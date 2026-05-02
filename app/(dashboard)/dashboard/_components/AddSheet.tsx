@@ -4,16 +4,29 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { SheetBackdrop } from './SheetBackdrop'
-import { createTransaction } from '@/actions/transaction'
+import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
 import { MiniCalendar } from './MiniCalendar'
 
+export interface AddSheetInitial {
+  id: string
+  amount: number
+  description: string
+  category: string
+  splitType: SplitType
+  payerId: string
+  transactedAt: string  // ISO
+}
+
 interface Props {
   open: boolean
   onClose: () => void
+  initial?: AddSheetInitial
+  /** Called after a successful create/edit/delete. Caller refreshes its own data. */
+  onMutated?: () => void
 }
 
 const TODAY_ISO = () => new Date().toISOString().slice(0, 10)
@@ -73,7 +86,7 @@ function Chevron() {
   )
 }
 
-export function AddSheet({ open, onClose }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated }: Props) {
   const { viewer, partner } = useMember()
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
@@ -86,48 +99,79 @@ export function AddSheet({ open, onClose }: Props) {
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
 
-  // Reset on open + autofocus the amount input so the system numeric keyboard pops on mobile.
+  // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
-    if (open) {
+    if (!open) return
+    if (initial) {
+      setAmount(String(initial.amount))
+      setDesc(initial.description)
+      setCategory(
+        (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'food',
+      )
+      setSplit(initial.splitType)
+      setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
+      setDate(initial.transactedAt.slice(0, 10))
+    } else {
       setAmount('')
       setDesc('')
       setCategory('food')
       setSplit('half')
       setPayerWho('M')
       setDate(TODAY_ISO())
-      setShowCal(false)
-      setError('')
-      // Wait for the slide-up animation before focusing so iOS doesn't trip on it.
-      const t = setTimeout(() => amountInputRef.current?.focus(), 350)
-      return () => clearTimeout(t)
     }
-  }, [open])
+    setShowCal(false)
+    setError('')
+    const t = setTimeout(() => amountInputRef.current?.focus(), 350)
+    return () => clearTimeout(t)
+  }, [open, initial, viewer.id])
+
+  const isEdit = !!initial
 
   const handleSave = () => {
     const n = parseInt(amount, 10)
-    if (!n || n <= 0) {
-      setError('請輸入金額')
-      return
-    }
-    if (!desc.trim()) {
-      setError('請輸入描述')
-      return
-    }
-    if (payerWho === 'T' && !partner) {
-      setError('伴侶尚未加入')
-      return
-    }
+    if (!n || n <= 0) { setError('請輸入金額'); return }
+    if (!desc.trim()) { setError('請輸入描述'); return }
+    if (payerWho === 'T' && !partner) { setError('伴侶尚未加入'); return }
     const payerId = payerWho === 'M' ? viewer.id : partner!.id
+    const transactedAt = new Date(date + 'T00:00:00')
+
     startTransition(async () => {
       try {
-        await createTransaction({
-          amount: n,
-          description: desc,
-          category,
-          splitType: split,
-          payerId,
-          transactedAt: new Date(date + 'T00:00:00'),
-        })
+        if (isEdit) {
+          await editTransaction({
+            oldId: initial!.id,
+            amount: n,
+            description: desc,
+            category,
+            splitType: split,
+            payerId,
+            transactedAt,
+          })
+        } else {
+          await createTransaction({
+            amount: n,
+            description: desc,
+            category,
+            splitType: split,
+            payerId,
+            transactedAt,
+          })
+        }
+        onMutated?.()
+        onClose()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '發生錯誤')
+      }
+    })
+  }
+
+  const handleDelete = () => {
+    if (!isEdit) return
+    if (!confirm('確定刪除這筆？')) return
+    startTransition(async () => {
+      try {
+        await softDeleteTransaction(initial!.id)
+        onMutated?.()
         onClose()
       } catch (e) {
         setError(e instanceof Error ? e.message : '發生錯誤')
@@ -172,7 +216,7 @@ export function AddSheet({ open, onClose }: Props) {
             className="text-base font-semibold tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
-            新增紀錄
+            {isEdit ? '編輯紀錄' : '新增紀錄'}
           </div>
           <button
             onClick={handleSave}
@@ -371,6 +415,23 @@ export function AddSheet({ open, onClose }: Props) {
             </button>
             {showCal && <MiniCalendar value={date} onChange={d => { setDate(d); setShowCal(false) }} />}
           </div>
+
+          {isEdit && (
+            <div className="px-5 pb-2">
+              <button
+                onClick={handleDelete}
+                disabled={pending}
+                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+                style={{
+                  background: 'transparent',
+                  color: '#B85A48',
+                  border: '1px solid rgba(184, 90, 72, 0.25)',
+                }}
+              >
+                刪除這筆
+              </button>
+            </div>
+          )}
 
           <div className="h-6" />
         </div>
