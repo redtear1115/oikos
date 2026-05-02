@@ -29,7 +29,10 @@ interface Props {
   onMutated?: () => void
 }
 
-const TODAY_ISO = () => new Date().toISOString().slice(0, 10)
+const TODAY_ISO = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function dateLabel(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -127,7 +130,15 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
     }
     setShowCal(false)
     setError('')
-    const t = setTimeout(() => amountInputRef.current?.focus(), 350)
+    // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
+    // the prefilled amount in edit mode (typing replaces the selection rather than
+    // appending to "240" → "2405").
+    const t = setTimeout(() => {
+      const el = amountInputRef.current
+      if (!el) return
+      el.focus()
+      el.select()
+    }, 350)
     return () => clearTimeout(t)
   }, [open, initial, viewer.id])
 
@@ -249,7 +260,18 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
             >
               金額
             </div>
-            <div className="flex items-baseline justify-center gap-1.5 min-h-[60px]">
+            <label
+              className="flex items-baseline justify-center gap-1.5 min-h-[60px] cursor-text"
+              onClick={() => {
+                // Focus + select on tap anywhere in the hero (NT$ label, the gap,
+                // or the digits). Native click on the inner <input> would also focus
+                // it, but tapping the label gives users a much wider hit target.
+                const el = amountInputRef.current
+                if (!el) return
+                el.focus()
+                el.select()
+              }}
+            >
               <span
                 className="text-[22px] font-medium"
                 style={{ color: amount ? 'var(--ink-2)' : 'var(--ink-3)' }}
@@ -276,11 +298,13 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
                   fontSize: 56,
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
-                  width: `${Math.max(amount.length || 1, 1)}ch`,
+                  // Min 2ch so empty/single-digit values still have a comfortable hit area;
+                  // grow with content up to 7ch (matches the 7-digit cap).
+                  width: `${Math.max(amount.length || 1, 2)}ch`,
                   caretColor: 'var(--accent)',
                 }}
               />
-            </div>
+            </label>
 
             {/* Payer segmented */}
             <div
