@@ -13,7 +13,7 @@ interface Props {
 
 const TABS = [
   { id: 'home', label: '首頁', href: '/dashboard', icon: NavHomeIcon },
-  { id: 'list', label: '紀錄', href: '/coming-soon?next=list', icon: NavListIcon },
+  { id: 'list', label: '紀錄', href: '/records', icon: NavListIcon },
   { id: 'assets', label: '資產', href: '/coming-soon?next=assets', icon: NavAssetsIcon },
   { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
 ] as const
@@ -23,6 +23,7 @@ export function BottomNav({ onAddClick, hideFab = false }: Props) {
 
   const getActiveTab = (): typeof TABS[number]['id'] => {
     if (pathname === '/dashboard') return 'home'
+    if (pathname === '/records') return 'list'
     if (pathname === '/settings') return 'settings'
     return 'home'
   }
