@@ -15,9 +15,10 @@ export interface CompactRowProps {
     transactedAt: string
   }
   isLast: boolean
+  onClick?: () => void
 }
 
-export function CompactRow({ tx, isLast }: CompactRowProps) {
+export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const { viewer, partner } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
@@ -41,13 +42,10 @@ export function CompactRow({ tx, isLast }: CompactRowProps) {
   const d = new Date(tx.transactedAt)
   const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
 
-  return (
-    <div
-      className="flex items-center gap-3 px-[14px] py-3"
-      style={{ borderBottom: isLast ? 'none' : '1px solid var(--hairline)' }}
-    >
+  const inner = (
+    <>
       <CategoryChip categoryId={tx.category} size={32} />
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 text-left">
         <div className="text-sm font-medium mb-0.5" style={{ color: 'var(--ink)' }}>
           {tx.description}
         </div>
@@ -69,6 +67,23 @@ export function CompactRow({ tx, isLast }: CompactRowProps) {
           {delta === 0 ? '—' : (delta > 0 ? '+' : '−') + Math.abs(delta).toLocaleString('en-US')}
         </div>
       </div>
+    </>
+  )
+
+  const cls = "w-full flex items-center gap-3 px-[14px] py-3 text-left bg-transparent border-0"
+  const style = { borderBottom: isLast ? 'none' : '1px solid var(--hairline)' }
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={`${cls} cursor-pointer transition-colors duration-100 hover:bg-[rgba(31,27,22,0.03)]`} style={style}>
+        {inner}
+      </button>
+    )
+  }
+
+  return (
+    <div className={cls} style={style}>
+      {inner}
     </div>
   )
 }
