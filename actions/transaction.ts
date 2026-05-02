@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { isValidCategoryId, type CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import { eq, or } from 'drizzle-orm'
+import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export interface CreateTransactionInput {
@@ -63,4 +63,33 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 
   revalidatePath('/dashboard')
   return { id: created.id }
+}
+
+export async function softDeleteTransaction(transactionId: string): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [group] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) throw new Error('找不到家計簿')
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(cashTransactions)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(cashTransactions.id, transactionId),
+        eq(cashTransactions.groupId, group.id),
+        isNull(cashTransactions.deletedAt),
+      ))
+      .returning({ id: cashTransactions.id })
+    if (updated.length === 0) throw new Error('找不到該筆紀錄')
+    await recalcGroupBalance(group.id, tx)
+  })
+
+  revalidatePath('/dashboard')
 }
