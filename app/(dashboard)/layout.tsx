@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-export default async function RootPage() {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  redirect(user ? '/dashboard' : '/sign-in')
+  if (!user) redirect('/sign-in')
+  return <>{children}</>
 }
