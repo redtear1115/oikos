@@ -3,18 +3,19 @@
 import Link from 'next/link'
 import { CompactRow, type CompactRowProps } from './CompactRow'
 
-export function RecentList({ items }: { items: CompactRowProps['tx'][] }) {
+interface Props {
+  items: CompactRowProps['tx'][]
+  onItemClick?: (item: CompactRowProps['tx']) => void
+}
+
+export function RecentList({ items, onItemClick }: Props) {
   return (
     <div className="pt-1 pb-5">
       <div className="flex items-center justify-between px-6 py-2.5">
         <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
           最近紀錄
         </span>
-        <Link
-          href="/coming-soon?next=list"
-          className="text-[11px] no-underline"
-          style={{ color: 'var(--ink-3)' }}
-        >
+        <Link href="/records" className="text-[11px] no-underline" style={{ color: 'var(--ink-3)' }}>
           查看全部 →
         </Link>
       </div>
@@ -23,7 +24,12 @@ export function RecentList({ items }: { items: CompactRowProps['tx'][] }) {
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         {items.map((tx, i) => (
-          <CompactRow key={tx.id} tx={tx} isLast={i === items.length - 1} />
+          <CompactRow
+            key={tx.id}
+            tx={tx}
+            isLast={i === items.length - 1}
+            onClick={onItemClick ? () => onItemClick(tx) : undefined}
+          />
         ))}
       </div>
     </div>
