@@ -49,30 +49,32 @@
 
 ### Schema
 
--- 注意：SQL table 實際命名用複數小寫（groups, transactions, settlements...）
--- 避開 PostgreSQL reserved words
+-- Table 命名慣例：PascalCase（Drizzle 會自動加引號）
+-- Group / Transaction 為 PostgreSQL reserved words，加前綴區分：
+--   Group → OikosGroups
+--   Transaction → CashTransactions
 
 ```sql
 -- 使用者（對應 Supabase auth.users）
-profiles
+Profiles
   id: uuid (PK, FK → auth.users.id)
   display_name: text
   avatar_url: text
   created_at: timestamptz
 
--- 群組（固定兩人）；table name: groups
-groups
+-- 群組（固定兩人）
+OikosGroups
   id: uuid (PK)
   name: text
-  member_a: uuid FK → profiles
-  member_b: uuid FK → profiles
+  member_a: uuid FK → Profiles
+  member_b: uuid FK → Profiles
   created_at: timestamptz
 
 -- 群組邀請
-GroupInvite
+GroupInvites
   id: uuid (PK)
-  group_id: uuid FK → Group
-  invited_by: uuid FK → profiles
+  group_id: uuid FK → OikosGroups
+  invited_by: uuid FK → Profiles
   token: text UNIQUE              -- URL-safe random token
   expires_at: timestamptz
   accepted_at: timestamptz        -- null = 尚未接受
@@ -80,31 +82,31 @@ GroupInvite
 
 -- 欠款快取
 GroupBalance
-  group_id: uuid (PK, FK → Group)
+  group_id: uuid (PK, FK → OikosGroups)
   balance: integer                -- 正數 = member_b 欠 member_a；負數 = member_a 欠 member_b
   version: integer                -- optimistic locking
   last_calculated_at: timestamptz
 
--- 記帳條目；table name: transactions
-transactions
+-- 記帳條目
+CashTransactions
   id: uuid (PK)
-  group_id: uuid FK → Group
-  paid_by: uuid FK → profiles
+  group_id: uuid FK → OikosGroups
+  paid_by: uuid FK → Profiles
   amount: integer
   split_type: enum(all_mine, all_theirs, half)
   description: text
   category: text
-  asset_id: uuid nullable FK → Asset
+  asset_id: uuid nullable FK → Assets
   invoice_number: text nullable   -- Phase 3：發票號碼，防止重複匯入
   transacted_at: timestamptz
   deleted_at: timestamptz
   created_at: timestamptz
 
 -- 結清紀錄
-Settlement
+Settlements
   id: uuid (PK)
-  group_id: uuid FK → Group
-  paid_by: uuid FK → profiles
+  group_id: uuid FK → OikosGroups
+  paid_by: uuid FK → Profiles
   amount: integer
   note: text
   settled_at: timestamptz
@@ -112,25 +114,25 @@ Settlement
   created_at: timestamptz
 
 -- 資產 parent table
-Asset
+Assets
   id: uuid (PK)
-  group_id: uuid FK → Group
+  group_id: uuid FK → OikosGroups
   type: enum(car, house, child, insurance)
   name: text
   deleted_at: timestamptz
   created_at: timestamptz
 
 -- 車輛
-CarDetail
-  asset_id: uuid (PK, FK → Asset)
+CarDetails
+  asset_id: uuid (PK, FK → Assets)
   plate: text
   purchased_at: date
   purchase_price: integer
 
 -- 加油紀錄
-FuelLog
+FuelLogs
   id: uuid (PK)
-  asset_id: uuid FK → Asset       -- 須 type=car（application 層驗證）
+  asset_id: uuid FK → Assets      -- 須 type=car（application 層驗證）
   liters: integer                  -- 精度待 Phase 2 決定（見 Section 5）
   fuel_type: enum(92, 95, 98, diesel)
   odometer: integer
@@ -140,38 +142,38 @@ FuelLog
   created_at: timestamptz
 
 -- 房子
-HouseDetail
-  asset_id: uuid (PK, FK → Asset)
-  owner: uuid FK → profiles
+HouseDetails
+  asset_id: uuid (PK, FK → Assets)
+  owner: uuid FK → Profiles
   address: text
   purchased_at: date
   purchase_price: integer
 
 -- 孩子
-ChildDetail
-  asset_id: uuid (PK, FK → Asset)
+ChildDetails
+  asset_id: uuid (PK, FK → Assets)
   birthday: date
   gender: enum(male, female, other)
   id_number_encrypted: text        -- AES-256，key 在 Vercel env var
   insurance_id_encrypted: text     -- AES-256
 
 -- 保險
-InsuranceDetail
-  asset_id: uuid (PK, FK → Asset)
+InsuranceDetails
+  asset_id: uuid (PK, FK → Assets)
   policy_number: text
   insurance_type: text
   coverage_amount: integer
   payment_date: integer            -- 每月幾號
   expiry_date: date
   insured_type: enum(user, child)
-  insured_user_id: uuid nullable FK → profiles
-  insured_child_id: uuid nullable FK → Asset  -- type=child，application 層驗證
+  insured_user_id: uuid nullable FK → Profiles
+  insured_child_id: uuid nullable FK → Assets  -- type=child，application 層驗證
 
 -- 手機條碼載具（Phase 3）
-InvoiceCredential
+InvoiceCredentials
   id: uuid (PK)
-  group_id: uuid FK → Group
-  user_id: uuid FK → profiles
+  group_id: uuid FK → OikosGroups
+  user_id: uuid FK → Profiles
   barcode: text                    -- 手機條碼（明文）
   verification_code_encrypted: text -- AES-256
   created_at: timestamptz
