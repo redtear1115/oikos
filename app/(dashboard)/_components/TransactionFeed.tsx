@@ -77,7 +77,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
                   key={tx.id}
                   tx={tx as CompactRowProps['tx']}
                   isLast={i === g.items.length - 1}
-                  onClick={tx.kind === 'transaction' ? () => onItemClick(tx) : undefined}
+                  onClick={() => onItemClick(tx)}
                 />
               ))}
             </div>

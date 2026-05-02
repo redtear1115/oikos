@@ -6,6 +6,7 @@ import { BrandHeader } from './BrandHeader'
 import { BalanceHero } from './BalanceHero'
 import { EmptyState } from './EmptyState'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
+import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -19,28 +20,36 @@ export interface DashboardProps {
 export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
-  const [editing, setEditing] = useState<AddSheetInitial | null>(null)
+  const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
+  const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
 
-  const sheetOpen = addOpen || editing !== null
+  const sheetOpen = addOpen || editingTx !== null || editingSettlement !== null
 
   const handleItemClick = (tx: PagedTxnRow) => {
-    // Settlement rows are read-only in 1c — TransactionFeed gates onClick by kind
-    // so this function only ever receives transactions. The non-null assertion below
-    // is safe given that contract.
-    setEditing({
-      id: tx.id,
-      amount: tx.amount,
-      description: tx.description,
-      category: tx.category,
-      splitType: tx.splitType!,
-      payerId: tx.paidBy,
-      transactedAt: tx.transactedAt,
-    })
+    if (tx.kind === 'settlement') {
+      setEditingSettlement({
+        id: tx.id,
+        amount: tx.amount,
+        payerId: tx.paidBy,
+        settledAt: tx.transactedAt,
+      })
+    } else {
+      setEditingTx({
+        id: tx.id,
+        amount: tx.amount,
+        description: tx.description,
+        category: tx.category,
+        splitType: tx.splitType!,
+        payerId: tx.paidBy,
+        transactedAt: tx.transactedAt,
+      })
+    }
   }
 
   const handleClose = () => {
     setAddOpen(false)
-    setEditing(null)
+    setEditingTx(null)
+    setEditingSettlement(null)
   }
 
   const handleMutated = () => router.refresh()
@@ -66,9 +75,15 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
       />
       <BottomNav onAddClick={() => setAddOpen(true)} hideFab={sheetOpen} />
       <AddSheet
-        open={sheetOpen}
+        open={addOpen || editingTx !== null}
         onClose={handleClose}
-        initial={editing ?? undefined}
+        initial={editingTx ?? undefined}
+        onMutated={handleMutated}
+      />
+      <SettlementSheet
+        open={editingSettlement !== null}
+        onClose={handleClose}
+        initial={editingSettlement}
         onMutated={handleMutated}
       />
     </div>

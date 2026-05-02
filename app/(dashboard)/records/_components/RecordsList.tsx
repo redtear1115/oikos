@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -14,28 +15,36 @@ interface Props {
 
 export function RecordsList({ initial, pageSize }: Props) {
   const router = useRouter()
-  const [editing, setEditing] = useState<AddSheetInitial | null>(null)
+  const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
+  const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [adding, setAdding] = useState(false)
 
-  const sheetOpen = editing !== null || adding
+  const sheetOpen = editingTx !== null || editingSettlement !== null || adding
 
   const handleItemClick = (tx: PagedTxnRow) => {
-    // Settlement rows are read-only in 1c — TransactionFeed gates onClick by kind
-    // so this function only ever receives transactions. The non-null assertion below
-    // is safe given that contract.
-    setEditing({
-      id: tx.id,
-      amount: tx.amount,
-      description: tx.description,
-      category: tx.category,
-      splitType: tx.splitType!,
-      payerId: tx.paidBy,
-      transactedAt: tx.transactedAt,
-    })
+    if (tx.kind === 'settlement') {
+      setEditingSettlement({
+        id: tx.id,
+        amount: tx.amount,
+        payerId: tx.paidBy,
+        settledAt: tx.transactedAt,
+      })
+    } else {
+      setEditingTx({
+        id: tx.id,
+        amount: tx.amount,
+        description: tx.description,
+        category: tx.category,
+        splitType: tx.splitType!,
+        payerId: tx.paidBy,
+        transactedAt: tx.transactedAt,
+      })
+    }
   }
 
-  const handleClose = () => {
-    setEditing(null)
+  const handleSheetClose = () => {
+    setEditingTx(null)
+    setEditingSettlement(null)
     setAdding(false)
   }
 
@@ -69,9 +78,15 @@ export function RecordsList({ initial, pageSize }: Props) {
       <BottomNav onAddClick={() => setAdding(true)} hideFab={sheetOpen} />
 
       <AddSheet
-        open={sheetOpen}
-        onClose={handleClose}
-        initial={editing ?? undefined}
+        open={adding || editingTx !== null}
+        onClose={handleSheetClose}
+        initial={editingTx ?? undefined}
+        onMutated={handleMutated}
+      />
+      <SettlementSheet
+        open={editingSettlement !== null}
+        onClose={handleSheetClose}
+        initial={editingSettlement}
         onMutated={handleMutated}
       />
     </div>
