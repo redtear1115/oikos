@@ -23,21 +23,23 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const { viewer, partner } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
-  const payerLabel = payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`
+  const payerLabel = tx.kind === 'settlement'
+    ? (payerIsViewer ? '我還款' : `${partner?.displayName ?? '對方'} 還款`)
+    : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
 
-  // Personal delta (viewer perspective).
-  // Storage is PAYER-RELATIVE: split_type === 'all_mine' means payer covered own expense
-  // (no debt either way regardless of who paid). 'all_theirs' means payer covered for the
-  // other person (full amount owed to payer). 'half' = shared 50/50 (other owes ceil/2).
+  // Delta is only meaningful for transactions. Settlements just transfer cash —
+  // they don't change anyone's "share owed" for this individual row.
   let delta = 0
-  if (tx.splitType === 'all_theirs') {
-    delta = payerIsViewer ? +tx.amount : -tx.amount
-  } else if (tx.splitType === 'half') {
-    delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
+  if (tx.kind === 'transaction') {
+    if (tx.splitType === 'all_theirs') {
+      delta = payerIsViewer ? +tx.amount : -tx.amount
+    } else if (tx.splitType === 'half') {
+      delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
+    }
   }
-  // 'all_mine' → delta stays 0 (payer's own expense)
 
   const dColor = delta > 0 ? 'var(--credit)' : delta < 0 ? 'var(--debit)' : 'var(--ink-3)'
+  const showDelta = tx.kind === 'transaction'
 
   // M/D format
   const d = new Date(tx.transactedAt)
@@ -64,9 +66,11 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         >
           NT${tx.amount.toLocaleString('en-US')}
         </div>
-        <div className="tnum text-[10px] mt-px" style={{ color: dColor }}>
-          {delta === 0 ? '—' : (delta > 0 ? '+' : '−') + Math.abs(delta).toLocaleString('en-US')}
-        </div>
+        {showDelta && (
+          <div className="tnum text-[10px] mt-px" style={{ color: dColor }}>
+            {delta === 0 ? '—' : (delta > 0 ? '+' : '−') + Math.abs(delta).toLocaleString('en-US')}
+          </div>
+        )}
       </div>
     </>
   )
