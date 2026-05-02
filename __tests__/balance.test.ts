@@ -26,11 +26,22 @@ describe('transactionDelta — from member_a perspective', () => {
 })
 
 describe('settlementDelta', () => {
-  it('A pays settlement → −amount (A reduces what B owes them OR pays down debt)', () => {
-    expect(settlementDelta({ amount: 200, payerIs: 'a' })).toBe(-200)
+  // paid_by = the actual cash sender. Convention: balance > 0 = B owes A.
+  it('A pays B (paid_by=A) → +amount (B becomes indebted to A by amount)', () => {
+    expect(settlementDelta({ amount: 200, payerIs: 'a' })).toBe(200)
   })
-  it('B pays settlement → +amount', () => {
-    expect(settlementDelta({ amount: 200, payerIs: 'b' })).toBe(200)
+  it('B pays A (paid_by=B) → −amount (A becomes indebted to B by amount)', () => {
+    expect(settlementDelta({ amount: 200, payerIs: 'b' })).toBe(-200)
+  })
+  it('settling existing debt drives balance toward 0 — B owes A 100, B pays A 100', () => {
+    // Initial balance = +100 (B owes A 100). B pays A 100 to settle.
+    // settlementDelta(payerIs='b') = -100 → balance = 100 + (-100) = 0. ✓
+    expect(100 + settlementDelta({ amount: 100, payerIs: 'b' })).toBe(0)
+  })
+  it('settling existing debt drives balance toward 0 — A owes B 100, A pays B 100', () => {
+    // Initial balance = -100 (A owes B 100). A pays B 100 to settle.
+    // settlementDelta(payerIs='a') = +100 → balance = -100 + 100 = 0. ✓
+    expect(-100 + settlementDelta({ amount: 100, payerIs: 'a' })).toBe(0)
   })
 })
 
@@ -50,15 +61,16 @@ describe('computeBalance', () => {
   it('mixed transactions + settlement', () => {
     const balance = computeBalance({
       transactions: [
-        { amount: 200, splitType: 'half', payerIs: 'a' },     // +100
+        { amount: 200, splitType: 'half', payerIs: 'a' },      // +100
         { amount: 100, splitType: 'all_theirs', payerIs: 'b' },// -100
-        { amount: 50,  splitType: 'all_mine', payerIs: 'a' }, // 0
+        { amount: 50,  splitType: 'all_mine', payerIs: 'a' },  //   0
       ],
       settlements: [
-        { amount: 50, payerIs: 'b' }, // +50
+        { amount: 50, payerIs: 'b' },                          // -50 (B paid A → A indebted to B)
       ],
     })
-    expect(balance).toBe(50)
+    // 100 + (-100) + 0 + (-50) = -50
+    expect(balance).toBe(-50)
   })
 
   it('viewerBalance flips for member_b', () => {

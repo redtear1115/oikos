@@ -24,12 +24,19 @@ export function transactionDelta({ amount, splitType, payerIs }: TxDelta): numbe
 }
 
 /**
- * Settlement delta. The payer is paying down what they owe.
- * A pays B → A's debt decreases → balance moves negative.
- * B pays A → B's debt decreases → balance moves positive.
+ * Settlement delta. `paid_by` is the actual cash sender.
+ *
+ * Convention: balance > 0 = member_b owes member_a.
+ *
+ * A pays B (paid_by=A): cash flows A → B. B is now in deficit by `amount` to A,
+ *   so balance += amount.
+ * B pays A (paid_by=B): cash flows B → A. A is now in deficit by `amount` to B,
+ *   so balance −= amount.
+ *
+ * Net effect: a settlement that pays down existing debt drives balance toward 0.
  */
 export function settlementDelta({ amount, payerIs }: SettlementDelta): number {
-  return payerIs === 'a' ? -amount : amount
+  return payerIs === 'a' ? amount : -amount
 }
 
 export function computeBalance(input: {

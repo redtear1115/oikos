@@ -31,7 +31,10 @@ export async function recalcGroupBalance(
       ), 0)
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
-    ) - (
+    ) + (
+      -- Settlement deltas (matches lib/balance.ts settlementDelta):
+      -- paid_by = member_a (A paid B) → +amount (B now indebted to A)
+      -- paid_by = member_b (B paid A) → -amount (A now indebted to B)
       SELECT COALESCE(SUM(
         CASE
           WHEN paid_by = (SELECT member_a FROM "OikosGroups" WHERE id = ${groupId}) THEN amount
