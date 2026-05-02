@@ -121,8 +121,11 @@ export async function listTransactionsPaged(
     description: r.description,
     category: r.category,
     paidBy: r.paid_by,
-    transactedAt: r.transacted_at,
-    createdAt: r.created_at,
+    // db.execute() returns timestamps as strings (postgres-js default), not Date —
+    // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
+    // matches what the page projections expect.
+    transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
+    createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
     kind: r.kind,
   }))
 }
