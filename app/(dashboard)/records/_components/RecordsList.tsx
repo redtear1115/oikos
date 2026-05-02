@@ -20,6 +20,9 @@ export function RecordsList({ initial, pageSize }: Props) {
   const sheetOpen = editing !== null || adding
 
   const handleItemClick = (tx: PagedTxnRow) => {
+    // Settlements (kind='settlement') have null splitType and will be handled in Task 3.
+    // For now, only transactions reach this path; guard ensures type safety.
+    if (!tx.splitType) return
     setEditing({
       id: tx.id,
       amount: tx.amount,

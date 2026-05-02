@@ -30,6 +30,7 @@ export default async function RecordsPage() {
     paidBy: r.paidBy,
     transactedAt: r.transactedAt.toISOString(),
     createdAt: r.createdAt.toISOString(),
+    kind: r.kind,
   }))
 
   return <RecordsList initial={initial} pageSize={PAGE_SIZE} />

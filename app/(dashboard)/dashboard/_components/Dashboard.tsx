@@ -24,6 +24,9 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const sheetOpen = addOpen || editing !== null
 
   const handleItemClick = (tx: PagedTxnRow) => {
+    // Settlements (kind='settlement') have null splitType and will be handled in Task 3.
+    // For now, only transactions reach this path; the non-null assertion is safe.
+    if (!tx.splitType) return
     setEditing({
       id: tx.id,
       amount: tx.amount,

@@ -8,11 +8,12 @@ export interface CompactRowProps {
   tx: {
     id: string
     amount: number
-    splitType: 'all_mine' | 'all_theirs' | 'half'
+    splitType: 'all_mine' | 'all_theirs' | 'half' | null
     description: string
     category: string
     paidBy: string
     transactedAt: string
+    kind: 'transaction' | 'settlement'
   }
   isLast: boolean
   onClick?: () => void

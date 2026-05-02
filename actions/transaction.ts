@@ -173,12 +173,13 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
 export interface PagedTxnRow {
   id: string
   amount: number
-  splitType: SplitType
+  splitType: SplitType | null  // null for settlements
   description: string
   category: string
   paidBy: string
   transactedAt: string  // ISO
   createdAt: string     // ISO (used as cursor part)
+  kind: 'transaction' | 'settlement'
 }
 
 export async function loadMoreTransactions(
@@ -206,5 +207,6 @@ export async function loadMoreTransactions(
     paidBy: r.paidBy,
     transactedAt: r.transactedAt.toISOString(),
     createdAt: r.createdAt.toISOString(),
+    kind: r.kind,
   }))
 }

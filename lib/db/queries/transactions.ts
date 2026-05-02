@@ -2,6 +2,20 @@ import { db } from '@/lib/db/client'
 import { cashTransactions } from '@/lib/db/schema'
 import { and, eq, isNull, desc, sql } from 'drizzle-orm'
 
+export type FeedKind = 'transaction' | 'settlement'
+
+export interface FeedRow {
+  id: string
+  amount: number
+  splitType: 'all_mine' | 'all_theirs' | 'half' | null  // null for settlements
+  description: string
+  category: string  // for settlements always 'settle'
+  paidBy: string
+  transactedAt: Date
+  createdAt: Date
+  kind: FeedKind
+}
+
 export interface TxnRow {
   id: string
   amount: number
@@ -42,52 +56,73 @@ export interface TxnCursor {
   createdAt: string     // ISO
 }
 
-export interface TxnRowWithCreatedAt extends TxnRow {
-  createdAt: Date
-}
-
 /**
- * Page through active transactions (newest first) using a composite (transactedAt, createdAt)
- * cursor to avoid skipping same-day rows. Pass `cursor=null` for the first page.
+ * Page through active transactions + settlements (newest first) using a composite
+ * (transactedAt/settledAt, createdAt) cursor. Pass `cursor=null` for the first page.
+ *
+ * Settlements are normalized into the same row shape as transactions: settledAt → transactedAt,
+ * COALESCE(note,'還款') → description, 'settle' → category, NULL → splitType.
  */
 export async function listTransactionsPaged(
   groupId: string,
   cursor: TxnCursor | null,
   limit = 20,
-): Promise<TxnRowWithCreatedAt[]> {
-  const baseSelect = {
-    id: cashTransactions.id,
-    amount: cashTransactions.amount,
-    splitType: cashTransactions.splitType,
-    description: cashTransactions.description,
-    category: cashTransactions.category,
-    paidBy: cashTransactions.paidBy,
-    transactedAt: cashTransactions.transactedAt,
-    createdAt: cashTransactions.createdAt,
-  }
+): Promise<FeedRow[]> {
+  const txCursor = cursor
+    ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
+    : sql``
+  const setCursor = cursor
+    ? sql`AND (settled_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
+    : sql``
 
-  if (!cursor) {
-    return db
-      .select(baseSelect)
-      .from(cashTransactions)
-      .where(and(
-        eq(cashTransactions.groupId, groupId),
-        isNull(cashTransactions.deletedAt),
-      ))
-      .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
-      .limit(limit)
-  }
+  const rows = await db.execute<{
+    id: string
+    amount: number
+    split_type: 'all_mine' | 'all_theirs' | 'half' | null
+    description: string
+    category: string
+    paid_by: string
+    transacted_at: Date
+    created_at: Date
+    kind: FeedKind
+  }>(sql`
+    SELECT * FROM (
+      SELECT
+        id, amount, split_type, description, category, paid_by,
+        transacted_at, created_at,
+        'transaction'::text AS kind
+      FROM "CashTransactions"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${txCursor}
 
-  // Tuple comparison: (transacted_at, created_at) < (cursor.t, cursor.c).
-  // Pass ISO strings with explicit ::timestamptz casts so Postgres parses them correctly.
-  return db
-    .select(baseSelect)
-    .from(cashTransactions)
-    .where(and(
-      eq(cashTransactions.groupId, groupId),
-      isNull(cashTransactions.deletedAt),
-      sql`(${cashTransactions.transactedAt}, ${cashTransactions.createdAt}) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`,
-    ))
-    .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
-    .limit(limit)
+      UNION ALL
+
+      SELECT
+        id, amount,
+        NULL::split_type AS split_type,
+        COALESCE(note, '還款') AS description,
+        'settle' AS category,
+        paid_by,
+        settled_at AS transacted_at,
+        created_at,
+        'settlement'::text AS kind
+      FROM "Settlements"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${setCursor}
+    ) AS feed
+    ORDER BY transacted_at DESC, created_at DESC
+    LIMIT ${limit}
+  `)
+
+  return rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    splitType: r.split_type,
+    description: r.description,
+    category: r.category,
+    paidBy: r.paid_by,
+    transactedAt: r.transacted_at,
+    createdAt: r.created_at,
+    kind: r.kind,
+  }))
 }
