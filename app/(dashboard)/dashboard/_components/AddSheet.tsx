@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { SheetBackdrop } from './SheetBackdrop'
@@ -10,7 +10,6 @@ import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
 import { MiniCalendar } from './MiniCalendar'
-import { Numpad } from './Numpad'
 
 interface Props {
   open: boolean
@@ -85,8 +84,9 @@ export function AddSheet({ open, onClose }: Props) {
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
+  const amountInputRef = useRef<HTMLInputElement>(null)
 
-  // Reset on open
+  // Reset on open + autofocus the amount input so the system numeric keyboard pops on mobile.
   useEffect(() => {
     if (open) {
       setAmount('')
@@ -97,6 +97,9 @@ export function AddSheet({ open, onClose }: Props) {
       setDate(TODAY_ISO())
       setShowCal(false)
       setError('')
+      // Wait for the slide-up animation before focusing so iOS doesn't trip on it.
+      const t = setTimeout(() => amountInputRef.current?.focus(), 350)
+      return () => clearTimeout(t)
     }
   }, [open])
 
@@ -136,15 +139,16 @@ export function AddSheet({ open, onClose }: Props) {
     <>
       <SheetBackdrop open={open} onClick={onClose} />
       <div
-        className="absolute left-0 right-0 bottom-0 z-[80] flex flex-col overflow-hidden"
+        className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
-          maxHeight: '92%',
+          maxHeight: '92dvh',
           transform: open ? 'translateY(0)' : 'translateY(100%)',
           transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+          pointerEvents: open ? 'auto' : 'none',
         }}
       >
         {/* Grabber */}
@@ -202,17 +206,30 @@ export function AddSheet({ open, onClose }: Props) {
               >
                 NT$
               </span>
-              <span
-                className="tnum tracking-[-2px] leading-none min-w-[40px]"
+              <input
+                ref={amountInputRef}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                enterKeyHint="done"
+                value={amount}
+                onChange={(e) => {
+                  // strip non-digits, drop leading zeros, cap at 7 digits
+                  const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
+                  setAmount(next)
+                }}
+                placeholder="0"
+                aria-label="金額"
+                className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
                   fontSize: 56,
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
+                  width: `${Math.max(amount.length || 1, 1)}ch`,
+                  caretColor: 'var(--accent)',
                 }}
-              >
-                {amount ? parseInt(amount, 10).toLocaleString('en-US') : '0'}
-              </span>
+              />
             </div>
 
             {/* Payer segmented */}
@@ -357,16 +374,11 @@ export function AddSheet({ open, onClose }: Props) {
 
           <div className="h-6" />
         </div>
-
-        <Numpad onKey={k => {
-          if (k === 'del') setAmount(a => a.slice(0, -1))
-          else if (amount.length < 7) setAmount(a => (a + k).replace(/^0+/, '') || '0')
-        }} />
       </div>
 
-      {error && (
+      {error && open && (
         <div
-          className="absolute top-4 left-4 right-4 z-[90] px-4 py-3 rounded-xl text-sm text-white"
+          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
           style={{ background: 'var(--debit)' }}
         >
           {error}

@@ -36,7 +36,7 @@ export function Dashboard({ balance, recent }: DashboardProps) {
         ? <EmptyState onAdd={() => setAddOpen(true)} />
         : <RecentList items={recent} />
       }
-      <BottomNav onAddClick={() => setAddOpen(true)} />
+      <BottomNav onAddClick={() => setAddOpen(true)} hideFab={addOpen} />
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   )

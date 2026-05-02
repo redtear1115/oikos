@@ -8,6 +8,7 @@ import { NavHomeIcon, NavListIcon, NavAssetsIcon, NavSettingsIcon } from './TabI
 
 interface Props {
   onAddClick: () => void
+  hideFab?: boolean
 }
 
 const TABS = [
@@ -17,7 +18,7 @@ const TABS = [
   { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
 ] as const
 
-export function BottomNav({ onAddClick }: Props) {
+export function BottomNav({ onAddClick, hideFab = false }: Props) {
   const pathname = usePathname()
 
   const getActiveTab = (): typeof TABS[number]['id'] => {
@@ -30,7 +31,7 @@ export function BottomNav({ onAddClick }: Props) {
 
   return (
     <>
-      <div className="absolute left-0 right-0 bottom-0 z-[80] h-[78px] flex pb-[22px]"
+      <div className="fixed left-1/2 bottom-0 z-[80] h-[78px] w-full max-w-md -translate-x-1/2 flex pb-[22px]"
         style={{ background: 'var(--surface)', borderTop: '1px solid var(--hairline)' }}>
         <NavTab tab={TABS[0]} active={activeId === TABS[0].id} />
         <NavTab tab={TABS[1]} active={activeId === TABS[1].id} />
@@ -39,16 +40,18 @@ export function BottomNav({ onAddClick }: Props) {
         <NavTab tab={TABS[3]} active={activeId === TABS[3].id} />
       </div>
 
-      <button
-        onClick={onAddClick}
-        className="absolute left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
-        style={{
-          background: 'var(--ink)',
-          color: '#fff',
-          boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
-        }}>
-        <PlusIcon size={26} />
-      </button>
+      {!hideFab && (
+        <button
+          onClick={onAddClick}
+          className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
+          style={{
+            background: 'var(--ink)',
+            color: '#fff',
+            boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
+          }}>
+          <PlusIcon size={26} />
+        </button>
+      )}
 
       <HomeIndicator />
     </>
