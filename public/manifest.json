@@ -1,11 +1,11 @@
 {
-  "name": "Oikos 家庭帳本",
-  "short_name": "Oikos",
+  "name": "Futari",
+  "short_name": "Futari",
   "description": "家庭記帳與資產管理",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#FBEDE0",
+  "theme_color": "#FBEDE0",
   "orientation": "portrait",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

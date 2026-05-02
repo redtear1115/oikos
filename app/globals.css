@@ -1,26 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #FBEDE0;
+  --surface: #FFFFFF;
+  --surface-alt: #FFF6EC;
+  --ink: #3A2419;
+  --ink-2: #7A5848;
+  --ink-3: #B89C8B;
+  --hairline: rgba(58, 36, 25, 0.10);
+  --accent: #E08856;
+  --accent-soft: #F8D9C2;
+  --credit: #7A9F7E;
+  --credit-soft: #DDEAD8;
+  --debit: #D17561;
+  --me-color: #3A2419;
+  --them-color: #E08856;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-credit: var(--credit);
+  --color-credit-soft: var(--credit-soft);
+  --color-debit: var(--debit);
+  --color-me: var(--me-color);
+  --color-them: var(--them-color);
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-noto-tc);
+  --font-numeric: -apple-system, "SF Pro Display", system-ui;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html, body { margin: 0; padding: 0; background: var(--bg); }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
+*::-webkit-scrollbar { display: none; }
+.tnum { font-feature-settings: "tnum"; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.animate-blink { animation: blink 1s step-end infinite; }

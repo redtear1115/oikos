@@ -1,19 +1,34 @@
 import type { Metadata, Viewport } from 'next'
+import { Fraunces, Noto_Sans_TC } from 'next/font/google'
 import './globals.css'
 
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-fraunces',
+  display: 'swap',
+})
+
+const notoTC = Noto_Sans_TC({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-noto-tc',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Oikos',
-  description: '家庭記帳與資產管理',
+  title: 'Futari',
+  description: 'ふたり ・ 家計簿 — 兩個人的記帳本',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Oikos',
+    title: 'Futari',
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#ffffff',
+  themeColor: '#FBEDE0',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -21,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW">
+    <html lang="zh-TW" className={`${fraunces.variable} ${notoTC.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
