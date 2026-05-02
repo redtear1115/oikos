@@ -1,0 +1,74 @@
+'use client'
+
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
+
+export interface CompactRowProps {
+  tx: {
+    id: string
+    amount: number
+    splitType: 'all_mine' | 'all_theirs' | 'half'
+    description: string
+    category: string
+    paidBy: string
+    transactedAt: string
+  }
+  isLast: boolean
+}
+
+export function CompactRow({ tx, isLast }: CompactRowProps) {
+  const { viewer, partner } = useMember()
+  const payerIsViewer = tx.paidBy === viewer.id
+  const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
+  const payerLabel = payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`
+
+  // Personal delta (viewer perspective).
+  // Storage is PAYER-RELATIVE: split_type === 'all_mine' means payer covered own expense
+  // (no debt either way regardless of who paid). 'all_theirs' means payer covered for the
+  // other person (full amount owed to payer). 'half' = shared 50/50 (other owes ceil/2).
+  let delta = 0
+  if (tx.splitType === 'all_theirs') {
+    delta = payerIsViewer ? +tx.amount : -tx.amount
+  } else if (tx.splitType === 'half') {
+    delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
+  }
+  // 'all_mine' → delta stays 0 (payer's own expense)
+
+  const dColor = delta > 0 ? 'var(--credit)' : delta < 0 ? 'var(--debit)' : 'var(--ink-3)'
+
+  // M/D format
+  const d = new Date(tx.transactedAt)
+  const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
+
+  return (
+    <div
+      className="flex items-center gap-3 px-[14px] py-3"
+      style={{ borderBottom: isLast ? 'none' : '1px solid var(--hairline)' }}
+    >
+      <CategoryChip categoryId={tx.category} size={32} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium mb-0.5" style={{ color: 'var(--ink)' }}>
+          {tx.description}
+        </div>
+        <div
+          className="text-[11px] flex items-center gap-1.5"
+          style={{ color: 'var(--ink-3)' }}
+        >
+          {dateLabel} · <Avatar who="M" initial={payerInitial} size={12} /> {payerLabel}
+        </div>
+      </div>
+      <div className="text-right">
+        <div
+          className="tnum text-sm font-medium tracking-[-0.2px]"
+          style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
+        >
+          NT${tx.amount.toLocaleString('en-US')}
+        </div>
+        <div className="tnum text-[10px] mt-px" style={{ color: dColor }}>
+          {delta === 0 ? '—' : (delta > 0 ? '+' : '−') + Math.abs(delta).toLocaleString('en-US')}
+        </div>
+      </div>
+    </div>
+  )
+}
