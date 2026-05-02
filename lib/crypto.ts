@@ -4,7 +4,7 @@ const ALGORITHM = 'aes-256-gcm'
 
 function getKey(): Buffer {
   const key = process.env.ENCRYPTION_KEY
-  if (!key || key.length !== 64) throw new Error('ENCRYPTION_KEY must be 64 hex chars (32 bytes)')
+  if (!key || !/^[0-9a-fA-F]{64}$/.test(key)) throw new Error('ENCRYPTION_KEY must be 64 hex chars (32 bytes)')
   return Buffer.from(key, 'hex')
 }
 

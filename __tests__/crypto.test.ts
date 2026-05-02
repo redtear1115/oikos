@@ -14,9 +14,15 @@ describe('crypto', () => {
     expect(encrypt(plaintext)).not.toBe(encrypt(plaintext))
   })
 
-  it('throws on tampered ciphertext', () => {
+  it('throws on tampered ciphertext payload', () => {
     const ciphertext = encrypt('secret')
     const tampered = ciphertext.slice(0, -4) + 'xxxx'
     expect(() => decrypt(tampered)).toThrow()
+  })
+
+  it('throws on tampered auth tag', () => {
+    const [iv, , encrypted] = encrypt('secret').split(':')
+    const fakeTag = 'deadbeefdeadbeefdeadbeefdeadbeef'
+    expect(() => decrypt(`${iv}:${fakeTag}:${encrypted}`)).toThrow()
   })
 })
