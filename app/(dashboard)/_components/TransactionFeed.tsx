@@ -5,31 +5,51 @@ import { CompactRow, type CompactRowProps } from '@/app/(dashboard)/dashboard/_c
 import { MonthSection } from '@/app/(dashboard)/records/_components/MonthSection'
 import { groupByMonth } from '@/lib/groupByMonth'
 import { loadMoreTransactions, type PagedTxnRow } from '@/actions/transaction'
+import { toWire, type TxnFilter } from '@/lib/filter'
 
 interface Props {
   initial: PagedTxnRow[]
   pageSize: number
-  /** Render this when initial.length === 0 (no records at all). */
+  /** Render this when items are empty. */
   emptyState: React.ReactNode
-  /** Called when a row is tapped — parent opens its AddSheet in edit mode. */
+  /** Called when a row is tapped — parent opens its AddSheet / SettlementSheet in edit mode. */
   onItemClick: (tx: PagedTxnRow) => void
   /** Optional small label rendered above the list (e.g. "最近紀錄"). */
   label?: React.ReactNode
+  /** Optional filter. When this object reference changes, the feed refetches page 1 with
+   *  the new filter and replaces its items. Pass `undefined` for "no filter". */
+  filter?: TxnFilter
 }
 
-export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label }: Props) {
+export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, filter }: Props) {
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
   const [hasMore, setHasMore] = useState(initial.length === pageSize)
   const [loading, startLoading] = useTransition()
   const [error, setError] = useState('')
 
-  // Resync items + hasMore whenever the server re-renders this component with fresh
-  // `initial` (after router.refresh() following a mutation). This loses any "load more"
-  // position but guarantees consistent state.
+  // Resync to initial only when no filter is active (filter mode owns the items list).
   useEffect(() => {
-    setItems(initial)
-    setHasMore(initial.length === pageSize)
-  }, [initial, pageSize])
+    if (!filter) {
+      setItems(initial)
+      setHasMore(initial.length === pageSize)
+    }
+  }, [initial, pageSize, filter])
+
+  // When the filter changes (including becoming undefined → defined), refetch page 1.
+  useEffect(() => {
+    if (!filter) return  // handled by the previous effect via `initial`
+    setError('')
+    startLoading(async () => {
+      try {
+        const fresh = await loadMoreTransactions(null, pageSize, toWire(filter))
+        setItems(fresh)
+        setHasMore(fresh.length === pageSize)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '載入失敗')
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- filter identity drives this effect
+  }, [filter, pageSize])
 
   const handleLoadMore = () => {
     if (items.length === 0) return
@@ -40,6 +60,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         const more = await loadMoreTransactions(
           { transactedAt: last.transactedAt, createdAt: last.createdAt },
           pageSize,
+          filter ? toWire(filter) : undefined,
         )
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
