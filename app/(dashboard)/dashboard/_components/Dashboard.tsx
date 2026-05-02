@@ -4,25 +4,26 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BrandHeader } from './BrandHeader'
 import { BalanceHero } from './BalanceHero'
-import { RecentList } from './RecentList'
 import { EmptyState } from './EmptyState'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
-import type { CompactRowProps } from './CompactRow'
+import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
+import type { PagedTxnRow } from '@/actions/transaction'
 
 export interface DashboardProps {
   balance: number
-  recent: CompactRowProps['tx'][]
+  recent: PagedTxnRow[]
+  pageSize: number
 }
 
-export function Dashboard({ balance, recent }: DashboardProps) {
+export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<AddSheetInitial | null>(null)
 
   const sheetOpen = addOpen || editing !== null
 
-  const handleItemClick = (tx: CompactRowProps['tx']) => {
+  const handleItemClick = (tx: PagedTxnRow) => {
     setEditing({
       id: tx.id,
       amount: tx.amount,
@@ -39,7 +40,6 @@ export function Dashboard({ balance, recent }: DashboardProps) {
     setEditing(null)
   }
 
-  // Server action revalidated already; refresh re-runs the server component.
   const handleMutated = () => router.refresh()
 
   return (
@@ -50,10 +50,17 @@ export function Dashboard({ balance, recent }: DashboardProps) {
         onAddClick={() => setAddOpen(true)}
         onSettleClick={() => { /* Phase 1c */ }}
       />
-      {recent.length === 0
-        ? <EmptyState onAdd={() => setAddOpen(true)} />
-        : <RecentList items={recent} onItemClick={handleItemClick} />
-      }
+      <TransactionFeed
+        initial={recent}
+        pageSize={pageSize}
+        onItemClick={handleItemClick}
+        label={
+          <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
+            最近紀錄
+          </span>
+        }
+        emptyState={<EmptyState onAdd={() => setAddOpen(true)} />}
+      />
       <BottomNav onAddClick={() => setAddOpen(true)} hideFab={sheetOpen} />
       <AddSheet
         open={sheetOpen}

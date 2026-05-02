@@ -3,8 +3,10 @@ import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { getGroupBalance } from '@/lib/db/queries/balance'
-import { listRecentTransactions } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { Dashboard } from './_components/Dashboard'
+
+const PAGE_SIZE = 20
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -18,13 +20,22 @@ export default async function DashboardPage() {
     .limit(1)
   if (!group) throw new Error('No group')
 
-  const [balance, recent] = await Promise.all([
+  const [balance, rows] = await Promise.all([
     getGroupBalance(group.id),
-    listRecentTransactions(group.id, 5),
+    listTransactionsPaged(group.id, null, PAGE_SIZE),
   ])
 
-  // Serialize Date → string for client component
-  const recentSerializable = recent.map(t => ({ ...t, transactedAt: t.transactedAt.toISOString() }))
+  // Serialize Date → ISO string for the client component
+  const recent = rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    splitType: r.splitType,
+    description: r.description,
+    category: r.category,
+    paidBy: r.paidBy,
+    transactedAt: r.transactedAt.toISOString(),
+    createdAt: r.createdAt.toISOString(),
+  }))
 
-  return <Dashboard balance={balance} recent={recentSerializable} />
+  return <Dashboard balance={balance} recent={recent} pageSize={PAGE_SIZE} />
 }
