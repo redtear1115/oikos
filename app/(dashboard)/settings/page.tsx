@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   const initial = displayName[0]?.toUpperCase() ?? '?'
 
   return (
-    <div className="relative pb-[92px]">
+    <div className="relative min-h-screen pb-[92px]">
       <div className="px-5 pt-[60px] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"

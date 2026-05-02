@@ -25,7 +25,7 @@ export function Dashboard({ balance, recent }: DashboardProps) {
   const [addOpen, setAddOpen] = useState(false)
 
   return (
-    <div className="relative pb-[92px]">
+    <div className="relative min-h-screen pb-[92px]">
       <BrandHeader />
       <BalanceHero
         rawBalance={balance}

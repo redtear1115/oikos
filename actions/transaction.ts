@@ -30,6 +30,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
   const description = input.description.trim()
   if (!description) throw new Error('描述不能為空')
   const category = isValidCategoryId(input.category) ? input.category : 'other'
+  if (category === 'settle') throw new Error('不可使用此分類')
 
   // Find viewer's group
   const [group] = await db
