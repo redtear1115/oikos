@@ -93,10 +93,10 @@ export async function listTransactionsPaged(
   // Per-branch filter clauses
   const txPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
   const txSplit = filter && filter.splitTypes.length > 0
-    ? sql`AND split_type = ANY(${filter.splitTypes}::split_type[])`
+    ? sql`AND split_type IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
     : sql``
   const txCategory = filter && filter.categories.length > 0
-    ? sql`AND category = ANY(${filter.categories}::text[])`
+    ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
     : sql``
 
   const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
@@ -157,6 +157,9 @@ export async function listTransactionsPaged(
     description: r.description,
     category: r.category,
     paidBy: r.paid_by,
+    // db.execute() returns timestamps as strings (postgres-js default), not Date —
+    // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
+    // matches what the page projections expect.
     transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
     createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
     kind: r.kind,
