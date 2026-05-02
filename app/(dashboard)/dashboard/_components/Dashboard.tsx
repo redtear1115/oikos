@@ -24,15 +24,15 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const sheetOpen = addOpen || editing !== null
 
   const handleItemClick = (tx: PagedTxnRow) => {
-    // Settlements (kind='settlement') have null splitType and will be handled in Task 3.
-    // For now, only transactions reach this path; the non-null assertion is safe.
-    if (!tx.splitType) return
+    // Settlement rows are read-only in 1c — TransactionFeed gates onClick by kind
+    // so this function only ever receives transactions. The non-null assertion below
+    // is safe given that contract.
     setEditing({
       id: tx.id,
       amount: tx.amount,
       description: tx.description,
       category: tx.category,
-      splitType: tx.splitType,
+      splitType: tx.splitType!,
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
     })
