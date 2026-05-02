@@ -5,8 +5,12 @@ import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { SheetBackdrop } from './SheetBackdrop'
 import { createTransaction } from '@/actions/transaction'
+import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
+import { SplitGlyph } from './SplitGlyph'
+import { MiniCalendar } from './MiniCalendar'
+import { Numpad } from './Numpad'
 
 interface Props {
   open: boolean
@@ -14,6 +18,61 @@ interface Props {
 }
 
 const TODAY_ISO = () => new Date().toISOString().slice(0, 10)
+
+function dateLabel(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${y} 年 ${m} 月 ${d} 日`
+}
+
+function weekday(iso: string) {
+  const days = ['週日','週一','週二','週三','週四','週五','週六']
+  return days[new Date(iso + 'T00:00:00').getDay()]
+}
+
+/** Split-type subtitle, payer-relative (matches storage semantics in lib/balance.ts). */
+function splitSub(splitId: SplitType, payerWho: 'M' | 'T', amount: number): string {
+  if (splitId === 'all_mine') {
+    return payerWho === 'M' ? '你自己花的，不會欠款' : '對方自己花的，不會欠款'
+  }
+  if (splitId === 'all_theirs') {
+    if (!amount) return payerWho === 'M' ? '對方欠你全額' : '你欠對方全額'
+    return payerWho === 'M'
+      ? `對方欠你 NT$${amount.toLocaleString('en-US')}`
+      : `你欠對方 NT$${amount.toLocaleString('en-US')}`
+  }
+  // half
+  if (!amount) return '各付一半'
+  const half = Math.ceil(amount / 2)
+  return payerWho === 'M'
+    ? `對方欠你 NT$${half.toLocaleString('en-US')}`
+    : `你欠對方 NT$${half.toLocaleString('en-US')}`
+}
+
+function DescIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M4 6h14M4 11h14M4 16h9" stroke="#9A9085" strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function CalIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="3" y="5" width="16" height="14" rx="3" stroke="#5C544A" strokeWidth="1.5"/>
+      <path d="M3 9h16" stroke="#5C544A" strokeWidth="1.5"/>
+      <path d="M7 3v4M15 3v4" stroke="#5C544A" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function Chevron() {
+  return (
+    <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+      <path d="M1 1l5 5-5 5" stroke="var(--ink-3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
 
 export function AddSheet({ open, onClose }: Props) {
   const { viewer, partner } = useMember()
@@ -195,12 +254,114 @@ export function AddSheet({ open, onClose }: Props) {
             </div>
           </div>
 
-          {/* Body sections come in Task 16 */}
-          <div data-todo-task-16 />
+          {/* Description */}
+          <div className="px-5 py-3.5 flex items-center gap-3.5"
+            style={{ borderBottom: '1px solid var(--hairline)' }}>
+            <DescIcon />
+            <input
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+              placeholder="描述（例：晚餐、雜貨）"
+              className="flex-1 bg-transparent border-0 outline-none text-base py-1"
+              style={{ color: 'var(--ink)' }}
+            />
+          </div>
+
+          {/* Categories */}
+          <div className="pt-5 pb-[18px]">
+            <div className="text-xs tracking-[0.6px] px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
+              分類
+            </div>
+            <div className="flex gap-2 px-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              {PICKABLE_CATEGORIES.map(c => {
+                const sel = category === c.id
+                return (
+                  <button key={c.id} onClick={() => setCategory(c.id)}
+                    className="h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
+                    style={{
+                      background: sel ? 'var(--ink)' : 'var(--surface)',
+                      color: sel ? '#fff' : 'var(--ink)',
+                      border: sel ? '1px solid var(--ink)' : '1px solid var(--hairline)',
+                    }}>
+                    <span className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-[13px] font-medium"
+                      style={{ background: c.tint, color: c.ink }}>
+                      {c.mono}
+                    </span>
+                    {c.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Split type */}
+          <div className="px-5 pt-2 pb-[18px] mt-1"
+            style={{ borderTop: '1px solid var(--hairline)' }}>
+            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              分攤方式
+            </div>
+            <div className="flex flex-col gap-2">
+              {([
+                { id: 'all_mine',   label: '全部我的',   sub: splitSub('all_mine',   payerWho, parseInt(amount, 10) || 0) },
+                { id: 'all_theirs', label: '全部對方的', sub: splitSub('all_theirs', payerWho, parseInt(amount, 10) || 0) },
+                { id: 'half',       label: '平分',       sub: splitSub('half',       payerWho, parseInt(amount, 10) || 0) },
+              ] as const).map(s => {
+                const sel = split === s.id
+                return (
+                  <button key={s.id} onClick={() => setSplit(s.id)}
+                    className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left transition-all duration-150"
+                    style={{
+                      background: 'var(--surface)',
+                      border: sel ? '1.5px solid var(--ink)' : '1px solid var(--hairline)',
+                    }}>
+                    <SplitGlyph kind={s.id} active={sel} />
+                    <div className="flex-1">
+                      <div className="text-[15px] font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
+                        {s.label}
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{s.sub}</div>
+                    </div>
+                    <div className="w-5 h-5 rounded-full transition-all duration-150"
+                      style={{
+                        border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
+                        background: sel ? 'var(--ink)' : 'transparent',
+                        boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
+                      }} />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Date */}
+          <div className="px-5 pt-1 pb-6">
+            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              日期
+            </div>
+            <button onClick={() => setShowCal(v => !v)}
+              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+              <CalIcon />
+              <div className="flex-1 text-left">
+                <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
+                  {dateLabel(date)}
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                  {date === TODAY_ISO() ? '今天' : weekday(date)}
+                </div>
+              </div>
+              <Chevron />
+            </button>
+            {showCal && <MiniCalendar value={date} onChange={d => { setDate(d); setShowCal(false) }} />}
+          </div>
+
+          <div className="h-6" />
         </div>
 
-        {/* Numpad comes in Task 17 */}
-        <div data-todo-task-17 />
+        <Numpad onKey={k => {
+          if (k === 'del') setAmount(a => a.slice(0, -1))
+          else if (amount.length < 7) setAmount(a => (a + k).replace(/^0+/, '') || '0')
+        }} />
       </div>
 
       {error && (
