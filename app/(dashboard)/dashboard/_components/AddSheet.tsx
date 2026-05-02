@@ -10,6 +10,7 @@ import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
 import { MiniCalendar } from './MiniCalendar'
+import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
 
 export interface AddSheetInitial {
   id: string
@@ -29,10 +30,6 @@ interface Props {
   onMutated?: () => void
 }
 
-const TODAY_ISO = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 function dateLabel(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -96,7 +93,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
   const [category, setCategory] = useState<CategoryId>('food')
   const [split, setSplit] = useState<SplitType>('half')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
-  const [date, setDate] = useState(TODAY_ISO())
+  const [date, setDate] = useState(localTodayISO())
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -126,7 +123,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
       setCategory('food')
       setSplit('half')
       setPayerWho('M')
-      setDate(TODAY_ISO())
+      setDate(localTodayISO())
     }
     setShowCal(false)
     setError('')
@@ -150,7 +147,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
     if (!desc.trim()) { setError('請輸入描述'); return }
     if (payerWho === 'T' && !partner) { setError('伴侶尚未加入'); return }
     const payerId = payerWho === 'M' ? viewer.id : partner!.id
-    const transactedAt = new Date(date + 'T00:00:00')
+    const transactedAt = ymdToUTCNoon(date)
 
     startTransition(async () => {
       try {
@@ -438,7 +435,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
                   {dateLabel(date)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                  {date === TODAY_ISO() ? '今天' : weekday(date)}
+                  {date === localTodayISO() ? '今天' : weekday(date)}
                 </div>
               </div>
               <Chevron />

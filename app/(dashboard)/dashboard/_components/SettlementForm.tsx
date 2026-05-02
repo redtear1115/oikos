@@ -5,6 +5,8 @@ import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
+import { MiniCalendar } from './MiniCalendar'
+import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -15,18 +17,48 @@ interface Props {
   onMutated: () => void
 }
 
-const TODAY_ISO = () => new Date().toISOString().slice(0, 10)
+function dateLabel(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${y} 年 ${m} 月 ${d} 日`
+}
+
+function weekday(iso: string) {
+  const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
+  return days[new Date(iso + 'T00:00:00').getDay()]
+}
+
+function CalIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+      <rect x="3" y="5" width="16" height="14" rx="3" stroke="#5C544A" strokeWidth="1.5" />
+      <path d="M3 9h16" stroke="#5C544A" strokeWidth="1.5" />
+      <path d="M7 3v4M15 3v4" stroke="#5C544A" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function Chevron() {
+  return (
+    <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+      <path d="M1 1l5 5-5 5" stroke="var(--ink-3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
   const { viewer, partner } = useMember()
   // Default to the full outstanding amount.
   const [amount, setAmount] = useState(String(debtAmount))
+  const [date, setDate] = useState(localTodayISO())
+  const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setAmount(String(debtAmount))
+    setDate(localTodayISO())
+    setShowCal(false)
     setError('')
     const t = setTimeout(() => {
       const el = inputRef.current
@@ -56,7 +88,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         await createSettlement({
           amount: parsed,
           payerId,
-          settledAt: new Date(TODAY_ISO() + 'T00:00:00'),
+          settledAt: ymdToUTCNoon(date),
         })
         onMutated()
         onClose()
@@ -138,7 +170,30 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
           </div>
         )}
 
-        <div className="flex gap-2 mt-5">
+        {/* Date picker */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowCal(v => !v)}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] cursor-pointer text-left"
+            style={{ background: 'var(--bg)', border: '1px solid var(--hairline)' }}
+          >
+            <CalIcon />
+            <div className="flex-1 text-left">
+              <div className="text-[13px] font-medium" style={{ color: 'var(--ink)' }}>
+                {dateLabel(date)}
+              </div>
+              <div className="text-[11px] mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                {date === localTodayISO() ? '今天' : weekday(date)}
+              </div>
+            </div>
+            <Chevron />
+          </button>
+          {showCal && (
+            <MiniCalendar value={date} onChange={d => { setDate(d); setShowCal(false) }} />
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-4">
           <button
             onClick={handleConfirm}
             disabled={!parsed || pending}
