@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer,
-  timestamp, date, boolean, unique,
+  timestamp, date,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
