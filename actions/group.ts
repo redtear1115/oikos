@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups, groupBalance } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { eq, or } from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
 
 export async function getMyGroup() {
   const supabase = await createClient()
@@ -48,4 +49,25 @@ export async function createGroup(name: string) {
   })
 
   return group
+}
+
+export async function updateGroupName(name: string): Promise<{ ok: true }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const trimmed = name.trim()
+  if (!trimmed) throw new Error('帳本名稱不能為空')
+  if (trimmed.length > 32) throw new Error('帳本名稱最長 32 字')
+
+  const result = await db
+    .update(oikosGroups)
+    .set({ name: trimmed })
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .returning({ id: oikosGroups.id })
+
+  if (result.length === 0) throw new Error('找不到家計簿')
+
+  revalidatePath('/settings')
+  return { ok: true }
 }
