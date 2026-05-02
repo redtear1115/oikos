@@ -1,0 +1,70 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { PlusIcon } from './PlusIcon'
+import { HomeIndicator } from './HomeIndicator'
+import { NavHomeIcon, NavListIcon, NavAssetsIcon, NavSettingsIcon } from './TabIcons'
+
+interface Props {
+  onAddClick: () => void
+}
+
+const TABS = [
+  { id: 'home', label: '首頁', href: '/dashboard', icon: NavHomeIcon },
+  { id: 'list', label: '紀錄', href: '/coming-soon?next=list', icon: NavListIcon },
+  { id: 'assets', label: '資產', href: '/coming-soon?next=assets', icon: NavAssetsIcon },
+  { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
+] as const
+
+export function BottomNav({ onAddClick }: Props) {
+  const pathname = usePathname()
+
+  const getActiveTab = (): typeof TABS[number]['id'] => {
+    if (pathname === '/dashboard') return 'home'
+    if (pathname === '/settings') return 'settings'
+    return 'home'
+  }
+
+  const activeId = getActiveTab()
+
+  return (
+    <>
+      <div className="absolute left-0 right-0 bottom-0 z-[80] h-[78px] flex pb-[22px]"
+        style={{ background: 'var(--surface)', borderTop: '1px solid var(--hairline)' }}>
+        <NavTab tab={TABS[0]} active={activeId === TABS[0].id} />
+        <NavTab tab={TABS[1]} active={activeId === TABS[1].id} />
+        <div className="w-[76px] shrink-0" />
+        <NavTab tab={TABS[2]} active={activeId === TABS[2].id} />
+        <NavTab tab={TABS[3]} active={activeId === TABS[3].id} />
+      </div>
+
+      <button
+        onClick={onAddClick}
+        className="absolute left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
+        style={{
+          background: 'var(--ink)',
+          color: '#fff',
+          boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
+        }}>
+        <PlusIcon size={26} />
+      </button>
+
+      <HomeIndicator />
+    </>
+  )
+}
+
+function NavTab({ tab, active }: { tab: typeof TABS[number]; active: boolean }) {
+  const Icon = tab.icon
+  const color = active ? 'var(--ink)' : 'var(--ink-3)'
+  return (
+    <Link href={tab.href} className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
+      style={{ color }}>
+      <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
+      <span className="text-[10px] tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
+        {tab.label}
+      </span>
+    </Link>
+  )
+}
