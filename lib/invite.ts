@@ -28,6 +28,6 @@ export function validateInviteAcceptance(
   if (invite.expiresAt < now) return { ok: false, error: '邀請連結已過期' }
   if (!group) return { ok: false, error: '找不到群組' }
   if (group.memberB !== null) return { ok: false, error: '此帳本已有兩位成員' }
-  if (group.memberA === userId) return { ok: false, error: '你已經是此帳本的成員' }
+  if (group.memberA === userId || group.memberB === userId) return { ok: false, error: '你已經是此帳本的成員' }
   return { ok: true }
 }

@@ -52,4 +52,10 @@ describe('validateInviteAcceptance', () => {
     const result = validateInviteAcceptance(baseInvite, baseGroup, 'user-a')
     expect(result).toMatchObject({ ok: false, error: '你已經是此帳本的成員' })
   })
+
+  it('rejects when user is already memberB', () => {
+    const group = { ...baseGroup, memberB: 'user-b' }
+    const result = validateInviteAcceptance(baseInvite, group, 'user-b')
+    expect(result).toMatchObject({ ok: false, error: '此帳本已有兩位成員' })
+  })
 })

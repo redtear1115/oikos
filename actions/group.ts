@@ -24,7 +24,12 @@ export async function createGroup(name: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const existing = await getMyGroup()
+  const [existing] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+
   if (existing) throw new Error('Already in a group')
 
   const [group] = await db.transaction(async (tx) => {

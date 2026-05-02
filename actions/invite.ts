@@ -4,7 +4,7 @@ import { db } from '@/lib/db/client'
 import { groupInvites, oikosGroups } from '@/lib/db/schema'
 import { generateToken, getInviteUrl, validateInviteAcceptance } from '@/lib/invite'
 import { createClient } from '@/lib/supabase/server'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 
 export async function createInvite(groupId: string): Promise<string> {
   const supabase = await createClient()
@@ -43,15 +43,18 @@ export async function acceptInvite(token: string): Promise<string> {
   if (!result.ok) throw new Error(result.error)
 
   await db.transaction(async (tx) => {
-    await tx
+    const updated = await tx
       .update(oikosGroups)
       .set({ memberB: user.id })
-      .where(eq(oikosGroups.id, invite.groupId))
+      .where(and(eq(oikosGroups.id, invite.groupId), isNull(oikosGroups.memberB)))
+      .returning()
+
+    if (updated.length === 0) throw new Error('此帳本已有兩位成員')
 
     await tx
       .update(groupInvites)
       .set({ acceptedAt: new Date() })
-      .where(eq(groupInvites.token, token))
+      .where(and(eq(groupInvites.token, token), isNull(groupInvites.acceptedAt)))
   })
 
   return invite.groupId
