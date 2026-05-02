@@ -4,11 +4,12 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 
 export default function SignInPage() {
   const handleSignIn = async () => {
+    const next = new URLSearchParams(window.location.search).get('next') ?? '/dashboard'
     const supabase = getSupabaseClient()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     })
   }
