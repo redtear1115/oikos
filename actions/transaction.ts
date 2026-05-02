@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { isValidCategoryId, type CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import { listTransactionsPaged, type TxnCursor } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, type TxnCursor, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
+import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -185,6 +186,7 @@ export interface PagedTxnRow {
 export async function loadMoreTransactions(
   cursor: TxnCursor | null,
   limit = 20,
+  filterWire?: TxnFilterWire,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -197,7 +199,26 @@ export async function loadMoreTransactions(
     .limit(1)
   if (!group) throw new Error('找不到家計簿')
 
-  const rows = await listTransactionsPaged(group.id, cursor, limit)
+  let resolved: ResolvedTxnFilter | undefined
+  if (filterWire) {
+    const f = fromWire(filterWire)
+    let paidBy: string | null = null
+    if (f.payer === 'mine') paidBy = user.id
+    else if (f.payer === 'theirs') {
+      const partner = group.memberA === user.id ? group.memberB : group.memberA
+      // If no partner yet, "對方" filter matches nothing — emit an impossible UUID so
+      // the SQL returns 0 rows instead of crashing on a NULL comparison.
+      paidBy = partner ?? '00000000-0000-0000-0000-000000000000'
+    }
+    resolved = {
+      paidBy,
+      splitTypes: f.split === 'all' ? [] : [f.split],
+      categories: Array.from(f.categories),
+      excludeSettlements: hidesSettlements(f),
+    }
+  }
+
+  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
