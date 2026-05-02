@@ -51,7 +51,7 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
       <BalanceHero
         rawBalance={balance}
         onAddClick={() => setAddOpen(true)}
-        onSettleClick={() => { /* Phase 1c */ }}
+        onSettleMutated={handleMutated}
       />
       <TransactionFeed
         initial={recent}
