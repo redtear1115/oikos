@@ -110,7 +110,13 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
       )
       setSplit(initial.splitType)
       setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
-      setDate(initial.transactedAt.slice(0, 10))
+      // Use LOCAL date components, not the UTC ISO prefix — otherwise a row stored at
+      // local midnight (e.g. 2026-05-02 00:00 in UTC+8 = 2026-05-01T16:00:00Z) would
+      // show as 2026-05-01 in the picker and silently shift one day on save.
+      const dt = new Date(initial.transactedAt)
+      const localYMD =
+        `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+      setDate(localYMD)
     } else {
       setAmount('')
       setDesc('')

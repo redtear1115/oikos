@@ -64,6 +64,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
   })
 
   revalidatePath('/dashboard')
+  revalidatePath('/records')
   return { id: created.id }
 }
 
@@ -94,6 +95,7 @@ export async function softDeleteTransaction(transactionId: string): Promise<void
   })
 
   revalidatePath('/dashboard')
+  revalidatePath('/records')
 }
 
 export interface EditTransactionInput {

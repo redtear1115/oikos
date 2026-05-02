@@ -33,6 +33,7 @@ export function RecordsList({ initial, pageSize }: Props) {
 
   const handleLoadMore = () => {
     if (items.length === 0) return
+    setError('')
     const last = items[items.length - 1]
     startLoading(async () => {
       try {
