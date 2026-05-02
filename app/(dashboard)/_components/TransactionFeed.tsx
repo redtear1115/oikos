@@ -60,7 +60,11 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       {label && <div className="px-6 pt-2 pb-1">{label}</div>}
 
       {groups.map((g) => {
-        const total = g.items.reduce((acc, t) => acc + t.amount, 0)
+        // Only sum transaction amounts — settlements are transfers, not spend, so
+        // including them in the month total inflates the figure misleadingly.
+        const total = g.items
+          .filter((t) => t.kind === 'transaction')
+          .reduce((acc, t) => acc + t.amount, 0)
         return (
           <div key={g.monthKey}>
             <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} />

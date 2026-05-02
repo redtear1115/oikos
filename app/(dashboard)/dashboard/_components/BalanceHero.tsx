@@ -99,10 +99,9 @@ export function BalanceHero({ rawBalance, onAddClick, onSettleMutated }: Props) 
           debtAmount={amount}
           viewerIsDebtor={balance < 0}
           onClose={() => setSettleOpen(false)}
-          onMutated={() => {
-            onSettleMutated?.()
-            setSettleOpen(false)
-          }}
+          // onMutated signals success to the parent; SettlementForm itself calls
+          // onClose() afterwards, so we don't double-close here.
+          onMutated={() => onSettleMutated?.()}
         />
       )}
     </div>
