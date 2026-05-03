@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { viewerBalance } from '@/lib/balance'
 import { SettlementForm } from './SettlementForm'
+import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 
 interface Props {
   rawBalance: number  // member_a perspective (positive = b owes a)
@@ -16,7 +17,25 @@ interface Props {
 
 export function BalanceHero({ rawBalance, onAddClick, onSettleMutated }: Props) {
   const { viewer, partner, viewerIsA } = useMember()
-  const balance = viewerBalance(rawBalance, viewerIsA)
+  const [displayedRaw, setDisplayedRaw] = useState(rawBalance)
+  const [fading, setFading] = useState(false)
+
+  // Sync if parent prop changes (e.g. after our own mutation router.refresh).
+  useEffect(() => { setDisplayedRaw(rawBalance) }, [rawBalance])
+
+  useRealtimeEvents((event) => {
+    if (event.kind === 'balance-change') {
+      // The realtime payload is in member_a's perspective (raw). Cross-fade.
+      setFading(true)
+      setTimeout(() => {
+        setDisplayedRaw(event.balance)
+        setFading(false)
+      }, 150)
+    }
+    // Other event kinds are handled by TransactionFeed; no-op here.
+  })
+
+  const balance = viewerBalance(displayedRaw, viewerIsA)
   const [settleOpen, setSettleOpen] = useState(false)
 
   // balance > 0 → 對方 欠你; balance < 0 → 你 欠對方; balance == 0 → 打平
@@ -59,12 +78,13 @@ export function BalanceHero({ rawBalance, onAddClick, onSettleMutated }: Props) 
               <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
               <span>{verb}</span>
             </div>
-            <div className="tnum leading-[1.05] tracking-[-1.4px]"
+            <div className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
               style={{
                 fontFamily: 'var(--font-numeric)',
                 fontSize: 44,
                 fontWeight: 600,
                 color: 'var(--ink)',
+                opacity: fading ? 0 : 1,
               }}>
               <span className="text-[22px] font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
               {amount.toLocaleString('en-US')}
