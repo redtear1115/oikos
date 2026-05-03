@@ -50,40 +50,38 @@ export function SoloBanner({ onDismiss }: Props = {}) {
 
   return (
     <div className="px-5 pt-6 pb-5">
-      <div
-        className="relative flex items-center gap-[14px] p-4 rounded-2xl"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      >
-        {onDismiss && (
-          <button
-            type="button"
-            onClick={onDismiss}
-            aria-label="關閉提示"
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-[15px]"
-            style={{ color: 'var(--ink-3)' }}
-          >
-            ×
-          </button>
-        )}
+      <div className="flex items-start gap-[14px]">
         <Avatar who="T" initial="?" src={null} size={44} />
-        <div className="flex-1 min-w-0 pr-6">
-          <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--ink)' }}>
-            還在等對方加入
+        <div className="flex-1 min-w-0 pt-[2px]">
+          <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
+            <span className="font-semibold" style={{ color: 'var(--ink)' }}>還在等對方加入</span>
           </div>
           <div className="text-xs" style={{ color: 'var(--ink-2)' }}>
             傳連結邀請他
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleInvite}
-          disabled={pending}
-          className="h-9 px-4 rounded-full border-0 text-white text-sm font-medium cursor-pointer disabled:opacity-50"
-          style={{ background: 'var(--accent)' }}
-        >
-          {pending ? '產生中…' : '傳送邀請'}
-        </button>
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="關閉提示"
+            className="self-center text-[22px] leading-none bg-transparent border-0 cursor-pointer p-1"
+            style={{ color: 'var(--ink-3)' }}
+          >
+            ×
+          </button>
+        )}
       </div>
+
+      <button
+        type="button"
+        onClick={handleInvite}
+        disabled={pending}
+        className="mt-[18px] w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center disabled:opacity-50"
+        style={{ background: 'var(--accent)' }}
+      >
+        {pending ? '產生中…' : '傳送邀請'}
+      </button>
 
       {toast && (
         <div className="mt-3 text-xs text-center" style={{ color: 'var(--ink-2)' }}>
