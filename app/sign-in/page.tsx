@@ -41,6 +41,7 @@ export default function SignInPage() {
 
       <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">
         <button
+          type="button"
           onClick={handleSignIn}
           className="w-full h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer flex items-center justify-center gap-2"
           style={{ background: 'var(--ink)' }}
