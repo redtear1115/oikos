@@ -45,7 +45,21 @@ export function RealtimeProvider({ groupId, children }: Props) {
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+
+    // We need a fresh user JWT BEFORE subscribing — the channel join carries the
+    // token Supabase Realtime uses to evaluate auth.uid() inside RLS policies.
+    // Subscribing before the session loads sends an anonymous join, RLS denies
+    // every row, and no postgres_changes events ever reach the client.
+    const setup = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (cancelled) return
+      if (session) {
+        supabase.realtime.setAuth(session.access_token)
+      }
+
+      channel = supabase
       .channel(`group:${groupId}`)
       .on(
         'postgres_changes',
@@ -88,19 +102,33 @@ export function RealtimeProvider({ groupId, children }: Props) {
           dispatch({ kind: 'group-updated' })
         })
 
-    let wasSubscribed = false
-    channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
-      if (status === 'SUBSCRIBED') {
-        if (wasSubscribed) {
-          // This is a re-subscribe after a disconnect — tell subscribers to refetch.
-          dispatch({ kind: 'reconnect' })
+      let wasSubscribed = false
+      channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
+        if (status === 'SUBSCRIBED') {
+          if (wasSubscribed) {
+            // This is a re-subscribe after a disconnect — tell subscribers to refetch.
+            dispatch({ kind: 'reconnect' })
+          }
+          wasSubscribed = true
         }
-        wasSubscribed = true
-      }
+      })
+    }
+
+    setup()
+
+    // Refresh the channel auth when the user's session changes (e.g. token refresh
+    // after ~1 hour). Without this, the channel keeps using a stale JWT and RLS
+    // starts denying once the token expires, even though our cookie session is
+    // still valid.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: authSub } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+      if (session) supabase.realtime.setAuth(session.access_token)
     })
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      authSub.subscription.unsubscribe()
+      if (channel) supabase.removeChannel(channel)
     }
   }, [groupId, dispatch])
 
