@@ -79,6 +79,12 @@ export function RealtimeProvider({ groupId, children }: Props) {
           const b = payload.new as { balance: number; version: number }
           dispatch({ kind: 'balance-change', balance: b.balance, version: b.version })
         })
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'OikosGroups', filter: `id=eq.${groupId}` },
+        () => {
+          dispatch({ kind: 'group-updated' })
+        })
 
     let wasSubscribed = false
     channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
