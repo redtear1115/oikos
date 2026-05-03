@@ -6,6 +6,7 @@ export interface MemberInfo {
   id: string
   initial: string
   displayName: string
+  avatarUrl: string | null
 }
 
 export interface MemberContextValue {
