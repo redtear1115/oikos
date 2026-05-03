@@ -5,7 +5,9 @@ import { CompactRow, type CompactRowProps } from '@/app/(dashboard)/dashboard/_c
 import { MonthSection } from '@/app/(dashboard)/records/_components/MonthSection'
 import { groupByMonth } from '@/lib/groupByMonth'
 import { loadMoreTransactions, type PagedTxnRow } from '@/actions/transaction'
-import { toWire, type TxnFilter } from '@/lib/filter'
+import { toWire, type TxnFilter, matchesFilter, type FilterableRow } from '@/lib/filter'
+import { useRealtimeEvents } from './RealtimeProvider'
+import { useMember } from './MemberContext'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -70,6 +72,95 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     })
   }
 
+  const { viewer, partner } = useMember()
+
+  useRealtimeEvents((event) => {
+    if (event.kind === 'reconnect') {
+      // Refetch page 1 (with current filter, if any) to re-align.
+      startLoading(async () => {
+        try {
+          const fresh = await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined)
+          setItems(fresh)
+          setHasMore(fresh.length === pageSize)
+        } catch {
+          // Silent — reconnect refetch is best-effort.
+        }
+      })
+      return
+    }
+
+    if (event.kind === 'txn-insert') {
+      const row = event.row
+      const feed = {
+        id: row.id,
+        amount: row.amount,
+        splitType: row.splitType,
+        description: row.description,
+        category: row.category,
+        paidBy: row.paidBy,
+        transactedAt: row.transactedAt,
+        createdAt: row.createdAt,
+        kind: 'transaction' as const,
+      }
+      if (filter) {
+        const f: FilterableRow = { paidBy: row.paidBy, splitType: row.splitType, category: row.category, kind: 'transaction' }
+        if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
+      }
+      setItems((cur) => {
+        if (cur.some((r) => r.id === row.id)) return cur  // dedupe (own-write echo)
+        return [feed, ...cur]
+      })
+      requestAnimationFrame(() => {
+        document.querySelector(`[data-rt-id="${row.id}"]`)?.classList.add('rt-flash')
+      })
+    } else if (event.kind === 'txn-update') {
+      const row = event.row
+      if (row.deletedAt) {
+        const el = document.querySelector(`[data-rt-id="${row.id}"]`)
+        el?.classList.add('rt-fading')
+        setTimeout(() => {
+          setItems((cur) => cur.filter((r) => r.id !== row.id))
+        }, 500)
+      }
+      // Non-delete UPDATE shouldn't happen in our flow (edits = soft-delete + insert),
+      // but if it does, leave items as-is to avoid jitter.
+    } else if (event.kind === 'settle-insert' || event.kind === 'settle-update') {
+      const row = event.row
+      if (event.kind === 'settle-update' && row.deletedAt) {
+        const el = document.querySelector(`[data-rt-id="${row.id}"]`)
+        el?.classList.add('rt-fading')
+        setTimeout(() => {
+          setItems((cur) => cur.filter((r) => r.id !== row.id))
+        }, 500)
+        return
+      }
+      if (event.kind === 'settle-insert') {
+        const feed = {
+          id: row.id,
+          amount: row.amount,
+          splitType: null,
+          description: row.note ?? '還款',
+          category: 'settle',
+          paidBy: row.paidBy,
+          transactedAt: row.settledAt,
+          createdAt: row.createdAt,
+          kind: 'settlement' as const,
+        }
+        if (filter) {
+          const f: FilterableRow = { paidBy: row.paidBy, splitType: null, category: 'settle', kind: 'settlement' }
+          if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
+        }
+        setItems((cur) => {
+          if (cur.some((r) => r.id === row.id)) return cur
+          return [feed, ...cur]
+        })
+        requestAnimationFrame(() => {
+          document.querySelector(`[data-rt-id="${row.id}"]`)?.classList.add('rt-flash')
+        })
+      }
+    }
+  })
+
   if (items.length === 0) {
     return <>{emptyState}</>
   }
@@ -94,12 +185,13 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
             >
               {g.items.map((tx, i) => (
-                <CompactRow
-                  key={tx.id}
-                  tx={tx as CompactRowProps['tx']}
-                  isLast={i === g.items.length - 1}
-                  onClick={() => onItemClick(tx)}
-                />
+                <div key={tx.id} data-rt-id={tx.id}>
+                  <CompactRow
+                    tx={tx as CompactRowProps['tx']}
+                    isLast={i === g.items.length - 1}
+                    onClick={() => onItemClick(tx)}
+                  />
+                </div>
               ))}
             </div>
           </div>

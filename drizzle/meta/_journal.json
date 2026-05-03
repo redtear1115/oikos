@@ -8,6 +8,13 @@
       "when": 1777725458963,
       "tag": "0000_curly_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777772563352,
+      "tag": "0001_pg_cron_cleanup",
+      "breakpoints": true
     }
   ]
 }

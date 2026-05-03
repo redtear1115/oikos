@@ -4,8 +4,9 @@ import { db } from '@/lib/db/client'
 import { cashTransactions, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
-import { isValidCategoryId, type CategoryId } from '@/lib/categories'
+import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
+import { validateTransactionInput } from '@/lib/validators'
 import { listTransactionsPaged, type TxnCursor, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
 import { eq, or, and, isNull } from 'drizzle-orm'
@@ -26,13 +27,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
   if (!user) throw new Error('Unauthorized')
 
   // Validate
-  if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    throw new Error('金額必須是正整數')
-  }
-  const description = input.description.trim()
-  if (!description) throw new Error('描述不能為空')
-  const category = isValidCategoryId(input.category) ? input.category : 'other'
-  if (category === 'settle') throw new Error('不可使用此分類')
+  const validated = validateTransactionInput(input)
 
   // Find viewer's group
   const [group] = await db
@@ -52,12 +47,12 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
       .insert(cashTransactions)
       .values({
         groupId: group.id,
-        paidBy: input.payerId,
-        amount: input.amount,
-        splitType: input.splitType,
-        description,
-        category,
-        transactedAt: input.transactedAt,
+        paidBy: validated.payerId,
+        amount: validated.amount,
+        splitType: validated.splitType,
+        description: validated.description,
+        category: validated.category,
+        transactedAt: validated.transactedAt,
       })
       .returning({ id: cashTransactions.id })
     await recalcGroupBalance(group.id, tx)
@@ -115,13 +110,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
   if (!user) throw new Error('Unauthorized')
 
   // Validate (mirror createTransaction)
-  if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    throw new Error('金額必須是正整數')
-  }
-  const description = input.description.trim()
-  if (!description) throw new Error('描述不能為空')
-  const category = isValidCategoryId(input.category) ? input.category : 'other'
-  if (category === 'settle') throw new Error('不可使用此分類')
+  const validated = validateTransactionInput(input)
 
   const [group] = await db
     .select()
@@ -152,12 +141,12 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
       .insert(cashTransactions)
       .values({
         groupId: group.id,
-        paidBy: input.payerId,
-        amount: input.amount,
-        splitType: input.splitType,
-        description,
-        category,
-        transactedAt: input.transactedAt,
+        paidBy: validated.payerId,
+        amount: validated.amount,
+        splitType: validated.splitType,
+        description: validated.description,
+        category: validated.category,
+        transactedAt: validated.transactedAt,
       })
       .returning({ id: cashTransactions.id })
 

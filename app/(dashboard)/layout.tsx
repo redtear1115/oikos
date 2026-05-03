@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups, profiles } from '@/lib/db/schema'
 import { eq, or, inArray } from 'drizzle-orm'
 import { ViewerProvider } from './_components/ViewerProvider'
+import { RealtimeProvider } from './_components/RealtimeProvider'
 import type { MemberContextValue } from './_components/MemberContext'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -50,9 +51,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <ViewerProvider value={value}>
-      <div className="relative max-w-md mx-auto min-h-screen" style={{ background: 'var(--bg)' }}>
-        {children}
-      </div>
+      <RealtimeProvider groupId={group.id}>
+        <div className="relative max-w-md mx-auto min-h-screen" style={{ background: 'var(--bg)' }}>
+          {children}
+        </div>
+      </RealtimeProvider>
     </ViewerProvider>
   )
 }

@@ -15,6 +15,7 @@
   --debit: #D17561;
   --me-color: #3A2419;
   --them-color: #E08856;
+  --realtime-flash: #fffbe8;
 }
 
 @theme inline {
@@ -47,3 +48,20 @@ body {
 
 @keyframes blink { 50% { opacity: 0; } }
 .animate-blink { animation: blink 1s step-end infinite; }
+
+@keyframes rt-flash {
+  0%   { background: var(--realtime-flash); }
+  100% { background: transparent; }
+}
+.rt-flash {
+  animation: rt-flash 1s ease-out;
+}
+
+@keyframes rt-fade-out {
+  0%   { opacity: 1; max-height: 80px; }
+  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+}
+.rt-fading {
+  animation: rt-fade-out 0.5s ease-out forwards;
+  overflow: hidden;
+}

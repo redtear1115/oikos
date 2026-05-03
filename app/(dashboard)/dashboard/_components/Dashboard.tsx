@@ -7,8 +7,10 @@ import { BalanceHero } from './BalanceHero'
 import { EmptyState } from './EmptyState'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
+import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
+import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 
 export interface DashboardProps {
@@ -22,8 +24,11 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filter, setFilter] = useState<TxnFilter | null>(null)
 
-  const sheetOpen = addOpen || editingTx !== null || editingSettlement !== null
+  const sheetOpen = addOpen || editingTx !== null || editingSettlement !== null || filterOpen
+  const filterActive = filter !== null && isFilterActive(filter)
 
   const handleItemClick = (tx: PagedTxnRow) => {
     if (tx.kind === 'settlement') {
@@ -66,10 +71,21 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
         initial={recent}
         pageSize={pageSize}
         onItemClick={handleItemClick}
+        filter={filter ?? undefined}
         label={
-          <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
-            最近紀錄
-          </span>
+          <div className="flex items-end justify-between">
+            <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
+              最近紀錄
+            </span>
+            <button
+              onClick={() => setFilterOpen(true)}
+              className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
+              style={{ color: 'var(--ink-2)' }}
+              aria-label="開啟篩選"
+            >
+              篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+            </button>
+          </div>
         }
         emptyState={<EmptyState onAdd={() => setAddOpen(true)} />}
       />
@@ -85,6 +101,15 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
         onClose={handleClose}
         initial={editingSettlement}
         onMutated={handleMutated}
+      />
+      <FilterSheet
+        open={filterOpen}
+        current={filter ?? defaultFilter()}
+        onClose={() => setFilterOpen(false)}
+        onApply={(next) => {
+          setFilter(isFilterActive(next) ? next : null)
+          setFilterOpen(false)
+        }}
       />
     </div>
   )

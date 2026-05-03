@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { validateSettlementInput } from '@/lib/validators'
 
 export interface EditSettlementInput {
   oldId: string
@@ -27,9 +28,12 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    throw new Error('金額必須是正整數')
-  }
+  const validated = validateSettlementInput({
+    amount: input.amount,
+    payerId: input.payerId,
+    settledAt: input.settledAt,
+    note: input.note,
+  })
 
   const [group] = await db
     .select()
@@ -47,10 +51,10 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
       .insert(settlements)
       .values({
         groupId: group.id,
-        paidBy: input.payerId,
-        amount: input.amount,
-        note: input.note?.trim() || null,
-        settledAt: input.settledAt,
+        paidBy: validated.payerId,
+        amount: validated.amount,
+        note: validated.note,
+        settledAt: validated.settledAt,
       })
       .returning({ id: settlements.id })
     await recalcGroupBalance(group.id, tx)
@@ -97,9 +101,12 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    throw new Error('金額必須是正整數')
-  }
+  const validated = validateSettlementInput({
+    amount: input.amount,
+    payerId: input.payerId,
+    settledAt: input.settledAt,
+    note: input.note,
+  })
 
   const [group] = await db
     .select()
@@ -128,10 +135,10 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
       .insert(settlements)
       .values({
         groupId: group.id,
-        paidBy: input.payerId,
-        amount: input.amount,
-        note: input.note?.trim() || null,
-        settledAt: input.settledAt,
+        paidBy: validated.payerId,
+        amount: validated.amount,
+        note: validated.note,
+        settledAt: validated.settledAt,
       })
       .returning({ id: settlements.id })
 
