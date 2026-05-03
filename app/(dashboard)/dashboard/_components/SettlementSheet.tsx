@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
+import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
@@ -30,24 +32,6 @@ function dateLabel(iso: string) {
 function weekday(iso: string) {
   const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
   return days[new Date(iso + 'T00:00:00').getDay()]
-}
-
-function CalIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="3" y="5" width="16" height="14" rx="3" stroke="#5C544A" strokeWidth="1.5" />
-      <path d="M3 9h16" stroke="#5C544A" strokeWidth="1.5" />
-      <path d="M7 3v4M15 3v4" stroke="#5C544A" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function Chevron() {
-  return (
-    <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
-      <path d="M1 1l5 5-5 5" stroke="var(--ink-3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
 }
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
@@ -101,9 +85,10 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
     })
   }
 
-  const handleDelete = () => {
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const performDelete = () => {
     if (!initial) return
-    if (!confirm('確定刪除這筆還款？')) return
+    setConfirmingDelete(false)
     startTransition(async () => {
       try {
         await softDeleteSettlement(initial.id)
@@ -245,13 +230,14 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           {/* Delete */}
           <div className="px-5 pb-2">
             <button
-              onClick={handleDelete}
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
               disabled={pending}
               className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
               style={{
                 background: 'transparent',
-                color: '#B85A48',
-                border: '1px solid rgba(184, 90, 72, 0.25)',
+                color: 'var(--destructive)',
+                border: '1px solid var(--destructive-soft)',
               }}
             >
               刪除這筆
@@ -270,6 +256,16 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           {error}
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmingDelete && open}
+        title="刪除這筆還款？"
+        description="這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。"
+        confirmLabel="刪除"
+        pending={pending}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={performDelete}
+      />
     </>
   )
 }

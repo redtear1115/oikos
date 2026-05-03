@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
@@ -25,24 +26,6 @@ function dateLabel(iso: string) {
 function weekday(iso: string) {
   const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
   return days[new Date(iso + 'T00:00:00').getDay()]
-}
-
-function CalIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-      <rect x="3" y="5" width="16" height="14" rx="3" stroke="#5C544A" strokeWidth="1.5" />
-      <path d="M3 9h16" stroke="#5C544A" strokeWidth="1.5" />
-      <path d="M7 3v4M15 3v4" stroke="#5C544A" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function Chevron() {
-  return (
-    <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
-      <path d="M1 1l5 5-5 5" stroke="var(--ink-3)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
 }
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
@@ -178,7 +161,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] cursor-pointer text-left"
             style={{ background: 'var(--bg)', border: '1px solid var(--hairline)' }}
           >
-            <CalIcon />
+            <CalIcon size={20} />
             <div className="flex-1 text-left">
               <div className="text-[13px] font-medium" style={{ color: 'var(--ink)' }}>
                 {dateLabel(date)}

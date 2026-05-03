@@ -57,7 +57,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           className="text-[11px] flex items-center gap-1.5"
           style={{ color: 'var(--ink-3)' }}
         >
-          {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} src={payerAvatar} size={12} /> {payerLabel}
+          {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} src={payerAvatar} size={16} /> {payerLabel}
         </div>
       </div>
       <div className="text-right">
