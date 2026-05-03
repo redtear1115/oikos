@@ -6,30 +6,32 @@ afterEach(() => {
 })
 
 describe('shareInviteLink', () => {
-  it('uses navigator.share when available', async () => {
+  it('copies first then opens native share when available', async () => {
     const share = vi.fn().mockResolvedValue(undefined)
-    const writeText = vi.fn()
+    const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { share, clipboard: { writeText } })
 
     const result = await shareInviteLink('https://example.com/invite/abc')
+    // Both happen — clipboard first as a desktop safety net, share on top.
+    expect(writeText).toHaveBeenCalledWith('https://example.com/invite/abc')
     expect(share).toHaveBeenCalledWith({ title: 'Futari 邀請', url: 'https://example.com/invite/abc' })
-    expect(writeText).not.toHaveBeenCalled()
     expect(result).toBe('shared')
   })
 
-  it('returns "cancelled" when user aborts share', async () => {
+  it('returns "copied" when user aborts the native share sheet', async () => {
     const abort = new Error('user cancelled')
     abort.name = 'AbortError'
     const share = vi.fn().mockRejectedValue(abort)
-    const writeText = vi.fn()
+    const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { share, clipboard: { writeText } })
 
     const result = await shareInviteLink('https://example.com/invite/abc')
-    expect(result).toBe('cancelled')
-    expect(writeText).not.toHaveBeenCalled()
+    // Clipboard succeeded before the cancelled share, so caller can still toast.
+    expect(writeText).toHaveBeenCalledWith('https://example.com/invite/abc')
+    expect(result).toBe('copied')
   })
 
-  it('falls back to clipboard when navigator.share missing', async () => {
+  it('returns "copied" when navigator.share is missing entirely', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { clipboard: { writeText } })
 
@@ -38,7 +40,7 @@ describe('shareInviteLink', () => {
     expect(result).toBe('copied')
   })
 
-  it('falls back to clipboard when navigator.share throws a non-AbortError', async () => {
+  it('returns "copied" when navigator.share throws a non-AbortError', async () => {
     const share = vi.fn().mockRejectedValue(new Error('NotAllowedError'))
     const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { share, clipboard: { writeText } })
@@ -49,8 +51,17 @@ describe('shareInviteLink', () => {
     expect(result).toBe('copied')
   })
 
-  it('throws when neither share nor clipboard is available', async () => {
+  it('throws when neither clipboard nor share is available', async () => {
     vi.stubGlobal('navigator', {})
-    await expect(shareInviteLink('https://example.com/invite/abc')).rejects.toThrow('剪貼簿不可用')
+    await expect(shareInviteLink('https://example.com/invite/abc')).rejects.toThrow('連結無法傳送')
+  })
+
+  it('still returns "shared" if clipboard is unavailable but share works', async () => {
+    const share = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { share })  // no clipboard
+
+    const result = await shareInviteLink('https://example.com/invite/abc')
+    expect(share).toHaveBeenCalledOnce()
+    expect(result).toBe('shared')
   })
 })
