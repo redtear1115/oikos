@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createGroup } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
@@ -26,6 +26,14 @@ export default function SetupForm() {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
+  }, [])
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = name.trim()
@@ -46,7 +54,8 @@ export default function SetupForm() {
 
   const flashToast = (msg: string) => {
     setToast(msg)
-    setTimeout(() => setToast(null), 2000)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToast(null), 2000)
   }
 
   const handleCopy = async () => {
@@ -118,6 +127,7 @@ export default function SetupForm() {
               {inviteUrl}
             </div>
             <button
+              type="button"
               onClick={handleCopy}
               className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
               style={{ background: 'var(--ink)', color: '#fff' }}
@@ -127,6 +137,7 @@ export default function SetupForm() {
           </div>
 
           <button
+            type="button"
             onClick={handleShare}
             className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer"
             style={{ background: 'var(--accent)', color: '#fff' }}
@@ -135,6 +146,7 @@ export default function SetupForm() {
           </button>
 
           <button
+            type="button"
             onClick={handleSkip}
             className="text-sm bg-transparent border-0 cursor-pointer mt-2"
             style={{ color: 'var(--ink-2)' }}
