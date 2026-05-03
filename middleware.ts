@@ -44,5 +44,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icons/).*)'],
+  // Skip auth check on Next internals + static assets in /public.
+  // manifest.json and image files would otherwise be redirected to /sign-in for
+  // signed-out users, which the browser then tries to parse as JSON / image →
+  // "Manifest: Line 1 Syntax error" / broken icons.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)',
+  ],
 }
