@@ -1,11 +1,11 @@
 'use client'
 
-import { getSupabaseClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SignInPage() {
   const handleSignIn = async () => {
     const next = new URLSearchParams(window.location.search).get('next') ?? '/dashboard'
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

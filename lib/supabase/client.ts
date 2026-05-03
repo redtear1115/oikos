@@ -13,5 +13,3 @@ export function createClient() {
   return cached
 }
 
-/** @deprecated Use createClient() instead */
-export const getSupabaseClient = createClient
