@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createGroup, updateGroupName } from '@/actions/group'
-import { updateDisplayName } from '@/actions/profile'
+import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 
@@ -82,5 +82,40 @@ describe('updateDisplayName', () => {
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(updateDisplayName('Coco')).rejects.toThrow('Unauthorized')
+  })
+})
+
+describe('updateDefaultSplitType', () => {
+  it('happy path: half', async () => {
+    queueDbResult([{ id: 'user-a' }])  // update returning
+    const r = await updateDefaultSplitType('half')
+    expect(r).toEqual({ ok: true })
+  })
+
+  it('happy path: all_mine', async () => {
+    queueDbResult([{ id: 'user-a' }])
+    const r = await updateDefaultSplitType('all_mine')
+    expect(r).toEqual({ ok: true })
+  })
+
+  it('happy path: all_theirs', async () => {
+    queueDbResult([{ id: 'user-a' }])
+    const r = await updateDefaultSplitType('all_theirs')
+    expect(r).toEqual({ ok: true })
+  })
+
+  it('rejects invalid split type', async () => {
+    // @ts-expect-error testing runtime validation
+    await expect(updateDefaultSplitType('invalid')).rejects.toThrow(/分攤方式無效/)
+  })
+
+  it('throws if profile not found', async () => {
+    queueDbResult([])  // update returning nothing
+    await expect(updateDefaultSplitType('half')).rejects.toThrow('找不到個人資料')
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(updateDefaultSplitType('half')).rejects.toThrow('Unauthorized')
   })
 })
