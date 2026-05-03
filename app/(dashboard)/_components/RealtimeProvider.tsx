@@ -16,9 +16,13 @@ const BusContext = createContext<BusContextValue | null>(null)
 /** Subscribe a handler. Returns an unsubscribe; call from useEffect cleanup. */
 export function useRealtimeEvents(handler: Handler) {
   const ctx = useContext(BusContext)
-  // Stash handler in a ref so we don't re-subscribe on every render.
+  // Stash handler in a ref so we don't re-subscribe on every render — but update
+  // the ref inside an effect (writing to refs during render is flagged by lint
+  // and breaks under React's concurrent rendering).
   const handlerRef = useRef(handler)
-  handlerRef.current = handler
+  useEffect(() => {
+    handlerRef.current = handler
+  }, [handler])
 
   useEffect(() => {
     if (!ctx) return

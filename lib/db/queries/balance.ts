@@ -1,6 +1,10 @@
 import { sql } from 'drizzle-orm'
-import type { PgTransaction } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db/client'
+
+// The transaction handle Drizzle hands to the .transaction(cb) callback —
+// extracted from `db.transaction`'s callback signature so we don't need to
+// hand-type the deeply-generic PgTransaction<HKT, FullSchema, TablesConfig>.
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 /**
  * Recompute and persist GroupBalance from active transactions + settlements.
@@ -9,7 +13,7 @@ import { db } from '@/lib/db/client'
  */
 export async function recalcGroupBalance(
   groupId: string,
-  tx: typeof db | PgTransaction<any, any, any> = db,
+  tx: typeof db | DbTransaction = db,
 ): Promise<void> {
   await tx.execute(sql`
     UPDATE "GroupBalance"
