@@ -1,12 +1,14 @@
 'use client'
 
 import { createContext, useContext } from 'react'
+import type { SplitType } from '@/lib/balance'
 
 export interface MemberInfo {
   id: string
   initial: string
   displayName: string
   avatarUrl: string | null
+  defaultSplitType: SplitType
 }
 
 export interface MemberContextValue {

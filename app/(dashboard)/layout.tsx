@@ -37,6 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       displayName: viewerProfile.displayName,
       initial: (viewerProfile.displayName[0] ?? '?').toUpperCase(),
       avatarUrl: viewerProfile.avatarUrl ?? null,
+      defaultSplitType: viewerProfile.defaultSplitType,
       who: 'M',
     },
     partner: partnerProfile ? {
@@ -44,6 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       displayName: partnerProfile.displayName,
       initial: (partnerProfile.displayName[0] ?? '?').toUpperCase(),
       avatarUrl: partnerProfile.avatarUrl ?? null,
+      defaultSplitType: partnerProfile.defaultSplitType,
       who: 'T',
     } : null,
     viewerIsA,
