@@ -36,6 +36,13 @@
       "when": 1777796150176,
       "tag": "0004_realtime_publication_phase1_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777797426939,
+      "tag": "0005_rls_policies_phase1",
+      "breakpoints": true
     }
   ]
 }
