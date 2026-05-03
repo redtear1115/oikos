@@ -30,12 +30,14 @@ export default async function SettingsPage() {
     id: user.id,
     displayName: viewerProfile?.displayName ?? '?',
     email: user.email ?? '',
+    avatarUrl: viewerProfile?.avatarUrl ?? null,
   }
   const partner: PartnerInfo | null = partnerProfile
     ? {
         id: partnerProfile.id,
         displayName: partnerProfile.displayName,
         email: null,
+        avatarUrl: partnerProfile.avatarUrl ?? null,
       }
     : null
 

@@ -8,8 +8,8 @@ import { LogoutButton } from './LogoutButton'
 import { updateGroupName } from '@/actions/group'
 import { updateDisplayName } from '@/actions/profile'
 
-export interface ViewerInfo { id: string; displayName: string; email: string }
-export interface PartnerInfo { id: string; displayName: string; email: string | null }
+export interface ViewerInfo { id: string; displayName: string; email: string; avatarUrl: string | null }
+export interface PartnerInfo { id: string; displayName: string; email: string | null; avatarUrl: string | null }
 
 interface Props {
   viewer: ViewerInfo
@@ -53,6 +53,7 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
           <MemberRow
             who="M"
             initial={viewer.displayName[0]?.toUpperCase() ?? '?'}
+            avatarUrl={viewer.avatarUrl}
             displayName={viewer.displayName}
             email={viewer.email}
             youSuffix
@@ -63,6 +64,7 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
               <MemberRow
                 who="T"
                 initial={partner.displayName[0]?.toUpperCase() ?? '?'}
+                avatarUrl={partner.avatarUrl}
                 displayName={partner.displayName}
                 email={partner.email ?? ''}
               />
@@ -140,11 +142,11 @@ function Row({ label, value, onClick }: { label: string; value: string; onClick:
 }
 
 function MemberRow({
-  who, initial, displayName, email, youSuffix,
-}: { who: 'M' | 'T'; initial: string; displayName: string; email: string; youSuffix?: boolean }) {
+  who, initial, avatarUrl, displayName, email, youSuffix,
+}: { who: 'M' | 'T'; initial: string; avatarUrl: string | null; displayName: string; email: string; youSuffix?: boolean }) {
   return (
     <div className="flex items-center gap-3.5 px-5 py-4">
-      <Avatar who={who} initial={initial} size={40} />
+      <Avatar who={who} initial={initial} src={avatarUrl} size={40} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
           {displayName}{youSuffix && <span className="ml-1" style={{ color: 'var(--ink-3)' }}>（你）</span>}
