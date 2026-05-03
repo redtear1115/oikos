@@ -23,6 +23,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const { viewer, partner } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
+  const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const payerLabel = tx.kind === 'settlement'
     ? (payerIsViewer ? '我還款' : `${partner?.displayName ?? '對方'} 還款`)
     : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
@@ -56,7 +57,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           className="text-[11px] flex items-center gap-1.5"
           style={{ color: 'var(--ink-3)' }}
         >
-          {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} size={12} /> {payerLabel}
+          {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} src={payerAvatar} size={12} /> {payerLabel}
         </div>
       </div>
       <div className="text-right">

@@ -39,6 +39,7 @@ export function BalanceHero({ rawBalance, onAddClick, onSettleMutated }: Props) 
 
   const amount = Math.abs(balance)
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
+  const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const canSettle = balance !== 0
 
   return (
@@ -52,7 +53,7 @@ export function BalanceHero({ rawBalance, onAddClick, onSettleMutated }: Props) 
         aria-label={canSettle ? '記錄還款 / 收款' : undefined}
       >
         <div className="flex items-start gap-[14px]">
-          <Avatar who={owedByWho} initial={showInitial} size={44} />
+          <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
           <div className="flex-1 pt-[2px] min-w-0">
             <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
               <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
