@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { LogoutButton } from './LogoutButton'
 import { updateGroupName } from '@/actions/group'
+import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
+import { shareInviteLink } from '@/lib/share'
 import type { SplitType } from '@/lib/balance'
 
 export interface ViewerInfo {
@@ -21,10 +23,11 @@ export interface PartnerInfo { id: string; displayName: string; email: string | 
 interface Props {
   viewer: ViewerInfo
   partner: PartnerInfo | null
+  groupId: string
   groupName: string
 }
 
-export function SettingsContent({ viewer, partner, groupName }: Props) {
+export function SettingsContent({ viewer, partner, groupId, groupName }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
   const isSolo = partner === null
@@ -34,6 +37,35 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
 
   const [savingSplit, startSplitTransition] = useTransition()
   const [splitError, setSplitError] = useState<string | null>(null)
+
+  // Solo-mode invite flow (only relevant when partner === null).
+  const [invitePending, startInviteTransition] = useTransition()
+  const [inviteToast, setInviteToast] = useState<string | null>(null)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const inviteToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
+    }
+  }, [])
+
+  const handleInvite = () => {
+    setInviteError(null)
+    startInviteTransition(async () => {
+      try {
+        const url = await createInvite(groupId)
+        const result = await shareInviteLink(url)
+        if (result === 'copied') {
+          setInviteToast('已複製連結')
+          if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
+          inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
+        }
+      } catch (e) {
+        setInviteError(e instanceof Error ? e.message : '發生錯誤')
+      }
+    })
+  }
 
   // In solo mode the only valid configuration is all_mine, so we lock the radio
   // to that value visually and disable interaction. The user's stored preference
@@ -100,6 +132,29 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
             </>
           )}
         </div>
+        {isSolo && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={handleInvite}
+              disabled={invitePending}
+              className="w-full h-12 rounded-[14px] border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
+              style={{ background: 'var(--accent)' }}
+            >
+              {invitePending ? '產生中…' : '邀請對方加入'}
+            </button>
+            {inviteToast && (
+              <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--ink-2)' }}>
+                {inviteToast}
+              </div>
+            )}
+            {inviteError && (
+              <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--debit)' }}>
+                {inviteError}
+              </div>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* 個人 */}

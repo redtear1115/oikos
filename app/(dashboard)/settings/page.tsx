@@ -47,6 +47,7 @@ export default async function SettingsPage() {
       <SettingsContent
         viewer={viewer}
         partner={partner}
+        groupId={group.id}
         groupName={group.name}
       />
       <BottomNavSkeleton />

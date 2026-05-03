@@ -6,12 +6,19 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
 
+interface Props {
+  /** Called when the user dismisses the banner via the × button. The parent owns the
+   *  persisted dismissal state (typically localStorage) and is responsible for
+   *  swapping in a fallback hero. */
+  onDismiss?: () => void
+}
+
 /**
  * Shown on the dashboard hero slot when the viewer is in a solo group
  * (member_b = null). Clicking the CTA generates an invite URL on demand
  * and pushes it through the Web Share API (or clipboard fallback).
  */
-export function SoloBanner() {
+export function SoloBanner({ onDismiss }: Props = {}) {
   const { group } = useMember()
   const [pending, startTransition] = useTransition()
   const [toast, setToast] = useState<string | null>(null)
@@ -44,11 +51,22 @@ export function SoloBanner() {
   return (
     <div className="px-5 pt-6 pb-5">
       <div
-        className="flex items-center gap-[14px] p-4 rounded-2xl"
+        className="relative flex items-center gap-[14px] p-4 rounded-2xl"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="關閉提示"
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-[15px]"
+            style={{ color: 'var(--ink-3)' }}
+          >
+            ×
+          </button>
+        )}
         <Avatar who="T" initial="?" src={null} size={44} />
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-6">
           <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--ink)' }}>
             還在等對方加入
           </div>

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
 import { SoloBanner } from './SoloBanner'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
@@ -12,9 +13,12 @@ import { AddSheet, type AddSheetInitial } from './AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
 import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
+
+const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 
 export interface DashboardProps {
   balance: number
@@ -40,6 +44,18 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
   const [filter, setFilter] = useState<TxnFilter | null>(null)
+
+  // SoloBanner dismissal — persisted in localStorage, hydrated on mount.
+  // SSR renders the banner; on first client paint we may swap to the fallback hero.
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setBannerDismissed(window.localStorage.getItem(SOLO_BANNER_DISMISS_KEY) === 'true')
+  }, [])
+  const handleDismissBanner = () => {
+    window.localStorage.setItem(SOLO_BANNER_DISMISS_KEY, 'true')
+    setBannerDismissed(true)
+  }
 
   const sheetOpen = addOpen || editingTx !== null || editingSettlement !== null || filterOpen
   const filterActive = filter !== null && isFilterActive(filter)
@@ -77,7 +93,26 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
     <div className="relative min-h-screen pb-[92px]">
       <BrandHeader />
       {isSolo ? (
-        <SoloBanner />
+        bannerDismissed ? (
+          <div className="px-5 pt-6 pb-5">
+            <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
+              <span>你還在獨自記帳</span>
+              <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>
+                邀請對方 →
+              </Link>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center gap-1.5"
+              style={{ background: 'var(--ink)' }}
+            >
+              <PlusIcon size={16} />新增一筆
+            </button>
+          </div>
+        ) : (
+          <SoloBanner onDismiss={handleDismissBanner} />
+        )
       ) : (
         <BalanceHero
           rawBalance={balance}
