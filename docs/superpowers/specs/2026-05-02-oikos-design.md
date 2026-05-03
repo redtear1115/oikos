@@ -1,22 +1,24 @@
 # Oikos — 整體設計規格
 
-> 家庭記帳與資產管理工具，固定兩人（夫妻／伴侶）使用。
-> 本文記錄 2026-05-02 brainstorm 的所有架構決定，作為實作依據。
+> 家庭記帳工具，固定兩人（夫妻／伴侶）使用。
+> 本文記錄架構決定，作為實作的「為什麼」依據。具體 schema / API 細節以程式碼為準。
 
 ---
 
 ## 1. Tech Stack
 
-| 層 | 選擇 | 備註 |
+| 層 | 選擇 | 為什麼 |
 |---|---|---|
-| Frontend + API | Next.js (App Router) on Vercel | API routes 處理寫入、加密、Phase 3 proxy |
-| DB | Supabase (Postgres) | schema 直接落地，Supabase pooler 處理 serverless 連線 |
-| Auth | Supabase Auth (Google OAuth) | Google 登入，取代原本規劃的 Firebase Auth |
-| ORM | Drizzle ORM | serverless 友好、TypeScript schema 定義、migration 自管 |
-| Styling | Tailwind CSS | 沿用 sibling 專案習慣 |
-| 敏感欄位加密 | AES-256 in Next.js Server Actions | key 存 Vercel env var，DB 只存 ciphertext |
-| PWA | 是 | Next.js manifest + service worker，支援加到主畫面 |
-| 環境 | 單一 Supabase project | `.env.local` 區分 dev/prod 設定，家用工具不需兩個 project |
+| Frontend + API | Next.js 16 (App Router) on Vercel | Server Actions 處理寫入；React 19 |
+| DB | Supabase (Postgres) | 一條龍 Auth + DB + Realtime；pooler 處理 serverless 連線 |
+| Auth | Supabase Auth (Google OAuth) | 取代原規劃的 Firebase Auth |
+| ORM | Drizzle ORM | TypeScript schema、migration 自管 |
+| Styling | Tailwind CSS v4 | sibling 專案習慣 |
+| 加密 | AES-256-GCM in Server Actions | key 在 Vercel env，DB 只存 ciphertext |
+| Real-time | Supabase Realtime postgres_changes | partner 異裝置變動立即反應 |
+| PWA | 是 | 加到主畫面 |
+
+單一 Supabase project；`.env.local` 區分 dev/prod。
 
 ---
 
@@ -25,242 +27,71 @@
 ```
 寫入路徑：
   Client → Next.js Server Action → Drizzle → Supabase Postgres
-  （加密、GroupBalance 重算、業務邏輯全在 Server Action）
+  （驗證、加密、GroupBalance 重算、業務邏輯全在 Server Action）
 
 讀取路徑：
-  Client → Supabase JS client → Postgres（RLS 控 group 存取）
-  （可選 real-time subscription，partner 新增 transaction 即時顯示）
+  Client → Server Component → Drizzle → Postgres
+  Realtime updates → Client subscribes → React state mutation
+
+讀取安全：RLS 確保只能看自己 group 的資料
+寫入安全：Server Action 是第一道防線；RLS 是備用安全網
 ```
 
-**RLS 策略**：讀取時 RLS 確保只能看自己 group 的資料；寫入時 Server Action 是第一道防線，RLS 是備用安全網。
+實作位置：
+- Server Actions：[actions/](actions/)
+- Validation helpers：[lib/validators.ts](lib/validators.ts)
+- DB queries：[lib/db/queries/](lib/db/queries/)
+- Realtime：[app/(dashboard)/_components/RealtimeProvider.tsx](app/%28dashboard%29/_components/RealtimeProvider.tsx)
 
 ---
 
 ## 3. 資料模型
 
-### 設計原則（沿用 CLAUDE.md，修正部分）
+### 設計原則
 
-- **ID 型別**：所有 PK 為 `uuid`，預設 `gen_random_uuid()`
-- **Timestamp**：所有時間欄位為 `timestamptz`
-- **金額**：統一 `integer`（台幣整數，無小數）
-- **軟刪除**：Transaction / Settlement / FuelLog 用 `deleted_at`；Asset 亦同
-- **不支援 update**：「編輯」= soft delete 舊紀錄 + insert 新紀錄，同一 DB transaction
-- **欠款計算**：全局計算，維護 `GroupBalance` cache，每次寫入後全量重算
+- **ID**：uuid，預設 `gen_random_uuid()`
+- **時間**：`timestamptz`
+- **金額**：`integer`（台幣，無小數）
+- **軟刪除**：Transaction / Settlement / FuelLog / Asset 用 `deleted_at`
+- **不支援 update**：「編輯」= soft delete + insert，同一 DB transaction
+- **欠款計算**：每次寫入後全量重算，cache 在 `GroupBalance` table
+- **命名**：PascalCase；避開 SQL reserved word（Group → OikosGroups、Transaction → CashTransactions）
 
 ### Schema
 
--- Table 命名慣例：PascalCase（Drizzle 會自動加引號）
--- Group / Transaction 為 PostgreSQL reserved words，加前綴區分：
---   Group → OikosGroups
---   Transaction → CashTransactions
+完整 schema 以 [lib/db/schema.ts](lib/db/schema.ts) 為準。Migration 在 [drizzle/](drizzle/)。
 
-```sql
--- 使用者（對應 Supabase auth.users）
-Profiles
-  id: uuid (PK, FK → auth.users.id)
-  display_name: text
-  avatar_url: text
-  created_at: timestamptz
-
--- 群組（固定兩人）
-OikosGroups
-  id: uuid (PK)
-  name: text
-  member_a: uuid FK → Profiles
-  member_b: uuid FK → Profiles
-  created_at: timestamptz
-
--- 群組邀請
-GroupInvites
-  id: uuid (PK)
-  group_id: uuid FK → OikosGroups
-  invited_by: uuid FK → Profiles
-  token: text UNIQUE              -- URL-safe random token
-  expires_at: timestamptz
-  accepted_at: timestamptz        -- null = 尚未接受
-  created_at: timestamptz
-
--- 欠款快取
-GroupBalance
-  group_id: uuid (PK, FK → OikosGroups)
-  balance: integer                -- 正數 = member_b 欠 member_a；負數 = member_a 欠 member_b
-  version: integer                -- optimistic locking
-  last_calculated_at: timestamptz
-
--- 記帳條目
-CashTransactions
-  id: uuid (PK)
-  group_id: uuid FK → OikosGroups
-  paid_by: uuid FK → Profiles
-  amount: integer
-  split_type: enum(all_mine, all_theirs, half)
-  description: text
-  category: text
-  asset_id: uuid nullable FK → Assets
-  invoice_number: text nullable   -- Phase 3：發票號碼，防止重複匯入
-  transacted_at: timestamptz
-  deleted_at: timestamptz
-  created_at: timestamptz
-
--- 結清紀錄
-Settlements
-  id: uuid (PK)
-  group_id: uuid FK → OikosGroups
-  paid_by: uuid FK → Profiles
-  amount: integer
-  note: text
-  settled_at: timestamptz
-  deleted_at: timestamptz
-  created_at: timestamptz
-
--- 資產 parent table
-Assets
-  id: uuid (PK)
-  group_id: uuid FK → OikosGroups
-  type: enum(car, house, child, insurance)
-  name: text
-  deleted_at: timestamptz
-  created_at: timestamptz
-
--- 車輛
-CarDetails
-  asset_id: uuid (PK, FK → Assets)
-  plate: text
-  purchased_at: date
-  purchase_price: integer
-
--- 加油紀錄
-FuelLogs
-  id: uuid (PK)
-  asset_id: uuid FK → Assets      -- 須 type=car（application 層驗證）
-  liters: integer                  -- 精度待 Phase 2 決定（見 Section 5）
-  fuel_type: enum(92, 95, 98, diesel)
-  odometer: integer
-  price_per_liter: integer         -- 精度待 Phase 2 決定（見 Section 5）
-  logged_at: timestamptz
-  deleted_at: timestamptz
-  created_at: timestamptz
-
--- 房子
-HouseDetails
-  asset_id: uuid (PK, FK → Assets)
-  owner: uuid FK → Profiles
-  address: text
-  purchased_at: date
-  purchase_price: integer
-
--- 孩子
-ChildDetails
-  asset_id: uuid (PK, FK → Assets)
-  birthday: date
-  gender: enum(male, female, other)
-  id_number_encrypted: text        -- AES-256，key 在 Vercel env var
-  insurance_id_encrypted: text     -- AES-256
-
--- 保險
-InsuranceDetails
-  asset_id: uuid (PK, FK → Assets)
-  policy_number: text
-  insurance_type: text
-  coverage_amount: integer
-  payment_date: integer            -- 每月幾號
-  expiry_date: date
-  insured_type: enum(user, child)
-  insured_user_id: uuid nullable FK → Profiles
-  insured_child_id: uuid nullable FK → Assets  -- type=child，application 層驗證
-
--- 手機條碼載具（Phase 3）
-InvoiceCredentials
-  id: uuid (PK)
-  group_id: uuid FK → OikosGroups
-  user_id: uuid FK → Profiles
-  barcode: text                    -- 手機條碼（明文）
-  verification_code_encrypted: text -- AES-256
-  created_at: timestamptz
-```
+主要 tables：
+- `Profiles`（FK → auth.users）
+- `OikosGroups`（含 member_a / member_b）
+- `GroupInvites`（token-based 7 天 expire）
+- `GroupBalance`（derived cache，每次寫入重算）
+- `CashTransactions`（核心，nullable `asset_id` 預留 Phase 2）
+- `Settlements`
+- `Assets` + `CarDetails` / `HouseDetails` / `ChildDetails` / `InsuranceDetails`（Phase 2）
+- `FuelLogs`（Phase 2，車輛專用）
+- `InvoiceCredentials`（Phase 3，加密驗證碼）
 
 ### Balance 計算規則
 
-```
-payer = member_a:
-  all_mine    → delta = 0
-  all_theirs  → delta = +amount         （b 欠 a 全額）
-  half        → delta = +ceil(amount/2) （b 欠 a 較多那半；付款人福利）
-
-payer = member_b:
-  all_mine    → delta = 0
-  all_theirs  → delta = -amount
-  half        → delta = -ceil(amount/2)
-
-settlement payer = member_a → delta = -amount
-settlement payer = member_b → delta = +amount
-```
-
-**UI 顯示**：
-```typescript
-const viewerBalance = (viewer.id === group.member_a_id) ? balance : -balance
-// viewerBalance > 0 → "對方欠你 X 元"
-// viewerBalance < 0 → "你欠對方 X 元"
-```
+詳見 [CLAUDE.md 的「Balance 計算規則」](../../../CLAUDE.md)。實作在 [lib/balance.ts](lib/balance.ts) + [lib/db/queries/balance.ts](lib/db/queries/balance.ts)（包含 recalc SQL）。
 
 ---
 
-## 4. Phase 規劃（修訂版）
+## 4. Phase 規劃
 
-### Phase 0 — 專案初始化
+| Phase | 範圍 | 狀態 |
+|---|---|---|
+| 0 | 專案建置 + Auth + Group 建立 + Invite + RLS + PWA | ✅ |
+| 1 | 核心記帳：transaction CRUD + settlement + 列表 + 篩選 + Settings + Real-time + pg_cron cleanup + 測試 | ✅ |
+| 2 | 資產管理（車輛 → 保險 → 孩子 → 房子），每筆 transaction 可關聯 asset | ⬜ |
+| 3 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
 
-- [ ] Next.js + Supabase + Drizzle + Tailwind 專案建置
-- [ ] Drizzle schema 定義 + migration workflow（local → Supabase）
-- [ ] Supabase Auth（Google OAuth）
-- [ ] `profiles` trigger（auth.users 新增時自動建 profiles）
-- [ ] Group 建立流程（第一個登入者建 group）
-- [ ] Invite flow：
-  - 建立者產生 invite link（含 token，效期 7 天）
-  - 複製 link 自行傳給對方
-  - 對方開啟 link → 登入 → 加入 group
-  - Group 滿兩人後 invite link 失效，第三人無法加入
-- [ ] 全 table 的 RLS policies 在此 Phase 設定完畢
-- [ ] PWA manifest + service worker 基本設定
-
-### Phase 1 — 核心記帳 ✦ P0
-
-- [ ] Transaction Server Action（create / soft-delete）
-- [ ] 「編輯」= soft delete + insert，UI 呈現為正常編輯按鈕（使用者不感知）
-- [ ] 分攤計算（all_mine / all_theirs / half，含 ceil 奇數規則）
-- [ ] GroupBalance Server Action（每次寫入後全量重算）
-- [ ] Settlement Server Action（create / soft-delete），支援部分結清
-- [ ] 淨欠額顯示（依 viewer 翻轉正負號）
-- [ ] Transaction list（依月份，預設當月，可切換月份）
-- [ ] Settlement 歷史列表
-- [ ] Real-time subscription（partner 新增 transaction 即時顯示）
-- [ ] `deleted_at` 超過一年的 records 由 Supabase pg_cron 定期物理刪除
-
-### Phase 2 — 資產管理 ✦ P1
-
-建立順序：**車輛 → 保險 → 孩子 → 房子**
-
-每種資產：
-- [ ] 資產 CRUD（Asset parent + 對應 detail table）
-- [ ] Transaction 表單新增「關聯資產」選項（Phase 2 才顯示）
-- [ ] 依資產篩選 transaction list
-
-**車輛額外：**
-- [ ] FuelLog CRUD
-- [ ] 油耗自動計算（本次里程 / 本次加油公升數）
-
-### Phase 3 — 雲端發票匯入 ✦ P2
-
-> 前置條件：APP_ID 申請（自然人憑證），須在 Phase 3 開始前完成。
-
-- [ ] `InvoiceCredential` 儲存（手機條碼 + 加密驗證碼）
-- [ ] Vercel API route 作為財政部 API proxy
-- [ ] 依月份拉取發票列表
-- [ ] 勾選發票 → 帶入 Transaction 表單（金額、店名預填）
-- [ ] `invoice_number` 防止重複匯入
+Phase 1 詳細功能對照 → [2026-05-02-phase-1-transactions-design.md](2026-05-02-phase-1-transactions-design.md)
 
 ---
 
-## 5. 尚未決定
+## 5. 待 Phase 2+ 決定
 
-- FuelLog `liters` 和 `price_per_liter` 的精度：用整數（毫升、分）或 decimal？待 Phase 2 實作時決定。
-- Phase 3 APP_ID 申請時程（外部依賴）。
+- FuelLog `liters` 和 `price_per_liter` 的精度（毫升/分 整數 vs decimal）
+- Phase 3 APP_ID 申請時程（外部依賴）
