@@ -37,4 +37,20 @@ describe('shareInviteLink', () => {
     expect(writeText).toHaveBeenCalledWith('https://example.com/invite/abc')
     expect(result).toBe('copied')
   })
+
+  it('falls back to clipboard when navigator.share throws a non-AbortError', async () => {
+    const share = vi.fn().mockRejectedValue(new Error('NotAllowedError'))
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { share, clipboard: { writeText } })
+
+    const result = await shareInviteLink('https://example.com/invite/abc')
+    expect(share).toHaveBeenCalledOnce()
+    expect(writeText).toHaveBeenCalledWith('https://example.com/invite/abc')
+    expect(result).toBe('copied')
+  })
+
+  it('throws when neither share nor clipboard is available', async () => {
+    vi.stubGlobal('navigator', {})
+    await expect(shareInviteLink('https://example.com/invite/abc')).rejects.toThrow('剪貼簿不可用')
+  })
 })

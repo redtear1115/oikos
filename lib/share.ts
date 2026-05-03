@@ -16,6 +16,9 @@ export async function shareInviteLink(
       // Fall through to clipboard for non-cancel errors (e.g. permission denied)
     }
   }
+  if (typeof navigator === 'undefined' || !navigator.clipboard) {
+    throw new Error('剪貼簿不可用')
+  }
   await navigator.clipboard.writeText(url)
   return 'copied'
 }
