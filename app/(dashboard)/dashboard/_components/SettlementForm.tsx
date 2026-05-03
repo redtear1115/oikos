@@ -108,6 +108,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
           <Avatar
             who={viewerIsDebtor ? 'M' : 'T'}
             initial={viewerIsDebtor ? viewer.initial : (partner?.initial ?? '?')}
+            src={viewerIsDebtor ? viewer.avatarUrl : (partner?.avatarUrl ?? null)}
             size={20}
           />
           <span>{title}</span>

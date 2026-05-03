@@ -16,10 +16,10 @@ export function BrandHeader() {
         </div>
       </div>
       <div className="flex">
-        <Avatar who="M" initial={viewer.initial} size={26} />
+        <Avatar who="M" initial={viewer.initial} src={viewer.avatarUrl} size={26} />
         {partner && (
           <div className="-ml-[7px]">
-            <Avatar who="T" initial={partner.initial} size={26} ring />
+            <Avatar who="T" initial={partner.initial} src={partner.avatarUrl} size={26} ring />
           </div>
         )}
       </div>

@@ -1,6 +1,8 @@
 import { db } from '@/lib/db/client'
 import { cashTransactions } from '@/lib/db/schema'
 import { and, eq, isNull, desc, sql } from 'drizzle-orm'
+import type { CategoryId } from '@/lib/categories'
+import type { SplitType } from '@/lib/balance'
 
 export type FeedKind = 'transaction' | 'settlement'
 
@@ -14,6 +16,18 @@ export interface FeedRow {
   transactedAt: Date
   createdAt: Date
   kind: FeedKind
+}
+
+/**
+ * Resolved filter: 誰付 dimension is collapsed to a concrete user id (or null = no filter).
+ * 分攤 / categories arrive as concrete arrays (empty array = no filter).
+ */
+export interface ResolvedTxnFilter {
+  paidBy: string | null
+  splitTypes: SplitType[]   // empty = all
+  categories: CategoryId[]  // empty = all
+  /** True when settlements should be excluded entirely. */
+  excludeSettlements: boolean
 }
 
 export interface TxnRow {
@@ -67,6 +81,7 @@ export async function listTransactionsPaged(
   groupId: string,
   cursor: TxnCursor | null,
   limit = 20,
+  filter?: ResolvedTxnFilter,
 ): Promise<FeedRow[]> {
   const txCursor = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
@@ -74,6 +89,38 @@ export async function listTransactionsPaged(
   const setCursor = cursor
     ? sql`AND (settled_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
     : sql``
+
+  // Per-branch filter clauses
+  const txPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+  const txSplit = filter && filter.splitTypes.length > 0
+    ? sql`AND split_type IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
+    : sql``
+  const txCategory = filter && filter.categories.length > 0
+    ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
+    : sql``
+
+  const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+
+  // Drop the settlements branch entirely when 分攤 / 分類 dims are active.
+  const settlementsBranch = filter?.excludeSettlements
+    ? sql``
+    : sql`
+      UNION ALL
+
+      SELECT
+        id, amount,
+        NULL::split_type AS split_type,
+        COALESCE(note, '還款') AS description,
+        'settle' AS category,
+        paid_by,
+        settled_at AS transacted_at,
+        created_at,
+        'settlement'::text AS kind
+      FROM "Settlements"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${setCursor}
+      ${setPayer}
+    `
 
   const rows = await db.execute<{
     id: string
@@ -94,21 +141,10 @@ export async function listTransactionsPaged(
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${txCursor}
-
-      UNION ALL
-
-      SELECT
-        id, amount,
-        NULL::split_type AS split_type,
-        COALESCE(note, '還款') AS description,
-        'settle' AS category,
-        paid_by,
-        settled_at AS transacted_at,
-        created_at,
-        'settlement'::text AS kind
-      FROM "Settlements"
-      WHERE group_id = ${groupId} AND deleted_at IS NULL
-      ${setCursor}
+      ${txPayer}
+      ${txSplit}
+      ${txCategory}
+      ${settlementsBranch}
     ) AS feed
     ORDER BY transacted_at DESC, created_at DESC
     LIMIT ${limit}

@@ -333,6 +333,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
                       initial={
                         w === 'M' ? viewer.initial : partner?.initial ?? '?'
                       }
+                      src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
                       size={18}
                     />
                     {w === 'M' ? '我' : '對方'}
