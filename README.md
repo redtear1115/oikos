@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Oikos
 
-## Getting Started
+> 家庭記帳工具，固定兩人（夫妻／伴侶）使用。
+> 對使用者顯示為 **Futari**；codebase 用 Oikos。
 
-First, run the development server:
+私人家庭工具，非 SaaS。所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first PWA。
+
+**Status：Phase 1 完成**（核心記帳 + Settlement + 篩選 + Settings + Real-time + pg_cron）。詳見 [CLAUDE.md](CLAUDE.md)。
+
+---
+
+## Tech Stack
+
+- **Next.js 16**（App Router）+ React 19 on Vercel
+- **Supabase**：Postgres + Auth (Google OAuth) + Realtime
+- **Drizzle ORM** + Tailwind CSS v4
+- **vitest** + jsdom
+
+---
+
+## Local Setup
+
+### 1. Install
+
+```bash
+npm install
+```
+
+### 2. 環境變數
+
+複製 `.env.local.example` 成 `.env.local`，填入 Supabase 專案設定：
+
+```bash
+cp .env.local.example .env.local
+```
+
+需要的值：
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase 專案的 API settings
+- `DATABASE_URL_DIRECT` — direct connection (5432)，給 Drizzle migrations 用
+- `DATABASE_URL` — pooler connection (6543, `?pgbouncer=true`)，給 runtime 用
+- `ENCRYPTION_KEY` — `openssl rand -hex 32` 產生
+- `NEXT_PUBLIC_APP_URL` — local dev 用 `http://localhost:3000`
+
+### 3. Supabase 一次性設定
+
+在 Supabase dashboard 確認：
+- **Auth → Providers**：啟用 Google OAuth（callback URL 加 `https://<your-domain>/auth/callback`）
+- **Database → Extensions**：啟用 `pg_cron`（給 weekly cleanup 用）
+
+### 4. Migrations
+
+```bash
+npm run db:migrate
+```
+
+Migration 會自動 apply schema + 排程 pg_cron cleanup job（每週日 03:00 物理刪除 `deleted_at > 1 year` 的 row）。
+
+### 5. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開 [http://localhost:3000](http://localhost:3000)。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Commands
 
-## Learn More
+| Command | 用途 |
+|---|---|
+| `npm run dev` | 開發 server |
+| `npm run build` | 生產 build |
+| `npm start` | 跑生產 build |
+| `npm run lint` | ESLint |
+| `npm test` | vitest watch mode |
+| `npm run test:run` | vitest 一次性 |
+| `npm run db:generate` | Drizzle：從 schema 生 migration |
+| `npm run db:migrate` | Drizzle：apply migrations |
+| `npm run db:studio` | Drizzle Studio（DB browser） |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+actions/                  Server Actions（寫入路徑）
+app/
+  (dashboard)/            登入後的 routes：dashboard / records / settings
+  auth/callback/          OAuth callback
+  invite/[token]/         加入 group 的 invite link
+  setup/                  首次登入建 group
+  sign-in/                登入頁
+lib/
+  balance.ts              分攤計算（pure）
+  filter.ts               TxnFilter 型別 + matcher（pure）
+  validators.ts           Server Action 共用驗證（pure）
+  settlement.ts           Smart chip 計算（pure）
+  categories.ts           Category 列表 + 顏色
+  realtime/event.ts       Realtime event 型別
+  db/                     Drizzle schema + queries
+  supabase/               Supabase server / browser clients
+drizzle/                  SQL migrations + journal
+__tests__/, tests/        vitest 測試
+docs/superpowers/specs/   架構規格 + 功能對照表
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy（Vercel）
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Vercel 連 GitHub repo
+2. Build settings 留預設（Next.js auto-detect）
+3. **Environment Variables**：把 `.env.local` 全部值填進去
+4. 第一次 deploy 完，記得：
+   - 把 Vercel 的 production URL 加到 Supabase Auth 的 redirect allow-list
+   - 把 production URL 設成 `NEXT_PUBLIC_APP_URL`
+
+每次 push 到 `main` 自動 deploy。
+
+---
+
+## Notes
+
+- 兩人 group：第一人登入會被導到 `/setup` 建帳本；第二人需透過第一人產的 invite link 加入
+- 記帳「編輯」是 soft delete + insert 的 atomic operation（DB 層不支援 update），UX 上使用者無感
+- `deleted_at` 超過 1 年的紀錄由 pg_cron 物理刪除，所以「編輯歷史」只保留一年
+- 沒有 forgot password / 帳號管理 UI — Google OAuth 把這些都包了
