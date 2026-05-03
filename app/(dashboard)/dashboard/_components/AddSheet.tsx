@@ -121,7 +121,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
       setAmount('')
       setDesc('')
       setCategory('food')
-      setSplit(isSolo ? 'all_mine' : 'half')
+      setSplit(isSolo ? 'all_mine' : viewer.defaultSplitType)
       setPayerWho('M')
       setDate(localTodayISO())
     }
@@ -137,7 +137,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
       el.select()
     }, 350)
     return () => clearTimeout(t)
-  }, [open, initial, viewer.id, isSolo])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo])
 
   const isEdit = !!initial
 
