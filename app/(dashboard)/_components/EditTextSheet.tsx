@@ -56,8 +56,8 @@ export function EditTextSheet({ open, title, initialValue, onSubmit, onClose, pl
     <>
       <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
       <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-[100] rounded-t-[20px] pb-6 px-5 pt-5"
-        style={{ background: 'var(--bg)', boxShadow: '0 -8px 32px rgba(0,0,0,0.12)' }}
+        className="fixed left-1/2 bottom-[28%] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] z-[100] rounded-[20px] pb-5 px-5 pt-5"
+        style={{ background: 'var(--bg)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
       >
         <div className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>{title}</div>
         <input
