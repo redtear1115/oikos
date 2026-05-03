@@ -5,15 +5,14 @@ import { profiles } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { validateName } from '@/lib/validators'
 
 export async function updateDisplayName(name: string): Promise<{ ok: true }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const trimmed = name.trim()
-  if (!trimmed) throw new Error('顯示名稱不能為空')
-  if (trimmed.length > 32) throw new Error('顯示名稱最長 32 字')
+  const trimmed = validateName(name, '顯示名稱')
 
   const result = await db
     .update(profiles)

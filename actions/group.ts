@@ -5,6 +5,7 @@ import { oikosGroups, groupBalance } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { eq, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { validateName } from '@/lib/validators'
 
 export async function getMyGroup() {
   const supabase = await createClient()
@@ -56,9 +57,7 @@ export async function updateGroupName(name: string): Promise<{ ok: true }> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const trimmed = name.trim()
-  if (!trimmed) throw new Error('帳本名稱不能為空')
-  if (trimmed.length > 32) throw new Error('帳本名稱最長 32 字')
+  const trimmed = validateName(name, '帳本名稱')
 
   const result = await db
     .update(oikosGroups)
