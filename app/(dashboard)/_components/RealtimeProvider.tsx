@@ -79,6 +79,8 @@ export function RealtimeProvider({ groupId, children }: Props) {
           const b = payload.new as { balance: number; version: number }
           dispatch({ kind: 'balance-change', balance: b.balance, version: b.version })
         })
+      // OikosGroups UPDATE fires when member_b is set after invite acceptance.
+      // Dispatch group-updated so Dashboard can router.refresh() and re-derive MemberContext.
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'OikosGroups', filter: `id=eq.${groupId}` },

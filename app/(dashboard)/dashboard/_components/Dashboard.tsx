@@ -27,9 +27,10 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const { isSolo } = useMember()
 
   useRealtimeEvents((event) => {
-    if (event.kind === 'group-updated') {
-      // Partner just accepted the invite — re-fetch the layout to get fresh
-      // MemberContext (partner profile + isSolo flips to false).
+    if (event.kind === 'group-updated' || event.kind === 'reconnect') {
+      // Partner accepted the invite (group-updated), or we reconnected after a
+      // disconnect that may have missed the event. Re-fetch the layout to get
+      // fresh MemberContext (partner profile + isSolo flips to false).
       router.refresh()
     }
   })
