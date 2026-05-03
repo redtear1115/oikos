@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
+import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { LogoutButton } from './LogoutButton'
 import { updateGroupName } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
@@ -49,6 +50,8 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
       if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
     }
   }, [])
+
+  const [installGuideOpen, setInstallGuideOpen] = useState(false)
 
   const handleInvite = () => {
     setInviteError(null)
@@ -159,6 +162,11 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
       {/* 個人 */}
       <Section title="個人">
         <Row
+          label="加到主畫面"
+          onClick={() => setInstallGuideOpen(true)}
+        />
+        <div className="mt-3" />
+        <Row
           label="顯示名稱"
           value={viewer.displayName}
           onClick={() => setEditing('name')}
@@ -247,6 +255,10 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
           refresh()
         }}
       />
+      <InstallGuide
+        open={installGuideOpen}
+        onClose={() => setInstallGuideOpen(false)}
+      />
     </>
   )
 }
@@ -260,16 +272,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Row({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
+function Row({ label, value, onClick }: { label: string; value?: string; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>
       <div className="text-sm flex items-center gap-2" style={{ color: 'var(--ink-3)' }}>
-        <span style={{ color: 'var(--ink-2)' }}>「{value}」</span>
+        {value && <span style={{ color: 'var(--ink-2)' }}>「{value}」</span>}
         <span>›</span>
       </div>
     </button>
