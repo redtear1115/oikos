@@ -1,14 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { LogoutButton } from './LogoutButton'
 import { updateGroupName } from '@/actions/group'
-import { updateDisplayName } from '@/actions/profile'
+import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
+import type { SplitType } from '@/lib/balance'
 
-export interface ViewerInfo { id: string; displayName: string; email: string; avatarUrl: string | null }
+export interface ViewerInfo {
+  id: string
+  displayName: string
+  email: string
+  avatarUrl: string | null
+  defaultSplitType: SplitType
+}
 export interface PartnerInfo { id: string; displayName: string; email: string | null; avatarUrl: string | null }
 
 interface Props {
@@ -23,6 +30,22 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
 
   const handleClose = () => setEditing(null)
   const refresh = () => router.refresh()
+
+  const [savingSplit, startSplitTransition] = useTransition()
+  const [splitError, setSplitError] = useState<string | null>(null)
+
+  const handleSplitChange = (next: SplitType) => {
+    if (next === viewer.defaultSplitType) return  // no-op if same
+    setSplitError(null)
+    startSplitTransition(async () => {
+      try {
+        await updateDefaultSplitType(next)
+        router.refresh()
+      } catch (e) {
+        setSplitError(e instanceof Error ? e.message : '儲存失敗')
+      }
+    })
+  }
 
   return (
     <>
@@ -80,6 +103,53 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
           value={viewer.displayName}
           onClick={() => setEditing('name')}
         />
+        <div className="mt-3">
+          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
+            建立紀錄時的預設分攤
+          </div>
+          <div
+            className="rounded-[20px] overflow-hidden flex flex-col"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            {([
+              { id: 'half',       label: '平分' },
+              { id: 'all_mine',   label: '全部我的' },
+              { id: 'all_theirs', label: '全部對方的' },
+            ] as const).map((opt, i) => {
+              const sel = viewer.defaultSplitType === opt.id
+              return (
+                <button
+                  type="button"
+                  key={opt.id}
+                  onClick={() => handleSplitChange(opt.id)}
+                  disabled={savingSplit}
+                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:opacity-50"
+                  style={{
+                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
+                    background: 'transparent',
+                  }}
+                >
+                  <span className="text-[15px]" style={{ color: 'var(--ink)' }}>
+                    {opt.label}
+                  </span>
+                  <div
+                    className="w-5 h-5 rounded-full transition-all duration-150"
+                    style={{
+                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
+                      background: sel ? 'var(--ink)' : 'transparent',
+                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
+                    }}
+                  />
+                </button>
+              )
+            })}
+          </div>
+          {splitError && (
+            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
+              {splitError}
+            </div>
+          )}
+        </div>
       </Section>
 
       <div className="px-4 pb-2 mt-4">
