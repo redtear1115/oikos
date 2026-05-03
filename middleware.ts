@@ -30,7 +30,9 @@ export async function middleware(request: NextRequest) {
     pathname === '/' ||
     pathname.startsWith('/sign-in') ||
     pathname.startsWith('/auth/') ||
-    pathname.startsWith('/invite/')
+    pathname.startsWith('/invite/') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/privacy')
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
