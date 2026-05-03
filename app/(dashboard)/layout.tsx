@@ -47,6 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       who: 'T',
     } : null,
     viewerIsA,
+    isSolo: !partnerProfile,
   }
 
   return (
