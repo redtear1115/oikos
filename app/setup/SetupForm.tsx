@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation'
 import { createGroup } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
+import { isStandalone } from '@/lib/install-guide'
+import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 
 const NAME_SUGGESTIONS = ['我們倆', '○○家', '日日', 'Home', '一起']
 const NAME_MAX = 20
+const INSTALL_GUIDE_SEEN_KEY = 'oikos_install_guide_seen'
 
 type Step = 'name' | 'invite'
 
@@ -74,10 +77,39 @@ export default function SetupForm() {
     }
   }
 
-  const handleSkip = () => router.push('/dashboard')
+  const [installGuideOpen, setInstallGuideOpen] = useState(false)
+
+  const goToDashboard = () => {
+    // Skip the install guide if (a) already a PWA, or (b) the user has seen it before.
+    if (typeof window === 'undefined') {
+      router.push('/dashboard')
+      return
+    }
+    const alreadySeen = window.localStorage.getItem(INSTALL_GUIDE_SEEN_KEY) === 'true'
+    if (isStandalone() || alreadySeen) {
+      router.push('/dashboard')
+      return
+    }
+    setInstallGuideOpen(true)
+  }
+
+  const dismissInstallGuide = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(INSTALL_GUIDE_SEEN_KEY, 'true')
+    }
+    setInstallGuideOpen(false)
+    router.push('/dashboard')
+  }
+
+  const handleSkip = () => goToDashboard()
+
+  const installGuideJsx = (
+    <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} />
+  )
 
   if (step === 'invite' && group && inviteUrl) {
     return (
+      <>
       <main
         className="flex min-h-screen flex-col px-6 py-10"
         style={{ background: 'var(--bg)' }}
@@ -161,10 +193,13 @@ export default function SetupForm() {
           )}
         </div>
       </main>
+      {installGuideJsx}
+      </>
     )
   }
 
   return (
+    <>
     <main
       className="flex min-h-screen flex-col px-6 py-10"
       style={{ background: 'var(--bg)' }}
@@ -234,5 +269,7 @@ export default function SetupForm() {
         </button>
       </form>
     </main>
+    {installGuideJsx}
+    </>
   )
 }
