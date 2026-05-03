@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BrandHeader } from './BrandHeader'
+import { SoloBanner } from './SoloBanner'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { BalanceHero } from './BalanceHero'
 import { EmptyState } from './EmptyState'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
@@ -21,6 +23,7 @@ export interface DashboardProps {
 
 export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const router = useRouter()
+  const { isSolo } = useMember()
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
@@ -62,11 +65,15 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   return (
     <div className="relative min-h-screen pb-[92px]">
       <BrandHeader />
-      <BalanceHero
-        rawBalance={balance}
-        onAddClick={() => setAddOpen(true)}
-        onSettleMutated={handleMutated}
-      />
+      {isSolo ? (
+        <SoloBanner />
+      ) : (
+        <BalanceHero
+          rawBalance={balance}
+          onAddClick={() => setAddOpen(true)}
+          onSettleMutated={handleMutated}
+        />
+      )}
       <TransactionFeed
         initial={recent}
         pageSize={pageSize}
