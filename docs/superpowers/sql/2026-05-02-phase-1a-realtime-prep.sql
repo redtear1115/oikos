@@ -1,9 +1,0 @@
--- Phase 1e will use Supabase Realtime postgres_changes.
--- Run this in Supabase SQL editor BEFORE Phase 1e implementation.
---
--- ALTER PUBLICATION supabase_realtime ADD TABLE
---   "CashTransactions",
---   "Settlements",
---   "GroupBalance";
---
--- (Commented out — do not run during Phase 1a.)
