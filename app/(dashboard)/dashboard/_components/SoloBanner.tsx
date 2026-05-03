@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { createInvite } from '@/actions/invite'
@@ -16,6 +16,13 @@ export function SoloBanner() {
   const [pending, startTransition] = useTransition()
   const [toast, setToast] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
+  }, [])
 
   const handleInvite = () => {
     setError(null)
@@ -25,7 +32,8 @@ export function SoloBanner() {
         const result = await shareInviteLink(url)
         if (result === 'copied') {
           setToast('已複製連結')
-          setTimeout(() => setToast(null), 2000)
+          if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+          toastTimerRef.current = setTimeout(() => setToast(null), 2000)
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : '發生錯誤')
@@ -49,6 +57,7 @@ export function SoloBanner() {
           </div>
         </div>
         <button
+          type="button"
           onClick={handleInvite}
           disabled={pending}
           className="h-9 px-4 rounded-full border-0 text-white text-sm font-medium cursor-pointer disabled:opacity-50"
