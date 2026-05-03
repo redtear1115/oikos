@@ -22,6 +22,13 @@
       "when": 1777786684316,
       "tag": "0002_enable_realtime_oikos_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777789204142,
+      "tag": "0003_gigantic_vertigo",
+      "breakpoints": true
     }
   ]
 }

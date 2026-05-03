@@ -1,0 +1,1 @@
+ALTER TABLE "Profiles" ADD COLUMN "default_split_type" "split_type" DEFAULT 'half' NOT NULL;

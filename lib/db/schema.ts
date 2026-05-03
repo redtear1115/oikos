@@ -18,6 +18,7 @@ export const profiles = pgTable('Profiles', {
   id: uuid('id').primaryKey(), // mirrors auth.users.id
   displayName: text('display_name').notNull(),
   avatarUrl: text('avatar_url'),
+  defaultSplitType: splitTypeEnum('default_split_type').notNull().default('half'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
