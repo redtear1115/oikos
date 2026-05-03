@@ -29,6 +29,13 @@
       "when": 1777789204142,
       "tag": "0003_gigantic_vertigo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777796150176,
+      "tag": "0004_realtime_publication_phase1_tables",
+      "breakpoints": true
     }
   ]
 }

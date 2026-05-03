@@ -56,11 +56,10 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
       try {
         const url = await createInvite(groupId)
         const result = await shareInviteLink(url)
-        if (result === 'copied') {
-          setInviteToast('已複製連結')
-          if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
-          inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
-        }
+        // Always confirm — see SoloBanner for the same rationale.
+        setInviteToast(result === 'shared' ? '已分享,連結也已複製' : '已複製連結')
+        if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
+        inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
       } catch (e) {
         setInviteError(e instanceof Error ? e.message : '發生錯誤')
       }

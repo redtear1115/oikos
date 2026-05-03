@@ -37,11 +37,12 @@ export function SoloBanner({ onDismiss }: Props = {}) {
       try {
         const url = await createInvite(group.id)
         const result = await shareInviteLink(url)
-        if (result === 'copied') {
-          setToast('已複製連結')
-          if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-          toastTimerRef.current = setTimeout(() => setToast(null), 2000)
-        }
+        // Always confirm — desktop share sheets (especially Chrome on macOS) can be
+        // unobtrusive enough that users don't realise anything happened. Since the
+        // helper always copies first, the URL is on the clipboard either way.
+        setToast(result === 'shared' ? '已分享，連結也已複製' : '已複製連結')
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+        toastTimerRef.current = setTimeout(() => setToast(null), 2000)
       } catch (e) {
         setError(e instanceof Error ? e.message : '發生錯誤')
       }
