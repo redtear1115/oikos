@@ -27,12 +27,18 @@ interface Props {
 export function SettingsContent({ viewer, partner, groupName }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
+  const isSolo = partner === null
 
   const handleClose = () => setEditing(null)
   const refresh = () => router.refresh()
 
   const [savingSplit, startSplitTransition] = useTransition()
   const [splitError, setSplitError] = useState<string | null>(null)
+
+  // In solo mode the only valid configuration is all_mine, so we lock the radio
+  // to that value visually and disable interaction. The user's stored preference
+  // (in DB) is preserved untouched and re-takes effect when partner joins.
+  const displayedSplit: SplitType = isSolo ? 'all_mine' : viewer.defaultSplitType
 
   const handleSplitChange = (next: SplitType) => {
     if (next === viewer.defaultSplitType) return  // no-op if same
@@ -116,14 +122,14 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
               { id: 'all_mine',   label: '全部我的' },
               { id: 'all_theirs', label: '全部對方的' },
             ] as const).map((opt, i) => {
-              const sel = viewer.defaultSplitType === opt.id
+              const sel = displayedSplit === opt.id
               return (
                 <button
                   type="button"
                   key={opt.id}
                   onClick={() => handleSplitChange(opt.id)}
-                  disabled={savingSplit}
-                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:opacity-50"
+                  disabled={savingSplit || isSolo}
+                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
                   style={{
                     borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
                     background: 'transparent',
@@ -144,6 +150,11 @@ export function SettingsContent({ viewer, partner, groupName }: Props) {
               )
             })}
           </div>
+          {isSolo && (
+            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
+              單人狀態下固定為「全部我的」，邀請對方加入後可調整。
+            </div>
+          )}
           {splitError && (
             <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
               {splitError}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { defaultFilter, type TxnFilter, type PayerFilter, type SplitFilter } from '@/lib/filter'
 
@@ -29,6 +30,7 @@ const SPLIT_OPTIONS: { value: SplitFilter; label: string }[] = [
 ]
 
 export function FilterSheet({ open, current, onClose, onApply }: Props) {
+  const { isSolo } = useMember()
   const [draft, setDraft] = useState<TxnFilter>(current)
 
   // Re-seed the draft whenever the sheet (re-)opens — without this, dismissing without
@@ -75,29 +77,33 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
         </div>
 
         <div className="px-5 pt-4 space-y-5 max-h-[70vh] overflow-y-auto">
-          {/* 誰付的 */}
-          <Section title="誰付的">
-            {PAYER_OPTIONS.map((o) => (
-              <Chip
-                key={o.value}
-                label={o.label}
-                active={draft.payer === o.value}
-                onClick={() => setDraft({ ...draft, payer: o.value })}
-              />
-            ))}
-          </Section>
+          {/* 誰付的 + 分攤 — pair-mode only. In solo, payer is always self and split is
+              always all_mine, so these dimensions are degenerate (every row matches). */}
+          {!isSolo && (
+            <Section title="誰付的">
+              {PAYER_OPTIONS.map((o) => (
+                <Chip
+                  key={o.value}
+                  label={o.label}
+                  active={draft.payer === o.value}
+                  onClick={() => setDraft({ ...draft, payer: o.value })}
+                />
+              ))}
+            </Section>
+          )}
 
-          {/* 分攤 */}
-          <Section title="分攤">
-            {SPLIT_OPTIONS.map((o) => (
-              <Chip
-                key={o.value}
-                label={o.label}
-                active={draft.split === o.value}
-                onClick={() => setDraft({ ...draft, split: o.value })}
-              />
-            ))}
-          </Section>
+          {!isSolo && (
+            <Section title="分攤">
+              {SPLIT_OPTIONS.map((o) => (
+                <Chip
+                  key={o.value}
+                  label={o.label}
+                  active={draft.split === o.value}
+                  onClick={() => setDraft({ ...draft, split: o.value })}
+                />
+              ))}
+            </Section>
+          )}
 
           {/* 分類 (multi) */}
           <Section title="分類（可多選）">
