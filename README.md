@@ -126,3 +126,11 @@ docs/superpowers/specs/   架構規格 + 功能對照表
 - 記帳「編輯」是 soft delete + insert 的 atomic operation（DB 層不支援 update），UX 上使用者無感
 - `deleted_at` 超過 1 年的紀錄由 pg_cron 物理刪除，所以「編輯歷史」只保留一年
 - 沒有 forgot password / 帳號管理 UI — Google OAuth 把這些都包了
+
+---
+
+## License
+
+[AGPL-3.0-or-later](LICENSE)
+
+簡言之：你可以自由閱讀、修改、自架本專案的 fork。但如果你把改過的版本當 SaaS 提供給他人使用（包含網路服務），AGPL 要求你必須讓使用者能取得你的修改版原始碼。

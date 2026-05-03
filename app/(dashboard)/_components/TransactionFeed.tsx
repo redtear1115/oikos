@@ -50,7 +50,6 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setError(e instanceof Error ? e.message : '載入失敗')
       }
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- filter identity drives this effect
   }, [filter, pageSize])
 
   const handleLoadMore = () => {

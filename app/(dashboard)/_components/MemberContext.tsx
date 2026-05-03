@@ -1,12 +1,14 @@
 'use client'
 
 import { createContext, useContext } from 'react'
+import type { SplitType } from '@/lib/balance'
 
 export interface MemberInfo {
   id: string
   initial: string
   displayName: string
   avatarUrl: string | null
+  defaultSplitType: SplitType
 }
 
 export interface MemberContextValue {
@@ -14,6 +16,7 @@ export interface MemberContextValue {
   viewer: MemberInfo & { who: 'M' }      // the signed-in user
   partner: (MemberInfo & { who: 'T' }) | null  // null until invite accepted
   viewerIsA: boolean  // true if viewer === group.memberA
+  isSolo: boolean     // partner === null
 }
 
 const MemberContext = createContext<MemberContextValue | null>(null)

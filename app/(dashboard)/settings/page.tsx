@@ -31,6 +31,7 @@ export default async function SettingsPage() {
     displayName: viewerProfile?.displayName ?? '?',
     email: user.email ?? '',
     avatarUrl: viewerProfile?.avatarUrl ?? null,
+    defaultSplitType: viewerProfile?.defaultSplitType ?? 'half',
   }
   const partner: PartnerInfo | null = partnerProfile
     ? {
@@ -46,6 +47,7 @@ export default async function SettingsPage() {
       <SettingsContent
         viewer={viewer}
         partner={partner}
+        groupId={group.id}
         groupName={group.name}
       />
       <BottomNavSkeleton />

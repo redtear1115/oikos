@@ -38,4 +38,5 @@ export type RealtimeEvent =
   | { kind: 'settle-insert'; row: SettleRowPayload }
   | { kind: 'settle-update'; row: SettleRowPayload }
   | { kind: 'balance-change'; balance: number; version: number }
+  | { kind: 'group-updated' }   // OikosGroups row changed (e.g. member_b set after invite acceptance)
   | { kind: 'reconnect' }   // emitted after WebSocket reconnect — subscribers should refetch

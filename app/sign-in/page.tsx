@@ -15,17 +15,48 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center gap-6 rounded-2xl bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold text-gray-900">Oikos</h1>
-        <p className="text-sm text-gray-500">家庭記帳與資產管理</p>
-        <button
-          onClick={handleSignIn}
-          className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+    <main
+      className="flex min-h-screen flex-col items-center justify-between px-6 py-12"
+      style={{ background: 'var(--bg)' }}
+    >
+      <div className="flex-1" />
+
+      <div className="flex flex-col items-center text-center gap-3">
+        <div
+          className="text-[44px] leading-none tracking-[-1px]"
+          style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
-          以 Google 帳號登入
-        </button>
+          Futari
+        </div>
+        <div className="text-sm tracking-[3px]" style={{ color: 'var(--ink-2)' }}>
+          ふたり
+        </div>
+        <p
+          className="mt-6 text-base leading-relaxed"
+          style={{ color: 'var(--ink-2)', maxWidth: 280 }}
+        >
+          兩個人的日子，<br />可以一起記下來。
+        </p>
       </div>
+
+      <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">
+        <button
+          type="button"
+          onClick={handleSignIn}
+          className="w-full h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer flex items-center justify-center gap-2"
+          style={{ background: 'var(--ink)' }}
+        >
+          以 Google 帳號繼續
+        </button>
+        <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
+          繼續即表示您同意我們的{' '}
+          <a href="/terms" className="underline">服務條款</a>
+          {' '}與{' '}
+          <a href="/privacy" className="underline">隱私權政策</a>
+        </p>
+      </div>
+
+      <div className="flex-1" />
     </main>
   )
 }

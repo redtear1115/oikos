@@ -15,6 +15,34 @@
       "when": 1777772563352,
       "tag": "0001_pg_cron_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777786684316,
+      "tag": "0002_enable_realtime_oikos_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777789204142,
+      "tag": "0003_gigantic_vertigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777796150176,
+      "tag": "0004_realtime_publication_phase1_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777797426939,
+      "tag": "0005_rls_policies_phase1",
+      "breakpoints": true
     }
   ]
 }
