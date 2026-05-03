@@ -28,10 +28,28 @@ export default async function InvitePage({ params }: Props) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="rounded-2xl bg-white p-8 shadow-sm text-center">
-        <p className="text-sm text-red-500">{error}</p>
-        <a href="/dashboard" className="mt-4 block text-sm text-gray-500 underline">
+    <main
+      className="flex min-h-screen items-center justify-center px-6"
+      style={{ background: 'var(--bg)' }}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl p-8 text-center"
+        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+      >
+        <h1
+          className="text-[22px] leading-tight mb-3"
+          style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
+        >
+          無法加入帳本
+        </h1>
+        <p className="text-sm mb-6" style={{ color: 'var(--debit)' }}>
+          {error}
+        </p>
+        <a
+          href="/dashboard"
+          className="inline-block text-sm underline"
+          style={{ color: 'var(--ink-2)' }}
+        >
           回到首頁
         </a>
       </div>

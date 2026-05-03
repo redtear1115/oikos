@@ -31,7 +31,8 @@ export const viewport: Viewport = {
   themeColor: '#FBEDE0',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale: WCAG 1.4.4 (Resize Text) requires letting users zoom.
+  // Inputs are sized at >= 16px to avoid iOS auto-zoom on focus.
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
