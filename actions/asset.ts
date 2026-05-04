@@ -88,6 +88,8 @@ export async function editCar(input: EditCarInput): Promise<void> {
 
   revalidatePath('/assets')
   revalidatePath(`/assets/${input.id}`)
+  // Renamed car needs to flow to AddSheet's asset-picker label on the records page.
+  revalidatePath('/records')
 }
 
 export async function softDeleteCar(id: string): Promise<void> {
@@ -102,6 +104,7 @@ export async function softDeleteCar(id: string): Promise<void> {
     .where(and(
       eq(assets.id, id),
       eq(assets.groupId, group.id),
+      eq(assets.type, 'car'),
       isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })

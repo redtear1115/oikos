@@ -72,6 +72,14 @@ describe('editCar', () => {
       purchasedAt: null, purchasePrice: null,
     })).rejects.toThrow(/找不到/)
   })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(editCar({
+      id: 'asset-1', name: '車', plate: 'A1',
+      purchasedAt: null, purchasePrice: null,
+    })).rejects.toThrow('Unauthorized')
+  })
 })
 
 describe('softDeleteCar', () => {
