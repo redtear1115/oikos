@@ -87,3 +87,43 @@ export function validateSettlementInput(input: SettlementInput): ValidatedSettle
     note,
   }
 }
+
+export interface CarInput {
+  name: string
+  plate: string
+  purchasedAt?: string | null  // YYYY-MM-DD
+  purchasePrice?: number | null
+}
+
+export interface ValidatedCarInput {
+  name: string
+  plate: string
+  purchasedAt: string | null
+  purchasePrice: number | null
+}
+
+/**
+ * Validates a car asset input. Trims + max-length-checks name and plate, uppercases plate,
+ * validates optional purchasedAt as a YYYY-MM-DD date and optional purchasePrice as a
+ * positive integer. Returns the validated payload or throws.
+ */
+export function validateCarInput(input: CarInput): ValidatedCarInput {
+  const name = validateName(input.name, '名稱', 32)
+  const rawPlate = input.plate.trim().toUpperCase()
+  if (!rawPlate) throw new Error('車牌不能為空')
+  if (rawPlate.length > 16) throw new Error('車牌最長 16 字')
+
+  let purchasedAt: string | null = null
+  if (input.purchasedAt) {
+    const parsed = new Date(input.purchasedAt + 'T00:00:00')
+    if (isNaN(parsed.getTime())) throw new Error('購入日期格式錯誤')
+    purchasedAt = input.purchasedAt
+  }
+
+  let purchasePrice: number | null = null
+  if (input.purchasePrice !== null && input.purchasePrice !== undefined) {
+    purchasePrice = validateAmount(input.purchasePrice, '購入價')
+  }
+
+  return { name, plate: rawPlate, purchasedAt, purchasePrice }
+}
