@@ -17,6 +17,10 @@ const notoTC = Noto_Sans_TC({
 })
 
 export const metadata: Metadata = {
+  // metadataBase resolves all relative metadata URLs (OG image, Twitter card, etc.)
+  // against the canonical domain. Without it, Next.js logs warnings + falls back to
+  // a guessed origin which is wrong on Vercel preview deployments.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'),
   title: 'Futari',
   description: 'ふたり ・ 家計簿 — 兩個人的記帳本',
   manifest: '/manifest.json',
