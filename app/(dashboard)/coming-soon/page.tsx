@@ -6,7 +6,7 @@ export default async function ComingSoonPage({
   searchParams: Promise<{ next?: string }>
 }) {
   const { next } = await searchParams
-  const labels: Record<string, string> = { list: '紀錄', assets: '資產' }
+  const labels: Record<string, string> = { list: '紀錄' }
   const label = labels[next ?? ''] ?? '此功能'
 
   return (
