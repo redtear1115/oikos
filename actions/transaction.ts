@@ -167,9 +167,12 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     if (asset.deletedAt) throw new Error('關聯資產已刪除')
   }
 
-  // 3. Soft-delete old + insert new in one tx.
+  // 3. Soft-delete old + insert new in one tx. Keep .returning() on the soft-delete
+  //    as a race guard: if a partner soft-deleted the row between step 1 and now,
+  //    the WHERE's isNull(deletedAt) makes the UPDATE no-op, and we'd silently
+  //    create a dup. The length check restores the existence proof inside the tx.
   const [created] = await db.transaction(async (tx) => {
-    await tx
+    const deleted = await tx
       .update(cashTransactions)
       .set({ deletedAt: new Date() })
       .where(and(
@@ -177,6 +180,8 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         eq(cashTransactions.groupId, group.id),
         isNull(cashTransactions.deletedAt),
       ))
+      .returning({ id: cashTransactions.id })
+    if (deleted.length === 0) throw new Error('找不到該筆紀錄')
 
     const inserted = await tx
       .insert(cashTransactions)

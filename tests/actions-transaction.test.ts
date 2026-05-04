@@ -68,7 +68,7 @@ describe('editTransaction', () => {
     queueDbResult([GROUP])                    // group lookup (.limit)
     queueDbResult([{ assetId: null }])        // oldRow lookup (.limit)
     // no asset re-check (assetId is null)
-    queueDbResult([])                         // soft-delete UPDATE (.then, value discarded)
+    queueDbResult([{ id: 'tx-old' }])         // soft-delete UPDATE .returning (race-guard)
     queueDbResult([{ id: 'tx-new' }])         // insert returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
 
@@ -148,7 +148,7 @@ describe('editTransaction with assetId', () => {
     queueDbResult([GROUP])                              // group lookup
     queueDbResult([{ assetId: 'asset-zombie' }])        // oldRow .limit — asset matches
     // No asset re-check because assetId === oldRow.assetId
-    queueDbResult([])                                   // soft-delete UPDATE inside tx (.then consumes one entry, value discarded)
+    queueDbResult([{ id: 'tx-old' }])                   // soft-delete UPDATE .returning (race-guard)
     queueDbResult([{ id: 'tx-new' }])                   // insert .returning
     // recalc execute pulls from empty queue (default [])
 
