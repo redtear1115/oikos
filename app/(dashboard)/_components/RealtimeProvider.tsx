@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
 import type { REALTIME_SUBSCRIBE_STATES } from '@supabase/realtime-js'
 import { createClient } from '@/lib/supabase/client'
-import type { RealtimeEvent, TxnRowPayload, SettleRowPayload } from '@/lib/realtime/event'
+import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload } from '@/lib/realtime/event'
 
 type Handler = (event: RealtimeEvent) => void
 
@@ -104,6 +104,16 @@ export function RealtimeProvider({ groupId, children }: Props) {
         { event: 'UPDATE', schema: 'public', table: 'OikosGroups', filter: `id=eq.${groupId}` },
         () => {
           dispatch({ kind: 'group-updated' })
+        })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'Assets', filter: `group_id=eq.${groupId}` },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => {
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            dispatch({ kind: 'asset-changed', row: rowFromPayload(payload.new as Record<string, unknown>) as AssetRowPayload })
+          }
+          // DELETE: we soft-delete; hard delete via pg_cron only happens >1yr later. Ignore.
         })
 
       let wasSubscribed = false

@@ -32,6 +32,15 @@ export interface SettleRowPayload {
   deletedAt: string | null
 }
 
+export interface AssetRowPayload {
+  id: string
+  groupId: string
+  type: 'car' | 'house' | 'child' | 'insurance'
+  name: string
+  createdAt: string  // ISO
+  deletedAt: string | null  // ISO when soft-deleted
+}
+
 export type RealtimeEvent =
   | { kind: 'txn-insert'; row: TxnRowPayload }
   | { kind: 'txn-update'; row: TxnRowPayload }   // soft-delete shows up here too (deletedAt becomes set)
@@ -39,4 +48,5 @@ export type RealtimeEvent =
   | { kind: 'settle-update'; row: SettleRowPayload }
   | { kind: 'balance-change'; balance: number; version: number }
   | { kind: 'group-updated' }   // OikosGroups row changed (e.g. member_b set after invite acceptance)
+  | { kind: 'asset-changed'; row: AssetRowPayload }
   | { kind: 'reconnect' }   // emitted after WebSocket reconnect — subscribers should refetch
