@@ -137,6 +137,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       // Non-delete UPDATE shouldn't happen in our flow (edits = soft-delete + insert),
       // but if it does, leave items as-is to avoid jitter.
     } else if (event.kind === 'settle-insert' || event.kind === 'settle-update') {
+      if (loader) return  // asset-scoped feeds never deal with settlements
       const row = event.row
       if (event.kind === 'settle-update' && row.deletedAt) {
         const el = document.querySelector(`[data-rt-id="${row.id}"]`)

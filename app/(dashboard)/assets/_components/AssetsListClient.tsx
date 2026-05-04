@@ -34,7 +34,7 @@ export function AssetsListClient({ items }: Props) {
 
   const open = sheetOpen || editing !== null
   const handleClose = () => { setSheetOpen(false); setEditing(null) }
-  const handleMutated = () => router.refresh()
+  const handleMutated = (_kind: 'saved' | 'deleted') => router.refresh()
 
   return (
     <div className="relative min-h-screen pb-[92px]">

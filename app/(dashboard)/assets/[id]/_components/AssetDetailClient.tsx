@@ -30,20 +30,23 @@ export function AssetDetailClient({
 
   // Refresh when this asset's row changes (e.g. partner edits/deletes it).
   // If the asset is soft-deleted, redirect to /assets.
+  // Only react to THIS asset's events (not other assets in the group) or reconnects.
   useRealtimeEvents((event) => {
-    if (event.kind === 'asset-changed' && event.row.id === assetId && event.row.deletedAt) {
-      router.replace('/assets')
-      return
-    }
-    if (event.kind === 'asset-changed' || event.kind === 'reconnect') {
-      router.refresh()
+    if (event.kind === 'reconnect') { router.refresh(); return }
+    if (event.kind === 'asset-changed' && event.row.id === assetId) {
+      if (event.row.deletedAt) router.replace('/assets')
+      else router.refresh()
     }
   })
 
-  // After AssetSheet edit/delete, navigate back if deleted (page reload will 404 otherwise)
-  const handleAssetMutated = () => {
-    // If we soft-deleted, the realtime event will fire and replace us to /assets.
-    // For the edit case, just refresh to pick up new name/plate in hero.
+  // After AssetSheet edit/delete, branch on kind to avoid 404 flash:
+  // - 'deleted': navigate immediately before realtime event arrives
+  // - 'saved': refresh to pick up new name/plate in hero
+  const handleAssetMutated = (kind: 'saved' | 'deleted') => {
+    if (kind === 'deleted') {
+      router.replace('/assets')
+      return
+    }
     router.refresh()
   }
 

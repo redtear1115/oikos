@@ -20,7 +20,7 @@ interface Props {
   open: boolean
   onClose: () => void
   initial?: AssetSheetInitial
-  onMutated?: () => void
+  onMutated?: (kind: 'saved' | 'deleted') => void
 }
 
 function dateLabel(iso: string) {
@@ -88,7 +88,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             purchasePrice: price ?? undefined,
           })
         }
-        onMutated?.()
+        onMutated?.('saved')
         onClose()
       } catch (e) {
         setError(e instanceof Error ? e.message : '發生錯誤')
@@ -103,7 +103,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     startTransition(async () => {
       try {
         await softDeleteCar(initial!.id)
-        onMutated?.()
+        onMutated?.('deleted')
         onClose()
       } catch (e) {
         setError(e instanceof Error ? e.message : '發生錯誤')
