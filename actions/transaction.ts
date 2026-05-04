@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { cashTransactions, oikosGroups } from '@/lib/db/schema'
+import { assets, cashTransactions, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
@@ -19,6 +19,7 @@ export interface CreateTransactionInput {
   splitType: SplitType
   payerId: string             // user.id of payer (must be in group)
   transactedAt: Date
+  assetId?: string | null
 }
 
 export async function createTransaction(input: CreateTransactionInput): Promise<{ id: string }> {
@@ -42,6 +43,20 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
     throw new Error('付款人不在家計簿內')
   }
 
+  // Asset ownership + not-deleted check (only if assetId provided)
+  if (validated.assetId) {
+    const [asset] = await db
+      .select({ id: assets.id, deletedAt: assets.deletedAt })
+      .from(assets)
+      .where(and(
+        eq(assets.id, validated.assetId),
+        eq(assets.groupId, group.id),
+      ))
+      .limit(1)
+    if (!asset) throw new Error('關聯資產不在家計簿內')
+    if (asset.deletedAt) throw new Error('關聯資產已刪除')
+  }
+
   const [created] = await db.transaction(async (tx) => {
     const inserted = await tx
       .insert(cashTransactions)
@@ -53,6 +68,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
         description: validated.description,
         category: validated.category,
         transactedAt: validated.transactedAt,
+        assetId: validated.assetId,
       })
       .returning({ id: cashTransactions.id })
     await recalcGroupBalance(group.id, tx)
@@ -61,6 +77,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 
   revalidatePath('/dashboard')
   revalidatePath('/records')
+  if (validated.assetId) revalidatePath(`/assets/${validated.assetId}`)
   return { id: created.id }
 }
 
@@ -102,6 +119,7 @@ export interface EditTransactionInput {
   splitType: SplitType
   payerId: string
   transactedAt: Date
+  assetId?: string | null
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
@@ -109,7 +127,6 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  // Validate (mirror createTransaction)
   const validated = validateTransactionInput(input)
 
   const [group] = await db
@@ -123,9 +140,36 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     throw new Error('付款人不在家計簿內')
   }
 
+  // 1. Look up old row to (a) prove existence, (b) get its assetId for the
+  //    "kept zombie" exemption check.
+  const [oldRow] = await db
+    .select({ assetId: cashTransactions.assetId })
+    .from(cashTransactions)
+    .where(and(
+      eq(cashTransactions.id, input.oldId),
+      eq(cashTransactions.groupId, group.id),
+      isNull(cashTransactions.deletedAt),
+    ))
+    .limit(1)
+  if (!oldRow) throw new Error('找不到該筆紀錄')
+
+  // 2. Asset check — only when newly assigning (or changing) to a different asset.
+  if (validated.assetId && validated.assetId !== oldRow.assetId) {
+    const [asset] = await db
+      .select({ id: assets.id, deletedAt: assets.deletedAt })
+      .from(assets)
+      .where(and(
+        eq(assets.id, validated.assetId),
+        eq(assets.groupId, group.id),
+      ))
+      .limit(1)
+    if (!asset) throw new Error('關聯資產不在家計簿內')
+    if (asset.deletedAt) throw new Error('關聯資產已刪除')
+  }
+
+  // 3. Soft-delete old + insert new in one tx.
   const [created] = await db.transaction(async (tx) => {
-    // Soft-delete old (must belong to this group + still active)
-    const deleted = await tx
+    await tx
       .update(cashTransactions)
       .set({ deletedAt: new Date() })
       .where(and(
@@ -133,10 +177,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         eq(cashTransactions.groupId, group.id),
         isNull(cashTransactions.deletedAt),
       ))
-      .returning({ id: cashTransactions.id })
-    if (deleted.length === 0) throw new Error('找不到該筆紀錄')
 
-    // Insert new
     const inserted = await tx
       .insert(cashTransactions)
       .values({
@@ -147,6 +188,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         description: validated.description,
         category: validated.category,
         transactedAt: validated.transactedAt,
+        assetId: validated.assetId,
       })
       .returning({ id: cashTransactions.id })
 
@@ -156,6 +198,8 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
 
   revalidatePath('/dashboard')
   revalidatePath('/records')
+  if (oldRow.assetId) revalidatePath(`/assets/${oldRow.assetId}`)
+  if (validated.assetId) revalidatePath(`/assets/${validated.assetId}`)
 
   return { id: created.id }
 }

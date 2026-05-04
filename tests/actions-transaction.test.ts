@@ -65,9 +65,11 @@ describe('createTransaction', () => {
 
 describe('editTransaction', () => {
   it('happy path: soft-deletes old + inserts new in one transaction', async () => {
-    queueDbResult([GROUP])               // group lookup (.limit)
-    queueDbResult([{ id: 'tx-old' }])    // update returning — proves old row existed (.returning)
-    queueDbResult([{ id: 'tx-new' }])    // insert returning (.returning)
+    queueDbResult([GROUP])                    // group lookup (.limit)
+    queueDbResult([{ assetId: null }])        // oldRow lookup (.limit)
+    // no asset re-check (assetId is null)
+    queueDbResult([])                         // soft-delete UPDATE (.then, value discarded)
+    queueDbResult([{ id: 'tx-new' }])         // insert returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
 
     const result = await editTransaction({
@@ -86,7 +88,7 @@ describe('editTransaction', () => {
 
   it('throws if old row not found', async () => {
     queueDbResult([GROUP])
-    queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
+    queueDbResult([])  // oldRow lookup empty → throws '找不到該筆紀錄'
     await expect(editTransaction({
       oldId: 'tx-missing', amount: 200, description: 'x',
       category: 'food', splitType: 'half', payerId: 'user-a',
@@ -101,6 +103,74 @@ describe('editTransaction', () => {
       category: 'food', splitType: 'half', payerId: 'user-a',
       transactedAt: new Date(),
     })).rejects.toThrow('Unauthorized')
+  })
+})
+
+describe('createTransaction with assetId', () => {
+  it('happy path: validates asset belongs to group + not deleted', async () => {
+    queueDbResult([GROUP])                           // group lookup
+    queueDbResult([{ id: 'asset-1', deletedAt: null }])  // asset check .limit
+    queueDbResult([{ id: 'tx-1' }])                  // insert .returning
+    // recalc empty queue
+
+    const result = await createTransaction({
+      amount: 100, description: '加油', category: 'transit',
+      splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date('2026-05-03'),
+      assetId: 'asset-1',
+    })
+    expect(result).toEqual({ id: 'tx-1' })
+  })
+
+  it('rejects assetId not in group', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])  // asset lookup empty
+    await expect(createTransaction({
+      amount: 100, description: 'x', category: 'food',
+      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      assetId: 'foreign-asset',
+    })).rejects.toThrow(/不在家計簿內/)
+  })
+
+  it('rejects assetId pointing at soft-deleted asset', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])
+    await expect(createTransaction({
+      amount: 100, description: 'x', category: 'food',
+      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      assetId: 'asset-zombie',
+    })).rejects.toThrow(/已刪除/)
+  })
+})
+
+describe('editTransaction with assetId', () => {
+  it('allows keeping old assetId even if asset is now deleted (zombie keep)', async () => {
+    queueDbResult([GROUP])                              // group lookup
+    queueDbResult([{ assetId: 'asset-zombie' }])        // oldRow .limit — asset matches
+    // No asset re-check because assetId === oldRow.assetId
+    queueDbResult([])                                   // soft-delete UPDATE inside tx (.then consumes one entry, value discarded)
+    queueDbResult([{ id: 'tx-new' }])                   // insert .returning
+    // recalc execute pulls from empty queue (default [])
+
+    const result = await editTransaction({
+      oldId: 'tx-old', amount: 200, description: 'x',
+      category: 'food', splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date(),
+      assetId: 'asset-zombie',  // same as before — exempt from not-deleted check
+    })
+    expect(result).toEqual({ id: 'tx-new' })
+  })
+
+  it('blocks newly assigning to a deleted asset', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ assetId: null }])                          // oldRow had no asset
+    queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])  // new asset is deleted
+    await expect(editTransaction({
+      oldId: 'tx-old', amount: 200, description: 'x',
+      category: 'food', splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date(),
+      assetId: 'asset-zombie',
+    })).rejects.toThrow(/已刪除/)
   })
 })
 

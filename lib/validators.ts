@@ -29,6 +29,7 @@ export interface TransactionInput {
   splitType: SplitType
   payerId: string
   transactedAt: Date
+  assetId?: string | null
 }
 
 export interface ValidatedTransactionInput {
@@ -38,6 +39,7 @@ export interface ValidatedTransactionInput {
   splitType: SplitType
   payerId: string
   transactedAt: Date
+  assetId: string | null
 }
 
 /**
@@ -57,6 +59,7 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
     splitType: input.splitType,
     payerId: input.payerId,
     transactedAt: input.transactedAt,
+    assetId: input.assetId ?? null,
   }
 }
 
