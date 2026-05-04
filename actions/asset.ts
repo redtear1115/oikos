@@ -112,6 +112,10 @@ export async function softDeleteCar(id: string): Promise<void> {
   if (updated.length === 0) throw new Error('找不到該資產')
 
   revalidatePath('/assets')
+  // Defense-in-depth: a partner viewing the detail page primarily redirects
+  // via the realtime asset-changed event, but if the WebSocket dropped, this
+  // ensures the next nav reads fresh state and notFound()s cleanly.
+  revalidatePath(`/assets/${id}`)
   revalidatePath('/records')
 }
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
-import { AssetSheet, type AssetSheetInitial } from './AssetSheet'
+import { AssetSheet } from './AssetSheet'
 import { AssetListItem } from './AssetListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 
@@ -23,7 +23,6 @@ interface Props {
 export function AssetsListClient({ items }: Props) {
   const router = useRouter()
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [editing, setEditing] = useState<AssetSheetInitial | null>(null)
 
   // Refresh when partner adds/updates/deletes an asset
   useRealtimeEvents((event) => {
@@ -32,9 +31,8 @@ export function AssetsListClient({ items }: Props) {
     }
   })
 
-  const open = sheetOpen || editing !== null
-  const handleClose = () => { setSheetOpen(false); setEditing(null) }
-  const handleMutated = (_kind: 'saved' | 'deleted') => router.refresh()
+  const handleClose = () => setSheetOpen(false)
+  const handleMutated = () => router.refresh()
 
   return (
     <div className="relative min-h-screen pb-[92px]">
@@ -72,14 +70,14 @@ export function AssetsListClient({ items }: Props) {
 
       <BottomNav
         onAddClick={() => setSheetOpen(true)}
-        hideFab={open}
+        hideFab={sheetOpen}
         fabVariant="accent"
       />
 
+      {/* Create-only on this page; edits happen on /assets/[id] via the Hero ⋯ button. */}
       <AssetSheet
-        open={open}
+        open={sheetOpen}
         onClose={handleClose}
-        initial={editing ?? undefined}
         onMutated={handleMutated}
       />
     </div>
