@@ -8,6 +8,8 @@ import { loadMoreTransactions, type PagedTxnRow } from '@/actions/transaction'
 import { toWire, type TxnFilter, matchesFilter, type FilterableRow } from '@/lib/filter'
 import { useRealtimeEvents } from './RealtimeProvider'
 import { useMember } from './MemberContext'
+import type { TxnCursor } from '@/lib/db/queries/transactions'
+import type { TxnRowPayload } from '@/lib/realtime/event'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -21,9 +23,14 @@ interface Props {
   /** Optional filter. When this object reference changes, the feed refetches page 1 with
    *  the new filter and replaces its items. Pass `undefined` for "no filter". */
   filter?: TxnFilter
+  /** Optional custom loader for pagination. Defaults to global loadMoreTransactions. */
+  loader?: (cursor: TxnCursor | null) => Promise<PagedTxnRow[]>
+  /** Optional realtime-insert filter. Called for every txn-insert event;
+   *  return false to drop the row. Used by asset-scoped feeds. */
+  acceptInsert?: (row: TxnRowPayload) => boolean
 }
 
-export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, filter }: Props) {
+export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, filter, loader, acceptInsert }: Props) {
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
   const [hasMore, setHasMore] = useState(initial.length === pageSize)
   const [loading, startLoading] = useTransition()
@@ -58,11 +65,13 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     const last = items[items.length - 1]
     startLoading(async () => {
       try {
-        const more = await loadMoreTransactions(
-          { transactedAt: last.transactedAt, createdAt: last.createdAt },
-          pageSize,
-          filter ? toWire(filter) : undefined,
-        )
+        const more = loader
+          ? await loader({ transactedAt: last.transactedAt, createdAt: last.createdAt })
+          : await loadMoreTransactions(
+              { transactedAt: last.transactedAt, createdAt: last.createdAt },
+              pageSize,
+              filter ? toWire(filter) : undefined,
+            )
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
       } catch (e) {
@@ -78,7 +87,9 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       // Refetch page 1 (with current filter, if any) to re-align.
       startLoading(async () => {
         try {
-          const fresh = await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined)
+          const fresh = loader
+            ? await loader(null)
+            : await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined)
           setItems(fresh)
           setHasMore(fresh.length === pageSize)
         } catch {
@@ -106,6 +117,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         const f: FilterableRow = { paidBy: row.paidBy, splitType: row.splitType, category: row.category, kind: 'transaction' }
         if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
       }
+      if (acceptInsert && !acceptInsert(row)) return
       setItems((cur) => {
         if (cur.some((r) => r.id === row.id)) return cur  // dedupe (own-write echo)
         return [feed, ...cur]

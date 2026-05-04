@@ -8,6 +8,7 @@ import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput } from '@/lib/validators'
 import { listTransactionsPaged, type TxnCursor, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
+import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -269,5 +270,40 @@ export async function loadMoreTransactions(
     createdAt: r.createdAt.toISOString(),
     kind: r.kind,
     assetId: r.assetId,
+  }))
+}
+
+/**
+ * Asset-scoped page-through (newest first). Settlements never have an asset,
+ * so this is transactions-only.
+ */
+export async function loadMoreTransactionsForAsset(
+  assetId: string,
+  cursor: TxnCursor | null,
+  limit = 20,
+): Promise<PagedTxnRow[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [group] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) throw new Error('找不到家計簿')
+
+  const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit)
+  return rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    splitType: r.splitType,
+    description: r.description,
+    category: r.category,
+    paidBy: r.paidBy,
+    transactedAt: r.transactedAt.toISOString(),
+    createdAt: r.createdAt.toISOString(),
+    kind: r.kind,
+    assetId: r.assetId ?? null,
   }))
 }
