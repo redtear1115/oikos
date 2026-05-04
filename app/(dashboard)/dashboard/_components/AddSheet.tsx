@@ -136,6 +136,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       return
     }
     if (loadedIdRef.current === assetId) return  // already loaded this one, skip refetch
+    setAssetInfo(null)  // clear stale info from a previous asset before fetching new
     let cancelled = false
     loadAsset(assetId).then((info) => {
       if (cancelled) return
