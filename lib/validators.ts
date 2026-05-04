@@ -115,8 +115,20 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
 
   let purchasedAt: string | null = null
   if (input.purchasedAt) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.purchasedAt)) {
+      throw new Error('購入日期格式錯誤')
+    }
     const parsed = new Date(input.purchasedAt + 'T00:00:00')
     if (isNaN(parsed.getTime())) throw new Error('購入日期格式錯誤')
+    // Reject silent coercion (e.g. '2024-02-30' → Date '2024-02-29').
+    // Use UTC slice to avoid timezone shifts since we anchored at local midnight,
+    // but compare against the same local date components.
+    const y = parsed.getFullYear()
+    const m = String(parsed.getMonth() + 1).padStart(2, '0')
+    const d = String(parsed.getDate()).padStart(2, '0')
+    if (`${y}-${m}-${d}` !== input.purchasedAt) {
+      throw new Error('購入日期不存在')
+    }
     purchasedAt = input.purchasedAt
   }
 

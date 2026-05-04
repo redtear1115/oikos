@@ -46,4 +46,16 @@ describe('validateCarInput', () => {
   it('throws on invalid purchasedAt', () => {
     expect(() => validateCarInput({ name: '車', plate: 'A1', purchasedAt: 'not-a-date' })).toThrow(/日期/)
   })
+
+  it('throws on out-of-range day silently coerced (2024-02-30)', () => {
+    expect(() => validateCarInput({ name: '車', plate: 'A1', purchasedAt: '2024-02-30' })).toThrow(/不存在/)
+  })
+
+  it('throws on out-of-range day (2024-06-31)', () => {
+    expect(() => validateCarInput({ name: '車', plate: 'A1', purchasedAt: '2024-06-31' })).toThrow(/不存在/)
+  })
+
+  it('throws on US-format date string (06-01-2024)', () => {
+    expect(() => validateCarInput({ name: '車', plate: 'A1', purchasedAt: '06-01-2024' })).toThrow(/格式錯誤/)
+  })
 })
