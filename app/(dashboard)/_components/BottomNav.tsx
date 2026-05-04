@@ -9,21 +9,23 @@ import { NavHomeIcon, NavListIcon, NavAssetsIcon, NavSettingsIcon } from './TabI
 interface Props {
   onAddClick: () => void
   hideFab?: boolean
+  fabVariant?: 'primary' | 'accent'
 }
 
 const TABS = [
   { id: 'home', label: '首頁', href: '/dashboard', icon: NavHomeIcon },
   { id: 'list', label: '紀錄', href: '/records', icon: NavListIcon },
-  { id: 'assets', label: '資產', href: '/coming-soon?next=assets', icon: NavAssetsIcon },
+  { id: 'assets', label: '資產', href: '/assets', icon: NavAssetsIcon },
   { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
 ] as const
 
-export function BottomNav({ onAddClick, hideFab = false }: Props) {
+export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary' }: Props) {
   const pathname = usePathname()
 
   const getActiveTab = (): typeof TABS[number]['id'] => {
     if (pathname === '/dashboard') return 'home'
     if (pathname === '/records') return 'list'
+    if (pathname.startsWith('/assets')) return 'assets'
     if (pathname === '/settings') return 'settings'
     return 'home'
   }
@@ -46,7 +48,7 @@ export function BottomNav({ onAddClick, hideFab = false }: Props) {
           onClick={onAddClick}
           className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
           style={{
-            background: 'var(--ink)',
+            background: fabVariant === 'accent' ? 'var(--accent)' : 'var(--ink)',
             color: '#fff',
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
