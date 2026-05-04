@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { validateCarInput } from '@/lib/validators'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { listAssetsForGroup } from '@/lib/db/queries/asset'
 
 async function getViewerGroup() {
   const supabase = await createClient()
@@ -112,4 +113,21 @@ export async function softDeleteCar(id: string): Promise<void> {
 
   revalidatePath('/assets')
   revalidatePath('/records')
+}
+
+export interface PickerAsset {
+  id: string
+  type: 'car' | 'house' | 'child' | 'insurance'
+  name: string
+  plate: string | null
+}
+
+/**
+ * Lightweight asset list for AssetPickerSheet — name + plate only, excludes
+ * deleted assets (new transaction links can never point at zombies).
+ */
+export async function loadAssetsForPicker(): Promise<PickerAsset[]> {
+  const group = await getViewerGroup()
+  const rows = await listAssetsForGroup(group.id)
+  return rows.map(r => ({ id: r.id, type: r.type, name: r.name, plate: r.plate }))
 }
