@@ -24,7 +24,7 @@ function createQueryMock() {
     return Promise.resolve(queue.shift() ?? []).then(onFulfilled)
   })
 
-  return { builder, queueResult: (value: unknown[]) => queue.push(value) }
+  return { builder, queue, queueResult: (value: unknown[]) => queue.push(value) }
 }
 
 const queryMock = createQueryMock()
@@ -34,7 +34,9 @@ export const mockDb = {
   insert: vi.fn(() => queryMock.builder),
   update: vi.fn(() => queryMock.builder),
   delete: vi.fn(() => queryMock.builder),
-  execute: vi.fn(),
+  // db.execute(sql`...`) — also consumes from the shared queue so raw-SQL queries
+  // can be tested with the same queueDbResult helper as chainable queries.
+  execute: vi.fn(() => Promise.resolve(queryMock.queue.shift() ?? [])),
   // transaction: just call the callback with `this` (so nested ops use the same builder)
   transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(mockDb)),
 }
@@ -59,5 +61,6 @@ export function resetDbMocks() {
   mockDb.insert.mockImplementation(() => queryMock.builder)
   mockDb.update.mockImplementation(() => queryMock.builder)
   mockDb.delete.mockImplementation(() => queryMock.builder)
+  mockDb.execute.mockImplementation(() => Promise.resolve(queryMock.queue.shift() ?? []))
   mockDb.transaction.mockImplementation(async (fn) => fn(mockDb))
 }
