@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { validateCarInput } from '@/lib/validators'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { listAssetsForGroup } from '@/lib/db/queries/asset'
+import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 
 async function getViewerGroup() {
   const supabase = await createClient()
@@ -130,4 +130,27 @@ export async function loadAssetsForPicker(): Promise<PickerAsset[]> {
   const group = await getViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows.map(r => ({ id: r.id, type: r.type, name: r.name, plate: r.plate }))
+}
+
+export interface LoadedAsset {
+  id: string
+  name: string
+  plate: string | null
+  deletedAt: string | null  // ISO
+}
+
+/**
+ * Loads a single asset for display (e.g. AddSheet's "關聯資產" row showing
+ * "我的 Tesla（已刪除）"). Returns null if not found or wrong group.
+ */
+export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
+  const group = await getViewerGroup()
+  const row = await getAssetById(assetId, group.id)
+  if (!row) return null
+  return {
+    id: row.id,
+    name: row.name,
+    plate: row.plate,
+    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
+  }
 }

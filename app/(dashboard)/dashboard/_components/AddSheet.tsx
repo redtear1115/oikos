@@ -6,7 +6,9 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron, DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
+import { AssetPickerSheet } from './AssetPickerSheet'
 import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
+import { loadAsset } from '@/actions/asset'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
@@ -22,6 +24,7 @@ export interface AddSheetInitial {
   splitType: SplitType
   payerId: string
   transactedAt: string  // ISO
+  assetId?: string | null
 }
 
 interface Props {
@@ -30,6 +33,10 @@ interface Props {
   initial?: AddSheetInitial
   /** Called after a successful create/edit/delete. Caller refreshes its own data. */
   onMutated?: () => void
+  /** When opening in create mode from a car-detail FAB, prefill the asset link. */
+  prefilledAssetId?: string | null
+  /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB). */
+  prefilledCategory?: CategoryId
 }
 
 
@@ -62,7 +69,7 @@ function splitSub(splitId: SplitType, payerWho: 'M' | 'T', amount: number): stri
     : `你欠對方 NT$${half.toLocaleString('en-US')}`
 }
 
-export function AddSheet({ open, onClose, initial, onMutated }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
@@ -74,6 +81,9 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
+  const [assetId, setAssetId] = useState<string | null>(null)
+  const [assetInfo, setAssetInfo] = useState<{ name: string; plate: string | null; deletedAt: string | null } | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
@@ -93,14 +103,17 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
       const localYMD =
         `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
       setDate(localYMD)
+      setAssetId(initial.assetId ?? null)
     } else {
       setAmount('')
       setDesc('')
-      setCategory('food')
+      setCategory(prefilledCategory ?? 'food')
       setSplit(isSolo ? 'all_mine' : viewer.defaultSplitType)
       setPayerWho('M')
       setDate(localTodayISO())
+      setAssetId(prefilledAssetId ?? null)
     }
+    setAssetInfo(null)
     setShowCal(false)
     setError('')
     // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
@@ -113,7 +126,19 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
       el.select()
     }, 350)
     return () => clearTimeout(t)
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory])
+
+  useEffect(() => {
+    if (!open) return
+    if (!assetId) { setAssetInfo(null); return }
+    let cancelled = false
+    loadAsset(assetId).then((info) => {
+      if (cancelled) return
+      if (info) setAssetInfo({ name: info.name, plate: info.plate, deletedAt: info.deletedAt })
+      else setAssetInfo(null)
+    }).catch(() => { /* silent — display 'unknown' */ })
+    return () => { cancelled = true }
+  }, [assetId, open])
 
   const isEdit = !!initial
 
@@ -137,6 +162,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
             splitType,
             payerId,
             transactedAt,
+            assetId,
           })
         } else {
           await createTransaction({
@@ -146,6 +172,7 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
             splitType,
             payerId,
             transactedAt,
+            assetId,
           })
         }
         onMutated?.()
@@ -362,6 +389,40 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
             </div>
           </div>
 
+          {/* Asset link (visible in both solo and dual mode) */}
+          <div className="px-5 pt-2 pb-[18px] mt-1" style={{ borderTop: '1px solid var(--hairline)' }}>
+            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              關聯資產（選填）
+            </div>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+            >
+              <div className="flex-1">
+                {assetId && assetInfo ? (
+                  <>
+                    <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
+                      {assetInfo.name}
+                      {assetInfo.deletedAt && (
+                        <span className="ml-2 text-xs" style={{ color: 'var(--ink-3)' }}>（已刪除）</span>
+                      )}
+                    </div>
+                    {assetInfo.plate && (
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{assetInfo.plate}</div>
+                    )}
+                  </>
+                ) : assetId && !assetInfo ? (
+                  <div className="text-[15px]" style={{ color: 'var(--ink-3)' }}>載入中…</div>
+                ) : (
+                  <div className="text-[15px]" style={{ color: 'var(--ink-3)' }}>不關聯</div>
+                )}
+              </div>
+              <Chevron />
+            </button>
+          </div>
+
           {!isSolo && (
             <div className="px-5 pt-2 pb-[18px] mt-1"
               style={{ borderTop: '1px solid var(--hairline)' }}>
@@ -463,6 +524,13 @@ export function AddSheet({ open, onClose, initial, onMutated }: Props) {
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
         onConfirm={performDelete}
+      />
+
+      <AssetPickerSheet
+        open={pickerOpen && open}
+        selectedAssetId={assetId}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(id) => setAssetId(id)}
       />
     </>
   )
