@@ -60,8 +60,8 @@ export function RecordsList({ initial, pageSize }: Props) {
   const filterActive = filter !== null && isFilterActive(filter)
 
   return (
-    <div className="relative min-h-screen pb-[92px]">
-      <div className="px-5 pt-[60px] pb-2 flex items-end justify-between">
+    <div className="relative min-h-dvh pb-[92px]">
+      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-end justify-between">
         <div
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}

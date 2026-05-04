@@ -6,6 +6,7 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { viewerBalance } from '@/lib/balance'
 import { SettlementForm } from './SettlementForm'
+import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 
 interface Props {
@@ -63,6 +64,8 @@ export function BalanceHero({ rawBalance, onAddClick, onSettleMutated }: Props) 
 
   return (
     <div className="px-5 pt-6 pb-5">
+      <ModeTogglePlaceholder />
+
       <button
         type="button"
         onClick={() => canSettle && setSettleOpen((v) => !v)}

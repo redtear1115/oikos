@@ -2,6 +2,7 @@
 
 :root {
   --bg: #FBEDE0;
+  --bg-page: #E8D5B8;     /* darker frame visible behind the 448px app on landscape / desktop */
   --surface: #FFFFFF;
   --surface-alt: #FFF6EC;
   --ink: #3A2419;
@@ -40,7 +41,7 @@
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 }
 
-html, body { margin: 0; padding: 0; background: var(--bg); }
+html, body { margin: 0; padding: 0; background: var(--bg-page); }
 body {
   color: var(--ink);
   font-family: var(--font-sans);

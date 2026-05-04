@@ -55,7 +55,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <ViewerProvider value={value}>
       <RealtimeProvider groupId={group.id}>
-        <div className="relative max-w-md mx-auto min-h-screen" style={{ background: 'var(--bg)' }}>
+        <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
           {children}
         </div>
       </RealtimeProvider>

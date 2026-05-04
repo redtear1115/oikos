@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
+import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { SoloBanner } from './SoloBanner'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
@@ -91,11 +92,13 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const handleMutated = () => router.refresh()
 
   return (
-    <div className="relative min-h-screen pb-[92px]">
+    <div className="relative min-h-dvh pb-[92px]">
       <BrandHeader />
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-6 pb-5">
+            <ModeTogglePlaceholder />
+
             <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
               <span>你還在獨自記帳</span>
               <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>

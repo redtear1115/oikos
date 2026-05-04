@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
 
@@ -51,6 +52,8 @@ export function SoloBanner({ onDismiss }: Props = {}) {
 
   return (
     <div className="px-5 pt-6 pb-5">
+      <ModeTogglePlaceholder />
+
       <div className="flex items-start gap-[14px]">
         <Avatar who="T" initial="?" src={null} size={44} />
         <div className="flex-1 min-w-0 pt-[2px]">

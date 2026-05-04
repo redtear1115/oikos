@@ -89,7 +89,7 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
 
   return (
     <>
-      <div className="px-5 pt-[60px] pb-4">
+      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}

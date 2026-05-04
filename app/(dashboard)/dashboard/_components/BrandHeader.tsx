@@ -7,15 +7,15 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 export function BrandHeader() {
   const { group, viewer, partner } = useMember()
   return (
-    <div className="flex items-center justify-between px-5 pt-[60px] pb-0">
-      <div className="flex items-center gap-[10px]">
+    <div className="flex items-center justify-between gap-3 px-5 pt-[max(env(safe-area-inset-top),24px)] pb-0">
+      <div className="flex items-center gap-[10px] min-w-0 flex-1">
         <FutariMark size={36} />
-        <div className="text-[19px] font-medium tracking-tight"
+        <div className="text-[19px] font-medium tracking-tight truncate"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {group.name}
         </div>
       </div>
-      <div className="flex">
+      <div className="flex shrink-0">
         <Avatar who="M" initial={viewer.initial} src={viewer.avatarUrl} size={26} />
         {partner && (
           <div className="-ml-[7px]">
