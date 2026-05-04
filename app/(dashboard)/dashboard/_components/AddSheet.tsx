@@ -84,6 +84,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [assetId, setAssetId] = useState<string | null>(null)
   const [assetInfo, setAssetInfo] = useState<{ name: string; plate: string | null; deletedAt: string | null } | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const loadedIdRef = useRef<string | null>(null)
 
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
@@ -113,7 +114,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setDate(localTodayISO())
       setAssetId(prefilledAssetId ?? null)
     }
-    setAssetInfo(null)
     setShowCal(false)
     setError('')
     // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
@@ -130,13 +130,28 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
   useEffect(() => {
     if (!open) return
-    if (!assetId) { setAssetInfo(null); return }
+    if (!assetId) {
+      setAssetInfo(null)
+      loadedIdRef.current = null
+      return
+    }
+    if (loadedIdRef.current === assetId) return  // already loaded this one, skip refetch
     let cancelled = false
     loadAsset(assetId).then((info) => {
       if (cancelled) return
-      if (info) setAssetInfo({ name: info.name, plate: info.plate, deletedAt: info.deletedAt })
-      else setAssetInfo(null)
-    }).catch(() => { /* silent — display 'unknown' */ })
+      if (info) {
+        setAssetInfo({ name: info.name, plate: info.plate, deletedAt: info.deletedAt })
+        loadedIdRef.current = assetId
+      } else {
+        setAssetInfo(null)
+        loadedIdRef.current = null
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setAssetInfo(null)  // don't leave stuck at "載入中…" on error
+        loadedIdRef.current = null
+      }
+    })
     return () => { cancelled = true }
   }, [assetId, open])
 

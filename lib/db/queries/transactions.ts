@@ -16,6 +16,7 @@ export interface FeedRow {
   transactedAt: Date
   createdAt: Date
   kind: FeedKind
+  assetId: string | null
 }
 
 /**
@@ -38,6 +39,7 @@ export interface TxnRow {
   category: string
   paidBy: string
   transactedAt: Date
+  assetId: string | null
 }
 
 /** Fetch most recent N active transactions for a group. */
@@ -54,6 +56,7 @@ export async function listRecentTransactions(
       category: cashTransactions.category,
       paidBy: cashTransactions.paidBy,
       transactedAt: cashTransactions.transactedAt,
+      assetId: cashTransactions.assetId,
     })
     .from(cashTransactions)
     .where(and(
@@ -113,6 +116,7 @@ export async function listTransactionsPaged(
         COALESCE(note, '還款') AS description,
         'settle' AS category,
         paid_by,
+        NULL::uuid AS asset_id,
         settled_at AS transacted_at,
         created_at,
         'settlement'::text AS kind
@@ -129,6 +133,7 @@ export async function listTransactionsPaged(
     description: string
     category: string
     paid_by: string
+    asset_id: string | null
     transacted_at: Date
     created_at: Date
     kind: FeedKind
@@ -136,7 +141,7 @@ export async function listTransactionsPaged(
     SELECT * FROM (
       SELECT
         id, amount, split_type, description, category, paid_by,
-        transacted_at, created_at,
+        asset_id, transacted_at, created_at,
         'transaction'::text AS kind
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
@@ -157,6 +162,7 @@ export async function listTransactionsPaged(
     description: r.description,
     category: r.category,
     paidBy: r.paid_by,
+    assetId: r.asset_id,
     // db.execute() returns timestamps as strings (postgres-js default), not Date —
     // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
     // matches what the page projections expect.

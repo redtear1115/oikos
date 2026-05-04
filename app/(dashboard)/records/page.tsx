@@ -31,6 +31,7 @@ export default async function RecordsPage() {
     transactedAt: r.transactedAt.toISOString(),
     createdAt: r.createdAt.toISOString(),
     kind: r.kind,
+    assetId: r.assetId,
   }))
 
   return <RecordsList initial={initial} pageSize={PAGE_SIZE} />

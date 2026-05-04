@@ -219,6 +219,7 @@ export interface PagedTxnRow {
   transactedAt: string  // ISO
   createdAt: string     // ISO (used as cursor part)
   kind: 'transaction' | 'settlement'
+  assetId: string | null
 }
 
 export async function loadMoreTransactions(
@@ -267,5 +268,6 @@ export async function loadMoreTransactions(
     transactedAt: r.transactedAt.toISOString(),
     createdAt: r.createdAt.toISOString(),
     kind: r.kind,
+    assetId: r.assetId,
   }))
 }

@@ -77,6 +77,7 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
         splitType: tx.splitType!,
         payerId: tx.paidBy,
         transactedAt: tx.transactedAt,
+        assetId: tx.assetId,
       })
     }
   }

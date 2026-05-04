@@ -44,6 +44,7 @@ export function RecordsList({ initial, pageSize }: Props) {
         splitType: tx.splitType!,
         payerId: tx.paidBy,
         transactedAt: tx.transactedAt,
+        assetId: tx.assetId,
       })
     }
   }

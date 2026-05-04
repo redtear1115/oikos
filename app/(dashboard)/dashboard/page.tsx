@@ -36,6 +36,7 @@ export default async function DashboardPage() {
     transactedAt: r.transactedAt.toISOString(),
     createdAt: r.createdAt.toISOString(),
     kind: r.kind,
+    assetId: r.assetId,
   }))
 
   return <Dashboard balance={balance} recent={recent} pageSize={PAGE_SIZE} />

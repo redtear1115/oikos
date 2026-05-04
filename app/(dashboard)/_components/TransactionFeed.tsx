@@ -100,6 +100,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         transactedAt: row.transactedAt,
         createdAt: row.createdAt,
         kind: 'transaction' as const,
+        assetId: row.assetId ?? null,
       }
       if (filter) {
         const f: FilterableRow = { paidBy: row.paidBy, splitType: row.splitType, category: row.category, kind: 'transaction' }
@@ -144,6 +145,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           transactedAt: row.settledAt,
           createdAt: row.createdAt,
           kind: 'settlement' as const,
+          assetId: null,
         }
         if (filter) {
           const f: FilterableRow = { paidBy: row.paidBy, splitType: null, category: 'settle', kind: 'settlement' }

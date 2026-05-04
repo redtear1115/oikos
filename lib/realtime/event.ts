@@ -19,6 +19,7 @@ export interface TxnRowPayload {
   transactedAt: string  // ISO
   createdAt: string     // ISO
   deletedAt: string | null  // ISO when soft-deleted
+  assetId: string | null
 }
 
 export interface SettleRowPayload {
