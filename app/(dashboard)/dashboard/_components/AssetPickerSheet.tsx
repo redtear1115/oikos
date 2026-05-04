@@ -27,15 +27,17 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     <>
       <div
         onClick={onClose}
-        className="fixed inset-0 z-[105] transition-opacity duration-[250ms]"
+        className="fixed inset-0 z-[112] transition-opacity duration-[250ms]"
         style={{
           background: 'rgba(31,27,22,0.45)',
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
         }}
       />
+      {/* Sheet sits at z-115 — must be ABOVE AddSheet's error toast (z-110) so a
+          mid-picker error doesn't render in front of the asset list. */}
       <div
-        className="fixed left-1/2 bottom-0 z-[110] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
+        className="fixed left-1/2 bottom-0 z-[115] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
           borderTopLeftRadius: 28,
