@@ -56,6 +56,8 @@ export function resetDbMocks() {
   Object.values(mockDb).forEach((fn) => {
     if (typeof fn === 'function' && 'mockReset' in fn) (fn as { mockReset: () => void }).mockReset()
   })
+  // Clear any orphaned queue entries from a test that errored before consuming.
+  queryMock.queue.length = 0
   // Re-initialize behaviors
   mockDb.select.mockImplementation(() => queryMock.builder)
   mockDb.insert.mockImplementation(() => queryMock.builder)
