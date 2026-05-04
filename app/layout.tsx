@@ -21,13 +21,35 @@ export const metadata: Metadata = {
   // against the canonical domain. Without it, Next.js logs warnings + falls back to
   // a guessed origin which is wrong on Vercel preview deployments.
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'),
-  title: 'Futari',
-  description: 'ふたり ・ 家計簿 — 兩個人的記帳本',
+  title: 'Futari · ふたり 家計簿',
+  description: '兩個人的日子，可以一起記下來。家庭記帳、分攤、結算。',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Futari',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Futari · ふたり 家計簿',
+    description: '兩個人的日子，可以一起記下來。',
+    url: '/',
+    siteName: 'Futari',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Futari' }],
+    locale: 'zh_TW',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Futari · ふたり 家計簿',
+    description: '兩個人的日子，可以一起記下來。',
+    images: ['/og-image.png'],
   },
 }
 
@@ -42,9 +64,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-TW" className={`${fraunces.variable} ${notoTC.variable}`}>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-      </head>
       <body className="antialiased">{children}</body>
     </html>
   )
