@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
@@ -36,8 +35,11 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
     setError('')
   }, [debtAmount])
 
-  // Component only mounts when the settle panel is open; focus once on mount.
-  useFocusAndSelectOnOpen(true, inputRef, 250)
+  // Component mounts exactly when the settle panel opens — focus once on mount.
+  useEffect(() => {
+    const t = setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select() }, 250)
+    return () => clearTimeout(t)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const chips = settlementChips(debtAmount)
   const parsed = parseInt(amount, 10) || 0

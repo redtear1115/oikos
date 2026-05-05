@@ -19,5 +19,7 @@ export function useFocusAndSelectOnOpen(
       ref.current?.select()
     }, delay)
     return () => clearTimeout(t)
-  }, [open, ref, delay])
+  // ref is a stable RefObject — omitting it from deps is intentional
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, delay])
 }
