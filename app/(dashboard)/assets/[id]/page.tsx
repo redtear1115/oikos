@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
-import { getAssetById, getAssetSummary, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
+import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
 import { computeAvgEcon } from '@/lib/fuelEcon'
 import { AssetDetailClient } from './_components/AssetDetailClient'
@@ -12,8 +12,26 @@ import { PetDetailClient } from './_components/PetDetailClient'
 import { PlantDetailClient } from './_components/PlantDetailClient'
 import { InsuranceDetailClient } from './_components/InsuranceDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails } from '@/lib/db/queries/aibutsu'
+import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
+import type { PagedTxnRow } from '@/actions/transaction'
 
 const PAGE_SIZE = 20
+
+function serializeTxns(rows: Awaited<ReturnType<typeof listTransactionsPagedForAsset>>): PagedTxnRow[] {
+  return rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    splitType: r.splitType,
+    description: r.description,
+    category: r.category,
+    paidBy: r.paidBy,
+    transactedAt: r.transactedAt.toISOString(),
+    createdAt: r.createdAt.toISOString(),
+    kind: r.kind,
+    assetId: r.assetId ?? null,
+    fuelLogId: r.fuelLogId ?? null,
+  }))
+}
 
 export default async function AssetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -32,47 +50,106 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const asset = await getAssetById(id, group.id)
   if (!asset || asset.deletedAt) notFound()
 
+  const allAssetsData = await listAssetsForGroup(group.id)
+  const allAssets = allAssetsData.map(a => ({ id: a.id, name: a.name, type: a.type }))
+
   if (asset.type === 'child') {
-    const [childDetailsData, summary] = await Promise.all([
+    const [childDetailsData, summary, txnRows] = await Promise.all([
       getChildDetails(asset.id),
       getAssetSummary(asset.id, group.id),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
     ])
+    const initialTxns = serializeTxns(txnRows)
+    const assetSheetInitial: AssetSheetInitial = {
+      id: asset.id,
+      type: 'child',
+      name: asset.name,
+      childNickname: childDetailsData?.nickname ?? null,
+      childGender: childDetailsData?.gender ?? null,
+      childBirthday: childDetailsData?.birthday ?? null,
+      childNationalId: childDetailsData?.nationalId ?? null,
+      childNhiNo: childDetailsData?.nhiNo ?? null,
+      childBloodType: childDetailsData?.bloodType ?? null,
+      childHospital: childDetailsData?.hospital ?? null,
+      childHeightCm: childDetailsData?.heightCm ?? null,
+      childWeightG: childDetailsData?.weightG ?? null,
+    }
     return (
       <ChildDetailClient
         assetId={asset.id}
         name={asset.name}
         details={childDetailsData}
         summary={summary}
+        assetSheetInitial={assetSheetInitial}
+        initialTxns={initialTxns}
+        pageSize={PAGE_SIZE}
+        allAssets={allAssets}
       />
     )
   }
 
   if (asset.type === 'pet') {
-    const [petDetailsData, summary] = await Promise.all([
+    const [petDetailsData, summary, txnRows] = await Promise.all([
       getPetDetails(asset.id),
       getAssetSummary(asset.id, group.id),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
     ])
+    const initialTxns = serializeTxns(txnRows)
+    const assetSheetInitial: AssetSheetInitial = {
+      id: asset.id,
+      type: 'pet',
+      name: asset.name,
+      petSpecies: petDetailsData?.species ?? null,
+      petBreed: petDetailsData?.breed ?? null,
+      petSex: petDetailsData?.sex ?? null,
+      petBirthDate: petDetailsData?.birthDate ?? null,
+      petAdoptedDate: petDetailsData?.adoptedDate ?? null,
+      petPurchaseCost: petDetailsData?.purchaseCost ?? null,
+      petWeightG: petDetailsData?.weightG ?? null,
+      petChipNo: petDetailsData?.chipNo ?? null,
+      petVet: petDetailsData?.vet ?? null,
+    }
     return (
       <PetDetailClient
         assetId={asset.id}
         name={asset.name}
         details={petDetailsData}
         summary={summary}
+        assetSheetInitial={assetSheetInitial}
+        initialTxns={initialTxns}
+        pageSize={PAGE_SIZE}
+        allAssets={allAssets}
       />
     )
   }
 
   if (asset.type === 'plant') {
-    const [plantDetailsData, summary] = await Promise.all([
+    const [plantDetailsData, summary, txnRows] = await Promise.all([
       getPlantDetails(asset.id),
       getAssetSummary(asset.id, group.id),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
     ])
+    const initialTxns = serializeTxns(txnRows)
+    const assetSheetInitial: AssetSheetInitial = {
+      id: asset.id,
+      type: 'plant',
+      name: asset.name,
+      plantSpecies: plantDetailsData?.species ?? null,
+      plantLocation: plantDetailsData?.location ?? null,
+      plantSproutedAt: plantDetailsData?.sproutedAt ?? null,
+      plantCost: plantDetailsData?.cost ?? null,
+      plantWaterEvery: plantDetailsData?.waterEvery ?? null,
+    }
     return (
       <PlantDetailClient
         assetId={asset.id}
         name={asset.name}
         details={plantDetailsData}
         summary={summary}
+        assetSheetInitial={assetSheetInitial}
+        initialTxns={initialTxns}
+        pageSize={PAGE_SIZE}
+        allAssets={allAssets}
       />
     )
   }
@@ -84,6 +161,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetId={asset.id}
         name={asset.name}
         details={insuranceDetailsData}
+        allAssets={allAssets}
       />
     )
   }
@@ -95,19 +173,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     fuelStatsForAsset(id),
   ])
 
-  const initialTxns = txnRows.map((r) => ({
-    id: r.id,
-    amount: r.amount,
-    splitType: r.splitType,
-    description: r.description,
-    category: r.category,
-    paidBy: r.paidBy,
-    transactedAt: r.transactedAt.toISOString(),
-    createdAt: r.createdAt.toISOString(),
-    kind: r.kind,
-    assetId: r.assetId ?? null,
-    fuelLogId: r.fuelLogId ?? null,
-  }))
+  const initialTxns = serializeTxns(txnRows)
 
   const avgEcon = computeAvgEcon(
     fuelLogs.map(f => ({ liters: f.liters, odometer: f.odometer, loggedAt: f.loggedAt })),
@@ -157,6 +223,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       initialTxns={initialTxns}
       initialFuelLogs={initialFuelLogs}
       pageSize={PAGE_SIZE}
+      allAssets={allAssets}
     />
   )
 }

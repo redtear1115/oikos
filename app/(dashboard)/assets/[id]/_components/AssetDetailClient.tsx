@@ -8,6 +8,7 @@ import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_com
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { AssetHero } from './AssetHero'
+import { AssetSwitcher } from './AssetSwitcher'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -40,13 +41,14 @@ interface Props {
   initialTxns: PagedTxnRow[]
   initialFuelLogs: SerializedFuelLog[]
   pageSize: number
+  allAssets: Array<{ id: string; name: string; type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' }>
 }
 
 export function AssetDetailClient({
   assetId, assetSheetInitial, fuelType, primaryUserId,
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
-  initialTxns, initialFuelLogs, pageSize,
+  initialTxns, initialFuelLogs, pageSize, allAssets,
 }: Props) {
   const router = useRouter()
   const [editAssetOpen, setEditAssetOpen] = useState(false)
@@ -141,6 +143,7 @@ export function AssetDetailClient({
         avgEcon={avgEcon}
         fuelLogCount={initialFuelLogs.length}
         onEdit={() => setEditAssetOpen(true)}
+        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
       />
 
       <TransactionFeed

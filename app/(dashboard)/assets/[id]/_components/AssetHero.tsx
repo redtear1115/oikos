@@ -12,6 +12,7 @@ interface AssetHeroProps {
   avgEcon: number | null
   fuelLogCount: number
   onEdit?: () => void
+  switcher?: React.ReactNode
 }
 
 function BackButton() {
@@ -50,7 +51,7 @@ function EditPencilButton({ onClick }: { onClick: () => void }) {
 
 export function AssetHero({
   name, plate, brand, model, year, fuelType,
-  monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit,
+  monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit, switcher,
 }: AssetHeroProps) {
   const isElectric = fuelType === 'electric'
 
@@ -64,6 +65,7 @@ export function AssetHero({
             {name}
           </div>
           {onEdit && <EditPencilButton onClick={onEdit} />}
+          {switcher}
         </div>
         <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
           {plate && <span>{plate}</span>}
@@ -91,6 +93,7 @@ export function AssetHero({
           {name}
         </div>
         {onEdit && <EditPencilButton onClick={onEdit} />}
+        {switcher}
       </div>
       <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
         {plate && <span>{plate}</span>}

@@ -14,9 +14,10 @@ interface AibutsuHeaderProps {
   name: string
   subtitle?: string | null
   onEditClick?: () => void
+  switcher?: React.ReactNode
 }
 
-export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHeaderProps) {
+export function AibutsuHeader({ kind, name, subtitle, onEditClick, switcher }: AibutsuHeaderProps) {
   const tint = TINTS[kind]
   return (
     <div className="px-5 pt-12 pb-3" style={{ background: tint.bg }}>
@@ -49,6 +50,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
                 </svg>
               </button>
             )}
+            {switcher}
           </div>
           {subtitle && (
             <div

@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
+import { AssetSwitcher } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
+
+type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 
 const KIND_LABELS: Record<string, string> = {
   medical: '醫療', life: '壽險', accident: '意外',
@@ -21,9 +24,10 @@ interface Props {
   assetId: string
   name: string
   details: InsuranceDetailsRow | null
+  allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function InsuranceDetailClient({ assetId, name, details }: Props) {
+export function InsuranceDetailClient({ assetId, name, details, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const tint = useTint('insurance')
@@ -43,7 +47,12 @@ export function InsuranceDetailClient({ assetId, name, details }: Props) {
 
   return (
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
-      <AibutsuHeader kind="insurance" name={name} subtitle={subtitle || null} />
+      <AibutsuHeader
+        kind="insurance"
+        name={name}
+        subtitle={subtitle || null}
+        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
+      />
 
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
         <div className="text-[10px] tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>年繳保費</div>
