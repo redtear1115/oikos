@@ -75,7 +75,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     } else {
       setAmount('')
       setDesc('')
-      setCategory(prefilledCategory ?? 'food')
+      setCategory(prefilledCategory ?? 'dining')
       setSplit(isSolo ? 'all_mine' : viewer.defaultSplitType)
       setPayerWho('M')
       setDate(localTodayISO())
