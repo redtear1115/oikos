@@ -28,7 +28,7 @@ export function AssetHero({ name, plate, monthAmount, totalAmount, onEditClick }
         <button
           type="button"
           onClick={onEditClick}
-          aria-label="編輯這台車"
+          aria-label="編輯此愛物"
           className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
         >

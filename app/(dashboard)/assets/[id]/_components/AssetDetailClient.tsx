@@ -82,7 +82,10 @@ export function AssetDetailClient({
         onItemClick={handleTxItemClick}
         emptyState={
           <div className="text-center py-10 px-6 text-sm leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-            還沒有為這台車記下任何花費 —<br />戳右下角 + 開始
+            {assetSheetInitial.type === 'car'
+              ? <>還沒有為這台車記下任何花費 —<br />戳右下角 + 開始</>
+              : <>還沒有記下任何花費 —<br />戳右下角 + 開始</>
+            }
           </div>
         }
         loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
