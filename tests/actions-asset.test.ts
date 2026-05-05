@@ -251,6 +251,62 @@ describe('createCar with auto-transaction', () => {
   })
 })
 
+describe('editCar with primaryUserId + fuelType', () => {
+  it('updates carDetails with new fields, does NOT insert any transaction (E2 drift)', async () => {
+    queueDbResult([GROUP])               // group lookup
+    queueDbResult([{ id: 'asset-1' }])   // assets update .returning
+    queueDbResult([])                    // carDetails update
+
+    await editCar({
+      id: 'asset-1',
+      name: '阿白',
+      plate: 'ABC-1234',
+      purchasedAt: '2026-04-01',
+      purchasePrice: 600000,   // changed from 500k — drift expected per E2
+      primaryUserId: 'user-a',
+      fuelType: '98',
+    })
+
+    // Exactly 2 updates (assets + carDetails), no inserts
+    expect(mockDb.update).toHaveBeenCalledTimes(2)
+    expect(mockDb.insert).not.toHaveBeenCalled()
+
+    // Verify the carDetails payload includes the new fields
+    const valueCalls = mockBuilder.values.mock.calls
+    expect(valueCalls).toHaveLength(0)   // edit uses .set(), not .values()
+  })
+
+  it('accepts fuelType=electric on editCar (EV allowed at car level)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+
+    await expect(editCar({
+      id: 'asset-1',
+      name: '電車',
+      plate: 'EV-1234',
+      purchasedAt: null,
+      purchasePrice: null,
+      primaryUserId: null,
+      fuelType: 'electric',
+    })).resolves.toBeUndefined()
+  })
+
+  it('omitting primaryUserId/fuelType still works (Slice 1 callers, defaults applied)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+
+    await expect(editCar({
+      id: 'asset-1',
+      name: '車',
+      plate: 'A1',
+      purchasedAt: null,
+      purchasePrice: null,
+    })).resolves.toBeUndefined()
+  })
+})
+
 describe('softDeleteCar', () => {
   it('happy path: marks deleted_at, does NOT touch transaction.asset_id', async () => {
     queueDbResult([GROUP])

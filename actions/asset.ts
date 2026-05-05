@@ -115,6 +115,8 @@ export interface EditCarInput {
   plate: string
   purchasedAt: string | null
   purchasePrice: number | null
+  primaryUserId?: string | null      // NEW — Slice 2
+  fuelType?: '95' | '98' | 'diesel' | 'electric'  // NEW — Slice 2
 }
 
 export async function editCar(input: EditCarInput): Promise<void> {
@@ -141,9 +143,12 @@ export async function editCar(input: EditCarInput): Promise<void> {
         plate: validated.plate,
         purchasedAt: validated.purchasedAt,
         purchasePrice: validated.purchasePrice,
+        primaryUserId: validated.primaryUserId,
+        fuelType: validated.fuelType,
       })
       .where(eq(carDetails.assetId, input.id))
   })
+  // Per spec E2: do NOT touch the linked purchase transaction (drift allowed)
 
   revalidatePath('/assets')
   revalidatePath(`/assets/${input.id}`)
