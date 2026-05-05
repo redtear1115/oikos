@@ -145,8 +145,9 @@ export interface EditLifeEntityInput {
 }
 
 export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> {
-  const name = input.name.trim()
-  if (!name) throw new Error('名稱不可為空')
+  // Reuse validator for consistent name trimming + length check
+  // type field is irrelevant for edit; 'pet' is used as a placeholder
+  const { name } = validateLifeEntityInput({ type: 'pet', name: input.name })
   const group = await getViewerGroup()
 
   const updated = await db
@@ -179,6 +180,8 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
   if (updated.length === 0) throw new Error('找不到該愛物')
 
   revalidatePath('/assets')
+  revalidatePath(`/assets/${assetId}`)
+  revalidatePath('/records')
 }
 
 export interface PickerAsset {

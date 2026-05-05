@@ -162,6 +162,10 @@ describe('editLifeEntity', () => {
   it('throws on empty name', async () => {
     await expect(editLifeEntity({ id: 'asset-2', name: '  ' })).rejects.toThrow(/名稱/)
   })
+
+  it('throws on name over 32 chars', async () => {
+    await expect(editLifeEntity({ id: 'asset-2', name: 'a'.repeat(33) })).rejects.toThrow(/32/)
+  })
 })
 
 describe('softDeleteAsset', () => {
