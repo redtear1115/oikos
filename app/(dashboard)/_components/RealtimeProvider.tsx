@@ -1,9 +1,12 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
-import type { REALTIME_SUBSCRIBE_STATES } from '@supabase/realtime-js'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import type { REALTIME_SUBSCRIBE_STATES, RealtimePostgresChangesPayload } from '@supabase/realtime-js'
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload } from '@/lib/realtime/event'
+
+type PgPayload = RealtimePostgresChangesPayload<Record<string, unknown>>
 
 type Handler = (event: RealtimeEvent) => void
 
@@ -68,12 +71,11 @@ export function RealtimeProvider({ groupId, children }: Props) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'CashTransactions', filter: `group_id=eq.${groupId}` },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload: any) => {
+        (payload: PgPayload) => {
           if (payload.eventType === 'INSERT') {
-            dispatch({ kind: 'txn-insert', row: rowFromPayload(payload.new as Record<string, unknown>) as TxnRowPayload })
+            dispatch({ kind: 'txn-insert', row: rowFromPayload(payload.new) as TxnRowPayload })
           } else if (payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'txn-update', row: rowFromPayload(payload.new as Record<string, unknown>) as TxnRowPayload })
+            dispatch({ kind: 'txn-update', row: rowFromPayload(payload.new) as TxnRowPayload })
           }
           // DELETE: we soft-delete, so DELETE events shouldn't fire. Hard delete via pg_cron fires DELETE
           // but those rows are >1yr stale and likely already off-screen. Ignore.
@@ -81,19 +83,17 @@ export function RealtimeProvider({ groupId, children }: Props) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'Settlements', filter: `group_id=eq.${groupId}` },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload: any) => {
+        (payload: PgPayload) => {
           if (payload.eventType === 'INSERT') {
-            dispatch({ kind: 'settle-insert', row: rowFromPayload(payload.new as Record<string, unknown>) as SettleRowPayload })
+            dispatch({ kind: 'settle-insert', row: rowFromPayload(payload.new) as SettleRowPayload })
           } else if (payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'settle-update', row: rowFromPayload(payload.new as Record<string, unknown>) as SettleRowPayload })
+            dispatch({ kind: 'settle-update', row: rowFromPayload(payload.new) as SettleRowPayload })
           }
         })
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'GroupBalance', filter: `group_id=eq.${groupId}` },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload: any) => {
+        (payload: PgPayload) => {
           const b = payload.new as { balance: number; version: number }
           dispatch({ kind: 'balance-change', balance: b.balance, version: b.version })
         })
@@ -108,10 +108,9 @@ export function RealtimeProvider({ groupId, children }: Props) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'Assets', filter: `group_id=eq.${groupId}` },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (payload: any) => {
+        (payload: PgPayload) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'asset-changed', row: rowFromPayload(payload.new as Record<string, unknown>) as AssetRowPayload })
+            dispatch({ kind: 'asset-changed', row: rowFromPayload(payload.new) as AssetRowPayload })
           }
           // DELETE: we soft-delete; hard delete via pg_cron only happens >1yr later. Ignore.
         })
@@ -134,8 +133,7 @@ export function RealtimeProvider({ groupId, children }: Props) {
     // after ~1 hour). Without this, the channel keeps using a stale JWT and RLS
     // starts denying once the token expires, even though our cookie session is
     // still valid.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: authSub } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+    const { data: authSub } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       if (session) supabase.realtime.setAuth(session.access_token)
     })
 

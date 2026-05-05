@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
 
 interface Props {
   open: boolean
@@ -28,14 +29,9 @@ export function EditTextSheet({ open, title, initialValue, onSubmit, onClose, pl
     if (!open) return
     setValue(initialValue)
     setError('')
-    const t = setTimeout(() => {
-      const el = inputRef.current
-      if (!el) return
-      el.focus()
-      el.select()
-    }, 250)
-    return () => clearTimeout(t)
   }, [open, initialValue])
+
+  useFocusAndSelectOnOpen(open, inputRef, 250)
 
   if (!open) return null
 

@@ -7,7 +7,7 @@ import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
-import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -16,16 +16,6 @@ interface Props {
   viewerIsDebtor: boolean
   onClose: () => void
   onMutated: () => void
-}
-
-function dateLabel(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${y} 年 ${m} 月 ${d} 日`
-}
-
-function weekday(iso: string) {
-  const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
-  return days[new Date(iso + 'T00:00:00').getDay()]
 }
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
@@ -43,14 +33,13 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
     setDate(localTodayISO())
     setShowCal(false)
     setError('')
-    const t = setTimeout(() => {
-      const el = inputRef.current
-      if (!el) return
-      el.focus()
-      el.select()
-    }, 250)
-    return () => clearTimeout(t)
   }, [debtAmount])
+
+  // Component mounts exactly when the settle panel opens — focus once on mount.
+  useEffect(() => {
+    const t = setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select() }, 250)
+    return () => clearTimeout(t)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const chips = settlementChips(debtAmount)
   const parsed = parseInt(amount, 10) || 0

@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
+import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
+import { PayerToggle } from './PayerToggle'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
-import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
 
 export interface SettlementSheetInitial {
   id: string
@@ -22,16 +23,6 @@ interface Props {
   onClose: () => void
   initial: SettlementSheetInitial | null
   onMutated?: () => void
-}
-
-function dateLabel(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${y} 年 ${m} 月 ${d} 日`
-}
-
-function weekday(iso: string) {
-  const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
-  return days[new Date(iso + 'T00:00:00').getDay()]
 }
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
@@ -54,14 +45,9 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
     setDate(`${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`)
     setShowCal(false)
     setError('')
-    const t = setTimeout(() => {
-      const el = amountInputRef.current
-      if (!el) return
-      el.focus()
-      el.select()
-    }, 350)
-    return () => clearTimeout(t)
   }, [open, initial, viewer.id])
+
+  useFocusAndSelectOnOpen(open, amountInputRef)
 
   const handleSave = () => {
     if (!initial) return
@@ -179,30 +165,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               />
             </label>
 
-            <div className="mt-[22px] flex items-center justify-center gap-2.5 text-[13px]"
-              style={{ color: 'var(--ink-2)' }}>
-              <span>誰付的？</span>
-              <div className="inline-flex rounded-full p-[3px] gap-0.5"
-                style={{ background: 'rgba(31,27,22,0.05)' }}>
-                {(['M', 'T'] as const).map((w) => (
-                  <button key={w} onClick={() => setPayerWho(w)}
-                    className="h-7 px-3.5 rounded-full border-0 text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
-                    style={{
-                      background: payerWho === w ? 'var(--surface)' : 'transparent',
-                      color: payerWho === w ? 'var(--ink)' : 'var(--ink-2)',
-                      boxShadow: payerWho === w ? '0 1px 3px rgba(31,27,22,0.10)' : 'none',
-                    }}>
-                    <Avatar
-                      who={w}
-                      initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
-                      src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
-                      size={18}
-                    />
-                    {w === 'M' ? '我' : '對方'}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <PayerToggle value={payerWho} onChange={setPayerWho} />
           </div>
 
           {/* Date */}
