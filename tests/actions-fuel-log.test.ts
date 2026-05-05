@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createFuelLog, editFuelLog } from '@/actions/fuelLog'
+import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -271,5 +271,65 @@ describe('editFuelLog', () => {
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-stranger', splitType: 'all_mine',
     })).rejects.toThrow('付款人不在家計簿內')
+  })
+})
+
+describe('softDeleteFuelLog', () => {
+  it('soft-deletes both FuelLog and linked CashTransaction atomically + recalc', async () => {
+    queueDbResult([GROUP])                                                          // group lookup
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])     // fuel log lookup
+    queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // asset ownership
+    // Inside the transaction:
+    queueDbResult([{ id: 'fuel-log-id' }])             // UPDATE fuelLogs .returning
+    queueDbResult([{ id: 'old-txn-id' }])              // UPDATE cashTransactions .returning
+    queueDbResult([])                                  // recalc UPDATE
+    queueDbResult([])                                  // recalc UPDATE delta (extra safety)
+
+    await softDeleteFuelLog('fuel-log-id')
+
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    // update was called: once for fuelLogs, once for the linked cashTransactions row(s)
+    expect(mockDb.update).toHaveBeenCalledTimes(2)
+    // No inserts in a soft-delete
+    expect(mockDb.insert).not.toHaveBeenCalled()
+
+    // Both .set() calls must set deletedAt to a Date
+    const setCalls = mockBuilder.set.mock.calls
+    expect(setCalls.length).toBeGreaterThanOrEqual(2)
+    const fuelLogSet = setCalls[0][0] as Record<string, unknown>
+    const txnSet = setCalls[1][0] as Record<string, unknown>
+    expect(fuelLogSet.deletedAt).toBeInstanceOf(Date)
+    expect(txnSet.deletedAt).toBeInstanceOf(Date)
+  })
+
+  it('idempotent: soft-deleting an already-deleted fuel log throws', async () => {
+    queueDbResult([GROUP])                                                                    // group
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: new Date() }])         // fuel log soft-deleted
+
+    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow(/已刪除|不存在/)
+    // Should not enter the transaction at all
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('throws when fuel log is not found', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])  // no fuel log row
+
+    await expect(softDeleteFuelLog('missing-id')).rejects.toThrow(/已刪除|不存在/)
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('rejects when fuel log asset is not in viewer group', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'foreign-asset', deletedAt: null }])
+    queueDbResult([])  // asset lookup empty (asset not in this group)
+
+    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow(/不在家計簿內/)
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('Unauthorized')
   })
 })

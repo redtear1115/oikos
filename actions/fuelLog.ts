@@ -223,3 +223,83 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
 
   return { id: result.id }
 }
+
+/**
+ * Atomic soft-delete of a fuel-up event:
+ *   UPDATE FuelLogs SET deleted_at=NOW()
+ *   UPDATE CashTransactions SET deleted_at=NOW() WHERE fuel_log_id = … AND deleted_at IS NULL
+ *   recalcGroupBalance — all inside one DB transaction.
+ *
+ * Idempotent: throws if the fuel log is missing or already soft-deleted (matches
+ * Phase 1 softDeleteTransaction semantics — no silent no-op on stale clicks).
+ */
+export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  // Find viewer's group
+  const [group] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) throw new Error('找不到家計簿')
+
+  // Look up the fuel log; reject if missing or already soft-deleted (idempotency).
+  const [existingLog] = await db
+    .select({ id: fuelLogs.id, assetId: fuelLogs.assetId, deletedAt: fuelLogs.deletedAt })
+    .from(fuelLogs)
+    .where(eq(fuelLogs.id, fuelLogId))
+    .limit(1)
+  if (!existingLog || existingLog.deletedAt) {
+    throw new Error('加油記錄已刪除或不存在')
+  }
+
+  // Verify the fuel log's asset belongs to viewer's group (ownership check).
+  const [asset] = await db
+    .select({ id: assets.id, deletedAt: assets.deletedAt })
+    .from(assets)
+    .where(and(
+      eq(assets.id, existingLog.assetId),
+      eq(assets.groupId, group.id),
+      eq(assets.type, 'car'),
+    ))
+    .limit(1)
+  if (!asset) throw new Error('關聯資產不在家計簿內')
+
+  await db.transaction(async (tx) => {
+    const now = new Date()
+
+    // 1. Soft-delete the FuelLog. .returning() + length check guards against a
+    //    partner concurrently soft-deleting between our lookup and this UPDATE.
+    const deletedLog = await tx
+      .update(fuelLogs)
+      .set({ deletedAt: now })
+      .where(and(
+        eq(fuelLogs.id, fuelLogId),
+        isNull(fuelLogs.deletedAt),
+      ))
+      .returning({ id: fuelLogs.id })
+    if (deletedLog.length === 0) throw new Error('加油記錄已刪除或不存在')
+
+    // 2. Soft-delete the linked CashTransaction(s). Under normal flow there's
+    //    exactly one active row per fuelLogId, but matching `deleted_at IS NULL`
+    //    keeps this safe if an editFuelLog left zombies. No length check —
+    //    a missing linked txn shouldn't block deletion of the fuel log itself.
+    await tx
+      .update(cashTransactions)
+      .set({ deletedAt: now })
+      .where(and(
+        eq(cashTransactions.fuelLogId, fuelLogId),
+        isNull(cashTransactions.deletedAt),
+      ))
+      .returning({ id: cashTransactions.id })
+
+    await recalcGroupBalance(group.id, tx)
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/records')
+  revalidatePath(`/assets/${existingLog.assetId}`)
+}
