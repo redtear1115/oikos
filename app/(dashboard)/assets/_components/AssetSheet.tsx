@@ -247,6 +247,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       setPlate('')
                       setPurchasedAt(null)
                       setPurchasePrice('')
+                      setColor(null)
+                      setYear('')
+                      setBrand('')
+                      setModel('')
+                      setInitialOdometer('')
                     }}
                     className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
                     style={{
