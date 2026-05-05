@@ -3,7 +3,7 @@
 import { db } from '@/lib/db/client'
 import { assets, carDetails, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
-import { validateCarInput } from '@/lib/validators'
+import { validateCarInput, validateLifeEntityInput } from '@/lib/validators'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
@@ -117,6 +117,68 @@ export async function softDeleteCar(id: string): Promise<void> {
   // ensures the next nav reads fresh state and notFound()s cleanly.
   revalidatePath(`/assets/${id}`)
   revalidatePath('/records')
+}
+
+// ── Life entity (child / pet / plant) ─────────────────────────────────────
+
+export interface CreateLifeEntityInput {
+  type: 'child' | 'pet' | 'plant'
+  name: string
+}
+
+export async function createLifeEntity(input: CreateLifeEntityInput): Promise<{ id: string }> {
+  const validated = validateLifeEntityInput(input)
+  const group = await getViewerGroup()
+
+  const [created] = await db
+    .insert(assets)
+    .values({ groupId: group.id, type: validated.type, name: validated.name })
+    .returning({ id: assets.id })
+
+  revalidatePath('/assets')
+  return { id: created.id }
+}
+
+export interface EditLifeEntityInput {
+  id: string
+  name: string
+}
+
+export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> {
+  const name = input.name.trim()
+  if (!name) throw new Error('名稱不可為空')
+  const group = await getViewerGroup()
+
+  const updated = await db
+    .update(assets)
+    .set({ name })
+    .where(and(
+      eq(assets.id, input.id),
+      eq(assets.groupId, group.id),
+      isNull(assets.deletedAt),
+    ))
+    .returning({ id: assets.id })
+  if (updated.length === 0) throw new Error('找不到該愛物')
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+export async function softDeleteAsset(assetId: string): Promise<void> {
+  const group = await getViewerGroup()
+
+  const updated = await db
+    .update(assets)
+    .set({ deletedAt: new Date() })
+    .where(and(
+      eq(assets.id, assetId),
+      eq(assets.groupId, group.id),
+      isNull(assets.deletedAt),
+    ))
+    .returning({ id: assets.id })
+  if (updated.length === 0) throw new Error('找不到該愛物')
+
+  revalidatePath('/assets')
 }
 
 export interface PickerAsset {

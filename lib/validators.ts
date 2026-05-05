@@ -142,3 +142,15 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
 
   return { name, plate: rawPlate, purchasedAt, purchasePrice }
 }
+
+export interface LifeEntityInput {
+  type: 'child' | 'pet' | 'plant'
+  name: string
+}
+
+export function validateLifeEntityInput(input: LifeEntityInput): LifeEntityInput {
+  const name = input.name.trim()
+  if (!name) throw new Error('名稱不可為空')
+  if (name.length > 32) throw new Error('名稱最多 32 字')
+  return { type: input.type, name }
+}
