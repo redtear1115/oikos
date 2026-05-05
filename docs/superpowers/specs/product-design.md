@@ -1,4 +1,4 @@
-# Oikos — 整體設計規格
+# Oikos 整體產品設計
 
 > 家庭記帳工具，固定兩人（夫妻／伴侶）使用。
 > 本文記錄架構決定，作為實作的「為什麼」依據。具體 schema / API 細節以程式碼為準。
@@ -18,7 +18,7 @@
 | Real-time | Supabase Realtime postgres_changes | partner 異裝置變動立即反應 |
 | PWA | 是 | 加到主畫面 |
 
-單一 Supabase project；`.env.local` 區分 dev/prod。
+dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 ---
 
@@ -66,9 +66,9 @@
 - `OikosGroups`（含 member_a / member_b）
 - `GroupInvites`（token-based 7 天 expire）
 - `GroupBalance`（derived cache，每次寫入重算）
-- `CashTransactions`（核心，nullable `asset_id` 預留 Phase 2）
+- `CashTransactions`（核心，nullable `asset_id` 關聯愛物）
 - `Settlements`
-- `Assets` + `CarDetails` / `HouseDetails` / `ChildDetails` / `InsuranceDetails`（Phase 2）
+- `Assets` + `CarDetails` / `ChildDetails` / `PetDetails` / `InsuranceDetails`（Phase 2）
 - `FuelLogs`（Phase 2，車輛專用）
 - `InvoiceCredentials`（Phase 3，加密驗證碼）
 
@@ -84,14 +84,14 @@
 |---|---|---|
 | 0 | 專案建置 + Auth + Group 建立 + Invite + RLS + PWA | ✅ |
 | 1 | 核心記帳：transaction CRUD + settlement + 列表 + 篩選 + Settings + Real-time + pg_cron cleanup + 測試 | ✅ |
-| 2 | 資產管理（車輛 → 保險 → 孩子 → 房子），每筆 transaction 可關聯 asset | ⬜ |
+| 1.1 | Onboarding flow + Solo Mode | ✅ |
+| 2 | 愛物管理（Slice 1: 車 ✅ → Slice 2: FuelLog ✅ → Slice 3: Child/Pet/Plant 🔄 → House → Insurance） | 🔄 |
 | 3 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
 
-Phase 1 詳細功能對照 → [2026-05-02-phase-1-transactions-design.md](2026-05-02-phase-1-transactions-design.md)
+詳細設計見各 spec：[transactions-design.md](transactions-design.md) · [car-fuel-log-design.md](car-fuel-log-design.md) · [aibutsu-design.md](aibutsu-design.md) · [incomesheet-design.md](incomesheet-design.md)
 
 ---
 
-## 5. 待 Phase 2+ 決定
+## 5. 待決定
 
-- FuelLog `liters` 和 `price_per_liter` 的精度（毫升/分 整數 vs decimal）
 - Phase 3 APP_ID 申請時程（外部依賴）
