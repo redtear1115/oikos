@@ -69,8 +69,11 @@ export function AssetHero({
   // Gas variant — avg fuel econ big number + sub-stats row
   return (
     <div className="px-5 pt-[60px] pb-6">
-      <div className="text-2xl font-medium tracking-tight" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-        {name}
+      <div className="flex items-center">
+        <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+          {name}
+        </div>
+        {onEdit && <EditPencilButton onClick={onEdit} />}
       </div>
       <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
         {plate && <span>{plate}</span>}
