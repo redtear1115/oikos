@@ -6,7 +6,7 @@ import type { FeedRow, FeedKind, TxnCursor } from './transactions'
 export interface AssetWithCar {
   id: string
   groupId: string
-  type: 'car' | 'house' | 'child' | 'insurance'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
   deletedAt: Date | null
   createdAt: Date
@@ -21,8 +21,7 @@ export interface AssetWithCar {
 
 /**
  * List all non-deleted assets for a group with their car details joined.
- * Slice 1 only returns cars (filter on type='car'); other types are added in
- * later slices when they get UI.
+ * Non-car assets have null car detail fields.
  */
 export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[]> {
   const rows = await db
@@ -43,7 +42,6 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
     .where(and(
       eq(assets.groupId, groupId),
-      eq(assets.type, 'car'),
       isNull(assets.deletedAt),
     ))
     .orderBy(sql`${assets.createdAt} DESC`)
