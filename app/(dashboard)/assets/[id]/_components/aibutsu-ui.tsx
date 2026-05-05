@@ -87,7 +87,6 @@ export function AgeDisplay({ birth, accent }: { birth: string; accent: string })
           </>
         )}
       </div>
-      <div className="text-[10px] mt-1 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{birth}</div>
     </div>
   )
 }

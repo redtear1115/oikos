@@ -49,9 +49,12 @@ export function InsuranceDetailClient({ assetId, name, details, allAssets }: Pro
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="insurance"
-        name={name}
+        name={
+          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
+            <span>{name}</span>
+          </AssetSwitcher>
+        }
         subtitle={subtitle || null}
-        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
       />
 
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>

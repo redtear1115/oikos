@@ -9,6 +9,7 @@ import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_co
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { AssetHero } from './AssetHero'
 import { AssetSwitcher } from './AssetSwitcher'
+import { isDarkColor, FALLBACK_CAR_COLOR } from '../../_components/carColor'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -132,7 +133,15 @@ export function AssetDetailClient({
   return (
     <div className="relative min-h-screen pb-[92px]">
       <AssetHero
-        name={assetSheetInitial.name}
+        name={
+          <AssetSwitcher
+            currentAssetId={assetId}
+            allAssets={allAssets}
+            chevronInk={isDarkColor(assetSheetInitial.color ?? FALLBACK_CAR_COLOR) ? '#FFF6EC' : '#3A2419'}
+          >
+            <span>{assetSheetInitial.name}</span>
+          </AssetSwitcher>
+        }
         plate={assetSheetInitial.plate ?? null}
         brand={brand}
         model={model}
@@ -144,7 +153,6 @@ export function AssetDetailClient({
         avgEcon={avgEcon}
         fuelLogCount={initialFuelLogs.length}
         onEdit={() => setEditAssetOpen(true)}
-        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
       />
 
       <TransactionFeed

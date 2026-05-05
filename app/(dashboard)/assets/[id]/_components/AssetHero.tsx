@@ -3,7 +3,7 @@
 import { carBandBackground, carForeground, FALLBACK_CAR_COLOR } from '../../_components/carColor'
 
 interface AssetHeroProps {
-  name: string
+  name: React.ReactNode
   plate: string | null
   brand: string | null
   model: string | null
@@ -15,7 +15,6 @@ interface AssetHeroProps {
   avgEcon: number | null
   fuelLogCount: number
   onEdit?: () => void
-  switcher?: React.ReactNode
 }
 
 function BackButton({ btnBg, ink }: { btnBg: string; ink: string }) {
@@ -54,7 +53,7 @@ function EditPencilButton({ onClick, btnBg, ink }: { onClick: () => void; btnBg:
 
 export function AssetHero({
   name, plate, brand, model, year, fuelType, color,
-  monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit, switcher,
+  monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit,
 }: AssetHeroProps) {
   const isElectric = fuelType === 'electric'
   const swatch = color ?? FALLBACK_CAR_COLOR
@@ -70,7 +69,6 @@ export function AssetHero({
             {name}
           </div>
           {onEdit && <EditPencilButton onClick={onEdit} btnBg={fg.btnBg} ink={fg.ink} />}
-          {switcher}
         </div>
         <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: fg.inkSoft, fontFamily: 'var(--font-numeric)' }}>
           {plate && <span>{plate}</span>}
@@ -98,7 +96,6 @@ export function AssetHero({
           {name}
         </div>
         {onEdit && <EditPencilButton onClick={onEdit} btnBg={fg.btnBg} ink={fg.ink} />}
-        {switcher}
       </div>
       <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: fg.inkSoft, fontFamily: 'var(--font-numeric)' }}>
         {plate && <span>{plate}</span>}

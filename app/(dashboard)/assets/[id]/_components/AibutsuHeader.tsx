@@ -11,13 +11,14 @@ type TintKind = keyof typeof TINTS
 
 interface AibutsuHeaderProps {
   kind: TintKind
-  name: string
+  /** Page title — pass plain string, or wrap in <AssetSwitcher>...</AssetSwitcher>
+   *  to make it a tappable switcher. */
+  name: React.ReactNode
   subtitle?: string | null
   onEditClick?: () => void
-  switcher?: React.ReactNode
 }
 
-export function AibutsuHeader({ kind, name, subtitle, onEditClick, switcher }: AibutsuHeaderProps) {
+export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHeaderProps) {
   const tint = TINTS[kind]
   return (
     <div className="px-5 pt-12 pb-3" style={{ background: tint.bg }}>
@@ -34,8 +35,8 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, switcher }: A
           </svg>
         </a>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <div className="text-base font-semibold truncate" style={{ color: '#3A2419' }}>{name}</div>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <div className="text-lg font-semibold truncate min-w-0" style={{ color: '#3A2419' }}>{name}</div>
             {onEditClick && (
               <button
                 onClick={onEditClick}
@@ -50,7 +51,6 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, switcher }: A
                 </svg>
               </button>
             )}
-            {switcher}
           </div>
           {subtitle && (
             <div

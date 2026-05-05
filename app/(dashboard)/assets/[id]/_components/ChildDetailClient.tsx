@@ -67,10 +67,13 @@ export function ChildDetailClient({ assetId, name, details, summary, assetSheetI
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="child"
-        name={name}
+        name={
+          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
+            <span>{name}</span>
+          </AssetSwitcher>
+        }
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
-        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
       />
 
       {details?.birthday && (
@@ -83,6 +86,7 @@ export function ChildDetailClient({ assetId, name, details, summary, assetSheetI
 
       <SectionHeader>身分證件</SectionHeader>
       <InfoCard>
+        <InfoRow label="出生日" value={details?.birthday ?? ''} mono />
         <InfoRow label="身分證號" value={details?.nationalId ?? ''} mono />
         <InfoRow label="健保卡號" value={details?.nhiNo ?? ''} mono />
         <InfoRow label="出生醫院" value={details?.hospital ?? ''} />

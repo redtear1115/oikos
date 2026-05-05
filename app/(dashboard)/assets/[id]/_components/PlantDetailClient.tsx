@@ -80,10 +80,13 @@ export function PlantDetailClient({ assetId, name, details, summary, assetSheetI
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="plant"
-        name={name}
+        name={
+          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
+            <span>{name}</span>
+          </AssetSwitcher>
+        }
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
-        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
       />
 
       {details?.sproutedAt && (

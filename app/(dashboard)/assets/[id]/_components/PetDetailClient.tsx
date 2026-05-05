@@ -69,10 +69,13 @@ export function PetDetailClient({ assetId, name, details, summary, assetSheetIni
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="pet"
-        name={name}
+        name={
+          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
+            <span>{name}</span>
+          </AssetSwitcher>
+        }
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
-        switcher={<AssetSwitcher currentAssetId={assetId} allAssets={allAssets} />}
       />
 
       {details?.birthDate && (

@@ -8,6 +8,11 @@ type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 interface AssetSwitcherProps {
   currentAssetId: string
   allAssets: Array<{ id: string; name: string; type: AssetType }>
+  /** Foreground color for the chevron — defaults to ink. */
+  chevronInk?: string
+  /** Trigger content — typically the page title / name. Rendered inside the
+   *  click target with a chevron after it. */
+  children: React.ReactNode
 }
 
 const TYPE_LABELS: Record<AssetType, string> = {
@@ -19,7 +24,7 @@ const TYPE_LABELS: Record<AssetType, string> = {
   insurance: '保險',
 }
 
-export function AssetSwitcher({ currentAssetId, allAssets }: AssetSwitcherProps) {
+export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419', children }: AssetSwitcherProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -36,26 +41,32 @@ export function AssetSwitcher({ currentAssetId, allAssets }: AssetSwitcherProps)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
-  if (others.length === 0) return null
+  // No others to switch to — render the trigger inert (just the name, no chevron).
+  if (others.length === 0) {
+    return <div className="inline-flex items-center min-w-0">{children}</div>
+  }
 
   return (
-    <div ref={wrapRef} className="relative inline-flex">
+    <div ref={wrapRef} className="relative inline-flex items-center min-w-0">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-6 h-6 rounded-[7px] shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
-        style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
+        className="inline-flex items-center gap-1.5 min-w-0 bg-transparent border-0 p-0 cursor-pointer text-left"
         aria-label="切換愛物"
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-          <path d="M3 4.5l3 3 3-3" stroke="#3A2419" strokeWidth="1.4"
+        {children}
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0 opacity-60">
+          <path d="M3 4.5l3 3 3-3" stroke={chevronInk} strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
 
       {open && (
         <div
-          className="absolute left-0 top-[28px] z-50 min-w-[180px] max-h-[320px] overflow-auto rounded-[12px] py-1"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[200px] max-h-[320px] overflow-auto rounded-[12px] py-1"
+          role="listbox"
           style={{
             background: '#fff',
             border: '1px solid var(--hairline)',
@@ -66,6 +77,7 @@ export function AssetSwitcher({ currentAssetId, allAssets }: AssetSwitcherProps)
             <button
               key={a.id}
               type="button"
+              role="option"
               onClick={() => {
                 setOpen(false)
                 router.push(`/assets/${a.id}`)
