@@ -11,6 +11,17 @@ import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { createCar, editCar, createLifeEntity, editLifeEntity, softDeleteAsset } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
+const CAR_COLORS = [
+  { key: 'white',     hex: '#F0EDE8', border: '#D4CFC7' },
+  { key: 'black',     hex: '#1C1C1E', border: '#1C1C1E' },
+  { key: 'silver',    hex: '#B8B8C0', border: '#B8B8C0' },
+  { key: 'dark_gray', hex: '#4A4A52', border: '#4A4A52' },
+  { key: 'dark_red',  hex: '#7B2525', border: '#7B2525' },
+  { key: 'dark_blue', hex: '#1E3557', border: '#1E3557' },
+  { key: 'brown',     hex: '#7A5C3E', border: '#7A5C3E' },
+  { key: 'champagne', hex: '#C8A97A', border: '#C8A97A' },
+] as const
+
 export interface AssetSheetInitial {
   id: string
   type: 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance'
@@ -21,6 +32,12 @@ export interface AssetSheetInitial {
   purchasePrice?: number | null
   fuelType?: '92' | '95' | '98' | 'diesel'
   primaryUserId?: string | null
+  // extended car fields
+  color?: string | null
+  year?: number | null
+  brand?: string | null
+  model?: string | null
+  initialOdometer?: number | null
 }
 
 interface Props {
@@ -49,6 +66,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [purchasePrice, setPurchasePrice] = useState('')
   const [fuelType, setFuelType] = useState<'92' | '95' | '98' | 'diesel'>('95')
   const [primaryUserId, setPrimaryUserId] = useState<string | null>(null)
+  // extended car fields
+  const [color, setColor] = useState<string | null>(null)
+  const [year, setYear] = useState('')
+  const [brand, setBrand] = useState('')
+  const [model, setModel] = useState('')
+  const [initialOdometer, setInitialOdometer] = useState('')
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -65,6 +88,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setPurchasePrice(initial.purchasePrice ? String(initial.purchasePrice) : '')
       setFuelType(initial.fuelType ?? '95')
       setPrimaryUserId(initial.primaryUserId ?? null)
+      setColor(initial.color ?? null)
+      setYear(initial.year ? String(initial.year) : '')
+      setBrand(initial.brand ?? '')
+      setModel(initial.model ?? '')
+      setInitialOdometer(initial.initialOdometer ? String(initial.initialOdometer) : '')
     } else {
       setSelectedType('pet')
       setName('')
@@ -73,6 +101,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setPurchasePrice('')
       setFuelType('95')
       setPrimaryUserId(null)
+      setColor(null)
+      setYear('')
+      setBrand('')
+      setModel('')
+      setInitialOdometer('')
     }
     setShowCal(false)
     setError('')
@@ -100,6 +133,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               purchasePrice: price,
               fuelType,
               primaryUserId,
+              color,
+              year: year ? parseInt(year, 10) : null,
+              brand: brand.trim() || null,
+              model: model.trim() || null,
+              initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             })
           } else {
             await editLifeEntity({ id: initial!.id, name: name.trim() })
@@ -114,6 +152,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               purchasePrice: price ?? undefined,
               fuelType,
               primaryUserId,
+              color,
+              year: year ? parseInt(year, 10) : null,
+              brand: brand.trim() || null,
+              model: model.trim() || null,
+              initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             })
           } else {
             await createLifeEntity({ type: selectedType as 'child' | 'pet' | 'plant', name: name.trim() })
@@ -234,6 +277,42 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           {/* Car-only fields */}
           {isCar && (
             <>
+              {/* Color picker */}
+              <Field label="顏色">
+                <div className="flex gap-2 flex-wrap">
+                  {CAR_COLORS.map(c => (
+                    <button
+                      key={c.key}
+                      type="button"
+                      onClick={() => setColor(c.key)}
+                      className="w-9 h-9 rounded-full transition-all"
+                      style={{
+                        background: c.hex,
+                        border: color === c.key
+                          ? '3px solid var(--ink)'
+                          : `2px solid ${c.border}`,
+                        boxShadow: color === c.key ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
+                      }}
+                      aria-label={c.key}
+                    />
+                  ))}
+                  {/* No color option */}
+                  <button
+                    type="button"
+                    onClick={() => setColor(null)}
+                    className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-[10px]"
+                    style={{
+                      border: color === null ? '3px solid var(--ink)' : '1.5px solid var(--hairline)',
+                      background: 'transparent',
+                      color: 'var(--ink-3)',
+                      boxShadow: color === null ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
+                    }}
+                  >
+                    —
+                  </button>
+                </div>
+              </Field>
+
               <Field label="車牌">
                 <input
                   value={plate}
@@ -241,6 +320,38 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   placeholder="例：ABC-1234"
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                />
+              </Field>
+
+              <Field label="年份">
+                <input
+                  value={year}
+                  onChange={e => setYear(e.target.value.slice(0, 4))}
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="例：2019"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }}
+                />
+              </Field>
+
+              <Field label="品牌">
+                <input
+                  value={brand}
+                  onChange={e => setBrand(e.target.value.slice(0, 32))}
+                  placeholder="例：Toyota"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }}
+                />
+              </Field>
+
+              <Field label="型號">
+                <input
+                  value={model}
+                  onChange={e => setModel(e.target.value.slice(0, 32))}
+                  placeholder="例：Altis"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }}
                 />
               </Field>
 
@@ -274,6 +385,21 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                     className="flex-1 bg-transparent border-0 outline-none text-base tnum"
                     style={{ color: 'var(--ink)' }}
                   />
+                </div>
+              </Field>
+
+              <Field label="目前里程（選填）">
+                <div className="flex items-center gap-1">
+                  <input
+                    value={initialOdometer}
+                    onChange={e => setInitialOdometer(e.target.value)}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="例：50000"
+                    className="flex-1 bg-transparent border-0 outline-none text-base"
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                  />
+                  <span className="text-sm" style={{ color: 'var(--ink-3)' }}>km</span>
                 </div>
               </Field>
             </>
