@@ -469,6 +469,63 @@ export function validatePetInput(input: PetInput): ValidatedPetInput {
   return { name, species, breed, sex, birthDate, adoptedDate, purchaseCost, weightG, chipNo, vet }
 }
 
+// ── Plant ──────────────────────────────────────────────────────────
+export interface PlantInput {
+  name: string
+  species?: string | null
+  location?: string | null
+  sproutedAt?: string | null
+  cost?: number | null
+  waterEvery?: number | null
+}
+
+export interface ValidatedPlantInput {
+  name: string
+  species: string | null
+  location: string | null
+  sproutedAt: string | null
+  cost: number | null
+  waterEvery: number | null
+}
+
+export function validatePlantInput(input: PlantInput): ValidatedPlantInput {
+  const name = input.name?.trim()
+  if (!name || name.length < 1) throw new Error('名稱不能空白')
+  if (name.length > 32) throw new Error('名稱最長 32 字')
+
+  let species: string | null = null
+  if (input.species) {
+    const s = input.species.trim()
+    if (s.length > 32) throw new Error('種類最長 32 字')
+    species = s || null
+  }
+
+  let location: string | null = null
+  if (input.location) {
+    const l = input.location.trim()
+    if (l.length > 32) throw new Error('位置最長 32 字')
+    location = l || null
+  }
+
+  const sproutedAt = input.sproutedAt?.trim() || null
+
+  let cost: number | null = null
+  if (input.cost !== null && input.cost !== undefined) {
+    if (!Number.isInteger(input.cost) || input.cost < 0)
+      throw new Error('金額必須是非負整數')
+    cost = input.cost
+  }
+
+  let waterEvery: number | null = null
+  if (input.waterEvery !== null && input.waterEvery !== undefined) {
+    if (!Number.isInteger(input.waterEvery) || input.waterEvery <= 0)
+      throw new Error('澆水週期必須是正整數')
+    waterEvery = input.waterEvery
+  }
+
+  return { name, species, location, sproutedAt, cost, waterEvery }
+}
+
 // ── Insurance ──────────────────────────────────────────────────────
 export interface InsuranceInput {
   name: string

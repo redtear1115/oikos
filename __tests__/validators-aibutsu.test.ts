@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateChildInput, validatePetInput, validateInsuranceInput } from '@/lib/validators'
+import { validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput } from '@/lib/validators'
 
 const childBase = { name: '小元' }
 const petBase = { name: '米嚕' }
@@ -57,6 +57,37 @@ describe('validatePetInput', () => {
 
   it('rejects negative purchaseCost', () => {
     expect(() => validatePetInput({ name: '米嚕', purchaseCost: -1 })).toThrow(/金額/)
+  })
+})
+
+describe('validatePlantInput', () => {
+  it('accepts minimal input (name only)', () => {
+    const r = validatePlantInput({ name: '龜背芋' })
+    expect(r.name).toBe('龜背芋')
+    expect(r.species).toBeNull()
+    expect(r.location).toBeNull()
+    expect(r.sproutedAt).toBeNull()
+    expect(r.cost).toBeNull()
+    expect(r.waterEvery).toBeNull()
+  })
+
+  it('accepts full input', () => {
+    const r = validatePlantInput({
+      name: '阿龜', species: '龜背芋', location: '北向陽台',
+      sproutedAt: '2024-03-10', cost: 1850, waterEvery: 7,
+    })
+    expect(r.species).toBe('龜背芋')
+    expect(r.location).toBe('北向陽台')
+    expect(r.cost).toBe(1850)
+    expect(r.waterEvery).toBe(7)
+  })
+
+  it('rejects negative cost', () => {
+    expect(() => validatePlantInput({ name: '阿龜', cost: -1 })).toThrow(/金額/)
+  })
+
+  it('rejects zero waterEvery', () => {
+    expect(() => validatePlantInput({ name: '阿龜', waterEvery: 0 })).toThrow(/澆水週期/)
   })
 })
 
