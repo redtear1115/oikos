@@ -50,7 +50,18 @@ export function AssetIcon({ type, size = 24, color = 'currentColor' }: Props) {
     )
   }
 
-  // Placeholder for other types (house, child, insurance)
+  if (type === 'child') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        {/* head */}
+        <circle cx="12" cy="8" r="3.2" fill={color} opacity="0.9" />
+        {/* body */}
+        <path d="M6.5 20c0-3.038 2.462-5.5 5.5-5.5s5.5 2.462 5.5 5.5" stroke={color} strokeWidth="1.6" strokeLinecap="round" fill="none" />
+      </svg>
+    )
+  }
+
+  // Placeholder for other types (house, insurance)
   return (
     <div
       style={{ width: size, height: size, background: 'var(--surface-alt)', borderRadius: 6 }}

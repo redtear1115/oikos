@@ -73,8 +73,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         plate: asset.plate ?? undefined,
         purchasedAt: asset.purchasedAt,
         purchasePrice: asset.purchasePrice,
-        // '92' is a legacy enum value that can't be dropped from Postgres; coerce to '95' for UI
-        fuelType: (asset.fuelType === '92' ? '95' : asset.fuelType) ?? '95',
+        // '92' and 'electric' are legacy enum values; coerce to '95' for UI
+        fuelType: (asset.fuelType === '92' || asset.fuelType === 'electric' ? '95' : asset.fuelType) ?? '95',
         primaryUserId: asset.primaryUserId,
       }}
       fuelType={asset.fuelType ?? '95'}

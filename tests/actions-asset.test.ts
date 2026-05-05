@@ -276,19 +276,19 @@ describe('editCar with primaryUserId + fuelType', () => {
     expect(valueCalls).toHaveLength(0)   // edit uses .set(), not .values()
   })
 
-  it('accepts fuelType=electric on editCar (EV allowed at car level)', async () => {
+  it('accepts fuelType=92 on editCar', async () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'asset-1' }])
     queueDbResult([])
 
     await expect(editCar({
       id: 'asset-1',
-      name: '電車',
-      plate: 'EV-1234',
+      name: '九二車',
+      plate: 'AA-1234',
       purchasedAt: null,
       purchasePrice: null,
       primaryUserId: null,
-      fuelType: 'electric',
+      fuelType: '92',
     })).resolves.toBeUndefined()
   })
 

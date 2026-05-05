@@ -71,8 +71,8 @@ describe('validateCarInput', () => {
     expect(r2.primaryUserId).toBeNull()
   })
 
-  it('accepts all 4 fuelType values including electric', () => {
-    for (const ft of ['95', '98', 'diesel', 'electric'] as const) {
+  it('accepts all 4 fuelType values', () => {
+    for (const ft of ['92', '95', '98', 'diesel'] as const) {
       const r = validateCarInput({ ...validBase, fuelType: ft })
       expect(r.fuelType).toBe(ft)
     }

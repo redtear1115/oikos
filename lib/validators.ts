@@ -115,7 +115,7 @@ export interface CarInput {
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
   primaryUserId?: string | null
-  fuelType?: '95' | '98' | 'diesel' | 'electric'
+  fuelType?: '92' | '95' | '98' | 'diesel'
 }
 
 export interface ValidatedCarInput {
@@ -124,10 +124,10 @@ export interface ValidatedCarInput {
   purchasedAt: string | null
   purchasePrice: number | null
   primaryUserId: string | null
-  fuelType: '95' | '98' | 'diesel' | 'electric'
+  fuelType: '92' | '95' | '98' | 'diesel'
 }
 
-const CAR_FUEL_TYPES = ['95', '98', 'diesel', 'electric'] as const
+const CAR_FUEL_TYPES = ['92', '95', '98', 'diesel'] as const
 
 /**
  * Validates a car asset input. Trims + max-length-checks name and plate, uppercases plate,
@@ -190,14 +190,14 @@ export interface FuelLogInputValidated {
   liters: number      // numeric, > 0
   odometer: number    // >= 0
   cost: number        // > 0
-  fuelType: '95' | '98' | 'diesel'
+  fuelType: '92' | '95' | '98' | 'diesel'
   loggedAt: Date
   station: string | null
   paidBy: string
   splitType: 'all_mine' | 'all_theirs' | 'half'
 }
 
-const FUEL_TYPES_GAS = ['95', '98', 'diesel'] as const
+const FUEL_TYPES_GAS = ['92', '95', '98', 'diesel'] as const
 
 /**
  * Validates a FuelLog input. FuelLog is gas-only per EV1 spec — electric cars
@@ -225,7 +225,7 @@ export function validateFuelLogInput(input: FuelLogInputRaw): FuelLogInputValida
   // cost — reuse existing validateAmount (positive integer)
   const cost = validateAmount(input.cost, '金額')
 
-  // fuelType — must be one of gas types (no electric per EV1)
+  // fuelType — must be one of gas types
   if (input.fuelType === 'electric') {
     throw new Error('電車不支援加油記錄')
   }
@@ -267,7 +267,7 @@ export function validateFuelLogInput(input: FuelLogInputRaw): FuelLogInputValida
     liters,
     odometer: input.odometer,
     cost,
-    fuelType: input.fuelType as '95' | '98' | 'diesel',
+    fuelType: input.fuelType as '92' | '95' | '98' | 'diesel',
     loggedAt,
     station,
     paidBy: input.paidBy,

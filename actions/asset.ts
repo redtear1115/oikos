@@ -30,7 +30,7 @@ export interface CreateCarInput {
   purchasedAt?: string | null
   purchasePrice?: number | null
   primaryUserId?: string | null
-  fuelType?: '95' | '98' | 'diesel' | 'electric'
+  fuelType?: '92' | '95' | '98' | 'diesel'
 }
 
 /**
@@ -116,7 +116,7 @@ export interface EditCarInput {
   purchasedAt: string | null
   purchasePrice: number | null
   primaryUserId?: string | null      // NEW — Slice 2
-  fuelType?: '95' | '98' | 'diesel' | 'electric'  // NEW — Slice 2
+  fuelType?: '92' | '95' | '98' | 'diesel'
 }
 
 export async function editCar(input: EditCarInput): Promise<void> {

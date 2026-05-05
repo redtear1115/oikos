@@ -19,7 +19,7 @@ export interface AssetSheetInitial {
   plate?: string
   purchasedAt?: string | null
   purchasePrice?: number | null
-  fuelType?: '95' | '98' | 'diesel' | 'electric'
+  fuelType?: '92' | '95' | '98' | 'diesel'
   primaryUserId?: string | null
 }
 
@@ -47,7 +47,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [plate, setPlate] = useState('')
   const [purchasedAt, setPurchasedAt] = useState<string | null>(null)
   const [purchasePrice, setPurchasePrice] = useState('')
-  const [fuelType, setFuelType] = useState<'95' | '98' | 'diesel' | 'electric'>('95')
+  const [fuelType, setFuelType] = useState<'92' | '95' | '98' | 'diesel'>('95')
   const [primaryUserId, setPrimaryUserId] = useState<string | null>(null)
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()

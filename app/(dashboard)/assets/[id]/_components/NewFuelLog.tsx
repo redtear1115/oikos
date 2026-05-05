@@ -49,12 +49,13 @@ function isoToLocalDate(iso: string): string {
   return `${y}-${m}-${day}`
 }
 
-type GasFuelType = '95' | '98' | 'diesel'
+type GasFuelType = '92' | '95' | '98' | 'diesel'
 
 function toGasFuelType(ft: string | null | undefined): GasFuelType {
+  if (ft === '92') return '92'
   if (ft === '98') return '98'
   if (ft === 'diesel') return 'diesel'
-  return '95'   // default for electric / 92 / null
+  return '95'   // default for electric / null
 }
 
 export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: NewFuelLogProps) {

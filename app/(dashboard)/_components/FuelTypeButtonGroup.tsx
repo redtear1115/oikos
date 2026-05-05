@@ -1,6 +1,6 @@
 'use client'
 
-type FuelType = '95' | '98' | 'diesel' | 'electric'
+type FuelType = '92' | '95' | '98' | 'diesel'
 
 interface FuelTypeButtonGroupProps {
   value: FuelType
@@ -8,10 +8,10 @@ interface FuelTypeButtonGroupProps {
 }
 
 const OPTIONS: Array<{ value: FuelType; label: string }> = [
+  { value: '92', label: '92' },
   { value: '95', label: '95' },
   { value: '98', label: '98' },
   { value: 'diesel', label: '柴油' },
-  { value: 'electric', label: '電' },
 ]
 
 export function FuelTypeButtonGroup({ value, onChange }: FuelTypeButtonGroupProps) {
