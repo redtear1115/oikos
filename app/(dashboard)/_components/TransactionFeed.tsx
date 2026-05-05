@@ -28,9 +28,11 @@ interface Props {
   /** Optional realtime-insert filter. Called for every txn-insert event;
    *  return false to drop the row. Used by asset-scoped feeds. */
   acceptInsert?: (row: TxnRowPayload) => boolean
+  /** Optional custom row renderer. Return undefined to use the default CompactRow. */
+  renderRow?: (tx: PagedTxnRow) => React.ReactNode | undefined
 }
 
-export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, filter, loader, acceptInsert }: Props) {
+export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, filter, loader, acceptInsert, renderRow }: Props) {
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
   const [hasMore, setHasMore] = useState(initial.length === pageSize)
   const [loading, startLoading] = useTransition()
@@ -101,7 +103,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
 
     if (event.kind === 'txn-insert') {
       const row = event.row
-      const feed = {
+      const feed: PagedTxnRow = {
         id: row.id,
         amount: row.amount,
         splitType: row.splitType,
@@ -112,6 +114,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         createdAt: row.createdAt,
         kind: 'transaction' as const,
         assetId: row.assetId ?? null,
+        fuelLogId: null,  // realtime payload doesn't carry this; fuel-log events handled separately
       }
       if (filter) {
         const f: FilterableRow = { paidBy: row.paidBy, splitType: row.splitType, category: row.category, kind: 'transaction' }
@@ -148,7 +151,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         return
       }
       if (event.kind === 'settle-insert') {
-        const feed = {
+        const feed: PagedTxnRow = {
           id: row.id,
           amount: row.amount,
           splitType: null,
@@ -159,6 +162,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           createdAt: row.createdAt,
           kind: 'settlement' as const,
           assetId: null,
+          fuelLogId: null,
         }
         if (filter) {
           const f: FilterableRow = { paidBy: row.paidBy, splitType: null, category: 'settle', kind: 'settlement' }
@@ -198,15 +202,21 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
               className="mx-4 rounded-[18px] overflow-hidden"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
             >
-              {g.items.map((tx, i) => (
-                <div key={tx.id} data-rt-id={tx.id}>
-                  <CompactRow
-                    tx={tx as CompactRowProps['tx']}
-                    isLast={i === g.items.length - 1}
-                    onClick={() => onItemClick(tx)}
-                  />
-                </div>
-              ))}
+              {g.items.map((tx, i) => {
+                const custom = renderRow?.(tx)
+                if (custom !== undefined) {
+                  return <div key={tx.id} data-rt-id={tx.id}>{custom}</div>
+                }
+                return (
+                  <div key={tx.id} data-rt-id={tx.id}>
+                    <CompactRow
+                      tx={tx as CompactRowProps['tx']}
+                      isLast={i === g.items.length - 1}
+                      onClick={() => onItemClick(tx)}
+                    />
+                  </div>
+                )
+              })}
             </div>
           </div>
         )

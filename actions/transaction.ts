@@ -221,6 +221,7 @@ export interface PagedTxnRow {
   createdAt: string     // ISO (used as cursor part)
   kind: 'transaction' | 'settlement'
   assetId: string | null
+  fuelLogId: string | null  // non-null when row was created by a FuelLog dual-write
 }
 
 export async function loadMoreTransactions(
@@ -270,6 +271,7 @@ export async function loadMoreTransactions(
     createdAt: r.createdAt.toISOString(),
     kind: r.kind,
     assetId: r.assetId,
+    fuelLogId: r.fuelLogId ?? null,
   }))
 }
 
@@ -305,5 +307,6 @@ export async function loadMoreTransactionsForAsset(
     createdAt: r.createdAt.toISOString(),
     kind: r.kind,
     assetId: r.assetId ?? null,
+    fuelLogId: r.fuelLogId ?? null,
   }))
 }
