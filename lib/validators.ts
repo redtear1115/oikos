@@ -181,7 +181,7 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
     throw new Error('油種無效')
   }
 
-  // color — store as-is (UI enforces valid keys), max 32 chars
+  // color — store as-is (UI enforces valid keys from CAR_COLORS)
   const color = input.color?.trim() || null
 
   // year — integer 1900–2100
