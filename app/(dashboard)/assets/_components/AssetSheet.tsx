@@ -8,7 +8,8 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
-import { createCar, editCar, createLifeEntity, editLifeEntity, softDeleteAsset } from '@/actions/asset'
+import { createCar, editCar, createLifeEntity, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createInsurance, editInsurance } from '@/actions/asset'
+import type { EditChildInput, EditPetInput, EditInsuranceInput } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
 const CAR_COLORS = [
@@ -38,6 +39,37 @@ export interface AssetSheetInitial {
   brand?: string | null
   model?: string | null
   initialOdometer?: number | null
+  // Child-specific
+  childNickname?: string | null
+  childGender?: 'male' | 'female' | 'other' | null
+  childBirthday?: string | null
+  childNationalId?: string | null
+  childNhiNo?: string | null
+  childBloodType?: string | null
+  childHospital?: string | null
+  childHeightCm?: number | null
+  childWeightG?: number | null
+  // Pet-specific
+  petSpecies?: string | null
+  petBreed?: string | null
+  petSex?: string | null
+  petBirthDate?: string | null
+  petAdoptedDate?: string | null
+  petPurchaseCost?: number | null
+  petWeightG?: number | null
+  petChipNo?: string | null
+  petVet?: string | null
+  // Insurance-specific
+  insKind?: string | null
+  insInsured?: string | null
+  insInsurer?: string | null
+  insPolicyNo?: string | null
+  insAnnualPremium?: number | null
+  insSumInsured?: number | null
+  insPayCycle?: string | null
+  insStartsAt?: string | null
+  insEndsAt?: string | null
+  insTermYears?: number | null
 }
 
 interface Props {
@@ -47,7 +79,7 @@ interface Props {
   onMutated?: (kind: 'saved' | 'deleted') => void
 }
 
-type PickerType = 'car' | 'child' | 'pet' | 'plant'
+type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance'
 
 const TYPE_OPTIONS: { value: PickerType; label: string }[] = [
   { value: 'car',   label: '車' },
@@ -72,6 +104,37 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [brand, setBrand] = useState('')
   const [model, setModel] = useState('')
   const [initialOdometer, setInitialOdometer] = useState('')
+  // Child state
+  const [childNickname, setChildNickname] = useState('')
+  const [childGender, setChildGender] = useState<'male' | 'female' | null>(null)
+  const [childBirthday, setChildBirthday] = useState('')
+  const [childNationalId, setChildNationalId] = useState('')
+  const [childNhiNo, setChildNhiNo] = useState('')
+  const [childBloodType, setChildBloodType] = useState<'A' | 'B' | 'O' | 'AB' | null>(null)
+  const [childHospital, setChildHospital] = useState('')
+  const [childHeightCm, setChildHeightCm] = useState('')
+  const [childWeightKg, setChildWeightKg] = useState('')
+  // Pet state
+  const [petSpecies, setPetSpecies] = useState('')
+  const [petBreed, setPetBreed] = useState('')
+  const [petSex, setPetSex] = useState<'male' | 'female' | null>(null)
+  const [petBirthDate, setPetBirthDate] = useState('')
+  const [petAdoptedDate, setPetAdoptedDate] = useState('')
+  const [petCost, setPetCost] = useState('')
+  const [petWeightKg, setPetWeightKg] = useState('')
+  const [petChipNo, setPetChipNo] = useState('')
+  const [petVet, setPetVet] = useState('')
+  // Insurance state
+  const [insKind, setInsKind] = useState('medical')
+  const [insInsured, setInsInsured] = useState('')
+  const [insInsurer, setInsInsurer] = useState('')
+  const [insPolicyNo, setInsPolicyNo] = useState('')
+  const [insPremium, setInsPremium] = useState('')
+  const [insSumInsured, setInsSumInsured] = useState('')
+  const [insPayCycle, setInsPayCycle] = useState('annual')
+  const [insStartsAt, setInsStartsAt] = useState('')
+  const [insEndsAt, setInsEndsAt] = useState('')
+  const [insTermYears, setInsTermYears] = useState('')
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -93,6 +156,40 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setBrand(initial.brand ?? '')
       setModel(initial.model ?? '')
       setInitialOdometer(initial.initialOdometer ? String(initial.initialOdometer) : '')
+      if (initial.type === 'child') {
+        setChildNickname(initial.childNickname ?? '')
+        setChildGender((initial.childGender === 'male' || initial.childGender === 'female') ? initial.childGender : null)
+        setChildBirthday(initial.childBirthday ?? '')
+        setChildNationalId(initial.childNationalId ?? '')
+        setChildNhiNo(initial.childNhiNo ?? '')
+        setChildBloodType((initial.childBloodType as 'A' | 'B' | 'O' | 'AB' | null) ?? null)
+        setChildHospital(initial.childHospital ?? '')
+        setChildHeightCm(initial.childHeightCm?.toString() ?? '')
+        setChildWeightKg(initial.childWeightG ? (initial.childWeightG / 1000).toFixed(1) : '')
+      }
+      if (initial.type === 'pet') {
+        setPetSpecies(initial.petSpecies ?? '')
+        setPetBreed(initial.petBreed ?? '')
+        setPetSex((initial.petSex === 'male' || initial.petSex === 'female') ? initial.petSex : null)
+        setPetBirthDate(initial.petBirthDate ?? '')
+        setPetAdoptedDate(initial.petAdoptedDate ?? '')
+        setPetCost(initial.petPurchaseCost?.toString() ?? '')
+        setPetWeightKg(initial.petWeightG ? (initial.petWeightG / 1000).toFixed(1) : '')
+        setPetChipNo(initial.petChipNo ?? '')
+        setPetVet(initial.petVet ?? '')
+      }
+      if (initial.type === 'insurance') {
+        setInsKind(initial.insKind ?? 'medical')
+        setInsInsured(initial.insInsured ?? '')
+        setInsInsurer(initial.insInsurer ?? '')
+        setInsPolicyNo(initial.insPolicyNo ?? '')
+        setInsPremium(initial.insAnnualPremium?.toString() ?? '')
+        setInsSumInsured(initial.insSumInsured?.toString() ?? '')
+        setInsPayCycle(initial.insPayCycle ?? 'annual')
+        setInsStartsAt(initial.insStartsAt ?? '')
+        setInsEndsAt(initial.insEndsAt ?? '')
+        setInsTermYears(initial.insTermYears?.toString() ?? '')
+      }
     } else {
       setSelectedType('pet')
       setName('')
@@ -106,6 +203,37 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setBrand('')
       setModel('')
       setInitialOdometer('')
+      // Child resets
+      setChildNickname('')
+      setChildGender(null)
+      setChildBirthday('')
+      setChildNationalId('')
+      setChildNhiNo('')
+      setChildBloodType(null)
+      setChildHospital('')
+      setChildHeightCm('')
+      setChildWeightKg('')
+      // Pet resets
+      setPetSpecies('')
+      setPetBreed('')
+      setPetSex(null)
+      setPetBirthDate('')
+      setPetAdoptedDate('')
+      setPetCost('')
+      setPetWeightKg('')
+      setPetChipNo('')
+      setPetVet('')
+      // Insurance resets
+      setInsKind('medical')
+      setInsInsured('')
+      setInsInsurer('')
+      setInsPolicyNo('')
+      setInsPremium('')
+      setInsSumInsured('')
+      setInsPayCycle('annual')
+      setInsStartsAt('')
+      setInsEndsAt('')
+      setInsTermYears('')
     }
     setShowCal(false)
     setError('')
@@ -122,9 +250,9 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const handleSave = () => {
     startTransition(async () => {
       try {
-        if (isEdit) {
-          if (isCar) {
-            const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+        if (isCar) {
+          const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+          if (isEdit) {
             await editCar({
               id: initial!.id,
               name: name.trim(),
@@ -140,11 +268,6 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             })
           } else {
-            await editLifeEntity({ id: initial!.id, name: name.trim() })
-          }
-        } else {
-          if (isCar) {
-            const price = purchasePrice ? parseInt(purchasePrice, 10) : null
             await createCar({
               name: name.trim(),
               plate: plate.trim(),
@@ -158,6 +281,66 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               model: model.trim() || null,
               initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             })
+          }
+        } else if (selectedType === 'child') {
+          const payload = {
+            name: name.trim(),
+            nickname: childNickname.trim() || null,
+            gender: childGender,
+            birthday: childBirthday || null,
+            nationalId: childNationalId.trim() || null,
+            nhiNo: childNhiNo.trim() || null,
+            bloodType: childBloodType,
+            hospital: childHospital.trim() || null,
+            heightCm: childHeightCm ? parseInt(childHeightCm, 10) : null,
+            weightG: childWeightKg ? Math.round(parseFloat(childWeightKg) * 1000) : null,
+          }
+          if (isEdit) {
+            await editChild({ id: initial!.id, ...payload })
+          } else {
+            await createChild(payload)
+          }
+        } else if (selectedType === 'pet') {
+          const payload = {
+            name: name.trim(),
+            species: petSpecies.trim() || null,
+            breed: petBreed.trim() || null,
+            sex: petSex,
+            birthDate: petBirthDate || null,
+            adoptedDate: petAdoptedDate || null,
+            purchaseCost: petCost ? parseInt(petCost, 10) : null,
+            weightG: petWeightKg ? Math.round(parseFloat(petWeightKg) * 1000) : null,
+            chipNo: petChipNo.trim() || null,
+            vet: petVet.trim() || null,
+          }
+          if (isEdit) {
+            await editPet({ id: initial!.id, ...payload })
+          } else {
+            await createPet(payload)
+          }
+        } else if (selectedType === 'insurance') {
+          const payload = {
+            name: name.trim(),
+            kind: insKind || null,
+            insured: insInsured.trim() || null,
+            insurer: insInsurer.trim() || null,
+            policyNo: insPolicyNo.trim() || null,
+            annualPremium: insPremium ? parseInt(insPremium, 10) : null,
+            sumInsured: insSumInsured ? parseInt(insSumInsured, 10) : null,
+            payCycle: insPayCycle || null,
+            startsAt: insStartsAt || null,
+            endsAt: insEndsAt || null,
+            termYears: insTermYears ? parseInt(insTermYears, 10) : null,
+          }
+          if (isEdit) {
+            await editInsurance({ id: initial!.id, ...payload })
+          } else {
+            await createInsurance(payload)
+          }
+        } else {
+          // plant — generic life entity
+          if (isEdit) {
+            await editLifeEntity({ id: initial!.id, name: name.trim() })
           } else {
             await createLifeEntity({ type: selectedType as 'child' | 'pet' | 'plant', name: name.trim() })
           }
@@ -252,6 +435,37 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       setBrand('')
                       setModel('')
                       setInitialOdometer('')
+                      // Child resets
+                      setChildNickname('')
+                      setChildGender(null)
+                      setChildBirthday('')
+                      setChildNationalId('')
+                      setChildNhiNo('')
+                      setChildBloodType(null)
+                      setChildHospital('')
+                      setChildHeightCm('')
+                      setChildWeightKg('')
+                      // Pet resets
+                      setPetSpecies('')
+                      setPetBreed('')
+                      setPetSex(null)
+                      setPetBirthDate('')
+                      setPetAdoptedDate('')
+                      setPetCost('')
+                      setPetWeightKg('')
+                      setPetChipNo('')
+                      setPetVet('')
+                      // Insurance resets
+                      setInsKind('medical')
+                      setInsInsured('')
+                      setInsInsurer('')
+                      setInsPolicyNo('')
+                      setInsPremium('')
+                      setInsSumInsured('')
+                      setInsPayCycle('annual')
+                      setInsStartsAt('')
+                      setInsEndsAt('')
+                      setInsTermYears('')
                     }}
                     className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
                     style={{
@@ -420,6 +634,284 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               {/* Primary User (hidden in solo mode — PrimaryUserToggle returns null) */}
               <Field label="主要使用人">
                 <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
+              </Field>
+            </>
+          )}
+
+          {selectedType === 'child' && (
+            <>
+              <Field label="小名">
+                <input value={childNickname} onChange={e => setChildNickname(e.target.value.slice(0, 20))}
+                  placeholder="元寶" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="性別">
+                <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
+                  {([{v: 'male' as const, label: '男孩'}, {v: 'female' as const, label: '女孩'}]).map(o => (
+                    <button key={o.v} type="button" onClick={() => setChildGender(o.v)}
+                      className="flex-1 h-9 rounded-[9px] text-sm font-medium"
+                      style={{
+                        border: 'none',
+                        background: childGender === o.v ? '#fff' : 'transparent',
+                        color: childGender === o.v ? 'var(--ink)' : 'var(--ink-2)',
+                        boxShadow: childGender === o.v ? '0 1px 3px rgba(58,36,25,0.10)' : 'none',
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="出生日期">
+                <input value={childBirthday} onChange={e => setChildBirthday(e.target.value)}
+                  type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <div className="flex items-center gap-2 mt-2 px-1">
+                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身分證件</div>
+                <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+              </div>
+
+              <Field label="身分證號">
+                <input value={childNationalId} onChange={e => setChildNationalId(e.target.value.slice(0, 20))}
+                  placeholder="A123456789" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+              </Field>
+
+              <Field label="健保卡號">
+                <input value={childNhiNo} onChange={e => setChildNhiNo(e.target.value.slice(0, 20))}
+                  placeholder="0000-1234-5678-90" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+              </Field>
+
+              <Field label="血型">
+                <div className="flex gap-1.5">
+                  {(['A', 'B', 'O', 'AB'] as const).map(b => (
+                    <button key={b} type="button" onClick={() => setChildBloodType(b)}
+                      className="flex-1 h-9 rounded-[10px] text-[13px] font-semibold"
+                      style={{
+                        border: childBloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                        background: childBloodType === b ? 'rgba(58,36,25,0.04)' : '#fff',
+                        color: childBloodType === b ? 'var(--ink)' : 'var(--ink-2)',
+                        fontFamily: 'var(--font-numeric)',
+                      }}>{b}</button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="出生醫院">
+                <input value={childHospital} onChange={e => setChildHospital(e.target.value.slice(0, 32))}
+                  placeholder="臺大醫院" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <div className="flex items-center gap-2 mt-2 px-1">
+                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身體紀錄（可之後補）</div>
+                <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+              </div>
+
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Field label="身高">
+                    <input value={childHeightCm} onChange={e => setChildHeightCm(e.target.value)}
+                      type="number" inputMode="numeric" placeholder="102"
+                      className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                    <span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>
+                  </Field>
+                </div>
+                <div className="flex-1">
+                  <Field label="體重">
+                    <input value={childWeightKg} onChange={e => setChildWeightKg(e.target.value)}
+                      type="number" inputMode="decimal" placeholder="16.4"
+                      className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                    <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
+                  </Field>
+                </div>
+              </div>
+            </>
+          )}
+
+          {selectedType === 'pet' && (
+            <>
+              <Field label="種類">
+                <div className="flex flex-wrap gap-1.5">
+                  {[{v: 'cat', label: '貓'},{v: 'dog', label: '狗'},{v: 'rabbit', label: '兔'},{v: 'bird', label: '鳥'},{v: 'fish', label: '魚'},{v: 'other', label: '其他'}].map(o => (
+                    <button key={o.v} type="button" onClick={() => setPetSpecies(o.v)}
+                      className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                      style={{
+                        border: petSpecies === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                        background: petSpecies === o.v ? 'rgba(58,36,25,0.04)' : '#fff',
+                        color: petSpecies === o.v ? 'var(--ink)' : 'var(--ink-2)',
+                        fontWeight: petSpecies === o.v ? 600 : 500,
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="品種 / 品名">
+                <input value={petBreed} onChange={e => setPetBreed(e.target.value.slice(0, 32))}
+                  placeholder="美短" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="性別">
+                <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
+                  {([{v: 'male' as const, label: '男孩'}, {v: 'female' as const, label: '女孩'}]).map(o => (
+                    <button key={o.v} type="button" onClick={() => setPetSex(o.v)}
+                      className="flex-1 h-9 rounded-[9px] text-sm font-medium"
+                      style={{
+                        border: 'none',
+                        background: petSex === o.v ? '#fff' : 'transparent',
+                        color: petSex === o.v ? 'var(--ink)' : 'var(--ink-2)',
+                        boxShadow: petSex === o.v ? '0 1px 3px rgba(58,36,25,0.10)' : 'none',
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="出生日">
+                <input value={petBirthDate} onChange={e => setPetBirthDate(e.target.value)}
+                  type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="到家日">
+                <input value={petAdoptedDate} onChange={e => setPetAdoptedDate(e.target.value)}
+                  type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="領養金額">
+                <input value={petCost} onChange={e => setPetCost(e.target.value)}
+                  type="number" inputMode="numeric" placeholder="12000"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+              </Field>
+
+              <Field label="體重">
+                <input value={petWeightKg} onChange={e => setPetWeightKg(e.target.value)}
+                  type="number" inputMode="decimal" placeholder="4.2"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
+              </Field>
+
+              <div className="flex items-center gap-2 mt-2 px-1">
+                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>健康 / 證件</div>
+                <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+              </div>
+
+              <Field label="晶片號">
+                <input value={petChipNo} onChange={e => setPetChipNo(e.target.value.slice(0, 20))}
+                  placeholder="900141001234567" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+              </Field>
+
+              <Field label="獸醫院">
+                <input value={petVet} onChange={e => setPetVet(e.target.value.slice(0, 32))}
+                  placeholder="永和動物醫院" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+            </>
+          )}
+
+          {selectedType === 'insurance' && (
+            <>
+              <Field label="險種">
+                <div className="flex flex-wrap gap-1.5">
+                  {[{v:'medical',label:'醫療'},{v:'life',label:'壽險'},{v:'accident',label:'意外'},{v:'cancer',label:'癌症'},{v:'illness',label:'重大傷病'},{v:'car',label:'汽車'}].map(o => (
+                    <button key={o.v} type="button" onClick={() => setInsKind(o.v)}
+                      className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                      style={{
+                        border: insKind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                        background: insKind === o.v ? 'rgba(58,36,25,0.04)' : '#fff',
+                        color: insKind === o.v ? 'var(--ink)' : 'var(--ink-2)',
+                        fontWeight: insKind === o.v ? 600 : 500,
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="被保人">
+                <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
+                  placeholder="小元" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="保險公司">
+                <input value={insInsurer} onChange={e => setInsInsurer(e.target.value.slice(0, 32))}
+                  placeholder="南山人壽" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="保單號">
+                <input value={insPolicyNo} onChange={e => setInsPolicyNo(e.target.value.slice(0, 32))}
+                  placeholder="NSL-2022-0814-001" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+              </Field>
+
+              <div className="flex items-center gap-2 mt-2 px-1">
+                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>保費與保額</div>
+                <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+              </div>
+
+              <Field label="年繳保費">
+                <input value={insPremium} onChange={e => setInsPremium(e.target.value)}
+                  type="number" inputMode="numeric" placeholder="24960"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+              </Field>
+
+              <Field label="保額">
+                <input value={insSumInsured} onChange={e => setInsSumInsured(e.target.value)}
+                  type="number" inputMode="numeric" placeholder="3000000"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+              </Field>
+
+              <Field label="繳費週期">
+                <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
+                  {([{v:'annual',label:'年繳'},{v:'semi',label:'半年'},{v:'quarterly',label:'季繳'},{v:'monthly',label:'月繳'}]).map(o => (
+                    <button key={o.v} type="button" onClick={() => setInsPayCycle(o.v)}
+                      className="flex-1 h-8 rounded-[9px] text-xs font-medium"
+                      style={{
+                        border: 'none',
+                        background: insPayCycle === o.v ? '#fff' : 'transparent',
+                        color: insPayCycle === o.v ? 'var(--ink)' : 'var(--ink-2)',
+                        boxShadow: insPayCycle === o.v ? '0 1px 3px rgba(58,36,25,0.10)' : 'none',
+                      }}>{o.label}</button>
+                  ))}
+                </div>
+              </Field>
+
+              <div className="flex items-center gap-2 mt-2 px-1">
+                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>合約期間</div>
+                <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+              </div>
+
+              <Field label="保單起">
+                <input value={insStartsAt} onChange={e => setInsStartsAt(e.target.value)}
+                  type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="保單迄">
+                <input value={insEndsAt} onChange={e => setInsEndsAt(e.target.value)}
+                  type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+              </Field>
+
+              <Field label="年期">
+                <input value={insTermYears} onChange={e => setInsTermYears(e.target.value)}
+                  type="number" inputMode="numeric" placeholder="20"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>年</span>
               </Field>
             </>
           )}
