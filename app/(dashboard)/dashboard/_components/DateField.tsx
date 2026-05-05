@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO } from '@/lib/local-date'
@@ -8,6 +8,7 @@ import { localTodayISO } from '@/lib/local-date'
 interface DateFieldProps {
   value: string  // ISO date string e.g. "2026-05-05"
   onChange: (iso: string) => void
+  open?: boolean  // parent sheet open state; resets calendar on reopen
 }
 
 function dateLabel(iso: string) {
@@ -20,8 +21,9 @@ function weekday(iso: string) {
   return days[new Date(iso + 'T00:00:00').getDay()]
 }
 
-export function DateField({ value, onChange }: DateFieldProps) {
+export function DateField({ value, onChange, open }: DateFieldProps) {
   const [showCal, setShowCal] = useState(false)
+  useEffect(() => { if (open) setShowCal(false) }, [open])
 
   return (
     <>

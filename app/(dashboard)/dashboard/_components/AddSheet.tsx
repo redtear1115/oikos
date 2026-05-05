@@ -395,7 +395,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               日期
             </div>
-            <DateField value={date} onChange={setDate} />
+            <DateField value={date} onChange={setDate} open={open} />
           </div>
 
           {isEdit && (
