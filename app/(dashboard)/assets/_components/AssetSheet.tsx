@@ -8,7 +8,7 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
-import { createCar, editCar, createLifeEntity, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createInsurance, editInsurance } from '@/actions/asset'
+import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance } from '@/actions/asset'
 import type { EditChildInput, EditPetInput, EditInsuranceInput } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
@@ -59,6 +59,12 @@ export interface AssetSheetInitial {
   petWeightG?: number | null
   petChipNo?: string | null
   petVet?: string | null
+  // Plant-specific
+  plantSpecies?: string | null
+  plantLocation?: string | null
+  plantSproutedAt?: string | null
+  plantCost?: number | null
+  plantWaterEvery?: number | null
   // Insurance-specific
   insKind?: string | null
   insInsured?: string | null
@@ -124,6 +130,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [petWeightKg, setPetWeightKg] = useState('')
   const [petChipNo, setPetChipNo] = useState('')
   const [petVet, setPetVet] = useState('')
+  // Plant state
+  const [plantSpecies, setPlantSpecies] = useState('')
+  const [plantLocation, setPlantLocation] = useState('')
+  const [plantSproutedAt, setPlantSproutedAt] = useState('')
+  const [plantCost, setPlantCost] = useState('')
+  const [plantWaterEvery, setPlantWaterEvery] = useState<number | null>(7)
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
@@ -178,6 +190,13 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setPetChipNo(initial.petChipNo ?? '')
         setPetVet(initial.petVet ?? '')
       }
+      if (initial.type === 'plant') {
+        setPlantSpecies(initial.plantSpecies ?? '')
+        setPlantLocation(initial.plantLocation ?? '')
+        setPlantSproutedAt(initial.plantSproutedAt ?? '')
+        setPlantCost(initial.plantCost?.toString() ?? '')
+        setPlantWaterEvery(initial.plantWaterEvery ?? 7)
+      }
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
@@ -223,6 +242,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setPetWeightKg('')
       setPetChipNo('')
       setPetVet('')
+      // Plant resets
+      setPlantSpecies('')
+      setPlantLocation('')
+      setPlantSproutedAt('')
+      setPlantCost('')
+      setPlantWaterEvery(7)
       // Insurance resets
       setInsKind('medical')
       setInsInsured('')
@@ -337,12 +362,24 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           } else {
             await createInsurance(payload)
           }
+        } else if (selectedType === 'plant') {
+          const payload = {
+            name: name.trim(),
+            species: plantSpecies.trim() || null,
+            location: plantLocation.trim() || null,
+            sproutedAt: plantSproutedAt || null,
+            cost: plantCost ? parseInt(plantCost, 10) : null,
+            waterEvery: plantWaterEvery,
+          }
+          if (isEdit) {
+            await editPlant({ id: initial!.id, ...payload })
+          } else {
+            await createPlant(payload)
+          }
         } else {
-          // plant — generic life entity
+          // fallback (e.g. house) — generic life entity edit only
           if (isEdit) {
             await editLifeEntity({ id: initial!.id, name: name.trim() })
-          } else {
-            await createLifeEntity({ type: selectedType as 'child' | 'pet' | 'plant', name: name.trim() })
           }
         }
         onMutated?.('saved')
@@ -455,6 +492,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       setPetWeightKg('')
                       setPetChipNo('')
                       setPetVet('')
+                      // Plant resets
+                      setPlantSpecies('')
+                      setPlantLocation('')
+                      setPlantSproutedAt('')
+                      setPlantCost('')
+                      setPlantWaterEvery(7)
                       // Insurance resets
                       setInsKind('medical')
                       setInsInsured('')
@@ -814,6 +857,67 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 <input value={petVet} onChange={e => setPetVet(e.target.value.slice(0, 32))}
                   placeholder="永和動物醫院" className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
+              </Field>
+            </>
+          )}
+
+          {selectedType === 'plant' && (
+            <>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Field label="種類">
+                    <input value={plantSpecies} onChange={e => setPlantSpecies(e.target.value.slice(0, 32))}
+                      placeholder="例：龜背芋" className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                  </Field>
+                </div>
+                <div className="flex-1">
+                  <Field label="位置">
+                    <input value={plantLocation} onChange={e => setPlantLocation(e.target.value.slice(0, 32))}
+                      placeholder="北向陽台" className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                  </Field>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Field label="入手日">
+                    <input value={plantSproutedAt} onChange={e => setPlantSproutedAt(e.target.value)}
+                      type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                  </Field>
+                </div>
+                <div className="flex-1">
+                  <Field label="入手金額">
+                    <input value={plantCost} onChange={e => setPlantCost(e.target.value)}
+                      type="number" inputMode="numeric" placeholder="1850"
+                      className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                    <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+                  </Field>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2 px-1">
+                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>照顧週期</div>
+                <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+              </div>
+
+              <Field label="多久澆一次水">
+                <div className="flex gap-1.5">
+                  {[2, 3, 7, 14, 30].map(d => (
+                    <button key={d} type="button" onClick={() => setPlantWaterEvery(d)}
+                      className="flex-1 h-10 rounded-[10px] text-[13px] font-semibold"
+                      style={{
+                        border: plantWaterEvery === d ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                        background: plantWaterEvery === d ? 'rgba(58,36,25,0.04)' : '#fff',
+                        color: plantWaterEvery === d ? 'var(--ink)' : 'var(--ink-2)',
+                        fontFamily: 'var(--font-numeric)',
+                      }}>{d}</button>
+                  ))}
+                  <span className="self-center text-xs ml-1" style={{ color: 'var(--ink-3)' }}>天</span>
+                </div>
               </Field>
             </>
           )}
