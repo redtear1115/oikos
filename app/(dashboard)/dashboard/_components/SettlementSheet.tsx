@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
+import { PayerToggle } from './PayerToggle'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
 import { MiniCalendar } from './MiniCalendar'
@@ -165,30 +165,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               />
             </label>
 
-            <div className="mt-[22px] flex items-center justify-center gap-2.5 text-[13px]"
-              style={{ color: 'var(--ink-2)' }}>
-              <span>誰付的？</span>
-              <div className="inline-flex rounded-full p-[3px] gap-0.5"
-                style={{ background: 'rgba(31,27,22,0.05)' }}>
-                {(['M', 'T'] as const).map((w) => (
-                  <button key={w} onClick={() => setPayerWho(w)}
-                    className="h-7 px-3.5 rounded-full border-0 text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
-                    style={{
-                      background: payerWho === w ? 'var(--surface)' : 'transparent',
-                      color: payerWho === w ? 'var(--ink)' : 'var(--ink-2)',
-                      boxShadow: payerWho === w ? '0 1px 3px rgba(31,27,22,0.10)' : 'none',
-                    }}>
-                    <Avatar
-                      who={w}
-                      initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
-                      src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
-                      size={18}
-                    />
-                    {w === 'M' ? '我' : '對方'}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <PayerToggle value={payerWho} onChange={setPayerWho} />
           </div>
 
           {/* Date */}
