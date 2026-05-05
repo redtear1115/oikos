@@ -7,6 +7,10 @@ import { getAssetById, getAssetSummary, listTransactionsPagedForAsset } from '@/
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
 import { computeAvgEcon } from '@/lib/fuelEcon'
 import { AssetDetailClient } from './_components/AssetDetailClient'
+import { ChildDetailClient } from './_components/ChildDetailClient'
+import { PetDetailClient } from './_components/PetDetailClient'
+import { InsuranceDetailClient } from './_components/InsuranceDetailClient'
+import { getChildDetails, getPetDetails, getInsuranceDetails } from '@/lib/db/queries/aibutsu'
 
 const PAGE_SIZE = 20
 
@@ -26,6 +30,47 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   const asset = await getAssetById(id, group.id)
   if (!asset || asset.deletedAt) notFound()
+
+  if (asset.type === 'child') {
+    const [childDetailsData, summary] = await Promise.all([
+      getChildDetails(asset.id),
+      getAssetSummary(asset.id, group.id),
+    ])
+    return (
+      <ChildDetailClient
+        assetId={asset.id}
+        name={asset.name}
+        details={childDetailsData}
+        summary={summary}
+      />
+    )
+  }
+
+  if (asset.type === 'pet') {
+    const [petDetailsData, summary] = await Promise.all([
+      getPetDetails(asset.id),
+      getAssetSummary(asset.id, group.id),
+    ])
+    return (
+      <PetDetailClient
+        assetId={asset.id}
+        name={asset.name}
+        details={petDetailsData}
+        summary={summary}
+      />
+    )
+  }
+
+  if (asset.type === 'insurance') {
+    const insuranceDetailsData = await getInsuranceDetails(asset.id)
+    return (
+      <InsuranceDetailClient
+        assetId={asset.id}
+        name={asset.name}
+        details={insuranceDetailsData}
+      />
+    )
+  }
 
   const [summary, txnRows, fuelLogs, fuelStats] = await Promise.all([
     getAssetSummary(id, group.id),
