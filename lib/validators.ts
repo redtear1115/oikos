@@ -116,6 +116,11 @@ export interface CarInput {
   purchasePrice?: number | null
   primaryUserId?: string | null
   fuelType?: '92' | '95' | '98' | 'diesel'
+  color?: string | null
+  year?: number | null
+  brand?: string | null
+  model?: string | null
+  initialOdometer?: number | null
 }
 
 export interface ValidatedCarInput {
@@ -125,6 +130,11 @@ export interface ValidatedCarInput {
   purchasePrice: number | null
   primaryUserId: string | null
   fuelType: '92' | '95' | '98' | 'diesel'
+  color: string | null
+  year: number | null
+  brand: string | null
+  model: string | null
+  initialOdometer: number | null
 }
 
 const CAR_FUEL_TYPES = ['92', '95', '98', 'diesel'] as const
@@ -134,7 +144,8 @@ const CAR_FUEL_TYPES = ['92', '95', '98', 'diesel'] as const
  * validates optional purchasedAt as a YYYY-MM-DD date and optional purchasePrice as a
  * positive integer. primaryUserId is optional (null when absent/empty). fuelType defaults
  * to '95' when undefined so existing Slice 1 callers keep working; carDetails CAN have
- * 'electric' (only the FuelLog flow rejects it). Returns the validated payload or throws.
+ * 'electric' (only the FuelLog flow rejects it). Extended Slice 3 fields: color, year,
+ * brand, model, initialOdometer. Returns the validated payload or throws.
  */
 export function validateCarInput(input: CarInput): ValidatedCarInput {
   const name = validateName(input.name, '名稱', 32)
@@ -170,7 +181,56 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
     throw new Error('油種無效')
   }
 
-  return { name, plate: rawPlate, purchasedAt, purchasePrice, primaryUserId, fuelType }
+  // color — store as-is (UI enforces valid keys), max 32 chars
+  const color = input.color?.trim() || null
+
+  // year — integer 1900–2100
+  let year: number | null = null
+  if (input.year !== null && input.year !== undefined) {
+    if (!Number.isInteger(input.year) || input.year < 1900 || input.year > 2100) {
+      throw new Error('年份無效（1900–2100）')
+    }
+    year = input.year
+  }
+
+  // brand — max 32 chars
+  let brand: string | null = null
+  if (input.brand) {
+    const b = input.brand.trim()
+    if (b.length > 32) throw new Error('品牌最長 32 字')
+    brand = b || null
+  }
+
+  // model — max 32 chars
+  let model: string | null = null
+  if (input.model) {
+    const m = input.model.trim()
+    if (m.length > 32) throw new Error('型號最長 32 字')
+    model = m || null
+  }
+
+  // initialOdometer — non-negative integer
+  let initialOdometer: number | null = null
+  if (input.initialOdometer !== null && input.initialOdometer !== undefined) {
+    if (!Number.isInteger(input.initialOdometer) || input.initialOdometer < 0) {
+      throw new Error('里程必須是非負整數')
+    }
+    initialOdometer = input.initialOdometer
+  }
+
+  return {
+    name,
+    plate: rawPlate,
+    purchasedAt,
+    purchasePrice,
+    primaryUserId,
+    fuelType,
+    color,
+    year,
+    brand,
+    model,
+    initialOdometer,
+  }
 }
 
 export interface FuelLogInputRaw {

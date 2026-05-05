@@ -10,7 +10,7 @@ export interface AssetWithCar {
   name: string
   deletedAt: Date | null
   createdAt: Date
-  // Car-only fields (null for non-car types — slice 1 only fetches cars)
+  // Car-only fields (null for non-car assets)
   plate: string | null
   purchasedAt: string | null
   purchasePrice: number | null

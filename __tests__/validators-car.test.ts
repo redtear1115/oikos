@@ -16,6 +16,11 @@ describe('validateCarInput', () => {
       purchasePrice: 800000,
       primaryUserId: null,
       fuelType: '95',
+      color: null,
+      year: null,
+      brand: null,
+      model: null,
+      initialOdometer: null,
     })
   })
 
@@ -85,5 +90,48 @@ describe('validateCarInput', () => {
   it('defaults fuelType to "95" when undefined (existing Slice 1 callers)', () => {
     const r = validateCarInput({ ...validBase, fuelType: undefined as never })
     expect(r.fuelType).toBe('95')
+  })
+
+  // Slice 3: extended car fields (color, year, brand, model, initialOdometer)
+  it('accepts all extended optional fields', () => {
+    const r = validateCarInput({
+      ...validBase,
+      color: 'white',
+      year: 2020,
+      brand: 'Toyota',
+      model: 'Altis',
+      initialOdometer: 50000,
+    })
+    expect(r.color).toBe('white')
+    expect(r.year).toBe(2020)
+    expect(r.brand).toBe('Toyota')
+    expect(r.model).toBe('Altis')
+    expect(r.initialOdometer).toBe(50000)
+  })
+
+  it('defaults extended fields to null when absent', () => {
+    const r = validateCarInput(validBase)
+    expect(r.color).toBeNull()
+    expect(r.year).toBeNull()
+    expect(r.brand).toBeNull()
+    expect(r.model).toBeNull()
+    expect(r.initialOdometer).toBeNull()
+  })
+
+  it('rejects year below 1900 or above 2100', () => {
+    expect(() => validateCarInput({ ...validBase, year: 1800 })).toThrow(/年份/)
+    expect(() => validateCarInput({ ...validBase, year: 2200 })).toThrow(/年份/)
+  })
+
+  it('rejects brand longer than 32 chars', () => {
+    expect(() => validateCarInput({ ...validBase, brand: 'A'.repeat(33) })).toThrow(/品牌/)
+  })
+
+  it('rejects model longer than 32 chars', () => {
+    expect(() => validateCarInput({ ...validBase, model: 'A'.repeat(33) })).toThrow(/型號/)
+  })
+
+  it('rejects negative initialOdometer', () => {
+    expect(() => validateCarInput({ ...validBase, initialOdometer: -1 })).toThrow(/里程/)
   })
 })
