@@ -7,7 +7,6 @@
 -- pg_cron: 加 FuelLogs 進 weekly cleanup（沿用 0001 既有 cleanup-soft-deleted job）.
 --
 -- 全部 idempotent；dev + prod 都跑（per memory project_supabase_envs.md）.
--- friend-test prod 還沒 fuelLogs 資料，所以 ALTER COLUMN liters TYPE numeric 安全.
 
 -- ─── 0. Ensure 'electric' in fuel_type enum ─────────────────────────────────
 DO $$
@@ -79,19 +78,8 @@ CREATE INDEX IF NOT EXISTS "idx_cash_transactions_fuel_log_id"
   WHERE "fuel_log_id" IS NOT NULL;
 
 -- ─── 4. RLS: FuelLogs ───────────────────────────────────────────────────────
--- Mirror 0006 pattern (asset_id → Assets → OikosGroups membership). Server
--- writes go through service role (bypasses RLS); only the SELECT policy is
--- needed for the anon role + Realtime subscriptions.
-DROP POLICY IF EXISTS "fuel_logs_member_select" ON "FuelLogs";
-CREATE POLICY "fuel_logs_member_select" ON "FuelLogs" FOR SELECT
-  USING (
-    asset_id IN (
-      SELECT id FROM "Assets" WHERE group_id IN (
-        SELECT id FROM "OikosGroups"
-        WHERE member_a = auth.uid() OR member_b = auth.uid()
-      )
-    )
-  );
+-- Already covered by 0006_assets_realtime_rls.sql (Slice 1 added forward-looking
+-- policies for FuelLogs / HouseDetails / ChildDetails / InsuranceDetails). No-op here.
 
 -- ─── 5. Realtime publication: FuelLogs ──────────────────────────────────────
 DO $$

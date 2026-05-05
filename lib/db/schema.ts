@@ -8,9 +8,7 @@ import { sql } from 'drizzle-orm'
 
 export const splitTypeEnum = pgEnum('split_type', ['all_mine', 'all_theirs', 'half'])
 export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance'])
-// Note: '92' is a legacy enum value left over from Phase 0; postgres can't easily
-// drop enum values, so we keep it in the schema even though current UI only
-// surfaces 95 / 98 / diesel / electric (per Phase 2 Slice 2 spec).
+// '92' is legacy from Phase 0; pg can't drop enum values, so kept here even though UI only offers 95/98/diesel/electric.
 export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel', 'electric'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
 export const insuredTypeEnum = pgEnum('insured_type', ['user', 'child'])
