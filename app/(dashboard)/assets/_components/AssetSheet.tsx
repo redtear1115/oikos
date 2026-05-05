@@ -123,7 +123,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   // Pet state
   const [petSpecies, setPetSpecies] = useState('')
   const [petBreed, setPetBreed] = useState('')
-  const [petSex, setPetSex] = useState<'male' | 'female' | null>(null)
+  const [petSex, setPetSex] = useState<'male' | 'female' | 'unknown' | null>(null)
   const [petBirthDate, setPetBirthDate] = useState('')
   const [petAdoptedDate, setPetAdoptedDate] = useState('')
   const [petCost, setPetCost] = useState('')
@@ -182,7 +182,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       if (initial.type === 'pet') {
         setPetSpecies(initial.petSpecies ?? '')
         setPetBreed(initial.petBreed ?? '')
-        setPetSex((initial.petSex === 'male' || initial.petSex === 'female') ? initial.petSex : null)
+        setPetSex((initial.petSex === 'male' || initial.petSex === 'female' || initial.petSex === 'unknown') ? initial.petSex : null)
         setPetBirthDate(initial.petBirthDate ?? '')
         setPetAdoptedDate(initial.petAdoptedDate ?? '')
         setPetCost(initial.petPurchaseCost?.toString() ?? '')
@@ -801,7 +801,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
               <Field label="性別">
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-                  {([{v: 'male' as const, label: '男孩'}, {v: 'female' as const, label: '女孩'}]).map(o => (
+                  {([{v: 'male' as const, label: '男孩'}, {v: 'female' as const, label: '女孩'}, {v: 'unknown' as const, label: '不明'}]).map(o => (
                     <button key={o.v} type="button" onClick={() => setPetSex(o.v)}
                       className="flex-1 h-9 rounded-[9px] text-sm font-medium"
                       style={{

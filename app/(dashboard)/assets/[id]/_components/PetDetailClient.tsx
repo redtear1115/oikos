@@ -19,7 +19,12 @@ interface Props {
 export function PetDetailClient({ assetId, name, details, summary }: Props) {
   const tint = useTint('pet')
   const subtitle = details
-    ? [details.species, details.breed, details.sex === 'female' ? '女孩' : details.sex === 'male' ? '男孩' : null].filter(Boolean).join(' · ')
+    ? [details.species, details.breed,
+        details.sex === 'female' ? '女孩'
+          : details.sex === 'male' ? '男孩'
+          : details.sex === 'unknown' ? '不明'
+          : null
+      ].filter(Boolean).join(' · ')
     : null
 
   return (
