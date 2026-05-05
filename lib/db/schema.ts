@@ -1,5 +1,5 @@
 import {
-  pgTable, pgEnum, uuid, text, integer,
+  pgTable, pgEnum, uuid, text, integer, numeric,
   timestamp, date,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
@@ -8,7 +8,10 @@ import { sql } from 'drizzle-orm'
 
 export const splitTypeEnum = pgEnum('split_type', ['all_mine', 'all_theirs', 'half'])
 export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance'])
-export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel'])
+// Note: '92' is a legacy enum value left over from Phase 0; postgres can't easily
+// drop enum values, so we keep it in the schema even though current UI only
+// surfaces 95 / 98 / diesel / electric (per Phase 2 Slice 2 spec).
+export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel', 'electric'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
 export const insuredTypeEnum = pgEnum('insured_type', ['user', 'child'])
 
@@ -65,6 +68,7 @@ export const cashTransactions = pgTable('CashTransactions', {
   description: text('description').notNull(),
   category: text('category').notNull(),
   assetId: uuid('asset_id').references(() => assets.id),
+  fuelLogId: uuid('fuel_log_id').references(() => fuelLogs.id),
   invoiceNumber: text('invoice_number'),
   transactedAt: timestamp('transacted_at', { withTimezone: true }).notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -87,15 +91,17 @@ export const carDetails = pgTable('CarDetails', {
   plate: text('plate').notNull(),
   purchasedAt: date('purchased_at'),
   purchasePrice: integer('purchase_price'),
+  primaryUserId: uuid('primary_user_id').references(() => profiles.id), // NULL = 共用
+  fuelType: fuelTypeEnum('fuel_type').notNull().default('95'),
 })
 
 export const fuelLogs = pgTable('FuelLogs', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   assetId: uuid('asset_id').notNull().references(() => assets.id),
-  liters: integer('liters').notNull(),
+  liters: numeric('liters', { precision: 6, scale: 2 }).notNull(),
   fuelType: fuelTypeEnum('fuel_type').notNull(),
   odometer: integer('odometer').notNull(),
-  pricePerLiter: integer('price_per_liter').notNull(),
+  station: text('station'),
   loggedAt: timestamp('logged_at', { withTimezone: true }).notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -43,6 +43,13 @@
       "when": 1777797426939,
       "tag": "0005_rls_policies_phase1",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777980135718,
+      "tag": "0007_phase2_slice2",
+      "breakpoints": true
     }
   ]
 }
