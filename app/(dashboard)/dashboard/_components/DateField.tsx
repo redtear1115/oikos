@@ -8,7 +8,7 @@ import { localTodayISO } from '@/lib/local-date'
 interface DateFieldProps {
   value: string  // ISO date string e.g. "2026-05-05"
   onChange: (iso: string) => void
-  open?: boolean  // parent sheet open state; resets calendar on reopen
+  open: boolean  // parent sheet open state; resets calendar on reopen
 }
 
 function dateLabel(iso: string) {
