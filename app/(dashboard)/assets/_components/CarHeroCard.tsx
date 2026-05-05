@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CarMark, carBandBackground, carForeground, FALLBACK_CAR_COLOR } from './carColor'
+import { CarMark, FALLBACK_CAR_COLOR, isDarkColor } from './carColor'
 
 interface Props {
   id: string
@@ -73,11 +73,9 @@ export function CarHeroCard({
   monthAmount,
   totalAmount,
   avgFuelEcon,
-  compact = false,
+  compact: _compact = false,
 }: Props) {
   const swatch = color ?? FALLBACK_CAR_COLOR
-  const fg = carForeground(swatch)
-  const bandBg = carBandBackground(swatch)
 
   const subtitleParts: string[] = []
   if (year != null) subtitleParts.push(String(year))
@@ -89,7 +87,7 @@ export function CarHeroCard({
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
+      className="block no-underline relative"
       style={{
         background: 'var(--surface)',
         borderRadius: 18,
@@ -98,56 +96,69 @@ export function CarHeroCard({
         color: 'var(--ink)',
       }}
     >
+      {/* Left accent — solid stripe + dashed echo, in the car color */}
       <div
+        aria-hidden="true"
         style={{
-          height: compact ? 90 : 130,
-          background: bandBg,
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          position: 'absolute',
+          left: 0, top: 0, bottom: 0,
+          width: 5,
+          background: swatch,
         }}
-      >
-        <CarMark
-          size={compact ? 60 : 84}
-          stroke={fg.markStroke}
-          accent={fg.markAccent}
-          orbitOpacity={fg.orbitOpacity}
-        />
-        {plate && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 8,
-              right: 10,
-              fontSize: 11,
-              color: fg.plateInk,
-              fontFamily: '"JetBrains Mono", monospace',
-              letterSpacing: 0.8,
-              background: fg.plateBg,
-              padding: '3px 8px',
-              borderRadius: 5,
-            }}
-          >
-            {plate}
-          </div>
-        )}
-      </div>
-      <div style={{ padding: '14px 16px 16px' }}>
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 9, top: 8, bottom: 8,
+          width: 0,
+          borderLeft: `1.5px dashed ${swatch}`,
+          opacity: 0.55,
+        }}
+      />
+
+      <div style={{ padding: '14px 16px 16px 22px' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
             gap: 12,
           }}
         >
+          {/* Inline car mark — silhouette stays in ink for light cars (so it's
+           *  always visible on white surface); dashed orbit carries the color. */}
+          <div className="shrink-0" aria-hidden="true">
+            <CarMark
+              size={40}
+              stroke={isDarkColor(swatch) ? swatch : '#3A2419'}
+              accent={swatch}
+              orbitOpacity={0.55}
+            />
+          </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div
-              className="truncate"
-              style={{ fontSize: 16, color: 'var(--ink)', fontWeight: 600 }}
-            >
-              {name}
+            <div className="flex items-center gap-2">
+              <div
+                className="truncate"
+                style={{ fontSize: 16, color: 'var(--ink)', fontWeight: 600 }}
+              >
+                {name}
+              </div>
+              {plate && (
+                <span
+                  className="shrink-0"
+                  style={{
+                    fontSize: 10,
+                    color: 'var(--ink-2)',
+                    fontFamily: '"JetBrains Mono", monospace',
+                    letterSpacing: 0.8,
+                    background: 'rgba(58,36,25,0.06)',
+                    padding: '2px 7px',
+                    borderRadius: 5,
+                  }}
+                >
+                  {plate}
+                </span>
+              )}
             </div>
             <div
               className="truncate"
