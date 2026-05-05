@@ -1,9 +1,9 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, carDetails, cashTransactions, oikosGroups, childDetails, petDetails, insuranceDetails } from '@/lib/db/schema'
+import { assets, carDetails, cashTransactions, oikosGroups, childDetails, petDetails, plantDetails, insuranceDetails } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
-import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validateInsuranceInput } from '@/lib/validators'
+import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, or, and, isNull } from 'drizzle-orm'
@@ -499,6 +499,90 @@ export async function editPet(input: EditPetInput): Promise<void> {
           weightG: validated.weightG,
           chipNo: validated.chipNo,
           vet: validated.vet,
+        },
+      })
+  })
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+// ── Plant ──────────────────────────────────────────────────────────────────
+
+export interface CreatePlantInput {
+  name: string
+  species?: string | null
+  location?: string | null
+  sproutedAt?: string | null
+  cost?: number | null
+  waterEvery?: number | null
+}
+
+export interface EditPlantInput extends CreatePlantInput {
+  id: string
+}
+
+export async function createPlant(input: CreatePlantInput): Promise<{ id: string }> {
+  'use server'
+  const validated = validatePlantInput(input)
+  const { group } = await getViewerGroup()
+
+  const [created] = await db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({ groupId: group.id, type: 'plant', name: validated.name })
+      .returning({ id: assets.id })
+    await tx.insert(plantDetails).values({
+      assetId: asset.id,
+      species: validated.species,
+      location: validated.location,
+      sproutedAt: validated.sproutedAt,
+      cost: validated.cost,
+      waterEvery: validated.waterEvery,
+    })
+    return [asset]
+  })
+
+  revalidatePath('/assets')
+  return { id: created.id }
+}
+
+export async function editPlant(input: EditPlantInput): Promise<void> {
+  'use server'
+  const validated = validatePlantInput(input)
+  const { group } = await getViewerGroup()
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(assets)
+      .set({ name: validated.name })
+      .where(and(
+        eq(assets.id, input.id),
+        eq(assets.groupId, group.id),
+        eq(assets.type, 'plant'),
+        isNull(assets.deletedAt),
+      ))
+      .returning({ id: assets.id })
+    if (updated.length === 0) throw new Error('找不到該愛物')
+
+    await tx
+      .insert(plantDetails)
+      .values({
+        assetId: input.id,
+        species: validated.species,
+        location: validated.location,
+        sproutedAt: validated.sproutedAt,
+        cost: validated.cost,
+        waterEvery: validated.waterEvery,
+      })
+      .onConflictDoUpdate({
+        target: plantDetails.assetId,
+        set: {
+          species: validated.species,
+          location: validated.location,
+          sproutedAt: validated.sproutedAt,
+          cost: validated.cost,
+          waterEvery: validated.waterEvery,
         },
       })
   })

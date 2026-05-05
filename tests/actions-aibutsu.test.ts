@@ -4,6 +4,7 @@ import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
   createChild, editChild,
   createPet, editPet,
+  createPlant, editPlant,
   createInsurance, editInsurance,
 } from '@/actions/asset'
 
@@ -189,6 +190,87 @@ describe('editPet', () => {
 
   it('throws on empty name', async () => {
     await expect(editPet({ id: 'asset-1', name: '  ' })).rejects.toThrow(/名稱/)
+  })
+})
+
+// ── createPlant ──────────────────────────────────────────────────────────────
+
+describe('createPlant', () => {
+  it('creates asset + plantDetails row', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])  // assets insert
+    queueDbResult([])                    // plantDetails insert
+
+    await expect(createPlant({ name: '阿龜' })).resolves.toMatchObject({ id: 'asset-1' })
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('passes all plantDetails fields to insert', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-7' }])
+    queueDbResult([])
+
+    await createPlant({
+      name: '阿龜',
+      species: '龜背芋',
+      location: '北向陽台',
+      sproutedAt: '2024-03-10',
+      cost: 1850,
+      waterEvery: 7,
+    })
+
+    const valueCalls = mockBuilder.values.mock.calls
+    const plantPayload = valueCalls[1][0] as Record<string, unknown>
+    expect(plantPayload).toMatchObject({
+      assetId: 'asset-7',
+      species: '龜背芋',
+      location: '北向陽台',
+      sproutedAt: '2024-03-10',
+      cost: 1850,
+      waterEvery: 7,
+    })
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(createPlant({ name: '阿龜' })).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws on empty name', async () => {
+    await expect(createPlant({ name: '   ' })).rejects.toThrow(/名稱/)
+  })
+
+  it('throws when group not found', async () => {
+    queueDbResult([])
+    await expect(createPlant({ name: '阿龜' })).rejects.toThrow('找不到家計簿')
+  })
+})
+
+// ── editPlant ────────────────────────────────────────────────────────────────
+
+describe('editPlant', () => {
+  it('updates asset name + sets plantDetails fields', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])  // assets update .returning
+    queueDbResult([])                    // plantDetails upsert
+
+    await expect(editPlant({ id: 'asset-1', name: '新名字' })).resolves.toBeUndefined()
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('throws if asset not found in group', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])  // assets update returning empty
+    await expect(editPlant({ id: 'missing', name: '阿龜' })).rejects.toThrow(/找不到/)
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(editPlant({ id: 'asset-1', name: '阿龜' })).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws on empty name', async () => {
+    await expect(editPlant({ id: 'asset-1', name: '  ' })).rejects.toThrow(/名稱/)
   })
 })
 
