@@ -4,6 +4,7 @@ import {
   validateName,
   validateTransactionInput,
   validateSettlementInput,
+  validateFuelLogInput,
 } from '@/lib/validators'
 
 describe('validateAmount', () => {
@@ -82,5 +83,62 @@ describe('validateSettlementInput', () => {
   })
   it('rejects invalid amount', () => {
     expect(() => validateSettlementInput({ ...baseValid, amount: -1 })).toThrow(/金額必須是正整數/)
+  })
+})
+
+describe('validateFuelLogInput', () => {
+  const validBase = {
+    assetId: '00000000-0000-0000-0000-000000000001',
+    liters: 36.2,
+    odometer: 86420,
+    cost: 1340,
+    fuelType: '95' as const,
+    loggedAt: '2026-05-05',
+    station: '中油 永和',
+    paidBy: 'user-id',
+    splitType: 'all_mine' as const,
+  }
+
+  it('accepts valid input', () => {
+    const result = validateFuelLogInput(validBase)
+    expect(result.liters).toBeCloseTo(36.2)
+    expect(result.odometer).toBe(86420)
+    expect(result.cost).toBe(1340)
+    expect(result.station).toBe('中油 永和')
+  })
+
+  it('accepts null station', () => {
+    const result = validateFuelLogInput({ ...validBase, station: null })
+    expect(result.station).toBeNull()
+  })
+
+  it('rejects non-positive liters', () => {
+    expect(() => validateFuelLogInput({ ...validBase, liters: 0 })).toThrow(/油量/)
+    expect(() => validateFuelLogInput({ ...validBase, liters: -5 })).toThrow(/油量/)
+  })
+
+  it('rejects negative odometer', () => {
+    expect(() => validateFuelLogInput({ ...validBase, odometer: -1 })).toThrow(/里程/)
+  })
+
+  it('rejects non-positive cost', () => {
+    expect(() => validateFuelLogInput({ ...validBase, cost: 0 })).toThrow(/金額/)
+  })
+
+  it('rejects invalid fuelType', () => {
+    expect(() => validateFuelLogInput({ ...validBase, fuelType: 'foo' as never })).toThrow(/油種/)
+  })
+
+  it('rejects fuelType=electric (FuelLog gas-only per EV1)', () => {
+    expect(() => validateFuelLogInput({ ...validBase, fuelType: 'electric' as never })).toThrow(/電車/)
+  })
+
+  it('trims overlong station to <= 100 chars', () => {
+    const long = 'x'.repeat(150)
+    expect(() => validateFuelLogInput({ ...validBase, station: long })).toThrow(/加油站/)
+  })
+
+  it('rejects invalid loggedAt date', () => {
+    expect(() => validateFuelLogInput({ ...validBase, loggedAt: 'not-a-date' })).toThrow(/日期/)
   })
 })
