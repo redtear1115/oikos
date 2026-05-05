@@ -346,3 +346,192 @@ export function validateLifeEntityInput(input: LifeEntityInput): LifeEntityInput
   if (name.length > 32) throw new Error('名稱最多 32 字')
   return { type: input.type, name }
 }
+
+// ── Child ──────────────────────────────────────────────────────────
+export interface ChildInput {
+  name: string
+  nickname?: string | null
+  gender?: 'male' | 'female' | 'other' | null
+  birthday?: string | null
+  nationalId?: string | null
+  nhiNo?: string | null
+  bloodType?: string | null
+  hospital?: string | null
+  heightCm?: number | null
+  weightG?: number | null
+}
+
+export interface ValidatedChildInput {
+  name: string
+  nickname: string | null
+  gender: 'male' | 'female' | 'other' | null
+  birthday: string | null
+  nationalId: string | null
+  nhiNo: string | null
+  bloodType: string | null
+  hospital: string | null
+  heightCm: number | null
+  weightG: number | null
+}
+
+export function validateChildInput(input: ChildInput): ValidatedChildInput {
+  const name = input.name?.trim()
+  if (!name || name.length < 1) throw new Error('名稱不能空白')
+  if (name.length > 32) throw new Error('名稱最長 32 字')
+
+  const nickname = input.nickname?.trim() || null
+
+  let gender: 'male' | 'female' | 'other' | null = null
+  if (input.gender !== null && input.gender !== undefined) {
+    if (input.gender !== 'male' && input.gender !== 'female' && input.gender !== 'other')
+      throw new Error('性別無效')
+    gender = input.gender
+  }
+
+  const birthday = input.birthday?.trim() || null
+  const nationalId = input.nationalId?.trim() || null
+  const nhiNo = input.nhiNo?.trim() || null
+  const bloodType = input.bloodType?.trim() || null
+  const hospital = input.hospital?.trim() || null
+
+  let heightCm: number | null = null
+  if (input.heightCm !== null && input.heightCm !== undefined) {
+    if (!Number.isInteger(input.heightCm) || input.heightCm < 0)
+      throw new Error('身高必須是非負整數（cm）')
+    heightCm = input.heightCm
+  }
+
+  let weightG: number | null = null
+  if (input.weightG !== null && input.weightG !== undefined) {
+    if (!Number.isInteger(input.weightG) || input.weightG < 0)
+      throw new Error('體重必須是非負整數（g）')
+    weightG = input.weightG
+  }
+
+  return { name, nickname, gender, birthday, nationalId, nhiNo, bloodType, hospital, heightCm, weightG }
+}
+
+// ── Pet ────────────────────────────────────────────────────────────
+export interface PetInput {
+  name: string
+  species?: string | null
+  breed?: string | null
+  sex?: string | null
+  birthDate?: string | null
+  adoptedDate?: string | null
+  purchaseCost?: number | null
+  weightG?: number | null
+  chipNo?: string | null
+  vet?: string | null
+}
+
+export interface ValidatedPetInput {
+  name: string
+  species: string | null
+  breed: string | null
+  sex: string | null
+  birthDate: string | null
+  adoptedDate: string | null
+  purchaseCost: number | null
+  weightG: number | null
+  chipNo: string | null
+  vet: string | null
+}
+
+export function validatePetInput(input: PetInput): ValidatedPetInput {
+  const name = input.name?.trim()
+  if (!name || name.length < 1) throw new Error('名稱不能空白')
+  if (name.length > 32) throw new Error('名稱最長 32 字')
+
+  const species = input.species?.trim() || null
+  const breed = input.breed?.trim() || null
+  const sex = input.sex?.trim() || null
+  const birthDate = input.birthDate?.trim() || null
+  const adoptedDate = input.adoptedDate?.trim() || null
+
+  let purchaseCost: number | null = null
+  if (input.purchaseCost !== null && input.purchaseCost !== undefined) {
+    if (!Number.isInteger(input.purchaseCost) || input.purchaseCost < 0)
+      throw new Error('金額必須是非負整數')
+    purchaseCost = input.purchaseCost
+  }
+
+  let weightG: number | null = null
+  if (input.weightG !== null && input.weightG !== undefined) {
+    if (!Number.isInteger(input.weightG) || input.weightG < 0)
+      throw new Error('體重必須是非負整數（g）')
+    weightG = input.weightG
+  }
+
+  const chipNo = input.chipNo?.trim() || null
+  const vet = input.vet?.trim() || null
+
+  return { name, species, breed, sex, birthDate, adoptedDate, purchaseCost, weightG, chipNo, vet }
+}
+
+// ── Insurance ──────────────────────────────────────────────────────
+export interface InsuranceInput {
+  name: string
+  kind?: string | null
+  insured?: string | null
+  insurer?: string | null
+  policyNo?: string | null
+  annualPremium?: number | null
+  sumInsured?: number | null
+  payCycle?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
+  termYears?: number | null
+}
+
+export interface ValidatedInsuranceInput {
+  name: string
+  kind: string | null
+  insured: string | null
+  insurer: string | null
+  policyNo: string | null
+  annualPremium: number | null
+  sumInsured: number | null
+  payCycle: string | null
+  startsAt: string | null
+  endsAt: string | null
+  termYears: number | null
+}
+
+export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranceInput {
+  const name = input.name?.trim()
+  if (!name || name.length < 1) throw new Error('名稱不能空白')
+  if (name.length > 64) throw new Error('名稱最長 64 字')
+
+  const kind = input.kind?.trim() || null
+  const insured = input.insured?.trim() || null
+  const insurer = input.insurer?.trim() || null
+  const policyNo = input.policyNo?.trim() || null
+
+  let annualPremium: number | null = null
+  if (input.annualPremium !== null && input.annualPremium !== undefined) {
+    if (!Number.isInteger(input.annualPremium) || input.annualPremium < 0)
+      throw new Error('保費必須是非負整數')
+    annualPremium = input.annualPremium
+  }
+
+  let sumInsured: number | null = null
+  if (input.sumInsured !== null && input.sumInsured !== undefined) {
+    if (!Number.isInteger(input.sumInsured) || input.sumInsured < 0)
+      throw new Error('保額必須是非負整數')
+    sumInsured = input.sumInsured
+  }
+
+  const payCycle = input.payCycle?.trim() || null
+  const startsAt = input.startsAt?.trim() || null
+  const endsAt = input.endsAt?.trim() || null
+
+  let termYears: number | null = null
+  if (input.termYears !== null && input.termYears !== undefined) {
+    if (!Number.isInteger(input.termYears) || input.termYears <= 0)
+      throw new Error('年期必須是正整數')
+    termYears = input.termYears
+  }
+
+  return { name, kind, insured, insurer, policyNo, annualPremium, sumInsured, payCycle, startsAt, endsAt, termYears }
+}
