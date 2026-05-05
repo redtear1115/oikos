@@ -1,0 +1,93 @@
+'use client'
+
+export function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-5 pt-[18px] pb-2">
+      <div
+        className="text-[10px] tracking-[1.5px] uppercase"
+        style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+      >{children}</div>
+    </div>
+  )
+}
+
+export function InfoCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="mx-4 rounded-2xl overflow-hidden"
+      style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+    >{children}</div>
+  )
+}
+
+export function InfoRow({ label, value, mono = false, last = false }: {
+  label: string; value: string; mono?: boolean; last?: boolean
+}) {
+  return (
+    <div
+      className="px-[14px] py-[11px] flex items-center gap-2.5"
+      style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
+    >
+      <div
+        className="text-[11px] shrink-0 tracking-[0.4px]"
+        style={{ color: 'var(--ink-3)', width: 76 }}
+      >{label}</div>
+      <div
+        className="flex-1 text-[13px] font-medium truncate"
+        style={{
+          color: 'var(--ink)',
+          fontFamily: mono ? 'var(--font-numeric)' : 'inherit',
+        }}
+      >{value || '—'}</div>
+    </div>
+  )
+}
+
+export function MoneyTwoCol({ month, total, accent }: { month: number; total: number; accent: string }) {
+  return (
+    <div
+      className="mx-4 mt-3 flex rounded-2xl px-[14px] py-3 gap-2"
+      style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+    >
+      {[{ label: '本月', value: month }, { label: '累計', value: total }].map((s, i) => (
+        <div key={s.label} className="flex-1 flex items-stretch gap-2">
+          {i > 0 && <div className="w-px" style={{ background: 'var(--hairline)' }} />}
+          <div className="flex-1">
+            <div className="text-[9px] tracking-[1px]" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{s.label}</div>
+            <div className="text-base font-semibold mt-0.5 tabular-nums" style={{ color: 'var(--ink)' }}>
+              NT$ {s.value.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function AgeDisplay({ birth, accent }: { birth: string; accent: string }) {
+  const now = new Date()
+  const b = new Date(birth)
+  const months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth())
+  const yrs = Math.floor(months / 12)
+  const mos = months % 12
+  return (
+    <div className="text-center py-2">
+      <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>年齡</div>
+      <div className="inline-flex items-baseline gap-1.5 mt-1.5">
+        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 56, fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>
+          {yrs}
+        </span>
+        <span className="text-sm font-medium" style={{ color: accent }}>歲</span>
+        {mos > 0 && (
+          <>
+            <span className="tabular-nums leading-none ml-1.5" style={{ fontFamily: 'var(--font-numeric)', fontSize: 32, fontWeight: 600, color: 'var(--ink)', letterSpacing: -1 }}>
+              {mos}
+            </span>
+            <span className="text-xs font-medium" style={{ color: accent }}>個月</span>
+          </>
+        )}
+      </div>
+      <div className="text-[10px] mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{birth}</div>
+    </div>
+  )
+}
