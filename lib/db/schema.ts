@@ -124,6 +124,24 @@ export const childDetails = pgTable('ChildDetails', {
   gender: genderEnum('gender'),
   idNumberEncrypted: text('id_number_encrypted'),
   insuranceIdEncrypted: text('insurance_id_encrypted'),
+  nickname: text('nickname'),
+  hospital: text('hospital'),
+  bloodType: text('blood_type'),
+  heightCm: integer('height_cm'),
+  weightG: integer('weight_g'),
+})
+
+export const petDetails = pgTable('PetDetails', {
+  assetId: uuid('asset_id').primaryKey().references(() => assets.id),
+  species: text('species'),
+  breed: text('breed'),
+  sex: text('sex'),
+  birthDate: date('birth_date'),
+  adoptedDate: date('adopted_date'),
+  purchaseCost: integer('purchase_cost'),
+  weightG: integer('weight_g'),
+  chipNo: text('chip_no'),
+  vet: text('vet'),
 })
 
 export const insuranceDetails = pgTable('InsuranceDetails', {
@@ -136,6 +154,13 @@ export const insuranceDetails = pgTable('InsuranceDetails', {
   insuredType: insuredTypeEnum('insured_type').notNull(),
   insuredUserId: uuid('insured_user_id').references(() => profiles.id),
   insuredChildId: uuid('insured_child_id').references(() => assets.id),
+  insured: text('insured'),
+  insurer: text('insurer'),
+  annualPremium: integer('annual_premium'),
+  payCycle: text('pay_cycle'),
+  startsAt: date('starts_at'),
+  termYears: integer('term_years'),
+  sumInsured: integer('sum_insured'),
 })
 
 export const invoiceCredentials = pgTable('InvoiceCredentials', {
