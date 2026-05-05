@@ -36,7 +36,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
         </a>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <div className="text-lg font-semibold truncate min-w-0" style={{ color: '#3A2419' }}>{name}</div>
+            <div className="text-lg font-semibold min-w-0" style={{ color: '#3A2419' }}>{name}</div>
             {onEditClick && (
               <button
                 onClick={onEditClick}

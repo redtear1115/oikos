@@ -10,6 +10,9 @@ interface AssetSwitcherProps {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
   /** Foreground color for the chevron — defaults to ink. */
   chevronInk?: string
+  /** Background tint of the trigger pill — defaults to ink-soft. Pass a custom
+   *  rgba for tinted hero bands. */
+  triggerBg?: string
   /** Trigger content — typically the page title / name. Rendered inside the
    *  click target with a chevron after it. */
   children: React.ReactNode
@@ -24,7 +27,7 @@ const TYPE_LABELS: Record<AssetType, string> = {
   insurance: '保險',
 }
 
-export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419', children }: AssetSwitcherProps) {
+export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419', triggerBg = 'rgba(58,36,25,0.06)', children }: AssetSwitcherProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -51,14 +54,15 @@ export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 min-w-0 bg-transparent border-0 p-0 cursor-pointer text-left"
+        className="inline-flex items-center gap-1.5 min-w-0 border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 py-0.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
+        style={{ background: triggerBg }}
         aria-label="切換愛物"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        {children}
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0 opacity-60">
-          <path d="M3 4.5l3 3 3-3" stroke={chevronInk} strokeWidth="1.6"
+        <span className="truncate min-w-0">{children}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0 opacity-70">
+          <path d="M3 4.5l3 3 3-3" stroke={chevronInk} strokeWidth="1.8"
             strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>

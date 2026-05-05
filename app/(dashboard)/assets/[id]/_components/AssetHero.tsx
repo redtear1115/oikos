@@ -92,7 +92,7 @@ export function AssetHero({
     <div className="px-5 pt-[60px] pb-6" style={{ background: bandBg }}>
       <div className="flex items-center">
         <BackButton btnBg={fg.btnBg} ink={fg.ink} />
-        <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: fg.ink }}>
+        <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: fg.ink }}>
           {name}
         </div>
         {onEdit && <EditPencilButton onClick={onEdit} btnBg={fg.btnBg} ink={fg.ink} />}

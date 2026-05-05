@@ -138,6 +138,7 @@ export function AssetDetailClient({
             currentAssetId={assetId}
             allAssets={allAssets}
             chevronInk={isDarkColor(assetSheetInitial.color ?? FALLBACK_CAR_COLOR) ? '#FFF6EC' : '#3A2419'}
+            triggerBg={isDarkColor(assetSheetInitial.color ?? FALLBACK_CAR_COLOR) ? 'rgba(255,255,255,0.10)' : 'rgba(58,36,25,0.08)'}
           >
             <span>{assetSheetInitial.name}</span>
           </AssetSwitcher>
