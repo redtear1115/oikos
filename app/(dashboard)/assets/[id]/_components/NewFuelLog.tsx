@@ -3,10 +3,13 @@
 import { useEffect, useState, useMemo, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
+import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
+import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 import { localTodayISO } from '@/lib/local-date'
+import type { SplitType } from '@/lib/balance'
 
 interface CarLite {
   id: string
@@ -22,11 +25,11 @@ export interface NewFuelLogInitial {
   liters: string
   odometer: number
   station: string | null
-  fuelType: '95' | '98' | 'diesel'
+  fuelType: '92' | '95' | '98' | 'diesel'
   loggedAt: string    // ISO string
   cost: number
   paidBy: string
-  splitType: 'all_mine' | 'all_theirs' | 'half'
+  splitType: SplitType
 }
 
 interface NewFuelLogProps {
@@ -38,10 +41,7 @@ interface NewFuelLogProps {
   initial?: NewFuelLogInitial | null
 }
 
-type PayerSelection = 'me' | 'partner' | 'shared'
-
 function isoToLocalDate(iso: string): string {
-  // Return YYYY-MM-DD in local timezone from an ISO string
   const d = new Date(iso)
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -65,19 +65,24 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
   const [showCal, setShowCal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const initialPayer: PayerSelection = useMemo(() => {
-    if (car.primaryUserId === null) return 'shared'
-    if (car.primaryUserId === viewer.id) return 'me'
-    if (partner && car.primaryUserId === partner.id) return 'partner'
-    return 'me'
-  }, [car.primaryUserId, viewer.id, partner])
+  // Default payer/split derived from car's primary user
+  const defaultPayerWho = useMemo<'M' | 'T'>(() => {
+    if (partner && car.primaryUserId === partner.id) return 'T'
+    return 'M'
+  }, [car.primaryUserId, partner])
+
+  const defaultSplit = useMemo<SplitType>(() => {
+    if (!partner) return 'all_mine'
+    if (car.primaryUserId === null) return 'half'
+    return 'all_mine'
+  }, [car.primaryUserId, partner])
 
   const [liters, setLiters] = useState('')
   const [odometer, setOdometer] = useState('')
   const [cost, setCost] = useState('')
-  const [station, setStation] = useState('')
   const [fuelType, setFuelType] = useState<GasFuelType>(toGasFuelType(car.fuelType))
-  const [payer, setPayer] = useState<PayerSelection>(initialPayer)
+  const [payerWho, setPayerWho] = useState<'M' | 'T'>(defaultPayerWho)
+  const [split, setSplit] = useState<SplitType>(defaultSplit)
   const [date, setDate] = useState(() => localTodayISO())
 
   useEffect(() => {
@@ -86,30 +91,23 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
       setLiters(initial.liters)
       setOdometer(String(initial.odometer))
       setCost(String(initial.cost))
-      setStation(initial.station ?? '')
       setFuelType(initial.fuelType)
-      // Derive payer from splitType + paidBy
-      if (initial.splitType === 'half') {
-        setPayer('shared')
-      } else if (initial.paidBy === viewer.id) {
-        setPayer('me')
-      } else {
-        setPayer('partner')
-      }
+      setPayerWho(initial.paidBy === viewer.id ? 'M' : 'T')
+      setSplit(initial.splitType)
       setDate(isoToLocalDate(initial.loggedAt))
     } else {
       setLiters('')
       setOdometer('')
       setCost('')
-      setStation('')
       setFuelType(toGasFuelType(car.fuelType))
-      setPayer(initialPayer)
+      setPayerWho(defaultPayerWho)
+      setSplit(defaultSplit)
       setDate(localTodayISO())
     }
     setShowCal(false)
     setError(null)
     setConfirmDelete(false)
-  }, [open, mode, initial, car.fuelType, initialPayer, viewer.id])
+  }, [open, mode, initial, car.fuelType, defaultPayerWho, defaultSplit, viewer.id])
 
   // Live km/L preview
   const dist = lastOdometer !== null && odometer
@@ -120,14 +118,12 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     ? (dist / litersNum).toFixed(1)
     : '—'
 
-  // Payer → { paidBy, splitType }
+  const costNum = parseInt(cost.replace(/,/g, ''), 10) || 0
+
   function resolvePayment() {
-    if (!partner) {
-      return { paidBy: viewer.id, splitType: 'all_mine' as const }
-    }
-    if (payer === 'shared') return { paidBy: viewer.id, splitType: 'half' as const }
-    if (payer === 'partner') return { paidBy: partner.id, splitType: 'all_mine' as const }
-    return { paidBy: viewer.id, splitType: 'all_mine' as const }
+    const paidBy = payerWho === 'M' ? viewer.id : (partner?.id ?? viewer.id)
+    const splitType: SplitType = partner ? split : 'all_mine'
+    return { paidBy, splitType }
   }
 
   const canSubmit = liters.trim() !== '' && odometer.trim() !== '' && cost.trim() !== '' && !pending
@@ -136,7 +132,6 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     setError(null)
     const { paidBy, splitType } = resolvePayment()
     const odometerNum = parseInt(odometer.replace(/,/g, ''), 10)
-    const costNum = parseInt(cost.replace(/,/g, ''), 10)
 
     startTransition(async () => {
       try {
@@ -149,7 +144,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             cost: costNum,
             fuelType,
             loggedAt: date,
-            station: station.trim() || null,
+            station: initial.station,
             paidBy,
             splitType,
           })
@@ -161,7 +156,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             cost: costNum,
             fuelType,
             loggedAt: date,
-            station: station.trim() || null,
+            station: null,
             paidBy,
             splitType,
           })
@@ -263,6 +258,11 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           </div>
         </div>
 
+        {/* 誰付的 toggle — only when there's a partner */}
+        {partner && (
+          <PayerToggle value={payerWho} onChange={setPayerWho} />
+        )}
+
         {/* Form */}
         <div className="overflow-auto flex-1 px-4 pt-4 pb-3 flex flex-col gap-2.5">
           <FormRow label="油量" unit="公升">
@@ -306,17 +306,6 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             />
           </FormRow>
 
-          <FormRow label="加油站">
-            <input
-              value={station}
-              onChange={e => setStation(e.target.value)}
-              type="text"
-              placeholder="例：中油 永和（選填）"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-[15px] outline-none"
-              style={{ color: 'var(--ink)' }}
-            />
-          </FormRow>
-
           <FormRow label="日期">
             <button
               type="button"
@@ -336,14 +325,17 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             )}
           </FormRow>
 
+          {/* 分攤方式 — only when there's a partner */}
           {partner && (
-            <FormRow label="付款人">
-              <PayerToggleInline
-                value={payer}
-                onChange={setPayer}
-                partnerLabel={partner.displayName ?? '對方'}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] text-[var(--ink-2)] tracking-[0.4px]">分攤方式</span>
+              <SplitTypeSelector
+                value={split}
+                onChange={setSplit}
+                amount={costNum}
+                payerWho={payerWho}
               />
-            </FormRow>
+            </div>
           )}
         </div>
 
@@ -406,37 +398,5 @@ function FormRow({
       {children}
       {hint && <span className="text-[10px] text-[var(--ink-3)] font-mono">{hint}</span>}
     </label>
-  )
-}
-
-function PayerToggleInline({
-  value, onChange, partnerLabel,
-}: {
-  value: PayerSelection
-  onChange: (v: PayerSelection) => void
-  partnerLabel: string
-}) {
-  const opts: Array<{ v: PayerSelection; label: string }> = [
-    { v: 'me', label: '我' },
-    { v: 'partner', label: partnerLabel },
-    { v: 'shared', label: '共用' },
-  ]
-  return (
-    <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(58,36,25,0.05)' }}>
-      {opts.map(opt => (
-        <button
-          key={opt.v}
-          type="button"
-          onClick={() => onChange(opt.v)}
-          className={`flex-1 h-9 rounded-lg text-[13px] font-medium transition-colors ${
-            value === opt.v
-              ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
-              : 'bg-transparent text-[var(--ink-2)]'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
   )
 }
