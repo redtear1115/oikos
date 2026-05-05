@@ -1,5 +1,9 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aibutsu-ui'
 import type { ChildDetailsRow } from '@/lib/db/queries/aibutsu'
@@ -17,6 +21,8 @@ interface Props {
 }
 
 export function ChildDetailClient({ assetId, name, details, summary }: Props) {
+  const router = useRouter()
+  const [addOpen, setAddOpen] = useState(false)
   const tint = useTint('child')
   const subtitle = details
     ? [
@@ -50,6 +56,14 @@ export function ChildDetailClient({ assetId, name, details, summary }: Props) {
         <InfoRow label="身高" value={details?.heightCm ? `${details.heightCm} cm` : ''} mono />
         <InfoRow label="體重" value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
       </InfoCard>
+
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      <AddSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        prefilledAssetId={assetId}
+        onMutated={() => router.refresh()}
+      />
     </div>
   )
 }

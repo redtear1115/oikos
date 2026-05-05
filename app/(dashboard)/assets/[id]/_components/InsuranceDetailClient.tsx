@@ -1,5 +1,9 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
@@ -20,6 +24,8 @@ interface Props {
 }
 
 export function InsuranceDetailClient({ assetId, name, details }: Props) {
+  const router = useRouter()
+  const [addOpen, setAddOpen] = useState(false)
   const tint = useTint('insurance')
   const subtitle = details
     ? [details.insurer, details.kind ? KIND_LABELS[details.kind] : null].filter(Boolean).join(' · ')
@@ -86,6 +92,14 @@ export function InsuranceDetailClient({ assetId, name, details }: Props) {
         <InfoRow label="保單起" value={details?.startsAt ?? ''} mono />
         <InfoRow label="保單迄" value={details?.endsAt ?? ''} mono last />
       </InfoCard>
+
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      <AddSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        prefilledAssetId={assetId}
+        onMutated={() => router.refresh()}
+      />
     </div>
   )
 }

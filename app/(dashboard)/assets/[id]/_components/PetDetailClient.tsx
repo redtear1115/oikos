@@ -1,5 +1,9 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aibutsu-ui'
 import type { PetDetailsRow } from '@/lib/db/queries/aibutsu'
@@ -17,6 +21,8 @@ interface Props {
 }
 
 export function PetDetailClient({ assetId, name, details, summary }: Props) {
+  const router = useRouter()
+  const [addOpen, setAddOpen] = useState(false)
   const tint = useTint('pet')
   const subtitle = details
     ? [details.species, details.breed,
@@ -52,6 +58,14 @@ export function PetDetailClient({ assetId, name, details, summary }: Props) {
         <InfoRow label="晶片號" value={details?.chipNo ?? ''} mono />
         <InfoRow label="獸醫院" value={details?.vet ?? ''} last />
       </InfoCard>
+
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      <AddSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        prefilledAssetId={assetId}
+        onMutated={() => router.refresh()}
+      />
     </div>
   )
 }

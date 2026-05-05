@@ -1,5 +1,9 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
 import type { PlantDetailsRow } from '@/lib/db/queries/aibutsu'
@@ -32,7 +36,9 @@ function CompanionDays({ sproutedAt, waterEvery, accent }: { sproutedAt: string;
   )
 }
 
-export function PlantDetailClient({ assetId: _assetId, name, details, summary }: Props) {
+export function PlantDetailClient({ assetId, name, details, summary }: Props) {
+  const router = useRouter()
+  const [addOpen, setAddOpen] = useState(false)
   const tint = useTint('plant')
   const subtitle = details
     ? [details.species, details.location].filter(Boolean).join(' · ')
@@ -57,6 +63,14 @@ export function PlantDetailClient({ assetId: _assetId, name, details, summary }:
         <InfoRow label="位置" value={details?.location ?? ''} />
         <InfoRow label="澆水週期" value={details?.waterEvery ? `每 ${details.waterEvery} 天` : ''} mono last />
       </InfoCard>
+
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      <AddSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        prefilledAssetId={assetId}
+        onMutated={() => router.refresh()}
+      />
     </div>
   )
 }
