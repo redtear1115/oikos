@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, cashTransactions, fuelLogs, oikosGroups } from '@/lib/db/schema'
+import { assets, carDetails, cashTransactions, fuelLogs, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
@@ -302,4 +302,75 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
   revalidatePath('/dashboard')
   revalidatePath('/records')
   revalidatePath(`/assets/${existingLog.assetId}`)
+}
+
+export interface FuelLogDetail {
+  id: string
+  assetId: string
+  liters: string
+  odometer: number
+  station: string | null
+  fuelType: '92' | '95' | '98' | 'diesel' | 'electric'
+  loggedAt: string    // ISO
+  carName: string
+  carPlate: string | null
+  carFuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  carPrimaryUserId: string | null
+}
+
+/**
+ * Load a single fuel log with its car details for the edit sheet.
+ * Verifies the fuel log belongs to an asset in the viewer's group.
+ */
+export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [group] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) throw new Error('找不到家計簿')
+
+  const [row] = await db
+    .select({
+      id: fuelLogs.id,
+      assetId: fuelLogs.assetId,
+      liters: fuelLogs.liters,
+      odometer: fuelLogs.odometer,
+      station: fuelLogs.station,
+      fuelType: fuelLogs.fuelType,
+      loggedAt: fuelLogs.loggedAt,
+      assetName: assets.name,
+      assetGroupId: assets.groupId,
+      carPlate: carDetails.plate,
+      carFuelType: carDetails.fuelType,
+      carPrimaryUserId: carDetails.primaryUserId,
+    })
+    .from(fuelLogs)
+    .innerJoin(assets, eq(assets.id, fuelLogs.assetId))
+    .leftJoin(carDetails, eq(carDetails.assetId, fuelLogs.assetId))
+    .where(and(
+      eq(fuelLogs.id, id),
+      isNull(fuelLogs.deletedAt),
+    ))
+    .limit(1)
+
+  if (!row || row.assetGroupId !== group.id) return null
+
+  return {
+    id: row.id,
+    assetId: row.assetId,
+    liters: row.liters,
+    odometer: row.odometer,
+    station: row.station,
+    fuelType: row.fuelType,
+    loggedAt: row.loggedAt instanceof Date ? row.loggedAt.toISOString() : String(row.loggedAt),
+    carName: row.assetName,
+    carPlate: row.carPlate,
+    carFuelType: row.carFuelType,
+    carPrimaryUserId: row.carPrimaryUserId,
+  }
 }

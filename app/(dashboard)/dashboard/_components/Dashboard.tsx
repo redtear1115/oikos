@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useReducer, useState } from 'react'
+import { useEffect, useReducer, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
@@ -18,6 +18,8 @@ import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
+import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
+import { getFuelLogById } from '@/actions/fuelLog'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 
@@ -50,6 +52,16 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   const [modal, dispatch] = useReducer((_prev: ModalState, next: ModalState) => next, { kind: 'closed' })
   const [filter, setFilter] = useState<TxnFilter | null>(null)
 
+  // Fuel log edit sheet state
+  const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
+  const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
+  const [fuelCar, setFuelCar] = useState<{
+    id: string; name: string; plate: string
+    fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+    primaryUserId: string | null
+  } | null>(null)
+  const [, startFuelLoad] = useTransition()
+
   // SoloBanner dismissal — persisted in localStorage, hydrated on mount.
   // SSR renders the banner; on first client paint we may swap to the fallback hero.
   const [bannerDismissed, setBannerDismissed] = useState(false)
@@ -76,21 +88,50 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
           settledAt: tx.transactedAt,
         },
       })
-    } else {
-      dispatch({
-        kind: 'edit-tx',
-        data: {
-          id: tx.id,
-          amount: tx.amount,
-          description: tx.description,
-          category: tx.category,
-          splitType: tx.splitType!,
-          payerId: tx.paidBy,
-          transactedAt: tx.transactedAt,
-          assetId: tx.assetId,
-        },
-      })
+      return
     }
+
+    if (tx.fuelLogId !== null) {
+      startFuelLoad(async () => {
+        const detail = await getFuelLogById(tx.fuelLogId!)
+        if (!detail) return
+        setFuelSheetInitial({
+          fuelLogId: detail.id,
+          transactionId: tx.id,
+          liters: detail.liters,
+          odometer: detail.odometer,
+          station: detail.station,
+          fuelType: detail.fuelType === '98' ? '98' : detail.fuelType === 'diesel' ? 'diesel' : '95',
+          loggedAt: detail.loggedAt,
+          cost: tx.amount,
+          paidBy: tx.paidBy,
+          splitType: tx.splitType ?? 'all_mine',
+        })
+        setFuelCar({
+          id: detail.assetId,
+          name: detail.carName,
+          plate: detail.carPlate ?? '',
+          fuelType: detail.carFuelType,
+          primaryUserId: detail.carPrimaryUserId,
+        })
+        setFuelSheetOpen(true)
+      })
+      return
+    }
+
+    dispatch({
+      kind: 'edit-tx',
+      data: {
+        id: tx.id,
+        amount: tx.amount,
+        description: tx.description,
+        category: tx.category,
+        splitType: tx.splitType!,
+        payerId: tx.paidBy,
+        transactedAt: tx.transactedAt,
+        assetId: tx.assetId,
+      },
+    })
   }
 
   const handleClose = () => dispatch({ kind: 'closed' })
@@ -175,6 +216,17 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
           dispatch({ kind: 'closed' })
         }}
       />
+
+      {fuelCar && (
+        <NewFuelLog
+          open={fuelSheetOpen}
+          onClose={() => setFuelSheetOpen(false)}
+          car={fuelCar}
+          lastOdometer={null}
+          mode="edit"
+          initial={fuelSheetInitial}
+        />
+      )}
     </div>
   )
 }
