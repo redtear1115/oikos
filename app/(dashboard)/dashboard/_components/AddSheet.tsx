@@ -3,18 +3,18 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import { CalIcon, Chevron, DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
+import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
-import { AssetPickerSheet } from './AssetPickerSheet'
 import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
-import { loadAsset } from '@/actions/asset'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
-import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { CategoryPicker } from './CategoryPicker'
+import { DateField } from './DateField'
+import { AssetLinkField } from './AssetLinkField'
 
 export interface AddSheetInitial {
   id: string
@@ -37,17 +37,6 @@ interface Props {
   prefilledAssetId?: string | null
   /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB). */
   prefilledCategory?: CategoryId
-}
-
-
-function dateLabel(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${y} 年 ${m} 月 ${d} 日`
-}
-
-function weekday(iso: string) {
-  const days = ['週日','週一','週二','週三','週四','週五','週六']
-  return days[new Date(iso + 'T00:00:00').getDay()]
 }
 
 /** Split-type subtitle, payer-relative (matches storage semantics in lib/balance.ts). */
@@ -77,14 +66,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [split, setSplit] = useState<SplitType>('half')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
-  const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
   const [assetId, setAssetId] = useState<string | null>(null)
-  const [assetInfo, setAssetInfo] = useState<{ name: string; plate: string | null; deletedAt: string | null } | null>(null)
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const loadedIdRef = useRef<string | null>(null)
 
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
@@ -114,7 +99,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setDate(localTodayISO())
       setAssetId(prefilledAssetId ?? null)
     }
-    setShowCal(false)
     setError('')
     // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
     // the prefilled amount in edit mode (typing replaces the selection rather than
@@ -127,34 +111,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     }, 350)
     return () => clearTimeout(t)
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory])
-
-  useEffect(() => {
-    if (!open) return
-    if (!assetId) {
-      setAssetInfo(null)
-      loadedIdRef.current = null
-      return
-    }
-    if (loadedIdRef.current === assetId) return  // already loaded this one, skip refetch
-    setAssetInfo(null)  // clear stale info from a previous asset before fetching new
-    let cancelled = false
-    loadAsset(assetId).then((info) => {
-      if (cancelled) return
-      if (info) {
-        setAssetInfo({ name: info.name, plate: info.plate, deletedAt: info.deletedAt })
-        loadedIdRef.current = assetId
-      } else {
-        setAssetInfo(null)
-        loadedIdRef.current = null
-      }
-    }).catch(() => {
-      if (!cancelled) {
-        setAssetInfo(null)  // don't leave stuck at "載入中…" on error
-        loadedIdRef.current = null
-      }
-    })
-    return () => { cancelled = true }
-  }, [assetId, open])
 
   const isEdit = !!initial
 
@@ -383,26 +339,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <div className="text-xs tracking-[0.6px] px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
               分類
             </div>
-            <div className="flex gap-2 px-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {PICKABLE_CATEGORIES.map(c => {
-                const sel = category === c.id
-                return (
-                  <button key={c.id} onClick={() => setCategory(c.id)}
-                    className="h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
-                    style={{
-                      background: sel ? 'var(--ink)' : 'var(--surface)',
-                      color: sel ? '#fff' : 'var(--ink)',
-                      border: sel ? '1px solid var(--ink)' : '1px solid var(--hairline)',
-                    }}>
-                    <span className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-[13px] font-medium"
-                      style={{ background: c.tint, color: c.ink }}>
-                      {c.mono}
-                    </span>
-                    {c.label}
-                  </button>
-                )
-              })}
-            </div>
+            <CategoryPicker value={category} onChange={setCategory} />
           </div>
 
           {/* Asset link (visible in both solo and dual mode) */}
@@ -410,33 +347,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               關聯資產（選填）
             </div>
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
-              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-            >
-              <div className="flex-1">
-                {assetId && assetInfo ? (
-                  <>
-                    <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
-                      {assetInfo.name}
-                      {assetInfo.deletedAt && (
-                        <span className="ml-2 text-xs" style={{ color: 'var(--ink-3)' }}>（已刪除）</span>
-                      )}
-                    </div>
-                    {assetInfo.plate && (
-                      <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{assetInfo.plate}</div>
-                    )}
-                  </>
-                ) : assetId && !assetInfo ? (
-                  <div className="text-[15px]" style={{ color: 'var(--ink-3)' }}>載入中…</div>
-                ) : (
-                  <div className="text-[15px]" style={{ color: 'var(--ink-3)' }}>不關聯</div>
-                )}
-              </div>
-              <Chevron />
-            </button>
+            <AssetLinkField value={assetId} onChange={setAssetId} open={open} />
           </div>
 
           {!isSolo && (
@@ -484,21 +395,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               日期
             </div>
-            <button onClick={() => setShowCal(v => !v)}
-              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
-              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
-              <CalIcon />
-              <div className="flex-1 text-left">
-                <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
-                  {dateLabel(date)}
-                </div>
-                <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                  {date === localTodayISO() ? '今天' : weekday(date)}
-                </div>
-              </div>
-              <Chevron />
-            </button>
-            {showCal && <MiniCalendar value={date} onChange={d => { setDate(d); setShowCal(false) }} />}
+            <DateField value={date} onChange={setDate} />
           </div>
 
           {isEdit && (
@@ -540,13 +437,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
         onConfirm={performDelete}
-      />
-
-      <AssetPickerSheet
-        open={pickerOpen && open}
-        selectedAssetId={assetId}
-        onClose={() => setPickerOpen(false)}
-        onSelect={(id) => setAssetId(id)}
       />
     </>
   )
