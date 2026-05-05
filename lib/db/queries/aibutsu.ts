@@ -1,5 +1,5 @@
 import { db } from '@/lib/db/client'
-import { childDetails, petDetails, insuranceDetails } from '@/lib/db/schema'
+import { childDetails, petDetails, plantDetails, insuranceDetails } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 export interface ChildDetailsRow {
@@ -60,6 +60,29 @@ export async function getPetDetails(assetId: string): Promise<PetDetailsRow | nu
     })
     .from(petDetails)
     .where(eq(petDetails.assetId, assetId))
+    .limit(1)
+  return rows[0] ?? null
+}
+
+export interface PlantDetailsRow {
+  species: string | null
+  location: string | null
+  sproutedAt: string | null
+  cost: number | null
+  waterEvery: number | null
+}
+
+export async function getPlantDetails(assetId: string): Promise<PlantDetailsRow | null> {
+  const rows = await db
+    .select({
+      species: plantDetails.species,
+      location: plantDetails.location,
+      sproutedAt: plantDetails.sproutedAt,
+      cost: plantDetails.cost,
+      waterEvery: plantDetails.waterEvery,
+    })
+    .from(plantDetails)
+    .where(eq(plantDetails.assetId, assetId))
     .limit(1)
   return rows[0] ?? null
 }

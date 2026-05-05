@@ -144,6 +144,15 @@ export const petDetails = pgTable('PetDetails', {
   vet: text('vet'),
 })
 
+export const plantDetails = pgTable('PlantDetails', {
+  assetId: uuid('asset_id').primaryKey().references(() => assets.id),
+  species: text('species'),
+  location: text('location'),
+  sproutedAt: date('sprouted_at'),
+  cost: integer('cost'),
+  waterEvery: integer('water_every'),
+})
+
 export const insuranceDetails = pgTable('InsuranceDetails', {
   assetId: uuid('asset_id').primaryKey().references(() => assets.id),
   policyNumber: text('policy_number'),
