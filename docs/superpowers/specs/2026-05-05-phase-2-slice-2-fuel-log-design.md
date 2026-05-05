@@ -558,20 +558,27 @@ WHERE asset_id = $1 AND fuel_log_id IS NOT NULL
 
 ---
 
+## Slice 2 後半段：車輛 polish（與 FuelLog 同 Slice，實作可分 PR）
+
+不在 FuelLog 主線但屬 Slice 2 範圍，設計 bundle 已 cover：
+
+| 設計項目 | 對應 mockup | 備註 |
+|---|---|---|
+| `/assets` list CarHeroCard 升級（avgFuelEcon 三欄） | car-screens.jsx CarHeroCard | 純 UI polish |
+| AssetPickerSheet inline 分區 | asset-picker.jsx（chat4 推薦） | 純 UI polish |
+| carDetails 加 brand / model / year / color picker | car-forms.jsx NewCarForm（完整版） | NewCarForm + AssetSheet 編輯同步 |
+
 ## Slice 3+ 候選（從本 slice 推到下個）
 
-不在 Slice 2 範圍但設計 bundle 有 cover：
+不在 Slice 2 範圍：
 
-| 設計項目 | 對應 mockup | 優先級 |
+| 設計項目 | 對應 mockup | 備註 |
 |---|---|---|
-| 電車 ChargeLog（kWh / 充電站 / 慢充快充 / km/kWh） | 無（待設計） | P3（看 EV user 比例） |
-| `/assets` list CarHeroCard 升級（avgFuelEcon 三欄） | car-screens.jsx CarHeroCard | P2（純 UI polish） |
-| AssetPickerSheet inline 分區 | asset-picker.jsx（chat4 推薦） | P2 |
-| 維修保養紀錄（action bar 第二顆 [保養]） | car-screens.jsx ActionBtn label='保養' | P3 |
-| carDetails 加 brand / model / year / color picker | car-forms.jsx NewCarForm（完整版） | P3 |
-| `currentOdometer` 欄位 + AssetSheet 顯示 | car-forms.jsx NewCarForm `目前里程` | P3 |
-| asset marks v2（line / glyph / badge × 4 type） | asset-marks.jsx, asset-marks-v2.jsx | P3（孩 / 寵 / 植 / 房 / 險 slice 一起） |
-| `/records` FilterSheet 加「依愛物」維度 | 無（待設計） | P3 |
+| 電車 ChargeLog（kWh / 充電站 / 慢充快充 / km/kWh） | 無（待設計） | 看 EV user 比例 |
+| 維修保養紀錄（action bar 第二顆 [保養]） | car-screens.jsx ActionBtn label='保養' | 待設計 |
+| `currentOdometer` 欄位 + AssetSheet 顯示 | car-forms.jsx NewCarForm `目前里程` | 待設計 |
+| asset marks v2（line / glyph / badge × 4 type） | asset-marks.jsx, asset-marks-v2.jsx | 孩 / 寵 / 植 / 房 / 險 slice 一起 |
+| `/records` FilterSheet 加「依愛物」維度 | 無（待設計） | 待設計 |
 
 ### 永遠不做（per CLAUDE.md「不在範圍內」）
 
