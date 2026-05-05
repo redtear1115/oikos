@@ -5,6 +5,8 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
+import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
+import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { createCar, editCar, softDeleteCar } from '@/actions/asset'
 
@@ -14,6 +16,8 @@ export interface AssetSheetInitial {
   plate: string
   purchasedAt: string | null  // YYYY-MM-DD
   purchasePrice: number | null
+  fuelType?: '95' | '98' | 'diesel' | 'electric'
+  primaryUserId?: string | null
 }
 
 interface Props {
@@ -28,6 +32,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [plate, setPlate] = useState('')
   const [purchasedAt, setPurchasedAt] = useState<string | null>(null)
   const [purchasePrice, setPurchasePrice] = useState('')
+  const [fuelType, setFuelType] = useState<'95' | '98' | 'diesel' | 'electric'>('95')
+  const [primaryUserId, setPrimaryUserId] = useState<string | null>(null)
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -40,11 +46,15 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setPlate(initial.plate)
       setPurchasedAt(initial.purchasedAt)
       setPurchasePrice(initial.purchasePrice ? String(initial.purchasePrice) : '')
+      setFuelType(initial.fuelType ?? '95')
+      setPrimaryUserId(initial.primaryUserId ?? null)
     } else {
       setName('')
       setPlate('')
       setPurchasedAt(null)
       setPurchasePrice('')
+      setFuelType('95')
+      setPrimaryUserId(null)
     }
     setShowCal(false)
     setError('')
@@ -74,6 +84,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             plate: trimmedPlate,
             purchasedAt,
             purchasePrice: price,
+            fuelType,
+            primaryUserId,
           })
         } else {
           await createCar({
@@ -81,6 +93,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             plate: trimmedPlate,
             purchasedAt: purchasedAt ?? undefined,
             purchasePrice: price ?? undefined,
+            fuelType,
+            primaryUserId,
           })
         }
         onMutated?.('saved')
@@ -216,6 +230,16 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)', width: '100%' }}
               />
             </div>
+          </Field>
+
+          {/* Fuel Type */}
+          <Field label="油種">
+            <FuelTypeButtonGroup value={fuelType} onChange={setFuelType} />
+          </Field>
+
+          {/* Primary User (hidden in solo mode — PrimaryUserToggle returns null) */}
+          <Field label="主要使用人">
+            <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
           </Field>
 
           {isEdit && (

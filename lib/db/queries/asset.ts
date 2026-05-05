@@ -14,6 +14,9 @@ export interface AssetWithCar {
   plate: string | null
   purchasedAt: string | null
   purchasePrice: number | null
+  // Slice 2 additions
+  fuelType: 'electric' | '92' | '95' | '98' | 'diesel' | null
+  primaryUserId: string | null
 }
 
 /**
@@ -33,6 +36,8 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       plate: carDetails.plate,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,
+      fuelType: carDetails.fuelType,
+      primaryUserId: carDetails.primaryUserId,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -62,6 +67,8 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       plate: carDetails.plate,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,
+      fuelType: carDetails.fuelType,
+      primaryUserId: carDetails.primaryUserId,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
