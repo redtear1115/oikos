@@ -15,7 +15,7 @@ interface Props {
 const TABS = [
   { id: 'home', label: '首頁', href: '/dashboard', icon: NavHomeIcon },
   { id: 'list', label: '紀錄', href: '/records', icon: NavListIcon },
-  { id: 'assets', label: '資產', href: '/assets', icon: NavAssetsIcon },
+  { id: 'assets', label: '愛物', href: '/assets', icon: NavAssetsIcon },
   { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
 ] as const
 

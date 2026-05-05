@@ -41,7 +41,7 @@ export function AssetsListClient({ items }: Props) {
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
-          資產
+          愛物
         </div>
       </div>
 
