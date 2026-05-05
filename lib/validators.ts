@@ -114,6 +114,8 @@ export interface CarInput {
   plate: string
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
+  primaryUserId?: string | null
+  fuelType?: '95' | '98' | 'diesel' | 'electric'
 }
 
 export interface ValidatedCarInput {
@@ -121,12 +123,18 @@ export interface ValidatedCarInput {
   plate: string
   purchasedAt: string | null
   purchasePrice: number | null
+  primaryUserId: string | null
+  fuelType: '95' | '98' | 'diesel' | 'electric'
 }
+
+const CAR_FUEL_TYPES = ['95', '98', 'diesel', 'electric'] as const
 
 /**
  * Validates a car asset input. Trims + max-length-checks name and plate, uppercases plate,
  * validates optional purchasedAt as a YYYY-MM-DD date and optional purchasePrice as a
- * positive integer. Returns the validated payload or throws.
+ * positive integer. primaryUserId is optional (null when absent/empty). fuelType defaults
+ * to '95' when undefined so existing Slice 1 callers keep working; carDetails CAN have
+ * 'electric' (only the FuelLog flow rejects it). Returns the validated payload or throws.
  */
 export function validateCarInput(input: CarInput): ValidatedCarInput {
   const name = validateName(input.name, '名稱', 32)
@@ -152,7 +160,17 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
     purchasePrice = validateAmount(input.purchasePrice, '購入價')
   }
 
-  return { name, plate: rawPlate, purchasedAt, purchasePrice }
+  const primaryUserId =
+    typeof input.primaryUserId === 'string' && input.primaryUserId.length > 0
+      ? input.primaryUserId
+      : null
+
+  const fuelType = input.fuelType ?? '95'
+  if (!CAR_FUEL_TYPES.includes(fuelType)) {
+    throw new Error('油種無效')
+  }
+
+  return { name, plate: rawPlate, purchasedAt, purchasePrice, primaryUserId, fuelType }
 }
 
 export interface FuelLogInputRaw {

@@ -14,6 +14,8 @@ describe('validateCarInput', () => {
       plate: 'ABC-1234',
       purchasedAt: '2024-06-01',
       purchasePrice: 800000,
+      primaryUserId: null,
+      fuelType: '95',
     })
   })
 
@@ -57,5 +59,31 @@ describe('validateCarInput', () => {
 
   it('throws on US-format date string (06-01-2024)', () => {
     expect(() => validateCarInput({ name: '車', plate: 'A1', purchasedAt: '06-01-2024' })).toThrow(/格式錯誤/)
+  })
+
+  // Slice 2: primaryUserId + fuelType extension
+  const validBase = { name: '車', plate: 'A1' }
+
+  it('accepts primaryUserId (uuid string) and null', () => {
+    const r1 = validateCarInput({ ...validBase, primaryUserId: 'some-user-id', fuelType: '95' })
+    expect(r1.primaryUserId).toBe('some-user-id')
+    const r2 = validateCarInput({ ...validBase, primaryUserId: null, fuelType: '95' })
+    expect(r2.primaryUserId).toBeNull()
+  })
+
+  it('accepts all 4 fuelType values including electric', () => {
+    for (const ft of ['95', '98', 'diesel', 'electric'] as const) {
+      const r = validateCarInput({ ...validBase, fuelType: ft })
+      expect(r.fuelType).toBe(ft)
+    }
+  })
+
+  it('rejects invalid fuelType', () => {
+    expect(() => validateCarInput({ ...validBase, fuelType: 'foo' as never })).toThrow(/油種/)
+  })
+
+  it('defaults fuelType to "95" when undefined (existing Slice 1 callers)', () => {
+    const r = validateCarInput({ ...validBase, fuelType: undefined as never })
+    expect(r.fuelType).toBe('95')
   })
 })
