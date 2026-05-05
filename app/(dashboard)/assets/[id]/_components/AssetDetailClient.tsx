@@ -113,7 +113,6 @@ export function AssetDetailClient({
     }
   }
 
-  const sheetOpen = addOpen || editingTx !== null || editAssetOpen || fuelSheetOpen
   const car = {
     id: assetId,
     name: assetSheetInitial.name,
