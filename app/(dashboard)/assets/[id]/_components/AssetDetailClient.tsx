@@ -138,6 +138,7 @@ export function AssetDetailClient({
         model={model}
         year={year}
         fuelType={fuelType}
+        color={assetSheetInitial.color ?? null}
         monthAmount={monthAmount}
         totalAmount={totalAmount}
         avgEcon={avgEcon}

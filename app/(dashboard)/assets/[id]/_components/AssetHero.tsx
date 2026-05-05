@@ -1,5 +1,7 @@
 'use client'
 
+import { carBandBackground, carForeground, FALLBACK_CAR_COLOR } from '../../_components/carColor'
+
 interface AssetHeroProps {
   name: string
   plate: string | null
@@ -7,6 +9,7 @@ interface AssetHeroProps {
   model: string | null
   year: number | null
   fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  color: string | null
   monthAmount: number
   totalAmount: number
   avgEcon: number | null
@@ -15,34 +18,34 @@ interface AssetHeroProps {
   switcher?: React.ReactNode
 }
 
-function BackButton() {
+function BackButton({ btnBg, ink }: { btnBg: string; ink: string }) {
   return (
     <a
       href="/assets"
       className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0 mr-3"
-      style={{ background: 'rgba(58,36,25,0.08)' }}
+      style={{ background: btnBg }}
       aria-label="返回"
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M9 2l-5 5 5 5" stroke="#3A2419" strokeWidth="1.6"
+        <path d="M9 2l-5 5 5 5" stroke={ink} strokeWidth="1.6"
           strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </a>
   )
 }
 
-function EditPencilButton({ onClick }: { onClick: () => void }) {
+function EditPencilButton({ onClick, btnBg, ink }: { onClick: () => void; btnBg: string; ink: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="w-6 h-6 rounded-[7px] shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
-      style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
+      style={{ background: btnBg, border: 'none' }}
       aria-label="編輯"
     >
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
         <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
-          stroke="#3A2419" strokeWidth="1.2"
+          stroke={ink} strokeWidth="1.2"
           strokeLinecap="round" strokeLinejoin="round" fill="none"/>
       </svg>
     </button>
@@ -50,24 +53,26 @@ function EditPencilButton({ onClick }: { onClick: () => void }) {
 }
 
 export function AssetHero({
-  name, plate, brand, model, year, fuelType,
+  name, plate, brand, model, year, fuelType, color,
   monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit, switcher,
 }: AssetHeroProps) {
   const isElectric = fuelType === 'electric'
+  const swatch = color ?? FALLBACK_CAR_COLOR
+  const fg = carForeground(swatch)
+  const bandBg = carBandBackground(swatch)
 
   if (isElectric) {
-    // EV — simple 本月 / 累計 layout (no fuel econ)
     return (
-      <div className="px-5 pt-[60px] pb-6">
+      <div className="px-5 pt-[60px] pb-6" style={{ background: bandBg }}>
         <div className="flex items-center">
-          <BackButton />
-          <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+          <BackButton btnBg={fg.btnBg} ink={fg.ink} />
+          <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: fg.ink }}>
             {name}
           </div>
-          {onEdit && <EditPencilButton onClick={onEdit} />}
+          {onEdit && <EditPencilButton onClick={onEdit} btnBg={fg.btnBg} ink={fg.ink} />}
           {switcher}
         </div>
-        <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+        <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: fg.inkSoft, fontFamily: 'var(--font-numeric)' }}>
           {plate && <span>{plate}</span>}
           {(brand || model) && plate && <span>·</span>}
           {(brand || model) && (
@@ -77,25 +82,25 @@ export function AssetHero({
           {year && <span>{year}</span>}
         </div>
         <div className="flex items-baseline gap-7 mt-6">
-          <Stat label="本月" amount={monthAmount} accent={false} />
-          <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
-          <Stat label="累積" amount={totalAmount} accent />
+          <Stat label="本月" amount={monthAmount} accent={false} ink={fg.ink} inkSoft={fg.inkSoft} />
+          <div style={{ width: 1, height: 36, background: fg.btnBg }} />
+          <Stat label="累積" amount={totalAmount} accent ink={fg.ink} inkSoft={fg.inkSoft} />
         </div>
       </div>
     )
   }
 
-  // Gas variant — avg fuel econ big number + sub-stats row
   return (
-    <div className="px-5 pt-[60px] pb-6">
+    <div className="px-5 pt-[60px] pb-6" style={{ background: bandBg }}>
       <div className="flex items-center">
-        <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+        <BackButton btnBg={fg.btnBg} ink={fg.ink} />
+        <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: fg.ink }}>
           {name}
         </div>
-        {onEdit && <EditPencilButton onClick={onEdit} />}
+        {onEdit && <EditPencilButton onClick={onEdit} btnBg={fg.btnBg} ink={fg.ink} />}
         {switcher}
       </div>
-      <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+      <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: fg.inkSoft, fontFamily: 'var(--font-numeric)' }}>
         {plate && <span>{plate}</span>}
         {(brand || model) && plate && <span>·</span>}
         {(brand || model) && (
@@ -105,19 +110,18 @@ export function AssetHero({
         {year && <span>{year}</span>}
       </div>
 
-      {/* Hero avg fuel economy */}
       <div className="text-center mt-5 pb-1">
-        <div className="text-[10px] text-[var(--ink-3)] font-mono uppercase tracking-[1.5px]">平均油耗</div>
+        <div className="text-[10px] font-mono uppercase tracking-[1.5px]" style={{ color: fg.inkSofter }}>平均油耗</div>
         <div className="inline-flex items-baseline gap-1.5 mt-1.5">
           <span
-            className="text-[56px] font-semibold text-[var(--ink)] tabular-nums leading-none"
-            style={{ letterSpacing: '-2px' }}
+            className="text-[56px] font-semibold tabular-nums leading-none"
+            style={{ letterSpacing: '-2px', color: fg.ink }}
           >
             {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
           </span>
-          <span className="text-[13px] text-[var(--ink-3)] font-medium">km/L</span>
+          <span className="text-[13px] font-medium" style={{ color: fg.inkSoft }}>km/L</span>
         </div>
-        <div className="text-[10px] text-[var(--ink-3)] font-mono mt-1">
+        <div className="text-[10px] font-mono mt-1" style={{ color: fg.inkSofter }}>
           {avgEcon === null && fuelLogCount === 0
             ? '加第一筆油看油耗'
             : avgEcon === null
@@ -126,45 +130,44 @@ export function AssetHero({
         </div>
       </div>
 
-      {/* 本月 / 累計 sub-stats */}
       <div
         className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
-        style={{ background: 'rgba(255,255,255,0.55)' }}
+        style={{ background: fg.overlayBg }}
       >
-        <MiniStat label="本月" value={`NT$ ${monthAmount.toLocaleString()}`} />
-        <div style={{ width: 1, background: 'var(--hairline)' }} />
-        <MiniStat label="累積" value={`NT$ ${totalAmount.toLocaleString()}`} />
+        <MiniStat label="本月" value={`NT$ ${monthAmount.toLocaleString()}`} ink={fg.ink} inkSoft={fg.inkSoft} />
+        <div style={{ width: 1, background: fg.btnBg }} />
+        <MiniStat label="累積" value={`NT$ ${totalAmount.toLocaleString()}`} ink={fg.ink} inkSoft={fg.inkSoft} />
       </div>
     </div>
   )
 }
 
-function Stat({ label, amount, accent }: { label: string; amount: number; accent: boolean }) {
+function Stat({ label, amount, accent, ink, inkSoft }: { label: string; amount: number; accent: boolean; ink: string; inkSoft: string }) {
   const dim = amount === 0
   return (
     <div>
-      <div className="text-[11px] tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-[11px] tracking-[0.6px] mb-1" style={{ color: inkSoft }}>{label}</div>
       <div
         className="tnum tracking-[-1px] leading-none"
         style={{
           fontFamily: 'var(--font-numeric)',
           fontSize: accent ? 44 : 32,
           fontWeight: 600,
-          color: dim ? 'var(--ink-3)' : 'var(--ink)',
+          color: dim ? inkSoft : ink,
         }}
       >
-        <span className="text-base mr-0.5" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>NT$</span>
+        <span className="text-base mr-0.5" style={{ color: inkSoft, fontWeight: 500 }}>NT$</span>
         {amount.toLocaleString('en-US')}
       </div>
     </div>
   )
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function MiniStat({ label, value, ink, inkSoft }: { label: string; value: string; ink: string; inkSoft: string }) {
   return (
     <div className="flex-1">
-      <div className="text-[9px] text-[var(--ink-3)] font-mono tracking-wider">{label}</div>
-      <div className="text-[16px] font-semibold text-[var(--ink)] tabular-nums mt-0.5">{value}</div>
+      <div className="text-[9px] font-mono tracking-wider" style={{ color: inkSoft }}>{label}</div>
+      <div className="text-[16px] font-semibold tabular-nums mt-0.5" style={{ color: ink }}>{value}</div>
     </div>
   )
 }
