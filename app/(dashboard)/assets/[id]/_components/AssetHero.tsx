@@ -3,6 +3,9 @@
 interface AssetHeroProps {
   name: string
   plate: string | null
+  brand: string | null
+  model: string | null
+  year: number | null
   fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
   monthAmount: number
   totalAmount: number
@@ -11,7 +14,8 @@ interface AssetHeroProps {
 }
 
 export function AssetHero({
-  name, plate, fuelType, monthAmount, totalAmount, avgEcon, fuelLogCount,
+  name, plate, brand, model, year, fuelType,
+  monthAmount, totalAmount, avgEcon, fuelLogCount,
 }: AssetHeroProps) {
   const isElectric = fuelType === 'electric'
 
@@ -22,11 +26,15 @@ export function AssetHero({
         <div className="text-2xl font-medium tracking-tight" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {name}
         </div>
-        {plate && (
-          <div className="text-xs mt-1 tracking-[1px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-            {plate}
-          </div>
-        )}
+        <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          {plate && <span>{plate}</span>}
+          {(brand || model) && plate && <span>·</span>}
+          {(brand || model) && (
+            <span>{[brand, model].filter(Boolean).join(' ')}</span>
+          )}
+          {year && (brand || model || plate) && <span>·</span>}
+          {year && <span>{year}</span>}
+        </div>
         <div className="flex items-baseline gap-7 mt-6">
           <Stat label="本月" amount={monthAmount} accent={false} />
           <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />

@@ -76,9 +76,18 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         // '92' and 'electric' are legacy enum values; coerce to '95' for UI
         fuelType: (asset.fuelType === '92' || asset.fuelType === 'electric' ? '95' : asset.fuelType) ?? '95',
         primaryUserId: asset.primaryUserId,
+        color: asset.color,
+        year: asset.year,
+        brand: asset.brand,
+        model: asset.model,
+        initialOdometer: asset.initialOdometer,
       }}
       fuelType={asset.fuelType ?? '95'}
       primaryUserId={asset.primaryUserId}
+      brand={asset.brand ?? null}
+      model={asset.model ?? null}
+      year={asset.year ?? null}
+      initialOdometer={asset.initialOdometer ?? null}
       monthAmount={summary.monthAmount}
       totalAmount={summary.totalAmount}
       monthFuel={fuelStats.monthFuel}

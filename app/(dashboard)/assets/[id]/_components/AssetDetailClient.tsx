@@ -29,6 +29,10 @@ interface Props {
   assetSheetInitial: AssetSheetInitial
   fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
   primaryUserId: string | null
+  brand: string | null
+  model: string | null
+  year: number | null
+  initialOdometer: number | null
   monthAmount: number
   totalAmount: number
   monthFuel: number
@@ -41,6 +45,7 @@ interface Props {
 
 export function AssetDetailClient({
   assetId, assetSheetInitial, fuelType, primaryUserId,
+  brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
   initialTxns, initialFuelLogs, pageSize,
 }: Props) {
@@ -54,8 +59,10 @@ export function AssetDetailClient({
 
   // Build a map of fuelLogId → fuelLog for timeline row rendering
   const fuelLogMap = new Map(initialFuelLogs.map(f => [f.id, f]))
-  // lastOdometer: most recent entry (array is DESC order from server)
-  const lastOdometer = initialFuelLogs.length > 0 ? initialFuelLogs[0].odometer : null
+  // lastOdometer: most recent entry (array is DESC order from server), fallback to initialOdometer
+  const lastOdometer = initialFuelLogs.length > 0
+    ? initialFuelLogs[0].odometer
+    : (initialOdometer ?? null)
 
   // Refresh when this asset changes (partner edit/delete) or WebSocket reconnect
   useRealtimeEvents((event) => {
@@ -126,6 +133,9 @@ export function AssetDetailClient({
       <AssetHero
         name={assetSheetInitial.name}
         plate={assetSheetInitial.plate ?? null}
+        brand={brand}
+        model={model}
+        year={year}
         fuelType={fuelType}
         monthAmount={monthAmount}
         totalAmount={totalAmount}
