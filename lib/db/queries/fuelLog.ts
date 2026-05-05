@@ -81,6 +81,44 @@ export async function listFuelLogsWithPrev(assetId: string): Promise<FuelLogWith
 }
 
 /**
+ * Hero card stats for a car asset on the assets list.
+ *   latestOdometer: newest fuel log's odometer; falls back to initialOdometer
+ *     when there are zero logs (still null if both unset).
+ *   avgFuelEcon: lifetime average km/L. Defined as
+ *       (max_odometer - min_odometer) / SUM(liters of all logs except the
+ *       earliest one).  The earliest log establishes the starting odometer
+ *       but its liters happened *before* the measured distance, so we exclude
+ *       it. Returns null when fewer than 2 logs exist.
+ *
+ * Done in JS off listFuelLogsForAsset to keep the SQL trivially auditable;
+ * N is small (a handful of fill-ups per car for the foreseeable future).
+ */
+export async function getCarHeroStats(
+  assetId: string,
+  initialOdometer: number | null,
+): Promise<{ latestOdometer: number | null; avgFuelEcon: number | null }> {
+  const logs = await listFuelLogsForAsset(assetId)  // desc by loggedAt
+  if (logs.length === 0) {
+    return { latestOdometer: initialOdometer, avgFuelEcon: null }
+  }
+  const latestOdometer = logs[0].odometer
+  if (logs.length < 2) {
+    return { latestOdometer, avgFuelEcon: null }
+  }
+  // logs are desc; earliest is logs[logs.length - 1]
+  const earliest = logs[logs.length - 1]
+  const distance = latestOdometer - earliest.odometer
+  // Exclude earliest log's liters (it's the baseline fill-up).
+  const litersSum = logs
+    .slice(0, logs.length - 1)
+    .reduce((acc, l) => acc + parseFloat(l.liters), 0)
+  if (distance <= 0 || litersSum <= 0) {
+    return { latestOdometer, avgFuelEcon: null }
+  }
+  return { latestOdometer, avgFuelEcon: distance / litersSum }
+}
+
+/**
  * Sum of CashTransactions linked to this asset's fuel logs (本月加油 / 累計加油).
  * Month boundary uses Asia/Taipei (TW-only product) for consistency with
  * getAssetSummary in asset.ts. Returns 0 when no fuel transactions exist.

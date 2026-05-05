@@ -3,6 +3,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { listAssetsForGroup, getAssetSummary } from '@/lib/db/queries/asset'
+import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
 
 export default async function AssetsPage() {
@@ -24,12 +25,24 @@ export default async function AssetsPage() {
   const items: AssetsListItem[] = await Promise.all(
     assetRows.map(async (a) => {
       const summary = await getAssetSummary(a.id, group.id)
-      return {
+      const base: AssetsListItem = {
         id: a.id,
         type: a.type,
         name: a.name,
         plate: a.plate,
         monthAmount: summary.monthAmount,
+      }
+      if (a.type !== 'car') return base
+      const heroStats = await getCarHeroStats(a.id, a.initialOdometer)
+      return {
+        ...base,
+        color: a.color,
+        year: a.year,
+        brand: a.brand,
+        model: a.model,
+        latestOdometer: heroStats.latestOdometer,
+        totalAmount: summary.totalAmount,
+        avgFuelEcon: heroStats.avgFuelEcon,
       }
     }),
   )
