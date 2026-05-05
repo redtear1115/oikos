@@ -54,7 +54,7 @@ export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 min-w-0 border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 py-0.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
+        className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
         style={{ background: triggerBg }}
         aria-label="切換愛物"
         aria-haspopup="listbox"

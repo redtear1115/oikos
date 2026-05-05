@@ -38,11 +38,11 @@ function EditPencilButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-6 h-6 rounded-[7px] shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
+      className="w-[30px] h-[30px] rounded-[10px] shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
       style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
       aria-label="編輯"
     >
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
         <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
           stroke="#3A2419" strokeWidth="1.2"
           strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -91,7 +91,7 @@ export function AssetHero({
         <LeftAccent swatch={swatch} />
         <div className="flex items-center">
           <BackButton />
-          <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+          <div className="text-lg font-semibold min-w-0 leading-[30px]" style={{ color: 'var(--ink)' }}>
             {name}
           </div>
           {onEdit && <EditPencilButton onClick={onEdit} />}

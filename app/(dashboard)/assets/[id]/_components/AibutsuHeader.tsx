@@ -36,15 +36,15 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
         </a>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <div className="text-lg font-semibold min-w-0" style={{ color: '#3A2419' }}>{name}</div>
+            <div className="text-lg font-semibold min-w-0 leading-[30px]" style={{ color: '#3A2419' }}>{name}</div>
             {onEditClick && (
               <button
                 onClick={onEditClick}
-                className="w-6 h-6 rounded-[7px] shrink-0 flex items-center justify-center"
+                className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center"
                 style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
                 aria-label="編輯"
               >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
                   <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
                     stroke="#3A2419" strokeWidth="1.2"
                     strokeLinecap="round" strokeLinejoin="round" fill="none"/>
