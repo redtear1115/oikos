@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
-import type { AuthChangeEvent, Session } from '@supabase/auth-js'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { REALTIME_SUBSCRIBE_STATES, RealtimePostgresChangesPayload } from '@supabase/realtime-js'
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload } from '@/lib/realtime/event'
