@@ -17,6 +17,7 @@ export interface AssetWithCar {
   // Slice 2 additions
   fuelType: 'electric' | '92' | '95' | '98' | 'diesel' | null
   primaryUserId: string | null
+  // Extended car fields
   color: string | null
   year: number | null
   brand: string | null
