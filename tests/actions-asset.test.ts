@@ -238,6 +238,30 @@ describe('createCar with auto-transaction', () => {
     expect(carDetailsPayload.primaryUserId).toBeNull()    // validator default
   })
 
+  it('persists extended car fields', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])  // assets insert
+    queueDbResult([])                    // carDetails insert
+
+    await expect(createCar({
+      name: '阿白',
+      plate: 'ABC-1234',
+      color: 'white',
+      year: 2019,
+      brand: 'Toyota',
+      model: 'Altis',
+      initialOdometer: 0,
+    })).resolves.toMatchObject({ id: 'asset-1' })
+
+    const carDetailValues = mockBuilder.values.mock.calls
+      .find(c => c[0]?.color !== undefined)?.[0]
+    expect(carDetailValues?.color).toBe('white')
+    expect(carDetailValues?.year).toBe(2019)
+    expect(carDetailValues?.brand).toBe('Toyota')
+    expect(carDetailValues?.model).toBe('Altis')
+    expect(carDetailValues?.initialOdometer).toBe(0)
+  })
+
   it('purchasePrice=0 is rejected by validator (positive integer required)', async () => {
     // validateAmount throws on amount<=0 — runs before any DB call
     await expect(createCar({

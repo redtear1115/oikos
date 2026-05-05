@@ -31,6 +31,11 @@ export interface CreateCarInput {
   purchasePrice?: number | null
   primaryUserId?: string | null
   fuelType?: '92' | '95' | '98' | 'diesel'
+  color?: string | null
+  year?: number | null
+  brand?: string | null
+  model?: string | null
+  initialOdometer?: number | null
 }
 
 /**
@@ -61,6 +66,11 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
       purchasePrice: validated.purchasePrice,
       primaryUserId: validated.primaryUserId,
       fuelType: validated.fuelType,
+      color: validated.color,
+      year: validated.year,
+      brand: validated.brand,
+      model: validated.model,
+      initialOdometer: validated.initialOdometer,
     })
 
     // Auto-create a paired purchase CashTransaction when purchasePrice was set.
@@ -117,6 +127,11 @@ export interface EditCarInput {
   purchasePrice: number | null
   primaryUserId?: string | null      // NEW — Slice 2
   fuelType?: '92' | '95' | '98' | 'diesel'
+  color?: string | null
+  year?: number | null
+  brand?: string | null
+  model?: string | null
+  initialOdometer?: number | null
 }
 
 export async function editCar(input: EditCarInput): Promise<void> {
@@ -145,6 +160,11 @@ export async function editCar(input: EditCarInput): Promise<void> {
         purchasePrice: validated.purchasePrice,
         primaryUserId: validated.primaryUserId,
         fuelType: validated.fuelType,
+        color: validated.color,
+        year: validated.year,
+        brand: validated.brand,
+        model: validated.model,
+        initialOdometer: validated.initialOdometer,
       })
       .where(eq(carDetails.assetId, input.id))
   })
