@@ -19,8 +19,8 @@ interface AibutsuHeaderProps {
 export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHeaderProps) {
   const tint = TINTS[kind]
   return (
-    <div className="px-5 pt-14 pb-6" style={{ background: tint.bg }}>
-      <div className="flex items-center gap-3 mb-4">
+    <div className="px-5 pt-12 pb-3" style={{ background: tint.bg }}>
+      <div className="flex items-center gap-3 mb-2">
         <a
           href="/assets"
           className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0"

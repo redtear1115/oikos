@@ -14,6 +14,22 @@ interface AssetHeroProps {
   onEdit?: () => void
 }
 
+function BackButton() {
+  return (
+    <a
+      href="/assets"
+      className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0 mr-3"
+      style={{ background: 'rgba(58,36,25,0.08)' }}
+      aria-label="返回"
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M9 2l-5 5 5 5" stroke="#3A2419" strokeWidth="1.6"
+          strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </a>
+  )
+}
+
 function EditPencilButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -43,6 +59,7 @@ export function AssetHero({
     return (
       <div className="px-5 pt-[60px] pb-6">
         <div className="flex items-center">
+          <BackButton />
           <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
             {name}
           </div>

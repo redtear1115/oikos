@@ -71,23 +71,23 @@ export function AgeDisplay({ birth, accent }: { birth: string; accent: string })
   const yrs = Math.floor(months / 12)
   const mos = months % 12
   return (
-    <div className="text-center py-2">
+    <div className="text-center">
       <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>年齡</div>
-      <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 56, fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>
+      <div className="inline-flex items-baseline gap-1 mt-1">
+        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 36, fontWeight: 600, color: 'var(--ink)', letterSpacing: -1 }}>
           {yrs}
         </span>
-        <span className="text-sm font-medium" style={{ color: accent }}>歲</span>
+        <span className="text-xs font-medium" style={{ color: accent }}>歲</span>
         {mos > 0 && (
           <>
-            <span className="tabular-nums leading-none ml-1.5" style={{ fontFamily: 'var(--font-numeric)', fontSize: 32, fontWeight: 600, color: 'var(--ink)', letterSpacing: -1 }}>
+            <span className="tabular-nums leading-none ml-1" style={{ fontFamily: 'var(--font-numeric)', fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}>
               {mos}
             </span>
-            <span className="text-xs font-medium" style={{ color: accent }}>個月</span>
+            <span className="text-[10px] font-medium" style={{ color: accent }}>個月</span>
           </>
         )}
       </div>
-      <div className="text-[10px] mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{birth}</div>
+      <div className="text-[10px] mt-1 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{birth}</div>
     </div>
   )
 }
