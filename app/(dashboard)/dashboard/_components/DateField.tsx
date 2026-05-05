@@ -3,22 +3,12 @@
 import { useState, useEffect } from 'react'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from './MiniCalendar'
-import { localTodayISO } from '@/lib/local-date'
+import { localTodayISO, dateLabel, weekday } from '@/lib/local-date'
 
 interface DateFieldProps {
   value: string  // ISO date string e.g. "2026-05-05"
   onChange: (iso: string) => void
   open: boolean  // parent sheet open state; resets calendar on reopen
-}
-
-function dateLabel(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${y} 年 ${m} 月 ${d} 日`
-}
-
-function weekday(iso: string) {
-  const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
-  return days[new Date(iso + 'T00:00:00').getDay()]
 }
 
 export function DateField({ value, onChange, open }: DateFieldProps) {

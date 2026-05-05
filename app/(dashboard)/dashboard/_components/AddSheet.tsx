@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
+import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
@@ -100,17 +101,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAssetId(prefilledAssetId ?? null)
     }
     setError('')
-    // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
-    // the prefilled amount in edit mode (typing replaces the selection rather than
-    // appending to "240" → "2405").
-    const t = setTimeout(() => {
-      const el = amountInputRef.current
-      if (!el) return
-      el.focus()
-      el.select()
-    }, 350)
-    return () => clearTimeout(t)
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory])
+
+  // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
+  // the prefilled amount in edit mode (typing replaces the selection rather than
+  // appending to "240" → "2405").
+  useFocusAndSelectOnOpen(open, amountInputRef)
 
   const isEdit = !!initial
 

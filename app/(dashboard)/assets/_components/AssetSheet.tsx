@@ -5,7 +5,7 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
-import { localTodayISO } from '@/lib/local-date'
+import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { createCar, editCar, softDeleteCar } from '@/actions/asset'
 
 export interface AssetSheetInitial {
@@ -21,11 +21,6 @@ interface Props {
   onClose: () => void
   initial?: AssetSheetInitial
   onMutated?: (kind: 'saved' | 'deleted') => void
-}
-
-function dateLabel(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${y} 年 ${m} 月 ${d} 日`
 }
 
 export function AssetSheet({ open, onClose, initial, onMutated }: Props) {

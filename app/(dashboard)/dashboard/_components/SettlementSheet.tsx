@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
+import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
@@ -8,7 +9,7 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
-import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
 
 export interface SettlementSheetInitial {
   id: string
@@ -22,16 +23,6 @@ interface Props {
   onClose: () => void
   initial: SettlementSheetInitial | null
   onMutated?: () => void
-}
-
-function dateLabel(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return `${y} 年 ${m} 月 ${d} 日`
-}
-
-function weekday(iso: string) {
-  const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
-  return days[new Date(iso + 'T00:00:00').getDay()]
 }
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
@@ -54,14 +45,9 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
     setDate(`${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`)
     setShowCal(false)
     setError('')
-    const t = setTimeout(() => {
-      const el = amountInputRef.current
-      if (!el) return
-      el.focus()
-      el.select()
-    }, 350)
-    return () => clearTimeout(t)
   }, [open, initial, viewer.id])
+
+  useFocusAndSelectOnOpen(open, amountInputRef)
 
   const handleSave = () => {
     if (!initial) return
