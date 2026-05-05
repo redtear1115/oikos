@@ -64,6 +64,10 @@ export function AssetDetailClient({
       if (event.row.deletedAt) router.replace('/assets')
       else router.refresh()
     }
+    // Partner added/edited/deleted a fuel log for this car → refresh timeline + hero
+    if (event.kind === 'fuel-log-changed' && event.row.assetId === assetId) {
+      router.refresh()
+    }
   })
 
   const handleAssetMutated = (kind: 'saved' | 'deleted') => {
