@@ -20,7 +20,7 @@ describe('createTransaction', () => {
     const result = await createTransaction({
       amount: 100,
       description: '午餐',
-      category: 'food',
+      category: 'dining',
       splitType: 'half',
       payerId: 'user-a',
       transactedAt: new Date('2026-05-03'),
@@ -33,7 +33,7 @@ describe('createTransaction', () => {
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(createTransaction({
-      amount: 100, description: 'x', category: 'food',
+      amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
     })).rejects.toThrow('Unauthorized')
   })
@@ -41,7 +41,7 @@ describe('createTransaction', () => {
   it('throws on invalid amount', async () => {
     // validateTransactionInput runs before group lookup — no queue needed
     await expect(createTransaction({
-      amount: 0, description: 'x', category: 'food',
+      amount: 0, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
     })).rejects.toThrow(/金額必須是正整數/)
   })
@@ -49,7 +49,7 @@ describe('createTransaction', () => {
   it('throws when group not found', async () => {
     queueDbResult([])  // empty group lookup → throws '找不到家計簿'
     await expect(createTransaction({
-      amount: 100, description: 'x', category: 'food',
+      amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
     })).rejects.toThrow('找不到家計簿')
   })
@@ -57,7 +57,7 @@ describe('createTransaction', () => {
   it('throws when payer not in group', async () => {
     queueDbResult([GROUP])
     await expect(createTransaction({
-      amount: 100, description: 'x', category: 'food',
+      amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-stranger', transactedAt: new Date(),
     })).rejects.toThrow('付款人不在家計簿內')
   })
@@ -76,7 +76,7 @@ describe('editTransaction', () => {
       oldId: 'tx-old',
       amount: 200,
       description: 'updated',
-      category: 'food',
+      category: 'dining',
       splitType: 'half',
       payerId: 'user-a',
       transactedAt: new Date('2026-05-03'),
@@ -91,7 +91,7 @@ describe('editTransaction', () => {
     queueDbResult([])  // oldRow lookup empty → throws '找不到該筆紀錄'
     await expect(editTransaction({
       oldId: 'tx-missing', amount: 200, description: 'x',
-      category: 'food', splitType: 'half', payerId: 'user-a',
+      category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: new Date(),
     })).rejects.toThrow('找不到該筆紀錄')
   })
@@ -100,7 +100,7 @@ describe('editTransaction', () => {
     setMockUser(null)
     await expect(editTransaction({
       oldId: 'tx-1', amount: 100, description: 'x',
-      category: 'food', splitType: 'half', payerId: 'user-a',
+      category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: new Date(),
     })).rejects.toThrow('Unauthorized')
   })
@@ -126,7 +126,7 @@ describe('createTransaction with assetId', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // asset lookup empty
     await expect(createTransaction({
-      amount: 100, description: 'x', category: 'food',
+      amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
       assetId: 'foreign-asset',
     })).rejects.toThrow(/不在家計簿內/)
@@ -136,7 +136,7 @@ describe('createTransaction with assetId', () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])
     await expect(createTransaction({
-      amount: 100, description: 'x', category: 'food',
+      amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
       assetId: 'asset-zombie',
     })).rejects.toThrow(/已刪除/)
@@ -154,7 +154,7 @@ describe('editTransaction with assetId', () => {
 
     const result = await editTransaction({
       oldId: 'tx-old', amount: 200, description: 'x',
-      category: 'food', splitType: 'half', payerId: 'user-a',
+      category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: new Date(),
       assetId: 'asset-zombie',  // same as before — exempt from not-deleted check
     })
@@ -167,7 +167,7 @@ describe('editTransaction with assetId', () => {
     queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])  // new asset is deleted
     await expect(editTransaction({
       oldId: 'tx-old', amount: 200, description: 'x',
-      category: 'food', splitType: 'half', payerId: 'user-a',
+      category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: new Date(),
       assetId: 'asset-zombie',
     })).rejects.toThrow(/已刪除/)

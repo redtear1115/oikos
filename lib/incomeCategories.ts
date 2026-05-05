@@ -33,3 +33,6 @@ export function getIncomeCategory(id: string): IncomeCategory {
 export function isValidIncomeCategoryId(id: string): boolean {
   return id in BY_ID
 }
+
+// All income categories are user-pickable (no system-reserved equivalent of 'settle')
+export const PICKABLE_INCOME_CATEGORIES = INCOME_CATEGORIES

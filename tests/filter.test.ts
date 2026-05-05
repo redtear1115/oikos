@@ -18,7 +18,7 @@ describe('isFilterActive', () => {
     expect(isFilterActive({ ...defaultFilter(), split: 'half' })).toBe(true)
   })
   it('categories alone activates', () => {
-    expect(isFilterActive({ ...defaultFilter(), categories: new Set(['food']) })).toBe(true)
+    expect(isFilterActive({ ...defaultFilter(), categories: new Set(['dining']) })).toBe(true)
   })
 })
 
@@ -30,18 +30,18 @@ describe('hidesSettlements', () => {
     expect(hidesSettlements({ ...defaultFilter(), split: 'half' })).toBe(true)
   })
   it('categories active hides settlements', () => {
-    expect(hidesSettlements({ ...defaultFilter(), categories: new Set(['food']) })).toBe(true)
+    expect(hidesSettlements({ ...defaultFilter(), categories: new Set(['dining']) })).toBe(true)
   })
 })
 
 describe('wire round-trip', () => {
   it('preserves all dimensions', () => {
-    const f = { payer: 'theirs' as const, split: 'half' as const, categories: new Set(['food', 'transit'] as const) }
+    const f = { payer: 'theirs' as const, split: 'half' as const, categories: new Set(['dining', 'transit'] as const) }
     expect(fromWire(toWire(f))).toEqual(f)
   })
 })
 
-const txMine: FilterableRow = { paidBy: 'me', splitType: 'half', category: 'food', kind: 'transaction' }
+const txMine: FilterableRow = { paidBy: 'me', splitType: 'half', category: 'dining', kind: 'transaction' }
 const txTheirs: FilterableRow = { paidBy: 'them', splitType: 'all_theirs', category: 'transit', kind: 'transaction' }
 const settleMine: FilterableRow = { paidBy: 'me', splitType: null, category: 'settle', kind: 'settlement' }
 const settleTheirs: FilterableRow = { paidBy: 'them', splitType: null, category: 'settle', kind: 'settlement' }
@@ -87,13 +87,13 @@ describe('matchesFilter — split dimension', () => {
 
 describe('matchesFilter — category dimension', () => {
   it('food selected → only food tx; settle dropped', () => {
-    const f = { ...defaultFilter(), categories: new Set(['food'] as const) }
+    const f = { ...defaultFilter(), categories: new Set(['dining'] as const) }
     expect(matchesFilter(txMine, f, 'me', 'them')).toBe(true)
     expect(matchesFilter(txTheirs, f, 'me', 'them')).toBe(false)
     expect(matchesFilter(settleMine, f, 'me', 'them')).toBe(false)
   })
   it('multi-category union', () => {
-    const f = { ...defaultFilter(), categories: new Set(['food', 'transit'] as const) }
+    const f = { ...defaultFilter(), categories: new Set(['dining', 'transit'] as const) }
     expect(matchesFilter(txMine, f, 'me', 'them')).toBe(true)
     expect(matchesFilter(txTheirs, f, 'me', 'them')).toBe(true)
   })
