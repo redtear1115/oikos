@@ -22,6 +22,24 @@ export function validateName(name: string, fieldLabel: string, maxLen = 32): str
   return trimmed
 }
 
+/**
+ * Parses a YYYY-MM-DD date string into a Date anchored at local midnight.
+ * Returns null on format/calendar errors (e.g. '2024-02-30' silently coerced
+ * by `new Date(...)` is rejected). Caller decides which error message to throw.
+ */
+export function parseDateString(input: string): Date | null {
+  if (!input || typeof input !== 'string') return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input)) return null
+  const parsed = new Date(input + 'T00:00:00')
+  if (isNaN(parsed.getTime())) return null
+  // Reject silent coercion (e.g. '2024-02-30' → Date '2024-02-29').
+  const y = parsed.getFullYear()
+  const m = String(parsed.getMonth() + 1).padStart(2, '0')
+  const d = String(parsed.getDate()).padStart(2, '0')
+  if (`${y}-${m}-${d}` !== input) return null
+  return parsed
+}
+
 export interface TransactionInput {
   amount: number
   description: string
@@ -96,6 +114,8 @@ export interface CarInput {
   plate: string
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
+  primaryUserId?: string | null
+  fuelType?: '95' | '98' | 'diesel' | 'electric'
 }
 
 export interface ValidatedCarInput {
@@ -103,12 +123,18 @@ export interface ValidatedCarInput {
   plate: string
   purchasedAt: string | null
   purchasePrice: number | null
+  primaryUserId: string | null
+  fuelType: '95' | '98' | 'diesel' | 'electric'
 }
+
+const CAR_FUEL_TYPES = ['95', '98', 'diesel', 'electric'] as const
 
 /**
  * Validates a car asset input. Trims + max-length-checks name and plate, uppercases plate,
  * validates optional purchasedAt as a YYYY-MM-DD date and optional purchasePrice as a
- * positive integer. Returns the validated payload or throws.
+ * positive integer. primaryUserId is optional (null when absent/empty). fuelType defaults
+ * to '95' when undefined so existing Slice 1 callers keep working; carDetails CAN have
+ * 'electric' (only the FuelLog flow rejects it). Returns the validated payload or throws.
  */
 export function validateCarInput(input: CarInput): ValidatedCarInput {
   const name = validateName(input.name, '名稱', 32)
@@ -121,15 +147,9 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.purchasedAt)) {
       throw new Error('購入日期格式錯誤')
     }
-    const parsed = new Date(input.purchasedAt + 'T00:00:00')
-    if (isNaN(parsed.getTime())) throw new Error('購入日期格式錯誤')
-    // Reject silent coercion (e.g. '2024-02-30' → Date '2024-02-29').
-    // Use UTC slice to avoid timezone shifts since we anchored at local midnight,
-    // but compare against the same local date components.
-    const y = parsed.getFullYear()
-    const m = String(parsed.getMonth() + 1).padStart(2, '0')
-    const d = String(parsed.getDate()).padStart(2, '0')
-    if (`${y}-${m}-${d}` !== input.purchasedAt) {
+    const parsed = parseDateString(input.purchasedAt)
+    if (!parsed) {
+      // Distinguish "doesn't exist" (e.g. 2024-02-30) — format already passed regex.
       throw new Error('購入日期不存在')
     }
     purchasedAt = input.purchasedAt
@@ -140,5 +160,117 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
     purchasePrice = validateAmount(input.purchasePrice, '購入價')
   }
 
-  return { name, plate: rawPlate, purchasedAt, purchasePrice }
+  const primaryUserId =
+    typeof input.primaryUserId === 'string' && input.primaryUserId.length > 0
+      ? input.primaryUserId
+      : null
+
+  const fuelType = input.fuelType ?? '95'
+  if (!CAR_FUEL_TYPES.includes(fuelType)) {
+    throw new Error('油種無效')
+  }
+
+  return { name, plate: rawPlate, purchasedAt, purchasePrice, primaryUserId, fuelType }
+}
+
+export interface FuelLogInputRaw {
+  assetId: string
+  liters: number | string
+  odometer: number
+  cost: number
+  fuelType: string
+  loggedAt: string  // YYYY-MM-DD
+  station: string | null
+  paidBy: string
+  splitType: 'all_mine' | 'all_theirs' | 'half'
+}
+
+export interface FuelLogInputValidated {
+  assetId: string
+  liters: number      // numeric, > 0
+  odometer: number    // >= 0
+  cost: number        // > 0
+  fuelType: '95' | '98' | 'diesel'
+  loggedAt: Date
+  station: string | null
+  paidBy: string
+  splitType: 'all_mine' | 'all_theirs' | 'half'
+}
+
+const FUEL_TYPES_GAS = ['95', '98', 'diesel'] as const
+
+/**
+ * Validates a FuelLog input. FuelLog is gas-only per EV1 spec — electric cars
+ * track charging via a separate flow (not implemented in Slice 2). Throws on:
+ * missing assetId/paidBy, non-positive liters/cost, negative odometer, invalid
+ * fuelType, station > 100 chars, malformed loggedAt, unknown splitType.
+ */
+export function validateFuelLogInput(input: FuelLogInputRaw): FuelLogInputValidated {
+  // assetId — basic uuid presence check
+  if (!input.assetId || typeof input.assetId !== 'string') {
+    throw new Error('資產 ID 缺失')
+  }
+
+  // liters — numeric > 0 (accept string for form input convenience)
+  const liters = typeof input.liters === 'string' ? parseFloat(input.liters) : input.liters
+  if (!Number.isFinite(liters) || liters <= 0) {
+    throw new Error('油量必須大於 0')
+  }
+
+  // odometer — integer >= 0
+  if (!Number.isInteger(input.odometer) || input.odometer < 0) {
+    throw new Error('里程必須是非負整數')
+  }
+
+  // cost — reuse existing validateAmount (positive integer)
+  const cost = validateAmount(input.cost, '金額')
+
+  // fuelType — must be one of gas types (no electric per EV1)
+  if (input.fuelType === 'electric') {
+    throw new Error('電車不支援加油記錄')
+  }
+  if (!FUEL_TYPES_GAS.includes(input.fuelType as typeof FUEL_TYPES_GAS[number])) {
+    throw new Error('油種無效')
+  }
+
+  // station — optional, max 100 chars
+  let station: string | null = null
+  if (input.station !== null && input.station !== undefined) {
+    const s = input.station.trim()
+    if (s.length === 0) {
+      station = null
+    } else if (s.length > 100) {
+      throw new Error('加油站名稱過長（上限 100 字）')
+    } else {
+      station = s
+    }
+  }
+
+  // loggedAt — YYYY-MM-DD
+  const loggedAt = parseDateString(input.loggedAt)
+  if (!loggedAt) {
+    throw new Error('日期格式無效')
+  }
+
+  // paidBy — string presence
+  if (!input.paidBy || typeof input.paidBy !== 'string') {
+    throw new Error('付款人缺失')
+  }
+
+  // splitType — enum check
+  if (!['all_mine', 'all_theirs', 'half'].includes(input.splitType)) {
+    throw new Error('分攤方式無效')
+  }
+
+  return {
+    assetId: input.assetId,
+    liters,
+    odometer: input.odometer,
+    cost,
+    fuelType: input.fuelType as '95' | '98' | 'diesel',
+    loggedAt,
+    station,
+    paidBy: input.paidBy,
+    splitType: input.splitType,
+  }
 }

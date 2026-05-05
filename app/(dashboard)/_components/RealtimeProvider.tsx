@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef } from 'react
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { REALTIME_SUBSCRIBE_STATES, RealtimePostgresChangesPayload } from '@supabase/realtime-js'
 import { createClient } from '@/lib/supabase/client'
-import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload } from '@/lib/realtime/event'
+import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload, FuelLogRowPayload } from '@/lib/realtime/event'
 
 type PgPayload = RealtimePostgresChangesPayload<Record<string, unknown>>
 
@@ -113,6 +113,16 @@ export function RealtimeProvider({ groupId, children }: Props) {
             dispatch({ kind: 'asset-changed', row: rowFromPayload(payload.new) as AssetRowPayload })
           }
           // DELETE: we soft-delete; hard delete via pg_cron only happens >1yr later. Ignore.
+        })
+      // FuelLogs: no group_id FK on FuelLogs table — filter by asset_id not possible
+      // without knowing all asset IDs. Subscribe to all; AssetDetailClient filters by assetId.
+      // RLS policy (fuel_logs_member_select) ensures Realtime only delivers rows the viewer can read.
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'FuelLogs' },
+        (payload: PgPayload) => {
+          const row = payload.eventType === 'DELETE' ? payload.old : payload.new
+          dispatch({ kind: 'fuel-log-changed', row: rowFromPayload(row) as FuelLogRowPayload })
         })
 
       let wasSubscribed = false

@@ -29,6 +29,15 @@ function createQueryMock() {
 
 const queryMock = createQueryMock()
 
+/**
+ * Exposed for tests that want to inspect `.values(...)` payloads on insert/update —
+ * the builder is shared across all chainable calls, so `mockBuilder.values.mock.calls`
+ * lists every payload passed in this test, in order.
+ *
+ * Cast to `Record<string, Mock>` so `.mock.calls` is reachable without `as` in tests.
+ */
+export const mockBuilder = queryMock.builder as unknown as Record<string, ReturnType<typeof vi.fn>>
+
 export const mockDb = {
   select: vi.fn(() => queryMock.builder),
   insert: vi.fn(() => queryMock.builder),
@@ -56,6 +65,11 @@ export function resetDbMocks() {
   Object.values(mockDb).forEach((fn) => {
     if (typeof fn === 'function' && 'mockReset' in fn) (fn as { mockReset: () => void }).mockReset()
   })
+  // Reset builder method spies too — otherwise mockBuilder.values.mock.calls would
+  // leak across tests in the same file.
+  for (const fn of Object.values(queryMock.builder)) {
+    if (typeof fn === 'function' && 'mockClear' in fn) (fn as { mockClear: () => void }).mockClear()
+  }
   // Clear any orphaned queue entries from a test that errored before consuming.
   queryMock.queue.length = 0
   // Re-initialize behaviors

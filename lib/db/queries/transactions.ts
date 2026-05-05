@@ -17,6 +17,7 @@ export interface FeedRow {
   createdAt: Date
   kind: FeedKind
   assetId: string | null
+  fuelLogId: string | null  // non-null when created by a FuelLog dual-write
 }
 
 /**
@@ -117,6 +118,7 @@ export async function listTransactionsPaged(
         'settle' AS category,
         paid_by,
         NULL::uuid AS asset_id,
+        NULL::uuid AS fuel_log_id,
         settled_at AS transacted_at,
         created_at,
         'settlement'::text AS kind
@@ -134,6 +136,7 @@ export async function listTransactionsPaged(
     category: string
     paid_by: string
     asset_id: string | null
+    fuel_log_id: string | null
     transacted_at: Date
     created_at: Date
     kind: FeedKind
@@ -141,7 +144,7 @@ export async function listTransactionsPaged(
     SELECT * FROM (
       SELECT
         id, amount, split_type, description, category, paid_by,
-        asset_id, transacted_at, created_at,
+        asset_id, fuel_log_id, transacted_at, created_at,
         'transaction'::text AS kind
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
@@ -163,6 +166,7 @@ export async function listTransactionsPaged(
     category: r.category,
     paidBy: r.paid_by,
     assetId: r.asset_id,
+    fuelLogId: r.fuel_log_id ?? null,
     // db.execute() returns timestamps as strings (postgres-js default), not Date —
     // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
     // matches what the page projections expect.

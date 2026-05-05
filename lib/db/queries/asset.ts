@@ -14,6 +14,9 @@ export interface AssetWithCar {
   plate: string | null
   purchasedAt: string | null
   purchasePrice: number | null
+  // Slice 2 additions
+  fuelType: 'electric' | '92' | '95' | '98' | 'diesel' | null
+  primaryUserId: string | null
 }
 
 /**
@@ -33,6 +36,8 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       plate: carDetails.plate,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,
+      fuelType: carDetails.fuelType,
+      primaryUserId: carDetails.primaryUserId,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -62,6 +67,8 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       plate: carDetails.plate,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,
+      fuelType: carDetails.fuelType,
+      primaryUserId: carDetails.primaryUserId,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -124,13 +131,14 @@ export async function listTransactionsPagedForAsset(
     category: string
     paid_by: string
     asset_id: string | null
+    fuel_log_id: string | null
     transacted_at: Date | string
     created_at: Date | string
     kind: FeedKind
   }>(sql`
     SELECT
       id, amount, split_type, description, category, paid_by,
-      asset_id, transacted_at, created_at,
+      asset_id, fuel_log_id, transacted_at, created_at,
       'transaction'::text AS kind
     FROM "CashTransactions"
     WHERE asset_id = ${assetId}
@@ -149,6 +157,7 @@ export async function listTransactionsPagedForAsset(
     category: r.category,
     paidBy: r.paid_by,
     assetId: r.asset_id,
+    fuelLogId: r.fuel_log_id ?? null,
     transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
     createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
     kind: r.kind,

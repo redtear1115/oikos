@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
@@ -9,6 +9,8 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { FilterSheet } from './FilterSheet'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
+import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
+import { getFuelLogById } from '@/actions/fuelLog'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -21,11 +23,19 @@ export function RecordsList({ initial, pageSize }: Props) {
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [adding, setAdding] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
-  // `null` = no filter active (TransactionFeed owns the unfiltered initial list).
-  // Once the user applies any filter, this becomes a TxnFilter object.
   const [filter, setFilter] = useState<TxnFilter | null>(null)
 
-  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen
+  // Fuel log edit sheet state
+  const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
+  const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
+  const [fuelCar, setFuelCar] = useState<{
+    id: string; name: string; plate: string
+    fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+    primaryUserId: string | null
+  } | null>(null)
+  const [, startFuelLoad] = useTransition()
+
+  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen || fuelSheetOpen
 
   const handleItemClick = (tx: PagedTxnRow) => {
     if (tx.kind === 'settlement') {
@@ -35,18 +45,48 @@ export function RecordsList({ initial, pageSize }: Props) {
         payerId: tx.paidBy,
         settledAt: tx.transactedAt,
       })
-    } else {
-      setEditingTx({
-        id: tx.id,
-        amount: tx.amount,
-        description: tx.description,
-        category: tx.category,
-        splitType: tx.splitType!,
-        payerId: tx.paidBy,
-        transactedAt: tx.transactedAt,
-        assetId: tx.assetId,
-      })
+      return
     }
+
+    if (tx.fuelLogId !== null) {
+      // Fuel transaction → load fuel log detail and open NewFuelLog in edit mode
+      startFuelLoad(async () => {
+        const detail = await getFuelLogById(tx.fuelLogId!)
+        if (!detail) return  // stale or unauthorized — silently skip
+        setFuelSheetInitial({
+          fuelLogId: detail.id,
+          transactionId: tx.id,
+          liters: detail.liters,
+          odometer: detail.odometer,
+          station: detail.station,
+          fuelType: detail.fuelType === '98' ? '98' : detail.fuelType === 'diesel' ? 'diesel' : '95',
+          loggedAt: detail.loggedAt,
+          cost: tx.amount,
+          paidBy: tx.paidBy,
+          splitType: tx.splitType ?? 'all_mine',
+        })
+        setFuelCar({
+          id: detail.assetId,
+          name: detail.carName,
+          plate: detail.carPlate ?? '',
+          fuelType: detail.carFuelType,
+          primaryUserId: detail.carPrimaryUserId,
+        })
+        setFuelSheetOpen(true)
+      })
+      return
+    }
+
+    setEditingTx({
+      id: tx.id,
+      amount: tx.amount,
+      description: tx.description,
+      category: tx.category,
+      splitType: tx.splitType!,
+      payerId: tx.paidBy,
+      transactedAt: tx.transactedAt,
+      assetId: tx.assetId,
+    })
   }
 
   const handleSheetClose = () => {
@@ -109,12 +149,21 @@ export function RecordsList({ initial, pageSize }: Props) {
         current={filter ?? defaultFilter()}
         onClose={() => setFilterOpen(false)}
         onApply={(next) => {
-          // Setting back to a default filter clears (becomes null) so TransactionFeed
-          // re-syncs to the unfiltered server-rendered initial list.
           setFilter(isFilterActive(next) ? next : null)
           setFilterOpen(false)
         }}
       />
+
+      {fuelCar && (
+        <NewFuelLog
+          open={fuelSheetOpen}
+          onClose={() => setFuelSheetOpen(false)}
+          car={fuelCar}
+          lastOdometer={null}  // not available from records list context
+          mode="edit"
+          initial={fuelSheetInitial}
+        />
+      )}
     </div>
   )
 }

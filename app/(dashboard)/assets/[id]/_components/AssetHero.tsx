@@ -1,45 +1,82 @@
 'use client'
 
-interface Props {
+interface AssetHeroProps {
   name: string
   plate: string | null
+  fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
   monthAmount: number
   totalAmount: number
-  onEditClick: () => void
+  avgEcon: number | null
+  fuelLogCount: number
 }
 
-export function AssetHero({ name, plate, monthAmount, totalAmount, onEditClick }: Props) {
+export function AssetHero({
+  name, plate, fuelType, monthAmount, totalAmount, avgEcon, fuelLogCount,
+}: AssetHeroProps) {
+  const isElectric = fuelType === 'electric'
+
+  if (isElectric) {
+    // EV — simple 本月 / 累計 layout (no fuel econ)
+    return (
+      <div className="px-5 pt-[60px] pb-6">
+        <div className="text-2xl font-medium tracking-tight" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+          {name}
+        </div>
+        {plate && (
+          <div className="text-xs mt-1 tracking-[1px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            {plate}
+          </div>
+        )}
+        <div className="flex items-baseline gap-7 mt-6">
+          <Stat label="本月" amount={monthAmount} accent={false} />
+          <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
+          <Stat label="累積" amount={totalAmount} accent />
+        </div>
+      </div>
+    )
+  }
+
+  // Gas variant — avg fuel econ big number + sub-stats row
   return (
     <div className="px-5 pt-[60px] pb-6">
-      <div className="flex items-start justify-between mb-1">
-        <div className="flex-1 min-w-0">
-          <div
-            className="text-2xl font-medium tracking-tight truncate"
-            style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
-          >
-            {name}
-          </div>
-          {plate && (
-            <div className="text-xs mt-1 tracking-[1px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-              {plate}
-            </div>
-          )}
+      <div className="text-2xl font-medium tracking-tight" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+        {name}
+      </div>
+      {plate && (
+        <div className="text-xs mt-1 tracking-[1px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          {plate}
         </div>
-        <button
-          type="button"
-          onClick={onEditClick}
-          aria-label="編輯這台車"
-          className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
-        >
-          ⋯
-        </button>
+      )}
+
+      {/* Hero avg fuel economy */}
+      <div className="text-center mt-5 pb-1">
+        <div className="text-[10px] text-[var(--ink-3)] font-mono uppercase tracking-[1.5px]">平均油耗</div>
+        <div className="inline-flex items-baseline gap-1.5 mt-1.5">
+          <span
+            className="text-[56px] font-semibold text-[var(--ink)] tabular-nums leading-none"
+            style={{ letterSpacing: '-2px' }}
+          >
+            {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
+          </span>
+          <span className="text-[13px] text-[var(--ink-3)] font-medium">km/L</span>
+        </div>
+        <div className="text-[10px] text-[var(--ink-3)] font-mono mt-1">
+          {avgEcon === null && fuelLogCount === 0
+            ? '加第一筆油看油耗'
+            : avgEcon === null
+            ? '需要至少 2 次加油記錄'
+            : '近 6 個月'}
+        </div>
       </div>
 
-      <div className="flex items-baseline gap-7 mt-6">
-        <Stat label="本月" amount={monthAmount} accent={false} />
-        <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
-        <Stat label="累積" amount={totalAmount} accent />
+      {/* 本月 / 累計 sub-stats */}
+      <div
+        className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
+        style={{ background: 'rgba(255,255,255,0.55)' }}
+      >
+        <MiniStat label="本月" value={`NT$ ${monthAmount.toLocaleString()}`} />
+        <div style={{ width: 1, background: 'var(--hairline)' }} />
+        <MiniStat label="累積" value={`NT$ ${totalAmount.toLocaleString()}`} />
       </div>
     </div>
   )
@@ -62,6 +99,15 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
         <span className="text-base mr-0.5" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>NT$</span>
         {amount.toLocaleString('en-US')}
       </div>
+    </div>
+  )
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex-1">
+      <div className="text-[9px] text-[var(--ink-3)] font-mono tracking-wider">{label}</div>
+      <div className="text-[16px] font-semibold text-[var(--ink)] tabular-nums mt-0.5">{value}</div>
     </div>
   )
 }
