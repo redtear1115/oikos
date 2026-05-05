@@ -17,6 +17,11 @@ export interface AssetWithCar {
   // Slice 2 additions
   fuelType: 'electric' | '92' | '95' | '98' | 'diesel' | null
   primaryUserId: string | null
+  color: string | null
+  year: number | null
+  brand: string | null
+  model: string | null
+  initialOdometer: number | null
 }
 
 /**
@@ -37,6 +42,11 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       purchasePrice: carDetails.purchasePrice,
       fuelType: carDetails.fuelType,
       primaryUserId: carDetails.primaryUserId,
+      color: carDetails.color,
+      year: carDetails.year,
+      brand: carDetails.brand,
+      model: carDetails.model,
+      initialOdometer: carDetails.initialOdometer,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -67,6 +77,11 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       purchasePrice: carDetails.purchasePrice,
       fuelType: carDetails.fuelType,
       primaryUserId: carDetails.primaryUserId,
+      color: carDetails.color,
+      year: carDetails.year,
+      brand: carDetails.brand,
+      model: carDetails.model,
+      initialOdometer: carDetails.initialOdometer,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))

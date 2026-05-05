@@ -91,6 +91,11 @@ export const carDetails = pgTable('CarDetails', {
   purchasePrice: integer('purchase_price'),
   primaryUserId: uuid('primary_user_id').references(() => profiles.id), // NULL = 共用
   fuelType: fuelTypeEnum('fuel_type').notNull().default('95'),
+  color: text('color'),
+  year: integer('year'),
+  brand: text('brand'),
+  model: text('model'),
+  initialOdometer: integer('initial_odometer'),
 })
 
 export const fuelLogs = pgTable('FuelLogs', {
