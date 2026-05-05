@@ -9,7 +9,7 @@ function createQueryMock() {
   const queue: unknown[][] = []
   const builder: Record<string, unknown> = {}
 
-  const chainable = ['select', 'from', 'where', 'set', 'values', 'orderBy', 'innerJoin', 'leftJoin']
+  const chainable = ['select', 'from', 'where', 'set', 'values', 'orderBy', 'innerJoin', 'leftJoin', 'onConflictDoUpdate']
   for (const m of chainable) {
     builder[m] = vi.fn(() => builder)
   }

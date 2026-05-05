@@ -1,9 +1,9 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, carDetails, cashTransactions, oikosGroups } from '@/lib/db/schema'
+import { assets, carDetails, cashTransactions, oikosGroups, childDetails, petDetails, insuranceDetails } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
-import { validateCarInput, validateLifeEntityInput } from '@/lib/validators'
+import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validateInsuranceInput } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, or, and, isNull } from 'drizzle-orm'
@@ -305,4 +305,310 @@ export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
     plate: row.plate,
     deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
   }
+}
+
+// ── Child ──────────────────────────────────────────────────────────────────
+
+export interface CreateChildInput {
+  name: string
+  nickname?: string | null
+  gender?: 'male' | 'female' | 'other' | null
+  birthday?: string | null
+  nationalId?: string | null
+  nhiNo?: string | null
+  bloodType?: string | null
+  hospital?: string | null
+  heightCm?: number | null
+  weightG?: number | null
+}
+
+export interface EditChildInput extends CreateChildInput {
+  id: string
+}
+
+export async function createChild(input: CreateChildInput): Promise<{ id: string }> {
+  'use server'
+  const validated = validateChildInput(input)
+  const { group } = await getViewerGroup()
+
+  const [created] = await db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({ groupId: group.id, type: 'child', name: validated.name })
+      .returning({ id: assets.id })
+    await tx.insert(childDetails).values({
+      assetId: asset.id,
+      birthday: validated.birthday,
+      gender: validated.gender,
+      idNumberEncrypted: validated.nationalId,
+      insuranceIdEncrypted: validated.nhiNo,
+      nickname: validated.nickname,
+      hospital: validated.hospital,
+      bloodType: validated.bloodType,
+      heightCm: validated.heightCm,
+      weightG: validated.weightG,
+    })
+    return [asset]
+  })
+
+  revalidatePath('/assets')
+  return { id: created.id }
+}
+
+export async function editChild(input: EditChildInput): Promise<void> {
+  'use server'
+  const validated = validateChildInput(input)
+  const { group } = await getViewerGroup()
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(assets)
+      .set({ name: validated.name })
+      .where(and(
+        eq(assets.id, input.id),
+        eq(assets.groupId, group.id),
+        eq(assets.type, 'child'),
+        isNull(assets.deletedAt),
+      ))
+      .returning({ id: assets.id })
+    if (updated.length === 0) throw new Error('找不到該愛物')
+
+    await tx
+      .insert(childDetails)
+      .values({
+        assetId: input.id,
+        birthday: validated.birthday,
+        gender: validated.gender,
+        idNumberEncrypted: validated.nationalId,
+        insuranceIdEncrypted: validated.nhiNo,
+        nickname: validated.nickname,
+        hospital: validated.hospital,
+        bloodType: validated.bloodType,
+        heightCm: validated.heightCm,
+        weightG: validated.weightG,
+      })
+      .onConflictDoUpdate({
+        target: childDetails.assetId,
+        set: {
+          birthday: validated.birthday,
+          gender: validated.gender,
+          idNumberEncrypted: validated.nationalId,
+          insuranceIdEncrypted: validated.nhiNo,
+          nickname: validated.nickname,
+          hospital: validated.hospital,
+          bloodType: validated.bloodType,
+          heightCm: validated.heightCm,
+          weightG: validated.weightG,
+        },
+      })
+  })
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+// ── Pet ────────────────────────────────────────────────────────────────────
+
+export interface CreatePetInput {
+  name: string
+  species?: string | null
+  breed?: string | null
+  sex?: string | null
+  birthDate?: string | null
+  adoptedDate?: string | null
+  purchaseCost?: number | null
+  weightG?: number | null
+  chipNo?: string | null
+  vet?: string | null
+}
+
+export interface EditPetInput extends CreatePetInput {
+  id: string
+}
+
+export async function createPet(input: CreatePetInput): Promise<{ id: string }> {
+  'use server'
+  const validated = validatePetInput(input)
+  const { group } = await getViewerGroup()
+
+  const [created] = await db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({ groupId: group.id, type: 'pet', name: validated.name })
+      .returning({ id: assets.id })
+    await tx.insert(petDetails).values({
+      assetId: asset.id,
+      species: validated.species,
+      breed: validated.breed,
+      sex: validated.sex,
+      birthDate: validated.birthDate,
+      adoptedDate: validated.adoptedDate,
+      purchaseCost: validated.purchaseCost,
+      weightG: validated.weightG,
+      chipNo: validated.chipNo,
+      vet: validated.vet,
+    })
+    return [asset]
+  })
+
+  revalidatePath('/assets')
+  return { id: created.id }
+}
+
+export async function editPet(input: EditPetInput): Promise<void> {
+  'use server'
+  const validated = validatePetInput(input)
+  const { group } = await getViewerGroup()
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(assets)
+      .set({ name: validated.name })
+      .where(and(
+        eq(assets.id, input.id),
+        eq(assets.groupId, group.id),
+        eq(assets.type, 'pet'),
+        isNull(assets.deletedAt),
+      ))
+      .returning({ id: assets.id })
+    if (updated.length === 0) throw new Error('找不到該愛物')
+
+    await tx
+      .insert(petDetails)
+      .values({
+        assetId: input.id,
+        species: validated.species,
+        breed: validated.breed,
+        sex: validated.sex,
+        birthDate: validated.birthDate,
+        adoptedDate: validated.adoptedDate,
+        purchaseCost: validated.purchaseCost,
+        weightG: validated.weightG,
+        chipNo: validated.chipNo,
+        vet: validated.vet,
+      })
+      .onConflictDoUpdate({
+        target: petDetails.assetId,
+        set: {
+          species: validated.species,
+          breed: validated.breed,
+          sex: validated.sex,
+          birthDate: validated.birthDate,
+          adoptedDate: validated.adoptedDate,
+          purchaseCost: validated.purchaseCost,
+          weightG: validated.weightG,
+          chipNo: validated.chipNo,
+          vet: validated.vet,
+        },
+      })
+  })
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+// ── Insurance ──────────────────────────────────────────────────────────────
+
+export interface CreateInsuranceInput {
+  name: string
+  kind?: string | null
+  insured?: string | null
+  insurer?: string | null
+  policyNo?: string | null
+  annualPremium?: number | null
+  sumInsured?: number | null
+  payCycle?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
+  termYears?: number | null
+}
+
+export interface EditInsuranceInput extends CreateInsuranceInput {
+  id: string
+}
+
+export async function createInsurance(input: CreateInsuranceInput): Promise<{ id: string }> {
+  'use server'
+  const validated = validateInsuranceInput(input)
+  const { group } = await getViewerGroup()
+
+  const [created] = await db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({ groupId: group.id, type: 'insurance', name: validated.name })
+      .returning({ id: assets.id })
+    await tx.insert(insuranceDetails).values({
+      assetId: asset.id,
+      insuranceType: validated.kind,
+      insured: validated.insured,
+      insurer: validated.insurer,
+      policyNumber: validated.policyNo,
+      annualPremium: validated.annualPremium,
+      sumInsured: validated.sumInsured,
+      payCycle: validated.payCycle,
+      startsAt: validated.startsAt,
+      expiryDate: validated.endsAt,
+      termYears: validated.termYears,
+      insuredType: 'user',
+    })
+    return [asset]
+  })
+
+  revalidatePath('/assets')
+  return { id: created.id }
+}
+
+export async function editInsurance(input: EditInsuranceInput): Promise<void> {
+  'use server'
+  const validated = validateInsuranceInput(input)
+  const { group } = await getViewerGroup()
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(assets)
+      .set({ name: validated.name })
+      .where(and(
+        eq(assets.id, input.id),
+        eq(assets.groupId, group.id),
+        eq(assets.type, 'insurance'),
+        isNull(assets.deletedAt),
+      ))
+      .returning({ id: assets.id })
+    if (updated.length === 0) throw new Error('找不到該愛物')
+
+    await tx
+      .insert(insuranceDetails)
+      .values({
+        assetId: input.id,
+        insuranceType: validated.kind,
+        insured: validated.insured,
+        insurer: validated.insurer,
+        policyNumber: validated.policyNo,
+        annualPremium: validated.annualPremium,
+        sumInsured: validated.sumInsured,
+        payCycle: validated.payCycle,
+        startsAt: validated.startsAt,
+        expiryDate: validated.endsAt,
+        termYears: validated.termYears,
+        insuredType: 'user',
+      })
+      .onConflictDoUpdate({
+        target: insuranceDetails.assetId,
+        set: {
+          insuranceType: validated.kind,
+          insured: validated.insured,
+          insurer: validated.insurer,
+          policyNumber: validated.policyNo,
+          annualPremium: validated.annualPremium,
+          sumInsured: validated.sumInsured,
+          payCycle: validated.payCycle,
+          startsAt: validated.startsAt,
+          expiryDate: validated.endsAt,
+          termYears: validated.termYears,
+        },
+      })
+  })
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
 }
