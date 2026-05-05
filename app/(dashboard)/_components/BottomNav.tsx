@@ -10,6 +10,9 @@ interface Props {
   onAddClick: () => void
   hideFab?: boolean
   fabVariant?: 'primary' | 'accent'
+  /** Custom FAB content. When provided, the default circular FAB is replaced
+   *  with a wider pill that contains this node (e.g. "加油" + fuel pump icon). */
+  fabContent?: React.ReactNode
 }
 
 const TABS = [
@@ -19,7 +22,7 @@ const TABS = [
   { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
 ] as const
 
-export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary' }: Props) {
+export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary', fabContent }: Props) {
   const pathname = usePathname()
 
   const getActiveTab = (): typeof TABS[number]['id'] => {
@@ -43,7 +46,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary' 
         <NavTab tab={TABS[3]} active={activeId === TABS[3].id} />
       </div>
 
-      {!hideFab && (
+      {!hideFab && !fabContent && (
         <button
           onClick={onAddClick}
           className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
@@ -53,6 +56,18 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary' 
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
           <PlusIcon size={26} />
+        </button>
+      )}
+
+      {!hideFab && fabContent && (
+        <button
+          onClick={onAddClick}
+          className="fixed left-1/2 bottom-[34px] z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-white text-sm font-semibold tracking-[0.5px]"
+          style={{
+            background: fabVariant === 'accent' ? 'var(--accent)' : 'var(--ink)',
+            boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
+          }}>
+          {fabContent}
         </button>
       )}
 

@@ -8,7 +8,6 @@ import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_com
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { AssetHero } from './AssetHero'
-import { AssetActionBar } from './AssetActionBar'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -141,22 +140,32 @@ export function AssetDetailClient({
         totalAmount={totalAmount}
         avgEcon={avgEcon}
         fuelLogCount={initialFuelLogs.length}
-      />
-
-      <AssetActionBar
-        fuelType={fuelType}
-        onAddFuel={() => {
-          setFuelSheetMode('create')
-          setFuelSheetInitial(null)
-          setFuelSheetOpen(true)
-        }}
-        onAddOther={() => setAddOpen(true)}
         onEdit={() => setEditAssetOpen(true)}
       />
 
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
+        header={(count) => (
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+              時間軸 · {count} 筆
+            </div>
+            {fuelType !== 'electric' && (
+              <button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-[11px] font-medium"
+                style={{ background: '#fff', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+              >
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+                其他花費
+              </button>
+            )}
+          </div>
+        )}
         onItemClick={handleTxItemClick}
         emptyState={
           <div className="text-center py-10 px-6 text-sm leading-relaxed" style={{ color: 'var(--ink-3)' }}>
@@ -185,11 +194,37 @@ export function AssetDetailClient({
         }}
       />
 
-      {/* FAB hidden on asset detail — AssetActionBar replaces it */}
+      {/* Car detail FAB: 加油 (gas) / 其他花費 (electric) */}
       <BottomNav
-        onAddClick={() => setAddOpen(true)}
-        hideFab={true}
+        onAddClick={() => {
+          if (fuelType === 'electric') {
+            setAddOpen(true)
+          } else {
+            setFuelSheetMode('create')
+            setFuelSheetInitial(null)
+            setFuelSheetOpen(true)
+          }
+        }}
         fabVariant="primary"
+        fabContent={
+          fuelType === 'electric' ? (
+            <>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 3v14M3 10h14" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              <span>其他花費</span>
+            </>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <rect x="3" y="4" width="9" height="13" rx="1" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M12 9h2a2 2 0 012 2v3a1 1 0 002 0V8l-2-2" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/>
+                <path d="M5 7h5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/>
+              </svg>
+              <span>加油</span>
+            </>
+          )
+        }
       />
 
       <NewFuelLog

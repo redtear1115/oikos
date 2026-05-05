@@ -20,6 +20,9 @@ interface Props {
   onItemClick: (tx: PagedTxnRow) => void
   /** Optional small label rendered above the list (e.g. "最近紀錄"). */
   label?: React.ReactNode
+  /** Optional header rendered above the list with the current visible count. Use for
+   *  counting headers like "時間軸 · N 筆" + secondary action. Mutually exclusive with `label`. */
+  header?: (count: number) => React.ReactNode
   /** Optional filter. When this object reference changes, the feed refetches page 1 with
    *  the new filter and replaces its items. Pass `undefined` for "no filter". */
   filter?: TxnFilter
@@ -32,7 +35,7 @@ interface Props {
   renderRow?: (tx: PagedTxnRow) => React.ReactNode | undefined
 }
 
-export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, filter, loader, acceptInsert, renderRow }: Props) {
+export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, header, filter, loader, acceptInsert, renderRow }: Props) {
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
   const [hasMore, setHasMore] = useState(initial.length === pageSize)
   const [loading, startLoading] = useTransition()
@@ -188,6 +191,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
   return (
     <>
       {label && <div className="px-6 pt-2 pb-1">{label}</div>}
+      {header && <div className="px-4 pt-[18px] pb-2">{header(items.length)}</div>}
 
       {groups.map((g) => {
         // Only sum transaction amounts — settlements are transfers, not spend, so

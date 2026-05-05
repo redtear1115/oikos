@@ -11,11 +11,30 @@ interface AssetHeroProps {
   totalAmount: number
   avgEcon: number | null
   fuelLogCount: number
+  onEdit?: () => void
+}
+
+function EditPencilButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-6 h-6 rounded-[7px] shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
+      style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
+      aria-label="編輯"
+    >
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
+          stroke="#3A2419" strokeWidth="1.2"
+          strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      </svg>
+    </button>
+  )
 }
 
 export function AssetHero({
   name, plate, brand, model, year, fuelType,
-  monthAmount, totalAmount, avgEcon, fuelLogCount,
+  monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit,
 }: AssetHeroProps) {
   const isElectric = fuelType === 'electric'
 
@@ -23,8 +42,11 @@ export function AssetHero({
     // EV — simple 本月 / 累計 layout (no fuel econ)
     return (
       <div className="px-5 pt-[60px] pb-6">
-        <div className="text-2xl font-medium tracking-tight" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-          {name}
+        <div className="flex items-center">
+          <div className="text-2xl font-medium tracking-tight truncate" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+            {name}
+          </div>
+          {onEdit && <EditPencilButton onClick={onEdit} />}
         </div>
         <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
           {plate && <span>{plate}</span>}
