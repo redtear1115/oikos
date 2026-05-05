@@ -94,6 +94,7 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
   }
 
   const handleClose = () => dispatch({ kind: 'closed' })
+  const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
 
   const handleMutated = () => router.refresh()
 
@@ -160,9 +161,9 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
         onMutated={handleMutated}
       />
       <SettlementSheet
-        open={modal.kind === 'edit-settlement'}
+        open={settlementData !== null}
         onClose={handleClose}
-        initial={modal.kind === 'edit-settlement' ? modal.data : null}
+        initial={settlementData}
         onMutated={handleMutated}
       />
       <FilterSheet
