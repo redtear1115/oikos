@@ -183,7 +183,7 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
 
 export interface PickerAsset {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
   plate: string | null
 }

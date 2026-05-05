@@ -125,6 +125,17 @@ describe('createLifeEntity', () => {
     setMockUser(null)
     await expect(createLifeEntity({ type: 'plant', name: '阿拉比卡' })).rejects.toThrow('Unauthorized')
   })
+
+  it('throws when group not found', async () => {
+    queueDbResult([])  // group lookup returns empty
+    await expect(createLifeEntity({ type: 'pet', name: '米嚕' })).rejects.toThrow('找不到家計簿')
+  })
+
+  it('throws on name over 32 chars', async () => {
+    await expect(
+      createLifeEntity({ type: 'pet', name: 'a'.repeat(33) })
+    ).rejects.toThrow(/32/)
+  })
 })
 
 describe('editLifeEntity', () => {
@@ -142,6 +153,15 @@ describe('editLifeEntity', () => {
     queueDbResult([])  // update returns empty = not found / wrong group
     await expect(editLifeEntity({ id: 'nope', name: '名' })).rejects.toThrow('找不到')
   })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(editLifeEntity({ id: 'asset-2', name: '名' })).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws on empty name', async () => {
+    await expect(editLifeEntity({ id: 'asset-2', name: '  ' })).rejects.toThrow(/名稱/)
+  })
 })
 
 describe('softDeleteAsset', () => {
@@ -158,5 +178,10 @@ describe('softDeleteAsset', () => {
     queueDbResult([GROUP])
     queueDbResult([])
     await expect(softDeleteAsset('nope')).rejects.toThrow('找不到')
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(softDeleteAsset('asset-2')).rejects.toThrow('Unauthorized')
   })
 })

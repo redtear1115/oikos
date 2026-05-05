@@ -1,7 +1,7 @@
 'use client'
 
 interface Props {
-  type: 'car' | 'house' | 'child' | 'insurance'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   size?: number
   color?: string
 }
