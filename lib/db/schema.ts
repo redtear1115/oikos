@@ -7,7 +7,7 @@ import { sql } from 'drizzle-orm'
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export const splitTypeEnum = pgEnum('split_type', ['all_mine', 'all_theirs', 'half'])
-export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance'])
+export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance', 'pet', 'plant'])
 // '92' is legacy from Phase 0; pg can't drop enum values, so kept here even though UI only offers 95/98/diesel/electric.
 export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel', 'electric'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
