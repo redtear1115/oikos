@@ -35,7 +35,7 @@ describe('validateTransactionInput', () => {
   const baseValid = {
     amount: 100,
     description: ' 午餐 ',
-    category: 'food',
+    category: 'dining',
     splitType: 'half' as const,
     payerId: 'user-a',
     transactedAt: new Date('2026-05-03'),
@@ -44,7 +44,7 @@ describe('validateTransactionInput', () => {
   it('happy path: trims description, accepts valid category', () => {
     const r = validateTransactionInput(baseValid)
     expect(r.description).toBe('午餐')
-    expect(r.category).toBe('food')
+    expect(r.category).toBe('dining')
   })
   it('falls back unknown category to other', () => {
     const r = validateTransactionInput({ ...baseValid, category: 'bogus' })

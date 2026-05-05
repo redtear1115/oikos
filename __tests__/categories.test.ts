@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { CATEGORIES, getCategory, isValidCategoryId } from '@/lib/categories'
 
 describe('CATEGORIES', () => {
-  it('has exactly 9 entries', () => {
-    expect(CATEGORIES).toHaveLength(9)
+  it('has exactly 10 entries', () => {
+    expect(CATEGORIES).toHaveLength(10)
   })
 
   it('each entry has required fields', () => {
@@ -19,13 +19,13 @@ describe('CATEGORIES', () => {
 
   it('contains expected ids', () => {
     const ids = CATEGORIES.map(c => c.id)
-    expect(ids).toEqual(['food', 'transit', 'daily', 'fun', 'health', 'home', 'gift', 'other', 'settle'])
+    expect(ids).toEqual(['dining', 'clothing', 'housing', 'transit', 'education', 'entertainment', 'health', 'financial', 'other', 'settle'])
   })
 })
 
 describe('getCategory', () => {
   it('returns category by id', () => {
-    expect(getCategory('food').label).toBe('餐飲')
+    expect(getCategory('dining').label).toBe('飲食')
   })
 
   it('returns "other" for unknown id', () => {
@@ -35,7 +35,7 @@ describe('getCategory', () => {
 
 describe('isValidCategoryId', () => {
   it('returns true for known ids', () => {
-    expect(isValidCategoryId('food')).toBe(true)
+    expect(isValidCategoryId('dining')).toBe(true)
     expect(isValidCategoryId('settle')).toBe(true)
   })
   it('returns false for unknown', () => {

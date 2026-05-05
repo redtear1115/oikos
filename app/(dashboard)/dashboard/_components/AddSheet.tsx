@@ -44,7 +44,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const { viewer, partner, isSolo } = useMember()
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
-  const [category, setCategory] = useState<CategoryId>('food')
+  const [category, setCategory] = useState<CategoryId>('dining')
   const [split, setSplit] = useState<SplitType>('half')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
@@ -60,7 +60,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAmount(String(initial.amount))
       setDesc(initial.description)
       setCategory(
-        (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'food',
+        (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'dining',
       )
       setSplit(initial.splitType)
       setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
