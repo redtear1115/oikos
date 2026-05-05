@@ -70,7 +70,7 @@ export function AssetDetailClient({
     <div className="relative min-h-screen pb-[92px]">
       <AssetHero
         name={assetSheetInitial.name}
-        plate={assetSheetInitial.plate}
+        plate={assetSheetInitial.plate ?? ''}
         monthAmount={monthAmount}
         totalAmount={totalAmount}
         onEditClick={() => setEditAssetOpen(true)}
