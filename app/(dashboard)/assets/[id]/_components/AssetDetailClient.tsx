@@ -9,7 +9,6 @@ import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_co
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { AssetHero } from './AssetHero'
 import { AssetSwitcher } from './AssetSwitcher'
-import { isDarkColor, FALLBACK_CAR_COLOR } from '../../_components/carColor'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -137,8 +136,6 @@ export function AssetDetailClient({
           <AssetSwitcher
             currentAssetId={assetId}
             allAssets={allAssets}
-            chevronInk={isDarkColor(assetSheetInitial.color ?? FALLBACK_CAR_COLOR) ? '#FFF6EC' : '#3A2419'}
-            triggerBg={isDarkColor(assetSheetInitial.color ?? FALLBACK_CAR_COLOR) ? 'rgba(255,255,255,0.10)' : 'rgba(58,36,25,0.08)'}
           >
             <span>{assetSheetInitial.name}</span>
           </AssetSwitcher>
