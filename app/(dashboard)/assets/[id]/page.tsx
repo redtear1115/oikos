@@ -9,8 +9,9 @@ import { computeAvgEcon } from '@/lib/fuelEcon'
 import { AssetDetailClient } from './_components/AssetDetailClient'
 import { ChildDetailClient } from './_components/ChildDetailClient'
 import { PetDetailClient } from './_components/PetDetailClient'
+import { PlantDetailClient } from './_components/PlantDetailClient'
 import { InsuranceDetailClient } from './_components/InsuranceDetailClient'
-import { getChildDetails, getPetDetails, getInsuranceDetails } from '@/lib/db/queries/aibutsu'
+import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails } from '@/lib/db/queries/aibutsu'
 
 const PAGE_SIZE = 20
 
@@ -56,6 +57,21 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetId={asset.id}
         name={asset.name}
         details={petDetailsData}
+        summary={summary}
+      />
+    )
+  }
+
+  if (asset.type === 'plant') {
+    const [plantDetailsData, summary] = await Promise.all([
+      getPlantDetails(asset.id),
+      getAssetSummary(asset.id, group.id),
+    ])
+    return (
+      <PlantDetailClient
+        assetId={asset.id}
+        name={asset.name}
+        details={plantDetailsData}
         summary={summary}
       />
     )
