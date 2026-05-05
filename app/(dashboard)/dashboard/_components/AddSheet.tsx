@@ -286,7 +286,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Asset link (visible in both solo and dual mode) */}
           <div className="px-5 pt-2 pb-[18px] mt-1" style={{ borderTop: '1px solid var(--hairline)' }}>
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
-              關聯資產（選填）
+              關聯愛物（選填）
             </div>
             <AssetLinkField value={assetId} onChange={setAssetId} open={open} />
           </div>

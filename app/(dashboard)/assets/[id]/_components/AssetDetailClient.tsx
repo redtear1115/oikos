@@ -116,7 +116,7 @@ export function AssetDetailClient({
   const car = {
     id: assetId,
     name: assetSheetInitial.name,
-    plate: assetSheetInitial.plate,
+    plate: assetSheetInitial.plate ?? '',
     fuelType: fuelType ?? '95' as const,
     primaryUserId,
   }
@@ -125,7 +125,7 @@ export function AssetDetailClient({
     <div className="relative min-h-screen pb-[92px]">
       <AssetHero
         name={assetSheetInitial.name}
-        plate={assetSheetInitial.plate}
+        plate={assetSheetInitial.plate ?? null}
         fuelType={fuelType}
         monthAmount={monthAmount}
         totalAmount={totalAmount}
@@ -150,9 +150,10 @@ export function AssetDetailClient({
         onItemClick={handleTxItemClick}
         emptyState={
           <div className="text-center py-10 px-6 text-sm leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-            {fuelType === 'electric'
-              ? '還沒有為這台車記下任何花費'
-              : '還沒有加油記錄 — 戳上方「加油」開始'}
+            {assetSheetInitial.type === 'car'
+              ? <>還沒有為這台車記下任何花費 —<br />戳右下角 + 開始</>
+              : <>還沒有記下任何花費 —<br />戳右下角 + 開始</>
+            }
           </div>
         }
         loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}

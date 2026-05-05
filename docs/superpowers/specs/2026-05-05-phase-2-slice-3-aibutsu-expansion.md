@@ -1,4 +1,4 @@
-# 愛物概念擴展設計 — Phase 2 Slice 2 (Child + Pet + Plant)
+# 愛物概念擴展設計 — Phase 2 Slice 3 (Child + Pet + Plant)
 
 ## Context
 
@@ -44,7 +44,7 @@ Pet / Plant 本 slice 只用 base fields（`name`、`type`、icon），**不做 
 ### Roadmap 調整
 
 ```
-Car ✅  →  Child + Pet + Plant（同一 slice）→  House  →  Insurance
+Car ✅  →  FuelLog + 車輛 polish ✅(Slice 2)  →  Child + Pet + Plant（Slice 3）→  House  →  Insurance
 ```
 
 Pet + Plant 與 Child 共用同一 slice：三者 data model 最接近（生命體、無市值欄位），CRUD 邏輯幾乎一樣。

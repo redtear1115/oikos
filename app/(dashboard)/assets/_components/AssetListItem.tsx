@@ -3,16 +3,22 @@
 import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
+const TYPE_LABEL: Record<string, string> = {
+  car: '車', child: '孩子', pet: '寵物', plant: '植物',
+  house: '房子', insurance: '保險',
+}
+
 interface Props {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
-  subtitle: string  // e.g. plate "ABC-1234"
+  plate: string | null
   monthAmount: number
   isLast?: boolean
 }
 
-export function AssetListItem({ id, type, name, subtitle, monthAmount, isLast }: Props) {
+export function AssetListItem({ id, type, name, plate, monthAmount, isLast }: Props) {
+  const subtitle = type === 'car' ? (plate ?? '') : (TYPE_LABEL[type] ?? type)
   return (
     <Link
       href={`/assets/${id}`}

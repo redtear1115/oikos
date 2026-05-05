@@ -68,8 +68,9 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       assetId={asset.id}
       assetSheetInitial={{
         id: asset.id,
+        type: asset.type,
         name: asset.name,
-        plate: asset.plate ?? '',
+        plate: asset.plate ?? undefined,
         purchasedAt: asset.purchasedAt,
         purchasePrice: asset.purchasePrice,
         // '92' is a legacy enum value that can't be dropped from Postgres; coerce to '95' for UI

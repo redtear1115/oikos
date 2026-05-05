@@ -8,14 +8,17 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
-import { createCar, editCar, softDeleteCar } from '@/actions/asset'
+import { createCar, editCar, createLifeEntity, editLifeEntity, softDeleteAsset } from '@/actions/asset'
+import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
 export interface AssetSheetInitial {
   id: string
+  type: 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance'
   name: string
-  plate: string
-  purchasedAt: string | null  // YYYY-MM-DD
-  purchasePrice: number | null
+  // car-only fields
+  plate?: string
+  purchasedAt?: string | null
+  purchasePrice?: number | null
   fuelType?: '95' | '98' | 'diesel' | 'electric'
   primaryUserId?: string | null
 }
@@ -27,8 +30,20 @@ interface Props {
   onMutated?: (kind: 'saved' | 'deleted') => void
 }
 
+type PickerType = 'car' | 'child' | 'pet' | 'plant'
+
+const TYPE_OPTIONS: { value: PickerType; label: string }[] = [
+  { value: 'car',   label: '車' },
+  { value: 'child', label: '孩子' },
+  { value: 'pet',   label: '寵物' },
+  { value: 'plant', label: '植物' },
+]
+
 export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
+  const isEdit = !!initial
+  const [selectedType, setSelectedType] = useState<PickerType>('pet')
   const [name, setName] = useState('')
+  // car-only fields
   const [plate, setPlate] = useState('')
   const [purchasedAt, setPurchasedAt] = useState<string | null>(null)
   const [purchasePrice, setPurchasePrice] = useState('')
@@ -37,18 +52,21 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
     if (initial) {
+      setSelectedType((initial.type as PickerType) ?? 'pet')
       setName(initial.name)
-      setPlate(initial.plate)
-      setPurchasedAt(initial.purchasedAt)
+      setPlate(initial.plate ?? '')
+      setPurchasedAt(initial.purchasedAt ?? null)
       setPurchasePrice(initial.purchasePrice ? String(initial.purchasePrice) : '')
       setFuelType(initial.fuelType ?? '95')
       setPrimaryUserId(initial.primaryUserId ?? null)
     } else {
+      setSelectedType('pet')
       setName('')
       setPlate('')
       setPurchasedAt(null)
@@ -62,40 +80,44 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     return () => clearTimeout(t)
   }, [open, initial])
 
-  const isEdit = !!initial
+  const isCar = selectedType === 'car'
+
+  const canSave = isCar
+    ? name.trim() !== '' && plate.trim() !== '' && !pending
+    : name.trim() !== '' && !pending
 
   const handleSave = () => {
-    const trimmedName = name.trim()
-    const trimmedPlate = plate.trim()
-    if (!trimmedName) { setError('請輸入名稱'); return }
-    if (!trimmedPlate) { setError('請輸入車牌'); return }
-
-    const price = purchasePrice ? parseInt(purchasePrice, 10) : null
-    if (purchasePrice && (!price || price <= 0)) {
-      setError('購入價格式錯誤'); return
-    }
-
     startTransition(async () => {
       try {
         if (isEdit) {
-          await editCar({
-            id: initial!.id,
-            name: trimmedName,
-            plate: trimmedPlate,
-            purchasedAt,
-            purchasePrice: price,
-            fuelType,
-            primaryUserId,
-          })
+          if (isCar) {
+            const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+            await editCar({
+              id: initial!.id,
+              name: name.trim(),
+              plate: plate.trim(),
+              purchasedAt,
+              purchasePrice: price,
+              fuelType,
+              primaryUserId,
+            })
+          } else {
+            await editLifeEntity({ id: initial!.id, name: name.trim() })
+          }
         } else {
-          await createCar({
-            name: trimmedName,
-            plate: trimmedPlate,
-            purchasedAt: purchasedAt ?? undefined,
-            purchasePrice: price ?? undefined,
-            fuelType,
-            primaryUserId,
-          })
+          if (isCar) {
+            const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+            await createCar({
+              name: name.trim(),
+              plate: plate.trim(),
+              purchasedAt: purchasedAt ?? undefined,
+              purchasePrice: price ?? undefined,
+              fuelType,
+              primaryUserId,
+            })
+          } else {
+            await createLifeEntity({ type: selectedType as 'child' | 'pet' | 'plant', name: name.trim() })
+          }
         }
         onMutated?.('saved')
         onClose()
@@ -105,13 +127,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     })
   }
 
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const performDelete = () => {
     if (!isEdit) return
     setConfirmingDelete(false)
     startTransition(async () => {
       try {
-        await softDeleteCar(initial!.id)
+        await softDeleteAsset(initial!.id)
         onMutated?.('deleted')
         onClose()
       } catch (e) {
@@ -119,6 +140,14 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       }
     })
   }
+
+  const typeLabel = TYPE_OPTIONS.find(o => o.value === selectedType)?.label ?? '愛物'
+  const title = isEdit ? `編輯${typeLabel}` : '新增愛物'
+
+  const namePlaceholder = isCar ? '例：我的車'
+    : selectedType === 'child' ? '例：小明'
+    : selectedType === 'pet' ? '例：米嚕'
+    : '例：陽台上的植物們'
 
   return (
     <>
@@ -147,138 +176,150 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             取消
           </button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
-            {isEdit ? '編輯車輛' : '新增車輛'}
+            {title}
           </div>
           <button
             onClick={handleSave}
-            disabled={!name || !plate || pending}
+            disabled={!canSave}
             className="bg-transparent border-0 text-[15px] font-semibold p-1 cursor-pointer disabled:cursor-default"
-            style={{ color: name && plate && !pending ? 'var(--accent)' : 'var(--ink-3)' }}
+            style={{ color: canSave ? 'var(--accent)' : 'var(--ink-3)' }}
           >
             {pending ? '儲存中…' : '儲存'}
           </button>
         </div>
 
         <div className="overflow-auto flex-1 px-5 pt-2 pb-6">
-          {/* Name */}
+          {/* Type picker — only when creating */}
+          {!isEdit && (
+            <div className="mb-4">
+              <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>類型</div>
+              <div className="grid grid-cols-4 gap-2">
+                {TYPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedType(opt.value)
+                      setName('')
+                      setPlate('')
+                      setPurchasedAt(null)
+                      setPurchasePrice('')
+                    }}
+                    className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+                    style={{
+                      background: selectedType === opt.value ? 'var(--accent)' : 'var(--surface)',
+                      color: selectedType === opt.value ? '#fff' : 'var(--ink-2)',
+                    }}
+                  >
+                    <AssetIcon type={opt.value} size={20} color={selectedType === opt.value ? '#fff' : 'var(--ink-2)'} />
+                    <span className="text-[11px] font-medium">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Name field */}
           <Field label="名稱">
             <input
               ref={nameInputRef}
               value={name}
               onChange={e => setName(e.target.value.slice(0, 32))}
-              placeholder="例：我的車"
+              placeholder={namePlaceholder}
               className="w-full bg-transparent border-0 outline-none text-base"
               style={{ color: 'var(--ink)' }}
             />
           </Field>
 
-          {/* Plate */}
-          <Field label="車牌">
-            <input
-              value={plate}
-              onChange={e => setPlate(e.target.value.toUpperCase().slice(0, 16))}
-              placeholder="例：ABC-1234"
-              className="w-full bg-transparent border-0 outline-none text-base tracking-[1px]"
-              style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-            />
-          </Field>
-
-          {/* Purchased At (optional) */}
-          <Field label="購入日（選填）">
-            <button
-              type="button"
-              onClick={() => setShowCal(v => !v)}
-              className="w-full flex items-center gap-3 cursor-pointer text-left bg-transparent border-0 p-0"
-            >
-              <CalIcon />
-              <div className="flex-1">
-                {purchasedAt ? (
-                  <span className="text-base" style={{ color: 'var(--ink)' }}>{dateLabel(purchasedAt)}</span>
-                ) : (
-                  <span className="text-base" style={{ color: 'var(--ink-3)' }}>未填</span>
-                )}
-              </div>
-              <Chevron />
-            </button>
-            {showCal && (
-              <div className="mt-3">
-                <MiniCalendar
-                  value={purchasedAt ?? localTodayISO()}
-                  onChange={d => { setPurchasedAt(d); setShowCal(false) }}
+          {/* Car-only fields */}
+          {isCar && (
+            <>
+              <Field label="車牌">
+                <input
+                  value={plate}
+                  onChange={e => setPlate(e.target.value.slice(0, 16))}
+                  placeholder="例：ABC-1234"
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
                 />
-              </div>
-            )}
-          </Field>
+              </Field>
 
-          {/* Purchase Price (optional) */}
-          <Field label="購入價（選填）">
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base" style={{ color: purchasePrice ? 'var(--ink-2)' : 'var(--ink-3)' }}>
-                NT$
-              </span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={purchasePrice}
-                onChange={e => {
-                  const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
-                  setPurchasePrice(next)
-                }}
-                placeholder="0"
-                className="tnum bg-transparent border-0 outline-none text-base"
-                style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)', width: '100%' }}
-              />
+              <Field label="購入日期（選填）">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 bg-transparent border-0 cursor-pointer p-0 text-base"
+                  style={{ color: purchasedAt ? 'var(--ink)' : 'var(--ink-3)' }}
+                  onClick={() => setShowCal(v => !v)}
+                >
+                  <CalIcon size={16} />
+                  {purchasedAt ? dateLabel(purchasedAt) : '選擇日期'}
+                  <Chevron />
+                </button>
+                {showCal && (
+                  <MiniCalendar
+                    value={purchasedAt ?? localTodayISO()}
+                    onChange={d => { setPurchasedAt(d); setShowCal(false) }}
+                  />
+                )}
+              </Field>
+
+              <Field label="購入價格（選填）">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm" style={{ color: 'var(--ink-3)' }}>NT$</span>
+                  <input
+                    value={purchasePrice}
+                    onChange={e => setPurchasePrice(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    placeholder="0"
+                    inputMode="numeric"
+                    className="flex-1 bg-transparent border-0 outline-none text-base tnum"
+                    style={{ color: 'var(--ink)' }}
+                  />
+                </div>
+              </Field>
+            </>
+          )}
+
+          {isCar && (
+            <>
+              {/* Fuel Type */}
+              <Field label="油種">
+                <FuelTypeButtonGroup value={fuelType} onChange={setFuelType} />
+              </Field>
+
+              {/* Primary User (hidden in solo mode — PrimaryUserToggle returns null) */}
+              <Field label="主要使用人">
+                <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
+              </Field>
+            </>
+          )}
+
+          {error && (
+            <div className="mt-3 text-sm" style={{ color: 'var(--error, #c0392b)' }}>
+              {error}
             </div>
-          </Field>
-
-          {/* Fuel Type */}
-          <Field label="油種">
-            <FuelTypeButtonGroup value={fuelType} onChange={setFuelType} />
-          </Field>
-
-          {/* Primary User (hidden in solo mode — PrimaryUserToggle returns null) */}
-          <Field label="主要使用人">
-            <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
-          </Field>
+          )}
 
           {isEdit && (
-            <div className="pt-4">
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(true)}
-                disabled={pending}
-                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
-                style={{
-                  background: 'transparent',
-                  color: 'var(--destructive)',
-                  border: '1px solid var(--destructive-soft)',
-                }}
-              >
-                刪除這台車
-              </button>
-            </div>
+            <button
+              type="button"
+              className="mt-6 w-full py-3 rounded-[14px] text-sm font-medium cursor-pointer border-0"
+              style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+              onClick={() => setConfirmingDelete(true)}
+            >
+              刪除
+            </button>
           )}
         </div>
       </div>
 
-      {error && open && (
-        <div
-          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
-        >
-          {error}
-        </div>
-      )}
-
       <ConfirmModal
-        open={confirmingDelete && open}
-        title="刪除這台車？"
-        description="關聯到這台車的紀錄會繼續保留，但會顯示為「已刪除」。"
+        open={confirmingDelete}
+        title="確認刪除？"
+        description="這個愛物與所有關聯花費將從列表中移除。"
         confirmLabel="刪除"
         pending={pending}
-        onCancel={() => setConfirmingDelete(false)}
         onConfirm={performDelete}
+        onCancel={() => setConfirmingDelete(false)}
       />
     </>
   )
@@ -286,8 +327,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="py-3.5" style={{ borderBottom: '1px solid var(--hairline)' }}>
-      <div className="text-xs tracking-[0.6px] mb-2" style={{ color: 'var(--ink-3)' }}>{label}</div>
+    <div
+      className="py-3"
+      style={{ borderBottom: '1px solid var(--hairline)' }}
+    >
+      <div className="text-xs mb-1 tracking-wide" style={{ color: 'var(--ink-3)' }}>{label}</div>
       {children}
     </div>
   )

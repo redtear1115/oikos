@@ -58,7 +58,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
             取消
           </button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
-            選擇資產
+            選擇愛物
           </div>
           <div className="w-10" />  {/* spacer for symmetry */}
         </div>
@@ -68,7 +68,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
           <PickerRow
             iconNode={<NoneIcon />}
             title="不關聯"
-            subtitle="這筆與任何資產無關"
+            subtitle="這筆與任何愛物無關"
             selected={selectedAssetId === null}
             onClick={() => { onSelect(null); onClose() }}
           />
@@ -87,7 +87,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
 
           {assets && assets.length === 0 && (
             <div className="text-sm py-6 px-3 text-center leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-              還沒有資產 — 先到「資產」分頁建立一台車。
+              還沒有愛物 — 先到「愛物」分頁新增。
             </div>
           )}
 

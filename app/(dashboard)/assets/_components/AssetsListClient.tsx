@@ -10,7 +10,7 @@ import { AssetEmptyState } from './AssetEmptyState'
 
 export interface AssetsListItem {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
   plate: string | null
   monthAmount: number
@@ -41,7 +41,7 @@ export function AssetsListClient({ items }: Props) {
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
-          資產
+          愛物
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export function AssetsListClient({ items }: Props) {
                 id={a.id}
                 type={a.type}
                 name={a.name}
-                subtitle={a.plate ?? ''}
+                plate={a.plate ?? null}
                 monthAmount={a.monthAmount}
                 isLast={i === items.length - 1}
               />
