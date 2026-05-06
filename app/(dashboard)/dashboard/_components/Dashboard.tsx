@@ -54,10 +54,16 @@ export function Dashboard({
   const { isSolo } = useMember()
 
   useRealtimeEvents((event) => {
-    if (event.kind === 'group-updated' || event.kind === 'reconnect') {
+    if (
+      event.kind === 'group-updated' ||
+      event.kind === 'reconnect' ||
+      event.kind === 'income-insert' ||
+      event.kind === 'income-update'
+    ) {
       // Partner accepted the invite (group-updated), or we reconnected after a
       // disconnect that may have missed the event. Re-fetch the layout to get
       // fresh MemberContext (partner profile + isSolo flips to false).
+      // Income insert/update: refresh to re-fetch income month summary and hero card data.
       router.refresh()
     }
   })

@@ -55,6 +55,19 @@ export interface FuelLogRowPayload {
   deletedAt: string | null  // ISO when soft-deleted
 }
 
+export interface IncomeRowPayload {
+  id: string
+  groupId: string
+  recipientId: string
+  amount: number
+  category: string
+  source: string | null
+  assetId: string | null
+  occurredAt: string    // YYYY-MM-DD
+  createdAt: string     // ISO timestamp
+  deletedAt: string | null  // ISO when soft-deleted
+}
+
 export type RealtimeEvent =
   | { kind: 'txn-insert'; row: TxnRowPayload }
   | { kind: 'txn-update'; row: TxnRowPayload }   // soft-delete shows up here too (deletedAt becomes set)
@@ -64,4 +77,6 @@ export type RealtimeEvent =
   | { kind: 'group-updated' }   // OikosGroups row changed (e.g. member_b set after invite acceptance)
   | { kind: 'asset-changed'; row: AssetRowPayload }
   | { kind: 'fuel-log-changed'; row: FuelLogRowPayload }  // FuelLog INSERT/UPDATE/soft-delete
+  | { kind: 'income-insert'; row: IncomeRowPayload }
+  | { kind: 'income-update'; row: IncomeRowPayload }  // soft-delete shows up here (deletedAt set)
   | { kind: 'reconnect' }   // emitted after WebSocket reconnect — subscribers should refetch

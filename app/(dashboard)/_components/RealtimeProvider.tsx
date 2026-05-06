@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef } from 'react
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { REALTIME_SUBSCRIBE_STATES, RealtimePostgresChangesPayload } from '@supabase/realtime-js'
 import { createClient } from '@/lib/supabase/client'
-import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload, FuelLogRowPayload } from '@/lib/realtime/event'
+import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload, FuelLogRowPayload, IncomeRowPayload } from '@/lib/realtime/event'
 
 type PgPayload = RealtimePostgresChangesPayload<Record<string, unknown>>
 
@@ -123,6 +123,16 @@ export function RealtimeProvider({ groupId, children }: Props) {
         (payload: PgPayload) => {
           const row = payload.eventType === 'DELETE' ? payload.old : payload.new
           dispatch({ kind: 'fuel-log-changed', row: rowFromPayload(row) as FuelLogRowPayload })
+        })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'IncomeTransactions', filter: `group_id=eq.${groupId}` },
+        (payload: PgPayload) => {
+          if (payload.eventType === 'INSERT') {
+            dispatch({ kind: 'income-insert', row: rowFromPayload(payload.new) as IncomeRowPayload })
+          } else if (payload.eventType === 'UPDATE') {
+            dispatch({ kind: 'income-update', row: rowFromPayload(payload.new) as IncomeRowPayload })
+          }
         })
 
       let wasSubscribed = false

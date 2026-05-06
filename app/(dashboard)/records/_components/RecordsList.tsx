@@ -6,6 +6,7 @@ import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_com
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
+import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet } from './FilterSheet'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
@@ -44,6 +45,12 @@ export function RecordsList({ initial, pageSize }: Props) {
   const [, startFuelLoad] = useTransition()
 
   const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen || fuelSheetOpen
+
+  useRealtimeEvents((event) => {
+    if (event.kind === 'income-insert' || event.kind === 'income-update') {
+      router.refresh()
+    }
+  })
 
   const handleItemClick = (tx: PagedTxnRow) => {
     if (tx.kind === 'income') return  // income editing not yet wired in records
