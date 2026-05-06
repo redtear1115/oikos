@@ -45,7 +45,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
   const parsed = parseInt(amount, 10) || 0
 
   const title = viewerIsDebtor
-    ? '我還 多少？'
+    ? '我還多少？'
     : `${partner?.displayName ?? '對方'} 還了 多少？`
   const primaryText = viewerIsDebtor ? '記錄還款' : '記錄收款'
 
