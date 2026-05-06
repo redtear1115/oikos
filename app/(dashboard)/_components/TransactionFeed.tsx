@@ -64,6 +64,13 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     })
   }, [filter, pageSize])
 
+  // Auto-dismiss error toast after 5s.
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(() => setError(''), 5000)
+    return () => clearTimeout(t)
+  }, [error])
+
   const handleLoadMore = () => {
     if (items.length === 0) return
     setError('')
@@ -249,10 +256,18 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
 
       {error && (
         <div
-          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
+          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white flex items-center gap-3"
           style={{ background: 'var(--debit)' }}
         >
-          {error}
+          <span className="flex-1">{error}</span>
+          <button
+            type="button"
+            onClick={() => setError('')}
+            aria-label="關閉"
+            className="bg-transparent border-0 text-white text-base leading-none cursor-pointer p-0"
+          >
+            ×
+          </button>
         </div>
       )}
     </>
