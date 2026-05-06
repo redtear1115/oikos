@@ -147,7 +147,7 @@ export function BalanceHero({
                 <div className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
                   style={{
                     fontFamily: 'var(--font-numeric)',
-                    fontSize: 'var(--fs-amount-md)',
+                    fontSize: 'var(--fs-amount-lg)',
                     fontWeight: 600,
                     color: 'var(--ink)',
                     opacity: fading ? 0 : 1,
