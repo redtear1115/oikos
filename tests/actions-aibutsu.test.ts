@@ -6,6 +6,7 @@ import {
   createPet, editPet,
   createPlant, editPlant,
   createInsurance, editInsurance,
+  createHouse, editHouse,
 } from '@/actions/asset'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
@@ -375,5 +376,101 @@ describe('editInsurance', () => {
 
   it('throws on empty name', async () => {
     await expect(editInsurance({ id: 'asset-1', name: '  ' })).rejects.toThrow(/名稱/)
+  })
+})
+
+// ── createHouse ──────────────────────────────────────────────────────────────
+
+describe('createHouse', () => {
+  it('creates asset + houseDetails row', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-h1' }])
+    queueDbResult([])
+
+    await expect(createHouse({ name: '我們家' })).resolves.toMatchObject({ id: 'asset-h1' })
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('passes all houseDetails fields to insert', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-h2' }])
+    queueDbResult([])
+
+    await createHouse({
+      name: '台北的家',
+      address: '台北市大安區某路1號',
+      purchasedAt: '2020-06-15',
+    })
+
+    const valueCalls = mockBuilder.values.mock.calls
+    const housePayload = valueCalls[1][0] as Record<string, unknown>
+    expect(housePayload).toMatchObject({
+      assetId: 'asset-h2',
+      owner: VIEWER.id,
+      address: '台北市大安區某路1號',
+      purchasedAt: '2020-06-15',
+    })
+  })
+
+  it('creates auto-transaction when purchasePrice > 0', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-h3' }])
+    queueDbResult([])
+    queueDbResult([{ id: 'txn-h1' }])
+
+    await createHouse({ name: '我們家', purchasePrice: 15000000 })
+
+    expect(mockDb.insert).toHaveBeenCalledTimes(3)
+    const valueCalls = mockBuilder.values.mock.calls
+    const txnPayload = valueCalls[2][0] as Record<string, unknown>
+    expect(txnPayload).toMatchObject({
+      groupId: 'grp-1',
+      assetId: 'asset-h3',
+      amount: 15000000,
+      category: 'housing',
+      description: '購入 · 我們家',
+    })
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(createHouse({ name: '我們家' })).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws on empty name', async () => {
+    await expect(createHouse({ name: '   ' })).rejects.toThrow(/名稱/)
+  })
+
+  it('throws when group not found', async () => {
+    queueDbResult([])
+    await expect(createHouse({ name: '我們家' })).rejects.toThrow('找不到家計簿')
+  })
+})
+
+// ── editHouse ────────────────────────────────────────────────────────────────
+
+describe('editHouse', () => {
+  it('updates asset name + houseDetails fields', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-h1' }])
+    queueDbResult([])
+
+    await expect(editHouse({ id: 'asset-h1', name: '新家' })).resolves.toBeUndefined()
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('throws if asset not found in group', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+    await expect(editHouse({ id: 'missing', name: '我們家' })).rejects.toThrow(/找不到/)
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(editHouse({ id: 'asset-h1', name: '我們家' })).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws on empty name', async () => {
+    await expect(editHouse({ id: 'asset-h1', name: '  ' })).rejects.toThrow(/名稱/)
   })
 })
