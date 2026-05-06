@@ -12,14 +12,14 @@ import { FilterSheet } from './FilterSheet'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
-import { loadMoreIncomes } from '@/actions/income'
-import type { IncomeCursor } from '@/lib/db/queries/incomes'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
-import { getIncomeCategory } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
+
+const incomeLoader = makeIncomeLoader(20)
 
 interface Props {
   initial: PagedTxnRow[]
@@ -123,27 +123,6 @@ export function RecordsList({ initial, pageSize }: Props) {
     if (tab === 'income') return initial.filter(r => r.kind === 'income')
     return initial
   }, [initial, tab])
-
-  // Income tab loader: adapts TxnCursor → IncomeCursor and maps PagedIncomeRow → PagedTxnRow
-  const incomeLoader = async (cursor: TxnCursor | null): Promise<PagedTxnRow[]> => {
-    const incomeCursor: IncomeCursor | null = cursor
-      ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
-      : null
-    const rows = await loadMoreIncomes(incomeCursor, 20)
-    return rows.map((r) => ({
-      id: r.id,
-      amount: r.amount,
-      splitType: null,
-      description: r.source ?? getIncomeCategory(r.category).label,
-      category: r.category,
-      paidBy: r.recipientId,
-      transactedAt: r.occurredAt + 'T00:00:00.000Z',
-      createdAt: r.createdAt,
-      kind: 'income' as const,
-      assetId: r.assetId,
-      fuelLogId: null,
-    }))
-  }
 
   const tabLoader =
     tab === 'income'

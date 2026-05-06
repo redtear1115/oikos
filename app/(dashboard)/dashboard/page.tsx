@@ -6,6 +6,8 @@ import { getGroupBalance } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { getIncomeCategory } from '@/lib/incomeCategories'
+import { incomeToFeedRow } from '@/lib/incomeFeedRow'
+import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
 
 const PAGE_SIZE = 20
@@ -25,11 +27,11 @@ export default async function DashboardPage() {
   const now = new Date()
   const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  const [balance, rows, incomeSummary, recentIncomes] = await Promise.all([
+  const [balance, rows, incomeSummary, recentIncomesRaw] = await Promise.all([
     getGroupBalance(group.id),
     listTransactionsPaged(group.id, null, PAGE_SIZE),
     listIncomeMonthSummary(group.id, yyyymm),
-    listIncomesPaged(group.id, null, 1),
+    listIncomesPaged(group.id, null, PAGE_SIZE),
   ])
 
   // Serialize Date → ISO string for the client component
@@ -47,9 +49,23 @@ export default async function DashboardPage() {
     fuelLogId: r.fuelLogId ?? null,
   }))
 
-  const recentIncomeLabel = recentIncomes.length > 0
+  const recentIncomeFeed: PagedTxnRow[] = recentIncomesRaw.map((r) =>
+    incomeToFeedRow({
+      id: r.id,
+      amount: r.amount,
+      category: r.category,
+      source: r.source,
+      recipientId: r.recipientId,
+      assetId: r.assetId,
+      occurredAt: r.occurredAt,
+      createdAt: r.createdAt.toISOString(),
+      kind: 'income',
+    })
+  )
+
+  const recentIncomeLabel = recentIncomesRaw.length > 0
     ? (() => {
-        const r = recentIncomes[0]
+        const r = recentIncomesRaw[0]
         const d = new Date(r.occurredAt + 'T00:00:00')
         const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
         return `${dateStr} · ${r.source ?? getIncomeCategory(r.category).label}`
@@ -64,6 +80,7 @@ export default async function DashboardPage() {
       incomeMonthTotal={incomeSummary.total}
       incomeMonthCount={incomeSummary.count}
       recentIncomeLabel={recentIncomeLabel}
+      recentIncomeFeed={recentIncomeFeed}
     />
   )
 }

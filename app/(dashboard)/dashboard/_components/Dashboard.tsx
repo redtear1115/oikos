@@ -9,7 +9,6 @@ import { SoloBanner } from './SoloBanner'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { BalanceHero } from './BalanceHero'
-import { EmptyState } from './EmptyState'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
 import { IncomeSheet, type IncomeSheetInitial } from './IncomeSheet'
@@ -17,13 +16,18 @@ import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
+import { EmptyState } from './EmptyState'
 import { IncomeEmptyState } from './IncomeEmptyState'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
+import { makeIncomeLoader } from '@/lib/incomeFeedRow'
+import { CompactRow } from './CompactRow'
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
+const incomeLoader = makeIncomeLoader(20)
 
 type ModalState =
   | { kind: 'closed' }
@@ -41,6 +45,7 @@ export interface DashboardProps {
   incomeMonthTotal: number
   incomeMonthCount: number
   recentIncomeLabel: string | null
+  recentIncomeFeed: PagedTxnRow[]
 }
 
 export function Dashboard({
@@ -50,6 +55,7 @@ export function Dashboard({
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,
+  recentIncomeFeed,
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo } = useMember()
@@ -98,7 +104,33 @@ export function Dashboard({
   const sheetOpen = modal.kind !== 'closed'
   const filterActive = filter !== null && isFilterActive(filter)
 
+  const P = DEFAULT_INCOME_PALETTE
+  const incomeRenderRow = (tx: PagedTxnRow): React.ReactNode | undefined => {
+    if (tx.kind !== 'income') return undefined
+    return (
+      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
+        <CompactRow tx={tx} isLast={false} onClick={() => handleItemClick(tx)} />
+      </div>
+    )
+  }
+
   const handleItemClick = (tx: PagedTxnRow) => {
+    if (tx.kind === 'income') {
+      dispatch({
+        kind: 'edit-income',
+        data: {
+          id: tx.id,
+          amount: tx.amount,
+          category: tx.category,
+          source: tx.description,
+          recipientId: tx.paidBy,
+          assetId: tx.assetId,
+          occurredAt: tx.transactedAt.substring(0, 10),
+        },
+      })
+      return
+    }
+
     if (tx.kind === 'settlement') {
       dispatch({
         kind: 'edit-settlement',
@@ -201,23 +233,28 @@ export function Dashboard({
         />
       )}
       <TransactionFeed
-        initial={recent}
+        key={mode}
+        initial={mode === 'income' ? recentIncomeFeed : recent}
         pageSize={pageSize}
         onItemClick={handleItemClick}
-        filter={filter ?? undefined}
+        filter={mode === 'income' ? undefined : (filter ?? undefined)}
+        loader={mode === 'income' ? incomeLoader : undefined}
+        renderRow={mode === 'income' ? incomeRenderRow : undefined}
         label={
           <div className="flex items-end justify-between">
             <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
               最近紀錄
             </span>
-            <button
-              onClick={() => dispatch({ kind: 'filter' })}
-              className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
-              style={{ color: 'var(--ink-2)' }}
-              aria-label="開啟篩選"
-            >
-              篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
-            </button>
+            {mode === 'expense' && (
+              <button
+                onClick={() => dispatch({ kind: 'filter' })}
+                className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
+                style={{ color: 'var(--ink-2)' }}
+                aria-label="開啟篩選"
+              >
+                篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+              </button>
+            )}
           </div>
         }
         emptyState={

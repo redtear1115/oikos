@@ -194,15 +194,6 @@ export function BalanceHero({
         </>
       )}
 
-      {mode === 'income' && !settleOpen && (
-        <button
-          onClick={onAddClick}
-          className="w-full h-[46px] rounded-xl border-0 font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center gap-1.5"
-          style={{ background: P.tint, color: P.ink }}
-        >
-          <PlusIcon size={16} />記一筆進帳
-        </button>
-      )}
     </div>
   )
 }
