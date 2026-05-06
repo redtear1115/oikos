@@ -455,7 +455,9 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
-          maxHeight: '92dvh',
+          // Fix the sheet height so toggling between types (long form like 車/保險 vs short like 植物/房子)
+          // doesn't make the sheet jump. Inner content scrolls when needed.
+          height: '92dvh',
           transform: open ? 'translateY(0)' : 'translateY(100%)',
           transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
           pointerEvents: open ? 'auto' : 'none',
