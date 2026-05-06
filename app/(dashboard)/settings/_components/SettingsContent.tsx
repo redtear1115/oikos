@@ -232,7 +232,7 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
         className="text-[11px] text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
       >
-        Futari · v0.1.0 · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>法律聲明</a>
+        Futari · v0.3.0 · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>法律聲明</a>
       </div>
 
       <EditTextSheet
