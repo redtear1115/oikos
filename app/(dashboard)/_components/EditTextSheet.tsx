@@ -17,12 +17,18 @@ interface Props {
   placeholder?: string
   /** Optional max length hint (visual only — server enforces). */
   maxLength?: number
+  /** iOS autocapitalize attribute. Defaults to browser default ('sentences'). */
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters'
 }
 
-export function EditTextSheet({ open, title, initialValue, onSubmit, onClose, placeholder, maxLength = 32 }: Props) {
+export function EditTextSheet({
+  open, title, initialValue, onSubmit, onClose,
+  placeholder, maxLength = 32, autoCapitalize,
+}: Props) {
   const [value, setValue] = useState(initialValue)
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -31,9 +37,23 @@ export function EditTextSheet({ open, title, initialValue, onSubmit, onClose, pl
     setError('')
   }, [open, initialValue])
 
-  useFocusAndSelectOnOpen(open, inputRef, 250)
+  useFocusAndSelectOnOpen(open, inputRef)
 
-  if (!open) return null
+  // Push sheet up when the soft keyboard appears
+  useEffect(() => {
+    if (!open) { setKeyboardOffset(0); return }
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () =>
+      setKeyboardOffset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [open])
 
   const handleConfirm = () => {
     const trimmed = value.trim()
@@ -52,54 +72,74 @@ export function EditTextSheet({ open, title, initialValue, onSubmit, onClose, pl
     <>
       <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
       <div
-        className="fixed left-1/2 bottom-[28%] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] z-[100] rounded-[20px] pb-5 px-5 pt-5"
-        style={{ background: 'var(--bg)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+        className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-[100] flex flex-col overflow-hidden"
+        style={{
+          background: 'var(--bg)',
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
+          bottom: keyboardOffset,
+          transform: open ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+          pointerEvents: open ? 'auto' : 'none',
+        }}
       >
-        <div className="text-sm font-semibold mb-3" style={{ color: 'var(--ink)' }}>{title}</div>
-        <input
-          ref={inputRef}
-          type="text"
-          value={value}
-          maxLength={maxLength}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !pending) {
-              e.preventDefault()
-              handleConfirm()
-            }
-          }}
-          placeholder={placeholder ?? title}
-          className="w-full h-12 px-3 rounded-xl text-sm bg-transparent outline-none"
-          style={{
-            border: '1px solid var(--hairline)',
-            color: 'var(--ink)',
-            background: 'var(--surface)',
-          }}
-        />
-        {error && (
-          <div className="text-xs mt-2" style={{ color: 'var(--debit)' }}>{error}</div>
-        )}
-        <div className="flex gap-2 mt-4">
+        {/* Grabber */}
+        <div className="pt-2 flex justify-center">
+          <div className="w-9 h-[5px] rounded-full" style={{ background: 'rgba(31,27,22,0.18)' }} />
+        </div>
+
+        {/* Header: 取消 / title / 完成 */}
+        <div className="flex items-center justify-between px-5 pt-3 pb-4">
           <button
-            onClick={handleConfirm}
-            disabled={pending || !value.trim()}
-            className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
-            style={{ background: 'var(--accent)' }}
-          >
-            {pending ? '儲存中…' : '儲存'}
-          </button>
-          <button
-            onClick={onClose}
+            onClick={pending ? undefined : onClose}
             disabled={pending}
-            className="h-[46px] px-4 rounded-xl text-sm font-medium cursor-pointer"
-            style={{
-              background: 'var(--surface)',
-              color: 'var(--ink-2)',
-              border: '1px solid var(--hairline)',
-            }}
+            className="bg-transparent border-0 text-body cursor-pointer p-1 disabled:opacity-50"
+            style={{ color: 'var(--ink-2)' }}
           >
             取消
           </button>
+          <span className="text-body font-semibold" style={{ color: 'var(--ink)' }}>
+            {title}
+          </span>
+          <button
+            onClick={handleConfirm}
+            disabled={pending || !value.trim()}
+            className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:opacity-50"
+            style={{ color: 'var(--accent)' }}
+          >
+            {pending ? '儲存中…' : '完成'}
+          </button>
+        </div>
+
+        {/* Input + error + char count */}
+        <div className="px-5 pb-6">
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            maxLength={maxLength}
+            autoCapitalize={autoCapitalize}
+            onChange={(e) => { setValue(e.target.value); setError('') }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !pending) { e.preventDefault(); handleConfirm() }
+            }}
+            placeholder={placeholder ?? title}
+            className="w-full h-12 px-3 rounded-xl outline-none"
+            style={{
+              fontSize: 16,
+              border: '1px solid var(--hairline)',
+              color: 'var(--ink)',
+              background: 'var(--surface)',
+              fontFamily: 'inherit',
+            }}
+          />
+          {error && (
+            <div className="text-micro mt-2" style={{ color: 'var(--debit)' }}>{error}</div>
+          )}
+          <div className="text-micro mt-1.5 text-right" style={{ color: 'var(--ink-3)' }}>
+            {value.length} / {maxLength}
+          </div>
         </div>
       </div>
     </>
