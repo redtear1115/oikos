@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function Avatar({ who, initial, src, size = 28, ring = false }: Props) {
-  const bg = who === 'M' ? 'var(--me-color)' : 'var(--them-color)'
+  const bg = 'var(--ink)'
   const [imgFailed, setImgFailed] = useState(false)
 
   // Reset failure state when src changes (e.g. after profile pic refresh).

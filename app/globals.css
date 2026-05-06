@@ -15,8 +15,6 @@
   --debit: #D17561;
   --destructive: #B85A48;        /* deeper red for destructive actions (logout, delete) */
   --destructive-soft: rgba(184, 90, 72, 0.25);  /* outline / hairline variant */
-  --me-color: #3A2419;
-  --them-color: #E08856;
   --realtime-flash: #fffbe8;
 
   /* Typography scale — P3-1 */
@@ -42,8 +40,6 @@
   --color-credit: var(--credit);
   --color-debit: var(--debit);
   --color-destructive: var(--destructive);
-  --color-me: var(--me-color);
-  --color-them: var(--them-color);
   --font-serif: var(--font-fraunces);
   --font-sans: var(--font-noto-tc);
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
