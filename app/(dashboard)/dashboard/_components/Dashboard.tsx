@@ -114,7 +114,7 @@ export function Dashboard({
           id: tx.id,
           amount: tx.amount,
           category: tx.category,
-          source: tx.description,
+          source: tx.description || null,
           recipientId: tx.paidBy,
           assetId: tx.assetId,
           occurredAt: tx.transactedAt.substring(0, 10),

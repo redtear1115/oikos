@@ -1,6 +1,7 @@
 'use client'
 
 import { monthLabel } from '@/lib/groupByMonth'
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 
 interface Props {
   monthKey: string
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Props) {
+  const P = DEFAULT_INCOME_PALETTE
   const hasIncome = incomeTotal !== undefined && incomeTotal > 0
   const net = hasIncome ? incomeTotal - totalAmount : null
 
@@ -26,12 +28,12 @@ export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Prop
           <span className="text-[11px]">
             支出 NT${totalAmount.toLocaleString('en-US')}
             {' · '}
-            <span style={{ color: '#3F6A56' }}>+{incomeTotal!.toLocaleString('en-US')}</span>
+            <span style={{ color: P.ink }}>+{incomeTotal!.toLocaleString('en-US')}</span>
           </span>
           {net !== null && (
             <span
               className="text-[11px] ml-2 font-medium"
-              style={{ color: net >= 0 ? '#3F6A56' : 'var(--ink-2)' }}
+              style={{ color: net >= 0 ? P.ink : 'var(--ink-2)' }}
             >
               淨 {net >= 0 ? '+' : ''}NT${net.toLocaleString('en-US')}
             </span>
