@@ -644,22 +644,23 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               {/* Color picker */}
               <Field label="顏色">
                 <div className="flex gap-2 flex-wrap">
-                  {CAR_COLORS.map(c => (
-                    <button
-                      key={c.key}
-                      type="button"
-                      onClick={() => setColor(c.key)}
-                      className="w-9 h-9 rounded-full transition-all"
-                      style={{
-                        background: c.hex,
-                        border: color === c.key
-                          ? '3px solid var(--ink)'
-                          : `2px solid ${c.border}`,
-                        boxShadow: color === c.key ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
-                      }}
-                      aria-label={c.key}
-                    />
-                  ))}
+                  {CAR_COLORS.map(c => {
+                    const sel = color === c.hex
+                    return (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => setColor(c.hex)}
+                        className="w-9 h-9 rounded-full transition-all"
+                        style={{
+                          background: c.hex,
+                          border: sel ? '3px solid var(--ink)' : `2px solid ${c.border}`,
+                          boxShadow: sel ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
+                        }}
+                        aria-label={c.key}
+                      />
+                    )
+                  })}
                   {/* No color option */}
                   <button
                     type="button"

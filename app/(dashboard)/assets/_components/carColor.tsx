@@ -5,6 +5,35 @@
 
 export const FALLBACK_CAR_COLOR = '#E8E4D8'
 
+/**
+ * Source of truth for the 8 mainstream car colors. Keys are stored in the DB
+ * (`CarDetails.color`); hex values are what the UI renders.
+ *
+ * Must stay in sync with `CAR_COLORS` in AssetSheet.tsx — the picker writes
+ * keys, this map reads them. If you add a swatch to one, add it to the other.
+ */
+export const CAR_SWATCHES: Record<string, string> = {
+  white:     '#F0EDE8',
+  black:     '#1C1C1E',
+  silver:    '#B8B8C0',
+  dark_gray: '#4A4A52',
+  dark_red:  '#7B2525',
+  dark_blue: '#1E3557',
+  brown:     '#7A5C3E',
+  champagne: '#C8A97A',
+}
+
+/**
+ * Translate a stored color key into a CSS-safe hex. Without this, raw keys
+ * like `'dark_gray'` / `'champagne'` aren't valid CSS color names and silently
+ * fail to render. The `?? key` tail keeps the function defensive in case a row
+ * already holds a hex (legacy data) — the value passes through unchanged.
+ */
+export function resolveCarColor(key: string | null | undefined): string {
+  if (!key) return FALLBACK_CAR_COLOR
+  return CAR_SWATCHES[key] ?? key
+}
+
 /** Rec.601 luma; <128 means dark enough that we should use light foreground. */
 export function isDarkColor(hex: string): boolean {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex)

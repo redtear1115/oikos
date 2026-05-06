@@ -1,6 +1,6 @@
 'use client'
 
-import { FALLBACK_CAR_COLOR } from '../../_components/carColor'
+import { resolveCarColor } from '../../_components/carColor'
 
 interface AssetHeroProps {
   name: React.ReactNode
@@ -51,116 +51,97 @@ function EditPencilButton({ onClick }: { onClick: () => void }) {
   )
 }
 
-/** Solid stripe + dashed echo on the left edge — matches the assets-list cards. */
-function LeftAccent({ swatch }: { swatch: string }) {
-  return (
-    <>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 0, top: 0, bottom: 0,
-          width: 5,
-          background: swatch,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 9, top: 12, bottom: 12,
-          width: 0,
-          borderLeft: `1.5px dashed ${swatch}`,
-          opacity: 0.55,
-        }}
-      />
-    </>
-  )
-}
-
 export function AssetHero({
   name, plate, brand, model, year, fuelType, color,
   monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit,
 }: AssetHeroProps) {
   const isElectric = fuelType === 'electric'
-  const swatch = color ?? FALLBACK_CAR_COLOR
+  const swatch = resolveCarColor(color)
+
+  // Shared subtitle — plate · brand model · year
+  const subtitle = (
+    <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+      {plate && <span>{plate}</span>}
+      {(brand || model) && plate && <span>·</span>}
+      {(brand || model) && (
+        <span>{[brand, model].filter(Boolean).join(' ')}</span>
+      )}
+      {year && (brand || model || plate) && <span>·</span>}
+      {year && <span>{year}</span>}
+    </div>
+  )
+
+  // Shared header — back / serif name / edit pencil
+  const header = (
+    <div className="flex items-center">
+      <BackButton />
+      <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+        {name}
+      </div>
+      {onEdit && <EditPencilButton onClick={onEdit} />}
+    </div>
+  )
+
+  /**
+   * Wrapping border in the car's color — replaces the previous left stripe +
+   * dashed echo. The hero card now reads like a framed photo: the car's color
+   * is the frame, contents stay neutral so numbers and text don't fight.
+   */
+  const FRAME_STYLE: React.CSSProperties = {
+    border: `2.5px solid ${swatch}`,
+    borderRadius: 24,
+  }
 
   if (isElectric) {
     return (
-      <div className="relative px-5 pt-[60px] pb-6 pl-[22px]">
-        <LeftAccent swatch={swatch} />
-        <div className="flex items-center">
-          <BackButton />
-          <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-            {name}
+      <div className="px-3 pt-[60px] pb-3">
+        <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
+          {header}
+          {subtitle}
+          <div className="flex items-baseline gap-7 mt-6">
+            <Stat label="本月" amount={monthAmount} accent={false} />
+            <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
+            <Stat label="累積" amount={totalAmount} accent />
           </div>
-          {onEdit && <EditPencilButton onClick={onEdit} />}
-        </div>
-        <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-          {plate && <span>{plate}</span>}
-          {(brand || model) && plate && <span>·</span>}
-          {(brand || model) && (
-            <span>{[brand, model].filter(Boolean).join(' ')}</span>
-          )}
-          {year && (brand || model || plate) && <span>·</span>}
-          {year && <span>{year}</span>}
-        </div>
-        <div className="flex items-baseline gap-7 mt-6">
-          <Stat label="本月" amount={monthAmount} accent={false} />
-          <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
-          <Stat label="累積" amount={totalAmount} accent />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="relative px-5 pt-[60px] pb-6 pl-[22px]">
-      <LeftAccent swatch={swatch} />
-      <div className="flex items-center">
-        <BackButton />
-        <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-          {name}
-        </div>
-        {onEdit && <EditPencilButton onClick={onEdit} />}
-      </div>
-      <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-        {plate && <span>{plate}</span>}
-        {(brand || model) && plate && <span>·</span>}
-        {(brand || model) && (
-          <span>{[brand, model].filter(Boolean).join(' ')}</span>
-        )}
-        {year && (brand || model || plate) && <span>·</span>}
-        {year && <span>{year}</span>}
-      </div>
+    <div className="px-3 pt-[60px] pb-3">
+      <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
+        {header}
+        {subtitle}
 
-      <div className="text-center mt-5 pb-1">
-        <div className="text-[10px] font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>平均油耗</div>
-        <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-          <span
-            className="text-[56px] font-semibold tabular-nums leading-none"
-            style={{ letterSpacing: '-2px', color: 'var(--ink)' }}
-          >
-            {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
-          </span>
-          <span className="text-[13px] font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
+        <div className="text-center mt-5 pb-1">
+          <div className="text-[10px] font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>平均油耗</div>
+          <div className="inline-flex items-baseline gap-1.5 mt-1.5">
+            <span
+              className="text-[56px] font-semibold tabular-nums leading-none"
+              style={{ letterSpacing: '-2px', color: 'var(--ink)' }}
+            >
+              {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
+            </span>
+            <span className="text-[13px] font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
+          </div>
+          <div className="text-[10px] font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
+            {avgEcon === null && fuelLogCount === 0
+              ? '加第一筆油看油耗'
+              : avgEcon === null
+              ? '需要至少 2 次加油記錄'
+              : '近 6 個月'}
+          </div>
         </div>
-        <div className="text-[10px] font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
-          {avgEcon === null && fuelLogCount === 0
-            ? '加第一筆油看油耗'
-            : avgEcon === null
-            ? '需要至少 2 次加油記錄'
-            : '近 6 個月'}
-        </div>
-      </div>
 
-      <div
-        className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
-        style={{ background: 'rgba(58,36,25,0.04)', border: '1px solid var(--hairline)' }}
-      >
-        <MiniStat label="本月" value={`NT$ ${monthAmount.toLocaleString()}`} />
-        <div style={{ width: 1, background: 'var(--hairline)' }} />
-        <MiniStat label="累積" value={`NT$ ${totalAmount.toLocaleString()}`} />
+        <div
+          className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
+          style={{ background: 'rgba(58,36,25,0.04)', border: '1px solid var(--hairline)' }}
+        >
+          <MiniStat label="本月" value={`NT$ ${monthAmount.toLocaleString()}`} />
+          <div style={{ width: 1, background: 'var(--hairline)' }} />
+          <MiniStat label="累積" value={`NT$ ${totalAmount.toLocaleString()}`} />
+        </div>
       </div>
     </div>
   )

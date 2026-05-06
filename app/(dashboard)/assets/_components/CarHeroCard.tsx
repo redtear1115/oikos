@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CarMark, FALLBACK_CAR_COLOR, isDarkColor } from './carColor'
+import { CarMark, isDarkColor, resolveCarColor } from './carColor'
 
 interface Props {
   id: string
@@ -75,7 +75,7 @@ export function CarHeroCard({
   avgFuelEcon,
   compact: _compact = false,
 }: Props) {
-  const swatch = color ?? FALLBACK_CAR_COLOR
+  const swatch = resolveCarColor(color)
 
   const subtitleParts: string[] = []
   if (year != null) subtitleParts.push(String(year))
