@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { CompactRow, type CompactRowProps } from '@/app/(dashboard)/dashboard/_components/CompactRow'
+import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { MonthSection } from '@/app/(dashboard)/records/_components/MonthSection'
 import { groupByMonth } from '@/lib/groupByMonth'
 import { loadMoreTransactions, type PagedTxnRow } from '@/actions/transaction'
@@ -221,7 +221,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
                 return (
                   <div key={tx.id} data-rt-id={tx.id}>
                     <CompactRow
-                      tx={tx as CompactRowProps['tx']}
+                      tx={tx}
                       isLast={i === g.items.length - 1}
                       onClick={() => onItemClick(tx)}
                     />

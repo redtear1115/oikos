@@ -154,7 +154,7 @@ export function RecordsList({ initial, pageSize }: Props) {
           background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)`,
         }}
       >
-        <CompactRow tx={{ ...tx, kind: 'transaction' }} isLast={false} onClick={() => handleItemClick(tx)} />
+        <CompactRow tx={tx} isLast={false} onClick={() => handleItemClick(tx)} />
       </div>
     )
   }

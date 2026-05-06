@@ -13,7 +13,7 @@ export interface CompactRowProps {
     category: string
     paidBy: string
     transactedAt: string
-    kind: 'transaction' | 'settlement'
+    kind: 'transaction' | 'settlement' | 'income'
   }
   isLast: boolean
   onClick?: () => void
@@ -26,6 +26,8 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const payerLabel = tx.kind === 'settlement'
     ? (payerIsViewer ? '我還款' : `${partner?.displayName ?? '對方'} 還款`)
+    : tx.kind === 'income'
+    ? (payerIsViewer ? '你收入' : `${partner?.displayName ?? '對方'} 收入`)
     : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
 
   // Delta is only meaningful for transactions. Settlements just transfer cash —
