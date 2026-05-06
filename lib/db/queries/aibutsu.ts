@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
-import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets } from '@/lib/db/schema'
+import { eq, and, isNull } from 'drizzle-orm'
 
 export interface ChildDetailsRow {
   birthday: string | null
@@ -98,6 +98,7 @@ export interface InsuranceDetailsRow {
   endsAt: string | null
   termYears: number | null
   sumInsured: number | null
+  vehicleId: string | null
 }
 
 export async function getInsuranceDetails(assetId: string): Promise<InsuranceDetailsRow | null> {
@@ -113,11 +114,23 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       endsAt: insuranceDetails.expiryDate,
       termYears: insuranceDetails.termYears,
       sumInsured: insuranceDetails.sumInsured,
+      vehicleId: insuranceDetails.vehicleId,
     })
     .from(insuranceDetails)
     .where(eq(insuranceDetails.assetId, assetId))
     .limit(1)
   return rows[0] ?? null
+}
+
+export async function getLinkedInsurancesForVehicle(vehicleId: string): Promise<{ id: string; name: string }[]> {
+  return db
+    .select({ id: assets.id, name: assets.name })
+    .from(assets)
+    .innerJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
+    .where(and(
+      eq(insuranceDetails.vehicleId, vehicleId),
+      isNull(assets.deletedAt),
+    ))
 }
 
 export interface HouseDetailsRow {

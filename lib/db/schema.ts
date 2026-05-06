@@ -170,6 +170,7 @@ export const insuranceDetails = pgTable('InsuranceDetails', {
   startsAt: date('starts_at'),
   termYears: integer('term_years'),
   sumInsured: integer('sum_insured'),
+  vehicleId: uuid('vehicle_id').references(() => assets.id),  // optional vehicle link (car insurance)
 })
 
 export const invoiceCredentials = pgTable('InvoiceCredentials', {

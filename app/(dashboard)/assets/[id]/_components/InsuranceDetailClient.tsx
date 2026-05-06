@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -25,11 +26,12 @@ interface Props {
   assetId: string
   name: string
   details: InsuranceDetailsRow | null
+  linkedVehicle?: { id: string; name: string } | null
   assetSheetInitial: AssetSheetInitial
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function InsuranceDetailClient({ assetId, name, details, assetSheetInitial, allAssets }: Props) {
+export function InsuranceDetailClient({ assetId, name, details, linkedVehicle, assetSheetInitial, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -113,6 +115,25 @@ export function InsuranceDetailClient({ assetId, name, details, assetSheetInitia
         <InfoRow label="保單起" value={details?.startsAt ?? ''} mono />
         <InfoRow label="保單迄" value={details?.endsAt ?? ''} mono last />
       </InfoCard>
+
+      {linkedVehicle && (
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+          <div className="px-5 py-4">
+            <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
+              關聯車輛
+            </div>
+            <Link
+              href={`/assets/${linkedVehicle.id}`}
+              className="flex items-center gap-3 text-sm font-medium"
+              style={{ color: 'var(--ink)' }}
+            >
+              <span>🚗</span>
+              <span>{linkedVehicle.name}</span>
+              <span style={{ color: 'var(--ink-3)', marginLeft: 'auto' }}>›</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
       <AddSheet

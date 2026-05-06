@@ -274,6 +274,24 @@ export interface PickerAsset {
   plate: string | null
 }
 
+export interface CarAsset {
+  id: string
+  name: string
+  plate: string | null
+}
+
+/**
+ * Returns all non-deleted car assets for the viewer's group.
+ * Used by the insurance form vehicle picker.
+ */
+export async function getCarAssets(): Promise<CarAsset[]> {
+  const { group } = await getViewerGroup()
+  const rows = await listAssetsForGroup(group.id)
+  return rows
+    .filter(r => r.type === 'car')
+    .map(r => ({ id: r.id, name: r.name, plate: r.plate }))
+}
+
 /**
  * Lightweight asset list for AssetPickerSheet — name + plate only, excludes
  * deleted assets (new transaction links can never point at zombies).
@@ -605,6 +623,7 @@ export interface CreateInsuranceInput {
   startsAt?: string | null
   endsAt?: string | null
   termYears?: number | null
+  vehicleId?: string | null
 }
 
 export interface EditInsuranceInput extends CreateInsuranceInput {
@@ -634,6 +653,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       expiryDate: validated.endsAt,
       termYears: validated.termYears,
       insuredType: 'user',
+      vehicleId: input.vehicleId ?? null,
     })
     return [asset]
   })
@@ -675,6 +695,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         expiryDate: validated.endsAt,
         termYears: validated.termYears,
         insuredType: 'user',
+        vehicleId: input.vehicleId ?? null,
       })
       .onConflictDoUpdate({
         target: insuranceDetails.assetId,
@@ -689,6 +710,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
           startsAt: validated.startsAt,
           expiryDate: validated.endsAt,
           termYears: validated.termYears,
+          vehicleId: input.vehicleId ?? null,
         },
       })
   })

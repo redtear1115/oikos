@@ -8,8 +8,8 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
-import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse } from '@/actions/asset'
-import type { EditChildInput, EditPetInput, EditInsuranceInput } from '@/actions/asset'
+import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets } from '@/actions/asset'
+import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
 const CAR_COLORS = [
@@ -76,6 +76,7 @@ export interface AssetSheetInitial {
   insStartsAt?: string | null
   insEndsAt?: string | null
   insTermYears?: number | null
+  insVehicleId?: string | null
   // House-specific
   houseAddress?: string | null
   housePurchasedAt?: string | null
@@ -165,6 +166,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [insStartsAt, setInsStartsAt] = useState('')
   const [insEndsAt, setInsEndsAt] = useState('')
   const [insTermYears, setInsTermYears] = useState('')
+  const [insVehicleId, setInsVehicleId] = useState<string | null>(null)
+  const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -236,6 +239,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setInsStartsAt(initial.insStartsAt ?? '')
         setInsEndsAt(initial.insEndsAt ?? '')
         setInsTermYears(initial.insTermYears?.toString() ?? '')
+        setInsVehicleId(initial.insVehicleId ?? null)
+        getCarAssets().then(setCarAssets).catch(() => {})
       }
     } else {
       setSelectedType('pet')
@@ -291,6 +296,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setInsStartsAt('')
       setInsEndsAt('')
       setInsTermYears('')
+      setInsVehicleId(null)
     }
     setShowCal(false)
     setError('')
@@ -388,6 +394,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             startsAt: insStartsAt || null,
             endsAt: insEndsAt || null,
             termYears: insTermYears ? parseInt(insTermYears, 10) : null,
+            vehicleId: insVehicleId || null,
           }
           if (isEdit) {
             await editInsurance({ id: initial!.id, ...payload })
@@ -505,6 +512,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setInsStartsAt('')
     setInsEndsAt('')
     setInsTermYears('')
+    setInsVehicleId(null)
+    if (t === 'insurance') {
+      getCarAssets().then(setCarAssets).catch(() => {})
+    }
   }
 
   const namePlaceholder = isCar ? '例：我的車'
@@ -1172,6 +1183,48 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   style={{ color: 'var(--ink)' }} />
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>年</span>
               </Field>
+
+              {carAssets.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 mt-2 px-1">
+                    <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>關聯車輛（選填）</div>
+                    <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+                  </div>
+                  <Field label="關聯車輛">
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setInsVehicleId(null)}
+                        className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                        style={{
+                          border: insVehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                          background: insVehicleId === null ? 'rgba(58,36,25,0.04)' : '#fff',
+                          color: insVehicleId === null ? 'var(--ink)' : 'var(--ink-2)',
+                          fontWeight: insVehicleId === null ? 600 : 500,
+                        }}
+                      >
+                        不關聯
+                      </button>
+                      {carAssets.map(car => (
+                        <button
+                          key={car.id}
+                          type="button"
+                          onClick={() => setInsVehicleId(car.id)}
+                          className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                          style={{
+                            border: insVehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                            background: insVehicleId === car.id ? 'rgba(58,36,25,0.04)' : '#fff',
+                            color: insVehicleId === car.id ? 'var(--ink)' : 'var(--ink-2)',
+                            fontWeight: insVehicleId === car.id ? 600 : 500,
+                          }}
+                        >
+                          {car.name}{car.plate ? ` · ${car.plate}` : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                </>
+              )}
             </>
           )}
 

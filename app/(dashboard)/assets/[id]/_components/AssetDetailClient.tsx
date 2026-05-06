@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
@@ -42,6 +43,7 @@ interface Props {
   initialFuelLogs: SerializedFuelLog[]
   pageSize: number
   allAssets: Array<{ id: string; name: string; type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' }>
+  linkedInsurances?: { id: string; name: string }[]
 }
 
 export function AssetDetailClient({
@@ -49,6 +51,7 @@ export function AssetDetailClient({
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
   initialTxns, initialFuelLogs, pageSize, allAssets,
+  linkedInsurances,
 }: Props) {
   const router = useRouter()
   const [editAssetOpen, setEditAssetOpen] = useState(false)
@@ -203,6 +206,32 @@ export function AssetDetailClient({
           return undefined
         }}
       />
+
+      {linkedInsurances && linkedInsurances.length > 0 && (
+        <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+          <div className="px-5 py-4">
+            <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
+              相關保險
+            </div>
+            {linkedInsurances.map((ins, i) => (
+              <Link
+                key={ins.id}
+                href={`/assets/${ins.id}`}
+                className="flex items-center gap-3 text-sm font-medium"
+                style={{
+                  color: 'var(--ink)',
+                  paddingTop: i > 0 ? 12 : 0,
+                  borderTop: i > 0 ? '1px solid var(--hairline)' : 'none',
+                }}
+              >
+                <span>🛡</span>
+                <span>{ins.name}</span>
+                <span style={{ color: 'var(--ink-3)', marginLeft: 'auto' }}>›</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Car detail FAB: 加油 (gas) / 其他花費 (electric) */}
       <BottomNav

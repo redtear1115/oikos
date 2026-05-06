@@ -12,7 +12,7 @@ import { PetDetailClient } from './_components/PetDetailClient'
 import { PlantDetailClient } from './_components/PlantDetailClient'
 import { InsuranceDetailClient } from './_components/InsuranceDetailClient'
 import { HouseDetailClient } from './_components/HouseDetailClient'
-import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails } from '@/lib/db/queries/aibutsu'
+import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import type { PagedTxnRow } from '@/actions/transaction'
 
@@ -186,6 +186,16 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   if (asset.type === 'insurance') {
     const insuranceDetailsData = await getInsuranceDetails(asset.id)
+
+    // Resolve linked vehicle name if vehicleId is set (allAssetsData already excludes deleted)
+    let linkedVehicle: { id: string; name: string } | null = null
+    if (insuranceDetailsData?.vehicleId) {
+      const vehicleAsset = allAssetsData.find(a => a.id === insuranceDetailsData.vehicleId)
+      if (vehicleAsset) {
+        linkedVehicle = { id: vehicleAsset.id, name: vehicleAsset.name }
+      }
+    }
+
     const assetSheetInitial: AssetSheetInitial = {
       id: asset.id,
       type: 'insurance',
@@ -200,23 +210,26 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       insStartsAt: insuranceDetailsData?.startsAt ?? null,
       insEndsAt: insuranceDetailsData?.endsAt ?? null,
       insTermYears: insuranceDetailsData?.termYears ?? null,
+      insVehicleId: insuranceDetailsData?.vehicleId ?? null,
     }
     return (
       <InsuranceDetailClient
         assetId={asset.id}
         name={asset.name}
         details={insuranceDetailsData}
+        linkedVehicle={linkedVehicle}
         assetSheetInitial={assetSheetInitial}
         allAssets={allAssets}
       />
     )
   }
 
-  const [summary, txnRows, fuelLogs, fuelStats] = await Promise.all([
+  const [summary, txnRows, fuelLogs, fuelStats, linkedInsurances] = await Promise.all([
     getAssetSummary(id, group.id),
     listTransactionsPagedForAsset(id, group.id, null, PAGE_SIZE),
     listFuelLogsWithPrev(id),
     fuelStatsForAsset(id),
+    getLinkedInsurancesForVehicle(id),
   ])
 
   const initialTxns = serializeTxns(txnRows)
@@ -239,6 +252,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   return (
     <AssetDetailClient
       assetId={asset.id}
+      linkedInsurances={linkedInsurances}
       assetSheetInitial={{
         id: asset.id,
         type: asset.type,
