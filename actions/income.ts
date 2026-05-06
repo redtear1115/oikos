@@ -78,23 +78,18 @@ export async function editIncome(input: EditIncomeInput): Promise<{ id: string }
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
-  // Verify the old row belongs to the viewer's group and is still active.
-  const [old] = await db
-    .select({ id: incomeTransactions.id })
-    .from(incomeTransactions)
-    .where(and(
-      eq(incomeTransactions.id, input.oldId),
-      eq(incomeTransactions.groupId, group.id),
-      isNull(incomeTransactions.deletedAt),
-    ))
-    .limit(1)
-  if (!old) throw new Error('找不到該筆進帳')
-
   const [created] = await db.transaction(async (tx) => {
-    await tx
+    const deleted = await tx
       .update(incomeTransactions)
       .set({ deletedAt: new Date() })
-      .where(eq(incomeTransactions.id, input.oldId))
+      .where(and(
+        eq(incomeTransactions.id, input.oldId),
+        eq(incomeTransactions.groupId, group.id),
+        isNull(incomeTransactions.deletedAt),
+      ))
+      .returning({ id: incomeTransactions.id })
+    if (deleted.length === 0) throw new Error('找不到該筆進帳')
+
     return await tx
       .insert(incomeTransactions)
       .values({

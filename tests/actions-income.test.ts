@@ -56,8 +56,7 @@ describe('createIncome', () => {
 describe('editIncome', () => {
   it('soft-deletes the old row + inserts a new one in a single transaction', async () => {
     queueDbResult([GROUP])
-    queueDbResult([{ id: 'old-1' }])  // old row lookup
-    queueDbResult([])                  // soft-delete update (no return value needed)
+    queueDbResult([{ id: 'old-1' }])  // in-tx soft-delete .returning()
     queueDbResult([{ id: 'new-1' }])  // new row insert
 
     await editIncome({
@@ -71,6 +70,18 @@ describe('editIncome', () => {
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     expect(mockDb.update).toHaveBeenCalled()  // soft delete
     expect(mockDb.insert).toHaveBeenCalled()  // new row
+  })
+
+  it('throws when oldId not found or already deleted', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])  // soft-delete returning is empty (row gone or wrong group)
+    await expect(editIncome({
+      oldId: 'gone',
+      amount: 1,
+      category: 'salary',
+      recipientId: 'user-a',
+      occurredAt: '2026-05-01',
+    })).rejects.toThrow(/找不到/)
   })
 })
 
