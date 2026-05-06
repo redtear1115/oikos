@@ -532,8 +532,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
           // Fix the sheet height so toggling between types (long form like 車/保險 vs short like 植物/房子)
           // doesn't make the sheet jump. Inner content scrolls when needed.

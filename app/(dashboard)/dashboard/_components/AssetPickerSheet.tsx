@@ -40,8 +40,8 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
         className="fixed left-1/2 bottom-0 z-[115] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
           maxHeight: '70dvh',
           transform: open ? 'translateY(0)' : 'translateY(100%)',

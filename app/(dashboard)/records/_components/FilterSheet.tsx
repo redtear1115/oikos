@@ -52,7 +52,7 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
     <>
       <SheetBackdrop open={open} onClick={onClose} />
       <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-[100] rounded-t-[20px] pb-6"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-[100] rounded-t-[24px] pb-6"
         style={{ background: 'var(--bg)', boxShadow: '0 -8px 32px rgba(0,0,0,0.12)' }}
       >
         {/* Header: 重設 / 篩選 / 套用 */}

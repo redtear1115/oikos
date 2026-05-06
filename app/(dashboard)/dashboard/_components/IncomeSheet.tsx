@@ -256,8 +256,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
         className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: P.sheetBg,
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           boxShadow: '0 -10px 40px rgba(58,36,25,0.18)',
           maxHeight: '92dvh',
           transform: open ? 'translateY(0)' : 'translateY(100%)',
