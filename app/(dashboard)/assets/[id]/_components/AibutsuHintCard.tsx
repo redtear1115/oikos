@@ -1,3 +1,5 @@
+'use client'
+
 type HintType = 'child' | 'pet' | 'plant' | 'house'
 
 type HintConfig = {
