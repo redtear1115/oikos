@@ -5,6 +5,7 @@ const TINTS = {
   pet:       { bg: '#F0E2D0', accent: '#9A6B3F' },
   plant:     { bg: '#DCE7D6', accent: '#5A7A4A' },
   insurance: { bg: '#DDE5DC', accent: '#5A7A66' },
+  house:     { bg: '#EFE3D0', accent: '#7A5A38' },
 } as const
 
 type TintKind = keyof typeof TINTS
