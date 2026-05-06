@@ -1,6 +1,6 @@
 export type IncomeCategoryId =
-  | 'labor' | 'investment' | 'rental' | 'interest'
-  | 'subsidy' | 'sale' | 'loan' | 'business' | 'other'
+  | 'salary' | 'bonus' | 'maturity' | 'claim'
+  | 'gift' | 'refund' | 'sidehustle' | 'other'
 
 export interface IncomeCategory {
   id: IncomeCategoryId
@@ -12,15 +12,14 @@ export interface IncomeCategory {
 }
 
 export const INCOME_CATEGORIES: IncomeCategory[] = [
-  { id: 'labor',      label: '勞務', mono: '勞', tint: '#F0EACA', ink: '#6A5820', chart: '#B09840' },
-  { id: 'investment', label: '投資', mono: '投', tint: '#D8EDD8', ink: '#2A5A2A', chart: '#5A9A5A' },
-  { id: 'rental',     label: '租金', mono: '租', tint: '#EDE0D0', ink: '#7A5030', chart: '#B08060' },
-  { id: 'interest',   label: '利息', mono: '息', tint: '#D0E5E8', ink: '#2A5A60', chart: '#5A9AA0' },
-  { id: 'subsidy',    label: '補助', mono: '補', tint: '#EAD8EC', ink: '#5A3870', chart: '#9878B0' },
-  { id: 'sale',       label: '售產', mono: '售', tint: '#D8E5F0', ink: '#2A4A6A', chart: '#5A80A8' },
-  { id: 'loan',       label: '借貸', mono: '貸', tint: '#DDD8EC', ink: '#3A3060', chart: '#7070A8' },
-  { id: 'business',   label: '業務', mono: '業', tint: '#F0E0CA', ink: '#7A4820', chart: '#C07840' },
-  { id: 'other',      label: '其他', mono: '他', tint: '#EDE3D7', ink: '#7A6A5A', chart: '#A8998A' },
+  { id: 'salary',     label: '薪水',     mono: '薪', tint: '#F2EAD3', ink: '#7A6A2E', chart: '#B8A85F' },
+  { id: 'bonus',      label: '獎金',     mono: '獎', tint: '#F4DEC2', ink: '#8A5A28', chart: '#C99464' },
+  { id: 'maturity',   label: '滿期還本', mono: '期', tint: '#E5E8D0', ink: '#5A6A38', chart: '#9AA864' },
+  { id: 'claim',      label: '保險理賠', mono: '賠', tint: '#DDE6DA', ink: '#3F6A56', chart: '#7AA48E' },
+  { id: 'gift',       label: '紅包禮金', mono: '紅', tint: '#F5E0DA', ink: '#8A4A40', chart: '#C97A6E' },
+  { id: 'refund',     label: '退稅',     mono: '退', tint: '#E8E2D8', ink: '#6A5A38', chart: '#A8997A' },
+  { id: 'sidehustle', label: '副業',     mono: '副', tint: '#E0E2E5', ink: '#4F5258', chart: '#85898F' },
+  { id: 'other',      label: '其他',     mono: '其', tint: '#EDE3D7', ink: '#7A6A5A', chart: '#A8998A' },
 ]
 
 const BY_ID = Object.fromEntries(INCOME_CATEGORIES.map(c => [c.id, c])) as Record<IncomeCategoryId, IncomeCategory>
@@ -34,5 +33,4 @@ export function isValidIncomeCategoryId(id: string): boolean {
   return id in BY_ID
 }
 
-// All income categories are user-pickable (no system-reserved equivalent of 'settle')
 export const PICKABLE_INCOME_CATEGORIES = INCOME_CATEGORIES

@@ -180,3 +180,16 @@ export const invoiceCredentials = pgTable('InvoiceCredentials', {
   verificationCodeEncrypted: text('verification_code_encrypted').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+export const incomeTransactions = pgTable('IncomeTransactions', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  recipientId: uuid('recipient_id').notNull().references(() => profiles.id),
+  amount: integer('amount').notNull(),
+  category: text('category').notNull(),
+  source: text('source'),
+  assetId: uuid('asset_id').references(() => assets.id),
+  occurredAt: date('occurred_at').notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})

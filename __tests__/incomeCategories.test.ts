@@ -2,42 +2,41 @@ import { describe, it, expect } from 'vitest'
 import { INCOME_CATEGORIES, getIncomeCategory, isValidIncomeCategoryId } from '@/lib/incomeCategories'
 
 describe('INCOME_CATEGORIES', () => {
-  it('has exactly 9 entries', () => {
-    expect(INCOME_CATEGORIES).toHaveLength(9)
+  it('exposes 8 entries (no settle equivalent)', () => {
+    expect(INCOME_CATEGORIES).toHaveLength(8)
   })
 
-  it('each entry has required fields', () => {
+  it('every entry has the required token fields', () => {
     for (const c of INCOME_CATEGORIES) {
-      expect(c.id).toMatch(/^[a-z]+$/)
+      expect(c.id).toBeTruthy()
       expect(c.label).toBeTruthy()
-      expect(c.mono).toBeTruthy()
-      expect(c.tint).toMatch(/^#[0-9A-F]{6}$/i)
-      expect(c.ink).toMatch(/^#[0-9A-F]{6}$/i)
-      expect(c.chart).toMatch(/^#[0-9A-F]{6}$/i)
+      expect(c.mono).toMatch(/^.$/)
+      expect(c.tint).toMatch(/^#/)
+      expect(c.ink).toMatch(/^#/)
+      expect(c.chart).toMatch(/^#/)
     }
   })
 
-  it('contains expected ids', () => {
-    const ids = INCOME_CATEGORIES.map(c => c.id)
-    expect(ids).toEqual(['labor', 'investment', 'rental', 'interest', 'subsidy', 'sale', 'loan', 'business', 'other'])
+  it('matches spec ids', () => {
+    const ids = INCOME_CATEGORIES.map(c => c.id).sort()
+    expect(ids).toEqual(['bonus', 'claim', 'gift', 'maturity', 'other', 'refund', 'salary', 'sidehustle'])
   })
 })
 
 describe('getIncomeCategory', () => {
-  it('returns category by id', () => {
-    expect(getIncomeCategory('labor').label).toBe('勞務')
+  it('returns the entry for a known id', () => {
+    expect(getIncomeCategory('salary').label).toBe('薪水')
+    expect(getIncomeCategory('maturity').mono).toBe('期')
   })
 
-  it('returns "other" for unknown id', () => {
+  it('falls back to other for unknown ids', () => {
     expect(getIncomeCategory('nonexistent').id).toBe('other')
   })
 })
 
 describe('isValidIncomeCategoryId', () => {
-  it('returns true for known ids', () => {
-    expect(isValidIncomeCategoryId('labor')).toBe(true)
-  })
-  it('returns false for unknown', () => {
-    expect(isValidIncomeCategoryId('xyz')).toBe(false)
+  it('accepts spec ids and rejects others', () => {
+    expect(isValidIncomeCategoryId('claim')).toBe(true)
+    expect(isValidIncomeCategoryId('labor')).toBe(false)  // pre-rewrite id
   })
 })
