@@ -6,6 +6,7 @@ import {
   validateSettlementInput,
   validateFuelLogInput,
   validateHouseInput,
+  validateIncomeInput,
 } from '@/lib/validators'
 
 describe('validateAmount', () => {
@@ -183,5 +184,56 @@ describe('validateHouseInput', () => {
 
   it('throws on non-positive purchasePrice', () => {
     expect(() => validateHouseInput({ name: '家', purchasePrice: 0 })).toThrow(/金額/)
+  })
+})
+
+describe('validateIncomeInput', () => {
+  const base = {
+    amount: 30000,
+    category: 'salary',
+    recipientId: '11111111-1111-1111-1111-111111111111',
+    occurredAt: '2026-05-01',
+  }
+
+  it('accepts a minimal valid input', () => {
+    const r = validateIncomeInput(base)
+    expect(r.amount).toBe(30000)
+    expect(r.category).toBe('salary')
+    expect(r.recipientId).toBe(base.recipientId)
+    expect(r.occurredAt).toBe('2026-05-01')
+    expect(r.assetId).toBeNull()
+    expect(r.source).toBeNull()
+  })
+
+  it('coerces unknown category to other', () => {
+    const r = validateIncomeInput({ ...base, category: 'nonexistent' })
+    expect(r.category).toBe('other')
+  })
+
+  it('rejects amount <= 0', () => {
+    expect(() => validateIncomeInput({ ...base, amount: 0 })).toThrow(/金額/)
+    expect(() => validateIncomeInput({ ...base, amount: -1 })).toThrow(/金額/)
+  })
+
+  it('rejects non-integer amount', () => {
+    expect(() => validateIncomeInput({ ...base, amount: 12.5 })).toThrow(/金額/)
+  })
+
+  it('trims source and treats empty as null', () => {
+    expect(validateIncomeInput({ ...base, source: '  五月薪水  ' }).source).toBe('五月薪水')
+    expect(validateIncomeInput({ ...base, source: '   ' }).source).toBeNull()
+  })
+
+  it('rejects source longer than 64 chars', () => {
+    expect(() => validateIncomeInput({ ...base, source: 'A'.repeat(65) })).toThrow(/備註/)
+  })
+
+  it('passes through assetId when provided', () => {
+    const id = '22222222-2222-2222-2222-222222222222'
+    expect(validateIncomeInput({ ...base, assetId: id }).assetId).toBe(id)
+  })
+
+  it('rejects bad date string', () => {
+    expect(() => validateIncomeInput({ ...base, occurredAt: 'not-a-date' })).toThrow(/日期/)
   })
 })

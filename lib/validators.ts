@@ -1,5 +1,6 @@
 import { isValidCategoryId, type CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
+import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 
 /**
  * Validates a positive integer NTD amount. Returns the value or throws.
@@ -632,4 +633,60 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   }
 
   return { name, kind, insured, insurer, policyNo, annualPremium, sumInsured, payCycle, startsAt, endsAt, termYears }
+}
+
+// ── Income ──────────────────────────────────────────────────────────────
+
+export interface IncomeInput {
+  amount: number
+  category: string
+  recipientId: string
+  occurredAt: string  // YYYY-MM-DD (local)
+  source?: string | null
+  assetId?: string | null
+}
+
+export interface ValidatedIncomeInput {
+  amount: number
+  category: string
+  recipientId: string
+  occurredAt: string
+  source: string | null
+  assetId: string | null
+}
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+export function validateIncomeInput(input: IncomeInput): ValidatedIncomeInput {
+  if (!Number.isInteger(input.amount) || input.amount <= 0) {
+    throw new Error('金額必須是正整數')
+  }
+
+  const category = isValidIncomeCategoryId(input.category) ? input.category : 'other'
+
+  const recipientId = input.recipientId?.trim()
+  if (!recipientId) throw new Error('收入歸屬不可空白')
+
+  const occurredAt = input.occurredAt?.trim()
+  if (!occurredAt || !ISO_DATE_RE.test(occurredAt)) {
+    throw new Error('日期格式錯誤')
+  }
+
+  let source: string | null = null
+  if (input.source !== undefined && input.source !== null) {
+    const s = input.source.trim()
+    if (s.length > 64) throw new Error('備註最長 64 字')
+    source = s.length > 0 ? s : null
+  }
+
+  const assetId = input.assetId?.trim() || null
+
+  return {
+    amount: input.amount,
+    category,
+    recipientId,
+    occurredAt,
+    source,
+    assetId,
+  }
 }
