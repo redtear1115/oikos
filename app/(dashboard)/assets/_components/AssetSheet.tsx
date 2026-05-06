@@ -8,7 +8,7 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
-import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance } from '@/actions/asset'
+import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse } from '@/actions/asset'
 import type { EditChildInput, EditPetInput, EditInsuranceInput } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
@@ -76,6 +76,10 @@ export interface AssetSheetInitial {
   insStartsAt?: string | null
   insEndsAt?: string | null
   insTermYears?: number | null
+  // House-specific
+  houseAddress?: string | null
+  housePurchasedAt?: string | null
+  housePurchasePrice?: number | null
 }
 
 interface Props {
@@ -85,13 +89,14 @@ interface Props {
   onMutated?: (kind: 'saved' | 'deleted') => void
 }
 
-type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance'
+type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance' | 'house'
 
 const TYPE_OPTIONS: { value: PickerType; label: string }[] = [
   { value: 'car',       label: '車' },
   { value: 'child',     label: '孩子' },
   { value: 'pet',       label: '寵物' },
   { value: 'plant',     label: '植物' },
+  { value: 'house',     label: '房子' },
   { value: 'insurance', label: '保險' },
 ]
 
@@ -137,6 +142,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [plantSproutedAt, setPlantSproutedAt] = useState('')
   const [plantCost, setPlantCost] = useState('')
   const [plantWaterEvery, setPlantWaterEvery] = useState<number | null>(7)
+  // house-only fields
+  const [houseAddress, setHouseAddress] = useState('')
+  const [housePurchasedAt, setHousePurchasedAt] = useState('')
+  const [housePurchasePrice, setHousePurchasePrice] = useState('')
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
@@ -198,6 +207,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setPlantCost(initial.plantCost?.toString() ?? '')
         setPlantWaterEvery(initial.plantWaterEvery ?? 7)
       }
+      if (initial.type === 'house') {
+        setHouseAddress(initial.houseAddress ?? '')
+        setHousePurchasedAt(initial.housePurchasedAt ?? '')
+        setHousePurchasePrice(initial.housePurchasePrice?.toString() ?? '')
+      }
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
@@ -249,6 +263,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setPlantSproutedAt('')
       setPlantCost('')
       setPlantWaterEvery(7)
+      // House resets
+      setHouseAddress('')
+      setHousePurchasedAt('')
+      setHousePurchasePrice('')
       // Insurance resets
       setInsKind('medical')
       setInsInsured('')
@@ -377,8 +395,20 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           } else {
             await createPlant(payload)
           }
+        } else if (selectedType === 'house') {
+          const payload = {
+            name: name.trim(),
+            address: houseAddress.trim() || null,
+            purchasedAt: housePurchasedAt || null,
+            purchasePrice: housePurchasePrice ? parseInt(housePurchasePrice, 10) : null,
+          }
+          if (isEdit) {
+            await editHouse({ id: initial!.id, ...payload })
+          } else {
+            await createHouse(payload)
+          }
         } else {
-          // fallback (e.g. house) — generic life entity edit only
+          // fallback for unknown future types — edit name only
           if (isEdit) {
             await editLifeEntity({ id: initial!.id, name: name.trim() })
           }
@@ -412,6 +442,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     : selectedType === 'child' ? '例：小明'
     : selectedType === 'pet' ? '例：米嚕'
     : selectedType === 'plant' ? '例：陽台上的植物們'
+    : selectedType === 'house' ? '例：我們家'
     : '例：南山醫療終身險'
 
   return (
@@ -500,6 +531,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       setPlantSproutedAt('')
                       setPlantCost('')
                       setPlantWaterEvery(7)
+                      // House resets
+                      setHouseAddress('')
+                      setHousePurchasedAt('')
+                      setHousePurchasePrice('')
                       // Insurance resets
                       setInsKind('medical')
                       setInsInsured('')
@@ -922,6 +957,58 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
             </>
+          )}
+
+          {selectedType === 'house' && (
+            <div className="flex flex-col gap-3 px-5 pb-2">
+              {/* Address */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>地址</label>
+                <input
+                  type="text"
+                  placeholder="例：台北市大安區某路1號"
+                  value={houseAddress}
+                  onChange={e => setHouseAddress(e.target.value)}
+                  maxLength={80}
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+                  style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}
+                />
+              </div>
+
+              {/* Purchase date */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入日期</label>
+                <button
+                  type="button"
+                  onClick={() => setShowCal(c => !c)}
+                  className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
+                  style={{ background: 'var(--surface)', color: housePurchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--border)' }}
+                >
+                  <span>{housePurchasedAt ? dateLabel(housePurchasedAt) : '選擇日期'}</span>
+                  <CalIcon size={16} />
+                </button>
+                {showCal && (
+                  <MiniCalendar
+                    value={housePurchasedAt || localTodayISO()}
+                    onChange={d => { setHousePurchasedAt(d); setShowCal(false) }}
+                  />
+                )}
+              </div>
+
+              {/* Purchase price */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入金額</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="例：15000000"
+                  value={housePurchasePrice}
+                  onChange={e => setHousePurchasePrice(e.target.value)}
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none"
+                  style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}
+                />
+              </div>
+            </div>
           )}
 
           {selectedType === 'insurance' && (
