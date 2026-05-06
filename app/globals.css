@@ -48,15 +48,15 @@
   --font-sans: var(--font-noto-tc);
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
-  /* Map fs tokens → Tailwind text-* utilities */
-  --text-micro:     var(--fs-micro);
-  --text-label:     var(--fs-label);
-  --text-body:      var(--fs-body);
-  --text-button:    var(--fs-button);
-  --text-title:     var(--fs-title);
-  --text-page:      var(--fs-page);
-  --text-amount-md: var(--fs-amount-md);
-  --text-amount-lg: var(--fs-amount-lg);
+  /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()) */
+  --text-micro:     11px;
+  --text-label:     13px;
+  --text-body:      15px;
+  --text-button:    16px;
+  --text-title:     22px;
+  --text-page:      26px;
+  --text-amount-md: 44px;
+  --text-amount-lg: 56px;
 }
 
 html, body { margin: 0; padding: 0; background: var(--bg-page); }
