@@ -1,7 +1,23 @@
 # IncomeSheet 設計 spec（Phase 2 保險前置）
 
 > 目標：lock 2026-05-04 與設計師完成的 IncomeSheet hi-fi 設計探索結論，作為未來實作 IncomeTransactions + Phase 2 保險時的依據。
-> 優先級：P2 Slice 5（保險）前置；本 spec 只 lock 設計，**不在此 ship 程式**。
+> 優先級：P2 Slice 5（保險）前置。
+
+## 實作狀態（2026-05-06）
+
+| 部分 | 狀態 | 位置 |
+|---|---|---|
+| `IncomeTransactions` schema + RLS + Realtime + pg_cron | ✅ shipped to dev + prod | [drizzle/0012_income_transactions.sql](../../../drizzle/0012_income_transactions.sql) · [lib/db/schema.ts](../../../lib/db/schema.ts) → `incomeTransactions` |
+| `INCOME_CATEGORIES` + `INCOME_PALETTES` token | ✅ | [lib/incomeCategories.ts](../../../lib/incomeCategories.ts) · [lib/incomePalettes.ts](../../../lib/incomePalettes.ts) |
+| Validators / Server actions / Queries | ✅ | [lib/validators.ts](../../../lib/validators.ts) → `validateIncomeInput` · [actions/income.ts](../../../actions/income.ts) · [lib/db/queries/incomes.ts](../../../lib/db/queries/incomes.ts) · [lib/db/queries/transactions.ts](../../../lib/db/queries/transactions.ts) → `listFeedAllPaged` |
+| IncomeSheet UI 元件 | ⬜ Phase 3 of plan |
+| Dashboard mode toggle（支出 / 進帳） | ⬜ Phase 4 of plan |
+| Records 分 tab（全部 / 支出 / 進帳） | ⬜ Phase 5 of plan |
+| Realtime IncomeTxns events | ⬜ Phase 6 of plan |
+| Constellation+halo empty state | ⬜ Phase 7 of plan |
+| Insurance ↔ Vehicle 關聯 | ⬜ Phase 8 of plan |
+
+剩餘的 UI / realtime / vehicle linkage 工作詳見 `docs/superpowers/plans/2026-05-06-slice-5-insurance.md`（plan 是 untracked 草稿，不進 git；參照 commit 訊息回溯）。
 
 ---
 
@@ -180,8 +196,8 @@ export const incomeTransactions = pgTable('IncomeTransactions', {
 
 - **排在 Phase 2 Slice 5（保險）一起 ship**：IncomeSheet + 保險詳情頁是耦合 feature
 - **時間 budget**：4-5 年內第一張儲蓄險滿期前必須上線；保險 slice 預計 2026 下半年 ~ 2027 上半年
-- **前置完成**：Slice 1（車）✅ Slice 2（FuelLog）✅ Slice 3（Child/Pet/Plant）🔄 — 完成後才進入保險 slice
-- **不能提前**：本 spec 不應在 Phase 2 Slice 1-4 完成前實作
+- **前置完成**：Slice 1（車）✅ Slice 2（FuelLog）✅ Slice 3（Child/Pet/Plant）✅ Slice 4（House）✅
+- **目前狀態**：Slice 5 backend 已 ship（2026-05-06），UI 待續做（plan Phases 3-9）
 
 ---
 

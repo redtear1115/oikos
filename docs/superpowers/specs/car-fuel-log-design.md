@@ -37,9 +37,9 @@
 | 設計項目 | 對應 mockup | 狀態 |
 |---|---|---|
 | Asset marks 系統（line/glyph/badge × 4 types 完整版） | asset-marks.jsx / v2 | ⬜ 目前各 type 有 icon，mark system 未完整 |
-| Car hero 用 `car.color` 動態上色 | car-screens.jsx | ⬜ carDetails 有 color 欄位但 hero tinting 未實作 |
+| Car hero 用 `car.color` 動態上色 | car-screens.jsx | ✅ 2026-05-06 — 環繞色框 + DB 改存 hex（migration 0013）|
 | AssetPickerSheet 視覺分組（inline 分區，chat4 推薦） | asset-picker.jsx | ⬜ 仍 flat list |
-| House entity | asset-list.jsx | ⬜ Slice 4 |
+| House entity | asset-list.jsx | ✅ Slice 4 完成 2026-05-06 |
 
 ---
 

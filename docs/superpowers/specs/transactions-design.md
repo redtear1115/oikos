@@ -105,11 +105,13 @@
 
 ### 設計師待補
 
-1. 雙色 heart icon SVG（空狀態）
-2. Futari logo SVG（目前 placeholder）
-3. 醫療 / 家居 / 禮物 / 其他 4 個 category 的精確色票
-4. 完整 design tokens（hover、disabled、shadow、radius、spacing）
-5. PWA icon set（512×512、192×192、maskable）
+| # | 項目 | 狀態 |
+|---|---|---|
+| 1 | 雙色 heart icon SVG（空狀態） | ✅ FutariMark 已 ship |
+| 2 | Futari logo SVG | ✅ 已 ship |
+| 3 | 醫療 / 家居 / 禮物 / 其他 4 個 category 色票 | ✅ 已收進 [lib/categories.ts](../../../lib/categories.ts) |
+| 4 | 完整 design tokens（hover、disabled、shadow、radius、spacing） | 🔄 部分定 token，部分 raw value 散落（見 CLAUDE.md → Design Debt P3-1 / P4-3）|
+| 5 | PWA icon set（512×512、192×192、maskable） | ✅ 已交付 + 上架（`public/icons/`、`public/og-image.png`、`app/favicon.ico`）|
 
 ---
 
