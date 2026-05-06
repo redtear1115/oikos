@@ -311,49 +311,19 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             記一筆進帳
           </div>
 
-          {isEdit ? (
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={pending}
-              className="bg-transparent border-0 text-[15px] cursor-pointer p-1 disabled:opacity-50"
-              style={{ color: 'var(--destructive)', fontFamily: 'inherit' }}
-            >
-              刪除
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!amount || pending}
-              className="bg-transparent border-0 text-[15px] font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
-              style={{
-                color: amount && !pending ? P.ink : 'var(--ink-3)',
-                fontFamily: 'inherit',
-              }}
-            >
-              {pending ? '儲存中…' : '儲存'}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!amount || pending}
+            className="bg-transparent border-0 text-[15px] font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
+            style={{
+              color: amount && !pending ? P.ink : 'var(--ink-3)',
+              fontFamily: 'inherit',
+            }}
+          >
+            {pending ? '儲存中…' : '儲存'}
+          </button>
         </div>
-
-        {/* Edit mode: show Save button in a separate row */}
-        {isEdit && (
-          <div className="flex justify-end px-5 pb-1">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!amount || pending}
-              className="bg-transparent border-0 text-[15px] font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
-              style={{
-                color: amount && !pending ? P.ink : 'var(--ink-3)',
-                fontFamily: 'inherit',
-              }}
-            >
-              {pending ? '儲存中…' : '儲存'}
-            </button>
-          </div>
-        )}
 
         <div className="overflow-auto flex-1">
           {/* Amount stage */}
@@ -639,6 +609,21 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             </div>
             <DateField value={date} onChange={setDate} open={open} />
           </div>
+
+          {/* Delete affordance — edit mode only */}
+          {isEdit && (
+            <div className="px-5 pt-2 pb-5 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={pending}
+                className="text-sm cursor-pointer bg-transparent border-0"
+                style={{ color: 'var(--destructive)' }}
+              >
+                刪除這筆進帳
+              </button>
+            </div>
+          )}
 
           {/* Error display */}
           {error && (
