@@ -12,6 +12,7 @@ import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
 import type { HouseDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
+import { AibutsuHintCard } from './AibutsuHintCard'
 
 interface AssetSummary {
   monthAmount: number
@@ -88,7 +89,7 @@ export function HouseDetailClient({ assetId, name, details, summary, assetSheetI
         loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
-        emptyState={<div className="text-center py-10 px-6 text-sm" style={{ color: 'var(--ink-3)' }}>還沒有任何花費</div>}
+        emptyState={<AibutsuHintCard type="house" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-[11px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             時間軸 · {count} 筆
