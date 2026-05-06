@@ -89,7 +89,7 @@ export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419
               className="w-full flex items-center gap-2 px-3 py-2 text-left bg-transparent border-0 cursor-pointer hover:bg-[rgba(58,36,25,0.04)]"
             >
               <span
-                className="text-[10px] tracking-[0.5px] shrink-0 px-1.5 py-0.5 rounded"
+                className="text-micro tracking-[0.5px] shrink-0 px-1.5 py-0.5 rounded"
                 style={{ background: 'rgba(58,36,25,0.06)', color: 'var(--ink-3)' }}
               >
                 {TYPE_LABELS[a.type]}

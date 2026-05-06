@@ -152,13 +152,13 @@ export function BalanceHero({
                     color: 'var(--ink)',
                     opacity: fading ? 0 : 1,
                   }}>
-                  <span className="text-[22px] font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
+                  <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
                   {amount.toLocaleString('en-US')}
                 </div>
               </div>
               {canSettle && (
                 <div
-                  className="self-center text-[22px] transition-transform duration-200"
+                  className="self-center text-title transition-transform duration-200"
                   style={{
                     color: 'var(--ink-3)',
                     transform: settleOpen ? 'rotate(180deg)' : 'rotate(0deg)',

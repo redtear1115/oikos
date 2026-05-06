@@ -47,13 +47,13 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
       }}
     >
       <p
-        className="text-[11px] font-semibold mb-[5px]"
+        className="text-micro font-semibold mb-[5px]"
         style={{ color: cfg.accentColor, letterSpacing: '0.3px' }}
       >
         ✦ 可以記什麼？
       </p>
       <p
-        className="text-[11px] mb-[10px]"
+        className="text-micro mb-[10px]"
         style={{ color: 'var(--ink-2)', lineHeight: 1.9 }}
       >
         {cfg.items}
@@ -61,7 +61,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
       <button
         type="button"
         onClick={onCtaPress}
-        className="w-full h-9 rounded-[10px] text-[12px] font-semibold text-white cursor-pointer"
+        className="w-full h-9 rounded-[10px] text-label font-semibold text-white cursor-pointer"
         style={{
           background: 'var(--accent)',
           boxShadow: '0 2px 6px rgba(224,136,86,0.3)',

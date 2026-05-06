@@ -35,13 +35,13 @@ export function AssetListItem({ id, type, name, plate, monthAmount, isLast }: Pr
         <AssetIcon type={type} size={22} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[15px] font-semibold truncate">{name}</div>
+        <div className="text-body font-semibold truncate">{name}</div>
         <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>
           {subtitle}
         </div>
       </div>
       <div className="text-right shrink-0 ml-2">
-        <div className="text-[11px] tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
+        <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
         <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
           NT${monthAmount.toLocaleString('en-US')}
         </div>

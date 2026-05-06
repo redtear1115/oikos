@@ -29,7 +29,7 @@ export function PrimaryUserToggle({ value, onChange }: PrimaryUserToggleProps) {
           key={opt.v ?? 'shared'}
           type="button"
           onClick={() => onChange(opt.v)}
-          className={`flex-1 h-9 rounded-lg text-[13px] font-medium transition-colors ${
+          className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
             value === opt.v
               ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
               : 'bg-transparent text-[var(--ink-2)]'

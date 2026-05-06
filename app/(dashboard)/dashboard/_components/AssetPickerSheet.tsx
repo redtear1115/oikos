@@ -54,7 +54,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button onClick={onClose} className="bg-transparent border-0 text-[15px] cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
+          <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
             取消
           </button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
@@ -127,12 +127,12 @@ function PickerRow({
         {iconNode}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[15px] font-medium truncate" style={{ color: 'var(--ink)' }}>{title}</div>
+        <div className="text-body font-medium truncate" style={{ color: 'var(--ink)' }}>{title}</div>
         {subtitle && (
           <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>{subtitle}</div>
         )}
       </div>
-      {selected && <span className="text-[15px]" style={{ color: 'var(--ink)' }}>✓</span>}
+      {selected && <span className="text-body" style={{ color: 'var(--ink)' }}>✓</span>}
     </button>
   )
 }

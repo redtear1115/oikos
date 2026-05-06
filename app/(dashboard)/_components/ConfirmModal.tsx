@@ -50,7 +50,7 @@ export function ConfirmModal({
         }}
       >
         <h2
-          className="text-[18px] mb-2 leading-tight"
+          className="text-button mb-2 leading-tight"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
           {title}

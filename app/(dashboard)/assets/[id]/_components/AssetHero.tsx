@@ -115,17 +115,17 @@ export function AssetHero({
         {subtitle}
 
         <div className="text-center mt-5 pb-1">
-          <div className="text-[10px] font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>平均油耗</div>
+          <div className="text-micro font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>平均油耗</div>
           <div className="inline-flex items-baseline gap-1.5 mt-1.5">
             <span
-              className="text-[56px] font-semibold tabular-nums leading-none"
+              className="text-amount-lg font-semibold tabular-nums leading-none"
               style={{ letterSpacing: '-2px', color: 'var(--ink)' }}
             >
               {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
             </span>
-            <span className="text-[13px] font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
+            <span className="text-label font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
           </div>
-          <div className="text-[10px] font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
+          <div className="text-micro font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
             {avgEcon === null && fuelLogCount === 0
               ? '加第一筆油看油耗'
               : avgEcon === null
@@ -151,7 +151,7 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
   const dim = amount === 0
   return (
     <div>
-      <div className="text-[11px] tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-micro tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
       <div
         className="tnum tracking-[-1px] leading-none"
         style={{
@@ -171,8 +171,8 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1">
-      <div className="text-[9px] font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
-      <div className="text-[16px] font-semibold tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
+      <div className="text-micro font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-button font-semibold tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
     </div>
   )
 }

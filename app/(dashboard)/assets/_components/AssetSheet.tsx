@@ -550,7 +550,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button onClick={onClose} className="bg-transparent border-0 text-[15px] cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
+          <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
             取消
           </button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
@@ -559,7 +559,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           <button
             onClick={handleSave}
             disabled={!canSave}
-            className="bg-transparent border-0 text-[15px] font-semibold p-1 cursor-pointer disabled:cursor-default"
+            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
             style={{ color: canSave ? 'var(--accent)' : 'var(--ink-3)' }}
           >
             {pending ? '儲存中…' : '儲存'}
@@ -586,7 +586,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       }}
                     >
                       <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
-                      <span className="text-[11px] font-medium">{opt.label}</span>
+                      <span className="text-micro font-medium">{opt.label}</span>
                     </button>
                   )
                 })}
@@ -602,8 +602,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                     border: showSecondaryRow ? '1px solid var(--ink)' : '1px solid transparent',
                   }}
                 >
-                  <span className="text-[18px] leading-[20px] font-semibold tracking-[1px]" aria-hidden="true">⋯</span>
-                  <span className="text-[11px] font-medium">更多</span>
+                  <span className="text-button leading-[20px] font-semibold tracking-[1px]" aria-hidden="true">⋯</span>
+                  <span className="text-micro font-medium">更多</span>
                 </button>
               </div>
 
@@ -628,7 +628,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                         }}
                       >
                         <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
-                        <span className="text-[11px] font-medium">{opt.label}</span>
+                        <span className="text-micro font-medium">{opt.label}</span>
                       </button>
                     )
                   })}
@@ -676,7 +676,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   <button
                     type="button"
                     onClick={() => setColor(null)}
-                    className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-[10px]"
+                    className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-micro"
                     style={{
                       border: color === null ? '3px solid var(--ink)' : '1.5px solid var(--hairline)',
                       background: 'transparent',
@@ -825,7 +825,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身分證件</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身分證件</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
@@ -845,7 +845,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 <div className="flex gap-1.5">
                   {(['A', 'B', 'O', 'AB'] as const).map(b => (
                     <button key={b} type="button" onClick={() => setChildBloodType(b)}
-                      className="flex-1 h-9 rounded-[10px] text-[13px] font-semibold"
+                      className="flex-1 h-9 rounded-[10px] text-label font-semibold"
                       style={{
                         border: childBloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                         background: childBloodType === b ? 'rgba(58,36,25,0.04)' : '#fff',
@@ -863,7 +863,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身體紀錄（可之後補）</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身體紀錄（可之後補）</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
@@ -896,7 +896,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 <div className="flex flex-wrap gap-1.5">
                   {[{v: 'cat', label: '貓'},{v: 'dog', label: '狗'},{v: 'rabbit', label: '兔'},{v: 'bird', label: '鳥'},{v: 'fish', label: '魚'},{v: 'other', label: '其他'}].map(o => (
                     <button key={o.v} type="button" onClick={() => setPetSpecies(o.v)}
-                      className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                      className="h-[34px] px-[14px] rounded-[10px] text-label"
                       style={{
                         border: petSpecies === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                         background: petSpecies === o.v ? 'rgba(58,36,25,0.04)' : '#fff',
@@ -957,7 +957,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>健康 / 證件</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>健康 / 證件</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
@@ -1014,7 +1014,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </div>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>照顧週期</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>照顧週期</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
@@ -1022,7 +1022,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 <div className="flex gap-1.5">
                   {[2, 3, 7, 14, 30].map(d => (
                     <button key={d} type="button" onClick={() => setPlantWaterEvery(d)}
-                      className="flex-1 h-10 rounded-[10px] text-[13px] font-semibold"
+                      className="flex-1 h-10 rounded-[10px] text-label font-semibold"
                       style={{
                         border: plantWaterEvery === d ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                         background: plantWaterEvery === d ? 'rgba(58,36,25,0.04)' : '#fff',
@@ -1040,7 +1040,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             <div className="flex flex-col gap-3 px-5 pb-2">
               {/* Address */}
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>地址</label>
+                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>地址</label>
                 <input
                   type="text"
                   placeholder="例：台北市大安區某路1號"
@@ -1054,7 +1054,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
               {/* Purchase date */}
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入日期</label>
+                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入日期</label>
                 <button
                   type="button"
                   onClick={() => setShowCal(c => !c)}
@@ -1074,7 +1074,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
               {/* Purchase price */}
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入金額</label>
+                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入金額</label>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -1094,7 +1094,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 <div className="flex flex-wrap gap-1.5">
                   {[{v:'medical',label:'醫療'},{v:'life',label:'壽險'},{v:'accident',label:'意外'},{v:'cancer',label:'癌症'},{v:'illness',label:'重大傷病'},{v:'car',label:'汽車'}].map(o => (
                     <button key={o.v} type="button" onClick={() => setInsKind(o.v)}
-                      className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                      className="h-[34px] px-[14px] rounded-[10px] text-label"
                       style={{
                         border: insKind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                         background: insKind === o.v ? 'rgba(58,36,25,0.04)' : '#fff',
@@ -1124,7 +1124,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>保費與保額</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>保費與保額</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
@@ -1160,7 +1160,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>合約期間</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>合約期間</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
@@ -1187,7 +1187,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               {carAssets.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mt-2 px-1">
-                    <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>關聯車輛（選填）</div>
+                    <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>關聯車輛（選填）</div>
                     <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
                   </div>
                   <Field label="關聯車輛">
@@ -1195,7 +1195,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       <button
                         type="button"
                         onClick={() => setInsVehicleId(null)}
-                        className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                        className="h-[34px] px-[14px] rounded-[10px] text-label"
                         style={{
                           border: insVehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                           background: insVehicleId === null ? 'rgba(58,36,25,0.04)' : '#fff',
@@ -1210,7 +1210,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                           key={car.id}
                           type="button"
                           onClick={() => setInsVehicleId(car.id)}
-                          className="h-[34px] px-[14px] rounded-[10px] text-[13px]"
+                          className="h-[34px] px-[14px] rounded-[10px] text-label"
                           style={{
                             border: insVehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                             background: insVehicleId === car.id ? 'rgba(58,36,25,0.04)' : '#fff',

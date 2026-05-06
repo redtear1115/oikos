@@ -22,7 +22,7 @@ export function FuelTypeButtonGroup({ value, onChange }: FuelTypeButtonGroupProp
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`flex-1 h-9 rounded-lg text-[13px] font-medium transition-colors ${
+          className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
             value === opt.value
               ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
               : 'bg-transparent text-[var(--ink-2)]'

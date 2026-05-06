@@ -84,7 +84,7 @@ function NavTab({ tab, active }: { tab: typeof TABS[number]; active: boolean }) 
     <Link href={tab.href} className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
-      <span className="text-[10px] tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
+      <span className="text-micro tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
         {tab.label}
       </span>
     </Link>

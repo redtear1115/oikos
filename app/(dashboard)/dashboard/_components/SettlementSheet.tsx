@@ -110,13 +110,13 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button onClick={onClose}
-            className="bg-transparent border-0 text-[15px] cursor-pointer p-1"
+            className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)' }}>取消</button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
             編輯還款
           </div>
           <button onClick={handleSave} disabled={!amount || pending}
-            className="bg-transparent border-0 text-[15px] font-semibold p-1 cursor-pointer disabled:cursor-default"
+            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
             style={{ color: amount && !pending ? 'var(--accent)' : 'var(--ink-3)' }}>
             {pending ? '儲存中…' : '儲存'}
           </button>
@@ -138,7 +138,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
                 el.select()
               }}
             >
-              <span className="text-[22px] font-medium"
+              <span className="text-title font-medium"
                 style={{ color: amount ? 'var(--ink-2)' : 'var(--ink-3)' }}>NT$</span>
               <input
                 ref={amountInputRef}
@@ -178,7 +178,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
               <CalIcon />
               <div className="flex-1 text-left">
-                <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
+                <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>
                   {dateLabel(date)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>

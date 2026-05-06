@@ -218,10 +218,10 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             </svg>
           </button>
           <div className="flex-1">
-            <div className="text-[20px] font-medium text-[var(--ink)]" style={{ fontFamily: 'var(--font-serif)' }}>
+            <div className="text-title font-medium text-[var(--ink)]" style={{ fontFamily: 'var(--font-serif)' }}>
               {mode === 'edit' ? '編輯加油記錄' : '加油記錄'}
             </div>
-            <div className="text-[11px] text-[var(--ink-3)]">{car.name} · {car.plate}</div>
+            <div className="text-micro text-[var(--ink-3)]">{car.name} · {car.plate}</div>
           </div>
           {mode === 'edit' && (
             <button
@@ -231,7 +231,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               style={{ background: 'rgba(58,36,25,0.06)' }}
               aria-label="刪除"
             >
-              <span className="text-[18px] leading-none text-[var(--ink)]">⋯</span>
+              <span className="text-button leading-none text-[var(--ink)]">⋯</span>
             </button>
           )}
         </div>
@@ -241,15 +241,15 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           className="mx-4 mt-1 p-5 rounded-[18px] text-center shrink-0"
           style={{ background: 'linear-gradient(180deg, #F1ECE0 0%, #E8E4D8 100%)' }}
         >
-          <div className="text-[10px] text-[#8A7B5A] tracking-[1.4px] font-mono uppercase">本次油耗</div>
+          <div className="text-micro text-[#8A7B5A] tracking-[1.4px] font-mono uppercase">本次油耗</div>
           <div className="mt-1.5 inline-flex items-baseline gap-1.5">
             <span
-              className="text-[56px] font-semibold text-[#3A2419] leading-none tabular-nums"
+              className="text-amount-lg font-semibold text-[#3A2419] leading-none tabular-nums"
               style={{ letterSpacing: '-1.5px' }}
             >{econ}</span>
-            <span className="text-[13px] text-[#8A7B5A] font-medium">km/L</span>
+            <span className="text-label text-[#8A7B5A] font-medium">km/L</span>
           </div>
-          <div className="mt-1.5 text-[10px] text-[#8A7B5A] font-mono">
+          <div className="mt-1.5 text-micro text-[#8A7B5A] font-mono">
             {lastOdometer === null
               ? '第一次加油 · 之後才能算油耗'
               : dist !== null && dist > 0
@@ -273,7 +273,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               inputMode="decimal"
               step="0.01"
               placeholder="0.00"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-[15px] outline-none"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body outline-none"
               style={{ color: 'var(--ink)' }}
             />
           </FormRow>
@@ -289,7 +289,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               type="number"
               inputMode="numeric"
               placeholder="0"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-[15px] outline-none"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body outline-none"
               style={{ color: 'var(--ink)' }}
             />
           </FormRow>
@@ -301,7 +301,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               type="number"
               inputMode="numeric"
               placeholder="0"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-[15px] outline-none"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body outline-none"
               style={{ color: 'var(--ink)' }}
             />
           </FormRow>
@@ -310,7 +310,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             <button
               type="button"
               onClick={() => setShowCal(v => !v)}
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-[15px] text-left flex items-center"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body text-left flex items-center"
               style={{ color: 'var(--ink)' }}
             >
               {date || '選擇日期'}
@@ -328,7 +328,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           {/* 分攤方式 — only when there's a partner */}
           {partner && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] text-[var(--ink-2)] tracking-[0.4px]">分攤方式</span>
+              <span className="text-micro text-[var(--ink-2)] tracking-[0.4px]">分攤方式</span>
               <SplitTypeSelector
                 value={split}
                 onChange={setSplit}
@@ -340,7 +340,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         </div>
 
         {error && (
-          <div className="mx-4 mb-2 text-[12px] shrink-0" style={{ color: 'var(--destructive)' }}>
+          <div className="mx-4 mb-2 text-label shrink-0" style={{ color: 'var(--destructive)' }}>
             {error}
           </div>
         )}
@@ -353,7 +353,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="w-full h-12 rounded-2xl font-semibold text-[15px] tracking-wide transition-opacity"
+            className="w-full h-12 rounded-2xl font-semibold text-body tracking-wide transition-opacity"
             style={{
               background: 'var(--ink)',
               color: '#fff',
@@ -392,11 +392,11 @@ function FormRow({
   return (
     <label className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <span className="text-[11px] text-[var(--ink-2)] tracking-[0.4px]">{label}</span>
-        {unit && <span className="text-[9px] text-[var(--ink-3)] tracking-wider font-mono">{unit}</span>}
+        <span className="text-micro text-[var(--ink-2)] tracking-[0.4px]">{label}</span>
+        {unit && <span className="text-micro text-[var(--ink-3)] tracking-wider font-mono">{unit}</span>}
       </div>
       {children}
-      {hint && <span className="text-[10px] text-[var(--ink-3)] font-mono">{hint}</span>}
+      {hint && <span className="text-micro text-[var(--ink-3)] font-mono">{hint}</span>}
     </label>
   )
 }

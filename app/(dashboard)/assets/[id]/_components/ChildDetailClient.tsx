@@ -109,7 +109,7 @@ export function ChildDetailClient({ assetId, name, details, summary, assetSheetI
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="child" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-[11px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             時間軸 · {count} 筆
           </div>
         )}

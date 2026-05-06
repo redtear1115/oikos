@@ -62,7 +62,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           {displayLabel}
         </div>
         <div
-          className="text-[11px] flex items-center gap-1.5"
+          className="text-micro flex items-center gap-1.5"
           style={{ color: 'var(--ink-3)' }}
         >
           {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} src={payerAvatar} size={16} /> {payerLabel}
@@ -76,7 +76,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           NT${tx.amount.toLocaleString('en-US')}
         </div>
         {showDelta && (
-          <div className="tnum text-[10px] mt-px" style={{ color: dColor }}>
+          <div className="tnum text-micro mt-px" style={{ color: dColor }}>
             {delta === 0 ? '—' : (delta > 0 ? '+' : '−') + Math.abs(delta).toLocaleString('en-US')}
           </div>
         )}

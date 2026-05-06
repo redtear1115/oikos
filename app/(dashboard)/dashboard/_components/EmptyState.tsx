@@ -11,11 +11,11 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
         <div className="flex justify-center mb-5">
           <FutariMark size={64} />
         </div>
-        <div className="text-[18px] font-semibold mb-2"
+        <div className="text-button font-semibold mb-2"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           還沒有紀錄
         </div>
-        <div className="text-[13px] leading-relaxed mb-6"
+        <div className="text-label leading-relaxed mb-6"
           style={{ color: 'var(--ink-2)' }}>
           從第一筆開始 ─ 一杯咖啡、<br />
           一頓晚餐都算數。<br />

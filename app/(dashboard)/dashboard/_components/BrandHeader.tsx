@@ -10,7 +10,7 @@ export function BrandHeader() {
     <div className="flex items-center justify-between gap-3 px-5 pt-[max(env(safe-area-inset-top),24px)] pb-0">
       <div className="flex items-center gap-[10px] min-w-0 flex-1">
         <FutariMark size={36} />
-        <div className="text-[19px] font-medium tracking-tight truncate"
+        <div className="text-title font-medium tracking-tight truncate"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {group.name}
         </div>

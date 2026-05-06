@@ -25,14 +25,14 @@ export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Prop
       </span>
       {hasIncome ? (
         <div className="text-right tnum" style={{ color: 'var(--ink-3)' }}>
-          <span className="text-[11px]">
+          <span className="text-micro">
             支出 NT${totalAmount.toLocaleString('en-US')}
             {' · '}
             <span style={{ color: P.ink }}>+{incomeTotal!.toLocaleString('en-US')}</span>
           </span>
           {net !== null && (
             <span
-              className="text-[11px] ml-2 font-medium"
+              className="text-micro ml-2 font-medium"
               style={{ color: net >= 0 ? P.ink : 'var(--ink-2)' }}
             >
               淨 {net >= 0 ? '+' : ''}NT${net.toLocaleString('en-US')}
@@ -40,7 +40,7 @@ export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Prop
           )}
         </div>
       ) : (
-        <span className="tnum text-[11px]" style={{ color: 'var(--ink-3)' }}>
+        <span className="tnum text-micro" style={{ color: 'var(--ink-3)' }}>
           {count} 筆 · NT${totalAmount.toLocaleString('en-US')}
         </span>
       )}

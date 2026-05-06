@@ -69,7 +69,7 @@ export function SoloBanner({ onDismiss }: Props = {}) {
             type="button"
             onClick={onDismiss}
             aria-label="關閉提示"
-            className="self-center text-[22px] leading-none bg-transparent border-0 cursor-pointer p-1"
+            className="self-center text-title leading-none bg-transparent border-0 cursor-pointer p-1"
             style={{ color: 'var(--ink-3)' }}
           >
             ×

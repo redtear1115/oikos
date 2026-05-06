@@ -55,16 +55,16 @@ export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFiel
         <div className="flex-1">
           {assetId && assetInfo ? (
             <>
-              <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
+              <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>
                 {assetInfo.name}
                 {assetInfo.deletedAt && <span className="ml-2 text-xs" style={{ color: 'var(--ink-3)' }}>（已刪除）</span>}
               </div>
               {assetInfo.plate && <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{assetInfo.plate}</div>}
             </>
           ) : assetId && !assetInfo ? (
-            <div className="text-[15px]" style={{ color: 'var(--ink-3)' }}>載入中…</div>
+            <div className="text-body" style={{ color: 'var(--ink-3)' }}>載入中…</div>
           ) : (
-            <div className="text-[15px]" style={{ color: 'var(--ink-3)' }}>不關聯</div>
+            <div className="text-body" style={{ color: 'var(--ink-3)' }}>不關聯</div>
           )}
         </div>
         <Chevron />

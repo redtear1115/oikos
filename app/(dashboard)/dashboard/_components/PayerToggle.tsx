@@ -13,7 +13,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
 
   return (
     <div
-      className="mt-[22px] flex items-center justify-center gap-2.5 text-[13px]"
+      className="mt-[22px] flex items-center justify-center gap-2.5 text-label"
       style={{ color: 'var(--ink-2)' }}
     >
       <span>誰付的？</span>
@@ -25,7 +25,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
           <button
             key={w}
             onClick={() => onChange(w)}
-            className="h-7 px-3.5 rounded-full border-0 text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
+            className="h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
             style={{
               background: value === w ? 'var(--surface)' : 'transparent',
               color: value === w ? 'var(--ink)' : 'var(--ink-2)',

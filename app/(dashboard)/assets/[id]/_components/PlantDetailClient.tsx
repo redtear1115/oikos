@@ -36,12 +36,12 @@ function CompanionDays({ sproutedAt, waterEvery, accent }: { sproutedAt: string;
   const days = Math.max(0, Math.floor((Date.now() - new Date(sproutedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
-      <div className="text-[10px] tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>陪伴天數</div>
+      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>陪伴天數</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 56, fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>天</span>
       </div>
-      <div className="text-[10px] mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
+      <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
         {sproutedAt} 入手{waterEvery ? ` · 每 ${waterEvery} 天澆水` : ''}
       </div>
     </div>
@@ -115,7 +115,7 @@ export function PlantDetailClient({ assetId, name, details, summary, assetSheetI
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="plant" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-[11px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             時間軸 · {count} 筆
           </div>
         )}

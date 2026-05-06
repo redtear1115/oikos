@@ -95,7 +95,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             el.select()
           }}
         >
-          <span className="text-[18px] font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
+          <span className="text-button font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
           <input
             ref={inputRef}
             type="text"
@@ -152,10 +152,10 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
           >
             <CalIcon size={20} />
             <div className="flex-1 text-left">
-              <div className="text-[13px] font-medium" style={{ color: 'var(--ink)' }}>
+              <div className="text-label font-medium" style={{ color: 'var(--ink)' }}>
                 {dateLabel(date)}
               </div>
-              <div className="text-[11px] mt-0.5" style={{ color: 'var(--ink-3)' }}>
+              <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
                 {date === localTodayISO() ? '今天' : weekday(date)}
               </div>
             </div>

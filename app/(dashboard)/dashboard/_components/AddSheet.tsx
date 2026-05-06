@@ -175,7 +175,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button
             onClick={onClose}
-            className="bg-transparent border-0 text-[15px] cursor-pointer p-1"
+            className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)' }}
           >
             取消
@@ -189,7 +189,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           <button
             onClick={handleSave}
             disabled={!amount || pending}
-            className="bg-transparent border-0 text-[15px] font-semibold p-1 cursor-pointer disabled:cursor-default"
+            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
             style={{
               color:
                 amount && !pending ? 'var(--accent)' : 'var(--ink-3)',
@@ -224,7 +224,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               }}
             >
               <span
-                className="text-[22px] font-medium"
+                className="text-title font-medium"
                 style={{ color: amount ? 'var(--ink-2)' : 'var(--ink-3)' }}
               >
                 NT$

@@ -18,7 +18,7 @@ export default function TermsPage() {
     >
       <div className="max-w-md mx-auto">
         <h1
-          className="text-[28px] leading-tight mb-2"
+          className="text-page leading-tight mb-2"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
           服務條款

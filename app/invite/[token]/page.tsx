@@ -37,7 +37,7 @@ export default async function InvitePage({ params }: Props) {
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <h1
-          className="text-[22px] leading-tight mb-3"
+          className="text-title leading-tight mb-3"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
           無法加入帳本

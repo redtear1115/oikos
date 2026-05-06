@@ -117,7 +117,7 @@ export default function SetupForm() {
         <div className="max-w-sm w-full mx-auto flex flex-col gap-6">
           <div>
             <h1
-              className="text-[26px] leading-tight"
+              className="text-page leading-tight"
               style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
             >
               把連結傳給對方
@@ -207,7 +207,7 @@ export default function SetupForm() {
       <form onSubmit={handleCreate} className="max-w-sm w-full mx-auto flex flex-col gap-6">
         <div>
           <h1
-            className="text-[26px] leading-tight"
+            className="text-page leading-tight"
             style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
           >
             幫你們的家計簿取個名字

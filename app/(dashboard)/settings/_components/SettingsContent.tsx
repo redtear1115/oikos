@@ -197,7 +197,7 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
                     background: 'transparent',
                   }}
                 >
-                  <span className="text-[15px]" style={{ color: 'var(--ink)' }}>
+                  <span className="text-body" style={{ color: 'var(--ink)' }}>
                     {opt.label}
                   </span>
                   <div
@@ -229,7 +229,7 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
         <LogoutButton />
       </div>
       <div
-        className="text-[11px] text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
+        className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
       >
         Futari · v0.3.0 · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>法律聲明</a>

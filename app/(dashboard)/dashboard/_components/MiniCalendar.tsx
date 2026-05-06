@@ -43,7 +43,7 @@ export function MiniCalendar({ value, onChange }: Props) {
           type="button"
           onClick={goPrev}
           aria-label="上個月"
-          className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-[18px] leading-none"
+          className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-button leading-none"
           style={{ color: 'var(--ink-2)' }}
         >
           ‹
@@ -55,13 +55,13 @@ export function MiniCalendar({ value, onChange }: Props) {
           type="button"
           onClick={goNext}
           aria-label="下個月"
-          className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-[18px] leading-none"
+          className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-button leading-none"
           style={{ color: 'var(--ink-2)' }}
         >
           ›
         </button>
       </div>
-      <div className="grid grid-cols-7 text-[11px] text-center mb-1.5"
+      <div className="grid grid-cols-7 text-micro text-center mb-1.5"
         style={{ color: 'var(--ink-3)' }}>
         {['日','一','二','三','四','五','六'].map(d => <div key={d}>{d}</div>)}
       </div>

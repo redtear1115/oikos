@@ -48,7 +48,7 @@ export function InstallGuide({ open, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="bg-transparent border-0 text-[15px] cursor-pointer p-1"
+            className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)' }}
           >
             關閉

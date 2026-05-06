@@ -161,14 +161,14 @@ export function AssetDetailClient({
         pageSize={pageSize}
         header={(count) => (
           <div className="flex items-center justify-between">
-            <div className="text-[11px] tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
               時間軸 · {count} 筆
             </div>
             {fuelType !== 'electric' && (
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-[11px] font-medium"
+                className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-micro font-medium"
                 style={{ background: '#fff', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
               >
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">

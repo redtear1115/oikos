@@ -293,7 +293,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
           <button
             type="button"
             onClick={onClose}
-            className="bg-transparent border-0 text-[15px] cursor-pointer p-1"
+            className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)', fontFamily: 'inherit' }}
           >
             取消
@@ -311,7 +311,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             type="button"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="bg-transparent border-0 text-[15px] font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
+            className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
             style={{
               color: amount && !pending ? P.ink : 'var(--ink-3)',
               fontFamily: 'inherit',
@@ -346,7 +346,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
               }}
             >
               <span
-                className="text-[22px] font-medium"
+                className="text-title font-medium"
                 style={{ color: amount ? 'var(--ink-2)' : 'var(--ink-3)' }}
               >
                 NT$
@@ -384,7 +384,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             {/* Recipient picker */}
             {!isSolo && (
               <div
-                className="flex items-center justify-center gap-2.5 text-[13px]"
+                className="flex items-center justify-center gap-2.5 text-label"
                 style={{ marginTop: 24, color: 'var(--ink-2)' }}
               >
                 <span>進到誰那？</span>
@@ -397,7 +397,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
                       key={w}
                       type="button"
                       onClick={() => setRecipientWho(w)}
-                      className="h-7 px-3.5 rounded-full border-0 text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
+                      className="h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
                       style={{
                         background: recipientWho === w ? '#fff' : 'transparent',
                         color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
@@ -496,7 +496,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
                   <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                     {selectedPolicyName ?? '選擇對應保單'}
                   </div>
-                  <div className="text-[11px] mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                  <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
                     {category === 'maturity'
                       ? '此筆會記入該保單的「拿回」累計'
                       : '此筆會記入該保單的「理賠」紀錄'}
@@ -541,7 +541,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
                           <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                             {a.name}
                           </div>
-                          <div className="text-[11px] mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                          <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
                             保險
                           </div>
                         </div>

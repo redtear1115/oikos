@@ -23,7 +23,7 @@ export default function SignInPage() {
 
       <div className="flex flex-col items-center text-center gap-3">
         <div
-          className="text-[44px] leading-none tracking-[-1px]"
+          className="text-amount-md leading-none tracking-[-1px]"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
           Futari

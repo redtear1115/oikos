@@ -251,7 +251,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
             {loading ? '載入中…' : '載入更多'}
           </button>
         ) : (
-          <div className="text-center text-[11px] py-3" style={{ color: 'var(--ink-3)' }}>
+          <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
             已是最早的紀錄
           </div>
         )}

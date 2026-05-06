@@ -69,7 +69,7 @@ export function InsuranceDetailClient({ assetId, name, details, linkedVehicle, a
       />
 
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
-        <div className="text-[10px] tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>年繳保費</div>
+        <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>年繳保費</div>
         <div className="inline-flex items-baseline gap-1.5 mt-1.5">
           <span className="text-lg font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
           <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 48, fontWeight: 600, color: 'var(--ink)', letterSpacing: -1.5 }}>
@@ -77,7 +77,7 @@ export function InsuranceDetailClient({ assetId, name, details, linkedVehicle, a
           </span>
         </div>
         {details?.termYears && details?.sumInsured && (
-          <div className="text-[10px] mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-micro mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
             {details.termYears} 年期 · 保額 NT$ {details.sumInsured.toLocaleString()}
           </div>
         )}
@@ -86,15 +86,15 @@ export function InsuranceDetailClient({ assetId, name, details, linkedVehicle, a
       {details?.startsAt && details?.endsAt && (
         <div className="mx-4 mt-[14px] p-4 rounded-2xl" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
           <div className="flex justify-between items-baseline">
-            <span className="text-[11px]" style={{ color: 'var(--ink-2)' }}>合約進度</span>
-            <span className="text-[11px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <span className="text-micro" style={{ color: 'var(--ink-2)' }}>合約進度</span>
+            <span className="text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
               還剩 {yearsLeft.toFixed(1)} 年
             </span>
           </div>
           <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(58,36,25,0.08)' }}>
             <div className="h-full rounded-full" style={{ width: `${pct * 100}%`, background: tint.accent }} />
           </div>
-          <div className="mt-1.5 flex justify-between text-[10px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="mt-1.5 flex justify-between text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             <span>{details.startsAt}</span>
             <span>{details.endsAt}</span>
           </div>

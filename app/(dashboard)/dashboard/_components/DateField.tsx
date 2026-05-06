@@ -22,7 +22,7 @@ export function DateField({ value, onChange, open }: DateFieldProps) {
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
         <CalIcon />
         <div className="flex-1 text-left">
-          <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>{dateLabel(value)}</div>
+          <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>{dateLabel(value)}</div>
           <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{value === localTodayISO() ? '今天' : weekday(value)}</div>
         </div>
         <Chevron />
