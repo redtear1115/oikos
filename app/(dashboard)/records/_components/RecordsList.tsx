@@ -18,6 +18,7 @@ import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
+import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 
 const incomeLoader = makeIncomeLoader(20)
 
@@ -45,7 +46,10 @@ export function RecordsList({ initial, pageSize }: Props) {
   } | null>(null)
   const [, startFuelLoad] = useTransition()
 
-  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen || fuelSheetOpen
+  // Income edit sheet state
+  const [editingIncome, setEditingIncome] = useState<IncomeSheetInitial | null>(null)
+
+  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen || fuelSheetOpen || editingIncome !== null
 
   useRealtimeEvents((event) => {
     if (event.kind === 'income-insert' || event.kind === 'income-update') {
@@ -54,7 +58,18 @@ export function RecordsList({ initial, pageSize }: Props) {
   })
 
   const handleItemClick = (tx: PagedTxnRow) => {
-    if (tx.kind === 'income') return  // income editing not yet wired in records
+    if (tx.kind === 'income') {
+      setEditingIncome({
+        id: tx.id,
+        amount: tx.amount,
+        category: tx.category,
+        recipientId: tx.paidBy,
+        occurredAt: tx.transactedAt.substring(0, 10),
+        source: tx.description || null,
+        assetId: tx.assetId,
+      })
+      return
+    }
 
     if (tx.kind === 'settlement') {
       setEditingSettlement({
@@ -111,6 +126,7 @@ export function RecordsList({ initial, pageSize }: Props) {
     setEditingTx(null)
     setEditingSettlement(null)
     setAdding(false)
+    setEditingIncome(null)
   }
 
   const handleMutated = () => router.refresh()
@@ -244,6 +260,13 @@ export function RecordsList({ initial, pageSize }: Props) {
           setFilter(isFilterActive(next) ? next : null)
           setFilterOpen(false)
         }}
+      />
+
+      <IncomeSheet
+        open={editingIncome !== null}
+        onClose={handleSheetClose}
+        initial={editingIncome ?? undefined}
+        onMutated={handleMutated}
       />
 
       {fuelCar && (
