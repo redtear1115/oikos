@@ -18,6 +18,16 @@
   --me-color: #3A2419;
   --them-color: #E08856;
   --realtime-flash: #fffbe8;
+
+  /* Typography scale — P3-1 */
+  --fs-micro:     11px;   /* tab label, timestamp, metadata */
+  --fs-label:     13px;   /* section label, chip, caption */
+  --fs-body:      15px;   /* body text, list items, form inputs */
+  --fs-button:    16px;   /* button, CTA, month header */
+  --fs-title:     22px;   /* sheet title, section hero number */
+  --fs-page:      26px;   /* page/sub-page header */
+  --fs-amount-md: 44px;   /* settlement & detail hero amounts */
+  --fs-amount-lg: 56px;   /* dashboard hero balance, add/income amount */
 }
 
 @theme inline {
@@ -37,6 +47,16 @@
   --font-serif: var(--font-fraunces);
   --font-sans: var(--font-noto-tc);
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
+
+  /* Map fs tokens → Tailwind text-* utilities */
+  --text-micro:     var(--fs-micro);
+  --text-label:     var(--fs-label);
+  --text-body:      var(--fs-body);
+  --text-button:    var(--fs-button);
+  --text-title:     var(--fs-title);
+  --text-page:      var(--fs-page);
+  --text-amount-md: var(--fs-amount-md);
+  --text-amount-lg: var(--fs-amount-lg);
 }
 
 html, body { margin: 0; padding: 0; background: var(--bg-page); }
