@@ -1,14 +1,21 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
+import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet } from './FilterSheet'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
+import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
+import { loadMoreIncomes } from '@/actions/income'
+import type { IncomeCursor } from '@/lib/db/queries/incomes'
+import type { TxnCursor } from '@/lib/db/queries/transactions'
+import { getIncomeCategory } from '@/lib/incomeCategories'
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 
@@ -19,6 +26,7 @@ interface Props {
 
 export function RecordsList({ initial, pageSize }: Props) {
   const router = useRouter()
+  const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [adding, setAdding] = useState(false)
@@ -38,6 +46,8 @@ export function RecordsList({ initial, pageSize }: Props) {
   const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen || fuelSheetOpen
 
   const handleItemClick = (tx: PagedTxnRow) => {
+    if (tx.kind === 'income') return  // income editing not yet wired in records
+
     if (tx.kind === 'settlement') {
       setEditingSettlement({
         id: tx.id,
@@ -99,6 +109,56 @@ export function RecordsList({ initial, pageSize }: Props) {
 
   const filterActive = filter !== null && isFilterActive(filter)
 
+  // Tab-filtered initial data
+  const tabInitial = useMemo(() => {
+    if (tab === 'expense') return initial.filter(r => r.kind !== 'income')
+    if (tab === 'income') return initial.filter(r => r.kind === 'income')
+    return initial
+  }, [initial, tab])
+
+  // Income tab loader: adapts TxnCursor → IncomeCursor and maps PagedIncomeRow → PagedTxnRow
+  const incomeLoader = async (cursor: TxnCursor | null): Promise<PagedTxnRow[]> => {
+    const incomeCursor: IncomeCursor | null = cursor
+      ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
+      : null
+    const rows = await loadMoreIncomes(incomeCursor, 20)
+    return rows.map((r) => ({
+      id: r.id,
+      amount: r.amount,
+      splitType: null,
+      description: r.source ?? getIncomeCategory(r.category).label,
+      category: r.category,
+      paidBy: r.recipientId,
+      transactedAt: r.occurredAt + 'T00:00:00.000Z',
+      createdAt: r.createdAt,
+      kind: 'income' as const,
+      assetId: r.assetId,
+      fuelLogId: null,
+    }))
+  }
+
+  const tabLoader =
+    tab === 'income'
+      ? incomeLoader
+      : tab === 'expense'
+      ? (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20)
+      : loadMoreFeedAll
+
+  // Income row mint-glow renderer (used in 'all' tab only)
+  const P = DEFAULT_INCOME_PALETTE
+  const renderRow = (tx: PagedTxnRow): React.ReactNode | undefined => {
+    if (tx.kind !== 'income') return undefined
+    return (
+      <div
+        style={{
+          background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)`,
+        }}
+      >
+        <CompactRow tx={{ ...tx, kind: 'transaction' }} isLast={false} onClick={() => handleItemClick(tx)} />
+      </div>
+    )
+  }
+
   return (
     <div className="relative min-h-dvh pb-[92px]">
       <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-end justify-between">
@@ -108,24 +168,67 @@ export function RecordsList({ initial, pageSize }: Props) {
         >
           紀錄
         </div>
-        <button
-          onClick={() => setFilterOpen(true)}
-          className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
-          style={{ color: 'var(--ink-2)' }}
-          aria-label="開啟篩選"
-        >
-          篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
-        </button>
+        {tab !== 'income' && (
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
+            style={{ color: 'var(--ink-2)' }}
+            aria-label="開啟篩選"
+          >
+            篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+          </button>
+        )}
+      </div>
+
+      {/* Tab bar */}
+      <div
+        className="flex items-center px-5 pb-4"
+        style={{ gap: 8 }}
+      >
+        {([
+          { id: 'all',     label: '全部' },
+          { id: 'expense', label: '支出' },
+          { id: 'income',  label: '進帳' },
+        ] as const).map((t) => {
+          const sel = tab === t.id
+          const isIncome = t.id === 'income'
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
+              style={{
+                background: sel
+                  ? (isIncome ? P.tint : 'var(--ink)')
+                  : 'var(--surface)',
+                color: sel
+                  ? (isIncome ? P.ink : '#fff')
+                  : 'var(--ink-2)',
+                border: sel ? 'none' : '1px solid var(--hairline)',
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       <TransactionFeed
-        initial={initial}
+        key={tab}
+        initial={tabInitial}
         pageSize={pageSize}
         onItemClick={handleItemClick}
-        filter={filter ?? undefined}
+        filter={tab !== 'income' ? (filter ?? undefined) : undefined}
+        loader={tabLoader}
+        renderRow={tab !== 'income' ? renderRow : undefined}
         emptyState={
           <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
-            {filterActive ? '沒有符合條件的紀錄' : '還沒有紀錄。按下方 + 記第一筆吧。'}
+            {tab === 'income'
+              ? '還沒有進帳紀錄。'
+              : filterActive
+              ? '沒有符合條件的紀錄'
+              : '還沒有紀錄。按下方 + 記第一筆吧。'}
           </div>
         }
       />

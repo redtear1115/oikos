@@ -7,7 +7,7 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput } from '@/lib/validators'
-import { listTransactionsPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, listFeedAllPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
 import { eq, or, and, isNull } from 'drizzle-orm'
@@ -260,6 +260,41 @@ export async function loadMoreTransactions(
   }
 
   const rows = await listTransactionsPaged(group.id, cursor, limit, resolved)
+  return rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    splitType: r.splitType,
+    description: r.description,
+    category: r.category,
+    paidBy: r.paidBy,
+    transactedAt: r.transactedAt.toISOString(),
+    createdAt: r.createdAt.toISOString(),
+    kind: r.kind,
+    assetId: r.assetId,
+    fuelLogId: r.fuelLogId ?? null,
+  }))
+}
+
+/**
+ * Records "全部" tab feed: UNION CashTransactions + Settlements + IncomeTransactions,
+ * newest first.
+ */
+export async function loadMoreFeedAll(
+  cursor: TxnCursor | null,
+  limit = 20,
+): Promise<PagedTxnRow[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [group] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) throw new Error('找不到家計簿')
+
+  const rows = await listFeedAllPaged(group.id, cursor, limit)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
