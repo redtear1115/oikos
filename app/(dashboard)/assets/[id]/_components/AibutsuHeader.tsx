@@ -23,7 +23,11 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
   const tint = TINTS[kind]
   return (
     <div className="px-5 pt-12 pb-3" style={{ background: tint.bg }}>
-      <div className="flex items-center gap-3 mb-2">
+      {/* Mirror AssetHero structure: subtitle is a sibling of the header row,
+          not nested inside the flex-1 wrapper next to the back button. This
+          keeps the subtitle flush-left with the page padding (matches car
+          detail page) instead of indenting under the title. */}
+      <div className="flex items-center gap-3">
         <a
           href="/assets"
           className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0"
@@ -35,32 +39,28 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
               strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </a>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}>{name}</div>
-            {onEditClick && (
-              <button
-                onClick={onEditClick}
-                className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center"
-                style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
-                aria-label="編輯"
-              >
-                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-                  <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
-                    stroke="#3A2419" strokeWidth="1.2"
-                    strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                </svg>
-              </button>
-            )}
-          </div>
-          {subtitle && (
-            <div
-              className="text-[10px] mt-0.5 tracking-[0.8px]"
-              style={{ color: 'rgba(58,36,25,0.55)', fontFamily: 'var(--font-numeric)' }}
-            >{subtitle}</div>
-          )}
-        </div>
+        <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}>{name}</div>
+        {onEditClick && (
+          <button
+            onClick={onEditClick}
+            className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center"
+            style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
+            aria-label="編輯"
+          >
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+              <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
+                stroke="#3A2419" strokeWidth="1.2"
+                strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
+          </button>
+        )}
       </div>
+      {subtitle && (
+        <div
+          className="text-xs mt-1 tracking-[1px]"
+          style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+        >{subtitle}</div>
+      )}
     </div>
   )
 }
