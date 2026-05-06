@@ -144,6 +144,19 @@ export interface PagedIncomeRow {
   kind: 'income'
 }
 
+export async function getInsuranceAssets(): Promise<{ id: string; name: string }[]> {
+  const { group } = await getViewerGroup()
+  const rows = await db
+    .select({ id: assets.id, name: assets.name })
+    .from(assets)
+    .where(and(
+      eq(assets.groupId, group.id),
+      eq(assets.type, 'insurance'),
+      isNull(assets.deletedAt),
+    ))
+  return rows
+}
+
 export async function loadMoreIncomes(
   cursor: IncomeCursor | null,
   limit = 20,
