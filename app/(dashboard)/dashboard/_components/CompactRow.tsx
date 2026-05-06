@@ -3,6 +3,7 @@
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
+import { getIncomeCategory } from '@/lib/incomeCategories'
 
 export interface CompactRowProps {
   tx: {
@@ -44,6 +45,11 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const dColor = delta > 0 ? 'var(--credit)' : delta < 0 ? 'var(--debit)' : 'var(--ink-3)'
   const showDelta = tx.kind === 'transaction'
 
+  // For income rows, fall back to category label when source/description is empty.
+  const displayLabel = tx.kind === 'income'
+    ? (tx.description || getIncomeCategory(tx.category).label)
+    : tx.description
+
   // M/D format
   const d = new Date(tx.transactedAt)
   const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
@@ -53,7 +59,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
       <CategoryChip categoryId={tx.category} size={32} />
       <div className="flex-1 min-w-0 text-left">
         <div className="text-sm font-medium mb-0.5" style={{ color: 'var(--ink)' }}>
-          {tx.description}
+          {displayLabel}
         </div>
         <div
           className="text-[11px] flex items-center gap-1.5"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useReducer, useState, useTransition } from 'react'
+import { useCallback, useEffect, useReducer, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
@@ -105,14 +105,6 @@ export function Dashboard({
   const filterActive = filter !== null && isFilterActive(filter)
 
   const P = DEFAULT_INCOME_PALETTE
-  const incomeRenderRow = (tx: PagedTxnRow): React.ReactNode | undefined => {
-    if (tx.kind !== 'income') return undefined
-    return (
-      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
-        <CompactRow tx={tx} isLast={false} onClick={() => handleItemClick(tx)} />
-      </div>
-    )
-  }
 
   const handleItemClick = (tx: PagedTxnRow) => {
     if (tx.kind === 'income') {
@@ -186,6 +178,15 @@ export function Dashboard({
       },
     })
   }
+
+  const incomeRenderRow = useCallback((tx: PagedTxnRow): React.ReactNode | undefined => {
+    if (tx.kind !== 'income') return undefined
+    return (
+      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
+        <CompactRow tx={tx} isLast={false} onClick={() => handleItemClick(tx)} />
+      </div>
+    )
+  }, [handleItemClick])
 
   const handleClose = () => dispatch({ kind: 'closed' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
