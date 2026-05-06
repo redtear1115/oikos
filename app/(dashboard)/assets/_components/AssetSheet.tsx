@@ -91,14 +91,22 @@ interface Props {
 
 type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance' | 'house'
 
-const TYPE_OPTIONS: { value: PickerType; label: string }[] = [
-  { value: 'car',       label: '車' },
-  { value: 'child',     label: '孩子' },
-  { value: 'pet',       label: '寵物' },
-  { value: 'plant',     label: '植物' },
+// Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
+// Secondary tiles (房子 / 保險) reveal under 「更多」 to keep the row tidy as
+// the type list grows. This avoids a wrapped 6-tile grid that pushes the form
+// down when switching types.
+const PRIMARY_TYPE_OPTIONS: { value: PickerType; label: string }[] = [
+  { value: 'car',   label: '車' },
+  { value: 'child', label: '孩子' },
+  { value: 'pet',   label: '寵物' },
+  { value: 'plant', label: '植物' },
+]
+const SECONDARY_TYPE_OPTIONS: { value: PickerType; label: string }[] = [
   { value: 'house',     label: '房子' },
   { value: 'insurance', label: '保險' },
 ]
+const TYPE_OPTIONS = [...PRIMARY_TYPE_OPTIONS, ...SECONDARY_TYPE_OPTIONS]
+const isSecondaryType = (t: PickerType) => SECONDARY_TYPE_OPTIONS.some(o => o.value === t)
 
 export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const isEdit = !!initial
@@ -161,6 +169,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  // Whether the secondary tile row (房子 / 保險) is expanded under 「更多」.
+  // Auto-true if the current selectedType is a secondary type so the user
+  // can see what they picked without having to re-tap 更多.
+  const [moreOpen, setMoreOpen] = useState(false)
+  const showSecondaryRow = moreOpen || isSecondaryType(selectedType)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -438,6 +451,62 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const typeLabel = TYPE_OPTIONS.find(o => o.value === selectedType)?.label ?? '愛物'
   const title = isEdit ? `編輯${typeLabel}` : '新增愛物'
 
+  // Switching type clears all type-specific fields. Used by every tile click
+  // (primary + secondary) so the dedup lives here, not duplicated per tile.
+  const handleTypeChange = (t: PickerType) => {
+    setSelectedType(t)
+    setName('')
+    setPlate('')
+    setPurchasedAt(null)
+    setPurchasePrice('')
+    setColor(null)
+    setYear('')
+    setBrand('')
+    setModel('')
+    setInitialOdometer('')
+    // Child resets
+    setChildNickname('')
+    setChildGender(null)
+    setChildBirthday('')
+    setChildNationalId('')
+    setChildNhiNo('')
+    setChildBloodType(null)
+    setChildHospital('')
+    setChildHeightCm('')
+    setChildWeightKg('')
+    // Pet resets
+    setPetSpecies('')
+    setPetBreed('')
+    setPetSex(null)
+    setPetBirthDate('')
+    setPetAdoptedDate('')
+    setPetCost('')
+    setPetWeightKg('')
+    setPetChipNo('')
+    setPetVet('')
+    // Plant resets
+    setPlantSpecies('')
+    setPlantLocation('')
+    setPlantSproutedAt('')
+    setPlantCost('')
+    setPlantWaterEvery(7)
+    // House resets
+    setHouseAddress('')
+    setHousePurchasedAt('')
+    setHousePurchasePrice('')
+    // Insurance resets
+    setInsKind('medical')
+    setInsInsured('')
+    setInsInsurer('')
+    setInsPolicyNo('')
+    setInsPremium('')
+    setInsSumInsured('')
+    setInsPayCycle('annual')
+    setInsStartsAt('')
+    setInsEndsAt('')
+    setInsTermYears('')
+  }
+
   const namePlaceholder = isCar ? '例：我的車'
     : selectedType === 'child' ? '例：小明'
     : selectedType === 'pet' ? '例：米嚕'
@@ -492,74 +561,68 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             <div className="mb-4">
               <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>類型</div>
               <div className="grid grid-cols-5 gap-2">
-                {TYPE_OPTIONS.map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      setSelectedType(opt.value)
-                      setName('')
-                      setPlate('')
-                      setPurchasedAt(null)
-                      setPurchasePrice('')
-                      setColor(null)
-                      setYear('')
-                      setBrand('')
-                      setModel('')
-                      setInitialOdometer('')
-                      // Child resets
-                      setChildNickname('')
-                      setChildGender(null)
-                      setChildBirthday('')
-                      setChildNationalId('')
-                      setChildNhiNo('')
-                      setChildBloodType(null)
-                      setChildHospital('')
-                      setChildHeightCm('')
-                      setChildWeightKg('')
-                      // Pet resets
-                      setPetSpecies('')
-                      setPetBreed('')
-                      setPetSex(null)
-                      setPetBirthDate('')
-                      setPetAdoptedDate('')
-                      setPetCost('')
-                      setPetWeightKg('')
-                      setPetChipNo('')
-                      setPetVet('')
-                      // Plant resets
-                      setPlantSpecies('')
-                      setPlantLocation('')
-                      setPlantSproutedAt('')
-                      setPlantCost('')
-                      setPlantWaterEvery(7)
-                      // House resets
-                      setHouseAddress('')
-                      setHousePurchasedAt('')
-                      setHousePurchasePrice('')
-                      // Insurance resets
-                      setInsKind('medical')
-                      setInsInsured('')
-                      setInsInsurer('')
-                      setInsPolicyNo('')
-                      setInsPremium('')
-                      setInsSumInsured('')
-                      setInsPayCycle('annual')
-                      setInsStartsAt('')
-                      setInsEndsAt('')
-                      setInsTermYears('')
-                    }}
-                    className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
-                    style={{
-                      background: selectedType === opt.value ? 'var(--accent)' : 'var(--surface)',
-                      color: selectedType === opt.value ? '#fff' : 'var(--ink-2)',
-                    }}
-                  >
-                    <AssetIcon type={opt.value} size={20} color={selectedType === opt.value ? '#fff' : 'var(--ink-2)'} />
-                    <span className="text-[11px] font-medium">{opt.label}</span>
-                  </button>
-                ))}
+                {PRIMARY_TYPE_OPTIONS.map(opt => {
+                  const sel = selectedType === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => { handleTypeChange(opt.value); setMoreOpen(false) }}
+                      className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+                      style={{
+                        background: sel ? 'var(--accent)' : 'var(--surface)',
+                        color: sel ? '#fff' : 'var(--ink-2)',
+                      }}
+                    >
+                      <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
+                      <span className="text-[11px] font-medium">{opt.label}</span>
+                    </button>
+                  )
+                })}
+                {/* 「更多」 toggle — opens secondary row (房子 / 保險). */}
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen(v => !v)}
+                  aria-expanded={showSecondaryRow}
+                  className="flex flex-col items-center gap-1 py-3 rounded-[14px] cursor-pointer"
+                  style={{
+                    background: 'var(--surface)',
+                    color: 'var(--ink-2)',
+                    border: showSecondaryRow ? '1px solid var(--ink)' : '1px solid transparent',
+                  }}
+                >
+                  <span className="text-[18px] leading-[20px] font-semibold tracking-[1px]" aria-hidden="true">⋯</span>
+                  <span className="text-[11px] font-medium">更多</span>
+                </button>
               </div>
+
+              {showSecondaryRow && (
+                <div className="grid grid-cols-5 gap-2 mt-2">
+                  {/* Right-align secondary tiles under the 「更多」 toggle so the
+                      visual hierarchy reads "tap 更多 → those reveal below it". */}
+                  {Array.from({ length: 5 - SECONDARY_TYPE_OPTIONS.length }).map((_, i) => (
+                    <div key={`pad-${i}`} aria-hidden="true" />
+                  ))}
+                  {SECONDARY_TYPE_OPTIONS.map(opt => {
+                    const sel = selectedType === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleTypeChange(opt.value)}
+                        className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+                        style={{
+                          background: sel ? 'var(--accent)' : 'var(--surface)',
+                          color: sel ? '#fff' : 'var(--ink-2)',
+                        }}
+                      >
+                        <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
+                        <span className="text-[11px] font-medium">{opt.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 

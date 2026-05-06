@@ -74,11 +74,19 @@ export function AssetIcon({ type, size = 24, color = 'currentColor' }: Props) {
     )
   }
 
-  // Placeholder for other types (house)
-  return (
-    <div
-      style={{ width: size, height: size, background: 'var(--surface-alt)', borderRadius: 6 }}
-      aria-hidden="true"
-    />
-  )
+  if (type === 'house') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        {/* roof */}
+        <path d="M3 12 L12 4 L21 12" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        {/* walls */}
+        <path d="M5 11 V20 H19 V11" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        {/* door */}
+        <path d="M10 20 V14 H14 V20" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
+  // No remaining placeholder branches — all 6 asset types covered above.
+  return null
 }
