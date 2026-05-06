@@ -73,12 +73,11 @@ export function MiniCalendar({ value, onChange }: Props) {
           const isToday = iso === todayIso
           return (
             <button key={i} type="button" onClick={() => onChange(iso)}
-              className="h-9 border-0 rounded-[10px] cursor-pointer relative transition-[background] duration-100"
+              className="h-9 border-0 rounded-[10px] cursor-pointer relative transition-[background] duration-100 text-sm"
               style={{
                 background: sel ? 'var(--ink)' : 'transparent',
                 color: sel ? '#fff' : 'var(--ink)',
                 fontFamily: 'var(--font-numeric)',
-                fontSize: 14,
                 fontWeight: isToday ? 600 : 400,
               }}>
               {d}
