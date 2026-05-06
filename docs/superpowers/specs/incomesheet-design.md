@@ -3,21 +3,21 @@
 > 目標：lock 2026-05-04 與設計師完成的 IncomeSheet hi-fi 設計探索結論，作為未來實作 IncomeTransactions + Phase 2 保險時的依據。
 > 優先級：P2 Slice 5（保險）前置。
 
-## 實作狀態（2026-05-06）
+## 實作狀態（全部完成 2026-05-06）
 
 | 部分 | 狀態 | 位置 |
 |---|---|---|
-| `IncomeTransactions` schema + RLS + Realtime + pg_cron | ✅ shipped to dev + prod | [drizzle/0012_income_transactions.sql](../../../drizzle/0012_income_transactions.sql) · [lib/db/schema.ts](../../../lib/db/schema.ts) → `incomeTransactions` |
+| `IncomeTransactions` schema + RLS + Realtime + pg_cron | ✅ | [drizzle/0012](../../../drizzle/0012_income_transactions.sql) · [lib/db/schema.ts](../../../lib/db/schema.ts) |
 | `INCOME_CATEGORIES` + `INCOME_PALETTES` token | ✅ | [lib/incomeCategories.ts](../../../lib/incomeCategories.ts) · [lib/incomePalettes.ts](../../../lib/incomePalettes.ts) |
-| Validators / Server actions / Queries | ✅ | [lib/validators.ts](../../../lib/validators.ts) → `validateIncomeInput` · [actions/income.ts](../../../actions/income.ts) · [lib/db/queries/incomes.ts](../../../lib/db/queries/incomes.ts) · [lib/db/queries/transactions.ts](../../../lib/db/queries/transactions.ts) → `listFeedAllPaged` |
-| IncomeSheet UI 元件 | ⬜ Phase 3 of plan |
-| Dashboard mode toggle（支出 / 進帳） | ⬜ Phase 4 of plan |
-| Records 分 tab（全部 / 支出 / 進帳） | ⬜ Phase 5 of plan |
-| Realtime IncomeTxns events | ⬜ Phase 6 of plan |
-| Constellation+halo empty state | ⬜ Phase 7 of plan |
-| Insurance ↔ Vehicle 關聯 | ⬜ Phase 8 of plan |
-
-剩餘的 UI / realtime / vehicle linkage 工作詳見 `docs/superpowers/plans/2026-05-06-slice-5-insurance.md`（plan 是 untracked 草稿，不進 git；參照 commit 訊息回溯）。
+| Validators / Server actions / Queries | ✅ | [lib/validators.ts](../../../lib/validators.ts) · [actions/income.ts](../../../actions/income.ts) · [lib/db/queries/incomes.ts](../../../lib/db/queries/incomes.ts) · `listFeedAllPaged` in [lib/db/queries/transactions.ts](../../../lib/db/queries/transactions.ts) |
+| Shared mapping util | ✅ | [lib/incomeFeedRow.ts](../../../lib/incomeFeedRow.ts) — `incomeToFeedRow` + `makeIncomeLoader` |
+| IncomeSheet UI 元件 | ✅ | [app/(dashboard)/dashboard/_components/IncomeSheet.tsx](../../../app/%28dashboard%29/dashboard/_components/IncomeSheet.tsx) |
+| Dashboard mode toggle（支出 / 進帳） | ✅ | Dashboard.tsx · BalanceHero.tsx · ModeTogglePlaceholder.tsx |
+| Records 三 tab（全部 / 支出 / 進帳）+ sticky header | ✅ | [app/(dashboard)/records/_components/RecordsList.tsx](../../../app/%28dashboard%29/records/_components/RecordsList.tsx) |
+| Monthly net header in 全部 tab | ✅ | MonthSection.tsx · TransactionFeed.tsx |
+| Realtime IncomeTxns events | ✅ | [app/(dashboard)/_components/RealtimeProvider.tsx](../../../app/%28dashboard%29/_components/RealtimeProvider.tsx) |
+| Constellation+halo empty state | ✅ | [app/(dashboard)/dashboard/_components/IncomeEmptyState.tsx](../../../app/%28dashboard%29/dashboard/_components/IncomeEmptyState.tsx) |
+| Insurance ↔ Vehicle 關聯 | ✅ | [drizzle/0014](../../../drizzle/0014_insurance_vehicle_link.sql) · InsuranceDetailClient + AssetDetailClient |
 
 ---
 
@@ -83,36 +83,11 @@ Phase 1.1 上 prod 後 friend test 階段，一位朋友提出「能不能紀錄
 
 ### INCOME_CATEGORIES
 
-實作時直接寫 `lib/incomeCategories.ts`（鏡像 `lib/categories.ts` 的 shape）：
-
-```ts
-export type IncomeCategoryId =
-  | 'salary' | 'bonus' | 'maturity' | 'claim'
-  | 'gift' | 'refund' | 'sidehustle' | 'other'
-
-export const INCOME_CATEGORIES: IncomeCategory[] = [
-  { id: 'salary',     label: '薪水',       mono: '薪', tint: '#F2EAD3', ink: '#7A6A2E', chart: '#B8A85F' },
-  { id: 'bonus',      label: '獎金',       mono: '獎', tint: '#F4DEC2', ink: '#8A5A28', chart: '#C99464' },
-  { id: 'maturity',   label: '滿期還本',   mono: '期', tint: '#E5E8D0', ink: '#5A6A38', chart: '#9AA864' },
-  { id: 'claim',      label: '保險理賠',   mono: '賠', tint: '#DDE6DA', ink: '#3F6A56', chart: '#7AA48E' },
-  { id: 'gift',       label: '紅包禮金',   mono: '紅', tint: '#F5E0DA', ink: '#8A4A40', chart: '#C97A6E' },
-  { id: 'refund',     label: '退稅',       mono: '退', tint: '#E8E2D8', ink: '#6A5A38', chart: '#A8997A' },
-  { id: 'sidehustle', label: '副業',       mono: '副', tint: '#E0E2E5', ink: '#4F5258', chart: '#85898F' },
-  { id: 'other',      label: '其他',       mono: '其', tint: '#EDE3D7', ink: '#7A6A5A', chart: '#A8998A' },
-]
-```
+8 entries（薪 獎 期 賠 紅 退 副 其），每 entry 含 `id / label / mono / tint / ink / chart`。見 [lib/incomeCategories.ts](../../../lib/incomeCategories.ts)。
 
 ### INCOME_PALETTES（預設 mint）
 
-```ts
-export const INCOME_PALETTES = {
-  mint: { name: '薄荷', ink: '#3F6A56', tint: '#DDEAD8', glow: '#E5F0DE', whisper: '#F2F7EE', sheetBg: '#F4F8EF' },
-  gold: { name: '淺金', ink: '#8A6E2E', tint: '#F2E8CF', glow: '#F7EBC2', whisper: '#FBF5E5', sheetBg: '#FBF5E5' },
-  cream: { name: '暖白', ink: '#7A5848', tint: '#F5EBDF', glow: '#FFEEDD', whisper: '#FDF7EE', sheetBg: '#FDF7EE' },
-}
-```
-
-MVP 只 ship mint，gold / cream 保留 token 但不暴露切換。
+三種主色變體（mint / gold / cream），MVP 只 ship mint，其餘保留 token 但不暴露切換。見 [lib/incomePalettes.ts](../../../lib/incomePalettes.ts)。
 
 ---
 
@@ -146,24 +121,11 @@ IncomeSheet 提交後：對應 row 在 RecordsList / 保險頁 mint glow 背景 
 
 ---
 
-## IncomeTransactions schema sketch
+## IncomeTransactions schema
 
-```ts
-export const incomeTransactions = pgTable('IncomeTransactions', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
-  recipientId: uuid('recipient_id').notNull().references(() => profiles.id),
-  amount: integer('amount').notNull(),
-  category: text('category').notNull(),       // INCOME_CATEGORIES.id
-  source: text('source'),                      // 自由文字（「五月薪水」）
-  assetId: uuid('asset_id').references(() => assets.id),  // 連保單（type='insurance'）
-  occurredAt: date('occurred_at').notNull(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
-```
+見 [lib/db/schema.ts](../../../lib/db/schema.ts) → `incomeTransactions`。
 
-要點：不參與 balance / settlement / split；`assetId` 用既有 Assets 表；pg_cron 一年後物理刪除。
+要點：不參與 balance / settlement / split；`assetId` 用既有 Assets 表（連保單用）；pg_cron 一年後物理刪除；`source` 為自由文字備註（null when empty）。
 
 ---
 
@@ -194,10 +156,8 @@ export const incomeTransactions = pgTable('IncomeTransactions', {
 
 ## 排程
 
-- **排在 Phase 2 Slice 5（保險）一起 ship**：IncomeSheet + 保險詳情頁是耦合 feature
-- **時間 budget**：4-5 年內第一張儲蓄險滿期前必須上線；保險 slice 預計 2026 下半年 ~ 2027 上半年
-- **前置完成**：Slice 1（車）✅ Slice 2（FuelLog）✅ Slice 3（Child/Pet/Plant）✅ Slice 4（House）✅
-- **目前狀態**：Slice 5 backend 已 ship（2026-05-06），UI 待續做（plan Phases 3-9）
+- **全部完成（v0.3.0，2026-05-06）**：IncomeSheet UI + Dashboard mode toggle + Records tabs + Realtime + Insurance↔Vehicle 全 ship
+- **時間 budget**：4-5 年內第一張儲蓄險滿期前必須上線（已達成）
 
 ---
 

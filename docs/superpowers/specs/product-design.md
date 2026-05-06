@@ -85,10 +85,8 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 | 0 | 專案建置 + Auth + Group 建立 + Invite + RLS + PWA | ✅ |
 | 1 | 核心記帳：transaction CRUD + settlement + 列表 + 篩選 + Settings + Real-time + pg_cron cleanup + 測試 | ✅ |
 | 1.1 | Onboarding flow + Solo Mode | ✅ |
-| 2 | 愛物管理（Slice 1: 車 ✅ → Slice 2: FuelLog ✅ → Slice 3: Child/Pet/Plant ✅ → Slice 4: House ✅ → Slice 5: Insurance + IncomeTransactions ◑） | 🔄 |
+| 2 | 愛物管理（Slice 1: 車 ✅ → Slice 2: FuelLog ✅ → Slice 3: Child/Pet/Plant ✅ → Slice 4: House ✅ → Slice 5: Insurance + IncomeTransactions ✅） | ✅ v0.3.0 |
 | 3 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
-
-**Slice 5 進度**：Insurance CRUD ✅ + IncomeTransactions backend (schema / actions / queries / RLS / Realtime / pg_cron) ✅ shipped to prod 2026-05-06；IncomeSheet UI / Dashboard mode toggle / Records 分 tab / 保險頁累計繳費 view 待 ship（plan: `docs/superpowers/plans/2026-05-06-slice-5-insurance.md` Phases 3-9）。
 
 詳細設計見各 spec：[transactions-design.md](transactions-design.md) · [car-fuel-log-design.md](car-fuel-log-design.md) · [aibutsu-design.md](aibutsu-design.md) · [incomesheet-design.md](incomesheet-design.md)
 

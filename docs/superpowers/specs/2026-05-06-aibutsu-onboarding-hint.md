@@ -102,13 +102,13 @@ type AibutsuHintCardProps = {
 
 ## Verification Checklist
 
-- [ ] 新建一個寵物愛物 → 進詳情頁 → hint card 出現在 feed 空狀態
-- [ ] Hint card 標題色、border 色符合該 type 的 accent
-- [ ] 點「記第一筆 →」→ AddSheet 開啟，assetId 已預填
-- [ ] 在 AddSheet 記一筆交易後關閉 → hint card 消失，feed 顯示該交易
-- [ ] 重新進入詳情頁（已有交易）→ hint card 不顯示
-- [ ] 四種類型（child / pet / plant / house）各自文字正確
-- [ ] 車和保險詳情頁不受影響
+- [x] 新建一個寵物愛物 → 進詳情頁 → hint card 出現在 feed 空狀態
+- [x] Hint card 標題色、border 色符合該 type 的 accent
+- [x] 點「記第一筆 →」→ AddSheet 開啟，assetId 已預填
+- [x] 在 AddSheet 記一筆交易後關閉 → hint card 消失，feed 顯示該交易
+- [x] 重新進入詳情頁（已有交易）→ hint card 不顯示
+- [x] 四種類型（child / pet / plant / house）各自文字正確
+- [x] 車和保險詳情頁不受影響
 
 ---
 

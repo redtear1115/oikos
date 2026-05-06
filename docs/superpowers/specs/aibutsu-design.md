@@ -43,7 +43,7 @@ Pet / Plant 本 slice 只用 base fields（`name`、`type`、icon），不做 de
 
 ```
 Car ✅  →  FuelLog + 車輛 polish ✅(Slice 2)  →  Child + Pet + Plant ✅(Slice 3)
-       →  House ✅(Slice 4)  →  Insurance ◑(Slice 5: 保險 CRUD + IncomeTxns backend ✅，UI 進行中)
+       →  House ✅(Slice 4)  →  Insurance ✅(Slice 5: 全 ship 2026-05-06, v0.3.0)
 ```
 
 Pet + Plant 與 Child 共用同一 slice：三者 data model 最接近，CRUD 邏輯幾乎一樣。
