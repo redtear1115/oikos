@@ -24,16 +24,15 @@ export async function listIncomesPaged(
   cursor: IncomeCursor | null,
   limit = 20,
 ): Promise<IncomeRow[]> {
-  const where = cursor
-    ? and(
-        eq(incomeTransactions.groupId, groupId),
-        isNull(incomeTransactions.deletedAt),
-        sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`,
-      )
-    : and(
-        eq(incomeTransactions.groupId, groupId),
-        isNull(incomeTransactions.deletedAt),
-      )
+  const conditions = [
+    eq(incomeTransactions.groupId, groupId),
+    isNull(incomeTransactions.deletedAt),
+  ]
+  if (cursor) {
+    conditions.push(
+      sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`,
+    )
+  }
 
   const rows = await db
     .select({
@@ -48,7 +47,7 @@ export async function listIncomesPaged(
       createdAt: incomeTransactions.createdAt,
     })
     .from(incomeTransactions)
-    .where(where)
+    .where(and(...conditions))
     .orderBy(desc(incomeTransactions.occurredAt), desc(incomeTransactions.createdAt))
     .limit(limit)
 
