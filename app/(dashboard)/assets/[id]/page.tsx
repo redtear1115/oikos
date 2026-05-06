@@ -186,11 +186,27 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   if (asset.type === 'insurance') {
     const insuranceDetailsData = await getInsuranceDetails(asset.id)
+    const assetSheetInitial: AssetSheetInitial = {
+      id: asset.id,
+      type: 'insurance',
+      name: asset.name,
+      insKind: insuranceDetailsData?.kind ?? null,
+      insInsured: insuranceDetailsData?.insured ?? null,
+      insInsurer: insuranceDetailsData?.insurer ?? null,
+      insPolicyNo: insuranceDetailsData?.policyNo ?? null,
+      insAnnualPremium: insuranceDetailsData?.annualPremium ?? null,
+      insSumInsured: insuranceDetailsData?.sumInsured ?? null,
+      insPayCycle: insuranceDetailsData?.payCycle ?? null,
+      insStartsAt: insuranceDetailsData?.startsAt ?? null,
+      insEndsAt: insuranceDetailsData?.endsAt ?? null,
+      insTermYears: insuranceDetailsData?.termYears ?? null,
+    }
     return (
       <InsuranceDetailClient
         assetId={asset.id}
         name={asset.name}
         details={insuranceDetailsData}
+        assetSheetInitial={assetSheetInitial}
         allAssets={allAssets}
       />
     )

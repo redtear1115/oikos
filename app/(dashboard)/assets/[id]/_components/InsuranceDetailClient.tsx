@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { AssetSwitcher } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
@@ -24,13 +25,20 @@ interface Props {
   assetId: string
   name: string
   details: InsuranceDetailsRow | null
+  assetSheetInitial: AssetSheetInitial
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function InsuranceDetailClient({ assetId, name, details, allAssets }: Props) {
+export function InsuranceDetailClient({ assetId, name, details, assetSheetInitial, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const tint = useTint('insurance')
+
+  const handleAssetMutated = (kind: 'saved' | 'deleted') => {
+    if (kind === 'deleted') { router.replace('/assets'); return }
+    router.refresh()
+  }
   const subtitle = details
     ? [details.insurer, details.kind ? KIND_LABELS[details.kind] : null].filter(Boolean).join(' · ')
     : null
@@ -55,6 +63,7 @@ export function InsuranceDetailClient({ assetId, name, details, allAssets }: Pro
           </AssetSwitcher>
         }
         subtitle={subtitle || null}
+        onEditClick={() => setEditOpen(true)}
       />
 
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
@@ -111,6 +120,13 @@ export function InsuranceDetailClient({ assetId, name, details, allAssets }: Pro
         onClose={() => setAddOpen(false)}
         prefilledAssetId={assetId}
         onMutated={() => router.refresh()}
+      />
+
+      <AssetSheet
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        initial={assetSheetInitial}
+        onMutated={handleAssetMutated}
       />
     </div>
   )
