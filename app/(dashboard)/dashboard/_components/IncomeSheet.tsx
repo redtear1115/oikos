@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
+import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
@@ -139,9 +140,13 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
   // Policy picker state
   const [showPolicyPicker, setShowPolicyPicker] = useState(false)
   const [insuranceAssets, setInsuranceAssets] = useState<{ id: string; name: string }[]>([])
-  const [selectedPolicyName, setSelectedPolicyName] = useState<string | null>(null)
 
   const amountInputRef = useRef<HTMLInputElement>(null)
+
+  // Derived: resolve the selected policy name from assetId + loaded assets
+  const selectedPolicyName = assetId
+    ? (insuranceAssets.find(a => a.id === assetId)?.name ?? null)
+    : null
 
   const isEdit = !!initial
   const policyRelevant = category === 'maturity' || category === 'claim'
@@ -172,7 +177,6 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
     setError('')
     setConfirmingDelete(false)
     setShowPolicyPicker(false)
-    setSelectedPolicyName(null)
   }, [open, initial, viewer.id, prefilledAssetId])
 
   // Auto-suggest policy picker when category is maturity/claim
@@ -185,20 +189,12 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
     } else {
       setShowPolicyPicker(false)
       setAssetId(null)
-      setSelectedPolicyName(null)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category])
 
-  // Focus amount input after sheet slides up
-  useEffect(() => {
-    if (!open) return
-    const t = setTimeout(() => {
-      amountInputRef.current?.focus()
-      amountInputRef.current?.select()
-    }, 350)
-    return () => clearTimeout(t)
-  }, [open])
+  // Focus + select amount input after sheet slides up
+  useFocusAndSelectOnOpen(open, amountInputRef)
 
   const recipientId = isSolo
     ? viewer.id
@@ -230,8 +226,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             assetId,
           })
         }
-        onClose()
         onMutated?.()
+        onClose()
       } catch (e) {
         setError(e instanceof Error ? e.message : '儲存失敗')
       }
@@ -244,8 +240,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
     startTransition(async () => {
       try {
         await softDeleteIncome(initial!.id)
-        onClose()
         onMutated?.()
+        onClose()
       } catch (e) {
         setError(e instanceof Error ? e.message : '發生錯誤')
       }
@@ -265,7 +261,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
           boxShadow: '0 -10px 40px rgba(58,36,25,0.18)',
           maxHeight: '92dvh',
           transform: open ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.36s cubic-bezier(0.32, 0.72, 0, 1)',
+          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
           pointerEvents: open ? 'auto' : 'none',
         }}
       >
@@ -529,7 +525,6 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
                         type="button"
                         onClick={() => {
                           setAssetId(a.id)
-                          setSelectedPolicyName(a.name)
                           setShowPolicyPicker(false)
                         }}
                         className="w-full flex items-center justify-between text-left cursor-pointer"
@@ -625,16 +620,18 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             </div>
           )}
 
-          {/* Error display */}
-          {error && (
-            <div className="px-5 pb-2 text-sm" style={{ color: 'var(--destructive)' }}>
-              {error}
-            </div>
-          )}
-
           <div className="h-6" />
         </div>
       </div>
+
+      {error && open && (
+        <div
+          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
+          style={{ background: 'var(--debit)' }}
+        >
+          {error}
+        </div>
+      )}
 
       <ConfirmModal
         open={confirmingDelete && open}
