@@ -64,7 +64,7 @@ export function AssetsListClient({ items }: Props) {
         gap: 8,
         color: 'var(--ink-2)',
         fontFamily: 'inherit',
-        fontSize: 13,
+        fontSize: 'var(--fs-label)',
         cursor: 'pointer',
       }}
     >

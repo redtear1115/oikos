@@ -93,12 +93,12 @@ export function BalanceHero({
           padding: '20px 22px',
           marginBottom: 18,
         }}>
-          <div style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: 1.2 }}>
+          <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2 }}>
             本月進帳
           </div>
           <div style={{
             fontFamily: 'var(--font-numeric)',
-            fontSize: 36, fontWeight: 600,
+            fontSize: 'var(--fs-amount-md)', fontWeight: 600,
             color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
             letterSpacing: -1.2, marginTop: 4,
             fontFeatureSettings: '"tnum"',
@@ -111,16 +111,16 @@ export function BalanceHero({
             display: 'flex', gap: 16, alignItems: 'center',
           }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: 1 }}>筆數</div>
+              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>筆數</div>
               <div style={{
-                fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginTop: 2,
+                fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--ink)', marginTop: 2,
                 fontFeatureSettings: '"tnum"',
               }}>{incomeMonthCount} 筆</div>
             </div>
             <div style={{ width: 1, height: 28, background: 'var(--hairline)' }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, color: 'var(--ink-3)', letterSpacing: 1 }}>最近</div>
-              <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>最近</div>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', marginTop: 2 }}>
                 {recentIncomeLabel ?? '尚無紀錄'}
               </div>
             </div>
@@ -147,7 +147,7 @@ export function BalanceHero({
                 <div className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
                   style={{
                     fontFamily: 'var(--font-numeric)',
-                    fontSize: 44,
+                    fontSize: 'var(--fs-amount-md)',
                     fontWeight: 600,
                     color: 'var(--ink)',
                     opacity: fading ? 0 : 1,

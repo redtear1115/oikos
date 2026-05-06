@@ -39,7 +39,7 @@ export function ModeTogglePlaceholder({ mode = 'expense', onChange }: Props) {
               borderRadius: 999,
               background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
               color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-2)',
-              fontSize: 12,
+              fontSize: 'var(--fs-label)',
               letterSpacing: 0.3,
               transition: 'all 0.2s ease',
             }}

@@ -37,7 +37,7 @@ function Stat({
     <div style={{ flex: 1, textAlign: align }}>
       <div
         style={{
-          fontSize: 9,
+          fontSize: 'var(--fs-micro)',
           color: 'var(--ink-3)',
           letterSpacing: 1,
           fontFamily: '"JetBrains Mono", monospace',
@@ -48,14 +48,14 @@ function Stat({
       <div
         className="tnum"
         style={{
-          fontSize: 14,
+          fontSize: 'var(--fs-body)',
           fontWeight: 600,
           color: 'var(--ink)',
           marginTop: 2,
         }}
       >
         {value}{' '}
-        <span style={{ fontSize: 9, color: 'var(--ink-3)', fontWeight: 500 }}>{unit}</span>
+        <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', fontWeight: 500 }}>{unit}</span>
       </div>
     </div>
   )
@@ -139,7 +139,7 @@ export function CarHeroCard({
             <div className="flex items-center gap-2">
               <div
                 className="truncate"
-                style={{ fontSize: 16, color: 'var(--ink)', fontWeight: 600 }}
+                style={{ fontSize: 'var(--fs-button)', color: 'var(--ink)', fontWeight: 600 }}
               >
                 {name}
               </div>
@@ -147,7 +147,7 @@ export function CarHeroCard({
                 <span
                   className="shrink-0"
                   style={{
-                    fontSize: 10,
+                    fontSize: 'var(--fs-micro)',
                     color: 'var(--ink-2)',
                     fontFamily: '"JetBrains Mono", monospace',
                     letterSpacing: 0.8,
@@ -162,14 +162,14 @@ export function CarHeroCard({
             </div>
             <div
               className="truncate"
-              style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}
+              style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', marginTop: 2 }}
             >
               {subtitle}
             </div>
           </div>
           <span
             aria-hidden="true"
-            style={{ color: 'var(--ink-3)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}
+            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-button)', lineHeight: 1, flexShrink: 0 }}
           >
             ›
           </span>

@@ -53,7 +53,7 @@ function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
         border: selected ? `1.5px solid ${P.ink}` : '1px solid var(--hairline)',
         background: selected ? '#fff' : 'rgba(255,255,255,0.5)',
         color: 'var(--ink)',
-        fontSize: 14,
+        fontSize: 'var(--fs-body)',
         fontWeight: 500,
         display: 'inline-flex',
         alignItems: 'center',
@@ -75,7 +75,7 @@ function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 13,
+          fontSize: 'var(--fs-label)',
           fontWeight: 500,
         }}
       >
@@ -326,7 +326,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
           <div className="text-center" style={{ padding: '28px 24px 32px' }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 'var(--fs-micro)',
                 color: 'var(--ink-3)',
                 letterSpacing: 1.5,
                 textTransform: 'uppercase',
@@ -367,7 +367,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
                 className="bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 56,
+                  fontSize: 'var(--fs-amount-lg)',
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
                   letterSpacing: -2,
@@ -434,7 +434,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
           <div style={{ padding: '22px 0 18px' }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 'var(--fs-micro)',
                 color: 'var(--ink-3)',
                 letterSpacing: 1.5,
                 fontFamily: '"JetBrains Mono", ui-monospace, monospace',
@@ -464,7 +464,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
             <div style={{ padding: '4px 20px 18px' }}>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 'var(--fs-micro)',
                   color: 'var(--ink-3)',
                   letterSpacing: 1.5,
                   fontFamily: '"JetBrains Mono", ui-monospace, monospace',
@@ -584,7 +584,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
               onChange={e => setNote(e.target.value)}
               placeholder="備註（可選）"
               className="flex-1 bg-transparent border-0 outline-none py-1"
-              style={{ fontSize: 15, color: 'var(--ink)', fontFamily: 'inherit' }}
+              style={{ fontSize: 'var(--fs-body)', color: 'var(--ink)', fontFamily: 'inherit' }}
             />
           </div>
 
@@ -592,7 +592,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
           <div style={{ padding: '14px 20px 24px' }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 'var(--fs-micro)',
                 color: 'var(--ink-3)',
                 letterSpacing: 1.5,
                 fontFamily: '"JetBrains Mono", ui-monospace, monospace',

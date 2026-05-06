@@ -156,7 +156,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
                 className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 56,
+                  fontSize: 'var(--fs-amount-lg)',
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
                   width: `${Math.max(amount.length || 1, 2)}ch`,

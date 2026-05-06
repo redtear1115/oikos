@@ -112,7 +112,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             className="tnum tracking-[-1.5px] leading-none bg-transparent border-0 outline-none text-center"
             style={{
               fontFamily: 'var(--font-numeric)',
-              fontSize: 44,
+              fontSize: 'var(--fs-amount-md)',
               fontWeight: 600,
               color: amount ? 'var(--ink)' : 'var(--ink-3)',
               width: `${Math.max(amount.length || 1, 2)}ch`,
