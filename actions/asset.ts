@@ -1,9 +1,9 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, carDetails, cashTransactions, oikosGroups, childDetails, petDetails, plantDetails, insuranceDetails } from '@/lib/db/schema'
+import { assets, carDetails, cashTransactions, oikosGroups, childDetails, petDetails, plantDetails, insuranceDetails, houseDetails } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
-import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput } from '@/lib/validators'
+import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput, validateHouseInput } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, or, and, isNull } from 'drizzle-orm'
@@ -691,6 +691,113 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
           termYears: validated.termYears,
         },
       })
+  })
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+// ── House ──────────────────────────────────────────────────────────────────
+
+export interface CreateHouseInput {
+  name: string
+  address?: string | null
+  purchasedAt?: string | null
+  purchasePrice?: number | null
+}
+
+export async function createHouse(input: CreateHouseInput): Promise<{ id: string }> {
+  'use server'
+  const validated = validateHouseInput(input)
+  const { group, viewer } = await getViewerGroup()
+
+  const [created] = await db.transaction(async (tx) => {
+    const [asset] = await tx
+      .insert(assets)
+      .values({ groupId: group.id, type: 'house', name: validated.name })
+      .returning({ id: assets.id })
+    await tx.insert(houseDetails).values({
+      assetId: asset.id,
+      owner: viewer.id,
+      address: validated.address,
+      purchasedAt: validated.purchasedAt,
+      purchasePrice: validated.purchasePrice,
+    })
+
+    if (validated.purchasePrice) {
+      const partnerId =
+        group.memberB && group.memberB !== viewer.id
+          ? group.memberB
+          : group.memberA !== viewer.id
+            ? group.memberA
+            : null
+      const partner = partnerId ? { id: partnerId } : null
+      const { paidBy, splitType } = deriveTxnFromPrimaryUser(
+        viewer.id,
+        { id: viewer.id },
+        partner,
+      )
+
+      await tx.insert(cashTransactions).values({
+        groupId: group.id,
+        assetId: asset.id,
+        fuelLogId: null,
+        paidBy,
+        amount: validated.purchasePrice,
+        splitType,
+        category: 'housing',
+        description: `購入 · ${validated.name}`,
+        transactedAt: validated.purchasedAt
+          ? new Date(`${validated.purchasedAt}T00:00:00`)
+          : new Date(),
+      })
+
+      await recalcGroupBalance(group.id, tx)
+    }
+
+    return [asset]
+  })
+
+  revalidatePath('/assets')
+  revalidatePath('/dashboard')
+  revalidatePath('/records')
+  return { id: created.id }
+}
+
+export interface EditHouseInput {
+  id: string
+  name: string
+  address?: string | null
+  purchasedAt?: string | null
+  purchasePrice?: number | null
+}
+
+export async function editHouse(input: EditHouseInput): Promise<void> {
+  'use server'
+  const validated = validateHouseInput(input)
+  const { group } = await getViewerGroup()
+
+  await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(assets)
+      .set({ name: validated.name })
+      .where(and(
+        eq(assets.id, input.id),
+        eq(assets.groupId, group.id),
+        eq(assets.type, 'house'),
+        isNull(assets.deletedAt),
+      ))
+      .returning({ id: assets.id })
+    if (updated.length === 0) throw new Error('找不到該愛物')
+
+    await tx
+      .update(houseDetails)
+      .set({
+        address: validated.address,
+        purchasedAt: validated.purchasedAt,
+        purchasePrice: validated.purchasePrice,
+      })
+      .where(eq(houseDetails.assetId, input.id))
   })
 
   revalidatePath('/assets')
