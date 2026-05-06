@@ -88,10 +88,11 @@ interface Props {
 type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance'
 
 const TYPE_OPTIONS: { value: PickerType; label: string }[] = [
-  { value: 'car',   label: '車' },
-  { value: 'child', label: '孩子' },
-  { value: 'pet',   label: '寵物' },
-  { value: 'plant', label: '植物' },
+  { value: 'car',       label: '車' },
+  { value: 'child',     label: '孩子' },
+  { value: 'pet',       label: '寵物' },
+  { value: 'plant',     label: '植物' },
+  { value: 'insurance', label: '保險' },
 ]
 
 export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
@@ -410,7 +411,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const namePlaceholder = isCar ? '例：我的車'
     : selectedType === 'child' ? '例：小明'
     : selectedType === 'pet' ? '例：米嚕'
-    : '例：陽台上的植物們'
+    : selectedType === 'plant' ? '例：陽台上的植物們'
+    : '例：南山醫療終身險'
 
   return (
     <>
@@ -456,7 +458,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           {!isEdit && (
             <div className="mb-4">
               <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>類型</div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {TYPE_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
