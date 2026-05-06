@@ -17,6 +17,7 @@ import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
+import { IncomeEmptyState } from './IncomeEmptyState'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
@@ -219,7 +220,11 @@ export function Dashboard({
             </button>
           </div>
         }
-        emptyState={<EmptyState onAdd={() => dispatch({ kind: 'add' })} />}
+        emptyState={
+          mode === 'income'
+            ? <IncomeEmptyState onAdd={() => dispatch({ kind: 'income' })} />
+            : <EmptyState onAdd={() => dispatch({ kind: 'add' })} />
+        }
       />
       <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen} />
       <AddSheet

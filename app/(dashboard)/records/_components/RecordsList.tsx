@@ -19,6 +19,7 @@ import { getIncomeCategory } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
+import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -230,13 +231,15 @@ export function RecordsList({ initial, pageSize }: Props) {
         loader={tabLoader}
         renderRow={tab !== 'income' ? renderRow : undefined}
         emptyState={
-          <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
-            {tab === 'income'
-              ? '還沒有進帳紀錄。'
-              : filterActive
-              ? '沒有符合條件的紀錄'
-              : '還沒有紀錄。按下方 + 記第一筆吧。'}
-          </div>
+          tab === 'income'
+            ? <IncomeEmptyState />
+            : (
+              <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
+                {filterActive
+                  ? '沒有符合條件的紀錄'
+                  : '還沒有紀錄。按下方 + 記第一筆吧。'}
+              </div>
+            )
         }
       />
 
