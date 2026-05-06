@@ -635,6 +635,17 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
   const validated = validateInsuranceInput(input)
   const { group } = await getViewerGroup()
 
+  if (input.vehicleId) {
+    const [vehicle] = await db
+      .select({ id: assets.id, type: assets.type, deletedAt: assets.deletedAt })
+      .from(assets)
+      .where(and(eq(assets.id, input.vehicleId), eq(assets.groupId, group.id)))
+      .limit(1)
+    if (!vehicle || vehicle.type !== 'car' || vehicle.deletedAt) {
+      throw new Error('無效的關聯車輛')
+    }
+  }
+
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
@@ -653,7 +664,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       expiryDate: validated.endsAt,
       termYears: validated.termYears,
       insuredType: 'user',
-      vehicleId: input.vehicleId ?? null,
+      vehicleId: validated.vehicleId,
     })
     return [asset]
   })
@@ -666,6 +677,17 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
   'use server'
   const validated = validateInsuranceInput(input)
   const { group } = await getViewerGroup()
+
+  if (input.vehicleId) {
+    const [vehicle] = await db
+      .select({ id: assets.id, type: assets.type, deletedAt: assets.deletedAt })
+      .from(assets)
+      .where(and(eq(assets.id, input.vehicleId), eq(assets.groupId, group.id)))
+      .limit(1)
+    if (!vehicle || vehicle.type !== 'car' || vehicle.deletedAt) {
+      throw new Error('無效的關聯車輛')
+    }
+  }
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -695,7 +717,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         expiryDate: validated.endsAt,
         termYears: validated.termYears,
         insuredType: 'user',
-        vehicleId: input.vehicleId ?? null,
+        vehicleId: validated.vehicleId,
       })
       .onConflictDoUpdate({
         target: insuranceDetails.assetId,
@@ -710,7 +732,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
           startsAt: validated.startsAt,
           expiryDate: validated.endsAt,
           termYears: validated.termYears,
-          vehicleId: input.vehicleId ?? null,
+          vehicleId: validated.vehicleId,
         },
       })
   })

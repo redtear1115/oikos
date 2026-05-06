@@ -581,6 +581,7 @@ export interface InsuranceInput {
   startsAt?: string | null
   endsAt?: string | null
   termYears?: number | null
+  vehicleId?: string | null
 }
 
 export interface ValidatedInsuranceInput {
@@ -595,6 +596,7 @@ export interface ValidatedInsuranceInput {
   startsAt: string | null
   endsAt: string | null
   termYears: number | null
+  vehicleId: string | null
 }
 
 export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranceInput {
@@ -632,7 +634,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     termYears = input.termYears
   }
 
-  return { name, kind, insured, insurer, policyNo, annualPremium, sumInsured, payCycle, startsAt, endsAt, termYears }
+  return { name, kind, insured, insurer, policyNo, annualPremium, sumInsured, payCycle, startsAt, endsAt, termYears, vehicleId: input.vehicleId?.trim() || null }
 }
 
 // ── Income ──────────────────────────────────────────────────────────────
