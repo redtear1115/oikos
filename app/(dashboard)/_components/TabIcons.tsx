@@ -17,12 +17,12 @@ export function NavHomeIcon({ active, color }: IconProps) {
 export function NavListIcon({ active, color }: IconProps) {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-      <path d="M5.5 6 H16.5" stroke={color} strokeWidth={active ? 2 : 1.5} strokeLinecap="round"/>
+      <rect x="2" y="3.5" width="18" height="15" rx="2.4"
+        stroke={color} strokeWidth="1.5"
+        fill={active ? color : 'none'} fillOpacity={active ? 0.10 : 0}/>
+      <path d="M5.5 8 H16.5" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
       <path d="M5.5 11 H16.5" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M5.5 16 H12" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="3" cy="6" r="1.1" fill={color}/>
-      <circle cx="3" cy="11" r="1.1" fill={color} opacity={active ? 1 : 0.4}/>
-      <circle cx="3" cy="16" r="1.1" fill={color} opacity={active ? 1 : 0.4}/>
+      <path d="M5.5 14 H12" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   )
 }
