@@ -60,5 +60,6 @@ END $$;
 SELECT cron.schedule('cleanup-soft-deleted', '0 3 * * 0', $$
   DELETE FROM "CashTransactions"   WHERE deleted_at < NOW() - INTERVAL '1 year';
   DELETE FROM "Settlements"        WHERE deleted_at < NOW() - INTERVAL '1 year';
+  DELETE FROM "FuelLogs"           WHERE deleted_at < NOW() - INTERVAL '1 year';
   DELETE FROM "IncomeTransactions" WHERE deleted_at < NOW() - INTERVAL '1 year';
 $$);
