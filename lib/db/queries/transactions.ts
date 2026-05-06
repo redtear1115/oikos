@@ -4,7 +4,7 @@ import { and, eq, isNull, desc, sql } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 
-export type FeedKind = 'transaction' | 'settlement'
+export type FeedKind = 'transaction' | 'settlement' | 'income'
 
 export interface FeedRow {
   id: string
@@ -172,6 +172,84 @@ export async function listTransactionsPaged(
     // matches what the page projections expect.
     transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
     createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
+    kind: r.kind,
+  }))
+}
+
+/**
+ * Records 'all' tab feed: UNION CashTransactions + Settlements + IncomeTransactions
+ * (active only). Cursor uses (transactedAt, createdAt) where IncomeTransactions
+ * maps occurred_at → transacted_at (cast to timestamptz at midnight local UTC).
+ *
+ * Income rows have null splitType, kind='income'.
+ */
+export async function listFeedAllPaged(
+  groupId: string,
+  cursor: TxnCursor | null,
+  limit = 20,
+): Promise<FeedRow[]> {
+  const cur = cursor
+    ? sql`AND (sort_at, sort_created) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
+    : sql``
+
+  const rows = await db.execute<{
+    id: string
+    amount: number
+    split_type: 'all_mine' | 'all_theirs' | 'half' | null
+    description: string
+    category: string
+    paid_by: string
+    asset_id: string | null
+    fuel_log_id: string | null
+    sort_at: Date | string
+    sort_created: Date | string
+    kind: 'transaction' | 'settlement' | 'income'
+  }>(sql`
+    SELECT * FROM (
+      SELECT
+        id, amount, split_type, description, category, paid_by,
+        asset_id, fuel_log_id,
+        transacted_at AS sort_at, created_at AS sort_created,
+        'transaction'::text AS kind
+      FROM "CashTransactions"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+
+      UNION ALL
+
+      SELECT
+        id, amount, NULL::split_type, COALESCE(note, '還款'), 'settle',
+        paid_by, NULL::uuid, NULL::uuid,
+        settled_at AS sort_at, created_at AS sort_created,
+        'settlement'::text AS kind
+      FROM "Settlements"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+
+      UNION ALL
+
+      SELECT
+        id, amount, NULL::split_type, COALESCE(source, ''), category,
+        recipient_id AS paid_by, asset_id, NULL::uuid,
+        occurred_at::timestamptz AS sort_at, created_at AS sort_created,
+        'income'::text AS kind
+      FROM "IncomeTransactions"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+    ) AS feed
+    WHERE TRUE ${cur}
+    ORDER BY sort_at DESC, sort_created DESC
+    LIMIT ${limit}
+  `)
+
+  return rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    splitType: r.split_type,
+    description: r.description,
+    category: r.category,
+    paidBy: r.paid_by,
+    assetId: r.asset_id,
+    fuelLogId: r.fuel_log_id ?? null,
+    transactedAt: r.sort_at instanceof Date ? r.sort_at : new Date(r.sort_at),
+    createdAt: r.sort_created instanceof Date ? r.sort_created : new Date(r.sort_created),
     kind: r.kind,
   }))
 }

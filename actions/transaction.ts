@@ -7,7 +7,7 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput } from '@/lib/validators'
-import { listTransactionsPaged, type TxnCursor, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
 import { eq, or, and, isNull } from 'drizzle-orm'
@@ -219,7 +219,7 @@ export interface PagedTxnRow {
   paidBy: string
   transactedAt: string  // ISO
   createdAt: string     // ISO (used as cursor part)
-  kind: 'transaction' | 'settlement'
+  kind: FeedKind
   assetId: string | null
   fuelLogId: string | null  // non-null when row was created by a FuelLog dual-write
 }
