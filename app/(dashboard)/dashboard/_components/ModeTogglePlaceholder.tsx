@@ -1,33 +1,61 @@
-/**
- * 模式切換佔位 — 視覺保留，永遠在「支出」狀態。
- *
- * 功能本身（支出 / 進帳 切換 + 連動 hero card 內容 + 開 IncomeSheet）
- * 跟 Phase 2 保險 + IncomeSheet 一起 ship。詳見
- * docs/superpowers/specs/2026-05-04-incomesheet-design-spec.md
- *
- * 用在三個 dashboard hero variant 頂部：BalanceHero / SoloBanner /
- * Dashboard 內的 solo+dismissed 簡化 CTA。實作時把這個元件升級為有狀態的
- * 真 toggle，三處的 trigger 邏輯就一起改一處。
- */
-export function ModeTogglePlaceholder() {
+'use client'
+
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+
+interface Props {
+  mode?: 'expense' | 'income'
+  onChange?: (mode: 'expense' | 'income') => void
+}
+
+export function ModeTogglePlaceholder({ mode = 'expense', onChange }: Props) {
+  const P = DEFAULT_INCOME_PALETTE  // mint
   return (
     <div
-      className="flex items-center gap-1 rounded-full p-1 mb-5"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      aria-hidden="true"
+      className="flex items-center rounded-full p-1 mb-5"
+      style={{
+        background: '#fff',
+        border: '1px solid var(--hairline)',
+        boxShadow: mode === 'income' ? `0 0 0 3px ${P.glow}80` : 'none',
+        transition: 'box-shadow 0.3s ease',
+        display: 'inline-flex',
+        alignSelf: 'flex-start',
+      }}
     >
-      <div
-        className="flex-1 h-9 rounded-full flex items-center justify-center text-sm font-medium"
-        style={{ background: 'var(--ink)', color: 'white' }}
-      >
-        支出
-      </div>
-      <div
-        className="flex-1 h-9 rounded-full flex items-center justify-center text-sm font-medium"
-        style={{ color: 'var(--ink-3)', opacity: 0.4 }}
-      >
-        進帳
-      </div>
+      {([
+        { id: 'expense', label: '支出模式' },
+        { id: 'income',  label: '進帳模式' },
+      ] as const).map((o) => {
+        const sel = mode === o.id
+        const isIncome = o.id === 'income'
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange?.(o.id)}
+            className="flex items-center gap-[5px] font-semibold cursor-pointer border-0"
+            style={{
+              height: 30,
+              padding: '0 14px',
+              borderRadius: 999,
+              background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
+              color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-2)',
+              fontSize: 12,
+              letterSpacing: 0.3,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {isIncome && sel && (
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: P.ink,
+                boxShadow: `0 0 6px ${P.ink}aa`,
+                flexShrink: 0,
+              }} />
+            )}
+            {o.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

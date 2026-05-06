@@ -12,6 +12,7 @@ import { BalanceHero } from './BalanceHero'
 import { EmptyState } from './EmptyState'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
+import { IncomeSheet, type IncomeSheetInitial } from './IncomeSheet'
 import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
@@ -26,6 +27,8 @@ const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 type ModalState =
   | { kind: 'closed' }
   | { kind: 'add' }
+  | { kind: 'income' }
+  | { kind: 'edit-income'; data: IncomeSheetInitial }
   | { kind: 'edit-tx'; data: AddSheetInitial }
   | { kind: 'edit-settlement'; data: SettlementSheetInitial }
   | { kind: 'filter' }
@@ -34,9 +37,19 @@ export interface DashboardProps {
   balance: number
   recent: PagedTxnRow[]
   pageSize: number
+  incomeMonthTotal: number
+  incomeMonthCount: number
+  recentIncomeLabel: string | null
 }
 
-export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
+export function Dashboard({
+  balance,
+  recent,
+  pageSize,
+  incomeMonthTotal,
+  incomeMonthCount,
+  recentIncomeLabel,
+}: DashboardProps) {
   const router = useRouter()
   const { isSolo } = useMember()
 
@@ -49,6 +62,7 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
     }
   })
 
+  const [mode, setMode] = useState<'expense' | 'income'>('expense')
   const [modal, dispatch] = useReducer((_prev: ModalState, next: ModalState) => next, { kind: 'closed' })
   const [filter, setFilter] = useState<TxnFilter | null>(null)
 
@@ -139,13 +153,15 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
 
   const handleMutated = () => router.refresh()
 
+  const addOrIncome = mode === 'income' ? 'income' : 'add'
+
   return (
     <div className="relative min-h-dvh pb-[92px]">
       <BrandHeader />
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-6 pb-5">
-            <ModeTogglePlaceholder />
+            <ModeTogglePlaceholder mode={mode} onChange={setMode} />
 
             <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
               <span>你還在獨自記帳</span>
@@ -155,11 +171,11 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
             </div>
             <button
               type="button"
-              onClick={() => dispatch({ kind: 'add' })}
+              onClick={() => dispatch({ kind: addOrIncome })}
               className="w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center gap-1.5"
               style={{ background: 'var(--ink)' }}
             >
-              <PlusIcon size={16} />新增一筆
+              <PlusIcon size={16} />{mode === 'income' ? '記一筆進帳' : '新增一筆'}
             </button>
           </div>
         ) : (
@@ -168,8 +184,13 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
       ) : (
         <BalanceHero
           rawBalance={balance}
-          onAddClick={() => dispatch({ kind: 'add' })}
+          onAddClick={() => dispatch({ kind: addOrIncome })}
           onSettleMutated={handleMutated}
+          mode={mode}
+          onModeChange={setMode}
+          incomeMonthTotal={incomeMonthTotal}
+          incomeMonthCount={incomeMonthCount}
+          recentIncomeLabel={recentIncomeLabel}
         />
       )}
       <TransactionFeed
@@ -194,7 +215,7 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
         }
         emptyState={<EmptyState onAdd={() => dispatch({ kind: 'add' })} />}
       />
-      <BottomNav onAddClick={() => dispatch({ kind: 'add' })} hideFab={sheetOpen} />
+      <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen} />
       <AddSheet
         open={modal.kind === 'add' || modal.kind === 'edit-tx'}
         onClose={handleClose}
@@ -205,6 +226,12 @@ export function Dashboard({ balance, recent, pageSize }: DashboardProps) {
         open={settlementData !== null}
         onClose={handleClose}
         initial={settlementData}
+        onMutated={handleMutated}
+      />
+      <IncomeSheet
+        open={modal.kind === 'income' || modal.kind === 'edit-income'}
+        onClose={handleClose}
+        initial={modal.kind === 'edit-income' ? modal.data : undefined}
         onMutated={handleMutated}
       />
       <FilterSheet
