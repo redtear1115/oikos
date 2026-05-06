@@ -1180,10 +1180,27 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             </div>
           )}
 
+          {/* Primary save at the bottom of the form so a long fill-out
+              (車 / 保險) can submit without scrolling back to the top-right
+              save. The top-right save stays as a secondary affordance. */}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!canSave}
+            className="mt-6 w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
+            style={{
+              background: canSave ? 'var(--accent)' : 'var(--ink-3)',
+              opacity: canSave ? 1 : 0.55,
+              boxShadow: canSave ? '0 2px 6px rgba(224,136,86,0.3)' : 'none',
+            }}
+          >
+            {pending ? '儲存中…' : (isEdit ? '儲存變更' : '新增愛物')}
+          </button>
+
           {isEdit && (
             <button
               type="button"
-              className="mt-6 w-full py-3 rounded-[14px] text-sm font-medium cursor-pointer border-0"
+              className="mt-3 w-full py-3 rounded-[14px] text-sm font-medium cursor-pointer border-0"
               style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
               onClick={() => setConfirmingDelete(true)}
             >

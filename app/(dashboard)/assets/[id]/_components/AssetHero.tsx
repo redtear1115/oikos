@@ -91,7 +91,7 @@ export function AssetHero({
         <LeftAccent swatch={swatch} />
         <div className="flex items-center">
           <BackButton />
-          <div className="text-lg font-semibold min-w-0 leading-[30px]" style={{ color: 'var(--ink)' }}>
+          <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
             {name}
           </div>
           {onEdit && <EditPencilButton onClick={onEdit} />}

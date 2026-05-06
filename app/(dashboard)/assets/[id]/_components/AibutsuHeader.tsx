@@ -27,7 +27,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
         <a
           href="/assets"
           className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0"
-          style={{ background: 'rgba(58,36,25,0.10)' }}
+          style={{ background: 'rgba(58,36,25,0.08)' }}
           aria-label="返回"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -37,7 +37,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
         </a>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <div className="text-lg font-semibold min-w-0 leading-[30px]" style={{ color: '#3A2419' }}>{name}</div>
+            <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}>{name}</div>
             {onEditClick && (
               <button
                 onClick={onEditClick}
