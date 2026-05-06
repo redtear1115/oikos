@@ -2,6 +2,12 @@ import Link from 'next/link'
 
 export const metadata = {
   title: '服務條款 · Futari',
+  description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
+  openGraph: {
+    title: '服務條款 · Futari',
+    description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
+    type: 'article',
+  },
 }
 
 export default function TermsPage() {

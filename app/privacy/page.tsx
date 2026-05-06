@@ -2,6 +2,12 @@ import Link from 'next/link'
 
 export const metadata = {
   title: '隱私權政策 · Futari',
+  description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
+  openGraph: {
+    title: '隱私權政策 · Futari',
+    description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
+    type: 'article',
+  },
 }
 
 export default function PrivacyPage() {
