@@ -5,6 +5,7 @@ import {
   validateTransactionInput,
   validateSettlementInput,
   validateFuelLogInput,
+  validateHouseInput,
 } from '@/lib/validators'
 
 describe('validateAmount', () => {
@@ -140,5 +141,47 @@ describe('validateFuelLogInput', () => {
 
   it('rejects invalid loggedAt date', () => {
     expect(() => validateFuelLogInput({ ...validBase, loggedAt: 'not-a-date' })).toThrow(/日期/)
+  })
+})
+
+describe('validateHouseInput', () => {
+  it('accepts name only', () => {
+    const r = validateHouseInput({ name: '我們家' })
+    expect(r).toEqual({ name: '我們家', address: null, purchasedAt: null, purchasePrice: null })
+  })
+
+  it('trims and accepts all fields', () => {
+    const r = validateHouseInput({
+      name: ' 台北的家 ',
+      address: ' 台北市大安區某路1號 ',
+      purchasedAt: '2020-06-15',
+      purchasePrice: 15000000,
+    })
+    expect(r).toEqual({
+      name: '台北的家',
+      address: '台北市大安區某路1號',
+      purchasedAt: '2020-06-15',
+      purchasePrice: 15000000,
+    })
+  })
+
+  it('throws on empty name', () => {
+    expect(() => validateHouseInput({ name: '   ' })).toThrow(/名稱/)
+  })
+
+  it('throws on name over 32 chars', () => {
+    expect(() => validateHouseInput({ name: 'x'.repeat(33) })).toThrow(/名稱最長 32 字/)
+  })
+
+  it('throws on address over 80 chars', () => {
+    expect(() => validateHouseInput({ name: '家', address: 'x'.repeat(81) })).toThrow(/地址最長 80 字/)
+  })
+
+  it('throws on invalid purchasedAt format', () => {
+    expect(() => validateHouseInput({ name: '家', purchasedAt: '2020/06/15' })).toThrow(/日期格式/)
+  })
+
+  it('throws on non-positive purchasePrice', () => {
+    expect(() => validateHouseInput({ name: '家', purchasePrice: 0 })).toThrow(/金額/)
   })
 })

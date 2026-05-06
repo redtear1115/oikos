@@ -526,6 +526,47 @@ export function validatePlantInput(input: PlantInput): ValidatedPlantInput {
   return { name, species, location, sproutedAt, cost, waterEvery }
 }
 
+// ── House ──────────────────────────────────────────────────────────
+export interface HouseInput {
+  name: string
+  address?: string | null
+  purchasedAt?: string | null  // YYYY-MM-DD
+  purchasePrice?: number | null
+}
+
+export interface ValidatedHouseInput {
+  name: string
+  address: string | null
+  purchasedAt: string | null
+  purchasePrice: number | null
+}
+
+export function validateHouseInput(input: HouseInput): ValidatedHouseInput {
+  const name = validateName(input.name, '名稱', 32)
+
+  let address: string | null = null
+  if (input.address) {
+    const a = input.address.trim()
+    if (a.length > 80) throw new Error('地址最長 80 字')
+    address = a || null
+  }
+
+  let purchasedAt: string | null = null
+  if (input.purchasedAt) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.purchasedAt)) throw new Error('購入日期格式錯誤')
+    const parsed = parseDateString(input.purchasedAt)
+    if (!parsed) throw new Error('購入日期不存在')
+    purchasedAt = input.purchasedAt
+  }
+
+  let purchasePrice: number | null = null
+  if (input.purchasePrice !== null && input.purchasePrice !== undefined) {
+    purchasePrice = validateAmount(input.purchasePrice, '金額')
+  }
+
+  return { name, address, purchasedAt, purchasePrice }
+}
+
 // ── Insurance ──────────────────────────────────────────────────────
 export interface InsuranceInput {
   name: string
