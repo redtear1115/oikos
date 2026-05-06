@@ -206,9 +206,12 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         const total = g.items
           .filter((t) => t.kind === 'transaction')
           .reduce((acc, t) => acc + t.amount, 0)
+        const incomeTotal = g.items
+          .filter((t) => t.kind === 'income')
+          .reduce((acc, t) => acc + t.amount, 0)
         return (
           <div key={g.monthKey}>
-            <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} />
+            <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} incomeTotal={incomeTotal > 0 ? incomeTotal : undefined} />
             <div
               className="mx-4 rounded-[18px] overflow-hidden"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
