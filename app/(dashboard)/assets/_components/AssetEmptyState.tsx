@@ -18,7 +18,7 @@ export function AssetEmptyState() {
         還沒有愛物
       </div>
       <div className="text-sm leading-relaxed" style={{ color: 'var(--ink-3)', maxWidth: 240 }}>
-        新增一台車、寵物或孩子，<br />開始追蹤他們的開銷。
+        新增一台車、寵物、孩子或保單，<br />開始記錄花在他們身上的時間與心意。
       </div>
     </div>
   )
