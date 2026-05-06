@@ -49,6 +49,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
       {!hideFab && !fabContent && (
         <button
           onClick={onAddClick}
+          aria-label="新增一筆"
           className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
           style={{
             background: fabVariant === 'accent' ? 'var(--accent)' : 'var(--ink)',
