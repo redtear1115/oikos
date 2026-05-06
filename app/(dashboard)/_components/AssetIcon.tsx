@@ -61,7 +61,20 @@ export function AssetIcon({ type, size = 24, color = 'currentColor' }: Props) {
     )
   }
 
-  // Placeholder for other types (house, insurance)
+  if (type === 'insurance') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        {/* shield: rounded top, pointed bottom — protection motif */}
+        <path
+          d="M12 3.2 L4.5 6 V12.5 C4.5 16.6 7.7 19.8 12 21 C16.3 19.8 19.5 16.6 19.5 12.5 V6 Z"
+          stroke={color} strokeWidth="1.6" strokeLinejoin="round"
+        />
+        <path d="M9 12.4 L11.2 14.6 L15.2 10.6" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
+  // Placeholder for other types (house)
   return (
     <div
       style={{ width: size, height: size, background: 'var(--surface-alt)', borderRadius: 6 }}
