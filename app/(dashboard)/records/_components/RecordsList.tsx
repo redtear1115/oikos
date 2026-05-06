@@ -164,57 +164,63 @@ export function RecordsList({ initial, pageSize }: Props) {
 
   return (
     <div className="relative min-h-dvh pb-[92px]">
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-end justify-between">
-        <div
-          className="text-2xl font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
-        >
-          紀錄
-        </div>
-        {tab !== 'income' && (
-          <button
-            onClick={() => setFilterOpen(true)}
-            className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
-            style={{ color: 'var(--ink-2)' }}
-            aria-label="開啟篩選"
-          >
-            篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
-          </button>
-        )}
-      </div>
-
-      {/* Tab bar */}
+      {/* Sticky header + tab bar */}
       <div
-        className="flex items-center px-5 pb-4"
-        style={{ gap: 8 }}
+        className="sticky top-0 z-20 pb-1"
+        style={{ background: 'var(--bg)' }}
       >
-        {([
-          { id: 'all',     label: '全部' },
-          { id: 'expense', label: '支出' },
-          { id: 'income',  label: '進帳' },
-        ] as const).map((t) => {
-          const sel = tab === t.id
-          const isIncome = t.id === 'income'
-          return (
+        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-end justify-between">
+          <div
+            className="text-2xl font-medium tracking-tight"
+            style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
+          >
+            紀錄
+          </div>
+          {tab !== 'income' && (
             <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
-              style={{
-                background: sel
-                  ? (isIncome ? P.tint : 'var(--ink)')
-                  : 'var(--surface)',
-                color: sel
-                  ? (isIncome ? P.ink : '#fff')
-                  : 'var(--ink-2)',
-                border: sel ? 'none' : '1px solid var(--hairline)',
-              }}
+              onClick={() => setFilterOpen(true)}
+              className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
+              style={{ color: 'var(--ink-2)' }}
+              aria-label="開啟篩選"
             >
-              {t.label}
+              篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
             </button>
-          )
-        })}
+          )}
+        </div>
+
+        {/* Tab bar */}
+        <div
+          className="flex items-center px-5 pb-3"
+          style={{ gap: 8 }}
+        >
+          {([
+            { id: 'all',     label: '全部' },
+            { id: 'expense', label: '支出' },
+            { id: 'income',  label: '進帳' },
+          ] as const).map((t) => {
+            const sel = tab === t.id
+            const isIncome = t.id === 'income'
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
+                style={{
+                  background: sel
+                    ? (isIncome ? P.tint : 'var(--ink)')
+                    : 'var(--surface)',
+                  color: sel
+                    ? (isIncome ? P.ink : '#fff')
+                    : 'var(--ink-2)',
+                  border: sel ? 'none' : '1px solid var(--hairline)',
+                }}
+              >
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <TransactionFeed
