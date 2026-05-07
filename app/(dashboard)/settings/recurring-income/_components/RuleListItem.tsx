@@ -15,9 +15,20 @@ export function RuleListItem({ rule }: { rule: RecurringRuleRow }) {
 
   return (
     <li
-      className="rounded-2xl p-4"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+      className="relative overflow-hidden rounded-2xl p-4"
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--hairline)',
+        opacity: isPaused ? 0.6 : 1,
+      }}
     >
+      {isPaused && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-0 h-full"
+          style={{ width: 4, background: 'var(--ink-3)' }}
+        />
+      )}
       <div className="flex items-start gap-3">
         <span
           className="grid h-9 w-9 place-items-center rounded-full text-[var(--fs-base)]"
@@ -41,7 +52,7 @@ export function RuleListItem({ rule }: { rule: RecurringRuleRow }) {
       <div className="mt-3 flex gap-2">
         <Link
           href={`/settings/recurring-income/${rule.id}`}
-          className="flex-1 rounded-full py-2 text-center text-[var(--fs-sm)]"
+          className="flex h-11 flex-1 items-center justify-center rounded-full text-[var(--fs-sm)]"
           style={{ border: '1px solid var(--hairline)', color: 'var(--ink)' }}
         >
           編輯
@@ -53,7 +64,7 @@ export function RuleListItem({ rule }: { rule: RecurringRuleRow }) {
             if (isPaused) await resumeRule(rule.id)
             else await pauseRule(rule.id)
           })}
-          className="flex-1 rounded-full py-2 text-[var(--fs-sm)] disabled:opacity-50"
+          className="flex h-11 flex-1 items-center justify-center rounded-full text-[var(--fs-sm)] disabled:opacity-50"
           style={{ border: '1px solid var(--hairline)', color: 'var(--ink)' }}
         >
           {isPaused ? '恢復' : '暫停'}
