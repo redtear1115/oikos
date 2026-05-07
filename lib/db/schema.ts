@@ -194,3 +194,33 @@ export const incomeTransactions = pgTable('IncomeTransactions', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+export const recurringIncomeRules = pgTable('RecurringIncomeRules', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  recipientId: uuid('recipient_id').notNull().references(() => profiles.id),
+  amount: integer('amount').notNull(),
+  category: text('category').notNull(),
+  source: text('source'),
+  assetId: uuid('asset_id').references(() => assets.id),
+  intervalMonths: integer('interval_months').notNull().default(1),
+  dayOfMonth: integer('day_of_month').notNull(),
+  startsOn: date('starts_on').notNull(),
+  endsOn: date('ends_on'),
+  nextOccurrenceAt: date('next_occurrence_at').notNull(),
+  pausedAt: timestamp('paused_at', { withTimezone: true }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const pendingIncomeOccurrences = pgTable('PendingIncomeOccurrences', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  ruleId: uuid('rule_id').notNull().references(() => recurringIncomeRules.id, { onDelete: 'cascade' }),
+  periodStart: date('period_start').notNull(),
+  proposedAmount: integer('proposed_amount').notNull(),
+  proposedDate: date('proposed_date').notNull(),
+  skippedAt: timestamp('skipped_at', { withTimezone: true }),
+  resolvedTxId: uuid('resolved_tx_id').references(() => incomeTransactions.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
