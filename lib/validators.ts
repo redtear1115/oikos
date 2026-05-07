@@ -692,3 +692,66 @@ export function validateIncomeInput(input: IncomeInput): ValidatedIncomeInput {
     assetId,
   }
 }
+
+// ── Recurring Income ────────────────────────────────────────────────────
+
+export interface RecurringIncomeRuleInput {
+  amount: number
+  category: string
+  recipientId: string
+  intervalMonths: number
+  dayOfMonth: number
+  startsOn: string
+  endsOn: string | null
+  source?: string | null
+  assetId?: string | null
+}
+
+export interface ValidatedRecurringIncomeRuleInput {
+  amount: number
+  category: string
+  recipientId: string
+  intervalMonths: 1 | 3 | 6 | 12
+  dayOfMonth: number
+  startsOn: string
+  endsOn: string | null
+  source: string | null
+  assetId: string | null
+}
+
+const ALLOWED_INTERVALS = new Set([1, 3, 6, 12])
+
+export function validateRecurringIncomeRuleInput(
+  input: RecurringIncomeRuleInput,
+): ValidatedRecurringIncomeRuleInput {
+  const amount = validateAmount(input.amount)
+  if (!isValidIncomeCategoryId(input.category)) {
+    throw new Error('收入類別不在允許清單')
+  }
+  if (!input.recipientId) throw new Error('收入歸屬必填')
+  if (!ALLOWED_INTERVALS.has(input.intervalMonths)) {
+    throw new Error('週期僅支援每 1 / 3 / 6 / 12 個月')
+  }
+  if (!Number.isInteger(input.dayOfMonth) || input.dayOfMonth < 1 || input.dayOfMonth > 31) {
+    throw new Error('號數需介於 1 至 31')
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.startsOn)) throw new Error('起始日格式不對')
+  if (input.endsOn != null) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.endsOn)) throw new Error('結束日格式不對')
+    if (input.endsOn < input.startsOn) throw new Error('結束日不可早於起始日')
+  }
+  const source = input.source?.trim() || null
+  const assetId = input.assetId || null
+
+  return {
+    amount,
+    category: input.category,
+    recipientId: input.recipientId,
+    intervalMonths: input.intervalMonths as 1 | 3 | 6 | 12,
+    dayOfMonth: input.dayOfMonth,
+    startsOn: input.startsOn,
+    endsOn: input.endsOn,
+    source,
+    assetId,
+  }
+}
