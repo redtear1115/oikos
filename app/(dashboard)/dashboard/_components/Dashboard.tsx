@@ -25,6 +25,8 @@ import { CompactRow } from './CompactRow'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
+import { PendingIncomeStack } from './PendingIncomeStack'
+import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 const incomeLoader = makeIncomeLoader(20)
@@ -46,6 +48,7 @@ export interface DashboardProps {
   incomeMonthCount: number
   recentIncomeLabel: string | null
   recentIncomeFeed: PagedTxnRow[]
+  pendings: PendingRow[]
 }
 
 export function Dashboard({
@@ -56,6 +59,7 @@ export function Dashboard({
   incomeMonthCount,
   recentIncomeLabel,
   recentIncomeFeed,
+  pendings,
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo } = useMember()
@@ -65,7 +69,8 @@ export function Dashboard({
       event.kind === 'group-updated' ||
       event.kind === 'reconnect' ||
       event.kind === 'income-insert' ||
-      event.kind === 'income-update'
+      event.kind === 'income-update' ||
+      event.kind === 'recurring-income-changed'
     ) {
       // Partner accepted the invite (group-updated), or we reconnected after a
       // disconnect that may have missed the event. Re-fetch the layout to get
@@ -232,6 +237,11 @@ export function Dashboard({
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
         />
+      )}
+      {mode === 'income' && (
+        <div className="px-5">
+          <PendingIncomeStack pendings={pendings} />
+        </div>
       )}
       <TransactionFeed
         key={mode}
