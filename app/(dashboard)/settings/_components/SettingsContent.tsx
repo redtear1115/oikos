@@ -160,6 +160,14 @@ export function SettingsContent({ viewer, partner, groupId, groupName, appVersio
         )}
       </Section>
 
+      {/* 進帳 */}
+      <Section title="進帳">
+        <Row
+          label="定期進帳"
+          onClick={() => router.push('/settings/recurring-income')}
+        />
+      </Section>
+
       {/* 個人 */}
       <Section title="個人">
         <Row
