@@ -163,12 +163,17 @@ describe('renameInvoiceCredential', () => {
 })
 
 // ─── refreshInvoiceCredential ──────────────────────────────────────────────
+//
+// Note (verify-in-tx, post fix-brief #1): SELECT existing row, validate, API
+// verify, soft-delete and insert all run inside the same transaction. The
+// existing-row SELECT no longer happens before the transaction, so the queue
+// order under `db.transaction(...)` matches the in-tx call order.
 describe('refreshInvoiceCredential', () => {
-  it('soft-deletes the old row and inserts a new one with new ciphertext', async () => {
+  it('runs SELECT/verify/soft-delete/insert in a single transaction with new ciphertext', async () => {
     queueDbResult([GROUP])
     queueDbResult([{
       id: 'cred-1', barcode: '/AB12CD3', nickname: '我的', lastSyncedAt: null,
-    }])  // existing row lookup
+    }])  // existing row lookup (inside tx)
     queueDbResult([{ id: 'cred-1' }])  // soft-delete returning (inside tx)
     queueDbResult([{ id: 'cred-2' }])  // insert returning (inside tx)
 
@@ -188,35 +193,46 @@ describe('refreshInvoiceCredential', () => {
     expect(newValues.verificationCodeEncrypted).toMatch(/^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/)
   })
 
-  it('throws when row not in viewer group', async () => {
+  it('throws inside tx when row not in viewer group (rolls back before API verify)', async () => {
     queueDbResult([GROUP])
-    queueDbResult([])  // existing row not found
+    queueDbResult([])  // existing row not found inside tx
 
     await expect(
       refreshInvoiceCredential('cred-x', 'NEWCODEZ'),
     ).rejects.toThrow(/找不到/)
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    // No write should have been attempted (soft-delete / insert never reached).
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
   })
 
-  it('rejects when API returns 919 (verification code wrong)', async () => {
+  it('rejects with 919 from API verify inside tx (rolls back, old row untouched)', async () => {
     queueDbResult([GROUP])
     queueDbResult([{
       id: 'cred-1', barcode: '/AB12CD3', nickname: null, lastSyncedAt: null,
-    }])
+    }])  // existing row lookup (inside tx)
 
     await expect(
       refreshInvoiceCredential('cred-1', 'FAIL919X'),
     ).rejects.toThrow(/條碼或驗證碼/)
+    // verify ran inside tx; soft-delete/insert never reached because verify threw.
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
   })
 
-  it('rejects malformed new verification code before hitting API', async () => {
+  it('rejects malformed new verification code inside tx before hitting API', async () => {
     queueDbResult([GROUP])
     queueDbResult([{
       id: 'cred-1', barcode: '/AB12CD3', nickname: null, lastSyncedAt: null,
-    }])
+    }])  // existing row lookup (inside tx)
 
     await expect(
       refreshInvoiceCredential('cred-1', 'BAD'),  // too short
     ).rejects.toThrow(/驗證碼/)
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
   })
 })
 

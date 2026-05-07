@@ -160,35 +160,35 @@ export async function refreshInvoiceCredential(
 ): Promise<{ id: string }> {
   const { user, group } = await getViewerGroup()
 
-  // Ensure we own the row first (cheap + lets us copy fields over).
-  const [existing] = await db
-    .select({
-      id: invoiceCredentials.id,
-      barcode: invoiceCredentials.barcode,
-      nickname: invoiceCredentials.nickname,
-      lastSyncedAt: invoiceCredentials.lastSyncedAt,
-    })
-    .from(invoiceCredentials)
-    .where(and(
-      eq(invoiceCredentials.id, id),
-      eq(invoiceCredentials.groupId, group.id),
-      eq(invoiceCredentials.userId, user.id),
-      isNull(invoiceCredentials.deletedAt),
-    ))
-    .limit(1)
-  if (!existing) throw new Error('找不到該載具')
-
-  // Re-validate the new code shape using the shared helper. Reuse the existing
-  // barcode (always valid since it came from DB).
-  const validated = validateInvoiceCarrierInput({
-    barcode: existing.barcode,
-    verificationCode: newVerificationCode,
-    nickname: existing.nickname,
-  })
-
-  await verifyCarrierAgainstApi(validated.barcode, validated.verificationCode)
-
+  // SELECT → API verify → soft-delete → insert ALL run inside the transaction
+  // so a concurrent delete cannot race between verify and the soft-delete WHERE
+  // (TOCTOU). On verify failure the tx rolls back and the old row stays intact.
   const [created] = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({
+        id: invoiceCredentials.id,
+        barcode: invoiceCredentials.barcode,
+        nickname: invoiceCredentials.nickname,
+        lastSyncedAt: invoiceCredentials.lastSyncedAt,
+      })
+      .from(invoiceCredentials)
+      .where(and(
+        eq(invoiceCredentials.id, id),
+        eq(invoiceCredentials.groupId, group.id),
+        eq(invoiceCredentials.userId, user.id),
+        isNull(invoiceCredentials.deletedAt),
+      ))
+      .limit(1)
+    if (!existing) throw new Error('找不到該載具')
+
+    const validated = validateInvoiceCarrierInput({
+      barcode: existing.barcode,
+      verificationCode: newVerificationCode,
+      nickname: existing.nickname,
+    })
+
+    await verifyCarrierAgainstApi(validated.barcode, validated.verificationCode)
+
     const deleted = await tx
       .update(invoiceCredentials)
       .set({ deletedAt: new Date() })

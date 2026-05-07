@@ -44,6 +44,15 @@ CREATE POLICY "invoice_snapshots_group_member_select" ON "InvoiceImportSnapshots
       SELECT id FROM "OikosGroups" WHERE member_a = auth.uid() OR member_b = auth.uid()
     )
   );
+-- INSERT/UPDATE on InvoiceImportSnapshots is intentionally NOT exposed to anon.
+-- Snapshots are the diff base for 折讓 / 作廢 沖銷 and must only be written by
+-- the commit-import server action (postgres role bypasses RLS). Surfacing a
+-- client-side write policy would let a Supabase JS client poison the diff
+-- base. See spec §「折讓 / 作廢 自動沖銷」 for the invariant.
+
+-- (Phase A note: InvoiceImportRuns INSERT/UPDATE policies live in
+-- 0019_invoice_rls_write.sql — added after RLS audit found the write side
+-- missing.)
 
 -- ─── Realtime publication ──────────────────────────────────────────────────
 DO $$
