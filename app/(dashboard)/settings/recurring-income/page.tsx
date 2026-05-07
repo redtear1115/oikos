@@ -2,11 +2,17 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups } from '@/lib/db/schema'
-import { or, eq } from 'drizzle-orm'
+import { oikosGroups, assets } from '@/lib/db/schema'
+import { or, eq, and } from 'drizzle-orm'
 import { listActiveRules } from '@/lib/db/queries/recurringIncome'
-import { RuleListItem } from './_components/RuleListItem'
+import { RulesList } from './_components/RulesList'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { revalidatePath } from 'next/cache'
+
+async function handleMutated() {
+  'use server'
+  revalidatePath('/settings/recurring-income')
+}
 
 export default async function RecurringIncomeSettingsPage() {
   const supabase = await createClient()
@@ -21,6 +27,10 @@ export default async function RecurringIncomeSettingsPage() {
   if (!group) redirect('/setup')
 
   const rules = await listActiveRules(group.id)
+  const insuranceAssetRows = await db
+    .select({ id: assets.id, name: assets.name })
+    .from(assets)
+    .where(and(eq(assets.groupId, group.id), eq(assets.type, 'insurance')))
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
@@ -37,11 +47,7 @@ export default async function RecurringIncomeSettingsPage() {
       {rules.length === 0 ? (
         <EmptyState />
       ) : (
-        <ul className="space-y-3">
-          {rules.map((r) => (
-            <RuleListItem key={r.id} rule={r} />
-          ))}
-        </ul>
+        <RulesList rules={rules} insuranceAssets={insuranceAssetRows} onMutated={handleMutated} />
       )}
     </div>
   )
