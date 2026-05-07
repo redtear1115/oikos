@@ -14,7 +14,7 @@ import {
   pauseRule,
   resumeRule,
 } from '@/actions/recurringIncome'
-import { INCOME_CATEGORIES } from '@/lib/incomeCategories'
+import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
@@ -34,7 +34,6 @@ interface Props {
   onMutated: () => void
   /** undefined = create mode; set = edit mode */
   initial?: RecurringRuleRow
-  recipients: { id: string; displayName: string }[]
   insuranceAssets: { id: string; name: string }[]
 }
 
@@ -43,7 +42,6 @@ export function RecurringRuleSheet({
   onClose,
   onMutated,
   initial,
-  recipients,
   insuranceAssets,
 }: Props) {
   const { viewer, partner, isSolo } = useMember()
@@ -221,9 +219,15 @@ export function RecurringRuleSheet({
             <label className="flex items-baseline justify-center gap-2 cursor-text">
               <span className="text-title font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
               <input
-                type="number" min={1} inputMode="numeric"
-                value={amount || ''}
-                onChange={(e) => setAmount(parseInt(e.target.value || '0', 10))}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                enterKeyHint="done"
+                value={amount ? amount.toLocaleString('en-US') : ''}
+                onChange={(e) => {
+                  const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
+                  setAmount(next ? parseInt(next, 10) : 0)
+                }}
                 placeholder="0"
                 aria-label="固定金額"
                 className="bg-transparent border-0 outline-none text-center"
@@ -234,7 +238,7 @@ export function RecurringRuleSheet({
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
                   letterSpacing: -2,
                   lineHeight: 1,
-                  width: `${Math.max(String(amount || 0).length, 2)}ch`,
+                  width: `${Math.max((amount ? amount.toLocaleString('en-US').length : 1), 2)}ch`,
                   caretColor: P.ink,
                 }}
               />
@@ -280,7 +284,7 @@ export function RecurringRuleSheet({
             )}
           </div>
 
-          <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
+          <div style={{ height: 1, margin: '0 20px', background: 'linear-gradient(90deg, transparent, var(--hairline), transparent)' }} />
 
           {/* Category */}
           <div style={{ padding: '18px 0 16px' }}>
@@ -296,7 +300,7 @@ export function RecurringRuleSheet({
               className="flex gap-2"
               style={{ padding: '0 20px', overflowX: 'auto', scrollbarWidth: 'none' }}
             >
-              {INCOME_CATEGORIES.map((c) => (
+              {PICKABLE_INCOME_CATEGORIES.map((c) => (
                 <IncomeChip
                   key={c.id}
                   cat={c}
@@ -307,7 +311,7 @@ export function RecurringRuleSheet({
             </div>
           </div>
 
-          <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
+          <div style={{ height: 1, margin: '0 20px', background: 'linear-gradient(90deg, transparent, var(--hairline), transparent)' }} />
 
           {/* Interval */}
           <div style={{ padding: '18px 20px 16px' }}>
@@ -504,8 +508,8 @@ export function RecurringRuleSheet({
                   disabled={pending}
                   className="flex-1 py-3 rounded-full text-sm font-medium disabled:opacity-50"
                   style={{
-                    border: '1px solid #fca5a5',
-                    color: '#dc2626',
+                    border: '1px solid var(--destructive)',
+                    color: 'var(--destructive)',
                     background: 'transparent',
                     fontFamily: 'inherit',
                     cursor: 'pointer',

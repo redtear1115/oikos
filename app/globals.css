@@ -18,8 +18,11 @@
   --realtime-flash: #fffbe8;
 
   /* Typography scale — P3-1 */
+  --fs-xs:        11px;   /* extra small: labels, metadata */
   --fs-micro:     11px;   /* tab label, timestamp, metadata */
+  --fs-sm:        13px;   /* small: secondary text, captions */
   --fs-label:     13px;   /* section label, chip, caption */
+  --fs-base:      15px;   /* base: body text, list items, form inputs */
   --fs-body:      15px;   /* body text, list items, form inputs */
   --fs-button:    16px;   /* button, CTA, month header */
   --fs-title:     22px;   /* sheet title, section hero number */

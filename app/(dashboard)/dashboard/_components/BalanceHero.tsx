@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
@@ -124,6 +125,19 @@ export function BalanceHero({
                 {recentIncomeLabel ?? '尚無紀錄'}
               </div>
             </div>
+          </div>
+          <div style={{
+            marginTop: 12, paddingTop: 12,
+            borderTop: '1px solid var(--hairline)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>定期進帳</span>
+            <Link
+              href="/settings/recurring-income"
+              style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', textDecoration: 'none' }}
+            >
+              管理 ›
+            </Link>
           </div>
         </div>
       ) : (
