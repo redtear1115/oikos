@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule } from '@/actions/recurringIncome'
+import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending } from '@/actions/recurringIncome'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -149,5 +149,30 @@ describe('softDeleteRule', () => {
     queueDbResult([GROUP])
     queueDbResult([])
     await expect(softDeleteRule('rule-x')).rejects.toThrow(/找不到/)
+  })
+})
+
+describe('confirmPending', () => {
+  it('atomically inserts IncomeTx and updates pending.resolved_tx_id', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      id: 'pend-1', groupId: GROUP.id, ruleId: 'rule-1',
+      proposedAmount: 75000, proposedDate: '2026-05-25',
+      recipientId: 'user-a', category: 'salary',
+      source: '公司 A 月薪', assetId: null,
+    }])
+    queueDbResult([{ id: 'tx-1' }])     // tx insert IncomeTx
+    queueDbResult([{ id: 'pend-1' }])   // tx update pending
+
+    const out = await confirmPending('pend-1')
+
+    expect(out).toEqual({ txId: 'tx-1' })
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('throws when pending already resolved or skipped', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+    await expect(confirmPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
   })
 })

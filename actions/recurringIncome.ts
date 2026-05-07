@@ -3,6 +3,7 @@
 import { db } from '@/lib/db/client'
 import {
   assets,
+  incomeTransactions,
   oikosGroups,
   recurringIncomeRules,
   pendingIncomeOccurrences,
@@ -185,6 +186,63 @@ export async function resumeRule(id: string): Promise<void> {
 
   revalidatePath('/settings/recurring-income')
   revalidatePath('/dashboard')
+}
+
+export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
+  const { group } = await getViewerGroup()
+
+  const [row] = await db
+    .select({
+      id: pendingIncomeOccurrences.id,
+      groupId: pendingIncomeOccurrences.groupId,
+      proposedAmount: pendingIncomeOccurrences.proposedAmount,
+      proposedDate: pendingIncomeOccurrences.proposedDate,
+      recipientId: recurringIncomeRules.recipientId,
+      category: recurringIncomeRules.category,
+      source: recurringIncomeRules.source,
+      assetId: recurringIncomeRules.assetId,
+    })
+    .from(pendingIncomeOccurrences)
+    .innerJoin(recurringIncomeRules, eq(recurringIncomeRules.id, pendingIncomeOccurrences.ruleId))
+    .where(and(
+      eq(pendingIncomeOccurrences.id, pendingId),
+      eq(pendingIncomeOccurrences.groupId, group.id),
+      isNull(pendingIncomeOccurrences.skippedAt),
+      isNull(pendingIncomeOccurrences.resolvedTxId),
+    ))
+    .limit(1)
+  if (!row) throw new Error('待確認進帳已被處理或找不到')
+
+  const result = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(incomeTransactions)
+      .values({
+        groupId: row.groupId,
+        recipientId: row.recipientId,
+        amount: row.proposedAmount,
+        category: row.category,
+        source: row.source,
+        assetId: row.assetId,
+        occurredAt: row.proposedDate,
+      })
+      .returning({ id: incomeTransactions.id })
+
+    const [resolved] = await tx
+      .update(pendingIncomeOccurrences)
+      .set({ resolvedTxId: created.id })
+      .where(and(
+        eq(pendingIncomeOccurrences.id, pendingId),
+        isNull(pendingIncomeOccurrences.resolvedTxId),
+      ))
+      .returning({ id: pendingIncomeOccurrences.id })
+    if (!resolved) throw new Error('待確認進帳已被其他裝置處理')
+
+    return { txId: created.id }
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/records')
+  return result
 }
 
 export async function softDeleteRule(id: string): Promise<void> {
