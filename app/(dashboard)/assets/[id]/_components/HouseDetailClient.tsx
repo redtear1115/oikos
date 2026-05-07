@@ -14,6 +14,22 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
 
+function HomeStat({ purchasedAt, accent }: { purchasedAt: string; accent: string }) {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(purchasedAt).getTime()) / 86400000))
+  return (
+    <div className="text-center py-2">
+      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>入住天數</div>
+      <div className="inline-flex items-baseline gap-1.5 mt-1.5">
+        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="text-sm font-medium" style={{ color: accent }}>天</span>
+      </div>
+      <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
+        {purchasedAt} 入住
+      </div>
+    </div>
+  )
+}
+
 interface AssetSummary {
   monthAmount: number
   totalAmount: number
@@ -72,6 +88,12 @@ export function HouseDetailClient({ assetId, name, details, summary, assetSheetI
         subtitle={subtitle}
         onEditClick={() => setEditOpen(true)}
       />
+
+      {details?.purchasedAt && (
+        <div className="px-5 pb-6" style={{ background: tint.bg }}>
+          <HomeStat purchasedAt={details.purchasedAt} accent={tint.accent} />
+        </div>
+      )}
 
       <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
 

@@ -47,13 +47,16 @@ export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehi
 
   let pct = 0
   let yearsLeft = 0
+  let daysLeft: number | null = null
   if (details?.startsAt && details?.endsAt) {
     const start = new Date(details.startsAt)
     const end = new Date(details.endsAt)
     const now = new Date()
     pct = Math.max(0, Math.min(1, (now.getTime() - start.getTime()) / (end.getTime() - start.getTime())))
     yearsLeft = Math.max(0, (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+    if (yearsLeft < 1) daysLeft = Math.max(0, Math.round(yearsLeft * 365.25))
   }
+  const hasDates = !!(details?.startsAt && details?.endsAt)
 
   return (
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
@@ -69,17 +72,42 @@ export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehi
       />
 
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
-        <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>年繳保費</div>
-        <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-          <span className="text-lg font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
-          <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -1.5 }}>
-            {details?.annualPremium?.toLocaleString() ?? '—'}
-          </span>
-        </div>
-        {details?.termYears && details?.sumInsured && (
-          <div className="text-micro mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
-            {details.termYears} 年期 · 保額 NT$ {details.sumInsured.toLocaleString()}
-          </div>
+        {hasDates ? (
+          <>
+            <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+              {pct >= 1 ? '已到期' : '保障剩餘'}
+            </div>
+            <div className="inline-flex items-baseline gap-1.5 mt-1.5">
+              <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: pct >= 1 ? 'var(--ink-3)' : 'var(--ink)', letterSpacing: -1.5 }}>
+                {pct >= 1 ? '0' : daysLeft !== null ? daysLeft.toString() : yearsLeft.toFixed(1)}
+              </span>
+              {pct < 1 && (
+                <span className="text-sm font-medium" style={{ color: tint.accent }}>
+                  {daysLeft !== null ? '天' : '年'}
+                </span>
+              )}
+            </div>
+            <div className="text-micro mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+              {details?.annualPremium ? `年繳 NT$ ${details.annualPremium.toLocaleString()}` : ''}
+              {details?.annualPremium && details?.termYears ? ` · ` : ''}
+              {details?.termYears ? `共 ${details.termYears} 年期` : ''}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>年繳保費</div>
+            <div className="inline-flex items-baseline gap-1.5 mt-1.5">
+              <span className="text-lg font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
+              <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -1.5 }}>
+                {details?.annualPremium?.toLocaleString() ?? '—'}
+              </span>
+            </div>
+            {details?.termYears && details?.sumInsured && (
+              <div className="text-micro mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+                {details.termYears} 年期 · 保額 NT$ {details.sumInsured.toLocaleString()}
+              </div>
+            )}
+          </>
         )}
       </div>
 
