@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createRule, updateRule } from '@/actions/recurringIncome'
+import { createRule, updateRule, pauseRule, resumeRule } from '@/actions/recurringIncome'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -89,5 +89,45 @@ describe('updateRule', () => {
       id: 'rule-x', amount: 1, category: 'other', recipientId: 'user-a',
       intervalMonths: 1, dayOfMonth: 1, startsOn: '2026-05-01', endsOn: null,
     })).rejects.toThrow(/找不到/)
+  })
+})
+
+describe('pauseRule', () => {
+  it('sets paused_at on rule in viewer group', async () => {
+queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+    await pauseRule('rule-1')
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.pausedAt).toBeInstanceOf(Date)
+  })
+})
+
+describe('resumeRule', () => {
+  it('clears paused_at AND snaps next_occurrence to future when in past', async () => {
+queueDbResult([GROUP])
+    queueDbResult([{
+      id: 'rule-1', groupId: GROUP.id,
+      nextOccurrenceAt: '2026-02-25',
+      intervalMonths: 1, dayOfMonth: 25,
+    }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await resumeRule('rule-1')
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.pausedAt).toBeNull()
+    expect(setCall.nextOccurrenceAt).toBe('2026-05-25')
+  })
+
+  it('keeps next_occurrence when already in future', async () => {
+queueDbResult([GROUP])
+    queueDbResult([{
+      id: 'rule-1', groupId: GROUP.id,
+      nextOccurrenceAt: '2026-06-25', intervalMonths: 1, dayOfMonth: 25,
+    }])
+    queueDbResult([{ id: 'rule-1' }])
+    await resumeRule('rule-1')
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-25')
   })
 })

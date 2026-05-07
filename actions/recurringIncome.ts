@@ -136,3 +136,52 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
   revalidatePath('/dashboard')
   return { id: updated.id }
 }
+
+export async function pauseRule(id: string): Promise<void> {
+  const { group } = await getViewerGroup()
+  const [updated] = await db
+    .update(recurringIncomeRules)
+    .set({ pausedAt: new Date() })
+    .where(and(
+      eq(recurringIncomeRules.id, id),
+      eq(recurringIncomeRules.groupId, group.id),
+      isNull(recurringIncomeRules.deletedAt),
+    ))
+    .returning({ id: recurringIncomeRules.id })
+  if (!updated) throw new Error('找不到該定期規則')
+  revalidatePath('/settings/recurring-income')
+  revalidatePath('/dashboard')
+}
+
+export async function resumeRule(id: string): Promise<void> {
+  const { group } = await getViewerGroup()
+  const [rule] = await db
+    .select({
+      id: recurringIncomeRules.id,
+      nextOccurrenceAt: recurringIncomeRules.nextOccurrenceAt,
+      intervalMonths: recurringIncomeRules.intervalMonths,
+      dayOfMonth: recurringIncomeRules.dayOfMonth,
+    })
+    .from(recurringIncomeRules)
+    .where(and(
+      eq(recurringIncomeRules.id, id),
+      eq(recurringIncomeRules.groupId, group.id),
+      isNull(recurringIncomeRules.deletedAt),
+    ))
+    .limit(1)
+  if (!rule) throw new Error('找不到該定期規則')
+
+  const today = new Date().toISOString().slice(0, 10)
+  const snapped = rule.nextOccurrenceAt > today
+    ? rule.nextOccurrenceAt
+    : snapToFuture(rule.nextOccurrenceAt, rule.intervalMonths, rule.dayOfMonth, today)
+
+  await db
+    .update(recurringIncomeRules)
+    .set({ pausedAt: null, nextOccurrenceAt: snapped })
+    .where(eq(recurringIncomeRules.id, id))
+    .returning({ id: recurringIncomeRules.id })
+
+  revalidatePath('/settings/recurring-income')
+  revalidatePath('/dashboard')
+}
