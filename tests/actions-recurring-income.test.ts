@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending, editAndConfirmPending } from '@/actions/recurringIncome'
+import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending, editAndConfirmPending, skipPending } from '@/actions/recurringIncome'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -198,5 +198,22 @@ describe('editAndConfirmPending', () => {
     const insertVals = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(insertVals.amount).toBe(80000)
     expect(insertVals.source).toBe('加薪後 5 月')
+  })
+})
+
+describe('skipPending', () => {
+  it('sets skipped_at on active pending in viewer group', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'pend-1' }])
+
+    await skipPending('pend-1')
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.skippedAt).toBeInstanceOf(Date)
+  })
+
+  it('throws when already resolved or skipped', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+    await expect(skipPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
   })
 })

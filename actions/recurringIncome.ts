@@ -343,3 +343,19 @@ export async function softDeleteRule(id: string): Promise<void> {
   revalidatePath('/settings/recurring-income')
   revalidatePath('/dashboard')
 }
+
+export async function skipPending(pendingId: string): Promise<void> {
+  const { group } = await getViewerGroup()
+  const [updated] = await db
+    .update(pendingIncomeOccurrences)
+    .set({ skippedAt: new Date() })
+    .where(and(
+      eq(pendingIncomeOccurrences.id, pendingId),
+      eq(pendingIncomeOccurrences.groupId, group.id),
+      isNull(pendingIncomeOccurrences.skippedAt),
+      isNull(pendingIncomeOccurrences.resolvedTxId),
+    ))
+    .returning({ id: pendingIncomeOccurrences.id })
+  if (!updated) throw new Error('待確認進帳已被處理或找不到')
+  revalidatePath('/dashboard')
+}
