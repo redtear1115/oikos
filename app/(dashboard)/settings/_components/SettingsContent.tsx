@@ -6,6 +6,7 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { LogoutButton } from './LogoutButton'
+import { InvoiceCredentialSheet, type ExistingCredential, type InvoiceCredentialMode } from './InvoiceCredentialSheet'
 import { updateGroupName } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
@@ -21,18 +22,38 @@ export interface ViewerInfo {
 }
 export interface PartnerInfo { id: string; displayName: string; email: string | null; avatarUrl: string | null }
 
+export interface InvoiceCredentialRow {
+  id: string
+  barcode: string
+  nickname: string | null
+  status: 'active' | 'invalid' | 'revoked'
+  lastSyncedAt: string | null  // ISO string (server-formatted; UI just shows date part)
+}
+
 interface Props {
   viewer: ViewerInfo
   partner: PartnerInfo | null
   groupId: string
   groupName: string
   appVersion: string
+  /** Optional — undefined means caller hasn't wired the section yet (back-compat). */
+  invoiceCredentials?: InvoiceCredentialRow[]
 }
 
-export function SettingsContent({ viewer, partner, groupId, groupName, appVersion }: Props) {
+export function SettingsContent({
+  viewer, partner, groupId, groupName, appVersion,
+  invoiceCredentials = [],
+}: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
   const isSolo = partner === null
+
+  // Invoice carrier sheet state. `mode` carries the row to edit when present.
+  const [invoiceSheet, setInvoiceSheet] = useState<
+    | null
+    | { mode: 'create' }
+    | { mode: 'edit'; initial: ExistingCredential }
+  >(null)
 
   const handleClose = () => setEditing(null)
   const refresh = () => router.refresh()
@@ -168,6 +189,69 @@ export function SettingsContent({ viewer, partner, groupId, groupName, appVersio
         />
       </Section>
 
+      {/* 雲端發票 */}
+      <Section title="雲端發票">
+        {invoiceCredentials.length === 0 ? (
+          <Row
+            label="加入手機條碼"
+            onClick={() => setInvoiceSheet({ mode: 'create' })}
+          />
+        ) : (
+          <div
+            className="rounded-[20px] overflow-hidden"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            {invoiceCredentials.map((c, i) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setInvoiceSheet({
+                  mode: 'edit',
+                  initial: { id: c.id, barcode: c.barcode, nickname: c.nickname },
+                })}
+                className="w-full flex items-center gap-3 px-5 py-4 text-left bg-transparent cursor-pointer"
+                style={{ borderTop: i === 0 ? 'none' : '1px solid var(--hairline)' }}
+              >
+                {/* Status dot */}
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    background: c.status === 'active' ? 'var(--accent)' : '#E4A23B',
+                  }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                    {c.nickname || '我的'}
+                    <span className="ml-2 text-micro" style={{ color: 'var(--ink-3)' }}>
+                      {c.barcode}
+                    </span>
+                  </div>
+                  <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                    {c.status === 'invalid'
+                      ? '驗證碼可能已變更，點擊重新輸入'
+                      : c.lastSyncedAt
+                        ? `最近匯入：${formatYmd(c.lastSyncedAt)}`
+                        : '尚未匯入過'}
+                  </div>
+                </div>
+                <span className="text-sm" style={{ color: 'var(--ink-3)' }}>›</span>
+              </button>
+            ))}
+            <div style={{ borderTop: '1px solid var(--hairline)' }} />
+            <button
+              type="button"
+              onClick={() => setInvoiceSheet({ mode: 'create' })}
+              className="w-full flex items-center justify-between px-5 py-4 text-left bg-transparent cursor-pointer"
+            >
+              <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                + 加入手機條碼
+              </div>
+              <span className="text-sm" style={{ color: 'var(--ink-3)' }}>›</span>
+            </button>
+          </div>
+        )}
+      </Section>
+
       {/* 個人 */}
       <Section title="個人">
         <Row
@@ -268,8 +352,25 @@ export function SettingsContent({ viewer, partner, groupId, groupName, appVersio
         open={installGuideOpen}
         onClose={() => setInstallGuideOpen(false)}
       />
+
+      <InvoiceCredentialSheet
+        open={invoiceSheet !== null}
+        mode={(invoiceSheet?.mode ?? 'create') as InvoiceCredentialMode}
+        initial={invoiceSheet?.mode === 'edit' ? invoiceSheet.initial : undefined}
+        onClose={() => setInvoiceSheet(null)}
+        onSaved={() => router.refresh()}
+      />
     </>
   )
+}
+
+/** Format an ISO timestamp / date as `YYYY/MM/DD` for display. */
+function formatYmd(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}/${m}/${day}`
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

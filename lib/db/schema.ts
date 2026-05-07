@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date,
+  timestamp, date, jsonb,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -12,6 +12,11 @@ export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'ins
 export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel', 'electric'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
 export const insuredTypeEnum = pgEnum('insured_type', ['user', 'child'])
+export const invoiceCredentialStatusEnum = pgEnum('invoice_credential_status', ['active', 'invalid', 'revoked'])
+export const invoiceImportRunStatusEnum = pgEnum(
+  'invoice_import_run_status',
+  ['fetching', 'preview', 'committed', 'failed', 'cancelled'],
+)
 
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
@@ -180,7 +185,45 @@ export const invoiceCredentials = pgTable('InvoiceCredentials', {
   userId: uuid('user_id').notNull().references(() => profiles.id),
   barcode: text('barcode').notNull(),
   verificationCodeEncrypted: text('verification_code_encrypted').notNull(),
+  // v0.9.0 additions:
+  nickname: text('nickname'),
+  status: invoiceCredentialStatusEnum('status').notNull().default('active'),
+  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// Per-invoice diff base. invoice_number is globally unique nationwide. Server-only.
+export const invoiceImportSnapshots = pgTable('InvoiceImportSnapshots', {
+  invoiceNumber: text('invoice_number').primaryKey(),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  importedAmount: integer('imported_amount').notNull(),
+  importedDescription: text('imported_description').notNull(),
+  importedCategory: text('imported_category').notNull(),
+  invoiceDate: date('invoice_date').notNull(),
+  merchantName: text('merchant_name').notNull(),
+  raw: jsonb('raw'),
+  voidedAt: timestamp('voided_at', { withTimezone: true }),
+  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }).defaultNow().notNull(),
+  importedAt: timestamp('imported_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// Audit log + debounce for each "click 匯入發票" action.
+export const invoiceImportRuns = pgTable('InvoiceImportRuns', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  credentialId: uuid('credential_id').notNull().references(() => invoiceCredentials.id),
+  userId: uuid('user_id').notNull().references(() => profiles.id),
+  rangeStart: date('range_start').notNull(),
+  rangeEnd: date('range_end').notNull(),
+  status: invoiceImportRunStatusEnum('status').notNull().default('fetching'),
+  fetchedCount: integer('fetched_count').notNull().default(0),
+  committedCount: integer('committed_count').notNull().default(0),
+  skippedDupCount: integer('skipped_dup_count').notNull().default(0),
+  skippedVoidCount: integer('skipped_void_count').notNull().default(0),
+  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  errorMsg: text('error_msg'),
 })
 
 export const incomeTransactions = pgTable('IncomeTransactions', {
