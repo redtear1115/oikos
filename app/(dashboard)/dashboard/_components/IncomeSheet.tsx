@@ -121,9 +121,11 @@ interface Props {
   initial?: IncomeSheetInitial
   onMutated?: () => void
   prefilledAssetId?: string | null
+  prefilledCategory?: IncomeCategoryId
+  prefilledAmount?: number
 }
 
-export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetId }: Props) {
+export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledAmount }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const P = DEFAULT_INCOME_PALETTE
 
@@ -167,8 +169,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
       setNote(initial.source ?? '')
       setAssetId(initial.assetId ?? null)
     } else {
-      setAmount('')
-      setCategory('salary')
+      setAmount(prefilledAmount !== undefined ? String(prefilledAmount) : '')
+      setCategory(prefilledCategory ?? 'salary')
       setRecipientWho('M')
       setDate(localTodayISO())
       setNote('')
@@ -177,7 +179,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
     setError('')
     setConfirmingDelete(false)
     setShowPolicyPicker(false)
-  }, [open, initial, viewer.id, prefilledAssetId])
+  }, [open, initial, viewer.id, prefilledAssetId, prefilledCategory, prefilledAmount])
 
   // Auto-suggest policy picker when category is maturity/claim
   useEffect(() => {

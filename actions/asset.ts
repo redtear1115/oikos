@@ -624,6 +624,7 @@ export interface CreateInsuranceInput {
   endsAt?: string | null
   termYears?: number | null
   vehicleId?: string | null
+  expectedMaturityAmount?: number | null
 }
 
 export interface EditInsuranceInput extends CreateInsuranceInput {
@@ -665,6 +666,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       termYears: validated.termYears,
       insuredType: 'user',
       vehicleId: validated.vehicleId,
+      expectedMaturityAmount: validated.expectedMaturityAmount,
     })
     return [asset]
   })
@@ -718,6 +720,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         termYears: validated.termYears,
         insuredType: 'user',
         vehicleId: validated.vehicleId,
+        expectedMaturityAmount: validated.expectedMaturityAmount,
       })
       .onConflictDoUpdate({
         target: insuranceDetails.assetId,
@@ -733,6 +736,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
           expiryDate: validated.endsAt,
           termYears: validated.termYears,
           vehicleId: validated.vehicleId,
+          expectedMaturityAmount: validated.expectedMaturityAmount,
         },
       })
   })

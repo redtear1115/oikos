@@ -5,6 +5,7 @@ import { assets, incomeTransactions, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor } from '@/lib/db/queries/incomes'
+import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -163,6 +164,27 @@ export async function loadMoreIncomes(
 ): Promise<PagedIncomeRow[]> {
   const { group } = await getViewerGroup()
   const rows = await listIncomesPaged(group.id, cursor, limit)
+  return rows.map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    category: r.category,
+    source: r.source,
+    recipientId: r.recipientId,
+    assetId: r.assetId,
+    occurredAt: r.occurredAt,
+    createdAt: r.createdAt.toISOString(),
+    kind: 'income' as const,
+  }))
+}
+
+export async function loadMoreInsuranceReturns(
+  assetId: string,
+  categories: string[],
+  cursor: IncomeCursor | null,
+  limit = 20,
+): Promise<PagedIncomeRow[]> {
+  const { group } = await getViewerGroup()
+  const rows = await listInsuranceReturnsPaged(assetId, group.id, categories, cursor, limit)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

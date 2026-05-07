@@ -99,6 +99,7 @@ export interface InsuranceDetailsRow {
   termYears: number | null
   sumInsured: number | null
   vehicleId: string | null
+  expectedMaturityAmount: number | null
 }
 
 export async function getInsuranceDetails(assetId: string): Promise<InsuranceDetailsRow | null> {
@@ -115,6 +116,7 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       termYears: insuranceDetails.termYears,
       sumInsured: insuranceDetails.sumInsured,
       vehicleId: insuranceDetails.vehicleId,
+      expectedMaturityAmount: insuranceDetails.expectedMaturityAmount,
     })
     .from(insuranceDetails)
     .where(eq(insuranceDetails.assetId, assetId))
