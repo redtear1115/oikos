@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending } from '@/actions/recurringIncome'
+import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending, editAndConfirmPending } from '@/actions/recurringIncome'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -174,5 +174,29 @@ describe('confirmPending', () => {
     queueDbResult([GROUP])
     queueDbResult([])
     await expect(confirmPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
+  })
+})
+
+describe('editAndConfirmPending', () => {
+  it('inserts IncomeTx with edited fields and resolves pending', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'pend-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'tx-2' }])
+    queueDbResult([{ id: 'pend-1' }])
+
+    const out = await editAndConfirmPending({
+      pendingId: 'pend-1',
+      amount: 80000,
+      category: 'salary',
+      recipientId: 'user-a',
+      occurredAt: '2026-05-25',
+      source: '加薪後 5 月',
+      assetId: null,
+    })
+
+    expect(out).toEqual({ txId: 'tx-2' })
+    const insertVals = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(insertVals.amount).toBe(80000)
+    expect(insertVals.source).toBe('加薪後 5 月')
   })
 })

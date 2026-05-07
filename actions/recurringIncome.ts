@@ -11,6 +11,7 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import {
   validateRecurringIncomeRuleInput,
+  validateIncomeInput,
   type RecurringIncomeRuleInput,
 } from '@/lib/validators'
 import { computeNextOccurrence, snapToFuture } from '@/lib/recurringIncome'
@@ -232,6 +233,76 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
       .set({ resolvedTxId: created.id })
       .where(and(
         eq(pendingIncomeOccurrences.id, pendingId),
+        isNull(pendingIncomeOccurrences.resolvedTxId),
+      ))
+      .returning({ id: pendingIncomeOccurrences.id })
+    if (!resolved) throw new Error('待確認進帳已被其他裝置處理')
+
+    return { txId: created.id }
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/records')
+  return result
+}
+
+export interface EditAndConfirmInput {
+  pendingId: string
+  amount: number
+  category: string
+  recipientId: string
+  occurredAt: string
+  source?: string | null
+  assetId?: string | null
+}
+
+export async function editAndConfirmPending(
+  input: EditAndConfirmInput,
+): Promise<{ txId: string }> {
+  const validated = validateIncomeInput({
+    amount: input.amount,
+    category: input.category,
+    recipientId: input.recipientId,
+    occurredAt: input.occurredAt,
+    source: input.source ?? null,
+    assetId: input.assetId ?? null,
+  })
+
+  const { group } = await getViewerGroup()
+  assertRecipientInGroup(validated.recipientId, group)
+  if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
+
+  const [pending] = await db
+    .select({ id: pendingIncomeOccurrences.id })
+    .from(pendingIncomeOccurrences)
+    .where(and(
+      eq(pendingIncomeOccurrences.id, input.pendingId),
+      eq(pendingIncomeOccurrences.groupId, group.id),
+      isNull(pendingIncomeOccurrences.skippedAt),
+      isNull(pendingIncomeOccurrences.resolvedTxId),
+    ))
+    .limit(1)
+  if (!pending) throw new Error('待確認進帳已被處理或找不到')
+
+  const result = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(incomeTransactions)
+      .values({
+        groupId: group.id,
+        recipientId: validated.recipientId,
+        amount: validated.amount,
+        category: validated.category,
+        source: validated.source,
+        assetId: validated.assetId,
+        occurredAt: validated.occurredAt,
+      })
+      .returning({ id: incomeTransactions.id })
+
+    const [resolved] = await tx
+      .update(pendingIncomeOccurrences)
+      .set({ resolvedTxId: created.id })
+      .where(and(
+        eq(pendingIncomeOccurrences.id, input.pendingId),
         isNull(pendingIncomeOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingIncomeOccurrences.id })
