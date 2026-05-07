@@ -45,8 +45,38 @@ export function AssetsListClient({ items }: Props) {
   const handleMutated = () => router.refresh()
 
   const cars = items.filter((a) => a.type === 'car')
-  const others = items.filter((a) => a.type !== 'car')
-  const multi = cars.length > 1
+  const houses = items.filter((a) => a.type === 'house')
+  const livings = items.filter((a) => ['child', 'pet', 'plant'].includes(a.type))
+  const insurances = items.filter((a) => a.type === 'insurance')
+  const multiCar = cars.length > 1
+
+  const SectionLabel = ({ label }: { label: string }) => (
+    <div
+      className="text-xs font-medium tracking-[0.5px] px-1 pb-1"
+      style={{ color: 'var(--ink-3)' }}
+    >
+      {label}
+    </div>
+  )
+
+  const AssetGroup = ({ group }: { group: AssetsListItem[] }) => (
+    <div
+      className="rounded-[20px] overflow-hidden"
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+    >
+      {group.map((a, i) => (
+        <AssetListItem
+          key={a.id}
+          id={a.id}
+          type={a.type}
+          name={a.name}
+          plate={a.plate ?? null}
+          monthAmount={a.monthAmount}
+          isLast={i === group.length - 1}
+        />
+      ))}
+    </div>
+  )
 
   const dashedButton = (label: string) => (
     <button
@@ -72,6 +102,8 @@ export function AssetsListClient({ items }: Props) {
     </button>
   )
 
+  const hasProperty = cars.length > 0 || houses.length > 0
+
   return (
     <div className="relative min-h-screen pb-[92px]">
       <div className="px-5 pt-[60px] pb-4">
@@ -86,9 +118,10 @@ export function AssetsListClient({ items }: Props) {
       {items.length === 0 ? (
         <AssetEmptyState />
       ) : (
-        <div className="px-4 flex flex-col gap-4">
-          {cars.length > 0 && (
-            <div className="flex flex-col" style={{ gap: 12 }}>
+        <div className="px-4 flex flex-col gap-5">
+          {hasProperty && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel label="財產" />
               {cars.map((c) => (
                 <CarHeroCard
                   key={c.id}
@@ -103,29 +136,25 @@ export function AssetsListClient({ items }: Props) {
                   monthAmount={c.monthAmount}
                   totalAmount={c.totalAmount ?? 0}
                   avgFuelEcon={c.avgFuelEcon ?? null}
-                  compact={multi}
+                  compact={multiCar}
                 />
               ))}
-              {dashedButton(multi ? '新增車輛' : '加入第二輛車')}
+              {cars.length > 0 && dashedButton(multiCar ? '新增車輛' : '加入第二輛車')}
+              {houses.length > 0 && <AssetGroup group={houses} />}
             </div>
           )}
 
-          {others.length > 0 && (
-            <div
-              className="rounded-[20px] overflow-hidden"
-              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-            >
-              {others.map((a, i) => (
-                <AssetListItem
-                  key={a.id}
-                  id={a.id}
-                  type={a.type}
-                  name={a.name}
-                  plate={a.plate ?? null}
-                  monthAmount={a.monthAmount}
-                  isLast={i === others.length - 1}
-                />
-              ))}
+          {livings.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel label="生命體" />
+              <AssetGroup group={livings} />
+            </div>
+          )}
+
+          {insurances.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel label="保障" />
+              <AssetGroup group={insurances} />
             </div>
           )}
         </div>
