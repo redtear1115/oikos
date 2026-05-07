@@ -31,7 +31,7 @@ interface Props {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function InsuranceDetailClient({ assetId, name, details, linkedVehicle, assetSheetInitial, allAssets }: Props) {
+export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehicle, assetSheetInitial, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)

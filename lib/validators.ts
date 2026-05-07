@@ -582,6 +582,7 @@ export interface InsuranceInput {
   endsAt?: string | null
   termYears?: number | null
   vehicleId?: string | null
+  expectedMaturityAmount?: number | null
 }
 
 export interface ValidatedInsuranceInput {
@@ -597,6 +598,7 @@ export interface ValidatedInsuranceInput {
   endsAt: string | null
   termYears: number | null
   vehicleId: string | null
+  expectedMaturityAmount: number | null
 }
 
 export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranceInput {
@@ -634,7 +636,22 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     termYears = input.termYears
   }
 
-  return { name, kind, insured, insurer, policyNo, annualPremium, sumInsured, payCycle, startsAt, endsAt, termYears, vehicleId: input.vehicleId?.trim() || null }
+  // Only retained when kind === 'savings'; cleared otherwise to prevent
+  // stale values from leaking across kind switches.
+  let expectedMaturityAmount: number | null = null
+  if (kind === 'savings' && input.expectedMaturityAmount !== null && input.expectedMaturityAmount !== undefined) {
+    if (!Number.isInteger(input.expectedMaturityAmount) || input.expectedMaturityAmount < 0)
+      throw new Error('預估滿期金必須是非負整數')
+    expectedMaturityAmount = input.expectedMaturityAmount
+  }
+
+  return {
+    name, kind, insured, insurer, policyNo,
+    annualPremium, sumInsured, payCycle,
+    startsAt, endsAt, termYears,
+    vehicleId: input.vehicleId?.trim() || null,
+    expectedMaturityAmount,
+  }
 }
 
 // ── Income ──────────────────────────────────────────────────────────────

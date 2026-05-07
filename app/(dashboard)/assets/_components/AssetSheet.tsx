@@ -77,6 +77,7 @@ export interface AssetSheetInitial {
   insEndsAt?: string | null
   insTermYears?: number | null
   insVehicleId?: string | null
+  insExpectedMaturityAmount?: number | null
   // House-specific
   houseAddress?: string | null
   housePurchasedAt?: string | null
@@ -167,6 +168,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [insEndsAt, setInsEndsAt] = useState('')
   const [insTermYears, setInsTermYears] = useState('')
   const [insVehicleId, setInsVehicleId] = useState<string | null>(null)
+  const [insExpectedMaturityAmount, setInsExpectedMaturityAmount] = useState('')
   const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -240,6 +242,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setInsEndsAt(initial.insEndsAt ?? '')
         setInsTermYears(initial.insTermYears?.toString() ?? '')
         setInsVehicleId(initial.insVehicleId ?? null)
+        setInsExpectedMaturityAmount(initial.insExpectedMaturityAmount?.toString() ?? '')
         getCarAssets().then(setCarAssets).catch(() => {})
       }
     } else {
@@ -297,6 +300,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setInsEndsAt('')
       setInsTermYears('')
       setInsVehicleId(null)
+      setInsExpectedMaturityAmount('')
     }
     setShowCal(false)
     setError('')
@@ -395,6 +399,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             endsAt: insEndsAt || null,
             termYears: insTermYears ? parseInt(insTermYears, 10) : null,
             vehicleId: insVehicleId || null,
+            expectedMaturityAmount:
+              insKind === 'savings' && insExpectedMaturityAmount
+                ? parseInt(insExpectedMaturityAmount, 10)
+                : null,
           }
           if (isEdit) {
             await editInsurance({ id: initial!.id, ...payload })
@@ -1092,7 +1100,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             <>
               <Field label="險種">
                 <div className="flex flex-wrap gap-1.5">
-                  {[{v:'medical',label:'醫療'},{v:'life',label:'壽險'},{v:'accident',label:'意外'},{v:'cancer',label:'癌症'},{v:'illness',label:'重大傷病'},{v:'car',label:'汽車'}].map(o => (
+                  {[{v:'medical',label:'醫療'},{v:'life',label:'壽險'},{v:'accident',label:'意外'},{v:'cancer',label:'癌症'},{v:'illness',label:'重大傷病'},{v:'car',label:'汽車'},{v:'savings',label:'儲蓄'}].map(o => (
                     <button key={o.v} type="button" onClick={() => setInsKind(o.v)}
                       className="h-[34px] px-[14px] rounded-[10px] text-label"
                       style={{
@@ -1143,6 +1151,21 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   style={{ color: 'var(--ink)' }} />
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
               </Field>
+
+              {insKind === 'savings' && (
+                <Field label="預估滿期金">
+                  <input
+                    value={insExpectedMaturityAmount}
+                    onChange={e => setInsExpectedMaturityAmount(e.target.value)}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="600000"
+                    className="w-full bg-transparent border-0 outline-none text-base"
+                    style={{ color: 'var(--ink)' }}
+                  />
+                  <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+                </Field>
+              )}
 
               <Field label="繳費週期">
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>

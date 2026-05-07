@@ -10,7 +10,10 @@ import { AssetDetailClient } from './_components/AssetDetailClient'
 import { ChildDetailClient } from './_components/ChildDetailClient'
 import { PetDetailClient } from './_components/PetDetailClient'
 import { PlantDetailClient } from './_components/PlantDetailClient'
-import { InsuranceDetailClient } from './_components/InsuranceDetailClient'
+import { InsuranceDetailClientLegacy } from './_components/InsuranceDetailClientLegacy'
+import { SavingsView } from './_components/insurance/SavingsView'
+import { getFramingGroup } from '@/lib/insurance'
+import { getInsurancePaymentTotal, getInsuranceReturnTotal, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { HouseDetailClient } from './_components/HouseDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
@@ -211,9 +214,63 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       insEndsAt: insuranceDetailsData?.endsAt ?? null,
       insTermYears: insuranceDetailsData?.termYears ?? null,
       insVehicleId: insuranceDetailsData?.vehicleId ?? null,
+      insExpectedMaturityAmount: insuranceDetailsData?.expectedMaturityAmount ?? null,
     }
+    const framingGroup = getFramingGroup(insuranceDetailsData?.kind)
+
+    if (framingGroup === 'savings' && insuranceDetailsData) {
+      const [premiumStats, returnStats, premiumRows, returnRows] = await Promise.all([
+        getInsurancePaymentTotal(asset.id, group.id),
+        getInsuranceReturnTotal(asset.id, group.id, ['maturity']),
+        listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE),
+        listInsuranceReturnsPaged(asset.id, group.id, ['maturity'], null, PAGE_SIZE),
+      ])
+
+      const initialPremiumTxns: PagedTxnRow[] = premiumRows.map((r) => ({
+        id: r.id,
+        amount: r.amount,
+        splitType: r.splitType,
+        description: r.description,
+        category: r.category,
+        paidBy: r.paidBy,
+        transactedAt: r.transactedAt.toISOString(),
+        createdAt: r.createdAt.toISOString(),
+        kind: 'transaction',
+        assetId: r.assetId ?? null,
+        fuelLogId: r.fuelLogId ?? null,
+      }))
+
+      const initialReturns = returnRows.map((r) => ({
+        id: r.id,
+        amount: r.amount,
+        category: r.category,
+        source: r.source,
+        recipientId: r.recipientId,
+        assetId: r.assetId,
+        occurredAt: r.occurredAt,
+        createdAt: r.createdAt.toISOString(),
+        kind: 'income' as const,
+      }))
+
+      return (
+        <SavingsView
+          assetId={asset.id}
+          name={asset.name}
+          details={insuranceDetailsData}
+          premiumStats={premiumStats}
+          returnStats={returnStats}
+          initialPremiumTxns={initialPremiumTxns}
+          initialReturns={initialReturns}
+          pageSize={PAGE_SIZE}
+          assetSheetInitial={assetSheetInitial}
+          allAssets={allAssets}
+          linkedVehicle={linkedVehicle}
+        />
+      )
+    }
+
     return (
-      <InsuranceDetailClient
+      <InsuranceDetailClientLegacy
         assetId={asset.id}
         name={asset.name}
         details={insuranceDetailsData}
