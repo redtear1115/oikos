@@ -40,16 +40,25 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
+// Server actions call revalidatePath after the DB work, which throws outside a
+// Next.js request store. We are testing the DB behavior, not cache invalidation,
+// so stub it to a no-op.
+vi.mock('next/cache', () => ({
+  revalidatePath: () => {},
+  revalidateTag: () => {},
+}))
+
 // Import AFTER the mock + env load.
 const { db } = await import('@/lib/db/client')
 const {
   profiles,
   oikosGroups,
+  assets,
   recurringIncomeRules,
   pendingIncomeOccurrences,
   incomeTransactions,
 } = await import('@/lib/db/schema')
-const { editAndConfirmPending } = await import('@/actions/recurringIncome')
+const { editAndConfirmPending, confirmPending, skipPending } = await import('@/actions/recurringIncome')
 const { eq } = await import('drizzle-orm')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
@@ -66,6 +75,8 @@ interface Fixture {
   ruleBId: string
   pendingAId: string
   pendingBId: string
+  // Asset that lives in groupB — used to verify userA cannot reference it.
+  groupBAssetId: string
 }
 
 const fixture: Fixture = {
@@ -73,6 +84,7 @@ const fixture: Fixture = {
   groupAId: '', groupBId: '',
   ruleAId: '', ruleBId: '',
   pendingAId: '', pendingBId: '',
+  groupBAssetId: '',
 }
 
 const cleanupTxIds: string[] = []
@@ -130,24 +142,37 @@ beforeAll(async () => {
   }).returning({ id: pendingIncomeOccurrences.id })
   fixture.pendingAId = pendingA.id
   fixture.pendingBId = pendingB.id
+
+  // Asset owned by groupB — used by the cross-group assetId test to confirm
+  // userA (in groupA) cannot reference it.
+  const [groupBAsset] = await db.insert(assets).values({
+    groupId: fixture.groupBId,
+    type: 'pet',
+    name: 'TEST_phase2_groupB_asset',
+  }).returning({ id: assets.id })
+  fixture.groupBAssetId = groupBAsset.id
 })
 
 afterAll(async () => {
-  // Order matters because of FKs.
-  for (const txId of cleanupTxIds) {
-    await db.delete(incomeTransactions).where(eq(incomeTransactions.id, txId))
-  }
+  // Order matters because of FKs:
+  // pending.resolved_tx_id → IncomeTransactions, so pending must go first.
   if (fixture.pendingAId) {
     await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, fixture.pendingAId))
   }
   if (fixture.pendingBId) {
     await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, fixture.pendingBId))
   }
+  for (const txId of cleanupTxIds) {
+    await db.delete(incomeTransactions).where(eq(incomeTransactions.id, txId))
+  }
   if (fixture.ruleAId) {
     await db.delete(recurringIncomeRules).where(eq(recurringIncomeRules.id, fixture.ruleAId))
   }
   if (fixture.ruleBId) {
     await db.delete(recurringIncomeRules).where(eq(recurringIncomeRules.id, fixture.ruleBId))
+  }
+  if (fixture.groupBAssetId) {
+    await db.delete(assets).where(eq(assets.id, fixture.groupBAssetId))
   }
   if (fixture.groupAId) {
     await db.delete(oikosGroups).where(eq(oikosGroups.id, fixture.groupAId))
@@ -251,5 +276,156 @@ describe('editAndConfirmPending', () => {
     // we just check userB's call didn't create a *new* income tx tied to it.
     // The earlier resolvedTxId stays the same.
     expect(row.resolvedTxId).not.toBeNull()
+  })
+
+  it('race: confirmPending then editAndConfirmPending on same pendingId rejects', async () => {
+    // Simulates partner-already-confirmed: a fresh pending is confirmed via the
+    // plain confirmPending path (as if from another tab/device), then a
+    // subsequent editAndConfirmPending against the same id must lose cleanly.
+    const [pending] = await db.insert(pendingIncomeOccurrences).values({
+      groupId: fixture.groupAId, ruleId: fixture.ruleAId,
+      periodStart: '2026-07-01',
+      proposedAmount: 75000, proposedDate: '2026-07-01',
+    }).returning({ id: pendingIncomeOccurrences.id })
+
+    let raceTxId: string | null = null
+    try {
+      mockUserId = fixture.userAId
+      const first = await confirmPending(pending.id)
+      raceTxId = first.txId
+
+      await expect(editAndConfirmPending({
+        pendingId: pending.id,
+        amount: 80000,
+        category: 'salary',
+        recipientId: fixture.userAId,
+        occurredAt: '2026-07-02',
+        source: null,
+        assetId: null,
+      })).rejects.toThrow(/已被處理|找不到/)
+
+      // Resolved id stays as the first tx — race did not double-write.
+      const [row] = await db.select().from(pendingIncomeOccurrences)
+        .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
+      expect(row.resolvedTxId).toBe(first.txId)
+    } finally {
+      // Pending references tx via FK — drop pending first.
+      await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, pending.id))
+      if (raceTxId) {
+        await db.delete(incomeTransactions).where(eq(incomeTransactions.id, raceTxId))
+      }
+    }
+  })
+
+  it('rejects assetId belonging to a different group (forge protection)', async () => {
+    const [pending] = await db.insert(pendingIncomeOccurrences).values({
+      groupId: fixture.groupAId, ruleId: fixture.ruleAId,
+      periodStart: '2026-08-01',
+      proposedAmount: 75000, proposedDate: '2026-08-01',
+    }).returning({ id: pendingIncomeOccurrences.id })
+
+    try {
+      mockUserId = fixture.userAId
+      await expect(editAndConfirmPending({
+        pendingId: pending.id,
+        amount: 75000,
+        category: 'salary',
+        recipientId: fixture.userAId,
+        occurredAt: '2026-08-01',
+        source: null,
+        assetId: fixture.groupBAssetId,        // asset lives in groupB
+      })).rejects.toThrow(/愛物.*不在/)
+
+      const [row] = await db.select().from(pendingIncomeOccurrences)
+        .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
+      expect(row.resolvedTxId).toBeNull()
+    } finally {
+      await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, pending.id))
+    }
+  })
+
+  it('rejects recipientId not in the viewer\'s group', async () => {
+    // userA tries to credit userB (who is in groupB, not groupA).
+    const [pending] = await db.insert(pendingIncomeOccurrences).values({
+      groupId: fixture.groupAId, ruleId: fixture.ruleAId,
+      periodStart: '2026-09-01',
+      proposedAmount: 75000, proposedDate: '2026-09-01',
+    }).returning({ id: pendingIncomeOccurrences.id })
+
+    try {
+      mockUserId = fixture.userAId
+      await expect(editAndConfirmPending({
+        pendingId: pending.id,
+        amount: 75000,
+        category: 'salary',
+        recipientId: fixture.userBId,         // not member_a or member_b of groupA
+        occurredAt: '2026-09-01',
+        source: null,
+        assetId: null,
+      })).rejects.toThrow(/收入歸屬不在/)
+
+      const [row] = await db.select().from(pendingIncomeOccurrences)
+        .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
+      expect(row.resolvedTxId).toBeNull()
+    } finally {
+      await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, pending.id))
+    }
+  })
+
+  it('rejects source longer than 64 characters', async () => {
+    const [pending] = await db.insert(pendingIncomeOccurrences).values({
+      groupId: fixture.groupAId, ruleId: fixture.ruleAId,
+      periodStart: '2026-10-01',
+      proposedAmount: 75000, proposedDate: '2026-10-01',
+    }).returning({ id: pendingIncomeOccurrences.id })
+
+    try {
+      mockUserId = fixture.userAId
+      await expect(editAndConfirmPending({
+        pendingId: pending.id,
+        amount: 75000,
+        category: 'salary',
+        recipientId: fixture.userAId,
+        occurredAt: '2026-10-01',
+        source: 'x'.repeat(65),                // 65 > 64-char limit
+        assetId: null,
+      })).rejects.toThrow(/備註最長 64 字/)
+
+      const [row] = await db.select().from(pendingIncomeOccurrences)
+        .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
+      expect(row.resolvedTxId).toBeNull()
+    } finally {
+      await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, pending.id))
+    }
+  })
+
+  it('rejects edit-confirm of a skipped pending', async () => {
+    const [pending] = await db.insert(pendingIncomeOccurrences).values({
+      groupId: fixture.groupAId, ruleId: fixture.ruleAId,
+      periodStart: '2026-11-01',
+      proposedAmount: 75000, proposedDate: '2026-11-01',
+    }).returning({ id: pendingIncomeOccurrences.id })
+
+    try {
+      mockUserId = fixture.userAId
+      await skipPending(pending.id)
+
+      await expect(editAndConfirmPending({
+        pendingId: pending.id,
+        amount: 75000,
+        category: 'salary',
+        recipientId: fixture.userAId,
+        occurredAt: '2026-11-01',
+        source: null,
+        assetId: null,
+      })).rejects.toThrow(/已被處理|找不到/)
+
+      const [row] = await db.select().from(pendingIncomeOccurrences)
+        .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
+      expect(row.skippedAt).not.toBeNull()
+      expect(row.resolvedTxId).toBeNull()
+    } finally {
+      await db.delete(pendingIncomeOccurrences).where(eq(pendingIncomeOccurrences.id, pending.id))
+    }
   })
 })
