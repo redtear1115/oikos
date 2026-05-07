@@ -61,16 +61,17 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 完整 schema 以 [lib/db/schema.ts](lib/db/schema.ts) 為準。Migration 在 [drizzle/](drizzle/)。
 
-主要 tables：
+主要 tables（完整 schema 以 [lib/db/schema.ts](lib/db/schema.ts) 為準）：
 - `Profiles`（FK → auth.users）
 - `OikosGroups`（含 member_a / member_b）
 - `GroupInvites`（token-based 7 天 expire）
 - `GroupBalance`（derived cache，每次寫入重算）
 - `CashTransactions`（核心，nullable `asset_id` 關聯愛物）
 - `Settlements`
-- `Assets` + `CarDetails` / `ChildDetails` / `PetDetails` / `InsuranceDetails`（Phase 2）
-- `FuelLogs`（Phase 2，車輛專用）
-- `InvoiceCredentials`（Phase 3，加密驗證碼）
+- `Assets` + `CarDetails` / `ChildDetails` / `PetDetails` / `HouseDetails` / `InsuranceDetails`
+- `FuelLogs`（車輛專用）
+- `IncomeTransactions`（進帳，平行於 CashTransactions）
+- `InvoiceCredentials`（v0.8.0，加密驗證碼）
 
 ### Balance 計算規則
 
@@ -78,15 +79,18 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 ---
 
-## 4. Phase 規劃
+## 4. 版本規劃
 
-| Phase | 範圍 | 狀態 |
+| 版本 | 範圍 | 狀態 |
 |---|---|---|
-| 0 | 專案建置 + Auth + Group 建立 + Invite + RLS + PWA | ✅ |
-| 1 | 核心記帳：transaction CRUD + settlement + 列表 + 篩選 + Settings + Real-time + pg_cron cleanup + 測試 | ✅ |
-| 1.1 | Onboarding flow + Solo Mode | ✅ |
-| 2 | 愛物管理（Slice 1: 車 ✅ → Slice 2: FuelLog ✅ → Slice 3: Child/Pet/Plant ✅ → Slice 4: House ✅ → Slice 5: Insurance + IncomeTransactions ✅） | ✅ v0.3.0 |
-| 3 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
+| v0.1.0 | 專案建置 + Auth + Group + Invite + RLS + PWA + 核心記帳（AddSheet / Settlement / Records / Realtime） | ✅ |
+| v0.2.0 | Onboarding + Solo Mode + 篩選 + Settings | ✅ |
+| v0.3.0 | 愛物：Car | ✅ |
+| v0.4.0 | 愛物：Car FuelLog | ✅ |
+| v0.5.0 | 愛物：Child / Pet / Plant | ✅ |
+| v0.6.0 | 愛物：House + Insurance | ✅ |
+| v0.7.0 | 進帳（Income） | ✅ |
+| v0.8.0 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
 
 詳細設計見各 spec：[transactions-design.md](transactions-design.md) · [car-fuel-log-design.md](car-fuel-log-design.md) · [aibutsu-design.md](aibutsu-design.md) · [incomesheet-design.md](incomesheet-design.md)
 

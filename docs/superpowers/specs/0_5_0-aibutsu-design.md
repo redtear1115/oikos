@@ -42,8 +42,8 @@ Pet / Plant 本 slice 只用 base fields（`name`、`type`、icon），不做 de
 ### Roadmap
 
 ```
-Car ✅  →  FuelLog + 車輛 polish ✅(Slice 2)  →  Child + Pet + Plant ✅(Slice 3)
-       →  House ✅(Slice 4)  →  Insurance ✅(Slice 5: 全 ship 2026-05-06, v0.3.0)
+Car ✅(v0.3.0)  →  FuelLog ✅(v0.4.0)  →  Child + Pet + Plant ✅(v0.5.0)
+               →  House + Insurance ✅(v0.6.0)
 ```
 
 Pet + Plant 與 Child 共用同一 slice：三者 data model 最接近，CRUD 邏輯幾乎一樣。

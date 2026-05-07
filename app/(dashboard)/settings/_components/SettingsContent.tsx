@@ -26,9 +26,10 @@ interface Props {
   partner: PartnerInfo | null
   groupId: string
   groupName: string
+  appVersion: string
 }
 
-export function SettingsContent({ viewer, partner, groupId, groupName }: Props) {
+export function SettingsContent({ viewer, partner, groupId, groupName, appVersion }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
   const isSolo = partner === null
@@ -232,7 +233,7 @@ export function SettingsContent({ viewer, partner, groupId, groupName }: Props) 
         className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
       >
-        Futari · v0.3.0 · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>法律聲明</a>
+        Futari · v{appVersion} · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>法律聲明</a>
       </div>
 
       <EditTextSheet

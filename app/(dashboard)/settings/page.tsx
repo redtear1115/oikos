@@ -1,3 +1,4 @@
+import pkg from '@/package.json'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles, oikosGroups } from '@/lib/db/schema'
@@ -49,6 +50,7 @@ export default async function SettingsPage() {
         partner={partner}
         groupId={group.id}
         groupName={group.name}
+        appVersion={pkg.version}
       />
       <BottomNavSkeleton />
     </div>
