@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups, profiles } from '@/lib/db/schema'
-import { or, eq, inArray } from 'drizzle-orm'
+import { oikosGroups } from '@/lib/db/schema'
+import { or, eq } from 'drizzle-orm'
 import { listActiveRules } from '@/lib/db/queries/recurringIncome'
 import { getInsuranceAssets } from '@/actions/income'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
@@ -19,8 +19,6 @@ export default async function RecurringIncomeSettingsPage() {
     .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
     .limit(1)
   if (!group) redirect('/setup')
-
-  const memberIds = [group.memberA, group.memberB].filter(Boolean) as string[]
 
   const [rules, insuranceAssets] = await Promise.all([
     listActiveRules(group.id),
