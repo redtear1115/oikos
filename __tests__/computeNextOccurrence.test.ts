@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeNextOccurrence, snapToFuture } from '@/lib/recurringIncome'
+import { computeNextOccurrence, firstAnchorFromStart, snapToFuture } from '@/lib/recurringIncome'
 
 describe('computeNextOccurrence', () => {
   it('advances 1 month at day_of_month', () => {
@@ -22,6 +22,21 @@ describe('computeNextOccurrence', () => {
   })
   it('handles yearly interval with leap clamp', () => {
     expect(computeNextOccurrence('2024-02-29', 12, 29)).toBe('2025-02-28')
+  })
+})
+
+describe('firstAnchorFromStart', () => {
+  it('uses the same month when day_of_month >= startsOn day', () => {
+    expect(firstAnchorFromStart('2026-05-07', 25, 1)).toBe('2026-05-25')
+  })
+  it('rolls to next interval when day_of_month < startsOn day', () => {
+    expect(firstAnchorFromStart('2026-05-26', 25, 1)).toBe('2026-06-25')
+  })
+  it('clamps when day_of_month exceeds the start month length', () => {
+    expect(firstAnchorFromStart('2026-02-01', 31, 1)).toBe('2026-02-28')
+  })
+  it('quarterly start with same month anchor', () => {
+    expect(firstAnchorFromStart('2026-05-01', 15, 3)).toBe('2026-05-15')
   })
 })
 

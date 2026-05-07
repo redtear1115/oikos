@@ -14,7 +14,7 @@ import {
   validateIncomeInput,
   type RecurringIncomeRuleInput,
 } from '@/lib/validators'
-import { computeNextOccurrence, snapToFuture } from '@/lib/recurringIncome'
+import { firstAnchorFromStart, snapToFuture } from '@/lib/recurringIncome'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -48,14 +48,6 @@ async function assertAssetInGroup(assetId: string, groupId: string) {
     .limit(1)
   if (!asset) throw new Error('關聯愛物不在家計簿內')
   if (asset.deletedAt) throw new Error('關聯愛物已刪除')
-}
-
-function firstAnchorFromStart(startsOn: string, dayOfMonth: number, intervalMonths: number): string {
-  const [y, m] = startsOn.split('-').map(Number)
-  const lastThis = new Date(y, m, 0).getDate()
-  const candThis = `${y}-${String(m).padStart(2, '0')}-${String(Math.min(dayOfMonth, lastThis)).padStart(2, '0')}`
-  if (candThis >= startsOn) return candThis
-  return computeNextOccurrence(candThis, intervalMonths, dayOfMonth)
 }
 
 export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id: string }> {
@@ -256,6 +248,9 @@ export interface EditAndConfirmInput {
   assetId?: string | null
 }
 
+// Phase 2 surface: shipped + tested in Phase 1 so the Phase 2 wiring of the
+// Dashboard 「改一下」 button (IncomeSheet prefilled with pending values, submit
+// routes here) becomes mechanical. Currently no UI caller; do not remove.
 export async function editAndConfirmPending(
   input: EditAndConfirmInput,
 ): Promise<{ txId: string }> {

@@ -40,3 +40,20 @@ export function snapToFuture(
   }
   return curr
 }
+
+/**
+ * Returns the first anchor date on or after `startsOn` at `dayOfMonth`
+ * (clamped to the month's last day). If `startsOn`'s own month already
+ * passed the day, advances by one interval.
+ */
+export function firstAnchorFromStart(
+  startsOn: IsoDate,
+  dayOfMonth: number,
+  intervalMonths: number,
+): IsoDate {
+  const [y, m] = startsOn.split('-').map(Number)
+  const lastThis = new Date(y, m, 0).getDate()
+  const candThis = `${y}-${String(m).padStart(2, '0')}-${String(Math.min(dayOfMonth, lastThis)).padStart(2, '0')}`
+  if (candThis >= startsOn) return candThis
+  return computeNextOccurrence(candThis, intervalMonths, dayOfMonth)
+}
