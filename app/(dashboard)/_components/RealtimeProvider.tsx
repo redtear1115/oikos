@@ -144,7 +144,7 @@ export function RealtimeProvider({ groupId, children }: Props) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'PendingIncomeOccurrences', filter: `group_id=eq.${groupId}` },
         () => {
-          dispatch({ kind: 'recurring-income-changed' })
+          dispatch({ kind: 'pending-occurrence-changed' })
         })
 
       let wasSubscribed = false

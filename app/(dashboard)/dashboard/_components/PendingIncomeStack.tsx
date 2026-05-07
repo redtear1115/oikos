@@ -6,9 +6,10 @@ import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 
 export interface PendingIncomeStackProps {
   pendings: PendingRow[]
+  onEdit?: (pending: PendingRow) => void
 }
 
-export function PendingIncomeStack({ pendings }: PendingIncomeStackProps) {
+export function PendingIncomeStack({ pendings, onEdit }: PendingIncomeStackProps) {
   const [expanded, setExpanded] = useState(false)
   if (pendings.length === 0) return null
 
@@ -30,7 +31,7 @@ export function PendingIncomeStack({ pendings }: PendingIncomeStackProps) {
               transition: 'transform 0.2s ease',
             }}
           >
-            <PendingIncomeCard pending={p} />
+            <PendingIncomeCard pending={p} onEdit={onEdit} />
           </div>
         ))}
       </div>

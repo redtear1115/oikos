@@ -10,6 +10,7 @@ import { SheetBackdrop } from './SheetBackdrop'
 import { DateField } from './DateField'
 import { IncomeChip } from './IncomeChip'
 import { createIncome, editIncome, softDeleteIncome, getInsuranceAssets } from '@/actions/income'
+import { editAndConfirmPending } from '@/actions/recurringIncome'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import type { IncomeCategoryId } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
@@ -64,17 +65,30 @@ export interface IncomeSheetInitial {
   assetId: string | null
 }
 
+// mode controls submit routing + UI affordances:
+// - 'edit-income' (default when initial is set): editIncome + delete button
+// - 'edit-pending': prefill from a PendingIncomeOccurrence; submit routes to
+//   editAndConfirmPending(pendingId, fields). No delete button (the underlying
+//   pending is not a real IncomeTx; resolving creates one atomically).
+export type IncomeSheetMode = 'edit-income' | 'edit-pending'
+
 interface Props {
   open: boolean
   onClose: () => void
   initial?: IncomeSheetInitial
   onMutated?: () => void
+  // Called when an edit-pending submit loses to a partner race
+  // (pending already confirmed/skipped). Sheet has already closed; parent
+  // should surface a toast like "對方剛剛確認了這筆".
+  onRaceResolved?: (message: string) => void
   prefilledAssetId?: string | null
   prefilledCategory?: IncomeCategoryId
   prefilledAmount?: number
+  mode?: IncomeSheetMode
+  pendingId?: string
 }
 
-export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledAmount }: Props) {
+export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved, prefilledAssetId, prefilledCategory, prefilledAmount, mode, pendingId }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const P = DEFAULT_INCOME_PALETTE
 
@@ -99,7 +113,11 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
     ? (insuranceAssets.find(a => a.id === assetId)?.name ?? null)
     : null
 
-  const isEdit = !!initial
+  const isPending = mode === 'edit-pending'
+  // Edit affordance (delete button + editIncome path) only for real IncomeTx.
+  // Pending occurrences are not yet real tx → no delete; submit goes to
+  // editAndConfirmPending instead.
+  const isEdit = !!initial && !isPending
   const policyRelevant = category === 'maturity' || category === 'claim'
 
   // Reset / prefill on open
@@ -157,7 +175,18 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
 
     startTransition(async () => {
       try {
-        if (isEdit) {
+        if (isPending) {
+          if (!pendingId) throw new Error('缺少待確認進帳 id')
+          await editAndConfirmPending({
+            pendingId,
+            amount: n,
+            category,
+            recipientId,
+            occurredAt: date,
+            source: note.trim() || null,
+            assetId,
+          })
+        } else if (isEdit) {
           await editIncome({
             oldId: initial!.id,
             amount: n,
@@ -180,7 +209,18 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '儲存失敗')
+        const msg = e instanceof Error ? e.message : '儲存失敗'
+        // Race: partner confirmed/skipped this pending in another tab/device
+        // before our edit-confirm landed. The error messages from
+        // editAndConfirmPending in that case are: '待確認進帳已被處理或找不到'
+        // (pre-check) or '待確認進帳已被其他裝置處理' (in-tx guard).
+        if (isPending && msg.includes('待確認進帳')) {
+          onMutated?.()
+          onClose()
+          onRaceResolved?.('對方剛剛確認了這筆')
+          return
+        }
+        setError(msg)
       }
     })
   }
