@@ -40,7 +40,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.claude/
+# .claude — roles are versioned; tasks/handoff/reports are transient
+.claude/tasks/
+.claude/handoff/
+.claude/reports/
+.claude/worktrees/
 .superpowers/
 .worktrees/
 
