@@ -5,6 +5,7 @@ import {
   assets,
   oikosGroups,
   recurringIncomeRules,
+  pendingIncomeOccurrences,
 } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -181,6 +182,34 @@ export async function resumeRule(id: string): Promise<void> {
     .set({ pausedAt: null, nextOccurrenceAt: snapped })
     .where(eq(recurringIncomeRules.id, id))
     .returning({ id: recurringIncomeRules.id })
+
+  revalidatePath('/settings/recurring-income')
+  revalidatePath('/dashboard')
+}
+
+export async function softDeleteRule(id: string): Promise<void> {
+  const { group } = await getViewerGroup()
+
+  await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(recurringIncomeRules)
+      .set({ deletedAt: new Date() })
+      .where(and(
+        eq(recurringIncomeRules.id, id),
+        eq(recurringIncomeRules.groupId, group.id),
+        isNull(recurringIncomeRules.deletedAt),
+      ))
+      .returning({ id: recurringIncomeRules.id })
+    if (!updated) throw new Error('找不到該定期規則')
+
+    await tx
+      .delete(pendingIncomeOccurrences)
+      .where(and(
+        eq(pendingIncomeOccurrences.ruleId, id),
+        isNull(pendingIncomeOccurrences.skippedAt),
+        isNull(pendingIncomeOccurrences.resolvedTxId),
+      ))
+  })
 
   revalidatePath('/settings/recurring-income')
   revalidatePath('/dashboard')

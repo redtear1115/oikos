@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createRule, updateRule, pauseRule, resumeRule } from '@/actions/recurringIncome'
+import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule } from '@/actions/recurringIncome'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -129,5 +129,25 @@ queueDbResult([GROUP])
     await resumeRule('rule-1')
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setCall.nextOccurrenceAt).toBe('2026-06-25')
+  })
+})
+
+describe('softDeleteRule', () => {
+  it('soft-deletes rule and hard-deletes active pendings in one transaction', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])  // tx update rule .returning
+    queueDbResult([])                  // tx delete pendings
+
+    await softDeleteRule('rule-1')
+
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    expect(mockDb.update).toHaveBeenCalled()
+    expect(mockDb.delete).toHaveBeenCalled()
+  })
+
+  it('throws when rule not in viewer group', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])
+    await expect(softDeleteRule('rule-x')).rejects.toThrow(/找不到/)
   })
 })
