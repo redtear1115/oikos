@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { createRule, updateRule, softDeleteRule } from '@/actions/recurringIncome'
+import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
+import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 
 export interface RuleFormValues {
   id?: string
@@ -33,6 +35,7 @@ export function RuleForm({ initial, recipients, insuranceAssets }: RuleFormProps
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const [amount, setAmount] = useState(initial?.amount ?? 0)
   const [category, setCategory] = useState(initial?.category ?? 'salary')
@@ -63,9 +66,9 @@ export function RuleForm({ initial, recipients, insuranceAssets }: RuleFormProps
     })
   }
 
-  const remove = () => {
+  const performDelete = () => {
     if (!initial?.id) return
-    if (!confirm('刪除這個定期規則？已存在的待確認卡片也會一起清掉。')) return
+    setConfirmingDelete(false)
     startTransition(async () => {
       try {
         await softDeleteRule(initial.id!)
@@ -82,29 +85,41 @@ export function RuleForm({ initial, recipients, insuranceAssets }: RuleFormProps
         {initial?.id ? '編輯定期進帳' : '新增定期進帳'}
       </h1>
 
-      <label className="mb-4 block">
-        <div className="text-[var(--fs-sm)]" style={{ color: 'var(--ink-3)' }}>金額（NT$）</div>
-        <input
-          type="number" min={1} value={amount || ''}
-          onChange={(e) => setAmount(parseInt(e.target.value || '0', 10))}
-          className="mt-1 w-full rounded-xl bg-transparent px-3 py-2 text-[var(--fs-2xl)]"
-          style={{ border: '1px solid var(--hairline)', color: 'var(--ink)' }}
-        />
+      <label className="mb-6 block">
+        <div className="text-[var(--fs-sm)]" style={{ color: 'var(--ink-3)' }}>金額</div>
+        <div className="mt-2 flex items-baseline gap-2">
+          <span
+            className="font-medium"
+            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-base)' }}
+          >
+            NT$
+          </span>
+          <input
+            type="number" min={1} value={amount || ''}
+            onChange={(e) => setAmount(parseInt(e.target.value || '0', 10))}
+            placeholder="0"
+            className="w-full bg-transparent outline-none"
+            style={{
+              fontSize: 'var(--fs-amount-lg)',
+              lineHeight: 1.05,
+              fontWeight: 500,
+              color: 'var(--ink)',
+              fontFamily: 'var(--font-fraunces)',
+            }}
+          />
+        </div>
       </label>
 
       <div className="mb-4">
         <div className="text-[var(--fs-sm)]" style={{ color: 'var(--ink-3)' }}>類別</div>
         <div className="mt-2 flex flex-wrap gap-2">
           {INCOME_CATEGORIES.map((c) => (
-            <button
-              key={c.id} type="button" onClick={() => setCategory(c.id)}
-              className="grid h-10 w-10 place-items-center rounded-full"
-              style={{
-                background: category === c.id ? c.tint : 'transparent',
-                color: category === c.id ? c.ink : 'var(--ink-2)',
-                border: `1px solid ${category === c.id ? c.ink : 'var(--hairline)'}`,
-              }}
-            >{c.mono}</button>
+            <IncomeChip
+              key={c.id}
+              cat={c}
+              selected={category === c.id}
+              onClick={() => setCategory(c.id)}
+            />
           ))}
         </div>
       </div>
@@ -192,13 +207,23 @@ export function RuleForm({ initial, recipients, insuranceAssets }: RuleFormProps
           {pending ? '儲存中…' : '儲存'}
         </button>
         {initial?.id && (
-          <button type="button" onClick={remove} disabled={pending}
+          <button type="button" onClick={() => setConfirmingDelete(true)} disabled={pending}
             className="rounded-full px-5 py-3 disabled:opacity-50"
             style={{ border: '1px solid #fca5a5', color: '#dc2626' }}>
             刪除
           </button>
         )}
       </div>
+
+      <ConfirmModal
+        open={confirmingDelete}
+        title="刪除這個定期規則？"
+        description="已存在的待確認卡片也會一起清掉。"
+        confirmLabel="刪除"
+        pending={pending}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={performDelete}
+      />
     </div>
   )
 }

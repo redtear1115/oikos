@@ -13,15 +13,27 @@ export function PendingIncomeStack({ pendings }: PendingIncomeStackProps) {
   if (pendings.length === 0) return null
 
   const visible = expanded ? pendings : pendings.slice(0, 3)
+  const stacked = !expanded && pendings.length > 1
 
   return (
     <section className="mb-4 space-y-3">
       <div className="text-[var(--fs-xs)]" style={{ color: 'var(--ink-3)' }}>
-        {pendings.length} 筆待確認
+        這幾筆等你看看
       </div>
-      {visible.map((p) => (
-        <PendingIncomeCard key={p.id} pending={p} />
-      ))}
+      <div className="space-y-3">
+        {visible.map((p, i) => (
+          <div
+            key={p.id}
+            className={stacked && i > 0 ? '-mt-2 scale-[0.98]' : ''}
+            style={{
+              transformOrigin: 'top center',
+              transition: 'transform 0.2s ease',
+            }}
+          >
+            <PendingIncomeCard pending={p} />
+          </div>
+        ))}
+      </div>
       {pendings.length > 3 && (
         <button
           type="button" onClick={() => setExpanded(!expanded)}
