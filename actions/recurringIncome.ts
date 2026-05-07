@@ -11,8 +11,8 @@ import {
   validateRecurringIncomeRuleInput,
   type RecurringIncomeRuleInput,
 } from '@/lib/validators'
-import { computeNextOccurrence } from '@/lib/recurringIncome'
-import { and, eq, or } from 'drizzle-orm'
+import { computeNextOccurrence, snapToFuture } from '@/lib/recurringIncome'
+import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 async function getViewerGroup() {
@@ -83,4 +83,56 @@ export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id:
   revalidatePath('/settings/recurring-income')
   revalidatePath('/dashboard')
   return { id: created.id }
+}
+
+export interface UpdateRuleInput extends RecurringIncomeRuleInput {
+  id: string
+}
+
+export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }> {
+  const v = validateRecurringIncomeRuleInput(input)
+  const { group } = await getViewerGroup()
+  assertRecipientInGroup(v.recipientId, group)
+  if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
+
+  const [existing] = await db
+    .select({
+      id: recurringIncomeRules.id,
+      groupId: recurringIncomeRules.groupId,
+    })
+    .from(recurringIncomeRules)
+    .where(and(
+      eq(recurringIncomeRules.id, input.id),
+      eq(recurringIncomeRules.groupId, group.id),
+      isNull(recurringIncomeRules.deletedAt),
+    ))
+    .limit(1)
+  if (!existing) throw new Error('找不到該定期規則')
+
+  const today = new Date().toISOString().slice(0, 10)
+  const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  const nextOccurrenceAt = firstAnchor > today
+    ? firstAnchor
+    : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, today)
+
+  const [updated] = await db
+    .update(recurringIncomeRules)
+    .set({
+      amount: v.amount,
+      category: v.category,
+      recipientId: v.recipientId,
+      source: v.source,
+      assetId: v.assetId,
+      intervalMonths: v.intervalMonths,
+      dayOfMonth: v.dayOfMonth,
+      startsOn: v.startsOn,
+      endsOn: v.endsOn,
+      nextOccurrenceAt,
+    })
+    .where(eq(recurringIncomeRules.id, input.id))
+    .returning({ id: recurringIncomeRules.id })
+
+  revalidatePath('/settings/recurring-income')
+  revalidatePath('/dashboard')
+  return { id: updated.id }
 }
