@@ -90,7 +90,9 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 | v0.5.0 | 愛物：Child / Pet / Plant | ✅ |
 | v0.6.0 | 愛物：House + Insurance | ✅ |
 | v0.7.0 | 進帳（Income） | ✅ |
-| v0.8.0 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
+| v0.8.0 | 自訂定期收入（rules + pending preview→commit） | ✅ local |
+| v0.8.1 | UX polish：hero card 一致性 + 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending | ✅ local |
+| v0.9.0 | 保險「累計繳 vs. 拿回」統計視圖 | ⬜ |
 
 詳細設計見各 spec：[transactions-design.md](transactions-design.md) · [car-fuel-log-design.md](car-fuel-log-design.md) · [aibutsu-design.md](aibutsu-design.md) · [incomesheet-design.md](incomesheet-design.md)
 

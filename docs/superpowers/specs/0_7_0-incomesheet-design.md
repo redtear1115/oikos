@@ -29,7 +29,7 @@ Phase 1.1 上 prod 後 friend test 階段，一位朋友提出「能不能紀錄
 - **時序**：跟 Phase 2 保險耦合 ship——儲蓄險滿期是必發生 income event，沒這張表會無處安放；保險詳情頁的「累計繳 vs. 拿回」也仰賴它。
 - **Brand 邏輯**：收入是「兩人共同生活的高光時刻」，需要獨立的物理空間（IncomeSheet 非 AddSheet 加 toggle）。
 
-設計師 hi-fi bundle 存在 [.claude/incomesheet-design/](../../../.claude/incomesheet-design/)。
+設計師 hi-fi bundle（三輪迭代 + 最終決策）已用於實作，不再存在於 repo。
 
 ---
 
@@ -163,7 +163,5 @@ IncomeSheet 提交後：對應 row 在 RecordsList / 保險頁 mint glow 背景 
 
 ## 索引
 
-- 三輪討論記錄：[.claude/incomesheet-design/chats/](../../../.claude/incomesheet-design/chats/)
-- 設計師 hi-fi bundle：[.claude/incomesheet-design/](../../../.claude/incomesheet-design/)
 - 既有 expense category token：[lib/categories.ts](../../../lib/categories.ts)
 - AddSheet asset 關聯 picker UX 原則：[CLAUDE.md](../../../CLAUDE.md) → 設計慣例

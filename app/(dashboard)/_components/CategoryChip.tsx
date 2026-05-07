@@ -1,4 +1,5 @@
-import { getCategory } from '@/lib/categories'
+import { getCategory, isValidCategoryId } from '@/lib/categories'
+import { getIncomeCategory } from '@/lib/incomeCategories'
 
 interface Props {
   categoryId: string
@@ -6,7 +7,7 @@ interface Props {
 }
 
 export function CategoryChip({ categoryId, size = 36 }: Props) {
-  const c = getCategory(categoryId)
+  const c = isValidCategoryId(categoryId) ? getCategory(categoryId) : getIncomeCategory(categoryId)
   return (
     <div
       style={{

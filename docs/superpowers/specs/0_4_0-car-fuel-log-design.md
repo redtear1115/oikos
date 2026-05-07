@@ -6,25 +6,7 @@
 
 ## 設計 bundle
 
-設計師（claude.ai/design）2026-05-05 交付 Phase 2 hi-fi bundle，存在 `.claude/phase2-design/`：
-
-```
-.claude/phase2-design/
-├── README.md              ← 給 coding agent 看的「先讀我」
-├── chats/
-│   ├── chat1.md           (1545 行，主要迭代過程)
-│   ├── chat2.md / chat3.md
-│   └── chat4.md           (含視覺決策收斂：line mark / inline picker / 56px hero)
-└── project/
-    ├── Phase 2 · 資產系統.html   ← 主畫布
-    ├── car-screens.jsx           ← 車詳細 hero / timeline / action bar
-    ├── car-forms.jsx             ← FuelLog 表單 + NewCarForm（含 color picker）
-    ├── asset-marks.jsx / v2      ← 4 種類型 marks 三種 style 探索
-    ├── asset-picker.jsx          ← AddSheet 關聯愛物 picker（3 種版型）
-    └── asset-extras.jsx          ← 空狀態、light-dot 點陣
-```
-
-**怎麼讀**：先讀 README.md → 再讀 chats（設計意圖在這裡）→ html 是輸出，尺寸/色票規則在 source 裡。不要直接 render HTML 截圖。
+設計師（claude.ai/design）2026-05-05 交付 Phase 2 hi-fi bundle（車 hero / timeline / action bar、FuelLog 表單、NewCarForm、asset marks、asset picker）。Bundle 已用於實作，不再存在於 repo。
 
 ### Bundle 實作狀態
 

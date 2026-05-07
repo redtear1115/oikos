@@ -3,7 +3,7 @@
 > 目標：把現有的 `InsuranceDetailClient` 擴成完整的 savings（儲蓄 / 還本險）詳情頁，承載「累計繳 vs 已拿回 vs 預估剩餘」的視覺與情感框架。
 > 範圍：**本 spec 只 lock savings framing**。protection / car framing 留 TODO 入口，等下一輪迭代。
 > 優先級：P2 Slice 5。承接 [0_7_0-incomesheet-design.md](0_7_0-incomesheet-design.md) → Open Q1 / Q2。
-> 狀態：design lock，待 implementation（v0.8.0）。
+> 狀態：design lock，待 implementation（v0.9.0）。
 
 ---
 
@@ -77,25 +77,9 @@ AssetSheet 險種 picker 順序：`醫療 / 壽險 / 意外 / 癌症 / 重大傷
 
 把 sumInsured 當成滿期金顯示會誤導。需要獨立欄位。
 
-### Migration
+### Migration + Schema
 
-```sql
--- drizzle/0015_insurance_expected_maturity.sql
-ALTER TABLE "InsuranceDetails"
-  ADD COLUMN expected_maturity_amount integer;
-
-COMMENT ON COLUMN "InsuranceDetails".expected_maturity_amount IS
-  '使用者預估的滿期金 / 還本總額（單位：TWD）。null = 未設定，UI 不顯示「預估剩餘」';
-```
-
-### Schema diff
-
-```ts
-export const insuranceDetails = pgTable('InsuranceDetails', {
-  // ... existing fields ...
-  expectedMaturityAmount: integer('expected_maturity_amount'),  // NEW
-})
-```
+已實作：[drizzle/0015_insurance_expected_maturity.sql](../../../drizzle/0015_insurance_expected_maturity.sql)，schema 見 [lib/db/schema.ts](../../../lib/db/schema.ts) → `insuranceDetails.expectedMaturityAmount`。
 
 ### Why nullable
 

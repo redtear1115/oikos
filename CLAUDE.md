@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Current version: v0.8.1 in progress**（local，未 push origin / 未 migrate prod）— 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Current version: v0.8.1**（local，未 push origin / 未 migrate prod）— 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -25,7 +25,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.6.0 | 愛物：House + Insurance | ✅ |
 | v0.7.0 | 進帳（Income） | ✅ |
 | v0.8.0 | 自訂定期收入 Phase 1（rules + pending preview→commit） | ✅ local |
-| v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | 🔨 `feat/v081-hero-polish` |
+| v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ local |
 | v0.9.0 | 保險「累計繳 vs. 拿回」統計視圖 | ⬜ |
 
 ## Backlog

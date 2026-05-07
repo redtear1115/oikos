@@ -11,6 +11,28 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.8.1] - 2026-05-08
+
+### Added
+- **愛物清單分群**：`/assets` 頁面依「財產 / 生命體 / 保障」分群顯示，各群組附標題
+- **House hero card**：入住天數統計（`movedInAt` 起算至今）
+- **定期收入「改一下」wiring**：`editAndConfirmPending` 完整串接 — 點「改一下」開 IncomeSheet 預填全欄（amount / category / recipient / occurredAt / source / assetId），送出時同步 confirm pending（原子性）
+- **DayPicker 元件**：7 欄 × 5 列格狀日期選取，加 `aria-pressed` / `aria-label` 無障礙標記
+- **RecurringRuleSheet**：定期收入新增 / 編輯 bottom sheet，取代原本的獨立全頁表單
+
+### Changed
+- **定期收入設定頁架構重整**：`/settings/recurring-income` 改為 server component（`RecurringIncomeContent` client shell）；`/new` 和 `/[id]` sub-routes 廢除，改 redirect 回列表；`RuleListItem` 點擊即開 sheet，移除 inline 按鈕；`RuleForm.tsx` 刪除
+- **Insurance / House 詳情頁 hero**：統一樣式（Insurance 顯示保障剩餘天數 / House 顯示入住天數）
+
+### Fixed
+- **定期收入 Pending Realtime**：INSERT / UPDATE event 拆分，解決 partner 確認 pending 時的 race condition
+- **IncomeSheet race guard**：pending 模式下若 pending 已被 partner confirm，submit 時正確回應「已被處理」
+- **Income design critique P0+P1**：IncomeSheet / Dashboard income mode 細節修正
+
+### Schema（v0.9.0 基礎建設，無 user-facing UI）
+- 雲端發票匯入 schema 預置：`InvoiceCredentials` table + `cashTransactions.invoiceNumber`（migrations 0017-0019）— 功能因財政部 API 申請限制暫緩，不對使用者顯示
+- `lib/insuranceProgress.ts`：保險 savings 進度計算 helper（SavingsView UI 待 v0.9.0）
+
 ## [0.8.0] - 2026-05-07
 
 ### Added
@@ -201,7 +223,9 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/redtear1115/oikos/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/redtear1115/oikos/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/redtear1115/oikos/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/redtear1115/oikos/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/redtear1115/oikos/compare/v0.4.0...v0.5.0
