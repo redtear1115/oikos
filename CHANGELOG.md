@@ -9,6 +9,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [0.8.0] - 2026-05-07
+
 ### Added
 - **自訂定期收入（Phase 1）**：定期收入規則 + 待確認卡片 preview→commit 模型
 - **`RecurringIncomeRules` + `PendingIncomeOccurrences` schema** + RLS + Realtime publication
@@ -22,7 +26,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **`cleanup-soft-deleted` cron** 擴充：規則 1 年後物理刪、skipped pending 90 天後物理刪
 
 ### Changed
-- 新增 `docs/superpowers/specs/0_8_0-recurring-income-design.md` — 自訂定期收入完整設計 spec
+- 新增 `docs/superpowers/specs/0_9_0-recurring-income-design.md` — 自訂定期收入完整設計 spec
 
 ## [0.7.0] - 2026-05-06
 

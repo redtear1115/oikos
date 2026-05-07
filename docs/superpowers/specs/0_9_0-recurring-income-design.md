@@ -7,7 +7,7 @@
 
 | 部分 | 狀態 | 預期位置 |
 |---|---|---|
-| `RecurringIncomeRules` schema + RLS + Realtime | ⏳ Phase 1 | `drizzle/0015_recurring_income.sql` |
+| `RecurringIncomeRules` schema + RLS + Realtime | ✅ Phase 1 | `drizzle/0016_recurring_income.sql` |
 | `PendingIncomeOccurrences` schema + RLS + Realtime | ⏳ Phase 1 | 同上 |
 | pg_cron `generate_pending_income` job | ⏳ Phase 1 | 同上 |
 | Server actions（rule CRUD / pause / confirm / skip） | ⏳ Phase 1 | `actions/recurringIncome.ts` |
@@ -313,7 +313,7 @@ $$);
 
 **目標**：MVP 端到端 ship，friend test 階段可使用。
 
-- `0015_recurring_income.sql`：兩張表 + 索引 + RLS + Realtime publication + `compute_next_occurrence` SQL function + `generate-pending-income` cron job + 擴 `cleanup-soft-deleted` cron job 把 pending 90 天清理納入
+- `0016_recurring_income.sql`：兩張表 + 索引 + RLS + Realtime publication + `compute_next_occurrence` SQL function + `generate-pending-income` cron job + 擴 `cleanup-soft-deleted` cron job 把 pending 90 天清理納入
 - `lib/db/schema.ts`：加 drizzle 模型
 - `lib/validators.ts`：規則 / pending 動作的 zod schema
 - `actions/recurringIncome.ts`：
