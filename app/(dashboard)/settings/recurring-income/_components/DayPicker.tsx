@@ -11,7 +11,7 @@ export function DayPicker({ value, onChange }: Props) {
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(7, 1fr)',
-        gap: 6,
+        gap: 4,
       }}
     >
       {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
@@ -33,6 +33,8 @@ export function DayPicker({ value, onChange }: Props) {
               fontFamily: 'inherit',
               opacity: day > 28 ? 0.7 : 1,
             }}
+            aria-pressed={selected}
+            aria-label={`${day} 號`}
             title={day > 28 ? '若當月無此日，自動 fallback 到月底' : undefined}
           >
             {day}
