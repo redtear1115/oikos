@@ -171,6 +171,7 @@ export const insuranceDetails = pgTable('InsuranceDetails', {
   termYears: integer('term_years'),
   sumInsured: integer('sum_insured'),
   vehicleId: uuid('vehicle_id').references(() => assets.id),  // optional vehicle link (car insurance)
+  expectedMaturityAmount: integer('expected_maturity_amount'),  // savings framing: user-set 預估滿期金
 })
 
 export const invoiceCredentials = pgTable('InvoiceCredentials', {
