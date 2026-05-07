@@ -710,6 +710,66 @@ export function validateIncomeInput(input: IncomeInput): ValidatedIncomeInput {
   }
 }
 
+// ── Invoice carrier (cloud invoice / 雲端發票) ─────────────────────────────
+
+// Mobile barcode (cardType 3J0002): leading slash + 7 chars from
+// {A-Z, 0-9, '.', '+', '-'}. Total length 8.
+const BARCODE_RE = /^\/[A-Z0-9.+\-]{7}$/
+
+// Verification code: exactly 8 alphanumeric chars (case-insensitive on input
+// but uppercased before persisting so server-side comparison is deterministic).
+const VERIFICATION_CODE_RE = /^[A-Z0-9]{8}$/
+
+/**
+ * Validates the mobile-barcode shape only. Throws on shape mismatch. Use this
+ * standalone (e.g. UI typing feedback) or via validateInvoiceCarrierInput.
+ */
+export function validateBarcodeInput(barcode: string): string {
+  const trimmed = (barcode ?? '').trim().toUpperCase()
+  if (!trimmed) throw new Error('條碼不能為空')
+  if (!BARCODE_RE.test(trimmed)) {
+    throw new Error('條碼格式錯誤（需以 / 開頭、共 8 字元）')
+  }
+  return trimmed
+}
+
+export interface InvoiceCarrierInput {
+  barcode: string
+  verificationCode: string
+  nickname?: string | null
+}
+
+export interface ValidatedInvoiceCarrierInput {
+  barcode: string
+  verificationCode: string  // uppercased; ready to encrypt
+  nickname: string | null
+}
+
+/**
+ * Validates a mobile-barcode carrier registration. Trims + uppercases barcode
+ * and verification code. Nickname is optional (≤ 16 chars).
+ */
+export function validateInvoiceCarrierInput(
+  input: InvoiceCarrierInput,
+): ValidatedInvoiceCarrierInput {
+  const barcode = validateBarcodeInput(input.barcode)
+
+  const code = (input.verificationCode ?? '').trim().toUpperCase()
+  if (!code) throw new Error('驗證碼不能為空')
+  if (!VERIFICATION_CODE_RE.test(code)) {
+    throw new Error('驗證碼需為 8 位英數字')
+  }
+
+  let nickname: string | null = null
+  if (input.nickname !== null && input.nickname !== undefined) {
+    const n = input.nickname.trim()
+    if (n.length > 16) throw new Error('暱稱最長 16 字')
+    nickname = n.length > 0 ? n : null
+  }
+
+  return { barcode, verificationCode: code, nickname }
+}
+
 // ── Recurring Income ────────────────────────────────────────────────────
 
 export interface RecurringIncomeRuleInput {

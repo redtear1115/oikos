@@ -1,10 +1,15 @@
 import pkg from '@/package.json'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { profiles, oikosGroups } from '@/lib/db/schema'
-import { eq, or } from 'drizzle-orm'
+import { profiles, oikosGroups, invoiceCredentials } from '@/lib/db/schema'
+import { and, eq, isNull, or } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
-import { SettingsContent, type PartnerInfo, type ViewerInfo } from './_components/SettingsContent'
+import {
+  SettingsContent,
+  type PartnerInfo,
+  type ViewerInfo,
+  type InvoiceCredentialRow,
+} from './_components/SettingsContent'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -26,6 +31,29 @@ export default async function SettingsPage() {
     const [p] = await db.select().from(profiles).where(eq(profiles.id, partnerId)).limit(1)
     partnerProfile = p ?? null
   }
+
+  // Cloud-invoice carriers owned by the viewer (not the partner; RLS-mirrored).
+  const credentialRows = await db
+    .select({
+      id: invoiceCredentials.id,
+      barcode: invoiceCredentials.barcode,
+      nickname: invoiceCredentials.nickname,
+      status: invoiceCredentials.status,
+      lastSyncedAt: invoiceCredentials.lastSyncedAt,
+    })
+    .from(invoiceCredentials)
+    .where(and(
+      eq(invoiceCredentials.groupId, group.id),
+      eq(invoiceCredentials.userId, user.id),
+      isNull(invoiceCredentials.deletedAt),
+    ))
+  const invoiceCreds: InvoiceCredentialRow[] = credentialRows.map((r) => ({
+    id: r.id,
+    barcode: r.barcode,
+    nickname: r.nickname,
+    status: r.status,
+    lastSyncedAt: r.lastSyncedAt ? r.lastSyncedAt.toISOString() : null,
+  }))
 
   const viewer: ViewerInfo = {
     id: user.id,
@@ -51,6 +79,7 @@ export default async function SettingsPage() {
         groupId={group.id}
         groupName={group.name}
         appVersion={pkg.version}
+        invoiceCredentials={invoiceCreds}
       />
       <BottomNavSkeleton />
     </div>
