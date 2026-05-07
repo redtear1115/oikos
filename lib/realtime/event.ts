@@ -79,4 +79,5 @@ export type RealtimeEvent =
   | { kind: 'fuel-log-changed'; row: FuelLogRowPayload }  // FuelLog INSERT/UPDATE/soft-delete
   | { kind: 'income-insert'; row: IncomeRowPayload }
   | { kind: 'income-update'; row: IncomeRowPayload }  // soft-delete shows up here (deletedAt set)
+  | { kind: 'recurring-income-changed' }   // RecurringIncomeRules or PendingIncomeOccurrences row changed
   | { kind: 'reconnect' }   // emitted after WebSocket reconnect — subscribers should refetch

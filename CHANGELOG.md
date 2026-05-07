@@ -11,6 +11,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.8.0] - 2026-05-07
+
+### Added
+- **自訂定期收入（Phase 1）**：定期收入規則 + 待確認卡片 preview→commit 模型
+- **`RecurringIncomeRules` + `PendingIncomeOccurrences` schema** + RLS + Realtime publication
+- **`compute_next_occurrence` SQL helper**（PL/pgSQL，含月底 day clamp）
+- **pg_cron `generate-pending-income`**：每日 16:00 UTC 跑（= 台北 00:00），idempotent
+- **8 個 server actions**：`createRule`、`updateRule`、`pauseRule`、`resumeRule`、`softDeleteRule`、`confirmPending`、`editAndConfirmPending`（Phase 2 wiring 預留）、`skipPending`
+- **`computeNextOccurrence` / `snapToFuture` / `firstAnchorFromStart` TS helpers**（mirror SQL function）
+- **設定頁 `/settings/recurring-income`**：規則列表 + 新增/編輯，pause/resume inline toggle
+- **Dashboard 進帳模式 pending card stack**：「就這樣 / 跳過」兩動作（「改一下」延後 Phase 2）
+- **Realtime 同步**：partner 端建立/編輯規則、確認/跳過 pending 都即時刷新
+- **`cleanup-soft-deleted` cron** 擴充：規則 1 年後物理刪、skipped pending 90 天後物理刪
+
+### Changed
+- 新增 `docs/superpowers/specs/0_9_0-recurring-income-design.md` — 自訂定期收入完整設計 spec
+
 ## [0.7.0] - 2026-05-06
 
 ### Added

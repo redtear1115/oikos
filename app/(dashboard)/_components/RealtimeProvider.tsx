@@ -134,6 +134,18 @@ export function RealtimeProvider({ groupId, children }: Props) {
             dispatch({ kind: 'income-update', row: rowFromPayload(payload.new) as IncomeRowPayload })
           }
         })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'RecurringIncomeRules', filter: `group_id=eq.${groupId}` },
+        () => {
+          dispatch({ kind: 'recurring-income-changed' })
+        })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'PendingIncomeOccurrences', filter: `group_id=eq.${groupId}` },
+        () => {
+          dispatch({ kind: 'recurring-income-changed' })
+        })
 
       let wasSubscribed = false
       channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {

@@ -5,6 +5,7 @@ import { eq, or } from 'drizzle-orm'
 import { getGroupBalance } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
+import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -27,11 +28,12 @@ export default async function DashboardPage() {
   const now = new Date()
   const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  const [balance, rows, incomeSummary, recentIncomesRaw] = await Promise.all([
+  const [balance, rows, incomeSummary, recentIncomesRaw, pendings] = await Promise.all([
     getGroupBalance(group.id),
     listTransactionsPaged(group.id, null, PAGE_SIZE),
     listIncomeMonthSummary(group.id, yyyymm),
     listIncomesPaged(group.id, null, PAGE_SIZE),
+    listActivePendings(group.id),
   ])
 
   // Serialize Date → ISO string for the client component
@@ -81,6 +83,7 @@ export default async function DashboardPage() {
       incomeMonthCount={incomeSummary.count}
       recentIncomeLabel={recentIncomeLabel}
       recentIncomeFeed={recentIncomeFeed}
+      pendings={pendings}
     />
   )
 }
