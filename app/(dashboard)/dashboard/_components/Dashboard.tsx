@@ -36,6 +36,7 @@ type ModalState =
   | { kind: 'add' }
   | { kind: 'income' }
   | { kind: 'edit-income'; data: IncomeSheetInitial }
+  | { kind: 'edit-pending'; pendingId: string; data: IncomeSheetInitial }
   | { kind: 'edit-tx'; data: AddSheetInitial }
   | { kind: 'edit-settlement'; data: SettlementSheetInitial }
   | { kind: 'filter' }
@@ -240,7 +241,22 @@ export function Dashboard({
       )}
       {mode === 'income' && (
         <div className="px-5">
-          <PendingIncomeStack pendings={pendings} />
+          <PendingIncomeStack
+            pendings={pendings}
+            onEdit={(p) => dispatch({
+              kind: 'edit-pending',
+              pendingId: p.id,
+              data: {
+                id: p.id,
+                amount: p.proposedAmount,
+                category: p.category,
+                source: p.source,
+                recipientId: p.recipientId,
+                assetId: p.assetId,
+                occurredAt: p.proposedDate,
+              },
+            })}
+          />
         </div>
       )}
       <TransactionFeed
@@ -288,9 +304,15 @@ export function Dashboard({
         onMutated={handleMutated}
       />
       <IncomeSheet
-        open={modal.kind === 'income' || modal.kind === 'edit-income'}
+        open={modal.kind === 'income' || modal.kind === 'edit-income' || modal.kind === 'edit-pending'}
         onClose={handleClose}
-        initial={modal.kind === 'edit-income' ? modal.data : undefined}
+        initial={
+          modal.kind === 'edit-income' ? modal.data
+            : modal.kind === 'edit-pending' ? modal.data
+            : undefined
+        }
+        mode={modal.kind === 'edit-pending' ? 'edit-pending' : undefined}
+        pendingId={modal.kind === 'edit-pending' ? modal.pendingId : undefined}
         onMutated={handleMutated}
       />
       <FilterSheet

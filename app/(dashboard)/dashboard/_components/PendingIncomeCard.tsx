@@ -8,9 +8,10 @@ import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 
 export interface PendingIncomeCardProps {
   pending: PendingRow
+  onEdit?: (pending: PendingRow) => void
 }
 
-export function PendingIncomeCard({ pending }: PendingIncomeCardProps) {
+export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
   const router = useRouter()
   const [submitting, startTransition] = useTransition()
   const [fading, setFading] = useState(false)
@@ -80,9 +81,18 @@ export function PendingIncomeCard({ pending }: PendingIncomeCardProps) {
           就這樣
         </button>
         <button
+          type="button"
+          onClick={() => onEdit?.(pending)}
+          disabled={submitting || !onEdit}
+          className="rounded-full px-4 py-2 text-[var(--fs-sm)] disabled:opacity-30"
+          style={{ border: `1px solid ${cat.ink}40`, color: 'var(--ink-2)', background: 'transparent' }}
+        >
+          改一下
+        </button>
+        <button
           type="button" onClick={handleSkip} disabled={submitting}
           className="rounded-full px-4 py-2 text-[var(--fs-sm)] disabled:opacity-30"
-          style={{ border: '1px solid var(--hairline)', color: 'var(--ink-3)' }}
+          style={{ border: 'none', background: 'transparent', color: 'var(--ink-3)' }}
         >
           跳過
         </button>

@@ -9,6 +9,7 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { SheetBackdrop } from './SheetBackdrop'
 import { DateField } from './DateField'
 import { createIncome, editIncome, softDeleteIncome, getInsuranceAssets } from '@/actions/income'
+import { editAndConfirmPending } from '@/actions/recurringIncome'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import type { IncomeCategoryId, IncomeCategory } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
@@ -115,6 +116,13 @@ export interface IncomeSheetInitial {
   assetId: string | null
 }
 
+// mode controls submit routing + UI affordances:
+// - 'edit-income' (default when initial is set): editIncome + delete button
+// - 'edit-pending': prefill from a PendingIncomeOccurrence; submit routes to
+//   editAndConfirmPending(pendingId, fields). No delete button (the underlying
+//   pending is not a real IncomeTx; resolving creates one atomically).
+export type IncomeSheetMode = 'edit-income' | 'edit-pending'
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -123,9 +131,11 @@ interface Props {
   prefilledAssetId?: string | null
   prefilledCategory?: IncomeCategoryId
   prefilledAmount?: number
+  mode?: IncomeSheetMode
+  pendingId?: string
 }
 
-export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledAmount }: Props) {
+export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledAmount, mode, pendingId }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const P = DEFAULT_INCOME_PALETTE
 
@@ -150,7 +160,11 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
     ? (insuranceAssets.find(a => a.id === assetId)?.name ?? null)
     : null
 
-  const isEdit = !!initial
+  const isPending = mode === 'edit-pending'
+  // Edit affordance (delete button + editIncome path) only for real IncomeTx.
+  // Pending occurrences are not yet real tx → no delete; submit goes to
+  // editAndConfirmPending instead.
+  const isEdit = !!initial && !isPending
   const policyRelevant = category === 'maturity' || category === 'claim'
 
   // Reset / prefill on open
@@ -208,7 +222,18 @@ export function IncomeSheet({ open, onClose, initial, onMutated, prefilledAssetI
 
     startTransition(async () => {
       try {
-        if (isEdit) {
+        if (isPending) {
+          if (!pendingId) throw new Error('缺少待確認進帳 id')
+          await editAndConfirmPending({
+            pendingId,
+            amount: n,
+            category,
+            recipientId,
+            occurredAt: date,
+            source: note.trim() || null,
+            assetId,
+          })
+        } else if (isEdit) {
           await editIncome({
             oldId: initial!.id,
             amount: n,
