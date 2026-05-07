@@ -1,7 +1,7 @@
-# 雲端發票匯入設計（v0.8.0）
+# 雲端發票匯入設計（v0.9.0）
 
 > 串接財政部電子發票 API，讓使用者用手機條碼載具一鍵把過去每月的雲端發票匯入成 CashTransaction。
-> 優先級：v0.7.0 進帳完成後 ship。
+> 優先級：v0.8.0 自訂定期收入完成後 ship。
 > ⚠️ **外部依賴卡點**：財政部 2023/3/31 新制後個人不能申請 APP_ID，僅限**營業人 / 組織團體 / 政府機關**且需 **ISO27001 / CNS27001 認證**（[法規](https://law-out.mof.gov.tw/LawContent.aspx?id=GL010122)）。本專案目前為個人專案，Phase A（mock fixture）可先 ship；Phase B（真實 API）需先解決法規路徑——詳見「APP_ID 申請卡點」段落。
 
 ---
@@ -33,7 +33,7 @@
 
 ## Scope
 
-### In（v0.8.0）
+### In（v0.9.0）
 
 - 載具類型：**手機條碼（cardType=3J0002）only**
 - 設定頁新增「雲端發票」區塊：新增 / 移除 / 重新驗證 載具
@@ -48,7 +48,7 @@
 - API 失敗 / 驗證碼失效 / 載具被改 等錯誤處理
 - 雙人 group：每位 member 可獨立綁自己的載具；匯入歸屬 paidBy = credential.userId
 
-### Out（v0.8.0 不做）
+### Out（v0.9.0 不做）
 
 - 自然人憑證、悠遊卡、icash、會員載具（其他 cardType）— 之後評估
 - 發票明細 line item 拆分（一張發票 = 多筆 transaction）— 不做，永遠以發票總額作為一筆
@@ -140,7 +140,7 @@ Content-Type: application/x-www-form-urlencoded
 | `carrierInvChk` | 查指定區間發票 header list | cardNo + cardEncrypt |
 | `carrierInvDetail` | 查單張發票 detail（line items + 商家） | cardNo + cardEncrypt |
 
-> v0.8.0 因為以發票總額入帳，**只用 header list 即可拿到金額 + 商家 + 發票號碼 + 開立日期**。`carrierInvDetail` 留 Phase 2（line item 拆分時）再用。
+> v0.9.0 因為以發票總額入帳，**只用 header list 即可拿到金額 + 商家 + 發票號碼 + 開立日期**。`carrierInvDetail` 留 Phase 2（line item 拆分時）再用。
 
 ### `carrierInvChk` 必填參數
 
@@ -207,7 +207,7 @@ Content-Type: application/x-www-form-urlencoded
 { id, groupId, userId, barcode, verificationCodeEncrypted, createdAt }
 ```
 
-v0.8.0 加：
+v0.9.0 加：
 ```ts
 {
   ...,
@@ -286,7 +286,7 @@ CREATE UNIQUE INDEX cash_tx_invoice_uniq
 | `sellerName` → keyword 表 | `category` | `merchantToCategory()`，落空 → `other` |
 | — | `paidBy` | credential.userId |
 | — | `splitType` | viewer profile.defaultSplitType（solo → all_mine） |
-| — | `assetId` | null（v0.8.0） |
+| — | `assetId` | null（v0.9.0） |
 | — | `groupId` | credential.groupId |
 
 ---
@@ -295,7 +295,7 @@ CREATE UNIQUE INDEX cash_tx_invoice_uniq
 
 ### 為什麼要做
 
-v0.8.0 以發票總額入帳。如果使用者買 $1000 → 退 $300，MoF 端發票會被開折讓單；我們本機紀錄若還停在 $1000，當月支出就虛增。我們的 source of truth 必須跟 MoF 對齊。
+v0.9.0 以發票總額入帳。如果使用者買 $1000 → 退 $300，MoF 端發票會被開折讓單；我們本機紀錄若還停在 $1000，當月支出就虛增。我們的 source of truth 必須跟 MoF 對齊。
 
 ### 為什麼可以做
 
@@ -476,7 +476,7 @@ const RULES: Array<[regex: RegExp, category: CategoryId]> = [
 | 沒有 partner 的 credential.userId | userId = viewer.id（建立時 server 帶入）；雙人模式後對方仍看不到對方的 credential（RLS 限制）|
 | 同月份重複按「匯入發票」 | 拉資料每次都重來；dedup 自然處理；但 UX 上 commit 後 close sheet，user 不會誤點 |
 | 不同 credential 同一發票（不可能，但理論上） | dedup key 是 invoiceNumber unique per group，無關 credential |
-| 保險 / 房 / 寵物相關發票 | v0.8.0 一律 assetId=null；user 在 records 編輯加關聯（既有功能） |
+| 保險 / 房 / 寵物相關發票 | v0.9.0 一律 assetId=null；user 在 records 編輯加關聯（既有功能） |
 | 商家規則匹配出 settle | 永遠不會（settle 不在 PICKABLE_CATEGORIES）；落空都丟 'other' |
 
 ### Realtime 行為
@@ -538,9 +538,9 @@ const RULES: Array<[regex: RegExp, category: CategoryId]> = [
 - merchantToCategory 規則擴充（依 unmatched 樣本）
 - 「最近 6 個月」shortcut 真做（Phase B 預設只支援單月）
 - 匯入完成後動畫（光點亮起 batched）
-- 失敗復原：partial commit 後重試只跑剩下的（v0.8.0 commit 是 atomic，不需要部分復原；保留位）
+- 失敗復原：partial commit 後重試只跑剩下的（v0.9.0 commit 是 atomic，不需要部分復原；保留位）
 
-### Phase D — 之後（不在 v0.8.0）
+### Phase D — 之後（不在 v0.9.0）
 
 - 自動 asset heuristic（中油 → primaryUserId 的車 / 寵物店 → 寵物 entity）
 - 發票折讓 / 退貨沖銷
@@ -567,7 +567,7 @@ const RULES: Array<[regex: RegExp, category: CategoryId]> = [
 1. **載具暱稱必填？**：當前設計是選填。雙人 group 兩人都綁時，預設值「我的」可能撞名 → 預設依 viewer.displayName 帶入
 2. **跨月折讓的 sync 視窗**：4 月發票 5 月折讓時，5 月 preview 看不到。提案：每次 sync 額外 fetch 過去 6 個月有 active snapshot 的發票做 status diff（多 1–6 次 API call）。Phase B 末加，初版只 sync 當月即可
 3. **跨年區間 UX**：「最近 6 個月」shortcut 跨年時如何顯示月份 chip？提案：chip 顯示「2025-12」full year-month，避免歧義
-4. **Dedup 範圍**：目前是 group 內 unique。若同一人有多個 group（v0.8.0 不支援，但 schema 允許）會在另一 group 重複匯到；接受，因為兩個 group 是兩本不同帳
+4. **Dedup 範圍**：目前是 group 內 unique。若同一人有多個 group（v0.9.0 不支援，但 schema 允許）會在另一 group 重複匯到；接受，因為兩個 group 是兩本不同帳
 5. **Description 字數**：sellerName 常見 30+ 字（"○○○○股份有限公司桃園分公司"）；提案：截斷 + 移除常見後綴（「股份有限公司」、「分公司」）
 6. **invStatus 真值對照**：MoF API spec PDF 未開放純文字版，「開立 / 作廢 / 已折讓」這幾個值的實際字串需 Phase B kickoff 時打 mock + 真環境確認，本 spec 暫以中文當常數示意
 

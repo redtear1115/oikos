@@ -26,7 +26,9 @@ _Nothing unreleased yet._
 - **`cleanup-soft-deleted` cron** 擴充：規則 1 年後物理刪、skipped pending 90 天後物理刪
 
 ### Changed
-- 新增 `docs/superpowers/specs/0_9_0-recurring-income-design.md` — 自訂定期收入完整設計 spec
+- 新增 `docs/superpowers/specs/0_8_0-recurring-income-design.md` — 自訂定期收入完整設計 spec
+- 重命名 spec：`0_8_0-cloud-invoice-design.md` → `0_9_0-cloud-invoice-design.md`（cloud invoice 改排到 v0.9.0）
+- 重命名 spec：`0_8_0-insurance-detail-design.md` → `0_7_0-insurance-detail-design.md`（保險 savings framing 實際在 v0.7.0 ship）
 
 ## [0.7.0] - 2026-05-06
 

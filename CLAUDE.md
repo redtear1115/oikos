@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Current version: v0.7.0** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Current version: v0.8.0**（local 已 ship，未 push origin / 未 migrate prod）— 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -24,13 +24,15 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.5.0 | 愛物：Child / Pet / Plant | ✅ |
 | v0.6.0 | 愛物：House + Insurance | ✅ |
 | v0.7.0 | 進帳（Income） | ✅ |
-| v0.8.0 | 雲端發票匯入（財政部 API + 手機條碼載具） | ⬜ |
+| v0.8.0 | 自訂定期收入 Phase 1（rules + pending preview→commit） | ✅ local |
+| v0.8.x | Phase 2：`editAndConfirmPending` wiring（pending card「改一下」→ IncomeSheet edit mode） | ⬜ |
+| v0.9.0 | 雲端發票匯入（財政部 API + 手機條碼載具）— Phase A（mock fixture）可推進 | ⬜ |
 
 ## Backlog
 
 未排入版本的候選功能，優先順序待評估。
 
-- **雲端發票匯入**（v0.8.0 已排）：財政部 API + 手機條碼載具
+- **雲端發票匯入**（v0.9.0 已排）：財政部 API + 手機條碼載具
 - 保險詳情頁「累計繳 vs. 拿回」統計視圖
 - 愛物清單分群顯示（生命體 / 財產 / 保障）
 
@@ -86,5 +88,7 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/0_4_0-car-fuel-log-design.md` | 車輛 + FuelLog |
 | `docs/superpowers/specs/0_5_0-aibutsu-design.md` | 愛物擴展（Child/Pet/Plant/House/Insurance） |
 | `docs/superpowers/specs/0_7_0-incomesheet-design.md` | 進帳功能 |
-| `docs/superpowers/specs/0_8_0-cloud-invoice-design.md` | 雲端發票匯入（v0.8.0）|
+| `docs/superpowers/specs/0_7_0-insurance-detail-design.md` | 保險 savings framing 詳情頁 |
+| `docs/superpowers/specs/0_8_0-recurring-income-design.md` | 自訂定期收入（v0.8.0）|
+| `docs/superpowers/specs/0_9_0-cloud-invoice-design.md` | 雲端發票匯入（v0.9.0）|
 | `CHANGELOG.md` | 版本歷史 |
