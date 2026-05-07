@@ -3,19 +3,7 @@
 > 目標：定義「定期收入規則 → 到期產生待確認卡片 → 用戶確認落 IncomeTransaction」的端到端設計。
 > 優先級：P3（延伸 IncomeSheet 0_7_0；不阻擋 Phase 2 保險其他 slice）。
 
-## 實作狀態
-
-| 部分 | 狀態 | 預期位置 |
-|---|---|---|
-| `RecurringIncomeRules` schema + RLS + Realtime | ✅ | `drizzle/0016_recurring_income.sql` |
-| `PendingIncomeOccurrences` schema + RLS + Realtime | ✅ | 同上 |
-| pg_cron `generate_pending_income` job | ✅ | 同上 |
-| Server actions（rule CRUD / pause / confirm / skip） | ✅ | `actions/recurringIncome.ts` |
-| 設定頁（規則列表 + 新增/編輯 bottom sheet） | ✅ | `app/(dashboard)/settings/recurring-income/` |
-| Dashboard pending card stack | ✅ | `app/(dashboard)/dashboard/_components/PendingIncomeStack.tsx` |
-| IncomeSheet「改一下」prefill 整合 | ✅ | `IncomeSheet.tsx` |
-| 進帳 pill 未確認指示 dot | ✅ | `ModeTogglePlaceholder.tsx` |
-| Records 進帳 tab 設定入口 hint | ✅ | `RecordsList.tsx` |
+全部已完成（v0.8.0 / v0.8.1）。見 `drizzle/0016_recurring_income.sql`、`actions/recurringIncome.ts`、`app/(dashboard)/settings/recurring-income/`。
 
 ---
 

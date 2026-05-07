@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Current version: v0.8.1**（local，未 push origin / 未 migrate prod）— 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Current version: v0.9.0**（local，未 push origin / 未 migrate prod）— 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -26,7 +26,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.7.0 | 進帳（Income） | ✅ |
 | v0.8.0 | 自訂定期收入 Phase 1（rules + pending preview→commit） | ✅ local |
 | v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ local |
-| v0.9.0 | 保險「累計繳 vs. 拿回」統計視圖 | ⬜ |
+| v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ local |
 
 ## Backlog
 
@@ -81,12 +81,12 @@ npm run db:studio    # Drizzle Studio
 
 | 文件 | 內容 |
 |---|---|
-| `docs/superpowers/specs/0_1_0-product-design.md` | 整體架構、Tech Stack、Phase 規劃 |
-| `docs/superpowers/specs/0_1_0-transactions-design.md` | 核心記帳 UX |
-| `docs/superpowers/specs/0_4_0-car-fuel-log-design.md` | 車輛 + FuelLog |
-| `docs/superpowers/specs/0_5_0-aibutsu-design.md` | 愛物擴展（Child/Pet/Plant/House/Insurance） |
-| `docs/superpowers/specs/0_7_0-incomesheet-design.md` | 進帳功能 |
-| `docs/superpowers/specs/0_7_0-insurance-detail-design.md` | 保險 savings framing 詳情頁 |
-| `docs/superpowers/specs/0_8_0-recurring-income-design.md` | 自訂定期收入（v0.8.0）|
-| `docs/superpowers/specs/0_9_0-cloud-invoice-design.md` | 雲端發票匯入（v0.9.0）|
+| `docs/superpowers/specs/product-design.md` | 整體架構、Tech Stack |
+| `docs/superpowers/specs/transactions-design.md` | 核心記帳 UX、Onboarding、Solo Mode |
+| `docs/superpowers/specs/car-fuellog-design.md` | 車輛 + FuelLog |
+| `docs/superpowers/specs/aibutsu-design.md` | 愛物概念 + Child/Pet/Plant/House/Insurance |
+| `docs/superpowers/specs/income-design.md` | 進帳功能設計決策 |
+| `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
+| `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
+| `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
 | `CHANGELOG.md` | 版本歷史 |

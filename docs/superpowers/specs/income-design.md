@@ -3,22 +3,6 @@
 > 目標：lock 2026-05-04 與設計師完成的 IncomeSheet hi-fi 設計探索結論，作為未來實作 IncomeTransactions + Phase 2 保險時的依據。
 > 優先級：P2 Slice 5（保險）前置。
 
-## 實作狀態（全部完成 2026-05-06）
-
-| 部分 | 狀態 | 位置 |
-|---|---|---|
-| `IncomeTransactions` schema + RLS + Realtime + pg_cron | ✅ | [drizzle/0012](../../../drizzle/0012_income_transactions.sql) · [lib/db/schema.ts](../../../lib/db/schema.ts) |
-| `INCOME_CATEGORIES` + `INCOME_PALETTES` token | ✅ | [lib/incomeCategories.ts](../../../lib/incomeCategories.ts) · [lib/incomePalettes.ts](../../../lib/incomePalettes.ts) |
-| Validators / Server actions / Queries | ✅ | [lib/validators.ts](../../../lib/validators.ts) · [actions/income.ts](../../../actions/income.ts) · [lib/db/queries/incomes.ts](../../../lib/db/queries/incomes.ts) · `listFeedAllPaged` in [lib/db/queries/transactions.ts](../../../lib/db/queries/transactions.ts) |
-| Shared mapping util | ✅ | [lib/incomeFeedRow.ts](../../../lib/incomeFeedRow.ts) — `incomeToFeedRow` + `makeIncomeLoader` |
-| IncomeSheet UI 元件 | ✅ | [app/(dashboard)/dashboard/_components/IncomeSheet.tsx](../../../app/%28dashboard%29/dashboard/_components/IncomeSheet.tsx) |
-| Dashboard mode toggle（支出 / 進帳） | ✅ | Dashboard.tsx · BalanceHero.tsx · ModeTogglePlaceholder.tsx |
-| Records 三 tab（全部 / 支出 / 進帳）+ sticky header | ✅ | [app/(dashboard)/records/_components/RecordsList.tsx](../../../app/%28dashboard%29/records/_components/RecordsList.tsx) |
-| Monthly net header in 全部 tab | ✅ | MonthSection.tsx · TransactionFeed.tsx |
-| Realtime IncomeTxns events | ✅ | [app/(dashboard)/_components/RealtimeProvider.tsx](../../../app/%28dashboard%29/_components/RealtimeProvider.tsx) |
-| Constellation+halo empty state | ✅ | [app/(dashboard)/dashboard/_components/IncomeEmptyState.tsx](../../../app/%28dashboard%29/dashboard/_components/IncomeEmptyState.tsx) |
-| Insurance ↔ Vehicle 關聯 | ✅ | [drizzle/0014](../../../drizzle/0014_insurance_vehicle_link.sql) · InsuranceDetailClient + AssetDetailClient |
-
 ---
 
 ## 背景與動機
@@ -153,11 +137,6 @@ IncomeSheet 提交後：對應 row 在 RecordsList / 保險頁 mint glow 背景 
 5. **用語統一**：「記帳」、「紀錄」、「進帳」目前混用，需文案 review
 
 ---
-
-## 排程
-
-- **全部完成（v0.3.0，2026-05-06）**：IncomeSheet UI + Dashboard mode toggle + Records tabs + Realtime + Insurance↔Vehicle 全 ship
-- **時間 budget**：4-5 年內第一張儲蓄險滿期前必須上線（已達成）
 
 ---
 

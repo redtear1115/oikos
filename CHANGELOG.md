@@ -11,6 +11,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.9.0] - 2026-05-08
+
+### Added
+- **保險 SavingsView**：儲蓄型保單詳情頁全新視圖（`insuranceType = 'savings'`）
+  - 雙 bar hero：入（累計繳 / 估應繳總額）+ 出（已拿回 / 估滿期金），暖句隨進度切換
+  - 合約進度條（時間軸 timeline）
+  - 繳費紀錄 + 拿回紀錄（分頁）
+  - Trigger UX：30 天前 `MaturingSoonPrompt`、滿期未收 `MaturedAwaitingPrompt`（含一鍵記滿期金）
+  - 「記滿期金 +」section header 按鈕（returnRatio ≥ 1.05 時自動隱藏）
+  - 非 savings 險種 fallback 到 `InsuranceDetailClientLegacy`（維持原樣）
+- **`expected_maturity_amount` 欄位**（migration 0015）：儲蓄險預估滿期金，nullable
+- **`computeSavingsProgress` helper**（`lib/insuranceProgress.ts`）+ 14 unit tests，覆蓋全部 edge cases
+- **`AssetSheet` savings 險種**：picker 加入「儲蓄」選項，conditionally render 預估滿期金欄位
+- **`IncomeSheet` prefilledCategory / prefilledAmount props**：供 MaturedAwaitingPrompt 一鍵預填
+
+### Fixed
+- **保險詳情頁 hero 橫線**：`InsuranceDetailClientLegacy` header 與 hero 之間的 subpixel gap，導致外層 `var(--bg)` 透出形成暗線；以共同父層 div 包住消除間隙
+
+### Chore
+- **Spec 文件 doc-keeper**：8 個 spec 由版本前綴命名改為穩定 topic 命名（e.g. `0_7_0-insurance-detail-design.md` → `insurance-design.md`）；移除完成狀態表、路徑表、已 ship 驗收 checklist；CLAUDE.md spec 索引對應更新；`.claude/settings.local.json` 移除舊允許路徑
+
 ## [0.8.1] - 2026-05-08
 
 ### Added
@@ -29,9 +50,8 @@ _Nothing unreleased yet._
 - **IncomeSheet race guard**：pending 模式下若 pending 已被 partner confirm，submit 時正確回應「已被處理」
 - **Income design critique P0+P1**：IncomeSheet / Dashboard income mode 細節修正
 
-### Schema（v0.9.0 基礎建設，無 user-facing UI）
+### Schema（雲端發票基礎建設，無 user-facing UI）
 - 雲端發票匯入 schema 預置：`InvoiceCredentials` table + `cashTransactions.invoiceNumber`（migrations 0017-0019）— 功能因財政部 API 申請限制暫緩，不對使用者顯示
-- `lib/insuranceProgress.ts`：保險 savings 進度計算 helper（SavingsView UI 待 v0.9.0）
 
 ## [0.8.0] - 2026-05-07
 
@@ -223,7 +243,8 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/redtear1115/oikos/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/redtear1115/oikos/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/redtear1115/oikos/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/redtear1115/oikos/compare/v0.6.0...v0.7.0

@@ -81,20 +81,9 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 ## 4. 版本規劃
 
-| 版本 | 範圍 | 狀態 |
-|---|---|---|
-| v0.1.0 | 專案建置 + Auth + Group + Invite + RLS + PWA + 核心記帳（AddSheet / Settlement / Records / Realtime） | ✅ |
-| v0.2.0 | Onboarding + Solo Mode + 篩選 + Settings | ✅ |
-| v0.3.0 | 愛物：Car | ✅ |
-| v0.4.0 | 愛物：Car FuelLog | ✅ |
-| v0.5.0 | 愛物：Child / Pet / Plant | ✅ |
-| v0.6.0 | 愛物：House + Insurance | ✅ |
-| v0.7.0 | 進帳（Income） | ✅ |
-| v0.8.0 | 自訂定期收入（rules + pending preview→commit） | ✅ local |
-| v0.8.1 | UX polish：hero card 一致性 + 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending | ✅ local |
-| v0.9.0 | 保險「累計繳 vs. 拿回」統計視圖 | ⬜ |
+版本歷史與當前狀態見 [CLAUDE.md](../../../CLAUDE.md)（版本表）與 [CHANGELOG.md](../../../CHANGELOG.md)。
 
-詳細設計見各 spec：[transactions-design.md](transactions-design.md) · [car-fuel-log-design.md](car-fuel-log-design.md) · [aibutsu-design.md](aibutsu-design.md) · [incomesheet-design.md](incomesheet-design.md)
+各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md)
 
 ---
 

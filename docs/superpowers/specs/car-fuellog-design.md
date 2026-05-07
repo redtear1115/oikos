@@ -8,20 +8,11 @@
 
 設計師（claude.ai/design）2026-05-05 交付 Phase 2 hi-fi bundle（車 hero / timeline / action bar、FuelLog 表單、NewCarForm、asset marks、asset picker）。Bundle 已用於實作，不再存在於 repo。
 
-### Bundle 實作狀態
+Slice 1 + 2 已全數實作（v0.3.0 / v0.4.0）。
 
-**已實作：**
-- Slice 1：`/assets` 列表、`/assets/[id]`、`AssetIcon`、`AssetListItem`、`AssetEmptyState`、`AssetSheet`、`AssetPickerSheet`、`AssetHero`、`actions/asset.ts`、`lib/db/queries/asset.ts`
-- Slice 2：`actions/fuelLog.ts`、`lib/fuelEcon.ts`、`lib/db/queries/fuelLog.ts`、`lib/primaryUser.ts`、NewFuelLog sheet、車詳情 hero（avgFuelEcon + action bar）、FuelRow、`carDetails` 擴充（brand/model/year/color/primaryUserId/fuelType）
-
-**尚未實作：**
-
-| 設計項目 | 對應 mockup | 狀態 |
-|---|---|---|
-| Asset marks 系統（line/glyph/badge × 4 types 完整版） | asset-marks.jsx / v2 | ⬜ 目前各 type 有 icon，mark system 未完整 |
-| Car hero 用 `car.color` 動態上色 | car-screens.jsx | ✅ 2026-05-06 — 環繞色框 + DB 改存 hex（migration 0013）|
-| AssetPickerSheet 視覺分組（inline 分區，chat4 推薦） | asset-picker.jsx | ⬜ 仍 flat list |
-| House entity | asset-list.jsx | ✅ Slice 4 完成 2026-05-06 |
+**Backlog（未完整）：**
+- Asset marks 系統（line/glyph/badge × 4 types 完整版）— 目前各 type 有 icon，mark system 未完整
+- AssetPickerSheet 視覺分組（inline 分區）— 仍 flat list
 
 ---
 

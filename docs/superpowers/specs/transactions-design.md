@@ -1,26 +1,10 @@
 # 記帳功能設計（Transactions + Onboarding + Solo Mode）
 
-> Phase 1 + Phase 1.1 均已完成（2026-05-03）。
+> 全部已完成（v0.1.0 / v0.2.0）。
 
 ---
 
 ## Part 1 — 核心記帳（Phase 1）
-
-### 交付範圍
-
-| 功能 | 狀態 |
-|---|---|
-| Transaction CRUD（create / 編輯 = 軟刪+新增 / soft delete） | ✅ |
-| 分攤計算（all_mine / all_theirs / half，含 ceil 規則） | ✅ |
-| GroupBalance 全量重算（每次寫入 atomic） | ✅ |
-| Settlement（部分結清、smart chip、edit/delete） | ✅ |
-| 月份分組列表 + lazy 20 筆 cursor pagination | ✅ |
-| 三維度篩選 bottom sheet（誰付 / 分攤 / 分類） | ✅ |
-| Real-time 同步（partner 異裝置即時反應，淡黃 highlight） | ✅ |
-| 設定頁（帳本名 / 成員 / 顯示名 / 登出） | ✅ |
-| pg_cron weekly cleanup（soft-deleted >1yr 物理刪除） | ✅ |
-| Server action unit + integration tests | ✅ |
-| Bonus | Google avatar（環樣式 + 字母 fallback）；Dashboard filter parity |
 
 ### 命名與品牌
 
@@ -33,38 +17,15 @@
 
 **關鍵 invariant**：「編輯」= 一個 DB transaction 內 soft delete 舊 row + insert 新 row + recalcGroupBalance。使用者不感知這是兩步。
 
-| 元件 | 路徑 |
-|---|---|
-| Server actions | [actions/transaction.ts](../../../actions/transaction.ts)（`createTransaction`, `editTransaction`, `softDeleteTransaction`, `loadMoreTransactions`） |
-| Validation | [lib/validators.ts](../../../lib/validators.ts)（`validateTransactionInput`） |
-| 表單 UI | [app/(dashboard)/dashboard/_components/AddSheet.tsx](../../../app/%28dashboard%29/dashboard/_components/AddSheet.tsx) |
-| 列表 row | [app/(dashboard)/dashboard/_components/CompactRow.tsx](../../../app/%28dashboard%29/dashboard/_components/CompactRow.tsx) |
-| 列表容器 | [app/(dashboard)/_components/TransactionFeed.tsx](../../../app/%28dashboard%29/_components/TransactionFeed.tsx) |
-
 ### Settlement
 
 **關鍵概念**：
 - 「我還多少？」/「對方還了多少？」依 viewer 翻轉
 - Smart chip：全額 / 一半 / 整數（整數 = 取整百到不超過欠款；< 100 或等於全額時隱藏）
 
-| 元件 | 路徑 |
-|---|---|
-| Server actions | [actions/settlement.ts](../../../actions/settlement.ts) |
-| Smart chip 計算 | [lib/settlement.ts](../../../lib/settlement.ts) |
-| Inline 表單 | [app/(dashboard)/dashboard/_components/SettlementForm.tsx](../../../app/%28dashboard%29/dashboard/_components/SettlementForm.tsx) |
-| Edit/delete sheet | [app/(dashboard)/dashboard/_components/SettlementSheet.tsx](../../../app/%28dashboard%29/dashboard/_components/SettlementSheet.tsx) |
-
 ### Balance + 列表
 
 **關鍵 invariant**：列表用 UNION SQL，把 transactions 和 settlements 統一為 `kind: 'transaction' | 'settlement'`，cursor 用 `(transactedAt, createdAt)` 複合鍵。
-
-| 元件 | 路徑 |
-|---|---|
-| 計算公式（pure） | [lib/balance.ts](../../../lib/balance.ts) |
-| Recalc SQL | [lib/db/queries/balance.ts](../../../lib/db/queries/balance.ts) |
-| Feed query（UNION） | [lib/db/queries/transactions.ts](../../../lib/db/queries/transactions.ts) |
-| Balance card UI | [app/(dashboard)/dashboard/_components/BalanceHero.tsx](../../../app/%28dashboard%29/dashboard/_components/BalanceHero.tsx) |
-| 月份分組 | [lib/groupByMonth.ts](../../../lib/groupByMonth.ts) |
 
 ### 篩選
 
@@ -73,11 +34,6 @@
 - 分攤 / 分類 dim 觸發時 settlements 整批排除（`hidesSettlements`）
 - Server-side 在 `loadMoreTransactions` resolve 為 `ResolvedTxnFilter`，SQL 用 `IN + sql.join`
 - Filter state in-memory，不持久化；dashboard 跟 /records 各自獨立
-
-| 元件 | 路徑 |
-|---|---|
-| Filter types + helpers（pure） | [lib/filter.ts](../../../lib/filter.ts) |
-| Bottom sheet UI | [app/(dashboard)/records/_components/FilterSheet.tsx](../../../app/%28dashboard%29/records/_components/FilterSheet.tsx) |
 
 ### Real-time UX 規則
 
@@ -102,16 +58,6 @@
 
 - **Realtime 跨月份移動視覺破碎**：把 5/1 編輯成 4/15 會觸發 remove-from-五月 + insert-to-四月 兩個 event，視覺上有半秒空檔。選了「兩個 event 各自觸發」這條路，如果體感不好再優化。
 - **Realtime 連線中斷 backoff**：依賴 `@supabase/supabase-js` v2 預設行為；地下停車場 / 切 WiFi 場景未實際測過。
-
-### 設計師待補
-
-| # | 項目 | 狀態 |
-|---|---|---|
-| 1 | 雙色 heart icon SVG（空狀態） | ✅ FutariMark 已 ship |
-| 2 | Futari logo SVG | ✅ 已 ship |
-| 3 | 醫療 / 家居 / 禮物 / 其他 4 個 category 色票 | ✅ 已收進 [lib/categories.ts](../../../lib/categories.ts) |
-| 4 | 完整 design tokens（hover、disabled、shadow、radius、spacing） | 🔄 部分定 token，部分 raw value 散落（見 CLAUDE.md → Design Debt P3-1 / P4-3）|
-| 5 | PWA icon set（512×512、192×192、maskable） | ✅ 已交付 + 上架（`public/icons/`、`public/og-image.png`、`app/favicon.ico`）|
 
 ---
 

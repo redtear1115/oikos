@@ -60,6 +60,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehi
 
   return (
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+      <div style={{ background: tint.bg }}>
       <AibutsuHeader
         kind="insurance"
         name={
@@ -71,7 +72,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehi
         onEditClick={() => setEditOpen(true)}
       />
 
-      <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
+      <div className="px-5 pb-6 text-center">
         {hasDates ? (
           <>
             <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
@@ -109,6 +110,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehi
             )}
           </>
         )}
+      </div>
       </div>
 
       {details?.startsAt && details?.endsAt && (

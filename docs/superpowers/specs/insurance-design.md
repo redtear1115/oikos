@@ -446,43 +446,7 @@ return (
 
 ---
 
-## File layout
-
-```
-lib/
-  insurance.ts                          # NEW: getFramingGroup
-  insuranceProgress.ts                  # NEW: computeSavingsProgress + types
-  db/queries/insurance.ts               # NEW: payment/return queries
-
-drizzle/
-  0015_insurance_expected_maturity.sql  # NEW: ALTER TABLE add column
-
-app/(dashboard)/assets/[id]/_components/
-  InsuranceDetailClient.tsx             # 改為 dispatch by framingGroup
-  InsuranceDetailClientLegacy.tsx       # NEW: 把現況搬過來，給 protection/car 暫用
-  insurance/
-    SavingsView.tsx                     # NEW
-    SavingsHero.tsx                     # NEW: bar + 暖句
-    MaturingSoonPrompt.tsx              # NEW
-    MaturedAwaitingPrompt.tsx           # NEW
-    insurance-atoms.tsx                 # NEW: shared cards / cells
-    insurance-copy.ts                   # NEW: copy bank
-    # TODO(next iteration):
-    #   ProtectionView.tsx
-    #   CarInsuranceView.tsx
-
-app/(dashboard)/assets/_components/
-  AssetSheet.tsx                        # add 'savings' kind + expectedMaturityAmount field
-
-app/(dashboard)/dashboard/_components/
-  IncomeSheet.tsx                       # add prefilledCategory prop + amount prefill support
-
-actions/
-  asset.ts                              # editInsurance accept expectedMaturityAmount
-
-lib/
-  validators.ts                         # add expectedMaturityAmount to insurance schema
-```
+全部已實作（v0.8.1）。見 `lib/insurance.ts`、`lib/insuranceProgress.ts`、`lib/db/queries/insurance.ts`、`app/(dashboard)/assets/[id]/_components/insurance/`。
 
 ---
 
@@ -571,55 +535,6 @@ SavingsView 訂閱以下 events（沿用 [RealtimeProvider](app/(dashboard)/_com
 8. **險種家族 dashboard 統計**：「你的儲蓄險共預估可拿 NT$ X」這類跨保單聚合，留到愛物清單頁
 
 ---
-
-## Verification
-
-實作完成後人工驗證：
-
-### Savings 主路徑
-- [ ] 建立 `savings` 險種保單，AssetSheet 的「預估滿期金」欄位出現；切到其他險種時欄位消失
-- [ ] SavingsView hero 雙 bar 正確顯示 payProgress / returnProgress
-- [ ] 暖句依 returnTotal / yearsLeft 切換正確（notStarted / partial / matured 三狀態）
-- [ ] `expectedMaturity = null` 時，拿回 bar 退化為「設定預估金額」CTA
-- [ ] 繳費 row 列出 cashTransactions where assetId（不含其他保單）
-- [ ] 拿回 row 列出 incomeTransactions where assetId AND category='maturity'
-
-### Trigger UX
-- [ ] 滿期日 30 天內：MaturingSoonPrompt 出現在 hero 上方
-- [ ] 滿期日已到但 returnTotal < expectedMaturity：hero 變 MaturedAwaitingPrompt
-- [ ] MaturedAwaitingPrompt CTA 開 IncomeSheet 預填 assetId + category=maturity + amount=expectedMaturity
-- [ ] 「記滿期金 +」section header 按鈕一律顯示（returnRatio >= 1.05 時隱藏）
-
-### 計算 helper
-- [ ] computeSavingsProgress 對所有 edge case 有 unit test：
-  - 全空 inputs
-  - `expectedMaturity = null`
-  - `now < startsAt`（保單未生效）
-  - `payRatio > 1.05`（已超繳）
-  - `returnRatio > 1.05`（已超領）
-  - `awaitingMaturity` 狀態
-
-### Realtime
-- [ ] partner 在另一裝置記了一筆繳費 → 詳情頁 hero / 繳費 row 即時 refresh
-- [ ] partner 記了滿期金 → 拿回 bar 跳動，暖句切換
-
-### Schema
-- [ ] migration 0015 在 dev / prod 都跑
-- [ ] 既有 insurance 保單不受影響（`expected_maturity_amount` 預設 null）
-
----
-
-## 排程
-
-- **v0.8.0**（預計 1 週）：本 spec 全部實作
-  - drizzle/0015 migration
-  - lib/insurance.ts + lib/insuranceProgress.ts + lib/db/queries/insurance.ts
-  - SavingsView + atoms + copy
-  - InsuranceDetailClient dispatch + Legacy fallback
-  - AssetSheet `savings` kind + expectedMaturityAmount field
-  - IncomeSheet `prefilledCategory` + `prefilledAmount` props
-  - validators / actions update
-- **v0.9.0**（後續）：ProtectionView + CarInsuranceView（前 spec 草稿可參考）
 
 ---
 
