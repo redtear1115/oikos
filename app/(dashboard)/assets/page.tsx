@@ -20,37 +20,51 @@ export default async function AssetsPage() {
 
   const assetRows = await listAssetsForGroup(group.id)
 
-  // Batch nickname lookup for children (used to render nickname-first in list).
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
-  const childNicknames = await getChildNicknames(childIds)
 
-  // Fetch month summary for each asset (parallel). N is small (1-2 cars in
-  // friend test), so per-row queries are fine; if N grows we'll batch.
-  const items: AssetsListItem[] = await Promise.all(
-    assetRows.map(async (a) => {
-      const summary = await getAssetSummary(a.id, group.id)
-      const base: AssetsListItem = {
-        id: a.id,
-        type: a.type,
-        name: a.name,
-        nickname: a.type === 'child' ? (childNicknames.get(a.id) ?? null) : null,
-        plate: a.plate,
-        monthAmount: summary.monthAmount,
-      }
-      if (a.type !== 'car') return base
-      const heroStats = await getCarHeroStats(a.id, a.initialOdometer)
-      return {
-        ...base,
-        color: a.color,
-        year: a.year,
-        brand: a.brand,
-        model: a.model,
-        latestOdometer: heroStats.latestOdometer,
-        totalAmount: summary.totalAmount,
-        avgFuelEcon: heroStats.avgFuelEcon,
-      }
-    }),
-  )
+  // Run nickname lookup in parallel with per-row summary/hero queries — both
+  // only depend on assetRows. Per car row, summary + heroStats also run in
+  // parallel (independent queries against different tables).
+  const [childNicknames, partialItems] = await Promise.all([
+    getChildNicknames(childIds),
+    Promise.all(
+      assetRows.map(async (a) => {
+        if (a.type !== 'car') {
+          const summary = await getAssetSummary(a.id, group.id)
+          return {
+            id: a.id,
+            type: a.type,
+            name: a.name,
+            plate: a.plate,
+            monthAmount: summary.monthAmount,
+          } satisfies Omit<AssetsListItem, 'nickname'>
+        }
+        const [summary, heroStats] = await Promise.all([
+          getAssetSummary(a.id, group.id),
+          getCarHeroStats(a.id, a.initialOdometer),
+        ])
+        return {
+          id: a.id,
+          type: a.type,
+          name: a.name,
+          plate: a.plate,
+          monthAmount: summary.monthAmount,
+          color: a.color,
+          year: a.year,
+          brand: a.brand,
+          model: a.model,
+          latestOdometer: heroStats.latestOdometer,
+          totalAmount: summary.totalAmount,
+          avgFuelEcon: heroStats.avgFuelEcon,
+        } satisfies Omit<AssetsListItem, 'nickname'>
+      }),
+    ),
+  ])
+
+  const items: AssetsListItem[] = partialItems.map((i) => ({
+    ...i,
+    nickname: i.type === 'child' ? (childNicknames.get(i.id) ?? null) : null,
+  }))
 
   return <AssetsListClient items={items} />
 }
