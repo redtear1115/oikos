@@ -47,8 +47,120 @@
     {
       "idx": 6,
       "version": "7",
+      "when": 1777980135719,
+      "tag": "0006_assets_realtime_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
       "when": 1777980135718,
       "tag": "0007_phase2_slice2",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777980135720,
+      "tag": "0008_phase2_slice3",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777980135721,
+      "tag": "0009_car_extended_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777980135722,
+      "tag": "0010_aibutsu_detail_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1777980135723,
+      "tag": "0011_plant_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777980135724,
+      "tag": "0012_income_transactions",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777980135725,
+      "tag": "0013_car_color_to_hex",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1777980135726,
+      "tag": "0014_insurance_vehicle_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1777980135727,
+      "tag": "0015_insurance_expected_maturity",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1777980135728,
+      "tag": "0016_recurring_income",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1777980135729,
+      "tag": "0017_invoice_v090",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1777980135733,
+      "tag": "0018_invoice_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777980135734,
+      "tag": "0019_invoice_rls_write",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1777980135735,
+      "tag": "0020_assets_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1777980135736,
+      "tag": "0021_recurring_expense",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1777980135737,
+      "tag": "0022_security_fixes",
       "breakpoints": true
     }
   ]
