@@ -9,10 +9,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-### Backlog
-- i18n Assets 詳情頁 + AssetSheet 翻譯（~40 fields）
-- i18n 設定子頁（`recurring-income` / `invite` / `coming-soon`）
-- 離線瀏覽 SW 實作（Serwist + runtime cache + `/offline` page + banner + sign-out cache clear）
+_Nothing unreleased yet._
 
 ## [0.11.1] - 2026-05-08
 
@@ -281,7 +278,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/redtear1115/oikos/compare/v0.10.0...v0.11.1
 [0.10.0]: https://github.com/redtear1115/oikos/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/redtear1115/oikos/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/redtear1115/oikos/compare/v0.8.0...v0.8.1
