@@ -10,6 +10,7 @@ import { SheetBackdrop } from './SheetBackdrop'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
 import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
+import { useLocale } from '@/lib/i18n/client'
 
 export interface SettlementSheetInitial {
   id: string
@@ -27,6 +28,7 @@ interface Props {
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   const { viewer, partner } = useMember()
+  const locale = useLocale()
   const [amount, setAmount] = useState('')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
@@ -179,10 +181,10 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               <CalIcon />
               <div className="flex-1 text-left">
                 <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>
-                  {dateLabel(date)}
+                  {dateLabel(date, locale)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                  {date === localTodayISO() ? '今天' : weekday(date)}
+                  {date === localTodayISO() ? '今天' : weekday(date, locale)}
                 </div>
               </div>
               <Chevron />

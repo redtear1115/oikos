@@ -1,13 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { LOCALE_COOKIE, isLocale } from './lib/i18n/locales-meta'
 
-type Locale = 'zh-TW' | 'en'
-const LOCALE_COOKIE = 'lang'
 const LOCALE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
-
-function isLocale(value: string | null): value is Locale {
-  return value === 'zh-TW' || value === 'en'
-}
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

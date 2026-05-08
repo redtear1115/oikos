@@ -8,7 +8,7 @@ import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
-import { useTranslations } from '@/lib/i18n/client'
+import { useTranslations, useLocale } from '@/lib/i18n/client'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -22,6 +22,7 @@ interface Props {
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
   const { viewer, partner } = useMember()
   const t = useTranslations()
+  const locale = useLocale()
   // Default to the full outstanding amount.
   const [amount, setAmount] = useState(String(debtAmount))
   const [date, setDate] = useState(localTodayISO())
@@ -155,10 +156,10 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             <CalIcon size={20} />
             <div className="flex-1 text-left">
               <div className="text-label font-medium" style={{ color: 'var(--ink)' }}>
-                {dateLabel(date)}
+                {dateLabel(date, locale)}
               </div>
               <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                {date === localTodayISO() ? t.settlement.today : weekday(date)}
+                {date === localTodayISO() ? t.settlement.today : weekday(date, locale)}
               </div>
             </div>
             <Chevron />

@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.11.0**（tag local，待 push）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.11.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -28,20 +28,18 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ |
 | v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
 | v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
-| v0.11.0 | Perf：pages 改 `getSession()`（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2）· i18n：cookie-based locale + 4 語擴張 zh-TW / zh-CN / en / ja + dashboard / records / settings / assets 字典接通（PR #3 / #4 / #6 / #7）· Settings：語言切換 + 離線瀏覽 toggle UI（PR #6；SW 實作仍 backlog） | ✅ |
-| v0.11.1 | i18n Date helpers 改用 `Intl.DateTimeFormat(locale)`（`monthLabel` / `weekday` / `dateLabel`）+ middleware.ts `Locale` type 漂移修補（`?lang=zh-CN/ja` 進得來） | 🚧 in progress（隔壁 session） |
-| v0.12.0 | 定期支出（recurring expenses）— 對應自訂定期收入的支出版本；與定期收入共用 pending preview→commit 架構 | ⬜ |
-| v0.12.1 | i18n 設定子頁 — `recurring-income`、`invite`、`coming-soon` 等子頁字典接通 | ⬜ |
-| v0.13.0 | 小孩／寵物身高體重歷史紀錄 — append-only log（仿 FuelLog pattern）+ 修正 typo；MVP 不含成長曲線視覺化（codebase 無 chart lib）| ⬜ |
-| v0.13.1 | i18n Assets 詳情頁 + AssetSheet 翻譯 — 保險／車輛／兒童等 ~40 fields，需人工審稿 | ⬜ |
-| v0.14.0 | 離線瀏覽（Offline / PWA cache）— Serwist + network-first runtime cache，把 v0.11.0 已 ship 的 toggle UI 接上真實 SW；spec [docs/superpowers/specs/2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md) | ⬜ |
-| _Unreleased_ | _Nothing unreleased yet._ | ⬜ |
+| v0.11.1 | Perf（PR #1–2）+ i18n 4 語架構（PR #3 / #4 / #6 / #7）+ 離線瀏覽 toggle UI（PR #6） · middleware locale 修補（4 語）· i18n Date helpers 改 `Intl.DateTimeFormat` | ✅ |
 
 ## Backlog
 
 未排入版本的候選功能，優先順序待評估。
 
-- **雲端發票匯入**（財政部 API + 手機條碼載具）— APP_ID 卡法規路徑（[cloud-invoice-design.md](docs/superpowers/specs/cloud-invoice-design.md) 「APP_ID 申請卡點」），暫緩
+- **雲端發票匯入**（財政部 API + 手機條碼載具）— API key 無法取得，暫緩
+- **小孩／寵物身高體重歷史紀錄**（append-only log + 修正 typo）— 仿 FuelLog pattern；MVP 不含成長曲線視覺化（codebase 無 chart lib）
+- **定期支出**（recurring expenses）— 對應自訂定期收入的支出版本；建議與定期收入共用 pending preview→commit 架構，未排期
+- **離線瀏覽**（Offline / PWA cache）— Serwist + network-first runtime cache，讓使用者在無網路時能瀏覽最近的記錄與首頁；spec [docs/superpowers/specs/2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)，未排期
+- **i18n Assets 詳情頁 + AssetSheet 翻譯** — 各欄位（保險／車輛／兒童等 ~40 fields）翻譯量大，需人工審稿後才能上線
+- **i18n 設定子頁** — `recurring-income`、`invite`、`coming-soon` 等子頁仍 zh-TW only，待後續補齊
 
 ---
 

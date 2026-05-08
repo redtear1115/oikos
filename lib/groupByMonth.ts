@@ -25,12 +25,8 @@ export function groupByMonth<T>(
   return groups
 }
 
-const MONTH_NAMES = [
-  '一月', '二月', '三月', '四月', '五月', '六月',
-  '七月', '八月', '九月', '十月', '十一月', '十二月',
-]
-
-export function monthLabel(monthKey: string): string {
+export function monthLabel(monthKey: string, locale: string): string {
   const [year, month] = monthKey.split('-').map(Number)
-  return `${MONTH_NAMES[month - 1]} ${year}`
+  return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' })
+    .format(new Date(year, month - 1, 1))
 }

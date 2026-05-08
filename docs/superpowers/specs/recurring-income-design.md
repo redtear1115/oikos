@@ -263,7 +263,7 @@ Schema：[lib/db/schema.ts](../../../lib/db/schema.ts) → `pendingIncomeOccurre
 
 ## 索引
 
-- IncomeSheet 既有 spec：[0_7_0-incomesheet-design.md](0_7_0-incomesheet-design.md)
+- IncomeSheet 既有 spec：[income-design.md](income-design.md)
 - IncomeTransactions schema：[lib/db/schema.ts:185](../../../lib/db/schema.ts#L185)
 - IncomeTransactions migration：[drizzle/0012](../../../drizzle/0012_income_transactions.sql)
 - pg_cron 既有 cleanup job：[drizzle/0001](../../../drizzle/0001_pg_cron_cleanup.sql)

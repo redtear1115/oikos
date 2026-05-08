@@ -42,9 +42,17 @@ describe('groupByMonth', () => {
 })
 
 describe('monthLabel', () => {
-  it('formats YYYY-MM as Chinese month label', () => {
-    expect(monthLabel('2026-05')).toBe('五月 2026')
-    expect(monthLabel('2026-12')).toBe('十二月 2026')
-    expect(monthLabel('2026-01')).toBe('一月 2026')
+  it('formats YYYY-MM using Intl for zh-TW', () => {
+    const fmt = (key: string) => new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long' })
+      .format(new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1))
+    expect(monthLabel('2026-05', 'zh-TW')).toBe(fmt('2026-05'))
+    expect(monthLabel('2026-12', 'zh-TW')).toBe(fmt('2026-12'))
+    expect(monthLabel('2026-01', 'zh-TW')).toBe(fmt('2026-01'))
+  })
+
+  it('formats YYYY-MM using Intl for en', () => {
+    expect(monthLabel('2026-05', 'en')).toBe(
+      new Intl.DateTimeFormat('en', { year: 'numeric', month: 'long' }).format(new Date(2026, 4, 1))
+    )
   })
 })

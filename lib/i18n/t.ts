@@ -4,15 +4,20 @@ import { zhTW, type Translations } from './locales/zh-TW'
 import { zhCN } from './locales/zh-CN'
 import { en } from './locales/en'
 import { ja } from './locales/ja'
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE,
+  isLocale,
+  type Locale,
+} from './locales-meta'
 
-export const SUPPORTED_LOCALES = ['zh-TW', 'zh-CN', 'en', 'ja'] as const
-export type Locale = (typeof SUPPORTED_LOCALES)[number]
-export const DEFAULT_LOCALE: Locale = 'zh-TW'
-export const LOCALE_COOKIE = 'lang'
-
-export function isLocale(value: string | undefined | null): value is Locale {
-  return (SUPPORTED_LOCALES as readonly string[]).includes(value ?? '')
-}
+export {
+  SUPPORTED_LOCALES,
+  type Locale,
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE,
+  isLocale,
+} from './locales-meta'
 
 export async function getLocale(): Promise<Locale> {
   const cookieStore = await cookies()

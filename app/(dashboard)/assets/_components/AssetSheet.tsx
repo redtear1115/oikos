@@ -8,6 +8,7 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
+import { useLocale } from '@/lib/i18n/client'
 import { formatNhi, NHI_MAX_LENGTH } from '@/lib/format-nhi'
 import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets } from '@/actions/asset'
 import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset } from '@/actions/asset'
@@ -117,6 +118,7 @@ const isSecondaryType = (t: PickerType) => SECONDARY_TYPE_OPTIONS.some(o => o.va
 
 export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const isEdit = !!initial
+  const locale = useLocale()
   const [selectedType, setSelectedType] = useState<PickerType>('pet')
   const [name, setName] = useState('')
   // car-only fields
@@ -808,7 +810,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   onClick={() => setShowCal(v => !v)}
                 >
                   <CalIcon size={16} />
-                  {purchasedAt ? dateLabel(purchasedAt) : '選擇日期'}
+                  {purchasedAt ? dateLabel(purchasedAt, locale) : '選擇日期'}
                   <Chevron />
                 </button>
                 {showCal && (
@@ -1204,7 +1206,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
                   style={{ background: 'var(--surface)', color: housePurchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--border)' }}
                 >
-                  <span>{housePurchasedAt ? dateLabel(housePurchasedAt) : '選擇日期'}</span>
+                  <span>{housePurchasedAt ? dateLabel(housePurchasedAt, locale) : '選擇日期'}</span>
                   <CalIcon size={16} />
                 </button>
                 {showCal && (
