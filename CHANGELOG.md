@@ -30,6 +30,12 @@ _Nothing unreleased yet._
   - `openGraph.url` 由 `/`（會 307）改為 `/sign-in`、加 `alternateLocale`、`og:image:alt` 含關鍵字
   - Twitter card 同步描述與標題
 
+### Performance
+- **CSS bundle 瘦身：drop unused font weights**（`b315565`）：稽核 `app/` / `components/` / `lib/` 後確認 `font-bold` / `fontWeight: 700` 與 Fraunces weight 600 完全無 caller。Noto Sans TC 每個 weight 因 Google Fonts 以 unicode-range 切片發送（即使指定 `latin` subset 也會帶全部 ~105 個 `@font-face`），單一未用 weight 就讓 font CSS 膨脹 ~25%。Noto Sans TC 4→3 weights、Fraunces 3→2 weights，主 font CSS chunk 397 KB → 298 KB raw（-25%）／ 144 KB → 108 KB gzipped。視覺零變化。
+- **`/settings` RSC fetch 並行化**（`da9309c`）：`getCurrentUser` + `getLocale`、`viewerProfile` + group queries 原本串行；改為各自獨立的兩組 `Promise.all`，省掉短查詢 ~30–80ms 的等待 + `getLocale` 的 cookie 讀取延遲。
+- **BottomNav full prefetch**（`a46d676`）：Next 16 中 `prefetch={undefined}` 在 dynamic route 上只預取到最近的 `loading.js` 邊界，導致 `/records` 切換時 skeleton 已預取但 `listFeedAllPaged` 仍在 click 後才跑、可見一段卡頓。改 `prefetch={true}` 在 `requestIdleCallback` 觸發時預取完整 RSC payload（含資料）。PR #2 的 idle gating 保留。
+- **`/assets` batch GROUP BY query**（`2ecfeda`）：原本 N 個 asset 各跑一次 `getAssetSummary`（N×round-trip）；新增 `getAssetSummariesBatch`，用單一 `SUM ... GROUP BY asset_id` 取代。清單頁 batch summary + childNicknames + per-car heroStats 全部並行，項目同步組裝。N 個 asset 由 N 次 round-trip 縮為 1 次，節省 (N-1)×~30–80ms。Friend test 典型 5–8 個 asset → `/assets` RSC 預期省 120–560ms。詳情頁 single 版 `getAssetSummary` 保留，測試不受影響。
+
 ### SEO impact
 - 對外可見項目：實際 GET `/robots.txt`、`/sitemap.xml` 改為 200 帶內容（原為 307）；`/sign-in` 帶完整 meta + JSON-LD + 語意 `<h1>`。
 - 限制：站內仍只有 `/sign-in` 一個公開可索引頁；要拉 SEO 流量天花板需要日後另開 `/` 公開 landing（非本版範圍）。
