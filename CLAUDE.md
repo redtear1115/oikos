@@ -29,6 +29,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
 | v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
 | v0.11.1 | Perf（PR #1–2）+ i18n 4 語架構（PR #3 / #4 / #6 / #7）+ 離線瀏覽 toggle UI（PR #6） · middleware locale 修補（4 語）· i18n Date helpers 改 `Intl.DateTimeFormat` | ✅ |
+| v0.11.2 | Perf patch：CSS bundle 瘦身（Dashboard 首載 encoded ~1 MB，查 Tailwind purge + 字型載入）+ `/settings` RSC fetch 優化（目前 672ms，查 server-side query 並行化）+ BottomNav prefetch 補全（records / assets / settings tab；S-PF2 session 處理中）| ⬜ |
 
 ## Backlog
 
