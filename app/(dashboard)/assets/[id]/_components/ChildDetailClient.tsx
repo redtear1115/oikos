@@ -14,6 +14,7 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { revealChildPii } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
+import { resolveDisplayName } from '@/lib/display-name'
 
 // 10 mask characters — enough to read as "filled in" without leaking length.
 const PII_MASK = '●●●●●●●●●●'
@@ -101,6 +102,7 @@ type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 interface Props {
   assetId: string
   name: string
+  nickname: string | null
   details: ChildDetailsRow | null
   summary: AssetSummary
   assetSheetInitial: AssetSheetInitial
@@ -109,12 +111,13 @@ interface Props {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function ChildDetailClient({ assetId, name, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function ChildDetailClient({ assetId, name, nickname, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('child')
+  const display = resolveDisplayName(name, nickname)
   const subtitle = details
     ? [
         details.gender === 'male' ? '男' : details.gender === 'female' ? '女' : null,
@@ -147,7 +150,17 @@ export function ChildDetailClient({ assetId, name, details, summary, assetSheetI
         kind="child"
         name={
           <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
-            <span>{name}</span>
+            <span className="inline-flex items-baseline gap-2 min-w-0">
+              <span className="truncate">{display.primary}</span>
+              {display.secondary && (
+                <span
+                  className="text-micro tracking-[0.5px] truncate"
+                  style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+                >
+                  {display.secondary}
+                </span>
+              )}
+            </span>
           </AssetSwitcher>
         }
         subtitle={subtitle || null}

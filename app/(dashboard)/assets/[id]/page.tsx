@@ -84,6 +84,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       <ChildDetailClient
         assetId={asset.id}
         name={asset.name}
+        nickname={childDetailsData?.nickname ?? null}
         details={childDetailsData}
         summary={summary}
         assetSheetInitial={assetSheetInitial}

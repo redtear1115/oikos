@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
+import { resolveDisplayName } from '@/lib/display-name'
 
 const TYPE_LABEL: Record<string, string> = {
   car: '車', child: '孩子', pet: '寵物', plant: '植物',
@@ -12,13 +13,17 @@ interface Props {
   id: string
   type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
+  /** Optional nickname; when present, primary line shows nickname and
+   *  legal name slides into the right-aligned secondary slot. */
+  nickname?: string | null
   plate: string | null
   monthAmount: number
   isLast?: boolean
 }
 
-export function AssetListItem({ id, type, name, plate, monthAmount, isLast }: Props) {
+export function AssetListItem({ id, type, name, nickname, plate, monthAmount, isLast }: Props) {
   const subtitle = type === 'car' ? (plate ?? '') : (TYPE_LABEL[type] ?? type)
+  const display = resolveDisplayName(name, nickname)
   return (
     <Link
       href={`/assets/${id}`}
@@ -35,7 +40,17 @@ export function AssetListItem({ id, type, name, plate, monthAmount, isLast }: Pr
         <AssetIcon type={type} size={22} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-body font-semibold truncate">{name}</div>
+        <div className="flex items-baseline gap-2 min-w-0">
+          <div className="text-body font-semibold truncate">{display.primary}</div>
+          {display.secondary && (
+            <div
+              className="text-xs truncate"
+              style={{ color: 'var(--ink-3)' }}
+            >
+              {display.secondary}
+            </div>
+          )}
+        </div>
         <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>
           {subtitle}
         </div>

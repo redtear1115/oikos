@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets } from '@/lib/db/schema'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, isNull, inArray } from 'drizzle-orm'
 
 export interface ChildDetailsRow {
   birthday: string | null
@@ -17,6 +17,26 @@ export interface ChildDetailsRow {
   bloodType: string | null
   heightCm: number | null
   weightG: number | null
+}
+
+/**
+ * Batch-fetch nicknames for a list of child asset ids. Returns a Map keyed
+ * by assetId. Missing rows / null nicknames are simply absent from the map.
+ *
+ * Used by the asset list page so list items can show nickname-first when
+ * available without per-row queries.
+ */
+export async function getChildNicknames(assetIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>()
+  if (assetIds.length === 0) return out
+  const rows = await db
+    .select({ assetId: childDetails.assetId, nickname: childDetails.nickname })
+    .from(childDetails)
+    .where(inArray(childDetails.assetId, assetIds))
+  for (const r of rows) {
+    if (r.nickname && r.nickname.trim()) out.set(r.assetId, r.nickname)
+  }
+  return out
 }
 
 export async function getChildDetails(assetId: string): Promise<ChildDetailsRow | null> {

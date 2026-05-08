@@ -14,6 +14,9 @@ export interface AssetsListItem {
   id: string
   type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
+  /** Optional nickname (currently only populated for child assets). When
+   *  present, list items render nickname-first with legal name as secondary. */
+  nickname?: string | null
   plate: string | null
   monthAmount: number
   // Car-only extras (optional; ignored for non-car types)
@@ -70,6 +73,7 @@ export function AssetsListClient({ items }: Props) {
           id={a.id}
           type={a.type}
           name={a.name}
+          nickname={a.nickname ?? null}
           plate={a.plate ?? null}
           monthAmount={a.monthAmount}
           isLast={i === group.length - 1}

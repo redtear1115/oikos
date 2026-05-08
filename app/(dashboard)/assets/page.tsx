@@ -4,6 +4,7 @@ import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { listAssetsForGroup, getAssetSummary } from '@/lib/db/queries/asset'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
+import { getChildNicknames } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
 
 export default async function AssetsPage() {
@@ -20,6 +21,10 @@ export default async function AssetsPage() {
 
   const assetRows = await listAssetsForGroup(group.id)
 
+  // Batch nickname lookup for children (used to render nickname-first in list).
+  const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
+  const childNicknames = await getChildNicknames(childIds)
+
   // Fetch month summary for each asset (parallel). N is small (1-2 cars in
   // friend test), so per-row queries are fine; if N grows we'll batch.
   const items: AssetsListItem[] = await Promise.all(
@@ -29,6 +34,7 @@ export default async function AssetsPage() {
         id: a.id,
         type: a.type,
         name: a.name,
+        nickname: a.type === 'child' ? (childNicknames.get(a.id) ?? null) : null,
         plate: a.plate,
         monthAmount: summary.monthAmount,
       }

@@ -8,6 +8,7 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
+import { formatNhi, NHI_MAX_LENGTH } from '@/lib/format-nhi'
 import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets } from '@/actions/asset'
 import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
@@ -929,15 +930,17 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   <input
                     value={childNhiNo}
                     onChange={e => {
-                      setChildNhiNo(e.target.value.slice(0, 20))
+                      setChildNhiNo(formatNhi(e.target.value))
                       if (childWantClearNhiNo) setChildWantClearNhiNo(false)
                     }}
+                    inputMode="numeric"
+                    maxLength={NHI_MAX_LENGTH}
                     placeholder={
                       childWantClearNhiNo
                         ? '已標記清除（儲存後生效）'
                         : (isEdit && childHasNhiNo
                             ? '已加密儲存，留空即不變更'
-                            : '0000-1234-5678-90')
+                            : '0000 0000 0000')
                     }
                     className="flex-1 bg-transparent border-0 outline-none text-base"
                     style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
