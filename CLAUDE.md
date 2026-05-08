@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.10.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.11.0**（tag local，待 push）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -28,7 +28,8 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ |
 | v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
 | v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
-| _Unreleased_ | Perf：pages 改 `getSession()`（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2） · i18n：cookie-based locale + sign-in / Settings LanguageSwitcher（PR #3 / #4 / #6 整併）· 4 語擴張 zh-TW / zh-CN / en / ja + dashboard / records / settings / assets 字典接通（PR #7）· Settings：語言切換 + 離線瀏覽 toggle UI（PR #6；SW 實作仍 backlog） | 已 merge origin/main，待版本號 |
+| v0.11.0 | Perf：pages 改 `getSession()`（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2）· i18n：cookie-based locale + 4 語擴張 zh-TW / zh-CN / en / ja + dashboard / records / settings / assets 字典接通（PR #3 / #4 / #6 / #7）· Settings：語言切換 + 離線瀏覽 toggle UI（PR #6；SW 實作仍 backlog） | ✅ |
+| _Unreleased_ | _Nothing unreleased yet._ | ⬜ |
 
 ## Backlog
 
