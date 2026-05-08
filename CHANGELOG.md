@@ -16,6 +16,17 @@ _Nothing unreleased yet._
 ### Security
 - **孩子愛物身分證／健保卡欄位端到端加密**：`childDetails.id_number_encrypted` 與 `insurance_id_encrypted` 過去寫入未呼叫 `encrypt()`、讀取也直接以 plaintext 送 client；本版補上加密／解密、改以 `revealChildPii` server action 按需解密、詳情頁以 `●●●●●●●●●●` 遮蔽（顯示／隱藏 toggle）、編輯頁改為「留空＝不變更／清除按鈕＝清為空／輸入＝加密後覆蓋」三態語意。dev / prod 兩個 Supabase project 既有 plaintext 已 wipe 為 NULL，本版本不需資料 migration。
 
+### Added
+- **MiniCalendar 兩級 year/month nav**：費用紀錄 / 進帳 / 結算 / 加油的 datepicker header 可點 → Months view（12 月份格 + 年份左右箭頭）→ 再點 → Years view（10 年格 + 十年左右箭頭）。原有月份左右箭頭保留。
+- **孩子愛物自訂備註**：`Assets.notes` 新增 nullable text column；6 種愛物（車 / 孩子 / 寵物 / 植物 / 房子 / 保險）的詳情頁與編輯表單統一加備註區（textarea + `whitespace-pre-wrap` 顯示），上限 2000 chars，trim 後空字串視為 null。
+
+### Changed
+- **小孩愛物暱稱優先顯示**：詳情頁 hero 與愛物清單改用 `childDetails.nickname` 為主、`assets.name`（法定名）退為小灰字。暱稱為空時 fallback 法定名。保險「被保人」欄位維持 free text 不動。
+- **健保卡輸入格式 4-4-4**：`AssetSheet` 健保卡輸入 placeholder 改為 `0000 0000 0000`，`onChange` 自動每 4 位插空格、上限 12 位數字（顯示 14 chars），`inputMode="numeric"`。不擋送出，順「陪伴 > 評判」原則。
+
+### Database
+- `Assets.notes` 新增 nullable text column（`drizzle/0020_assets_notes.sql`）。dev / prod 整合時各跑一次 `npm run db:migrate`。
+
 ## [0.9.0] - 2026-05-08
 
 ### Added
