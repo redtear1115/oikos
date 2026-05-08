@@ -37,7 +37,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 - **雲端發票匯入**（財政部 API + 手機條碼載具）— API key 無法取得，暫緩
 - **小孩／寵物身高體重歷史紀錄**（append-only log + 修正 typo）— 仿 FuelLog pattern；MVP 不含成長曲線視覺化（codebase 無 chart lib）
 - **定期支出**（recurring expenses）— 對應自訂定期收入的支出版本；建議與定期收入共用 pending preview→commit 架構，未排期
-- **離線瀏覽**（Offline / PWA cache）— Service Worker + cache strategy，讓使用者在無網路時能瀏覽最近的記錄與首頁，未排期
+- **離線瀏覽**（Offline / PWA cache）— Serwist + network-first runtime cache，讓使用者在無網路時能瀏覽最近的記錄與首頁；spec [docs/superpowers/specs/2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)，未排期
 
 ---
 
@@ -99,4 +99,5 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
 | `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
+| `docs/superpowers/specs/2026-05-08-offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog）|
 | `CHANGELOG.md` | 版本歷史 |
