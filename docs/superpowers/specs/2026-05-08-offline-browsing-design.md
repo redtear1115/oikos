@@ -4,6 +4,13 @@
 > 範圍：read-only offline；不含離線寫入、編輯、realtime。
 > 優先級：Backlog（[CLAUDE.md](../../../CLAUDE.md) 列為待排期）；本 spec 鎖定方向，實作排期由開發者決定。
 
+## 實作狀態
+
+- ✅ Settings 頁「離線瀏覽」toggle UI（PR #6，已 merge origin/main）：[SettingsContent.tsx](../../../app/%28dashboard%29/settings/_components/SettingsContent.tsx)
+- ✅ Preference helper：[lib/offline/preference.ts](../../../lib/offline/preference.ts)（localStorage key = `offline-browsing-enabled`；spec 內 `oikos.offline.enabled` 為原始命名草案，實作時簡化）
+- ⬜ Service Worker / Serwist / runtime cache / `/offline` page / banner / sign-out cache clear / RealtimeProvider 離線靜音 — 全部未實作
+- 目前 toggle 切換**不會**真的註冊 SW；spec 第 3 節「啟用 / 停用流程」仍是目標態，待 SW 實作完成才接通
+
 ---
 
 ## 背景與動機
@@ -38,7 +45,7 @@ oikos 是 mobile-first PWA：[public/manifest.json](../../../public/manifest.jso
 - **Push notification**：和本 spec 無關
 - **Settings、Invite、Auth flows、`/setup`**：這些頁不 cache（需即時資料、含敏感操作）
 - **Server actions cache**：所有 server action 走 POST，預設不 cache，也**不該** cache（reveal 身分證／健保卡為高敏感）
-- **i18n / locale switching cache**：codebase 目前單語 zh-TW
+- **i18n / locale switching cache**：locale 走 `lang` cookie + `router.refresh()`，SW 不額外處理；切換時 RSC 重 render 拿到新字典即可（cached HTML 內含舊 locale 文字，但只在離線且未刷新時短暫看到）
 
 ---
 
