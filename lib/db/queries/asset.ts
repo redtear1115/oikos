@@ -124,6 +124,45 @@ export async function getAssetSummary(assetId: string, groupId: string): Promise
 }
 
 /**
+ * Batched variant of getAssetSummary — aggregates per-asset month/total in a
+ * single GROUP BY query. Used by the asset list page to avoid N round-trips
+ * when rendering the list. Assets with no transactions are absent from the
+ * result; callers should default to { monthAmount: 0, totalAmount: 0 }.
+ */
+export async function getAssetSummariesBatch(
+  assetIds: string[],
+  groupId: string,
+): Promise<Map<string, AssetSummary>> {
+  const out = new Map<string, AssetSummary>()
+  if (assetIds.length === 0) return out
+  const rows = await db.execute<{
+    asset_id: string
+    month_amount: number | null
+    total_amount: number | null
+  }>(sql`
+    SELECT
+      asset_id,
+      COALESCE(SUM(amount) FILTER (
+        WHERE date_trunc('month', (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp)
+            = date_trunc('month', (now() AT TIME ZONE 'Asia/Taipei')::timestamp)
+      ), 0)::int AS month_amount,
+      COALESCE(SUM(amount), 0)::int AS total_amount
+    FROM "CashTransactions"
+    WHERE asset_id IN (${sql.join(assetIds.map((id) => sql`${id}`), sql`, `)})
+      AND group_id = ${groupId}
+      AND deleted_at IS NULL
+    GROUP BY asset_id
+  `)
+  for (const r of rows) {
+    out.set(r.asset_id, {
+      monthAmount: r.month_amount ?? 0,
+      totalAmount: r.total_amount ?? 0,
+    })
+  }
+  return out
+}
+
+/**
  * Page through active transactions for a specific asset (newest first), using
  * the same composite (transactedAt, createdAt) cursor shape as
  * listTransactionsPaged. Settlements are never associated with assets so the
