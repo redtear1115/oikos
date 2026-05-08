@@ -1,11 +1,14 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/client'
+
 interface Props {
   value: number   // 1–31
   onChange: (day: number) => void
 }
 
 export function DayPicker({ value, onChange }: Props) {
+  const t = useTranslations()
   return (
     <div
       style={{
@@ -34,8 +37,8 @@ export function DayPicker({ value, onChange }: Props) {
               opacity: day > 28 ? 0.7 : 1,
             }}
             aria-pressed={selected}
-            aria-label={`${day} 號`}
-            title={day > 28 ? '若當月無此日，自動 fallback 到月底' : undefined}
+            aria-label={t.recurringIncome.sheet.dayAriaLabel.replace('{day}', String(day))}
+            title={day > 28 ? t.recurringIncome.sheet.dayFallbackTitle : undefined}
           >
             {day}
           </button>
