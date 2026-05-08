@@ -2,7 +2,7 @@
 
 > 目標：讓使用者在無網路時能瀏覽最近的記錄與首頁，不阻塞日常瀏覽。
 > 範圍：read-only offline；不含離線寫入、編輯、realtime。
-> 優先級：Backlog（[CLAUDE.md](../../../CLAUDE.md) 列為待排期）；本 spec 鎖定方向，實作排期由開發者決定。
+> 優先級：Backlog（[issue #19](https://github.com/redtear1115/oikos/issues/19)）；本 spec 鎖定方向，實作排期由開發者決定。
 
 ## 實作狀態
 
@@ -308,7 +308,7 @@ precache（L1）保留——靜態資源不含 PII，下個使用者用同一裝
 
 ## 索引
 
-- [CLAUDE.md](../../../CLAUDE.md) — Backlog 條目來源
+- [GitHub issue #19](https://github.com/redtear1115/oikos/issues/19) — Backlog 條目
 - [public/manifest.json](../../../public/manifest.json) — 既有 PWA manifest
 - [app/layout.tsx](../../../app/layout.tsx) — root layout，banner 接入點
 - [app/(dashboard)/_components/RealtimeProvider.tsx](../../../app/(dashboard)/_components/RealtimeProvider.tsx) — 相鄰修補目標
