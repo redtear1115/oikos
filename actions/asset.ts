@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput, validateHouseInput } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
+import { encrypt, decrypt } from '@/lib/crypto'
 import { eq, or, and, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
@@ -344,6 +345,18 @@ export interface EditChildInput extends CreateChildInput {
   id: string
 }
 
+/**
+ * Encrypt a PII trinary value for INSERT.
+ *
+ * `validateChildInput` returns `undefined` (no change) | `null` (clear) |
+ * `string` (set). On INSERT there is no existing row to keep — both `undefined`
+ * and `null` map to NULL in the column; only a non-empty string is encrypted.
+ */
+function encryptForInsert(value: string | null | undefined): string | null {
+  if (value === undefined || value === null) return null
+  return encrypt(value)
+}
+
 export async function createChild(input: CreateChildInput): Promise<{ id: string }> {
   'use server'
   const validated = validateChildInput(input)
@@ -358,8 +371,8 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
       assetId: asset.id,
       birthday: validated.birthday,
       gender: validated.gender,
-      idNumberEncrypted: validated.nationalId,
-      insuranceIdEncrypted: validated.nhiNo,
+      idNumberEncrypted: encryptForInsert(validated.nationalId),
+      insuranceIdEncrypted: encryptForInsert(validated.nhiNo),
       nickname: validated.nickname,
       hospital: validated.hospital,
       bloodType: validated.bloodType,
@@ -378,6 +391,25 @@ export async function editChild(input: EditChildInput): Promise<void> {
   const validated = validateChildInput(input)
   const { group } = await getViewerGroup()
 
+  // Trinary PII handling: build the partial column updates lazily so a
+  // "no change" (undefined) input doesn't touch the encrypted column. Only
+  // explicit clear (null) or set (string) writes the column.
+  //
+  // Why this matters: AssetSheet now starts these fields empty (we never
+  // hand plaintext to the client), so an unedited form produces undefined.
+  // If we coerced undefined → null we'd silently wipe everyone's existing
+  // PII the first time anyone edited any unrelated field.
+  const piiUpdates: {
+    idNumberEncrypted?: string | null
+    insuranceIdEncrypted?: string | null
+  } = {}
+  if (validated.nationalId !== undefined) {
+    piiUpdates.idNumberEncrypted = validated.nationalId === null ? null : encrypt(validated.nationalId)
+  }
+  if (validated.nhiNo !== undefined) {
+    piiUpdates.insuranceIdEncrypted = validated.nhiNo === null ? null : encrypt(validated.nhiNo)
+  }
+
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
@@ -391,14 +423,16 @@ export async function editChild(input: EditChildInput): Promise<void> {
       .returning({ id: assets.id })
     if (updated.length === 0) throw new Error('找不到該愛物')
 
+    // INSERT path runs only when no row exists yet — same encryption rules as
+    // createChild (undefined / null → NULL column; string → encrypted).
     await tx
       .insert(childDetails)
       .values({
         assetId: input.id,
         birthday: validated.birthday,
         gender: validated.gender,
-        idNumberEncrypted: validated.nationalId,
-        insuranceIdEncrypted: validated.nhiNo,
+        idNumberEncrypted: encryptForInsert(validated.nationalId),
+        insuranceIdEncrypted: encryptForInsert(validated.nhiNo),
         nickname: validated.nickname,
         hospital: validated.hospital,
         bloodType: validated.bloodType,
@@ -410,8 +444,7 @@ export async function editChild(input: EditChildInput): Promise<void> {
         set: {
           birthday: validated.birthday,
           gender: validated.gender,
-          idNumberEncrypted: validated.nationalId,
-          insuranceIdEncrypted: validated.nhiNo,
+          ...piiUpdates,
           nickname: validated.nickname,
           hospital: validated.hospital,
           bloodType: validated.bloodType,
@@ -423,6 +456,43 @@ export async function editChild(input: EditChildInput): Promise<void> {
 
   revalidatePath('/assets')
   revalidatePath(`/assets/${input.id}`)
+}
+
+/**
+ * On-demand decryption for child PII fields. The detail page never receives
+ * plaintext; instead it calls this server action when the user taps "顯示" on a
+ * masked row. Authorisation is double-gated (group ownership + asset.type) so
+ * a malicious client can't lift PII from another household by guessing UUIDs.
+ *
+ * Returns the plaintext value. Throws on cross-group access, wrong asset
+ * type, soft-deleted asset, or null column (nothing stored).
+ */
+export async function revealChildPii(
+  assetId: string,
+  field: 'nationalId' | 'nhiNo',
+): Promise<string> {
+  'use server'
+  const { group } = await getViewerGroup()
+
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      idNumberEncrypted: childDetails.idNumberEncrypted,
+      insuranceIdEncrypted: childDetails.insuranceIdEncrypted,
+    })
+    .from(assets)
+    .leftJoin(childDetails, eq(childDetails.assetId, assets.id))
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'child') {
+    throw new Error('找不到該愛物')
+  }
+
+  const ciphertext = field === 'nationalId' ? row.idNumberEncrypted : row.insuranceIdEncrypted
+  if (!ciphertext) throw new Error('尚未填寫此欄位')
+
+  return decrypt(ciphertext)
 }
 
 // ── Pet ────────────────────────────────────────────────────────────────────

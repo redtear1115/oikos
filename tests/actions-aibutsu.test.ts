@@ -2,15 +2,20 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
-  createChild, editChild,
+  createChild, editChild, revealChildPii,
   createPet, editPet,
   createPlant, editPlant,
   createInsurance, editInsurance,
   createHouse, editHouse,
 } from '@/actions/asset'
+import { decrypt } from '@/lib/crypto'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+
+// AES-256-GCM ciphertext shape: 12-byte IV (24 hex) : 16-byte authTag (32 hex)
+// : variable-length ciphertext (hex). lib/crypto.ts produces exactly this.
+const CIPHERTEXT_RE = /^[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/
 
 beforeEach(() => {
   resetDbMocks()
@@ -54,13 +59,49 @@ describe('createChild', () => {
       nickname: '元元',
       gender: 'female',
       birthday: '2023-03-15',
-      idNumberEncrypted: 'A123456789',
-      insuranceIdEncrypted: 'NHI-001',
       bloodType: 'A',
       hospital: '台大醫院',
       heightCm: 80,
       weightG: 9000,
     })
+    // Encrypted PII fields must NOT be raw plaintext anymore (security fix).
+    // Round-trip via decrypt() to prove correctness.
+    expect(childPayload.idNumberEncrypted).not.toBe('A123456789')
+    expect(childPayload.idNumberEncrypted).toMatch(CIPHERTEXT_RE)
+    expect(decrypt(childPayload.idNumberEncrypted as string)).toBe('A123456789')
+    expect(childPayload.insuranceIdEncrypted).not.toBe('NHI-001')
+    expect(childPayload.insuranceIdEncrypted).toMatch(CIPHERTEXT_RE)
+    expect(decrypt(childPayload.insuranceIdEncrypted as string)).toBe('NHI-001')
+  })
+
+  it('null PII fields stay null (no encryption of null)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-2b' }])
+    queueDbResult([])
+
+    await createChild({
+      name: '小元',
+      nationalId: null,
+      nhiNo: null,
+    })
+
+    const valueCalls = mockBuilder.values.mock.calls
+    const childPayload = valueCalls[1][0] as Record<string, unknown>
+    expect(childPayload.idNumberEncrypted).toBeNull()
+    expect(childPayload.insuranceIdEncrypted).toBeNull()
+  })
+
+  it('omitted PII fields stay null on create', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-2c' }])
+    queueDbResult([])
+
+    await createChild({ name: '小元' })
+
+    const valueCalls = mockBuilder.values.mock.calls
+    const childPayload = valueCalls[1][0] as Record<string, unknown>
+    expect(childPayload.idNumberEncrypted).toBeNull()
+    expect(childPayload.insuranceIdEncrypted).toBeNull()
   })
 
   it('throws unauthorized when no user', async () => {
@@ -103,6 +144,126 @@ describe('editChild', () => {
 
   it('throws on empty name', async () => {
     await expect(editChild({ id: 'asset-1', name: '  ' })).rejects.toThrow(/名稱/)
+  })
+
+  // ── Trinary PII semantics ────────────────────────────────────────────────
+
+  it('PII trinary "keep": omits PII keys from upsert SET when input absent', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+
+    await editChild({ id: 'asset-1', name: '小元' })
+
+    // The upsert SET clause is the second argument of the second .values()
+    // call's .onConflictDoUpdate (call sequence: tx.update(assets) then
+    // tx.insert(childDetails).values(...).onConflictDoUpdate({ set: ... })).
+    const conflictCall = mockBuilder.onConflictDoUpdate.mock.calls[0]
+    const setObj = (conflictCall[0] as { set: Record<string, unknown> }).set
+    expect(setObj).not.toHaveProperty('idNumberEncrypted')
+    expect(setObj).not.toHaveProperty('insuranceIdEncrypted')
+  })
+
+  it('PII trinary "clear": null in payload writes null to upsert SET', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+
+    await editChild({ id: 'asset-1', name: '小元', nationalId: null, nhiNo: null })
+
+    const conflictCall = mockBuilder.onConflictDoUpdate.mock.calls[0]
+    const setObj = (conflictCall[0] as { set: Record<string, unknown> }).set
+    expect(setObj.idNumberEncrypted).toBeNull()
+    expect(setObj.insuranceIdEncrypted).toBeNull()
+  })
+
+  it('PII trinary "set": string in payload writes encrypted ciphertext to upsert SET', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-1' }])
+    queueDbResult([])
+
+    await editChild({
+      id: 'asset-1',
+      name: '小元',
+      nationalId: 'A123456789',
+      nhiNo: 'NHI-002',
+    })
+
+    const conflictCall = mockBuilder.onConflictDoUpdate.mock.calls[0]
+    const setObj = (conflictCall[0] as { set: Record<string, unknown> }).set
+    expect(setObj.idNumberEncrypted).not.toBe('A123456789')
+    expect(setObj.idNumberEncrypted).toMatch(CIPHERTEXT_RE)
+    expect(decrypt(setObj.idNumberEncrypted as string)).toBe('A123456789')
+    expect(setObj.insuranceIdEncrypted).not.toBe('NHI-002')
+    expect(setObj.insuranceIdEncrypted).toMatch(CIPHERTEXT_RE)
+    expect(decrypt(setObj.insuranceIdEncrypted as string)).toBe('NHI-002')
+  })
+})
+
+// ── revealChildPii ──────────────────────────────────────────────────────────
+
+describe('revealChildPii', () => {
+  it('returns plaintext when ciphertext present and asset belongs to group', async () => {
+    const { encrypt } = await import('@/lib/crypto')
+    const ct = encrypt('A123456789')
+
+    queueDbResult([GROUP])
+    queueDbResult([{
+      assetType: 'child',
+      assetDeletedAt: null,
+      idNumberEncrypted: ct,
+      insuranceIdEncrypted: null,
+    }])
+
+    await expect(revealChildPii('asset-1', 'nationalId')).resolves.toBe('A123456789')
+  })
+
+  it('throws when asset not found in viewer group (cross-group access)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([])  // join returns no rows — assetId is in another group
+
+    await expect(revealChildPii('asset-x', 'nationalId')).rejects.toThrow(/找不到/)
+  })
+
+  it('throws when asset is soft-deleted', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      assetType: 'child',
+      assetDeletedAt: new Date(),
+      idNumberEncrypted: 'doesnt-matter',
+      insuranceIdEncrypted: null,
+    }])
+
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow(/找不到/)
+  })
+
+  it('throws when asset type is not child (e.g. car)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      assetType: 'car',
+      assetDeletedAt: null,
+      idNumberEncrypted: null,
+      insuranceIdEncrypted: null,
+    }])
+
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow(/找不到/)
+  })
+
+  it('throws when ciphertext column is null (nothing stored)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{
+      assetType: 'child',
+      assetDeletedAt: null,
+      idNumberEncrypted: null,
+      insuranceIdEncrypted: null,
+    }])
+
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow(/尚未填寫/)
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('Unauthorized')
   })
 })
 

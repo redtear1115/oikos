@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
@@ -12,7 +12,84 @@ import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aib
 import type { ChildDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
+import { revealChildPii } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
+
+// 10 mask characters — enough to read as "filled in" without leaking length.
+const PII_MASK = '●●●●●●●●●●'
+
+/**
+ * A row showing an encrypted PII value. Default state is masked; tapping
+ * 「顯示」 calls revealChildPii() server action and stores the plaintext in
+ * local state until the user toggles it back. If `hasValue` is false we just
+ * render the empty InfoRow (no toggle).
+ */
+function RevealableRow({
+  label,
+  hasValue,
+  assetId,
+  field,
+  last,
+}: {
+  label: string
+  hasValue: boolean
+  assetId: string
+  field: 'nationalId' | 'nhiNo'
+  last?: boolean
+}) {
+  const [revealed, setRevealed] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  if (!hasValue) {
+    return <InfoRow label={label} value="" mono last={last} />
+  }
+
+  const onToggle = () => {
+    if (revealed !== null) {
+      setRevealed(null)
+      setError(null)
+      return
+    }
+    startTransition(async () => {
+      try {
+        const value = await revealChildPii(assetId, field)
+        setRevealed(value)
+        setError(null)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '無法顯示')
+      }
+    })
+  }
+
+  const displayValue = revealed ?? PII_MASK
+  return (
+    <div
+      className="px-[14px] py-[11px] flex items-center gap-2.5"
+      style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
+    >
+      <div
+        className="text-micro shrink-0 tracking-[0.4px]"
+        style={{ color: 'var(--ink-3)', width: 76 }}
+      >{label}</div>
+      <div
+        className="flex-1 text-label font-medium truncate"
+        style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+      >
+        {error ?? displayValue}
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={pending}
+        className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 disabled:cursor-default"
+        style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+      >
+        {pending ? '…' : (revealed !== null ? '隱藏' : '顯示')}
+      </button>
+    </div>
+  )
+}
 
 interface AssetSummary {
   monthAmount: number
@@ -88,8 +165,18 @@ export function ChildDetailClient({ assetId, name, details, summary, assetSheetI
       <SectionHeader>身分證件</SectionHeader>
       <InfoCard>
         <InfoRow label="出生日" value={details?.birthday ?? ''} mono />
-        <InfoRow label="身分證號" value={details?.nationalId ?? ''} mono />
-        <InfoRow label="健保卡號" value={details?.nhiNo ?? ''} mono />
+        <RevealableRow
+          label="身分證號"
+          hasValue={details?.hasNationalId ?? false}
+          assetId={assetId}
+          field="nationalId"
+        />
+        <RevealableRow
+          label="健保卡號"
+          hasValue={details?.hasNhiNo ?? false}
+          assetId={assetId}
+          field="nhiNo"
+        />
         <InfoRow label="出生醫院" value={details?.hospital ?? ''} />
         <InfoRow label="血型" value={details?.bloodType ? `${details.bloodType} 型` : ''} last />
       </InfoCard>

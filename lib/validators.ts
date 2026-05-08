@@ -354,6 +354,12 @@ export interface ChildInput {
   nickname?: string | null
   gender?: 'male' | 'female' | 'other' | null
   birthday?: string | null
+  // Trinary semantics for the two encrypted PII fields:
+  //   undefined → "keep existing" (action ignores column)
+  //   null      → "explicitly clear" (action sets column to NULL)
+  //   string    → "set to this value" (action encrypts before insert)
+  // create() callers should pass undefined / non-empty string; editChild
+  // also accepts null to clear an existing encrypted value without revealing it.
   nationalId?: string | null
   nhiNo?: string | null
   bloodType?: string | null
@@ -367,12 +373,27 @@ export interface ValidatedChildInput {
   nickname: string | null
   gender: 'male' | 'female' | 'other' | null
   birthday: string | null
-  nationalId: string | null
-  nhiNo: string | null
+  // Trinary preserved (see ChildInput): undefined = keep, null = clear, string = set.
+  nationalId: string | null | undefined
+  nhiNo: string | null | undefined
   bloodType: string | null
   hospital: string | null
   heightCm: number | null
   weightG: number | null
+}
+
+/**
+ * Normalise a trinary PII field. `undefined` (key absent) means "no change" and
+ * is preserved; an explicit `null` means "clear"; a string is trimmed and
+ * collapsed to null when blank (treated as clear). Used for nationalId / nhiNo
+ * — these flow through encrypt() before persisting, so we never coerce
+ * undefined → null which would unintentionally clear the column on edit.
+ */
+function normalisePiiTrinary(input: string | null | undefined): string | null | undefined {
+  if (input === undefined) return undefined
+  if (input === null) return null
+  const trimmed = input.trim()
+  return trimmed.length > 0 ? trimmed : null
 }
 
 export function validateChildInput(input: ChildInput): ValidatedChildInput {
@@ -390,8 +411,11 @@ export function validateChildInput(input: ChildInput): ValidatedChildInput {
   }
 
   const birthday = input.birthday?.trim() || null
-  const nationalId = input.nationalId?.trim() || null
-  const nhiNo = input.nhiNo?.trim() || null
+  // PII trinary — see normalisePiiTrinary docstring.
+  // The 'in' check distinguishes "key absent" from "key present with undefined";
+  // we treat both as "no change", but the explicit branch makes intent obvious.
+  const nationalId = 'nationalId' in input ? normalisePiiTrinary(input.nationalId) : undefined
+  const nhiNo = 'nhiNo' in input ? normalisePiiTrinary(input.nhiNo) : undefined
   const bloodType = input.bloodType?.trim() || null
   const hospital = input.hospital?.trim() || null
 

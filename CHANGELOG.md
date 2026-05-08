@@ -11,6 +11,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.10.0] - 2026-05-08
+
+### Security
+- **孩子愛物身分證／健保卡欄位端到端加密**：`childDetails.id_number_encrypted` 與 `insurance_id_encrypted` 過去寫入未呼叫 `encrypt()`、讀取也直接以 plaintext 送 client；本版補上加密／解密、改以 `revealChildPii` server action 按需解密、詳情頁以 `●●●●●●●●●●` 遮蔽（顯示／隱藏 toggle）、編輯頁改為「留空＝不變更／清除按鈕＝清為空／輸入＝加密後覆蓋」三態語意。dev / prod 兩個 Supabase project 既有 plaintext 已 wipe 為 NULL，本版本不需資料 migration。
+
 ## [0.9.0] - 2026-05-08
 
 ### Added

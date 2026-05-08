@@ -71,8 +71,10 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       childNickname: childDetailsData?.nickname ?? null,
       childGender: childDetailsData?.gender ?? null,
       childBirthday: childDetailsData?.birthday ?? null,
-      childNationalId: childDetailsData?.nationalId ?? null,
-      childNhiNo: childDetailsData?.nhiNo ?? null,
+      // Encrypted PII never reaches the client. The form starts empty —
+      // hasX flags drive 「清除」 affordance + 留空=不變更 placeholder.
+      childHasNationalId: childDetailsData?.hasNationalId ?? false,
+      childHasNhiNo: childDetailsData?.hasNhiNo ?? false,
       childBloodType: childDetailsData?.bloodType ?? null,
       childHospital: childDetailsData?.hospital ?? null,
       childHeightCm: childDetailsData?.heightCm ?? null,

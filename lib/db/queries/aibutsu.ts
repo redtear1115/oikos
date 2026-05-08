@@ -5,8 +5,13 @@ import { eq, and, isNull } from 'drizzle-orm'
 export interface ChildDetailsRow {
   birthday: string | null
   gender: 'male' | 'female' | 'other' | null
-  nationalId: string | null
-  nhiNo: string | null
+  // PII fields are end-to-end encrypted at rest (see actions/asset.ts:
+  // createChild / editChild / revealChildPii). The detail page never receives
+  // plaintext from this query — it gets booleans + a server action ("reveal")
+  // for on-demand decryption. AssetSheet's edit form likewise starts these
+  // fields blank (placeholder = "已加密儲存，留空即不變更").
+  hasNationalId: boolean
+  hasNhiNo: boolean
   nickname: string | null
   hospital: string | null
   bloodType: string | null
@@ -19,8 +24,8 @@ export async function getChildDetails(assetId: string): Promise<ChildDetailsRow 
     .select({
       birthday: childDetails.birthday,
       gender: childDetails.gender,
-      nationalId: childDetails.idNumberEncrypted,
-      nhiNo: childDetails.insuranceIdEncrypted,
+      idNumberEncrypted: childDetails.idNumberEncrypted,
+      insuranceIdEncrypted: childDetails.insuranceIdEncrypted,
       nickname: childDetails.nickname,
       hospital: childDetails.hospital,
       bloodType: childDetails.bloodType,
@@ -30,7 +35,21 @@ export async function getChildDetails(assetId: string): Promise<ChildDetailsRow 
     .from(childDetails)
     .where(eq(childDetails.assetId, assetId))
     .limit(1)
-  return rows[0] ?? null
+  const row = rows[0]
+  if (!row) return null
+  // Project ciphertext columns to booleans before returning so plaintext never
+  // crosses the server/client boundary in any code path.
+  return {
+    birthday: row.birthday,
+    gender: row.gender,
+    hasNationalId: row.idNumberEncrypted !== null,
+    hasNhiNo: row.insuranceIdEncrypted !== null,
+    nickname: row.nickname,
+    hospital: row.hospital,
+    bloodType: row.bloodType,
+    heightCm: row.heightCm,
+    weightG: row.weightG,
+  }
 }
 
 export interface PetDetailsRow {

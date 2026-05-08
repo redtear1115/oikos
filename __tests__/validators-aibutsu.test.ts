@@ -25,6 +25,8 @@ describe('validateChildInput', () => {
     expect(r.bloodType).toBe('O')
     expect(r.heightCm).toBe(102)
     expect(r.weightG).toBe(16400)
+    expect(r.nationalId).toBe('A123456789')
+    expect(r.nhiNo).toBe('0000-1234-5678-90')
   })
 
   it('rejects invalid gender', () => {
@@ -33,6 +35,39 @@ describe('validateChildInput', () => {
 
   it('rejects negative heightCm', () => {
     expect(() => validateChildInput({ name: '小元', heightCm: -1 })).toThrow(/身高/)
+  })
+
+  // ── PII trinary semantics — see lib/validators.ts normalisePiiTrinary ──
+  describe('PII trinary (nationalId / nhiNo)', () => {
+    it('omits nationalId from result when key absent (no change)', () => {
+      const r = validateChildInput({ name: '小元' })
+      expect(r.nationalId).toBeUndefined()
+      expect(r.nhiNo).toBeUndefined()
+    })
+
+    it('preserves explicit null (clear)', () => {
+      const r = validateChildInput({ name: '小元', nationalId: null, nhiNo: null })
+      expect(r.nationalId).toBeNull()
+      expect(r.nhiNo).toBeNull()
+    })
+
+    it('treats whitespace-only string as clear (null)', () => {
+      const r = validateChildInput({ name: '小元', nationalId: '   ', nhiNo: '\t' })
+      expect(r.nationalId).toBeNull()
+      expect(r.nhiNo).toBeNull()
+    })
+
+    it('returns trimmed string when present', () => {
+      const r = validateChildInput({ name: '小元', nationalId: '  A123456789  ', nhiNo: 'NHI-1' })
+      expect(r.nationalId).toBe('A123456789')
+      expect(r.nhiNo).toBe('NHI-1')
+    })
+
+    it('treats explicit undefined the same as missing key', () => {
+      const r = validateChildInput({ name: '小元', nationalId: undefined, nhiNo: undefined })
+      expect(r.nationalId).toBeUndefined()
+      expect(r.nhiNo).toBeUndefined()
+    })
   })
 })
 

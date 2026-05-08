@@ -39,12 +39,14 @@ export interface AssetSheetInitial {
   brand?: string | null
   model?: string | null
   initialOdometer?: number | null
-  // Child-specific
+  // Child-specific. nationalId / nhiNo are encrypted at rest (see
+  // actions/asset.ts createChild/editChild/revealChildPii); the form never
+  // receives plaintext, only the has-value bools so it can show 「清除」.
   childNickname?: string | null
   childGender?: 'male' | 'female' | 'other' | null
   childBirthday?: string | null
-  childNationalId?: string | null
-  childNhiNo?: string | null
+  childHasNationalId?: boolean
+  childHasNhiNo?: boolean
   childBloodType?: string | null
   childHospital?: string | null
   childHeightCm?: number | null
@@ -126,12 +128,24 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [brand, setBrand] = useState('')
   const [model, setModel] = useState('')
   const [initialOdometer, setInitialOdometer] = useState('')
-  // Child state
+  // Child state. nationalId / nhiNo are special:
+  //   - The form ALWAYS starts blank — we never receive plaintext from the
+  //     server (stored encrypted). When `hasX` is true, an existing encrypted
+  //     value lives on the server side; the user can leave the input blank
+  //     (= keep) or hit the 「清除」 button (= explicitly null).
+  //   - The "wantClear" flag is the cleared sentinel: when true, the value
+  //     submitted is `null` (clear column). When false and the input is empty,
+  //     the value submitted is `undefined` (keep existing). A non-empty input
+  //     overrides both and submits a string (encrypt + set).
   const [childNickname, setChildNickname] = useState('')
   const [childGender, setChildGender] = useState<'male' | 'female' | null>(null)
   const [childBirthday, setChildBirthday] = useState('')
   const [childNationalId, setChildNationalId] = useState('')
+  const [childHasNationalId, setChildHasNationalId] = useState(false)
+  const [childWantClearNationalId, setChildWantClearNationalId] = useState(false)
   const [childNhiNo, setChildNhiNo] = useState('')
+  const [childHasNhiNo, setChildHasNhiNo] = useState(false)
+  const [childWantClearNhiNo, setChildWantClearNhiNo] = useState(false)
   const [childBloodType, setChildBloodType] = useState<'A' | 'B' | 'O' | 'AB' | null>(null)
   const [childHospital, setChildHospital] = useState('')
   const [childHeightCm, setChildHeightCm] = useState('')
@@ -200,8 +214,13 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setChildNickname(initial.childNickname ?? '')
         setChildGender((initial.childGender === 'male' || initial.childGender === 'female') ? initial.childGender : null)
         setChildBirthday(initial.childBirthday ?? '')
-        setChildNationalId(initial.childNationalId ?? '')
-        setChildNhiNo(initial.childNhiNo ?? '')
+        // Always start PII inputs blank — we never receive plaintext.
+        setChildNationalId('')
+        setChildHasNationalId(initial.childHasNationalId ?? false)
+        setChildWantClearNationalId(false)
+        setChildNhiNo('')
+        setChildHasNhiNo(initial.childHasNhiNo ?? false)
+        setChildWantClearNhiNo(false)
         setChildBloodType((initial.childBloodType as 'A' | 'B' | 'O' | 'AB' | null) ?? null)
         setChildHospital(initial.childHospital ?? '')
         setChildHeightCm(initial.childHeightCm?.toString() ?? '')
@@ -263,7 +282,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setChildGender(null)
       setChildBirthday('')
       setChildNationalId('')
+      setChildHasNationalId(false)
+      setChildWantClearNationalId(false)
       setChildNhiNo('')
+      setChildHasNhiNo(false)
+      setChildWantClearNhiNo(false)
       setChildBloodType(null)
       setChildHospital('')
       setChildHeightCm('')
@@ -350,13 +373,30 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             })
           }
         } else if (selectedType === 'child') {
+          // PII trinary on edit:
+          //   typed string → encrypt + set
+          //   blank input + 「清除」 pressed → null (clear column)
+          //   blank input alone → undefined (omit; keep existing encrypted value)
+          // On create there is no existing column, so blank just submits null.
+          const piiNationalId: string | null | undefined =
+            childNationalId.trim().length > 0
+              ? childNationalId.trim()
+              : (isEdit && childWantClearNationalId
+                  ? null
+                  : (isEdit ? undefined : null))
+          const piiNhiNo: string | null | undefined =
+            childNhiNo.trim().length > 0
+              ? childNhiNo.trim()
+              : (isEdit && childWantClearNhiNo
+                  ? null
+                  : (isEdit ? undefined : null))
           const payload = {
             name: name.trim(),
             nickname: childNickname.trim() || null,
             gender: childGender,
             birthday: childBirthday || null,
-            nationalId: childNationalId.trim() || null,
-            nhiNo: childNhiNo.trim() || null,
+            nationalId: piiNationalId,
+            nhiNo: piiNhiNo,
             bloodType: childBloodType,
             hospital: childHospital.trim() || null,
             heightCm: childHeightCm ? parseInt(childHeightCm, 10) : null,
@@ -484,7 +524,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setChildGender(null)
     setChildBirthday('')
     setChildNationalId('')
+    setChildHasNationalId(false)
+    setChildWantClearNationalId(false)
     setChildNhiNo('')
+    setChildHasNhiNo(false)
+    setChildWantClearNhiNo(false)
     setChildBloodType(null)
     setChildHospital('')
     setChildHeightCm('')
@@ -838,15 +882,87 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </div>
 
               <Field label="身分證號">
-                <input value={childNationalId} onChange={e => setChildNationalId(e.target.value.slice(0, 20))}
-                  placeholder="A123456789" className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+                <div className="flex items-center gap-2">
+                  <input
+                    value={childNationalId}
+                    onChange={e => {
+                      setChildNationalId(e.target.value.slice(0, 20))
+                      // Typing voids any pending clear — the user clearly wants
+                      // to set a new value, not clear.
+                      if (childWantClearNationalId) setChildWantClearNationalId(false)
+                    }}
+                    placeholder={
+                      childWantClearNationalId
+                        ? '已標記清除（儲存後生效）'
+                        : (isEdit && childHasNationalId
+                            ? '已加密儲存，留空即不變更'
+                            : 'A123456789')
+                    }
+                    className="flex-1 bg-transparent border-0 outline-none text-base"
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                  />
+                  {isEdit && childHasNationalId && !childWantClearNationalId && childNationalId.trim() === '' && (
+                    <button
+                      type="button"
+                      onClick={() => setChildWantClearNationalId(true)}
+                      className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                      style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+                    >
+                      清除
+                    </button>
+                  )}
+                  {isEdit && childWantClearNationalId && (
+                    <button
+                      type="button"
+                      onClick={() => setChildWantClearNationalId(false)}
+                      className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                      style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+                    >
+                      取消
+                    </button>
+                  )}
+                </div>
               </Field>
 
               <Field label="健保卡號">
-                <input value={childNhiNo} onChange={e => setChildNhiNo(e.target.value.slice(0, 20))}
-                  placeholder="0000-1234-5678-90" className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+                <div className="flex items-center gap-2">
+                  <input
+                    value={childNhiNo}
+                    onChange={e => {
+                      setChildNhiNo(e.target.value.slice(0, 20))
+                      if (childWantClearNhiNo) setChildWantClearNhiNo(false)
+                    }}
+                    placeholder={
+                      childWantClearNhiNo
+                        ? '已標記清除（儲存後生效）'
+                        : (isEdit && childHasNhiNo
+                            ? '已加密儲存，留空即不變更'
+                            : '0000-1234-5678-90')
+                    }
+                    className="flex-1 bg-transparent border-0 outline-none text-base"
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                  />
+                  {isEdit && childHasNhiNo && !childWantClearNhiNo && childNhiNo.trim() === '' && (
+                    <button
+                      type="button"
+                      onClick={() => setChildWantClearNhiNo(true)}
+                      className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                      style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+                    >
+                      清除
+                    </button>
+                  )}
+                  {isEdit && childWantClearNhiNo && (
+                    <button
+                      type="button"
+                      onClick={() => setChildWantClearNhiNo(false)}
+                      className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                      style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+                    >
+                      取消
+                    </button>
+                  )}
+                </div>
               </Field>
 
               <Field label="血型">
