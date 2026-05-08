@@ -1,6 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+type Locale = 'zh-TW' | 'en'
+const LOCALE_COOKIE = 'lang'
+const LOCALE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
+
+function isLocale(value: string | null): value is Locale {
+  return value === 'zh-TW' || value === 'en'
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -22,6 +30,19 @@ export async function middleware(request: NextRequest) {
       },
     }
   )
+
+  // Persist `?lang=xx` into a cookie so subsequent requests (and SSR for the
+  // current request) pick up the locale. Mutate the in-flight request cookies
+  // first so the page render in this same request sees the new value.
+  const langParam = request.nextUrl.searchParams.get('lang')
+  if (isLocale(langParam)) {
+    request.cookies.set(LOCALE_COOKIE, langParam)
+    supabaseResponse.cookies.set(LOCALE_COOKIE, langParam, {
+      path: '/',
+      maxAge: LOCALE_MAX_AGE,
+      sameSite: 'lax',
+    })
+  }
 
   const { data: { user } } = await supabase.auth.getUser()
 
