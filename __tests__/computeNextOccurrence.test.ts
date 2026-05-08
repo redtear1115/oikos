@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeNextOccurrence, firstAnchorFromStart, snapToFuture } from '@/lib/recurringIncome'
+import { computeNextOccurrence, firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
 
 describe('computeNextOccurrence', () => {
   it('advances 1 month at day_of_month', () => {

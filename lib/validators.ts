@@ -893,3 +893,157 @@ export function validateRecurringIncomeRuleInput(
     assetId,
   }
 }
+
+// ── Recurring Expense ───────────────────────────────────────────────────
+
+export interface RecurringExpenseRuleInput {
+  amount: number
+  category: string
+  paidBy: string
+  splitType: SplitType
+  description: string
+  intervalMonths: number
+  dayOfMonth: number
+  startsOn: string
+  endsOn: string | null
+  assetId?: string | null
+}
+
+export interface ValidatedRecurringExpenseRuleInput {
+  amount: number
+  category: CategoryId
+  paidBy: string
+  splitType: SplitType
+  description: string
+  intervalMonths: 1 | 3 | 6 | 12
+  dayOfMonth: number
+  startsOn: string
+  endsOn: string | null
+  assetId: string | null
+}
+
+const RECURRING_EXPENSE_DESC_MAX_LEN = 64
+const SPLIT_TYPES: readonly SplitType[] = ['all_mine', 'all_theirs', 'half']
+
+/**
+ * Validates a recurring-expense rule input. Mirrors validateRecurringIncomeRuleInput
+ * with three differences: paid_by + split_type required (cash semantics), description
+ * is NOT NULL (matches CashTransactions.description), and category is restricted to
+ * PICKABLE_CATEGORIES — `settle` is reserved for settlements and rejected here.
+ */
+export function validateRecurringExpenseRuleInput(
+  input: RecurringExpenseRuleInput,
+): ValidatedRecurringExpenseRuleInput {
+  const amount = validateAmount(input.amount)
+
+  if (!isValidCategoryId(input.category)) {
+    throw new Error('支出類別不在允許清單')
+  }
+  if (input.category === 'settle') {
+    throw new Error('不可使用此分類')
+  }
+
+  if (!input.paidBy) throw new Error('付款人必填')
+
+  if (!SPLIT_TYPES.includes(input.splitType)) {
+    throw new Error('分攤方式無效')
+  }
+
+  const description = input.description?.trim() ?? ''
+  if (!description) throw new Error('描述不能為空')
+  if (description.length > RECURRING_EXPENSE_DESC_MAX_LEN) {
+    throw new Error(`描述最長 ${RECURRING_EXPENSE_DESC_MAX_LEN} 字`)
+  }
+
+  if (!ALLOWED_INTERVALS.has(input.intervalMonths)) {
+    throw new Error('週期僅支援每 1 / 3 / 6 / 12 個月')
+  }
+  if (!Number.isInteger(input.dayOfMonth) || input.dayOfMonth < 1 || input.dayOfMonth > 31) {
+    throw new Error('號數需介於 1 至 31')
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.startsOn)) throw new Error('起始日格式不對')
+  if (input.endsOn != null) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.endsOn)) throw new Error('結束日格式不對')
+    if (input.endsOn < input.startsOn) throw new Error('結束日不可早於起始日')
+  }
+
+  return {
+    amount,
+    category: input.category as CategoryId,
+    paidBy: input.paidBy,
+    splitType: input.splitType,
+    description,
+    intervalMonths: input.intervalMonths as 1 | 3 | 6 | 12,
+    dayOfMonth: input.dayOfMonth,
+    startsOn: input.startsOn,
+    endsOn: input.endsOn,
+    assetId: input.assetId || null,
+  }
+}
+
+export interface ConfirmPendingExpenseOverrides {
+  amount?: number
+  category?: string
+  paidBy?: string
+  splitType?: SplitType
+  description?: string
+  transactedAt?: string  // YYYY-MM-DD
+  assetId?: string | null
+}
+
+export interface ValidatedConfirmPendingExpense {
+  amount?: number
+  category?: CategoryId
+  paidBy?: string
+  splitType?: SplitType
+  description?: string
+  transactedAt?: string
+  assetId?: string | null
+}
+
+/**
+ * Validates the optional override payload from `editAndConfirmPending`. Each
+ * field is independent — undefined keeps the snapshot value, defined replaces
+ * it. Used by the upcoming AddSheet "改一下" flow (PR #5); foundation only
+ * surfaces the validator so the action layer in PR #2 can wire it directly.
+ */
+export function validateConfirmPendingExpenseInput(
+  input: ConfirmPendingExpenseOverrides,
+): ValidatedConfirmPendingExpense {
+  const out: ValidatedConfirmPendingExpense = {}
+
+  if (input.amount !== undefined) {
+    out.amount = validateAmount(input.amount)
+  }
+  if (input.category !== undefined) {
+    if (!isValidCategoryId(input.category)) throw new Error('支出類別不在允許清單')
+    if (input.category === 'settle') throw new Error('不可使用此分類')
+    out.category = input.category as CategoryId
+  }
+  if (input.paidBy !== undefined) {
+    if (!input.paidBy) throw new Error('付款人必填')
+    out.paidBy = input.paidBy
+  }
+  if (input.splitType !== undefined) {
+    if (!SPLIT_TYPES.includes(input.splitType)) throw new Error('分攤方式無效')
+    out.splitType = input.splitType
+  }
+  if (input.description !== undefined) {
+    const trimmed = input.description.trim()
+    if (!trimmed) throw new Error('描述不能為空')
+    if (trimmed.length > RECURRING_EXPENSE_DESC_MAX_LEN) {
+      throw new Error(`描述最長 ${RECURRING_EXPENSE_DESC_MAX_LEN} 字`)
+    }
+    out.description = trimmed
+  }
+  if (input.transactedAt !== undefined) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.transactedAt)) throw new Error('日期格式錯誤')
+    if (!parseDateString(input.transactedAt)) throw new Error('日期不存在')
+    out.transactedAt = input.transactedAt
+  }
+  if (input.assetId !== undefined) {
+    out.assetId = input.assetId || null
+  }
+
+  return out
+}
