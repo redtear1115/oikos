@@ -427,12 +427,12 @@ AddSheet 既有 props 需擴：`pendingExpenseId?: string`（hidden state；subm
 ### 設計原則
 
 1. **新建立 `recurringExpense.*` namespace**（集中、結構完整）
-2. **同步整理出 `recurringIncome.*` namespace**：把現有散在 `incomeSheet` / `balanceHero` / hardcode 中文的 settings/recurring-income 字串 refactor 進來——同時還掉 [CLAUDE.md backlog](../../../CLAUDE.md) 的「設定子頁 i18n」一部分
+2. **同步整理出 `recurringIncome.*` namespace**：把現有散在 `incomeSheet` / `balanceHero` / hardcode 中文的 settings/recurring-income 字串 refactor 進來——同時還掉 [issue #21](https://github.com/redtear1115/oikos/issues/21) 的「設定子頁 i18n」一部分
 3. 兩個 namespace **結構鏡像對稱**，未來新增 key 可以雙邊同步
 
 ### 既有 key 整理（順手做）
 
-CLAUDE.md backlog 列出的「設定子頁 i18n」包含 `recurring-income`。本 spec 順手把 recurring-income 的字串整理進 `recurringIncome.*` namespace（current `app/(dashboard)/settings/recurring-income/_components/` 內的硬寫中文），確保 income / expense 雙邊命名一致。
+[issue #21](https://github.com/redtear1115/oikos/issues/21)（i18n 設定子頁翻譯）涵蓋 `recurring-income`。本 spec 順手把 recurring-income 的字串整理進 `recurringIncome.*` namespace（current `app/(dashboard)/settings/recurring-income/_components/` 內的硬寫中文），確保 income / expense 雙邊命名一致。
 
 ### Namespace 結構（mirror）
 
@@ -661,7 +661,7 @@ settings: {
 
 ### PR #3 · i18n：`recurringExpense.*` 新增 + `recurringIncome.*` 重整
 
-**範圍**（[已 confirmed 在同一 PR](../../../CLAUDE.md)）
+**範圍**（已 confirmed 在同一 PR）
 - `lib/i18n/locales/{zh-TW,zh-CN,en,ja}.ts`：新增 `recurringExpense.*` namespace（~30 keys × 4 語）
 - 同檔案：整理 `recurringIncome.*` namespace — 把 `app/(dashboard)/settings/recurring-income/_components/` 內的硬寫中文搬入字典（~30 keys × 4 語）
 - `Translations` type 更新：兩個 namespace 完整定義
@@ -687,7 +687,7 @@ settings: {
   - Solo Mode 鎖 `paid_by=本人` + `split_type=all_mine`，picker 隱藏
 - Settings 主頁加項目「定期支出」（在「定期進帳」下方）
 - `PendingExpenseStack` + `PendingExpenseCard`（dashboard 元件，mirror income 結構，差異在 category-tint glow 與 payer line）
-- `ModeTogglePlaceholder` prop 改名：`pendingCount` → `incomePendingCount` + 新增 `expensePendingCount`（[已 confirmed breaking + 同 PR 替換](../../../CLAUDE.md)）
+- `ModeTogglePlaceholder` prop 改名：`pendingCount` → `incomePendingCount` + 新增 `expensePendingCount`（已 confirmed breaking + 同 PR 替換）
 - `Dashboard.tsx` wiring：
   - server-side load active pending list（call `listActivePendingExpenses`）
   - 傳給 PendingExpenseStack
@@ -714,7 +714,7 @@ settings: {
   - tab='expense' → 「⚙ 設定定期支出 →」
   - tab='income' → 「⚙ 設定定期進帳 →」（同步補上 income 端 entry，[recurring-income-design.md Phase 2 點名未 ship](recurring-income-design.md)）
   - tab='all' → 不顯示
-- `CLAUDE.md` 版本表加入 v0.12.0 + 移除 backlog 中已實現項目（recurring expense / records 入口 / settings 子頁 i18n 部分）
+- `CLAUDE.md` 版本表加入 v0.12.0；關掉對應 issues（[#18](https://github.com/redtear1115/oikos/issues/18) 定期支出主議題、[#21](https://github.com/redtear1115/oikos/issues/21) i18n 設定子頁的 `recurring-income` 部分）
 - `CHANGELOG.md` 新增 v0.12.0 entry（Added / Changed / Database）
 - `package.json` version → `0.12.0`
 - spec self-review pass（補實作中發現的細節）
