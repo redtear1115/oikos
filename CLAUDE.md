@@ -28,7 +28,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ |
 | v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
 | v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
-| _Unreleased_ | Perf：pages 改 `getSession()` 跳過 Auth API HTTP 往返（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2） | 已 merge origin/main，待版本號 |
+| _Unreleased_ | Perf：pages 改 `getSession()`（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2） · i18n：cookie-based locale + sign-in / Settings LanguageSwitcher（PR #3 / #4 / #6 整併）· 4 語擴張 zh-TW / zh-CN / en / ja + dashboard / records / settings / assets 字典接通（PR #7）· Settings：語言切換 + 離線瀏覽 toggle UI（PR #6；SW 實作仍 backlog） | 已 merge origin/main，待版本號 |
 
 ## Backlog
 
@@ -56,6 +56,7 @@ Realtime：Client subscribes → React state mutation
 - DB queries：`lib/db/queries/`
 - Validators：`lib/validators.ts`
 - Realtime：`app/(dashboard)/_components/RealtimeProvider.tsx`
+- i18n：`lib/i18n/`（server `getTranslations()` → dashboard layout `<TranslationsProvider>` → client `useTranslations()`；cookie-based locale，4 語）
 - Schema：`lib/db/schema.ts`
 - Migrations：`drizzle/`
 - Specs：`docs/superpowers/specs/`
@@ -102,5 +103,6 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
 | `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
-| `docs/superpowers/specs/2026-05-08-offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog）|
+| `docs/superpowers/specs/2026-05-08-offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog；toggle UI 已 ship、SW 未實作）|
+| `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |

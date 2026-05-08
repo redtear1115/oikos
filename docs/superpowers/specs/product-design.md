@@ -16,7 +16,8 @@
 | Styling | Tailwind CSS v4 | sibling 專案習慣 |
 | 加密 | AES-256-GCM in Server Actions | key 在 Vercel env，DB 只存 ciphertext |
 | Real-time | Supabase Realtime postgres_changes | partner 異裝置變動立即反應 |
-| PWA | 是 | 加到主畫面 |
+| PWA | 是 | 加到主畫面（Service Worker 待 backlog；目前無 cache）|
+| i18n | 自製字典 + cookie-based locale | 4 語（zh-TW / zh-CN / en / ja）；不引 next-intl，詳見 [i18n-design.md](i18n-design.md) |
 
 dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
@@ -95,7 +96,7 @@ Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`
 
 版本歷史與當前狀態見 [CLAUDE.md](../../../CLAUDE.md)（版本表）與 [CHANGELOG.md](../../../CHANGELOG.md)。
 
-各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md)
+各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md) · [i18n-design.md](i18n-design.md) · [2026-05-08-offline-browsing-design.md](2026-05-08-offline-browsing-design.md)
 
 ---
 

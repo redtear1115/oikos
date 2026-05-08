@@ -13,6 +13,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **Pages 改用 `getSession()` 跳過 Auth API 往返**（PR #1，已 merge origin/main）：`middleware.ts` 仍用 `auth.getUser()` 作為 trust boundary；page / layout server component 改用 `lib/supabase/server.ts` 的 `getCurrentUser()`（內部 `getSession()`），省每頁 200–400ms HTTP 往返。Server actions 維持 `getUser()`。10 個 page / layout 改寫。
 - **BottomNav 延遲 prefetch + Dashboard Suspense 邊界**（PR #2，已 merge origin/main）：冷啟動時不再 4 條 RSC prefetch 同時打；Hero balance 先 paint、feed 後到。
 
+### Added
+- **i18n 4 語架構**（PR #3 / #4 / #6 / #7，已 merge origin/main）：自製 `lib/i18n/`（server `getTranslations()` → dashboard layout `<TranslationsProvider>` → client `useTranslations()`）；cookie-based locale（`lang` cookie + `?lang=` query 入口）；4 語 zh-TW / zh-CN / en / ja；dashboard / records / settings / assets 字典已接通；sign-in footer + Settings 頁 LanguageSwitcher（footer / pill 兩變體）。詳見 [i18n-design.md](docs/superpowers/specs/i18n-design.md)。
+- **Settings 離線瀏覽 toggle UI**（PR #6，已 merge origin/main）：`lib/offline/preference.ts` localStorage helper + Settings 頁 toggle。**僅 UI 層 ship；SW / runtime cache / banner 等仍 backlog**。詳見 [2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)「實作狀態」段。
+
+### Backlog（_Unreleased_ 衍生）
+- i18n Date helpers 改用 `Intl.DateTimeFormat(locale)`
+- i18n Assets 詳情頁 + AssetSheet 翻譯（~40 fields）
+- i18n 設定子頁（`recurring-income` / `invite` / `coming-soon`）
+- 離線瀏覽 SW 實作（Serwist + runtime cache + `/offline` page + banner + sign-out cache clear）
+
 ## [0.10.0] - 2026-05-08
 
 ### Security
