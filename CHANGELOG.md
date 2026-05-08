@@ -9,7 +9,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### Performance
+- **Pages 改用 `getSession()` 跳過 Auth API 往返**（PR #1，已 merge origin/main）：`middleware.ts` 仍用 `auth.getUser()` 作為 trust boundary；page / layout server component 改用 `lib/supabase/server.ts` 的 `getCurrentUser()`（內部 `getSession()`），省每頁 200–400ms HTTP 往返。Server actions 維持 `getUser()`。10 個 page / layout 改寫。
+- **BottomNav 延遲 prefetch + Dashboard Suspense 邊界**（PR #2，已 merge origin/main）：冷啟動時不再 4 條 RSC prefetch 同時打；Hero balance 先 paint、feed 後到。
 
 ## [0.10.0] - 2026-05-08
 
@@ -262,7 +264,8 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/redtear1115/oikos/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/redtear1115/oikos/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/redtear1115/oikos/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/redtear1115/oikos/compare/v0.7.0...v0.8.0
