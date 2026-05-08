@@ -12,18 +12,17 @@ import {
 } from './_components/SettingsContent'
 
 export default async function SettingsPage() {
-  const user = await getCurrentUser()
+  const [user, currentLocale] = await Promise.all([getCurrentUser(), getLocale()])
   if (!user) throw new Error('Unauthorized')
 
-  const currentLocale = await getLocale()
-
-  const [viewerProfile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1)
-
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const [[viewerProfile], [group]] = await Promise.all([
+    db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1),
+    db
+      .select()
+      .from(oikosGroups)
+      .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+      .limit(1),
+  ])
   if (!group) throw new Error('No group')
 
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
