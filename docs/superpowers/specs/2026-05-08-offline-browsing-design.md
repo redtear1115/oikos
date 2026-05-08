@@ -12,17 +12,21 @@ oikos 是 mobile-first PWA：[public/manifest.json](../../../public/manifest.jso
 
 需求面只要求「瀏覽」，不要求「寫入」。離線寫入會帶來 conflict resolution、雙人 race、加密欄位（v0.10.0 才剛端到端加密）的安全疑慮，**全部不在本 spec 範圍**。
 
+此外，把 PII（金額、姓名、遮罩 ID）cache 在裝置上是**裝置端的隱私決定**，不是純技術功能。v0.10.0 剛把身分證／健保卡 E2E 加密，呼應「使用者控制自己資料」的基調，本功能採 **opt-in**：預設關閉，使用者到 Settings 主動開啟才會註冊 SW、開始 cache。共用裝置、低可信任環境、儲存吃緊的舊機都可以選擇不開。
+
 ---
 
 ## Scope
 
 ### In
 
-- Service Worker 安裝與生命週期管理（Serwist + `@serwist/next`）
+- Settings 頁「離線瀏覽」開關（**預設關閉**，per-device localStorage 持久化）
+- Service Worker 安裝與生命週期管理（Serwist + `@serwist/next`），**僅在 toggle 開啟時 register**
 - App shell precache：`_next/static/**`、`/manifest.json`、icons、`favicon.svg`、`og-image*`
 - Runtime cache：`/dashboard`、`/records`、`/assets`、`/assets/[id]`、`/assets/[id]/*` 的 RSC HTML，network-first + 3s timeout
 - `/offline` fallback 頁（純靜態，告知「離線中，以下資料為快取」）
-- Online / offline banner（`navigator.onLine` 偵測）
+- Online / offline banner（`navigator.onLine` 偵測，僅 toggle 開啟時顯示）
+- Toggle 關閉時主動 unregister SW + 清 L1 + L2 caches
 - Sign-out flow 主動清 dynamic cache 的 hook（防 PII 跨使用者外洩）
 - `RealtimeProvider` 在離線時靜音 reconnect retry（不在本 spec 引入新元件，但相鄰修補）
 
@@ -42,6 +46,9 @@ oikos 是 mobile-first PWA：[public/manifest.json](../../../public/manifest.jso
 
 | 維度 | 決定 | 理由 |
 |---|---|---|
+| 啟用模式 | **opt-in via Settings 開關**，預設關閉；存 localStorage `oikos.offline.enabled`（per device） | Cache PII 是裝置端隱私決定（v0.10.0 才剛 E2E 加密敏感欄位）；尊重「使用者控制自己資料」基調；soft-launch 收 feedback 再評估是否改預設 |
+| Toggle 持久化位置 | **localStorage（per device / browser）**，不存 Supabase user prefs | SW 是裝置能力（瀏覽器支援、儲存配額、共享裝置疑慮），語義上是 per-device 而非 per-user；同帳號跨裝置要分別 opt-in |
+| Toggle off 行為 | **`navigator.serviceWorker.unregister` + 清 L1 + L2 caches + localStorage = false** | 使用者關閉是主動撤回信任，不只 bypass cache 還要把已存資料抹乾淨；下次再開重新 precache |
 | SW framework | **Serwist (`@serwist/next`)** | next-pwa 維護停滯、Next 16 / App Router 兼容回報差；Serwist 為其精神後繼，App Router first-class；自製 SW 在此 scope 不划算 |
 | Cache 分層 | **L1 precache（靜態） + L2 runtime（HTML），跳過 L3（API）** | oikos 沒有 GET API；server actions 為 POST 不 cache；L3 對需求面零價值且高風險（PII） |
 | 靜態資源策略 | **cache-first** | 不變、按 hash key、cache hit 即可離線啟動 |
@@ -57,6 +64,9 @@ oikos 是 mobile-first PWA：[public/manifest.json](../../../public/manifest.jso
 
 ### 不採用
 
+- ❌ **預設啟用**：cache PII 在裝置上是隱私決定，需明確同意；先 opt-in 觀察使用情況再決定是否改預設
+- ❌ **Toggle 存 Supabase user preferences（跨裝置同步）**：聽起來合理，但 SW / cache 是裝置能力，跨裝置同步可能造成「我在朋友家用過一次的瀏覽器自動開了 cache」這種反直覺結果；per-device 較安全
+- ❌ **首次安裝後彈 modal 邀請開啟**：MVP 不做主動推銷；toggle 放在 Settings 等使用者主動發現。若上線一段時間使用率太低再考慮一次性 hint
 - ❌ **next-pwa**：維護停滯、Next 16 / App Router 兼容問題多
 - ❌ **自製 SW**：要自處理 precache hashing、版本切換、navigation preload，工時 vs 價值不成比例
 - ❌ **Stale-while-revalidate (SWR) on HTML**：oikos 寫入路徑會 `revalidatePath`，SW 層 SWR 不認；剛新增完一筆 expense 回 dashboard 會看到舊 cache，體感像 bug
@@ -97,7 +107,35 @@ oikos 是 mobile-first PWA：[public/manifest.json](../../../public/manifest.jso
 └─────────────────────────────────────────────┘
 ```
 
-### 請求路徑（runtime）
+### 啟用 / 停用流程
+
+```
+App boot（client）
+  ↓
+讀 localStorage `oikos.offline.enabled`
+  ├─ 'true' → navigator.serviceWorker.register('/sw.js')
+  │            ↓
+  │          SW active → 接管 fetch（見下方請求路徑）
+  │
+  └─ 'false' or 缺 → 不 register；確保任何殘留 SW 也 unregister
+                   （防止使用者曾開過、後來關掉、但舊 SW 還 active）
+
+Settings 頁切換
+  ON：
+    1. navigator.serviceWorker.register('/sw.js')
+    2. await registration.ready
+    3. localStorage.setItem('oikos.offline.enabled', 'true')
+    4. UI 更新為「已開啟」
+    （若 register fail：UI 回原狀並顯示錯誤，localStorage 不寫）
+
+  OFF：
+    1. localStorage.setItem('oikos.offline.enabled', 'false')
+    2. for reg of await navigator.serviceWorker.getRegistrations(): reg.unregister()
+    3. for name of await caches.keys(): caches.delete(name)
+    4. UI 更新為「已關閉」
+```
+
+### 請求路徑（runtime，僅在 toggle 開啟時生效）
 
 ```
 Request /dashboard
@@ -122,10 +160,13 @@ SW fetch handler
 |---|---|---|
 | Serwist 設定 | `next.config.ts` | 引入 `@serwist/next`，dev disable |
 | SW entry | `app/sw.ts` | runtime caching rules、precache manifest 注入 |
+| Offline preference helper | `lib/offline/preference.ts`（新） | localStorage 讀寫、SSR-safe；提供 `isOfflineEnabled()` / `setOfflineEnabled()` |
+| SW lifecycle controller | `app/(dashboard)/_components/OfflineLifecycle.tsx`（新，client） | App boot 時讀 preference 決定 register / unregister；放在 dashboard layout 確保只在登入區生效 |
+| Settings toggle | `app/(dashboard)/settings/_components/OfflineBrowsingToggle.tsx`（新） | 顯示開／關狀態 + 描述；切換時觸發 register/unregister + cache 清理 |
 | Offline fallback page | `app/offline/page.tsx` | 純 RSC，無資料依賴 |
-| Online status hook | `lib/hooks/useOnlineStatus.ts`（新） | `navigator.onLine` + `online`/`offline` 事件 |
-| Offline banner | `app/(dashboard)/_components/OfflineBanner.tsx`（新） | 全站頂部 banner，離線時顯示 |
-| Sign-out cache clear | `actions/auth.ts` 既有 sign-out → 加 client-side 清 cache 步驟 | 防 PII 跨使用者 |
+| Online status hook | `lib/hooks/useOnlineStatus.ts`（新） | `navigator.onLine` + `online`/`offline` 事件，內部也讀 preference 避免關閉狀態時誤亮 banner |
+| Offline banner | `app/(dashboard)/_components/OfflineBanner.tsx`（新） | 全站頂部 banner；preference off 時永不顯示 |
+| Sign-out cache clear | `actions/auth.ts` 既有 sign-out → 加 client-side 清 cache 步驟 | 防 PII 跨使用者；preference 不變（per-device） |
 | RealtimeProvider 修補 | `app/(dashboard)/_components/RealtimeProvider.tsx` | 離線時靜音 reconnect |
 
 ### 資料流
@@ -135,6 +176,20 @@ SW fetch handler
 ---
 
 ## UX 細節
+
+### Settings 頁開關
+
+- 路徑：`/settings`（主設定頁，與其他 toggle 並列；不另開子頁）
+- Label：「離線瀏覽」
+- 狀態描述：
+  - 關閉時：「在無網路時看不到歷史記錄。開啟後，最近瀏覽過的頁面會存在這台裝置上。」
+  - 開啟時：「無網路時可看最近一次連線時的記錄。資料只存在這台裝置，登出時會自動清除。」
+- 預設：**關**
+- 開啟動作：呼叫 `register` → `await registration.ready` → 寫 localStorage → UI 切換到「已開啟」
+- 關閉動作：寫 localStorage = false → unregister 所有 SW → `caches.delete()` 全部 → UI 切換到「已關閉」
+- Toggle 顯示與真實 SW 狀態必須一致：每次進 settings 頁時呼叫 `navigator.serviceWorker.getRegistrations()` 校準 UI（不只信 localStorage），避免「使用者在另一個 tab 改過」或「上次切換中途失敗」造成的不一致
+- 切換進行中（register / unregister 進行）UI disable + 顯示 spinner，避免連點造成半 cache 狀態
+- 帳號登出時 toggle 狀態**不變**（per-device，跟登入帳號脫鉤）
 
 ### Offline banner
 
@@ -184,6 +239,9 @@ precache（L1）保留——靜態資源不含 PII，下個使用者用同一裝
 5. **Vercel preview 部署的 SW 衝突**：Serwist build 出的 SW 註冊在 origin scope；preview deploy 用不同 subdomain 自然隔離，但要確認 prod domain 的 SW 不會在 preview 被覆寫。
 6. **Service Worker 註冊失敗的 fallback**：SW 安裝失敗（用戶停用、private mode、quota exceeded）時 app 仍要正常運作——本 spec 設計上 SW 是 enhancement，沒有 SW 就退回完全線上模式。
 7. **realtime + SW 互動**：SW 不攔 WebSocket，realtime 路徑不受影響；但 RealtimeProvider 在離線時的 reconnect noise 要靜音（相鄰修補）。
+8. **Toggle race（連點開／關）**：register / unregister 是 async；UI 在進行中必須 disable，否則中途切換會留下殘 SW 或殘 cache。
+9. **Toggle 狀態與 SW 註冊狀態漂移**：localStorage 與 `navigator.serviceWorker.getRegistrations()` 可能不一致（手動清 storage、瀏覽器隔離模式、跨 tab 切換）；settings 頁進入時校準 UI 為兩者的「實際狀態」（以 SW registration 為準）。
+10. **使用者刪了 PWA 但 SW 還在原網站**：PWA 移除不會 unregister origin 上的 SW；但這不是新問題（任何 PWA 都這樣），且使用者下次回到網站時 settings 頁會反映實際 SW 狀態，可手動關閉。
 
 ---
 
@@ -194,29 +252,41 @@ precache（L1）保留——靜態資源不含 PII，下個使用者用同一裝
 | 安裝 / 設定 Serwist（`next.config.ts`、`app/sw.ts`） | 0.5d |
 | Precache manifest 規則（靜態資源） | 0.5d |
 | Runtime caching rules（dashboard / records / assets，network-first + 3s） | 0.5d |
+| `lib/offline/preference.ts` localStorage helper | 0.25d |
+| `OfflineLifecycle` 元件（boot 時 register/unregister 校準） | 0.25d |
+| Settings `OfflineBrowsingToggle`（UI + register/unregister flow + 校準） | 0.5d |
 | `/offline` fallback page + `useOnlineStatus` hook | 0.25d |
-| `OfflineBanner` 元件接入 layout | 0.25d |
+| `OfflineBanner` 元件接入 layout（gated by preference） | 0.25d |
 | Sign-out flow 加 cache clear | 0.5d |
 | RealtimeProvider 離線靜音 | 0.25d |
 | Records 換頁離線 empty state | 0.25d |
 | 跨平台驗證：iOS 16.4+ Safari standalone、Chrome Android、desktop PWA | 1d |
 | Spec / CLAUDE.md / CHANGELOG 更新 | 0.25d |
-| **合計** | **~4 dev days** |
+| **合計** | **~5 dev days** |
 
 ---
 
 ## 測試矩陣
 
+**前置條件：除非另註，所有「離線/cache」相關場景皆以 toggle 已開啟為前提。**
+
 | 平台 | 場景 | 期望 |
 |---|---|---|
-| Chrome desktop | 飛航模式開 dashboard（已 cache） | 顯示 cache + offline banner |
-| Chrome desktop | 飛航模式開 records 第二頁（未 cache） | 顯示 empty state |
-| Chrome Android（PWA） | 漫遊環境啟動 app | 啟動 < 1s（app shell precache 命中） |
-| iOS 16.4+ Safari（standalone） | 飛航模式開 dashboard | 顯示 cache + offline banner |
-| iOS 16.3 以下（standalone） | 飛航模式 | 看到瀏覽器離線頁（graceful degrade，與現況同） |
-| 任意平台 | 同裝置帳號 A 登出 → 帳號 B 登入 → 開 dashboard | 看到 B 的資料，無 A 的 PII 殘影 |
-| 任意平台 | 線上新增 expense → 立刻回 dashboard | 看到新資料（network-first 命中網路） |
-| 任意平台 | 線上 → 拔網路 → 重整 dashboard | 3s 後顯示 cache + banner |
+| 任意平台 | 第一次安裝 PWA 後（toggle 預設關） | SW 未註冊；飛航模式開 app 看到瀏覽器離線頁 |
+| 任意平台 | Settings 開啟 toggle | SW register 成功、UI 切換成「已開啟」、開始 cache |
+| 任意平台 | Settings 關閉 toggle | SW unregister、所有 cache 清空、UI 切換成「已關閉」 |
+| 任意平台 | 開 → 關 → 重新開 | SW 重新註冊，重新 precache fresh（不殘留舊 cache） |
+| 任意平台 | 切換進行中連點 | 第二次點擊被 disable，無中間態殘留 |
+| 任意平台 | 手動清 localStorage 後進 settings 頁 | UI 校準為實際 SW 狀態（若 SW 仍註冊就顯示「已開啟」） |
+| Chrome desktop | toggle 開、飛航模式開 dashboard（已 cache） | 顯示 cache + offline banner |
+| Chrome desktop | toggle 開、飛航模式開 records 第二頁（未 cache） | 顯示 empty state |
+| Chrome Android（PWA） | toggle 開、漫遊環境啟動 app | 啟動 < 1s（app shell precache 命中） |
+| iOS 16.4+ Safari（standalone） | toggle 開、飛航模式開 dashboard | 顯示 cache + offline banner |
+| iOS 16.3 以下（standalone） | toggle 開、飛航模式 | 看到瀏覽器離線頁（SW 不啟動，graceful degrade） |
+| 任意平台 | toggle 開、同裝置帳號 A 登出 → 帳號 B 登入 → 開 dashboard | 看到 B 的資料，無 A 的 PII 殘影；toggle 狀態仍為「已開啟」 |
+| 任意平台 | toggle 開、線上新增 expense → 立刻回 dashboard | 看到新資料（network-first 命中網路） |
+| 任意平台 | toggle 開、線上 → 拔網路 → 重整 dashboard | 3s 後顯示 cache + banner |
+| 任意平台 | toggle 關、拔網路 | 看到瀏覽器離線頁（無 cache 介入）、無 banner |
 
 ---
 
@@ -235,3 +305,4 @@ precache（L1）保留——靜態資源不含 PII，下個使用者用同一裝
 - [public/manifest.json](../../../public/manifest.json) — 既有 PWA manifest
 - [app/layout.tsx](../../../app/layout.tsx) — root layout，banner 接入點
 - [app/(dashboard)/_components/RealtimeProvider.tsx](../../../app/(dashboard)/_components/RealtimeProvider.tsx) — 相鄰修補目標
+- [app/(dashboard)/settings/](../../../app/(dashboard)/settings/) — toggle UI 接入點
