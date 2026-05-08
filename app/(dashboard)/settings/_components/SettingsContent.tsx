@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { Switch } from '@/components/Switch'
 import { LogoutButton } from './LogoutButton'
 import { updateGroupName } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 import { shareInviteLink } from '@/lib/share'
+import { getOfflinePref, setOfflinePref } from '@/lib/offline/preference'
 import type { SplitType } from '@/lib/balance'
 
 export interface ViewerInfo {
@@ -27,10 +30,11 @@ interface Props {
   groupId: string
   groupName: string
   appVersion: string
+  currentLocale: string
 }
 
 export function SettingsContent({
-  viewer, partner, groupId, groupName, appVersion,
+  viewer, partner, groupId, groupName, appVersion, currentLocale,
 }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
@@ -55,6 +59,18 @@ export function SettingsContent({
   }, [])
 
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
+
+  // Offline browsing preference — read from localStorage on mount to avoid
+  // SSR/CSR mismatch (default: false during SSR, hydrate from storage after mount).
+  const [offlineEnabled, setOfflineEnabled] = useState(false)
+  useEffect(() => {
+    setOfflineEnabled(getOfflinePref())
+  }, [])
+
+  const handleOfflineToggle = (next: boolean) => {
+    setOfflineEnabled(next)
+    setOfflinePref(next)
+  }
 
   const handleInvite = () => {
     setInviteError(null)
@@ -176,6 +192,12 @@ export function SettingsContent({
         />
         <div className="mt-3">
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
+            語言
+          </div>
+          <LanguageSwitcher current={currentLocale} />
+        </div>
+        <div className="mt-3">
+          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
             建立紀錄時的預設分攤
           </div>
           <div
@@ -225,6 +247,28 @@ export function SettingsContent({
               {splitError}
             </div>
           )}
+        </div>
+      </Section>
+
+      {/* 裝置 */}
+      <Section title="裝置">
+        <div
+          className="rounded-[20px] flex items-center justify-between px-5 py-4"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+        >
+          <div className="flex-1 min-w-0 pr-4">
+            <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+              離線瀏覽
+            </div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+              開啟後可在無網路時查看最近記錄
+            </div>
+          </div>
+          <Switch
+            checked={offlineEnabled}
+            onChange={handleOfflineToggle}
+            ariaLabel="離線瀏覽"
+          />
         </div>
       </Section>
 

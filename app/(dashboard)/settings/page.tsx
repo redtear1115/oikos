@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { profiles, oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
+import { getLocale } from '@/lib/i18n/t'
 import {
   SettingsContent,
   type PartnerInfo,
@@ -13,6 +14,8 @@ import {
 export default async function SettingsPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
+
+  const currentLocale = await getLocale()
 
   const [viewerProfile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1)
 
@@ -54,6 +57,7 @@ export default async function SettingsPage() {
         groupId={group.id}
         groupName={group.name}
         appVersion={pkg.version}
+        currentLocale={currentLocale}
       />
       <BottomNavSkeleton />
     </div>
