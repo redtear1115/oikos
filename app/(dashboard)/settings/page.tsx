@@ -1,4 +1,5 @@
 import pkg from '@/package.json'
+import { cookies } from 'next/headers'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles, oikosGroups } from '@/lib/db/schema'
@@ -13,6 +14,9 @@ import {
 export default async function SettingsPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
+
+  const cookieStore = await cookies()
+  const currentLocale = cookieStore.get('lang')?.value ?? 'zh-TW'
 
   const [viewerProfile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1)
 
@@ -54,6 +58,7 @@ export default async function SettingsPage() {
         groupId={group.id}
         groupName={group.name}
         appVersion={pkg.version}
+        currentLocale={currentLocale}
       />
       <BottomNavSkeleton />
     </div>
