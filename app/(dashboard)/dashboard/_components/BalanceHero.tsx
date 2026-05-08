@@ -10,6 +10,7 @@ import { SettlementForm } from './SettlementForm'
 import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   rawBalance: number  // member_a perspective (positive = b owes a)
@@ -38,6 +39,7 @@ export function BalanceHero({
   pendingCount = 0,
 }: Props) {
   const { viewer, partner, viewerIsA } = useMember()
+  const t = useTranslations()
   const [displayedRaw, setDisplayedRaw] = useState(rawBalance)
   const [fading, setFading] = useState(false)
   const P = DEFAULT_INCOME_PALETTE
@@ -60,22 +62,22 @@ export function BalanceHero({
   const balance = viewerBalance(displayedRaw, viewerIsA)
   const [settleOpen, setSettleOpen] = useState(false)
 
-  // balance > 0 → 對方 欠你; balance < 0 → 你 欠對方; balance == 0 → 打平
+  // balance > 0 → partner owes you; balance < 0 → you owe partner; balance == 0 → even
   let owedByWho: 'M' | 'T'
   let subjectName: string
   let verb: string
   if (balance > 0) {
     owedByWho = 'T'
-    subjectName = partner?.displayName ?? '對方'
-    verb = '欠你'
+    subjectName = partner?.displayName ?? t.common.partner
+    verb = t.balanceHero.partnerOwesYou
   } else if (balance < 0) {
     owedByWho = 'M'
-    subjectName = '你'
-    verb = '欠對方'
+    subjectName = t.common.you
+    verb = t.balanceHero.youOwePartner
   } else {
     owedByWho = 'M'
-    subjectName = '目前'
-    verb = '打平'
+    subjectName = t.balanceHero.currentlyLabel
+    verb = t.balanceHero.currentlyEven
   }
 
   const amount = Math.abs(balance)
@@ -97,7 +99,7 @@ export function BalanceHero({
           marginBottom: 18,
         }}>
           <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2 }}>
-            本月進帳
+            {t.balanceHero.monthlyIncome}
           </div>
           <div style={{
             fontFamily: 'var(--font-numeric)',
@@ -114,17 +116,17 @@ export function BalanceHero({
             display: 'flex', gap: 16, alignItems: 'center',
           }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>筆數</div>
+              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.countLabel}</div>
               <div style={{
                 fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--ink)', marginTop: 2,
                 fontFeatureSettings: '"tnum"',
-              }}>{incomeMonthCount} 筆</div>
+              }}>{incomeMonthCount}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`}</div>
             </div>
             <div style={{ width: 1, height: 28, background: 'var(--hairline)' }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>最近</div>
+              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.recent}</div>
               <div style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', marginTop: 2 }}>
-                {recentIncomeLabel ?? '尚無紀錄'}
+                {recentIncomeLabel ?? t.balanceHero.noRecord}
               </div>
             </div>
           </div>
@@ -133,12 +135,12 @@ export function BalanceHero({
             borderTop: '1px solid var(--hairline)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>定期進帳</span>
+            <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.recurring}</span>
             <Link
               href="/settings/recurring-income"
               style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', textDecoration: 'none' }}
             >
-              管理 ›
+              {t.balanceHero.manage}
             </Link>
           </div>
         </div>
@@ -151,7 +153,7 @@ export function BalanceHero({
             disabled={!canSettle}
             className="w-full text-left bg-transparent border-0 cursor-pointer disabled:cursor-default p-0"
             aria-expanded={settleOpen}
-            aria-label={canSettle ? '記錄還款 / 收款' : undefined}
+            aria-label={canSettle ? t.balanceHero.settleAriaLabel : undefined}
           >
             <div className="flex items-start gap-[14px]">
               <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
@@ -192,7 +194,7 @@ export function BalanceHero({
               <button onClick={onAddClick}
                 className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center gap-1.5"
                 style={{ background: 'var(--ink)' }}>
-                <PlusIcon size={16} />新增一筆
+                <PlusIcon size={16} />{t.dashboard.addExpense}
               </button>
             </div>
           )}

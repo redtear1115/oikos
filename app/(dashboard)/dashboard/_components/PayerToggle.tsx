@@ -2,6 +2,7 @@
 
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface PayerToggleProps {
   value: 'M' | 'T'
@@ -10,13 +11,14 @@ interface PayerToggleProps {
 
 export function PayerToggle({ value, onChange }: PayerToggleProps) {
   const { viewer, partner } = useMember()
+  const t = useTranslations()
 
   return (
     <div
       className="mt-[22px] flex items-center justify-center gap-2.5 text-label"
       style={{ color: 'var(--ink-2)' }}
     >
-      <span>誰付的？</span>
+      <span>{t.payerToggle.label}</span>
       <div
         className="inline-flex rounded-full p-[3px] gap-0.5"
         style={{ background: 'rgba(31,27,22,0.05)' }}
@@ -38,7 +40,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
               src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
               size={18}
             />
-            {w === 'M' ? '我' : '對方'}
+            {w === 'M' ? t.common.me : t.common.partner}
           </button>
         ))}
       </div>

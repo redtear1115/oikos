@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from '@/lib/i18n/t'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
 export default async function SignInPage() {
@@ -37,6 +37,7 @@ export default async function SignInPage() {
           <a href="/terms" className="underline">{t.signIn.termsLink}</a>
           {' '}{t.signIn.termsAnd}{' '}
           <a href="/privacy" className="underline">{t.signIn.privacyLink}</a>
+          {t.signIn.termsSuffix}
         </p>
       </div>
 

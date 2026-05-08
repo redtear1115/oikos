@@ -2,6 +2,7 @@
 
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface CategoryPickerProps {
   value: CategoryId
@@ -9,6 +10,7 @@ interface CategoryPickerProps {
 }
 
 export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
+  const t = useTranslations()
   return (
     <div className="flex gap-2 px-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
       {PICKABLE_CATEGORIES.map(c => {
@@ -24,7 +26,7 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
             <span className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-label font-medium" style={{ background: c.tint, color: c.ink }}>
               {c.mono}
             </span>
-            {c.label}
+            {t.category[c.id]}
           </button>
         )
       })}

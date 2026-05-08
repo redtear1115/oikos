@@ -38,6 +38,9 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 - **小孩／寵物身高體重歷史紀錄**（append-only log + 修正 typo）— 仿 FuelLog pattern；MVP 不含成長曲線視覺化（codebase 無 chart lib）
 - **定期支出**（recurring expenses）— 對應自訂定期收入的支出版本；建議與定期收入共用 pending preview→commit 架構，未排期
 - **離線瀏覽**（Offline / PWA cache）— Serwist + network-first runtime cache，讓使用者在無網路時能瀏覽最近的記錄與首頁；spec [docs/superpowers/specs/2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)，未排期
+- **i18n Date helpers 重構** — `monthLabel` / `weekday` / `dateLabel` 目前硬寫中文，需改用 `Intl.DateTimeFormat(locale)` 讓月份標頭與日期顯示跟著語系走
+- **i18n Assets 詳情頁 + AssetSheet 翻譯** — 各欄位（保險／車輛／兒童等 ~40 fields）翻譯量大，需人工審稿後才能上線
+- **i18n 設定子頁** — `recurring-income`、`invite`、`coming-soon` 等子頁仍 zh-TW only，待後續補齊
 
 ---
 

@@ -15,6 +15,7 @@ import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import type { IncomeCategoryId } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
+import { useTranslations } from '@/lib/i18n/client'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ interface Props {
 
 export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved, prefilledAssetId, prefilledCategory, prefilledAmount, mode, pendingId }: Props) {
   const { viewer, partner, isSolo } = useMember()
+  const t = useTranslations()
   const P = DEFAULT_INCOME_PALETTE
 
   const [amount, setAmount] = useState('')
@@ -171,12 +173,12 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
   const handleSave = () => {
     const n = parseInt(amount, 10)
-    if (!n || n <= 0) { setError('請輸入金額'); return }
+    if (!n || n <= 0) { setError(t.incomeSheet.errors.amountRequired); return }
 
     startTransition(async () => {
       try {
         if (isPending) {
-          if (!pendingId) throw new Error('缺少待確認進帳 id')
+          if (!pendingId) throw new Error(t.incomeSheet.errors.missingPendingId)
           await editAndConfirmPending({
             pendingId,
             amount: n,
@@ -209,7 +211,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         onMutated?.()
         onClose()
       } catch (e) {
-        const msg = e instanceof Error ? e.message : '儲存失敗'
+        const msg = e instanceof Error ? e.message : t.incomeSheet.errors.saveFailed
         // Race: partner confirmed/skipped this pending in another tab/device
         // before our edit-confirm landed. The error messages from
         // editAndConfirmPending in that case are: '待確認進帳已被處理或找不到'
@@ -217,7 +219,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         if (isPending && msg.includes('待確認進帳')) {
           onMutated?.()
           onClose()
-          onRaceResolved?.('對方剛剛確認了這筆')
+          onRaceResolved?.(t.incomeSheet.raceMessage)
           return
         }
         setError(msg)
@@ -234,7 +236,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -287,7 +289,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)', fontFamily: 'inherit' }}
           >
-            取消
+            {t.common.cancel}
           </button>
 
           <div
@@ -295,7 +297,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             style={{ color: 'var(--ink)' }}
           >
             <LightDot />
-            記一筆進帳
+            {t.incomeSheet.title}
           </div>
 
           <button
@@ -308,7 +310,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
               fontFamily: 'inherit',
             }}
           >
-            {pending ? '儲存中…' : '儲存'}
+            {pending ? t.common.saving : t.common.save}
           </button>
         </div>
 
@@ -325,7 +327,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 marginBottom: 14,
               }}
             >
-              進帳金額
+              {t.incomeSheet.amountLabel}
             </div>
 
             <label
@@ -354,7 +356,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                   setAmount(next)
                 }}
                 placeholder="0"
-                aria-label="進帳金額"
+                aria-label={t.incomeSheet.amountLabel}
                 className="bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
@@ -378,7 +380,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 className="flex items-center justify-center gap-2.5 text-label"
                 style={{ marginTop: 24, color: 'var(--ink-2)' }}
               >
-                <span>進到誰那？</span>
+                <span>{t.incomeSheet.recipientPrompt}</span>
                 <div
                   className="inline-flex rounded-full p-[3px] gap-0.5"
                   style={{ background: 'rgba(58,36,25,0.05)' }}
@@ -404,7 +406,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                         src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
                         size={18}
                       />
-                      {w === 'M' ? '我' : '對方'}
+                      {w === 'M' ? t.common.me : t.common.partner}
                     </button>
                   ))}
                 </div>
@@ -433,7 +435,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 textTransform: 'uppercase',
               }}
             >
-              類別
+              {t.incomeSheet.categoryLabel}
             </div>
             <div
               className="flex gap-2"
@@ -463,7 +465,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                   textTransform: 'uppercase',
                 }}
               >
-                關聯保單
+                {t.incomeSheet.policyLink}
               </div>
               <button
                 type="button"
@@ -485,12 +487,12 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 <PolicyIcon color={P.ink} />
                 <div className="flex-1">
                   <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-                    {selectedPolicyName ?? '選擇對應保單'}
+                    {selectedPolicyName ?? t.incomeSheet.selectPolicy}
                   </div>
                   <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
                     {category === 'maturity'
-                      ? '此筆會記入該保單的「拿回」累計'
-                      : '此筆會記入該保單的「理賠」紀錄'}
+                      ? t.incomeSheet.maturityHint
+                      : t.incomeSheet.claimHint}
                   </div>
                 </div>
                 <ChevronDown />
@@ -507,7 +509,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 >
                   {insuranceAssets.length === 0 ? (
                     <div className="px-4 py-3 text-sm" style={{ color: 'var(--ink-3)' }}>
-                      尚無保單
+                      {t.incomeSheet.noPolicy}
                     </div>
                   ) : (
                     insuranceAssets.map((a, i) => (
@@ -533,7 +535,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                             {a.name}
                           </div>
                           <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                            保險
+                            {t.incomeSheet.insuranceBadge}
                           </div>
                         </div>
                         <svg
@@ -573,7 +575,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             <input
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="備註（可選）"
+              placeholder={t.incomeSheet.notePlaceholder}
               className="flex-1 bg-transparent border-0 outline-none py-1"
               style={{ fontSize: 'var(--fs-body)', color: 'var(--ink)', fontFamily: 'inherit' }}
             />
@@ -591,7 +593,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 textTransform: 'uppercase',
               }}
             >
-              日期
+              {t.addSheet.date}
             </div>
             <DateField value={date} onChange={setDate} open={open} />
           </div>
@@ -606,7 +608,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 className="text-sm cursor-pointer bg-transparent border-0"
                 style={{ color: 'var(--destructive)' }}
               >
-                刪除這筆進帳
+                {t.incomeSheet.deleteIncome}
               </button>
             </div>
           )}
@@ -626,9 +628,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
       <ConfirmModal
         open={confirmingDelete && open}
-        title="刪除這筆進帳？"
-        description="這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。"
-        confirmLabel="刪除"
+        title={t.incomeSheet.deleteConfirmTitle}
+        description={t.common.deleteSoftDescription}
+        confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
         onConfirm={performDelete}

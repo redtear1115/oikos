@@ -1,6 +1,7 @@
 'use client'
 
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   mode?: 'expense' | 'income'
@@ -10,6 +11,7 @@ interface Props {
 
 export function ModeTogglePlaceholder({ mode = 'expense', onChange, pendingCount = 0 }: Props) {
   const P = DEFAULT_INCOME_PALETTE  // mint
+  const t = useTranslations()
   return (
     <div
       className="flex items-center rounded-full p-1 mb-5"
@@ -23,9 +25,9 @@ export function ModeTogglePlaceholder({ mode = 'expense', onChange, pendingCount
       }}
     >
       {([
-        { id: 'expense', label: '支出模式' },
-        { id: 'income',  label: '進帳模式' },
-      ] as const).map((o) => {
+        { id: 'expense' as const, label: t.modeToggle.expense },
+        { id: 'income' as const,  label: t.modeToggle.income },
+      ]).map((o) => {
         const sel = mode === o.id
         const isIncome = o.id === 'income'
         return (
