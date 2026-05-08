@@ -17,6 +17,18 @@
   --destructive-soft: rgba(184, 90, 72, 0.25);  /* outline / hairline variant */
   --realtime-flash: #fffbe8;
 
+  /* Per-asset-type tints — soft warm hues for icon box bg + 3px left rail. */
+  --asset-tint-house:     #EDDCD0;
+  --asset-tint-car:       #E8E4D8;
+  --asset-tint-child:     #F1DEE0;
+  --asset-tint-pet:       #F0E2D0;
+  --asset-tint-plant:     #DCE7D6;
+  --asset-tint-insurance: #DDE5DC;
+
+  /* Savings (儲蓄險) badge — shares the muted-green family with insurance tint. */
+  --saving-soft: #DDE5DC;
+  --saving:      #5A7A66;
+
   /* Typography scale — P3-1 */
   --fs-xs:        11px;   /* extra small: labels, metadata */
   --fs-micro:     11px;   /* tab label, timestamp, metadata */

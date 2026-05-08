@@ -20,6 +20,9 @@ export interface AssetsListItem {
   nickname?: string | null
   plate: string | null
   monthAmount: number
+  /** Insurance-only: true when InsuranceDetails.insurance_type === 'savings'.
+   *  Drives the 「儲蓄」badge in AssetListItem. */
+  isSavings?: boolean
   // Car-only extras (optional; ignored for non-car types)
   color?: string | null
   year?: number | null
@@ -78,6 +81,7 @@ export function AssetsListClient({ items }: Props) {
           nickname={a.nickname ?? null}
           plate={a.plate ?? null}
           monthAmount={a.monthAmount}
+          isSavings={a.isSavings}
           isLast={i === group.length - 1}
         />
       ))}
