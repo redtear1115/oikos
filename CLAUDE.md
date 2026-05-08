@@ -33,6 +33,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 未排入版本的候選功能，優先順序待評估。
 
 - **雲端發票匯入**（財政部 API + 手機條碼載具）— API key 無法取得，暫緩
+- **小孩／寵物身高體重歷史紀錄**（append-only log + 修正 typo）— 仿 FuelLog pattern；MVP 不含成長曲線視覺化（codebase 無 chart lib）
 
 ---
 
@@ -74,6 +75,11 @@ npm run db:migrate   # apply migrations
 npm run db:generate  # 從 schema 生 migration
 npm run db:studio    # Drizzle Studio
 ```
+
+## AI 開發協作規則
+
+- **commit 自主**：每完成一個邏輯單位（PR / feature）即自動 commit，不必問。push 仍需要明確指令。
+- **destructive ops**：動 prod 資料、force push、reset --hard 之類仍要明確確認 scope 後才執行。
 
 ---
 
