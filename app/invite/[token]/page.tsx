@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { acceptInvite } from '@/actions/invite'
 
 interface Props {
@@ -8,8 +8,7 @@ interface Props {
 
 export default async function InvitePage({ params }: Props) {
   const { token } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect(`/sign-in?next=/invite/${token}`)

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups, profiles } from '@/lib/db/schema'
 import { eq, or, inArray } from 'drizzle-orm'
@@ -8,8 +8,7 @@ import { RealtimeProvider } from './_components/RealtimeProvider'
 import type { MemberContextValue } from './_components/MemberContext'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
   const [group] = await db
