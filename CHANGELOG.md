@@ -11,6 +11,29 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.11.3] - 2026-05-08
+
+### Added
+- **`app/robots.ts`**：用 Next 16 `MetadataRoute.Robots` 動態生成；`Allow: / /sign-in /terms /privacy`、`Disallow: /dashboard /setup /invite/ /auth/ /api/`，宣告 `Sitemap` 與 `Host`。
+- **`app/sitemap.ts`**：含 `/sign-in`（priority 1.0、含 4 語 hreflang alternates）、`/terms`、`/privacy`（priority 0.3）。
+- **`/sign-in` 結構化資料 `SoftwareApplication` JSON-LD**：含 `applicationCategory: FinanceApplication`、`featureList`（雙人共享記帳／費用自動分攤／資產盤點／保險／油耗等）、`offers: 0 TWD`、`inLanguage: zh-TW/zh-CN/en/ja`，給搜尋引擎結構化訊號。
+- **品牌語意 heading**：`/sign-in` 的「Futari」品牌字由 `<div>` 改為 `<h1>`，內含 `sr-only` 副標「· 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA」+ 頁底 sr-only 描述段；視覺零變化，搜尋引擎可正確判斷頁面主題。
+
+### Changed
+- **`middleware.ts` matcher 排除 `/robots.txt` 與 `/sitemap.xml`**：原 matcher 已排除 `manifest.json` 與圖片，但漏了 SEO 兩個關鍵檔案，導致 unauthed 爬蟲被 307→`/sign-in`，等同沒 robots.txt / sitemap.xml。
+- **`app/layout.tsx` metadata 全面重寫**：
+  - title：`Futari · ふたり 家計簿` → `Futari · 兩個人的家計簿｜伴侶／夫妻共享記帳`
+  - description：25 字 → 100+ 字密集涵蓋伴侶／夫妻／共享／分攤／AA／資產／保險／油耗／PWA／台灣等關鍵字
+  - 新增 `keywords`（22 個目標長尾詞，Bing/百度有讀）
+  - 新增 `alternates.canonical: /sign-in` + 4 語 `hreflang`
+  - 新增 `robots: { index, follow, googleBot: { 'max-image-preview': 'large' } }` 顯式宣告
+  - `openGraph.url` 由 `/`（會 307）改為 `/sign-in`、加 `alternateLocale`、`og:image:alt` 含關鍵字
+  - Twitter card 同步描述與標題
+
+### SEO impact
+- 對外可見項目：實際 GET `/robots.txt`、`/sitemap.xml` 改為 200 帶內容（原為 307）；`/sign-in` 帶完整 meta + JSON-LD + 語意 `<h1>`。
+- 限制：站內仍只有 `/sign-in` 一個公開可索引頁；要拉 SEO 流量天花板需要日後另開 `/` 公開 landing（非本版範圍）。
+
 ## [0.11.1] - 2026-05-08
 
 ### Fixed

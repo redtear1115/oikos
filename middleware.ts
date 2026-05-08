@@ -62,11 +62,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Skip auth check on Next internals + static assets in /public.
-  // manifest.json and image files would otherwise be redirected to /sign-in for
-  // signed-out users, which the browser then tries to parse as JSON / image →
-  // "Manifest: Line 1 Syntax error" / broken icons.
+  // Skip auth check on Next internals, SEO assets, and static files in /public.
+  // Without these exclusions: manifest.json + images get 307'd to /sign-in (broken
+  // browser parsing); robots.txt + sitemap.xml get 307'd too, defeating SEO.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons/|manifest.json|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|webp|ico)$).*)',
   ],
 }
