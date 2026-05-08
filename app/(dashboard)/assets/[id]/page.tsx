@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
@@ -40,8 +40,7 @@ function serializeTxns(rows: Awaited<ReturnType<typeof listTransactionsPagedForA
 export default async function AssetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
   const [group] = await db

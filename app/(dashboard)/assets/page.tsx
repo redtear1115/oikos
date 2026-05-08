@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
@@ -8,8 +8,7 @@ import { getChildNicknames } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
 
 export default async function AssetsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
   const [group] = await db
