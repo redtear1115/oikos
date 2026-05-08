@@ -5,14 +5,14 @@ import './globals.css'
 
 const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500'],
   variable: '--font-fraunces',
   display: 'swap',
 })
 
 const notoTC = Noto_Sans_TC({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   variable: '--font-noto-tc',
   display: 'swap',
 })
