@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { PlusIcon } from './PlusIcon'
 import { HomeIndicator } from './HomeIndicator'
 import { NavHomeIcon, NavListIcon, NavAssetsIcon, NavSettingsIcon } from './TabIcons'
@@ -25,6 +26,24 @@ const TABS = [
 export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary', fabContent }: Props) {
   const pathname = usePathname()
 
+  // Defer auto-prefetch of the four tab destinations until after the host page
+  // has had time to settle. Prefetching four parallel routes immediately on
+  // cold-start contends with the main page's data fetch.
+  const [allowPrefetch, setAllowPrefetch] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => setAllowPrefetch(true), { timeout: 1500 })
+      return () => w.cancelIdleCallback?.(id)
+    }
+    const t = setTimeout(() => setAllowPrefetch(true), 1500)
+    return () => clearTimeout(t)
+  }, [])
+
   const getActiveTab = (): typeof TABS[number]['id'] => {
     if (pathname === '/dashboard') return 'home'
     if (pathname === '/records') return 'list'
@@ -39,11 +58,11 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
     <>
       <div className="fixed left-1/2 bottom-0 z-[80] h-[78px] w-full max-w-md -translate-x-1/2 flex pb-[22px]"
         style={{ background: 'var(--surface)', borderTop: '1px solid var(--hairline)' }}>
-        <NavTab tab={TABS[0]} active={activeId === TABS[0].id} />
-        <NavTab tab={TABS[1]} active={activeId === TABS[1].id} />
+        <NavTab tab={TABS[0]} active={activeId === TABS[0].id} allowPrefetch={allowPrefetch} />
+        <NavTab tab={TABS[1]} active={activeId === TABS[1].id} allowPrefetch={allowPrefetch} />
         <div className="w-[76px] shrink-0" />
-        <NavTab tab={TABS[2]} active={activeId === TABS[2].id} />
-        <NavTab tab={TABS[3]} active={activeId === TABS[3].id} />
+        <NavTab tab={TABS[2]} active={activeId === TABS[2].id} allowPrefetch={allowPrefetch} />
+        <NavTab tab={TABS[3]} active={activeId === TABS[3].id} allowPrefetch={allowPrefetch} />
       </div>
 
       {!hideFab && !fabContent && (
@@ -77,11 +96,14 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
   )
 }
 
-function NavTab({ tab, active }: { tab: typeof TABS[number]; active: boolean }) {
+function NavTab({ tab, active, allowPrefetch }: { tab: typeof TABS[number]; active: boolean; allowPrefetch: boolean }) {
   const Icon = tab.icon
   const color = active ? 'var(--ink)' : 'var(--ink-3)'
   return (
-    <Link href={tab.href} className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
+    <Link
+      href={tab.href}
+      prefetch={allowPrefetch ? undefined : false}
+      className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
       <span className="text-micro tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
