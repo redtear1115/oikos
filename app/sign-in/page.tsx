@@ -1,8 +1,9 @@
-import { getTranslations } from '@/lib/i18n/t'
+import { getLocale, getTranslations } from '@/lib/i18n/t'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
 export default async function SignInPage() {
-  const t = await getTranslations()
+  const [locale, t] = await Promise.all([getLocale(), getTranslations()])
 
   return (
     <main
@@ -40,6 +41,8 @@ export default async function SignInPage() {
       </div>
 
       <div className="flex-1" />
+
+      <LanguageSwitcher current={locale} />
     </main>
   )
 }
