@@ -1,5 +1,5 @@
 import pkg from '@/package.json'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles, oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
@@ -11,8 +11,7 @@ import {
 } from './_components/SettingsContent'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
   const [viewerProfile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1)

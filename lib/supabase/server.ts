@@ -24,3 +24,18 @@ export async function createClient() {
     }
   )
 }
+
+/**
+ * Read the current user from the local session cookie without an Auth API
+ * round-trip. Use ONLY in page / layout server components where read latency
+ * matters and the trust boundary is already enforced by middleware.
+ *
+ * Do NOT use in server actions — those mutate state and must call
+ * `supabase.auth.getUser()` directly to re-validate the JWT against Supabase
+ * Auth.
+ */
+export async function getCurrentUser() {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user ?? null
+}

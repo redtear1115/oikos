@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { or, eq } from 'drizzle-orm'
@@ -9,8 +9,7 @@ import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkelet
 import { RecurringIncomeContent } from './_components/RecurringIncomeContent'
 
 export default async function RecurringIncomeSettingsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
   const [group] = await db
