@@ -2,7 +2,7 @@
 
 import { monthLabel } from '@/lib/groupByMonth'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
-import { useTranslations } from '@/lib/i18n/client'
+import { useTranslations, useLocale } from '@/lib/i18n/client'
 
 interface Props {
   monthKey: string
@@ -14,6 +14,7 @@ interface Props {
 export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Props) {
   const P = DEFAULT_INCOME_PALETTE
   const t = useTranslations()
+  const locale = useLocale()
   const hasIncome = incomeTotal !== undefined && incomeTotal > 0
   const net = hasIncome ? incomeTotal - totalAmount : null
 
@@ -23,7 +24,7 @@ export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Prop
         className="text-base font-medium tracking-tight"
         style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
       >
-        {monthLabel(monthKey)}
+        {monthLabel(monthKey, locale)}
       </span>
       {hasIncome ? (
         <div className="text-right tnum" style={{ color: 'var(--ink-3)' }}>

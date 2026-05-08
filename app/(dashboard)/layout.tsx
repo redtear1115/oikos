@@ -6,7 +6,7 @@ import { eq, or, inArray } from 'drizzle-orm'
 import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import type { MemberContextValue } from './_components/MemberContext'
-import { getTranslations } from '@/lib/i18n/t'
+import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -21,9 +21,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!group) redirect('/setup')
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
-  const [profilesRows, t] = await Promise.all([
+  const [profilesRows, t, locale] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
+    getLocale(),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
@@ -57,7 +58,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <TranslationsProvider value={t}>
+    <TranslationsProvider value={t} locale={locale}>
       <ViewerProvider value={value}>
         <RealtimeProvider groupId={group.id}>
           <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>

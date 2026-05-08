@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO, dateLabel, weekday } from '@/lib/local-date'
+import { useLocale } from '@/lib/i18n/client'
 
 interface DateFieldProps {
   value: string  // ISO date string e.g. "2026-05-05"
@@ -13,6 +14,7 @@ interface DateFieldProps {
 
 export function DateField({ value, onChange, open }: DateFieldProps) {
   const [showCal, setShowCal] = useState(false)
+  const locale = useLocale()
   useEffect(() => { if (open) setShowCal(false) }, [open])
 
   return (
@@ -22,8 +24,8 @@ export function DateField({ value, onChange, open }: DateFieldProps) {
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
         <CalIcon />
         <div className="flex-1 text-left">
-          <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>{dateLabel(value)}</div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{value === localTodayISO() ? '今天' : weekday(value)}</div>
+          <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>{dateLabel(value, locale)}</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{value === localTodayISO() ? '今天' : weekday(value, locale)}</div>
         </div>
         <Chevron />
       </button>
