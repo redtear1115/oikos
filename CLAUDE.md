@@ -29,6 +29,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
 | v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
 | v0.11.0 | Perf：pages 改 `getSession()`（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2）· i18n：cookie-based locale + 4 語擴張 zh-TW / zh-CN / en / ja + dashboard / records / settings / assets 字典接通（PR #3 / #4 / #6 / #7）· Settings：語言切換 + 離線瀏覽 toggle UI（PR #6；SW 實作仍 backlog） | ✅ |
+| v0.11.1 | i18n Date helpers 改用 `Intl.DateTimeFormat(locale)`（`monthLabel` / `weekday` / `dateLabel`）+ middleware.ts `Locale` type 漂移修補（`?lang=zh-CN/ja` 進得來） | 🚧 in progress（隔壁 session） |
 | v0.12.0 | 定期支出（recurring expenses）— 對應自訂定期收入的支出版本；與定期收入共用 pending preview→commit 架構 | ⬜ |
 | v0.12.1 | i18n 設定子頁 — `recurring-income`、`invite`、`coming-soon` 等子頁字典接通 | ⬜ |
 | v0.13.0 | 小孩／寵物身高體重歷史紀錄 — append-only log（仿 FuelLog pattern）+ 修正 typo；MVP 不含成長曲線視覺化（codebase 無 chart lib）| ⬜ |
@@ -41,8 +42,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 未排入版本的候選功能，優先順序待評估。
 
 - **雲端發票匯入**（財政部 API + 手機條碼載具）— APP_ID 卡法規路徑（[cloud-invoice-design.md](docs/superpowers/specs/cloud-invoice-design.md) 「APP_ID 申請卡點」），暫緩
-- **i18n Date helpers 重構** — `monthLabel` / `weekday` / `dateLabel` 硬寫中文，需改用 `Intl.DateTimeFormat(locale)` 讓月份標頭與日期顯示跟著語系走；體量小，可併入任一 i18n 排程版本（v0.12.1 / v0.13.1）一起出
-- **middleware.ts Locale 漂移修補** — `?lang=zh-CN/ja` 進不來；建議下一個 patch 順手修
 
 ---
 
