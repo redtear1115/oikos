@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 
 const LOCALES = [
   { value: 'zh-TW', label: '繁中' },
+  { value: 'zh-CN', label: '简中' },
   { value: 'en', label: 'EN' },
+  { value: 'ja', label: '日本語' },
 ] as const
 
 type Variant = 'pill' | 'footer'

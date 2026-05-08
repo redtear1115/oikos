@@ -6,6 +6,7 @@ export type Translations = {
     termsLink: string
     termsAnd: string
     privacyLink: string
+    termsSuffix: string
   }
 }
 
@@ -17,5 +18,6 @@ export const zhTW: Translations = {
     termsLink: '服務條款',
     termsAnd: '與',
     privacyLink: '隱私權政策',
+    termsSuffix: '',
   },
 }

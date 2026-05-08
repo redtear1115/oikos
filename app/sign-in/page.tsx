@@ -37,6 +37,7 @@ export default async function SignInPage() {
           <a href="/terms" className="underline">{t.signIn.termsLink}</a>
           {' '}{t.signIn.termsAnd}{' '}
           <a href="/privacy" className="underline">{t.signIn.privacyLink}</a>
+          {t.signIn.termsSuffix}
         </p>
       </div>
 

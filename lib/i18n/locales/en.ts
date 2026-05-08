@@ -8,5 +8,6 @@ export const en: Translations = {
     termsLink: 'Terms of Service',
     termsAnd: 'and',
     privacyLink: 'Privacy Policy',
+    termsSuffix: '',
   },
 }
