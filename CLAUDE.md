@@ -40,6 +40,8 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 - **離線瀏覽**（Offline / PWA cache）— Serwist + network-first runtime cache，讓使用者在無網路時能瀏覽最近的記錄與首頁；spec [docs/superpowers/specs/2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)，未排期
 - **i18n Assets 詳情頁 + AssetSheet 翻譯** — 各欄位（保險／車輛／兒童等 ~40 fields）翻譯量大，需人工審稿後才能上線
 - **i18n 設定子頁** — `recurring-income`、`invite`、`coming-soon` 等子頁仍 zh-TW only，待後續補齊
+- **月度/分類統計 view** — Records 頁目前只有 raw list，缺 aggregation view；friend test 進入第二個月後高頻需求（候選 v0.13.0+）
+- **Records 搜尋（free text search）** — 等用戶 signal 後實作，約 1.5d
 
 ---
 
