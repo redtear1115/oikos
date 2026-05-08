@@ -44,7 +44,7 @@ export function SavingsHero({ progress, endsAt, startsAt, onSetExpectedMaturity 
         />
       )}
 
-      <div className="mt-4 text-xs" style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>
+      <div className="mt-4 text-[14px]" style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>
         {subCopy}
       </div>
     </div>
@@ -77,7 +77,7 @@ function ProgressBar({
           {label}
         </span>
         <div
-          className="flex-1 h-2 rounded-full overflow-hidden"
+          className="flex-1 h-2.5 rounded-full overflow-hidden"
           style={{ background: 'rgba(58,36,25,0.08)' }}
         >
           {progress !== null && (
