@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.11.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.11.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -30,6 +30,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
 | v0.11.1 | Perf（PR #1–2）+ i18n 4 語架構（PR #3 / #4 / #6 / #7）+ 離線瀏覽 toggle UI（PR #6） · middleware locale 修補（4 語）· i18n Date helpers 改 `Intl.DateTimeFormat` | ✅ |
 | v0.11.2 | Perf patch：CSS bundle 瘦身（Dashboard 首載 encoded ~1 MB，查 Tailwind purge + 字型載入）+ `/settings` RSC fetch 優化（目前 672ms，查 server-side query 並行化）+ BottomNav prefetch 補全（records / assets / settings tab；S-PF2 session 處理中）| ⬜ |
+| v0.11.3 | SEO 基礎建設：middleware matcher 放行 `/robots.txt` + `/sitemap.xml` + `app/robots.ts` + `app/sitemap.ts`（含 4 語 hreflang）+ root metadata 重寫（title「兩個人的家計簿」、description 100+ 字含 22 個目標關鍵字、canonical、hreflang、`max-image-preview`）+ `/sign-in` 改用語意 `<h1>` + sr-only 副標 + `SoftwareApplication` JSON-LD | ✅ |
 
 ## Backlog
 
@@ -37,8 +38,8 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 - **雲端發票匯入**（財政部 API + 手機條碼載具）— API key 無法取得，暫緩
 - **小孩／寵物身高體重歷史紀錄**（append-only log + 修正 typo）— 仿 FuelLog pattern；MVP 不含成長曲線視覺化（codebase 無 chart lib）
-- **定期支出**（recurring expenses）— 對應自訂定期收入的支出版本；建議與定期收入共用 pending preview→commit 架構，未排期
-- **離線瀏覽**（Offline / PWA cache）— Serwist + network-first runtime cache，讓使用者在無網路時能瀏覽最近的記錄與首頁；spec [docs/superpowers/specs/2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)，未排期
+- **定期支出**（recurring expenses）— 對應自訂定期收入的支出版本；spec 已 lock 設計（schema / cron / UI / PR 拆分），實作排期跟 v0.12.0 走；詳見 [docs/superpowers/specs/recurring-expense-design.md](docs/superpowers/specs/recurring-expense-design.md)
+- **離線瀏覽**（Offline / PWA cache）— Serwist + network-first runtime cache，讓使用者在無網路時能瀏覽最近的記錄與首頁；spec [docs/superpowers/specs/offline-browsing-design.md](docs/superpowers/specs/offline-browsing-design.md)，未排期
 - **i18n Assets 詳情頁 + AssetSheet 翻譯** — 各欄位（保險／車輛／兒童等 ~40 fields）翻譯量大，需人工審稿後才能上線
 - **i18n 設定子頁** — `recurring-income`、`invite`、`coming-soon` 等子頁仍 zh-TW only，待後續補齊
 - **月度/分類統計 view** — Records 頁目前只有 raw list，缺 aggregation view；friend test 進入第二個月後高頻需求（候選 v0.13.0+）
@@ -104,7 +105,8 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/income-design.md` | 進帳功能設計決策 |
 | `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
 | `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
+| `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.12.0 lock，未實作）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
-| `docs/superpowers/specs/2026-05-08-offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog；toggle UI 已 ship、SW 未實作）|
+| `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog；toggle UI 已 ship、SW 未實作）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |
