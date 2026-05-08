@@ -24,6 +24,7 @@ type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 interface Props {
   assetId: string
   name: string
+  notes: string | null
   details: PetDetailsRow | null
   summary: AssetSummary
   assetSheetInitial: AssetSheetInitial
@@ -32,7 +33,7 @@ interface Props {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function PetDetailClient({ assetId, name, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function PetDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -100,6 +101,17 @@ export function PetDetailClient({ assetId, name, details, summary, assetSheetIni
         <InfoRow label="晶片號" value={details?.chipNo ?? ''} mono />
         <InfoRow label="獸醫院" value={details?.vet ?? ''} last />
       </InfoCard>
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
+      )}
 
       <SectionHeader>近期花費</SectionHeader>
       <TransactionFeed

@@ -8,6 +8,7 @@ export interface AssetWithCar {
   groupId: string
   type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
   name: string
+  notes: string | null
   deletedAt: Date | null
   createdAt: Date
   // Car-only fields (null for non-car assets)
@@ -36,6 +37,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       groupId: assets.groupId,
       type: assets.type,
       name: assets.name,
+      notes: assets.notes,
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
       plate: carDetails.plate,
@@ -71,6 +73,7 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       groupId: assets.groupId,
       type: assets.type,
       name: assets.name,
+      notes: assets.notes,
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
       plate: carDetails.plate,

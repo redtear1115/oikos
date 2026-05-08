@@ -103,6 +103,7 @@ interface Props {
   assetId: string
   name: string
   nickname: string | null
+  notes: string | null
   details: ChildDetailsRow | null
   summary: AssetSummary
   assetSheetInitial: AssetSheetInitial
@@ -111,7 +112,7 @@ interface Props {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function ChildDetailClient({ assetId, name, nickname, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function ChildDetailClient({ assetId, name, nickname, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -199,6 +200,17 @@ export function ChildDetailClient({ assetId, name, nickname, details, summary, a
         <InfoRow label="身高" value={details?.heightCm ? `${details.heightCm} cm` : ''} mono />
         <InfoRow label="體重" value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
       </InfoCard>
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
+      )}
 
       <SectionHeader>近期花費</SectionHeader>
       <TransactionFeed

@@ -24,6 +24,23 @@ export function validateName(name: string, fieldLabel: string, maxLen = 32): str
 }
 
 /**
+ * Validates an optional freeform notes field. Trim, treat empty/whitespace as null.
+ * Caps at 2000 chars to prevent runaway input — this is the canonical absent
+ * representation for the `Assets.notes` column (and any future twin).
+ */
+export const NOTES_MAX_LEN = 2000
+
+export function validateNotes(input: string | null | undefined): string | null {
+  if (input === null || input === undefined) return null
+  const trimmed = input.trim()
+  if (!trimmed) return null
+  if (trimmed.length > NOTES_MAX_LEN) {
+    throw new Error(`備註最長 ${NOTES_MAX_LEN} 字`)
+  }
+  return trimmed
+}
+
+/**
  * Parses a YYYY-MM-DD date string into a Date anchored at local midnight.
  * Returns null on format/calendar errors (e.g. '2024-02-30' silently coerced
  * by `new Date(...)` is rejected). Caller decides which error message to throw.
@@ -122,6 +139,7 @@ export interface CarInput {
   brand?: string | null
   model?: string | null
   initialOdometer?: number | null
+  notes?: string | null
 }
 
 export interface ValidatedCarInput {
@@ -136,6 +154,7 @@ export interface ValidatedCarInput {
   brand: string | null
   model: string | null
   initialOdometer: number | null
+  notes: string | null
 }
 
 const CAR_FUEL_TYPES = ['92', '95', '98', 'diesel'] as const
@@ -231,6 +250,7 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
     brand,
     model,
     initialOdometer,
+    notes: validateNotes(input.notes),
   }
 }
 
@@ -366,6 +386,7 @@ export interface ChildInput {
   hospital?: string | null
   heightCm?: number | null
   weightG?: number | null
+  notes?: string | null
 }
 
 export interface ValidatedChildInput {
@@ -380,6 +401,7 @@ export interface ValidatedChildInput {
   hospital: string | null
   heightCm: number | null
   weightG: number | null
+  notes: string | null
 }
 
 /**
@@ -433,7 +455,10 @@ export function validateChildInput(input: ChildInput): ValidatedChildInput {
     weightG = input.weightG
   }
 
-  return { name, nickname, gender, birthday, nationalId, nhiNo, bloodType, hospital, heightCm, weightG }
+  return {
+    name, nickname, gender, birthday, nationalId, nhiNo, bloodType, hospital, heightCm, weightG,
+    notes: validateNotes(input.notes),
+  }
 }
 
 // ── Pet ────────────────────────────────────────────────────────────
@@ -448,6 +473,7 @@ export interface PetInput {
   weightG?: number | null
   chipNo?: string | null
   vet?: string | null
+  notes?: string | null
 }
 
 export interface ValidatedPetInput {
@@ -461,6 +487,7 @@ export interface ValidatedPetInput {
   weightG: number | null
   chipNo: string | null
   vet: string | null
+  notes: string | null
 }
 
 export function validatePetInput(input: PetInput): ValidatedPetInput {
@@ -491,7 +518,10 @@ export function validatePetInput(input: PetInput): ValidatedPetInput {
   const chipNo = input.chipNo?.trim() || null
   const vet = input.vet?.trim() || null
 
-  return { name, species, breed, sex, birthDate, adoptedDate, purchaseCost, weightG, chipNo, vet }
+  return {
+    name, species, breed, sex, birthDate, adoptedDate, purchaseCost, weightG, chipNo, vet,
+    notes: validateNotes(input.notes),
+  }
 }
 
 // ── Plant ──────────────────────────────────────────────────────────
@@ -502,6 +532,7 @@ export interface PlantInput {
   sproutedAt?: string | null
   cost?: number | null
   waterEvery?: number | null
+  notes?: string | null
 }
 
 export interface ValidatedPlantInput {
@@ -511,6 +542,7 @@ export interface ValidatedPlantInput {
   sproutedAt: string | null
   cost: number | null
   waterEvery: number | null
+  notes: string | null
 }
 
 export function validatePlantInput(input: PlantInput): ValidatedPlantInput {
@@ -548,7 +580,7 @@ export function validatePlantInput(input: PlantInput): ValidatedPlantInput {
     waterEvery = input.waterEvery
   }
 
-  return { name, species, location, sproutedAt, cost, waterEvery }
+  return { name, species, location, sproutedAt, cost, waterEvery, notes: validateNotes(input.notes) }
 }
 
 // ── House ──────────────────────────────────────────────────────────
@@ -557,6 +589,7 @@ export interface HouseInput {
   address?: string | null
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
+  notes?: string | null
 }
 
 export interface ValidatedHouseInput {
@@ -564,6 +597,7 @@ export interface ValidatedHouseInput {
   address: string | null
   purchasedAt: string | null
   purchasePrice: number | null
+  notes: string | null
 }
 
 export function validateHouseInput(input: HouseInput): ValidatedHouseInput {
@@ -589,7 +623,7 @@ export function validateHouseInput(input: HouseInput): ValidatedHouseInput {
     purchasePrice = validateAmount(input.purchasePrice, '金額')
   }
 
-  return { name, address, purchasedAt, purchasePrice }
+  return { name, address, purchasedAt, purchasePrice, notes: validateNotes(input.notes) }
 }
 
 // ── Insurance ──────────────────────────────────────────────────────
@@ -607,6 +641,7 @@ export interface InsuranceInput {
   termYears?: number | null
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
+  notes?: string | null
 }
 
 export interface ValidatedInsuranceInput {
@@ -623,6 +658,7 @@ export interface ValidatedInsuranceInput {
   termYears: number | null
   vehicleId: string | null
   expectedMaturityAmount: number | null
+  notes: string | null
 }
 
 export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranceInput {
@@ -675,6 +711,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     startsAt, endsAt, termYears,
     vehicleId: input.vehicleId?.trim() || null,
     expectedMaturityAmount,
+    notes: validateNotes(input.notes),
   }
 }
 

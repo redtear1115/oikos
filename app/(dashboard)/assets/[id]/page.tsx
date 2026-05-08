@@ -68,6 +68,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       id: asset.id,
       type: 'child',
       name: asset.name,
+      notes: asset.notes,
       childNickname: childDetailsData?.nickname ?? null,
       childGender: childDetailsData?.gender ?? null,
       childBirthday: childDetailsData?.birthday ?? null,
@@ -85,6 +86,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetId={asset.id}
         name={asset.name}
         nickname={childDetailsData?.nickname ?? null}
+        notes={asset.notes ?? null}
         details={childDetailsData}
         summary={summary}
         assetSheetInitial={assetSheetInitial}
@@ -106,6 +108,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       id: asset.id,
       type: 'pet',
       name: asset.name,
+      notes: asset.notes,
       petSpecies: petDetailsData?.species ?? null,
       petBreed: petDetailsData?.breed ?? null,
       petSex: petDetailsData?.sex ?? null,
@@ -120,6 +123,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       <PetDetailClient
         assetId={asset.id}
         name={asset.name}
+        notes={asset.notes ?? null}
         details={petDetailsData}
         summary={summary}
         assetSheetInitial={assetSheetInitial}
@@ -141,6 +145,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       id: asset.id,
       type: 'plant',
       name: asset.name,
+      notes: asset.notes,
       plantSpecies: plantDetailsData?.species ?? null,
       plantLocation: plantDetailsData?.location ?? null,
       plantSproutedAt: plantDetailsData?.sproutedAt ?? null,
@@ -151,6 +156,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       <PlantDetailClient
         assetId={asset.id}
         name={asset.name}
+        notes={asset.notes ?? null}
         details={plantDetailsData}
         summary={summary}
         assetSheetInitial={assetSheetInitial}
@@ -172,6 +178,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       id: asset.id,
       type: 'house',
       name: asset.name,
+      notes: asset.notes,
       houseAddress: houseDetailsData?.address ?? null,
       housePurchasedAt: houseDetailsData?.purchasedAt ?? null,
       housePurchasePrice: houseDetailsData?.purchasePrice ?? null,
@@ -180,6 +187,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       <HouseDetailClient
         assetId={asset.id}
         name={asset.name}
+        notes={asset.notes ?? null}
         details={houseDetailsData}
         summary={summary}
         assetSheetInitial={assetSheetInitial}
@@ -206,6 +214,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       id: asset.id,
       type: 'insurance',
       name: asset.name,
+      notes: asset.notes,
       insKind: insuranceDetailsData?.kind ?? null,
       insInsured: insuranceDetailsData?.insured ?? null,
       insInsurer: insuranceDetailsData?.insurer ?? null,
@@ -259,6 +268,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         <SavingsView
           assetId={asset.id}
           name={asset.name}
+          notes={asset.notes ?? null}
           details={insuranceDetailsData}
           premiumStats={premiumStats}
           returnStats={returnStats}
@@ -276,6 +286,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       <InsuranceDetailClientLegacy
         assetId={asset.id}
         name={asset.name}
+        notes={asset.notes ?? null}
         details={insuranceDetailsData}
         linkedVehicle={linkedVehicle}
         assetSheetInitial={assetSheetInitial}
@@ -312,11 +323,13 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   return (
     <AssetDetailClient
       assetId={asset.id}
+      notes={asset.notes ?? null}
       linkedInsurances={linkedInsurances}
       assetSheetInitial={{
         id: asset.id,
         type: asset.type,
         name: asset.name,
+        notes: asset.notes,
         plate: asset.plate ?? undefined,
         purchasedAt: asset.purchasedAt,
         purchasePrice: asset.purchasePrice,

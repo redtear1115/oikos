@@ -31,6 +31,7 @@ type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 interface Props {
   assetId: string
   name: string
+  notes: string | null
   details: InsuranceDetailsRow
   premiumStats: { total: number; count: number }
   returnStats: { total: number; count: number }
@@ -47,6 +48,7 @@ const RETURN_CATEGORIES = ['maturity']
 export function SavingsView({
   assetId,
   name,
+  notes,
   details,
   premiumStats,
   returnStats,
@@ -287,6 +289,17 @@ export function SavingsView({
             </Link>
           </div>
         </div>
+      )}
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
       )}
 
       <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />

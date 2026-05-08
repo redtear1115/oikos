@@ -24,6 +24,7 @@ type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 interface Props {
   assetId: string
   name: string
+  notes: string | null
   details: PlantDetailsRow | null
   summary: AssetSummary
   assetSheetInitial: AssetSheetInitial
@@ -48,7 +49,7 @@ function CompanionDays({ sproutedAt, waterEvery, accent }: { sproutedAt: string;
   )
 }
 
-export function PlantDetailClient({ assetId, name, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function PlantDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -105,6 +106,17 @@ export function PlantDetailClient({ assetId, name, details, summary, assetSheetI
         <InfoRow label="位置" value={details?.location ?? ''} />
         <InfoRow label="澆水週期" value={details?.waterEvery ? `每 ${details.waterEvery} 天` : ''} mono last />
       </InfoCard>
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
+      )}
 
       <SectionHeader>近期花費</SectionHeader>
       <TransactionFeed

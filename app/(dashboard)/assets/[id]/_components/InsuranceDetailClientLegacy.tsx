@@ -25,13 +25,14 @@ const PAY_CYCLE_LABELS: Record<string, string> = {
 interface Props {
   assetId: string
   name: string
+  notes: string | null
   details: InsuranceDetailsRow | null
   linkedVehicle?: { id: string; name: string } | null
   assetSheetInitial: AssetSheetInitial
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehicle, assetSheetInitial, allAssets }: Props) {
+export function InsuranceDetailClientLegacy({ assetId, name, notes, details, linkedVehicle, assetSheetInitial, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -163,6 +164,17 @@ export function InsuranceDetailClientLegacy({ assetId, name, details, linkedVehi
             </Link>
           </div>
         </div>
+      )}
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
       )}
 
       <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />

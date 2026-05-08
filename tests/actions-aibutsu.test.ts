@@ -635,3 +635,46 @@ describe('editHouse', () => {
     await expect(editHouse({ id: 'asset-h1', name: '  ' })).rejects.toThrow(/名稱/)
   })
 })
+
+// ── notes round-trip on Assets table ────────────────────────────────────────
+// PR #6: notes lives on assets.notes (not the per-type *Details rows). Verify
+// the column flows from action input → assets insert via createChild + createPet.
+
+describe('notes round-trip', () => {
+  it('createChild: notes flows into assets insert (first .values call)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-n1' }])
+    queueDbResult([])
+
+    await createChild({ name: '小元', notes: '上次健檢一切正常\n下次回診 6/12' })
+
+    const assetsPayload = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(assetsPayload).toMatchObject({
+      type: 'child',
+      name: '小元',
+      notes: '上次健檢一切正常\n下次回診 6/12',
+    })
+  })
+
+  it('createPet: empty/whitespace notes coerced to null on assets insert', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-n2' }])
+    queueDbResult([])
+
+    await createPet({ name: '米嚕', notes: '   \n  ' })
+
+    const assetsPayload = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(assetsPayload).toMatchObject({ type: 'pet', name: '米嚕', notes: null })
+  })
+
+  it('createPet: trims surrounding whitespace, preserves inner newlines', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'asset-n3' }])
+    queueDbResult([])
+
+    await createPet({ name: '米嚕', notes: '  晶片 12345\n獸醫：王醫師  ' })
+
+    const assetsPayload = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(assetsPayload.notes).toBe('晶片 12345\n獸醫：王醫師')
+  })
+})

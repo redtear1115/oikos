@@ -37,6 +37,7 @@ export interface CreateCarInput {
   brand?: string | null
   model?: string | null
   initialOdometer?: number | null
+  notes?: string | null
 }
 
 /**
@@ -58,7 +59,7 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'car', name: validated.name })
+      .values({ groupId: group.id, type: 'car', name: validated.name, notes: validated.notes })
       .returning({ id: assets.id })
     await tx.insert(carDetails).values({
       assetId: asset.id,
@@ -133,6 +134,7 @@ export interface EditCarInput {
   brand?: string | null
   model?: string | null
   initialOdometer?: number | null
+  notes?: string | null
 }
 
 export async function editCar(input: EditCarInput): Promise<void> {
@@ -143,7 +145,7 @@ export async function editCar(input: EditCarInput): Promise<void> {
     // UPDATE Asset; .returning proves ownership (group_id match + not deleted)
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name })
+      .set({ name: validated.name, notes: validated.notes })
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),
@@ -339,6 +341,7 @@ export interface CreateChildInput {
   hospital?: string | null
   heightCm?: number | null
   weightG?: number | null
+  notes?: string | null
 }
 
 export interface EditChildInput extends CreateChildInput {
@@ -365,7 +368,7 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'child', name: validated.name })
+      .values({ groupId: group.id, type: 'child', name: validated.name, notes: validated.notes })
       .returning({ id: assets.id })
     await tx.insert(childDetails).values({
       assetId: asset.id,
@@ -413,7 +416,7 @@ export async function editChild(input: EditChildInput): Promise<void> {
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name })
+      .set({ name: validated.name, notes: validated.notes })
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),
@@ -508,6 +511,7 @@ export interface CreatePetInput {
   weightG?: number | null
   chipNo?: string | null
   vet?: string | null
+  notes?: string | null
 }
 
 export interface EditPetInput extends CreatePetInput {
@@ -522,7 +526,7 @@ export async function createPet(input: CreatePetInput): Promise<{ id: string }> 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'pet', name: validated.name })
+      .values({ groupId: group.id, type: 'pet', name: validated.name, notes: validated.notes })
       .returning({ id: assets.id })
     await tx.insert(petDetails).values({
       assetId: asset.id,
@@ -551,7 +555,7 @@ export async function editPet(input: EditPetInput): Promise<void> {
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name })
+      .set({ name: validated.name, notes: validated.notes })
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),
@@ -604,6 +608,7 @@ export interface CreatePlantInput {
   sproutedAt?: string | null
   cost?: number | null
   waterEvery?: number | null
+  notes?: string | null
 }
 
 export interface EditPlantInput extends CreatePlantInput {
@@ -618,7 +623,7 @@ export async function createPlant(input: CreatePlantInput): Promise<{ id: string
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'plant', name: validated.name })
+      .values({ groupId: group.id, type: 'plant', name: validated.name, notes: validated.notes })
       .returning({ id: assets.id })
     await tx.insert(plantDetails).values({
       assetId: asset.id,
@@ -643,7 +648,7 @@ export async function editPlant(input: EditPlantInput): Promise<void> {
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name })
+      .set({ name: validated.name, notes: validated.notes })
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),
@@ -695,6 +700,7 @@ export interface CreateInsuranceInput {
   termYears?: number | null
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
+  notes?: string | null
 }
 
 export interface EditInsuranceInput extends CreateInsuranceInput {
@@ -720,7 +726,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'insurance', name: validated.name })
+      .values({ groupId: group.id, type: 'insurance', name: validated.name, notes: validated.notes })
       .returning({ id: assets.id })
     await tx.insert(insuranceDetails).values({
       assetId: asset.id,
@@ -764,7 +770,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name })
+      .set({ name: validated.name, notes: validated.notes })
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),
@@ -822,6 +828,7 @@ export interface CreateHouseInput {
   address?: string | null
   purchasedAt?: string | null
   purchasePrice?: number | null
+  notes?: string | null
 }
 
 export async function createHouse(input: CreateHouseInput): Promise<{ id: string }> {
@@ -832,7 +839,7 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'house', name: validated.name })
+      .values({ groupId: group.id, type: 'house', name: validated.name, notes: validated.notes })
       .returning({ id: assets.id })
     await tx.insert(houseDetails).values({
       assetId: asset.id,
@@ -888,6 +895,7 @@ export interface EditHouseInput {
   address?: string | null
   purchasedAt?: string | null
   purchasePrice?: number | null
+  notes?: string | null
 }
 
 export async function editHouse(input: EditHouseInput): Promise<void> {
@@ -898,7 +906,7 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name })
+      .set({ name: validated.name, notes: validated.notes })
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),

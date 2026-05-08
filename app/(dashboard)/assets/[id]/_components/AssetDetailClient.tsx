@@ -12,6 +12,7 @@ import { AssetHero } from './AssetHero'
 import { AssetSwitcher } from './AssetSwitcher'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
+import { SectionHeader, InfoCard } from './aibutsu-ui'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 
@@ -27,6 +28,7 @@ interface SerializedFuelLog {
 
 interface Props {
   assetId: string
+  notes: string | null
   assetSheetInitial: AssetSheetInitial
   fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
   primaryUserId: string | null
@@ -47,7 +49,7 @@ interface Props {
 }
 
 export function AssetDetailClient({
-  assetId, assetSheetInitial, fuelType, primaryUserId,
+  assetId, notes, assetSheetInitial, fuelType, primaryUserId,
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
   initialTxns, initialFuelLogs, pageSize, allAssets,
@@ -155,6 +157,17 @@ export function AssetDetailClient({
         fuelLogCount={initialFuelLogs.length}
         onEdit={() => setEditAssetOpen(true)}
       />
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
+      )}
 
       <TransactionFeed
         initial={initialTxns}

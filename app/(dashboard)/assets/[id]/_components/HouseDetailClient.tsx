@@ -40,6 +40,7 @@ type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 interface Props {
   assetId: string
   name: string
+  notes: string | null
   details: HouseDetailsRow | null
   summary: AssetSummary
   assetSheetInitial: AssetSheetInitial
@@ -48,7 +49,7 @@ interface Props {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function HouseDetailClient({ assetId, name, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function HouseDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -103,6 +104,17 @@ export function HouseDetailClient({ assetId, name, details, summary, assetSheetI
         <InfoRow label="購入日" value={details?.purchasedAt ?? ''} mono />
         <InfoRow label="購入金額" value={details?.purchasePrice ? `NT$ ${details.purchasePrice.toLocaleString()}` : ''} mono last />
       </InfoCard>
+
+      {notes && (
+        <>
+          <SectionHeader>備註</SectionHeader>
+          <InfoCard>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+              {notes}
+            </div>
+          </InfoCard>
+        </>
+      )}
 
       <SectionHeader>近期花費</SectionHeader>
       <TransactionFeed

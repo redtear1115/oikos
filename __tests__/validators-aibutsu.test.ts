@@ -153,3 +153,39 @@ describe('validateInsuranceInput', () => {
     expect(() => validateInsuranceInput({ name: '保單', termYears: 0 })).toThrow(/年期/)
   })
 })
+
+// ── notes (shared across all six asset types) ──────────────────────────
+// Spot-check on Child + Pet because the trim/null/cap behavior is shared
+// between all six validators (validateNotes is the single helper).
+describe('notes field', () => {
+  it('coerces undefined → null (Child)', () => {
+    const r = validateChildInput(childBase)
+    expect(r.notes).toBeNull()
+  })
+
+  it('coerces empty string → null (Child)', () => {
+    const r = validateChildInput({ ...childBase, notes: '' })
+    expect(r.notes).toBeNull()
+  })
+
+  it('coerces whitespace-only → null (Pet)', () => {
+    const r = validatePetInput({ ...petBase, notes: '   \n  \t  ' })
+    expect(r.notes).toBeNull()
+  })
+
+  it('preserves multi-line text and trims edges (Pet)', () => {
+    const r = validatePetInput({ ...petBase, notes: '  上次健檢心跳偏快\n獸醫：王醫師  ' })
+    expect(r.notes).toBe('上次健檢心跳偏快\n獸醫：王醫師')
+  })
+
+  it('rejects > 2000 chars (Child)', () => {
+    const long = 'a'.repeat(2001)
+    expect(() => validateChildInput({ ...childBase, notes: long })).toThrow(/備註/)
+  })
+
+  it('accepts exactly 2000 chars (Child)', () => {
+    const exactly2000 = 'a'.repeat(2000)
+    const r = validateChildInput({ ...childBase, notes: exactly2000 })
+    expect(r.notes?.length).toBe(2000)
+  })
+})

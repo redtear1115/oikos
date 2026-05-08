@@ -148,7 +148,7 @@ describe('validateFuelLogInput', () => {
 describe('validateHouseInput', () => {
   it('accepts name only', () => {
     const r = validateHouseInput({ name: '我們家' })
-    expect(r).toEqual({ name: '我們家', address: null, purchasedAt: null, purchasePrice: null })
+    expect(r).toEqual({ name: '我們家', address: null, purchasedAt: null, purchasePrice: null, notes: null })
   })
 
   it('trims and accepts all fields', () => {
@@ -163,6 +163,7 @@ describe('validateHouseInput', () => {
       address: '台北市大安區某路1號',
       purchasedAt: '2020-06-15',
       purchasePrice: 15000000,
+      notes: null,
     })
   })
 

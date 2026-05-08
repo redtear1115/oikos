@@ -85,6 +85,8 @@ export interface AssetSheetInitial {
   houseAddress?: string | null
   housePurchasedAt?: string | null
   housePurchasePrice?: number | null
+  // Shared across all six asset types — freeform user notes
+  notes?: string | null
 }
 
 interface Props {
@@ -171,6 +173,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [houseAddress, setHouseAddress] = useState('')
   const [housePurchasedAt, setHousePurchasedAt] = useState('')
   const [housePurchasePrice, setHousePurchasePrice] = useState('')
+  // Shared notes (all six asset types)
+  const [notes, setNotes] = useState('')
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
@@ -211,6 +215,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setBrand(initial.brand ?? '')
       setModel(initial.model ?? '')
       setInitialOdometer(initial.initialOdometer ? String(initial.initialOdometer) : '')
+      setNotes(initial.notes ?? '')
       if (initial.type === 'child') {
         setChildNickname(initial.childNickname ?? '')
         setChildGender((initial.childGender === 'male' || initial.childGender === 'female') ? initial.childGender : null)
@@ -278,6 +283,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setBrand('')
       setModel('')
       setInitialOdometer('')
+      setNotes('')
       // Child resets
       setChildNickname('')
       setChildGender(null)
@@ -339,6 +345,8 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     : name.trim() !== '' && !pending
 
   const handleSave = () => {
+    // Trim once and let server-side validateNotes coerce empty → null.
+    const notesPayload = notes.trim() || null
     startTransition(async () => {
       try {
         if (isCar) {
@@ -357,6 +365,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               brand: brand.trim() || null,
               model: model.trim() || null,
               initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
+              notes: notesPayload,
             })
           } else {
             await createCar({
@@ -371,6 +380,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               brand: brand.trim() || null,
               model: model.trim() || null,
               initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
+              notes: notesPayload,
             })
           }
         } else if (selectedType === 'child') {
@@ -402,6 +412,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             hospital: childHospital.trim() || null,
             heightCm: childHeightCm ? parseInt(childHeightCm, 10) : null,
             weightG: childWeightKg ? Math.round(parseFloat(childWeightKg) * 1000) : null,
+            notes: notesPayload,
           }
           if (isEdit) {
             await editChild({ id: initial!.id, ...payload })
@@ -420,6 +431,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             weightG: petWeightKg ? Math.round(parseFloat(petWeightKg) * 1000) : null,
             chipNo: petChipNo.trim() || null,
             vet: petVet.trim() || null,
+            notes: notesPayload,
           }
           if (isEdit) {
             await editPet({ id: initial!.id, ...payload })
@@ -444,6 +456,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               insKind === 'savings' && insExpectedMaturityAmount
                 ? parseInt(insExpectedMaturityAmount, 10)
                 : null,
+            notes: notesPayload,
           }
           if (isEdit) {
             await editInsurance({ id: initial!.id, ...payload })
@@ -458,6 +471,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             sproutedAt: plantSproutedAt || null,
             cost: plantCost ? parseInt(plantCost, 10) : null,
             waterEvery: plantWaterEvery,
+            notes: notesPayload,
           }
           if (isEdit) {
             await editPlant({ id: initial!.id, ...payload })
@@ -470,6 +484,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             address: houseAddress.trim() || null,
             purchasedAt: housePurchasedAt || null,
             purchasePrice: housePurchasePrice ? parseInt(housePurchasePrice, 10) : null,
+            notes: notesPayload,
           }
           if (isEdit) {
             await editHouse({ id: initial!.id, ...payload })
@@ -520,6 +535,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setBrand('')
     setModel('')
     setInitialOdometer('')
+    setNotes('')
     // Child resets
     setChildNickname('')
     setChildGender(null)
@@ -1369,6 +1385,20 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               )}
             </>
           )}
+
+          {/* Notes — shared across all six asset types. Cap at 2000 chars
+              (matches lib/validators.ts NOTES_MAX_LEN); empty/whitespace
+              treated as null on submit. */}
+          <Field label="備註">
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value.slice(0, 2000))}
+              placeholder="自由填寫，例：上次健檢心跳偏快、保單折扣到 2027 等"
+              rows={3}
+              className="w-full bg-transparent border-0 outline-none text-base resize-y"
+              style={{ color: 'var(--ink)', minHeight: 64 }}
+            />
+          </Field>
 
           {error && (
             <div className="mt-3 text-sm" style={{ color: 'var(--error, #c0392b)' }}>

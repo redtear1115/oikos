@@ -21,6 +21,7 @@ describe('validateCarInput', () => {
       brand: null,
       model: null,
       initialOdometer: null,
+      notes: null,
     })
   })
 
