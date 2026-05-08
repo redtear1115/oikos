@@ -1,10 +1,10 @@
 import pkg from '@/package.json'
-import { cookies } from 'next/headers'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles, oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
+import { getLocale } from '@/lib/i18n/t'
 import {
   SettingsContent,
   type PartnerInfo,
@@ -15,8 +15,7 @@ export default async function SettingsPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const cookieStore = await cookies()
-  const currentLocale = cookieStore.get('lang')?.value ?? 'zh-TW'
+  const currentLocale = await getLocale()
 
   const [viewerProfile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1)
 

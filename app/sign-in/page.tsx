@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from '@/lib/i18n/t'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
 export default async function SignInPage() {
@@ -42,7 +42,7 @@ export default async function SignInPage() {
 
       <div className="flex-1" />
 
-      <LanguageSwitcher current={locale} />
+      <LanguageSwitcher current={locale} variant="footer" />
     </main>
   )
 }
