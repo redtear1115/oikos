@@ -2,7 +2,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
-import { listAssetsForGroup, getAssetSummary } from '@/lib/db/queries/asset'
+import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
@@ -21,50 +21,43 @@ export default async function AssetsPage() {
   const assetRows = await listAssetsForGroup(group.id)
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
+  const allIds = assetRows.map((a) => a.id)
+  const carRows = assetRows.filter((a) => a.type === 'car')
 
-  // Run nickname lookup in parallel with per-row summary/hero queries — both
-  // only depend on assetRows. Per car row, summary + heroStats also run in
-  // parallel (independent queries against different tables).
-  const [childNicknames, partialItems] = await Promise.all([
+  // One batched SUM for all asset summaries; nickname lookup; per-car hero
+  // stats — all three groups run in parallel (no shared dependencies).
+  const [childNicknames, summaries, carStatsList] = await Promise.all([
     getChildNicknames(childIds),
+    getAssetSummariesBatch(allIds, group.id),
     Promise.all(
-      assetRows.map(async (a) => {
-        if (a.type !== 'car') {
-          const summary = await getAssetSummary(a.id, group.id)
-          return {
-            id: a.id,
-            type: a.type,
-            name: a.name,
-            plate: a.plate,
-            monthAmount: summary.monthAmount,
-          } satisfies Omit<AssetsListItem, 'nickname'>
-        }
-        const [summary, heroStats] = await Promise.all([
-          getAssetSummary(a.id, group.id),
-          getCarHeroStats(a.id, a.initialOdometer),
-        ])
-        return {
-          id: a.id,
-          type: a.type,
-          name: a.name,
-          plate: a.plate,
-          monthAmount: summary.monthAmount,
-          color: a.color,
-          year: a.year,
-          brand: a.brand,
-          model: a.model,
-          latestOdometer: heroStats.latestOdometer,
-          totalAmount: summary.totalAmount,
-          avgFuelEcon: heroStats.avgFuelEcon,
-        } satisfies Omit<AssetsListItem, 'nickname'>
-      }),
+      carRows.map(async (a) => [a.id, await getCarHeroStats(a.id, a.initialOdometer)] as const),
     ),
   ])
+  const carStats = new Map(carStatsList)
 
-  const items: AssetsListItem[] = partialItems.map((i) => ({
-    ...i,
-    nickname: i.type === 'child' ? (childNicknames.get(i.id) ?? null) : null,
-  }))
+  const items: AssetsListItem[] = assetRows.map((a) => {
+    const summary = summaries.get(a.id) ?? { monthAmount: 0, totalAmount: 0 }
+    const base: AssetsListItem = {
+      id: a.id,
+      type: a.type,
+      name: a.name,
+      nickname: a.type === 'child' ? (childNicknames.get(a.id) ?? null) : null,
+      plate: a.plate,
+      monthAmount: summary.monthAmount,
+    }
+    if (a.type !== 'car') return base
+    const heroStats = carStats.get(a.id)!
+    return {
+      ...base,
+      color: a.color,
+      year: a.year,
+      brand: a.brand,
+      model: a.model,
+      latestOdometer: heroStats.latestOdometer,
+      totalAmount: summary.totalAmount,
+      avgFuelEcon: heroStats.avgFuelEcon,
+    }
+  })
 
   return <AssetsListClient items={items} />
 }
