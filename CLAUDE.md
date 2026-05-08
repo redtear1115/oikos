@@ -44,15 +44,18 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 - **i18n 設定子頁** — `recurring-income`、`invite`、`coming-soon` 等子頁仍 zh-TW only，待後續補齊
 - **月度/分類統計 view** — Records 頁目前只有 raw list，缺 aggregation view；friend test 進入第二個月後高頻需求（候選 v0.13.0+）
 - **Records 搜尋（free text search）** — 等用戶 signal 後實作，約 1.5d
-- **SEO 內容頁面 / 公開 landing 強化**（候選 v1.0.0｜版本號待定，亦可 v0.12.0 / v0.11.4）— 接續 v0.11.3 SEO 基礎建設。目前爬蟲只能 index `/sign-in` 約 200 字（含 sr-only），**內容稀薄是 Google ranking 天花板**，meta 關鍵字塞得再密也無法取代正文。預計工項：
-  - **B 內容頁面（核心，必做）**：新增 `/about` 或 `/features` 公開內容頁面，800–1500 字，3–5 個 H2 自然嵌入長尾詞（「新婚夫妻怎麼分攤生活費」「情侶 AA 制記帳 app」「家庭資產盤點怎麼做」）；narrative 涵蓋「為什麼伴侶需要共同記帳」「AA 制 vs 共同錢包的差異」「家庭資產盤點怎麼做」；`app/sitemap.ts` 加此頁 priority 0.8
-  - **C JSON-LD 補欄位**：`SoftwareApplication` 加 `author: { @type: Organization, name: "Southern Light" }` 與 `datePublished`
-  - **D og-image 壓縮**：`/public/og-image.png` 從 1.13 MB 壓到 < 300 KB（社群平台 preview 抓取上限，超過會 fallback 不顯示）
-  - **E twitter:site**（依條件）：若有官方 X 帳號，補 `<meta name="twitter:site" content="@xxx">`；無則跳過
-  - **F sitemap root**：`app/sitemap.ts` 加 `/`（即使 redirect 到 `/sign-in`，列入 sitemap 讓 GSC 能驗證 redirect 行為）
-  - **路徑選擇待定**：`/about`（narrative，conventional）vs `/features`（功能 listing，SEO 略高但與 narrative 氣質衝突）vs **改造 `/`**（公開 landing + 底部 CTA `以 Google 登入`，SEO 最大化但實作 lift 最高、需動 middleware redirect 邏輯）
-  - **品牌語氣紅線**：對齊「陪伴／克制／不評判／光 × 顏色」；避免「立即下載」「最強記帳」這類 aggressive marketing 文案；對齊現有 sign-in tagline「兩個人的日子，可以一起記下來」的克制感
-  - **產出流程建議**：先 brainstorm 結構大綱（3–5 個 H2 + keyword 配置 + 敘事弧線）→ 取得 review → 寫 markdown / JSX → 接 route + 更新 `app/sitemap.ts`。預計 ~1.5d 含文案打磨
+- **v1.0.0 — `/sign-in` 公開 landing 改版**（產品公開可被搜尋／分享的里程碑）— 接續 v0.11.3 SEO 基礎建設。目前爬蟲只能 index `/sign-in` 約 200 字（含 sr-only），**內容稀薄是 Google ranking 天花板**，meta 關鍵字塞得再密也無法取代正文。Locked scope：
+  - **Layout**：`/sign-in` 改 3 欄式 landing（不另開 `/about`，保持「公開頁只有一頁」的乾淨架構，canonical 仍在 `/sign-in`）
+    - **左欄**：about narrative，800–1500 字，3–5 個 H2 自然嵌入長尾詞（「新婚夫妻怎麼分攤生活費」「情侶 AA 制記帳 app」「家庭資產盤點怎麼做」）；涵蓋「為什麼伴侶需要共同記帳」「AA 制 vs 共同錢包的差異」「家庭資產盤點怎麼做」
+    - **中欄**：既有 Futari brand mark + tagline + 「以 Google 帳號繼續」CTA（保持 v0.11.3 的 `<h1>` + sr-only 副標 + JSON-LD 結構不動）
+    - **右欄**：3 大功能 highlight（圖示 + 短句，候選：雙人共享記帳／愛物盤點／自動分攤結算）
+    - Mobile：垂直 stack（CTA 優先 → about → features），維持 mobile-first first paint 體感
+  - **C — JSON-LD 補欄位**：`SoftwareApplication` 加 `author: { @type: Organization, name: "Southern Light" }` 與 `datePublished`
+  - **F — sitemap root**：`app/sitemap.ts` 加 `/`（即使 redirect 到 `/sign-in`，列入 sitemap 讓 GSC 能驗證 redirect 行為）
+  - **品牌語氣紅線**：對齊「陪伴／克制／不評判／光 × 顏色」；**禁用**「立即下載」「最強記帳」這類 aggressive marketing 文案；對齊現有 sign-in tagline「兩個人的日子，可以一起記下來」的克制感
+  - **產出流程**：實作開工時再 brainstorm（3 欄各自的結構與 narrative 弧線、keyword 配置、mobile stacking 順序），不在本 backlog entry 預先 spec
+  - **預計工時**：~1.5d 含文案打磨 + 響應式排版
+- **og-image 壓縮**（順手 chore，下次改版帶上）— `/public/og-image.png` 1.13 MB → < 300 KB（社群平台 preview 抓取上限，超過 fallback 不顯示）。獨立於 v1.0.0，但實作 v1.0.0 時順手做掉
 
 ---
 
