@@ -5,7 +5,7 @@
 
 私人家庭工具，非 SaaS。所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first PWA。
 
-**Status：Phase 1 完成**（核心記帳 + Settlement + 篩選 + Settings + Real-time + pg_cron）。詳見 [CLAUDE.md](CLAUDE.md)。
+**Status：v0.11.1**（核心記帳・愛物・進帳・定期收入・保險 SavingsView・i18n 4 語）。版本歷史見 [CHANGELOG.md](CHANGELOG.md)，開發脈絡見 [CLAUDE.md](CLAUDE.md)。
 
 ---
 
@@ -86,7 +86,11 @@ npm run dev
 ```
 actions/                  Server Actions（寫入路徑）
 app/
-  (dashboard)/            登入後的 routes：dashboard / records / settings
+  (dashboard)/            登入後的 routes
+    dashboard/            主頁（收支 / 結算）
+    records/              帳務紀錄列表
+    assets/               愛物（車 / 保險 / 子女 / 寵物 / 植物 / 房屋）
+    settings/             設定
   auth/callback/          OAuth callback
   invite/[token]/         加入 group 的 invite link
   setup/                  首次登入建 group
@@ -96,13 +100,13 @@ lib/
   filter.ts               TxnFilter 型別 + matcher（pure）
   validators.ts           Server Action 共用驗證（pure）
   settlement.ts           Smart chip 計算（pure）
-  categories.ts           Category 列表 + 顏色
-  realtime/event.ts       Realtime event 型別
+  categories.ts           支出 category 列表 + 顏色
+  i18n/                   多語系（cookie-based，4 語：zh-TW / zh-CN / en / ja）
   db/                     Drizzle schema + queries
   supabase/               Supabase server / browser clients
 drizzle/                  SQL migrations + journal
 __tests__/, tests/        vitest 測試
-docs/superpowers/specs/   架構規格 + 功能對照表
+docs/superpowers/specs/   架構規格 + 設計決策
 ```
 
 ---
