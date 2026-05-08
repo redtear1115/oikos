@@ -1,9 +1,8 @@
 'use client'
 
 import { getIncomeCategory } from '@/lib/incomeCategories'
+import { useTranslations } from '@/lib/i18n/client'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
-
-const INTERVAL_LABEL: Record<number, string> = { 1: '每月', 3: '每季', 6: '每半年', 12: '每年' }
 
 interface Props {
   rule: RecurringRuleRow
@@ -11,8 +10,20 @@ interface Props {
 }
 
 export function RuleListItem({ rule, onEdit }: Props) {
+  const t = useTranslations()
   const cat = getIncomeCategory(rule.category)
   const isPaused = !!rule.pausedAt
+
+  const intervalLabel: Record<number, string> = {
+    1: t.recurringIncome.rule.intervalEveryMonth,
+    3: t.recurringIncome.rule.intervalEveryQuarter,
+    6: t.recurringIncome.rule.intervalEveryHalfYear,
+    12: t.recurringIncome.rule.intervalEveryYear,
+  }
+  const intervalText =
+    intervalLabel[rule.intervalMonths] ??
+    t.recurringIncome.rule.intervalEveryNMonths.replace('{n}', String(rule.intervalMonths))
+  const dayText = t.recurringIncome.rule.dayLabel.replace('{day}', String(rule.dayOfMonth))
 
   return (
     <li>
@@ -51,13 +62,13 @@ export function RuleListItem({ rule, onEdit }: Props) {
                   className="ml-2 text-xs font-normal"
                   style={{ color: '#b45309' }}
                 >
-                  已暫停
+                  {t.recurringIncome.rule.pausedHint}
                 </span>
               )}
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-              {INTERVAL_LABEL[rule.intervalMonths] ?? `每 ${rule.intervalMonths} 個月`}
-              {' · '}{rule.dayOfMonth} 號
+              {intervalText}
+              {' · '}{dayText}
               {' · '}NT${rule.amount.toLocaleString()}
             </div>
           </div>

@@ -219,7 +219,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         if (isPending && msg.includes('待確認進帳')) {
           onMutated?.()
           onClose()
-          onRaceResolved?.(t.incomeSheet.raceMessage)
+          onRaceResolved?.(t.recurringIncome.raceMessage)
           return
         }
         setError(msg)

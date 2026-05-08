@@ -89,7 +89,6 @@ export type Translations = {
     countSuffix: string
     recent: string
     noRecord: string
-    recurring: string
     manage: string
     settleAriaLabel: string
     partnerOwesYou: string
@@ -145,7 +144,6 @@ export type Translations = {
       saveFailed: string
       missingPendingId: string
     }
-    raceMessage: string
   }
 
   settlement: {
@@ -166,6 +164,8 @@ export type Translations = {
     tabAll: string
     tabExpense: string
     tabIncome: string
+    manageRecurringIncome: string
+    manageRecurringExpense: string
   }
 
   filterSheet: {
@@ -199,6 +199,8 @@ export type Translations = {
     sectionDevice: string
     offlineBrowsing: string
     offlineHint: string
+    recurringIncome: string
+    recurringExpense: string
   }
 
   assets: {
@@ -214,6 +216,132 @@ export type Translations = {
     }
     addCar: string
     addSecondCar: string
+  }
+
+  recurringIncome: {
+    title: string
+    back: string
+    add: string
+    empty: {
+      hint: string
+      cta: string
+    }
+    rule: {
+      pausedHint: string
+      intervalEveryMonth: string
+      intervalEveryQuarter: string
+      intervalEveryHalfYear: string
+      intervalEveryYear: string
+      /** Template with `{n}` for non-standard intervals. */
+      intervalEveryNMonths: string
+      /** Template with `{day}` placeholder. */
+      dayLabel: string
+    }
+    pending: {
+      sectionLabel: string
+      primaryAction: string
+      editAction: string
+      skipAction: string
+      /** Template with `{date}` and `{description}` placeholders. */
+      skipConfirm: string
+      /** Template with `{n}` placeholder. */
+      expandAll: string
+      collapse: string
+    }
+    sheet: {
+      titleNew: string
+      titleEdit: string
+      amountLabel: string
+      recipientPrompt: string
+      categoryLabel: string
+      intervalLabel: string
+      dayOfMonthLabel: string
+      dayOfMonthFallbackHint: string
+      /** Template with `{day}` placeholder for DayPicker aria-label. */
+      dayAriaLabel: string
+      dayFallbackTitle: string
+      sourceLabel: string
+      sourcePlaceholder: string
+      startsOnLabel: string
+      endsOnLabel: string
+      assetLabel: string
+      assetNone: string
+      pauseAction: string
+      resumeAction: string
+      deleteRuleAction: string
+      deleteConfirmTitle: string
+      deleteConfirmDescription: string
+    }
+    errors: {
+      amountRequired: string
+      saveFailed: string
+      operationFailed: string
+      deleteFailed: string
+    }
+    raceMessage: string
+  }
+
+  recurringExpense: {
+    title: string
+    back: string
+    add: string
+    empty: {
+      hint: string
+      cta: string
+    }
+    rule: {
+      pausedHint: string
+      pausedAssetDeletedHint: string
+      intervalEveryMonth: string
+      intervalEveryQuarter: string
+      intervalEveryHalfYear: string
+      intervalEveryYear: string
+      intervalEveryNMonths: string
+      dayLabel: string
+    }
+    pending: {
+      sectionLabel: string
+      primaryAction: string
+      editAction: string
+      skipAction: string
+      skipConfirm: string
+      expandAll: string
+      collapse: string
+      /** Template with `{payer}` and `{splitType}` placeholders. */
+      payerLine: string
+    }
+    sheet: {
+      titleNew: string
+      titleEdit: string
+      amountLabel: string
+      payerPrompt: string
+      splitTypeLabel: string
+      categoryLabel: string
+      intervalLabel: string
+      dayOfMonthLabel: string
+      dayOfMonthFallbackHint: string
+      dayAriaLabel: string
+      dayFallbackTitle: string
+      descriptionLabel: string
+      descriptionPlaceholder: string
+      startsOnLabel: string
+      endsOnLabel: string
+      assetLabel: string
+      assetNone: string
+      pauseAction: string
+      resumeAction: string
+      deleteRuleAction: string
+      deleteConfirmTitle: string
+      deleteConfirmDescription: string
+    }
+    errors: {
+      amountRequired: string
+      descriptionRequired: string
+      saveFailed: string
+      operationFailed: string
+      deleteFailed: string
+    }
+    raceMessage: string
   }
 }
 
@@ -308,7 +436,6 @@ export const zhTW: Translations = {
     countSuffix: '筆',
     recent: '最近',
     noRecord: '尚無紀錄',
-    recurring: '定期進帳',
     manage: '管理 ›',
     settleAriaLabel: '記錄還款 / 收款',
     partnerOwesYou: '欠你',
@@ -364,7 +491,6 @@ export const zhTW: Translations = {
       saveFailed: '儲存失敗',
       missingPendingId: '缺少待確認進帳 id',
     },
-    raceMessage: '對方剛剛確認了這筆',
   },
 
   settlement: {
@@ -384,6 +510,8 @@ export const zhTW: Translations = {
     tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '進帳',
+    manageRecurringIncome: '⚙ 設定定期進帳 →',
+    manageRecurringExpense: '⚙ 設定定期支出 →',
   },
 
   filterSheet: {
@@ -417,6 +545,8 @@ export const zhTW: Translations = {
     sectionDevice: '裝置',
     offlineBrowsing: '離線瀏覽',
     offlineHint: '開啟後可在無網路時查看最近記錄',
+    recurringIncome: '定期進帳',
+    recurringExpense: '定期支出',
   },
 
   assets: {
@@ -432,5 +562,125 @@ export const zhTW: Translations = {
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',
+  },
+
+  recurringIncome: {
+    title: '定期進帳',
+    back: '返回',
+    add: '+ 新增',
+    empty: {
+      hint: '還沒設定定期進帳',
+      cta: '新增第一個',
+    },
+    rule: {
+      pausedHint: '已暫停',
+      intervalEveryMonth: '每月',
+      intervalEveryQuarter: '每季',
+      intervalEveryHalfYear: '每半年',
+      intervalEveryYear: '每年',
+      intervalEveryNMonths: '每 {n} 個月',
+      dayLabel: '{day} 號',
+    },
+    pending: {
+      sectionLabel: '這幾筆等你看看',
+      primaryAction: '就這樣',
+      editAction: '改一下',
+      skipAction: '跳過',
+      skipConfirm: '跳過 {date} 的 {description}？',
+      expandAll: '展開全部（還有 {n} 筆）',
+      collapse: '收合',
+    },
+    sheet: {
+      titleNew: '新增定期進帳',
+      titleEdit: '編輯定期進帳',
+      amountLabel: '固定金額',
+      recipientPrompt: '進到誰那？',
+      categoryLabel: '類別',
+      intervalLabel: '週期',
+      dayOfMonthLabel: '每月幾號',
+      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayAriaLabel: '{day} 號',
+      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      sourceLabel: '來源名稱（選填）',
+      sourcePlaceholder: '公司名稱或薪資來源',
+      startsOnLabel: '開始日期',
+      endsOnLabel: '結束日期（選填）',
+      assetLabel: '關聯保單（選填）',
+      assetNone: '無',
+      pauseAction: '暫停',
+      resumeAction: '恢復',
+      deleteRuleAction: '刪除規則',
+      deleteConfirmTitle: '刪除這個定期規則？',
+      deleteConfirmDescription: '已存在的待確認卡片也會一起清掉，此動作無法復原。',
+    },
+    errors: {
+      amountRequired: '請輸入金額',
+      saveFailed: '儲存失敗',
+      operationFailed: '操作失敗',
+      deleteFailed: '刪除失敗',
+    },
+    raceMessage: '對方剛剛確認了這筆',
+  },
+
+  recurringExpense: {
+    title: '定期支出',
+    back: '返回',
+    add: '+ 新增',
+    empty: {
+      hint: '還沒設定定期支出',
+      cta: '新增第一個',
+    },
+    rule: {
+      pausedHint: '已暫停',
+      pausedAssetDeletedHint: '已暫停（關聯愛物已刪除）',
+      intervalEveryMonth: '每月',
+      intervalEveryQuarter: '每季',
+      intervalEveryHalfYear: '每半年',
+      intervalEveryYear: '每年',
+      intervalEveryNMonths: '每 {n} 個月',
+      dayLabel: '{day} 號',
+    },
+    pending: {
+      sectionLabel: '這幾筆等你看看',
+      primaryAction: '就這樣',
+      editAction: '改一下',
+      skipAction: '跳過',
+      skipConfirm: '跳過 {date} 的 {description}？',
+      expandAll: '展開全部（還有 {n} 筆）',
+      collapse: '收合',
+      payerLine: '{payer}・{splitType}',
+    },
+    sheet: {
+      titleNew: '新增定期支出',
+      titleEdit: '編輯定期支出',
+      amountLabel: '固定金額',
+      payerPrompt: '誰付的？',
+      splitTypeLabel: '分攤方式',
+      categoryLabel: '類別',
+      intervalLabel: '週期',
+      dayOfMonthLabel: '每月幾號',
+      dayOfMonthFallbackHint: '2 月或月份天數不足時，自動 fallback 到月底。',
+      dayAriaLabel: '{day} 號',
+      dayFallbackTitle: '若當月無此日，自動 fallback 到月底',
+      descriptionLabel: '描述',
+      descriptionPlaceholder: '例：房租、訂閱',
+      startsOnLabel: '開始日期',
+      endsOnLabel: '結束日期（選填）',
+      assetLabel: '關聯愛物（選填）',
+      assetNone: '無',
+      pauseAction: '暫停',
+      resumeAction: '恢復',
+      deleteRuleAction: '刪除規則',
+      deleteConfirmTitle: '刪除這個定期規則？',
+      deleteConfirmDescription: '已存在的待確認卡片也會一起清掉，此動作無法復原。',
+    },
+    errors: {
+      amountRequired: '請輸入金額',
+      descriptionRequired: '請輸入描述',
+      saveFailed: '儲存失敗',
+      operationFailed: '操作失敗',
+      deleteFailed: '刪除失敗',
+    },
+    raceMessage: '對方剛剛確認了這筆',
   },
 }

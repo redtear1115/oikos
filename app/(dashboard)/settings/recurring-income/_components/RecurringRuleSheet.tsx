@@ -17,16 +17,12 @@ import {
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
+import { useTranslations } from '@/lib/i18n/client'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 
 const P = DEFAULT_INCOME_PALETTE
 
-const INTERVALS: { v: 1 | 3 | 6 | 12; label: string }[] = [
-  { v: 1, label: '每月' },
-  { v: 3, label: '每季' },
-  { v: 6, label: '每半年' },
-  { v: 12, label: '每年' },
-]
+const INTERVAL_VALUES: (1 | 3 | 6 | 12)[] = [1, 3, 6, 12]
 
 interface Props {
   open: boolean
@@ -45,7 +41,15 @@ export function RecurringRuleSheet({
   insuranceAssets,
 }: Props) {
   const { viewer, partner, isSolo } = useMember()
+  const t = useTranslations()
   const isEdit = !!initial
+
+  const intervalLabels: Record<1 | 3 | 6 | 12, string> = {
+    1: t.recurringIncome.rule.intervalEveryMonth,
+    3: t.recurringIncome.rule.intervalEveryQuarter,
+    6: t.recurringIncome.rule.intervalEveryHalfYear,
+    12: t.recurringIncome.rule.intervalEveryYear,
+  }
 
   const [amount, setAmount] = useState(0)
   const [category, setCategory] = useState('salary')
@@ -95,7 +99,7 @@ export function RecurringRuleSheet({
       : (partner?.id ?? viewer.id)
 
   const handleSave = () => {
-    if (!amount || amount <= 0) { setError('請輸入金額'); return }
+    if (!amount || amount <= 0) { setError(t.recurringIncome.errors.amountRequired); return }
     setError(null)
     const payload = {
       amount,
@@ -115,7 +119,7 @@ export function RecurringRuleSheet({
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '儲存失敗')
+        setError(e instanceof Error ? e.message : t.recurringIncome.errors.saveFailed)
       }
     })
   }
@@ -130,7 +134,7 @@ export function RecurringRuleSheet({
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '操作失敗')
+        setError(e instanceof Error ? e.message : t.recurringIncome.errors.operationFailed)
       }
     })
   }
@@ -144,7 +148,7 @@ export function RecurringRuleSheet({
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '刪除失敗')
+        setError(e instanceof Error ? e.message : t.recurringIncome.errors.deleteFailed)
       }
     })
   }
@@ -191,17 +195,17 @@ export function RecurringRuleSheet({
             className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)', fontFamily: 'inherit' }}
           >
-            取消
+            {t.common.cancel}
           </button>
           <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-            {isEdit ? '編輯定期進帳' : '新增定期進帳'}
+            {isEdit ? t.recurringIncome.sheet.titleEdit : t.recurringIncome.sheet.titleNew}
           </div>
           <button
             type="button" onClick={handleSave} disabled={!amount || pending}
             className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
             style={{ color: amount && !pending ? P.ink : 'var(--ink-3)', fontFamily: 'inherit' }}
           >
-            {pending ? '儲存中…' : '儲存'}
+            {pending ? t.common.saving : t.common.save}
           </button>
         </div>
 
@@ -214,7 +218,7 @@ export function RecurringRuleSheet({
                 letterSpacing: 1.2, marginBottom: 12,
               }}
             >
-              固定金額
+              {t.recurringIncome.sheet.amountLabel}
             </div>
             <label className="flex items-baseline justify-center gap-2 cursor-text">
               <span className="text-title font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
@@ -229,7 +233,7 @@ export function RecurringRuleSheet({
                   setAmount(next ? parseInt(next, 10) : 0)
                 }}
                 placeholder="0"
-                aria-label="固定金額"
+                aria-label={t.recurringIncome.sheet.amountLabel}
                 className="bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
@@ -250,7 +254,7 @@ export function RecurringRuleSheet({
                 className="flex items-center justify-center gap-2.5 text-label"
                 style={{ marginTop: 18, color: 'var(--ink-2)' }}
               >
-                <span>進到誰那？</span>
+                <span>{t.recurringIncome.sheet.recipientPrompt}</span>
                 <div
                   className="inline-flex rounded-full p-[3px] gap-0.5"
                   style={{ background: 'rgba(58,36,25,0.05)' }}
@@ -276,7 +280,7 @@ export function RecurringRuleSheet({
                         src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
                         size={18}
                       />
-                      {w === 'M' ? '我' : '對方'}
+                      {w === 'M' ? t.common.me : t.common.partner}
                     </button>
                   ))}
                 </div>
@@ -294,7 +298,7 @@ export function RecurringRuleSheet({
                 letterSpacing: 1.2, padding: '0 20px 12px',
               }}
             >
-              類別
+              {t.recurringIncome.sheet.categoryLabel}
             </div>
             <div
               className="flex gap-2"
@@ -321,24 +325,24 @@ export function RecurringRuleSheet({
                 letterSpacing: 1.2, marginBottom: 12,
               }}
             >
-              週期
+              {t.recurringIncome.sheet.intervalLabel}
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {INTERVALS.map((i) => (
+              {INTERVAL_VALUES.map((v) => (
                 <button
-                  key={i.v}
+                  key={v}
                   type="button"
-                  onClick={() => setIntervalMonths(i.v)}
+                  onClick={() => setIntervalMonths(v)}
                   className="rounded-full py-2 text-sm"
                   style={{
-                    border: `1px solid ${intervalMonths === i.v ? 'var(--ink)' : 'var(--hairline)'}`,
-                    background: intervalMonths === i.v ? 'var(--ink)' : 'transparent',
-                    color: intervalMonths === i.v ? '#fff' : 'var(--ink)',
+                    border: `1px solid ${intervalMonths === v ? 'var(--ink)' : 'var(--hairline)'}`,
+                    background: intervalMonths === v ? 'var(--ink)' : 'transparent',
+                    color: intervalMonths === v ? '#fff' : 'var(--ink)',
                     fontFamily: 'inherit',
                     cursor: 'pointer',
                   }}
                 >
-                  {i.label}
+                  {intervalLabels[v]}
                 </button>
               ))}
             </div>
@@ -354,7 +358,7 @@ export function RecurringRuleSheet({
                 letterSpacing: 1.2, marginBottom: 12,
               }}
             >
-              每月幾號
+              {t.recurringIncome.sheet.dayOfMonthLabel}
             </div>
             <DayPicker value={dayOfMonth} onChange={setDayOfMonth} />
             {dayOfMonth > 28 && (
@@ -362,7 +366,7 @@ export function RecurringRuleSheet({
                 className="mt-2 text-xs"
                 style={{ color: 'var(--ink-3)' }}
               >
-                2 月或月份天數不足時，自動 fallback 到月底。
+                {t.recurringIncome.sheet.dayOfMonthFallbackHint}
               </div>
             )}
           </div>
@@ -377,12 +381,12 @@ export function RecurringRuleSheet({
                 letterSpacing: 1.2, marginBottom: 8,
               }}
             >
-              來源名稱（選填）
+              {t.recurringIncome.sheet.sourceLabel}
             </div>
             <input
               value={source}
               onChange={(e) => setSource(e.target.value)}
-              placeholder="公司名稱或薪資來源"
+              placeholder={t.recurringIncome.sheet.sourcePlaceholder}
               className="w-full bg-transparent outline-none"
               style={{
                 border: 'none',
@@ -404,7 +408,7 @@ export function RecurringRuleSheet({
                   letterSpacing: 1.2, marginBottom: 8,
                 }}
               >
-                開始日期
+                {t.recurringIncome.sheet.startsOnLabel}
               </div>
               <input
                 type="date"
@@ -428,7 +432,7 @@ export function RecurringRuleSheet({
                   letterSpacing: 1.2, marginBottom: 8,
                 }}
               >
-                結束日期（選填）
+                {t.recurringIncome.sheet.endsOnLabel}
               </div>
               <input
                 type="date"
@@ -458,7 +462,7 @@ export function RecurringRuleSheet({
                     letterSpacing: 1.2, marginBottom: 8,
                   }}
                 >
-                  關聯保單（選填）
+                  {t.recurringIncome.sheet.assetLabel}
                 </div>
                 <select
                   value={assetId}
@@ -473,7 +477,7 @@ export function RecurringRuleSheet({
                     fontFamily: 'inherit',
                   }}
                 >
-                  <option value="">無</option>
+                  <option value="">{t.recurringIncome.sheet.assetNone}</option>
                   {insuranceAssets.map((a) => (
                     <option key={a.id} value={a.id}>{a.name}</option>
                   ))}
@@ -500,7 +504,7 @@ export function RecurringRuleSheet({
                     cursor: 'pointer',
                   }}
                 >
-                  {isPaused ? '恢復' : '暫停'}
+                  {isPaused ? t.recurringIncome.sheet.resumeAction : t.recurringIncome.sheet.pauseAction}
                 </button>
                 <button
                   type="button"
@@ -515,7 +519,7 @@ export function RecurringRuleSheet({
                     cursor: 'pointer',
                   }}
                 >
-                  刪除規則
+                  {t.recurringIncome.sheet.deleteRuleAction}
                 </button>
               </div>
             </>
@@ -536,9 +540,9 @@ export function RecurringRuleSheet({
 
       <ConfirmModal
         open={confirmingDelete && open}
-        title="刪除這個定期規則？"
-        description="已存在的待確認卡片也會一起清掉，此動作無法復原。"
-        confirmLabel="刪除"
+        title={t.recurringIncome.sheet.deleteConfirmTitle}
+        description={t.recurringIncome.sheet.deleteConfirmDescription}
+        confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
         onConfirm={handleDelete}

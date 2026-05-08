@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { RuleListItem } from './RuleListItem'
 import { RecurringRuleSheet } from './RecurringRuleSheet'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { useTranslations } from '@/lib/i18n/client'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 
 const P = DEFAULT_INCOME_PALETTE
@@ -16,6 +17,7 @@ interface Props {
 
 export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
   const router = useRouter()
+  const t = useTranslations()
   // null = closed, 'create' = new rule sheet, RecurringRuleRow = edit sheet
   const [sheetState, setSheetState] = useState<null | 'create' | RecurringRuleRow>(null)
 
@@ -43,11 +45,11 @@ export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
             <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          返回
+          {t.recurringIncome.back}
         </button>
 
         <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          定期進帳
+          {t.recurringIncome.title}
         </div>
 
         <button
@@ -56,14 +58,18 @@ export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
           className="rounded-full px-3.5 py-1.5 text-sm font-medium text-white border-0 cursor-pointer"
           style={{ background: 'var(--ink)' }}
         >
-          + 新增
+          {t.recurringIncome.add}
         </button>
       </div>
 
       {/* Rules list or empty state */}
       <div className="px-4 mt-4">
         {rules.length === 0 ? (
-          <EmptyState onAdd={() => setSheetState('create')} />
+          <EmptyState
+            hint={t.recurringIncome.empty.hint}
+            cta={t.recurringIncome.empty.cta}
+            onAdd={() => setSheetState('create')}
+          />
         ) : (
           <ul className="space-y-3">
             {rules.map((r) => (
@@ -89,7 +95,7 @@ export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
   )
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ hint, cta, onAdd }: { hint: string; cta: string; onAdd: () => void }) {
   const dots = [
     { x: 22, y: 18, r: 1.6, o: 0.30 }, { x: 78, y: 14, r: 2.2, o: 0.22 },
     { x: 12, y: 38, r: 1.2, o: 0.18 }, { x: 90, y: 30, r: 1.8, o: 0.28 },
@@ -117,7 +123,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         </svg>
       </div>
       <p className="mb-5 text-sm" style={{ color: 'var(--ink-2)', lineHeight: 1.6 }}>
-        還沒設定定期進帳
+        {hint}
       </p>
       <button
         type="button"
@@ -125,7 +131,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         className="h-10 px-6 rounded-full text-sm font-semibold inline-flex items-center border-0 cursor-pointer"
         style={{ background: P.tint, color: P.ink, border: `1px solid ${P.ink}30` }}
       >
-        新增第一個
+        {cta}
       </button>
     </div>
   )
