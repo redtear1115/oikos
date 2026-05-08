@@ -58,6 +58,7 @@ export const assets = pgTable('Assets', {
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
   type: assetTypeEnum('type').notNull(),
   name: text('name').notNull(),
+  notes: text('notes'),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
