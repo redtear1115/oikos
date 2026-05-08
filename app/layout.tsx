@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Noto_Sans_TC } from 'next/font/google'
+import { getLocale } from '@/lib/i18n/t'
 import './globals.css'
 
 const fraunces = Fraunces({
@@ -61,9 +62,10 @@ export const viewport: Viewport = {
   // Inputs are sized at >= 16px to avoid iOS auto-zoom on focus.
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
   return (
-    <html lang="zh-TW" className={`${fraunces.variable} ${notoTC.variable}`}>
+    <html lang={locale} className={`${fraunces.variable} ${notoTC.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   )
