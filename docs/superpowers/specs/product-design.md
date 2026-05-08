@@ -96,7 +96,7 @@ Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`
 
 版本歷史與當前狀態見 [CLAUDE.md](../../../CLAUDE.md)（版本表）與 [CHANGELOG.md](../../../CHANGELOG.md)。
 
-各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md) · [i18n-design.md](i18n-design.md) · [2026-05-08-offline-browsing-design.md](2026-05-08-offline-browsing-design.md)
+各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [recurring-expense-design.md](recurring-expense-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md) · [i18n-design.md](i18n-design.md) · [offline-browsing-design.md](offline-browsing-design.md)
 
 ---
 

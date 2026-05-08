@@ -138,8 +138,6 @@ IncomeSheet 提交後：對應 row 在 RecordsList / 保險頁 mint glow 背景 
 
 ---
 
----
-
 ## 索引
 
 - 既有 expense category token：[lib/categories.ts](../../../lib/categories.ts)

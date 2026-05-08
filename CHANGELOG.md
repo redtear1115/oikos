@@ -48,7 +48,7 @@ _Nothing unreleased yet._
 
 ### Added
 - **i18n 4 語架構**（PR #3 / #4 / #6 / #7，已 merge origin/main）：自製 `lib/i18n/`（server `getTranslations()` → dashboard layout `<TranslationsProvider>` → client `useTranslations()`）；cookie-based locale（`lang` cookie + `?lang=` query 入口）；4 語 zh-TW / zh-CN / en / ja；dashboard / records / settings / assets 字典已接通；sign-in footer + Settings 頁 LanguageSwitcher（footer / pill 兩變體）。詳見 [i18n-design.md](docs/superpowers/specs/i18n-design.md)。
-- **Settings 離線瀏覽 toggle UI**（PR #6，已 merge origin/main）：`lib/offline/preference.ts` localStorage helper + Settings 頁 toggle。**僅 UI 層 ship；SW / runtime cache / banner 等仍 backlog**。詳見 [2026-05-08-offline-browsing-design.md](docs/superpowers/specs/2026-05-08-offline-browsing-design.md)「實作狀態」段。
+- **Settings 離線瀏覽 toggle UI**（PR #6，已 merge origin/main）：`lib/offline/preference.ts` localStorage helper + Settings 頁 toggle。**僅 UI 層 ship；SW / runtime cache / banner 等仍 backlog**。詳見 [offline-browsing-design.md](docs/superpowers/specs/offline-browsing-design.md)「實作狀態」段。
 
 ## [0.10.0] - 2026-05-08
 
