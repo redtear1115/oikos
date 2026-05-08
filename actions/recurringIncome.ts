@@ -14,7 +14,7 @@ import {
   validateIncomeInput,
   type RecurringIncomeRuleInput,
 } from '@/lib/validators'
-import { firstAnchorFromStart, snapToFuture } from '@/lib/recurringIncome'
+import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 

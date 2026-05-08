@@ -269,3 +269,37 @@ export const pendingIncomeOccurrences = pgTable('PendingIncomeOccurrences', {
   resolvedTxId: uuid('resolved_tx_id').references(() => incomeTransactions.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+export const recurringExpenseRules = pgTable('RecurringExpenseRules', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  paidBy: uuid('paid_by').notNull().references(() => profiles.id),
+  amount: integer('amount').notNull(),
+  splitType: splitTypeEnum('split_type').notNull(),
+  description: text('description').notNull(),
+  category: text('category').notNull(),
+  assetId: uuid('asset_id').references(() => assets.id),
+  intervalMonths: integer('interval_months').notNull().default(1),
+  dayOfMonth: integer('day_of_month').notNull(),
+  startsOn: date('starts_on').notNull(),
+  endsOn: date('ends_on'),
+  nextOccurrenceAt: date('next_occurrence_at').notNull(),
+  pausedAt: timestamp('paused_at', { withTimezone: true }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const pendingExpenseOccurrences = pgTable('PendingExpenseOccurrences', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  ruleId: uuid('rule_id').notNull().references(() => recurringExpenseRules.id, { onDelete: 'cascade' }),
+  periodStart: date('period_start').notNull(),
+  proposedAmount: integer('proposed_amount').notNull(),
+  proposedDate: date('proposed_date').notNull(),
+  proposedDescription: text('proposed_description').notNull(),
+  proposedPaidBy: uuid('proposed_paid_by').notNull().references(() => profiles.id),
+  proposedSplitType: splitTypeEnum('proposed_split_type').notNull(),
+  skippedAt: timestamp('skipped_at', { withTimezone: true }),
+  resolvedTxId: uuid('resolved_tx_id').references(() => cashTransactions.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})

@@ -63,7 +63,12 @@ v0.8.0 的[定期收入](recurring-income-design.md)已驗證 **preview→commit
 
 ## Locked decisions
 
-繼承定期收入決策，僅列**本 spec 新決或差異**：
+繼承定期收入決策，僅列**本 spec 新決或差異**。
+
+> **2026-05-08 confirmed by user**：以下三項在 spec 完成審視後特別 ack：
+> 1. Asset 已軟刪除 → 規則自動 `paused_at`（見表中對應行）
+> 2. `ModeTogglePlaceholder` prop 改名（`pendingCount` → `incomePendingCount` + 新增 `expensePendingCount`）為 breaking change，全 codebase 替換在同 PR 完成（見 UI/UX § 3）
+> 3. `recurringIncome.*` namespace 重整與 `recurringExpense.*` 新增**同一 PR** 完成（見 i18n § 與 PR 拆分 § PR #3）
 
 | 維度 | 決定 | 理由 |
 |---|---|---|
@@ -607,6 +612,144 @@ settings: {
 | **合計** | **~9.5 dev days** |
 
 > 比第一輪 brainstorm 估的 5–7d 略高（+2d）。主因：(1) i18n namespace 順手整理 income 端、(2) AddSheet pendingExpenseId 模式新增、(3) 比 income 多 paid_by / split_type / asset auto-pause 三個維度。
+
+---
+
+## v0.12.0 PR 拆分
+
+5 個 PR、依賴呈線性主軸 + i18n 旁支可並行。每個 PR 都可以獨立 review / merge，不會把使用者卡在半成品狀態。
+
+### PR #1 · 基礎：schema + cron + helpers + validators
+
+**範圍**
+- `drizzle/0021_recurring_expense.sql`：`RecurringExpenseRules` + `PendingExpenseOccurrences` 兩張表 + RLS + Realtime publication + 索引
+- pg_cron `generate-pending-expense`（每日 16:00 UTC，含 asset auto-pause join 邏輯）
+- 擴充 `cleanup-soft-deleted` cron（rules 1 年、skipped pendings 90 天）
+- `lib/db/schema.ts`：兩張新 table 的 Drizzle schema 定義
+- `lib/recurring.ts`：rename from `lib/recurringIncome.ts`，更新所有 import 路徑（純位移、無邏輯變動）
+- `lib/validators.ts`：`validateRecurringExpenseRuleInput`（`paidBy` / `splitType` / `description` NOT NULL / category ∈ PICKABLE_CATEGORIES）
+- 既有 `compute_next_occurrence` SQL helper **直接 reuse**，不重建
+
+**依賴**：無
+**工時**：~1.75d
+**Session title**：`feat(recurring-expense): foundation — schema, cron, validators`
+
+**驗證**：dev + prod 兩個 Supabase 各跑一次 migration、`npm run db:studio` 確認兩張表存在、psql `SELECT cron.jobname FROM cron.job` 確認 `generate-pending-expense` 已 schedule
+
+---
+
+### PR #2 · Server actions + DB queries
+
+**範圍**
+- `actions/recurringExpense.ts`：8 個 server action mirror income
+  - `createRule` / `updateRule` / `pauseRule` / `resumeRule` / `softDeleteRule`
+  - `confirmPending`（同 transaction：INSERT cashTransactions + UPDATE pending.resolvedTxId + balance 重算 hook）
+  - `editAndConfirmPending`（同上但接受 user 修改 fields）
+  - `skipPending`
+- `lib/db/queries/recurringExpense.ts`：list rules / get rule / list active pendings for group / get pending by id
+- Asset assertion helper（reuse 或從 `actions/recurringIncome.ts` 抽出共用）
+- Race guard：confirmPending / editAndConfirmPending 處理 partner 已 confirm / skip 的 case，回 race message
+- `resumeRule` snap to future helper（reuse `lib/recurring.ts`）
+
+**依賴**：PR #1（schema + helpers）
+**工時**：~2d
+**Session title**：`feat(recurring-expense): server actions + db queries`
+
+**驗證**：unit test 寫 5 個 path（happy / pause→resume / soft delete / race / asset auto-pause 模擬）；`npm run test:run` 全綠；無 UI 變動所以 friend test 環境不受影響
+
+---
+
+### PR #3 · i18n：`recurringExpense.*` 新增 + `recurringIncome.*` 重整
+
+**範圍**（[已 confirmed 在同一 PR](../../../CLAUDE.md)）
+- `lib/i18n/locales/{zh-TW,zh-CN,en,ja}.ts`：新增 `recurringExpense.*` namespace（~30 keys × 4 語）
+- 同檔案：整理 `recurringIncome.*` namespace — 把 `app/(dashboard)/settings/recurring-income/_components/` 內的硬寫中文搬入字典（~30 keys × 4 語）
+- `Translations` type 更新：兩個 namespace 完整定義
+- 新增 `records.manageRecurringExpense` / `records.manageRecurringIncome` keys
+- 新增 `settings.recurringExpense` / `settings.recurringIncome` 主頁項目 keys
+- **同 PR 範圍內接 income 端 UI**：把 `settings/recurring-income/_components/*.tsx` import `useTranslations()` 換掉硬寫中文（PR #4-5 的 expense UI 才用得到 expense keys，但 income 端的清理當下就完成）
+
+**依賴**：無（純文字 + recurring-income 既有 UI rewire）
+**並行**：可與 PR #1 / #2 同時進行，互不衝突
+**工時**：~1d
+**Session title**：`i18n(recurring): expense namespace + income cleanup`
+
+**驗證**：4 語切換 `/settings/recurring-income` 子頁全部接通；`tsc` 無紅字（type 強制每語每 key 都填）
+
+---
+
+### PR #4 · Settings 子頁 + Dashboard pending stack
+
+**範圍**
+- `app/(dashboard)/settings/recurring-expense/page.tsx`（server component）+ `_components/RecurringExpenseContent.tsx`（client shell）
+- `RecurringRuleSheet`（expense 版新元件）— form 欄位：amount / category / payer / splitType / description / interval / dayOfMonth / startsOn / endsOn / asset
+  - PayerToggle / SplitTypeSelector / AssetPickerSheet 全部 reuse 既有元件
+  - Solo Mode 鎖 `paid_by=本人` + `split_type=all_mine`，picker 隱藏
+- Settings 主頁加項目「定期支出」（在「定期進帳」下方）
+- `PendingExpenseStack` + `PendingExpenseCard`（dashboard 元件，mirror income 結構，差異在 category-tint glow 與 payer line）
+- `ModeTogglePlaceholder` prop 改名：`pendingCount` → `incomePendingCount` + 新增 `expensePendingCount`（[已 confirmed breaking + 同 PR 替換](../../../CLAUDE.md)）
+- `Dashboard.tsx` wiring：
+  - server-side load active pending list（call `listActivePendingExpenses`）
+  - 傳給 PendingExpenseStack
+  - 傳給 ModeTogglePlaceholder 算 dot
+  - RealtimeProvider 接 INSERT / UPDATE event for `RecurringExpenseRules` + `PendingExpenseOccurrences`
+- 「就這樣」/「跳過」path 接通（call confirmPending / skipPending）
+- 「改一下」path 在這個 PR 暫時 disabled（顯示 disabled 樣式 + console.warn `// wired in PR #5`），不 broken
+
+**依賴**：PR #1（schema）+ PR #2（actions）+ PR #3（i18n keys）
+**工時**：~3.5d
+**Session title**：`feat(recurring-expense): settings page + dashboard pending stack`
+
+**驗證**：建一個 rule（每月 1 號 房租 25000）、psql 手動把 `next_occurrence_at` set 為今天、cron job 跑一次（`SELECT cron.run('generate-pending-expense')` 或等隔天 16:00 UTC）→ 確認 dashboard 看到卡片、按「就這樣」確認落 cashTransactions、balance 重算正確、partner 端 realtime 看到卡片消失；Solo Mode 開新規則 form 確認 payer / split UI 隱藏
+
+---
+
+### PR #5 · AddSheet「改一下」+ Records 入口 + v0.12.0 release
+
+**範圍**
+- AddSheet 加 `pendingExpenseId?: string` prop（mirror IncomeSheet `pendingId` pattern）
+- AddSheet submit path 在 `pendingExpenseId` 存在時走 `editAndConfirmPending` 而非 `createTransaction`
+- PendingExpenseCard「改一下」按鈕 wire 到 AddSheet 開啟（prefill 全欄 + 帶 pendingExpenseId）
+- Records sticky tab bar 下方 inline link 區
+  - tab='expense' → 「⚙ 設定定期支出 →」
+  - tab='income' → 「⚙ 設定定期進帳 →」（同步補上 income 端 entry，[recurring-income-design.md Phase 2 點名未 ship](recurring-income-design.md)）
+  - tab='all' → 不顯示
+- `CLAUDE.md` 版本表加入 v0.12.0 + 移除 backlog 中已實現項目（recurring expense / records 入口 / settings 子頁 i18n 部分）
+- `CHANGELOG.md` 新增 v0.12.0 entry（Added / Changed / Database）
+- `package.json` version → `0.12.0`
+- spec self-review pass（補實作中發現的細節）
+
+**依賴**：PR #4
+**工時**：~1.5d
+**Session title**：`feat(recurring-expense): add-sheet edit mode + records entry + v0.12.0`
+
+**驗證**：「改一下」open AddSheet 後 prefill 全欄正確；改金額後送出 → cashTransactions 落新值、pending.resolvedTxId 指到新 tx、balance 重算正確；race case：partner 已 confirm 時 client refresh 看到 pending 消失；Records 三個 tab 切換 link 顯示正確；release 流程走 `git-develop:release` skill（如果使用）
+
+---
+
+### 並行性
+
+```
+時間軸（單人 dev）：
+  PR #1 ──→ PR #2 ──┐
+                    ├──→ PR #4 ──→ PR #5
+  PR #3 ────────────┘
+
+時間軸（雙人 dev）：
+  Dev A：  PR #1 ──→ PR #2 ──┐
+                              ├──→ PR #4 ──→ PR #5
+  Dev B：  PR #3 ─────────────┘
+```
+
+**critical path**（單人）= 1.75 + 2 + 1 + 3.5 + 1.5 ≈ **9.75d**
+**critical path**（雙人並行）= 1.75 + 2 + max(1, 0) + 3.5 + 1.5 ≈ **8.75d**（PR #3 與 PR #1+#2 並行省 ~1d）
+
+### 風險集中於 PR #4
+
+PR #4 是最重的（3.5d），且包含三個新元件（RecurringRuleSheet / PendingExpenseStack / PendingExpenseCard）+ 一個 prop breaking change。**緩解**：
+- 接 PR 前先 review 既有 PendingIncomeStack / PendingIncomeCard / RecurringRuleSheet（income 版）程式碼，照搬結構
+- 「改一下」disabled state 在 PR #4，避免半 wired path 出現在 prod
+- 如果 review 發現 PR #4 過大，可以再拆「Settings 子頁」與「Dashboard pending stack」為兩個 PR（依賴：兩者都依 #1+#2+#3，彼此獨立）
 
 ---
 
