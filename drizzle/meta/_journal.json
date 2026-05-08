@@ -169,6 +169,13 @@
       "when": 1777980135738,
       "tag": "0023_security_fixes2",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1777980135739,
+      "tag": "0024_oikos_groups_rls",
+      "breakpoints": true
     }
   ]
 }
