@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from 'react'
+import { Suspense, use, useCallback, useEffect, useReducer, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
@@ -41,26 +41,29 @@ type ModalState =
   | { kind: 'edit-settlement'; data: SettlementSheetInitial }
   | { kind: 'filter' }
 
+export interface DashboardFeedData {
+  recent: PagedTxnRow[]
+  recentIncomeFeed: PagedTxnRow[]
+}
+
 export interface DashboardProps {
   balance: number
-  recent: PagedTxnRow[]
   pageSize: number
   incomeMonthTotal: number
   incomeMonthCount: number
   recentIncomeLabel: string | null
-  recentIncomeFeed: PagedTxnRow[]
   pendings: PendingRow[]
+  feedDataPromise: Promise<DashboardFeedData>
 }
 
 export function Dashboard({
   balance,
-  recent,
   pageSize,
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,
-  recentIncomeFeed,
   pendings,
+  feedDataPromise,
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo } = useMember()
@@ -121,9 +124,7 @@ export function Dashboard({
   const sheetOpen = modal.kind !== 'closed'
   const filterActive = filter !== null && isFilterActive(filter)
 
-  const P = DEFAULT_INCOME_PALETTE
-
-  const handleItemClick = (tx: PagedTxnRow) => {
+  const handleItemClick = useCallback((tx: PagedTxnRow) => {
     if (tx.kind === 'income') {
       dispatch({
         kind: 'edit-income',
@@ -194,16 +195,7 @@ export function Dashboard({
         assetId: tx.assetId,
       },
     })
-  }
-
-  const incomeRenderRow = useCallback((tx: PagedTxnRow): React.ReactNode | undefined => {
-    if (tx.kind !== 'income') return undefined
-    return (
-      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
-        <CompactRow tx={tx} isLast={false} onClick={() => handleItemClick(tx)} />
-      </div>
-    )
-  }, [handleItemClick])
+  }, [startFuelLoad])
 
   const handleClose = () => dispatch({ kind: 'closed' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
@@ -271,37 +263,19 @@ export function Dashboard({
           />
         </div>
       )}
-      <TransactionFeed
-        key={mode}
-        initial={mode === 'income' ? recentIncomeFeed : recent}
-        pageSize={pageSize}
-        onItemClick={handleItemClick}
-        filter={mode === 'income' ? undefined : (filter ?? undefined)}
-        loader={mode === 'income' ? incomeLoader : undefined}
-        renderRow={mode === 'income' ? incomeRenderRow : undefined}
-        label={
-          <div className="flex items-end justify-between">
-            <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
-              最近紀錄
-            </span>
-            {mode === 'expense' && (
-              <button
-                onClick={() => dispatch({ kind: 'filter' })}
-                className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
-                style={{ color: 'var(--ink-2)' }}
-                aria-label="開啟篩選"
-              >
-                篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
-              </button>
-            )}
-          </div>
-        }
-        emptyState={
-          mode === 'income'
-            ? <IncomeEmptyState onAdd={() => dispatch({ kind: 'income' })} />
-            : <EmptyState onAdd={() => dispatch({ kind: 'add' })} />
-        }
-      />
+      <Suspense fallback={<DashboardFeedSkeleton />}>
+        <DashboardFeed
+          feedDataPromise={feedDataPromise}
+          mode={mode}
+          pageSize={pageSize}
+          filter={filter}
+          filterActive={filterActive}
+          onItemClick={handleItemClick}
+          onFilterClick={() => dispatch({ kind: 'filter' })}
+          onAddIncome={() => dispatch({ kind: 'income' })}
+          onAddTx={() => dispatch({ kind: 'add' })}
+        />
+      </Suspense>
       <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen} />
       <AddSheet
         open={modal.kind === 'add' || modal.kind === 'edit-tx'}
@@ -360,5 +334,106 @@ export function Dashboard({
         </div>
       )}
     </div>
+  )
+}
+
+interface DashboardFeedProps {
+  feedDataPromise: Promise<DashboardFeedData>
+  mode: 'expense' | 'income'
+  pageSize: number
+  filter: TxnFilter | null
+  filterActive: boolean
+  onItemClick: (tx: PagedTxnRow) => void
+  onFilterClick: () => void
+  onAddIncome: () => void
+  onAddTx: () => void
+}
+
+function DashboardFeed({
+  feedDataPromise,
+  mode,
+  pageSize,
+  filter,
+  filterActive,
+  onItemClick,
+  onFilterClick,
+  onAddIncome,
+  onAddTx,
+}: DashboardFeedProps) {
+  const { recent, recentIncomeFeed } = use(feedDataPromise)
+  const P = DEFAULT_INCOME_PALETTE
+
+  const incomeRenderRow = useCallback((tx: PagedTxnRow): React.ReactNode | undefined => {
+    if (tx.kind !== 'income') return undefined
+    return (
+      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
+        <CompactRow tx={tx} isLast={false} onClick={() => onItemClick(tx)} />
+      </div>
+    )
+  }, [onItemClick, P.glow])
+
+  return (
+    <TransactionFeed
+      key={mode}
+      initial={mode === 'income' ? recentIncomeFeed : recent}
+      pageSize={pageSize}
+      onItemClick={onItemClick}
+      filter={mode === 'income' ? undefined : (filter ?? undefined)}
+      loader={mode === 'income' ? incomeLoader : undefined}
+      renderRow={mode === 'income' ? incomeRenderRow : undefined}
+      label={
+        <div className="flex items-end justify-between">
+          <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
+            最近紀錄
+          </span>
+          {mode === 'expense' && (
+            <button
+              onClick={onFilterClick}
+              className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
+              style={{ color: 'var(--ink-2)' }}
+              aria-label="開啟篩選"
+            >
+              篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+            </button>
+          )}
+        </div>
+      }
+      emptyState={
+        mode === 'income'
+          ? <IncomeEmptyState onAdd={onAddIncome} />
+          : <EmptyState onAdd={onAddTx} />
+      }
+    />
+  )
+}
+
+function DashboardFeedSkeleton() {
+  return (
+    <>
+      <div className="px-6 pt-2 pb-1">
+        <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
+          最近紀錄
+        </span>
+      </div>
+      <div className="px-6 pt-4 pb-2">
+        <div className="h-4 w-24 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
+      </div>
+      <div
+        className="mx-4 rounded-[18px] overflow-hidden"
+        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+      >
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-[68px] animate-pulse"
+            style={{
+              background: 'var(--surface)',
+              opacity: 0.6,
+              borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
+            }}
+          />
+        ))}
+      </div>
+    </>
   )
 }

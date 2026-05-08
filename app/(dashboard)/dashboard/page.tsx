@@ -27,62 +27,72 @@ export default async function DashboardPage() {
   const now = new Date()
   const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  const [balance, rows, incomeSummary, recentIncomesRaw, pendings] = await Promise.all([
+  // Fast path — what hero/banner needs to paint immediately. Awaited so
+  // BalanceHero / SoloBanner / ModeTogglePlaceholder render with real data.
+  // The latest income (limit 1) covers the hero label without pulling the full feed.
+  const [balance, incomeSummary, pendings, latestIncomes] = await Promise.all([
     getGroupBalance(group.id),
-    listTransactionsPaged(group.id, null, PAGE_SIZE),
     listIncomeMonthSummary(group.id, yyyymm),
-    listIncomesPaged(group.id, null, PAGE_SIZE),
     listActivePendings(group.id),
+    listIncomesPaged(group.id, null, 1),
   ])
 
-  // Serialize Date → ISO string for the client component
-  const recent = rows.map((r) => ({
-    id: r.id,
-    amount: r.amount,
-    splitType: r.splitType,
-    description: r.description,
-    category: r.category,
-    paidBy: r.paidBy,
-    transactedAt: r.transactedAt.toISOString(),
-    createdAt: r.createdAt.toISOString(),
-    kind: r.kind,
-    assetId: r.assetId,
-    fuelLogId: r.fuelLogId ?? null,
-  }))
-
-  const recentIncomeFeed: PagedTxnRow[] = recentIncomesRaw.map((r) =>
-    incomeToFeedRow({
-      id: r.id,
-      amount: r.amount,
-      category: r.category,
-      source: r.source,
-      recipientId: r.recipientId,
-      assetId: r.assetId,
-      occurredAt: r.occurredAt,
-      createdAt: r.createdAt.toISOString(),
-      kind: 'income',
-    })
-  )
-
-  const recentIncomeLabel = recentIncomesRaw.length > 0
+  const recentIncomeLabel = latestIncomes.length > 0
     ? (() => {
-        const r = recentIncomesRaw[0]
+        const r = latestIncomes[0]
         const d = new Date(r.occurredAt + 'T00:00:00')
         const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
         return `${dateStr} · ${r.source ?? getIncomeCategory(r.category).label}`
       })()
     : null
 
+  // Slow path — passed as a Promise so the client can wrap it in <Suspense>
+  // and stream the feed in after the hero paints. Both queries kick off here
+  // (not awaited) and stream over the same RSC payload.
+  const feedDataPromise = Promise.all([
+    listTransactionsPaged(group.id, null, PAGE_SIZE),
+    listIncomesPaged(group.id, null, PAGE_SIZE),
+  ]).then(([rows, incomeRows]) => {
+    const recent: PagedTxnRow[] = rows.map((r) => ({
+      id: r.id,
+      amount: r.amount,
+      splitType: r.splitType,
+      description: r.description,
+      category: r.category,
+      paidBy: r.paidBy,
+      transactedAt: r.transactedAt.toISOString(),
+      createdAt: r.createdAt.toISOString(),
+      kind: r.kind,
+      assetId: r.assetId,
+      fuelLogId: r.fuelLogId ?? null,
+    }))
+
+    const recentIncomeFeed: PagedTxnRow[] = incomeRows.map((r) =>
+      incomeToFeedRow({
+        id: r.id,
+        amount: r.amount,
+        category: r.category,
+        source: r.source,
+        recipientId: r.recipientId,
+        assetId: r.assetId,
+        occurredAt: r.occurredAt,
+        createdAt: r.createdAt.toISOString(),
+        kind: 'income',
+      })
+    )
+
+    return { recent, recentIncomeFeed }
+  })
+
   return (
     <Dashboard
       balance={balance}
-      recent={recent}
       pageSize={PAGE_SIZE}
       incomeMonthTotal={incomeSummary.total}
       incomeMonthCount={incomeSummary.count}
       recentIncomeLabel={recentIncomeLabel}
-      recentIncomeFeed={recentIncomeFeed}
       pendings={pendings}
+      feedDataPromise={feedDataPromise}
     />
   )
 }
