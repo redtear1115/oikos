@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Switch } from '@/components/Switch'
 import { LogoutButton } from './LogoutButton'
 import { updateGroupName } from '@/actions/group'
@@ -14,6 +13,8 @@ import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 import { shareInviteLink } from '@/lib/share'
 import { getOfflinePref, setOfflinePref } from '@/lib/offline/preference'
 import type { SplitType } from '@/lib/balance'
+import { useTranslations } from '@/lib/i18n/client'
+import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 
 export interface ViewerInfo {
   id: string
@@ -37,6 +38,7 @@ export function SettingsContent({
   viewer, partner, groupId, groupName, appVersion, currentLocale,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations()
   const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
   const isSolo = partner === null
 
@@ -79,11 +81,11 @@ export function SettingsContent({
         const url = await createInvite(groupId)
         const result = await shareInviteLink(url)
         // Always confirm — see SoloBanner for the same rationale.
-        setInviteToast(result === 'shared' ? '已分享,連結也已複製' : '已複製連結')
+        setInviteToast(result === 'shared' ? t.soloBanner.sharedAndCopied : t.soloBanner.copied)
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
       } catch (e) {
-        setInviteError(e instanceof Error ? e.message : '發生錯誤')
+        setInviteError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -101,7 +103,7 @@ export function SettingsContent({
         await updateDefaultSplitType(next)
         router.refresh()
       } catch (e) {
-        setSplitError(e instanceof Error ? e.message : '儲存失敗')
+        setSplitError(e instanceof Error ? e.message : t.incomeSheet.errors.saveFailed)
       }
     })
   }
@@ -113,21 +115,21 @@ export function SettingsContent({
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
-          設定
+          {t.settings.title}
         </div>
       </div>
 
       {/* 帳本 */}
-      <Section title="帳本">
+      <Section title={t.settings.sectionGroup}>
         <Row
-          label="帳本名稱"
+          label={t.settings.groupName}
           value={groupName}
           onClick={() => setEditing('group')}
         />
       </Section>
 
       {/* 成員 */}
-      <Section title="成員">
+      <Section title={t.settings.sectionMember}>
         <div
           className="rounded-[20px] overflow-hidden"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
@@ -162,7 +164,7 @@ export function SettingsContent({
               className="w-full h-12 rounded-[14px] border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--accent)' }}
             >
-              {invitePending ? '產生中…' : '邀請對方加入'}
+              {invitePending ? t.soloBanner.generating : t.settings.inviteCta}
             </button>
             {inviteToast && (
               <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--ink-2)' }}>
@@ -179,36 +181,36 @@ export function SettingsContent({
       </Section>
 
       {/* 個人 */}
-      <Section title="個人">
+      <Section title={t.settings.sectionPersonal}>
         <Row
-          label="加到主畫面"
+          label={t.settings.addToHomeScreen}
           onClick={() => setInstallGuideOpen(true)}
         />
         <div className="mt-3" />
         <Row
-          label="顯示名稱"
+          label={t.settings.displayName}
           value={viewer.displayName}
           onClick={() => setEditing('name')}
         />
         <div className="mt-3">
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            語言
+            {t.settings.language}
           </div>
           <LanguageSwitcher current={currentLocale} />
         </div>
         <div className="mt-3">
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            建立紀錄時的預設分攤
+            {t.settings.defaultSplitTitle}
           </div>
           <div
             className="rounded-[20px] overflow-hidden flex flex-col"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
           >
             {([
-              { id: 'half',       label: '平分' },
-              { id: 'all_mine',   label: '全部我的' },
-              { id: 'all_theirs', label: '全部對方的' },
-            ] as const).map((opt, i) => {
+              { id: 'half' as const,       label: t.splitType.even },
+              { id: 'all_mine' as const,   label: t.splitType.allMine },
+              { id: 'all_theirs' as const, label: t.splitType.allPartners },
+            ]).map((opt, i) => {
               const sel = displayedSplit === opt.id
               return (
                 <button
@@ -239,7 +241,7 @@ export function SettingsContent({
           </div>
           {isSolo && (
             <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
-              單人狀態下固定為「全部我的」，邀請對方加入後可調整。
+              {t.settings.soloLockHint}
             </div>
           )}
           {splitError && (
@@ -251,23 +253,23 @@ export function SettingsContent({
       </Section>
 
       {/* 裝置 */}
-      <Section title="裝置">
+      <Section title={t.settings.sectionDevice}>
         <div
           className="rounded-[20px] flex items-center justify-between px-5 py-4"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
           <div className="flex-1 min-w-0 pr-4">
             <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-              離線瀏覽
+              {t.settings.offlineBrowsing}
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-              開啟後可在無網路時查看最近記錄
+              {t.settings.offlineHint}
             </div>
           </div>
           <Switch
             checked={offlineEnabled}
             onChange={handleOfflineToggle}
-            ariaLabel="離線瀏覽"
+            ariaLabel={t.settings.offlineBrowsing}
           />
         </div>
       </Section>
@@ -279,12 +281,12 @@ export function SettingsContent({
         className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
       >
-        Futari · v{appVersion} · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>法律聲明</a>
+        Futari · v{appVersion} · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>{t.settings.legalNotice}</a>
       </div>
 
       <EditTextSheet
         open={editing === 'group'}
-        title="帳本名稱"
+        title={t.settings.groupName}
         initialValue={groupName}
         onClose={handleClose}
         onSubmit={async (v) => {
@@ -294,7 +296,7 @@ export function SettingsContent({
       />
       <EditTextSheet
         open={editing === 'name'}
-        title="顯示名稱"
+        title={t.settings.displayName}
         initialValue={viewer.displayName}
         onClose={handleClose}
         onSubmit={async (v) => {
@@ -340,12 +342,13 @@ function Row({ label, value, onClick }: { label: string; value?: string; onClick
 function MemberRow({
   who, initial, avatarUrl, displayName, email, youSuffix,
 }: { who: 'M' | 'T'; initial: string; avatarUrl: string | null; displayName: string; email: string; youSuffix?: boolean }) {
+  const t = useTranslations()
   return (
     <div className="flex items-center gap-3.5 px-5 py-4">
       <Avatar who={who} initial={initial} src={avatarUrl} size={40} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
-          {displayName}{youSuffix && <span className="ml-1" style={{ color: 'var(--ink-3)' }}>（你）</span>}
+          {displayName}{youSuffix && <span className="ml-1" style={{ color: 'var(--ink-3)' }}>{t.settings.youSuffix}</span>}
         </div>
         {email && (
           <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>{email}</div>

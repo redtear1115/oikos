@@ -8,6 +8,7 @@ import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -20,6 +21,7 @@ interface Props {
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
   const { viewer, partner } = useMember()
+  const t = useTranslations()
   // Default to the full outstanding amount.
   const [amount, setAmount] = useState(String(debtAmount))
   const [date, setDate] = useState(localTodayISO())
@@ -45,14 +47,14 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
   const parsed = parseInt(amount, 10) || 0
 
   const title = viewerIsDebtor
-    ? '我還多少？'
-    : `${partner?.displayName ?? '對方'} 還了 多少？`
-  const primaryText = viewerIsDebtor ? '記錄還款' : '記錄收款'
+    ? t.settlement.debtorTitle
+    : t.settlement.creditorTitle.replace('{name}', partner?.displayName ?? t.common.partner)
+  const primaryText = viewerIsDebtor ? t.settlement.primaryRepay : t.settlement.primaryReceive
 
   const handleConfirm = () => {
-    if (!parsed || parsed <= 0) { setError('請輸入金額'); return }
-    if (parsed > debtAmount) { setError('金額不能超過欠款'); return }
-    if (!viewerIsDebtor && !partner) { setError('伴侶尚未加入'); return }
+    if (!parsed || parsed <= 0) { setError(t.addSheet.errors.amountRequired); return }
+    if (parsed > debtAmount) { setError(t.settlement.errors.exceedsDebt); return }
+    if (!viewerIsDebtor && !partner) { setError(t.addSheet.errors.noPartner); return }
     // Settlement payer = whoever owes (paying down their debt).
     const payerId = viewerIsDebtor ? viewer.id : partner!.id
     startTransition(async () => {
@@ -65,7 +67,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -108,7 +110,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
               setAmount(next)
             }}
             placeholder="0"
-            aria-label="還款金額"
+            aria-label={t.settlement.amountAriaLabel}
             className="tnum tracking-[-1.5px] leading-none bg-transparent border-0 outline-none text-center"
             style={{
               fontFamily: 'var(--font-numeric)',
@@ -156,7 +158,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
                 {dateLabel(date)}
               </div>
               <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                {date === localTodayISO() ? '今天' : weekday(date)}
+                {date === localTodayISO() ? t.settlement.today : weekday(date)}
               </div>
             </div>
             <Chevron />
@@ -173,7 +175,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--accent)' }}
           >
-            {pending ? '處理中…' : `${primaryText} NT$${parsed.toLocaleString('en-US')}`}
+            {pending ? t.common.processing : `${primaryText} NT$${parsed.toLocaleString('en-US')}`}
           </button>
           <button
             onClick={onClose}
@@ -185,7 +187,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
               border: '1px solid var(--hairline)',
             }}
           >
-            取消
+            {t.common.cancel}
           </button>
         </div>
 

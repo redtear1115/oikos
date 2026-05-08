@@ -1,6 +1,7 @@
 'use client'
 
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   onAdd?: () => void
@@ -8,6 +9,7 @@ interface Props {
 
 export function IncomeEmptyState({ onAdd }: Props) {
   const P = DEFAULT_INCOME_PALETTE  // mint
+  const t = useTranslations()
 
   // Constellation dot positions (scattered around the central halo)
   // Relative positions based on the design reference
@@ -63,7 +65,7 @@ export function IncomeEmptyState({ onAdd }: Props) {
         className="text-sm mb-5"
         style={{ color: 'var(--ink-2)', lineHeight: 1.6 }}
       >
-        還沒記過家裡的進帳
+        {t.feed.noIncome}
       </p>
 
       {/* CTA — conditionally rendered */}
@@ -78,7 +80,7 @@ export function IncomeEmptyState({ onAdd }: Props) {
             border: `1px solid ${P.ink}30`,
           }}
         >
-          記第一筆
+          {t.feed.addFirst}
         </button>
       )}
     </div>

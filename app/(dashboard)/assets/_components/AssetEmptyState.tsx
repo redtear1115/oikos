@@ -1,4 +1,9 @@
+'use client'
+
+import { useTranslations } from '@/lib/i18n/client'
+
 export function AssetEmptyState() {
+  const t = useTranslations()
   return (
     <div className="flex flex-col items-center justify-center pt-16 pb-12 px-6 text-center">
       <div
@@ -15,10 +20,10 @@ export function AssetEmptyState() {
         </svg>
       </div>
       <div className="text-base font-medium mb-2" style={{ color: 'var(--ink)' }}>
-        還沒有愛物
+        {t.assets.empty.title}
       </div>
       <div className="text-sm leading-relaxed" style={{ color: 'var(--ink-3)', maxWidth: 240 }}>
-        新增一台車、寵物、孩子或保單，<br />開始記錄花在他們身上的時間與心意。
+        {t.assets.empty.body}
       </div>
     </div>
   )

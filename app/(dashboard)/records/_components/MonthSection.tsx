@@ -2,6 +2,7 @@
 
 import { monthLabel } from '@/lib/groupByMonth'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   monthKey: string
@@ -12,6 +13,7 @@ interface Props {
 
 export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Props) {
   const P = DEFAULT_INCOME_PALETTE
+  const t = useTranslations()
   const hasIncome = incomeTotal !== undefined && incomeTotal > 0
   const net = hasIncome ? incomeTotal - totalAmount : null
 
@@ -26,7 +28,7 @@ export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Prop
       {hasIncome ? (
         <div className="text-right tnum" style={{ color: 'var(--ink-3)' }}>
           <span className="text-micro">
-            支出 NT${totalAmount.toLocaleString('en-US')}
+            {t.monthSection.expense} NT${totalAmount.toLocaleString('en-US')}
             {' · '}
             <span style={{ color: P.ink }}>+{incomeTotal!.toLocaleString('en-US')}</span>
           </span>
@@ -35,13 +37,13 @@ export function MonthSection({ monthKey, count, totalAmount, incomeTotal }: Prop
               className="text-micro ml-2 font-medium"
               style={{ color: net >= 0 ? P.ink : 'var(--ink-2)' }}
             >
-              淨 {net >= 0 ? '+' : ''}NT${net.toLocaleString('en-US')}
+              {t.monthSection.net} {net >= 0 ? '+' : ''}NT${net.toLocaleString('en-US')}
             </span>
           )}
         </div>
       ) : (
         <span className="tnum text-micro" style={{ color: 'var(--ink-3)' }}>
-          {count} 筆 · NT${totalAmount.toLocaleString('en-US')}
+          {count}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`} · NT${totalAmount.toLocaleString('en-US')}
         </span>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from '@/lib/i18n/t'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
 export default async function SignInPage() {

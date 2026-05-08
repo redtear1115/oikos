@@ -27,6 +27,7 @@ import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id
 import { getFuelLogById } from '@/actions/fuelLog'
 import { PendingIncomeStack } from './PendingIncomeStack'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import { useTranslations } from '@/lib/i18n/client'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 const incomeLoader = makeIncomeLoader(20)
@@ -67,6 +68,7 @@ export function Dashboard({
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo } = useMember()
+  const t = useTranslations()
 
   useRealtimeEvents((event) => {
     if (
@@ -213,9 +215,9 @@ export function Dashboard({
             <ModeTogglePlaceholder mode={mode} onChange={setMode} pendingCount={pendings.length} />
 
             <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
-              <span>你還在獨自記帳</span>
+              <span>{t.dashboard.soloHint}</span>
               <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>
-                邀請對方 →
+                {t.dashboard.inviteCta}
               </Link>
             </div>
             <button
@@ -224,7 +226,7 @@ export function Dashboard({
               className="w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center gap-1.5"
               style={{ background: 'var(--ink)' }}
             >
-              <PlusIcon size={16} />{mode === 'income' ? '記一筆進帳' : '新增一筆'}
+              <PlusIcon size={16} />{mode === 'income' ? t.dashboard.addIncome : t.dashboard.addExpense}
             </button>
           </div>
         ) : (
@@ -362,6 +364,7 @@ function DashboardFeed({
 }: DashboardFeedProps) {
   const { recent, recentIncomeFeed } = use(feedDataPromise)
   const P = DEFAULT_INCOME_PALETTE
+  const t = useTranslations()
 
   const incomeRenderRow = useCallback((tx: PagedTxnRow): React.ReactNode | undefined => {
     if (tx.kind !== 'income') return undefined
@@ -384,16 +387,16 @@ function DashboardFeed({
       label={
         <div className="flex items-end justify-between">
           <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
-            最近紀錄
+            {t.feed.header}
           </span>
           {mode === 'expense' && (
             <button
               onClick={onFilterClick}
               className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
               style={{ color: 'var(--ink-2)' }}
-              aria-label="開啟篩選"
+              aria-label={t.dashboard.filterAriaLabel}
             >
-              篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
             </button>
           )}
         </div>
@@ -408,11 +411,12 @@ function DashboardFeed({
 }
 
 function DashboardFeedSkeleton() {
+  const t = useTranslations()
   return (
     <>
       <div className="px-6 pt-2 pb-1">
         <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
-          最近紀錄
+          {t.feed.header}
         </span>
       </div>
       <div className="px-6 pt-4 pb-2">

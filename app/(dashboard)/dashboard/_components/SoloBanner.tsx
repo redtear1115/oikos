@@ -6,6 +6,7 @@ import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   /** Called when the user dismisses the banner via the × button. The parent owns the
@@ -24,6 +25,7 @@ interface Props {
  */
 export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
   const { group } = useMember()
+  const t = useTranslations()
   const [pending, startTransition] = useTransition()
   const [toast, setToast] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -44,11 +46,11 @@ export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
         // Always confirm — desktop share sheets (especially Chrome on macOS) can be
         // unobtrusive enough that users don't realise anything happened. Since the
         // helper always copies first, the URL is on the clipboard either way.
-        setToast(result === 'shared' ? '已分享，連結也已複製' : '已複製連結')
+        setToast(result === 'shared' ? t.soloBanner.sharedAndCopied : t.soloBanner.copied)
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
         toastTimerRef.current = setTimeout(() => setToast(null), 2000)
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -61,17 +63,17 @@ export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
         <Avatar who="T" initial="?" src={null} size={44} />
         <div className="flex-1 min-w-0 pt-[2px]">
           <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
-            <span className="font-semibold" style={{ color: 'var(--ink)' }}>還在等對方加入</span>
+            <span className="font-semibold" style={{ color: 'var(--ink)' }}>{t.soloBanner.waiting}</span>
           </div>
           <div className="text-xs" style={{ color: 'var(--ink-2)' }}>
-            傳連結邀請他
+            {t.soloBanner.sendInviteHint}
           </div>
         </div>
         {onDismiss && (
           <button
             type="button"
             onClick={onDismiss}
-            aria-label="關閉提示"
+            aria-label={t.soloBanner.dismissAriaLabel}
             className="self-center text-title leading-none bg-transparent border-0 cursor-pointer p-1"
             style={{ color: 'var(--ink-3)' }}
           >
@@ -87,7 +89,7 @@ export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
         className="mt-[18px] w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center disabled:opacity-50"
         style={{ background: 'var(--accent)' }}
       >
-        {pending ? '產生中…' : '傳送邀請'}
+        {pending ? t.soloBanner.generating : t.soloBanner.sendInvite}
       </button>
 
       {toast && (

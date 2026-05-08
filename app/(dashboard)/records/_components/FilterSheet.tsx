@@ -5,6 +5,7 @@ import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBack
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { defaultFilter, type TxnFilter, type PayerFilter, type SplitFilter } from '@/lib/filter'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   open: boolean
@@ -16,22 +17,23 @@ interface Props {
   onApply: (next: TxnFilter) => void
 }
 
-const PAYER_OPTIONS: { value: PayerFilter; label: string }[] = [
-  { value: 'all',    label: '全部' },
-  { value: 'mine',   label: '我' },
-  { value: 'theirs', label: '對方' },
-]
-
-const SPLIT_OPTIONS: { value: SplitFilter; label: string }[] = [
-  { value: 'all',         label: '全部' },
-  { value: 'half',        label: '平分' },
-  { value: 'all_mine',    label: '我的' },
-  { value: 'all_theirs',  label: '對方的' },
-]
-
 export function FilterSheet({ open, current, onClose, onApply }: Props) {
   const { isSolo } = useMember()
+  const t = useTranslations()
   const [draft, setDraft] = useState<TxnFilter>(current)
+
+  const PAYER_OPTIONS: { value: PayerFilter; label: string }[] = [
+    { value: 'all',    label: t.common.all },
+    { value: 'mine',   label: t.common.me },
+    { value: 'theirs', label: t.common.partner },
+  ]
+
+  const SPLIT_OPTIONS: { value: SplitFilter; label: string }[] = [
+    { value: 'all',         label: t.common.all },
+    { value: 'half',        label: t.splitType.even },
+    { value: 'all_mine',    label: t.splitType.mine },
+    { value: 'all_theirs',  label: t.splitType.theirs },
+  ]
 
   // Re-seed the draft whenever the sheet (re-)opens — without this, dismissing without
   // applying and reopening would show the stale draft instead of the live state.
@@ -64,15 +66,15 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
             className="text-sm font-medium bg-transparent border-0 cursor-pointer"
             style={{ color: 'var(--ink-2)' }}
           >
-            重設
+            {t.filterSheet.reset}
           </button>
-          <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>篩選</div>
+          <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{t.filterSheet.title}</div>
           <button
             onClick={() => onApply(draft)}
             className="text-sm font-semibold bg-transparent border-0 cursor-pointer"
             style={{ color: 'var(--accent)' }}
           >
-            套用
+            {t.filterSheet.apply}
           </button>
         </div>
 
@@ -80,7 +82,7 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
           {/* 誰付的 + 分攤 — pair-mode only. In solo, payer is always self and split is
               always all_mine, so these dimensions are degenerate (every row matches). */}
           {!isSolo && (
-            <Section title="誰付的">
+            <Section title={t.filterSheet.payerSection}>
               {PAYER_OPTIONS.map((o) => (
                 <Chip
                   key={o.value}
@@ -93,7 +95,7 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
           )}
 
           {!isSolo && (
-            <Section title="分攤">
+            <Section title={t.filterSheet.splitSection}>
               {SPLIT_OPTIONS.map((o) => (
                 <Chip
                   key={o.value}
@@ -106,11 +108,11 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
           )}
 
           {/* 分類 (multi) */}
-          <Section title="分類（可多選）">
+          <Section title={t.filterSheet.categorySection}>
             {PICKABLE_CATEGORIES.map((c) => (
               <Chip
                 key={c.id}
-                label={c.label}
+                label={t.category[c.id]}
                 active={draft.categories.has(c.id)}
                 onClick={() => toggleCategory(c.id)}
               />

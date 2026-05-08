@@ -9,6 +9,7 @@ import { AssetSheet } from './AssetSheet'
 import { AssetListItem } from './AssetListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
+import { useTranslations } from '@/lib/i18n/client'
 
 export interface AssetsListItem {
   id: string
@@ -35,6 +36,7 @@ interface Props {
 
 export function AssetsListClient({ items }: Props) {
   const router = useRouter()
+  const t = useTranslations()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   // Refresh when partner adds/updates/deletes an asset
@@ -115,7 +117,7 @@ export function AssetsListClient({ items }: Props) {
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
-          愛物
+          {t.assets.title}
         </div>
       </div>
 
@@ -125,7 +127,7 @@ export function AssetsListClient({ items }: Props) {
         <div className="px-4 flex flex-col gap-5">
           {hasProperty && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label="財產" />
+              <SectionLabel label={t.assets.section.property} />
               {cars.map((c) => (
                 <CarHeroCard
                   key={c.id}
@@ -143,21 +145,21 @@ export function AssetsListClient({ items }: Props) {
                   compact={multiCar}
                 />
               ))}
-              {cars.length > 0 && dashedButton(multiCar ? '新增車輛' : '加入第二輛車')}
+              {cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
               {houses.length > 0 && <AssetGroup group={houses} />}
             </div>
           )}
 
           {livings.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label="生命體" />
+              <SectionLabel label={t.assets.section.living} />
               <AssetGroup group={livings} />
             </div>
           )}
 
           {insurances.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label="保障" />
+              <SectionLabel label={t.assets.section.coverage} />
               <AssetGroup group={insurances} />
             </div>
           )}

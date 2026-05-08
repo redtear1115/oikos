@@ -19,6 +19,7 @@ import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id
 import { getFuelLogById } from '@/actions/fuelLog'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
 import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
+import { useTranslations } from '@/lib/i18n/client'
 
 const incomeLoader = makeIncomeLoader(20)
 
@@ -29,6 +30,7 @@ interface Props {
 
 export function RecordsList({ initial, pageSize }: Props) {
   const router = useRouter()
+  const t = useTranslations()
   const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
@@ -174,16 +176,16 @@ export function RecordsList({ initial, pageSize }: Props) {
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
           >
-            紀錄
+            {t.records.title}
           </div>
           {tab !== 'income' && (
             <button
               onClick={() => setFilterOpen(true)}
               className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
               style={{ color: 'var(--ink-2)' }}
-              aria-label="開啟篩選"
+              aria-label={t.dashboard.filterAriaLabel}
             >
-              篩選{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
             </button>
           )}
         </div>
@@ -194,17 +196,17 @@ export function RecordsList({ initial, pageSize }: Props) {
           style={{ gap: 8 }}
         >
           {([
-            { id: 'all',     label: '全部' },
-            { id: 'expense', label: '支出' },
-            { id: 'income',  label: '進帳' },
-          ] as const).map((t) => {
-            const sel = tab === t.id
-            const isIncome = t.id === 'income'
+            { id: 'all' as const,     label: t.records.tabAll },
+            { id: 'expense' as const, label: t.records.tabExpense },
+            { id: 'income' as const,  label: t.records.tabIncome },
+          ]).map((tab2) => {
+            const sel = tab === tab2.id
+            const isIncome = tab2.id === 'income'
             return (
               <button
-                key={t.id}
+                key={tab2.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(tab2.id)}
                 className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
                 style={{
                   background: sel
@@ -216,7 +218,7 @@ export function RecordsList({ initial, pageSize }: Props) {
                   border: sel ? 'none' : '1px solid var(--hairline)',
                 }}
               >
-                {t.label}
+                {tab2.label}
               </button>
             )
           })}
@@ -236,9 +238,7 @@ export function RecordsList({ initial, pageSize }: Props) {
             ? <IncomeEmptyState />
             : (
               <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
-                {filterActive
-                  ? '沒有符合條件的紀錄'
-                  : '還沒有紀錄。按下方 + 記第一筆吧。'}
+                {filterActive ? t.feed.noFiltered : t.feed.noFilteredAddHint}
               </div>
             )
         }

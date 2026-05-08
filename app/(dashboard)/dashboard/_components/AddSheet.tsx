@@ -16,6 +16,7 @@ import { DateField } from './DateField'
 import { AssetLinkField } from './AssetLinkField'
 import { PayerToggle } from './PayerToggle'
 import { SplitTypeSelector } from './SplitTypeSelector'
+import { useTranslations } from '@/lib/i18n/client'
 
 export interface AddSheetInitial {
   id: string
@@ -42,6 +43,7 @@ interface Props {
 
 export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory }: Props) {
   const { viewer, partner, isSolo } = useMember()
+  const t = useTranslations()
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
   const [category, setCategory] = useState<CategoryId>('dining')
@@ -93,9 +95,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
   const handleSave = () => {
     const n = parseInt(amount, 10)
-    if (!n || n <= 0) { setError('請輸入金額'); return }
-    if (!desc.trim()) { setError('請輸入描述'); return }
-    if (payerWho === 'T' && !partner) { setError('伴侶尚未加入'); return }
+    if (!n || n <= 0) { setError(t.addSheet.errors.amountRequired); return }
+    if (!desc.trim()) { setError(t.addSheet.errors.descriptionRequired); return }
+    if (payerWho === 'T' && !partner) { setError(t.addSheet.errors.noPartner); return }
     const payerId = isSolo ? viewer.id : (payerWho === 'M' ? viewer.id : partner!.id)
     const splitType: SplitType = isSolo ? 'all_mine' : split
     const transactedAt = ymdToUTCNoon(date)
@@ -127,7 +129,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -142,7 +144,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -178,13 +180,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)' }}
           >
-            取消
+            {t.common.cancel}
           </button>
           <div
             className="text-base font-semibold tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
-            {isEdit ? '編輯紀錄' : '新增紀錄'}
+            {isEdit ? t.addSheet.titleEdit : t.addSheet.title}
           </div>
           <button
             onClick={handleSave}
@@ -195,7 +197,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 amount && !pending ? 'var(--accent)' : 'var(--ink-3)',
             }}
           >
-            {pending ? '儲存中…' : '儲存'}
+            {pending ? t.common.saving : t.common.save}
           </button>
         </div>
 
@@ -209,7 +211,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               className="text-xs tracking-[0.6px] mb-3"
               style={{ color: 'var(--ink-3)' }}
             >
-              金額
+              {t.addSheet.amount}
             </div>
             <label
               className="flex items-baseline justify-center gap-1.5 min-h-[60px] cursor-text"
@@ -242,7 +244,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                   setAmount(next)
                 }}
                 placeholder="0"
-                aria-label="金額"
+                aria-label={t.addSheet.amount}
                 className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
@@ -269,7 +271,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <input
               value={desc}
               onChange={e => setDesc(e.target.value)}
-              placeholder="描述（例：晚餐、雜貨）"
+              placeholder={t.addSheet.descPlaceholder}
               className="flex-1 bg-transparent border-0 outline-none text-base py-1"
               style={{ color: 'var(--ink)' }}
             />
@@ -278,7 +280,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Categories */}
           <div className="pt-5 pb-[18px]">
             <div className="text-xs tracking-[0.6px] px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
-              分類
+              {t.addSheet.category}
             </div>
             <CategoryPicker value={category} onChange={setCategory} />
           </div>
@@ -286,7 +288,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Asset link (visible in both solo and dual mode) */}
           <div className="px-5 pt-2 pb-[18px] mt-1" style={{ borderTop: '1px solid var(--hairline)' }}>
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
-              關聯愛物（選填）
+              {t.addSheet.assetLink}
             </div>
             <AssetLinkField value={assetId} onChange={setAssetId} open={open} />
           </div>
@@ -295,7 +297,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <div className="px-5 pt-2 pb-[18px] mt-1"
               style={{ borderTop: '1px solid var(--hairline)' }}>
               <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
-                分攤方式
+                {t.addSheet.splitMethod}
               </div>
               <SplitTypeSelector
                 value={split}
@@ -309,7 +311,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Date */}
           <div className="px-5 pt-1 pb-6">
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
-              日期
+              {t.addSheet.date}
             </div>
             <DateField value={date} onChange={setDate} open={open} />
           </div>
@@ -327,7 +329,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                   border: '1px solid var(--destructive-soft)',
                 }}
               >
-                刪除這筆
+                {t.addSheet.deleteOne}
               </button>
             </div>
           )}
@@ -347,9 +349,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
       <ConfirmModal
         open={confirmingDelete && open}
-        title="刪除這筆紀錄？"
-        description="這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。"
-        confirmLabel="刪除"
+        title={t.addSheet.deleteConfirmTitle}
+        description={t.common.deleteSoftDescription}
+        confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
         onConfirm={performDelete}
