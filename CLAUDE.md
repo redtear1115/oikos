@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Current version: v0.9.0**（local，未 push origin / 未 migrate prod）— 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.10.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 | 狀態 |
 |---|---|---|
@@ -24,10 +24,11 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | v0.5.0 | 愛物：Child / Pet / Plant | ✅ |
 | v0.6.0 | 愛物：House + Insurance | ✅ |
 | v0.7.0 | 進帳（Income） | ✅ |
-| v0.8.0 | 自訂定期收入 Phase 1（rules + pending preview→commit） | ✅ local |
-| v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ local |
-| v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ local |
-| v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ local |
+| v0.8.0 | 自訂定期收入 Phase 1（rules + pending preview→commit） | ✅ |
+| v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ |
+| v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
+| v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
+| _Unreleased_ | Perf：pages 改 `getSession()` 跳過 Auth API HTTP 往返（PR #1）+ BottomNav 延遲 prefetch + Dashboard Suspense 邊界（PR #2） | 已 merge origin/main，待版本號 |
 
 ## Backlog
 

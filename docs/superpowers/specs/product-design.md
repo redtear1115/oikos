@@ -43,6 +43,18 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 - DB queries：[lib/db/queries/](lib/db/queries/)
 - Realtime：[app/(dashboard)/_components/RealtimeProvider.tsx](app/%28dashboard%29/_components/RealtimeProvider.tsx)
 
+### Auth 驗證分層
+
+| 位置 | 用 | 為什麼 |
+|---|---|---|
+| `middleware.ts` | `auth.getUser()` | 整個系統的 trust boundary，必須真打 Auth API 驗 token，防 cookie 偽造 |
+| Page / layout server components | `getCurrentUser()`（內部 `getSession()`）| Middleware 已先驗，cookie 在 page render 當下可信；省每頁 200–400ms HTTP 往返 |
+| Server actions（`actions/**.ts`）| `auth.getUser()` | Write path 直接被 client 呼叫，保守起見不省這層；單次 action 慢一點可接受 |
+
+不採用：無腦全面 `getSession()`（含 actions）/ 移除 middleware `getUser()` / process-level cache（Vercel 各 instance 不一致）/ Edge runtime（Drizzle 相容性）。
+
+Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`，回 `User | null`。新增 page / layout 時用這個，不要再呼叫 `auth.getUser()`。
+
 ---
 
 ## 3. 資料模型
