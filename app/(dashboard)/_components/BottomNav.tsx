@@ -102,7 +102,7 @@ function NavTab({ tab, active, allowPrefetch }: { tab: typeof TABS[number]; acti
   return (
     <Link
       href={tab.href}
-      prefetch={allowPrefetch ? undefined : false}
+      prefetch={allowPrefetch ? true : false}
       className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
