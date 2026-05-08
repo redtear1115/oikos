@@ -218,7 +218,7 @@ export function Dashboard({
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-6 pb-5">
-            <ModeTogglePlaceholder mode={mode} onChange={setMode} />
+            <ModeTogglePlaceholder mode={mode} onChange={setMode} pendingCount={pendings.length} />
 
             <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
               <span>你還在獨自記帳</span>
@@ -236,7 +236,7 @@ export function Dashboard({
             </button>
           </div>
         ) : (
-          <SoloBanner onDismiss={handleDismissBanner} />
+          <SoloBanner onDismiss={handleDismissBanner} pendingCount={pendings.length} />
         )
       ) : (
         <BalanceHero
@@ -248,6 +248,7 @@ export function Dashboard({
           incomeMonthTotal={incomeMonthTotal}
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
+          pendingCount={pendings.length}
         />
       )}
       {mode === 'income' && (

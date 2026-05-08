@@ -12,6 +12,9 @@ interface Props {
    *  persisted dismissal state (typically localStorage) and is responsible for
    *  swapping in a fallback hero. */
   onDismiss?: () => void
+  /** Pending recurring-income count, threaded into ModeTogglePlaceholder so the
+   *  「進帳模式」 tab gets the same mint-dot indicator as in non-solo flows. */
+  pendingCount?: number
 }
 
 /**
@@ -19,7 +22,7 @@ interface Props {
  * (member_b = null). Clicking the CTA generates an invite URL on demand
  * and pushes it through the Web Share API (or clipboard fallback).
  */
-export function SoloBanner({ onDismiss }: Props = {}) {
+export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
   const { group } = useMember()
   const [pending, startTransition] = useTransition()
   const [toast, setToast] = useState<string | null>(null)
@@ -52,7 +55,7 @@ export function SoloBanner({ onDismiss }: Props = {}) {
 
   return (
     <div className="px-5 pt-6 pb-5">
-      <ModeTogglePlaceholder />
+      <ModeTogglePlaceholder pendingCount={pendingCount} />
 
       <div className="flex items-start gap-[14px]">
         <Avatar who="T" initial="?" src={null} size={44} />

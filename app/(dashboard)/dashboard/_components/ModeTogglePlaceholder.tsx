@@ -5,9 +5,10 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 interface Props {
   mode?: 'expense' | 'income'
   onChange?: (mode: 'expense' | 'income') => void
+  pendingCount?: number
 }
 
-export function ModeTogglePlaceholder({ mode = 'expense', onChange }: Props) {
+export function ModeTogglePlaceholder({ mode = 'expense', onChange, pendingCount = 0 }: Props) {
   const P = DEFAULT_INCOME_PALETTE  // mint
   return (
     <div
@@ -53,6 +54,15 @@ export function ModeTogglePlaceholder({ mode = 'expense', onChange }: Props) {
               }} />
             )}
             {o.label}
+            {isIncome && !sel && pendingCount > 0 && (
+              <span style={{
+                width: 5, height: 5, borderRadius: '50%',
+                background: P.ink,
+                boxShadow: `0 0 4px ${P.glow}`,
+                flexShrink: 0,
+                opacity: 0.8,
+              }} />
+            )}
           </button>
         )
       })}
