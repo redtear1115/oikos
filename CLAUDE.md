@@ -15,21 +15,21 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 **Latest released: v0.11.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
-| 版本 | 範圍 | 狀態 |
-|---|---|---|
-| v0.1.0 | 專案建置 + Auth + Group + Invite + RLS + PWA + 核心記帳（AddSheet / Settlement / Records / Realtime） | ✅ |
-| v0.2.0 | Onboarding + Solo Mode + 篩選 + Settings | ✅ |
-| v0.3.0 | 愛物：Car | ✅ |
-| v0.4.0 | 愛物：Car FuelLog | ✅ |
-| v0.5.0 | 愛物：Child / Pet / Plant | ✅ |
-| v0.6.0 | 愛物：House + Insurance | ✅ |
-| v0.7.0 | 進帳（Income） | ✅ |
-| v0.8.0 | 自訂定期收入 Phase 1（rules + pending preview→commit） | ✅ |
-| v0.8.1 | UX polish：hero card 一致性（House 入住天數、Insurance 保障剩餘）+ 愛物清單分群（財產／生命體／保障）+ editAndConfirmPending wiring | ✅ |
-| v0.9.0 | 保險 SavingsView（儲蓄型雙 bar hero + maturity trigger UX）+ 保護型詳情頁 subpixel 修 + spec doc-keeper | ✅ |
-| v0.10.0 | 安全修補：身分證／健保卡端到端加密 + 遮蔽（reveal server action）+ datepicker 兩級 year/month nav + 小孩暱稱優先 + 健保卡 placeholder 4-4-4 + 愛物自訂備註（Assets.notes）+ pending 指示器 + SavingsHero 微調 | ✅ |
-| v0.11.1 | Perf（PR #1–2）+ i18n 4 語架構（PR #3 / #4 / #6 / #7）+ 離線瀏覽 toggle UI（PR #6） · middleware locale 修補（4 語）· i18n Date helpers 改 `Intl.DateTimeFormat` | ✅ |
-| v0.11.3 | SEO 基礎建設：middleware matcher 放行 `/robots.txt` + `/sitemap.xml` + `app/robots.ts` + `app/sitemap.ts`（含 4 語 hreflang）+ root metadata 重寫（title「兩個人的家計簿」、description 100+ 字含 22 個目標關鍵字、canonical、hreflang、`max-image-preview`）+ `/sign-in` 改用語意 `<h1>` + sr-only 副標 + `SoftwareApplication` JSON-LD | ✅ |
+| 版本 | 範圍 |
+|---|---|
+| [v0.1.0](CHANGELOG.md#010---2026-05-03) | 登入與基礎．兩個人的全新開始 |
+| [v0.2.0](CHANGELOG.md#020---2026-05-03) | 獨處模式與啟程．先一個人也是日子 |
+| [v0.3.0](CHANGELOG.md#030---2026-05-05) | 愛物概念與車．也住進兩個人的家 |
+| [v0.4.0](CHANGELOG.md#040---2026-05-05) | 加油與油耗紀錄．累積每次出門軌跡 |
+| [v0.5.0](CHANGELOG.md#050---2026-05-05) | 孩子寵物與植物．生命都是發光的 |
+| [v0.6.0](CHANGELOG.md#060---2026-05-06) | 家屋與保險加入．家也是一道光 |
+| [v0.7.0](CHANGELOG.md#070---2026-05-06) | 進帳與收入記錄．也記得回來的光 |
+| [v0.8.0](CHANGELOG.md#080---2026-05-07) | 自訂定期收入．不必再記住薪水 |
+| [v0.8.1](CHANGELOG.md#081---2026-05-08) | 細節與一致性．日常更順手了 |
+| [v0.9.0](CHANGELOG.md#090---2026-05-08) | 儲蓄險詳情頁．累積也看得見 |
+| [v0.10.0](CHANGELOG.md#0100---2026-05-08) | 加密與安全強化．把秘密好好守著 |
+| [v0.11.1](CHANGELOG.md#0111---2026-05-08) | i18n 四語架構．換種語言也說得通 |
+| [v0.11.3](CHANGELOG.md#0113---2026-05-08) | SEO 基礎建設．讓世界找得到 |
 
 ## Backlog / 未釋出版本
 
@@ -66,6 +66,17 @@ Realtime：Client subscribes → React state mutation
 ### 編輯模式
 
 「編輯」= soft delete + insert（atomic DB transaction）。DB 層不支援 UPDATE。`deleted_at` 超過 1 年由 pg_cron 物理刪除。
+
+---
+
+## 環境
+
+| env | project | URL |
+|---|---|---|
+| prod | `oikos` | https://cxbnlahuhdvrbwcnzoqo.supabase.co |
+| dev  | `oikos-dev` | https://ufhcprrauwsxdmscbkrf.supabase.co |
+
+兩個 Supabase project 完全獨立。Migration / realtime publication / pg_cron job 兩邊都要跑（`npm run db:migrate` 看本地 `.env.local` 指向哪個）。Vercel preview / prod 部署只連 prod project；本機 `npm run dev` 連 dev project。
 
 ---
 
