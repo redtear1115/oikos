@@ -71,6 +71,12 @@ export const zhCN: Translations = {
     noFilteredAddHint: '还没有记录。按下方 + 记第一笔吧。',
   },
 
+  firstRecordCard: {
+    headline: '你们的第一笔。这是个开始，不是考试。',
+    dismiss: '明白了',
+    closeAriaLabel: '关闭提示',
+  },
+
   modeToggle: {
     expense: '支出模式',
     income: '进账模式',

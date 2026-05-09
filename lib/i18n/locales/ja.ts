@@ -71,6 +71,12 @@ export const ja: Translations = {
     noFilteredAddHint: 'まだ記録がありません。下の + で最初の一件を記録しましょう。',
   },
 
+  firstRecordCard: {
+    headline: '二人の最初の一件。テストじゃなくて、始まりだよ。',
+    dismiss: 'わかった',
+    closeAriaLabel: '閉じる',
+  },
+
   modeToggle: {
     expense: '支出モード',
     income: '収入モード',
