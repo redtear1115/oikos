@@ -10,7 +10,7 @@ import { validateTransactionInput } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
-import { eq, or, and, isNull } from 'drizzle-orm'
+import { eq, or, and, isNull, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export interface CreateTransactionInput {
@@ -24,7 +24,9 @@ export interface CreateTransactionInput {
   notes?: string | null
 }
 
-export async function createTransaction(input: CreateTransactionInput): Promise<{ id: string }> {
+export async function createTransaction(
+  input: CreateTransactionInput,
+): Promise<{ id: string; isFirstTransaction: boolean }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
@@ -59,8 +61,8 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
     if (asset.deletedAt) throw new Error('關聯資產已刪除')
   }
 
-  const [created] = await db.transaction(async (tx) => {
-    const inserted = await tx
+  const result = await db.transaction(async (tx) => {
+    const [inserted] = await tx
       .insert(cashTransactions)
       .values({
         groupId: group.id,
@@ -75,13 +77,29 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
       })
       .returning({ id: cashTransactions.id })
     await recalcGroupBalance(group.id, tx)
-    return inserted
+
+    // Per-user "first record" signal for the #43 phase C card. paid_by is the
+    // proxy for "who entered this row" — there is no created_by column. The
+    // typical first-record moment is the user logging their own purchase, so
+    // the proxy holds; an edge case where the user marks the partner as payer
+    // first won't fire the card.
+    const [countRow] = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(cashTransactions)
+      .where(and(
+        eq(cashTransactions.groupId, group.id),
+        eq(cashTransactions.paidBy, user.id),
+        isNull(cashTransactions.deletedAt),
+      ))
+    const isFirstTransaction = (countRow?.count ?? 0) === 1
+
+    return { id: inserted.id, isFirstTransaction }
   })
 
   revalidatePath('/dashboard')
   revalidatePath('/records')
   if (validated.assetId) revalidatePath(`/assets/${validated.assetId}`)
-  return { id: created.id }
+  return result
 }
 
 export async function softDeleteTransaction(transactionId: string): Promise<void> {

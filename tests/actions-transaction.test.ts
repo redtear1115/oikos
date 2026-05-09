@@ -12,10 +12,11 @@ beforeEach(() => {
 })
 
 describe('createTransaction', () => {
-  it('happy path: validates, inserts, recalcs', async () => {
+  it('happy path: validates, inserts, recalcs, returns isFirstTransaction', async () => {
     queueDbResult([GROUP])              // group lookup (.limit)
     queueDbResult([{ id: 'tx-1' }])     // insert returning (.returning)
-    // recalcGroupBalance uses tx.execute — shifts [] from empty queue (default)
+    queueDbResult([])                   // recalcGroupBalance tx.execute
+    queueDbResult([{ count: 1 }])       // per-user paid_by count → first record
 
     const result = await createTransaction({
       amount: 100,
@@ -26,8 +27,23 @@ describe('createTransaction', () => {
       transactedAt: new Date('2026-05-03'),
     })
 
-    expect(result).toEqual({ id: 'tx-1' })
+    expect(result).toEqual({ id: 'tx-1', isFirstTransaction: true })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('returns isFirstTransaction=false when user already has another row', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'tx-2' }])
+    queueDbResult([])
+    queueDbResult([{ count: 5 }])
+
+    const result = await createTransaction({
+      amount: 100, description: '晚餐', category: 'dining',
+      splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date('2026-05-03'),
+    })
+
+    expect(result).toEqual({ id: 'tx-2', isFirstTransaction: false })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -158,7 +174,8 @@ describe('createTransaction with assetId', () => {
     queueDbResult([GROUP])                           // group lookup
     queueDbResult([{ id: 'asset-1', deletedAt: null }])  // asset check .limit
     queueDbResult([{ id: 'tx-1' }])                  // insert .returning
-    // recalc empty queue
+    queueDbResult([])                                // recalc execute
+    queueDbResult([{ count: 1 }])                    // per-user count
 
     const result = await createTransaction({
       amount: 100, description: '加油', category: 'transit',
@@ -166,7 +183,7 @@ describe('createTransaction with assetId', () => {
       transactedAt: new Date('2026-05-03'),
       assetId: 'asset-1',
     })
-    expect(result).toEqual({ id: 'tx-1' })
+    expect(result).toEqual({ id: 'tx-1', isFirstTransaction: true })
   })
 
   it('rejects assetId not in group', async () => {
