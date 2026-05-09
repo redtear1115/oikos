@@ -11,6 +11,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.12.0] - 2026-05-09
+
+主題：**陪伴 × 信任**——讓兩個人都安心把日子記下來。
+
+### Added
+- **信任宣示頁 + onboarding 信任卡**（PR #62，closes #48）：新增 `/settings/trust` 頁，三段式陪伴感文案（加密 / 可攜 / 備份），不講工程細節而是「連我們自己也讀不到」「我們替你們守著」這類軟性敘述；Settings 主頁加「資料」section 連到該頁。Onboarding flow 的 invite step 在「分享連結」與「稍後再邀請」之間插入 3 行信任卡。`trust.*` namespace × 4 語齊備（zh-TW / zh-CN / en / ja）。範圍對齊 #48 Phase A + B；Phase C（uptime status page）/ Phase D（Privacy/Terms 法規文案）out of scope。
+- **CashTransactions 共同備註欄位**（PR #66，closes #34）：CashTransactions 新增 nullable `notes` 欄位（migration `0025_transaction_notes.sql`）。AddSheet 在日期下方加 multi-line textarea；列表 row 在備註非空時用引號樣式顯示一行（`line-clamp-2`），保持低調陪伴感。Phase 1 edit pattern (soft-delete + insert) 把 notes 帶到新 row；驗證走既有 `validateNotes`（≤2000 字、空白即 null）。Realtime payload 新增 `notes` 欄位（snake-case → camelCase 自動轉換）。i18n 4 語。
+- **MiniCalendar 三層導覽（day → month → year）+ 3×4 年份格**（PR #67，closes #65）：day / month view title 加 `˅` chevron 暗示可下鑽；year view title 用 en-dash 分隔十年範圍。Year grid 由 5×2（10 in-decade）改為 3×4（1 leading overflow + 10 in-decade + 1 trailing overflow），overflow 年份 `opacity-40`，對齊 iOS / Google Calendar pattern；點 overflow 年份會跳到相鄰十年。Props (`value`, `onChange`) 維持不變，5 個既有 caller（DateField, SettlementForm, SettlementSheet, NewFuelLog, AssetSheet ×2）零 break。
+- **CSV 匯出（v1：活躍 CashTransactions）**（PR #70，closes #37）：Settings → 資料 區新增「匯出資料（CSV）」按鈕，純 client-side `fetch → blob → <a download>` 觸發；`/api/export/transactions` route handler 在 `OikosGroups` 做成員身份檢查。CSV 為 UTF-8 with BOM + CRLF 行尾 + RFC 4180 跳脫，欄位：日期 / 描述 / 金額 / 分類 / 誰付的 / 分攤 / 備註，分類 + 分攤依 cookie locale 4 語翻譯，誰付的用 display name 不暴露 UUID；檔名 `futari-transactions-YYYY-MM-DD.csv`（Asia/Taipei）。`csvExport` namespace × 4 語。v1 範圍只匯出 CashTransactions；Settlements / IncomeTransactions / 日期範圍 / Google Sheets OAuth 留後續。
+- **i18n：Settings 子頁（coming-soon + invite）**（PR #64，closes #21）：`/coming-soon` 與 `/invite/[token]` 兩個 server page 改用 `getTranslations()`；`comingSoon` + `invite` namespace × 4 語齊備。`validateInviteAcceptance` 改回傳 `InviteAcceptError` code，不再吐 zh-TW 字串；`acceptInvite` race condition 的 `'此帳本已有兩位成員'` 也改成 `'group_full'`，由頁面 map 成當前語系字串。
+- **i18n：愛物 detail pages + AssetSheet**（PR #69，closes #20）：新增 `assetSheet`（建立／編輯表單）+ `assetDetail`（唯讀詳情頁）兩個 namespace × 4 語，~80 keys。重構整個愛物 detail flow 用 `useTranslations()`：6 種 type pickers + ~50 fields（car / child / pet / plant / house / insurance）+ 6 個 detail clients + AibutsuHeader / AssetSwitcher / AssetHero / AibutsuHintCard / aibutsu-ui (MoneyTwoCol / AgeDisplay) / FuelTypeButtonGroup / PrimaryUserToggle + Savings flow（SavingsView / MaturingSoonPrompt / MaturedAwaitingPrompt / SavingsHero）。Drop `insurance-copy.ts` string bank（superseded by dictionary entries）；strip display labels out of `lib/insurance.ts`（kept `getFramingGroup`）。
+
+### Fixed
+- **Solo mode 進帳模式 toggle 失效**（PR #63，closes #61）：`SoloBanner` 把 `pendingCount` forwards 給 `ModeTogglePlaceholder` 但漏掉 `mode` / `onChange`，導致 toggle 的 `onClick={() => onChange?.(o.id)}` 靜默 no-op，banner 顯示時 solo 使用者無法切到進帳模式。把 `mode` + `onModeChange` props 串通 `SoloBanner` → `Dashboard.tsx` 改 pass `mode` / `setMode`（鏡像 dismissed-banner 既有路徑）。新增 `tests/SoloBanner.test.tsx` regression test。
+- **MiniCalendar year-view title chevron 拿掉**（commit `2f45fc2`）：year view 是頂層，本來就無處可下鑽，多餘的 chevron 拿掉避免 UX 訊號矛盾。
+
+### Migration
+
+Dev / prod 兩邊都要手動跑（`npm run db:migrate` 視 `.env.local`）：
+
+```sql
+ALTER TABLE "CashTransactions" ADD COLUMN "notes" text;
+```
+
 ## [0.11.4] - 2026-05-09
 
 ### Added
@@ -317,7 +341,8 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.11.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/redtear1115/oikos/compare/v0.11.4...v0.12.0
 [0.11.4]: https://github.com/redtear1115/oikos/compare/v0.11.3...v0.11.4
 [0.11.3]: https://github.com/redtear1115/oikos/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/redtear1115/oikos/compare/v0.11.1...v0.11.2
