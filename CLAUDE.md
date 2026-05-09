@@ -35,9 +35,16 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## Backlog / 未釋出版本
 
-→ [GitHub Issues](https://github.com/redtear1115/oikos/issues)
+每版工時目標 ~2 週。主題敘事用來決定 changelog 文案與 release 重點。
 
-Labels：[`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog) · [`v0.12.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) · [`v1.0.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0)
+| 版本 | 主題 | 主要 issues |
+|---|---|---|
+| [v0.12.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) | 陪伴 × 信任 | #34 共同備註、#37 CSV 匯出、#48 信任宣示頁、#20/#21 i18n 收尾 |
+| [v0.13.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.13.0) | 自訂定期支出 | #18（單主軸） |
+| [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 離線 + 統計 | #19 read-only offline、#22 月度／分類統計 |
+| [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
+
+→ 所有候選：[GitHub Issues](https://github.com/redtear1115/oikos/issues) · [`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
 
 ---
 
