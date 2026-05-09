@@ -15,6 +15,7 @@ export interface CompactRowProps {
     paidBy: string
     transactedAt: string
     kind: 'transaction' | 'settlement' | 'income'
+    notes?: string | null
   }
   isLast: boolean
   onClick?: () => void
@@ -54,6 +55,8 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const d = new Date(tx.transactedAt)
   const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
 
+  const noteText = tx.notes?.trim() || null
+
   const inner = (
     <>
       <CategoryChip categoryId={tx.category} size={32} />
@@ -67,6 +70,14 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         >
           {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} src={payerAvatar} size={16} /> {payerLabel}
         </div>
+        {noteText && (
+          <div
+            className="text-micro mt-1 italic line-clamp-2 break-words"
+            style={{ color: 'var(--ink-2)' }}
+          >
+            “{noteText}”
+          </div>
+        )}
       </div>
       <div className="text-right">
         <div

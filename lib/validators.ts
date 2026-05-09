@@ -66,6 +66,7 @@ export interface TransactionInput {
   payerId: string
   transactedAt: Date
   assetId?: string | null
+  notes?: string | null
 }
 
 export interface ValidatedTransactionInput {
@@ -76,6 +77,7 @@ export interface ValidatedTransactionInput {
   payerId: string
   transactedAt: Date
   assetId: string | null
+  notes: string | null
 }
 
 /**
@@ -96,6 +98,7 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
     payerId: input.payerId,
     transactedAt: input.transactedAt,
     assetId: input.assetId ?? null,
+    notes: validateNotes(input.notes),
   }
 }
 

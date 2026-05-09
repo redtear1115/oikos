@@ -121,6 +121,7 @@ export function RecordsList({ initial, pageSize }: Props) {
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId: tx.assetId,
+      notes: tx.notes,
     })
   }
 

@@ -32,6 +32,7 @@ export default async function RecordsPage() {
     kind: r.kind,
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
+    notes: r.notes,
   }))
 
   return <RecordsList initial={initial} pageSize={PAGE_SIZE} />

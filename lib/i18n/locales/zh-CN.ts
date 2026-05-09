@@ -118,6 +118,8 @@ export const zhCN: Translations = {
     assetLink: '关联爱物（选填）',
     splitMethod: '分摊方式',
     date: '日期',
+    notesLabel: '备注（选填，两人都看得到）',
+    notesPlaceholder: '写一句留给对方的话，或之后想记得的事',
     deleteOne: '删除这笔',
     deleteConfirmTitle: '删除这笔记录？',
     errors: {

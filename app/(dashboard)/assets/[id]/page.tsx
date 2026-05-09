@@ -34,6 +34,7 @@ function serializeTxns(rows: Awaited<ReturnType<typeof listTransactionsPagedForA
     kind: r.kind,
     assetId: r.assetId ?? null,
     fuelLogId: r.fuelLogId ?? null,
+    notes: r.notes,
   }))
 }
 
@@ -249,6 +250,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         kind: 'transaction',
         assetId: r.assetId ?? null,
         fuelLogId: r.fuelLogId ?? null,
+        notes: r.notes,
       }))
 
       const initialReturns = returnRows.map((r) => ({

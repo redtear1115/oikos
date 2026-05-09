@@ -122,6 +122,7 @@ export function AssetDetailClient({
         payerId: tx.paidBy,
         transactedAt: tx.transactedAt,
         assetId,
+        notes: tx.notes,
       })
     }
   }

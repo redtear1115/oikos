@@ -71,6 +71,7 @@ export const cashTransactions = pgTable('CashTransactions', {
   splitType: splitTypeEnum('split_type').notNull(),
   description: text('description').notNull(),
   category: text('category').notNull(),
+  notes: text('notes'),
   assetId: uuid('asset_id').references(() => assets.id),
   fuelLogId: uuid('fuel_log_id').references(() => fuelLogs.id),
   invoiceNumber: text('invoice_number'),

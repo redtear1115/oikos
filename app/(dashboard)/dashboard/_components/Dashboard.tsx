@@ -195,6 +195,7 @@ export function Dashboard({
         payerId: tx.paidBy,
         transactedAt: tx.transactedAt,
         assetId: tx.assetId,
+        notes: tx.notes,
       },
     })
   }, [startFuelLoad])
