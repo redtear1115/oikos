@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
@@ -17,8 +17,8 @@ import {
 } from '@/actions/recurringExpense'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
+import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
 
 const INTERVAL_VALUES: (1 | 3 | 6 | 12)[] = [1, 3, 6, 12]
@@ -48,49 +48,52 @@ export function RecurringRuleSheet({
     12: t.recurringExpense.rule.intervalEveryYear,
   }
 
-  const [amount, setAmount] = useState(0)
+  const form = useRecurringRuleForm({
+    open,
+    initial,
+    actions: { pauseRule, resumeRule, softDeleteRule },
+    errorMessages: {
+      operationFailed: t.recurringExpense.errors.operationFailed,
+      deleteFailed: t.recurringExpense.errors.deleteFailed,
+    },
+    onMutated,
+    onClose,
+  })
+  const {
+    amount, setAmount,
+    intervalMonths, setIntervalMonths,
+    dayOfMonth, setDayOfMonth,
+    startsOn, setStartsOn,
+    endsOn, setEndsOn,
+    error, setError,
+    confirmingDelete, setConfirmingDelete,
+    pending, isPaused,
+    handlePauseResume, handleDelete, runSubmit,
+  } = form
+
   const [category, setCategory] = useState<CategoryId>('housing')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [splitType, setSplitType] = useState<SplitType>('half')
   const [description, setDescription] = useState('')
-  const [intervalMonths, setIntervalMonths] = useState<1 | 3 | 6 | 12>(1)
-  const [dayOfMonth, setDayOfMonth] = useState(new Date().getDate())
-  const [startsOn, setStartsOn] = useState(localTodayISO())
-  const [endsOn, setEndsOn] = useState('')
   const [assetId, setAssetId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [pending, startTransition] = useTransition()
 
   useEffect(() => {
     if (!open) return
     if (initial) {
-      setAmount(initial.amount)
       setCategory(
         (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'other',
       )
       setPayerWho(initial.paidBy === viewer.id ? 'M' : 'T')
       setSplitType(initial.splitType)
       setDescription(initial.description)
-      setIntervalMonths(initial.intervalMonths as 1 | 3 | 6 | 12)
-      setDayOfMonth(initial.dayOfMonth)
-      setStartsOn(initial.startsOn)
-      setEndsOn(initial.endsOn ?? '')
       setAssetId(initial.assetId)
     } else {
-      setAmount(0)
       setCategory('housing')
       setPayerWho('M')
       setSplitType(isSolo ? 'all_mine' : viewer.defaultSplitType)
       setDescription('')
-      setIntervalMonths(1)
-      setDayOfMonth(new Date().getDate())
-      setStartsOn(localTodayISO())
-      setEndsOn('')
       setAssetId(null)
     }
-    setError(null)
-    setConfirmingDelete(false)
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo])
 
   const paidBy = isSolo
@@ -117,48 +120,11 @@ export function RecurringRuleSheet({
       endsOn: endsOn || null,
       assetId: assetId || null,
     }
-    startTransition(async () => {
-      try {
-        if (initial?.id) await updateRule({ id: initial.id, ...payload })
-        else await createRule(payload)
-        onMutated()
-        onClose()
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringExpense.errors.saveFailed)
-      }
-    })
+    runSubmit(
+      () => initial?.id ? updateRule({ id: initial.id, ...payload }) : createRule(payload),
+      t.recurringExpense.errors.saveFailed,
+    )
   }
-
-  const handlePauseResume = () => {
-    if (!initial?.id) return
-    const isPaused = !!initial.pausedAt
-    startTransition(async () => {
-      try {
-        if (isPaused) await resumeRule(initial.id)
-        else await pauseRule(initial.id)
-        onMutated()
-        onClose()
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringExpense.errors.operationFailed)
-      }
-    })
-  }
-
-  const handleDelete = () => {
-    if (!initial?.id) return
-    setConfirmingDelete(false)
-    startTransition(async () => {
-      try {
-        await softDeleteRule(initial.id)
-        onMutated()
-        onClose()
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringExpense.errors.deleteFailed)
-      }
-    })
-  }
-
-  const isPaused = !!initial?.pausedAt
 
   return (
     <>

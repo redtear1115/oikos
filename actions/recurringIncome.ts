@@ -2,52 +2,29 @@
 
 import { db } from '@/lib/db/client'
 import {
-  assets,
   incomeTransactions,
-  oikosGroups,
   recurringIncomeRules,
   pendingIncomeOccurrences,
 } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
 import {
   validateRecurringIncomeRuleInput,
   validateIncomeInput,
   type RecurringIncomeRuleInput,
 } from '@/lib/validators'
 import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
-import { and, eq, isNull, or } from 'drizzle-orm'
+import {
+  getViewerGroup,
+  assertMemberInGroup,
+  assertAssetInGroup,
+} from '@/lib/recurringActionHelpers'
+import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-
-async function getViewerGroup() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
-  if (!group) throw new Error('找不到家計簿')
-  return { user, group }
-}
 
 function assertRecipientInGroup(
   recipientId: string,
   group: { memberA: string; memberB: string | null },
 ) {
-  if (recipientId !== group.memberA && recipientId !== group.memberB) {
-    throw new Error('收入歸屬不在家計簿內')
-  }
-}
-
-async function assertAssetInGroup(assetId: string, groupId: string) {
-  const [asset] = await db
-    .select({ id: assets.id, deletedAt: assets.deletedAt })
-    .from(assets)
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, groupId)))
-    .limit(1)
-  if (!asset) throw new Error('關聯愛物不在家計簿內')
-  if (asset.deletedAt) throw new Error('關聯愛物已刪除')
+  assertMemberInGroup(recipientId, group, '收入歸屬不在家計簿內')
 }
 
 export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id: string }> {
