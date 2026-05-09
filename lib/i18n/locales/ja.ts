@@ -338,4 +338,28 @@ export const ja: Translations = {
     },
     raceMessage: '相手がたった今この記録を確認しました',
   },
+
+  comingSoon: {
+    title: '{feature}は近日公開',
+    subtitle: 'まずはホームに戻って一件記録してみましょう。',
+    backToHome: 'ホームへ戻る',
+    features: {
+      list: '記録',
+      fallback: 'この機能',
+    },
+  },
+
+  invite: {
+    errorTitle: '家計簿に参加できません',
+    backToHome: 'ホームへ戻る',
+    errors: {
+      invalidOrExpired: '招待リンクが無効または期限切れです',
+      alreadyUsed: '招待リンクは既に使用されています',
+      expired: '招待リンクの有効期限が切れています',
+      groupNotFound: '家計簿が見つかりません',
+      groupFull: 'この家計簿には既に二人のメンバーがいます',
+      alreadyMember: 'あなたは既にこの家計簿のメンバーです',
+      unknown: '家計簿に参加できません',
+    },
+  },
 }

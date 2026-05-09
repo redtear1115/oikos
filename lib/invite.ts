@@ -13,9 +13,17 @@ export function getInviteUrl(token: string): string {
 type Invite = typeof groupInvites.$inferSelect
 type Group = typeof oikosGroups.$inferSelect
 
+export type InviteAcceptError =
+  | 'invalid_or_expired'
+  | 'already_used'
+  | 'expired'
+  | 'group_not_found'
+  | 'group_full'
+  | 'already_member'
+
 export type AcceptResult =
   | { ok: true }
-  | { ok: false; error: string }
+  | { ok: false; error: InviteAcceptError }
 
 export function validateInviteAcceptance(
   invite: Invite | null,
@@ -23,11 +31,11 @@ export function validateInviteAcceptance(
   userId: string,
   now: Date = new Date()
 ): AcceptResult {
-  if (!invite) return { ok: false, error: '邀請連結無效或已過期' }
-  if (invite.acceptedAt) return { ok: false, error: '邀請連結已被使用' }
-  if (invite.expiresAt < now) return { ok: false, error: '邀請連結已過期' }
-  if (!group) return { ok: false, error: '找不到群組' }
-  if (group.memberB !== null) return { ok: false, error: '此帳本已有兩位成員' }
-  if (group.memberA === userId || group.memberB === userId) return { ok: false, error: '你已經是此帳本的成員' }
+  if (!invite) return { ok: false, error: 'invalid_or_expired' }
+  if (invite.acceptedAt) return { ok: false, error: 'already_used' }
+  if (invite.expiresAt < now) return { ok: false, error: 'expired' }
+  if (!group) return { ok: false, error: 'group_not_found' }
+  if (group.memberB !== null) return { ok: false, error: 'group_full' }
+  if (group.memberA === userId || group.memberB === userId) return { ok: false, error: 'already_member' }
   return { ok: true }
 }

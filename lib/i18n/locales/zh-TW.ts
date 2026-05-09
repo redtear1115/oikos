@@ -343,6 +343,31 @@ export type Translations = {
     }
     raceMessage: string
   }
+
+  comingSoon: {
+    /** Template with `{feature}` placeholder. */
+    title: string
+    subtitle: string
+    backToHome: string
+    features: {
+      list: string
+      fallback: string
+    }
+  }
+
+  invite: {
+    errorTitle: string
+    backToHome: string
+    errors: {
+      invalidOrExpired: string
+      alreadyUsed: string
+      expired: string
+      groupNotFound: string
+      groupFull: string
+      alreadyMember: string
+      unknown: string
+    }
+  }
 }
 
 export const zhTW: Translations = {
@@ -682,5 +707,29 @@ export const zhTW: Translations = {
       deleteFailed: '刪除失敗',
     },
     raceMessage: '對方剛剛確認了這筆',
+  },
+
+  comingSoon: {
+    title: '{feature} 即將推出',
+    subtitle: '先回首頁記一筆吧。',
+    backToHome: '回首頁',
+    features: {
+      list: '紀錄',
+      fallback: '此功能',
+    },
+  },
+
+  invite: {
+    errorTitle: '無法加入帳本',
+    backToHome: '回到首頁',
+    errors: {
+      invalidOrExpired: '邀請連結無效或已過期',
+      alreadyUsed: '邀請連結已被使用',
+      expired: '邀請連結已過期',
+      groupNotFound: '找不到群組',
+      groupFull: '此帳本已有兩位成員',
+      alreadyMember: '你已經是此帳本的成員',
+      unknown: '無法加入帳本',
+    },
   },
 }
