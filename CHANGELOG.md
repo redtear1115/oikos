@@ -11,6 +11,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.13.0] - 2026-05-09
+
+主題：**陪伴 × 起點 × 定期支出**——兩個人都有自己的第一步、自己的第一筆，再到不必再記住的每月固定。
+
+完整 diff：[v0.12.0...v0.13.0](https://github.com/redtear1115/oikos/compare/v0.12.0...v0.13.0)
+
+### Added
+- **邀請流程雙向確認儀式**（PR #73，#43 Phase E）：把單向的信任宣示升級為雙向確認儀式。A 邀請者在 `/setup` 流程中，於 `name → trust → invite` 三步走中插入 `trust` 步驟，讀完三段承諾（加密／可攜／備份）並按「這是我希望的」才會 `createGroup + createInvite`；B 受邀者點 invite 連結改走 `previewInvite`（新 server action，驗 token 但不 commit）拿到 inviter displayName，看到「{name} 已經承諾了這些」+ 同樣三段承諾，按「我也是」才 `acceptInvite`。`TrustCommitments` 元件抽出共用，給 `/settings/trust`、setup trust step、invite confirm 三處復用。i18n 4 語新增 `trust.bilateral.{inviter,invitee}` + `invite.{joiningGroupLabel,fallbackInviter}`。
+- **First-record 理念卡**（PR #74，#43 Phase C）：`createTransaction` server action 改回傳 `{ id, isFirstTransaction }`，trigger 是該使用者在這個 group 的 `paid_by` 計數於 insert 後 = 1。AddSheet 透過既有 `onMutated(info?: { isFirstTransaction })` callback 把訊號帶回 Dashboard；Dashboard 持有 `showFirstCard` state，跨 `router.refresh()` 維持顯示，使用者 dismiss 才消失。`<FirstRecordCard>` 顯示時即把 `oikos_first_record_card_seen_{userId}` 寫入 localStorage（per-user flag），確保 reload 不二次觸發、刪除重建也不二次觸發。兩位伴侶各自有自己的 first-record moment（trigger 是 per-user）。i18n 4 語齊備（`firstRecordCard.*`）。
+- **定期支出 — server actions + db queries**（PR #76，#18 PR #2／5）：mirror `actions/recurringIncome.ts` 形狀，新增 `actions/recurringExpense.ts` 8 個 actions（`createRule` / `updateRule` / `pauseRule` / `resumeRule` / `softDeleteRule` / `confirmPending` / `editAndConfirmPending` / `skipPending`）+ `lib/db/queries/recurringExpense.ts`（`listActiveRules` / `listActivePendings` join rule 取 category & asset）。**vs income 的差異**：rule 帶 `paid_by` + `split_type` + `description`（NOT NULL），不是 `recipient_id` + `source`；`confirmPending` 在同一個 drizzle transaction 內寫 `CashTransactions` row + 跑 `recalcGroupBalance`（mirror `createTransaction`，income 的 confirm 沒有 balance impact）；`editAndConfirmPending` 接 partial-overrides + 用 PR #1 的 `validateConfirmPendingExpenseInput`；race guard：`proposed_paid_by` 已離開 group 時 surface partner-race 訊息給 UI 提示「改一下」而不是塞 orphan transaction。19 個 unit tests。
+- **定期支出 — Settings 子頁 + Dashboard pending stack**（PR #77，#18 PR #3／5）：`/settings/recurring-expense` 列出規則 + 新增/編輯/暫停/恢復/刪除（mirror `recurring-income/`）；Settings 主頁加「定期進帳」+「定期支出」兩條入口。Dashboard 新增 `PendingExpenseStack` / `PendingExpenseCard`，用 category tint 做 glow（住=米色、樂=粉、融=藍，**不混 mint** 避免跟進帳訊號重疊）；payer line 顯示「{payer}・{splitType}」；「就這樣」「跳過」直通 server action，「改一下」先放 stub 留 PR #4 接 AddSheet prefill。`RealtimeProvider` 新增 `RecurringExpenseRules` + `PendingExpenseOccurrences` 訂閱 + `recurring-expense-changed` / `pending-expense-occurrence-changed` event kinds。**Breaking 改名**：`ModeTogglePlaceholder` 的 `pendingCount` → `incomePendingCount`，新增 `expensePendingCount`；4 處 callsite（Dashboard×3 + SoloBanner + BalanceHero）同 PR 全替換。
+- **定期支出 — AddSheet「改一下」接通 + Records 入口**（PR #78，#18 PR #4／5，closes #18）：AddSheet 新增 `pendingExpenseId?` + `onRaceResolved?` props；submit 路徑分流，`isPending` 走 `editAndConfirmPending`，否則維持 `editTransaction` / `createTransaction`。Pending mode 隱藏 delete 按鈕 + notes 區塊（pending 不是真實 tx；notes 不在 override contract）。Race 偵測：error 訊息含 `'待確認支出'` 時觸發 `onRaceResolved` 顯示 toast「對方剛剛確認了這筆」。`PendingExpenseStack` 的 `onEdit` callback 帶完整 prefill payload（amount / description / category / splitType / payerId / transactedAt / assetId）給 AddSheet；新增 `edit-pending-expense` modal kind。Records sticky tab bar 下方加 inline link：tab=expense → 「⚙ 設定定期支出 →」、tab=income → 「⚙ 設定定期進帳 →」、tab=all → 不顯示。
+
+### Design notes
+- **`paid_by` 作為 row creator 代理**：CashTransactions 沒有 `created_by` 欄位；first-record 的 UX 場景是使用者記自己的支出，這個代理對暖訊息文案是足夠的。若日後需要嚴格的 creator 語意再加 migration。
+- **Dashboard 載入零新增 query**：first-record signal 的成本完全收進 `createTransaction` insert path（一個 `count(*) WHERE paid_by = me`，在同一個 transaction 裡），不在 dashboard fast path 加任何 query。
+- **定期支出 v.s. 定期進帳的 confirm 路徑刻意不對稱**：expense 的 `confirmPending` 必須跟 `recalcGroupBalance` 在同一個 drizzle transaction 裡（mirror `createTransaction`），income 不需要。共用一層抽象會讓 income 多扛不必要的 transaction overhead；複製 8 個 actions 比抽共用層更清楚反映「這兩種定期事件對 balance 的關係不同」。
+- **「改一下」的 partial override 走 pending snapshot fallback**：使用者只改一個欄位（例如金額）不應該被迫補齊整張表；`editAndConfirmPending` 接 partial payload，未提供的欄位 fall back 到 pending occurrence 的 snapshot，再經 `validateConfirmPendingExpenseInput` 統一驗。
+
 ## [0.12.0] - 2026-05-09
 
 主題：**陪伴 × 信任**——讓兩個人都安心把日子記下來。
@@ -341,7 +360,8 @@ ALTER TABLE "CashTransactions" ADD COLUMN "notes" text;
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/redtear1115/oikos/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/redtear1115/oikos/compare/v0.11.4...v0.12.0
 [0.11.4]: https://github.com/redtear1115/oikos/compare/v0.11.3...v0.11.4
 [0.11.3]: https://github.com/redtear1115/oikos/compare/v0.11.2...v0.11.3

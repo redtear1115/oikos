@@ -5,7 +5,7 @@
 
 私人家庭工具，非 SaaS。所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first PWA。
 
-**Status：v0.11.1**（核心記帳・愛物・進帳・定期收入・保險 SavingsView・i18n 4 語）。版本歷史見 [CHANGELOG.md](CHANGELOG.md)，開發脈絡見 [CLAUDE.md](CLAUDE.md)。
+> 最新版本與變更紀錄請見 [CHANGELOG.md](CHANGELOG.md)。開發脈絡見 [CLAUDE.md](CLAUDE.md)。
 
 ---
 
