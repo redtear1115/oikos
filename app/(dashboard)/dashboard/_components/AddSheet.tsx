@@ -7,6 +7,7 @@ import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
 import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
+import { editAndConfirmPending } from '@/actions/recurringExpense'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
@@ -45,9 +46,19 @@ interface Props {
   prefilledAssetId?: string | null
   /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB). */
   prefilledCategory?: CategoryId
+  /**
+   * Recurring-expense pending mode. When set, `initial` carries the prefill
+   * snapshot but the sheet routes submit to editAndConfirmPending instead of
+   * editTransaction, and hides the delete + notes affordances (the underlying
+   * pending is not a real CashTransaction; notes are not persisted by the
+   * override contract).
+   */
+  pendingExpenseId?: string
+  /** Called when an edit-pending submit loses to a partner race. */
+  onRaceResolved?: (message: string) => void
 }
 
-export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
@@ -100,7 +111,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // appending to "240" → "2405").
   useFocusAndSelectOnOpen(open, amountInputRef)
 
-  const isEdit = !!initial
+  const isPending = !!pendingExpenseId
+  // Edit affordance (delete button + editTransaction path) only for real tx.
+  // Pending occurrences are not yet real tx → no delete; submit goes to
+  // editAndConfirmPending instead.
+  const isEdit = !!initial && !isPending
 
   const handleSave = () => {
     const n = parseInt(amount, 10)
@@ -114,7 +129,20 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     startTransition(async () => {
       try {
         let isFirstTransaction = false
-        if (isEdit) {
+        if (isPending) {
+          await editAndConfirmPending({
+            pendingId: pendingExpenseId!,
+            overrides: {
+              amount: n,
+              description: desc,
+              category,
+              splitType,
+              paidBy: payerId,
+              transactedAt: date,
+              assetId,
+            },
+          })
+        } else if (isEdit) {
           await editTransaction({
             oldId: initial!.id,
             amount: n,
@@ -142,7 +170,17 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         onMutated?.({ isFirstTransaction })
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        const msg = e instanceof Error ? e.message : t.common.error
+        // Race: partner confirmed/skipped this pending in another tab/device
+        // before our edit-confirm landed. Action errors in that case contain
+        // '待確認支出' (matches both '已被處理或找不到' and '已被其他裝置處理').
+        if (isPending && msg.includes('待確認支出')) {
+          onMutated?.()
+          onClose()
+          onRaceResolved?.(t.recurringExpense.raceMessage)
+          return
+        }
+        setError(msg)
       }
     })
   }
@@ -329,21 +367,26 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <DateField value={date} onChange={setDate} open={open} />
           </div>
 
-          {/* Shared notes / memo (optional, both partners can read + write). */}
-          <div className="px-5 pt-3 pb-6" style={{ borderTop: '1px solid var(--hairline)' }}>
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
-              {t.addSheet.notesLabel}
+          {/* Shared notes / memo (optional, both partners can read + write).
+              Hidden in pending mode: editAndConfirmPending overrides do not
+              accept a notes field, so anything typed here would be silently
+              dropped — better to omit the affordance. */}
+          {!isPending && (
+            <div className="px-5 pt-3 pb-6" style={{ borderTop: '1px solid var(--hairline)' }}>
+              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+                {t.addSheet.notesLabel}
+              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={t.addSheet.notesPlaceholder}
+                maxLength={2000}
+                rows={3}
+                className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
+                style={{ color: 'var(--ink)' }}
+              />
             </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={t.addSheet.notesPlaceholder}
-              maxLength={2000}
-              rows={3}
-              className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
-              style={{ color: 'var(--ink)' }}
-            />
-          </div>
+          )}
 
           {isEdit && (
             <div className="px-5 pb-2">
