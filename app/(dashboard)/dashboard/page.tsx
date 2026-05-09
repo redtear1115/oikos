@@ -6,6 +6,7 @@ import { getGroupBalance } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
+import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
@@ -31,10 +32,11 @@ export default async function DashboardPage() {
   // Fast path — what hero/banner needs to paint immediately. Awaited so
   // BalanceHero / SoloBanner / ModeTogglePlaceholder render with real data.
   // The latest income (limit 1) covers the hero label without pulling the full feed.
-  const [balance, incomeSummary, pendings, latestIncomes, t] = await Promise.all([
+  const [balance, incomeSummary, pendings, expensePendings, latestIncomes, t] = await Promise.all([
     getGroupBalance(group.id),
     listIncomeMonthSummary(group.id, yyyymm),
     listActivePendings(group.id),
+    listActiveExpensePendings(group.id),
     listIncomesPaged(group.id, null, 1),
     getTranslations(),
   ])
@@ -97,6 +99,7 @@ export default async function DashboardPage() {
       incomeMonthCount={incomeSummary.count}
       recentIncomeLabel={recentIncomeLabel}
       pendings={pendings}
+      expensePendings={expensePendings}
       feedDataPromise={feedDataPromise}
     />
   )

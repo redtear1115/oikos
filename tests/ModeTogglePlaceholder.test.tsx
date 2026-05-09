@@ -31,24 +31,50 @@ describe('ModeTogglePlaceholder', () => {
   })
 
   it('shows a pending dot on income tab when expense is selected and pendings > 0', () => {
-    const { container } = wrap(<ModeTogglePlaceholder mode="expense" pendingCount={2} />)
+    const { container } = wrap(<ModeTogglePlaceholder mode="expense" incomePendingCount={2} />)
     expect(pendingDotsIn(container).length).toBe(1)
   })
 
-  it('hides the pending dot when pendingCount is 0', () => {
-    const { container } = wrap(<ModeTogglePlaceholder mode="expense" pendingCount={0} />)
+  it('hides the pending dot when incomePendingCount is 0', () => {
+    const { container } = wrap(<ModeTogglePlaceholder mode="expense" incomePendingCount={0} />)
     expect(pendingDotsIn(container).length).toBe(0)
   })
 
   it('hides the pending dot when income tab is already selected', () => {
     // Even if pending count > 0, no dot when the user is already viewing the
     // income surface — they are presumably about to see the pendings inline.
-    const { container } = wrap(<ModeTogglePlaceholder mode="income" pendingCount={5} />)
+    const { container } = wrap(<ModeTogglePlaceholder mode="income" incomePendingCount={5} />)
     expect(pendingDotsIn(container).length).toBe(0)
   })
 
-  it('defaults pendingCount to 0 when prop is omitted', () => {
+  it('defaults incomePendingCount to 0 when prop is omitted', () => {
     const { container } = wrap(<ModeTogglePlaceholder mode="expense" />)
     expect(pendingDotsIn(container).length).toBe(0)
+  })
+
+  it('shows a pending dot on expense tab when income is selected and expensePendings > 0', () => {
+    const { container } = wrap(
+      <ModeTogglePlaceholder mode="income" expensePendingCount={3} />,
+    )
+    expect(pendingDotsIn(container).length).toBe(1)
+  })
+
+  it('hides the expense pending dot when expense tab is already selected', () => {
+    const { container } = wrap(
+      <ModeTogglePlaceholder mode="expense" expensePendingCount={3} />,
+    )
+    expect(pendingDotsIn(container).length).toBe(0)
+  })
+
+  it('shows two dots when both pending counts > 0 and on expense tab — no, only the inactive (income) tab gets the dot', () => {
+    const { container } = wrap(
+      <ModeTogglePlaceholder
+        mode="expense"
+        incomePendingCount={2}
+        expensePendingCount={2}
+      />,
+    )
+    // Only the inactive (income) tab shows a dot — the active (expense) tab is suppressed.
+    expect(pendingDotsIn(container).length).toBe(1)
   })
 })

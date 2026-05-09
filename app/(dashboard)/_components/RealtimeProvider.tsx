@@ -146,6 +146,18 @@ export function RealtimeProvider({ groupId, children }: Props) {
         () => {
           dispatch({ kind: 'pending-occurrence-changed' })
         })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'RecurringExpenseRules', filter: `group_id=eq.${groupId}` },
+        () => {
+          dispatch({ kind: 'recurring-expense-changed' })
+        })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'PendingExpenseOccurrences', filter: `group_id=eq.${groupId}` },
+        () => {
+          dispatch({ kind: 'pending-expense-occurrence-changed' })
+        })
 
       let wasSubscribed = false
       channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {

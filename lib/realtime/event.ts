@@ -82,4 +82,6 @@ export type RealtimeEvent =
   | { kind: 'income-update'; row: IncomeRowPayload }  // soft-delete shows up here (deletedAt set)
   | { kind: 'recurring-income-changed' }   // RecurringIncomeRules row changed
   | { kind: 'pending-occurrence-changed' } // PendingIncomeOccurrences row changed (cron insert, partner confirm/skip, edit-confirm)
+  | { kind: 'recurring-expense-changed' }  // RecurringExpenseRules row changed
+  | { kind: 'pending-expense-occurrence-changed' } // PendingExpenseOccurrences row changed
   | { kind: 'reconnect' }   // emitted after WebSocket reconnect — subscribers should refetch
