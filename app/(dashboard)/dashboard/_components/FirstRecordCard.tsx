@@ -15,11 +15,14 @@ interface Props {
  * Phase C of issue #43. Lit by Dashboard's `showFirstCard` state, which flips
  * true when the most recent createTransaction reported isFirstTransaction.
  *
- * Refresh-safety: on first render with show=true, immediately set a per-user
- * localStorage flag (oikos_first_record_card_seen_{userId}). If `show` flips
- * true again later (e.g., user deleted their first row and recreated, server
- * reports isFirstTransaction again) AND the flag is already set, we call
- * onDismiss right away so the parent state flips back and we never re-render.
+ * localStorage flag `oikos_first_record_card_seen_{userId}` is set while the
+ * card is visible and cleared on dismiss — a session-local "I've seen this
+ * one" mark. The DB-side `isFirstTransaction` count is the actual gate; the
+ * flag is just defensive bookkeeping for the brief window the card is up.
+ *
+ * Cross-device + cross-user is handled entirely by the per-user paid_by count
+ * in createTransaction — once a user has > 1 row, the action stops returning
+ * isFirstTransaction=true and the card simply never lights again.
  *
  * Non-blocking: sits above BottomNav at bottom: 96 so the rest of the UI
  * stays interactive.
@@ -30,15 +33,16 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
   const storageKey = `${STORAGE_KEY_PREFIX}${viewer.id}`
 
   useEffect(() => {
-    if (!show) return
-    if (typeof window === 'undefined') return
-    if (window.localStorage.getItem(storageKey) === 'true') {
-      // User has already seen the card on this device — bail out.
-      onDismiss()
-      return
-    }
+    if (!show || typeof window === 'undefined') return
     window.localStorage.setItem(storageKey, 'true')
-  }, [show, storageKey, onDismiss])
+  }, [show, storageKey])
+
+  const handleDismiss = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(storageKey)
+    }
+    onDismiss()
+  }
 
   if (!show) return null
 
@@ -59,7 +63,7 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
       >
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={handleDismiss}
           aria-label={t.firstRecordCard.closeAriaLabel}
           className="absolute right-3 top-2 bg-transparent border-0 cursor-pointer p-1 text-title leading-none"
           style={{ color: 'var(--ink-3)' }}
@@ -74,7 +78,7 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
         </p>
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={handleDismiss}
           className="w-full h-[42px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer"
           style={{ background: 'var(--ink)' }}
         >

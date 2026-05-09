@@ -25,7 +25,7 @@ describe('FirstRecordCard', () => {
     expect(onDismiss).not.toHaveBeenCalled()
   })
 
-  it('renders headline and writes seen flag when show is true and storage empty', () => {
+  it('renders headline and writes seen flag when show is true', () => {
     const onDismiss = vi.fn()
     wrap(<FirstRecordCard show={true} onDismiss={onDismiss} />)
     expect(screen.getByText(/第一筆/)).toBeInTheDocument()
@@ -33,24 +33,21 @@ describe('FirstRecordCard', () => {
     expect(onDismiss).not.toHaveBeenCalled()
   })
 
-  it('calls onDismiss when storage flag already set (refresh-safety)', () => {
-    window.localStorage.setItem(STORAGE_KEY, 'true')
+  it('clears seen flag and calls onDismiss when 明白了 is clicked', () => {
     const onDismiss = vi.fn()
     wrap(<FirstRecordCard show={true} onDismiss={onDismiss} />)
-    expect(onDismiss).toHaveBeenCalledTimes(1)
-  })
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe('true')
 
-  it('calls onDismiss when 明白了 is clicked', () => {
-    const onDismiss = vi.fn()
-    wrap(<FirstRecordCard show={true} onDismiss={onDismiss} />)
     fireEvent.click(screen.getByRole('button', { name: '明白了' }))
-    expect(onDismiss).toHaveBeenCalled()
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 
-  it('calls onDismiss when × close is clicked', () => {
+  it('clears seen flag and calls onDismiss when × close is clicked', () => {
     const onDismiss = vi.fn()
     wrap(<FirstRecordCard show={true} onDismiss={onDismiss} />)
     fireEvent.click(screen.getByRole('button', { name: '關閉提示' }))
-    expect(onDismiss).toHaveBeenCalled()
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 })
