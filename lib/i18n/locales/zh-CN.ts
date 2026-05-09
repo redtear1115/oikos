@@ -324,6 +324,19 @@ export const zhCN: Translations = {
       line2: '随时都能整包带走',
       line3: '每一笔我们都替你们守着',
     },
+    bilateral: {
+      inviter: {
+        heading: '在邀请对方之前',
+        subtitle: '读一下我们对你们俩的承诺。如果你愿意，再把链接传出去。',
+        cta: '这是我希望的',
+      },
+      invitee: {
+        heading: '{name} 已经承诺了这些',
+        subtitle: '你呢？想不想一起？',
+        cta: '我也是',
+        confirming: '正在加入…',
+      },
+    },
   },
 
   assetSheet: {
@@ -732,6 +745,8 @@ export const zhCN: Translations = {
   invite: {
     errorTitle: '无法加入账本',
     backToHome: '回到首页',
+    joiningGroupLabel: '加入「{group}」',
+    fallbackInviter: '对方',
     errors: {
       invalidOrExpired: '邀请链接无效或已过期',
       alreadyUsed: '邀请链接已被使用',

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
+import { TrustCommitments } from './TrustCommitments'
 
 export function TrustContent() {
   const router = useRouter()
@@ -44,44 +45,9 @@ export function TrustContent() {
         </p>
       </div>
 
-      <div className="px-4 space-y-3 pb-12">
-        <TrustSection heading={t.trust.encryption.heading} body={t.trust.encryption.body} />
-        <TrustSection
-          heading={t.trust.portability.heading}
-          body={t.trust.portability.body}
-          hint={t.trust.portability.comingSoonHint}
-        />
-        <TrustSection heading={t.trust.backup.heading} body={t.trust.backup.body} />
+      <div className="px-4 pb-12">
+        <TrustCommitments t={t.trust} />
       </div>
     </>
-  )
-}
-
-function TrustSection({
-  heading,
-  body,
-  hint,
-}: {
-  heading: string
-  body: string
-  hint?: string
-}) {
-  return (
-    <div
-      className="rounded-[20px] px-5 py-5"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-    >
-      <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
-        {heading}
-      </div>
-      <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-        {body}
-      </p>
-      {hint && (
-        <div className="text-xs mt-3" style={{ color: 'var(--ink-3)' }}>
-          {hint}
-        </div>
-      )}
-    </div>
   )
 }

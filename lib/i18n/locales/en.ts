@@ -324,6 +324,19 @@ export const en: Translations = {
       line2: 'Take it all with you, anytime',
       line3: 'Every entry, held safe by us',
     },
+    bilateral: {
+      inviter: {
+        heading: 'Before you invite them',
+        subtitle: 'Read what we promise the two of you. Send the link only if it feels right.',
+        cta: 'This is what I want',
+      },
+      invitee: {
+        heading: '{name} agreed to these',
+        subtitle: 'You? Want to do this together?',
+        cta: 'I do too',
+        confirming: 'Joining…',
+      },
+    },
   },
 
   assetSheet: {
@@ -732,6 +745,8 @@ export const en: Translations = {
   invite: {
     errorTitle: "Can't join this ledger",
     backToHome: 'Back to home',
+    joiningGroupLabel: 'Joining "{group}"',
+    fallbackInviter: 'your partner',
     errors: {
       invalidOrExpired: 'This invite link is invalid or expired.',
       alreadyUsed: 'This invite link has already been used.',

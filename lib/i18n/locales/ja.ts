@@ -324,6 +324,19 @@ export const ja: Translations = {
       line2: 'いつでも、まるごと持ち出せます',
       line3: '一つひとつ、私たちが守ります',
     },
+    bilateral: {
+      inviter: {
+        heading: '相手を招待する前に',
+        subtitle: 'お二人へのお約束を読んでみてください。納得できたら、リンクを送りましょう。',
+        cta: 'これが私の願いです',
+      },
+      invitee: {
+        heading: '{name} さんは、この約束に同意しました',
+        subtitle: 'あなたも、いっしょに？',
+        cta: '私も同じ気持ち',
+        confirming: '参加しています…',
+      },
+    },
   },
 
   assetSheet: {
@@ -732,6 +745,8 @@ export const ja: Translations = {
   invite: {
     errorTitle: '家計簿に参加できません',
     backToHome: 'ホームへ戻る',
+    joiningGroupLabel: '「{group}」に参加',
+    fallbackInviter: '相手',
     errors: {
       invalidOrExpired: '招待リンクが無効または期限切れです',
       alreadyUsed: '招待リンクは既に使用されています',
