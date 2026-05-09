@@ -207,7 +207,6 @@ export const ja: Translations = {
     defaultSplitTitle: '記録時のデフォルト分担',
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     inviteCta: '相手を招待',
-    legalNotice: '法的事項',
     language: '言語',
     sectionDevice: 'デバイス',
     offlineBrowsing: 'オフライン閲覧',

@@ -207,7 +207,6 @@ export const en: Translations = {
     defaultSplitTitle: 'Default split for new entries',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     inviteCta: 'Invite partner',
-    legalNotice: 'Legal',
     language: 'Language',
     sectionDevice: 'Device',
     offlineBrowsing: 'Offline browsing',
