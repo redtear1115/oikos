@@ -9,7 +9,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### Added
+- **離線瀏覽 / PWA cache**（#19）：把 v0.11.1 留下的 Settings toggle UI 接通到真正的 Service Worker。採 [Serwist](https://serwist.pages.dev/) (`@serwist/next`)，opt-in via Settings：預設關閉，使用者主動開啟才 register SW。L1 precache app shell（`_next/static/**`、icons、og-image、`/manifest.json`、`/offline`）；L2 runtime cache `/dashboard`、`/records`、`/assets`、`/assets/[id]/*` 走 NetworkFirst + 3s timeout，只 cache 200 OK + 非 redirect 的回應（避免把 `/sign-in` 蓋掉登入態頁）。新增 `/offline` fallback 頁、`OfflineBanner`（離線時頁首顯示「離線中・顯示最近一次連線的資料」）、`OfflineLifecycle`（boot 時用 preference 校準 SW 狀態）、`OfflineBrowsingToggle`（取代原本的 inline switch，切換時 register/unregister + 清 caches，UI 跟實際 SW 狀態校準）。Sign-out flow 在 redirect 前 `caches.delete('dynamic-v1')` 防 PII 跨使用者。`RealtimeProvider` 聽 `online`/`offline` 事件呼叫 `realtime.disconnect()`/`connect()` 暫停 reconnect 迴圈。Records 換頁離線時把「載入更多」換為 inline empty state「再多紀錄需連線取得」（不彈 toast）。i18n 4 語齊備：拆 `offlineHint` 為 `offlineHintOff`/`offlineHintOn`，新增 `offlineToggling`、`offlineToggleError`、`offlineUnsupported`、`records.offlineMoreNeedsNetwork`、`offlineBanner.text`、`offlinePage.*`。
+
+### Design notes
+- **opt-in 而非預設啟用**：cache PII 在裝置上是裝置端的隱私決定（v0.10.0 才剛 E2E 加密敏感欄位），呼應「使用者控制自己資料」基調。共用裝置、低可信任環境、儲存吃緊的舊機都可以選擇不開。先觀察使用率，再評估是否改預設。
+- **Toggle 持久化在 localStorage 而非 Supabase**：SW 是裝置能力（瀏覽器支援、儲存配額、共享裝置疑慮），語義上是 per-device 而非 per-user；同帳號跨裝置要分別 opt-in 比「我在朋友家用過一次的瀏覽器自動開了 cache」直觀。
+- **Network-first 而非 SWR**：oikos 寫入路徑會 `revalidatePath`，SW 層 SWR 不認；剛新增完一筆 expense 回 dashboard 會看到舊 cache 體感像 bug。3s timeout 兜離線、命中網路時拿到的就是最新。
+- **不在 SW 攔截 server actions / 不預先 disable 寫入按鈕**：寫入 source of truth 是 server action 的 response，不是 `navigator.onLine`（會誤判 captive portal、弱訊號）。離線時點寫入按鈕由 server action 自然 fail，既有錯誤訊息「網路不穩，再試一次」就夠了，不為離線分支多寫一套互動。
+- **Sign-out 只清 dynamic cache、不動 precache**：app shell 不含 PII，下個使用者用同一裝置時 startup 還能享受快取速度。Toggle off 才會把所有 cache 清乾淨（使用者主動撤回信任）。
+
+### Internal
+- **Build script 改為 `next build --webpack`**：Serwist 9.x 仍是 webpack plugin，跟 Next.js 16 預設的 Turbopack production build 不相容；改用 `--webpack` flag 讓 SW 真的會被生成到 `public/sw.js`。Dev server (`next dev`) 維持 Turbopack（SW 在 dev 也是 disable 的，沒影響）。等 Serwist 出 Turbopack 支援再切回。
+- **`app/sw.ts` 從主 tsconfig 排除**：`serwist` package 透過 `declare global` 注入 `ServiceWorkerGlobalScopeEventMap` 等 webworker 型別，被混進 DOM 編譯 context 會把 `Navigator` 染成 `WorkerNavigator` 導致整個 app 的 client component typecheck 全壞。Serwist webpack plugin 自己會編譯 sw.ts，不需要主 tsconfig 看到它。
 
 ## [0.13.1] - 2026-05-09
 

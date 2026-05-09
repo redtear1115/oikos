@@ -1,8 +1,7 @@
 ---
-status: partial
-shipped_in: v0.11.1（Settings 頁 toggle UI + localStorage preference helper，PR #6）
-remaining_issues: #19（Service Worker / runtime cache / banner / sign-out cache clear / RealtimeProvider 靜音 — 排程 v0.14.0）
-note: toggle 切換目前只動 localStorage，不會註冊 SW；後段「啟用 / 停用流程」為目標態。
+status: shipped
+shipped_in: v0.14.0（Service Worker 接通 toggle、precache + runtime cache、/offline、banner、sign-out 清 cache、RealtimeProvider 離線靜音、records 換頁離線 empty state）
+remaining_issues: 後續視使用率再決定是否預設啟用；離線寫入 / IndexedDB shadow / push 仍為 out-of-scope（見「未來擴展」）
 ---
 
 # 離線瀏覽 / PWA Cache 設計 spec
@@ -13,10 +12,16 @@ note: toggle 切換目前只動 localStorage，不會註冊 SW；後段「啟用
 
 ## 實作狀態
 
-- ✅ Settings 頁「離線瀏覽」toggle UI（PR #6，已 merge origin/main）：[SettingsContent.tsx](../../../app/%28dashboard%29/settings/_components/SettingsContent.tsx)
+- ✅ Settings 頁「離線瀏覽」toggle UI（v0.11.1, PR #6）→ v0.14.0 重構為獨立 [`OfflineBrowsingToggle`](../../../app/%28dashboard%29/settings/_components/OfflineBrowsingToggle.tsx)，整合 SW register/unregister + cache clean
 - ✅ Preference helper：[lib/offline/preference.ts](../../../lib/offline/preference.ts)（localStorage key = `offline-browsing-enabled`；spec 內 `oikos.offline.enabled` 為原始命名草案，實作時簡化）
-- ⬜ Service Worker / Serwist / runtime cache / `/offline` page / banner / sign-out cache clear / RealtimeProvider 離線靜音 — 全部未實作
-- 目前 toggle 切換**不會**真的註冊 SW；spec 第 3 節「啟用 / 停用流程」仍是目標態，待 SW 實作完成才接通
+- ✅ SW 控制 helper：[lib/offline/swControl.ts](../../../lib/offline/swControl.ts)（register / unregisterAll / clearAllCaches / clearDynamicCache / hasActiveSW）
+- ✅ Serwist + service worker：[next.config.ts](../../../next.config.ts) + [app/sw.ts](../../../app/sw.ts)（NetworkFirst 3s timeout 走 dashboard / records / assets，CacheFirst 走 icons/og-image，dev disable）
+- ✅ `/offline` fallback 頁：[app/offline/page.tsx](../../../app/offline/page.tsx)
+- ✅ Online status hook：[lib/hooks/useOnlineStatus.ts](../../../lib/hooks/useOnlineStatus.ts)
+- ✅ Lifecycle + banner：[OfflineLifecycle](../../../app/%28dashboard%29/_components/OfflineLifecycle.tsx) + [OfflineBanner](../../../app/%28dashboard%29/_components/OfflineBanner.tsx)（dashboard layout 接入）
+- ✅ Sign-out cache clear：[LogoutButton](../../../app/%28dashboard%29/settings/_components/LogoutButton.tsx) 在呼叫 server action 前 `caches.delete('dynamic-v1')`
+- ✅ RealtimeProvider 離線靜音：聽 `online` / `offline` 事件呼叫 `realtime.disconnect()` / `connect()` 暫停 reconnect 迴圈
+- ✅ Records 換頁離線 empty state：[TransactionFeed](../../../app/%28dashboard%29/_components/TransactionFeed.tsx) 在 offline 時把「載入更多」換為文字提示
 
 ---
 

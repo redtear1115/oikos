@@ -181,9 +181,19 @@ export function RealtimeProvider({ groupId, children }: Props) {
       if (session) supabase.realtime.setAuth(session.access_token)
     })
 
+    // Pause the realtime socket while the device reports no network — stops the
+    // exponential-backoff reconnect loop from spamming. supabase-js will rejoin
+    // existing subscriptions automatically after .connect().
+    const handleOffline = () => { supabase.realtime.disconnect() }
+    const handleOnline = () => { supabase.realtime.connect() }
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('online', handleOnline)
+
     return () => {
       cancelled = true
       authSub.subscription.unsubscribe()
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('online', handleOnline)
       if (channel) supabase.removeChannel(channel)
     }
   }, [groupId, dispatch])

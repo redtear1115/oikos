@@ -179,6 +179,7 @@ export const zhCN: Translations = {
     tabIncome: '进账',
     manageRecurringIncome: '⚙ 设定定期进账 →',
     manageRecurringExpense: '⚙ 设定定期支出 →',
+    offlineMoreNeedsNetwork: '更多记录需联网获取',
   },
 
   filterSheet: {
@@ -210,7 +211,11 @@ export const zhCN: Translations = {
     language: '语言',
     sectionDevice: '设备',
     offlineBrowsing: '离线浏览',
-    offlineHint: '开启后可在无网络时查看最近记录',
+    offlineHintOff: '在无网络时看不到历史记录。开启后，最近浏览过的页面会存在这台设备上。',
+    offlineHintOn: '无网络时可查看最近一次连接时的记录。资料只存在这台设备，登出时会自动清除。',
+    offlineToggling: '处理中…',
+    offlineToggleError: '无法切换，请稍后再试',
+    offlineUnsupported: '当前的浏览器不支援离线浏览',
     recurringIncome: '定期进账',
     recurringExpense: '定期支出',
     sectionData: '数据',
@@ -761,5 +766,18 @@ export const zhCN: Translations = {
       alreadyMember: '你已经是此账本的成员',
       unknown: '无法加入账本',
     },
+  },
+
+  offlineBanner: {
+    text: '离线中・显示最近一次连接的资料',
+  },
+
+  offlinePage: {
+    title: '这里需要联网才看得到',
+    subtitle: '先看看下面这些已经存着的吧。',
+    linkDashboard: '回首页',
+    linkRecords: '记录',
+    linkAssets: '爱物',
+    footer: '联网后会自动更新',
   },
 }

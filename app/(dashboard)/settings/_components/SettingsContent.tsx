@@ -5,13 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
-import { Switch } from '@/components/Switch'
 import { LogoutButton } from './LogoutButton'
+import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { updateGroupName } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 import { shareInviteLink } from '@/lib/share'
-import { getOfflinePref, setOfflinePref } from '@/lib/offline/preference'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
@@ -89,18 +88,6 @@ export function SettingsContent({
         setExportError(t.csvExport.failed)
       }
     })
-  }
-
-  // Offline browsing preference — read from localStorage on mount to avoid
-  // SSR/CSR mismatch (default: false during SSR, hydrate from storage after mount).
-  const [offlineEnabled, setOfflineEnabled] = useState(false)
-  useEffect(() => {
-    setOfflineEnabled(getOfflinePref())
-  }, [])
-
-  const handleOfflineToggle = (next: boolean) => {
-    setOfflineEnabled(next)
-    setOfflinePref(next)
   }
 
   const handleInvite = () => {
@@ -283,24 +270,7 @@ export function SettingsContent({
 
       {/* 裝置 */}
       <Section title={t.settings.sectionDevice}>
-        <div
-          className="rounded-[20px] flex items-center justify-between px-5 py-4"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-        >
-          <div className="flex-1 min-w-0 pr-4">
-            <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-              {t.settings.offlineBrowsing}
-            </div>
-            <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-              {t.settings.offlineHint}
-            </div>
-          </div>
-          <Switch
-            checked={offlineEnabled}
-            onChange={handleOfflineToggle}
-            ariaLabel={t.settings.offlineBrowsing}
-          />
-        </div>
+        <OfflineBrowsingToggle />
       </Section>
 
       <Section title={t.settings.sectionData}>

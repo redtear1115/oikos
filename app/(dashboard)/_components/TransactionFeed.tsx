@@ -8,6 +8,8 @@ import { loadMoreTransactions, type PagedTxnRow } from '@/actions/transaction'
 import { toWire, type TxnFilter, matchesFilter, type FilterableRow } from '@/lib/filter'
 import { useRealtimeEvents } from './RealtimeProvider'
 import { useMember } from './MemberContext'
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
+import { useTranslations } from '@/lib/i18n/client'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { TxnRowPayload } from '@/lib/realtime/event'
 
@@ -36,6 +38,8 @@ interface Props {
 }
 
 export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, header, filter, loader, acceptInsert, renderRow }: Props) {
+  const t = useTranslations()
+  const online = useOnlineStatus()
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
   const [hasMore, setHasMore] = useState(initial.length === pageSize)
   const [loading, startLoading] = useTransition()
@@ -240,18 +244,24 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
 
       <div className="px-4 pt-6 pb-2">
         {hasMore ? (
-          <button
-            onClick={handleLoadMore}
-            disabled={loading}
-            className="w-full h-11 rounded-[14px] text-sm font-medium cursor-pointer disabled:opacity-50"
-            style={{
-              background: 'var(--surface)',
-              color: 'var(--ink-2)',
-              border: '1px solid var(--hairline)',
-            }}
-          >
-            {loading ? '載入中…' : '載入更多'}
-          </button>
+          online ? (
+            <button
+              onClick={handleLoadMore}
+              disabled={loading}
+              className="w-full h-11 rounded-[14px] text-sm font-medium cursor-pointer disabled:opacity-50"
+              style={{
+                background: 'var(--surface)',
+                color: 'var(--ink-2)',
+                border: '1px solid var(--hairline)',
+              }}
+            >
+              {loading ? '載入中…' : '載入更多'}
+            </button>
+          ) : (
+            <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
+              {t.records.offlineMoreNeedsNetwork}
+            </div>
+          )
         ) : (
           <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
             已是最早的紀錄

@@ -5,6 +5,8 @@ import { oikosGroups, profiles } from '@/lib/db/schema'
 import { eq, or, inArray } from 'drizzle-orm'
 import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
+import { OfflineLifecycle } from './_components/OfflineLifecycle'
+import { OfflineBanner } from './_components/OfflineBanner'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
@@ -61,6 +63,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <TranslationsProvider value={t} locale={locale}>
       <ViewerProvider value={value}>
         <RealtimeProvider groupId={group.id}>
+          <OfflineLifecycle />
+          <OfflineBanner />
           <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
             {children}
           </div>

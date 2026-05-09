@@ -178,6 +178,7 @@ export type Translations = {
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    offlineMoreNeedsNetwork: string
   }
 
   filterSheet: {
@@ -209,7 +210,11 @@ export type Translations = {
     language: string
     sectionDevice: string
     offlineBrowsing: string
-    offlineHint: string
+    offlineHintOff: string
+    offlineHintOn: string
+    offlineToggling: string
+    offlineToggleError: string
+    offlineUnsupported: string
     recurringIncome: string
     recurringExpense: string
     sectionData: string
@@ -790,6 +795,19 @@ export type Translations = {
       unknown: string
     }
   }
+
+  offlineBanner: {
+    text: string
+  }
+
+  offlinePage: {
+    title: string
+    subtitle: string
+    linkDashboard: string
+    linkRecords: string
+    linkAssets: string
+    footer: string
+  }
 }
 
 export const zhTW: Translations = {
@@ -971,6 +989,7 @@ export const zhTW: Translations = {
     tabIncome: '進帳',
     manageRecurringIncome: '⚙ 設定定期進帳 →',
     manageRecurringExpense: '⚙ 設定定期支出 →',
+    offlineMoreNeedsNetwork: '再多紀錄需連線取得',
   },
 
   filterSheet: {
@@ -1002,7 +1021,11 @@ export const zhTW: Translations = {
     language: '語言',
     sectionDevice: '裝置',
     offlineBrowsing: '離線瀏覽',
-    offlineHint: '開啟後可在無網路時查看最近記錄',
+    offlineHintOff: '在無網路時看不到歷史記錄。開啟後，最近瀏覽過的頁面會存在這台裝置上。',
+    offlineHintOn: '無網路時可看最近一次連線時的記錄。資料只存在這台裝置，登出時會自動清除。',
+    offlineToggling: '處理中…',
+    offlineToggleError: '無法切換，請稍後再試',
+    offlineUnsupported: '目前的瀏覽器不支援離線瀏覽',
     recurringIncome: '定期進帳',
     recurringExpense: '定期支出',
     sectionData: '資料',
@@ -1553,5 +1576,18 @@ export const zhTW: Translations = {
       alreadyMember: '你已經是此帳本的成員',
       unknown: '無法加入帳本',
     },
+  },
+
+  offlineBanner: {
+    text: '離線中・顯示最近一次連線的資料',
+  },
+
+  offlinePage: {
+    title: '這裡需要連線才看得到',
+    subtitle: '先看看下面這些已經存著的吧。',
+    linkDashboard: '回首頁',
+    linkRecords: '紀錄',
+    linkAssets: '愛物',
+    footer: '等連線回來會自動更新',
   },
 }

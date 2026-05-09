@@ -40,6 +40,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated service worker (Serwist)
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
+/public/swe-worker-*.js.map
 # .claude — roles are versioned; tasks/handoff/reports are transient
 .claude/tasks/
 .claude/handoff/

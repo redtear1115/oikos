@@ -179,6 +179,7 @@ export const en: Translations = {
     tabIncome: 'Income',
     manageRecurringIncome: '⚙ Manage recurring income →',
     manageRecurringExpense: '⚙ Manage recurring expense →',
+    offlineMoreNeedsNetwork: 'More records need a connection',
   },
 
   filterSheet: {
@@ -210,7 +211,11 @@ export const en: Translations = {
     language: 'Language',
     sectionDevice: 'Device',
     offlineBrowsing: 'Offline browsing',
-    offlineHint: 'Browse recent records when offline',
+    offlineHintOff: "When offline, history isn't available. Turn this on to keep recently-viewed pages on this device.",
+    offlineHintOn: 'When offline, you can view records from your last connection. Data lives on this device only and is cleared on sign-out.',
+    offlineToggling: 'Working…',
+    offlineToggleError: "Couldn't switch — try again in a moment.",
+    offlineUnsupported: 'This browser does not support offline browsing.',
     recurringIncome: 'Recurring income',
     recurringExpense: 'Recurring expense',
     sectionData: 'Data',
@@ -761,5 +766,18 @@ export const en: Translations = {
       alreadyMember: "You're already a member of this ledger.",
       unknown: "Can't join this ledger.",
     },
+  },
+
+  offlineBanner: {
+    text: "Offline · showing your last connection's data",
+  },
+
+  offlinePage: {
+    title: "You're offline for this one",
+    subtitle: 'Here are pages already saved on this device.',
+    linkDashboard: 'Home',
+    linkRecords: 'Records',
+    linkAssets: 'Things you love',
+    footer: "We'll catch up when you're back online",
   },
 }
