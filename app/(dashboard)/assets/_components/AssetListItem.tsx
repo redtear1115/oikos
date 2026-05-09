@@ -4,38 +4,53 @@ import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { resolveDisplayName } from '@/lib/display-name'
 
-const TYPE_LABEL: Record<string, string> = {
+type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+
+const TYPE_LABEL: Record<AssetType, string> = {
   car: '車', child: '孩子', pet: '寵物', plant: '植物',
   house: '房子', insurance: '保險',
 }
 
+const TYPE_TINT: Record<AssetType, string> = {
+  house: 'var(--asset-tint-house)',
+  car: 'var(--asset-tint-car)',
+  child: 'var(--asset-tint-child)',
+  pet: 'var(--asset-tint-pet)',
+  plant: 'var(--asset-tint-plant)',
+  insurance: 'var(--asset-tint-insurance)',
+}
+
 interface Props {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+  type: AssetType
   name: string
   /** Optional nickname; when present, primary line shows nickname and
    *  legal name slides into the right-aligned secondary slot. */
   nickname?: string | null
   plate: string | null
   monthAmount: number
+  /** Insurance-only: render the 「儲蓄」badge on the subtitle row. */
+  isSavings?: boolean
   isLast?: boolean
 }
 
-export function AssetListItem({ id, type, name, nickname, plate, monthAmount, isLast }: Props) {
-  const subtitle = type === 'car' ? (plate ?? '') : (TYPE_LABEL[type] ?? type)
+export function AssetListItem({ id, type, name, nickname, plate, monthAmount, isSavings, isLast }: Props) {
+  const subtitle = type === 'car' ? (plate ?? '') : TYPE_LABEL[type]
   const display = resolveDisplayName(name, nickname)
+  const tint = TYPE_TINT[type]
   return (
     <Link
       href={`/assets/${id}`}
       className="flex items-center gap-3.5 px-5 py-4 no-underline"
       style={{
         color: 'var(--ink)',
+        borderLeft: `3px solid ${tint}`,
         borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
       }}
     >
       <div
         className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
-        style={{ background: 'var(--surface-alt)', color: 'var(--ink-2)' }}
+        style={{ background: tint, color: 'var(--ink-2)' }}
       >
         <AssetIcon type={type} size={22} />
       </div>
@@ -51,8 +66,22 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
             </div>
           )}
         </div>
-        <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>
-          {subtitle}
+        <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+          {isSavings && (
+            <span
+              className="font-mono shrink-0 px-1.5 py-px rounded-[4px] leading-none"
+              style={{
+                fontSize: 11,
+                background: 'var(--saving-soft)',
+                color: 'var(--saving)',
+              }}
+            >
+              儲蓄
+            </span>
+          )}
+          <span className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
+            {subtitle}
+          </span>
         </div>
       </div>
       <div className="text-right shrink-0 ml-2">

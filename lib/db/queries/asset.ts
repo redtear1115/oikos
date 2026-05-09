@@ -1,5 +1,5 @@
 import { db } from '@/lib/db/client'
-import { assets, carDetails } from '@/lib/db/schema'
+import { assets, carDetails, insuranceDetails } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { FeedRow, FeedKind, TxnCursor } from './transactions'
 
@@ -24,6 +24,8 @@ export interface AssetWithCar {
   brand: string | null
   model: string | null
   initialOdometer: number | null
+  // Insurance-only fields (null for non-insurance assets)
+  insuranceType: string | null
 }
 
 /**
@@ -50,9 +52,11 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       brand: carDetails.brand,
       model: carDetails.model,
       initialOdometer: carDetails.initialOdometer,
+      insuranceType: insuranceDetails.insuranceType,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .where(and(
       eq(assets.groupId, groupId),
       isNull(assets.deletedAt),
@@ -86,9 +90,11 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       brand: carDetails.brand,
       model: carDetails.model,
       initialOdometer: carDetails.initialOdometer,
+      insuranceType: insuranceDetails.insuranceType,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .where(and(eq(assets.id, id), eq(assets.groupId, groupId)))
     .limit(1)
   return (rows[0] as AssetWithCar) ?? null

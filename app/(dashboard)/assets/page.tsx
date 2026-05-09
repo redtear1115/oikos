@@ -44,6 +44,7 @@ export default async function AssetsPage() {
       nickname: a.type === 'child' ? (childNicknames.get(a.id) ?? null) : null,
       plate: a.plate,
       monthAmount: summary.monthAmount,
+      isSavings: a.type === 'insurance' && a.insuranceType === 'savings',
     }
     if (a.type !== 'car') return base
     const heroStats = carStats.get(a.id)!
