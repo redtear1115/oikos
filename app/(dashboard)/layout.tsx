@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .from(oikosGroups)
     .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
     .limit(1)
-  if (!group) redirect('/setup')
+  if (!group) redirect('/onboarding')
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
   const [profilesRows, t, locale] = await Promise.all([
