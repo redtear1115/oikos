@@ -54,12 +54,14 @@ export function RuleListItem({ rule, onEdit }: Props) {
             {cat.mono}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
-              {rule.description}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
+                {rule.description}
+              </div>
               {isPaused && (
                 <span
-                  className="ml-2 text-xs font-normal"
-                  style={{ color: '#b45309' }}
+                  className="shrink-0 inline-flex items-center px-2 py-[1px] rounded-full text-[11px] font-medium leading-none"
+                  style={{ background: 'var(--warning-soft)', color: 'var(--warning)' }}
                 >
                   {t.recurringExpense.rule.pausedHint}
                 </span>

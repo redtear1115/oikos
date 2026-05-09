@@ -77,7 +77,18 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
         <TrustCommitments t={trust} />
 
         {error && (
-          <p className="text-sm" style={{ color: 'var(--debit)' }}>{error}</p>
+          <div
+            role="alert"
+            className="rounded-lg p-3 text-sm flex items-start gap-2"
+            style={{
+              background: 'var(--debit-soft)',
+              borderLeft: '2px solid var(--debit)',
+              color: 'var(--debit)',
+            }}
+          >
+            <span aria-hidden="true">⚠</span>
+            <span className="flex-1">{error}</span>
+          </div>
         )}
 
         <button

@@ -145,7 +145,7 @@ export function RecurringRuleSheet({
       >
         {/* Grabber */}
         <div className="pt-2 flex justify-center relative">
-          <div className="w-9 h-[5px] rounded-full" style={{ background: 'rgba(31,27,22,0.18)' }} />
+          <div className="w-9 h-[5px] rounded-full" style={{ background: 'var(--grabber)' }} />
         </div>
 
         {/* Header */}
@@ -170,6 +170,16 @@ export function RecurringRuleSheet({
         </div>
 
         <div className="overflow-auto flex-1">
+          {error && (
+            <div
+              role="alert"
+              className="sticky top-0 z-10 mx-5 mt-2 px-4 py-3 rounded-xl text-sm text-white"
+              style={{ background: 'var(--debit)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+            >
+              {error}
+            </div>
+          )}
+
           {/* Amount */}
           <div className="text-center" style={{ padding: '24px 24px 20px' }}>
             <div
@@ -473,15 +483,6 @@ export function RecurringRuleSheet({
           <div className="h-8" />
         </div>
       </div>
-
-      {error && open && (
-        <div
-          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
-        >
-          {error}
-        </div>
-      )}
 
       <ConfirmModal
         open={confirmingDelete && open}

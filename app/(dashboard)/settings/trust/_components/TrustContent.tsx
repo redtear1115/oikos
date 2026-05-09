@@ -17,7 +17,7 @@ export function TrustContent() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer p-1 -ml-1"
+          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer min-h-11 px-2 -ml-2"
           style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
         >
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
