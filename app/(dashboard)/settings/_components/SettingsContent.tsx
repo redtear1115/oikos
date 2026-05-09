@@ -274,6 +274,13 @@ export function SettingsContent({
         </div>
       </Section>
 
+      <Section title={t.settings.sectionData}>
+        <Row
+          label={t.settings.trust}
+          onClick={() => router.push('/settings/trust')}
+        />
+      </Section>
+
       <div className="px-4 pb-2 mt-4">
         <LogoutButton />
       </div>

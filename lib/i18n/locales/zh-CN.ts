@@ -202,6 +202,8 @@ export const zhCN: Translations = {
     offlineHint: '开启后可在无网络时查看最近记录',
     recurringIncome: '定期进账',
     recurringExpense: '定期支出',
+    sectionData: '数据',
+    trust: '数据安全',
   },
 
   assets: {
@@ -275,6 +277,31 @@ export const zhCN: Translations = {
       deleteFailed: '删除失败',
     },
     raceMessage: '对方刚刚确认了这笔',
+  },
+
+  trust: {
+    title: '数据安全',
+    back: '返回',
+    pageHeading: '你们的数据，属于你们俩',
+    pageSubtitle: '我们的承诺，写在这里。',
+    encryption: {
+      heading: '只有你们俩能看到',
+      body: '我们用 AES-256-GCM 为你们的记录加密。连我们自己，也读不到内容。',
+    },
+    portability: {
+      heading: '随时都能整包带走',
+      body: '我们不会把你们绑在这里。日后想离开，所有记录都能整批带走。',
+      comingSoonHint: '导出功能即将推出',
+    },
+    backup: {
+      heading: '我们替你们守着',
+      body: '每一笔记录，我们都备份保管。即使你们忘了，我们也替你们留着。',
+    },
+    onboarding: {
+      line1: '数据只属于你们俩',
+      line2: '随时都能整包带走',
+      line3: '每一笔我们都替你们守着',
+    },
   },
 
   recurringExpense: {
