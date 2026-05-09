@@ -1,3 +1,8 @@
+---
+status: shipped
+shipped_in: v0.1.0（核心 CRUD / settlement / balance / 篩選 / realtime）· v0.2.0（onboarding + Solo Mode）· v0.12.0（共同備註 #34 PR #66、CSV 匯出 #37 PR #70、信任宣示頁 #48 PR #62）
+---
+
 # 記帳功能設計（Transactions + Onboarding + Solo Mode）
 
 > 全部已完成（v0.1.0 / v0.2.0）。

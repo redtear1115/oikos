@@ -1,3 +1,10 @@
+---
+status: planned
+blocked_on: 財政部 API APP_ID（2023/3/31 新制不開放個人申請，需 ISO27001）
+remaining_issues: #16
+note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.invoiceNumber` 欄位 + AES-256-GCM helper）。實作所有 Phase A/B/C 都未進行；APP_ID 卡點未解前不啟動。
+---
+
 # 雲端發票匯入設計
 
 > 串接財政部電子發票 API，讓使用者用手機條碼載具一鍵把過去每月的雲端發票匯入成 CashTransaction。

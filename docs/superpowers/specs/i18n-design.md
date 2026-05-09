@@ -1,8 +1,13 @@
+---
+status: shipped
+shipped_in: v0.11.1（基礎架構 + dashboard / records / settings / assets 字典 + 4 語切換器，PR #3 / #4 / #6 / #7）· v0.12.0（Assets 詳情頁 + AssetSheet #20 PR #69、Settings 子頁 coming-soon + invite #21 PR #64、`recurringIncome` / `recurringExpense` namespaces PR #77）
+---
+
 # i18n 架構設計 spec
 
 > 目標：lock 多語架構決策，讓「加新語系」「翻新頁」「翻新元件」三件事有清楚的接入點。
 > 範圍：**zh-TW / zh-CN / en / ja 四語**；server-driven locale；dictionary-based（無翻譯後端、無動態載入）。
-> 狀態：基礎已 ship（PR #3 / #4 / #6 / #7 → v0.11.1）；日期 helper 已改用 `Intl.DateTimeFormat(locale)`（v0.11.1）。愛物詳情頁、設定子頁翻譯仍待補（[issue #20](https://github.com/redtear1115/oikos/issues/20)、[#21](https://github.com/redtear1115/oikos/issues/21)）。
+> 狀態：基礎已 ship（PR #3 / #4 / #6 / #7 → v0.11.1）；日期 helper 已改用 `Intl.DateTimeFormat(locale)`（v0.11.1）。Assets 詳情頁 + AssetSheet（[#20](https://github.com/redtear1115/oikos/issues/20)）與 Settings 子頁（[#21](https://github.com/redtear1115/oikos/issues/21)）已於 v0.12.0 翻譯完成（PR #69 / PR #64）。
 
 ---
 
@@ -103,10 +108,9 @@ RSC 重新 render → getTranslations() 讀新 cookie → 整頁字串換掉
 
 ## Out of scope（不做 / 待補）
 
-### 待補（GitHub issues）
+### 待補
 
-- **Assets 詳情頁 + AssetSheet 翻譯**（[issue #20](https://github.com/redtear1115/oikos/issues/20)）：保險 / 車輛 / 兒童等 ~40 fields，翻譯量大需人工審稿後才能上線
-- **Settings 子頁翻譯**（[issue #21](https://github.com/redtear1115/oikos/issues/21)）：`recurring-income` / `invite` / `coming-soon` 等子頁仍 zh-TW only
+目前 4 語覆蓋 dashboard / records / settings（含子頁 recurring-income / recurring-expense / coming-soon / invite / trust）/ assets（含 AssetSheet + 詳情頁 + Savings flow）/ recurring-income / recurring-expense。原規劃缺口（[#20](https://github.com/redtear1115/oikos/issues/20) Assets 詳情頁、[#21](https://github.com/redtear1115/oikos/issues/21) Settings 子頁）已於 v0.12.0 補完（PR #69 / PR #64）。新增功能持續沿用本 spec 接入流程。
 
 ### 永久 out
 
@@ -119,7 +123,6 @@ RSC 重新 render → getTranslations() 讀新 cookie → 整頁字串換掉
 
 ## 索引
 
-- [issue #20](https://github.com/redtear1115/oikos/issues/20) · [#21](https://github.com/redtear1115/oikos/issues/21) — i18n 待補項目（Assets 詳情頁、Settings 子頁）
 - [lib/i18n/](../../../lib/i18n/) — 所有 i18n code
 - [app/(dashboard)/layout.tsx](../../../app/%28dashboard%29/layout.tsx) — Provider 接入點
 - [app/sign-in/page.tsx](../../../app/sign-in/page.tsx) — sign-in 自帶 fetch 範例

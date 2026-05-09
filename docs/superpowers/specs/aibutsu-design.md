@@ -1,3 +1,8 @@
+---
+status: shipped
+shipped_in: v0.5.0（Child + Pet + Plant）· v0.6.0（House + Insurance）· v0.8.1（愛物清單 inline 分組 + AibutsuHintCard onboarding）· v0.11.4（per-type tint + 儲蓄 badge #28）
+---
+
 # 愛物概念擴展設計（Phase 2 Slice 3 — Child + Pet + Plant）
 
 ## Context
