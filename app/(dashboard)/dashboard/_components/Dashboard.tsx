@@ -230,7 +230,12 @@ export function Dashboard({
             </button>
           </div>
         ) : (
-          <SoloBanner onDismiss={handleDismissBanner} pendingCount={pendings.length} />
+          <SoloBanner
+            onDismiss={handleDismissBanner}
+            pendingCount={pendings.length}
+            mode={mode}
+            onModeChange={setMode}
+          />
         )
       ) : (
         <BalanceHero
