@@ -130,6 +130,10 @@ export const zhCN: Translations = {
     date: '日期',
     notesLabel: '备注（选填，两人都看得到）',
     notesPlaceholder: '写一句留给对方的话，或之后想记得的事',
+    statusLabel: '状态',
+    statusSettled: '已扣款',
+    statusPending: '待扣款',
+    statusPendingHint: '待扣款不会算进两人的结算，等实际扣款后再改为已扣款。',
     deleteOne: '删除这笔',
     deleteConfirmTitle: '删除这笔记录？',
     errors: {
@@ -137,6 +141,10 @@ export const zhCN: Translations = {
       descriptionRequired: '请输入描述',
       noPartner: '伴侣尚未加入',
     },
+  },
+
+  compactRow: {
+    pendingBadge: '待扣款',
   },
 
   incomeSheet: {

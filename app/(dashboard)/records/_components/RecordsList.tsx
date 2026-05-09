@@ -123,6 +123,7 @@ export function RecordsList({ initial, pageSize }: Props) {
       transactedAt: tx.transactedAt,
       assetId: tx.assetId,
       notes: tx.notes,
+      status: tx.status,
     })
   }
 

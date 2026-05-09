@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import { validateTransactionInput } from '@/lib/validators'
+import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
@@ -22,6 +22,7 @@ export interface CreateTransactionInput {
   transactedAt: Date
   assetId?: string | null
   notes?: string | null
+  status?: RecordStatus       // defaults to 'settled' (issue #49)
 }
 
 export async function createTransaction(
@@ -72,6 +73,7 @@ export async function createTransaction(
         description: validated.description,
         category: validated.category,
         notes: validated.notes,
+        status: validated.status,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
       })
@@ -142,6 +144,7 @@ export interface EditTransactionInput {
   transactedAt: Date
   assetId?: string | null
   notes?: string | null
+  status?: RecordStatus
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
@@ -215,6 +218,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         description: validated.description,
         category: validated.category,
         notes: validated.notes,
+        status: validated.status,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
       })
@@ -245,6 +249,7 @@ export interface PagedTxnRow {
   assetId: string | null
   fuelLogId: string | null  // non-null when row was created by a FuelLog dual-write
   notes: string | null  // shared memo on a CashTransaction; null for settlements/income/empty
+  status: RecordStatus  // settlements/income are always 'settled'; only CashTransactions can be 'pending'
 }
 
 export async function loadMoreTransactions(
@@ -296,6 +301,7 @@ export async function loadMoreTransactions(
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
+    status: r.status ?? 'settled',
   }))
 }
 
@@ -332,6 +338,7 @@ export async function loadMoreFeedAll(
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
+    status: r.status ?? 'settled',
   }))
 }
 
@@ -369,5 +376,6 @@ export async function loadMoreTransactionsForAsset(
     assetId: r.assetId ?? null,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
+    status: r.status ?? 'settled',
   }))
 }

@@ -4,6 +4,7 @@ import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
+import { useTranslations } from '@/lib/i18n/client'
 
 export interface CompactRowProps {
   tx: {
@@ -16,12 +17,14 @@ export interface CompactRowProps {
     transactedAt: string
     kind: 'transaction' | 'settlement' | 'income'
     notes?: string | null
+    status?: 'settled' | 'pending'
   }
   isLast: boolean
   onClick?: () => void
 }
 
 export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
+  const t = useTranslations()
   const { viewer, partner } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
@@ -56,13 +59,25 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
 
   const noteText = tx.notes?.trim() || null
+  const isPending = tx.kind === 'transaction' && tx.status === 'pending'
 
   const inner = (
     <>
       <CategoryChip categoryId={tx.category} size={32} />
       <div className="flex-1 min-w-0 text-left">
-        <div className="text-sm font-medium mb-0.5" style={{ color: 'var(--ink)' }}>
-          {displayLabel}
+        <div className="text-sm font-medium mb-0.5 flex items-center gap-1.5" style={{ color: 'var(--ink)' }}>
+          <span className="truncate">{displayLabel}</span>
+          {isPending && (
+            <span
+              className="text-[10px] tracking-[0.4px] px-1.5 py-px rounded-full shrink-0"
+              style={{
+                background: 'var(--hairline)',
+                color: 'var(--ink-2)',
+              }}
+            >
+              {t.compactRow.pendingBadge}
+            </span>
+          )}
         </div>
         <div
           className="text-micro flex items-center gap-1.5"
@@ -96,7 +111,12 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   )
 
   const cls = "w-full flex items-center gap-3 px-[14px] py-3 text-left bg-transparent border-0"
-  const style = { borderBottom: isLast ? 'none' : '1px solid var(--hairline)' }
+  // Pending records read as "still in motion" — drop opacity so they recede
+  // visually next to settled rows. Badge label still reads at full contrast.
+  const style = {
+    borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
+    opacity: isPending ? 0.6 : 1,
+  }
 
   if (onClick) {
     return (

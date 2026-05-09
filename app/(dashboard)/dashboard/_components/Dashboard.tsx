@@ -210,6 +210,7 @@ export function Dashboard({
         transactedAt: tx.transactedAt,
         assetId: tx.assetId,
         notes: tx.notes,
+        status: tx.status,
       },
     })
   }, [startFuelLoad])
