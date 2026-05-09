@@ -179,6 +179,17 @@ export const ja: Translations = {
     tabIncome: '収入',
     manageRecurringIncome: '⚙ 定期収入を設定 →',
     manageRecurringExpense: '⚙ 定期支出を設定 →',
+    stats: {
+      title: '今月の支出',
+      total: '合計 NT${amount}',
+      empty: '今月はまだ記録がありません',
+      emptySub: '別の月を見てみる',
+      viewByCategory: 'カテゴリー',
+      viewByAsset: '愛物',
+      otherSpend: 'その他の支出',
+      prevMonth: '前の月',
+      nextMonth: '次の月',
+    },
   },
 
   filterSheet: {

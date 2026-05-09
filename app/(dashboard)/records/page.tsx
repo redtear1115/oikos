@@ -2,25 +2,41 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
-import { listFeedAllPaged } from '@/lib/db/queries/transactions'
+import { listFeedAllPaged, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
 import { RecordsList } from './_components/RecordsList'
+import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
+import { isMonthKey, currentMonthKey, clampMonthKey, monthKeyOf } from '@/lib/monthKey'
+import type { BreakdownView } from './_components/StatsBreakdownToggle'
 
 const PAGE_SIZE = 20
 
-export default async function RecordsPage() {
+export default async function RecordsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string; view?: string }>
+}) {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const [{ month: rawMonth, view: rawView }, [group]] = await Promise.all([
+    searchParams,
+    db
+      .select()
+      .from(oikosGroups)
+      .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+      .limit(1),
+  ])
   if (!group) throw new Error('No group')
 
-  const rows = await listFeedAllPaged(group.id, null, PAGE_SIZE)
+  // Stats bounds need the group's creation month (Asia/Taipei). Run with the feed
+  // and DB-truth conversion in parallel; fall back to JS-side if the helper is
+  // null (shouldn't happen but the type allows it).
+  const [feedRows, creationMonthFromDb] = await Promise.all([
+    listFeedAllPaged(group.id, null, PAGE_SIZE),
+    getGroupCreationMonthKey(group.id),
+  ])
 
-  const initial = rows.map((r) => ({
+  const initial = feedRows.map((r) => ({
     id: r.id,
     amount: r.amount,
     splitType: r.splitType,
@@ -35,5 +51,27 @@ export default async function RecordsPage() {
     notes: r.notes,
   }))
 
-  return <RecordsList initial={initial} pageSize={PAGE_SIZE} />
+  // Per spec: clamp ?month to [creationMonth, currentMonth]. Bounds are also fed
+  // to MonthSwitcher so the prev/next buttons disable at the edges.
+  const minMonthKey = creationMonthFromDb ?? monthKeyOf(group.createdAt)
+  const maxMonthKey = currentMonthKey()
+  const requestedMonth = isMonthKey(rawMonth) ? rawMonth : maxMonthKey
+  const monthKey = clampMonthKey(requestedMonth, minMonthKey, maxMonthKey)
+  const view: BreakdownView = rawView === 'asset' ? 'asset' : 'category'
+
+  return (
+    <RecordsList
+      initial={initial}
+      pageSize={PAGE_SIZE}
+      statsSlot={
+        <MonthlyStatsSection
+          groupId={group.id}
+          monthKey={monthKey}
+          minMonthKey={minMonthKey}
+          maxMonthKey={maxMonthKey}
+          view={view}
+        />
+      }
+    />
+  )
 }

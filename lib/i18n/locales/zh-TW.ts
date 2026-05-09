@@ -178,6 +178,17 @@ export type Translations = {
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    stats: {
+      title: string
+      total: string  // {amount}
+      empty: string
+      emptySub: string
+      viewByCategory: string
+      viewByAsset: string
+      otherSpend: string
+      prevMonth: string
+      nextMonth: string
+    }
   }
 
   filterSheet: {
@@ -1072,6 +1083,17 @@ export const zhTW: Translations = {
     tabIncome: '進帳',
     manageRecurringIncome: '⚙ 設定定期進帳 →',
     manageRecurringExpense: '⚙ 設定定期支出 →',
+    stats: {
+      title: '這個月花了',
+      total: '總共 NT${amount}',
+      empty: '這個月還沒有花費紀錄',
+      emptySub: '翻翻其他月看看',
+      viewByCategory: '分類',
+      viewByAsset: '愛物',
+      otherSpend: '其他支出',
+      prevMonth: '上一月',
+      nextMonth: '下一月',
+    },
   },
 
   filterSheet: {
