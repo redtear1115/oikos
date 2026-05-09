@@ -27,6 +27,7 @@ vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHintCard', () => ({ Ai
 
 import { render, screen } from '@testing-library/react'
 import { PetDetailClient } from '@/app/(dashboard)/assets/[id]/_components/PetDetailClient'
+import { I18nWrapper } from './_mocks/i18n'
 
 const baseProps = {
   assetId: 'a1',
@@ -41,13 +42,13 @@ const baseProps = {
 
 describe('PetDetailClient — notes section', () => {
   it('hides the notes section when notes is null', () => {
-    render(<PetDetailClient {...baseProps} notes={null} />)
+    render(<PetDetailClient {...baseProps} notes={null} />, { wrapper: I18nWrapper })
     expect(screen.queryByText('備註')).not.toBeInTheDocument()
   })
 
   it('renders the notes section with whitespace-pre-wrap when notes is present', () => {
     const noteText = '上次健檢一切正常\n下次回診 6/12'
-    const { container } = render(<PetDetailClient {...baseProps} notes={noteText} />)
+    const { container } = render(<PetDetailClient {...baseProps} notes={noteText} />, { wrapper: I18nWrapper })
     expect(screen.getByText('備註')).toBeInTheDocument()
     // The notes text lives inside a div with whitespace-pre-wrap so the
     // browser preserves the literal '\n' visually as a line break.

@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/client'
+
 type FuelType = '92' | '95' | '98' | 'diesel'
 
 interface FuelTypeButtonGroupProps {
@@ -7,14 +9,14 @@ interface FuelTypeButtonGroupProps {
   onChange: (value: FuelType) => void
 }
 
-const OPTIONS: Array<{ value: FuelType; label: string }> = [
-  { value: '92', label: '92' },
-  { value: '95', label: '95' },
-  { value: '98', label: '98' },
-  { value: 'diesel', label: '柴油' },
-]
-
 export function FuelTypeButtonGroup({ value, onChange }: FuelTypeButtonGroupProps) {
+  const t = useTranslations()
+  const OPTIONS: Array<{ value: FuelType; label: string }> = [
+    { value: '92', label: '92' },
+    { value: '95', label: '95' },
+    { value: '98', label: '98' },
+    { value: 'diesel', label: t.assetSheet.car.fuelTypeDiesel },
+  ]
   return (
     <div className="flex gap-1 rounded-xl bg-[rgba(58,36,25,0.05)] p-1">
       {OPTIONS.map(opt => (

@@ -13,18 +13,20 @@ import type { HouseDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
+import { useTranslations } from '@/lib/i18n/client'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
-function HomeStat({ purchasedAt, accent }: { purchasedAt: string; accent: string }) {
+function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: string; td: Translations['assetDetail']['house'] }) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(purchasedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
-      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>入住天數</div>
+      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
-        <span className="text-sm font-medium" style={{ color: accent }}>天</span>
+        <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
       <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
-        {purchasedAt} 入住
+        {purchasedAt}{td.livingSuffix}
       </div>
     </div>
   )
@@ -51,6 +53,8 @@ interface Props {
 
 export function HouseDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
+  const t = useTranslations()
+  const td = t.assetDetail.house
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -93,22 +97,22 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
 
       {details?.purchasedAt && (
         <div className="px-5 pb-6" style={{ background: tint.bg }}>
-          <HomeStat purchasedAt={details.purchasedAt} accent={tint.accent} />
+          <HomeStat purchasedAt={details.purchasedAt} accent={tint.accent} td={td} />
         </div>
       )}
 
       <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
 
-      <SectionHeader>房子資訊</SectionHeader>
+      <SectionHeader>{td.sectionInfo}</SectionHeader>
       <InfoCard>
-        <InfoRow label="地址" value={details?.address ?? ''} />
-        <InfoRow label="購入日" value={details?.purchasedAt ?? ''} mono />
-        <InfoRow label="購入金額" value={details?.purchasePrice ? `NT$ ${details.purchasePrice.toLocaleString()}` : ''} mono last />
+        <InfoRow label={td.address} value={details?.address ?? ''} />
+        <InfoRow label={td.purchasedAt} value={details?.purchasedAt ?? ''} mono />
+        <InfoRow label={td.purchasePrice} value={details?.purchasePrice ? `NT$ ${details.purchasePrice.toLocaleString()}` : ''} mono last />
       </InfoCard>
 
       {notes && (
         <>
-          <SectionHeader>備註</SectionHeader>
+          <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
             <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
               {notes}
@@ -117,7 +121,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         </>
       )}
 
-      <SectionHeader>近期花費</SectionHeader>
+      <SectionHeader>{t.assetDetail.recentExpenses}</SectionHeader>
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
@@ -127,7 +131,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         emptyState={<AibutsuHintCard type="house" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-            時間軸 · {count} 筆
+            {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}
       />

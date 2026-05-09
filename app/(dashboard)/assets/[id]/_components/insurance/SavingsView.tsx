@@ -15,10 +15,10 @@ import { SectionHeader, InfoCard, InfoRow } from '../aibutsu-ui'
 import { SavingsHero } from './SavingsHero'
 import { MaturingSoonPrompt } from './MaturingSoonPrompt'
 import { MaturedAwaitingPrompt } from './MaturedAwaitingPrompt'
-import { SAVINGS_PAYMENT_EMPTY, SAVINGS_RETURN_EMPTY } from './insurance-copy'
 import { computeSavingsProgress } from '@/lib/insuranceProgress'
-import { getKindLabel, getPayCycleLabel } from '@/lib/insurance'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
+import { useTranslations } from '@/lib/i18n/client'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { loadMoreInsuranceReturns } from '@/actions/income'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -27,6 +27,18 @@ import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 
 type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+
+function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
+  if (!kind) return ''
+  if (kind in td.kindLabels) return td.kindLabels[kind as keyof typeof td.kindLabels]
+  return kind
+}
+
+function lookupPayCycleLabel(cycle: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
+  if (!cycle) return ''
+  if (cycle in td.payCycleLabels) return td.payCycleLabels[cycle as keyof typeof td.payCycleLabels]
+  return cycle
+}
 
 interface Props {
   assetId: string
@@ -60,6 +72,9 @@ export function SavingsView({
   linkedVehicle,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations()
+  const td = t.assetDetail.insurance
+  const ts = t.assetDetail.savings
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editAssetOpen, setEditAssetOpen] = useState(false)
@@ -93,7 +108,7 @@ export function SavingsView({
     endsAt: details.endsAt,
   })
 
-  const subtitle = [details.insurer, getKindLabel(details.kind) || null].filter(Boolean).join(' · ') || null
+  const subtitle = [details.insurer, lookupKindLabel(details.kind, td) || null].filter(Boolean).join(' · ') || null
 
   const handleAssetMutated = (kind: 'saved' | 'deleted') => {
     if (kind === 'deleted') { router.replace('/assets'); return }
@@ -175,12 +190,12 @@ export function SavingsView({
       {details.startsAt && details.endsAt && !progress.awaitingMaturity && (
         <div className="mx-4 mt-3 p-4 rounded-2xl" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
           <div className="flex justify-between items-baseline">
-            <span className="text-micro" style={{ color: 'var(--ink-2)' }}>合約進度</span>
+            <span className="text-micro" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
             <span className="text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
               {progress.yearsLeft !== null && progress.yearsLeft > 0
-                ? `還剩 ${progress.yearsLeft.toFixed(1)} 年`
+                ? td.yearsLeft.replace('{years}', progress.yearsLeft.toFixed(1))
                 : progress.isMatured
-                  ? '已滿期'
+                  ? td.matured
                   : ''}
             </span>
           </div>
@@ -200,7 +215,7 @@ export function SavingsView({
         </div>
       )}
 
-      <SectionHeader>繳費紀錄</SectionHeader>
+      <SectionHeader>{ts.sectionPremium}</SectionHeader>
       <div className="mx-4">
         <TransactionFeed
           initial={initialPremiumTxns}
@@ -210,7 +225,7 @@ export function SavingsView({
           onItemClick={handleTxClick}
           emptyState={
             <div className="text-center py-8 text-sm" style={{ color: 'var(--ink-3)' }}>
-              {SAVINGS_PAYMENT_EMPTY}
+              {ts.paymentEmpty}
             </div>
           }
         />
@@ -218,7 +233,7 @@ export function SavingsView({
 
       <div className="px-5 pt-[18px] pb-2 flex items-center justify-between">
         <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-          拿回紀錄
+          {ts.sectionReturn}
         </div>
         {showRecordReturnCta && (
           <button
@@ -230,7 +245,7 @@ export function SavingsView({
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
             </svg>
-            記滿期金
+            {ts.addReturn}
           </button>
         )}
       </div>
@@ -244,39 +259,39 @@ export function SavingsView({
           emptyState={
             <div className="text-center py-8 text-sm" style={{ color: 'var(--ink-3)' }}>
               {progress.isMatured
-                ? SAVINGS_RETURN_EMPTY.awaitingMaturity
-                : SAVINGS_RETURN_EMPTY.beforeMaturity}
+                ? ts.returnEmptyAwaiting
+                : ts.returnEmptyBefore}
             </div>
           }
         />
       </div>
 
-      <SectionHeader>合約資訊</SectionHeader>
+      <SectionHeader>{td.sectionContract}</SectionHeader>
       <InfoCard>
-        <InfoRow label="險種" value={getKindLabel(details.kind) + (details.termYears ? `（${details.termYears} 年期）` : '')} />
-        <InfoRow label="被保人" value={details.insured ?? ''} />
-        <InfoRow label="保險公司" value={details.insurer ?? ''} />
-        <InfoRow label="保單號" value={details.policyNo ?? ''} mono />
-        <InfoRow label="繳費週期" value={getPayCycleLabel(details.payCycle)} />
+        <InfoRow label={td.kind} value={lookupKindLabel(details.kind, td) + (details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : '')} />
+        <InfoRow label={td.insured} value={details.insured ?? ''} />
+        <InfoRow label={td.insurer} value={details.insurer ?? ''} />
+        <InfoRow label={td.policyNo} value={details.policyNo ?? ''} mono />
+        <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details.payCycle, td)} />
         <InfoRow
-          label="預估滿期金"
+          label={td.expectedMaturity}
           value={details.expectedMaturityAmount !== null ? `NT$ ${details.expectedMaturityAmount.toLocaleString()}` : ''}
           mono
           last
         />
       </InfoCard>
 
-      <SectionHeader>到期資訊</SectionHeader>
+      <SectionHeader>{td.sectionMaturity}</SectionHeader>
       <InfoCard>
-        <InfoRow label="保單起" value={details.startsAt ?? ''} mono />
-        <InfoRow label="保單迄" value={details.endsAt ?? ''} mono last />
+        <InfoRow label={td.startsAt} value={details.startsAt ?? ''} mono />
+        <InfoRow label={td.endsAt} value={details.endsAt ?? ''} mono last />
       </InfoCard>
 
       {linkedVehicle && (
         <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
           <div className="px-5 py-4">
             <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
-              關聯車輛
+              {t.assetDetail.linkedVehicleSection}
             </div>
             <Link
               href={`/assets/${linkedVehicle.id}`}
@@ -293,7 +308,7 @@ export function SavingsView({
 
       {notes && (
         <>
-          <SectionHeader>備註</SectionHeader>
+          <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
             <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
               {notes}

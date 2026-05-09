@@ -15,6 +15,7 @@ import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import { SectionHeader, InfoCard } from './aibutsu-ui'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface SerializedFuelLog {
   id: string
@@ -56,6 +57,7 @@ export function AssetDetailClient({
   linkedInsurances,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations()
   const [editAssetOpen, setEditAssetOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -161,7 +163,7 @@ export function AssetDetailClient({
 
       {notes && (
         <>
-          <SectionHeader>備註</SectionHeader>
+          <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
             <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
               {notes}
@@ -176,7 +178,7 @@ export function AssetDetailClient({
         header={(count) => (
           <div className="flex items-center justify-between">
             <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-              時間軸 · {count} 筆
+              {t.assetDetail.timelineEntries.replace('{count}', String(count))}
             </div>
             {fuelType !== 'electric' && (
               <button
@@ -188,7 +190,7 @@ export function AssetDetailClient({
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                   <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                 </svg>
-                其他花費
+                {t.assetDetail.addOtherExpense}
               </button>
             )}
           </div>
@@ -197,8 +199,8 @@ export function AssetDetailClient({
         emptyState={
           <div className="text-center py-10 px-6 text-sm leading-relaxed" style={{ color: 'var(--ink-3)' }}>
             {assetSheetInitial.type === 'car'
-              ? <>還沒有為這台車記下任何花費 —<br />戳右下角 + 開始</>
-              : <>還沒有記下任何花費 —<br />戳右下角 + 開始</>
+              ? <>{t.assetDetail.emptyCarLine1}<br />{t.assetDetail.emptyCarLine2}</>
+              : <>{t.assetDetail.emptyDefaultLine1}<br />{t.assetDetail.emptyDefaultLine2}</>
             }
           </div>
         }
@@ -225,7 +227,7 @@ export function AssetDetailClient({
         <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
           <div className="px-5 py-4">
             <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
-              相關保險
+              {t.assetDetail.relatedInsurance}
             </div>
             {linkedInsurances.map((ins, i) => (
               <Link
@@ -265,7 +267,7 @@ export function AssetDetailClient({
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M10 3v14M3 10h14" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
-              <span>其他花費</span>
+              <span>{t.assetDetail.addOtherExpense}</span>
             </>
           ) : (
             <>
@@ -274,7 +276,7 @@ export function AssetDetailClient({
                 <path d="M12 9h2a2 2 0 012 2v3a1 1 0 002 0V8l-2-2" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/>
                 <path d="M5 7h5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
-              <span>加油</span>
+              <span>{t.assetDetail.refuel}</span>
             </>
           )
         }

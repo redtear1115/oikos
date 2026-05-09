@@ -13,6 +13,8 @@ import type { PlantDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
+import { useTranslations } from '@/lib/i18n/client'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 interface AssetSummary {
   monthAmount: number
@@ -33,17 +35,17 @@ interface Props {
   allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-function CompanionDays({ sproutedAt, waterEvery, accent }: { sproutedAt: string; waterEvery: number | null; accent: string }) {
+function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: string; waterEvery: number | null; accent: string; td: Translations['assetDetail']['plant'] }) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(sproutedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
-      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>陪伴天數</div>
+      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.companionDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
-        <span className="text-sm font-medium" style={{ color: accent }}>天</span>
+        <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
       <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
-        {sproutedAt} 入手{waterEvery ? ` · 每 ${waterEvery} 天澆水` : ''}
+        {sproutedAt}{td.sproutedSuffix}{waterEvery ? td.waterEveryFooter.replace('{n}', String(waterEvery)) : ''}
       </div>
     </div>
   )
@@ -51,6 +53,8 @@ function CompanionDays({ sproutedAt, waterEvery, accent }: { sproutedAt: string;
 
 export function PlantDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
+  const t = useTranslations()
+  const td = t.assetDetail.plant
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -94,23 +98,23 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
 
       {details?.sproutedAt && (
         <div className="px-5 pb-6" style={{ background: tint.bg }}>
-          <CompanionDays sproutedAt={details.sproutedAt} waterEvery={details.waterEvery} accent={tint.accent} />
+          <CompanionDays sproutedAt={details.sproutedAt} waterEvery={details.waterEvery} accent={tint.accent} td={td} />
         </div>
       )}
 
       <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
 
-      <SectionHeader>植物紀錄</SectionHeader>
+      <SectionHeader>{td.sectionRecord}</SectionHeader>
       <InfoCard>
-        <InfoRow label="入手日" value={details?.sproutedAt ?? ''} mono />
-        <InfoRow label="入手金額" value={details?.cost ? `NT$ ${details.cost.toLocaleString()}` : ''} mono />
-        <InfoRow label="位置" value={details?.location ?? ''} />
-        <InfoRow label="澆水週期" value={details?.waterEvery ? `每 ${details.waterEvery} 天` : ''} mono last />
+        <InfoRow label={td.sproutedAt} value={details?.sproutedAt ?? ''} mono />
+        <InfoRow label={td.cost} value={details?.cost ? `NT$ ${details.cost.toLocaleString()}` : ''} mono />
+        <InfoRow label={td.location} value={details?.location ?? ''} />
+        <InfoRow label={td.waterEvery} value={details?.waterEvery ? td.waterEveryValue.replace('{n}', String(details.waterEvery)) : ''} mono last />
       </InfoCard>
 
       {notes && (
         <>
-          <SectionHeader>備註</SectionHeader>
+          <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
             <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
               {notes}
@@ -119,7 +123,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         </>
       )}
 
-      <SectionHeader>近期花費</SectionHeader>
+      <SectionHeader>{t.assetDetail.recentExpenses}</SectionHeader>
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
@@ -129,7 +133,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         emptyState={<AibutsuHintCard type="plant" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-            時間軸 · {count} 筆
+            {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}
       />

@@ -1,5 +1,7 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/client'
+
 export function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="px-5 pt-[18px] pb-2">
@@ -44,12 +46,13 @@ export function InfoRow({ label, value, mono = false, last = false }: {
 }
 
 export function MoneyTwoCol({ month, total, accent }: { month: number; total: number; accent: string }) {
+  const t = useTranslations()
   return (
     <div
       className="mx-4 mt-3 flex rounded-2xl px-[14px] py-3 gap-2"
       style={{ background: '#fff', border: '1px solid var(--hairline)' }}
     >
-      {[{ label: '本月', value: month }, { label: '累計', value: total }].map((s, i) => (
+      {[{ label: t.assetDetail.money.thisMonth, value: month }, { label: t.assetDetail.money.cumulative, value: total }].map((s, i) => (
         <div key={s.label} className="flex-1 flex items-stretch gap-2">
           {i > 0 && <div className="w-px" style={{ background: 'var(--hairline)' }} />}
           <div className="flex-1">
@@ -65,6 +68,7 @@ export function MoneyTwoCol({ month, total, accent }: { month: number; total: nu
 }
 
 export function AgeDisplay({ birth, accent }: { birth: string; accent: string }) {
+  const t = useTranslations()
   const now = new Date()
   const b = new Date(birth)
   const months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth())
@@ -72,18 +76,18 @@ export function AgeDisplay({ birth, accent }: { birth: string; accent: string })
   const mos = months % 12
   return (
     <div className="text-center">
-      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>年齡</div>
+      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{t.assetDetail.age.label}</div>
       <div className="inline-flex items-baseline gap-1 mt-1">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-md)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -1 }}>
           {yrs}
         </span>
-        <span className="text-xs font-medium" style={{ color: accent }}>歲</span>
+        <span className="text-xs font-medium" style={{ color: accent }}>{t.assetDetail.age.yearsSuffix}</span>
         {mos > 0 && (
           <>
             <span className="tabular-nums leading-none ml-1" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--ink)' }}>
               {mos}
             </span>
-            <span className="text-micro font-medium" style={{ color: accent }}>個月</span>
+            <span className="text-micro font-medium" style={{ color: accent }}>{t.assetDetail.age.monthsSuffix}</span>
           </>
         )}
       </div>

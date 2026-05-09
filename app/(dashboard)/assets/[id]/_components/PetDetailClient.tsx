@@ -13,6 +13,7 @@ import type { PetDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface AssetSummary {
   monthAmount: number
@@ -35,15 +36,17 @@ interface Props {
 
 export function PetDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
+  const t = useTranslations()
+  const td = t.assetDetail.pet
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('pet')
   const subtitle = details
     ? [details.species, details.breed,
-        details.sex === 'female' ? '女孩'
-          : details.sex === 'male' ? '男孩'
-          : details.sex === 'unknown' ? '不明'
+        details.sex === 'female' ? td.sexFemale
+          : details.sex === 'male' ? td.sexMale
+          : details.sex === 'unknown' ? td.sexUnknown
           : null
       ].filter(Boolean).join(' · ')
     : null
@@ -89,23 +92,23 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
 
       <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
 
-      <SectionHeader>來到家裡</SectionHeader>
+      <SectionHeader>{td.sectionAtHome}</SectionHeader>
       <InfoCard>
-        <InfoRow label="出生日" value={details?.birthDate ?? ''} mono />
-        <InfoRow label="到家日" value={details?.adoptedDate ?? ''} mono />
-        <InfoRow label="領養金額" value={details?.purchaseCost ? `NT$ ${details.purchaseCost.toLocaleString()}` : ''} mono />
-        <InfoRow label="目前體重" value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
+        <InfoRow label={td.birthDate} value={details?.birthDate ?? ''} mono />
+        <InfoRow label={td.adoptedDate} value={details?.adoptedDate ?? ''} mono />
+        <InfoRow label={td.purchaseCost} value={details?.purchaseCost ? `NT$ ${details.purchaseCost.toLocaleString()}` : ''} mono />
+        <InfoRow label={td.weight} value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
       </InfoCard>
 
-      <SectionHeader>健康 / 證件</SectionHeader>
+      <SectionHeader>{td.sectionHealth}</SectionHeader>
       <InfoCard>
-        <InfoRow label="晶片號" value={details?.chipNo ?? ''} mono />
-        <InfoRow label="獸醫院" value={details?.vet ?? ''} last />
+        <InfoRow label={td.chipNo} value={details?.chipNo ?? ''} mono />
+        <InfoRow label={td.vet} value={details?.vet ?? ''} last />
       </InfoCard>
 
       {notes && (
         <>
-          <SectionHeader>備註</SectionHeader>
+          <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
             <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
               {notes}
@@ -114,7 +117,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         </>
       )}
 
-      <SectionHeader>近期花費</SectionHeader>
+      <SectionHeader>{t.assetDetail.recentExpenses}</SectionHeader>
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
@@ -124,7 +127,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         emptyState={<AibutsuHintCard type="pet" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-            時間軸 · {count} 筆
+            {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}
       />
