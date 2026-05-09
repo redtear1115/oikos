@@ -42,7 +42,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 | 主要 issues |
 |---|---|---|
-| [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 離線 + 統計 | #19 read-only offline、#22 月度／分類統計 |
+| [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 沒有訊號的時候，也還看得見 | #19 read-only offline、#22 月度／分類統計、#44 雙人月度回顧 |
 | [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
 
 → 所有候選：[GitHub Issues](https://github.com/redtear1115/oikos/issues) · [`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
