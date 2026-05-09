@@ -201,6 +201,8 @@ export type Translations = {
     offlineHint: string
     recurringIncome: string
     recurringExpense: string
+    sectionData: string
+    trust: string
   }
 
   assets: {
@@ -279,6 +281,31 @@ export type Translations = {
       deleteFailed: string
     }
     raceMessage: string
+  }
+
+  trust: {
+    title: string
+    back: string
+    pageHeading: string
+    pageSubtitle: string
+    encryption: {
+      heading: string
+      body: string
+    }
+    portability: {
+      heading: string
+      body: string
+      comingSoonHint: string
+    }
+    backup: {
+      heading: string
+      body: string
+    }
+    onboarding: {
+      line1: string
+      line2: string
+      line3: string
+    }
   }
 
   recurringExpense: {
@@ -547,6 +574,8 @@ export const zhTW: Translations = {
     offlineHint: '開啟後可在無網路時查看最近記錄',
     recurringIncome: '定期進帳',
     recurringExpense: '定期支出',
+    sectionData: '資料',
+    trust: '資料安全',
   },
 
   assets: {
@@ -620,6 +649,31 @@ export const zhTW: Translations = {
       deleteFailed: '刪除失敗',
     },
     raceMessage: '對方剛剛確認了這筆',
+  },
+
+  trust: {
+    title: '資料安全',
+    back: '返回',
+    pageHeading: '你們的資料，屬於你們倆',
+    pageSubtitle: '我們的承諾，寫在這裡。',
+    encryption: {
+      heading: '只有你們倆能看到',
+      body: '我們用 AES-256-GCM 為你們的紀錄加密。連我們自己，也讀不到內容。',
+    },
+    portability: {
+      heading: '隨時都能整包帶走',
+      body: '我們不會把你們綁在這裡。日後想離開，所有紀錄都能整批帶走。',
+      comingSoonHint: '匯出功能即將推出',
+    },
+    backup: {
+      heading: '我們替你們守著',
+      body: '每一筆紀錄，我們都備份保管。即使你們忘了，我們也替你們留著。',
+    },
+    onboarding: {
+      line1: '資料只屬於你們倆',
+      line2: '隨時都能整包帶走',
+      line3: '每一筆我們都替你們守著',
+    },
   },
 
   recurringExpense: {

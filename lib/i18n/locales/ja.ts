@@ -202,6 +202,8 @@ export const ja: Translations = {
     offlineHint: 'オフライン時に最近の記録を閲覧できます',
     recurringIncome: '定期収入',
     recurringExpense: '定期支出',
+    sectionData: 'データ',
+    trust: 'データの安心',
   },
 
   assets: {
@@ -275,6 +277,31 @@ export const ja: Translations = {
       deleteFailed: '削除に失敗しました',
     },
     raceMessage: '相手がたった今この記録を確認しました',
+  },
+
+  trust: {
+    title: 'データの安心',
+    back: '戻る',
+    pageHeading: 'お二人の記録は、お二人のもの',
+    pageSubtitle: '私たちのお約束を、ここに。',
+    encryption: {
+      heading: 'お二人だけが見られます',
+      body: '記録は AES-256-GCM で暗号化しています。私たちにも、中身は読めません。',
+    },
+    portability: {
+      heading: 'いつでも、まるごと持ち出せます',
+      body: 'お二人を縛りつけることはありません。離れる時も、すべて持っていけます。',
+      comingSoonHint: 'エクスポート機能、近日公開',
+    },
+    backup: {
+      heading: '私たちが、お預かりします',
+      body: '一つひとつの記録を、しっかり保管しています。お二人が忘れても、ちゃんと守っています。',
+    },
+    onboarding: {
+      line1: '記録は、お二人だけのもの',
+      line2: 'いつでも、まるごと持ち出せます',
+      line3: '一つひとつ、私たちが守ります',
+    },
   },
 
   recurringExpense: {

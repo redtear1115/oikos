@@ -202,6 +202,8 @@ export const en: Translations = {
     offlineHint: 'Browse recent records when offline',
     recurringIncome: 'Recurring income',
     recurringExpense: 'Recurring expense',
+    sectionData: 'Data',
+    trust: 'Your data',
   },
 
   assets: {
@@ -275,6 +277,31 @@ export const en: Translations = {
       deleteFailed: 'Delete failed',
     },
     raceMessage: 'Your partner just confirmed this entry',
+  },
+
+  trust: {
+    title: 'Your data',
+    back: 'Back',
+    pageHeading: 'Your records belong to the two of you',
+    pageSubtitle: 'Our promises, written down here.',
+    encryption: {
+      heading: 'Only the two of you can read it',
+      body: 'We encrypt your records with AES-256-GCM. We can\'t read them either.',
+    },
+    portability: {
+      heading: 'Take it all with you, anytime',
+      body: 'We won\'t lock you in. If you ever want to leave, you can take everything with you.',
+      comingSoonHint: 'Export coming soon',
+    },
+    backup: {
+      heading: 'We hold them safe for you',
+      body: 'We back up every record we keep for you. Even if you forget, we won\'t.',
+    },
+    onboarding: {
+      line1: 'Your records, only yours',
+      line2: 'Take it all with you, anytime',
+      line3: 'Every entry, held safe by us',
+    },
   },
 
   recurringExpense: {

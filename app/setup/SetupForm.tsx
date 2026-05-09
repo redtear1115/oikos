@@ -19,7 +19,13 @@ interface CreatedGroup {
   name: string
 }
 
-export default function SetupForm() {
+interface TrustLines {
+  line1: string
+  line2: string
+  line3: string
+}
+
+export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
   const router = useRouter()
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
@@ -176,6 +182,26 @@ export default function SetupForm() {
           >
             分享連結
           </button>
+
+          <div
+            className="rounded-2xl px-4 py-3.5 flex flex-col gap-2"
+            style={{ background: 'var(--surface-alt)' }}
+          >
+            {[trustLines.line1, trustLines.line2, trustLines.line3].map((line, i) => (
+              <div
+                key={i}
+                className="text-xs flex items-start gap-2 leading-relaxed"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                <span
+                  className="w-1 h-1 rounded-full mt-1.5 shrink-0"
+                  style={{ background: 'var(--ink-3)' }}
+                  aria-hidden="true"
+                />
+                <span>{line}</span>
+              </div>
+            ))}
+          </div>
 
           <button
             type="button"

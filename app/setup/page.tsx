@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
+import { getTranslations } from '@/lib/i18n/t'
 import SetupForm from './SetupForm'
 
 export default async function SetupPage() {
@@ -17,5 +18,6 @@ export default async function SetupPage() {
 
   if (group) redirect('/dashboard')
 
-  return <SetupForm />
+  const t = await getTranslations()
+  return <SetupForm trustLines={t.trust.onboarding} />
 }
