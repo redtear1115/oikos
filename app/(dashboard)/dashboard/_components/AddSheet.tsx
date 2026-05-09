@@ -34,8 +34,13 @@ interface Props {
   open: boolean
   onClose: () => void
   initial?: AddSheetInitial
-  /** Called after a successful create/edit/delete. Caller refreshes its own data. */
-  onMutated?: () => void
+  /**
+   * Called after a successful create/edit/delete. Caller refreshes its own data.
+   * Optional `info.isFirstTransaction` is only set on a successful create when
+   * the per-user paid_by count for the group flipped to 1, used by Dashboard
+   * to surface the #43 phase C card.
+   */
+  onMutated?: (info?: { isFirstTransaction?: boolean }) => void
   /** When opening in create mode from a car-detail FAB, prefill the asset link. */
   prefilledAssetId?: string | null
   /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB). */
@@ -108,6 +113,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
     startTransition(async () => {
       try {
+        let isFirstTransaction = false
         if (isEdit) {
           await editTransaction({
             oldId: initial!.id,
@@ -121,7 +127,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             notes,
           })
         } else {
-          await createTransaction({
+          const result = await createTransaction({
             amount: n,
             description: desc,
             category,
@@ -131,8 +137,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             assetId,
             notes,
           })
+          isFirstTransaction = result.isFirstTransaction
         }
-        onMutated?.()
+        onMutated?.({ isFirstTransaction })
         onClose()
       } catch (e) {
         setError(e instanceof Error ? e.message : t.common.error)

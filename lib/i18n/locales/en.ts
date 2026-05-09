@@ -71,6 +71,12 @@ export const en: Translations = {
     noFilteredAddHint: 'No records yet. Tap + below to add one.',
   },
 
+  firstRecordCard: {
+    headline: 'Your first one together. This is a start, not a test.',
+    dismiss: 'Got it',
+    closeAriaLabel: 'Dismiss',
+  },
+
   modeToggle: {
     expense: 'Expense',
     income: 'Income',

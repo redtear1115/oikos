@@ -69,6 +69,12 @@ export type Translations = {
     noFilteredAddHint: string
   }
 
+  firstRecordCard: {
+    headline: string
+    dismiss: string
+    closeAriaLabel: string
+  }
+
   modeToggle: {
     expense: string
     income: string
@@ -856,6 +862,12 @@ export const zhTW: Translations = {
     addFirst: '記第一筆',
     noIncome: '還沒記過家裡的進帳',
     noFilteredAddHint: '還沒有紀錄。按下方 + 記第一筆吧。',
+  },
+
+  firstRecordCard: {
+    headline: '你們的第一筆。這是個開始，不是考試。',
+    dismiss: '明白了',
+    closeAriaLabel: '關閉提示',
   },
 
   modeToggle: {
