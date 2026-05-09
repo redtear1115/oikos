@@ -57,7 +57,7 @@ describe('MiniCalendar', () => {
     fireEvent.click(screen.getByRole('button', { name: /選擇月份/ }))
     fireEvent.click(screen.getByRole('button', { name: /選擇年份/ }))
     // 2026 falls in decade 2020-2029
-    expect(screen.getByText(/2020 – 2029 ˅/)).toBeInTheDocument()
+    expect(screen.getByText(/^2020 – 2029$/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '2020' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '2029' })).toBeInTheDocument()
     // 3×4 grid with overflow years on each side
@@ -70,10 +70,10 @@ describe('MiniCalendar', () => {
     fireEvent.click(screen.getByRole('button', { name: /選擇月份/ }))
     fireEvent.click(screen.getByRole('button', { name: /選擇年份/ }))
     fireEvent.click(screen.getByRole('button', { name: '上一個十年' }))
-    expect(screen.getByText(/2010 – 2019 ˅/)).toBeInTheDocument()
+    expect(screen.getByText(/^2010 – 2019$/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '下一個十年' }))
     fireEvent.click(screen.getByRole('button', { name: '下一個十年' }))
-    expect(screen.getByText(/2030 – 2039 ˅/)).toBeInTheDocument()
+    expect(screen.getByText(/^2030 – 2039$/)).toBeInTheDocument()
   })
 
   it('picking a year from year-grid returns to month-grid for that year', () => {
@@ -95,7 +95,7 @@ describe('MiniCalendar', () => {
     expect(screen.getByText(/^2019 年 ˅$/)).toBeInTheDocument()
     // Re-entering year view from 2019 should land on decade 2010-2019
     fireEvent.click(screen.getByRole('button', { name: /選擇年份/ }))
-    expect(screen.getByText(/2010 – 2019 ˅/)).toBeInTheDocument()
+    expect(screen.getByText(/^2010 – 2019$/)).toBeInTheDocument()
   })
 
   it('day selection still uses originally selected month even after navigating away', () => {

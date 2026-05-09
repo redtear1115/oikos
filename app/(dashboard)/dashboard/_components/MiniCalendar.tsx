@@ -125,7 +125,7 @@ export function MiniCalendar({ value, onChange }: Props) {
         nextLabel="下一個十年"
         onPrev={goPrev}
         onNext={goNext}
-        title={`${decadeStart} – ${decadeStart + 9} ˅`}
+        title={`${decadeStart} – ${decadeStart + 9}`}
       />
       <div className="grid grid-cols-3 gap-1.5">
         {Array.from({ length: 12 }, (_, i) => decadeStart - 1 + i).map(y => {
