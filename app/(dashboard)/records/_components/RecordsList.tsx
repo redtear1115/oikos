@@ -27,9 +27,15 @@ const incomeLoader = makeIncomeLoader(20)
 interface Props {
   initial: PagedTxnRow[]
   pageSize: number
+  /**
+   * Server-rendered slot shown below the transaction feed (currently the monthly
+   * stats section). Re-renders when ?month or ?view in the URL change; list state
+   * is preserved because RecordsList stays mounted across those navigations.
+   */
+  statsSlot?: React.ReactNode
 }
 
-export function RecordsList({ initial, pageSize }: Props) {
+export function RecordsList({ initial, pageSize, statsSlot }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
@@ -270,6 +276,10 @@ export function RecordsList({ initial, pageSize }: Props) {
             )
         }
       />
+
+      {/* Stats are 純支出視角 (spec). Hide on the income-only tab to avoid mixing
+          two unrelated framings on the same screen. */}
+      {tab !== 'income' && statsSlot}
 
       <BottomNav onAddClick={() => setAdding(true)} hideFab={sheetOpen} />
 

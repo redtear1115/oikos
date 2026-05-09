@@ -179,6 +179,17 @@ export const zhCN: Translations = {
     tabIncome: '进账',
     manageRecurringIncome: '⚙ 设定定期进账 →',
     manageRecurringExpense: '⚙ 设定定期支出 →',
+    stats: {
+      title: '这个月花了',
+      total: '总共 NT${amount}',
+      empty: '这个月还没有花费记录',
+      emptySub: '翻翻其他月看看',
+      viewByCategory: '分类',
+      viewByAsset: '爱物',
+      otherSpend: '其他支出',
+      prevMonth: '上一月',
+      nextMonth: '下一月',
+    },
   },
 
   filterSheet: {

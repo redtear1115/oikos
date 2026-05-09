@@ -179,6 +179,17 @@ export const en: Translations = {
     tabIncome: 'Income',
     manageRecurringIncome: '⚙ Manage recurring income →',
     manageRecurringExpense: '⚙ Manage recurring expense →',
+    stats: {
+      title: 'This month',
+      total: 'Total NT${amount}',
+      empty: 'No spending logged this month',
+      emptySub: 'Try another month',
+      viewByCategory: 'Category',
+      viewByAsset: 'Aibutsu',
+      otherSpend: 'Other spending',
+      prevMonth: 'Previous month',
+      nextMonth: 'Next month',
+    },
   },
 
   filterSheet: {

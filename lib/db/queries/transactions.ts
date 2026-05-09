@@ -3,6 +3,7 @@ import { cashTransactions, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, desc, sql } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
+import { monthRangeIso } from '@/lib/monthKey'
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
 
@@ -260,6 +261,104 @@ export async function listFeedAllPaged(
     createdAt: r.sort_created instanceof Date ? r.sort_created : new Date(r.sort_created),
     kind: r.kind,
   }))
+}
+
+// ─── Monthly stats (Records 月度統計, spec: docs/superpowers/specs/stats-design.md) ─
+
+export interface CategoryStatRow {
+  /** Category id from CashTransactions.category. May fall outside CategoryId if data drifts. */
+  key: string
+  total: number
+  count: number
+}
+
+export interface AssetStatRow {
+  /** Asset id; null = transactions with no asset_id (歸 "其他支出"). */
+  key: string | null
+  /** Asset name, including soft-deleted assets (no deletedAt filter). null when key=null. */
+  name: string | null
+  total: number
+  count: number
+}
+
+/**
+ * Sum active CashTransactions for a group within a local-Taipei calendar month,
+ * grouped by category, ordered by total desc.
+ *
+ * Excludes Settlements / IncomeTransactions (純支出視角) and soft-deleted rows.
+ * Reused by #44 monthly review — keep the shape stable.
+ */
+export async function monthlyStatsByCategory(
+  groupId: string,
+  monthKey: string,
+): Promise<CategoryStatRow[]> {
+  const { startIso, endIso } = monthRangeIso(monthKey)
+  const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
+    SELECT
+      category,
+      SUM(amount)::int AS total,
+      COUNT(*)::int AS count
+    FROM "CashTransactions"
+    WHERE group_id = ${groupId}
+      AND deleted_at IS NULL
+      AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
+      AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp
+    GROUP BY category
+    ORDER BY total DESC
+  `)
+  return rows.map((r) => ({ key: r.category, total: r.total, count: r.count }))
+}
+
+/**
+ * Same as monthlyStatsByCategory but grouped by asset_id. Includes a row with
+ * key=null for transactions without an asset (rendered as "其他支出"). Asset names
+ * are read from Assets without filtering deletedAt so soft-deleted assets still
+ * show their original name instead of "未命名".
+ */
+export async function monthlyStatsByAsset(
+  groupId: string,
+  monthKey: string,
+): Promise<AssetStatRow[]> {
+  const { startIso, endIso } = monthRangeIso(monthKey)
+  const rows = await db.execute<{
+    asset_id: string | null
+    asset_name: string | null
+    total: number
+    count: number
+  }>(sql`
+    SELECT
+      ct.asset_id,
+      a.name AS asset_name,
+      SUM(ct.amount)::int AS total,
+      COUNT(*)::int AS count
+    FROM "CashTransactions" ct
+    LEFT JOIN "Assets" a ON a.id = ct.asset_id
+    WHERE ct.group_id = ${groupId}
+      AND ct.deleted_at IS NULL
+      AND (ct.transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
+      AND (ct.transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp
+    GROUP BY ct.asset_id, a.name
+    ORDER BY total DESC
+  `)
+  return rows.map((r) => ({
+    key: r.asset_id,
+    name: r.asset_name,
+    total: r.total,
+    count: r.count,
+  }))
+}
+
+/**
+ * The 'YYYY-MM' month a group was created in (Asia/Taipei). Used as the lower
+ * bound for the stats month switcher — months before this have no data.
+ */
+export async function getGroupCreationMonthKey(groupId: string): Promise<string | null> {
+  const rows = await db.execute<{ month: string }>(sql`
+    SELECT to_char((created_at AT TIME ZONE 'Asia/Taipei'), 'YYYY-MM') AS month
+    FROM "OikosGroups"
+    WHERE id = ${groupId}
+  `)
+  return rows[0]?.month ?? null
 }
 
 export interface ExportTxnDbRow {
