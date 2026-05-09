@@ -145,11 +145,10 @@ npm run db:studio    # Drizzle Studio
 
 ## 規格文件位置
 
-> Status 總覽：[docs/superpowers/specs/INDEX.md](docs/superpowers/specs/INDEX.md)（每份 spec 頂部也有 frontmatter）
+> 每份 spec 頂部 frontmatter 標注實作狀態（status / shipped_in / remaining_issues）。
 
 | 文件 | 內容 |
 |---|---|
-| `docs/superpowers/specs/INDEX.md` | 各 spec ship 狀態總覽 |
 | `docs/superpowers/specs/product-design.md` | 整體架構、Tech Stack |
 | `docs/superpowers/specs/transactions-design.md` | 核心記帳 UX、Onboarding、Solo Mode |
 | `docs/superpowers/specs/car-fuellog-design.md` | 車輛 + FuelLog |
