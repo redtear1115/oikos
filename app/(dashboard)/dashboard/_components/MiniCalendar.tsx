@@ -43,7 +43,7 @@ export function MiniCalendar({ value, onChange }: Props) {
           nextLabel="下個月"
           onPrev={goPrev}
           onNext={goNext}
-          title={`${view.year} 年 ${view.month} 月`}
+          title={`${view.year} 年 ${view.month} 月 ˅`}
           titleAriaLabel="選擇月份"
           onTitle={() => setMode('months')}
         />
@@ -89,7 +89,7 @@ export function MiniCalendar({ value, onChange }: Props) {
           nextLabel="下一年"
           onPrev={goPrev}
           onNext={goNext}
-          title={`${view.year} 年`}
+          title={`${view.year} 年 ˅`}
           titleAriaLabel="選擇年份"
           onTitle={() => setMode('years')}
         />
@@ -114,7 +114,7 @@ export function MiniCalendar({ value, onChange }: Props) {
     )
   }
 
-  // mode === 'years'
+  // mode === 'years' — 3×4 grid: 1 overflow year, 10 in-decade, 1 overflow year.
   const decadeStart = Math.floor(view.year / 10) * 10
   const goPrev = () => setView(v => ({ ...v, year: v.year - 10 }))
   const goNext = () => setView(v => ({ ...v, year: v.year + 10 }))
@@ -125,11 +125,12 @@ export function MiniCalendar({ value, onChange }: Props) {
         nextLabel="下一個十年"
         onPrev={goPrev}
         onNext={goNext}
-        title={`${decadeStart} ~ ${decadeStart + 9}`}
+        title={`${decadeStart} – ${decadeStart + 9}`}
       />
-      <div className="grid grid-cols-5 gap-1.5">
-        {Array.from({ length: 10 }, (_, i) => decadeStart + i).map(y => {
+      <div className="grid grid-cols-3 gap-1.5">
+        {Array.from({ length: 12 }, (_, i) => decadeStart - 1 + i).map(y => {
           const sel = y === valueY
+          const overflow = y < decadeStart || y > decadeStart + 9
           return (
             <button key={y} type="button"
               onClick={() => { setView(v => ({ ...v, year: y })); setMode('months') }}
@@ -138,6 +139,7 @@ export function MiniCalendar({ value, onChange }: Props) {
                 background: sel ? 'var(--ink)' : 'transparent',
                 color: sel ? '#fff' : 'var(--ink)',
                 fontFamily: 'var(--font-numeric)',
+                opacity: overflow && !sel ? 0.4 : 1,
               }}>
               {y}
             </button>
