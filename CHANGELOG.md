@@ -11,6 +11,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.13.1] - 2026-05-09
+
+主題：**啟程之前的鋪陳**——v0.13.0 部署之後夾帶到 prod 的 polish 補上正式紀錄：onboarding 哲學卡讓「Futari 的承諾」在開門第一刻就說出口，外加 settings 法律連結修補與 AI 協作規則調整。
+
+完整 diff：[v0.13.0...v0.13.1](https://github.com/redtear1115/oikos/compare/v0.13.0...v0.13.1)
+
+### Added
+- **Onboarding 哲學卡**（PR #83）：在 `sign-in → /setup` 之間插入新的 `/onboarding` 路由，5 張輕量哲學卡每張一個獨立的「光 × 顏色」視覺收尾，全部可跳過。卡片內容：①「Futari 不會問誰花得比較多」黎明柔光純墨 orbit；②「進到 Futari 的，就是我們共同的」兩色漸層分割；③「薪水進來的那天，是兩個人一起感受的時刻」大太陽地平線弧；④「保險不是費用，是和對方一起守護的承諾」鼠尾草色光暈；⑤「準備好了嗎？就從第一筆慢慢開始。」兩色相遇 + CTA → `/setup`。看完或跳過後 localStorage flag 紀錄，第二次不再顯示。Dashboard layout `redirect('/setup')` 改為 `redirect('/onboarding')`。
+
+### Fixed
+- **Settings 頁底部無效連結**（PR #84）：原本只有一個 `href="#"` 的「法律聲明」連結，點了不會去任何地方。改成兩個真實連結 `/terms`（服務條款）+ `/privacy`（隱私權政策），複用 sign-in 已有的 `termsLink` / `privacyLink` i18n keys（4 語），刪除沒人在用的 `settings.legalNotice` key。
+
+### Internal
+- **AI 協作規則放寬 + 釐清**（PR #85，doc-only）：CLAUDE.md「AI 開發協作規則」段落從原本「commit 自主、push 仍要明確指令」放寬為「commit + push 到 feature branch 都自動」；同時明確列出「`main` / `release` 是 protected，一律走 PR」「`gh pr merge --admin`（任何繞過 branch protection 的 merge）也要明確指令才執行」「force-push 到 feature branch 在 rebase 後可自動，destructive ops（prod、reset --hard、force push to protected）仍 gated」。
+
+### Process notes
+- **這版是「補登」而非新部署**：v0.13.0 deploy PR (#86) 已把 #83 / #84 / #85 三個 PR 一併送上 prod，但 v0.13.0 changelog 沒涵蓋它們。這次 v0.13.1 release PR 純粹補 changelog 跟 version bump，**不再開 deploy PR、prod 不會被重新觸發**。tag `v0.13.1` 將打在 release HEAD（v0.13.0 deploy 的 merge commit）而非 main 的 release commit，因為那才是 v0.13.1 真正在跑的 deploy 點。
+- **未來避免再發生**：merge 進 main 的東西會跟著下一個 deploy PR 進 prod。release PR 開出來的瞬間，main HEAD 就是 ship 範圍——之後再 merge 的東西要算下一版。下次 release 流程要 sequence 緊：release PR merge → 立刻開 deploy PR → 中間不放任何其他 PR 進 main。
+
 ## [0.13.0] - 2026-05-09
 
 主題：**陪伴 × 起點 × 定期支出**——兩個人都有自己的第一步、自己的第一筆，再到不必再記住的每月固定。
@@ -360,7 +379,8 @@ ALTER TABLE "CashTransactions" ADD COLUMN "notes" text;
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/redtear1115/oikos/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/redtear1115/oikos/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/redtear1115/oikos/compare/v0.11.4...v0.12.0
 [0.11.4]: https://github.com/redtear1115/oikos/compare/v0.11.3...v0.11.4
