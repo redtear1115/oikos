@@ -1,3 +1,10 @@
+---
+status: partial
+shipped_in: v0.11.1（Settings 頁 toggle UI + localStorage preference helper，PR #6）
+remaining_issues: #19（Service Worker / runtime cache / banner / sign-out cache clear / RealtimeProvider 靜音 — 排程 v0.14.0）
+note: toggle 切換目前只動 localStorage，不會註冊 SW；後段「啟用 / 停用流程」為目標態。
+---
+
 # 離線瀏覽 / PWA Cache 設計 spec
 
 > 目標：讓使用者在無網路時能瀏覽最近的記錄與首頁，不阻塞日常瀏覽。

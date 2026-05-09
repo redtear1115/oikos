@@ -1,3 +1,9 @@
+---
+status: shipped
+shipped_in: v0.3.0（Slice 1 車輛基礎）· v0.4.0（Slice 2 FuelLog + 購車雙寫）· v0.8.1（AssetPickerSheet inline 分組 + carDetails brand/model/year/color polish）· v0.11.4（AssetListItem per-type tint #28）
+backlog: 「Asset marks v2」4-type 完整版尚未做；其他 Slice 3+ 候選（電車 ChargeLog、維修保養、folder 升級）暫無對應 issue
+---
+
 # 車輛 & FuelLog 設計（Phase 2 Slice 1 + 2）
 
 > Slice 1（車輛基礎）+ Slice 2（FuelLog + 購車雙寫 + NewCarForm 擴充）均已實作。

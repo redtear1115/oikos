@@ -26,7 +26,10 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 import { PendingIncomeStack } from './PendingIncomeStack'
+import { PendingExpenseStack } from './PendingExpenseStack'
+import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
@@ -38,6 +41,7 @@ type ModalState =
   | { kind: 'income' }
   | { kind: 'edit-income'; data: IncomeSheetInitial }
   | { kind: 'edit-pending'; pendingId: string; data: IncomeSheetInitial }
+  | { kind: 'edit-pending-expense'; pendingId: string; data: AddSheetInitial }
   | { kind: 'edit-tx'; data: AddSheetInitial }
   | { kind: 'edit-settlement'; data: SettlementSheetInitial }
   | { kind: 'filter' }
@@ -54,6 +58,7 @@ export interface DashboardProps {
   incomeMonthCount: number
   recentIncomeLabel: string | null
   pendings: PendingRow[]
+  expensePendings: PendingExpenseRow[]
   feedDataPromise: Promise<DashboardFeedData>
 }
 
@@ -64,6 +69,7 @@ export function Dashboard({
   incomeMonthCount,
   recentIncomeLabel,
   pendings,
+  expensePendings,
   feedDataPromise,
 }: DashboardProps) {
   const router = useRouter()
@@ -77,7 +83,9 @@ export function Dashboard({
       event.kind === 'income-insert' ||
       event.kind === 'income-update' ||
       event.kind === 'recurring-income-changed' ||
-      event.kind === 'pending-occurrence-changed'
+      event.kind === 'pending-occurrence-changed' ||
+      event.kind === 'recurring-expense-changed' ||
+      event.kind === 'pending-expense-occurrence-changed'
     ) {
       // Partner accepted the invite (group-updated), or we reconnected after a
       // disconnect that may have missed the event. Re-fetch the layout to get
@@ -100,6 +108,12 @@ export function Dashboard({
     primaryUserId: string | null
   } | null>(null)
   const [, startFuelLoad] = useTransition()
+
+  // First-record theory card visibility (#43 phase C). Lit by AddSheet's
+  // onMutated when createTransaction reports isFirstTransaction=true; persists
+  // across the router.refresh() that the same callback triggers because
+  // refresh re-runs the server tree without unmounting client state.
+  const [showFirstCard, setShowFirstCard] = useState(false)
 
   // Lightweight transient toast (e.g. partner-race notice from IncomeSheet).
   const [toast, setToast] = useState<string | null>(null)
@@ -203,7 +217,10 @@ export function Dashboard({
   const handleClose = () => dispatch({ kind: 'closed' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
 
-  const handleMutated = () => router.refresh()
+  const handleMutated = (info?: { isFirstTransaction?: boolean }) => {
+    if (info?.isFirstTransaction) setShowFirstCard(true)
+    router.refresh()
+  }
 
   const addOrIncome = mode === 'income' ? 'income' : 'add'
 
@@ -213,7 +230,12 @@ export function Dashboard({
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-6 pb-5">
-            <ModeTogglePlaceholder mode={mode} onChange={setMode} pendingCount={pendings.length} />
+            <ModeTogglePlaceholder
+              mode={mode}
+              onChange={setMode}
+              incomePendingCount={pendings.length}
+              expensePendingCount={expensePendings.length}
+            />
 
             <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
               <span>{t.dashboard.soloHint}</span>
@@ -233,7 +255,8 @@ export function Dashboard({
         ) : (
           <SoloBanner
             onDismiss={handleDismissBanner}
-            pendingCount={pendings.length}
+            incomePendingCount={pendings.length}
+            expensePendingCount={expensePendings.length}
             mode={mode}
             onModeChange={setMode}
           />
@@ -248,8 +271,33 @@ export function Dashboard({
           incomeMonthTotal={incomeMonthTotal}
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
-          pendingCount={pendings.length}
+          incomePendingCount={pendings.length}
+          expensePendingCount={expensePendings.length}
         />
+      )}
+      {mode === 'expense' && expensePendings.length > 0 && (
+        <div className="px-5">
+          <PendingExpenseStack
+            pendings={expensePendings}
+            onEdit={(p) => dispatch({
+              kind: 'edit-pending-expense',
+              pendingId: p.id,
+              data: {
+                id: p.id,
+                amount: p.proposedAmount,
+                description: p.proposedDescription,
+                category: p.category,
+                splitType: p.proposedSplitType,
+                payerId: p.proposedPaidBy,
+                // Construct as local midnight so AddSheet's getFullYear/Month/Date
+                // round-trip yields the original YYYY-MM-DD regardless of timezone.
+                transactedAt: `${p.proposedDate}T00:00:00`,
+                assetId: p.assetId,
+                notes: null,
+              },
+            })}
+          />
+        </div>
       )}
       {mode === 'income' && (
         <div className="px-5">
@@ -286,10 +334,16 @@ export function Dashboard({
       </Suspense>
       <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen} />
       <AddSheet
-        open={modal.kind === 'add' || modal.kind === 'edit-tx'}
+        open={modal.kind === 'add' || modal.kind === 'edit-tx' || modal.kind === 'edit-pending-expense'}
         onClose={handleClose}
-        initial={modal.kind === 'edit-tx' ? modal.data : undefined}
+        initial={
+          modal.kind === 'edit-tx' ? modal.data
+            : modal.kind === 'edit-pending-expense' ? modal.data
+            : undefined
+        }
+        pendingExpenseId={modal.kind === 'edit-pending-expense' ? modal.pendingId : undefined}
         onMutated={handleMutated}
+        onRaceResolved={showToast}
       />
       <SettlementSheet
         open={settlementData !== null}
@@ -341,6 +395,11 @@ export function Dashboard({
           {toast}
         </div>
       )}
+
+      <FirstRecordCard
+        show={showFirstCard}
+        onDismiss={() => setShowFirstCard(false)}
+      />
     </div>
   )
 }

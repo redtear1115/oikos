@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.12.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.13.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -33,6 +33,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.11.3](CHANGELOG.md#0113---2026-05-08) | SEO 基礎建設．讓世界找得到 |
 | [v0.11.4](CHANGELOG.md#0114---2026-05-09) | 愛物分色標識．每種愛都有自己的光 |
 | [v0.12.0](CHANGELOG.md#0120---2026-05-09) | 陪伴 × 信任．把陪伴的細節都收下 |
+| [v0.13.0](CHANGELOG.md#0130---2026-05-09) | 陪伴 × 起點 × 定期支出．第一步、第一筆，到不必再記住 |
 
 ## Backlog / 未釋出版本
 
@@ -40,7 +41,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 | 主要 issues |
 |---|---|---|
-| [v0.13.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.13.0) | 自訂定期支出 | #18（單主軸） |
 | [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 離線 + 統計 | #19 read-only offline、#22 月度／分類統計 |
 | [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
 
@@ -138,12 +138,15 @@ npm run db:studio    # Drizzle Studio
 
 ## AI 開發協作規則
 
-- **commit 自主**：每完成一個邏輯單位（PR / feature）即自動 commit，不必問。push 仍需要明確指令。
-- **destructive ops**：動 prod 資料、force push、reset --hard 之類仍要明確確認 scope 後才執行。
+- **commit + push 自主**：每完成一個邏輯單位（PR / feature）即自動 commit，並自動 push 到當前 feature branch，不必問。
+- **`main` / `release` 是 protected**：絕對不要直接 push 到這兩條，要進去都走 PR merge 流程。`gh pr merge --admin`（任何繞過 branch protection 的 merge）也要明確指令才執行。
+- **destructive ops**：動 prod 資料、force push 到 main/release、`reset --hard` 之類仍要明確確認 scope 後才執行。force-push（含 `--force-with-lease`）到 feature branch 在 rebase 後可自動執行。
 
 ---
 
 ## 規格文件位置
+
+> 每份 spec 頂部 frontmatter 標注實作狀態（status / shipped_in / remaining_issues）。
 
 | 文件 | 內容 |
 |---|---|
@@ -154,8 +157,8 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/income-design.md` | 進帳功能設計決策 |
 | `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
 | `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
-| `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.12.0 lock，未實作）|
+| `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
-| `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog；toggle UI 已 ship、SW 未實作）|
+| `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（toggle UI 已 ship、SW 未實作 → v0.14.0）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |

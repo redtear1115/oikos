@@ -71,6 +71,12 @@ export const ja: Translations = {
     noFilteredAddHint: 'まだ記録がありません。下の + で最初の一件を記録しましょう。',
   },
 
+  firstRecordCard: {
+    headline: '二人の最初の一件。テストじゃなくて、始まりだよ。',
+    dismiss: 'わかった',
+    closeAriaLabel: '閉じる',
+  },
+
   modeToggle: {
     expense: '支出モード',
     income: '収入モード',
@@ -201,7 +207,6 @@ export const ja: Translations = {
     defaultSplitTitle: '記録時のデフォルト分担',
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     inviteCta: '相手を招待',
-    legalNotice: '法的事項',
     language: '言語',
     sectionDevice: 'デバイス',
     offlineBrowsing: 'オフライン閲覧',
@@ -323,6 +328,19 @@ export const ja: Translations = {
       line1: '記録は、お二人だけのもの',
       line2: 'いつでも、まるごと持ち出せます',
       line3: '一つひとつ、私たちが守ります',
+    },
+    bilateral: {
+      inviter: {
+        heading: '相手を招待する前に',
+        subtitle: 'お二人へのお約束を読んでみてください。納得できたら、リンクを送りましょう。',
+        cta: 'これが私の願いです',
+      },
+      invitee: {
+        heading: '{name} さんは、この約束に同意しました',
+        subtitle: 'あなたも、いっしょに？',
+        cta: '私も同じ気持ち',
+        confirming: '参加しています…',
+      },
     },
   },
 
@@ -732,6 +750,8 @@ export const ja: Translations = {
   invite: {
     errorTitle: '家計簿に参加できません',
     backToHome: 'ホームへ戻る',
+    joiningGroupLabel: '「{group}」に参加',
+    fallbackInviter: '相手',
     errors: {
       invalidOrExpired: '招待リンクが無効または期限切れです',
       alreadyUsed: '招待リンクは既に使用されています',

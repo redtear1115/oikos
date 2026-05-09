@@ -1,3 +1,8 @@
+---
+status: shipped
+shipped_in: v0.8.1（framing groups + 進度條基礎）· v0.9.0（SavingsView 完整：MaturityCountdown / MaturingSoonPrompt / MaturedAwaitingPrompt / 繳費 vs 拿回紀錄）
+---
+
 # 保險詳情頁設計 spec — Savings framing（Phase 2 Slice 5）
 
 > 目標：把 InsuranceDetailClient 擴成完整 savings（儲蓄 / 還本險）詳情頁，承載「累計繳 vs 已拿回 vs 預估剩餘」視覺與情感框架。

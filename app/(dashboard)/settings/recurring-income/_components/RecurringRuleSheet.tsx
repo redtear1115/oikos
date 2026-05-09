@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
@@ -16,8 +16,8 @@ import {
 } from '@/actions/recurringIncome'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
-import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
+import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 
 const P = DEFAULT_INCOME_PALETTE
@@ -51,45 +51,48 @@ export function RecurringRuleSheet({
     12: t.recurringIncome.rule.intervalEveryYear,
   }
 
-  const [amount, setAmount] = useState(0)
+  const form = useRecurringRuleForm({
+    open,
+    initial,
+    actions: { pauseRule, resumeRule, softDeleteRule },
+    errorMessages: {
+      operationFailed: t.recurringIncome.errors.operationFailed,
+      deleteFailed: t.recurringIncome.errors.deleteFailed,
+    },
+    onMutated,
+    onClose,
+  })
+  const {
+    amount, setAmount,
+    intervalMonths, setIntervalMonths,
+    dayOfMonth, setDayOfMonth,
+    startsOn, setStartsOn,
+    endsOn, setEndsOn,
+    error, setError,
+    confirmingDelete, setConfirmingDelete,
+    pending, isPaused,
+    handlePauseResume, handleDelete, runSubmit,
+  } = form
+
   const [category, setCategory] = useState('salary')
   const [recipientWho, setRecipientWho] = useState<'M' | 'T'>('M')
-  const [intervalMonths, setIntervalMonths] = useState<1 | 3 | 6 | 12>(1)
-  const [dayOfMonth, setDayOfMonth] = useState(new Date().getDate())
-  const [startsOn, setStartsOn] = useState(localTodayISO())
-  const [endsOn, setEndsOn] = useState('')
   const [source, setSource] = useState('')
   const [assetId, setAssetId] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [pending, startTransition] = useTransition()
 
   // Reset / prefill on open
   useEffect(() => {
     if (!open) return
     if (initial) {
-      setAmount(initial.amount)
       setCategory(initial.category)
       setRecipientWho(initial.recipientId === viewer.id ? 'M' : 'T')
-      setIntervalMonths(initial.intervalMonths as 1 | 3 | 6 | 12)
-      setDayOfMonth(initial.dayOfMonth)
-      setStartsOn(initial.startsOn)
-      setEndsOn(initial.endsOn ?? '')
       setSource(initial.source ?? '')
       setAssetId(initial.assetId ?? '')
     } else {
-      setAmount(0)
       setCategory('salary')
       setRecipientWho('M')
-      setIntervalMonths(1)
-      setDayOfMonth(new Date().getDate())
-      setStartsOn(localTodayISO())
-      setEndsOn('')
       setSource('')
       setAssetId('')
     }
-    setError(null)
-    setConfirmingDelete(false)
   }, [open, initial, viewer.id])
 
   const recipientId = isSolo
@@ -112,48 +115,11 @@ export function RecurringRuleSheet({
       source: source.trim() || null,
       assetId: assetId || null,
     }
-    startTransition(async () => {
-      try {
-        if (initial?.id) await updateRule({ id: initial.id, ...payload })
-        else await createRule(payload)
-        onMutated()
-        onClose()
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringIncome.errors.saveFailed)
-      }
-    })
+    runSubmit(
+      () => initial?.id ? updateRule({ id: initial.id, ...payload }) : createRule(payload),
+      t.recurringIncome.errors.saveFailed,
+    )
   }
-
-  const handlePauseResume = () => {
-    if (!initial?.id) return
-    const isPaused = !!initial.pausedAt
-    startTransition(async () => {
-      try {
-        if (isPaused) await resumeRule(initial.id)
-        else await pauseRule(initial.id)
-        onMutated()
-        onClose()
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringIncome.errors.operationFailed)
-      }
-    })
-  }
-
-  const handleDelete = () => {
-    if (!initial?.id) return
-    setConfirmingDelete(false)
-    startTransition(async () => {
-      try {
-        await softDeleteRule(initial.id)
-        onMutated()
-        onClose()
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringIncome.errors.deleteFailed)
-      }
-    })
-  }
-
-  const isPaused = !!initial?.pausedAt
 
   return (
     <>
@@ -185,7 +151,7 @@ export function RecurringRuleSheet({
 
         {/* Grabber */}
         <div className="pt-2 flex justify-center relative">
-          <div className="w-9 h-[5px] rounded-full" style={{ background: 'rgba(58,36,25,0.18)' }} />
+          <div className="w-9 h-[5px] rounded-full" style={{ background: 'var(--grabber)' }} />
         </div>
 
         {/* Header */}
@@ -210,6 +176,16 @@ export function RecurringRuleSheet({
         </div>
 
         <div className="overflow-auto flex-1">
+          {error && (
+            <div
+              role="alert"
+              className="sticky top-0 z-10 mx-5 mt-2 px-4 py-3 rounded-xl text-sm text-white"
+              style={{ background: 'var(--debit)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+            >
+              {error}
+            </div>
+          )}
+
           {/* Amount */}
           <div className="text-center" style={{ padding: '24px 24px 20px' }}>
             <div
@@ -528,15 +504,6 @@ export function RecurringRuleSheet({
           <div className="h-8" />
         </div>
       </div>
-
-      {error && open && (
-        <div
-          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
-        >
-          {error}
-        </div>
-      )}
 
       <ConfirmModal
         open={confirmingDelete && open}

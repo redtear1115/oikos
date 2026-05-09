@@ -19,5 +19,5 @@ export default async function SetupPage() {
   if (group) redirect('/dashboard')
 
   const t = await getTranslations()
-  return <SetupForm trustLines={t.trust.onboarding} />
+  return <SetupForm trust={t.trust} />
 }

@@ -69,6 +69,12 @@ export type Translations = {
     noFilteredAddHint: string
   }
 
+  firstRecordCard: {
+    headline: string
+    dismiss: string
+    closeAriaLabel: string
+  }
+
   modeToggle: {
     expense: string
     income: string
@@ -200,7 +206,6 @@ export type Translations = {
     defaultSplitTitle: string
     soloLockHint: string
     inviteCta: string
-    legalNotice: string
     language: string
     sectionDevice: string
     offlineBrowsing: string
@@ -328,6 +333,20 @@ export type Translations = {
       line1: string
       line2: string
       line3: string
+    }
+    bilateral: {
+      inviter: {
+        heading: string
+        subtitle: string
+        cta: string
+      }
+      invitee: {
+        /** Template with `{name}` placeholder for inviter's display name. */
+        heading: string
+        subtitle: string
+        cta: string
+        confirming: string
+      }
     }
   }
 
@@ -757,6 +776,10 @@ export type Translations = {
   invite: {
     errorTitle: string
     backToHome: string
+    /** Template with `{group}` placeholder, shown above invitee bilateral heading. */
+    joiningGroupLabel: string
+    /** Used when the inviter has no display name set. */
+    fallbackInviter: string
     errors: {
       invalidOrExpired: string
       alreadyUsed: string
@@ -838,6 +861,12 @@ export const zhTW: Translations = {
     addFirst: '記第一筆',
     noIncome: '還沒記過家裡的進帳',
     noFilteredAddHint: '還沒有紀錄。按下方 + 記第一筆吧。',
+  },
+
+  firstRecordCard: {
+    headline: '你們的第一筆。這是個開始，不是考試。',
+    dismiss: '明白了',
+    closeAriaLabel: '關閉提示',
   },
 
   modeToggle: {
@@ -970,7 +999,6 @@ export const zhTW: Translations = {
     defaultSplitTitle: '建立紀錄時的預設分攤',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     inviteCta: '邀請對方加入',
-    legalNotice: '法律聲明',
     language: '語言',
     sectionDevice: '裝置',
     offlineBrowsing: '離線瀏覽',
@@ -1092,6 +1120,19 @@ export const zhTW: Translations = {
       line1: '資料只屬於你們倆',
       line2: '隨時都能整包帶走',
       line3: '每一筆我們都替你們守著',
+    },
+    bilateral: {
+      inviter: {
+        heading: '在邀請對方之前',
+        subtitle: '讀一下我們對你們倆的承諾。如果你願意，再把連結傳出去。',
+        cta: '這是我希望的',
+      },
+      invitee: {
+        heading: '{name} 已經承諾了這些',
+        subtitle: '你呢？想不想一起？',
+        cta: '我也是',
+        confirming: '正在加入…',
+      },
     },
   },
 
@@ -1501,6 +1542,8 @@ export const zhTW: Translations = {
   invite: {
     errorTitle: '無法加入帳本',
     backToHome: '回到首頁',
+    joiningGroupLabel: '加入「{group}」',
+    fallbackInviter: '對方',
     errors: {
       invalidOrExpired: '邀請連結無效或已過期',
       alreadyUsed: '邀請連結已被使用',

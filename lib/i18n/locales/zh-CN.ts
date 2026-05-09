@@ -71,6 +71,12 @@ export const zhCN: Translations = {
     noFilteredAddHint: '还没有记录。按下方 + 记第一笔吧。',
   },
 
+  firstRecordCard: {
+    headline: '你们的第一笔。这是个开始，不是考试。',
+    dismiss: '明白了',
+    closeAriaLabel: '关闭提示',
+  },
+
   modeToggle: {
     expense: '支出模式',
     income: '进账模式',
@@ -201,7 +207,6 @@ export const zhCN: Translations = {
     defaultSplitTitle: '创建记录时的默认分摊',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     inviteCta: '邀请对方加入',
-    legalNotice: '法律声明',
     language: '语言',
     sectionDevice: '设备',
     offlineBrowsing: '离线浏览',
@@ -323,6 +328,19 @@ export const zhCN: Translations = {
       line1: '数据只属于你们俩',
       line2: '随时都能整包带走',
       line3: '每一笔我们都替你们守着',
+    },
+    bilateral: {
+      inviter: {
+        heading: '在邀请对方之前',
+        subtitle: '读一下我们对你们俩的承诺。如果你愿意，再把链接传出去。',
+        cta: '这是我希望的',
+      },
+      invitee: {
+        heading: '{name} 已经承诺了这些',
+        subtitle: '你呢？想不想一起？',
+        cta: '我也是',
+        confirming: '正在加入…',
+      },
     },
   },
 
@@ -732,6 +750,8 @@ export const zhCN: Translations = {
   invite: {
     errorTitle: '无法加入账本',
     backToHome: '回到首页',
+    joiningGroupLabel: '加入「{group}」',
+    fallbackInviter: '对方',
     errors: {
       invalidOrExpired: '邀请链接无效或已过期',
       alreadyUsed: '邀请链接已被使用',

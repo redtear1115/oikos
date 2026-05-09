@@ -71,6 +71,12 @@ export const en: Translations = {
     noFilteredAddHint: 'No records yet. Tap + below to add one.',
   },
 
+  firstRecordCard: {
+    headline: 'Your first one together. This is a start, not a test.',
+    dismiss: 'Got it',
+    closeAriaLabel: 'Dismiss',
+  },
+
   modeToggle: {
     expense: 'Expense',
     income: 'Income',
@@ -201,7 +207,6 @@ export const en: Translations = {
     defaultSplitTitle: 'Default split for new entries',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     inviteCta: 'Invite partner',
-    legalNotice: 'Legal',
     language: 'Language',
     sectionDevice: 'Device',
     offlineBrowsing: 'Offline browsing',
@@ -323,6 +328,19 @@ export const en: Translations = {
       line1: 'Your records, only yours',
       line2: 'Take it all with you, anytime',
       line3: 'Every entry, held safe by us',
+    },
+    bilateral: {
+      inviter: {
+        heading: 'Before you invite them',
+        subtitle: 'Read what we promise the two of you. Send the link only if it feels right.',
+        cta: 'This is what I want',
+      },
+      invitee: {
+        heading: '{name} agreed to these',
+        subtitle: 'You? Want to do this together?',
+        cta: 'I do too',
+        confirming: 'Joining…',
+      },
     },
   },
 
@@ -732,6 +750,8 @@ export const en: Translations = {
   invite: {
     errorTitle: "Can't join this ledger",
     backToHome: 'Back to home',
+    joiningGroupLabel: 'Joining "{group}"',
+    fallbackInviter: 'your partner',
     errors: {
       invalidOrExpired: 'This invite link is invalid or expired.',
       alreadyUsed: 'This invite link has already been used.',

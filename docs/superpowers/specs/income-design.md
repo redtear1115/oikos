@@ -1,3 +1,8 @@
+---
+status: shipped
+shipped_in: v0.7.0（IncomeTransactions + IncomeSheet + Records 三 tab + Dashboard mode toggle）
+---
+
 # IncomeSheet 設計 spec（Phase 2 保險前置）
 
 > 目標：lock 2026-05-04 與設計師完成的 IncomeSheet hi-fi 設計探索結論，作為未來實作 IncomeTransactions + Phase 2 保險時的依據。
