@@ -145,8 +145,11 @@ npm run db:studio    # Drizzle Studio
 
 ## 規格文件位置
 
+> Status 總覽：[docs/superpowers/specs/INDEX.md](docs/superpowers/specs/INDEX.md)（每份 spec 頂部也有 frontmatter）
+
 | 文件 | 內容 |
 |---|---|
+| `docs/superpowers/specs/INDEX.md` | 各 spec ship 狀態總覽 |
 | `docs/superpowers/specs/product-design.md` | 整體架構、Tech Stack |
 | `docs/superpowers/specs/transactions-design.md` | 核心記帳 UX、Onboarding、Solo Mode |
 | `docs/superpowers/specs/car-fuellog-design.md` | 車輛 + FuelLog |
@@ -154,8 +157,8 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/income-design.md` | 進帳功能設計決策 |
 | `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
 | `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
-| `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.12.0 lock，未實作）|
+| `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（main 已合入 PR #76 / #77 / #78，pending v0.13.0 release）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
-| `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（Backlog；toggle UI 已 ship、SW 未實作）|
+| `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（toggle UI 已 ship、SW 未實作 → v0.14.0）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |

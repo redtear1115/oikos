@@ -1,3 +1,9 @@
+---
+status: shipped
+shipped_in: 持續演進（基礎自 v0.1.0；i18n cookie locale v0.11.1；Auth `getSession()` 分層 v0.11.1）
+note: 架構總覽，無單一 ship point；個別功能域 status 見對應 spec。
+---
+
 # Oikos 整體產品設計
 
 > 家庭記帳工具，固定兩人（夫妻／伴侶）使用。

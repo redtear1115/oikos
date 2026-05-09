@@ -1,3 +1,8 @@
+---
+status: shipped
+shipped_in: v0.8.0（schema + cron + actions + Dashboard PendingIncomeStack + Settings 子頁）· v0.8.1（polish）
+---
+
 # 自訂定期收入設計 spec
 
 > 目標：定義「定期收入規則 → 到期產生待確認卡片 → 用戶確認落 IncomeTransaction」的端到端設計。
