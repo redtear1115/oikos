@@ -35,9 +35,32 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## Backlog / 未釋出版本
 
-→ [GitHub Issues](https://github.com/redtear1115/oikos/issues)
+每版工時目標 ~2 週。主題敘事用來決定 changelog 文案與 release 重點。
 
-Labels：[`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog) · [`v0.12.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) · [`v1.0.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0)
+| 版本 | 主題 | 主要 issues |
+|---|---|---|
+| [v0.12.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) | 陪伴 × 信任 | #34 共同備註、#37 CSV 匯出、#48 信任宣示頁、#20/#21 i18n 收尾 |
+| [v0.13.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.13.0) | 自訂定期支出 | #18（單主軸） |
+| [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 離線 + 統計 | #19 read-only offline、#22 月度／分類統計 |
+| [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
+
+→ 所有候選：[GitHub Issues](https://github.com/redtear1115/oikos/issues) · [`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
+
+---
+
+## 市場觀察 / 戰略背景
+
+兩份外部分析（2026-05-09 snapshot）解釋了 backlog 多個 issue 的優先序與設計立場。將來實作時翻回去能理解「為什麼這個時間點做、為什麼這樣做」。
+
+| 觀察 | 影響的決策 |
+|---|---|
+| **Honeydue 衰退是時間窗口** — 2024 已剝離成 Moneydue Inc.、剩 1–10 人、客服失聯 | #51（競品 CSV 匯入）的 short-term 急迫性 |
+| **台灣反訂閱文化** — PTT/Dcard 反覆出現「可接受買斷、不接受訂閱」訊號；CWMoney/MOZE 訂閱被批 | #46 定價 RFC 必須認真評估買斷選項 |
+| **「資料會不會消失」是底層焦慮** — Spendee 曾刪用戶資料 + Honeydue 衰退用戶焦慮 | #48 信任宣示頁列為 short-term；CSV 匯出（#37）信任配套 |
+| **「信任作為設計前提」vs「能見度管理」是根本立場** — Honeydue 的帳戶能見度分級是防禦性假設 | **Futari 不會做**帳戶能見度分級 — 不記的東西不要記，進到 Futari 的就是兩人共同的 |
+| **Futari positioning：雙人優先 × 陪伴 × 愛物** — 競品象限分析顯示這是目前空白象限 | 整體產品的核心賭注，影響功能取捨優先序 |
+
+→ 完整分析：[oikos-competitive-analysis.md](docs/superpowers/oikos-competitive-analysis.md) · [user-feedback-analysis.md](docs/superpowers/user-feedback-analysis.md)
 
 ---
 
