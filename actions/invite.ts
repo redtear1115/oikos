@@ -49,7 +49,7 @@ export async function acceptInvite(token: string): Promise<string> {
       .where(and(eq(oikosGroups.id, invite.groupId), isNull(oikosGroups.memberB)))
       .returning()
 
-    if (updated.length === 0) throw new Error('此帳本已有兩位成員')
+    if (updated.length === 0) throw new Error('group_full')
 
     await tx
       .update(groupInvites)

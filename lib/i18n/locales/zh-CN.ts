@@ -365,4 +365,28 @@ export const zhCN: Translations = {
     },
     raceMessage: '对方刚刚确认了这笔',
   },
+
+  comingSoon: {
+    title: '{feature} 即将推出',
+    subtitle: '先回首页记一笔吧。',
+    backToHome: '回首页',
+    features: {
+      list: '记录',
+      fallback: '此功能',
+    },
+  },
+
+  invite: {
+    errorTitle: '无法加入账本',
+    backToHome: '回到首页',
+    errors: {
+      invalidOrExpired: '邀请链接无效或已过期',
+      alreadyUsed: '邀请链接已被使用',
+      expired: '邀请链接已过期',
+      groupNotFound: '找不到群组',
+      groupFull: '此账本已有两位成员',
+      alreadyMember: '你已经是此账本的成员',
+      unknown: '无法加入账本',
+    },
+  },
 }

@@ -365,4 +365,28 @@ export const en: Translations = {
     },
     raceMessage: 'Your partner just confirmed this entry',
   },
+
+  comingSoon: {
+    title: '{feature} coming soon',
+    subtitle: 'For now, head back and log an entry.',
+    backToHome: 'Back to home',
+    features: {
+      list: 'Records',
+      fallback: 'This feature',
+    },
+  },
+
+  invite: {
+    errorTitle: "Can't join this ledger",
+    backToHome: 'Back to home',
+    errors: {
+      invalidOrExpired: 'This invite link is invalid or expired.',
+      alreadyUsed: 'This invite link has already been used.',
+      expired: 'This invite link has expired.',
+      groupNotFound: 'Ledger not found.',
+      groupFull: 'This ledger already has two members.',
+      alreadyMember: "You're already a member of this ledger.",
+      unknown: "Can't join this ledger.",
+    },
+  },
 }
