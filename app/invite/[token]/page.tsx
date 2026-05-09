@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
-import { acceptInvite } from '@/actions/invite'
+import { previewInvite } from '@/actions/invite'
 import { getTranslations } from '@/lib/i18n/t'
-import type { InviteAcceptError } from '@/lib/invite'
+import { InviteConfirm } from './InviteConfirm'
 
 interface Props {
   params: Promise<{ token: string }>
@@ -16,20 +16,22 @@ export default async function InvitePage({ params }: Props) {
     redirect(`/sign-in?next=/invite/${token}`)
   }
 
-  // redirect() throws internally in Next.js — must NOT be inside try/catch
-  let errorCode = ''
-  try {
-    await acceptInvite(token)
-  } catch (err) {
-    errorCode = err instanceof Error ? err.message : ''
-  }
-
-  if (!errorCode) {
-    redirect('/dashboard')
-  }
-
+  const preview = await previewInvite(token)
   const t = await getTranslations()
-  const errorMap: Record<InviteAcceptError, string> = {
+
+  if (preview.ok) {
+    return (
+      <InviteConfirm
+        token={token}
+        groupName={preview.groupName}
+        inviterName={preview.inviterName}
+        trust={t.trust}
+        invite={t.invite}
+      />
+    )
+  }
+
+  const errorMap: Record<typeof preview.error, string> = {
     invalid_or_expired: t.invite.errors.invalidOrExpired,
     already_used: t.invite.errors.alreadyUsed,
     expired: t.invite.errors.expired,
@@ -37,7 +39,7 @@ export default async function InvitePage({ params }: Props) {
     group_full: t.invite.errors.groupFull,
     already_member: t.invite.errors.alreadyMember,
   }
-  const errorMessage = errorMap[errorCode as InviteAcceptError] ?? t.invite.errors.unknown
+  const errorMessage = errorMap[preview.error] ?? t.invite.errors.unknown
 
   return (
     <main

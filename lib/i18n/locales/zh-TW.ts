@@ -329,6 +329,20 @@ export type Translations = {
       line2: string
       line3: string
     }
+    bilateral: {
+      inviter: {
+        heading: string
+        subtitle: string
+        cta: string
+      }
+      invitee: {
+        /** Template with `{name}` placeholder for inviter's display name. */
+        heading: string
+        subtitle: string
+        cta: string
+        confirming: string
+      }
+    }
   }
 
   assetSheet: {
@@ -757,6 +771,10 @@ export type Translations = {
   invite: {
     errorTitle: string
     backToHome: string
+    /** Template with `{group}` placeholder, shown above invitee bilateral heading. */
+    joiningGroupLabel: string
+    /** Used when the inviter has no display name set. */
+    fallbackInviter: string
     errors: {
       invalidOrExpired: string
       alreadyUsed: string
@@ -1092,6 +1110,19 @@ export const zhTW: Translations = {
       line1: '資料只屬於你們倆',
       line2: '隨時都能整包帶走',
       line3: '每一筆我們都替你們守著',
+    },
+    bilateral: {
+      inviter: {
+        heading: '在邀請對方之前',
+        subtitle: '讀一下我們對你們倆的承諾。如果你願意，再把連結傳出去。',
+        cta: '這是我希望的',
+      },
+      invitee: {
+        heading: '{name} 已經承諾了這些',
+        subtitle: '你呢？想不想一起？',
+        cta: '我也是',
+        confirming: '正在加入…',
+      },
     },
   },
 
@@ -1501,6 +1532,8 @@ export const zhTW: Translations = {
   invite: {
     errorTitle: '無法加入帳本',
     backToHome: '回到首頁',
+    joiningGroupLabel: '加入「{group}」',
+    fallbackInviter: '對方',
     errors: {
       invalidOrExpired: '邀請連結無效或已過期',
       alreadyUsed: '邀請連結已被使用',

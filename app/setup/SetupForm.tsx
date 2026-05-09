@@ -7,25 +7,23 @@ import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
 import { isStandalone } from '@/lib/install-guide'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
+import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 const NAME_SUGGESTIONS = ['我們倆', '○○家', '日日', 'Home', '一起']
 const NAME_MAX = 20
 const INSTALL_GUIDE_SEEN_KEY = 'oikos_install_guide_seen'
 
-type Step = 'name' | 'invite'
+type Step = 'name' | 'trust' | 'invite'
 
 interface CreatedGroup {
   id: string
   name: string
 }
 
-interface TrustLines {
-  line1: string
-  line2: string
-  line3: string
-}
+type TrustStrings = Translations['trust']
 
-export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
+export default function SetupForm({ trust }: { trust: TrustStrings }) {
   const router = useRouter()
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
@@ -43,10 +41,17 @@ export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
     }
   }, [])
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) { setError('請輸入名稱'); return }
+    setError('')
+    setStep('trust')
+  }
+
+  const handleTrustConfirm = () => {
+    const trimmed = name.trim()
+    if (!trimmed) { setStep('name'); return }
     setError('')
     startTransition(async () => {
       try {
@@ -112,6 +117,60 @@ export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
   const installGuideJsx = (
     <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} />
   )
+
+  if (step === 'trust') {
+    return (
+      <>
+      <main
+        className="flex min-h-screen flex-col px-6 py-10"
+        style={{ background: 'var(--bg)' }}
+      >
+        <div className="max-w-sm w-full mx-auto flex flex-col gap-6">
+          <button
+            type="button"
+            onClick={() => setStep('name')}
+            className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer p-1 -ml-1 self-start"
+            style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
+          >
+            <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+              <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {trust.back}
+          </button>
+
+          <div>
+            <h1
+              className="text-page leading-tight"
+              style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
+            >
+              {trust.bilateral.inviter.heading}
+            </h1>
+            <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+              {trust.bilateral.inviter.subtitle}
+            </p>
+          </div>
+
+          <TrustCommitments t={trust} />
+
+          {error && (
+            <p className="text-sm" style={{ color: 'var(--debit)' }}>{error}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleTrustConfirm}
+            disabled={pending}
+            className="h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
+            style={{ background: 'var(--ink)' }}
+          >
+            {pending ? '建立中…' : trust.bilateral.inviter.cta}
+          </button>
+        </div>
+      </main>
+      {installGuideJsx}
+      </>
+    )
+  }
 
   if (step === 'invite' && group && inviteUrl) {
     return (
@@ -187,7 +246,7 @@ export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
             className="rounded-2xl px-4 py-3.5 flex flex-col gap-2"
             style={{ background: 'var(--surface-alt)' }}
           >
-            {[trustLines.line1, trustLines.line2, trustLines.line3].map((line, i) => (
+            {[trust.onboarding.line1, trust.onboarding.line2, trust.onboarding.line3].map((line, i) => (
               <div
                 key={i}
                 className="text-xs flex items-start gap-2 leading-relaxed"
@@ -230,7 +289,7 @@ export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
       className="flex min-h-screen flex-col px-6 py-10"
       style={{ background: 'var(--bg)' }}
     >
-      <form onSubmit={handleCreate} className="max-w-sm w-full mx-auto flex flex-col gap-6">
+      <form onSubmit={handleNameSubmit} className="max-w-sm w-full mx-auto flex flex-col gap-6">
         <div>
           <h1
             className="text-page leading-tight"
@@ -287,11 +346,11 @@ export default function SetupForm({ trustLines }: { trustLines: TrustLines }) {
 
         <button
           type="submit"
-          disabled={!name.trim() || pending}
+          disabled={!name.trim()}
           className="h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
           style={{ background: 'var(--ink)' }}
         >
-          {pending ? '建立中…' : '下一步'}
+          下一步
         </button>
       </form>
     </main>
