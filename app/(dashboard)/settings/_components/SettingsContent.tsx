@@ -328,7 +328,11 @@ export function SettingsContent({
         className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
       >
-        Futari · v{appVersion} · <a href="#" className="underline" style={{ color: 'var(--ink-3)' }}>{t.settings.legalNotice}</a>
+        Futari · v{appVersion}
+        <br />
+        <a href="/terms" className="underline" style={{ color: 'var(--ink-3)' }}>{t.signIn.termsLink}</a>
+        {' · '}
+        <a href="/privacy" className="underline" style={{ color: 'var(--ink-3)' }}>{t.signIn.privacyLink}</a>
       </div>
 
       <EditTextSheet
