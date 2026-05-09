@@ -16,6 +16,8 @@ interface Props {
   /** Pending recurring-income count, threaded into ModeTogglePlaceholder so the
    *  「進帳模式」 tab gets the same mint-dot indicator as in non-solo flows. */
   pendingCount?: number
+  mode?: 'expense' | 'income'
+  onModeChange?: (mode: 'expense' | 'income') => void
 }
 
 /**
@@ -23,7 +25,7 @@ interface Props {
  * (member_b = null). Clicking the CTA generates an invite URL on demand
  * and pushes it through the Web Share API (or clipboard fallback).
  */
-export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
+export function SoloBanner({ onDismiss, pendingCount = 0, mode, onModeChange }: Props = {}) {
   const { group } = useMember()
   const t = useTranslations()
   const [pending, startTransition] = useTransition()
@@ -57,7 +59,7 @@ export function SoloBanner({ onDismiss, pendingCount = 0 }: Props = {}) {
 
   return (
     <div className="px-5 pt-6 pb-5">
-      <ModeTogglePlaceholder pendingCount={pendingCount} />
+      <ModeTogglePlaceholder mode={mode} onChange={onModeChange} pendingCount={pendingCount} />
 
       <div className="flex items-start gap-[14px]">
         <Avatar who="T" initial="?" src={null} size={44} />
