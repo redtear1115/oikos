@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.11.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.11.4**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -29,13 +29,15 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.9.0](CHANGELOG.md#090---2026-05-08) | 儲蓄險詳情頁．累積也看得見 |
 | [v0.10.0](CHANGELOG.md#0100---2026-05-08) | 加密與安全強化．把秘密好好守著 |
 | [v0.11.1](CHANGELOG.md#0111---2026-05-08) | i18n 四語架構．換種語言也說得通 |
+| [v0.11.2](CHANGELOG.md#0112---2026-05-08) | 效能優化．切換之間更輕快 |
 | [v0.11.3](CHANGELOG.md#0113---2026-05-08) | SEO 基礎建設．讓世界找得到 |
+| [v0.11.4](CHANGELOG.md#0114---2026-05-09) | 愛物分色標識．每種愛都有自己的光 |
 
 ## Backlog / 未釋出版本
 
 → [GitHub Issues](https://github.com/redtear1115/oikos/issues)
 
-Labels：[`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog) · [`v0.11.2`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.11.2) · [`v0.12.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) · [`v1.0.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0)
+Labels：[`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog) · [`v0.12.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) · [`v1.0.0`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0)
 
 ---
 
@@ -77,6 +79,27 @@ Realtime：Client subscribes → React state mutation
 | dev  | `oikos-dev` | https://ufhcprrauwsxdmscbkrf.supabase.co |
 
 兩個 Supabase project 完全獨立。Migration / realtime publication / pg_cron job 兩邊都要跑（`npm run db:migrate` 看本地 `.env.local` 指向哪個）。Vercel preview / prod 部署只連 prod project；本機 `npm run dev` 連 dev project。
+
+---
+
+## 部署流程
+
+Vercel 連兩條 branch：
+
+| Branch | Vercel target | 觸發來源 |
+|---|---|---|
+| `main` | Preview | feature PR merge |
+| `release` | **Production** | 手動 merge `main` → push |
+
+要 release 時：
+
+```bash
+git checkout release
+git merge main
+git push origin release
+```
+
+push 後 Vercel 自動部 prod。Feature PR 進 `main` 只會起 Preview，不會碰 prod。
 
 ---
 
