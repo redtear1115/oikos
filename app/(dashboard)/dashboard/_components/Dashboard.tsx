@@ -41,6 +41,7 @@ type ModalState =
   | { kind: 'income' }
   | { kind: 'edit-income'; data: IncomeSheetInitial }
   | { kind: 'edit-pending'; pendingId: string; data: IncomeSheetInitial }
+  | { kind: 'edit-pending-expense'; pendingId: string; data: AddSheetInitial }
   | { kind: 'edit-tx'; data: AddSheetInitial }
   | { kind: 'edit-settlement'; data: SettlementSheetInitial }
   | { kind: 'filter' }
@@ -276,7 +277,26 @@ export function Dashboard({
       )}
       {mode === 'expense' && expensePendings.length > 0 && (
         <div className="px-5">
-          <PendingExpenseStack pendings={expensePendings} />
+          <PendingExpenseStack
+            pendings={expensePendings}
+            onEdit={(p) => dispatch({
+              kind: 'edit-pending-expense',
+              pendingId: p.id,
+              data: {
+                id: p.id,
+                amount: p.proposedAmount,
+                description: p.proposedDescription,
+                category: p.category,
+                splitType: p.proposedSplitType,
+                payerId: p.proposedPaidBy,
+                // Construct as local midnight so AddSheet's getFullYear/Month/Date
+                // round-trip yields the original YYYY-MM-DD regardless of timezone.
+                transactedAt: `${p.proposedDate}T00:00:00`,
+                assetId: p.assetId,
+                notes: null,
+              },
+            })}
+          />
         </div>
       )}
       {mode === 'income' && (
@@ -314,10 +334,16 @@ export function Dashboard({
       </Suspense>
       <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen} />
       <AddSheet
-        open={modal.kind === 'add' || modal.kind === 'edit-tx'}
+        open={modal.kind === 'add' || modal.kind === 'edit-tx' || modal.kind === 'edit-pending-expense'}
         onClose={handleClose}
-        initial={modal.kind === 'edit-tx' ? modal.data : undefined}
+        initial={
+          modal.kind === 'edit-tx' ? modal.data
+            : modal.kind === 'edit-pending-expense' ? modal.data
+            : undefined
+        }
+        pendingExpenseId={modal.kind === 'edit-pending-expense' ? modal.pendingId : undefined}
         onMutated={handleMutated}
+        onRaceResolved={showToast}
       />
       <SettlementSheet
         open={settlementData !== null}

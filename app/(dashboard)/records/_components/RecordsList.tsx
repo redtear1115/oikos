@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
@@ -224,6 +225,31 @@ export function RecordsList({ initial, pageSize }: Props) {
             )
           })}
         </div>
+
+        {/* Inline link to recurring rule settings — only when a single-kind tab
+            is active so the affordance maps to one settings target. */}
+        {tab === 'expense' && (
+          <div className="px-5 pb-2">
+            <Link
+              href="/settings/recurring-expense"
+              className="text-xs"
+              style={{ color: 'var(--ink-3)' }}
+            >
+              {t.records.manageRecurringExpense}
+            </Link>
+          </div>
+        )}
+        {tab === 'income' && (
+          <div className="px-5 pb-2">
+            <Link
+              href="/settings/recurring-income"
+              className="text-xs"
+              style={{ color: 'var(--ink-3)' }}
+            >
+              {t.records.manageRecurringIncome}
+            </Link>
+          </div>
+        )}
       </div>
 
       <TransactionFeed
