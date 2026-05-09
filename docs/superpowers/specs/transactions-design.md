@@ -50,9 +50,10 @@
 | 項目 | 去向 |
 |---|---|
 | 推播通知 | 不做（無 PWA push） |
-| 多幣別、匯出、theme、頭像上傳 | 不做 |
+| 多幣別、theme、頭像上傳 | 不做 |
 | 自定 category | Phase 2+ |
-| 法律聲明頁 | 之後（目前 href="#" 占位） |
+| CSV 匯出 | v0.12.0 已實作（`/api/export/transactions`，僅活躍 CashTransactions）|
+| 法律聲明頁 | v0.11.x 已上線 `/terms` `/privacy`；v0.12.0 加 `/settings/trust` 信任宣示頁 |
 
 ### 待後續處理
 
