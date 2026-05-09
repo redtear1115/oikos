@@ -3,7 +3,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { getGroupBalance } from '@/lib/db/queries/balance'
-import { listTransactionsPaged } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, getActiveTransactionCount } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
@@ -31,11 +31,12 @@ export default async function DashboardPage() {
   // Fast path — what hero/banner needs to paint immediately. Awaited so
   // BalanceHero / SoloBanner / ModeTogglePlaceholder render with real data.
   // The latest income (limit 1) covers the hero label without pulling the full feed.
-  const [balance, incomeSummary, pendings, latestIncomes, t] = await Promise.all([
+  const [balance, incomeSummary, pendings, latestIncomes, transactionCount, t] = await Promise.all([
     getGroupBalance(group.id),
     listIncomeMonthSummary(group.id, yyyymm),
     listActivePendings(group.id),
     listIncomesPaged(group.id, null, 1),
+    getActiveTransactionCount(group.id),
     getTranslations(),
   ])
 
@@ -97,6 +98,7 @@ export default async function DashboardPage() {
       incomeMonthCount={incomeSummary.count}
       recentIncomeLabel={recentIncomeLabel}
       pendings={pendings}
+      showFirstRecordCard={transactionCount === 1}
       feedDataPromise={feedDataPromise}
     />
   )

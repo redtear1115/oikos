@@ -26,6 +26,7 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 import { PendingIncomeStack } from './PendingIncomeStack'
+import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import { useTranslations } from '@/lib/i18n/client'
 
@@ -54,6 +55,7 @@ export interface DashboardProps {
   incomeMonthCount: number
   recentIncomeLabel: string | null
   pendings: PendingRow[]
+  showFirstRecordCard: boolean
   feedDataPromise: Promise<DashboardFeedData>
 }
 
@@ -64,6 +66,7 @@ export function Dashboard({
   incomeMonthCount,
   recentIncomeLabel,
   pendings,
+  showFirstRecordCard,
   feedDataPromise,
 }: DashboardProps) {
   const router = useRouter()
@@ -341,6 +344,8 @@ export function Dashboard({
           {toast}
         </div>
       )}
+
+      <FirstRecordCard show={showFirstRecordCard} />
     </div>
   )
 }
