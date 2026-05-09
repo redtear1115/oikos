@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.11.4**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.12.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -32,6 +32,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.11.2](CHANGELOG.md#0112---2026-05-08) | 效能優化．切換之間更輕快 |
 | [v0.11.3](CHANGELOG.md#0113---2026-05-08) | SEO 基礎建設．讓世界找得到 |
 | [v0.11.4](CHANGELOG.md#0114---2026-05-09) | 愛物分色標識．每種愛都有自己的光 |
+| [v0.12.0](CHANGELOG.md#0120---2026-05-09) | 陪伴 × 信任．把陪伴的細節都收下 |
 
 ## Backlog / 未釋出版本
 
@@ -39,7 +40,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 | 主要 issues |
 |---|---|---|
-| [v0.12.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.12.0) | 陪伴 × 信任 | #34 共同備註、#37 CSV 匯出、#48 信任宣示頁、#20/#21 i18n 收尾 |
 | [v0.13.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.13.0) | 自訂定期支出 | #18（單主軸） |
 | [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 離線 + 統計 | #19 read-only offline、#22 月度／分類統計 |
 | [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
