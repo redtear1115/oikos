@@ -1,6 +1,6 @@
 'use client'
 
-import { SAVINGS_MATURED_AWAITING } from './insurance-copy'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   maturityDate: string
@@ -17,14 +17,15 @@ export function MaturedAwaitingPrompt({
   premiumCount,
   onConfirm,
 }: Props) {
-  const copy = SAVINGS_MATURED_AWAITING
+  const t = useTranslations()
+  const ts = t.assetDetail.savings
   return (
     <div
       className="px-5 pt-6 pb-7 text-center"
       style={{ background: '#F7F4EE' }}
     >
       <div className="text-xs tracking-[1px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-        {copy.title(maturityDate)}
+        {ts.maturedAwaitingTitle.replace('{date}', maturityDate)}
       </div>
 
       <div className="mt-3 inline-flex items-baseline gap-1.5">
@@ -43,7 +44,7 @@ export function MaturedAwaitingPrompt({
         </span>
       </div>
       <div className="text-xs mt-1.5" style={{ color: 'var(--ink-3)' }}>
-        估 · {copy.status}
+        {ts.heroExpectedTag} · {ts.maturedAwaitingStatus}
       </div>
 
       <button
@@ -52,12 +53,14 @@ export function MaturedAwaitingPrompt({
         className="mt-5 inline-flex items-center justify-center px-5 h-11 rounded-full text-sm font-medium"
         style={{ background: 'var(--ink)', color: '#fff' }}
       >
-        {copy.cta}
+        {ts.maturedAwaitingCta}
       </button>
 
       {premiumCount > 0 && (
         <div className="mt-4 text-xs" style={{ color: 'var(--ink-3)' }}>
-          {copy.premiumNote(premiumTotal, premiumCount)}
+          {ts.maturedAwaitingPremiumNote
+            .replace('{total}', premiumTotal.toLocaleString())
+            .replace('{count}', String(premiumCount))}
         </div>
       )}
     </div>

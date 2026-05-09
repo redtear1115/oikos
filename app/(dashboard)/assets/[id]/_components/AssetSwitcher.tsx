@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from '@/lib/i18n/client'
 
 type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 
@@ -18,17 +19,10 @@ interface AssetSwitcherProps {
   children: React.ReactNode
 }
 
-const TYPE_LABELS: Record<AssetType, string> = {
-  car: '車',
-  house: '房',
-  child: '孩子',
-  pet: '寵物',
-  plant: '植物',
-  insurance: '保險',
-}
-
 export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419', triggerBg = 'rgba(58,36,25,0.06)', children }: AssetSwitcherProps) {
   const router = useRouter()
+  const t = useTranslations()
+  const TYPE_LABELS: Record<AssetType, string> = t.assetDetail.typeLabels
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
 
@@ -56,7 +50,7 @@ export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419
         onClick={() => setOpen(v => !v)}
         className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
         style={{ background: triggerBg }}
-        aria-label="切換愛物"
+        aria-label={t.assetDetail.switcherAriaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
       >

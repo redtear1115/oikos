@@ -15,6 +15,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { revealChildPii } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { resolveDisplayName } from '@/lib/display-name'
+import { useTranslations } from '@/lib/i18n/client'
 
 // 10 mask characters — enough to read as "filled in" without leaking length.
 const PII_MASK = '●●●●●●●●●●'
@@ -38,6 +39,7 @@ function RevealableRow({
   field: 'nationalId' | 'nhiNo'
   last?: boolean
 }) {
+  const t = useTranslations()
   const [revealed, setRevealed] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -58,7 +60,7 @@ function RevealableRow({
         setRevealed(value)
         setError(null)
       } catch (e) {
-        setError(e instanceof Error ? e.message : '無法顯示')
+        setError(e instanceof Error ? e.message : t.assetDetail.child.revealError)
       }
     })
   }
@@ -86,7 +88,7 @@ function RevealableRow({
         className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 disabled:cursor-default"
         style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
       >
-        {pending ? '…' : (revealed !== null ? '隱藏' : '顯示')}
+        {pending ? t.assetDetail.child.revealLoading : (revealed !== null ? t.assetDetail.child.revealHide : t.assetDetail.child.revealShow)}
       </button>
     </div>
   )
@@ -114,6 +116,8 @@ interface Props {
 
 export function ChildDetailClient({ assetId, name, nickname, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
   const router = useRouter()
+  const t = useTranslations()
+  const td = t.assetDetail.child
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -121,8 +125,8 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
   const display = resolveDisplayName(name, nickname)
   const subtitle = details
     ? [
-        details.gender === 'male' ? '男' : details.gender === 'female' ? '女' : null,
-        details.bloodType ? `${details.bloodType} 型` : null
+        details.gender === 'male' ? td.genderMale : details.gender === 'female' ? td.genderFemale : null,
+        details.bloodType ? td.bloodTypeValue.replace('{type}', details.bloodType) : null
       ].filter(Boolean).join(' · ')
     : null
 
@@ -177,34 +181,34 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
 
       <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
 
-      <SectionHeader>身分證件</SectionHeader>
+      <SectionHeader>{td.sectionId}</SectionHeader>
       <InfoCard>
-        <InfoRow label="出生日" value={details?.birthday ?? ''} mono />
+        <InfoRow label={td.bornDate} value={details?.birthday ?? ''} mono />
         <RevealableRow
-          label="身分證號"
+          label={td.nationalId}
           hasValue={details?.hasNationalId ?? false}
           assetId={assetId}
           field="nationalId"
         />
         <RevealableRow
-          label="健保卡號"
+          label={td.nhiNo}
           hasValue={details?.hasNhiNo ?? false}
           assetId={assetId}
           field="nhiNo"
         />
-        <InfoRow label="出生醫院" value={details?.hospital ?? ''} />
-        <InfoRow label="血型" value={details?.bloodType ? `${details.bloodType} 型` : ''} last />
+        <InfoRow label={td.bornHospital} value={details?.hospital ?? ''} />
+        <InfoRow label={td.bloodType} value={details?.bloodType ? td.bloodTypeValue.replace('{type}', details.bloodType) : ''} last />
       </InfoCard>
 
-      <SectionHeader>身體紀錄</SectionHeader>
+      <SectionHeader>{td.sectionBody}</SectionHeader>
       <InfoCard>
-        <InfoRow label="身高" value={details?.heightCm ? `${details.heightCm} cm` : ''} mono />
-        <InfoRow label="體重" value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
+        <InfoRow label={td.height} value={details?.heightCm ? `${details.heightCm} cm` : ''} mono />
+        <InfoRow label={td.weight} value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
       </InfoCard>
 
       {notes && (
         <>
-          <SectionHeader>備註</SectionHeader>
+          <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
             <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
               {notes}
@@ -213,7 +217,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         </>
       )}
 
-      <SectionHeader>近期花費</SectionHeader>
+      <SectionHeader>{t.assetDetail.recentExpenses}</SectionHeader>
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
@@ -223,7 +227,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         emptyState={<AibutsuHintCard type="child" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-            時間軸 · {count} 筆
+            {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}
       />

@@ -2,7 +2,8 @@
 
 import { INCOME_PALETTES } from '@/lib/incomePalettes'
 import type { SavingsProgress } from '@/lib/insuranceProgress'
-import { SAVINGS_HERO_SUB, SAVINGS_NO_EXPECTED_MATURITY } from './insurance-copy'
+import { useTranslations } from '@/lib/i18n/client'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 interface Props {
   progress: SavingsProgress
@@ -12,35 +13,42 @@ interface Props {
 }
 
 export function SavingsHero({ progress, endsAt, startsAt, onSetExpectedMaturity }: Props) {
+  const t = useTranslations()
+  const ts = t.assetDetail.savings
   const hasExpected = progress.expectedMaturity !== null
-  const subCopy = computeSub(progress, endsAt, startsAt)
+  const subCopy = computeSub(progress, endsAt, startsAt, ts)
 
   return (
     <div className="px-5 pt-5 pb-6" style={{ background: '#F7F4EE' }}>
       <ProgressBar
-        label="入"
+        label={ts.heroLabelIn}
         progress={progress.payProgress}
         actual={progress.premiumTotal}
         expected={progress.expectedTotalPayment}
         accent={INCOME_PALETTES.mint.ink}
-        actualLabel="累計繳"
+        actualLabel={ts.heroPaymentLabel}
+        expectedTag={ts.heroExpectedTag}
       />
 
       <div className="h-3" />
 
       {hasExpected ? (
         <ProgressBar
-          label="出"
+          label={ts.heroLabelOut}
           progress={progress.returnProgress}
           actual={progress.returnTotal}
           expected={progress.expectedMaturity}
           accent={INCOME_PALETTES.gold.ink}
-          actualLabel="已拿回"
+          actualLabel={ts.heroReturnLabel}
+          expectedTag={ts.heroExpectedTag}
         />
       ) : (
         <NoExpectedMaturityRow
           received={progress.returnTotal}
           onSetExpected={onSetExpectedMaturity}
+          labelOut={ts.heroLabelOut}
+          barTemplate={ts.heroNoExpectedBar}
+          ctaLabel={ts.heroNoExpectedCta}
         />
       )}
 
@@ -58,6 +66,7 @@ function ProgressBar({
   expected,
   accent,
   actualLabel,
+  expectedTag,
 }: {
   label: string
   progress: number | null
@@ -65,6 +74,7 @@ function ProgressBar({
   expected: number | null
   accent: string
   actualLabel: string
+  expectedTag: string
 }) {
   const pct = progress !== null ? Math.round(progress * 100) : null
   return (
@@ -98,14 +108,26 @@ function ProgressBar({
         <span style={{ color: 'var(--ink) ' }}>NT$ {actual.toLocaleString()}</span>
         <span> {actualLabel}</span>
         {expected !== null && (
-          <span> / 估 NT$ {expected.toLocaleString()}</span>
+          <span> / {expectedTag} NT$ {expected.toLocaleString()}</span>
         )}
       </div>
     </div>
   )
 }
 
-function NoExpectedMaturityRow({ received, onSetExpected }: { received: number; onSetExpected?: () => void }) {
+function NoExpectedMaturityRow({
+  received,
+  onSetExpected,
+  labelOut,
+  barTemplate,
+  ctaLabel,
+}: {
+  received: number
+  onSetExpected?: () => void
+  labelOut: string
+  barTemplate: string
+  ctaLabel: string
+}) {
   return (
     <div>
       <div className="flex items-center gap-3">
@@ -113,10 +135,10 @@ function NoExpectedMaturityRow({ received, onSetExpected }: { received: number; 
           className="text-base font-semibold shrink-0"
           style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)', width: 18 }}
         >
-          出
+          {labelOut}
         </span>
         <div className="flex-1 text-xs" style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)' }}>
-          {SAVINGS_NO_EXPECTED_MATURITY.bar(received)}
+          {barTemplate.replace('{received}', received.toLocaleString())}
         </div>
       </div>
       {onSetExpected && (
@@ -126,20 +148,27 @@ function NoExpectedMaturityRow({ received, onSetExpected }: { received: number; 
           className="mt-1.5 ml-[26px] text-xs underline-offset-2 underline"
           style={{ color: 'var(--ink-2)' }}
         >
-          {SAVINGS_NO_EXPECTED_MATURITY.ctaLabel}
+          {ctaLabel}
         </button>
       )}
     </div>
   )
 }
 
-function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string | null): string {
-  if (p.awaitingMaturity) return SAVINGS_HERO_SUB.awaitingMaturity()
+function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string | null, ts: Translations['assetDetail']['savings']): string {
+  if (p.awaitingMaturity) return ts.heroAwaitingMaturity
   // Not yet active: only when we have a start date and we're before it
-  if (startsAt && p.timeProgress === 0) return SAVINGS_HERO_SUB.notYetActive(startsAt)
-  if (p.returnTotal === 0) return SAVINGS_HERO_SUB.notStarted(endsAt)
-  if (p.returnRatio !== null && p.returnRatio < 1 && p.returnProgress !== null) {
-    return SAVINGS_HERO_SUB.partial(Math.round(p.returnProgress * 100), p.yearsLeft)
+  if (startsAt && p.timeProgress === 0) return ts.heroNotYetActive.replace('{date}', startsAt)
+  if (p.returnTotal === 0) {
+    return endsAt
+      ? ts.heroNotStartedWithDate.replace('{date}', endsAt)
+      : ts.heroNotStarted
   }
-  return SAVINGS_HERO_SUB.matured(p.returnTotal)
+  if (p.returnRatio !== null && p.returnRatio < 1 && p.returnProgress !== null) {
+    const pct = String(Math.round(p.returnProgress * 100))
+    return p.yearsLeft !== null && p.yearsLeft > 0
+      ? ts.heroPartialWithYears.replace('{pct}', pct).replace('{years}', p.yearsLeft.toFixed(1))
+      : ts.heroPartial.replace('{pct}', pct)
+  }
+  return ts.heroMatured.replace('{total}', p.returnTotal.toLocaleString())
 }

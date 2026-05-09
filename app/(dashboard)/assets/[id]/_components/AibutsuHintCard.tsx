@@ -1,34 +1,19 @@
 'use client'
 
+import { useTranslations } from '@/lib/i18n/client'
+
 type HintType = 'child' | 'pet' | 'plant' | 'house'
 
-type HintConfig = {
+type HintStyle = {
   accentColor: string
   borderColor: string
-  items: string
 }
 
-const CONFIG: Record<HintType, HintConfig> = {
-  pet: {
-    accentColor: '#9A6B3F',
-    borderColor: 'rgba(154,107,63,0.35)',
-    items: '飼料 · 看診 · 洗澡美容 · 玩具 · 年度疫苗',
-  },
-  child: {
-    accentColor: '#A85B6A',
-    borderColor: 'rgba(168,91,106,0.35)',
-    items: '尿布奶粉 · 看診 · 課後安親 · 玩具 · 學費',
-  },
-  plant: {
-    accentColor: '#5A7A4A',
-    borderColor: 'rgba(90,122,74,0.35)',
-    items: '介質 · 盆器 · 肥料 · 買新苗 · 防蟲',
-  },
-  house: {
-    accentColor: '#7A5A38',
-    borderColor: 'rgba(122,90,56,0.35)',
-    items: '房貸 · 水電 · 管理費 · 維修 · 裝潢 · 清潔',
-  },
+const STYLE: Record<HintType, HintStyle> = {
+  pet: { accentColor: '#9A6B3F', borderColor: 'rgba(154,107,63,0.35)' },
+  child: { accentColor: '#A85B6A', borderColor: 'rgba(168,91,106,0.35)' },
+  plant: { accentColor: '#5A7A4A', borderColor: 'rgba(90,122,74,0.35)' },
+  house: { accentColor: '#7A5A38', borderColor: 'rgba(122,90,56,0.35)' },
 }
 
 interface AibutsuHintCardProps {
@@ -37,26 +22,32 @@ interface AibutsuHintCardProps {
 }
 
 export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
-  const cfg = CONFIG[type]
+  const t = useTranslations()
+  const style = STYLE[type]
+  const items =
+    type === 'pet' ? t.assetDetail.hint.itemsPet
+    : type === 'child' ? t.assetDetail.hint.itemsChild
+    : type === 'plant' ? t.assetDetail.hint.itemsPlant
+    : t.assetDetail.hint.itemsHouse
   return (
     <div
       className="mx-4 rounded-[14px] p-[14px]"
       style={{
         background: 'var(--surface)',
-        border: `1.5px dashed ${cfg.borderColor}`,
+        border: `1.5px dashed ${style.borderColor}`,
       }}
     >
       <p
         className="text-micro font-semibold mb-[5px]"
-        style={{ color: cfg.accentColor, letterSpacing: '0.3px' }}
+        style={{ color: style.accentColor, letterSpacing: '0.3px' }}
       >
-        ✦ 可以記什麼？
+        {t.assetDetail.hint.title}
       </p>
       <p
         className="text-micro mb-[10px]"
         style={{ color: 'var(--ink-2)', lineHeight: 1.9 }}
       >
-        {cfg.items}
+        {items}
       </p>
       <button
         type="button"
@@ -68,7 +59,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
           letterSpacing: '0.2px',
         }}
       >
-        記第一筆 →
+        {t.assetDetail.hint.cta}
       </button>
     </div>
   )

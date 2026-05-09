@@ -8,7 +8,7 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
-import { useLocale } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatNhi, NHI_MAX_LENGTH } from '@/lib/format-nhi'
 import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets } from '@/actions/asset'
 import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset } from '@/actions/asset'
@@ -100,25 +100,30 @@ interface Props {
 type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance' | 'house'
 
 // Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
-// Secondary tiles (房子 / 保險) reveal under 「更多」 to keep the row tidy as
-// the type list grows. This avoids a wrapped 6-tile grid that pushes the form
-// down when switching types.
-const PRIMARY_TYPE_OPTIONS: { value: PickerType; label: string }[] = [
-  { value: 'car',   label: '車' },
-  { value: 'child', label: '孩子' },
-  { value: 'pet',   label: '寵物' },
-  { value: 'plant', label: '植物' },
-]
-const SECONDARY_TYPE_OPTIONS: { value: PickerType; label: string }[] = [
-  { value: 'house',     label: '房子' },
-  { value: 'insurance', label: '保險' },
-]
-const TYPE_OPTIONS = [...PRIMARY_TYPE_OPTIONS, ...SECONDARY_TYPE_OPTIONS]
-const isSecondaryType = (t: PickerType) => SECONDARY_TYPE_OPTIONS.some(o => o.value === t)
+// Secondary tiles (house / insurance) reveal under 「更多」 to keep the row tidy
+// as the type list grows. This avoids a wrapped 6-tile grid that pushes the form
+// down when switching types. Labels resolved per-render via useTranslations.
+const PRIMARY_TYPES: PickerType[] = ['car', 'child', 'pet', 'plant']
+const SECONDARY_TYPES: PickerType[] = ['house', 'insurance']
+const isSecondaryType = (t: PickerType) => SECONDARY_TYPES.includes(t)
 
 export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const isEdit = !!initial
   const locale = useLocale()
+  const t = useTranslations()
+  const ts = t.assetSheet
+  const typeLabel = (type: PickerType): string => {
+    switch (type) {
+      case 'car': return ts.type.car
+      case 'child': return ts.type.child
+      case 'pet': return ts.type.pet
+      case 'plant': return ts.type.plant
+      case 'house': return ts.type.house
+      case 'insurance': return ts.type.insurance
+    }
+  }
+  const PRIMARY_TYPE_OPTIONS = PRIMARY_TYPES.map(value => ({ value, label: typeLabel(value) }))
+  const SECONDARY_TYPE_OPTIONS = SECONDARY_TYPES.map(value => ({ value, label: typeLabel(value) }))
   const [selectedType, setSelectedType] = useState<PickerType>('pet')
   const [name, setName] = useState('')
   // car-only fields
@@ -502,7 +507,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.('saved')
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
@@ -516,13 +521,15 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.('deleted')
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(e instanceof Error ? e.message : t.common.error)
       }
     })
   }
 
-  const typeLabel = TYPE_OPTIONS.find(o => o.value === selectedType)?.label ?? '愛物'
-  const title = isEdit ? `編輯${typeLabel}` : '新增愛物'
+  const selectedTypeLabel = typeLabel(selectedType) ?? ts.typeFallback
+  const title = isEdit
+    ? ts.titleEdit.replace('{type}', selectedTypeLabel)
+    : ts.titleNew
 
   // Switching type clears all type-specific fields. Used by every tile click
   // (primary + secondary) so the dedup lives here, not duplicated per tile.
@@ -589,12 +596,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     }
   }
 
-  const namePlaceholder = isCar ? '例：我的車'
-    : selectedType === 'child' ? '例：小明'
-    : selectedType === 'pet' ? '例：米嚕'
-    : selectedType === 'plant' ? '例：陽台上的植物們'
-    : selectedType === 'house' ? '例：我們家'
-    : '例：南山醫療終身險'
+  const namePlaceholder = isCar ? ts.name.placeholderCar
+    : selectedType === 'child' ? ts.name.placeholderChild
+    : selectedType === 'pet' ? ts.name.placeholderPet
+    : selectedType === 'plant' ? ts.name.placeholderPlant
+    : selectedType === 'house' ? ts.name.placeholderHouse
+    : ts.name.placeholderInsurance
 
   return (
     <>
@@ -622,7 +629,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
-            取消
+            {t.common.cancel}
           </button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
             {title}
@@ -633,7 +640,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
             style={{ color: canSave ? 'var(--accent)' : 'var(--ink-3)' }}
           >
-            {pending ? '儲存中…' : '儲存'}
+            {pending ? t.common.saving : t.common.save}
           </button>
         </div>
 
@@ -641,7 +648,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           {/* Type picker — only when creating */}
           {!isEdit && (
             <div className="mb-4">
-              <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>類型</div>
+              <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>{ts.type.label}</div>
               <div className="grid grid-cols-5 gap-2">
                 {PRIMARY_TYPE_OPTIONS.map(opt => {
                   const sel = selectedType === opt.value
@@ -674,7 +681,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   }}
                 >
                   <span className="text-button leading-[20px] font-semibold tracking-[1px]" aria-hidden="true">⋯</span>
-                  <span className="text-micro font-medium">更多</span>
+                  <span className="text-micro font-medium">{ts.type.more}</span>
                 </button>
               </div>
 
@@ -709,7 +716,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           )}
 
           {/* Name field */}
-          <Field label="名稱">
+          <Field label={ts.name.label}>
             <input
               ref={nameInputRef}
               value={name}
@@ -724,7 +731,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           {isCar && (
             <>
               {/* Color picker */}
-              <Field label="顏色">
+              <Field label={ts.car.color}>
                 <div className="flex gap-2 flex-wrap">
                   {CAR_COLORS.map(c => {
                     const sel = color === c.hex
@@ -754,55 +761,56 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       color: 'var(--ink-3)',
                       boxShadow: color === null ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
                     }}
+                    aria-label={ts.car.colorNoneAriaLabel}
                   >
                     —
                   </button>
                 </div>
               </Field>
 
-              <Field label="車牌">
+              <Field label={ts.car.plate}>
                 <input
                   value={plate}
                   onChange={e => setPlate(e.target.value.slice(0, 16))}
-                  placeholder="例：ABC-1234"
+                  placeholder={ts.car.platePlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
                 />
               </Field>
 
-              <Field label="年份">
+              <Field label={ts.car.year}>
                 <input
                   value={year}
                   onChange={e => setYear(e.target.value.slice(0, 4))}
                   type="number"
                   inputMode="numeric"
-                  placeholder="例：2019"
+                  placeholder={ts.car.yearPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }}
                 />
               </Field>
 
-              <Field label="品牌">
+              <Field label={ts.car.brand}>
                 <input
                   value={brand}
                   onChange={e => setBrand(e.target.value.slice(0, 32))}
-                  placeholder="例：Toyota"
+                  placeholder={ts.car.brandPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }}
                 />
               </Field>
 
-              <Field label="型號">
+              <Field label={ts.car.model}>
                 <input
                   value={model}
                   onChange={e => setModel(e.target.value.slice(0, 32))}
-                  placeholder="例：Altis"
+                  placeholder={ts.car.modelPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }}
                 />
               </Field>
 
-              <Field label="購入日期（選填）">
+              <Field label={ts.car.purchasedAt}>
                 <button
                   type="button"
                   className="flex items-center gap-2 bg-transparent border-0 cursor-pointer p-0 text-base"
@@ -810,7 +818,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   onClick={() => setShowCal(v => !v)}
                 >
                   <CalIcon size={16} />
-                  {purchasedAt ? dateLabel(purchasedAt, locale) : '選擇日期'}
+                  {purchasedAt ? dateLabel(purchasedAt, locale) : ts.car.pickDate}
                   <Chevron />
                 </button>
                 {showCal && (
@@ -821,7 +829,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 )}
               </Field>
 
-              <Field label="購入價格（選填）">
+              <Field label={ts.car.purchasePrice}>
                 <div className="flex items-center gap-1">
                   <span className="text-sm" style={{ color: 'var(--ink-3)' }}>NT$</span>
                   <input
@@ -835,14 +843,14 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
-              <Field label="目前里程（選填）">
+              <Field label={ts.car.initialOdometer}>
                 <div className="flex items-center gap-1">
                   <input
                     value={initialOdometer}
                     onChange={e => setInitialOdometer(e.target.value)}
                     type="number"
                     inputMode="numeric"
-                    placeholder="例：50000"
+                    placeholder={ts.car.initialOdometerPlaceholder}
                     className="flex-1 bg-transparent border-0 outline-none text-base"
                     style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
                   />
@@ -855,12 +863,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           {isCar && (
             <>
               {/* Fuel Type */}
-              <Field label="油種">
+              <Field label={ts.car.fuelType}>
                 <FuelTypeButtonGroup value={fuelType} onChange={setFuelType} />
               </Field>
 
               {/* Primary User (hidden in solo mode — PrimaryUserToggle returns null) */}
-              <Field label="主要使用人">
+              <Field label={ts.car.primaryUser}>
                 <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
               </Field>
             </>
@@ -868,15 +876,15 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
           {selectedType === 'child' && (
             <>
-              <Field label="小名">
+              <Field label={ts.child.nickname}>
                 <input value={childNickname} onChange={e => setChildNickname(e.target.value.slice(0, 20))}
-                  placeholder="元寶" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.child.nicknamePlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="性別">
+              <Field label={ts.child.gender}>
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-                  {([{v: 'male' as const, label: '男孩'}, {v: 'female' as const, label: '女孩'}]).map(o => (
+                  {([{v: 'male' as const, label: ts.child.genderMale}, {v: 'female' as const, label: ts.child.genderFemale}]).map(o => (
                     <button key={o.v} type="button" onClick={() => setChildGender(o.v)}
                       className="flex-1 h-9 rounded-[9px] text-sm font-medium"
                       style={{
@@ -889,18 +897,18 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
-              <Field label="出生日期">
+              <Field label={ts.child.birthday}>
                 <input value={childBirthday} onChange={e => setChildBirthday(e.target.value)}
                   type="date" className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身分證件</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionId}</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
-              <Field label="身分證號">
+              <Field label={ts.child.nationalId}>
                 <div className="flex items-center gap-2">
                   <input
                     value={childNationalId}
@@ -912,10 +920,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                     }}
                     placeholder={
                       childWantClearNationalId
-                        ? '已標記清除（儲存後生效）'
+                        ? ts.child.pendingClearHint
                         : (isEdit && childHasNationalId
-                            ? '已加密儲存，留空即不變更'
-                            : 'A123456789')
+                            ? ts.child.encryptedHint
+                            : ts.child.nationalIdPlaceholder)
                     }
                     className="flex-1 bg-transparent border-0 outline-none text-base"
                     style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
@@ -927,7 +935,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
                       style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
                     >
-                      清除
+                      {ts.child.clear}
                     </button>
                   )}
                   {isEdit && childWantClearNationalId && (
@@ -937,13 +945,13 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
                       style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
                     >
-                      取消
+                      {ts.child.cancelClear}
                     </button>
                   )}
                 </div>
               </Field>
 
-              <Field label="健保卡號">
+              <Field label={ts.child.nhiNo}>
                 <div className="flex items-center gap-2">
                   <input
                     value={childNhiNo}
@@ -955,10 +963,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                     maxLength={NHI_MAX_LENGTH}
                     placeholder={
                       childWantClearNhiNo
-                        ? '已標記清除（儲存後生效）'
+                        ? ts.child.pendingClearHint
                         : (isEdit && childHasNhiNo
-                            ? '已加密儲存，留空即不變更'
-                            : '0000 0000 0000')
+                            ? ts.child.encryptedHint
+                            : ts.child.nhiNoPlaceholder)
                     }
                     className="flex-1 bg-transparent border-0 outline-none text-base"
                     style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
@@ -970,7 +978,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
                       style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
                     >
-                      清除
+                      {ts.child.clear}
                     </button>
                   )}
                   {isEdit && childWantClearNhiNo && (
@@ -980,13 +988,13 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                       className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
                       style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
                     >
-                      取消
+                      {ts.child.cancelClear}
                     </button>
                   )}
                 </div>
               </Field>
 
-              <Field label="血型">
+              <Field label={ts.child.bloodType}>
                 <div className="flex gap-1.5">
                   {(['A', 'B', 'O', 'AB'] as const).map(b => (
                     <button key={b} type="button" onClick={() => setChildBloodType(b)}
@@ -1001,31 +1009,31 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
-              <Field label="出生醫院">
+              <Field label={ts.child.hospital}>
                 <input value={childHospital} onChange={e => setChildHospital(e.target.value.slice(0, 32))}
-                  placeholder="臺大醫院" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.child.hospitalPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>身體紀錄（可之後補）</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionBody}</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Field label="身高">
+                  <Field label={ts.child.height}>
                     <input value={childHeightCm} onChange={e => setChildHeightCm(e.target.value)}
-                      type="number" inputMode="numeric" placeholder="102"
+                      type="number" inputMode="numeric" placeholder={ts.child.heightPlaceholder}
                       className="w-full bg-transparent border-0 outline-none text-base"
                       style={{ color: 'var(--ink)' }} />
                     <span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>
                   </Field>
                 </div>
                 <div className="flex-1">
-                  <Field label="體重">
+                  <Field label={ts.child.weight}>
                     <input value={childWeightKg} onChange={e => setChildWeightKg(e.target.value)}
-                      type="number" inputMode="decimal" placeholder="16.4"
+                      type="number" inputMode="decimal" placeholder={ts.child.weightPlaceholder}
                       className="w-full bg-transparent border-0 outline-none text-base"
                       style={{ color: 'var(--ink)' }} />
                     <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
@@ -1037,9 +1045,9 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
           {selectedType === 'pet' && (
             <>
-              <Field label="種類">
+              <Field label={ts.pet.species}>
                 <div className="flex flex-wrap gap-1.5">
-                  {[{v: 'cat', label: '貓'},{v: 'dog', label: '狗'},{v: 'rabbit', label: '兔'},{v: 'bird', label: '鳥'},{v: 'fish', label: '魚'},{v: 'other', label: '其他'}].map(o => (
+                  {[{v: 'cat', label: ts.pet.speciesCat},{v: 'dog', label: ts.pet.speciesDog},{v: 'rabbit', label: ts.pet.speciesRabbit},{v: 'bird', label: ts.pet.speciesBird},{v: 'fish', label: ts.pet.speciesFish},{v: 'other', label: ts.pet.speciesOther}].map(o => (
                     <button key={o.v} type="button" onClick={() => setPetSpecies(o.v)}
                       className="h-[34px] px-[14px] rounded-[10px] text-label"
                       style={{
@@ -1052,15 +1060,15 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
-              <Field label="品種 / 品名">
+              <Field label={ts.pet.breed}>
                 <input value={petBreed} onChange={e => setPetBreed(e.target.value.slice(0, 32))}
-                  placeholder="美短" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.pet.breedPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="性別">
+              <Field label={ts.pet.sex}>
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-                  {([{v: 'male' as const, label: '男孩'}, {v: 'female' as const, label: '女孩'}, {v: 'unknown' as const, label: '不明'}]).map(o => (
+                  {([{v: 'male' as const, label: ts.pet.sexMale}, {v: 'female' as const, label: ts.pet.sexFemale}, {v: 'unknown' as const, label: ts.pet.sexUnknown}]).map(o => (
                     <button key={o.v} type="button" onClick={() => setPetSex(o.v)}
                       className="flex-1 h-9 rounded-[9px] text-sm font-medium"
                       style={{
@@ -1073,48 +1081,48 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
-              <Field label="出生日">
+              <Field label={ts.pet.birthDate}>
                 <input value={petBirthDate} onChange={e => setPetBirthDate(e.target.value)}
                   type="date" className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="到家日">
+              <Field label={ts.pet.adoptedDate}>
                 <input value={petAdoptedDate} onChange={e => setPetAdoptedDate(e.target.value)}
                   type="date" className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="領養金額">
+              <Field label={ts.pet.purchaseCost}>
                 <input value={petCost} onChange={e => setPetCost(e.target.value)}
-                  type="number" inputMode="numeric" placeholder="12000"
+                  type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
               </Field>
 
-              <Field label="體重">
+              <Field label={ts.pet.weight}>
                 <input value={petWeightKg} onChange={e => setPetWeightKg(e.target.value)}
-                  type="number" inputMode="decimal" placeholder="4.2"
+                  type="number" inputMode="decimal" placeholder={ts.pet.weightPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>健康 / 證件</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.pet.sectionHealth}</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
-              <Field label="晶片號">
+              <Field label={ts.pet.chipNo}>
                 <input value={petChipNo} onChange={e => setPetChipNo(e.target.value.slice(0, 20))}
-                  placeholder="900141001234567" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.pet.chipNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
               </Field>
 
-              <Field label="獸醫院">
+              <Field label={ts.pet.vet}>
                 <input value={petVet} onChange={e => setPetVet(e.target.value.slice(0, 32))}
-                  placeholder="永和動物醫院" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.pet.vetPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
             </>
@@ -1124,16 +1132,16 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             <>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Field label="種類">
+                  <Field label={ts.plant.species}>
                     <input value={plantSpecies} onChange={e => setPlantSpecies(e.target.value.slice(0, 32))}
-                      placeholder="例：龜背芋" className="w-full bg-transparent border-0 outline-none text-base"
+                      placeholder={ts.plant.speciesPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                       style={{ color: 'var(--ink)' }} />
                   </Field>
                 </div>
                 <div className="flex-1">
-                  <Field label="位置">
+                  <Field label={ts.plant.location}>
                     <input value={plantLocation} onChange={e => setPlantLocation(e.target.value.slice(0, 32))}
-                      placeholder="北向陽台" className="w-full bg-transparent border-0 outline-none text-base"
+                      placeholder={ts.plant.locationPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                       style={{ color: 'var(--ink)' }} />
                   </Field>
                 </div>
@@ -1141,16 +1149,16 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Field label="入手日">
+                  <Field label={ts.plant.sproutedAt}>
                     <input value={plantSproutedAt} onChange={e => setPlantSproutedAt(e.target.value)}
                       type="date" className="w-full bg-transparent border-0 outline-none text-base"
                       style={{ color: 'var(--ink)' }} />
                   </Field>
                 </div>
                 <div className="flex-1">
-                  <Field label="入手金額">
+                  <Field label={ts.plant.cost}>
                     <input value={plantCost} onChange={e => setPlantCost(e.target.value)}
-                      type="number" inputMode="numeric" placeholder="1850"
+                      type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
                       className="w-full bg-transparent border-0 outline-none text-base"
                       style={{ color: 'var(--ink)' }} />
                     <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
@@ -1159,11 +1167,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </div>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>照顧週期</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.plant.sectionCare}</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
-              <Field label="多久澆一次水">
+              <Field label={ts.plant.waterEvery}>
                 <div className="flex gap-1.5">
                   {[2, 3, 7, 14, 30].map(d => (
                     <button key={d} type="button" onClick={() => setPlantWaterEvery(d)}
@@ -1175,7 +1183,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                         fontFamily: 'var(--font-numeric)',
                       }}>{d}</button>
                   ))}
-                  <span className="self-center text-xs ml-1" style={{ color: 'var(--ink-3)' }}>天</span>
+                  <span className="self-center text-xs ml-1" style={{ color: 'var(--ink-3)' }}>{ts.plant.waterEverySuffix}</span>
                 </div>
               </Field>
             </>
@@ -1185,10 +1193,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             <div className="flex flex-col gap-3 px-5 pb-2">
               {/* Address */}
               <div className="flex flex-col gap-1">
-                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>地址</label>
+                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
                 <input
                   type="text"
-                  placeholder="例：台北市大安區某路1號"
+                  placeholder={ts.house.addressPlaceholder}
                   value={houseAddress}
                   onChange={e => setHouseAddress(e.target.value)}
                   maxLength={80}
@@ -1199,14 +1207,14 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
               {/* Purchase date */}
               <div className="flex flex-col gap-1">
-                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入日期</label>
+                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasedAt}</label>
                 <button
                   type="button"
                   onClick={() => setShowCal(c => !c)}
                   className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
                   style={{ background: 'var(--surface)', color: housePurchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--border)' }}
                 >
-                  <span>{housePurchasedAt ? dateLabel(housePurchasedAt, locale) : '選擇日期'}</span>
+                  <span>{housePurchasedAt ? dateLabel(housePurchasedAt, locale) : ts.house.pickDate}</span>
                   <CalIcon size={16} />
                 </button>
                 {showCal && (
@@ -1219,11 +1227,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
               {/* Purchase price */}
               <div className="flex flex-col gap-1">
-                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>購入金額</label>
+                <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
                 <input
                   type="number"
                   inputMode="numeric"
-                  placeholder="例：15000000"
+                  placeholder={ts.house.purchasePricePlaceholder}
                   value={housePurchasePrice}
                   onChange={e => setHousePurchasePrice(e.target.value)}
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none"
@@ -1235,9 +1243,9 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
           {selectedType === 'insurance' && (
             <>
-              <Field label="險種">
+              <Field label={ts.insurance.kind}>
                 <div className="flex flex-wrap gap-1.5">
-                  {[{v:'medical',label:'醫療'},{v:'life',label:'壽險'},{v:'accident',label:'意外'},{v:'cancer',label:'癌症'},{v:'illness',label:'重大傷病'},{v:'car',label:'汽車'},{v:'savings',label:'儲蓄'}].map(o => (
+                  {[{v:'medical',label:ts.insurance.kindMedical},{v:'life',label:ts.insurance.kindLife},{v:'accident',label:ts.insurance.kindAccident},{v:'cancer',label:ts.insurance.kindCancer},{v:'illness',label:ts.insurance.kindIllness},{v:'car',label:ts.insurance.kindCar},{v:'savings',label:ts.insurance.kindSavings}].map(o => (
                     <button key={o.v} type="button" onClick={() => setInsKind(o.v)}
                       className="h-[34px] px-[14px] rounded-[10px] text-label"
                       style={{
@@ -1250,53 +1258,53 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
-              <Field label="被保人">
+              <Field label={ts.insurance.insured}>
                 <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
-                  placeholder="小元" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="保險公司">
+              <Field label={ts.insurance.insurer}>
                 <input value={insInsurer} onChange={e => setInsInsurer(e.target.value.slice(0, 32))}
-                  placeholder="南山人壽" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.insurance.insurerPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="保單號">
+              <Field label={ts.insurance.policyNo}>
                 <input value={insPolicyNo} onChange={e => setInsPolicyNo(e.target.value.slice(0, 32))}
-                  placeholder="NSL-2022-0814-001" className="w-full bg-transparent border-0 outline-none text-base"
+                  placeholder={ts.insurance.policyNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>保費與保額</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionPremium}</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
-              <Field label="年繳保費">
+              <Field label={ts.insurance.annualPremium}>
                 <input value={insPremium} onChange={e => setInsPremium(e.target.value)}
-                  type="number" inputMode="numeric" placeholder="24960"
+                  type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
               </Field>
 
-              <Field label="保額">
+              <Field label={ts.insurance.sumInsured}>
                 <input value={insSumInsured} onChange={e => setInsSumInsured(e.target.value)}
-                  type="number" inputMode="numeric" placeholder="3000000"
+                  type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
                 <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
               </Field>
 
               {insKind === 'savings' && (
-                <Field label="預估滿期金">
+                <Field label={ts.insurance.expectedMaturityAmount}>
                   <input
                     value={insExpectedMaturityAmount}
                     onChange={e => setInsExpectedMaturityAmount(e.target.value)}
                     type="number"
                     inputMode="numeric"
-                    placeholder="600000"
+                    placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
                     className="w-full bg-transparent border-0 outline-none text-base"
                     style={{ color: 'var(--ink)' }}
                   />
@@ -1304,9 +1312,9 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </Field>
               )}
 
-              <Field label="繳費週期">
+              <Field label={ts.insurance.payCycle}>
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-                  {([{v:'annual',label:'年繳'},{v:'semi',label:'半年'},{v:'quarterly',label:'季繳'},{v:'monthly',label:'月繳'}]).map(o => (
+                  {([{v:'annual',label:ts.insurance.payCycleAnnual},{v:'semi',label:ts.insurance.payCycleSemi},{v:'quarterly',label:ts.insurance.payCycleQuarterly},{v:'monthly',label:ts.insurance.payCycleMonthly}]).map(o => (
                     <button key={o.v} type="button" onClick={() => setInsPayCycle(o.v)}
                       className="flex-1 h-8 rounded-[9px] text-xs font-medium"
                       style={{
@@ -1320,37 +1328,37 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <div className="flex items-center gap-2 mt-2 px-1">
-                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>合約期間</div>
+                <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionContract}</div>
                 <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
               </div>
 
-              <Field label="保單起">
+              <Field label={ts.insurance.startsAt}>
                 <input value={insStartsAt} onChange={e => setInsStartsAt(e.target.value)}
                   type="date" className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="保單迄">
+              <Field label={ts.insurance.endsAt}>
                 <input value={insEndsAt} onChange={e => setInsEndsAt(e.target.value)}
                   type="date" className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
               </Field>
 
-              <Field label="年期">
+              <Field label={ts.insurance.termYears}>
                 <input value={insTermYears} onChange={e => setInsTermYears(e.target.value)}
-                  type="number" inputMode="numeric" placeholder="20"
+                  type="number" inputMode="numeric" placeholder={ts.insurance.termYearsPlaceholder}
                   className="w-full bg-transparent border-0 outline-none text-base"
                   style={{ color: 'var(--ink)' }} />
-                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>年</span>
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{ts.insurance.termYearsSuffix}</span>
               </Field>
 
               {carAssets.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mt-2 px-1">
-                    <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>關聯車輛（選填）</div>
+                    <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionLinkedVehicle}</div>
                     <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
                   </div>
-                  <Field label="關聯車輛">
+                  <Field label={ts.insurance.linkedVehicle}>
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
@@ -1363,7 +1371,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                           fontWeight: insVehicleId === null ? 600 : 500,
                         }}
                       >
-                        不關聯
+                        {ts.insurance.noLink}
                       </button>
                       {carAssets.map(car => (
                         <button
@@ -1391,11 +1399,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           {/* Notes — shared across all six asset types. Cap at 2000 chars
               (matches lib/validators.ts NOTES_MAX_LEN); empty/whitespace
               treated as null on submit. */}
-          <Field label="備註">
+          <Field label={ts.notes.label}>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value.slice(0, 2000))}
-              placeholder="自由填寫，例：上次健檢心跳偏快、保單折扣到 2027 等"
+              placeholder={ts.notes.placeholder}
               rows={3}
               className="w-full bg-transparent border-0 outline-none text-base resize-y"
               style={{ color: 'var(--ink)', minHeight: 64 }}
@@ -1422,7 +1430,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               boxShadow: canSave ? '0 2px 6px rgba(224,136,86,0.3)' : 'none',
             }}
           >
-            {pending ? '儲存中…' : (isEdit ? '儲存變更' : '新增愛物')}
+            {pending ? t.common.saving : (isEdit ? ts.saveChanges : ts.titleNew)}
           </button>
 
           {isEdit && (
@@ -1432,7 +1440,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
               onClick={() => setConfirmingDelete(true)}
             >
-              刪除
+              {t.common.delete}
             </button>
           )}
         </div>
@@ -1440,9 +1448,9 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
 
       <ConfirmModal
         open={confirmingDelete}
-        title="確認刪除？"
-        description="這個愛物與所有關聯花費將從列表中移除。"
-        confirmLabel="刪除"
+        title={ts.deleteConfirm.title}
+        description={ts.deleteConfirm.description}
+        confirmLabel={ts.deleteConfirm.confirmLabel}
         pending={pending}
         onConfirm={performDelete}
         onCancel={() => setConfirmingDelete(false)}

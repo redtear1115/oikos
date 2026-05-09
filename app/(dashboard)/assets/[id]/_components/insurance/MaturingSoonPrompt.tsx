@@ -1,6 +1,6 @@
 'use client'
 
-import { SAVINGS_MATURING_SOON } from './insurance-copy'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   maturityDate: string
@@ -8,7 +8,8 @@ interface Props {
 }
 
 export function MaturingSoonPrompt({ maturityDate, onClick }: Props) {
-  const copy = SAVINGS_MATURING_SOON(maturityDate)
+  const t = useTranslations()
+  const ts = t.assetDetail.savings
   return (
     <button
       type="button"
@@ -21,14 +22,14 @@ export function MaturingSoonPrompt({ maturityDate, onClick }: Props) {
     >
       <div className="flex-1">
         <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-          {copy.title}
+          {ts.maturingSoonTitle.replace('{date}', maturityDate)}
         </div>
         <div className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
-          {copy.subtitle}
+          {ts.maturingSoonSubtitle}
         </div>
       </div>
       <span className="text-sm font-medium shrink-0" style={{ color: 'var(--ink)' }}>
-        {copy.cta}
+        {ts.maturingSoonCta}
       </span>
     </button>
   )
