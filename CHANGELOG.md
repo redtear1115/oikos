@@ -18,6 +18,10 @@ _Nothing unreleased yet._
 - **`app/sitemap.ts`**：含 `/sign-in`（priority 1.0、含 4 語 hreflang alternates）、`/terms`、`/privacy`（priority 0.3）。
 - **`/sign-in` 結構化資料 `SoftwareApplication` JSON-LD**：含 `applicationCategory: FinanceApplication`、`featureList`（雙人共享記帳／費用自動分攤／資產盤點／保險／油耗等）、`offers: 0 TWD`、`inLanguage: zh-TW/zh-CN/en/ja`，給搜尋引擎結構化訊號。
 - **品牌語意 heading**：`/sign-in` 的「Futari」品牌字由 `<div>` 改為 `<h1>`，內含 `sr-only` 副標「· 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA」+ 頁底 sr-only 描述段；視覺零變化，搜尋引擎可正確判斷頁面主題。
+- **`AssetListItem` 六種愛物類型 tint + 「儲蓄」badge**（PR #30，closes #28）：`app/globals.css` 新增六色 CSS vars（`--asset-tint-{house,car,child,pet,plant,insurance}`）；`AssetListItem` 圖示框由 `--surface-alt` 改為 per-type tint，每列再加 3px 左側 accent rail 同色系。`InsuranceDetails.insurance_type === 'savings'` 時 subtitle 列顯示 11px monospace 「儲蓄」badge（`--saving-soft` 底 / `--saving` 字）。`listAssetsForGroup` LEFT JOIN `InsuranceDetails` 暴露 `insuranceType`，`page.tsx` 推導 `isSavings` 並串到 `AssetsListClient` → `AssetListItem`。
+
+### Fixed
+- **`public/og-image.png` 從 768 KB 壓到 95 KB**（PR #29，closes #25）：原圖超過社群平台 ~300 KB 抓取上限，導致 Twitter / Facebook 預覽 fallback 為無圖。用 ImageMagick 256-color palette quantize（`magick og-image.png -strip -colors 256 -define png:compression-level=9 og-image.png`），壓縮 ~88%；視覺檢查設計師原稿的顆粒質感、雙人剪影、Futari wordmark 在預覽尺寸下無 banding。`app/layout.tsx` metadata 路徑不變。
 
 ### Changed
 - **`middleware.ts` matcher 排除 `/robots.txt` 與 `/sitemap.xml`**：原 matcher 已排除 `manifest.json` 與圖片，但漏了 SEO 兩個關鍵檔案，導致 unauthed 爬蟲被 307→`/sign-in`，等同沒 robots.txt / sitemap.xml。
