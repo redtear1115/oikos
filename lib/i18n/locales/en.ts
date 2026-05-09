@@ -210,6 +210,22 @@ export const en: Translations = {
     recurringExpense: 'Recurring expense',
     sectionData: 'Data',
     trust: 'Your data',
+    exportData: 'Export data (CSV)',
+  },
+
+  csvExport: {
+    preparing: 'Preparing…',
+    failed: 'Export failed. Please try again.',
+    filenamePrefix: 'futari-transactions',
+    columns: {
+      date: 'Date',
+      description: 'Description',
+      amount: 'Amount',
+      category: 'Category',
+      paidBy: 'Paid by',
+      splitType: 'Split',
+      notes: 'Notes',
+    },
   },
 
   assets: {

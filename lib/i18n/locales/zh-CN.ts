@@ -210,6 +210,22 @@ export const zhCN: Translations = {
     recurringExpense: '定期支出',
     sectionData: '数据',
     trust: '数据安全',
+    exportData: '导出数据（CSV）',
+  },
+
+  csvExport: {
+    preparing: '准备中…',
+    failed: '导出失败，请稍后再试',
+    filenamePrefix: 'futari-transactions',
+    columns: {
+      date: '日期',
+      description: '描述',
+      amount: '金额',
+      category: '分类',
+      paidBy: '谁付的',
+      splitType: '分摊',
+      notes: '备注',
+    },
   },
 
   assets: {

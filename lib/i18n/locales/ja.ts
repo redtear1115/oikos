@@ -210,6 +210,22 @@ export const ja: Translations = {
     recurringExpense: '定期支出',
     sectionData: 'データ',
     trust: 'データの安心',
+    exportData: 'データを書き出す（CSV）',
+  },
+
+  csvExport: {
+    preparing: '準備中…',
+    failed: '書き出しに失敗しました。もう一度お試しください。',
+    filenamePrefix: 'futari-transactions',
+    columns: {
+      date: '日付',
+      description: '内容',
+      amount: '金額',
+      category: 'カテゴリー',
+      paidBy: '支払者',
+      splitType: '負担',
+      notes: 'メモ',
+    },
   },
 
   assets: {

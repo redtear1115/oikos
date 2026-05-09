@@ -1,5 +1,5 @@
 import { db } from '@/lib/db/client'
-import { cashTransactions } from '@/lib/db/schema'
+import { cashTransactions, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, desc, sql } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
@@ -260,4 +260,41 @@ export async function listFeedAllPaged(
     createdAt: r.sort_created instanceof Date ? r.sort_created : new Date(r.sort_created),
     kind: r.kind,
   }))
+}
+
+export interface ExportTxnDbRow {
+  transactedAt: Date
+  description: string
+  amount: number
+  category: string
+  splitType: SplitType
+  paidByName: string
+  notes: string | null
+}
+
+/**
+ * Fetch every active CashTransaction in a group for CSV export.
+ * Joins Profiles so the export shows display names instead of opaque UUIDs.
+ * Caller is responsible for the group-membership check.
+ */
+export async function listAllActiveCashTransactionsForExport(
+  groupId: string,
+): Promise<ExportTxnDbRow[]> {
+  return db
+    .select({
+      transactedAt: cashTransactions.transactedAt,
+      description: cashTransactions.description,
+      amount: cashTransactions.amount,
+      category: cashTransactions.category,
+      splitType: cashTransactions.splitType,
+      paidByName: profiles.displayName,
+      notes: cashTransactions.notes,
+    })
+    .from(cashTransactions)
+    .innerJoin(profiles, eq(profiles.id, cashTransactions.paidBy))
+    .where(and(
+      eq(cashTransactions.groupId, groupId),
+      isNull(cashTransactions.deletedAt),
+    ))
+    .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
 }

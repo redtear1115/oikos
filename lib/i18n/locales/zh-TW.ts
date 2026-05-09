@@ -209,6 +209,23 @@ export type Translations = {
     recurringExpense: string
     sectionData: string
     trust: string
+    exportData: string
+  }
+
+  csvExport: {
+    preparing: string
+    failed: string
+    /** Filename stem; `-YYYYMMDD.csv` is appended at download time. */
+    filenamePrefix: string
+    columns: {
+      date: string
+      description: string
+      amount: string
+      category: string
+      paidBy: string
+      splitType: string
+      notes: string
+    }
   }
 
   assets: {
@@ -962,6 +979,22 @@ export const zhTW: Translations = {
     recurringExpense: '定期支出',
     sectionData: '資料',
     trust: '資料安全',
+    exportData: '匯出資料（CSV）',
+  },
+
+  csvExport: {
+    preparing: '準備中…',
+    failed: '匯出失敗，請稍後再試',
+    filenamePrefix: 'futari-transactions',
+    columns: {
+      date: '日期',
+      description: '描述',
+      amount: '金額',
+      category: '分類',
+      paidBy: '誰付的',
+      splitType: '分攤',
+      notes: '備註',
+    },
   },
 
   assets: {

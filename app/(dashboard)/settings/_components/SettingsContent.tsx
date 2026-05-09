@@ -62,6 +62,35 @@ export function SettingsContent({
 
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
 
+  const [exportPending, startExportTransition] = useTransition()
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const handleExport = () => {
+    setExportError(null)
+    startExportTransition(async () => {
+      try {
+        const res = await fetch('/api/export/transactions', { credentials: 'same-origin' })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const blob = await res.blob()
+        // Filename: prefer Content-Disposition from server, fall back to a sensible default.
+        const disposition = res.headers.get('Content-Disposition') ?? ''
+        const match = /filename="?([^";]+)"?/i.exec(disposition)
+        const filename = match?.[1] ?? 'futari-transactions.csv'
+
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+      } catch {
+        setExportError(t.csvExport.failed)
+      }
+    })
+  }
+
   // Offline browsing preference — read from localStorage on mount to avoid
   // SSR/CSR mismatch (default: false during SSR, hydrate from storage after mount).
   const [offlineEnabled, setOfflineEnabled] = useState(false)
@@ -279,6 +308,17 @@ export function SettingsContent({
           label={t.settings.trust}
           onClick={() => router.push('/settings/trust')}
         />
+        <div className="mt-3" />
+        <Row
+          label={exportPending ? t.csvExport.preparing : t.settings.exportData}
+          onClick={handleExport}
+          disabled={exportPending}
+        />
+        {exportError && (
+          <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
+            {exportError}
+          </div>
+        )}
       </Section>
 
       <div className="px-4 pb-2 mt-4">
@@ -329,12 +369,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Row({ label, value, onClick }: { label: string; value?: string; onClick: () => void }) {
+function Row({
+  label, value, onClick, disabled,
+}: { label: string; value?: string; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+      disabled={disabled}
+      className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-60"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>
