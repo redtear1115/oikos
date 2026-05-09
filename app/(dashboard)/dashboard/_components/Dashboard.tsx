@@ -26,8 +26,10 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 import { PendingIncomeStack } from './PendingIncomeStack'
+import { PendingExpenseStack } from './PendingExpenseStack'
 import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
@@ -55,6 +57,7 @@ export interface DashboardProps {
   incomeMonthCount: number
   recentIncomeLabel: string | null
   pendings: PendingRow[]
+  expensePendings: PendingExpenseRow[]
   feedDataPromise: Promise<DashboardFeedData>
 }
 
@@ -65,6 +68,7 @@ export function Dashboard({
   incomeMonthCount,
   recentIncomeLabel,
   pendings,
+  expensePendings,
   feedDataPromise,
 }: DashboardProps) {
   const router = useRouter()
@@ -78,7 +82,9 @@ export function Dashboard({
       event.kind === 'income-insert' ||
       event.kind === 'income-update' ||
       event.kind === 'recurring-income-changed' ||
-      event.kind === 'pending-occurrence-changed'
+      event.kind === 'pending-occurrence-changed' ||
+      event.kind === 'recurring-expense-changed' ||
+      event.kind === 'pending-expense-occurrence-changed'
     ) {
       // Partner accepted the invite (group-updated), or we reconnected after a
       // disconnect that may have missed the event. Re-fetch the layout to get
@@ -223,7 +229,12 @@ export function Dashboard({
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-6 pb-5">
-            <ModeTogglePlaceholder mode={mode} onChange={setMode} pendingCount={pendings.length} />
+            <ModeTogglePlaceholder
+              mode={mode}
+              onChange={setMode}
+              incomePendingCount={pendings.length}
+              expensePendingCount={expensePendings.length}
+            />
 
             <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
               <span>{t.dashboard.soloHint}</span>
@@ -243,7 +254,8 @@ export function Dashboard({
         ) : (
           <SoloBanner
             onDismiss={handleDismissBanner}
-            pendingCount={pendings.length}
+            incomePendingCount={pendings.length}
+            expensePendingCount={expensePendings.length}
             mode={mode}
             onModeChange={setMode}
           />
@@ -258,8 +270,14 @@ export function Dashboard({
           incomeMonthTotal={incomeMonthTotal}
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
-          pendingCount={pendings.length}
+          incomePendingCount={pendings.length}
+          expensePendingCount={expensePendings.length}
         />
+      )}
+      {mode === 'expense' && expensePendings.length > 0 && (
+        <div className="px-5">
+          <PendingExpenseStack pendings={expensePendings} />
+        </div>
       )}
       {mode === 'income' && (
         <div className="px-5">

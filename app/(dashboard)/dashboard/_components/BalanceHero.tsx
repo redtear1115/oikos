@@ -24,7 +24,8 @@ interface Props {
   incomeMonthTotal: number
   incomeMonthCount: number
   recentIncomeLabel: string | null  // e.g. "5/1 · 五月薪水" or null if no incomes
-  pendingCount?: number
+  incomePendingCount?: number
+  expensePendingCount?: number
 }
 
 export function BalanceHero({
@@ -36,7 +37,8 @@ export function BalanceHero({
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,
-  pendingCount = 0,
+  incomePendingCount = 0,
+  expensePendingCount = 0,
 }: Props) {
   const { viewer, partner, viewerIsA } = useMember()
   const t = useTranslations()
@@ -87,7 +89,12 @@ export function BalanceHero({
 
   return (
     <div className="px-5 pt-6 pb-5">
-      <ModeTogglePlaceholder mode={mode} onChange={onModeChange} pendingCount={pendingCount} />
+      <ModeTogglePlaceholder
+        mode={mode}
+        onChange={onModeChange}
+        incomePendingCount={incomePendingCount}
+        expensePendingCount={expensePendingCount}
+      />
 
       {mode === 'income' ? (
         // Income hero card

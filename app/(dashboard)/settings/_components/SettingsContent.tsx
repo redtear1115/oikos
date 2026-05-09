@@ -305,6 +305,16 @@ export function SettingsContent({
 
       <Section title={t.settings.sectionData}>
         <Row
+          label={t.settings.recurringIncome}
+          onClick={() => router.push('/settings/recurring-income')}
+        />
+        <div className="mt-3" />
+        <Row
+          label={t.settings.recurringExpense}
+          onClick={() => router.push('/settings/recurring-expense')}
+        />
+        <div className="mt-3" />
+        <Row
           label={t.settings.trust}
           onClick={() => router.push('/settings/trust')}
         />

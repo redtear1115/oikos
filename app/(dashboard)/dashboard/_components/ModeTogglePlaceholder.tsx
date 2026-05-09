@@ -6,10 +6,18 @@ import { useTranslations } from '@/lib/i18n/client'
 interface Props {
   mode?: 'expense' | 'income'
   onChange?: (mode: 'expense' | 'income') => void
-  pendingCount?: number
+  /** Pending recurring-income count — drives the mint dot on the 進帳 pill while in 支出 mode. */
+  incomePendingCount?: number
+  /** Pending recurring-expense count — drives the category-neutral dot on the 支出 pill while in 進帳 mode. */
+  expensePendingCount?: number
 }
 
-export function ModeTogglePlaceholder({ mode = 'expense', onChange, pendingCount = 0 }: Props) {
+export function ModeTogglePlaceholder({
+  mode = 'expense',
+  onChange,
+  incomePendingCount = 0,
+  expensePendingCount = 0,
+}: Props) {
   const P = DEFAULT_INCOME_PALETTE  // mint
   const t = useTranslations()
   return (
@@ -30,6 +38,11 @@ export function ModeTogglePlaceholder({ mode = 'expense', onChange, pendingCount
       ]).map((o) => {
         const sel = mode === o.id
         const isIncome = o.id === 'income'
+        const showDot = !sel && (
+          isIncome
+            ? incomePendingCount > 0
+            : expensePendingCount > 0
+        )
         return (
           <button
             key={o.id}
@@ -56,11 +69,11 @@ export function ModeTogglePlaceholder({ mode = 'expense', onChange, pendingCount
               }} />
             )}
             {o.label}
-            {isIncome && !sel && pendingCount > 0 && (
+            {showDot && (
               <span style={{
                 width: 5, height: 5, borderRadius: '50%',
-                background: P.ink,
-                boxShadow: `0 0 4px ${P.glow}`,
+                background: isIncome ? P.ink : 'var(--ink)',
+                boxShadow: isIncome ? `0 0 4px ${P.glow}` : '0 0 4px rgba(31,27,22,0.3)',
                 flexShrink: 0,
                 opacity: 0.8,
               }} />

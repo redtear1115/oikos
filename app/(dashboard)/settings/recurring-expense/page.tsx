@@ -1,0 +1,29 @@
+import { redirect } from 'next/navigation'
+import { getCurrentUser } from '@/lib/supabase/server'
+import { db } from '@/lib/db/client'
+import { oikosGroups } from '@/lib/db/schema'
+import { or, eq } from 'drizzle-orm'
+import { listActiveRules } from '@/lib/db/queries/recurringExpense'
+import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
+import { RecurringExpenseContent } from './_components/RecurringExpenseContent'
+
+export default async function RecurringExpenseSettingsPage() {
+  const user = await getCurrentUser()
+  if (!user) redirect('/sign-in')
+
+  const [group] = await db
+    .select()
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) redirect('/setup')
+
+  const rules = await listActiveRules(group.id)
+
+  return (
+    <div className="relative min-h-dvh pb-[92px]">
+      <RecurringExpenseContent rules={rules} />
+      <BottomNavSkeleton />
+    </div>
+  )
+}
