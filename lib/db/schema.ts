@@ -304,3 +304,52 @@ export const pendingExpenseOccurrences = pgTable('PendingExpenseOccurrences', {
   resolvedTxId: uuid('resolved_tx_id').references(() => cashTransactions.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+// v0.14.0 #44 — Monthly review snapshot. Cron predicts on the 1st 00:05
+// Asia/Taipei for the previous month; values are frozen and not recomputed.
+// All denormalised text columns (paid_by name / asset names) are snapshotted
+// to survive future renames or soft-deletes of the source rows.
+export const monthlyReviewSnapshots = pgTable('MonthlyReviewSnapshots', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  year: integer('year').notNull(),
+  month: integer('month').notNull(),
+  computedAt: timestamp('computed_at', { withTimezone: true }).defaultNow().notNull(),
+
+  // card 1 — most-shared category
+  topCategory: text('top_category'),
+  topCategoryTotal: integer('top_category_total'),
+
+  // card 2 — single largest expense (denormalised)
+  largestExpenseAmount: integer('largest_expense_amount'),
+  largestExpenseDescription: text('largest_expense_description'),
+  largestExpenseCategory: text('largest_expense_category'),
+  largestExpensePaidByName: text('largest_expense_paid_by_name'),
+
+  // card 3 — recurring events (income + expense), as a frozen list
+  recurringEvents: jsonb('recurring_events'),
+  recurringTotalIncome: integer('recurring_total_income'),
+  recurringTotalExpense: integer('recurring_total_expense'),
+
+  // card 4 — top-3 愛物 breakdown
+  assetBreakdown: jsonb('asset_breakdown'),
+
+  // per-user banner dismiss state (one snapshot row, two flags)
+  bannerDismissedByMemberAAt: timestamp('banner_dismissed_by_member_a_at', { withTimezone: true }),
+  bannerDismissedByMemberBAt: timestamp('banner_dismissed_by_member_b_at', { withTimezone: true }),
+})
+
+export const monthlyReviewMessages = pgTable('MonthlyReviewMessages', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  memberId: uuid('member_id').notNull().references(() => profiles.id),
+  // The month this message is *given to* (future-facing); written during the
+  // preceding month while reviewing it on /review/[YYYY-MM].
+  year: integer('year').notNull(),
+  month: integer('month').notNull(),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  // Stamped by month-end cron; non-null = read-only forever.
+  lockedAt: timestamp('locked_at', { withTimezone: true }),
+})
