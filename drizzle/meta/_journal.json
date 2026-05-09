@@ -176,6 +176,13 @@
       "when": 1777980135739,
       "tag": "0024_oikos_groups_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1778000000000,
+      "tag": "0025_transaction_notes",
+      "breakpoints": true
     }
   ]
 }

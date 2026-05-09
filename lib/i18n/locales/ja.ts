@@ -118,6 +118,8 @@ export const ja: Translations = {
     assetLink: '愛物にリンク（任意）',
     splitMethod: '分担方法',
     date: '日付',
+    notesLabel: 'メモ（任意・二人とも見られます）',
+    notesPlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
     deleteOne: 'この記録を削除',
     deleteConfirmTitle: 'この記録を削除しますか？',
     errors: {

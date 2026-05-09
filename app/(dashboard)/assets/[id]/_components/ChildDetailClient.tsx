@@ -142,6 +142,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId,
+      notes: tx.notes,
     })
   }
 

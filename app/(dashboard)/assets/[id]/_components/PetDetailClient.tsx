@@ -64,6 +64,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId,
+      notes: tx.notes,
     })
   }
 

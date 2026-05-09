@@ -27,6 +27,7 @@ export interface AddSheetInitial {
   payerId: string
   transactedAt: string  // ISO
   assetId?: string | null
+  notes?: string | null
 }
 
 interface Props {
@@ -50,6 +51,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [split, setSplit] = useState<SplitType>('half')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
+  const [notes, setNotes] = useState('')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
@@ -74,6 +76,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
       setDate(localYMD)
       setAssetId(initial.assetId ?? null)
+      setNotes(initial.notes ?? '')
     } else {
       setAmount('')
       setDesc('')
@@ -82,6 +85,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setPayerWho('M')
       setDate(localTodayISO())
       setAssetId(prefilledAssetId ?? null)
+      setNotes('')
     }
     setError('')
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory])
@@ -114,6 +118,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             payerId,
             transactedAt,
             assetId,
+            notes,
           })
         } else {
           await createTransaction({
@@ -124,6 +129,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             payerId,
             transactedAt,
             assetId,
+            notes,
           })
         }
         onMutated?.()
@@ -309,11 +315,27 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           )}
 
           {/* Date */}
-          <div className="px-5 pt-1 pb-6">
+          <div className="px-5 pt-1 pb-2">
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.date}
             </div>
             <DateField value={date} onChange={setDate} open={open} />
+          </div>
+
+          {/* Shared notes / memo (optional, both partners can read + write). */}
+          <div className="px-5 pt-3 pb-6" style={{ borderTop: '1px solid var(--hairline)' }}>
+            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              {t.addSheet.notesLabel}
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t.addSheet.notesPlaceholder}
+              maxLength={2000}
+              rows={3}
+              className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
+              style={{ color: 'var(--ink)' }}
+            />
           </div>
 
           {isEdit && (

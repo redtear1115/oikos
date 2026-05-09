@@ -21,6 +21,7 @@ export interface CreateTransactionInput {
   payerId: string             // user.id of payer (must be in group)
   transactedAt: Date
   assetId?: string | null
+  notes?: string | null
 }
 
 export async function createTransaction(input: CreateTransactionInput): Promise<{ id: string }> {
@@ -68,6 +69,7 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
         splitType: validated.splitType,
         description: validated.description,
         category: validated.category,
+        notes: validated.notes,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
       })
@@ -121,6 +123,7 @@ export interface EditTransactionInput {
   payerId: string
   transactedAt: Date
   assetId?: string | null
+  notes?: string | null
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
@@ -193,6 +196,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         splitType: validated.splitType,
         description: validated.description,
         category: validated.category,
+        notes: validated.notes,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
       })
@@ -222,6 +226,7 @@ export interface PagedTxnRow {
   kind: FeedKind
   assetId: string | null
   fuelLogId: string | null  // non-null when row was created by a FuelLog dual-write
+  notes: string | null  // shared memo on a CashTransaction; null for settlements/income/empty
 }
 
 export async function loadMoreTransactions(
@@ -272,6 +277,7 @@ export async function loadMoreTransactions(
     kind: r.kind,
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
+    notes: r.notes ?? null,
   }))
 }
 
@@ -307,6 +313,7 @@ export async function loadMoreFeedAll(
     kind: r.kind,
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
+    notes: r.notes ?? null,
   }))
 }
 
@@ -343,5 +350,6 @@ export async function loadMoreTransactionsForAsset(
     kind: r.kind,
     assetId: r.assetId ?? null,
     fuelLogId: r.fuelLogId ?? null,
+    notes: r.notes ?? null,
   }))
 }

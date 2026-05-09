@@ -74,6 +74,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId,
+      notes: tx.notes,
     })
   }
 

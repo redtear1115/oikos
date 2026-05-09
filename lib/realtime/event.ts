@@ -16,6 +16,7 @@ export interface TxnRowPayload {
   splitType: SplitType
   description: string
   category: string
+  notes: string | null
   transactedAt: string  // ISO
   createdAt: string     // ISO
   deletedAt: string | null  // ISO when soft-deleted

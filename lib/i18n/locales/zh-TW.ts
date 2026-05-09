@@ -116,6 +116,8 @@ export type Translations = {
     assetLink: string
     splitMethod: string
     date: string
+    notesLabel: string
+    notesPlaceholder: string
     deleteOne: string
     deleteConfirmTitle: string
     errors: {
@@ -515,6 +517,8 @@ export const zhTW: Translations = {
     assetLink: '關聯愛物（選填）',
     splitMethod: '分攤方式',
     date: '日期',
+    notesLabel: '備註（選填，兩人都看得到）',
+    notesPlaceholder: '寫一句留給對方的話，或之後想記得的事',
     deleteOne: '刪除這筆',
     deleteConfirmTitle: '刪除這筆紀錄？',
     errors: {

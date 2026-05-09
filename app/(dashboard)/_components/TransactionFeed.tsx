@@ -125,6 +125,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         kind: 'transaction' as const,
         assetId: row.assetId ?? null,
         fuelLogId: null,  // realtime payload doesn't carry this; fuel-log events handled separately
+        notes: row.notes ?? null,
       }
       if (filter) {
         const f: FilterableRow = { paidBy: row.paidBy, splitType: row.splitType, category: row.category, kind: 'transaction' }
@@ -173,6 +174,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           kind: 'settlement' as const,
           assetId: null,
           fuelLogId: null,
+          notes: null,
         }
         if (filter) {
           const f: FilterableRow = { paidBy: row.paidBy, splitType: null, category: 'settle', kind: 'settlement' }

@@ -62,6 +62,22 @@ describe('validateTransactionInput', () => {
   it('rejects invalid amount', () => {
     expect(() => validateTransactionInput({ ...baseValid, amount: 0 })).toThrow(/金額必須是正整數/)
   })
+  it('defaults notes to null when omitted', () => {
+    const r = validateTransactionInput(baseValid)
+    expect(r.notes).toBeNull()
+  })
+  it('trims notes and keeps non-empty', () => {
+    const r = validateTransactionInput({ ...baseValid, notes: '  下次別忘了  ' })
+    expect(r.notes).toBe('下次別忘了')
+  })
+  it('treats whitespace-only notes as null', () => {
+    const r = validateTransactionInput({ ...baseValid, notes: '   ' })
+    expect(r.notes).toBeNull()
+  })
+  it('rejects notes exceeding the cap', () => {
+    expect(() => validateTransactionInput({ ...baseValid, notes: 'x'.repeat(2001) }))
+      .toThrow(/備註最長 2000 字/)
+  })
 })
 
 describe('validateSettlementInput', () => {

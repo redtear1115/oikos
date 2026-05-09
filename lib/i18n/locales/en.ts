@@ -118,6 +118,8 @@ export const en: Translations = {
     assetLink: 'Link to asset (optional)',
     splitMethod: 'Split',
     date: 'Date',
+    notesLabel: 'Note (optional, visible to both of you)',
+    notesPlaceholder: 'Leave a line for your partner, or something to remember later',
     deleteOne: 'Delete this entry',
     deleteConfirmTitle: 'Delete this entry?',
     errors: {

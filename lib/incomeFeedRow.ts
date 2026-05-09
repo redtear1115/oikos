@@ -17,6 +17,7 @@ export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
     kind: 'income' as const,
     assetId: r.assetId,
     fuelLogId: null,
+    notes: null,
   }
 }
 

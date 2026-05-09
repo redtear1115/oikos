@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
-import { mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
+import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
@@ -61,6 +61,35 @@ describe('createTransaction', () => {
       splitType: 'half', payerId: 'user-stranger', transactedAt: new Date(),
     })).rejects.toThrow('付款人不在家計簿內')
   })
+
+  it('persists trimmed notes on insert', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'tx-1' }])
+
+    await createTransaction({
+      amount: 100, description: '午餐', category: 'dining',
+      splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date('2026-05-03'),
+      notes: '  下次別忘了  ',
+    })
+
+    const insertPayload = mockBuilder.values.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(insertPayload.notes).toBe('下次別忘了')
+  })
+
+  it('stores notes as null when omitted', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'tx-1' }])
+
+    await createTransaction({
+      amount: 100, description: '午餐', category: 'dining',
+      splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date('2026-05-03'),
+    })
+
+    const insertPayload = mockBuilder.values.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(insertPayload.notes).toBeNull()
+  })
 })
 
 describe('editTransaction', () => {
@@ -103,6 +132,24 @@ describe('editTransaction', () => {
       category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: new Date(),
     })).rejects.toThrow('Unauthorized')
+  })
+
+  it('passes notes through on edit (validated)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ assetId: null }])
+    queueDbResult([{ id: 'tx-old' }])
+    queueDbResult([{ id: 'tx-new' }])
+
+    await editTransaction({
+      oldId: 'tx-old',
+      amount: 200, description: 'updated', category: 'dining',
+      splitType: 'half', payerId: 'user-a',
+      transactedAt: new Date('2026-05-03'),
+      notes: '改成這樣 ',
+    })
+
+    const insertPayload = mockBuilder.values.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(insertPayload.notes).toBe('改成這樣')
   })
 })
 
