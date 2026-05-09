@@ -11,6 +11,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.11.4] - 2026-05-09
+
+### Added
+- **`AssetListItem` 六種愛物類型 tint + 「儲蓄」badge**（PR #30，closes #28）：`app/globals.css` 新增六色 CSS vars（`--asset-tint-{house,car,child,pet,plant,insurance}`）；`AssetListItem` 圖示框由 `--surface-alt` 改為 per-type tint，每列再加 3px 左側 accent rail 同色系。`InsuranceDetails.insurance_type === 'savings'` 時 subtitle 列顯示 11px monospace 「儲蓄」badge（`--saving-soft` 底 / `--saving` 字）。`listAssetsForGroup` LEFT JOIN `InsuranceDetails` 暴露 `insuranceType`，`page.tsx` 推導 `isSavings` 並串到 `AssetsListClient` → `AssetListItem`。
+
+### Fixed
+- **`public/og-image.png` 從 768 KB 壓到 95 KB**（PR #29，closes #25）：原圖超過社群平台 ~300 KB 抓取上限，導致 Twitter / Facebook 預覽 fallback 為無圖。用 ImageMagick 256-color palette quantize（`magick og-image.png -strip -colors 256 -define png:compression-level=9 og-image.png`），壓縮 ~88%；視覺檢查設計師原稿的顆粒質感、雙人剪影、Futari wordmark 在預覽尺寸下無 banding。`app/layout.tsx` metadata 路徑不變。
+
 ## [0.11.3] - 2026-05-08
 
 ### Added
@@ -30,15 +38,17 @@ _Nothing unreleased yet._
   - `openGraph.url` 由 `/`（會 307）改為 `/sign-in`、加 `alternateLocale`、`og:image:alt` 含關鍵字
   - Twitter card 同步描述與標題
 
+### SEO impact
+- 對外可見項目：實際 GET `/robots.txt`、`/sitemap.xml` 改為 200 帶內容（原為 307）；`/sign-in` 帶完整 meta + JSON-LD + 語意 `<h1>`。
+- 限制：站內仍只有 `/sign-in` 一個公開可索引頁；要拉 SEO 流量天花板需要日後另開 `/` 公開 landing（非本版範圍）。
+
+## [0.11.2] - 2026-05-08
+
 ### Performance
 - **CSS bundle 瘦身：drop unused font weights**（`b315565`）：稽核 `app/` / `components/` / `lib/` 後確認 `font-bold` / `fontWeight: 700` 與 Fraunces weight 600 完全無 caller。Noto Sans TC 每個 weight 因 Google Fonts 以 unicode-range 切片發送（即使指定 `latin` subset 也會帶全部 ~105 個 `@font-face`），單一未用 weight 就讓 font CSS 膨脹 ~25%。Noto Sans TC 4→3 weights、Fraunces 3→2 weights，主 font CSS chunk 397 KB → 298 KB raw（-25%）／ 144 KB → 108 KB gzipped。視覺零變化。
 - **`/settings` RSC fetch 並行化**（`da9309c`）：`getCurrentUser` + `getLocale`、`viewerProfile` + group queries 原本串行；改為各自獨立的兩組 `Promise.all`，省掉短查詢 ~30–80ms 的等待 + `getLocale` 的 cookie 讀取延遲。
 - **BottomNav full prefetch**（`a46d676`）：Next 16 中 `prefetch={undefined}` 在 dynamic route 上只預取到最近的 `loading.js` 邊界，導致 `/records` 切換時 skeleton 已預取但 `listFeedAllPaged` 仍在 click 後才跑、可見一段卡頓。改 `prefetch={true}` 在 `requestIdleCallback` 觸發時預取完整 RSC payload（含資料）。PR #2 的 idle gating 保留。
 - **`/assets` batch GROUP BY query**（`2ecfeda`）：原本 N 個 asset 各跑一次 `getAssetSummary`（N×round-trip）；新增 `getAssetSummariesBatch`，用單一 `SUM ... GROUP BY asset_id` 取代。清單頁 batch summary + childNicknames + per-car heroStats 全部並行，項目同步組裝。N 個 asset 由 N 次 round-trip 縮為 1 次，節省 (N-1)×~30–80ms。Friend test 典型 5–8 個 asset → `/assets` RSC 預期省 120–560ms。詳情頁 single 版 `getAssetSummary` 保留，測試不受影響。
-
-### SEO impact
-- 對外可見項目：實際 GET `/robots.txt`、`/sitemap.xml` 改為 200 帶內容（原為 307）；`/sign-in` 帶完整 meta + JSON-LD + 語意 `<h1>`。
-- 限制：站內仍只有 `/sign-in` 一個公開可索引頁；要拉 SEO 流量天花板需要日後另開 `/` 公開 landing（非本版範圍）。
 
 ## [0.11.1] - 2026-05-08
 
@@ -307,8 +317,10 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.11.3...HEAD
-[0.11.3]: https://github.com/redtear1115/oikos/compare/v0.11.1...v0.11.3
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.11.4...HEAD
+[0.11.4]: https://github.com/redtear1115/oikos/compare/v0.11.3...v0.11.4
+[0.11.3]: https://github.com/redtear1115/oikos/compare/v0.11.2...v0.11.3
+[0.11.2]: https://github.com/redtear1115/oikos/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/redtear1115/oikos/compare/v0.10.0...v0.11.1
 [0.10.0]: https://github.com/redtear1115/oikos/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/redtear1115/oikos/compare/v0.8.1...v0.9.0
