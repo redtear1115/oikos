@@ -9,12 +9,16 @@
   --ink-2: #7A5848;
   --ink-3: #B89C8B;
   --hairline: rgba(58, 36, 25, 0.10);
+  --grabber: rgba(58, 36, 25, 0.18);  /* sheet drag-handle bar */
   --accent: #E08856;
   --accent-soft: #F8D9C2;
   --credit: #7A9F7E;
   --debit: #D17561;
+  --debit-soft: rgba(209, 117, 97, 0.10);  /* error message bg tint */
   --destructive: #B85A48;        /* deeper red for destructive actions (logout, delete) */
   --destructive-soft: rgba(184, 90, 72, 0.25);  /* outline / hairline variant */
+  --warning: #B45309;            /* amber for paused / warning states */
+  --warning-soft: rgba(180, 83, 9, 0.12);  /* paused pill badge bg */
   --realtime-flash: #fffbe8;
 
   /* Per-asset-type tints — soft warm hues for icon box bg + 3px left rail. */
