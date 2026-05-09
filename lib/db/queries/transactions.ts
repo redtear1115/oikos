@@ -298,3 +298,19 @@ export async function listAllActiveCashTransactionsForExport(
     ))
     .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
 }
+
+/**
+ * Active CashTransaction count for a group (excludes soft-deleted rows). Used
+ * by the dashboard's first-record card gate (show iff count === 1) and is the
+ * scaffolding for future milestone messages (#100, etc.) that key off counts.
+ */
+export async function getActiveTransactionCount(groupId: string): Promise<number> {
+  const rows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(cashTransactions)
+    .where(and(
+      eq(cashTransactions.groupId, groupId),
+      isNull(cashTransactions.deletedAt),
+    ))
+  return rows[0]?.count ?? 0
+}
