@@ -1,27 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+
+const STORAGE_KEY_PREFIX = 'oikos_first_record_card_seen_'
 
 interface Props {
   show: boolean
+  onDismiss: () => void
 }
 
 /**
- * Phase C of issue #43. Visible iff the group has exactly one active
- * CashTransaction. Naturally idempotent — disappears when the group adds a
- * second record. No persistence: dismissal is session-local; reload while
- * still at count==1 will re-show (acceptable; the user is still "at their
- * first record").
+ * Phase C of issue #43. Lit by Dashboard's `showFirstCard` state, which flips
+ * true when the most recent createTransaction reported isFirstTransaction.
+ *
+ * Refresh-safety: on first render with show=true, immediately set a per-user
+ * localStorage flag (oikos_first_record_card_seen_{userId}). If `show` flips
+ * true again later (e.g., user deleted their first row and recreated, server
+ * reports isFirstTransaction again) AND the flag is already set, we call
+ * onDismiss right away so the parent state flips back and we never re-render.
  *
  * Non-blocking: sits above BottomNav at bottom: 96 so the rest of the UI
  * stays interactive.
  */
-export function FirstRecordCard({ show }: Props) {
+export function FirstRecordCard({ show, onDismiss }: Props) {
   const t = useTranslations()
-  const [dismissed, setDismissed] = useState(false)
+  const { viewer } = useMember()
+  const storageKey = `${STORAGE_KEY_PREFIX}${viewer.id}`
 
-  if (!show || dismissed) return null
+  useEffect(() => {
+    if (!show) return
+    if (typeof window === 'undefined') return
+    if (window.localStorage.getItem(storageKey) === 'true') {
+      // User has already seen the card on this device — bail out.
+      onDismiss()
+      return
+    }
+    window.localStorage.setItem(storageKey, 'true')
+  }, [show, storageKey, onDismiss])
+
+  if (!show) return null
 
   return (
     <div
@@ -40,7 +59,7 @@ export function FirstRecordCard({ show }: Props) {
       >
         <button
           type="button"
-          onClick={() => setDismissed(true)}
+          onClick={onDismiss}
           aria-label={t.firstRecordCard.closeAriaLabel}
           className="absolute right-3 top-2 bg-transparent border-0 cursor-pointer p-1 text-title leading-none"
           style={{ color: 'var(--ink-3)' }}
@@ -55,7 +74,7 @@ export function FirstRecordCard({ show }: Props) {
         </p>
         <button
           type="button"
-          onClick={() => setDismissed(true)}
+          onClick={onDismiss}
           className="w-full h-[42px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer"
           style={{ background: 'var(--ink)' }}
         >

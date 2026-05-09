@@ -55,7 +55,6 @@ export interface DashboardProps {
   incomeMonthCount: number
   recentIncomeLabel: string | null
   pendings: PendingRow[]
-  showFirstRecordCard: boolean
   feedDataPromise: Promise<DashboardFeedData>
 }
 
@@ -66,7 +65,6 @@ export function Dashboard({
   incomeMonthCount,
   recentIncomeLabel,
   pendings,
-  showFirstRecordCard,
   feedDataPromise,
 }: DashboardProps) {
   const router = useRouter()
@@ -103,6 +101,12 @@ export function Dashboard({
     primaryUserId: string | null
   } | null>(null)
   const [, startFuelLoad] = useTransition()
+
+  // First-record theory card visibility (#43 phase C). Lit by AddSheet's
+  // onMutated when createTransaction reports isFirstTransaction=true; persists
+  // across the router.refresh() that the same callback triggers because
+  // refresh re-runs the server tree without unmounting client state.
+  const [showFirstCard, setShowFirstCard] = useState(false)
 
   // Lightweight transient toast (e.g. partner-race notice from IncomeSheet).
   const [toast, setToast] = useState<string | null>(null)
@@ -206,7 +210,10 @@ export function Dashboard({
   const handleClose = () => dispatch({ kind: 'closed' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
 
-  const handleMutated = () => router.refresh()
+  const handleMutated = (info?: { isFirstTransaction?: boolean }) => {
+    if (info?.isFirstTransaction) setShowFirstCard(true)
+    router.refresh()
+  }
 
   const addOrIncome = mode === 'income' ? 'income' : 'add'
 
@@ -345,7 +352,10 @@ export function Dashboard({
         </div>
       )}
 
-      <FirstRecordCard show={showFirstRecordCard} />
+      <FirstRecordCard
+        show={showFirstCard}
+        onDismiss={() => setShowFirstCard(false)}
+      />
     </div>
   )
 }
