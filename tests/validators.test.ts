@@ -80,6 +80,52 @@ describe('validateTransactionInput', () => {
   })
 })
 
+describe('validateTransactionInput — weighted split', () => {
+  const base = {
+    amount: 1000,
+    description: '測試',
+    category: 'dining',
+    payerId: 'user-a',
+    transactedAt: new Date(),
+  }
+
+  it('weighted with valid splitRatioA passes', () => {
+    const result = validateTransactionInput({ ...base, splitType: 'weighted', splitRatioA: 30 })
+    expect(result.splitType).toBe('weighted')
+    expect(result.splitRatioA).toBe(30)
+  })
+
+  it('weighted with splitRatioA = 1 passes (min)', () => {
+    expect(() => validateTransactionInput({ ...base, splitType: 'weighted', splitRatioA: 1 })).not.toThrow()
+  })
+
+  it('weighted with splitRatioA = 99 passes (max)', () => {
+    expect(() => validateTransactionInput({ ...base, splitType: 'weighted', splitRatioA: 99 })).not.toThrow()
+  })
+
+  it('weighted without splitRatioA throws', () => {
+    expect(() => validateTransactionInput({ ...base, splitType: 'weighted', splitRatioA: undefined })).toThrow('分攤比例')
+  })
+
+  it('weighted with splitRatioA = 0 throws', () => {
+    expect(() => validateTransactionInput({ ...base, splitType: 'weighted', splitRatioA: 0 })).toThrow('分攤比例')
+  })
+
+  it('weighted with splitRatioA = 100 throws', () => {
+    expect(() => validateTransactionInput({ ...base, splitType: 'weighted', splitRatioA: 100 })).toThrow('分攤比例')
+  })
+
+  it('half splitType keeps splitRatioA null', () => {
+    const result = validateTransactionInput({ ...base, splitType: 'half', splitRatioA: 30 })
+    expect(result.splitRatioA).toBeNull()
+  })
+
+  it('all_mine splitType keeps splitRatioA null', () => {
+    const result = validateTransactionInput({ ...base, splitType: 'all_mine' })
+    expect(result.splitRatioA).toBeNull()
+  })
+})
+
 describe('validateSettlementInput', () => {
   const baseValid = {
     amount: 100,
