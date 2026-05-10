@@ -264,7 +264,6 @@ export function Dashboard({
       ) : (
         <BalanceHero
           rawBalance={balance}
-          onAddClick={() => dispatch({ kind: addOrIncome })}
           onSettleMutated={handleMutated}
           mode={mode}
           onModeChange={setMode}
