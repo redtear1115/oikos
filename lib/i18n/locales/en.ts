@@ -198,8 +198,6 @@ export const en: Translations = {
       summaryNetIncome: 'Net income +{amount}',
       summaryNetExpense: 'Net expense {amount}',
       summaryNetEven: 'Break even',
-      incomeWipTitle: '🚧 Income breakdown coming soon',
-      incomeWipHint: 'A pie chart of income categories will appear here',
     },
   },
 

@@ -5,6 +5,7 @@ import {
   monthlyStatsByAsset,
   getGroupCreationMonthKey,
 } from '@/lib/db/queries/transactions'
+import { monthlyIncomeStatsByCategory } from '@/lib/db/queries/incomes'
 
 beforeEach(() => resetDbMocks())
 
@@ -50,6 +51,27 @@ describe('monthlyStatsByAsset', () => {
     ])
     const rows = await monthlyStatsByAsset('grp-1', '2026-05')
     expect(rows[0].name).toBe('舊車（已刪）')
+  })
+})
+
+describe('monthlyIncomeStatsByCategory', () => {
+  it('returns rows mapped from raw SQL output (sorted desc by total)', async () => {
+    queueDbResult([
+      { category: 'salary', total: 75000, count: 1 },
+      { category: 'sidehustle', total: 12000, count: 3 },
+    ])
+    const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05')
+    expect(rows).toEqual([
+      { key: 'salary', total: 75000, count: 1 },
+      { key: 'sidehustle', total: 12000, count: 3 },
+    ])
+    expect(mockDb.execute).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns an empty array when no rows match', async () => {
+    queueDbResult([])
+    const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05')
+    expect(rows).toEqual([])
   })
 })
 

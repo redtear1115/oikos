@@ -198,8 +198,6 @@ export const ja: Translations = {
       summaryNetIncome: '純収入 +{amount}',
       summaryNetExpense: '純支出 {amount}',
       summaryNetEven: '収支均衡',
-      incomeWipTitle: '🚧 収入カテゴリ統計を開発中',
-      incomeWipHint: '後ほどカテゴリ別の円グラフを表示予定です',
     },
   },
 

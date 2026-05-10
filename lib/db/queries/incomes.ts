@@ -75,3 +75,36 @@ export async function listIncomeMonthSummary(
   `)
   return { total: parseInt(row.total, 10), count: parseInt(row.count, 10) }
 }
+
+export interface IncomeCategoryStatRow {
+  /** IncomeCategoryId — `salary` / `bonus` / `maturity` / etc. */
+  key: string
+  total: number
+  count: number
+}
+
+/**
+ * Sum active IncomeTransactions for a group within a local-Taipei calendar
+ * month, grouped by category, ordered by total desc. Mirrors
+ * `monthlyStatsByCategory` but for the income side. occurred_at is a `date`
+ * column (no tz conversion needed — it's already day-level).
+ */
+export async function monthlyIncomeStatsByCategory(
+  groupId: string,
+  monthKey: string,  // 'YYYY-MM'
+): Promise<IncomeCategoryStatRow[]> {
+  const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
+    SELECT
+      category,
+      SUM(amount)::int AS total,
+      COUNT(*)::int AS count
+    FROM "IncomeTransactions"
+    WHERE group_id = ${groupId}
+      AND deleted_at IS NULL
+      AND occurred_at >= ${monthKey + '-01'}::date
+      AND occurred_at <  (${monthKey + '-01'}::date + INTERVAL '1 month')
+    GROUP BY category
+    ORDER BY total DESC
+  `)
+  return rows.map((r) => ({ key: r.category, total: r.total, count: r.count }))
+}
