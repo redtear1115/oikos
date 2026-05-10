@@ -9,6 +9,7 @@ export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
     id: r.id,
     amount: r.amount,
     splitType: null,
+    splitRatioA: null,
     description: r.source ?? '',
     category: r.category,
     paidBy: r.recipientId,

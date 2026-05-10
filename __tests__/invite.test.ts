@@ -15,8 +15,9 @@ const baseGroup = {
   id: 'grp-1',
   name: '我們家',
   memberA: 'user-a',
-  memberB: null,
+  memberB: null as string | null,
   createdAt: new Date(),
+  defaultSplitRatioA: null as number | null,
 }
 
 describe('validateInviteAcceptance', () => {

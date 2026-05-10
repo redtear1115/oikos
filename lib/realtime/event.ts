@@ -14,6 +14,7 @@ export interface TxnRowPayload {
   paidBy: string
   amount: number
   splitType: SplitType
+  splitRatioA: number | null
   description: string
   category: string
   notes: string | null

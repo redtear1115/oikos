@@ -133,6 +133,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
       description: tx.description,
       category: tx.category,
       splitType: tx.splitType!,
+      splitRatioA: tx.splitRatioA ?? null,
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId: tx.assetId,

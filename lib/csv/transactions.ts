@@ -55,6 +55,7 @@ function splitTypeLabel(raw: SplitType, t: Translations['splitType']): string {
     case 'half':       return t.even
     case 'all_mine':   return t.allMine
     case 'all_theirs': return t.allPartners
+    case 'weighted':   return (t as Record<string, string>).weighted ?? raw
   }
 }
 

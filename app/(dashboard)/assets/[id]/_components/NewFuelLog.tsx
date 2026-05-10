@@ -74,7 +74,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     return 'M'
   }, [car.primaryUserId, partner])
 
-  const defaultSplit = useMemo<SplitType>(() => {
+  const defaultSplit = useMemo<'all_mine' | 'all_theirs' | 'half'>(() => {
     if (!partner) return 'all_mine'
     if (car.primaryUserId === null) return 'half'
     return 'all_mine'
@@ -85,7 +85,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
   const [cost, setCost] = useState('')
   const [fuelType, setFuelType] = useState<GasFuelType>(toGasFuelType(car.fuelType))
   const [payerWho, setPayerWho] = useState<'M' | 'T'>(defaultPayerWho)
-  const [split, setSplit] = useState<SplitType>(defaultSplit)
+  const [split, setSplit] = useState<'all_mine' | 'all_theirs' | 'half'>(defaultSplit)
   const [date, setDate] = useState(() => localTodayISO())
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
       setCost(String(initial.cost))
       setFuelType(initial.fuelType)
       setPayerWho(initial.paidBy === viewer.id ? 'M' : 'T')
-      setSplit(initial.splitType)
+      setSplit(initial.splitType as 'all_mine' | 'all_theirs' | 'half')
       setDate(isoToLocalDate(initial.loggedAt))
     } else {
       setLiters('')
@@ -334,9 +334,11 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               <span className="text-micro text-[var(--ink-2)] tracking-[0.4px]">分攤方式</span>
               <SplitTypeSelector
                 value={split}
-                onChange={setSplit}
+                onChange={(s) => { if (s !== 'weighted') setSplit(s) }}
                 amount={costNum}
                 payerWho={payerWho}
+                splitRatioA={50}
+                onSplitRatioAChange={() => {}}
               />
             </div>
           )}

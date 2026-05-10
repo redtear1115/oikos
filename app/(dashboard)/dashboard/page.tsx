@@ -117,6 +117,7 @@ export default async function DashboardPage() {
       id: r.id,
       amount: r.amount,
       splitType: r.splitType,
+      splitRatioA: r.splitRatioA ?? null,
       description: r.description,
       category: r.category,
       paidBy: r.paidBy,
@@ -164,6 +165,7 @@ export default async function DashboardPage() {
         pendings={pendings}
         expensePendings={expensePendings}
         feedDataPromise={feedDataPromise}
+        groupDefaultRatioA={group.defaultSplitRatioA ?? null}
       />
     </>
   )

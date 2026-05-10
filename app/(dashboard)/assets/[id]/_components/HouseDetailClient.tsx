@@ -75,6 +75,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
       description: tx.description,
       category: tx.category,
       splitType: tx.splitType!,
+      splitRatioA: tx.splitRatioA ?? null,
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId,

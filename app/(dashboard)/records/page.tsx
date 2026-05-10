@@ -47,6 +47,7 @@ export default async function RecordsPage({
     id: r.id,
     amount: r.amount,
     splitType: r.splitType,
+    splitRatioA: r.splitRatioA ?? null,
     description: r.description,
     category: r.category,
     paidBy: r.paidBy,
