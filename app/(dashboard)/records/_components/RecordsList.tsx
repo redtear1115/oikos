@@ -258,6 +258,12 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
         )}
       </div>
 
+      {/* Stats above the transaction feed — user-test feedback: 統計往下捲才
+          看得到太遠，移到月份切換 / 標題下方第一個 section。Collapse can
+          be used to compress when the user wants to focus on the list.
+          Hide on the income-only tab (stats are 純支出視角 per spec). */}
+      {tab === 'income' ? null : statsSlot}
+
       {/* Each child below is a stable JSX sibling — React reconciles them by
           position, not as a list. We deliberately render `null` (rather than
           mounting a hidden TransactionFeed per tab) so only one feed exists
@@ -281,10 +287,6 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
             )
         }
       />
-
-      {/* Stats are 純支出視角 (spec). Hide on the income-only tab to avoid
-          mixing two unrelated framings on the same screen. */}
-      {tab === 'income' ? null : statsSlot}
 
       <BottomNav onAddClick={() => setAdding(true)} hideFab={sheetOpen} />
 
