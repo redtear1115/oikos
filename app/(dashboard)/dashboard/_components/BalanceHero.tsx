@@ -102,7 +102,7 @@ export function BalanceHero({
   }
 
   return (
-    <div className="px-5 pt-6 pb-5">
+    <div className={`px-5 pt-6 ${heroCollapsed ? 'pb-3' : 'pb-5'}`}>
       <ModeTogglePlaceholder
         mode={mode}
         onChange={onModeChange}
@@ -116,31 +116,25 @@ export function BalanceHero({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="w-full flex items-center justify-between bg-transparent border-0 cursor-pointer p-0 py-2"
+            className="w-full flex items-center justify-between bg-transparent border-0 cursor-pointer p-0 py-1"
           >
             <span
               style={{
                 fontFamily: 'var(--font-numeric)',
-                fontSize: 'var(--fs-amount-md)',
+                fontSize: 'var(--fs-body)',
                 fontWeight: 600,
                 color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
-                letterSpacing: '-1.2px',
+                letterSpacing: '-0.6px',
                 fontFeatureSettings: '"tnum"',
               }}
             >
               {incomeMonthTotal > 0 ? `+NT$${incomeMonthTotal.toLocaleString('en-US')}` : 'NT$0'}
             </span>
             <span
-              style={{
-                color: 'var(--ink-3)',
-                display: 'inline-block',
-                transform: 'rotate(180deg)',
-                fontSize: 'var(--fs-title)',
-                lineHeight: 1,
-              }}
+              style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, fontWeight: 400 }}
               aria-hidden="true"
             >
-              ⌄
+              +
             </span>
           </button>
         ) : (
@@ -157,10 +151,10 @@ export function BalanceHero({
               type="button"
               onClick={toggleCollapsed}
               className="absolute top-3 right-4 bg-transparent border-0 cursor-pointer p-0"
-              style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-title)', lineHeight: 1 }}
+              style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, fontWeight: 400 }}
               aria-label="collapse"
             >
-              ⌄
+              −
             </button>
             <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2 }}>
               {t.balanceHero.monthlyIncome}
@@ -210,38 +204,39 @@ export function BalanceHero({
           </div>
         )
       ) : heroCollapsed ? (
-        // Expense collapsed — one line
+        // Expense collapsed — compact row with name + amount + expand button
         <button
           type="button"
           onClick={toggleCollapsed}
-          className="w-full flex items-center gap-3 bg-transparent border-0 cursor-pointer p-0 py-2"
+          className="w-full flex items-center gap-3 bg-transparent border-0 cursor-pointer p-0 py-1"
         >
-          <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={36} />
+          <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
+          <div className="flex-1 min-w-0">
+            <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-2)', lineHeight: 1.3 }}>
+              <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{subjectName}</span>{' '}
+              <span>{verb}</span>
+            </div>
+            <div
+              className="tnum transition-opacity duration-150"
+              style={{
+                fontFamily: 'var(--font-numeric)',
+                fontSize: 'var(--fs-body)',
+                fontWeight: 600,
+                color: 'var(--ink)',
+                letterSpacing: '-0.6px',
+                opacity: fading ? 0 : 1,
+                marginTop: 1,
+              }}
+            >
+              <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 500, color: 'var(--ink-2)', marginRight: 2 }}>NT$</span>
+              {amount.toLocaleString('en-US')}
+            </div>
+          </div>
           <span
-            className="flex-1 tnum leading-[1.05] transition-opacity duration-150"
-            style={{
-              fontFamily: 'var(--font-numeric)',
-              fontSize: 'var(--fs-amount-md)',
-              fontWeight: 600,
-              color: 'var(--ink)',
-              letterSpacing: '-1.2px',
-              opacity: fading ? 0 : 1,
-            }}
-          >
-            <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
-            {amount.toLocaleString('en-US')}
-          </span>
-          <span
-            style={{
-              color: 'var(--ink-3)',
-              display: 'inline-block',
-              transform: 'rotate(180deg)',
-              fontSize: 'var(--fs-title)',
-              lineHeight: 1,
-            }}
+            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, fontWeight: 400, flexShrink: 0 }}
             aria-hidden="true"
           >
-            ⌄
+            +
           </span>
         </button>
       ) : (
@@ -251,10 +246,10 @@ export function BalanceHero({
             type="button"
             onClick={toggleCollapsed}
             className="absolute top-0 right-0 bg-transparent border-0 cursor-pointer p-0"
-            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-title)', lineHeight: 1, zIndex: 1 }}
+            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, zIndex: 1, fontWeight: 400 }}
             aria-label="collapse"
           >
-            ⌄
+            −
           </button>
 
           <button
