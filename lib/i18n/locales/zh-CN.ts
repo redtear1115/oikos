@@ -198,6 +198,8 @@ export const zhCN: Translations = {
       summaryNetIncome: '净收入 +{amount}',
       summaryNetExpense: '净支出 {amount}',
       summaryNetEven: '持平',
+      incomeWipTitle: '🚧 收入分类统计开发中',
+      incomeWipHint: '之后会在这里看到分类圆饼图',
     },
   },
 

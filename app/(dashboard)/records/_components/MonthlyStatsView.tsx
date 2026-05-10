@@ -66,19 +66,16 @@ export function MonthlyStatsView({
     }
   }
 
-  // Forced compact wins over user preference. Two triggers:
-  // - server flag (pre-creation month — no data worth visualising)
-  // - income tab — we don't have income-category breakdown yet, so the only
-  //   meaningful surface is the summary line.
-  // TODO(stats-income): when income breakdown ships, lift the income-tab
-  // force-compact and let users expand. Side-effect today: the records-feed
-  // section below sits at a slightly different vertical offset on income tab
-  // vs. expense/all because the stats card is shorter.
-  const effectiveForceCompact = forceCompact || tab === 'income'
-  const showCollapsed = effectiveForceCompact || (mounted && collapsed)
-  const allowToggle = !effectiveForceCompact
+  // Forced compact only for pre-creation months (no data worth visualising).
+  // Income tab used to force-compact too, but that produced a visibly shorter
+  // stats card and threw off the records feed's vertical offset; we now show
+  // a WIP placeholder on income-tab expanded so heights stay aligned across
+  // tabs while the income-category breakdown query is still TODO.
+  const showCollapsed = forceCompact || (mounted && collapsed)
+  const allowToggle = !forceCompact
   const isEmpty = expenseTotal === 0 && incomeTotal === 0
   const hasExpenses = expenseTotal > 0
+  const isIncomeTab = tab === 'income'
 
   const title =
     tab === 'all' ? t.records.stats.titleAll
@@ -95,11 +92,12 @@ export function MonthlyStatsView({
           {title}
         </h2>
         {/* Title-row controls only when expanded AND has content AND toggle
-            is allowed. In collapsed mode the controls live inline with the
-            summary row. */}
+            is allowed. The breakdown toggle is hidden on income tab because
+            it controls the (expense) breakdown surface, which is replaced
+            by a WIP placeholder until the income-category query ships. */}
         {!isEmpty && !showCollapsed && allowToggle && (
           <div className="flex items-center gap-2">
-            {hasExpenses && <StatsBreakdownToggle value={view} />}
+            {hasExpenses && !isIncomeTab && <StatsBreakdownToggle value={view} />}
             <ToggleButton onClick={toggle} ariaLabel={t.records.stats.collapse} expanded>
               −
             </ToggleButton>
@@ -128,6 +126,32 @@ export function MonthlyStatsView({
             </ToggleButton>
           )}
         </div>
+      ) : isIncomeTab ? (
+        // Income tab expanded: summary line + visible WIP placeholder. The
+        // placeholder is sized to roughly match the donut + bars block on
+        // expense / all tabs so the records feed below sits at a similar
+        // vertical offset across tabs.
+        <>
+          <div className="mt-2 mb-4">
+            <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
+          </div>
+          <div
+            className="flex flex-col items-center justify-center text-center px-6"
+            style={{
+              minHeight: 240,
+              border: '1px dashed var(--hairline)',
+              borderRadius: 16,
+              background: 'var(--surface)',
+            }}
+          >
+            <div className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>
+              {t.records.stats.incomeWipTitle}
+            </div>
+            <div className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>
+              {t.records.stats.incomeWipHint}
+            </div>
+          </div>
+        </>
       ) : (
         // Expanded: donut chart on top, then total line, then detail-bar
         // legend (each bar's coloured chip matches its pie slice). Stacked
