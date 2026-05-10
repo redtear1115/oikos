@@ -249,7 +249,7 @@ export function AssetDetailClient({
         </div>
       )}
 
-      {/* Car detail FAB: 加油 (gas) / 其他花費 (electric) */}
+      {/* Car detail FAB: 加油 (gas) / 其他支出 (electric) */}
       <BottomNav
         onAddClick={() => {
           if (fuelType === 'electric') {

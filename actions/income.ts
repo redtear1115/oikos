@@ -89,7 +89,7 @@ export async function editIncome(input: EditIncomeInput): Promise<{ id: string }
         isNull(incomeTransactions.deletedAt),
       ))
       .returning({ id: incomeTransactions.id })
-    if (deleted.length === 0) throw new Error('找不到該筆進帳')
+    if (deleted.length === 0) throw new Error('找不到該筆收入')
 
     return await tx
       .insert(incomeTransactions)
@@ -122,7 +122,7 @@ export async function softDeleteIncome(id: string): Promise<void> {
       isNull(incomeTransactions.deletedAt),
     ))
     .limit(1)
-  if (!row) throw new Error('找不到該筆進帳')
+  if (!row) throw new Error('找不到該筆收入')
 
   await db
     .update(incomeTransactions)

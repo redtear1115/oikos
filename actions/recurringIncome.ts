@@ -181,7 +181,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
       isNull(pendingIncomeOccurrences.resolvedTxId),
     ))
     .limit(1)
-  if (!row) throw new Error('待確認進帳已被處理或找不到')
+  if (!row) throw new Error('待確認收入已被處理或找不到')
 
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
@@ -205,7 +205,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
         isNull(pendingIncomeOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingIncomeOccurrences.id })
-    if (!resolved) throw new Error('待確認進帳已被其他裝置處理')
+    if (!resolved) throw new Error('待確認收入已被其他裝置處理')
 
     return { txId: created.id }
   })
@@ -254,7 +254,7 @@ export async function editAndConfirmPending(
       isNull(pendingIncomeOccurrences.resolvedTxId),
     ))
     .limit(1)
-  if (!pending) throw new Error('待確認進帳已被處理或找不到')
+  if (!pending) throw new Error('待確認收入已被處理或找不到')
 
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
@@ -278,7 +278,7 @@ export async function editAndConfirmPending(
         isNull(pendingIncomeOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingIncomeOccurrences.id })
-    if (!resolved) throw new Error('待確認進帳已被其他裝置處理')
+    if (!resolved) throw new Error('待確認收入已被其他裝置處理')
 
     return { txId: created.id }
   })
@@ -328,6 +328,6 @@ export async function skipPending(pendingId: string): Promise<void> {
       isNull(pendingIncomeOccurrences.resolvedTxId),
     ))
     .returning({ id: pendingIncomeOccurrences.id })
-  if (!updated) throw new Error('待確認進帳已被處理或找不到')
+  if (!updated) throw new Error('待確認收入已被處理或找不到')
   revalidatePath('/dashboard')
 }

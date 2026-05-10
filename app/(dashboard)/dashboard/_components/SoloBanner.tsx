@@ -14,9 +14,9 @@ interface Props {
    *  swapping in a fallback hero. */
   onDismiss?: () => void
   /** Pending recurring-income count, threaded into ModeTogglePlaceholder so the
-   *  「進帳模式」 tab gets the same mint-dot indicator as in non-solo flows. */
+   *  「收入模式」 tab gets the same mint-dot indicator as in non-solo flows. */
   incomePendingCount?: number
-  /** Pending recurring-expense count — surfaces a dot on the 支出 pill while in 進帳 mode. */
+  /** Pending recurring-expense count — surfaces a dot on the 支出 pill while in 收入 mode. */
   expensePendingCount?: number
   mode?: 'expense' | 'income'
   onModeChange?: (mode: 'expense' | 'income') => void
