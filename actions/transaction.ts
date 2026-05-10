@@ -10,7 +10,6 @@ import { validateTransactionInput } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
-import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -264,7 +263,6 @@ export async function loadMoreTransactions(
   limit = 20,
   filterWire?: TxnFilterWire,
   monthKey?: string,
-  drillWire?: DrillFilterWire,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -296,8 +294,7 @@ export async function loadMoreTransactions(
     }
   }
 
-  const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill)
+  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
@@ -323,7 +320,6 @@ export async function loadMoreFeedAll(
   cursor: TxnCursor | null,
   limit = 20,
   monthKey?: string,
-  drillWire?: DrillFilterWire,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -336,8 +332,7 @@ export async function loadMoreFeedAll(
     .limit(1)
   if (!group) throw new Error('找不到家計簿')
 
-  const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill)
+  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

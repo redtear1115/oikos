@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/server'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor } from '@/lib/db/queries/incomes'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
-import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -163,11 +162,9 @@ export async function loadMoreIncomes(
   cursor: IncomeCursor | null,
   limit = 20,
   monthKey?: string,
-  drillWire?: DrillFilterWire,
 ): Promise<PagedIncomeRow[]> {
   const { group } = await getViewerGroup()
-  const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill)
+  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
