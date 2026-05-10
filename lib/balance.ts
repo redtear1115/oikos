@@ -1,10 +1,11 @@
-export type SplitType = 'all_mine' | 'all_theirs' | 'half'
+export type SplitType = 'all_mine' | 'all_theirs' | 'half' | 'weighted'
 export type PayerIs = 'a' | 'b'
 
 export interface TxDelta {
   amount: number
   splitType: SplitType
   payerIs: PayerIs
+  splitRatioA?: number   // 1–99; required when splitType = 'weighted', ignored otherwise
 }
 
 export interface SettlementDelta {
@@ -16,10 +17,19 @@ export interface SettlementDelta {
  * Delta to "balance" (member_a's perspective).
  * Positive = member_b owes member_a. Negative = member_a owes member_b.
  * `half` uses ceil(amount/2) so payer benefits from odd cents.
+ * `weighted` uses ceil(amount * (100 - ratioA) / 100) for payer=a, ceil(amount * ratioA / 100) for payer=b.
  */
-export function transactionDelta({ amount, splitType, payerIs }: TxDelta): number {
+export function transactionDelta({ amount, splitType, payerIs, splitRatioA }: TxDelta): number {
   if (splitType === 'all_mine') return 0
-  const owedToPayer = splitType === 'all_theirs' ? amount : Math.ceil(amount / 2)
+  let owedToPayer: number
+  if (splitType === 'weighted') {
+    const ratioA = splitRatioA ?? 50
+    owedToPayer = payerIs === 'a'
+      ? Math.ceil(amount * (100 - ratioA) / 100)
+      : Math.ceil(amount * ratioA / 100)
+  } else {
+    owedToPayer = splitType === 'all_theirs' ? amount : Math.ceil(amount / 2)
+  }
   return payerIs === 'a' ? owedToPayer : -owedToPayer
 }
 
