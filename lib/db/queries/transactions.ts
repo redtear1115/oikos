@@ -10,7 +10,8 @@ export type FeedKind = 'transaction' | 'settlement' | 'income'
 export interface FeedRow {
   id: string
   amount: number
-  splitType: 'all_mine' | 'all_theirs' | 'half' | null  // null for settlements
+  splitType: 'all_mine' | 'all_theirs' | 'half' | 'weighted' | null  // null for settlements
+  splitRatioA: number | null
   description: string
   category: string  // for settlements always 'settle'
   paidBy: string
@@ -37,7 +38,8 @@ export interface ResolvedTxnFilter {
 export interface TxnRow {
   id: string
   amount: number
-  splitType: 'all_mine' | 'all_theirs' | 'half'
+  splitType: 'all_mine' | 'all_theirs' | 'half' | 'weighted'
+  splitRatioA: number | null
   description: string
   category: string
   paidBy: string
@@ -56,6 +58,7 @@ export async function listRecentTransactions(
       id: cashTransactions.id,
       amount: cashTransactions.amount,
       splitType: cashTransactions.splitType,
+      splitRatioA: cashTransactions.splitRatioA,
       description: cashTransactions.description,
       category: cashTransactions.category,
       paidBy: cashTransactions.paidBy,
@@ -131,6 +134,7 @@ export async function listTransactionsPaged(
       SELECT
         id, amount,
         NULL::split_type AS split_type,
+        NULL::integer AS split_ratio_a,
         COALESCE(note, '還款') AS description,
         'settle' AS category,
         paid_by,
@@ -150,7 +154,8 @@ export async function listTransactionsPaged(
   const rows = await db.execute<{
     id: string
     amount: number
-    split_type: 'all_mine' | 'all_theirs' | 'half' | null
+    split_type: 'all_mine' | 'all_theirs' | 'half' | 'weighted' | null
+    split_ratio_a: number | null
     description: string
     category: string
     paid_by: string
@@ -163,7 +168,7 @@ export async function listTransactionsPaged(
   }>(sql`
     SELECT * FROM (
       SELECT
-        id, amount, split_type, description, category, paid_by,
+        id, amount, split_type, split_ratio_a, description, category, paid_by,
         asset_id, fuel_log_id, notes, transacted_at, created_at,
         'transaction'::text AS kind
       FROM "CashTransactions"
@@ -183,6 +188,7 @@ export async function listTransactionsPaged(
     id: r.id,
     amount: r.amount,
     splitType: r.split_type,
+    splitRatioA: r.split_ratio_a ?? null,
     description: r.description,
     category: r.category,
     paidBy: r.paid_by,
@@ -235,7 +241,8 @@ export async function listFeedAllPaged(
   const rows = await db.execute<{
     id: string
     amount: number
-    split_type: 'all_mine' | 'all_theirs' | 'half' | null
+    split_type: 'all_mine' | 'all_theirs' | 'half' | 'weighted' | null
+    split_ratio_a: number | null
     description: string
     category: string
     paid_by: string
@@ -248,7 +255,7 @@ export async function listFeedAllPaged(
   }>(sql`
     SELECT * FROM (
       SELECT
-        id, amount, split_type, description, category, paid_by,
+        id, amount, split_type, split_ratio_a, description, category, paid_by,
         asset_id, fuel_log_id, notes,
         transacted_at AS sort_at, created_at AS sort_created,
         'transaction'::text AS kind
@@ -259,7 +266,8 @@ export async function listFeedAllPaged(
       UNION ALL
 
       SELECT
-        id, amount, NULL::split_type, COALESCE(note, '還款'), 'settle',
+        id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
+        COALESCE(note, '還款'), 'settle',
         paid_by, NULL::uuid, NULL::uuid, NULL::text,
         settled_at AS sort_at, created_at AS sort_created,
         'settlement'::text AS kind
@@ -270,7 +278,8 @@ export async function listFeedAllPaged(
       UNION ALL
 
       SELECT
-        id, amount, NULL::split_type, COALESCE(source, ''), category,
+        id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
+        COALESCE(source, ''), category,
         recipient_id AS paid_by, asset_id, NULL::uuid, NULL::text,
         occurred_at::timestamptz AS sort_at, created_at AS sort_created,
         'income'::text AS kind
@@ -287,6 +296,7 @@ export async function listFeedAllPaged(
     id: r.id,
     amount: r.amount,
     splitType: r.split_type,
+    splitRatioA: r.split_ratio_a ?? null,
     description: r.description,
     category: r.category,
     paidBy: r.paid_by,
