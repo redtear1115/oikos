@@ -7,7 +7,7 @@ import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
-import { updateGroupName } from '@/actions/group'
+import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 import { shareInviteLink } from '@/lib/share'
@@ -32,10 +32,11 @@ interface Props {
   groupName: string
   appVersion: string
   currentLocale: string
+  groupDefaultRatioA: number | null
 }
 
 export function SettingsContent({
-  viewer, partner, groupId, groupName, appVersion, currentLocale,
+  viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -47,6 +48,10 @@ export function SettingsContent({
 
   const [savingSplit, startSplitTransition] = useTransition()
   const [splitError, setSplitError] = useState<string | null>(null)
+
+  const [splitRatioA, setSplitRatioA] = useState<number>(groupDefaultRatioA ?? 50)
+  const [savingRatio, startRatioTransition] = useTransition()
+  const [ratioError, setRatioError] = useState<string | null>(null)
 
   // Solo-mode invite flow (only relevant when partner === null).
   const [invitePending, startInviteTransition] = useTransition()
@@ -103,6 +108,18 @@ export function SettingsContent({
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
       } catch (e) {
         setInviteError(describeError(e, t.common.error, t.common.offlineError))
+      }
+    })
+  }
+
+  const handleRatioSave = () => {
+    setRatioError(null)
+    startRatioTransition(async () => {
+      try {
+        await updateGroupSplitRatio(splitRatioA)
+        refresh()
+      } catch (e) {
+        setRatioError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
       }
     })
   }
@@ -267,6 +284,35 @@ export function SettingsContent({
             </div>
           )}
         </div>
+        {!isSolo && (
+          <div className="mt-3">
+            <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
+              <div className="text-body font-semibold" style={{ color: 'var(--ink)' }}>分攤比例</div>
+              <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
+                <span>{viewer.displayName}（我）{splitRatioA}%</span>
+                <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={99}
+                step={1}
+                value={splitRatioA}
+                onChange={e => setSplitRatioA(Number(e.target.value))}
+                className="w-full accent-[var(--ink)]"
+              />
+              <button
+                onClick={handleRatioSave}
+                disabled={savingRatio}
+                className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
+                style={{ background: 'var(--ink)', color: 'var(--surface)' }}
+              >
+                {savingRatio ? '儲存中…' : '儲存預設比例'}
+              </button>
+              {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
+            </section>
+          </div>
+        )}
       </Section>
 
       {/* 裝置 */}
