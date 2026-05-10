@@ -1,8 +1,8 @@
 ---
-status: planned
-target: v0.14.0
+status: shipped
+shipped_in: v0.14.0（PR #93 + 13 個後續 polish iterations：donut chart / collapse / mode-aware title / 收入 category breakdown 等），closes #22。
 related_issues: "#22"
-note: 為 v0.14.0「沒有訊號的時候，也還看得見」主題的中段；#44 月度回顧依賴本 spec 的 query 形狀。
+note: v0.14.0 主題「沒有訊號的時候，也還看得見」的中段；#44 月度回顧 query 形狀沿用本 spec。Drill-down（點 detail bar → feed filter）data attributes 已預留，作業移到 #102 backlog。
 ---
 
 # Records 月度／分類統計 spec

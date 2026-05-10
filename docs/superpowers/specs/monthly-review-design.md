@@ -1,9 +1,9 @@
 ---
-status: planned
-target: v0.14.0
+status: shipped
+shipped_in: v0.14.0（PR #94），closes #44。
 related_issues: "#44"
 depends_on: stats-design.md（query helper reuse）
-note: v0.14.0「沒有訊號的時候，也還看得見」主題的後段；走 in-app banner，不引入 push infra。
+note: v0.14.0 主題「沒有訊號的時候，也還看得見」的後段；走 in-app banner，不引入 push infra。
 ---
 
 # 雙人月度回顧儀式 spec

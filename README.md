@@ -113,14 +113,21 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 ## Deploy（Vercel）
 
-1. Vercel 連 GitHub repo
+### Branch 說明
+
+- `main`：受保護分支，所有經過測試的新功能都會合入此處；Vercel 會 build preview。
+- `release`：部署分支，Vercel **prod** 以此分支為準。要 release 時手動 `git checkout release && git merge main && git push origin release`。
+
+兩條 branch 都受 protection 保護，一律走 PR merge，不直接 push。
+
+### 初次設定
+
+1. Vercel 連 GitHub repo，Production Branch 設為 `release`
 2. Build settings 留預設（Next.js auto-detect）
 3. **Environment Variables**：把 `.env.local` 全部值填進去
 4. 第一次 deploy 完，記得：
    - 把 Vercel 的 production URL 加到 Supabase Auth 的 redirect allow-list
    - 把 production URL 設成 `NEXT_PUBLIC_APP_URL`
-
-每次 push 到 `main` 自動 deploy。
 
 ---
 

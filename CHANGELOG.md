@@ -9,12 +9,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [0.14.0] - 2026-05-10
+
+主題：**沒有訊號的時候，也還看得見**——把這個月攤開來一起看（`/records` inline 月度統計 + 雙人月度回顧儀式），網路斷了之後也看得見最近一次連線的樣子（opt-in PWA offline browsing），順便把進入門檻收齊（onboarding 桌面對齊、in-app browser 引導跳出）。
+
+完整 diff：[v0.13.1...v0.14.0](https://github.com/redtear1115/oikos/compare/v0.13.1...v0.14.0)
+
 ### Added
-- **離線瀏覽 / PWA cache**（#19）：把 v0.11.1 留下的 Settings toggle UI 接通到真正的 Service Worker。採 [Serwist](https://serwist.pages.dev/) (`@serwist/next`)，opt-in via Settings：預設關閉，使用者主動開啟才 register SW。L1 precache app shell（`_next/static/**`、icons、og-image、`/manifest.json`、`/offline`）；L2 runtime cache `/dashboard`、`/records`、`/assets`、`/assets/[id]/*` 走 NetworkFirst + 3s timeout，只 cache 200 OK + 非 redirect 的回應（避免把 `/sign-in` 蓋掉登入態頁）。新增 `/offline` fallback 頁、`OfflineBanner`（離線時頁首顯示「離線中・顯示最近一次連線的資料」）、`OfflineLifecycle`（boot 時用 preference 校準 SW 狀態）、`OfflineBrowsingToggle`（取代原本的 inline switch，切換時 register/unregister + 清 caches，UI 跟實際 SW 狀態校準）。Sign-out flow 在 redirect 前 `caches.delete('dynamic-v1')` 防 PII 跨使用者。`RealtimeProvider` 聽 `online`/`offline` 事件呼叫 `realtime.disconnect()`/`connect()` 暫停 reconnect 迴圈。Records 換頁離線時把「載入更多」換為 inline empty state「再多紀錄需連線取得」（不彈 toast）。i18n 4 語齊備：拆 `offlineHint` 為 `offlineHintOff`/`offlineHintOn`，新增 `offlineToggling`、`offlineToggleError`、`offlineUnsupported`、`records.offlineMoreNeedsNetwork`、`offlineBanner.text`、`offlinePage.*`。
+- **`/records` inline 月度統計區**（PR #93 + 後續 polish iterations，closes #22）：在 sticky header 與 transaction feed 之間插入統計卡，與 feed 共用一個「month scope」（sticky `MonthSwitcher` 同時控 stats card + feed loaders；月份切換兩邊一起重抓）。三個 tab 各有一張卡：**全部** = 收支統計（donut + 支出 category breakdown）、**支出** = 支出統計（donut + category / 愛物 toggle）、**收入** = 收入統計（donut + 收入 category breakdown，無 asset toggle）。Donut 用 inline SVG（~80 行、無依賴；spec 原本就排除 Recharts ~50 KB+）；單一分類 ≥99% 時其他 slice 仍可見（3° 最小弧、按比例從大 slice shave）。Detail bars 是 chart 的 legend——row 左側同色圓點與 donut slice 一致。`+ / −` toggle 永遠 pin 在 title 右側、不會跟著 collapsed summary 跳位。Pre-creation 月份 stats 強制 compact（無資料、無展開鈕）。「設定定期支出/收入」做成 outline pill 併入 tab 列右側；模式色（深咖啡 / 薄荷綠）。月份 group header (`MonthSection`) 三個 tab 統一 `N 筆 · NT$X` 格式。新增 query：`monthlyStatsByCategory` / `monthlyStatsByAsset` / `monthlyIncomeStatsByCategory` / `getGroupCreationMonthKey`，feed loaders (`listFeedAllPaged` / `listExpensesPaged` / `listIncomesPaged`) 都接受 `monthKey?` 參數。i18n 4 語齊備（`records.stats.*`、用語統一：進帳→收入、花費→支出）。Drill-down（點 detail bar → feed filter）data attributes 已預留，作業移到 #102 backlog。
+- **雙人月度回顧儀式**（PR #94，closes #44）：每月 1 日 Taipei 00:05 由 pg_cron `monthly-review-snapshot` 自動 snapshot 上月，新 `MonthlyReviewSnapshots` table 凍結 4 張卡片資料（最大支出 / 分類 Top 3 / 愛物 / 定期支出變化），denormalise `paid_by` 顯示名與 asset name 避免日後 rename / soft-delete 變 dangling。`/review/[YYYY-MM]` 專頁 4 張卡片 carousel + 上月留言區；兩人各自有「給下個月的我們」`MessageEditor` 800ms debounce autosave、200 codepoint cap（emoji 用 `[...str].length` 正確計）、月切換時被 cron 鎖為 read-only。Dashboard banner 一次性顯示，dyad 偏好 quote 對方留言、solo quote 自己；`banner_dismissed_by_member_<a|b>_at` 寫入後跨裝置一致不再出。i18n 4 語齊備（含 Solo Mode 文案分流）。28 個新 unit tests。
+- **離線瀏覽 / PWA cache**（PR #95，closes #19）：把 v0.11.1 留下的 Settings toggle UI 接通到真正的 Service Worker。採 [Serwist](https://serwist.pages.dev/) (`@serwist/next`)，opt-in via Settings：預設關閉，使用者主動開啟才 register SW。L1 precache app shell（`_next/static/**`、icons、og-image、`/manifest.json`、`/offline`）；L2 runtime cache `/dashboard`、`/records`、`/assets`、`/assets/[id]/*` 走 NetworkFirst + 3s timeout，只 cache 200 OK + 非 redirect 的回應（避免把 `/sign-in` 蓋掉登入態頁）。新增 `/offline` fallback 頁、`OfflineBanner`（離線時頁首顯示「離線中・顯示最近一次連線的資料」）、`OfflineLifecycle`（boot 時用 preference 校準 SW 狀態）、`OfflineBrowsingToggle`（取代原本的 inline switch，切換時 register/unregister + 清 caches，UI 跟實際 SW 狀態校準）。Sign-out flow 在 redirect 前 `caches.delete('dynamic-v1')` 防 PII 跨使用者。`RealtimeProvider` 聽 `online`/`offline` 事件呼叫 `realtime.disconnect()`/`connect()` 暫停 reconnect 迴圈。Records 換頁離線時把「載入更多」換為 inline empty state「再多紀錄需連線取得」（不彈 toast）。i18n 4 語齊備：拆 `offlineHint` 為 `offlineHintOff`/`offlineHintOn`，新增 `offlineToggling`、`offlineToggleError`、`offlineUnsupported`、`records.offlineMoreNeedsNetwork`、`offlineBanner.text`、`offlinePage.*`。
+- **Vercel Analytics + Speed Insights**（commit `10acfe4`）：`@vercel/analytics` + `@vercel/speed-insights` 接通；root layout mount `<Analytics />` + `<SpeedInsights />`，給 Vercel dashboard 收 traffic + Core Web Vitals。
+
+### Fixed
+- **Onboarding 桌面跑版**（PR #98，closes #96）：`PhilosophyCards` 原本是 `fixed inset-0`，桌面瀏覽器（>448px）會把 5 張哲學卡撐滿整個 viewport，跟 dashboard 的 `max-w-md`（448px）PWA shell 對不上。包一層 `max-width: 448px` 居中容器即可，其他 auth-adjacent 頁（sign-in / setup / invite）audit 過確認都已限寬無問題。
+- **In-app browser 攔截 + 引導**（PR #99，closes #97）：偵測 LINE / Instagram / Threads / FB / Messenger / WeChat / Telegram / X / LinkedIn / KakaoTalk 等 in-app WebView，從 user-agent match 後 render 全螢幕 `role="dialog"` blocker，避免使用者卡在「Google OAuth 拒絕在 embedded WebView 載入 + Service Worker / Supabase session 不可靠」的死巷。Blocker 提供「複製連結」按鈕（clipboard）、iOS 額外提供 `x-safari-https://` 的「在 Safari 開啟」鍵、平台特定指引文案。`InAppBrowserGuard` 掛在 root layout `<body>` 最上層（root layout 沒有 `TranslationsProvider`，i18n 字串以 props 傳入）。22 個新 unit tests 覆蓋所有 in-app browsers + 真實 Safari/Chrome 的 false-positive 防誤判 + null/empty input。i18n 4 語齊備（`inAppBrowser.*`）。
 
 ### Design notes
-- **opt-in 而非預設啟用**：cache PII 在裝置上是裝置端的隱私決定（v0.10.0 才剛 E2E 加密敏感欄位），呼應「使用者控制自己資料」基調。共用裝置、低可信任環境、儲存吃緊的舊機都可以選擇不開。先觀察使用率，再評估是否改預設。
-- **Toggle 持久化在 localStorage 而非 Supabase**：SW 是裝置能力（瀏覽器支援、儲存配額、共享裝置疑慮），語義上是 per-device 而非 per-user；同帳號跨裝置要分別 opt-in 比「我在朋友家用過一次的瀏覽器自動開了 cache」直觀。
+- **月份 scope = page-level**：`/records` 月份切換器升級為 sticky header 一份，stats card 和 transaction feed 同時遵守一個 monthKey；不再各自管自己的時間軸。
+- **Donut 用 inline SVG**：~80 行手寫；mobile bundle 不引入 ~50 KB+ 圖表 lib（Recharts / Chart.js / etc.）的 budget 取捨。
+- **Snapshot 凍結語意**：軟刪除來源不會回頭更新已凍的回顧頁——回顧是「那個月當下我們看到了什麼」的紀錄，不是現況的查詢視圖。
+- **留言不加密、不可回頭改**：寫給未來自己的話刻意維持 plaintext + lock-after-cron 的單向性，跟 transactions 的 edit-as-soft-delete-then-insert 是不同生命週期。
+- **月度回顧不訂閱 realtime**：兩人不會同時編輯同一張卡（一個人寫自己、一個人寫自己），靠 `router.refresh()` async 共看就夠；省掉一條 subscription 與相關 invariants。
+- **In-app browser blocker 在 root layout 而非 dashboard layout**：sign-in / OAuth callback 都需要被攔；`<TranslationsProvider>` 還沒掛的位階就要顯示，所以 i18n strings 用 props 傳，不靠 `useTranslations()`。
+- **Offline opt-in 而非預設啟用**：cache PII 在裝置上是裝置端的隱私決定（v0.10.0 才剛 E2E 加密敏感欄位），呼應「使用者控制自己資料」基調。共用裝置、低可信任環境、儲存吃緊的舊機都可以選擇不開。先觀察使用率，再評估是否改預設。
+- **Offline toggle 持久化在 localStorage 而非 Supabase**：SW 是裝置能力（瀏覽器支援、儲存配額、共享裝置疑慮），語義上是 per-device 而非 per-user；同帳號跨裝置要分別 opt-in 比「我在朋友家用過一次的瀏覽器自動開了 cache」直觀。
 - **Network-first 而非 SWR**：oikos 寫入路徑會 `revalidatePath`，SW 層 SWR 不認；剛新增完一筆 expense 回 dashboard 會看到舊 cache 體感像 bug。3s timeout 兜離線、命中網路時拿到的就是最新。
 - **不在 SW 攔截 server actions / 不預先 disable 寫入按鈕**：寫入 source of truth 是 server action 的 response，不是 `navigator.onLine`（會誤判 captive portal、弱訊號）。離線時點寫入按鈕由 server action 自然 fail，既有錯誤訊息「網路不穩，再試一次」就夠了，不為離線分支多寫一套互動。
 - **Sign-out 只清 dynamic cache、不動 precache**：app shell 不含 PII，下個使用者用同一裝置時 startup 還能享受快取速度。Toggle off 才會把所有 cache 清乾淨（使用者主動撤回信任）。
@@ -22,6 +43,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Internal
 - **Build script 改為 `next build --webpack`**：Serwist 9.x 仍是 webpack plugin，跟 Next.js 16 預設的 Turbopack production build 不相容；改用 `--webpack` flag 讓 SW 真的會被生成到 `public/sw.js`。Dev server (`next dev`) 維持 Turbopack（SW 在 dev 也是 disable 的，沒影響）。等 Serwist 出 Turbopack 支援再切回。
 - **`app/sw.ts` 從主 tsconfig 排除**：`serwist` package 透過 `declare global` 注入 `ServiceWorkerGlobalScopeEventMap` 等 webworker 型別，被混進 DOM 編譯 context 會把 `Navigator` 染成 `WorkerNavigator` 導致整個 app 的 client component typecheck 全壞。Serwist webpack plugin 自己會編譯 sw.ts，不需要主 tsconfig 看到它。
+
+### Migration
+
+Dev / prod 兩邊都要手動跑（`npm run db:migrate` 視 `.env.local` 指向）：
+
+```sql
+-- drizzle/0026_monthly_review.sql
+-- 新增 MonthlyReviewSnapshots / MonthlyReviewMessages
+-- 新增 compute_monthly_review_snapshot(group, year, month) plpgsql function
+-- 新增 cron.schedule('monthly-review-snapshot', '5 16 1 * *', ...)
+```
+
+prod 另需確認 `pg_cron` extension 已啟用（v0.2.0 cleanup cron 已啟用，沿用即可）。`/records` 統計與 offline PWA 都不動 schema。
 
 ## [0.13.1] - 2026-05-09
 
@@ -391,7 +425,8 @@ ALTER TABLE "CashTransactions" ADD COLUMN "notes" text;
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/redtear1115/oikos/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/redtear1115/oikos/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/redtear1115/oikos/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/redtear1115/oikos/compare/v0.11.4...v0.12.0

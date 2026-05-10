@@ -1,6 +1,6 @@
 ---
 status: shipped
-shipped_in: 已合入 main（PR #76 server actions + db queries · PR #77 Settings 子頁 + Dashboard PendingExpenseStack · PR #78 AddSheet「改一下」+ Records 入口），closes #18。實際 ship 從 v0.12.0 滑到 **v0.13.0**（待 release tag）。
+shipped_in: v0.13.0（PR #76 server actions + db queries · PR #77 Settings 子頁 + Dashboard PendingExpenseStack · PR #78 AddSheet「改一下」+ Records 入口），closes #18。實際 ship 從 v0.12.0 滑到 v0.13.0。
 note: 下方「v0.12.0 PR 拆分」段保留為實作 audit 之用；實際 PR 編號為 #76 / #77 / #78（合計 3 個 PR，原 spec 規劃 5 個 PR 已合併執行）。
 ---
 
