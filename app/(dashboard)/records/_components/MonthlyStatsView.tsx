@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory, type CategoryId } from '@/lib/categories'
+import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
 import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transactions'
+import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { useRecordsTab } from './TabContext'
 
@@ -22,7 +24,10 @@ interface Props {
   /** Per-user scope — multiple users on the same device keep independent state. */
   userId: string
   view: BreakdownView
+  /** Expense breakdown rows. Used on 全部 / 支出 tabs (and shape varies by view). */
   rows: ReadonlyArray<CategoryStatRow | AssetStatRow>
+  /** Income breakdown rows (always by category). Used on 收入 tab. */
+  incomeRows: ReadonlyArray<IncomeCategoryStatRow>
   expenseTotal: number
   incomeTotal: number
   /** When true (e.g. user scrolled to a month before group creation), the card
@@ -34,6 +39,7 @@ export function MonthlyStatsView({
   userId,
   view,
   rows,
+  incomeRows,
   expenseTotal,
   incomeTotal,
   forceCompact = false,
@@ -67,15 +73,15 @@ export function MonthlyStatsView({
   }
 
   // Forced compact only for pre-creation months (no data worth visualising).
-  // Income tab used to force-compact too, but that produced a visibly shorter
-  // stats card and threw off the records feed's vertical offset; we now show
-  // a WIP placeholder on income-tab expanded so heights stay aligned across
-  // tabs while the income-category breakdown query is still TODO.
   const showCollapsed = forceCompact || (mounted && collapsed)
   const allowToggle = !forceCompact
   const isEmpty = expenseTotal === 0 && incomeTotal === 0
-  const hasExpenses = expenseTotal > 0
   const isIncomeTab = tab === 'income'
+
+  // Pick which dataset drives the donut + detail bars. Income tab uses the
+  // income breakdown; everywhere else uses expense (filtered by view toggle).
+  const breakdownTotal = isIncomeTab ? incomeTotal : expenseTotal
+  const hasBreakdown = breakdownTotal > 0
 
   const title =
     tab === 'all' ? t.records.stats.titleAll
@@ -92,14 +98,13 @@ export function MonthlyStatsView({
           {title}
         </h2>
         {/* Title-row controls. The +/− button stays here in both states
-            (collapsed and expanded) — previously it jumped to the summary
-            row when collapsed which made the eye chase it. The breakdown
-            toggle (分類/愛物) only shows in expanded mode and is also hidden
-            on the income tab (the expense-breakdown surface it controls is
-            replaced by a WIP placeholder there). */}
+            (collapsed and expanded) so the eye doesn't chase it. The
+            breakdown toggle (分類/愛物) only shows in expanded mode and is
+            also hidden on the income tab — income only has a category view
+            (no asset breakdown query yet). */}
         {!isEmpty && allowToggle && (
           <div className="flex items-center gap-2">
-            {!showCollapsed && hasExpenses && !isIncomeTab && (
+            {!showCollapsed && hasBreakdown && !isIncomeTab && (
               <StatsBreakdownToggle value={view} />
             )}
             <ToggleButton
@@ -126,59 +131,54 @@ export function MonthlyStatsView({
         // Collapsed: summary line only. Expand button lives in the title row
         // (固定位置) so the user's eye doesn't have to chase it.
         <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
-      ) : isIncomeTab ? (
-        // Income tab expanded: summary line + visible WIP placeholder. The
-        // placeholder is sized to roughly match the donut + bars block on
-        // expense / all tabs so the records feed below sits at a similar
-        // vertical offset across tabs.
-        <>
-          <div className="mt-2 mb-4">
-            <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
-          </div>
-          <div
-            className="flex flex-col items-center justify-center text-center px-6"
-            style={{
-              minHeight: 240,
-              border: '1px dashed var(--hairline)',
-              borderRadius: 16,
-              background: 'var(--surface)',
-            }}
-          >
-            <div className="text-sm font-medium" style={{ color: 'var(--ink-2)' }}>
-              {t.records.stats.incomeWipTitle}
-            </div>
-            <div className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>
-              {t.records.stats.incomeWipHint}
-            </div>
-          </div>
-        </>
       ) : (
         // Expanded: donut chart on top, then total line, then detail-bar
-        // legend (each bar's coloured chip matches its pie slice). Stacked
-        // bar dropped — the donut conveys the same proportion.
+        // legend (each bar's coloured chip matches its pie slice).
         <>
-          {hasExpenses && (
+          {hasBreakdown && (
             <div className="flex justify-center mt-2 mb-4">
-              <PieChart rows={rows} total={expenseTotal} view={view} />
+              {isIncomeTab ? (
+                <PieChart
+                  rows={incomeRows}
+                  total={breakdownTotal}
+                  getSliceColor={(row) => getIncomeCategory((row as IncomeCategoryStatRow).key).chart}
+                  getSliceKey={(row) => (row as IncomeCategoryStatRow).key}
+                />
+              ) : (
+                <PieChart
+                  rows={rows}
+                  total={breakdownTotal}
+                  getSliceColor={(row) => colorForRow(row, view).chart}
+                  getSliceKey={(row, i) =>
+                    view === 'category'
+                      ? (row as CategoryStatRow).key
+                      : (row as AssetStatRow).key ?? `__none_${i}`
+                  }
+                />
+              )}
             </div>
           )}
           <div className="text-sm tnum mt-2 mb-4" style={{ color: 'var(--ink-2)' }}>
-            {t.records.stats.total.replace('{amount}', expenseTotal.toLocaleString('en-US'))}
+            {t.records.stats.total.replace('{amount}', breakdownTotal.toLocaleString('en-US'))}
           </div>
-          {hasExpenses && (
+          {hasBreakdown && (
             <ul className="space-y-3">
-              {view === 'category'
-                ? (rows as CategoryStatRow[]).map((r) => (
-                    <CategoryBar key={r.key} row={r} total={expenseTotal} t={t} />
+              {isIncomeTab
+                ? incomeRows.map((r) => (
+                    <IncomeCategoryBar key={r.key} row={r} total={breakdownTotal} t={t} />
                   ))
-                : (rows as AssetStatRow[]).map((r) => (
-                    <AssetBar
-                      key={r.key ?? '__none__'}
-                      row={r}
-                      total={expenseTotal}
-                      otherLabel={t.records.stats.otherSpend}
-                    />
-                  ))}
+                : view === 'category'
+                  ? (rows as CategoryStatRow[]).map((r) => (
+                      <CategoryBar key={r.key} row={r} total={breakdownTotal} t={t} />
+                    ))
+                  : (rows as AssetStatRow[]).map((r) => (
+                      <AssetBar
+                        key={r.key ?? '__none__'}
+                        row={r}
+                        total={breakdownTotal}
+                        otherLabel={t.records.stats.otherSpend}
+                      />
+                    ))}
             </ul>
           )}
         </>
@@ -229,6 +229,7 @@ type StatsT = {
     }
   }
   category: Record<CategoryId, string>
+  incomeCategory: Record<IncomeCategoryId, string>
 }
 
 function SummaryText({
@@ -295,20 +296,22 @@ function hashStr(s: string): number {
 
 /**
  * Inline SVG donut chart — kept dep-free per the original spec
- * (Recharts ~50KB+ ruled out for mobile bundle size). Slice colors come from
- * the same `colorForRow` helper as the detail-bar legend dots, so the chart
- * and the legend stay visually coupled regardless of breakdown view.
+ * (Recharts ~50KB+ ruled out for mobile bundle size). Slice colors are
+ * sourced via a callback so the same chart renders expense (category /
+ * asset) and income (category) breakdowns with their respective palettes.
  */
-function PieChart({
+function PieChart<R extends { total: number }>({
   rows,
   total,
-  view,
+  getSliceColor,
+  getSliceKey,
   size = 156,
   innerRatio = 0.55,
 }: {
-  rows: ReadonlyArray<CategoryStatRow | AssetStatRow>
+  rows: ReadonlyArray<R>
   total: number
-  view: BreakdownView
+  getSliceColor: (row: R, i: number) => string
+  getSliceKey: (row: R, i: number) => string
   size?: number
   innerRatio?: number
 }) {
@@ -323,7 +326,7 @@ function PieChart({
 
   // Single-slice fast path (full ring) — avoids the 0-degree arc edge case.
   if (valued.length === 1) {
-    const { chart } = colorForRow(valued[0], view)
+    const chart = getSliceColor(valued[0], 0)
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="pie chart">
         <circle cx={cx} cy={cy} r={rOuter} fill={chart} />
@@ -380,11 +383,7 @@ function PieChart({
       'Z',
     ].join(' ')
 
-    const { chart } = colorForRow(row, view)
-    const key = view === 'category'
-      ? (row as CategoryStatRow).key
-      : (row as AssetStatRow).key ?? `__none_${i}`
-    return <path key={key} d={path} fill={chart} />
+    return <path key={getSliceKey(row, i)} d={path} fill={getSliceColor(row, i)} />
   })
 
   return (
@@ -420,6 +419,30 @@ function CategoryBar({
       tint={cat.tint}
       chart={cat.chart}
       data-category={cat.id}
+    />
+  )
+}
+
+function IncomeCategoryBar({
+  row,
+  total,
+  t,
+}: {
+  row: IncomeCategoryStatRow
+  total: number
+  t: { incomeCategory: Record<IncomeCategoryId, string> }
+}) {
+  const cat = getIncomeCategory(row.key)
+  const label = t.incomeCategory[cat.id] ?? cat.label
+  const pct = total > 0 ? (row.total / total) * 100 : 0
+  return (
+    <Bar
+      label={label}
+      pct={pct}
+      amount={row.total}
+      tint={cat.tint}
+      chart={cat.chart}
+      data-income-category={cat.id}
     />
   )
 }

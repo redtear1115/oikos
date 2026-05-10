@@ -2,7 +2,7 @@ import {
   monthlyStatsByCategory,
   monthlyStatsByAsset,
 } from '@/lib/db/queries/transactions'
-import { listIncomeMonthSummary } from '@/lib/db/queries/incomes'
+import { monthlyIncomeStatsByCategory } from '@/lib/db/queries/incomes'
 import { MonthlyStatsView } from './MonthlyStatsView'
 import type { BreakdownView } from './StatsBreakdownToggle'
 
@@ -18,7 +18,9 @@ interface Props {
 
 /**
  * Server data fetcher for the /records monthly stats section. Month scope is
- * page-level — the switcher / scope decision happens above us.
+ * page-level — the switcher / scope decision happens above us. Tab-aware
+ * rendering happens client-side via TabContext, so we pre-fetch BOTH expense
+ * and income breakdowns and let the view pick which to render.
  */
 export async function MonthlyStatsSection({
   userId,
@@ -27,21 +29,23 @@ export async function MonthlyStatsSection({
   view,
   forceCompact = false,
 }: Props) {
-  const [rows, incomeSummary] = await Promise.all([
+  const [rows, incomeRows] = await Promise.all([
     view === 'asset'
       ? monthlyStatsByAsset(groupId, monthKey)
       : monthlyStatsByCategory(groupId, monthKey),
-    listIncomeMonthSummary(groupId, monthKey),
+    monthlyIncomeStatsByCategory(groupId, monthKey),
   ])
   const expenseTotal = rows.reduce((acc, r) => acc + r.total, 0)
+  const incomeTotal = incomeRows.reduce((acc, r) => acc + r.total, 0)
 
   return (
     <MonthlyStatsView
       userId={userId}
       view={view}
       rows={rows}
+      incomeRows={incomeRows}
       expenseTotal={expenseTotal}
-      incomeTotal={incomeSummary.total}
+      incomeTotal={incomeTotal}
       forceCompact={forceCompact}
     />
   )
