@@ -8,6 +8,7 @@ import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transaction
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { useRecordsTab } from './TabContext'
+import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
 
 const KEY_PREFIX = 'oikos_stats_collapsed_'
 
@@ -187,35 +188,6 @@ export function MonthlyStatsView({
   )
 }
 
-function ToggleButton({
-  onClick,
-  ariaLabel,
-  expanded,
-  children,
-}: {
-  onClick: () => void
-  ariaLabel: string
-  expanded: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-expanded={expanded}
-      aria-label={ariaLabel}
-      className="h-7 w-7 grid place-items-center rounded-full cursor-pointer bg-transparent"
-      style={{
-        color: 'var(--ink-2)',
-        border: '1px solid var(--hairline)',
-        fontSize: 14,
-        lineHeight: 1,
-      }}
-    >
-      {children}
-    </button>
-  )
-}
 
 type StatsT = {
   records: {
