@@ -241,6 +241,9 @@ function SummaryText({
       <span>{incomeStr}</span>
       <span className="mx-1.5" style={{ color: 'var(--ink-3)' }}>·</span>
       <span style={{ fontWeight: 500 }}>{netStr}</span>
+      {/* One currency mark per line, at the end (per spec). The three numbers
+          above are bare; this NT$ anchors them all. */}
+      <span className="ml-1.5" style={{ color: 'var(--ink-3)' }}>NT$</span>
     </div>
   )
 }
@@ -373,7 +376,8 @@ function Bar({
       <div className="flex items-baseline justify-between text-sm">
         <span style={{ color: 'var(--ink)' }}>{label}</span>
         <span className="tnum text-micro" style={{ color: 'var(--ink-3)' }}>
-          {pct.toFixed(0)}% · NT${amount.toLocaleString('en-US')}
+          {/* Bare amount — currency anchored once on the total / summary line above. */}
+          {pct.toFixed(0)}% · {amount.toLocaleString('en-US')}
         </span>
       </div>
       <div
