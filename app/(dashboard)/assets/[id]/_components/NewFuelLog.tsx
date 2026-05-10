@@ -369,7 +369,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
       <ConfirmModal
         open={confirmDelete}
         title="刪除這筆加油記錄？"
-        description="刪除後無法復原，但其他花費紀錄不受影響。"
+        description="刪除後無法復原，但其他支出紀錄不受影響。"
         confirmLabel="刪除"
         pending={pending}
         onCancel={() => setConfirmDelete(false)}

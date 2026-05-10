@@ -191,6 +191,11 @@ export const ja: Translations = {
       nextMonth: '次の月',
       collapse: '統計を閉じる',
       expand: '統計を開く',
+      summaryExpense: '支出 NT${amount}',
+      summaryIncome: '収入 NT${amount}',
+      summaryNetIncome: '純収入 +NT${amount}',
+      summaryNetExpense: '純支出 NT${amount}',
+      summaryNetEven: '収支均衡',
     },
   },
 

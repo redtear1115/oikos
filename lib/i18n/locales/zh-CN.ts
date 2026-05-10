@@ -67,7 +67,7 @@ export const zhCN: Translations = {
     noRecordsTitle: '还没有记录',
     noRecordsHint: '从第一笔开始 ─ 一杯咖啡、一顿晚餐都算数。日子一天天记下来，回头看会很暖。',
     addFirst: '记第一笔',
-    noIncome: '还没记过家里的进账',
+    noIncome: '还没记过家里的收入',
     noFilteredAddHint: '还没有记录。按下方 + 记第一笔吧。',
   },
 
@@ -79,7 +79,7 @@ export const zhCN: Translations = {
 
   modeToggle: {
     expense: '支出模式',
-    income: '进账模式',
+    income: '收入模式',
   },
 
   payerToggle: {
@@ -90,13 +90,13 @@ export const zhCN: Translations = {
     soloHint: '你还在独自记账',
     inviteCta: '邀请对方 →',
     addExpense: '新增一笔',
-    addIncome: '记一笔进账',
+    addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
   },
 
   balanceHero: {
-    monthlyIncome: '本月进账',
+    monthlyIncome: '本月收入',
     countLabel: '笔数',
     countSuffix: '笔',
     recent: '最近',
@@ -140,9 +140,9 @@ export const zhCN: Translations = {
   },
 
   incomeSheet: {
-    title: '记一笔进账',
-    amountLabel: '进账金额',
-    recipientPrompt: '进到谁那？',
+    title: '记一笔收入',
+    amountLabel: '收入金额',
+    recipientPrompt: '谁的收入？',
     categoryLabel: '类别',
     policyLink: '关联保单',
     selectPolicy: '选择对应保单',
@@ -151,12 +151,12 @@ export const zhCN: Translations = {
     noPolicy: '尚无保单',
     insuranceBadge: '保险',
     notePlaceholder: '备注（可选）',
-    deleteIncome: '删除这笔进账',
-    deleteConfirmTitle: '删除这笔进账？',
+    deleteIncome: '删除这笔收入',
+    deleteConfirmTitle: '删除这笔收入？',
     errors: {
       amountRequired: '请输入金额',
       saveFailed: '保存失败',
-      missingPendingId: '缺少待确认进账 id',
+      missingPendingId: '缺少待确认收入 id',
     },
   },
 
@@ -176,13 +176,13 @@ export const zhCN: Translations = {
     title: '记录',
     tabAll: '全部',
     tabExpense: '支出',
-    tabIncome: '进账',
-    manageRecurringIncome: '⚙ 设定定期进账 →',
+    tabIncome: '收入',
+    manageRecurringIncome: '⚙ 设定定期收入 →',
     manageRecurringExpense: '⚙ 设定定期支出 →',
     stats: {
       title: '支出统计',
       total: '总共 NT${amount}',
-      empty: '这个月还没有花费记录',
+      empty: '这个月还没有支出记录',
       emptySub: '翻翻其他月看看',
       viewByCategory: '分类',
       viewByAsset: '爱物',
@@ -191,6 +191,11 @@ export const zhCN: Translations = {
       nextMonth: '下一月',
       collapse: '收合统计',
       expand: '展开统计',
+      summaryExpense: '支出 NT${amount}',
+      summaryIncome: '收入 NT${amount}',
+      summaryNetIncome: '净收入 +NT${amount}',
+      summaryNetExpense: '净支出 NT${amount}',
+      summaryNetEven: '持平',
     },
   },
 
@@ -224,7 +229,7 @@ export const zhCN: Translations = {
     sectionDevice: '设备',
     offlineBrowsing: '离线浏览',
     offlineHint: '开启后可在无网络时查看最近记录',
-    recurringIncome: '定期进账',
+    recurringIncome: '定期收入',
     recurringExpense: '定期支出',
     sectionData: '数据',
     trust: '数据安全',
@@ -262,11 +267,11 @@ export const zhCN: Translations = {
   },
 
   recurringIncome: {
-    title: '定期进账',
+    title: '定期收入',
     back: '返回',
     add: '+ 新增',
     empty: {
-      hint: '还没设定定期进账',
+      hint: '还没设定定期收入',
       cta: '新增第一个',
     },
     rule: {
@@ -288,10 +293,10 @@ export const zhCN: Translations = {
       collapse: '收起',
     },
     sheet: {
-      titleNew: '新增定期进账',
-      titleEdit: '编辑定期进账',
+      titleNew: '新增定期收入',
+      titleEdit: '编辑定期收入',
       amountLabel: '固定金额',
-      recipientPrompt: '进到谁那？',
+      recipientPrompt: '谁的收入？',
       categoryLabel: '类别',
       intervalLabel: '周期',
       dayOfMonthLabel: '每月几号',
@@ -364,7 +369,7 @@ export const zhCN: Translations = {
     saveChanges: '保存更改',
     deleteConfirm: {
       title: '确认删除？',
-      description: '这个爱物与所有关联花费将从列表中移除。',
+      description: '这个爱物与所有关联支出将从列表中移除。',
       confirmLabel: '删除',
     },
     type: {
@@ -525,15 +530,15 @@ export const zhCN: Translations = {
     editAriaLabel: '编辑',
     switcherAriaLabel: '切换爱物',
     notesSection: '备注',
-    recentExpenses: '近期花费',
+    recentExpenses: '近期支出',
     timelineEntries: '时间轴 · {count} 笔',
-    addOtherExpense: '其他花费',
+    addOtherExpense: '其他支出',
     refuel: '加油',
     relatedInsurance: '相关保险',
     linkedVehicleSection: '关联车辆',
-    emptyCarLine1: '还没为这台车记下任何花费 —',
+    emptyCarLine1: '还没为这台车记下任何支出 —',
     emptyCarLine2: '戳右下角 + 开始',
-    emptyDefaultLine1: '还没记下任何花费 —',
+    emptyDefaultLine1: '还没记下任何支出 —',
     emptyDefaultLine2: '戳右下角 + 开始',
     typeLabels: {
       car: '车',

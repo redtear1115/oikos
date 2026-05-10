@@ -6,9 +6,9 @@ import { useTranslations } from '@/lib/i18n/client'
 interface Props {
   mode?: 'expense' | 'income'
   onChange?: (mode: 'expense' | 'income') => void
-  /** Pending recurring-income count — drives the mint dot on the 進帳 pill while in 支出 mode. */
+  /** Pending recurring-income count — drives the mint dot on the 收入 pill while in 支出 mode. */
   incomePendingCount?: number
-  /** Pending recurring-expense count — drives the category-neutral dot on the 支出 pill while in 進帳 mode. */
+  /** Pending recurring-expense count — drives the category-neutral dot on the 支出 pill while in 收入 mode. */
   expensePendingCount?: number
 }
 

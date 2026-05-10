@@ -190,6 +190,11 @@ export type Translations = {
       nextMonth: string
       collapse: string
       expand: string
+      summaryExpense: string    // {amount}
+      summaryIncome: string     // {amount}
+      summaryNetIncome: string  // {amount}, e.g. "淨收入 +NT$..."
+      summaryNetExpense: string // {amount}, e.g. "淨支出 NT$..."
+      summaryNetEven: string    // "持平"
     }
   }
 
@@ -973,7 +978,7 @@ export const zhTW: Translations = {
     noRecordsTitle: '還沒有紀錄',
     noRecordsHint: '從第一筆開始 ─ 一杯咖啡、一頓晚餐都算數。日子一天天記下來，回頭看會很暖。',
     addFirst: '記第一筆',
-    noIncome: '還沒記過家裡的進帳',
+    noIncome: '還沒記過家裡的收入',
     noFilteredAddHint: '還沒有紀錄。按下方 + 記第一筆吧。',
   },
 
@@ -985,7 +990,7 @@ export const zhTW: Translations = {
 
   modeToggle: {
     expense: '支出模式',
-    income: '進帳模式',
+    income: '收入模式',
   },
 
   payerToggle: {
@@ -996,13 +1001,13 @@ export const zhTW: Translations = {
     soloHint: '你還在獨自記帳',
     inviteCta: '邀請對方 →',
     addExpense: '新增一筆',
-    addIncome: '記一筆進帳',
+    addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
   },
 
   balanceHero: {
-    monthlyIncome: '本月進帳',
+    monthlyIncome: '本月收入',
     countLabel: '筆數',
     countSuffix: '筆',
     recent: '最近',
@@ -1046,9 +1051,9 @@ export const zhTW: Translations = {
   },
 
   incomeSheet: {
-    title: '記一筆進帳',
-    amountLabel: '進帳金額',
-    recipientPrompt: '進到誰那？',
+    title: '記一筆收入',
+    amountLabel: '收入金額',
+    recipientPrompt: '誰的收入？',
     categoryLabel: '類別',
     policyLink: '關聯保單',
     selectPolicy: '選擇對應保單',
@@ -1057,12 +1062,12 @@ export const zhTW: Translations = {
     noPolicy: '尚無保單',
     insuranceBadge: '保險',
     notePlaceholder: '備註（可選）',
-    deleteIncome: '刪除這筆進帳',
-    deleteConfirmTitle: '刪除這筆進帳？',
+    deleteIncome: '刪除這筆收入',
+    deleteConfirmTitle: '刪除這筆收入？',
     errors: {
       amountRequired: '請輸入金額',
       saveFailed: '儲存失敗',
-      missingPendingId: '缺少待確認進帳 id',
+      missingPendingId: '缺少待確認收入 id',
     },
   },
 
@@ -1082,13 +1087,13 @@ export const zhTW: Translations = {
     title: '紀錄',
     tabAll: '全部',
     tabExpense: '支出',
-    tabIncome: '進帳',
-    manageRecurringIncome: '⚙ 設定定期進帳 →',
+    tabIncome: '收入',
+    manageRecurringIncome: '⚙ 設定定期收入 →',
     manageRecurringExpense: '⚙ 設定定期支出 →',
     stats: {
       title: '支出統計',
       total: '總共 NT${amount}',
-      empty: '這個月還沒有花費紀錄',
+      empty: '這個月還沒有支出紀錄',
       emptySub: '翻翻其他月看看',
       viewByCategory: '分類',
       viewByAsset: '愛物',
@@ -1097,6 +1102,11 @@ export const zhTW: Translations = {
       nextMonth: '下一月',
       collapse: '收合統計',
       expand: '展開統計',
+      summaryExpense: '支出 NT${amount}',
+      summaryIncome: '收入 NT${amount}',
+      summaryNetIncome: '淨收入 +NT${amount}',
+      summaryNetExpense: '淨支出 NT${amount}',
+      summaryNetEven: '持平',
     },
   },
 
@@ -1130,7 +1140,7 @@ export const zhTW: Translations = {
     sectionDevice: '裝置',
     offlineBrowsing: '離線瀏覽',
     offlineHint: '開啟後可在無網路時查看最近記錄',
-    recurringIncome: '定期進帳',
+    recurringIncome: '定期收入',
     recurringExpense: '定期支出',
     sectionData: '資料',
     trust: '資料安全',
@@ -1168,11 +1178,11 @@ export const zhTW: Translations = {
   },
 
   recurringIncome: {
-    title: '定期進帳',
+    title: '定期收入',
     back: '返回',
     add: '+ 新增',
     empty: {
-      hint: '還沒設定定期進帳',
+      hint: '還沒設定定期收入',
       cta: '新增第一個',
     },
     rule: {
@@ -1194,10 +1204,10 @@ export const zhTW: Translations = {
       collapse: '收合',
     },
     sheet: {
-      titleNew: '新增定期進帳',
-      titleEdit: '編輯定期進帳',
+      titleNew: '新增定期收入',
+      titleEdit: '編輯定期收入',
       amountLabel: '固定金額',
-      recipientPrompt: '進到誰那？',
+      recipientPrompt: '誰的收入？',
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
@@ -1270,7 +1280,7 @@ export const zhTW: Translations = {
     saveChanges: '儲存變更',
     deleteConfirm: {
       title: '確認刪除？',
-      description: '這個愛物與所有關聯花費將從列表中移除。',
+      description: '這個愛物與所有關聯支出將從列表中移除。',
       confirmLabel: '刪除',
     },
     type: {
@@ -1431,15 +1441,15 @@ export const zhTW: Translations = {
     editAriaLabel: '編輯',
     switcherAriaLabel: '切換愛物',
     notesSection: '備註',
-    recentExpenses: '近期花費',
+    recentExpenses: '近期支出',
     timelineEntries: '時間軸 · {count} 筆',
-    addOtherExpense: '其他花費',
+    addOtherExpense: '其他支出',
     refuel: '加油',
     relatedInsurance: '相關保險',
     linkedVehicleSection: '關聯車輛',
-    emptyCarLine1: '還沒有為這台車記下任何花費 —',
+    emptyCarLine1: '還沒有為這台車記下任何支出 —',
     emptyCarLine2: '戳右下角 + 開始',
-    emptyDefaultLine1: '還沒有記下任何花費 —',
+    emptyDefaultLine1: '還沒有記下任何支出 —',
     emptyDefaultLine2: '戳右下角 + 開始',
     typeLabels: {
       car: '車',
