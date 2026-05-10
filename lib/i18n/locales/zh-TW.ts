@@ -791,6 +791,86 @@ export type Translations = {
     }
   }
 
+  monthlyReview: {
+    /** Template with `{year}` `{month}`. */
+    pageTitle: string
+    backAriaLabel: string
+    closeAriaLabel: string
+    /** Banner heading template with `{month}` (1..12). */
+    bannerHeading: string
+    /** Banner heading when no message exists, with `{month}`. */
+    bannerHeadingNoMessage: string
+    /** Banner CTA template with `{month}`. */
+    bannerCta: string
+    /** Solo-mode banner heading variant with `{month}`. */
+    bannerHeadingSolo: string
+    /** Solo-mode banner heading no-message variant with `{month}`. */
+    bannerHeadingSoloNoMessage: string
+    /** Solo-mode CTA with `{month}`. */
+    bannerCtaSolo: string
+    /** Past-month read-only message section title. */
+    pastMessagesTitle: string
+    /** Author label fallback for past-month messages when display name absent. */
+    pastMessageAuthorFallback: string
+    /** Editor section heading. */
+    editorTitle: string
+    /** Solo-mode editor heading variant. */
+    editorTitleSolo: string
+    /** Editor textarea placeholder. */
+    editorPlaceholder: string
+    /** Counter template with `{n}` and `{max}`. */
+    editorCounter: string
+    /** Footer text shown when message is locked, with `{date}`. */
+    lockedFooter: string
+    /** Footer text shown while saving. */
+    savingFooter: string
+    /** Footer text shown after successful save. */
+    savedFooter: string
+    /** Footer error template, with `{message}`. */
+    errorFooter: string
+    /** Card 1 heading. */
+    card1Title: string
+    /** Card 1 body template with `{category}`, `{amount}`. */
+    card1Body: string
+    /** Card 1 solo body variant with `{category}`, `{amount}`. */
+    card1BodySolo: string
+    /** Card 2 heading. */
+    card2Title: string
+    /** Card 2 body template with `{name}`, `{description}`, `{amount}`. */
+    card2Body: string
+    /** Card 3 heading. */
+    card3Title: string
+    /** Card 3 expense total template with `{amount}`. */
+    card3ExpenseTotal: string
+    /** Card 3 income total template with `{amount}`. */
+    card3IncomeTotal: string
+    /** Card 4 heading. */
+    card4Title: string
+    /** Empty-card body lines (zero transactions). */
+    emptyCardBody: string
+    /** Empty-card CTA. */
+    emptyCardCta: string
+    /** Empty recurring events line. */
+    emptyRecurring: string
+    /** Empty asset breakdown line. */
+    emptyAssetBreakdown: string
+    /** Carousel page indicator template with `{current}` `{total}`. */
+    carouselIndicator: string
+    /** Direction label for income events in card 3. */
+    incomeLabel: string
+    /** Direction label for expense events in card 3. */
+    expenseLabel: string
+    /** Snapshot-not-yet-computed message (rare race). */
+    snapshotNotReady: string
+    /** Errors. */
+    errors: {
+      messageRequired: string
+      messageTooLong: string
+      saveFailed: string
+      locked: string
+    }
+  }
+
   inAppBrowser: {
     /** Heading on the full-screen blocker. */
     title: string
@@ -1573,6 +1653,51 @@ export const zhTW: Translations = {
       groupFull: '此帳本已有兩位成員',
       alreadyMember: '你已經是此帳本的成員',
       unknown: '無法加入帳本',
+    },
+  },
+
+  monthlyReview: {
+    pageTitle: '{year} 年 {month} 月．我們的記帳回顧',
+    backAriaLabel: '返回',
+    closeAriaLabel: '關閉',
+    bannerHeading: '你們在 {month} 月寫下：',
+    bannerHeadingNoMessage: '上個月的回顧整理好了',
+    bannerCta: '→ 一起看看 {month} 月',
+    bannerHeadingSolo: '你在 {month} 月寫下：',
+    bannerHeadingSoloNoMessage: '上個月的回顧整理好了',
+    bannerCtaSolo: '→ 看看 {month} 月',
+    pastMessagesTitle: '上個月寫給這個月的話',
+    pastMessageAuthorFallback: '對方',
+    editorTitle: '給下個月的我們',
+    editorTitleSolo: '給下個月的我',
+    editorPlaceholder: '寫一句話給下個月的你們',
+    editorCounter: '{n}/{max}',
+    lockedFooter: '已於 {date} 鎖定',
+    savingFooter: '儲存中…',
+    savedFooter: '已儲存',
+    errorFooter: '儲存失敗：{message}',
+    card1Title: '最常一起花的類別',
+    card1Body: '這個月你們最常一起花在 {category}，共 NT$ {amount}',
+    card1BodySolo: '這個月你最常花在 {category}，共 NT$ {amount}',
+    card2Title: '本月最大筆',
+    card2Body: '最大一筆 — {name} 付的「{description}」，NT$ {amount}',
+    card3Title: '定期入帳事件',
+    card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
+    card3IncomeTotal: '本月定期進帳共 NT$ {amount}',
+    card4Title: '愛物進度',
+    emptyCardBody: '這個月沒留下花費紀錄',
+    emptyCardCta: '現在去補登 →',
+    emptyRecurring: '本月沒有定期事件',
+    emptyAssetBreakdown: '本月沒有為任何愛物花費',
+    carouselIndicator: '{current} / {total}',
+    incomeLabel: '進',
+    expenseLabel: '支',
+    snapshotNotReady: '這個月的回顧還在整理中，等一下再進來看看吧。',
+    errors: {
+      messageRequired: '請寫一句話',
+      messageTooLong: '留言最長 200 字',
+      saveFailed: '儲存失敗',
+      locked: '這個月的留言已鎖定',
     },
   },
 

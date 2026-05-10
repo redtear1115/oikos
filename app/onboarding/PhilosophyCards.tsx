@@ -370,8 +370,16 @@ export default function PhilosophyCards() {
           to   { opacity: 1; transform: translateX(0);    }
         }
       `}</style>
-      <div key={index} style={{ position: 'absolute', inset: 0, animation: 'cardIn 0.28s ease' }}>
-        {cards[index]}
+      <div style={{
+        position: 'relative',
+        maxWidth: 448,
+        height: '100%',
+        margin: '0 auto',
+        overflow: 'hidden',
+      }}>
+        <div key={index} style={{ position: 'absolute', inset: 0, animation: 'cardIn 0.28s ease' }}>
+          {cards[index]}
+        </div>
       </div>
     </div>
   )
