@@ -70,3 +70,24 @@ export async function updateGroupName(name: string): Promise<{ ok: true }> {
   revalidatePath('/settings')
   return { ok: true }
 }
+
+export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  if (!Number.isInteger(ratioA) || ratioA < 1 || ratioA > 99) {
+    throw new Error('分攤比例必須為 1–99 的整數')
+  }
+
+  const result = await db
+    .update(oikosGroups)
+    .set({ defaultSplitRatioA: ratioA })
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .returning({ id: oikosGroups.id })
+
+  if (result.length === 0) throw new Error('找不到家計簿')
+
+  revalidatePath('/settings')
+  return { ok: true }
+}
