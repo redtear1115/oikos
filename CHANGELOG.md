@@ -11,6 +11,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.14.2] - 2026-05-11
+
+主題：**紀錄可以更貼手**——v0.14.1 上完之後把當時暫時 revert 出來的兩件小事 ship 回去：在 `/records` 月度統計卡點 detail bar 直接套用 filter 到 transaction feed（drill-down，#102），AddSheet 描述欄位輸入時即時 surface household 歷史紀錄做 inline suggestion（#113）。
+
+完整 diff：[v0.14.1...v0.14.2](https://github.com/redtear1115/oikos/compare/v0.14.1...v0.14.2)
+
+### Shipped
+
+1. **Added** — **AddSheet 描述自動完成**（PR #114，closes #113）：在 AddSheet 描述欄位輸入時，即時從目前 household（雙人共同帳本）的歷史 CashTransaction 描述抓前綴（caseinsensitive），最多回 5 條 inline 建議；點選即填入並收起 dropdown，空字串時不顯示。新增 `lib/db/queries/transactions.ts → suggestDescriptions()` query 與 `DescriptionAutocomplete` client 元件，soft-deleted 紀錄排除、僅讀當前 household。i18n 4 語齊備。原 PR 在 v0.14.1 release 時暫時 revert，本版 revert-the-revert 重新接回。
+2. **Added** — **`/records` 月度統計 drill-down**（PR #116，closes #102）：點 stats card detail bar（分類列 / 愛物列 / 收入分類列）直接把 transaction feed 套上對應 filter，配 `DrillFilterChip` 浮在 feed header 顯示「目前 filter 條件 + 一鍵清除」。`lib/drill.ts` 把 stats row 的 `data-category` / `data-asset-id` / `data-income-category` 翻成 feed `ResolvedTxnFilter`；點同一個 row 再點一次清除（idempotent toggle）。三個 tab 都通：全部 → 分類 / 愛物 / 收入分類；支出 → 分類 / 愛物；收入 → 收入分類。Stats card scope 仍只跟著 month switcher，不被 drill-down 連動。新增 `__tests__/drill.test.ts`（覆蓋 toggle 與三 tab 行為）。原 PR 在 v0.14.1 release 時暫時 revert，本版 revert-the-revert 重新接回。
+
+### Internal
+- **Doc-keeper sweep**（PR #119）：v0.14.1 ship 後留下的 stale spec / CLAUDE.md PR 編號修正——`fab-records-tab-design.md` frontmatter 從錯標的「PR #110 / 6776a4a / 42c7524 / Pending next tagged release」改為「PR #112，closes #110，shipped in v0.14.1」；CLAUDE.md spec table 同步調整 stats（drill-down 待 v0.14.2）與 fab（v0.14.1 + PR #112）兩列；`transactions-design.md` v0.14.1 增量段把錯標的「Dashboard hero collapse PR #109」修為「PR #111, closes #109」。
+
+### Migration
+
+無 schema 變動。Drill-down 與描述自動完成皆是純讀取 + 純前端互動。
+
 ## [0.14.1] - 2026-05-10
 
 主題：**分擔可以不對半，陪伴的細節再收一輪**——v0.14.0 上完之後幾天衍生出的修補與小功能：分擔不一定 50/50（依比例分），`/records` FAB 跟著 tab 換意思，dashboard hero 卡片可收起；外加一個 prod-only SW 註冊失敗的 hot-fix。
