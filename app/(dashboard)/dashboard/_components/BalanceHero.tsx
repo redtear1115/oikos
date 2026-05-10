@@ -10,6 +10,7 @@ import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
+import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
 
 const HERO_COLLAPSED_KEY = 'hero-collapsed'
 
@@ -113,11 +114,7 @@ export function BalanceHero({
       {mode === 'income' ? (
         heroCollapsed ? (
           // Income collapsed — one line
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className="w-full flex items-center justify-between bg-transparent border-0 cursor-pointer p-0 py-1"
-          >
+          <div className="flex items-center justify-between py-1">
             <span
               style={{
                 fontFamily: 'var(--font-numeric)',
@@ -130,34 +127,22 @@ export function BalanceHero({
             >
               {incomeMonthTotal > 0 ? `+NT$${incomeMonthTotal.toLocaleString('en-US')}` : 'NT$0'}
             </span>
-            <span
-              style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, fontWeight: 400 }}
-              aria-hidden="true"
-            >
-              +
-            </span>
-          </button>
+            <ToggleButton onClick={toggleCollapsed} ariaLabel="expand" expanded={false}>+</ToggleButton>
+          </div>
         ) : (
-          // Income expanded — full card
+          // Income expanded — full card with toggle in header row
           <div style={{
             background: '#fff',
             borderRadius: 20,
             border: '1px solid var(--hairline)',
             padding: '20px 22px',
             marginBottom: 18,
-            position: 'relative',
           }}>
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="absolute top-3 right-4 bg-transparent border-0 cursor-pointer p-0"
-              style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, fontWeight: 400 }}
-              aria-label="collapse"
-            >
-              −
-            </button>
-            <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2 }}>
-              {t.balanceHero.monthlyIncome}
+            <div className="flex items-center justify-between mb-1">
+              <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2 }}>
+                {t.balanceHero.monthlyIncome}
+              </div>
+              <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
             </div>
             <div style={{
               fontFamily: 'var(--font-numeric)',
@@ -204,7 +189,7 @@ export function BalanceHero({
           </div>
         )
       ) : heroCollapsed ? (
-        // Expense collapsed — compact row with settle pill + expand button
+        // Expense collapsed — compact row with settle pill + expand ToggleButton
         <div>
           <div className="flex items-center gap-2 py-1">
             <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
@@ -251,15 +236,7 @@ export function BalanceHero({
                 ⇄
               </button>
             )}
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="bg-transparent border-0 cursor-pointer p-0"
-              style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, fontWeight: 400, flexShrink: 0 }}
-              aria-label="expand"
-            >
-              +
-            </button>
+            <ToggleButton onClick={toggleCollapsed} ariaLabel="expand" expanded={false}>+</ToggleButton>
           </div>
           {settleOpen && canSettle && (
             <SettlementForm
@@ -271,61 +248,52 @@ export function BalanceHero({
           )}
         </div>
       ) : (
-        // Expense expanded — balance + optional settle form
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className="absolute top-0 right-0 bg-transparent border-0 cursor-pointer p-0"
-            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-label)', lineHeight: 1, zIndex: 1, fontWeight: 400 }}
-            aria-label="collapse"
-          >
-            −
-          </button>
-
-          <button
-            type="button"
-            onClick={() => canSettle && setSettleOpen((v) => !v)}
-            disabled={!canSettle}
-            className="w-full text-left bg-transparent border-0 cursor-pointer disabled:cursor-default p-0"
-            style={{ paddingRight: canSettle ? 0 : 24 }}
-            aria-expanded={settleOpen}
-            aria-label={canSettle ? t.balanceHero.settleAriaLabel : undefined}
-          >
-            <div className="flex items-start gap-[14px]">
-              <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
-              <div className="flex-1 pt-[2px] min-w-0">
-                <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
-                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
-                  <span>{verb}</span>
+        // Expense expanded — settle area (flex-1) + collapse ToggleButton sibling
+        <div>
+          <div className="flex items-start gap-2">
+            <button
+              type="button"
+              onClick={() => canSettle && setSettleOpen((v) => !v)}
+              disabled={!canSettle}
+              className="flex-1 text-left bg-transparent border-0 cursor-pointer disabled:cursor-default p-0"
+              aria-expanded={settleOpen}
+              aria-label={canSettle ? t.balanceHero.settleAriaLabel : undefined}
+            >
+              <div className="flex items-start gap-[14px]">
+                <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
+                <div className="flex-1 pt-[2px] min-w-0">
+                  <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
+                    <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
+                    <span>{verb}</span>
+                  </div>
+                  <div className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
+                    style={{
+                      fontFamily: 'var(--font-numeric)',
+                      fontSize: 'var(--fs-amount-lg)',
+                      fontWeight: 600,
+                      color: 'var(--ink)',
+                      opacity: fading ? 0 : 1,
+                    }}>
+                    <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
+                    {amount.toLocaleString('en-US')}
+                  </div>
                 </div>
-                <div className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
-                  style={{
-                    fontFamily: 'var(--font-numeric)',
-                    fontSize: 'var(--fs-amount-lg)',
-                    fontWeight: 600,
-                    color: 'var(--ink)',
-                    opacity: fading ? 0 : 1,
-                  }}>
-                  <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
-                  {amount.toLocaleString('en-US')}
-                </div>
+                {canSettle && (
+                  <div
+                    className="self-center text-title transition-transform duration-200"
+                    style={{
+                      color: 'var(--ink-3)',
+                      transform: settleOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }}
+                    aria-hidden="true"
+                  >
+                    ⌄
+                  </div>
+                )}
               </div>
-              {canSettle && (
-                <div
-                  className="self-center text-title transition-transform duration-200"
-                  style={{
-                    color: 'var(--ink-3)',
-                    transform: settleOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    marginRight: 24,
-                  }}
-                  aria-hidden="true"
-                >
-                  ⌄
-                </div>
-              )}
-            </div>
-          </button>
+            </button>
+            <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
+          </div>
 
           {settleOpen && canSettle && (
             <SettlementForm
