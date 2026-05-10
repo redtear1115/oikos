@@ -117,9 +117,26 @@ export function BalanceHero({
           padding: '16px 22px',
           marginBottom: heroCollapsed ? 0 : 18,
         }}>
-          <div className="flex items-center justify-between">
-            <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2 }}>
-              {t.balanceHero.monthlyIncome}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
+              <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2, flexShrink: 0 }}>
+                {t.balanceHero.monthlyIncome}
+              </span>
+              {heroCollapsed && (
+                <span
+                  className="tnum truncate"
+                  style={{
+                    fontFamily: 'var(--font-numeric)',
+                    fontSize: 'var(--fs-body)',
+                    fontWeight: 600,
+                    color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
+                    letterSpacing: '-0.6px',
+                    fontFeatureSettings: '"tnum"',
+                  }}
+                >
+                  {incomeMonthTotal > 0 ? `+NT$${incomeMonthTotal.toLocaleString('en-US')}` : 'NT$0'}
+                </span>
+              )}
             </div>
             <ToggleButton
               onClick={toggleCollapsed}
@@ -185,26 +202,21 @@ export function BalanceHero({
           {heroCollapsed ? (
             <div className="flex items-center gap-2">
               <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
-              <div className="flex-1 min-w-0">
-                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-2)', lineHeight: 1.3 }}>
-                  <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{subjectName}</span>{' '}
-                  <span>{verb}</span>
-                </div>
-                <div
-                  className="tnum transition-opacity duration-150"
+              <div className="flex-1 min-w-0 truncate transition-opacity duration-150" style={{ opacity: fading ? 0 : 1 }}>
+                <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 'var(--fs-body)' }}>{subjectName}</span>{' '}
+                <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-body)' }}>{verb}</span>{' '}
+                <span
+                  className="tnum"
                   style={{
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-body)',
                     fontWeight: 600,
                     color: 'var(--ink)',
                     letterSpacing: '-0.6px',
-                    opacity: fading ? 0 : 1,
-                    marginTop: 1,
                   }}
                 >
-                  <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 500, color: 'var(--ink-2)', marginRight: 2 }}>NT$</span>
-                  {amount.toLocaleString('en-US')}
-                </div>
+                  NT${amount.toLocaleString('en-US')}
+                </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} />}
