@@ -125,6 +125,7 @@ export const zhCN: Translations = {
     titleEdit: '编辑记录',
     amount: '金额',
     descPlaceholder: '描述（例：晚餐、杂货）',
+    descSuggestions: '描述建议',
     category: '分类',
     assetLink: '关联爱物（选填）',
     splitMethod: '分摊方式',

@@ -125,6 +125,7 @@ export const ja: Translations = {
     titleEdit: '記録を編集',
     amount: '金額',
     descPlaceholder: '内容（例: 夕食、買い物）',
+    descSuggestions: '入力候補',
     category: 'カテゴリー',
     assetLink: '愛物にリンク（任意）',
     splitMethod: '分担方法',

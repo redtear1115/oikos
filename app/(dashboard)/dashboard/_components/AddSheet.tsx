@@ -3,10 +3,15 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
-import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
+import { DescriptionAutocomplete } from './DescriptionAutocomplete'
+import {
+  createTransaction,
+  editTransaction,
+  softDeleteTransaction,
+  getDescriptionSuggestions,
+} from '@/actions/transaction'
 import { editAndConfirmPending } from '@/actions/recurringExpense'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
@@ -73,6 +78,20 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
   const [assetId, setAssetId] = useState<string | null>(null)
+  const [descSuggestions, setDescSuggestions] = useState<string[]>([])
+
+  // Fetch household-wide description history when the sheet opens. Re-fetched
+  // on every open so newly-added descriptions surface immediately on the next
+  // entry (and so we don't hold stale data across days). Cancelled if the
+  // sheet closes mid-flight to avoid a setState-after-unmount.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    getDescriptionSuggestions()
+      .then((list) => { if (!cancelled) setDescSuggestions(list) })
+      .catch(() => { /* autocomplete is best-effort; failing it shouldn't surface an error */ })
+    return () => { cancelled = true }
+  }, [open])
 
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
@@ -316,18 +335,14 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             )}
           </div>
 
-          {/* Description */}
-          <div className="px-5 py-3.5 flex items-center gap-3.5"
-            style={{ borderBottom: '1px solid var(--hairline)' }}>
-            <DescIcon />
-            <input
-              value={desc}
-              onChange={e => setDesc(e.target.value)}
-              placeholder={t.addSheet.descPlaceholder}
-              className="flex-1 bg-transparent border-0 outline-none text-base py-1"
-              style={{ color: 'var(--ink)' }}
-            />
-          </div>
+          {/* Description (with autocomplete from household history) */}
+          <DescriptionAutocomplete
+            value={desc}
+            onChange={setDesc}
+            suggestions={descSuggestions}
+            placeholder={t.addSheet.descPlaceholder}
+            listboxLabel={t.addSheet.descSuggestions}
+          />
 
           {/* Categories */}
           <div className="pt-5 pb-[18px]">

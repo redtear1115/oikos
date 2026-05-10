@@ -126,6 +126,8 @@ export type Translations = {
     titleEdit: string
     amount: string
     descPlaceholder: string
+    /** Aria label for the description-autocomplete suggestion listbox. */
+    descSuggestions: string
     category: string
     assetLink: string
     splitMethod: string
@@ -1055,6 +1057,7 @@ export const zhTW: Translations = {
     titleEdit: '編輯紀錄',
     amount: '金額',
     descPlaceholder: '描述（例：晚餐、雜貨）',
+    descSuggestions: '描述建議',
     category: '分類',
     assetLink: '關聯愛物（選填）',
     splitMethod: '分攤方式',
