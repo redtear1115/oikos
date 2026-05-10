@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.13.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.14.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -35,6 +35,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.12.0](CHANGELOG.md#0120---2026-05-09) | 陪伴 × 信任．把陪伴的細節都收下 |
 | [v0.13.0](CHANGELOG.md#0130---2026-05-09) | 陪伴 × 起點 × 定期支出．第一步、第一筆，到不必再記住 |
 | [v0.13.1](CHANGELOG.md#0131---2026-05-09) | 啟程之前的鋪陳．哲學卡先說我們的承諾 |
+| [v0.14.0](CHANGELOG.md#0140---2026-05-10) | 沒有訊號的時候，也還看得見．本月攤開來看一次，斷線了也記得 |
 
 ## Backlog / 未釋出版本
 
@@ -42,7 +43,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 | 主要 issues |
 |---|---|---|
-| [v0.14.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av0.14.0) | 沒有訊號的時候，也還看得見 | #19 read-only offline、#22 月度／分類統計、#44 雙人月度回顧 |
 | [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
 
 → 所有候選：[GitHub Issues](https://github.com/redtear1115/oikos/issues) · [`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
@@ -161,7 +161,7 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
 | `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（v0.14.0 shipped — Serwist + opt-in toggle + offline fallback）|
-| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 計畫中）|
-| `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 計畫中，#22 query reuse）|
+| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped）|
+| `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |
