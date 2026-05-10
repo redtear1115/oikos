@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
   // (Serwist's `disable: isDev`); production build forces webpack via
   // `next build --webpack` so the hook actually runs and emits public/sw.js.
   turbopack: {},
+  async headers() {
+    return [
+      {
+        // Service workers must never be served from CDN cache — the browser
+        // needs a fresh byte-comparison on every load to detect updates and to
+        // complete initial registration. Without this, Vercel returns 304 and
+        // navigator.serviceWorker.register() silently fails.
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+      },
+    ];
+  },
 };
 
 export default withSerwist(nextConfig);
