@@ -63,7 +63,7 @@ shipped_in: v0.1.0（核心 CRUD / settlement / balance / 篩選 / realtime）·
 ### v0.14.1 增量
 
 - **Weighted split**（plan：[`docs/superpowers/plans/2026-05-10-weighted-split.md`](../plans/2026-05-10-weighted-split.md)）：`split_type` 加 `weighted`、新增 `split_ratio_a`（CashTransactions / RecurringExpenseRules / PendingExpenseOccurrences），group 多 `default_split_ratio_a`；UI 把 `half` 換成 weighted slider。Balance recalc 同時支援 legacy `half` 和 `weighted`。
-- **Dashboard hero collapse**（PR #109）：避免 hero 卡 + balance row 在小螢幕擠成兩行；collapsed 狀態 toggle、settle pill、ToggleButton 在 collapsed / expanded 兩態的位置都鎖定。
+- **Dashboard hero collapse**（PR #111, closes #109）：避免 hero 卡 + balance row 在小螢幕擠成兩行；collapsed 狀態 toggle、settle pill、ToggleButton 在 collapsed / expanded 兩態的位置都鎖定。
 
 ### 待 v0.14.2 部署
 - **Description autocomplete**（PR #114, closes #113）：AddSheet 描述欄位輸入時，從 household 歷史紀錄做前綴搜尋的 inline suggestion。`DescriptionAutocomplete` 元件 + 對應 query。v0.14.1 release 時暫時 revert，明天 v0.14.2 deploy 一起上 prod。
