@@ -258,6 +258,11 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
         )}
       </div>
 
+      {/* Each child below is a stable JSX sibling — React reconciles them by
+          position, not as a list. We deliberately render `null` (rather than
+          mounting a hidden TransactionFeed per tab) so only one feed exists
+          in the DOM at a time; switching tabs unmounts the old one and the
+          new one fetches its own page-1 cleanly via `key={tab}`. */}
       <TransactionFeed
         key={tab}
         initial={tabInitial}
@@ -277,9 +282,9 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
         }
       />
 
-      {/* Stats are 純支出視角 (spec). Hide on the income-only tab to avoid mixing
-          two unrelated framings on the same screen. */}
-      {tab !== 'income' && statsSlot}
+      {/* Stats are 純支出視角 (spec). Hide on the income-only tab to avoid
+          mixing two unrelated framings on the same screen. */}
+      {tab === 'income' ? null : statsSlot}
 
       <BottomNav onAddClick={() => setAdding(true)} hideFab={sheetOpen} />
 
@@ -304,7 +309,6 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
           setFilterOpen(false)
         }}
       />
-
       <IncomeSheet
         open={editingIncome !== null}
         onClose={handleSheetClose}
@@ -312,7 +316,10 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
         onMutated={handleMutated}
       />
 
-      {fuelCar && (
+      {/* NewFuelLog is mounted lazily because its `car` prop is required and
+          only known after the user taps a fuel-log row. Keep this conditional
+          last so the slot order above (sheets) stays stable. */}
+      {fuelCar !== null ? (
         <NewFuelLog
           open={fuelSheetOpen}
           onClose={() => setFuelSheetOpen(false)}
@@ -321,7 +328,7 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
           mode="edit"
           initial={fuelSheetInitial}
         />
-      )}
+      ) : null}
     </div>
   )
 }
