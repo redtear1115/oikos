@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
+import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 interface Props {
   open: boolean
@@ -12,6 +14,7 @@ interface Props {
 }
 
 export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: Props) {
+  const t = useTranslations()
   const [assets, setAssets] = useState<PickerAsset[] | null>(null)
   const [loadError, setLoadError] = useState('')
 
@@ -20,8 +23,8 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     setLoadError('')
     loadAssetsForPicker()
       .then(setAssets)
-      .catch((e) => setLoadError(e instanceof Error ? e.message : '載入失敗'))
-  }, [open])
+      .catch((e) => setLoadError(describeError(e, '載入失敗', t.common.offlineError)))
+  }, [open, t])
 
   return (
     <>

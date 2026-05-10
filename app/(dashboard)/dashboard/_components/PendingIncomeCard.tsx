@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { confirmPending, skipPending } from '@/actions/recurringIncome'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
+import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 
 export interface PendingIncomeCardProps {
@@ -14,6 +16,7 @@ export interface PendingIncomeCardProps {
 
 export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
   const router = useRouter()
+  const t = useTranslations()
   const [submitting, startTransition] = useTransition()
   const [fading, setFading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +29,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
       setFading(true)
       setTimeout(() => router.refresh(), 800)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '確認失敗')
+      setError(describeError(e, '確認失敗', t.common.offlineError))
     }
   })
 
@@ -38,7 +41,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
         setFading(true)
         setTimeout(() => router.refresh(), 800)
       } catch (e) {
-        setError(e instanceof Error ? e.message : '跳過失敗')
+        setError(describeError(e, '跳過失敗', t.common.offlineError))
       }
     })
   }

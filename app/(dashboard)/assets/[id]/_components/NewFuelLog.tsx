@@ -9,6 +9,8 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 import { localTodayISO } from '@/lib/local-date'
+import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import type { SplitType } from '@/lib/balance'
 
 interface CarLite {
@@ -60,6 +62,7 @@ function toGasFuelType(ft: string | null | undefined): GasFuelType {
 
 export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: NewFuelLogProps) {
   const { viewer, partner } = useMember()
+  const t = useTranslations()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [showCal, setShowCal] = useState(false)
@@ -163,7 +166,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         }
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(describeError(err, t.common.error, t.common.offlineError))
       }
     })
   }
@@ -176,7 +179,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         await softDeleteFuelLog(initial.fuelLogId)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        setError(describeError(err, t.common.error, t.common.offlineError))
       }
     })
   }

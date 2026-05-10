@@ -10,7 +10,8 @@ import { SheetBackdrop } from './SheetBackdrop'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
 import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
-import { useLocale } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 export interface SettlementSheetInitial {
   id: string
@@ -29,6 +30,7 @@ interface Props {
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   const { viewer, partner } = useMember()
   const locale = useLocale()
+  const t = useTranslations()
   const [amount, setAmount] = useState('')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
@@ -68,7 +70,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }
@@ -83,7 +85,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '發生錯誤')
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { signOut } from '@/actions/auth'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
+import { clearDynamicCache } from '@/lib/offline/swControl'
 
 export function LogoutButton() {
   const [pending, startTransition] = useTransition()
@@ -28,7 +29,13 @@ export function LogoutButton() {
         onCancel={() => setConfirming(false)}
         onConfirm={() => {
           setConfirming(false)
-          startTransition(() => signOut())
+          startTransition(async () => {
+            // Drop cached HTML so the next user on this device can't see the
+            // previous user's pages. Toggle preference / app shell precache
+            // are kept (they're not user-scoped).
+            await clearDynamicCache().catch(() => {})
+            await signOut()
+          })
         }}
       />
     </>

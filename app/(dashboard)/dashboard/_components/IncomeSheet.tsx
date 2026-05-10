@@ -16,6 +16,7 @@ import type { IncomeCategoryId } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
 
@@ -211,7 +212,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         onMutated?.()
         onClose()
       } catch (e) {
-        const msg = e instanceof Error ? e.message : t.incomeSheet.errors.saveFailed
+        const msg = describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError)
         // Race: partner confirmed/skipped this pending in another tab/device
         // before our edit-confirm landed. The error messages from
         // editAndConfirmPending in that case are: '待確認收入已被處理或找不到'
@@ -236,7 +237,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }

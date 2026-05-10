@@ -7,6 +7,7 @@ import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 interface Props {
   /** Called when the user dismisses the banner via the × button. The parent owns the
@@ -60,7 +61,7 @@ export function SoloBanner({
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
         toastTimerRef.current = setTimeout(() => setToast(null), 2000)
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }

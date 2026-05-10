@@ -22,6 +22,7 @@ export const ja: Translations = {
     you: 'あなた',
     all: 'すべて',
     error: 'エラーが発生しました',
+    offlineError: 'オフライン中です。接続が戻ってからもう一度お試しください',
     back: '戻る',
     edit: '編集',
     shared: '共用',
@@ -179,6 +180,7 @@ export const ja: Translations = {
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
+    offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
     stats: {
       title: '支出統計',
       titleAll: '収支統計',
@@ -225,7 +227,11 @@ export const ja: Translations = {
     language: '言語',
     sectionDevice: 'デバイス',
     offlineBrowsing: 'オフライン閲覧',
-    offlineHint: 'オフライン時に最近の記録を閲覧できます',
+    offlineHintOff: 'オフライン時には履歴を表示できません。オンにすると、最近閲覧したページがこの端末に保存されます。',
+    offlineHintOn: 'オフライン時に最後の接続時の記録を閲覧できます。データはこの端末にのみ保存され、ログアウト時に削除されます。',
+    offlineToggling: '処理中…',
+    offlineToggleError: '切り替えできませんでした。少し時間をおいて再度お試しください。',
+    offlineUnsupported: 'このブラウザはオフライン閲覧に対応していません',
     recurringIncome: '定期収入',
     recurringExpense: '定期支出',
     sectionData: 'データ',
@@ -776,6 +782,19 @@ export const ja: Translations = {
       alreadyMember: 'あなたは既にこの家計簿のメンバーです',
       unknown: '家計簿に参加できません',
     },
+  },
+
+  offlineBanner: {
+    text: 'オフライン中・最後の接続時のデータを表示しています',
+  },
+
+  offlinePage: {
+    title: 'ここはオンラインでないと見られません',
+    subtitle: 'すでに保存されているページを見てみましょう。',
+    linkDashboard: 'ホーム',
+    linkRecords: '記録',
+    linkAssets: '愛用品',
+    footer: 'オンラインに戻ったら自動で更新されます',
   },
 
   monthlyReview: {

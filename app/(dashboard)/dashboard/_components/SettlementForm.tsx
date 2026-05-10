@@ -9,6 +9,7 @@ import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
 import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -68,7 +69,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }

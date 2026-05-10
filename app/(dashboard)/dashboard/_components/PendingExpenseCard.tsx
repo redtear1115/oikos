@@ -7,6 +7,7 @@ import { confirmPending, skipPending } from '@/actions/recurringExpense'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import type { SplitType } from '@/lib/balance'
 
@@ -41,7 +42,7 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
       setFading(true)
       setTimeout(() => router.refresh(), 800)
     } catch (e) {
-      setError(e instanceof Error ? e.message : t.recurringExpense.errors.operationFailed)
+      setError(describeError(e, t.recurringExpense.errors.operationFailed, t.common.offlineError))
     }
   })
 
@@ -53,7 +54,7 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
         setFading(true)
         setTimeout(() => router.refresh(), 800)
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.recurringExpense.errors.operationFailed)
+        setError(describeError(e, t.recurringExpense.errors.operationFailed, t.common.offlineError))
       }
     })
   }
