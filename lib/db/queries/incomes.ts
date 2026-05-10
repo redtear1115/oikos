@@ -1,6 +1,7 @@
 import { db } from '@/lib/db/client'
 import { incomeTransactions } from '@/lib/db/schema'
 import { and, eq, isNull, desc, sql } from 'drizzle-orm'
+import type { DrillFilter } from '@/lib/drill'
 
 export interface IncomeRow {
   id: string
@@ -24,7 +25,13 @@ export async function listIncomesPaged(
   cursor: IncomeCursor | null,
   limit = 20,
   monthKey?: string,
+  drill?: DrillFilter | null,
 ): Promise<IncomeRow[]> {
+  // Drill that doesn't target income (expense category / asset) → empty page.
+  // Lets the income tab render zero rows under an incompatible drill instead
+  // of bleeding through unfiltered.
+  if (drill && drill.kind !== 'income') return []
+
   const conditions = [
     eq(incomeTransactions.groupId, groupId),
     isNull(incomeTransactions.deletedAt),
@@ -40,6 +47,9 @@ export async function listIncomesPaged(
       sql`occurred_at >= ${monthKey + '-01'}::date`,
       sql`occurred_at <  (${monthKey + '-01'}::date + INTERVAL '1 month')`,
     )
+  }
+  if (drill?.kind === 'income') {
+    conditions.push(eq(incomeTransactions.category, drill.categoryId))
   }
 
   const rows = await db

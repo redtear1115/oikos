@@ -202,6 +202,11 @@ export const en: Translations = {
       summaryNetIncome: 'Net income +{amount}',
       summaryNetExpense: 'Net expense {amount}',
       summaryNetEven: 'Break even',
+      drillFilterLabel: 'Show only "{label}"',
+      drillClearLabel: 'Clear filter "{label}"',
+      drillChipPrefix: 'Only',
+      drillChipClear: 'Clear filter',
+      drillAssetUnknown: 'Unnamed',
     },
   },
 
