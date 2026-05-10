@@ -22,6 +22,7 @@ export interface CreateTransactionInput {
   transactedAt: Date
   assetId?: string | null
   notes?: string | null
+  splitRatioA?: number | null
 }
 
 export async function createTransaction(
@@ -32,7 +33,10 @@ export async function createTransaction(
   if (!user) throw new Error('Unauthorized')
 
   // Validate
-  const validated = validateTransactionInput(input)
+  const validated = validateTransactionInput({
+    ...input,
+    splitRatioA: input.splitRatioA ?? null,
+  })
 
   // Find viewer's group
   const [group] = await db
@@ -74,6 +78,7 @@ export async function createTransaction(
         notes: validated.notes,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
+        splitRatioA: validated.splitRatioA,
       })
       .returning({ id: cashTransactions.id })
     await recalcGroupBalance(group.id, tx)
@@ -142,6 +147,7 @@ export interface EditTransactionInput {
   transactedAt: Date
   assetId?: string | null
   notes?: string | null
+  splitRatioA?: number | null
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
@@ -149,7 +155,10 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const validated = validateTransactionInput(input)
+  const validated = validateTransactionInput({
+    ...input,
+    splitRatioA: input.splitRatioA ?? null,
+  })
 
   const [group] = await db
     .select()
@@ -217,6 +226,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         notes: validated.notes,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
+        splitRatioA: validated.splitRatioA,
       })
       .returning({ id: cashTransactions.id })
 
@@ -245,6 +255,7 @@ export interface PagedTxnRow {
   assetId: string | null
   fuelLogId: string | null  // non-null when row was created by a FuelLog dual-write
   notes: string | null  // shared memo on a CashTransaction; null for settlements/income/empty
+  splitRatioA: number | null
 }
 
 export async function loadMoreTransactions(
@@ -297,6 +308,7 @@ export async function loadMoreTransactions(
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
+    splitRatioA: r.splitRatioA ?? null,
   }))
 }
 
@@ -334,6 +346,7 @@ export async function loadMoreFeedAll(
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
+    splitRatioA: r.splitRatioA ?? null,
   }))
 }
 
@@ -371,5 +384,6 @@ export async function loadMoreTransactionsForAsset(
     assetId: r.assetId ?? null,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
+    splitRatioA: r.splitRatioA ?? null,
   }))
 }
