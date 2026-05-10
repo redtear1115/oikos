@@ -45,6 +45,30 @@ describe('settlementDelta', () => {
   })
 })
 
+describe('transactionDelta — weighted split', () => {
+  it('weighted 30:70 paid by A → B owes A 70% (ceil)', () => {
+    expect(transactionDelta({ amount: 3000, splitType: 'weighted', payerIs: 'a', splitRatioA: 30 })).toBe(2100)
+  })
+  it('weighted 30:70 paid by B → A owes B 30% (ceil)', () => {
+    expect(transactionDelta({ amount: 3000, splitType: 'weighted', payerIs: 'b', splitRatioA: 30 })).toBe(-900)
+  })
+  it('weighted 50:50 paid by A → same as half (ceil)', () => {
+    expect(transactionDelta({ amount: 101, splitType: 'weighted', payerIs: 'a', splitRatioA: 50 })).toBe(51)
+  })
+  it('weighted 50:50 paid by B → same as half (negative ceil)', () => {
+    expect(transactionDelta({ amount: 101, splitType: 'weighted', payerIs: 'b', splitRatioA: 50 })).toBe(-51)
+  })
+  it('weighted 1:99 paid by A → B owes A 99%', () => {
+    expect(transactionDelta({ amount: 100, splitType: 'weighted', payerIs: 'a', splitRatioA: 1 })).toBe(99)
+  })
+  it('weighted 99:1 paid by A → B owes A 1%', () => {
+    expect(transactionDelta({ amount: 100, splitType: 'weighted', payerIs: 'a', splitRatioA: 99 })).toBe(1)
+  })
+  it('weighted defaults splitRatioA to 50 when undefined', () => {
+    expect(transactionDelta({ amount: 100, splitType: 'weighted', payerIs: 'a' })).toBe(50)
+  })
+})
+
 describe('computeBalance', () => {
   it('empty → 0', () => {
     expect(computeBalance({ transactions: [], settlements: [] })).toBe(0)
