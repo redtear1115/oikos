@@ -762,4 +762,16 @@ export const ja: Translations = {
       unknown: '家計簿に参加できません',
     },
   },
+
+  inAppBrowser: {
+    title: '外部ブラウザで開いてください',
+    description: 'チャットアプリ内蔵のブラウザでは Google ログインとオフライン機能が動きません。Safari または Chrome で開き直してください。',
+    urlLabel: 'リンク',
+    copy: 'リンクをコピー',
+    copied: 'コピー済み',
+    openInSafari: 'Safari で開く',
+    instructionGeneric: '上のリンクをコピーして、Safari や Chrome に貼り付けてください。',
+    instructionIos: '上のボタンで Safari に移動、または手動でリンクをコピーして Safari に貼り付けてください。',
+    instructionAndroid: '右上のメニューから「ブラウザで開く」を選ぶか、リンクをコピーして Chrome に貼り付けてください。',
+  },
 }

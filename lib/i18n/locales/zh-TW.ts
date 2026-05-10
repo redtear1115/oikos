@@ -790,6 +790,27 @@ export type Translations = {
       unknown: string
     }
   }
+
+  inAppBrowser: {
+    /** Heading on the full-screen blocker. */
+    title: string
+    /** Body explaining why we block (Google login + offline don't work in WebViews). */
+    description: string
+    /** Section label above the URL block. */
+    urlLabel: string
+    /** Default state of the copy button. */
+    copy: string
+    /** State of the copy button after success. */
+    copied: string
+    /** iOS-only: button that tries `x-safari-https://` to jump to Safari. */
+    openInSafari: string
+    /** Generic hint shown below the copy/jump action. */
+    instructionGeneric: string
+    /** iOS-specific hint (Safari is the only supported browser for OAuth). */
+    instructionIos: string
+    /** Android-specific hint. */
+    instructionAndroid: string
+  }
 }
 
 export const zhTW: Translations = {
@@ -1553,5 +1574,17 @@ export const zhTW: Translations = {
       alreadyMember: '你已經是此帳本的成員',
       unknown: '無法加入帳本',
     },
+  },
+
+  inAppBrowser: {
+    title: '請在外部瀏覽器開啟',
+    description: '你目前在聊天軟體的內建瀏覽器裡。為了讓 Google 登入與離線功能正常運作，請改用 Safari 或 Chrome 開啟。',
+    urlLabel: '網址',
+    copy: '複製連結',
+    copied: '已複製',
+    openInSafari: '在 Safari 開啟',
+    instructionGeneric: '複製上方網址，貼到 Safari 或 Chrome 開啟。',
+    instructionIos: '點上方按鈕跳到 Safari，或複製網址後手動貼到 Safari。',
+    instructionAndroid: '點右上角選單，選「在瀏覽器中開啟」，或複製網址貼到 Chrome。',
   },
 }

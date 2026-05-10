@@ -762,4 +762,16 @@ export const zhCN: Translations = {
       unknown: '无法加入账本',
     },
   },
+
+  inAppBrowser: {
+    title: '请在外部浏览器中打开',
+    description: '你正在聊天软件内置的浏览器中浏览本页。为了让 Google 登录与离线功能正常工作，请改用 Safari 或 Chrome 打开。',
+    urlLabel: '链接',
+    copy: '复制链接',
+    copied: '已复制',
+    openInSafari: '在 Safari 中打开',
+    instructionGeneric: '复制上方链接，粘贴到 Safari 或 Chrome 中打开。',
+    instructionIos: '点上方按钮跳转到 Safari，或复制链接后手动粘贴到 Safari。',
+    instructionAndroid: '点右上角菜单，选「在浏览器中打开」，或复制链接粘贴到 Chrome。',
+  },
 }
