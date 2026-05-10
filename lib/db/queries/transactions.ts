@@ -501,31 +501,3 @@ export async function listAllActiveCashTransactionsForExport(
     ))
     .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
 }
-
-/**
- * Fetch unique CashTransaction descriptions for a group, ordered by frequency
- * (most-used first). Used by AddSheet's description autocomplete so partners
- * can quickly re-enter recurring labels ("早餐", "雜貨", "停車費"...). Empty /
- * whitespace-only descriptions are excluded; results are capped to keep the
- * payload small (autocomplete only needs a handful of matches anyway).
- */
-export async function listDescriptionSuggestions(
-  groupId: string,
-  limit = 200,
-): Promise<string[]> {
-  const rows = await db
-    .select({
-      description: cashTransactions.description,
-      freq: sql<number>`count(*)::int`,
-    })
-    .from(cashTransactions)
-    .where(and(
-      eq(cashTransactions.groupId, groupId),
-      isNull(cashTransactions.deletedAt),
-      sql`length(trim(${cashTransactions.description})) > 0`,
-    ))
-    .groupBy(cashTransactions.description)
-    .orderBy(sql`count(*) desc`)
-    .limit(limit)
-  return rows.map((r) => r.description)
-}
