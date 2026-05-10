@@ -40,16 +40,16 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## Backlog / 未釋出版本
 
-`v0.x` 每版工時目標 ~2 週；`v1.0.0+` 是 phase 級別範圍，工時不固定。主題敘事用來決定 changelog 文案與 release 重點。每個版本對應一個 GitHub milestone（per-issue 進度看 milestone 頁面）。
+`v0.x` 每版工時目標 ~2 週；`v1.0.0+` 是 phase 級別範圍，工時不固定。主題敘事用來決定 changelog 文案與 release 重點。每個版本對應一個 GitHub milestone — 詳細 issues 進度看 milestone 頁面，不在本檔維護。
 
-| 版本 | 主題 | 主要 issues |
-|---|---|---|
-| [v0.14.2](https://github.com/redtear1115/oikos/milestone/8) | 紀錄可以更貼手．自動完成 + 點選即篩選 | #102 stats drill-down · #113 description autocomplete |
-| [v0.15.0](https://github.com/redtear1115/oikos/milestone/5) | 離開也保留陪伴．pending 收斂 | #49 WIP pending record · #50 結構化篩選 · #79 leave group → solo · #101 pending 概念統一 |
-| [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 | #38 多幣種 · #68 心理匯率 · #91 settings 排版 |
-| [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 | #24 /sign-in 3-column · #51 競品 CSV 匯入 |
-| [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 | #46 定價 RFC · #54 entitlement · #55 趨勢圖 · #56 預算 · #57 PDF/CSV · #47 2FA · #39 owner→partner |
-| [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 | #35 OCR · #36 AI 語音 · #40 envelope budget · #41 對外借還 · #58 資產管家 · #59 儲蓄收入 · #60 GCal sync |
+| 版本 | 主題 |
+|---|---|
+| [v0.14.2](https://github.com/redtear1115/oikos/milestone/8) | 紀錄可以更貼手．自動完成 + 點選即篩選 |
+| [v0.15.0](https://github.com/redtear1115/oikos/milestone/5) | 離開也保留陪伴．pending 收斂 |
+| [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 |
+| [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 |
+| [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
+| [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 |
 
 → 沒指派 milestone 的候選：[no-milestone issues](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+no%3Amilestone) · [`backlog` 標籤](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
 
