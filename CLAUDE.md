@@ -36,7 +36,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.13.0](CHANGELOG.md#0130---2026-05-09) | 陪伴 × 起點 × 定期支出．第一步、第一筆，到不必再記住 |
 | [v0.13.1](CHANGELOG.md#0131---2026-05-09) | 啟程之前的鋪陳．哲學卡先說我們的承諾 |
 | [v0.14.0](CHANGELOG.md#0140---2026-05-10) | 沒有訊號的時候，也還看得見．本月攤開來看一次，斷線了也記得 |
-| [v0.14.1](CHANGELOG.md#0141---2026-05-10) | 分擔可以不對半，紀錄可以更貼手．依比例分 + 細修 |
+| [v0.14.1](CHANGELOG.md#0141---2026-05-10) | 分擔可以不對半．依比例分 + UI 細修 + SW 修補 |
 
 ## Backlog / 未釋出版本
 
@@ -44,6 +44,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 | 主要 issues |
 |---|---|---|
+| [v0.14.2](https://github.com/redtear1115/oikos/milestone/8) | 紀錄可以更貼手．自動完成 + 點選即篩選 | #102 stats drill-down · #113 description autocomplete |
 | [v0.15.0](https://github.com/redtear1115/oikos/milestone/5) | 離開也保留陪伴．pending 收斂 | #49 WIP pending record · #50 結構化篩選 · #79 leave group → solo · #101 pending 概念統一 |
 | [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 | #38 多幣種 · #68 心理匯率 · #91 settings 排版 |
 | [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 | #24 /sign-in 3-column · #51 競品 CSV 匯入 |
