@@ -72,20 +72,23 @@ export function MonthlyStatsView({
   const hasExpenses = expenseTotal > 0
 
   return (
-    <section className="px-5 pt-10 pb-2">
-      <div className="flex items-baseline justify-between mb-3">
+    <section className="px-5 pt-6 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
+      <div className="flex items-center justify-between mb-3">
         <h2
           className="text-base font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {t.records.stats.title}
         </h2>
-        {/* Collapse button at top-right only when expanded. In collapsed mode
-            the expand button lives inline with the summary row below. */}
+        {/* Title-row controls: only when expanded AND has content. In collapsed
+            mode the toggle / expand button live inline with the summary row. */}
         {!isEmpty && !showCollapsed && (
-          <ToggleButton onClick={toggle} ariaLabel={t.records.stats.collapse} expanded>
-            −
-          </ToggleButton>
+          <div className="flex items-center gap-2">
+            {hasExpenses && <StatsBreakdownToggle value={view} />}
+            <ToggleButton onClick={toggle} ariaLabel={t.records.stats.collapse} expanded>
+              −
+            </ToggleButton>
+          </div>
         )}
       </div>
 
@@ -104,45 +107,32 @@ export function MonthlyStatsView({
             {t.records.stats.emptySub}
           </div>
         </div>
+      ) : showCollapsed ? (
+        // Collapsed: a single inline row replaces every visualisation.
+        // Layout: [summary text]  [breakdown toggle]  [expand button].
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
+          <div className="flex items-center gap-2 ml-auto">
+            {hasExpenses && <StatsBreakdownToggle value={view} />}
+            <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
+              +
+            </ToggleButton>
+          </div>
+        </div>
       ) : (
+        // Expanded: pie chart + stacked bar + total + detail bars.
         <>
-          {/* Expanded chrome: stacked chart + total line */}
-          {!showCollapsed && (
+          {hasExpenses && (
             <>
-              {hasExpenses && (
-                <div className="mt-5">
-                  <StackedBar rows={rows} total={expenseTotal} view={view} />
-                </div>
-              )}
-              <div className="text-sm tnum mt-3 mb-4" style={{ color: 'var(--ink-2)' }}>
-                {t.records.stats.total.replace('{amount}', expenseTotal.toLocaleString('en-US'))}
+              <div className="flex justify-center mt-5 mb-4">
+                <PieChart rows={rows} total={expenseTotal} view={view} />
               </div>
+              <StackedBar rows={rows} total={expenseTotal} view={view} />
             </>
           )}
-
-          {/* Combined row — summary text (collapsed only) + breakdown toggle +
-              expand button (collapsed only). When expanded, only the toggle
-              shows, right-aligned. */}
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-3">
-            {showCollapsed && (
-              <SummaryText
-                expenseTotal={expenseTotal}
-                incomeTotal={incomeTotal}
-                t={t}
-              />
-            )}
-            <div className="flex items-center gap-2 ml-auto">
-              {hasExpenses && <StatsBreakdownToggle value={view} />}
-              {showCollapsed && (
-                <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
-                  +
-                </ToggleButton>
-              )}
-            </div>
+          <div className="text-sm tnum mt-3 mb-4" style={{ color: 'var(--ink-2)' }}>
+            {t.records.stats.total.replace('{amount}', expenseTotal.toLocaleString('en-US'))}
           </div>
-
-          {/* Detail bars persist across collapsed/expanded — they're the
-              concrete numbers, not the chart. Hidden when expense=0. */}
           {hasExpenses && (
             <ul className="space-y-3">
               {view === 'category'
@@ -269,6 +259,90 @@ function hashStr(s: string): number {
   let h = 5381
   for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0
   return h
+}
+
+/**
+ * Inline SVG donut chart — kept dep-free per the original spec
+ * (Recharts ~50KB+ ruled out for mobile bundle size). Same color palette
+ * as StackedBar / detail bars so the three visualisations stay coherent.
+ */
+function PieChart({
+  rows,
+  total,
+  view,
+  size = 156,
+  innerRatio = 0.55,
+}: {
+  rows: ReadonlyArray<CategoryStatRow | AssetStatRow>
+  total: number
+  view: BreakdownView
+  size?: number
+  innerRatio?: number
+}) {
+  if (total <= 0) return null
+  const valued = rows.filter((r) => r.total > 0)
+  if (valued.length === 0) return null
+
+  const cx = size / 2
+  const cy = size / 2
+  const rOuter = size / 2 - 2
+  const rInner = rOuter * innerRatio
+
+  // Single-slice fast path (full ring) — avoids the 0-degree arc edge case.
+  if (valued.length === 1) {
+    const { chart } = colorForRow(valued[0], view)
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="pie chart">
+        <circle cx={cx} cy={cy} r={rOuter} fill={chart} />
+        <circle cx={cx} cy={cy} r={rInner} fill="var(--bg)" />
+      </svg>
+    )
+  }
+
+  let cumulative = 0
+  const slices = valued.map((row, i) => {
+    const fraction = row.total / total
+    const startAngle = cumulative * 2 * Math.PI - Math.PI / 2
+    cumulative += fraction
+    const endAngle = cumulative * 2 * Math.PI - Math.PI / 2
+
+    const xo1 = cx + rOuter * Math.cos(startAngle)
+    const yo1 = cy + rOuter * Math.sin(startAngle)
+    const xo2 = cx + rOuter * Math.cos(endAngle)
+    const yo2 = cy + rOuter * Math.sin(endAngle)
+    const xi1 = cx + rInner * Math.cos(endAngle)
+    const yi1 = cy + rInner * Math.sin(endAngle)
+    const xi2 = cx + rInner * Math.cos(startAngle)
+    const yi2 = cy + rInner * Math.sin(startAngle)
+
+    const largeArc = fraction > 0.5 ? 1 : 0
+    // Donut wedge: outer arc → inner arc (reversed) → close
+    const path = [
+      `M ${xo1} ${yo1}`,
+      `A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${xo2} ${yo2}`,
+      `L ${xi1} ${yi1}`,
+      `A ${rInner} ${rInner} 0 ${largeArc} 0 ${xi2} ${yi2}`,
+      'Z',
+    ].join(' ')
+
+    const { chart } = colorForRow(row, view)
+    const key = view === 'category'
+      ? (row as CategoryStatRow).key
+      : (row as AssetStatRow).key ?? `__none_${i}`
+    return <path key={key} d={path} fill={chart} />
+  })
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label={`Pie chart of ${valued.length} segments`}
+    >
+      {slices}
+    </svg>
+  )
 }
 
 function StackedBar({
