@@ -45,9 +45,10 @@ const serwist = new Serwist({
   precacheEntries: [
     ...((self.__SW_MANIFEST ?? []) as (PrecacheEntry | string)[]),
     // /offline is a Next.js route (not in public/), so it must be listed
-    // explicitly. Everything in public/ is already in __SW_MANIFEST with a
-    // revision hash — adding them again as plain strings causes conflicts.
-    '/offline',
+    // explicitly with a revision. Everything in public/ is already in
+    // __SW_MANIFEST with a revision hash — adding them again as plain strings
+    // causes conflicts.
+    { url: '/offline', revision: process.env.NEXT_PUBLIC_BUILD_ID ?? 'dev' },
   ],
   skipWaiting: true,
   clientsClaim: true,
