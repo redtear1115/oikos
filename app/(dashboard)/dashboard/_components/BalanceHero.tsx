@@ -57,20 +57,17 @@ export function BalanceHero({
 
   useRealtimeEvents((event) => {
     if (event.kind === 'balance-change') {
-      // The realtime payload is in member_a's perspective (raw). Cross-fade.
       setFading(true)
       setTimeout(() => {
         setDisplayedRaw(event.balance)
         setFading(false)
       }, 150)
     }
-    // Other event kinds are handled by TransactionFeed; no-op here.
   })
 
   const balance = viewerBalance(displayedRaw, viewerIsA)
   const [settleOpen, setSettleOpen] = useState(false)
 
-  // balance > 0 → partner owes you; balance < 0 → you owe partner; balance == 0 → even
   let owedByWho: 'M' | 'T'
   let subjectName: string
   let verb: string
@@ -112,8 +109,7 @@ export function BalanceHero({
       />
 
       {mode === 'income' ? (
-        // Income: always render the card — ToggleButton stays in the header row
-        // and never moves; only the body shows/hides below it.
+        // Income: always render the card; ToggleButton stays in the header row.
         <div style={{
           background: '#fff',
           borderRadius: 20,
@@ -182,10 +178,31 @@ export function BalanceHero({
           )}
         </div>
       ) : (
-        // Expense: ToggleButton is absolute-pinned at top-right — it never moves.
-        // Content area has paddingRight to stay clear of the button.
-        <div style={{ position: 'relative', paddingRight: 36 }}>
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
+        // Expense: fixed button row at top-right, balance content below.
+        // The button row never moves; only content below it changes.
+        <div>
+          {/* Fixed button row — always at the same position */}
+          <div className="flex items-center justify-end gap-1.5 mb-2">
+            {canSettle && (
+              <button
+                type="button"
+                onClick={() => setSettleOpen((v) => !v)}
+                aria-label={t.balanceHero.settleAriaLabel}
+                aria-expanded={settleOpen}
+                className="h-7 grid place-items-center rounded-full cursor-pointer"
+                style={{
+                  padding: '0 10px',
+                  border: '1px solid',
+                  borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
+                  background: settleOpen ? 'var(--ink)' : 'transparent',
+                  color: settleOpen ? '#fff' : 'var(--ink-2)',
+                  fontSize: 14,
+                  transition: 'background 150ms, color 150ms, border-color 150ms',
+                }}
+              >
+                ⇄
+              </button>
+            )}
             <ToggleButton
               onClick={toggleCollapsed}
               ariaLabel={heroCollapsed ? 'expand' : 'collapse'}
@@ -195,117 +212,64 @@ export function BalanceHero({
             </ToggleButton>
           </div>
 
+          {/* Balance content — changes between collapsed / expanded */}
           {heroCollapsed ? (
-            // Collapsed: compact row + settle pill
-            <>
-              <div className="flex items-center gap-2 py-1">
-                <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
-                <div className="flex-1 min-w-0">
-                  <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-2)', lineHeight: 1.3 }}>
-                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{subjectName}</span>{' '}
-                    <span>{verb}</span>
-                  </div>
-                  <div
-                    className="tnum transition-opacity duration-150"
-                    style={{
-                      fontFamily: 'var(--font-numeric)',
-                      fontSize: 'var(--fs-body)',
-                      fontWeight: 600,
-                      color: 'var(--ink)',
-                      letterSpacing: '-0.6px',
-                      opacity: fading ? 0 : 1,
-                      marginTop: 1,
-                    }}
-                  >
-                    <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 500, color: 'var(--ink-2)', marginRight: 2 }}>NT$</span>
-                    {amount.toLocaleString('en-US')}
-                  </div>
+            <div className="flex items-center gap-2">
+              <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
+              <div className="flex-1 min-w-0">
+                <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-2)', lineHeight: 1.3 }}>
+                  <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{subjectName}</span>{' '}
+                  <span>{verb}</span>
                 </div>
-                {canSettle && (
-                  <button
-                    type="button"
-                    onClick={() => setSettleOpen((v) => !v)}
-                    aria-label={t.balanceHero.settleAriaLabel}
-                    aria-expanded={settleOpen}
-                    style={{
-                      flexShrink: 0,
-                      borderRadius: 99,
-                      border: '1px solid var(--hairline)',
-                      background: settleOpen ? 'var(--ink)' : 'transparent',
-                      color: settleOpen ? '#fff' : 'var(--ink-2)',
-                      padding: '4px 10px',
-                      fontSize: 'var(--fs-micro)',
-                      cursor: 'pointer',
-                      letterSpacing: 0,
-                      transition: 'background 150ms, color 150ms',
-                    }}
-                  >
-                    ⇄
-                  </button>
-                )}
+                <div
+                  className="tnum transition-opacity duration-150"
+                  style={{
+                    fontFamily: 'var(--font-numeric)',
+                    fontSize: 'var(--fs-body)',
+                    fontWeight: 600,
+                    color: 'var(--ink)',
+                    letterSpacing: '-0.6px',
+                    opacity: fading ? 0 : 1,
+                    marginTop: 1,
+                  }}
+                >
+                  <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 500, color: 'var(--ink-2)', marginRight: 2 }}>NT$</span>
+                  {amount.toLocaleString('en-US')}
+                </div>
               </div>
-              {settleOpen && canSettle && (
-                <SettlementForm
-                  debtAmount={amount}
-                  viewerIsDebtor={balance < 0}
-                  onClose={() => setSettleOpen(false)}
-                  onMutated={() => onSettleMutated?.()}
-                />
-              )}
-            </>
+            </div>
           ) : (
-            // Expanded: full balance row + optional settle form
-            <>
-              <button
-                type="button"
-                onClick={() => canSettle && setSettleOpen((v) => !v)}
-                disabled={!canSettle}
-                className="w-full text-left bg-transparent border-0 cursor-pointer disabled:cursor-default p-0"
-                aria-expanded={settleOpen}
-                aria-label={canSettle ? t.balanceHero.settleAriaLabel : undefined}
-              >
-                <div className="flex items-start gap-[14px]">
-                  <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
-                  <div className="flex-1 pt-[2px] min-w-0">
-                    <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
-                      <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
-                      <span>{verb}</span>
-                    </div>
-                    <div className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
-                      style={{
-                        fontFamily: 'var(--font-numeric)',
-                        fontSize: 'var(--fs-amount-lg)',
-                        fontWeight: 600,
-                        color: 'var(--ink)',
-                        opacity: fading ? 0 : 1,
-                      }}>
-                      <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
-                      {amount.toLocaleString('en-US')}
-                    </div>
-                  </div>
-                  {canSettle && (
-                    <div
-                      className="self-center text-title transition-transform duration-200"
-                      style={{
-                        color: 'var(--ink-3)',
-                        transform: settleOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      }}
-                      aria-hidden="true"
-                    >
-                      ⌄
-                    </div>
-                  )}
+            <div className="flex items-start gap-[14px]">
+              <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
+              <div className="flex-1 pt-[2px] min-w-0">
+                <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
+                  <span>{verb}</span>
                 </div>
-              </button>
-              {settleOpen && canSettle && (
-                <SettlementForm
-                  debtAmount={amount}
-                  viewerIsDebtor={balance < 0}
-                  onClose={() => setSettleOpen(false)}
-                  onMutated={() => onSettleMutated?.()}
-                />
-              )}
-            </>
+                <div
+                  className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
+                  style={{
+                    fontFamily: 'var(--font-numeric)',
+                    fontSize: 'var(--fs-amount-lg)',
+                    fontWeight: 600,
+                    color: 'var(--ink)',
+                    opacity: fading ? 0 : 1,
+                  }}
+                >
+                  <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
+                  {amount.toLocaleString('en-US')}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {settleOpen && canSettle && (
+            <SettlementForm
+              debtAmount={amount}
+              viewerIsDebtor={balance < 0}
+              onClose={() => setSettleOpen(false)}
+              onMutated={() => onSettleMutated?.()}
+            />
           )}
         </div>
       )}
