@@ -1,11 +1,20 @@
 'use client'
 
-interface Props { kind: 'all_mine' | 'all_theirs' | 'half'; active: boolean }
+interface Props {
+  kind: 'all_mine' | 'all_theirs' | 'half' | 'weighted'
+  active: boolean
+  ratioA?: number  // 1–99; only used when kind = 'weighted'
+}
 
-export function SplitGlyph({ kind, active }: Props) {
+export function SplitGlyph({ kind, active, ratioA }: Props) {
   const fillMe = active ? 'var(--ink)' : 'var(--ink-3)'
   const fillThem = active ? 'var(--accent)' : '#C7BFB3'
-  const left = kind === 'all_mine' ? '100%' : kind === 'all_theirs' ? '0%' : '50%'
+  let left: string
+  if (kind === 'all_mine') left = '100%'
+  else if (kind === 'all_theirs') left = '0%'
+  else if (kind === 'weighted') left = `${ratioA ?? 50}%`
+  else left = '50%'  // half
+
   return (
     <div className="w-11 h-11 rounded-xl relative overflow-hidden flex items-center justify-center shrink-0"
       style={{ background: 'rgba(31,27,22,0.06)' }}>
