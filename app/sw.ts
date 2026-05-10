@@ -44,15 +44,10 @@ const onlyCacheSuccessfulHtml = {
 const serwist = new Serwist({
   precacheEntries: [
     ...((self.__SW_MANIFEST ?? []) as (PrecacheEntry | string)[]),
+    // /offline is a Next.js route (not in public/), so it must be listed
+    // explicitly. Everything in public/ is already in __SW_MANIFEST with a
+    // revision hash — adding them again as plain strings causes conflicts.
     '/offline',
-    '/favicon.svg',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png',
-    '/icons/icon-192-maskable.png',
-    '/icons/icon-512-maskable.png',
-    '/icons/apple-touch-icon.png',
-    '/og-image.png',
-    '/og-image-2x.png',
   ],
   skipWaiting: true,
   clientsClaim: true,
