@@ -181,38 +181,7 @@ export function BalanceHero({
         // Expense: fixed button row at top-right, balance content below.
         // The button row never moves; only content below it changes.
         <div>
-          {/* Fixed button row — always at the same position */}
-          <div className="flex items-center justify-end gap-1.5 mb-2">
-            {canSettle && (
-              <button
-                type="button"
-                onClick={() => setSettleOpen((v) => !v)}
-                aria-label={t.balanceHero.settleAriaLabel}
-                aria-expanded={settleOpen}
-                className="h-7 grid place-items-center rounded-full cursor-pointer"
-                style={{
-                  padding: '0 10px',
-                  border: '1px solid',
-                  borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
-                  background: settleOpen ? 'var(--ink)' : 'transparent',
-                  color: settleOpen ? '#fff' : 'var(--ink-2)',
-                  fontSize: 14,
-                  transition: 'background 150ms, color 150ms, border-color 150ms',
-                }}
-              >
-                ⇄
-              </button>
-            )}
-            <ToggleButton
-              onClick={toggleCollapsed}
-              ariaLabel={heroCollapsed ? 'expand' : 'collapse'}
-              expanded={!heroCollapsed}
-            >
-              {heroCollapsed ? '+' : '−'}
-            </ToggleButton>
-          </div>
-
-          {/* Balance content — changes between collapsed / expanded */}
+          {/* Buttons — always right-side of the avatar row */}
           {heroCollapsed ? (
             <div className="flex items-center gap-2">
               <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
@@ -237,6 +206,10 @@ export function BalanceHero({
                   {amount.toLocaleString('en-US')}
                 </div>
               </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} />}
+                <ToggleButton onClick={toggleCollapsed} ariaLabel="expand" expanded={false}>+</ToggleButton>
+              </div>
             </div>
           ) : (
             <div className="flex items-start gap-[14px]">
@@ -260,6 +233,10 @@ export function BalanceHero({
                   {amount.toLocaleString('en-US')}
                 </div>
               </div>
+              <div className="flex items-center gap-1.5 shrink-0 pt-[2px]">
+                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} />}
+                <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
+              </div>
             </div>
           )}
 
@@ -275,5 +252,32 @@ export function BalanceHero({
       )}
 
     </div>
+  )
+}
+
+function SettleButton({ settleOpen, onToggle, ariaLabel }: {
+  settleOpen: boolean
+  onToggle: () => void
+  ariaLabel: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={ariaLabel}
+      aria-expanded={settleOpen}
+      className="h-7 grid place-items-center rounded-full cursor-pointer"
+      style={{
+        padding: '0 10px',
+        border: '1px solid',
+        borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
+        background: settleOpen ? 'var(--ink)' : 'transparent',
+        color: settleOpen ? '#fff' : 'var(--ink-2)',
+        fontSize: 14,
+        transition: 'background 150ms, color 150ms, border-color 150ms',
+      }}
+    >
+      ⇄
+    </button>
   )
 }
