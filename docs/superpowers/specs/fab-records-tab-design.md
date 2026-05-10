@@ -1,6 +1,6 @@
 ---
 status: shipped
-shipped_in: merged to main post-v0.14.0（PR #110；6776a4a feat + 42c7524 follow-up fix），closes #110。Pending next tagged release.
+shipped_in: v0.14.1（PR #112，closes #110；含 follow-up commit 將 FAB 統一為 mode-aware ink 色）
 related_issue: https://github.com/redtear1115/oikos/issues/110
 ---
 

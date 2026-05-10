@@ -167,8 +167,8 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
 | `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（v0.14.0 shipped — Serwist + opt-in toggle + offline fallback）|
-| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down post-v0.14.0 / #102）|
+| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down 待 v0.14.2 / #102）|
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
-| `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（post-v0.14.0 shipped；PR #110）|
+| `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（v0.14.1 shipped；PR #112 closes #110）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |
