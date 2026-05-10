@@ -91,15 +91,23 @@ export function MonthlyStatsView({
         >
           {title}
         </h2>
-        {/* Title-row controls only when expanded AND has content AND toggle
-            is allowed. The breakdown toggle is hidden on income tab because
-            it controls the (expense) breakdown surface, which is replaced
-            by a WIP placeholder until the income-category query ships. */}
-        {!isEmpty && !showCollapsed && allowToggle && (
+        {/* Title-row controls. The +/− button stays here in both states
+            (collapsed and expanded) — previously it jumped to the summary
+            row when collapsed which made the eye chase it. The breakdown
+            toggle (分類/愛物) only shows in expanded mode and is also hidden
+            on the income tab (the expense-breakdown surface it controls is
+            replaced by a WIP placeholder there). */}
+        {!isEmpty && allowToggle && (
           <div className="flex items-center gap-2">
-            {hasExpenses && !isIncomeTab && <StatsBreakdownToggle value={view} />}
-            <ToggleButton onClick={toggle} ariaLabel={t.records.stats.collapse} expanded>
-              −
+            {!showCollapsed && hasExpenses && !isIncomeTab && (
+              <StatsBreakdownToggle value={view} />
+            )}
+            <ToggleButton
+              onClick={toggle}
+              ariaLabel={showCollapsed ? t.records.stats.expand : t.records.stats.collapse}
+              expanded={!showCollapsed}
+            >
+              {showCollapsed ? '+' : '−'}
             </ToggleButton>
           </div>
         )}
@@ -115,17 +123,9 @@ export function MonthlyStatsView({
           </div>
         </div>
       ) : showCollapsed ? (
-        // Collapsed: summary line + expand button only. The breakdown toggle
-        // (分類/愛物) belongs to the chart + detail-bars view, so it stays
-        // hidden until the user expands — no point switching a hidden chart.
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
-          {allowToggle && (
-            <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
-              +
-            </ToggleButton>
-          )}
-        </div>
+        // Collapsed: summary line only. Expand button lives in the title row
+        // (固定位置) so the user's eye doesn't have to chase it.
+        <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
       ) : isIncomeTab ? (
         // Income tab expanded: summary line + visible WIP placeholder. The
         // placeholder is sized to roughly match the donut + bars block on
