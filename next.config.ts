@@ -14,7 +14,11 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Acknowledge Turbopack so `next dev` (Turbopack default) doesn't error on
+  // the webpack hook injected by Serwist. The hook is a no-op in dev anyway
+  // (Serwist's `disable: isDev`); production build forces webpack via
+  // `next build --webpack` so the hook actually runs and emits public/sw.js.
+  turbopack: {},
 };
 
 export default withSerwist(nextConfig);
