@@ -57,6 +57,7 @@ export default async function SettingsPage() {
         groupName={group.name}
         appVersion={pkg.version}
         currentLocale={currentLocale}
+        groupDefaultRatioA={group?.defaultSplitRatioA ?? null}
       />
       <BottomNavSkeleton />
     </div>
