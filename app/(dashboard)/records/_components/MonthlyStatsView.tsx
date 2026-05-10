@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory, type CategoryId } from '@/lib/categories'
 import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
@@ -9,6 +10,11 @@ import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { useRecordsTab } from './TabContext'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
+import {
+  applyDrillToParams,
+  parseDrillFromSearchParams,
+  type DrillFilter,
+} from '@/lib/drill'
 
 const KEY_PREFIX = 'oikos_stats_collapsed_'
 
@@ -47,8 +53,27 @@ export function MonthlyStatsView({
 }: Props) {
   const t = useTranslations()
   const tab = useRecordsTab()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [collapsed, setCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  // Active drill (URL-driven). Used to highlight the matching bar — clicking
+  // it again clears the drill (toggle), clicking another bar swaps to it.
+  const activeDrill = useMemo<DrillFilter | null>(
+    () => parseDrillFromSearchParams(searchParams),
+    [searchParams],
+  )
+
+  const setDrill = useCallback(
+    (next: DrillFilter | null) => {
+      const params = new URLSearchParams(searchParams.toString())
+      applyDrillToParams(params, next)
+      const qs = params.toString()
+      router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
+    },
+    [router, searchParams],
+  )
 
   // Read persisted state on mount. SSR / first paint always renders expanded;
   // if localStorage says collapsed we flip after hydration (slight flash for
@@ -165,21 +190,55 @@ export function MonthlyStatsView({
           {hasBreakdown && (
             <ul className="space-y-3">
               {isIncomeTab
-                ? incomeRows.map((r) => (
-                    <IncomeCategoryBar key={r.key} row={r} total={breakdownTotal} t={t} />
-                  ))
-                : view === 'category'
-                  ? (rows as CategoryStatRow[]).map((r) => (
-                      <CategoryBar key={r.key} row={r} total={breakdownTotal} t={t} />
-                    ))
-                  : (rows as AssetStatRow[]).map((r) => (
-                      <AssetBar
-                        key={r.key ?? '__none__'}
+                ? incomeRows.map((r) => {
+                    const active =
+                      activeDrill?.kind === 'income' && activeDrill.categoryId === r.key
+                    return (
+                      <IncomeCategoryBar
+                        key={r.key}
                         row={r}
                         total={breakdownTotal}
-                        otherLabel={t.records.stats.otherSpend}
+                        active={active}
+                        onSelect={() =>
+                          setDrill(active ? null : { kind: 'income', categoryId: r.key as IncomeCategoryId })
+                        }
+                        t={t}
                       />
-                    ))}
+                    )
+                  })
+                : view === 'category'
+                  ? (rows as CategoryStatRow[]).map((r) => {
+                      const active =
+                        activeDrill?.kind === 'category' && activeDrill.categoryId === r.key
+                      return (
+                        <CategoryBar
+                          key={r.key}
+                          row={r}
+                          total={breakdownTotal}
+                          active={active}
+                          onSelect={() =>
+                            setDrill(active ? null : { kind: 'category', categoryId: r.key as CategoryId })
+                          }
+                          t={t}
+                        />
+                      )
+                    })
+                  : (rows as AssetStatRow[]).map((r) => {
+                      const active =
+                        activeDrill?.kind === 'asset' && activeDrill.assetId === r.key
+                      return (
+                        <AssetBar
+                          key={r.key ?? '__none__'}
+                          row={r}
+                          total={breakdownTotal}
+                          otherLabel={t.records.stats.otherSpend}
+                          active={active}
+                          onSelect={() =>
+                            setDrill(active ? null : { kind: 'asset', assetId: r.key })
+                          }
+                        />
+                      )
+                    })}
             </ul>
           )}
         </>
@@ -374,11 +433,15 @@ function PieChart<R extends { total: number }>({
 function CategoryBar({
   row,
   total,
+  active,
+  onSelect,
   t,
 }: {
   row: CategoryStatRow
   total: number
-  t: { category: Record<CategoryId, string> }
+  active: boolean
+  onSelect: () => void
+  t: { category: Record<CategoryId, string>; records: { stats: { drillFilterLabel: string; drillClearLabel: string } } }
 }) {
   const cat = getCategory(row.key)
   const label = t.category[cat.id] ?? cat.label
@@ -390,6 +453,13 @@ function CategoryBar({
       amount={row.total}
       tint={cat.tint}
       chart={cat.chart}
+      active={active}
+      onSelect={onSelect}
+      a11yLabel={
+        active
+          ? t.records.stats.drillClearLabel.replace('{label}', label)
+          : t.records.stats.drillFilterLabel.replace('{label}', label)
+      }
       data-category={cat.id}
     />
   )
@@ -398,11 +468,15 @@ function CategoryBar({
 function IncomeCategoryBar({
   row,
   total,
+  active,
+  onSelect,
   t,
 }: {
   row: IncomeCategoryStatRow
   total: number
-  t: { incomeCategory: Record<IncomeCategoryId, string> }
+  active: boolean
+  onSelect: () => void
+  t: { incomeCategory: Record<IncomeCategoryId, string>; records: { stats: { drillFilterLabel: string; drillClearLabel: string } } }
 }) {
   const cat = getIncomeCategory(row.key)
   const label = t.incomeCategory[cat.id] ?? cat.label
@@ -414,6 +488,13 @@ function IncomeCategoryBar({
       amount={row.total}
       tint={cat.tint}
       chart={cat.chart}
+      active={active}
+      onSelect={onSelect}
+      a11yLabel={
+        active
+          ? t.records.stats.drillClearLabel.replace('{label}', label)
+          : t.records.stats.drillFilterLabel.replace('{label}', label)
+      }
       data-income-category={cat.id}
     />
   )
@@ -423,10 +504,14 @@ function AssetBar({
   row,
   total,
   otherLabel,
+  active,
+  onSelect,
 }: {
   row: AssetStatRow
   total: number
   otherLabel: string
+  active: boolean
+  onSelect: () => void
 }) {
   const label = row.key === null ? otherLabel : row.name ?? otherLabel
   const pct = total > 0 ? (row.total / total) * 100 : 0
@@ -438,6 +523,9 @@ function AssetBar({
       amount={row.total}
       tint={tint}
       chart={chart}
+      active={active}
+      onSelect={onSelect}
+      a11yLabel={label}
       data-asset-id={row.key ?? ''}
     />
   )
@@ -449,6 +537,9 @@ function Bar({
   amount,
   tint,
   chart,
+  active,
+  onSelect,
+  a11yLabel,
   ...rest
 }: {
   label: string
@@ -456,40 +547,67 @@ function Bar({
   amount: number
   tint: string
   chart: string
+  active: boolean
+  onSelect: () => void
+  a11yLabel: string
 } & React.HTMLAttributes<HTMLLIElement>) {
   // Floor of 2% so a non-zero amount is always visible at low share.
   const barPct = amount > 0 ? Math.max(pct, 2) : 0
   return (
-    <li {...rest} className="flex flex-col gap-1">
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="flex items-center gap-2 min-w-0">
-          {/* Colored chip — matches the corresponding pie slice exactly so this
-              row functions as the chart's legend. */}
-          <span
-            aria-hidden
-            className="inline-block rounded-full shrink-0"
-            style={{ width: 10, height: 10, background: chart }}
-          />
-          <span style={{ color: 'var(--ink)' }} className="truncate">{label}</span>
-        </span>
-        <span className="tnum text-micro shrink-0" style={{ color: 'var(--ink-3)' }}>
-          {/* Bare amount — currency anchored once on the total / summary line above. */}
-          {pct.toFixed(0)}% · {amount.toLocaleString('en-US')}
-        </span>
-      </div>
-      <div
-        className="relative h-2 rounded-full overflow-hidden"
-        style={{ background: tint }}
-        aria-label={label}
+    <li {...rest} className="list-none">
+      {/* The whole row is one tap target — wrapping the existing layout in a
+          full-width button (transparent / unstyled defaults) keeps the visual
+          identical when not active and gives us a focus ring + keyboard
+          activation for free. The active state borrows the bar's tint as a
+          backdrop so the highlight reads even at a glance. */}
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={active}
+        aria-label={a11yLabel}
+        className="w-full text-left flex flex-col gap-1 cursor-pointer rounded-[10px] -mx-2 px-2 py-1 transition-colors duration-150"
+        style={{
+          background: active ? tint : 'transparent',
+          border: 'none',
+        }}
       >
+        <div className="flex items-baseline justify-between text-sm">
+          <span className="flex items-center gap-2 min-w-0">
+            {/* Colored chip — matches the corresponding pie slice exactly so this
+                row functions as the chart's legend. */}
+            <span
+              aria-hidden
+              className="inline-block rounded-full shrink-0"
+              style={{ width: 10, height: 10, background: chart }}
+            />
+            <span
+              style={{
+                color: 'var(--ink)',
+                fontWeight: active ? 600 : 400,
+              }}
+              className="truncate"
+            >
+              {label}
+            </span>
+          </span>
+          <span className="tnum text-micro shrink-0" style={{ color: 'var(--ink-3)' }}>
+            {/* Bare amount — currency anchored once on the total / summary line above. */}
+            {pct.toFixed(0)}% · {amount.toLocaleString('en-US')}
+          </span>
+        </div>
         <div
-          className="absolute inset-y-0 left-0 rounded-full"
-          style={{
-            width: `${barPct}%`,
-            background: chart,
-          }}
-        />
-      </div>
+          className="relative h-2 rounded-full overflow-hidden"
+          style={{ background: active ? '#ffffff80' : tint }}
+        >
+          <div
+            className="absolute inset-y-0 left-0 rounded-full"
+            style={{
+              width: `${barPct}%`,
+              background: chart,
+            }}
+          />
+        </div>
+      </button>
     </li>
   )
 }

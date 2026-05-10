@@ -200,6 +200,11 @@ export const ja: Translations = {
       summaryNetIncome: '純収入 +{amount}',
       summaryNetExpense: '純支出 {amount}',
       summaryNetEven: '収支均衡',
+      drillFilterLabel: '「{label}」のみ表示',
+      drillClearLabel: '「{label}」の絞り込みを解除',
+      drillChipPrefix: 'のみ',
+      drillChipClear: '絞り込み解除',
+      drillAssetUnknown: '未設定',
     },
   },
 

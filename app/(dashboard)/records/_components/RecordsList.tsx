@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
@@ -13,6 +13,14 @@ import { FilterSheet } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
 import { TabProvider } from './TabContext'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
+import {
+  applyDrillToParams,
+  drillAppliesToTab,
+  drillKey,
+  parseDrillFromSearchParams,
+  toDrillWire,
+  type DrillFilter,
+} from '@/lib/drill'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
@@ -22,6 +30,7 @@ import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id
 import { getFuelLogById } from '@/actions/fuelLog'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
 import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
+import { DrillFilterChip } from './DrillFilterChip'
 import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
@@ -36,6 +45,13 @@ interface Props {
   /** Upper bound for MonthSwitcher (current Taipei month). */
   maxMonthKey: string
   /**
+   * Asset name for the active asset drill, resolved server-side. The chip
+   * needs the human name and the client doesn't have it — pre-fetching here
+   * avoids an extra round-trip on first paint. Null when no asset drill or
+   * when the drill targets the「其他」(no-asset) bar.
+   */
+  drillAssetName?: string | null
+  /**
    * Server-rendered stats card. Re-renders when ?month / ?view in the URL
    * change; list state is preserved because RecordsList stays mounted across
    * those navigations.
@@ -43,10 +59,33 @@ interface Props {
   statsSlot?: React.ReactNode
 }
 
-export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlot }: Props) {
+export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAssetName, statsSlot }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const t = useTranslations()
   const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
+
+  // Drill is URL-derived: we read live state from useSearchParams so a
+  // tap-bar handler that just calls router.replace reflects here on the very
+  // next render. The server (page.tsx) reads the same params so SSR initial
+  // is already drill-filtered — no separate prop needed.
+  const drill = useMemo<DrillFilter | null>(() => parseDrillFromSearchParams(searchParams), [searchParams])
+  // Effective drill — the active drill iff it's meaningful for the current tab.
+  // We keep the URL value as-is across tab switches but skip applying it on
+  // tabs where it would always return zero rows (e.g. expense-cat drill on the
+  // 收入 tab); drillKey participates in the feed key so a re-mount happens
+  // when the effective state flips.
+  const effectiveDrill = drillAppliesToTab(drill, tab) ? drill : null
+  const effectiveDrillKey = drillKey(effectiveDrill)
+  const effectiveDrillWire = effectiveDrill ? toDrillWire(effectiveDrill) : undefined
+
+  const handleClearDrill = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    applyDrillToParams(params, null)
+    const qs = params.toString()
+    router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
+  }
+
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [adding, setAdding] = useState(false)
@@ -160,19 +199,30 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
     return initial
   }, [initial, tab])
 
-  // Loaders close over the current monthKey so paginating stays scoped to the
-  // selected month. Recreated when month changes — TransactionFeed will use
-  // the new loader on the next page-fetch (initial data is already month-
-  // scoped via SSR, so no immediate refetch is needed).
+  // Loaders close over the current monthKey + effective drill so paginating
+  // stays scoped to the selected month + drill-down. Recreated when month or
+  // drill changes — TransactionFeed will use the new loader on the next page
+  // fetch (initial data is already month + drill scoped via SSR, so no
+  // immediate refetch is needed for that flow).
   const tabLoader = useMemo(() => {
     if (tab === 'income') {
-      return makeIncomeLoader(20, monthKey)
+      return makeIncomeLoader(20, monthKey, effectiveDrillWire)
     }
     if (tab === 'expense') {
-      return (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20, undefined, monthKey)
+      return (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20, undefined, monthKey, effectiveDrillWire)
     }
-    return (cursor: TxnCursor | null) => loadMoreFeedAll(cursor, 20, monthKey)
-  }, [tab, monthKey])
+    return (cursor: TxnCursor | null) => loadMoreFeedAll(cursor, 20, monthKey, effectiveDrillWire)
+  }, [tab, monthKey, effectiveDrillWire])
+
+  // Switching tabs keeps the drill in URL, but if the new tab can't apply it
+  // we strip it on the way out so SSR initial + chip stay coherent the next
+  // time the user lands on this tab. (See drillAppliesToTab for the rules.)
+  const handleSelectTab = (next: 'all' | 'expense' | 'income') => {
+    setTab(next)
+    if (drill && !drillAppliesToTab(drill, next)) {
+      handleClearDrill()
+    }
+  }
 
   // Income row mint-glow renderer (used in 'all' tab only)
   const P = DEFAULT_INCOME_PALETTE
@@ -243,7 +293,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
                 <button
                   key={tab2.id}
                   type="button"
-                  onClick={() => setTab(tab2.id)}
+                  onClick={() => handleSelectTab(tab2.id)}
                   className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
                   style={{
                     background: sel
@@ -295,13 +345,28 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
           income tab forces compact (no expense breakdown to show). */}
       <TabProvider value={tab}>{statsSlot}</TabProvider>
 
+      {/* Drill-down chip — surfaces the active stats-bar drill so the user has
+          a one-tap way out. Renders only when there's an active drill that
+          applies to the current tab; otherwise no DOM, no padding shift. */}
+      {effectiveDrill && (
+        <div className="px-5 pt-3 pb-1">
+          <DrillFilterChip
+            drill={effectiveDrill}
+            assetName={drillAssetName}
+            onClear={handleClearDrill}
+          />
+        </div>
+      )}
+
       {/* Each child below is a stable JSX sibling — React reconciles them by
           position, not as a list. We deliberately render `null` (rather than
           mounting a hidden TransactionFeed per tab) so only one feed exists
           in the DOM at a time; switching tabs unmounts the old one and the
-          new one fetches its own page-1 cleanly via `key={tab}`. */}
+          new one fetches its own page-1 cleanly via `key={tab}`. The drill
+          key participates so a drill change also triggers a clean remount
+          (initial data is already drill-filtered via SSR / parent useMemo). */}
       <TransactionFeed
-        key={`${tab}:${monthKey}`}
+        key={`${tab}:${monthKey}:${effectiveDrillKey}`}
         initial={tabInitial}
         pageSize={pageSize}
         monthKey={monthKey}
@@ -314,7 +379,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
             ? <IncomeEmptyState />
             : (
               <div className="px-6 py-16 text-center text-sm" style={{ color: 'var(--ink-3)' }}>
-                {filterActive ? t.feed.noFiltered : t.feed.noFilteredAddHint}
+                {filterActive || effectiveDrill ? t.feed.noFiltered : t.feed.noFilteredAddHint}
               </div>
             )
         }
