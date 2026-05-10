@@ -65,9 +65,10 @@ shipped_in: v0.1.0（核心 CRUD / settlement / balance / 篩選 / realtime）·
 - **Weighted split**（plan：[`docs/superpowers/plans/2026-05-10-weighted-split.md`](../plans/2026-05-10-weighted-split.md)）：`split_type` 加 `weighted`、新增 `split_ratio_a`（CashTransactions / RecurringExpenseRules / PendingExpenseOccurrences），group 多 `default_split_ratio_a`；UI 把 `half` 換成 weighted slider。Balance recalc 同時支援 legacy `half` 和 `weighted`。
 - **Dashboard hero collapse**（PR #111, closes #109）：避免 hero 卡 + balance row 在小螢幕擠成兩行；collapsed 狀態 toggle、settle pill、ToggleButton 在 collapsed / expanded 兩態的位置都鎖定。
 
-### 待 v0.14.2 部署
-- **Description autocomplete**（PR #114, closes #113）：AddSheet 描述欄位輸入時，從 household 歷史紀錄做前綴搜尋的 inline suggestion。`DescriptionAutocomplete` 元件 + 對應 query。v0.14.1 release 時暫時 revert，明天 v0.14.2 deploy 一起上 prod。
-- **Drill-down filter**（PR #116, closes #102）：在 `/records` 月度統計卡點 detail bar 直接套用 category / asset filter 到 transaction feed；hook 由 v0.14.0 預留的 data attributes 接上。`DrillFilterChip` + `lib/drill.ts`。同樣暫時 revert，等 v0.14.2 一起上。
+### v0.14.2 增量
+
+- **Description autocomplete**（PR #114, closes #113）：AddSheet 描述欄位輸入時，從目前 household 的歷史 CashTransaction 描述抓前綴（caseinsensitive，最多 5 條）做 inline suggestion；soft-deleted 排除、空字串不顯示。`DescriptionAutocomplete` 元件 + `lib/db/queries/transactions.ts → suggestDescriptions()`。v0.14.1 release 時暫時 revert，v0.14.2 revert-the-revert ship。
+- **Drill-down filter**（PR #116, closes #102）：在 `/records` 月度統計卡點 detail bar 直接套用 category / asset / income-category filter 到 transaction feed；hook 由 v0.14.0 預留的 data attributes 接上。`DrillFilterChip` 浮在 feed header、`lib/drill.ts` 翻譯 stats row attributes 到 feed `ResolvedTxnFilter`、同 row 再點清除。詳見 [stats-design.md](stats-design.md)。同樣 v0.14.1 revert，v0.14.2 revert-the-revert ship。
 
 ### 待後續處理
 

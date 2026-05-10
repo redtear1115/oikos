@@ -127,6 +127,8 @@ export type Translations = {
     titleEdit: string
     amount: string
     descPlaceholder: string
+    /** Aria label for the description-autocomplete suggestion listbox. */
+    descSuggestions: string
     category: string
     assetLink: string
     splitMethod: string
@@ -203,6 +205,13 @@ export type Translations = {
       summaryNetIncome: string  // {amount}, e.g. "淨收入 +NT$..."
       summaryNetExpense: string // {amount}, e.g. "淨支出 NT$..."
       summaryNetEven: string    // "持平"
+      /** A11y label for a stats bar that's NOT currently the drill target. {label} = bar's label. */
+      drillFilterLabel: string  // {label}
+      /** A11y label for a stats bar that IS the active drill (tap to clear). {label} = bar's label. */
+      drillClearLabel: string   // {label}
+      drillChipPrefix: string   // small prefix shown before the label inside the chip
+      drillChipClear: string    // a11y label for the chip's X button
+      drillAssetUnknown: string // fallback when an asset has no resolvable name
     }
   }
 
@@ -1057,6 +1066,7 @@ export const zhTW: Translations = {
     titleEdit: '編輯紀錄',
     amount: '金額',
     descPlaceholder: '描述（例：晚餐、雜貨）',
+    descSuggestions: '描述建議',
     category: '分類',
     assetLink: '關聯愛物（選填）',
     splitMethod: '分攤方式',
@@ -1132,6 +1142,11 @@ export const zhTW: Translations = {
       summaryNetIncome: '淨收入 +{amount}',
       summaryNetExpense: '淨支出 {amount}',
       summaryNetEven: '持平',
+      drillFilterLabel: '只看「{label}」',
+      drillClearLabel: '取消篩選「{label}」',
+      drillChipPrefix: '只看',
+      drillChipClear: '取消篩選',
+      drillAssetUnknown: '未命名',
     },
   },
 

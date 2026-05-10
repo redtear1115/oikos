@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.14.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.14.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -37,6 +37,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.13.1](CHANGELOG.md#0131---2026-05-09) | 啟程之前的鋪陳．哲學卡先說我們的承諾 |
 | [v0.14.0](CHANGELOG.md#0140---2026-05-10) | 沒有訊號的時候，也還看得見．本月攤開來看一次，斷線了也記得 |
 | [v0.14.1](CHANGELOG.md#0141---2026-05-10) | 分擔可以不對半．依比例分 + UI 細修 + SW 修補 |
+| [v0.14.2](CHANGELOG.md#0142---2026-05-11) | 紀錄可以更貼手．自動完成 + 點選即篩選 |
 
 ## Backlog / 未釋出版本
 
@@ -44,7 +45,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
-| [v0.14.2](https://github.com/redtear1115/oikos/milestone/8) | 紀錄可以更貼手．自動完成 + 點選即篩選 |
 | [v0.15.0](https://github.com/redtear1115/oikos/milestone/5) | 離開也保留陪伴．pending 收斂 |
 | [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 |
 | [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 |
@@ -167,7 +167,7 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
 | `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（v0.14.0 shipped — Serwist + opt-in toggle + offline fallback）|
-| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down 待 v0.14.2 / #102）|
+| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down v0.14.2 / PR #116 closes #102）|
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
 | `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（v0.14.1 shipped；PR #112 closes #110）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
