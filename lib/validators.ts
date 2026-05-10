@@ -67,6 +67,7 @@ export interface TransactionInput {
   transactedAt: Date
   assetId?: string | null
   notes?: string | null
+  splitRatioA?: number | null
 }
 
 export interface ValidatedTransactionInput {
@@ -78,6 +79,7 @@ export interface ValidatedTransactionInput {
   transactedAt: Date
   assetId: string | null
   notes: string | null
+  splitRatioA: number | null
 }
 
 /**
@@ -90,6 +92,17 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
   if (!description) throw new Error('描述不能為空')
   const category: CategoryId = isValidCategoryId(input.category) ? input.category as CategoryId : 'other'
   if (category === 'settle') throw new Error('不可使用此分類')
+  if (!['all_mine', 'all_theirs', 'half', 'weighted'].includes(input.splitType)) {
+    throw new Error('分攤方式無效')
+  }
+  let splitRatioA: number | null = null
+  if (input.splitType === 'weighted') {
+    const r = input.splitRatioA
+    if (r === null || r === undefined || !Number.isInteger(r) || r < 1 || r > 99) {
+      throw new Error('分攤比例必須為 1–99 的整數')
+    }
+    splitRatioA = r
+  }
   return {
     amount,
     description,
@@ -99,6 +112,7 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
     transactedAt: input.transactedAt,
     assetId: input.assetId ?? null,
     notes: validateNotes(input.notes),
+    splitRatioA,
   }
 }
 
@@ -910,6 +924,7 @@ export interface RecurringExpenseRuleInput {
   startsOn: string
   endsOn: string | null
   assetId?: string | null
+  splitRatioA?: number | null
 }
 
 export interface ValidatedRecurringExpenseRuleInput {
@@ -923,10 +938,11 @@ export interface ValidatedRecurringExpenseRuleInput {
   startsOn: string
   endsOn: string | null
   assetId: string | null
+  splitRatioA: number | null
 }
 
 const RECURRING_EXPENSE_DESC_MAX_LEN = 64
-const SPLIT_TYPES: readonly SplitType[] = ['all_mine', 'all_theirs', 'half']
+const SPLIT_TYPES: readonly SplitType[] = ['all_mine', 'all_theirs', 'half', 'weighted']
 
 /**
  * Validates a recurring-expense rule input. Mirrors validateRecurringIncomeRuleInput
@@ -950,6 +966,15 @@ export function validateRecurringExpenseRuleInput(
 
   if (!SPLIT_TYPES.includes(input.splitType)) {
     throw new Error('分攤方式無效')
+  }
+
+  let splitRatioA: number | null = null
+  if (input.splitType === 'weighted') {
+    const r = input.splitRatioA
+    if (r === null || r === undefined || !Number.isInteger(r) || r < 1 || r > 99) {
+      throw new Error('分攤比例必須為 1–99 的整數')
+    }
+    splitRatioA = r
   }
 
   const description = input.description?.trim() ?? ''
@@ -981,6 +1006,7 @@ export function validateRecurringExpenseRuleInput(
     startsOn: input.startsOn,
     endsOn: input.endsOn,
     assetId: input.assetId || null,
+    splitRatioA,
   }
 }
 
