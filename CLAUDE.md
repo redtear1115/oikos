@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.14.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.14.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -36,16 +36,21 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.13.0](CHANGELOG.md#0130---2026-05-09) | 陪伴 × 起點 × 定期支出．第一步、第一筆，到不必再記住 |
 | [v0.13.1](CHANGELOG.md#0131---2026-05-09) | 啟程之前的鋪陳．哲學卡先說我們的承諾 |
 | [v0.14.0](CHANGELOG.md#0140---2026-05-10) | 沒有訊號的時候，也還看得見．本月攤開來看一次，斷線了也記得 |
+| [v0.14.1](CHANGELOG.md#0141---2026-05-10) | 分擔可以不對半，紀錄可以更貼手．依比例分 + 細修 |
 
 ## Backlog / 未釋出版本
 
-每版工時目標 ~2 週。主題敘事用來決定 changelog 文案與 release 重點。
+`v0.x` 每版工時目標 ~2 週；`v1.0.0+` 是 phase 級別範圍，工時不固定。主題敘事用來決定 changelog 文案與 release 重點。每個版本對應一個 GitHub milestone（per-issue 進度看 milestone 頁面）。
 
 | 版本 | 主題 | 主要 issues |
 |---|---|---|
-| [v1.0.0](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Av1.0.0) | 公開 landing | #24 /sign-in 3-column |
+| [v0.15.0](https://github.com/redtear1115/oikos/milestone/5) | 離開也保留陪伴．pending 收斂 | #49 WIP pending record · #50 結構化篩選 · #79 leave group → solo · #101 pending 概念統一 |
+| [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 | #38 多幣種 · #68 心理匯率 · #91 settings 排版 |
+| [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 | #24 /sign-in 3-column · #51 競品 CSV 匯入 |
+| [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 | #46 定價 RFC · #54 entitlement · #55 趨勢圖 · #56 預算 · #57 PDF/CSV · #47 2FA · #39 owner→partner |
+| [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 | #35 OCR · #36 AI 語音 · #40 envelope budget · #41 對外借還 · #58 資產管家 · #59 儲蓄收入 · #60 GCal sync |
 
-→ 所有候選：[GitHub Issues](https://github.com/redtear1115/oikos/issues) · [`backlog`](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
+→ 沒指派 milestone 的候選：[no-milestone issues](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+no%3Amilestone) · [`backlog` 標籤](https://github.com/redtear1115/oikos/issues?q=is%3Aopen+label%3Abacklog)
 
 ---
 
@@ -161,7 +166,8 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
 | `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（v0.14.0 shipped — Serwist + opt-in toggle + offline fallback）|
-| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped）|
+| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down post-v0.14.0 / #102）|
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
+| `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（post-v0.14.0 shipped；PR #110）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |

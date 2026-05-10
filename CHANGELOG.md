@@ -11,6 +11,39 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.14.1] - 2026-05-10
+
+主題：**分擔可以不對半，紀錄可以更貼手**——v0.14.0 上完之後幾天內衍生出的修補與小功能：分擔不一定 50/50（依比例分），把 v0.14.0 預留的 drill-down hook 接上，AddSheet 描述欄記得家裡常用的詞，`/records` FAB 跟著 tab 換意思，dashboard hero 卡片可收起。
+
+完整 diff：[v0.14.0...v0.14.1](https://github.com/redtear1115/oikos/compare/v0.14.0...v0.14.1)
+
+### Shipped（合進 main 的順序）
+
+1. **Fixed** — **Service Worker 在 prod 註冊失敗**（PR #108，closes #107，2026-05-10 20:43 Taipei）：Vercel CDN 把 `/sw.js` 回 304 cache，導致 `navigator.serviceWorker.register()` 靜默失敗。在 `next.config.ts` `headers()` 給 `/sw.js` 加 `Cache-Control: no-store, max-age=0`，每次都重新拉。Settings 離線開關被卡住的全 prod 使用者解開。
+2. **Fixed** — **Dashboard hero 可收起 + 排版穩固**（PR #111，closes #109，2026-05-10 21:22 Taipei；加上 5 個 follow-up commits）：Hero card 收合狀態 single-line 顯示我/對方欠款；新增 `ToggleButton` 在收合 / 展開兩種狀態下位置鎖定（`cc87c87` `bdf632a` `8b761cd`）；settle pill 在收合狀態保留入口（`8b761cd`）；settle ⇄ 按鈕固定在 +/− 左側、不再因 hero 文字長度跳位（`0978c7a` `3d0bd6e`）；solo / dyad 兩種模式下 collapsed hero 都單行顯示（`a99dbf9`）。
+3. **Added** — **`/records` FAB 跟 tab 切色 + 切意義**（PR #112，closes #110，2026-05-10 21:34 Taipei）：原本不論在 全部／支出／收入 哪個 tab，FAB 都開「新增支出」。改成：全部／支出 tab 維持深咖啡 ink 色開 AddSheet；收入 tab 變薄荷綠 accent 色開 IncomeSheet。被動視覺暗示，無新增 label。後續修補 commit `42c7524` 將 FAB 統一為 mode-aware ink 色。
+4. **Added** — **依比例分（Weighted split）**（PR #115，closes #90，2026-05-10 23:04 Taipei）：新增 `weighted` split type，伴侶可自訂分擔比例（例：30:70）取代固定對半。`SplitTypeSelector` 把原本的「平分」按鈕換成「依比例分」+ inline slider（1–99 整數，剛好 50 顯示「平分」）。Group-level 預設比例存在 `oikos_groups.default_split_ratio_a`（nullable，null = 50）；每筆 transaction 自帶 `cash_transactions.split_ratio_a`；recurring expense rule 也支援。Balance 算法：付款人 A → B 欠 `ceil(amount × (100−ratioA) / 100)`；付款人 B → A 欠 `ceil(amount × ratioA / 100)`。`half` enum 保留作為 legacy；新舊紀錄在 feed / 編輯 sheet / settings slider 都能正確 render。Settings 加 group 預設比例 slider，RecurringRuleSheet / AddSheet / Dashboard 全鏈路串通 `groupDefaultRatioA`。FilterSheet 也支援以 weighted 過濾。i18n 4 語齊備（`splitType.weighted`）；656 個 tests 全綠。
+5. **Added** — **點分類 / 愛物 row → drill-down filter**（PR #116，closes #102，2026-05-10 23:09 Taipei）：v0.14.0 stats card 預留的 data attributes 接上 records feed filter。新元件 `DrillFilterChip`、helper `lib/drill.ts`；點 detail bar 直接套 category / asset filter 到下方 transaction list，不需要去 FilterSheet 手動拉。
+6. **Added** — **AddSheet 描述自動完成**（PR #114，closes #113，2026-05-10 23:10 Taipei）：輸入時從 household 歷史紀錄做前綴搜尋，inline suggestion 浮在欄位上。新元件 `DescriptionAutocomplete` + 對應 query。減少手動重複輸入「電費」「中油」等高頻描述的摩擦。
+
+### Internal
+- **Doc-keeper sweep**：CLAUDE.md spec table 加 `fab-records-tab-design.md` row、`stats-design.md` 描述補上 drill-down 已 ship；rename `2026-05-10-fab-records-tab-design.md` → `fab-records-tab-design.md`（去 date prefix）；`fab-records-tab-design.md` / `stats-design.md` frontmatter 改 `status: shipped`；`transactions-design.md` 加 weighted split / drill-down / autocomplete / hero polish 的「post-v0.14.0 增量」段。本機 worktree 端清掉 8 條已 merge 的 worktree + 對應 local branches。
+
+### Migration
+
+Dev / prod 兩邊都要手動跑（`npm run db:migrate` 視 `.env.local` 指向）：
+
+```sql
+-- drizzle/0027_weighted_split.sql
+-- ALTER TYPE split_type ADD VALUE 'weighted'
+-- ALTER TABLE oikos_groups ADD COLUMN default_split_ratio_a integer
+-- ALTER TABLE cash_transactions ADD COLUMN split_ratio_a integer
+-- ALTER TABLE recurring_expense_rules ADD COLUMN split_ratio_a integer
+-- ALTER TABLE pending_expense_occurrences ADD COLUMN split_ratio_a integer
+```
+
+Postgres 限制：`ALTER TYPE ... ADD VALUE` 不能跑在 transaction 內，drizzle migrator 預設逐句執行即可。所有現有 `half` 紀錄不受影響、繼續 render 為 `平分`。
+
 ## [0.14.0] - 2026-05-10
 
 主題：**沒有訊號的時候，也還看得見**——把這個月攤開來一起看（`/records` inline 月度統計 + 雙人月度回顧儀式），網路斷了之後也看得見最近一次連線的樣子（opt-in PWA offline browsing），順便把進入門檻收齊（onboarding 桌面對齊、in-app browser 引導跳出）。
@@ -425,7 +458,8 @@ ALTER TABLE "CashTransactions" ADD COLUMN "notes" text;
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/redtear1115/oikos/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/redtear1115/oikos/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/redtear1115/oikos/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/redtear1115/oikos/compare/v0.12.0...v0.13.0
