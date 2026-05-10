@@ -188,6 +188,8 @@ export type Translations = {
       otherSpend: string
       prevMonth: string
       nextMonth: string
+      collapse: string
+      expand: string
     }
   }
 
@@ -1084,7 +1086,7 @@ export const zhTW: Translations = {
     manageRecurringIncome: '⚙ 設定定期進帳 →',
     manageRecurringExpense: '⚙ 設定定期支出 →',
     stats: {
-      title: '這個月花了',
+      title: '支出統計',
       total: '總共 NT${amount}',
       empty: '這個月還沒有花費紀錄',
       emptySub: '翻翻其他月看看',
@@ -1093,6 +1095,8 @@ export const zhTW: Translations = {
       otherSpend: '其他支出',
       prevMonth: '上一月',
       nextMonth: '下一月',
+      collapse: '收合統計',
+      expand: '展開統計',
     },
   },
 

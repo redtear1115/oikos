@@ -180,7 +180,7 @@ export const en: Translations = {
     manageRecurringIncome: '⚙ Manage recurring income →',
     manageRecurringExpense: '⚙ Manage recurring expense →',
     stats: {
-      title: 'This month',
+      title: 'Spending',
       total: 'Total NT${amount}',
       empty: 'No spending logged this month',
       emptySub: 'Try another month',
@@ -189,6 +189,8 @@ export const en: Translations = {
       otherSpend: 'Other spending',
       prevMonth: 'Previous month',
       nextMonth: 'Next month',
+      collapse: 'Collapse stats',
+      expand: 'Expand stats',
     },
   },
 

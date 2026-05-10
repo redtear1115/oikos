@@ -180,7 +180,7 @@ export const ja: Translations = {
     manageRecurringIncome: '⚙ 定期収入を設定 →',
     manageRecurringExpense: '⚙ 定期支出を設定 →',
     stats: {
-      title: '今月の支出',
+      title: '支出統計',
       total: '合計 NT${amount}',
       empty: '今月はまだ記録がありません',
       emptySub: '別の月を見てみる',
@@ -189,6 +189,8 @@ export const ja: Translations = {
       otherSpend: 'その他の支出',
       prevMonth: '前の月',
       nextMonth: '次の月',
+      collapse: '統計を閉じる',
+      expand: '統計を開く',
     },
   },
 
