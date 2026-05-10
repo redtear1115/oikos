@@ -29,6 +29,7 @@ interface Props {
   onMutated: () => void
   /** undefined = create mode; set = edit mode */
   initial?: RecurringExpenseRuleRow
+  groupDefaultRatioA?: number | null
 }
 
 export function RecurringRuleSheet({
@@ -36,6 +37,7 @@ export function RecurringRuleSheet({
   onClose,
   onMutated,
   initial,
+  groupDefaultRatioA,
 }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const t = useTranslations()
@@ -74,6 +76,7 @@ export function RecurringRuleSheet({
   const [category, setCategory] = useState<CategoryId>('housing')
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [splitType, setSplitType] = useState<SplitType>('half')
+  const [splitRatioA, setSplitRatioA] = useState<number>(50)
   const [description, setDescription] = useState('')
   const [assetId, setAssetId] = useState<string | null>(null)
 
@@ -85,16 +88,18 @@ export function RecurringRuleSheet({
       )
       setPayerWho(initial.paidBy === viewer.id ? 'M' : 'T')
       setSplitType(initial.splitType)
+      setSplitRatioA(initial.splitRatioA ?? groupDefaultRatioA ?? 50)
       setDescription(initial.description)
       setAssetId(initial.assetId)
     } else {
       setCategory('housing')
       setPayerWho('M')
       setSplitType(isSolo ? 'all_mine' : viewer.defaultSplitType)
+      setSplitRatioA(groupDefaultRatioA ?? 50)
       setDescription('')
       setAssetId(null)
     }
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, groupDefaultRatioA])
 
   const paidBy = isSolo
     ? viewer.id
@@ -113,6 +118,7 @@ export function RecurringRuleSheet({
       category,
       paidBy,
       splitType: effectiveSplit,
+      splitRatioA: effectiveSplit === 'weighted' ? splitRatioA : null,
       description: description.trim(),
       intervalMonths,
       dayOfMonth,
@@ -312,8 +318,8 @@ export function RecurringRuleSheet({
                   onChange={setSplitType}
                   amount={amount}
                   payerWho={payerWho}
-                  splitRatioA={50}
-                  onSplitRatioAChange={() => {}}
+                  splitRatioA={splitRatioA}
+                  onSplitRatioAChange={setSplitRatioA}
                 />
               </div>
             </>
