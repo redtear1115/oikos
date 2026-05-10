@@ -44,6 +44,7 @@ export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id
       paidBy: v.paidBy,
       amount: v.amount,
       splitType: v.splitType,
+      splitRatioA: v.splitRatioA,
       description: v.description,
       category: v.category,
       assetId: v.assetId,
@@ -97,6 +98,7 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
       category: v.category,
       paidBy: v.paidBy,
       splitType: v.splitType,
+      splitRatioA: v.splitRatioA,
       description: v.description,
       assetId: v.assetId,
       intervalMonths: v.intervalMonths,
@@ -282,6 +284,7 @@ export async function editAndConfirmPending(
       proposedDescription: pendingExpenseOccurrences.proposedDescription,
       proposedPaidBy: pendingExpenseOccurrences.proposedPaidBy,
       proposedSplitType: pendingExpenseOccurrences.proposedSplitType,
+      proposedSplitRatioA: pendingExpenseOccurrences.proposedSplitRatioA,
       ruleCategory: recurringExpenseRules.category,
       ruleAssetId: recurringExpenseRules.assetId,
     })
@@ -305,6 +308,7 @@ export async function editAndConfirmPending(
   const finalAmount = overrides.amount ?? row.proposedAmount
   const finalCategory = overrides.category ?? row.ruleCategory
   const finalSplitType = overrides.splitType ?? row.proposedSplitType
+  const finalSplitRatioA = overrides.splitRatioA !== undefined ? overrides.splitRatioA : (row.proposedSplitRatioA ?? null)
   const finalDescription = overrides.description ?? row.proposedDescription
   const finalTransactedAt = overrides.transactedAt
     ? new Date(overrides.transactedAt)
@@ -318,6 +322,7 @@ export async function editAndConfirmPending(
         paidBy: finalPaidBy,
         amount: finalAmount,
         splitType: finalSplitType,
+        splitRatioA: finalSplitRatioA,
         description: finalDescription,
         category: finalCategory,
         assetId: finalAssetId,
