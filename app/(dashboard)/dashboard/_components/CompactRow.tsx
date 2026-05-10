@@ -9,7 +9,8 @@ export interface CompactRowProps {
   tx: {
     id: string
     amount: number
-    splitType: 'all_mine' | 'all_theirs' | 'half' | null
+    splitType: 'all_mine' | 'all_theirs' | 'half' | 'weighted' | null
+    splitRatioA: number | null
     description: string
     category: string
     paidBy: string
@@ -40,6 +41,12 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
       delta = payerIsViewer ? +tx.amount : -tx.amount
     } else if (tx.splitType === 'half') {
       delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
+    } else if (tx.splitType === 'weighted' && tx.splitRatioA != null) {
+      const ratioA = tx.splitRatioA
+      const otherShare = 100 - ratioA
+      delta = payerIsViewer
+        ? +Math.ceil(tx.amount * otherShare / 100)
+        : -Math.ceil(tx.amount * ratioA / 100)
     }
   }
 
