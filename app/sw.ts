@@ -45,7 +45,6 @@ const serwist = new Serwist({
   precacheEntries: [
     ...((self.__SW_MANIFEST ?? []) as (PrecacheEntry | string)[]),
     '/offline',
-    '/manifest.json',
     '/favicon.svg',
     '/icons/icon-192.png',
     '/icons/icon-512.png',
