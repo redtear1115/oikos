@@ -189,6 +189,7 @@ export async function listTransactionsPagedForAsset(
     id: string
     amount: number
     split_type: 'all_mine' | 'all_theirs' | 'half'
+    split_ratio_a: number | null
     description: string
     category: string
     paid_by: string
@@ -200,7 +201,7 @@ export async function listTransactionsPagedForAsset(
     kind: FeedKind
   }>(sql`
     SELECT
-      id, amount, split_type, description, category, paid_by,
+      id, amount, split_type, split_ratio_a, description, category, paid_by,
       asset_id, fuel_log_id, notes, transacted_at, created_at,
       'transaction'::text AS kind
     FROM "CashTransactions"
@@ -216,6 +217,7 @@ export async function listTransactionsPagedForAsset(
     id: r.id,
     amount: r.amount,
     splitType: r.split_type,
+    splitRatioA: r.split_ratio_a ?? null,
     description: r.description,
     category: r.category,
     paidBy: r.paid_by,

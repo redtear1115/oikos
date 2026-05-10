@@ -312,6 +312,8 @@ export function RecurringRuleSheet({
                   onChange={setSplitType}
                   amount={amount}
                   payerWho={payerWho}
+                  splitRatioA={50}
+                  onSplitRatioAChange={() => {}}
                 />
               </div>
             </>

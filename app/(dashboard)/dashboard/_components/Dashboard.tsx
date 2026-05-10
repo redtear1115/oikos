@@ -60,6 +60,7 @@ export interface DashboardProps {
   pendings: PendingRow[]
   expensePendings: PendingExpenseRow[]
   feedDataPromise: Promise<DashboardFeedData>
+  groupDefaultRatioA: number | null
 }
 
 export function Dashboard({
@@ -71,6 +72,7 @@ export function Dashboard({
   pendings,
   expensePendings,
   feedDataPromise,
+  groupDefaultRatioA,
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo } = useMember()
@@ -206,6 +208,7 @@ export function Dashboard({
         description: tx.description,
         category: tx.category,
         splitType: tx.splitType!,
+        splitRatioA: tx.splitRatioA ?? null,
         payerId: tx.paidBy,
         transactedAt: tx.transactedAt,
         assetId: tx.assetId,
@@ -287,6 +290,7 @@ export function Dashboard({
                 description: p.proposedDescription,
                 category: p.category,
                 splitType: p.proposedSplitType,
+                splitRatioA: (p as { proposedSplitRatioA?: number | null }).proposedSplitRatioA ?? null,
                 payerId: p.proposedPaidBy,
                 // Construct as local midnight so AddSheet's getFullYear/Month/Date
                 // round-trip yields the original YYYY-MM-DD regardless of timezone.
@@ -343,6 +347,7 @@ export function Dashboard({
         pendingExpenseId={modal.kind === 'edit-pending-expense' ? modal.pendingId : undefined}
         onMutated={handleMutated}
         onRaceResolved={showToast}
+        groupDefaultRatioA={groupDefaultRatioA}
       />
       <SettlementSheet
         open={settlementData !== null}

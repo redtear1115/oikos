@@ -144,6 +144,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
       description: tx.description,
       category: tx.category,
       splitType: tx.splitType!,
+      splitRatioA: tx.splitRatioA ?? null,
       payerId: tx.paidBy,
       transactedAt: tx.transactedAt,
       assetId,
