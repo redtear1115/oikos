@@ -11,6 +11,7 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
+import { TabProvider } from './TabContext'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
@@ -252,25 +253,29 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
           })}
         </div>
 
-        {/* Inline link to recurring rule settings — only when a single-kind tab
-            is active so the affordance maps to one settings target. */}
-        {tab === 'expense' && (
+        {/* Inline links to recurring rule settings.
+            - 全部 tab: both links (this is the only place users can land on
+              both kinds without switching tab) — colour-coded so the brown
+              expense link and the mint income link signal which is which.
+            - Single-kind tabs: the matching link only, in the mode colour.
+            Mode colours: 深咖啡 #7A5A38 for 支出, 薄荷綠 = INCOME_PALETTE.ink. */}
+        {(tab === 'all' || tab === 'expense') && (
           <div className="px-5 pb-2">
             <Link
               href="/settings/recurring-expense"
               className="text-xs"
-              style={{ color: 'var(--ink-3)' }}
+              style={{ color: '#7A5A38' }}
             >
               {t.records.manageRecurringExpense}
             </Link>
           </div>
         )}
-        {tab === 'income' && (
+        {(tab === 'all' || tab === 'income') && (
           <div className="px-5 pb-2">
             <Link
               href="/settings/recurring-income"
               className="text-xs"
-              style={{ color: 'var(--ink-3)' }}
+              style={{ color: P.ink }}
             >
               {t.records.manageRecurringIncome}
             </Link>
@@ -278,11 +283,10 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
         )}
       </div>
 
-      {/* Stats above the transaction feed — user-test feedback: 統計往下捲才
-          看得到太遠，移到月份切換 / 標題下方第一個 section。Collapse can
-          be used to compress when the user wants to focus on the list.
-          Hide on the income-only tab (stats are 純支出視角 per spec). */}
-      {tab === 'income' ? null : statsSlot}
+      {/* Stats above the transaction feed. The card adapts to the current tab
+          via TabContext: title becomes 收支統計 / 支出統計 / 收入統計,
+          income tab forces compact (no expense breakdown to show). */}
+      <TabProvider value={tab}>{statsSlot}</TabProvider>
 
       {/* Each child below is a stable JSX sibling — React reconciles them by
           position, not as a list. We deliberately render `null` (rather than
