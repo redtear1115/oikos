@@ -807,4 +807,16 @@ export const en: Translations = {
       locked: "This month's note is locked",
     },
   },
+
+  inAppBrowser: {
+    title: 'Please open in your browser',
+    description: "You're inside a chat app's built-in browser. Google sign-in and offline mode don't work here — please open this link in Safari or Chrome instead.",
+    urlLabel: 'Link',
+    copy: 'Copy link',
+    copied: 'Copied',
+    openInSafari: 'Open in Safari',
+    instructionGeneric: 'Copy the link above, then paste it into Safari or Chrome.',
+    instructionIos: 'Tap the button above to jump to Safari, or copy the link and paste it into Safari manually.',
+    instructionAndroid: 'Tap the menu (top-right) and choose "Open in browser", or copy the link and paste it into Chrome.',
+  },
 }

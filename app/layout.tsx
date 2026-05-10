@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Noto_Sans_TC } from 'next/font/google'
-import { getLocale } from '@/lib/i18n/t'
+import { getLocale, getTranslations } from '@/lib/i18n/t'
+import { InAppBrowserGuard } from '@/components/InAppBrowserGuard'
 import './globals.css'
 
 const fraunces = Fraunces({
@@ -101,9 +102,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
+  const t = await getTranslations()
   return (
     <html lang={locale} className={`${fraunces.variable} ${notoTC.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <InAppBrowserGuard strings={t.inAppBrowser} />
+        {children}
+      </body>
     </html>
   )
 }
