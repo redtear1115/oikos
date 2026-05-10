@@ -7,7 +7,7 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput } from '@/lib/validators'
-import { listTransactionsPaged, listFeedAllPaged, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
@@ -386,4 +386,25 @@ export async function loadMoreTransactionsForAsset(
     notes: r.notes ?? null,
     splitRatioA: r.splitRatioA ?? null,
   }))
+}
+
+/**
+ * Return unique CashTransaction descriptions for the viewer's group, ordered
+ * by frequency (most-used first). Powers the description-field autocomplete in
+ * AddSheet — re-fetched whenever the sheet opens so newly-added descriptions
+ * surface immediately on the next entry.
+ */
+export async function getDescriptionSuggestions(): Promise<string[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const [group] = await db
+    .select({ id: oikosGroups.id })
+    .from(oikosGroups)
+    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
+    .limit(1)
+  if (!group) return []
+
+  return listDescriptionSuggestions(group.id)
 }
