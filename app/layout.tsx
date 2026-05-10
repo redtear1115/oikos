@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Noto_Sans_TC } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { InAppBrowserGuard } from '@/components/InAppBrowserGuard'
 import './globals.css'
@@ -108,6 +110,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased">
         <InAppBrowserGuard strings={t.inAppBrowser} />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
