@@ -36,6 +36,7 @@ export const en: Translations = {
     allPartners: "All partner's",
     mine: 'Mine',
     theirs: 'Theirs',
+    weighted: 'Custom ratio',
   },
 
   category: {

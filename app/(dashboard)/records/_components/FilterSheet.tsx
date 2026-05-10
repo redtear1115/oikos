@@ -30,6 +30,7 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
 
   const SPLIT_OPTIONS: { value: SplitFilter; label: string }[] = [
     { value: 'all',         label: t.common.all },
+    { value: 'weighted',    label: t.splitType.weighted },
     { value: 'half',        label: t.splitType.even },
     { value: 'all_mine',    label: t.splitType.mine },
     { value: 'all_theirs',  label: t.splitType.theirs },
