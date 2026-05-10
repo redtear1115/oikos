@@ -126,7 +126,6 @@ export const en: Translations = {
     titleEdit: 'Edit entry',
     amount: 'Amount',
     descPlaceholder: 'Description (e.g., dinner, groceries)',
-    descSuggestions: 'Description suggestions',
     category: 'Category',
     assetLink: 'Link to asset (optional)',
     splitMethod: 'Split',
