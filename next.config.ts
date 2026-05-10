@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
   // (Serwist's `disable: isDev`); production build forces webpack via
   // `next build --webpack` so the hook actually runs and emits public/sw.js.
   turbopack: {},
+  env: {
+    // Exposed to sw.ts at build time so /offline can be precached with a
+    // valid revision. VERCEL_GIT_COMMIT_SHA changes on every deploy; falls
+    // back to 'dev' for local builds where the var isn't set.
+    NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev',
+  },
   async headers() {
     return [
       {
