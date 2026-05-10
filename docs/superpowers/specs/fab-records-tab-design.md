@@ -1,6 +1,6 @@
 ---
-status: approved
-shipped_in: ~
+status: shipped
+shipped_in: merged to main post-v0.14.0（PR #110；6776a4a feat + 42c7524 follow-up fix），closes #110。Pending next tagged release.
 related_issue: https://github.com/redtear1115/oikos/issues/110
 ---
 

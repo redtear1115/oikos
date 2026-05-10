@@ -15,6 +15,8 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 **Latest released: v0.14.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
+> Main 目前領先 `v0.14.0` 約 34 個 commits，含 weighted split（schema + balance + UI）、drill-down filter（#102）、description autocomplete（#113）、`/records` FAB context-awareness（#110）、dashboard hero collapse polish 等，等下一個 tagged release。
+
 | 版本 | 範圍 |
 |---|---|
 | [v0.1.0](CHANGELOG.md#010---2026-05-03) | 登入與基礎．兩個人的全新開始 |
@@ -161,7 +163,8 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
 | `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
 | `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（v0.14.0 shipped — Serwist + opt-in toggle + offline fallback）|
-| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped）|
+| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down post-v0.14.0 / #102）|
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
+| `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（post-v0.14.0 shipped；PR #110）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |
