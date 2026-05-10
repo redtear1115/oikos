@@ -25,11 +25,13 @@ export async function recalcGroupBalance(
               WHEN 'all_mine'   THEN 0
               WHEN 'all_theirs' THEN amount
               WHEN 'half'       THEN CEIL(amount / 2.0)::int
+              WHEN 'weighted'   THEN CEIL(amount * (100 - split_ratio_a) / 100.0)::int
             END
           ELSE CASE split_type
               WHEN 'all_mine'   THEN 0
               WHEN 'all_theirs' THEN -amount
               WHEN 'half'       THEN -CEIL(amount / 2.0)::int
+              WHEN 'weighted'   THEN -CEIL(amount * split_ratio_a / 100.0)::int
             END
         END
       ), 0)
