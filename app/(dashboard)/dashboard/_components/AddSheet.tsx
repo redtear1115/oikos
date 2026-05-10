@@ -26,6 +26,7 @@ export interface AddSheetInitial {
   description: string
   category: string
   splitType: SplitType
+  splitRatioA: number | null
   payerId: string
   transactedAt: string  // ISO
   assetId?: string | null
@@ -57,15 +58,17 @@ interface Props {
   pendingExpenseId?: string
   /** Called when an edit-pending submit loses to a partner race. */
   onRaceResolved?: (message: string) => void
+  groupDefaultRatioA?: number | null
 }
 
-export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved, groupDefaultRatioA }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
   const [category, setCategory] = useState<CategoryId>('dining')
   const [split, setSplit] = useState<SplitType>('half')
+  const [splitRatioA, setSplitRatioA] = useState<number>(50)
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
   const [notes, setNotes] = useState('')
@@ -83,7 +86,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setCategory(
         (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'dining',
       )
-      setSplit(initial.splitType)
+      setSplit(initial.splitType === 'half' ? 'weighted' : initial.splitType)
+      setSplitRatioA(initial.splitRatioA ?? groupDefaultRatioA ?? 50)
       setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
       // Use LOCAL date components, not the UTC ISO prefix — otherwise a row stored at
       // local midnight (e.g. 2026-05-02 00:00 in UTC+8 = 2026-05-01T16:00:00Z) would
@@ -98,14 +102,15 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAmount('')
       setDesc('')
       setCategory(prefilledCategory ?? 'dining')
-      setSplit(isSolo ? 'all_mine' : viewer.defaultSplitType)
+      setSplit(isSolo ? 'all_mine' : 'weighted')
+      setSplitRatioA(groupDefaultRatioA ?? 50)
       setPayerWho('M')
       setDate(localTodayISO())
       setAssetId(prefilledAssetId ?? null)
       setNotes('')
     }
     setError('')
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, groupDefaultRatioA])
 
   // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
   // the prefilled amount in edit mode (typing replaces the selection rather than
@@ -138,6 +143,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               description: desc,
               category,
               splitType,
+              splitRatioA: split === 'weighted' ? splitRatioA : null,
               paidBy: payerId,
               transactedAt: date,
               assetId,
@@ -150,6 +156,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             description: desc,
             category,
             splitType,
+            splitRatioA: split === 'weighted' ? splitRatioA : null,
             payerId,
             transactedAt,
             assetId,
@@ -161,6 +168,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             description: desc,
             category,
             splitType,
+            splitRatioA: split === 'weighted' ? splitRatioA : null,
             payerId,
             transactedAt,
             assetId,
@@ -353,6 +361,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               </div>
               <SplitTypeSelector
                 value={split}
+                splitRatioA={splitRatioA}
+                onSplitRatioAChange={setSplitRatioA}
                 onChange={setSplit}
                 amount={parseInt(amount, 10) || 0}
                 payerWho={payerWho}
