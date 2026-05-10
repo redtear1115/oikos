@@ -5,6 +5,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { getCategory, type CategoryId } from '@/lib/categories'
 import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transactions'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
+import { useRecordsTab } from './TabContext'
 
 const KEY_PREFIX = 'oikos_stats_collapsed_'
 
@@ -38,6 +39,7 @@ export function MonthlyStatsView({
   forceCompact = false,
 }: Props) {
   const t = useTranslations()
+  const tab = useRecordsTab()
   const [collapsed, setCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -64,12 +66,20 @@ export function MonthlyStatsView({
     }
   }
 
-  // Forced compact wins over user preference: pre-creation months have no data
-  // worth visualising, so the expand affordance is hidden.
-  const showCollapsed = forceCompact || (mounted && collapsed)
-  const allowToggle = !forceCompact
+  // Forced compact wins over user preference. Two triggers:
+  // - server flag (pre-creation month — no data worth visualising)
+  // - income tab — we don't have income-category breakdown yet, so the only
+  //   meaningful surface is the summary line.
+  const effectiveForceCompact = forceCompact || tab === 'income'
+  const showCollapsed = effectiveForceCompact || (mounted && collapsed)
+  const allowToggle = !effectiveForceCompact
   const isEmpty = expenseTotal === 0 && incomeTotal === 0
   const hasExpenses = expenseTotal > 0
+
+  const title =
+    tab === 'all' ? t.records.stats.titleAll
+    : tab === 'income' ? t.records.stats.titleIncome
+    : t.records.stats.title
 
   return (
     <section className="px-5 pt-4 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
@@ -78,7 +88,7 @@ export function MonthlyStatsView({
           className="text-base font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
-          {t.records.stats.title}
+          {title}
         </h2>
         {/* Title-row controls only when expanded AND has content AND toggle
             is allowed. In collapsed mode the controls live inline with the

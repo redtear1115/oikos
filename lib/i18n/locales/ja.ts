@@ -181,6 +181,8 @@ export const ja: Translations = {
     manageRecurringExpense: '⚙ 定期支出を設定 →',
     stats: {
       title: '支出統計',
+      titleAll: '収支統計',
+      titleIncome: '収入統計',
       total: '合計 {amount} NT$',
       empty: '今月はまだ記録がありません',
       emptySub: '別の月を見てみる',

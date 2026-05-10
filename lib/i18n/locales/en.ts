@@ -181,6 +181,8 @@ export const en: Translations = {
     manageRecurringExpense: '⚙ Manage recurring expense →',
     stats: {
       title: 'Expense',
+      titleAll: 'Overview',
+      titleIncome: 'Income',
       total: 'Total {amount} NT$',
       empty: 'No expenses logged this month',
       emptySub: 'Try another month',

@@ -181,6 +181,8 @@ export const zhCN: Translations = {
     manageRecurringExpense: '⚙ 设定定期支出 →',
     stats: {
       title: '支出统计',
+      titleAll: '收支统计',
+      titleIncome: '收入统计',
       total: '总共 {amount} NT$',
       empty: '这个月还没有支出记录',
       emptySub: '翻翻其他月看看',

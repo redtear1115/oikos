@@ -179,7 +179,9 @@ export type Translations = {
     manageRecurringIncome: string
     manageRecurringExpense: string
     stats: {
-      title: string
+      title: string         // expense-tab title (kept for back-compat)
+      titleAll: string      // 全部 tab
+      titleIncome: string   // 收入 tab
       total: string  // {amount}
       empty: string
       emptySub: string
@@ -991,6 +993,8 @@ export const zhTW: Translations = {
     manageRecurringExpense: '⚙ 設定定期支出 →',
     stats: {
       title: '支出統計',
+      titleAll: '收支統計',
+      titleIncome: '收入統計',
       total: '總共 {amount} NT$',
       empty: '這個月還沒有支出紀錄',
       emptySub: '翻翻其他月看看',
