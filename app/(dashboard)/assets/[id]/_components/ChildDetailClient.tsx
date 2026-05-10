@@ -16,6 +16,7 @@ import { revealChildPii } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { resolveDisplayName } from '@/lib/display-name'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 // 10 mask characters — enough to read as "filled in" without leaking length.
 const PII_MASK = '●●●●●●●●●●'
@@ -60,7 +61,7 @@ function RevealableRow({
         setRevealed(value)
         setError(null)
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.assetDetail.child.revealError)
+        setError(describeError(e, t.assetDetail.child.revealError, t.common.offlineError))
       }
     })
   }

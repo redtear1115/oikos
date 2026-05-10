@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import {
   MONTHLY_REVIEW_MESSAGE_MAX_CODEPOINTS,
@@ -75,7 +76,7 @@ export function MessageEditor({
       setSavedValue(next)
       setState({ kind: 'saved' })
     } catch (err) {
-      const message = err instanceof Error ? err.message : tr.errors.saveFailed
+      const message = describeError(err, tr.errors.saveFailed, t.common.offlineError)
       setState({ kind: 'error', message })
     }
   }

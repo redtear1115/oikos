@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
+import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 interface Props {
   open: boolean
@@ -25,6 +27,7 @@ export function EditTextSheet({
   open, title, initialValue, onSubmit, onClose,
   placeholder, maxLength = 32, autoCapitalize,
 }: Props) {
+  const t = useTranslations()
   const [value, setValue] = useState(initialValue)
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
@@ -63,7 +66,7 @@ export function EditTextSheet({
         await onSubmit(trimmed)
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : '儲存失敗')
+        setError(describeError(e, '儲存失敗', t.common.offlineError))
       }
     })
   }

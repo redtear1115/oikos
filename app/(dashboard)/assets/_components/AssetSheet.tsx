@@ -9,6 +9,7 @@ import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButto
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import { formatNhi, NHI_MAX_LENGTH } from '@/lib/format-nhi'
 import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets } from '@/actions/asset'
 import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset } from '@/actions/asset'
@@ -507,7 +508,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.('saved')
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }
@@ -521,7 +522,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.('deleted')
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }

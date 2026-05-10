@@ -20,6 +20,10 @@ export type Translations = {
     you: string
     all: string
     error: string
+    /** Shown when a server action fails because the device has no network.
+     *  Detected by `describeError` in lib/errors.ts. Soft phrasing — Futari
+     *  treats network loss as a temporary state, not an error to apologize for. */
+    offlineError: string
     back: string
     edit: string
     shared: string
@@ -948,6 +952,7 @@ export const zhTW: Translations = {
     you: '你',
     all: '全部',
     error: '發生錯誤',
+    offlineError: '目前離線中，等網路回來再試一次',
     back: '返回',
     edit: '編輯',
     shared: '共用',

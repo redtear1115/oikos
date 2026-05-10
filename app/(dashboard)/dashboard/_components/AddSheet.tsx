@@ -18,6 +18,7 @@ import { AssetLinkField } from './AssetLinkField'
 import { PayerToggle } from './PayerToggle'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 export interface AddSheetInitial {
   id: string
@@ -170,7 +171,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         onMutated?.({ isFirstTransaction })
         onClose()
       } catch (e) {
-        const msg = e instanceof Error ? e.message : t.common.error
+        const msg = describeError(e, t.common.error, t.common.offlineError)
         // Race: partner confirmed/skipped this pending in another tab/device
         // before our edit-confirm landed. Action errors in that case contain
         // '待確認支出' (matches both '已被處理或找不到' and '已被其他裝置處理').
@@ -195,7 +196,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         onMutated?.()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : t.common.error)
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }

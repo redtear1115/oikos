@@ -22,6 +22,7 @@ export const ja: Translations = {
     you: 'あなた',
     all: 'すべて',
     error: 'エラーが発生しました',
+    offlineError: 'オフライン中です。接続が戻ってからもう一度お試しください',
     back: '戻る',
     edit: '編集',
     shared: '共用',

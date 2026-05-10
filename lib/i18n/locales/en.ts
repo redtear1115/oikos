@@ -22,6 +22,7 @@ export const en: Translations = {
     you: 'You',
     all: 'All',
     error: 'Something went wrong',
+    offlineError: "You're offline — try again once you reconnect",
     back: 'Back',
     edit: 'Edit',
     shared: 'Shared',

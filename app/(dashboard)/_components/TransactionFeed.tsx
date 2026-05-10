@@ -10,6 +10,7 @@ import { useRealtimeEvents } from './RealtimeProvider'
 import { useMember } from './MemberContext'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { TxnRowPayload } from '@/lib/realtime/event'
 
@@ -68,10 +69,10 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
-        setError(e instanceof Error ? e.message : '載入失敗')
+        setError(describeError(e, '載入失敗', t.common.offlineError))
       }
     })
-  }, [filter, pageSize, monthKey])
+  }, [filter, pageSize, monthKey, t])
 
   // Auto-dismiss error toast after 5s.
   useEffect(() => {
@@ -97,7 +98,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
       } catch (e) {
-        setError(e instanceof Error ? e.message : '載入失敗')
+        setError(describeError(e, '載入失敗', t.common.offlineError))
       }
     })
   }

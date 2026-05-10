@@ -14,6 +14,7 @@ import { shareInviteLink } from '@/lib/share'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
+import { describeError } from '@/lib/errors'
 
 export interface ViewerInfo {
   id: string
@@ -101,7 +102,7 @@ export function SettingsContent({
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
       } catch (e) {
-        setInviteError(e instanceof Error ? e.message : t.common.error)
+        setInviteError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }
@@ -119,7 +120,7 @@ export function SettingsContent({
         await updateDefaultSplitType(next)
         router.refresh()
       } catch (e) {
-        setSplitError(e instanceof Error ? e.message : t.incomeSheet.errors.saveFailed)
+        setSplitError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
       }
     })
   }

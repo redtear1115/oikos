@@ -22,6 +22,7 @@ export const zhCN: Translations = {
     you: '你',
     all: '全部',
     error: '发生错误',
+    offlineError: '目前离线中，等网络回来再试一次',
     back: '返回',
     edit: '编辑',
     shared: '共用',
