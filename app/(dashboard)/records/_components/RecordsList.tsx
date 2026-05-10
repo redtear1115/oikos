@@ -323,7 +323,6 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
       <BottomNav
         onAddClick={() => tab === 'income' ? setAddingIncomeNew(true) : setAdding(true)}
         hideFab={sheetOpen}
-        fabVariant={tab === 'income' ? 'accent' : 'primary'}
       />
 
       <AddSheet
