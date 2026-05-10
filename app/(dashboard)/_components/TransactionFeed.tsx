@@ -28,6 +28,11 @@ interface Props {
   filter?: TxnFilter
   /** Optional custom loader for pagination. Defaults to global loadMoreTransactions. */
   loader?: (cursor: TxnCursor | null) => Promise<PagedTxnRow[]>
+  /** Optional page-level month scope ('YYYY-MM'). Threaded into the fallback
+   *  `loadMoreTransactions` calls (filter-change refetch, reconnect refetch,
+   *  load-more without custom loader) so the feed stays scoped when the parent
+   *  is in month mode. Custom loaders are responsible for their own scoping. */
+  monthKey?: string
   /** Optional realtime-insert filter. Called for every txn-insert event;
    *  return false to drop the row. Used by asset-scoped feeds. */
   acceptInsert?: (row: TxnRowPayload) => boolean
@@ -35,7 +40,7 @@ interface Props {
   renderRow?: (tx: PagedTxnRow) => React.ReactNode | undefined
 }
 
-export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, header, filter, loader, acceptInsert, renderRow }: Props) {
+export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, header, filter, loader, monthKey, acceptInsert, renderRow }: Props) {
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
   const [hasMore, setHasMore] = useState(initial.length === pageSize)
   const [loading, startLoading] = useTransition()
@@ -55,14 +60,14 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     setError('')
     startLoading(async () => {
       try {
-        const fresh = await loadMoreTransactions(null, pageSize, toWire(filter))
+        const fresh = await loadMoreTransactions(null, pageSize, toWire(filter), monthKey)
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
         setError(e instanceof Error ? e.message : '載入失敗')
       }
     })
-  }, [filter, pageSize])
+  }, [filter, pageSize, monthKey])
 
   // Auto-dismiss error toast after 5s.
   useEffect(() => {
@@ -83,6 +88,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
               { transactedAt: last.transactedAt, createdAt: last.createdAt },
               pageSize,
               filter ? toWire(filter) : undefined,
+              monthKey,
             )
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
@@ -101,7 +107,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         try {
           const fresh = loader
             ? await loader(null)
-            : await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined)
+            : await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined, monthKey)
           setItems(fresh)
           setHasMore(fresh.length === pageSize)
         } catch {

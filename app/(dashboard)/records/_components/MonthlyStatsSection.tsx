@@ -10,25 +10,22 @@ interface Props {
   userId: string
   groupId: string
   monthKey: string
-  /** Inclusive lower bound — usually the group's creation month. Caller clamps. */
-  minMonthKey: string
-  /** Inclusive upper bound — usually the current Taipei month. Caller clamps. */
-  maxMonthKey: string
   view: BreakdownView
+  /** True when the selected month is before the group was created — the card
+   *  is forced into compact mode (no expand affordance, no breakdown toggle). */
+  forceCompact?: boolean
 }
 
 /**
- * Server data fetcher for the /records monthly stats section. All UI lives in
- * MonthlyStatsView (client) so the collapse state can drive layout without
- * round-tripping through the URL — it's per-device preference, not URL state.
+ * Server data fetcher for the /records monthly stats section. Month scope is
+ * page-level — the switcher / scope decision happens above us.
  */
 export async function MonthlyStatsSection({
   userId,
   groupId,
   monthKey,
-  minMonthKey,
-  maxMonthKey,
   view,
+  forceCompact = false,
 }: Props) {
   const [rows, incomeSummary] = await Promise.all([
     view === 'asset'
@@ -41,13 +38,11 @@ export async function MonthlyStatsSection({
   return (
     <MonthlyStatsView
       userId={userId}
-      monthKey={monthKey}
-      minMonthKey={minMonthKey}
-      maxMonthKey={maxMonthKey}
       view={view}
       rows={rows}
       expenseTotal={expenseTotal}
       incomeTotal={incomeSummary.total}
+      forceCompact={forceCompact}
     />
   )
 }

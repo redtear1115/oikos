@@ -23,6 +23,7 @@ export async function listIncomesPaged(
   groupId: string,
   cursor: IncomeCursor | null,
   limit = 20,
+  monthKey?: string,
 ): Promise<IncomeRow[]> {
   const conditions = [
     eq(incomeTransactions.groupId, groupId),
@@ -31,6 +32,13 @@ export async function listIncomesPaged(
   if (cursor) {
     conditions.push(
       sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`,
+    )
+  }
+  if (monthKey) {
+    // occurred_at is a plain date, no tz conversion needed.
+    conditions.push(
+      sql`occurred_at >= ${monthKey + '-01'}::date`,
+      sql`occurred_at <  (${monthKey + '-01'}::date + INTERVAL '1 month')`,
     )
   }
 

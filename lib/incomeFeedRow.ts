@@ -21,12 +21,12 @@ export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
   }
 }
 
-export function makeIncomeLoader(limit = 20) {
+export function makeIncomeLoader(limit = 20, monthKey?: string) {
   return async (cursor: TxnCursor | null): Promise<PagedTxnRow[]> => {
     const incomeCursor: IncomeCursor | null = cursor
       ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
       : null
-    const rows = await loadMoreIncomes(incomeCursor, limit)
+    const rows = await loadMoreIncomes(incomeCursor, limit, monthKey)
     return rows.map(incomeToFeedRow)
   }
 }
