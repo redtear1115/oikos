@@ -30,7 +30,7 @@ describe('SoloBanner', () => {
     const { getByRole } = wrap(
       <SoloBanner mode="expense" onModeChange={onModeChange} />,
     )
-    fireEvent.click(getByRole('button', { name: /進帳模式/ }))
+    fireEvent.click(getByRole('button', { name: /收入模式/ }))
     expect(onModeChange).toHaveBeenCalledWith('income')
   })
 

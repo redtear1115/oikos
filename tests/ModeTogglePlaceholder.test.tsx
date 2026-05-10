@@ -5,7 +5,7 @@ import { I18nWrapper } from './_mocks/i18n'
 
 const wrap = (ui: React.ReactElement) => render(<I18nWrapper>{ui}</I18nWrapper>)
 
-// The pending-income mint dot lives inside the 「進帳模式」 button as a tiny
+// The pending-income mint dot lives inside the 「收入模式」 button as a tiny
 // 5×5 round span. We identify it by its width/height inline style — there's no
 // stable text or role to grab onto, and adding a data-testid felt heavier than
 // the test cost itself.
@@ -20,13 +20,13 @@ describe('ModeTogglePlaceholder', () => {
   it('renders both mode buttons', () => {
     const { getByRole } = wrap(<ModeTogglePlaceholder mode="expense" />)
     expect(getByRole('button', { name: /支出模式/ })).toBeInTheDocument()
-    expect(getByRole('button', { name: /進帳模式/ })).toBeInTheDocument()
+    expect(getByRole('button', { name: /收入模式/ })).toBeInTheDocument()
   })
 
   it('calls onChange when a mode is clicked', () => {
     const onChange = vi.fn()
     const { getByRole } = wrap(<ModeTogglePlaceholder mode="expense" onChange={onChange} />)
-    fireEvent.click(getByRole('button', { name: /進帳模式/ }))
+    fireEvent.click(getByRole('button', { name: /收入模式/ }))
     expect(onChange).toHaveBeenCalledWith('income')
   })
 

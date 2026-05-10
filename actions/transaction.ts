@@ -251,6 +251,7 @@ export async function loadMoreTransactions(
   cursor: TxnCursor | null,
   limit = 20,
   filterWire?: TxnFilterWire,
+  monthKey?: string,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -282,7 +283,7 @@ export async function loadMoreTransactions(
     }
   }
 
-  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved)
+  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
@@ -306,6 +307,7 @@ export async function loadMoreTransactions(
 export async function loadMoreFeedAll(
   cursor: TxnCursor | null,
   limit = 20,
+  monthKey?: string,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -318,7 +320,7 @@ export async function loadMoreFeedAll(
     .limit(1)
   if (!group) throw new Error('找不到家計簿')
 
-  const rows = await listFeedAllPaged(group.id, cursor, limit)
+  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

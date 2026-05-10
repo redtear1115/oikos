@@ -10,6 +10,8 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet } from './FilterSheet'
+import { MonthSwitcher } from './MonthSwitcher'
+import { TabProvider } from './TabContext'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
@@ -22,14 +24,26 @@ import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/Income
 import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { useTranslations } from '@/lib/i18n/client'
 
-const incomeLoader = makeIncomeLoader(20)
-
 interface Props {
   initial: PagedTxnRow[]
   pageSize: number
+  /**
+   * Page-level month scope: drives both the stats card AND the transaction
+   * feed. Server reads the URL param and feeds it down; client loaders close
+   * over it so paginating stays inside the same calendar month.
+   */
+  monthKey: string
+  /** Upper bound for MonthSwitcher (current Taipei month). */
+  maxMonthKey: string
+  /**
+   * Server-rendered stats card. Re-renders when ?month / ?view in the URL
+   * change; list state is preserved because RecordsList stays mounted across
+   * those navigations.
+   */
+  statsSlot?: React.ReactNode
 }
 
-export function RecordsList({ initial, pageSize }: Props) {
+export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlot }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
@@ -144,12 +158,19 @@ export function RecordsList({ initial, pageSize }: Props) {
     return initial
   }, [initial, tab])
 
-  const tabLoader =
-    tab === 'income'
-      ? incomeLoader
-      : tab === 'expense'
-      ? (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20)
-      : loadMoreFeedAll
+  // Loaders close over the current monthKey so paginating stays scoped to the
+  // selected month. Recreated when month changes — TransactionFeed will use
+  // the new loader on the next page-fetch (initial data is already month-
+  // scoped via SSR, so no immediate refetch is needed).
+  const tabLoader = useMemo(() => {
+    if (tab === 'income') {
+      return makeIncomeLoader(20, monthKey)
+    }
+    if (tab === 'expense') {
+      return (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20, undefined, monthKey)
+    }
+    return (cursor: TxnCursor | null) => loadMoreFeedAll(cursor, 20, monthKey)
+  }, [tab, monthKey])
 
   // Income row mint-glow renderer (used in 'all' tab only)
   const P = DEFAULT_INCOME_PALETTE
@@ -192,70 +213,96 @@ export function RecordsList({ initial, pageSize }: Props) {
           )}
         </div>
 
-        {/* Tab bar */}
-        <div
-          className="flex items-center px-5 pb-3"
-          style={{ gap: 8 }}
-        >
-          {([
-            { id: 'all' as const,     label: t.records.tabAll },
-            { id: 'expense' as const, label: t.records.tabExpense },
-            { id: 'income' as const,  label: t.records.tabIncome },
-          ]).map((tab2) => {
-            const sel = tab === tab2.id
-            const isIncome = tab2.id === 'income'
-            return (
-              <button
-                key={tab2.id}
-                type="button"
-                onClick={() => setTab(tab2.id)}
-                className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
-                style={{
-                  background: sel
-                    ? (isIncome ? P.tint : 'var(--ink)')
-                    : 'var(--surface)',
-                  color: sel
-                    ? (isIncome ? P.ink : '#fff')
-                    : 'var(--ink-2)',
-                  border: sel ? 'none' : '1px solid var(--hairline)',
-                }}
-              >
-                {tab2.label}
-              </button>
-            )
-          })}
+        {/* Page-level month scope: controls both the stats card and the
+            transaction feed below. Keeps stats and list in one mental model. */}
+        <div className="px-5 pb-3">
+          <MonthSwitcher monthKey={monthKey} maxMonthKey={maxMonthKey} />
         </div>
 
-        {/* Inline link to recurring rule settings — only when a single-kind tab
-            is active so the affordance maps to one settings target. */}
-        {tab === 'expense' && (
-          <div className="px-5 pb-2">
+        {/* Tabs (left, primary) + recurring-rule settings (right, secondary).
+            Two visually distinct pill styles in one row:
+            - Tabs: solid pill, high-contrast — they're the page's primary
+              control (drives stats title + feed kind).
+            - Setting buttons: outline pill in the mode colour — secondary
+              navigation to the recurring-rule settings page.
+            On narrow viewports `flex-wrap` lets the right group drop to a
+            second line; `ml-auto` keeps it right-aligned in either layout.
+            Mode colours: 深咖啡 #7A5A38 (支出) / 薄荷綠 INCOME_PALETTE.ink (收入). */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pb-3">
+          <div className="flex items-center" style={{ gap: 8 }}>
+            {([
+              { id: 'all' as const,     label: t.records.tabAll },
+              { id: 'expense' as const, label: t.records.tabExpense },
+              { id: 'income' as const,  label: t.records.tabIncome },
+            ]).map((tab2) => {
+              const sel = tab === tab2.id
+              const isIncome = tab2.id === 'income'
+              return (
+                <button
+                  key={tab2.id}
+                  type="button"
+                  onClick={() => setTab(tab2.id)}
+                  className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
+                  style={{
+                    background: sel
+                      ? (isIncome ? P.tint : 'var(--ink)')
+                      : 'var(--surface)',
+                    color: sel
+                      ? (isIncome ? P.ink : '#fff')
+                      : 'var(--ink-2)',
+                    border: sel ? 'none' : '1px solid var(--hairline)',
+                  }}
+                >
+                  {tab2.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
             <Link
               href="/settings/recurring-expense"
-              className="text-xs"
-              style={{ color: 'var(--ink-3)' }}
+              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
+              style={{
+                color: '#7A5A38',
+                border: '1px solid #7A5A3833',  // 20% alpha border = subtle outline
+                background: 'var(--surface)',
+              }}
             >
+              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
               {t.records.manageRecurringExpense}
             </Link>
-          </div>
-        )}
-        {tab === 'income' && (
-          <div className="px-5 pb-2">
             <Link
               href="/settings/recurring-income"
-              className="text-xs"
-              style={{ color: 'var(--ink-3)' }}
+              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
+              style={{
+                color: P.ink,
+                border: `1px solid ${P.ink}33`,
+                background: 'var(--surface)',
+              }}
             >
+              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
               {t.records.manageRecurringIncome}
             </Link>
           </div>
-        )}
+        </div>
       </div>
 
+      {/* Stats above the transaction feed. The card adapts to the current tab
+          via TabContext: title becomes 收支統計 / 支出統計 / 收入統計,
+          income tab forces compact (no expense breakdown to show). */}
+      <TabProvider value={tab}>{statsSlot}</TabProvider>
+
+      {/* Each child below is a stable JSX sibling — React reconciles them by
+          position, not as a list. We deliberately render `null` (rather than
+          mounting a hidden TransactionFeed per tab) so only one feed exists
+          in the DOM at a time; switching tabs unmounts the old one and the
+          new one fetches its own page-1 cleanly via `key={tab}`. */}
       <TransactionFeed
-        key={tab}
+        key={`${tab}:${monthKey}`}
         initial={tabInitial}
         pageSize={pageSize}
+        monthKey={monthKey}
         onItemClick={handleItemClick}
         filter={tab !== 'income' ? (filter ?? undefined) : undefined}
         loader={tabLoader}
@@ -294,7 +341,6 @@ export function RecordsList({ initial, pageSize }: Props) {
           setFilterOpen(false)
         }}
       />
-
       <IncomeSheet
         open={editingIncome !== null}
         onClose={handleSheetClose}
@@ -302,7 +348,10 @@ export function RecordsList({ initial, pageSize }: Props) {
         onMutated={handleMutated}
       />
 
-      {fuelCar && (
+      {/* NewFuelLog is mounted lazily because its `car` prop is required and
+          only known after the user taps a fuel-log row. Keep this conditional
+          last so the slot order above (sheets) stays stable. */}
+      {fuelCar !== null ? (
         <NewFuelLog
           open={fuelSheetOpen}
           onClose={() => setFuelSheetOpen(false)}
@@ -311,7 +360,7 @@ export function RecordsList({ initial, pageSize }: Props) {
           mode="edit"
           initial={fuelSheetInitial}
         />
-      )}
+      ) : null}
     </div>
   )
 }

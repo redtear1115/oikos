@@ -214,9 +214,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         const msg = e instanceof Error ? e.message : t.incomeSheet.errors.saveFailed
         // Race: partner confirmed/skipped this pending in another tab/device
         // before our edit-confirm landed. The error messages from
-        // editAndConfirmPending in that case are: '待確認進帳已被處理或找不到'
-        // (pre-check) or '待確認進帳已被其他裝置處理' (in-tx guard).
-        if (isPending && msg.includes('待確認進帳')) {
+        // editAndConfirmPending in that case are: '待確認收入已被處理或找不到'
+        // (pre-check) or '待確認收入已被其他裝置處理' (in-tx guard).
+        if (isPending && msg.includes('待確認收入')) {
           onMutated?.()
           onClose()
           onRaceResolved?.(t.recurringIncome.raceMessage)

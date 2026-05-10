@@ -179,6 +179,26 @@ export type Translations = {
     manageRecurringIncome: string
     manageRecurringExpense: string
     offlineMoreNeedsNetwork: string
+    stats: {
+      title: string         // expense-tab title (kept for back-compat)
+      titleAll: string      // 全部 tab
+      titleIncome: string   // 收入 tab
+      total: string  // {amount}
+      empty: string
+      emptySub: string
+      viewByCategory: string
+      viewByAsset: string
+      otherSpend: string
+      prevMonth: string
+      nextMonth: string
+      collapse: string
+      expand: string
+      summaryExpense: string    // {amount}
+      summaryIncome: string     // {amount}
+      summaryNetIncome: string  // {amount}, e.g. "淨收入 +NT$..."
+      summaryNetExpense: string // {amount}, e.g. "淨支出 NT$..."
+      summaryNetEven: string    // "持平"
+    }
   }
 
   filterSheet: {
@@ -188,11 +208,6 @@ export type Translations = {
     payerSection: string
     splitSection: string
     categorySection: string
-  }
-
-  monthSection: {
-    expense: string
-    net: string
   }
 
   settings: {
@@ -808,6 +823,107 @@ export type Translations = {
     linkAssets: string
     footer: string
   }
+
+  monthlyReview: {
+    /** Template with `{year}` `{month}`. */
+    pageTitle: string
+    backAriaLabel: string
+    closeAriaLabel: string
+    /** Banner heading template with `{month}` (1..12). */
+    bannerHeading: string
+    /** Banner heading when no message exists, with `{month}`. */
+    bannerHeadingNoMessage: string
+    /** Banner CTA template with `{month}`. */
+    bannerCta: string
+    /** Solo-mode banner heading variant with `{month}`. */
+    bannerHeadingSolo: string
+    /** Solo-mode banner heading no-message variant with `{month}`. */
+    bannerHeadingSoloNoMessage: string
+    /** Solo-mode CTA with `{month}`. */
+    bannerCtaSolo: string
+    /** Past-month read-only message section title. */
+    pastMessagesTitle: string
+    /** Author label fallback for past-month messages when display name absent. */
+    pastMessageAuthorFallback: string
+    /** Editor section heading. */
+    editorTitle: string
+    /** Solo-mode editor heading variant. */
+    editorTitleSolo: string
+    /** Editor textarea placeholder. */
+    editorPlaceholder: string
+    /** Counter template with `{n}` and `{max}`. */
+    editorCounter: string
+    /** Footer text shown when message is locked, with `{date}`. */
+    lockedFooter: string
+    /** Footer text shown while saving. */
+    savingFooter: string
+    /** Footer text shown after successful save. */
+    savedFooter: string
+    /** Footer error template, with `{message}`. */
+    errorFooter: string
+    /** Card 1 heading. */
+    card1Title: string
+    /** Card 1 body template with `{category}`, `{amount}`. */
+    card1Body: string
+    /** Card 1 solo body variant with `{category}`, `{amount}`. */
+    card1BodySolo: string
+    /** Card 2 heading. */
+    card2Title: string
+    /** Card 2 body template with `{name}`, `{description}`, `{amount}`. */
+    card2Body: string
+    /** Card 3 heading. */
+    card3Title: string
+    /** Card 3 expense total template with `{amount}`. */
+    card3ExpenseTotal: string
+    /** Card 3 income total template with `{amount}`. */
+    card3IncomeTotal: string
+    /** Card 4 heading. */
+    card4Title: string
+    /** Empty-card body lines (zero transactions). */
+    emptyCardBody: string
+    /** Empty-card CTA. */
+    emptyCardCta: string
+    /** Empty recurring events line. */
+    emptyRecurring: string
+    /** Empty asset breakdown line. */
+    emptyAssetBreakdown: string
+    /** Carousel page indicator template with `{current}` `{total}`. */
+    carouselIndicator: string
+    /** Direction label for income events in card 3. */
+    incomeLabel: string
+    /** Direction label for expense events in card 3. */
+    expenseLabel: string
+    /** Snapshot-not-yet-computed message (rare race). */
+    snapshotNotReady: string
+    /** Errors. */
+    errors: {
+      messageRequired: string
+      messageTooLong: string
+      saveFailed: string
+      locked: string
+    }
+  }
+
+  inAppBrowser: {
+    /** Heading on the full-screen blocker. */
+    title: string
+    /** Body explaining why we block (Google login + offline don't work in WebViews). */
+    description: string
+    /** Section label above the URL block. */
+    urlLabel: string
+    /** Default state of the copy button. */
+    copy: string
+    /** State of the copy button after success. */
+    copied: string
+    /** iOS-only: button that tries `x-safari-https://` to jump to Safari. */
+    openInSafari: string
+    /** Generic hint shown below the copy/jump action. */
+    instructionGeneric: string
+    /** iOS-specific hint (Safari is the only supported browser for OAuth). */
+    instructionIos: string
+    /** Android-specific hint. */
+    instructionAndroid: string
+  }
 }
 
 export const zhTW: Translations = {
@@ -877,7 +993,7 @@ export const zhTW: Translations = {
     noRecordsTitle: '還沒有紀錄',
     noRecordsHint: '從第一筆開始 ─ 一杯咖啡、一頓晚餐都算數。日子一天天記下來，回頭看會很暖。',
     addFirst: '記第一筆',
-    noIncome: '還沒記過家裡的進帳',
+    noIncome: '還沒記過家裡的收入',
     noFilteredAddHint: '還沒有紀錄。按下方 + 記第一筆吧。',
   },
 
@@ -889,7 +1005,7 @@ export const zhTW: Translations = {
 
   modeToggle: {
     expense: '支出模式',
-    income: '進帳模式',
+    income: '收入模式',
   },
 
   payerToggle: {
@@ -900,13 +1016,13 @@ export const zhTW: Translations = {
     soloHint: '你還在獨自記帳',
     inviteCta: '邀請對方 →',
     addExpense: '新增一筆',
-    addIncome: '記一筆進帳',
+    addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
   },
 
   balanceHero: {
-    monthlyIncome: '本月進帳',
+    monthlyIncome: '本月收入',
     countLabel: '筆數',
     countSuffix: '筆',
     recent: '最近',
@@ -950,9 +1066,9 @@ export const zhTW: Translations = {
   },
 
   incomeSheet: {
-    title: '記一筆進帳',
-    amountLabel: '進帳金額',
-    recipientPrompt: '進到誰那？',
+    title: '記一筆收入',
+    amountLabel: '收入金額',
+    recipientPrompt: '誰的收入？',
     categoryLabel: '類別',
     policyLink: '關聯保單',
     selectPolicy: '選擇對應保單',
@@ -961,12 +1077,12 @@ export const zhTW: Translations = {
     noPolicy: '尚無保單',
     insuranceBadge: '保險',
     notePlaceholder: '備註（可選）',
-    deleteIncome: '刪除這筆進帳',
-    deleteConfirmTitle: '刪除這筆進帳？',
+    deleteIncome: '刪除這筆收入',
+    deleteConfirmTitle: '刪除這筆收入？',
     errors: {
       amountRequired: '請輸入金額',
       saveFailed: '儲存失敗',
-      missingPendingId: '缺少待確認進帳 id',
+      missingPendingId: '缺少待確認收入 id',
     },
   },
 
@@ -986,10 +1102,30 @@ export const zhTW: Translations = {
     title: '紀錄',
     tabAll: '全部',
     tabExpense: '支出',
-    tabIncome: '進帳',
-    manageRecurringIncome: '⚙ 設定定期進帳 →',
-    manageRecurringExpense: '⚙ 設定定期支出 →',
+    tabIncome: '收入',
+    manageRecurringIncome: '定期收入',
+    manageRecurringExpense: '定期支出',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
+    stats: {
+      title: '支出統計',
+      titleAll: '收支統計',
+      titleIncome: '收入統計',
+      total: '總共 {amount} NT$',
+      empty: '這個月還沒有支出紀錄',
+      emptySub: '翻翻其他月看看',
+      viewByCategory: '分類',
+      viewByAsset: '愛物',
+      otherSpend: '其他支出',
+      prevMonth: '上一月',
+      nextMonth: '下一月',
+      collapse: '收合統計',
+      expand: '展開統計',
+      summaryExpense: '支出 {amount}',
+      summaryIncome: '收入 {amount}',
+      summaryNetIncome: '淨收入 +{amount}',
+      summaryNetExpense: '淨支出 {amount}',
+      summaryNetEven: '持平',
+    },
   },
 
   filterSheet: {
@@ -999,11 +1135,6 @@ export const zhTW: Translations = {
     payerSection: '誰付的',
     splitSection: '分攤',
     categorySection: '分類（可多選）',
-  },
-
-  monthSection: {
-    expense: '支出',
-    net: '淨',
   },
 
   settings: {
@@ -1026,7 +1157,7 @@ export const zhTW: Translations = {
     offlineToggling: '處理中…',
     offlineToggleError: '無法切換，請稍後再試',
     offlineUnsupported: '目前的瀏覽器不支援離線瀏覽',
-    recurringIncome: '定期進帳',
+    recurringIncome: '定期收入',
     recurringExpense: '定期支出',
     sectionData: '資料',
     trust: '資料安全',
@@ -1064,11 +1195,11 @@ export const zhTW: Translations = {
   },
 
   recurringIncome: {
-    title: '定期進帳',
+    title: '定期收入',
     back: '返回',
     add: '+ 新增',
     empty: {
-      hint: '還沒設定定期進帳',
+      hint: '還沒設定定期收入',
       cta: '新增第一個',
     },
     rule: {
@@ -1090,10 +1221,10 @@ export const zhTW: Translations = {
       collapse: '收合',
     },
     sheet: {
-      titleNew: '新增定期進帳',
-      titleEdit: '編輯定期進帳',
+      titleNew: '新增定期收入',
+      titleEdit: '編輯定期收入',
       amountLabel: '固定金額',
-      recipientPrompt: '進到誰那？',
+      recipientPrompt: '誰的收入？',
       categoryLabel: '類別',
       intervalLabel: '週期',
       dayOfMonthLabel: '每月幾號',
@@ -1166,7 +1297,7 @@ export const zhTW: Translations = {
     saveChanges: '儲存變更',
     deleteConfirm: {
       title: '確認刪除？',
-      description: '這個愛物與所有關聯花費將從列表中移除。',
+      description: '這個愛物與所有關聯支出將從列表中移除。',
       confirmLabel: '刪除',
     },
     type: {
@@ -1327,15 +1458,15 @@ export const zhTW: Translations = {
     editAriaLabel: '編輯',
     switcherAriaLabel: '切換愛物',
     notesSection: '備註',
-    recentExpenses: '近期花費',
+    recentExpenses: '近期支出',
     timelineEntries: '時間軸 · {count} 筆',
-    addOtherExpense: '其他花費',
+    addOtherExpense: '其他支出',
     refuel: '加油',
     relatedInsurance: '相關保險',
     linkedVehicleSection: '關聯車輛',
-    emptyCarLine1: '還沒有為這台車記下任何花費 —',
+    emptyCarLine1: '還沒有為這台車記下任何支出 —',
     emptyCarLine2: '戳右下角 + 開始',
-    emptyDefaultLine1: '還沒有記下任何花費 —',
+    emptyDefaultLine1: '還沒有記下任何支出 —',
     emptyDefaultLine2: '戳右下角 + 開始',
     typeLabels: {
       car: '車',
@@ -1589,5 +1720,62 @@ export const zhTW: Translations = {
     linkRecords: '紀錄',
     linkAssets: '愛物',
     footer: '等連線回來會自動更新',
+  },
+
+  monthlyReview: {
+    pageTitle: '{year} 年 {month} 月．我們的記帳回顧',
+    backAriaLabel: '返回',
+    closeAriaLabel: '關閉',
+    bannerHeading: '你們在 {month} 月寫下：',
+    bannerHeadingNoMessage: '上個月的回顧整理好了',
+    bannerCta: '→ 一起看看 {month} 月',
+    bannerHeadingSolo: '你在 {month} 月寫下：',
+    bannerHeadingSoloNoMessage: '上個月的回顧整理好了',
+    bannerCtaSolo: '→ 看看 {month} 月',
+    pastMessagesTitle: '上個月寫給這個月的話',
+    pastMessageAuthorFallback: '對方',
+    editorTitle: '給下個月的我們',
+    editorTitleSolo: '給下個月的我',
+    editorPlaceholder: '寫一句話給下個月的你們',
+    editorCounter: '{n}/{max}',
+    lockedFooter: '已於 {date} 鎖定',
+    savingFooter: '儲存中…',
+    savedFooter: '已儲存',
+    errorFooter: '儲存失敗：{message}',
+    card1Title: '最常一起花的類別',
+    card1Body: '這個月你們最常一起花在 {category}，共 NT$ {amount}',
+    card1BodySolo: '這個月你最常花在 {category}，共 NT$ {amount}',
+    card2Title: '本月最大筆',
+    card2Body: '最大一筆 — {name} 付的「{description}」，NT$ {amount}',
+    card3Title: '定期入帳事件',
+    card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
+    card3IncomeTotal: '本月定期進帳共 NT$ {amount}',
+    card4Title: '愛物進度',
+    emptyCardBody: '這個月沒留下花費紀錄',
+    emptyCardCta: '現在去補登 →',
+    emptyRecurring: '本月沒有定期事件',
+    emptyAssetBreakdown: '本月沒有為任何愛物花費',
+    carouselIndicator: '{current} / {total}',
+    incomeLabel: '進',
+    expenseLabel: '支',
+    snapshotNotReady: '這個月的回顧還在整理中，等一下再進來看看吧。',
+    errors: {
+      messageRequired: '請寫一句話',
+      messageTooLong: '留言最長 200 字',
+      saveFailed: '儲存失敗',
+      locked: '這個月的留言已鎖定',
+    },
+  },
+
+  inAppBrowser: {
+    title: '請在外部瀏覽器開啟',
+    description: '你目前在聊天軟體的內建瀏覽器裡。為了讓 Google 登入與離線功能正常運作，請改用 Safari 或 Chrome 開啟。',
+    urlLabel: '網址',
+    copy: '複製連結',
+    copied: '已複製',
+    openInSafari: '在 Safari 開啟',
+    instructionGeneric: '複製上方網址，貼到 Safari 或 Chrome 開啟。',
+    instructionIos: '點上方按鈕跳到 Safari，或複製網址後手動貼到 Safari。',
+    instructionAndroid: '點右上角選單，選「在瀏覽器中開啟」，或複製網址貼到 Chrome。',
   },
 }
