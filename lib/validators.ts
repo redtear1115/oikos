@@ -1015,6 +1015,7 @@ export interface ConfirmPendingExpenseOverrides {
   category?: string
   paidBy?: string
   splitType?: SplitType
+  splitRatioA?: number | null
   description?: string
   transactedAt?: string  // YYYY-MM-DD
   assetId?: string | null
@@ -1025,6 +1026,7 @@ export interface ValidatedConfirmPendingExpense {
   category?: CategoryId
   paidBy?: string
   splitType?: SplitType
+  splitRatioA?: number | null
   description?: string
   transactedAt?: string
   assetId?: string | null
@@ -1072,6 +1074,13 @@ export function validateConfirmPendingExpenseInput(
   }
   if (input.assetId !== undefined) {
     out.assetId = input.assetId || null
+  }
+  if (input.splitRatioA !== undefined) {
+    if (input.splitRatioA !== null) {
+      const r = input.splitRatioA
+      if (!Number.isInteger(r) || r < 1 || r > 99) throw new Error('加權比例需為 1–99 的整數')
+    }
+    out.splitRatioA = input.splitRatioA
   }
 
   return out
