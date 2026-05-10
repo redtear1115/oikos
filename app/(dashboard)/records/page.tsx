@@ -5,6 +5,7 @@ import { eq, or } from 'drizzle-orm'
 import { listFeedAllPaged, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
+import { StatsCollapsible } from './_components/StatsCollapsible'
 import { isMonthKey, currentMonthKey, clampMonthKey, monthKeyOf } from '@/lib/monthKey'
 import type { BreakdownView } from './_components/StatsBreakdownToggle'
 
@@ -64,13 +65,15 @@ export default async function RecordsPage({
       initial={initial}
       pageSize={PAGE_SIZE}
       statsSlot={
-        <MonthlyStatsSection
-          groupId={group.id}
-          monthKey={monthKey}
-          minMonthKey={minMonthKey}
-          maxMonthKey={maxMonthKey}
-          view={view}
-        />
+        <StatsCollapsible userId={user.id}>
+          <MonthlyStatsSection
+            groupId={group.id}
+            monthKey={monthKey}
+            minMonthKey={minMonthKey}
+            maxMonthKey={maxMonthKey}
+            view={view}
+          />
+        </StatsCollapsible>
       }
     />
   )
