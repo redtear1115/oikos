@@ -161,9 +161,10 @@ export async function getInsuranceAssets(): Promise<{ id: string; name: string }
 export async function loadMoreIncomes(
   cursor: IncomeCursor | null,
   limit = 20,
+  monthKey?: string,
 ): Promise<PagedIncomeRow[]> {
   const { group } = await getViewerGroup()
-  const rows = await listIncomesPaged(group.id, cursor, limit)
+  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

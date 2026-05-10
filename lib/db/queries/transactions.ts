@@ -90,6 +90,7 @@ export async function listTransactionsPaged(
   cursor: TxnCursor | null,
   limit = 20,
   filter?: ResolvedTxnFilter,
+  monthKey?: string,
 ): Promise<FeedRow[]> {
   const txCursor = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
@@ -108,6 +109,18 @@ export async function listTransactionsPaged(
     : sql``
 
   const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+
+  // Page-level month scope: feed shows only the selected calendar month
+  // (Asia/Taipei). When monthKey is omitted the feed remains all-time.
+  const monthRange = monthKey ? monthRangeIso(monthKey) : null
+  const txMonth = monthRange
+    ? sql`AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
+          AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
+    : sql``
+  const setMonth = monthRange
+    ? sql`AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
+          AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
+    : sql``
 
   // Drop the settlements branch entirely when 分攤 / 分類 dims are active.
   const settlementsBranch = filter?.excludeSettlements
@@ -131,6 +144,7 @@ export async function listTransactionsPaged(
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${setCursor}
       ${setPayer}
+      ${setMonth}
     `
 
   const rows = await db.execute<{
@@ -158,6 +172,7 @@ export async function listTransactionsPaged(
       ${txPayer}
       ${txSplit}
       ${txCategory}
+      ${txMonth}
       ${settlementsBranch}
     ) AS feed
     ORDER BY transacted_at DESC, created_at DESC
@@ -194,9 +209,27 @@ export async function listFeedAllPaged(
   groupId: string,
   cursor: TxnCursor | null,
   limit = 20,
+  monthKey?: string,
 ): Promise<FeedRow[]> {
   const cur = cursor
     ? sql`AND (sort_at, sort_created) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
+    : sql``
+
+  // Page-level month scope. CashTransactions/Settlements use timestamptz columns
+  // (Asia/Taipei conversion); IncomeTransactions uses a date column so the range
+  // compares against bare YYYY-MM-DD.
+  const monthRange = monthKey ? monthRangeIso(monthKey) : null
+  const txMonth = monthRange
+    ? sql`AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
+          AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
+    : sql``
+  const setMonth = monthRange
+    ? sql`AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
+          AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
+    : sql``
+  const incMonth = monthRange
+    ? sql`AND occurred_at >= ${monthRange.startIso.slice(0, 10)}::date
+          AND occurred_at <  ${monthRange.endIso.slice(0, 10)}::date`
     : sql``
 
   const rows = await db.execute<{
@@ -221,6 +254,7 @@ export async function listFeedAllPaged(
         'transaction'::text AS kind
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${txMonth}
 
       UNION ALL
 
@@ -231,6 +265,7 @@ export async function listFeedAllPaged(
         'settlement'::text AS kind
       FROM "Settlements"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${setMonth}
 
       UNION ALL
 
@@ -241,6 +276,7 @@ export async function listFeedAllPaged(
         'income'::text AS kind
       FROM "IncomeTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${incMonth}
     ) AS feed
     WHERE TRUE ${cur}
     ORDER BY sort_at DESC, sort_created DESC

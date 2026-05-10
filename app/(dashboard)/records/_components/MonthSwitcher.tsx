@@ -9,13 +9,15 @@ import { useTranslations, useLocale } from '@/lib/i18n/client'
 interface Props {
   /** Currently displayed month, 'YYYY-MM'. */
   monthKey: string
-  /** Lower bound (inclusive) — usually the group creation month. */
-  minMonthKey: string
+  /** Lower bound (inclusive). Defaults to '1970-01' so the user can scroll into
+   *  pre-creation months — the page renders a forced-compact stats card for
+   *  those (no data) but switching is still possible. */
+  minMonthKey?: string
   /** Upper bound (inclusive) — usually current Taipei month. */
   maxMonthKey: string
 }
 
-export function MonthSwitcher({ monthKey, minMonthKey, maxMonthKey }: Props) {
+export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations()

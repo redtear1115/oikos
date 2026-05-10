@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory, type CategoryId } from '@/lib/categories'
 import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transactions'
-import { MonthSwitcher } from './MonthSwitcher'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 
 const KEY_PREFIX = 'oikos_stats_collapsed_'
@@ -21,24 +20,22 @@ const ASSET_NULL_COLOR = '#B5B5C0'
 interface Props {
   /** Per-user scope — multiple users on the same device keep independent state. */
   userId: string
-  monthKey: string
-  minMonthKey: string
-  maxMonthKey: string
   view: BreakdownView
   rows: ReadonlyArray<CategoryStatRow | AssetStatRow>
   expenseTotal: number
   incomeTotal: number
+  /** When true (e.g. user scrolled to a month before group creation), the card
+   *  is forced into compact mode and the toggle / expand button disappear. */
+  forceCompact?: boolean
 }
 
 export function MonthlyStatsView({
   userId,
-  monthKey,
-  minMonthKey,
-  maxMonthKey,
   view,
   rows,
   expenseTotal,
   incomeTotal,
+  forceCompact = false,
 }: Props) {
   const t = useTranslations()
   const [collapsed, setCollapsed] = useState(false)
@@ -67,12 +64,15 @@ export function MonthlyStatsView({
     }
   }
 
-  const showCollapsed = mounted && collapsed
+  // Forced compact wins over user preference: pre-creation months have no data
+  // worth visualising, so the expand affordance is hidden.
+  const showCollapsed = forceCompact || (mounted && collapsed)
+  const allowToggle = !forceCompact
   const isEmpty = expenseTotal === 0 && incomeTotal === 0
   const hasExpenses = expenseTotal > 0
 
   return (
-    <section className="px-5 pt-6 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
+    <section className="px-5 pt-4 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
       <div className="flex items-center justify-between mb-3">
         <h2
           className="text-base font-medium tracking-tight"
@@ -80,9 +80,10 @@ export function MonthlyStatsView({
         >
           {t.records.stats.title}
         </h2>
-        {/* Title-row controls: only when expanded AND has content. In collapsed
-            mode the toggle / expand button live inline with the summary row. */}
-        {!isEmpty && !showCollapsed && (
+        {/* Title-row controls only when expanded AND has content AND toggle
+            is allowed. In collapsed mode the controls live inline with the
+            summary row. */}
+        {!isEmpty && !showCollapsed && allowToggle && (
           <div className="flex items-center gap-2">
             {hasExpenses && <StatsBreakdownToggle value={view} />}
             <ToggleButton onClick={toggle} ariaLabel={t.records.stats.collapse} expanded>
@@ -92,14 +93,8 @@ export function MonthlyStatsView({
         )}
       </div>
 
-      <MonthSwitcher
-        monthKey={monthKey}
-        minMonthKey={minMonthKey}
-        maxMonthKey={maxMonthKey}
-      />
-
       {isEmpty ? (
-        <div className="text-center py-10">
+        <div className="text-center py-6">
           <div className="text-sm" style={{ color: 'var(--ink-2)' }}>
             {t.records.stats.empty}
           </div>
@@ -110,27 +105,30 @@ export function MonthlyStatsView({
       ) : showCollapsed ? (
         // Collapsed: a single inline row replaces every visualisation.
         // Layout: [summary text]  [breakdown toggle]  [expand button].
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        // breakdown toggle and expand button are hidden when forceCompact —
+        // there's nothing to switch / expand into.
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
-          <div className="flex items-center gap-2 ml-auto">
-            {hasExpenses && <StatsBreakdownToggle value={view} />}
-            <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
-              +
-            </ToggleButton>
-          </div>
+          {allowToggle && (
+            <div className="flex items-center gap-2 ml-auto">
+              {hasExpenses && <StatsBreakdownToggle value={view} />}
+              <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
+                +
+              </ToggleButton>
+            </div>
+          )}
         </div>
       ) : (
-        // Expanded: pie chart + stacked bar + total + detail bars.
+        // Expanded: donut chart on top, then total line, then detail-bar
+        // legend (each bar's coloured chip matches its pie slice). Stacked
+        // bar dropped — the donut conveys the same proportion.
         <>
           {hasExpenses && (
-            <>
-              <div className="flex justify-center mt-5 mb-4">
-                <PieChart rows={rows} total={expenseTotal} view={view} />
-              </div>
-              <StackedBar rows={rows} total={expenseTotal} view={view} />
-            </>
+            <div className="flex justify-center mt-2 mb-4">
+              <PieChart rows={rows} total={expenseTotal} view={view} />
+            </div>
           )}
-          <div className="text-sm tnum mt-3 mb-4" style={{ color: 'var(--ink-2)' }}>
+          <div className="text-sm tnum mt-2 mb-4" style={{ color: 'var(--ink-2)' }}>
             {t.records.stats.total.replace('{amount}', expenseTotal.toLocaleString('en-US'))}
           </div>
           {hasExpenses && (
@@ -263,8 +261,9 @@ function hashStr(s: string): number {
 
 /**
  * Inline SVG donut chart — kept dep-free per the original spec
- * (Recharts ~50KB+ ruled out for mobile bundle size). Same color palette
- * as StackedBar / detail bars so the three visualisations stay coherent.
+ * (Recharts ~50KB+ ruled out for mobile bundle size). Slice colors come from
+ * the same `colorForRow` helper as the detail-bar legend dots, so the chart
+ * and the legend stay visually coupled regardless of breakdown view.
  */
 function PieChart({
   rows,
@@ -345,42 +344,6 @@ function PieChart({
   )
 }
 
-function StackedBar({
-  rows,
-  total,
-  view,
-}: {
-  rows: ReadonlyArray<CategoryStatRow | AssetStatRow>
-  total: number
-  view: BreakdownView
-}) {
-  return (
-    <div
-      className="h-3 w-full rounded-full overflow-hidden flex"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      role="img"
-      aria-label={`${total} stacked breakdown`}
-    >
-      {rows.map((r, i) => {
-        const pct = (r.total / total) * 100
-        const { chart } = colorForRow(r, view)
-        const key = view === 'category'
-          ? (r as CategoryStatRow).key
-          : (r as AssetStatRow).key ?? `__none_${i}`
-        return (
-          <div
-            key={key}
-            style={{
-              width: `${pct}%`,
-              background: chart,
-            }}
-          />
-        )
-      })}
-    </div>
-  )
-}
-
 function CategoryBar({
   row,
   total,
@@ -448,8 +411,17 @@ function Bar({
   return (
     <li {...rest} className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between text-sm">
-        <span style={{ color: 'var(--ink)' }}>{label}</span>
-        <span className="tnum text-micro" style={{ color: 'var(--ink-3)' }}>
+        <span className="flex items-center gap-2 min-w-0">
+          {/* Colored chip — matches the corresponding pie slice exactly so this
+              row functions as the chart's legend. */}
+          <span
+            aria-hidden
+            className="inline-block rounded-full shrink-0"
+            style={{ width: 10, height: 10, background: chart }}
+          />
+          <span style={{ color: 'var(--ink)' }} className="truncate">{label}</span>
+        </span>
+        <span className="tnum text-micro shrink-0" style={{ color: 'var(--ink-3)' }}>
           {/* Bare amount — currency anchored once on the total / summary line above. */}
           {pct.toFixed(0)}% · {amount.toLocaleString('en-US')}
         </span>

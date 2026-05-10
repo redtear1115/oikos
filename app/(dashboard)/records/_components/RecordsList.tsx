@@ -10,6 +10,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet } from './FilterSheet'
+import { MonthSwitcher } from './MonthSwitcher'
 import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
@@ -22,20 +23,26 @@ import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/Income
 import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { useTranslations } from '@/lib/i18n/client'
 
-const incomeLoader = makeIncomeLoader(20)
-
 interface Props {
   initial: PagedTxnRow[]
   pageSize: number
   /**
-   * Server-rendered slot shown below the transaction feed (currently the monthly
-   * stats section). Re-renders when ?month or ?view in the URL change; list state
-   * is preserved because RecordsList stays mounted across those navigations.
+   * Page-level month scope: drives both the stats card AND the transaction
+   * feed. Server reads the URL param and feeds it down; client loaders close
+   * over it so paginating stays inside the same calendar month.
+   */
+  monthKey: string
+  /** Upper bound for MonthSwitcher (current Taipei month). */
+  maxMonthKey: string
+  /**
+   * Server-rendered stats card. Re-renders when ?month / ?view in the URL
+   * change; list state is preserved because RecordsList stays mounted across
+   * those navigations.
    */
   statsSlot?: React.ReactNode
 }
 
-export function RecordsList({ initial, pageSize, statsSlot }: Props) {
+export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlot }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
@@ -150,12 +157,19 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
     return initial
   }, [initial, tab])
 
-  const tabLoader =
-    tab === 'income'
-      ? incomeLoader
-      : tab === 'expense'
-      ? (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20)
-      : loadMoreFeedAll
+  // Loaders close over the current monthKey so paginating stays scoped to the
+  // selected month. Recreated when month changes — TransactionFeed will use
+  // the new loader on the next page-fetch (initial data is already month-
+  // scoped via SSR, so no immediate refetch is needed).
+  const tabLoader = useMemo(() => {
+    if (tab === 'income') {
+      return makeIncomeLoader(20, monthKey)
+    }
+    if (tab === 'expense') {
+      return (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20, undefined, monthKey)
+    }
+    return (cursor: TxnCursor | null) => loadMoreFeedAll(cursor, 20, monthKey)
+  }, [tab, monthKey])
 
   // Income row mint-glow renderer (used in 'all' tab only)
   const P = DEFAULT_INCOME_PALETTE
@@ -196,6 +210,12 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
               {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
             </button>
           )}
+        </div>
+
+        {/* Page-level month scope: controls both the stats card and the
+            transaction feed below. Keeps stats and list in one mental model. */}
+        <div className="px-5 pb-3">
+          <MonthSwitcher monthKey={monthKey} maxMonthKey={maxMonthKey} />
         </div>
 
         {/* Tab bar */}
@@ -270,9 +290,10 @@ export function RecordsList({ initial, pageSize, statsSlot }: Props) {
           in the DOM at a time; switching tabs unmounts the old one and the
           new one fetches its own page-1 cleanly via `key={tab}`. */}
       <TransactionFeed
-        key={tab}
+        key={`${tab}:${monthKey}`}
         initial={tabInitial}
         pageSize={pageSize}
+        monthKey={monthKey}
         onItemClick={handleItemClick}
         filter={tab !== 'income' ? (filter ?? undefined) : undefined}
         loader={tabLoader}
