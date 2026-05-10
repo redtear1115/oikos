@@ -210,11 +210,6 @@ export const ja: Translations = {
     categorySection: 'カテゴリー（複数選択可）',
   },
 
-  monthSection: {
-    expense: '支出',
-    net: '収支',
-  },
-
   settings: {
     title: '設定',
     sectionGroup: '家計簿',

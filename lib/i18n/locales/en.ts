@@ -210,11 +210,6 @@ export const en: Translations = {
     categorySection: 'Categories (multi)',
   },
 
-  monthSection: {
-    expense: 'Expense',
-    net: 'Net',
-  },
-
   settings: {
     title: 'Settings',
     sectionGroup: 'Ledger',
