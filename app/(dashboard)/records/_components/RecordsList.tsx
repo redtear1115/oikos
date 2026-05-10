@@ -50,6 +50,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [adding, setAdding] = useState(false)
+  const [addingIncomeNew, setAddingIncomeNew] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [filter, setFilter] = useState<TxnFilter | null>(null)
 
@@ -66,7 +67,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
   // Income edit sheet state
   const [editingIncome, setEditingIncome] = useState<IncomeSheetInitial | null>(null)
 
-  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || filterOpen || fuelSheetOpen || editingIncome !== null
+  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || addingIncomeNew || filterOpen || fuelSheetOpen || editingIncome !== null
 
   useRealtimeEvents((event) => {
     if (event.kind === 'income-insert' || event.kind === 'income-update') {
@@ -144,6 +145,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
     setEditingTx(null)
     setEditingSettlement(null)
     setAdding(false)
+    setAddingIncomeNew(false)
     setEditingIncome(null)
   }
 
@@ -318,7 +320,11 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
         }
       />
 
-      <BottomNav onAddClick={() => setAdding(true)} hideFab={sheetOpen} />
+      <BottomNav
+        onAddClick={() => tab === 'income' ? setAddingIncomeNew(true) : setAdding(true)}
+        hideFab={sheetOpen}
+        fabVariant={tab === 'income' ? 'accent' : 'primary'}
+      />
 
       <AddSheet
         open={adding || editingTx !== null}
@@ -342,7 +348,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
         }}
       />
       <IncomeSheet
-        open={editingIncome !== null}
+        open={editingIncome !== null || addingIncomeNew}
         onClose={handleSheetClose}
         initial={editingIncome ?? undefined}
         onMutated={handleMutated}
