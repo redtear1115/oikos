@@ -9,9 +9,10 @@ import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
 
 interface Props {
   rules: RecurringExpenseRuleRow[]
+  groupDefaultRatioA?: number | null
 }
 
-export function RecurringExpenseContent({ rules }: Props) {
+export function RecurringExpenseContent({ rules, groupDefaultRatioA }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const [sheetState, setSheetState] = useState<null | 'create' | RecurringExpenseRuleRow>(null)
@@ -81,6 +82,7 @@ export function RecurringExpenseContent({ rules }: Props) {
         onClose={() => setSheetState(null)}
         onMutated={handleMutated}
         initial={initial}
+        groupDefaultRatioA={groupDefaultRatioA}
       />
     </>
   )

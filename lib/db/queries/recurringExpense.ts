@@ -11,6 +11,7 @@ export interface RecurringExpenseRuleRow {
   paidBy: string
   amount: number
   splitType: SplitType
+  splitRatioA: number | null
   description: string
   category: string
   assetId: string | null
@@ -29,6 +30,7 @@ export async function listActiveRules(groupId: string): Promise<RecurringExpense
       paidBy: recurringExpenseRules.paidBy,
       amount: recurringExpenseRules.amount,
       splitType: recurringExpenseRules.splitType,
+      splitRatioA: recurringExpenseRules.splitRatioA,
       description: recurringExpenseRules.description,
       category: recurringExpenseRules.category,
       assetId: recurringExpenseRules.assetId,

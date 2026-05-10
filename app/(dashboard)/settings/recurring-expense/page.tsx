@@ -22,7 +22,7 @@ export default async function RecurringExpenseSettingsPage() {
 
   return (
     <div className="relative min-h-dvh pb-[92px]">
-      <RecurringExpenseContent rules={rules} />
+      <RecurringExpenseContent rules={rules} groupDefaultRatioA={group.defaultSplitRatioA ?? null} />
       <BottomNavSkeleton />
     </div>
   )
