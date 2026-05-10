@@ -6,7 +6,7 @@ import { sql } from 'drizzle-orm'
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
-export const splitTypeEnum = pgEnum('split_type', ['all_mine', 'all_theirs', 'half'])
+export const splitTypeEnum = pgEnum('split_type', ['all_mine', 'all_theirs', 'half', 'weighted'])
 export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance', 'pet', 'plant'])
 // '92' is legacy from Phase 0; pg can't drop enum values, so kept here even though UI only offers 95/98/diesel/electric.
 export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel', 'electric'])
@@ -34,6 +34,7 @@ export const oikosGroups = pgTable('OikosGroups', {
   memberA: uuid('member_a').notNull().references(() => profiles.id),
   memberB: uuid('member_b').references(() => profiles.id), // null until invite accepted
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  defaultSplitRatioA: integer('default_split_ratio_a'),
 })
 
 export const groupInvites = pgTable('GroupInvites', {
@@ -69,6 +70,7 @@ export const cashTransactions = pgTable('CashTransactions', {
   paidBy: uuid('paid_by').notNull().references(() => profiles.id),
   amount: integer('amount').notNull(),
   splitType: splitTypeEnum('split_type').notNull(),
+  splitRatioA: integer('split_ratio_a'),
   description: text('description').notNull(),
   category: text('category').notNull(),
   notes: text('notes'),
@@ -277,6 +279,7 @@ export const recurringExpenseRules = pgTable('RecurringExpenseRules', {
   paidBy: uuid('paid_by').notNull().references(() => profiles.id),
   amount: integer('amount').notNull(),
   splitType: splitTypeEnum('split_type').notNull(),
+  splitRatioA: integer('split_ratio_a'),
   description: text('description').notNull(),
   category: text('category').notNull(),
   assetId: uuid('asset_id').references(() => assets.id),
@@ -300,6 +303,7 @@ export const pendingExpenseOccurrences = pgTable('PendingExpenseOccurrences', {
   proposedDescription: text('proposed_description').notNull(),
   proposedPaidBy: uuid('proposed_paid_by').notNull().references(() => profiles.id),
   proposedSplitType: splitTypeEnum('proposed_split_type').notNull(),
+  proposedSplitRatioA: integer('proposed_split_ratio_a'),
   skippedAt: timestamp('skipped_at', { withTimezone: true }),
   resolvedTxId: uuid('resolved_tx_id').references(() => cashTransactions.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
