@@ -210,11 +210,6 @@ export const zhCN: Translations = {
     categorySection: '分类（可多选）',
   },
 
-  monthSection: {
-    expense: '支出',
-    net: '净',
-  },
-
   settings: {
     title: '设置',
     sectionGroup: '账本',

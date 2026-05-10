@@ -209,11 +209,6 @@ export type Translations = {
     categorySection: string
   }
 
-  monthSection: {
-    expense: string
-    net: string
-  }
-
   settings: {
     title: string
     sectionGroup: string
@@ -1121,11 +1116,6 @@ export const zhTW: Translations = {
     payerSection: '誰付的',
     splitSection: '分攤',
     categorySection: '分類（可多選）',
-  },
-
-  monthSection: {
-    expense: '支出',
-    net: '淨',
   },
 
   settings: {

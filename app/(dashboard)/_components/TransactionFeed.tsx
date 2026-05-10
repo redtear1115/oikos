@@ -209,17 +209,21 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       {header && <div className="px-4 pt-[18px] pb-2">{header(items.length)}</div>}
 
       {groups.map((g) => {
-        // Only sum transaction amounts — settlements are transfers, not spend, so
-        // including them in the month total inflates the figure misleadingly.
-        const total = g.items
-          .filter((t) => t.kind === 'transaction')
-          .reduce((acc, t) => acc + t.amount, 0)
-        const incomeTotal = g.items
-          .filter((t) => t.kind === 'income')
-          .reduce((acc, t) => acc + t.amount, 0)
+        // Pick the primary amount based on what kinds the group contains.
+        // - All-income (income tab): sum income amounts
+        // - Otherwise (expense / all tab): sum transaction amounts only.
+        //   Settlements are transfers (not spend) and income amounts mix
+        //   dimensions, so excluding them keeps the number meaningful.
+        // The verbose "支出 X · 收入 Y · 淨 Z" surface lives in the stats
+        // card above the feed; this header just restates count + total
+        // for the group below it (unified across all three tabs).
+        const isIncomeOnly = g.items.length > 0 && g.items.every((t) => t.kind === 'income')
+        const total = isIncomeOnly
+          ? g.items.reduce((acc, t) => acc + t.amount, 0)
+          : g.items.filter((t) => t.kind === 'transaction').reduce((acc, t) => acc + t.amount, 0)
         return (
           <div key={g.monthKey}>
-            <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} incomeTotal={incomeTotal > 0 ? incomeTotal : undefined} />
+            <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} />
             <div
               className="mx-4 rounded-[18px] overflow-hidden"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}

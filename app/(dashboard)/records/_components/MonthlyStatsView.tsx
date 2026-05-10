@@ -70,6 +70,10 @@ export function MonthlyStatsView({
   // - server flag (pre-creation month — no data worth visualising)
   // - income tab — we don't have income-category breakdown yet, so the only
   //   meaningful surface is the summary line.
+  // TODO(stats-income): when income breakdown ships, lift the income-tab
+  // force-compact and let users expand. Side-effect today: the records-feed
+  // section below sits at a slightly different vertical offset on income tab
+  // vs. expense/all because the stats card is shorter.
   const effectiveForceCompact = forceCompact || tab === 'income'
   const showCollapsed = effectiveForceCompact || (mounted && collapsed)
   const allowToggle = !effectiveForceCompact
