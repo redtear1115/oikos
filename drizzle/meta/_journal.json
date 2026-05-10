@@ -188,7 +188,14 @@
       "idx": 26,
       "version": "7",
       "when": 1778100000000,
-      "tag": "0026_record_status",
+      "tag": "0026_monthly_review",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1778200000000,
+      "tag": "0027_record_status",
       "breakpoints": true
     }
   ]

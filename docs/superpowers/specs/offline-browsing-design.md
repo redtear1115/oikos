@@ -227,6 +227,16 @@ SW fetch handler
 - 偵測 `navigator.onLine === false` → 顯示 inline empty state「再多紀錄需連線取得」
 - 不彈 toast、不跳 modal（陪伴而不打擾）
 
+### Cached 頁面上的寫入互動（編輯／刪除／settle）
+
+cached HTML 上的編輯、刪除、settlement confirm 按鈕**不在 client 端預先 disable**。互動行為：
+
+- 使用者點擊 → 走既有 server action → 離線時 fetch 失敗 → 既有錯誤處理顯示「網路不穩，再試一次」
+- 不在 SW 層攔截寫入路徑，也不另寫離線 hint UI
+- 如果連線恰好恢復、server action 真的通了，視為正常寫入：realtime / `revalidatePath` 會把結果同步回頁面
+
+理由：(1) `navigator.onLine` 不可信（會誤判 captive portal、弱訊號），預先 disable 反而擋掉真的通的請求；(2) 寫入的 source of truth 是 server action 的 response，不是 SW 狀態；(3) 維持 UI 一致性，不為了離線分支多寫一套互動。AddSheet / IncomeSheet 的 FAB 同此原則——點下去由 server action 自然 fail，不在 client 預擋。
+
 ### Sign-out flow
 
 ```

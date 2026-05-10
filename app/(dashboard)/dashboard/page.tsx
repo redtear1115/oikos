@@ -7,11 +7,23 @@ import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
+import {
+  loadMonthlyReviewSnapshot,
+  loadMonthlyReviewMessages,
+} from '@/lib/db/queries/monthlyReview'
+import {
+  currentYearMonthInTaipei,
+  previousMonth,
+  truncateCodepoints,
+} from '@/lib/monthlyReview'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
+import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
 import { getTranslations } from '@/lib/i18n/t'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+
+const BANNER_QUOTE_MAX_CODEPOINTS = 60
 
 const PAGE_SIZE = 20
 
@@ -51,6 +63,48 @@ export default async function DashboardPage() {
         return `${dateStr} · ${r.source ?? catLabel}`
       })()
     : null
+
+  // Monthly review banner state. Surface only when:
+  //   1. snapshot exists for the previous month
+  //   2. viewer hasn't dismissed it
+  // Quote prefers the partner's "given to current month" message; falls back
+  // to the viewer's own. Solo mode always quotes the viewer.
+  const todayYM = currentYearMonthInTaipei()
+  const reviewedYM = previousMonth(todayYM)
+  const isSolo = !group.memberB
+  const viewerIsA = group.memberA === user.id
+
+  const [reviewSnapshot, currentMonthMessages] = await Promise.all([
+    loadMonthlyReviewSnapshot(group.id, reviewedYM.year, reviewedYM.month),
+    loadMonthlyReviewMessages(group.id, todayYM.year, todayYM.month),
+  ])
+
+  let bannerProps: {
+    reviewedMonth: typeof reviewedYM
+    currentMonth: number
+    quote: string | null
+    isSolo: boolean
+  } | null = null
+
+  if (reviewSnapshot) {
+    const dismissedAt = viewerIsA
+      ? reviewSnapshot.bannerDismissedByMemberAAt
+      : reviewSnapshot.bannerDismissedByMemberBAt
+
+    if (!dismissedAt) {
+      const partnerMsg = isSolo
+        ? null
+        : currentMonthMessages.find((m) => m.memberId !== user.id)
+      const ownMsg = currentMonthMessages.find((m) => m.memberId === user.id)
+      const preferred = partnerMsg ?? ownMsg ?? null
+      bannerProps = {
+        reviewedMonth: reviewedYM,
+        currentMonth: todayYM.month,
+        quote: preferred ? truncateCodepoints(preferred.body, BANNER_QUOTE_MAX_CODEPOINTS) : null,
+        isSolo,
+      }
+    }
+  }
 
   // Slow path — passed as a Promise so the client can wrap it in <Suspense>
   // and stream the feed in after the hero paints. Both queries kick off here
@@ -93,15 +147,25 @@ export default async function DashboardPage() {
   })
 
   return (
-    <Dashboard
-      balance={balance}
-      pageSize={PAGE_SIZE}
-      incomeMonthTotal={incomeSummary.total}
-      incomeMonthCount={incomeSummary.count}
-      recentIncomeLabel={recentIncomeLabel}
-      pendings={pendings}
-      expensePendings={expensePendings}
-      feedDataPromise={feedDataPromise}
-    />
+    <>
+      {bannerProps && (
+        <MonthlyReviewBanner
+          reviewedMonth={bannerProps.reviewedMonth}
+          currentMonth={bannerProps.currentMonth}
+          quote={bannerProps.quote}
+          isSolo={bannerProps.isSolo}
+        />
+      )}
+      <Dashboard
+        balance={balance}
+        pageSize={PAGE_SIZE}
+        incomeMonthTotal={incomeSummary.total}
+        incomeMonthCount={incomeSummary.count}
+        recentIncomeLabel={recentIncomeLabel}
+        pendings={pendings}
+        expensePendings={expensePendings}
+        feedDataPromise={feedDataPromise}
+      />
+    </>
   )
 }
