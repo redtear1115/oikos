@@ -197,6 +197,8 @@ export type Translations = {
       summaryNetIncome: string  // {amount}, e.g. "淨收入 +NT$..."
       summaryNetExpense: string // {amount}, e.g. "淨支出 NT$..."
       summaryNetEven: string    // "持平"
+      incomeWipTitle: string
+      incomeWipHint: string
     }
   }
 
@@ -1005,6 +1007,8 @@ export const zhTW: Translations = {
       summaryNetIncome: '淨收入 +{amount}',
       summaryNetExpense: '淨支出 {amount}',
       summaryNetEven: '持平',
+      incomeWipTitle: '🚧 收入分類統計開發中',
+      incomeWipHint: '之後會在這裡看到分類圓餅圖',
     },
   },
 
