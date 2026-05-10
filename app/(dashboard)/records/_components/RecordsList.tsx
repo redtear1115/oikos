@@ -219,68 +219,73 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, statsSlo
           <MonthSwitcher monthKey={monthKey} maxMonthKey={maxMonthKey} />
         </div>
 
-        {/* Tab bar */}
-        <div
-          className="flex items-center px-5 pb-3"
-          style={{ gap: 8 }}
-        >
-          {([
-            { id: 'all' as const,     label: t.records.tabAll },
-            { id: 'expense' as const, label: t.records.tabExpense },
-            { id: 'income' as const,  label: t.records.tabIncome },
-          ]).map((tab2) => {
-            const sel = tab === tab2.id
-            const isIncome = tab2.id === 'income'
-            return (
-              <button
-                key={tab2.id}
-                type="button"
-                onClick={() => setTab(tab2.id)}
-                className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
-                style={{
-                  background: sel
-                    ? (isIncome ? P.tint : 'var(--ink)')
-                    : 'var(--surface)',
-                  color: sel
-                    ? (isIncome ? P.ink : '#fff')
-                    : 'var(--ink-2)',
-                  border: sel ? 'none' : '1px solid var(--hairline)',
-                }}
-              >
-                {tab2.label}
-              </button>
-            )
-          })}
-        </div>
+        {/* Tabs (left, primary) + recurring-rule settings (right, secondary).
+            Two visually distinct pill styles in one row:
+            - Tabs: solid pill, high-contrast — they're the page's primary
+              control (drives stats title + feed kind).
+            - Setting buttons: outline pill in the mode colour — secondary
+              navigation to the recurring-rule settings page.
+            On narrow viewports `flex-wrap` lets the right group drop to a
+            second line; `ml-auto` keeps it right-aligned in either layout.
+            Mode colours: 深咖啡 #7A5A38 (支出) / 薄荷綠 INCOME_PALETTE.ink (收入). */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pb-3">
+          <div className="flex items-center" style={{ gap: 8 }}>
+            {([
+              { id: 'all' as const,     label: t.records.tabAll },
+              { id: 'expense' as const, label: t.records.tabExpense },
+              { id: 'income' as const,  label: t.records.tabIncome },
+            ]).map((tab2) => {
+              const sel = tab === tab2.id
+              const isIncome = tab2.id === 'income'
+              return (
+                <button
+                  key={tab2.id}
+                  type="button"
+                  onClick={() => setTab(tab2.id)}
+                  className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer border-0 transition-all duration-150"
+                  style={{
+                    background: sel
+                      ? (isIncome ? P.tint : 'var(--ink)')
+                      : 'var(--surface)',
+                    color: sel
+                      ? (isIncome ? P.ink : '#fff')
+                      : 'var(--ink-2)',
+                    border: sel ? 'none' : '1px solid var(--hairline)',
+                  }}
+                >
+                  {tab2.label}
+                </button>
+              )
+            })}
+          </div>
 
-        {/* Inline links to recurring rule settings.
-            - 全部 tab: both links (this is the only place users can land on
-              both kinds without switching tab) — colour-coded so the brown
-              expense link and the mint income link signal which is which.
-            - Single-kind tabs: the matching link only, in the mode colour.
-            Mode colours: 深咖啡 #7A5A38 for 支出, 薄荷綠 = INCOME_PALETTE.ink. */}
-        {(tab === 'all' || tab === 'expense') && (
-          <div className="px-5 pb-2">
+          <div className="ml-auto flex items-center gap-2">
             <Link
               href="/settings/recurring-expense"
-              className="text-xs"
-              style={{ color: '#7A5A38' }}
+              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
+              style={{
+                color: '#7A5A38',
+                border: '1px solid #7A5A3833',  // 20% alpha border = subtle outline
+                background: 'var(--surface)',
+              }}
             >
+              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
               {t.records.manageRecurringExpense}
             </Link>
-          </div>
-        )}
-        {(tab === 'all' || tab === 'income') && (
-          <div className="px-5 pb-2">
             <Link
               href="/settings/recurring-income"
-              className="text-xs"
-              style={{ color: P.ink }}
+              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
+              style={{
+                color: P.ink,
+                border: `1px solid ${P.ink}33`,
+                background: 'var(--surface)',
+              }}
             >
+              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
               {t.records.manageRecurringIncome}
             </Link>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Stats above the transaction feed. The card adapts to the current tab

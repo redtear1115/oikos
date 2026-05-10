@@ -989,8 +989,8 @@ export const zhTW: Translations = {
     tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
-    manageRecurringIncome: '⚙ 設定定期收入 →',
-    manageRecurringExpense: '⚙ 設定定期支出 →',
+    manageRecurringIncome: '定期收入',
+    manageRecurringExpense: '定期支出',
     stats: {
       title: '支出統計',
       titleAll: '收支統計',
