@@ -177,8 +177,8 @@ export const zhCN: Translations = {
     tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
-    manageRecurringIncome: '⚙ 设定定期收入 →',
-    manageRecurringExpense: '⚙ 设定定期支出 →',
+    manageRecurringIncome: '定期收入',
+    manageRecurringExpense: '定期支出',
     stats: {
       title: '支出统计',
       titleAll: '收支统计',

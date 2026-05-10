@@ -177,8 +177,8 @@ export const ja: Translations = {
     tabAll: 'すべて',
     tabExpense: '支出',
     tabIncome: '収入',
-    manageRecurringIncome: '⚙ 定期収入を設定 →',
-    manageRecurringExpense: '⚙ 定期支出を設定 →',
+    manageRecurringIncome: '定期収入',
+    manageRecurringExpense: '定期支出',
     stats: {
       title: '支出統計',
       titleAll: '収支統計',

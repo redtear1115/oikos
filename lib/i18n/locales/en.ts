@@ -177,8 +177,8 @@ export const en: Translations = {
     tabAll: 'All',
     tabExpense: 'Expense',
     tabIncome: 'Income',
-    manageRecurringIncome: '⚙ Manage recurring income →',
-    manageRecurringExpense: '⚙ Manage recurring expense →',
+    manageRecurringIncome: 'Recurring income',
+    manageRecurringExpense: 'Recurring expense',
     stats: {
       title: 'Expense',
       titleAll: 'Overview',
