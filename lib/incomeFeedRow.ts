@@ -3,7 +3,6 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import type { IncomeCursor } from '@/lib/db/queries/incomes'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import { loadMoreIncomes } from '@/actions/income'
-import type { DrillFilterWire } from '@/lib/drill'
 
 export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
   return {
@@ -23,12 +22,12 @@ export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
   }
 }
 
-export function makeIncomeLoader(limit = 20, monthKey?: string, drillWire?: DrillFilterWire) {
+export function makeIncomeLoader(limit = 20, monthKey?: string) {
   return async (cursor: TxnCursor | null): Promise<PagedTxnRow[]> => {
     const incomeCursor: IncomeCursor | null = cursor
       ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
       : null
-    const rows = await loadMoreIncomes(incomeCursor, limit, monthKey, drillWire)
+    const rows = await loadMoreIncomes(incomeCursor, limit, monthKey)
     return rows.map(incomeToFeedRow)
   }
 }

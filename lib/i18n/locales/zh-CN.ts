@@ -201,11 +201,6 @@ export const zhCN: Translations = {
       summaryNetIncome: '净收入 +{amount}',
       summaryNetExpense: '净支出 {amount}',
       summaryNetEven: '持平',
-      drillFilterLabel: '只看「{label}」',
-      drillClearLabel: '取消筛选「{label}」',
-      drillChipPrefix: '只看',
-      drillChipClear: '取消筛选',
-      drillAssetUnknown: '未命名',
     },
   },
 

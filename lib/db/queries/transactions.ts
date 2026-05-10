@@ -4,7 +4,6 @@ import { and, eq, isNull, desc, sql } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { monthRangeIso } from '@/lib/monthKey'
-import type { DrillFilter } from '@/lib/drill'
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
 
@@ -95,7 +94,6 @@ export async function listTransactionsPaged(
   limit = 20,
   filter?: ResolvedTxnFilter,
   monthKey?: string,
-  drill?: DrillFilter | null,
 ): Promise<FeedRow[]> {
   const txCursor = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
@@ -113,21 +111,6 @@ export async function listTransactionsPaged(
     ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
     : sql``
 
-  // Drill-down clauses (mutually exclusive with one another). Income drill is
-  // not meaningful in this query (it only targets IncomeTransactions), so it
-  // falls through to a no-op.
-  const txDrillCategory = drill?.kind === 'category'
-    ? sql`AND category = ${drill.categoryId}`
-    : sql``
-  const txDrillAsset = drill?.kind === 'asset'
-    ? (drill.assetId === null
-        ? sql`AND asset_id IS NULL`
-        : sql`AND asset_id = ${drill.assetId}::uuid`)
-    : sql``
-  // Any drill drops the settlements branch — settlements have no category /
-  // asset_id, so a drill row would never match them anyway.
-  const drillExcludesSettlements = drill !== undefined && drill !== null
-
   const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
 
   // Page-level month scope: feed shows only the selected calendar month
@@ -142,11 +125,8 @@ export async function listTransactionsPaged(
           AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
     : sql``
 
-  // Drop the settlements branch entirely when 分攤 / 分類 dims are active OR
-  // when a drill-down is active (a category/asset drill never matches a
-  // settlement, and an income drill renders this query irrelevant — but we
-  // still want zero settlements showing through alongside it).
-  const settlementsBranch = filter?.excludeSettlements || drillExcludesSettlements
+  // Drop the settlements branch entirely when 分攤 / 分類 dims are active.
+  const settlementsBranch = filter?.excludeSettlements
     ? sql``
     : sql`
       UNION ALL
@@ -170,12 +150,6 @@ export async function listTransactionsPaged(
       ${setPayer}
       ${setMonth}
     `
-
-  // Income-kind drill on a cash-transaction query: short-circuit to empty
-  // rather than returning unrelated cash rows. The page-1 refetch on this
-  // tab will see zero results, which matches the "this drill has no rows
-  // for this tab" contract.
-  if (drill?.kind === 'income') return []
 
   const rows = await db.execute<{
     id: string
@@ -203,8 +177,6 @@ export async function listTransactionsPaged(
       ${txPayer}
       ${txSplit}
       ${txCategory}
-      ${txDrillCategory}
-      ${txDrillAsset}
       ${txMonth}
       ${settlementsBranch}
     ) AS feed
@@ -244,7 +216,6 @@ export async function listFeedAllPaged(
   cursor: TxnCursor | null,
   limit = 20,
   monthKey?: string,
-  drill?: DrillFilter | null,
 ): Promise<FeedRow[]> {
   const cur = cursor
     ? sql`AND (sort_at, sort_created) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
@@ -266,32 +237,6 @@ export async function listFeedAllPaged(
     ? sql`AND occurred_at >= ${monthRange.startIso.slice(0, 10)}::date
           AND occurred_at <  ${monthRange.endIso.slice(0, 10)}::date`
     : sql``
-
-  // Per-drill predicates per branch. Each branch is either narrowed (the drill
-  // is meaningful for that row kind) or short-circuited to FALSE (so it never
-  // contributes rows). Drill kinds are mutually exclusive.
-  const txDrill =
-    drill?.kind === 'category'
-      ? sql`AND category = ${drill.categoryId}`
-      : drill?.kind === 'asset'
-        ? (drill.assetId === null
-            ? sql`AND asset_id IS NULL`
-            : sql`AND asset_id = ${drill.assetId}::uuid`)
-        : drill?.kind === 'income'
-          ? sql`AND FALSE`
-          : sql``
-  // Settlements have no category/asset/income-category — any drill drops them.
-  const setDrill = drill ? sql`AND FALSE` : sql``
-  const incDrill =
-    drill?.kind === 'income'
-      ? sql`AND category = ${drill.categoryId}`
-      : drill?.kind === 'asset'
-        ? (drill.assetId === null
-            ? sql`AND FALSE`  // income rows are not surfaced under the「其他」asset bar
-            : sql`AND FALSE`)
-        : drill?.kind === 'category'
-          ? sql`AND FALSE`
-          : sql``
 
   const rows = await db.execute<{
     id: string
@@ -317,7 +262,6 @@ export async function listFeedAllPaged(
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${txMonth}
-      ${txDrill}
 
       UNION ALL
 
@@ -330,7 +274,6 @@ export async function listFeedAllPaged(
       FROM "Settlements"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${setMonth}
-      ${setDrill}
 
       UNION ALL
 
@@ -343,7 +286,6 @@ export async function listFeedAllPaged(
       FROM "IncomeTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${incMonth}
-      ${incDrill}
     ) AS feed
     WHERE TRUE ${cur}
     ORDER BY sort_at DESC, sort_created DESC
