@@ -37,6 +37,7 @@ export type Translations = {
     allPartners: string
     mine: string
     theirs: string
+    weighted: string
   }
 
   category: {
@@ -966,6 +967,7 @@ export const zhTW: Translations = {
     allPartners: '全部對方的',
     mine: '我的',
     theirs: '對方的',
+    weighted: '依比例分',
   },
 
   category: {

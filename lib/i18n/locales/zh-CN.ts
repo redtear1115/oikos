@@ -36,6 +36,7 @@ export const zhCN: Translations = {
     allPartners: '全部对方的',
     mine: '我的',
     theirs: '对方的',
+    weighted: '按比例分',
   },
 
   category: {

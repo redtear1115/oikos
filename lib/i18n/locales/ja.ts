@@ -36,6 +36,7 @@ export const ja: Translations = {
     allPartners: 'すべて相手',
     mine: '自分',
     theirs: '相手',
+    weighted: '割合分担',
   },
 
   category: {
