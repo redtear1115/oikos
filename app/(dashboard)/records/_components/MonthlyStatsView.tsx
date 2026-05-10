@@ -113,19 +113,15 @@ export function MonthlyStatsView({
           </div>
         </div>
       ) : showCollapsed ? (
-        // Collapsed: a single inline row replaces every visualisation.
-        // Layout: [summary text]  [breakdown toggle]  [expand button].
-        // breakdown toggle and expand button are hidden when forceCompact —
-        // there's nothing to switch / expand into.
+        // Collapsed: summary line + expand button only. The breakdown toggle
+        // (分類/愛物) belongs to the chart + detail-bars view, so it stays
+        // hidden until the user expands — no point switching a hidden chart.
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
           {allowToggle && (
-            <div className="flex items-center gap-2 ml-auto">
-              {hasExpenses && <StatsBreakdownToggle value={view} />}
-              <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
-                +
-              </ToggleButton>
-            </div>
+            <ToggleButton onClick={toggle} ariaLabel={t.records.stats.expand} expanded={false}>
+              +
+            </ToggleButton>
           )}
         </div>
       ) : (
@@ -308,9 +304,31 @@ function PieChart({
     )
   }
 
+  // Min visible slice: when one category dominates (e.g. 99% transit), the
+  // natural arcs for everything else fall below 1° and visually disappear.
+  // We bump every non-zero slice up to MIN_FRACTION and pay for the boost by
+  // shaving large slices proportionally, so the pie still totals one
+  // revolution. The exact percentages are still readable in the legend below.
+  const MIN_FRACTION = 3 / 360  // ~3° minimum arc — enough to register colour
+  const naturalFractions = valued.map((r) => r.total / total)
+  const isSmall = naturalFractions.map((f) => f < MIN_FRACTION)
+  const totalBoost = naturalFractions.reduce(
+    (sum, f, i) => sum + (isSmall[i] ? MIN_FRACTION - f : 0),
+    0,
+  )
+  const largeSum = naturalFractions.reduce(
+    (sum, f, i) => sum + (isSmall[i] ? 0 : f),
+    0,
+  )
+  const fractions = largeSum > totalBoost
+    ? naturalFractions.map((f, i) =>
+        isSmall[i] ? MIN_FRACTION : f - (f / largeSum) * totalBoost,
+      )
+    : naturalFractions  // edge: every slice is below min — fall back to natural
+
   let cumulative = 0
   const slices = valued.map((row, i) => {
-    const fraction = row.total / total
+    const fraction = fractions[i]
     const startAngle = cumulative * 2 * Math.PI - Math.PI / 2
     cumulative += fraction
     const endAngle = cumulative * 2 * Math.PI - Math.PI / 2
