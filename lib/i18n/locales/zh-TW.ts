@@ -233,6 +233,21 @@ export type Translations = {
     payerSection: string
     splitSection: string
     categorySection: string
+    dateSection: string
+    dateThisMonth: string
+    dateLastMonth: string
+    dateAll: string
+    dateCustom: string
+    dateCustomStart: string
+    dateCustomEnd: string
+    dateRangeAll: string
+    dateRangeChipPrefix: string
+    dateRangeClear: string
+    assetSection: string
+    assetNone: string
+    shareLink: string
+    shareCopied: string
+    shareFailed: string
   }
 
   settings: {
@@ -1176,6 +1191,21 @@ export const zhTW: Translations = {
     payerSection: '誰付的',
     splitSection: '分攤',
     categorySection: '分類（可多選）',
+    dateSection: '日期',
+    dateThisMonth: '本月',
+    dateLastMonth: '上月',
+    dateAll: '全部',
+    dateCustom: '自訂',
+    dateCustomStart: '開始日期',
+    dateCustomEnd: '結束日期',
+    dateRangeAll: '全部時間',
+    dateRangeChipPrefix: '日期',
+    dateRangeClear: '清除日期範圍',
+    assetSection: '愛物（可多選）',
+    assetNone: '未歸屬',
+    shareLink: '複製分享連結',
+    shareCopied: '已複製到剪貼簿',
+    shareFailed: '複製失敗，請稍後再試',
   },
 
   settings: {

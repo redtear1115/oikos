@@ -4,9 +4,10 @@ import { db } from '@/lib/db/client'
 import { assets, incomeTransactions, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
-import { listIncomesPaged, type IncomeCursor } from '@/lib/db/queries/incomes'
+import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
+import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -159,15 +160,46 @@ export async function getInsuranceAssets(): Promise<{ id: string; name: string }
   return rows
 }
 
+/**
+ * Wire → ResolvedIncomeFilter conversion. Income rows have no split / no
+ * expense-categories: if either of those dims is active in the filter, the
+ * entire result set is dropped (cutAll = true) rather than silently ignoring
+ * the filter. Payer ('mine' / 'theirs') maps to recipient_id; assetIds pass
+ * through verbatim (the SQL helper expands the '__none__' sentinel).
+ */
+function resolveIncomeFilter(
+  filterWire: TxnFilterWire | undefined,
+  viewerId: string,
+  group: { memberA: string; memberB: string | null },
+): ResolvedIncomeFilter | undefined {
+  if (!filterWire) return undefined
+  const f = fromWire(filterWire)
+  let recipientId: string | null = null
+  if (f.payer === 'mine') recipientId = viewerId
+  else if (f.payer === 'theirs') {
+    const partner = group.memberA === viewerId ? group.memberB : group.memberA
+    recipientId = partner ?? '00000000-0000-0000-0000-000000000000'
+  }
+  const cutAll = f.split !== 'all' || f.categories.size > 0
+  return {
+    recipientId,
+    assetIds: Array.from(f.assetIds),
+    cutAll,
+  }
+}
+
 export async function loadMoreIncomes(
   cursor: IncomeCursor | null,
   limit = 20,
   monthKey?: string,
   drillWire?: DrillFilterWire,
+  filterWire?: TxnFilterWire,
+  dateRange?: DateRange,
 ): Promise<PagedIncomeRow[]> {
-  const { group } = await getViewerGroup()
+  const { user, group } = await getViewerGroup()
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill)
+  const incomeFilter = resolveIncomeFilter(filterWire, user.id, group)
+  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill, incomeFilter, dateRange)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
