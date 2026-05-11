@@ -190,6 +190,8 @@ export const en: Translations = {
     tabIncome: 'Income',
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
+    recurringMenuLabel: 'Recurring',
+    recurringMenuAriaLabel: 'Open recurring rules menu',
     offlineMoreNeedsNetwork: 'More records need a connection',
     stats: {
       title: 'Expense',

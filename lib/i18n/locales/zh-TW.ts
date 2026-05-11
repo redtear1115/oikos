@@ -196,6 +196,9 @@ export type Translations = {
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    /** Top-right popover label that opens the recurring-rule menu. */
+    recurringMenuLabel: string
+    recurringMenuAriaLabel: string
     offlineMoreNeedsNetwork: string
     stats: {
       title: string         // expense-tab title (kept for back-compat)
@@ -1156,6 +1159,8 @@ export const zhTW: Translations = {
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringMenuLabel: '定期',
+    recurringMenuAriaLabel: '開啟定期收支選單',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
     stats: {
       title: '支出統計',

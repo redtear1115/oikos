@@ -190,6 +190,8 @@ export const ja: Translations = {
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
+    recurringMenuLabel: '定期',
+    recurringMenuAriaLabel: '定期収支メニューを開く',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
     stats: {
       title: '支出統計',

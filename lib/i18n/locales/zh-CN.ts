@@ -190,6 +190,8 @@ export const zhCN: Translations = {
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringMenuLabel: '定期',
+    recurringMenuAriaLabel: '打开定期收支菜单',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
     stats: {
       title: '支出统计',

@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
@@ -12,6 +11,7 @@ import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet, type AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
 import { DateRangeChip } from './DateRangeChip'
+import { RecurringMenu } from './RecurringMenu'
 import { TabProvider } from './TabContext'
 import {
   applyDateRangeToParams,
@@ -343,16 +343,12 @@ export function RecordsList({
           >
             {t.records.title}
           </div>
-          {tab !== 'income' && (
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
-              style={{ color: 'var(--ink-2)' }}
-              aria-label={t.dashboard.filterAriaLabel}
-            >
-              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
-            </button>
-          )}
+          {/* Top-right: ⚙ 定期 popover. The previous design had two pills
+              (定期支出 / 定期收入) on the tab row, which crowded the
+              high-traffic tab area. Settings work is low-frequency, so we
+              fold them into a single icon entry up here and free the tab
+              row for the higher-traffic 篩選 affordance. */}
+          <RecurringMenu />
         </div>
 
         {/* Page-level date scope. Single-month mode uses the existing
@@ -368,16 +364,14 @@ export function RecordsList({
           )}
         </div>
 
-        {/* Tabs (left, primary) + recurring-rule settings (right, secondary).
-            Two visually distinct pill styles in one row:
-            - Tabs: solid pill, high-contrast — they're the page's primary
-              control (drives stats title + feed kind).
-            - Setting buttons: outline pill in the mode colour — secondary
-              navigation to the recurring-rule settings page.
-            On narrow viewports `flex-wrap` lets the right group drop to a
-            second line; `ml-auto` keeps it right-aligned in either layout.
-            Mode colours: 深咖啡 #7A5A38 (支出) / 薄荷綠 INCOME_PALETTE.ink (收入). */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pb-3">
+        {/* Tabs (primary navigation) + 篩選 (right-aligned).
+            Both are "narrow the view" controls — placing them in one row
+            unifies the mental model. Tabs use a solid pill / high-contrast
+            style; 篩選 uses a text link style so it doesn't compete with
+            the primary tab pills for attention. Filter button surfaces on
+            every tab — date / asset / payer apply to income too, even
+            though split / category don't. */}
+        <div className="flex items-center gap-x-3 px-5 pb-3">
           <div className="flex items-center" style={{ gap: 8 }}>
             {([
               { id: 'all' as const,     label: t.records.tabAll },
@@ -408,32 +402,15 @@ export function RecordsList({
             })}
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Link
-              href="/settings/recurring-expense"
-              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
-              style={{
-                color: '#7A5A38',
-                border: '1px solid #7A5A3833',  // 20% alpha border = subtle outline
-                background: 'var(--surface)',
-              }}
-            >
-              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
-              {t.records.manageRecurringExpense}
-            </Link>
-            <Link
-              href="/settings/recurring-income"
-              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
-              style={{
-                color: P.ink,
-                border: `1px solid ${P.ink}33`,
-                background: 'var(--surface)',
-              }}
-            >
-              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
-              {t.records.manageRecurringIncome}
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => setFilterOpen(true)}
+            className="ml-auto text-xs font-medium cursor-pointer bg-transparent border-0 flex items-center gap-1"
+            style={{ color: 'var(--ink-2)' }}
+            aria-label={t.dashboard.filterAriaLabel}
+          >
+            {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+          </button>
         </div>
       </div>
 
