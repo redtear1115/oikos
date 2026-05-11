@@ -809,6 +809,7 @@ export const en: Translations = {
     errors: {
       invalidOrExpired: 'This invite link is invalid or expired.',
       alreadyUsed: 'This invite link has already been used.',
+      revoked: 'This invite link is no longer valid.',
       expired: 'This invite link has expired.',
       groupNotFound: 'Ledger not found.',
       groupFull: 'This ledger already has two members.',

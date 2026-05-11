@@ -38,6 +38,13 @@ export const oikosGroups = pgTable('OikosGroups', {
   memberB: uuid('member_b').references(() => profiles.id), // null until invite accepted
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   defaultSplitRatioA: integer('default_split_ratio_a'),
+  // #79 — pending member_a/member_b swap proposal. Both fields go together.
+  pendingSwapProposedBy: uuid('pending_swap_proposed_by').references(() => profiles.id),
+  pendingSwapExpiresAt: timestamp('pending_swap_expires_at', { withTimezone: true }),
+  // #79 — epoch marker: bumped on swap / leave / new partner join.
+  // Downstream features filter timeline + stats by current epoch.
+  currentEpochStartedAt: timestamp('current_epoch_started_at', { withTimezone: true })
+    .defaultNow().notNull(),
 })
 
 export const groupInvites = pgTable('GroupInvites', {
@@ -47,6 +54,9 @@ export const groupInvites = pgTable('GroupInvites', {
   token: text('token').notNull().unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+  // #79 — stamped by leaveGroup so any in-flight invites can't bring a
+  // new member into a now-solo group with stale assumptions.
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

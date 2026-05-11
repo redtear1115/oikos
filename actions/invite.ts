@@ -89,9 +89,12 @@ export async function acceptInvite(token: string): Promise<string> {
   if (!result.ok) throw new Error(result.error)
 
   await db.transaction(async (tx) => {
+    // Bump the epoch as the partner joins — relevant for groups that were
+    // solo after a prior leave so the new relationship's timeline / stats
+    // start fresh once PR 3 layers epoch filtering on top.
     const updated = await tx
       .update(oikosGroups)
-      .set({ memberB: user.id })
+      .set({ memberB: user.id, currentEpochStartedAt: new Date() })
       .where(and(eq(oikosGroups.id, invite.groupId), isNull(oikosGroups.memberB)))
       .returning()
 

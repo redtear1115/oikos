@@ -16,6 +16,7 @@ type Group = typeof oikosGroups.$inferSelect
 export type InviteAcceptError =
   | 'invalid_or_expired'
   | 'already_used'
+  | 'revoked'
   | 'expired'
   | 'group_not_found'
   | 'group_full'
@@ -33,6 +34,7 @@ export function validateInviteAcceptance(
 ): AcceptResult {
   if (!invite) return { ok: false, error: 'invalid_or_expired' }
   if (invite.acceptedAt) return { ok: false, error: 'already_used' }
+  if (invite.revokedAt) return { ok: false, error: 'revoked' }
   if (invite.expiresAt < now) return { ok: false, error: 'expired' }
   if (!group) return { ok: false, error: 'group_not_found' }
   if (group.memberB !== null) return { ok: false, error: 'group_full' }

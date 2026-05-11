@@ -15,43 +15,50 @@ export async function recalcGroupBalance(
   groupId: string,
   tx: typeof db | DbTransaction = db,
 ): Promise<void> {
+  // Solo groups (member_b IS NULL) have no one to owe / be owed by — balance is
+  // structurally 0. Skipping the formula matters for groups that previously had
+  // a partner and inherit historical 'half' / 'weighted' rows after leaveGroup;
+  // running the formula on those would produce a nonsense balance.
   await tx.execute(sql`
     UPDATE "GroupBalance"
-    SET balance = (
-      SELECT COALESCE(SUM(
-        CASE
-          WHEN paid_by = (SELECT member_a FROM "OikosGroups" WHERE id = ${groupId})
-            THEN CASE split_type
-              WHEN 'all_mine'   THEN 0
-              WHEN 'all_theirs' THEN amount
-              WHEN 'half'       THEN CEIL(amount / 2.0)::int
-              WHEN 'weighted'   THEN CEIL(amount * (100 - split_ratio_a) / 100.0)::int
-            END
-          ELSE CASE split_type
-              WHEN 'all_mine'   THEN 0
-              WHEN 'all_theirs' THEN -amount
-              WHEN 'half'       THEN -CEIL(amount / 2.0)::int
-              WHEN 'weighted'   THEN -CEIL(amount * split_ratio_a / 100.0)::int
-            END
-        END
-      ), 0)
-      FROM "CashTransactions"
-      WHERE group_id = ${groupId}
-        AND deleted_at IS NULL
-        AND status = 'settled'
-    ) + (
-      -- Settlement deltas (matches lib/balance.ts settlementDelta):
-      -- paid_by = member_a (A paid B) → +amount (B now indebted to A)
-      -- paid_by = member_b (B paid A) → -amount (A now indebted to B)
-      SELECT COALESCE(SUM(
-        CASE
-          WHEN paid_by = (SELECT member_a FROM "OikosGroups" WHERE id = ${groupId}) THEN amount
-          ELSE -amount
-        END
-      ), 0)
-      FROM "Settlements"
-      WHERE group_id = ${groupId} AND deleted_at IS NULL
-    ),
+    SET balance = CASE
+      WHEN (SELECT member_b FROM "OikosGroups" WHERE id = ${groupId}) IS NULL THEN 0
+      ELSE (
+        SELECT COALESCE(SUM(
+          CASE
+            WHEN paid_by = (SELECT member_a FROM "OikosGroups" WHERE id = ${groupId})
+              THEN CASE split_type
+                WHEN 'all_mine'   THEN 0
+                WHEN 'all_theirs' THEN amount
+                WHEN 'half'       THEN CEIL(amount / 2.0)::int
+                WHEN 'weighted'   THEN CEIL(amount * (100 - split_ratio_a) / 100.0)::int
+              END
+            ELSE CASE split_type
+                WHEN 'all_mine'   THEN 0
+                WHEN 'all_theirs' THEN -amount
+                WHEN 'half'       THEN -CEIL(amount / 2.0)::int
+                WHEN 'weighted'   THEN -CEIL(amount * split_ratio_a / 100.0)::int
+              END
+          END
+        ), 0)
+        FROM "CashTransactions"
+        WHERE group_id = ${groupId}
+          AND deleted_at IS NULL
+          AND status = 'settled'
+      ) + (
+        -- Settlement deltas (matches lib/balance.ts settlementDelta):
+        -- paid_by = member_a (A paid B) → +amount (B now indebted to A)
+        -- paid_by = member_b (B paid A) → -amount (A now indebted to B)
+        SELECT COALESCE(SUM(
+          CASE
+            WHEN paid_by = (SELECT member_a FROM "OikosGroups" WHERE id = ${groupId}) THEN amount
+            ELSE -amount
+          END
+        ), 0)
+        FROM "Settlements"
+        WHERE group_id = ${groupId} AND deleted_at IS NULL
+      )
+    END,
     version = version + 1,
     last_calculated_at = NOW()
     WHERE group_id = ${groupId};

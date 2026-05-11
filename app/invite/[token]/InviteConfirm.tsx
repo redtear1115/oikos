@@ -43,6 +43,7 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
         const errorMap: Record<InviteAcceptError, string> = {
           invalid_or_expired: invite.errors.invalidOrExpired,
           already_used: invite.errors.alreadyUsed,
+          revoked: invite.errors.revoked,
           expired: invite.errors.expired,
           group_not_found: invite.errors.groupNotFound,
           group_full: invite.errors.groupFull,
