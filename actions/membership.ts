@@ -266,6 +266,12 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     ...movingInsuranceRows.map((r) => r.assetId),
   ]
 
+  // Empty array would interpolate as `ANY(()::uuid[])` (invalid SQL), so
+  // short-circuit to NULL when nothing is moving with the leaver.
+  const assetIdCase = movingAssetIds.length > 0
+    ? sql`CASE WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id ELSE NULL END`
+    : sql`NULL`
+
   const now = new Date()
   const newGroupId = await db.transaction(async (tx) => {
     // 1. Create the leaver's new solo group + balance row
@@ -309,10 +315,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     await tx.execute(sql`
       UPDATE "CashTransactions"
       SET group_id = ${newGroup.id},
-          asset_id = CASE
-            WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id
-            ELSE NULL
-          END
+          asset_id = ${assetIdCase}
       WHERE group_id = ${oldGroupId} AND paid_by = ${leaver}
     `)
 
@@ -320,10 +323,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     await tx.execute(sql`
       UPDATE "IncomeTransactions"
       SET group_id = ${newGroup.id},
-          asset_id = CASE
-            WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id
-            ELSE NULL
-          END
+          asset_id = ${assetIdCase}
       WHERE group_id = ${oldGroupId} AND recipient_id = ${leaver}
     `)
 
@@ -343,10 +343,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
       SET group_id = ${newGroup.id},
           split_type = 'all_mine',
           split_ratio_a = NULL,
-          asset_id = CASE
-            WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id
-            ELSE NULL
-          END
+          asset_id = ${assetIdCase}
       WHERE group_id = ${oldGroupId} AND paid_by = ${leaver}
     `)
 
@@ -370,10 +367,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     await tx.execute(sql`
       UPDATE "RecurringIncomeRules"
       SET group_id = ${newGroup.id},
-          asset_id = CASE
-            WHEN asset_id = ANY(${movingAssetIds}::uuid[]) THEN asset_id
-            ELSE NULL
-          END
+          asset_id = ${assetIdCase}
       WHERE group_id = ${oldGroupId} AND recipient_id = ${leaver}
     `)
 
