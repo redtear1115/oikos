@@ -130,7 +130,7 @@ export interface InsuranceDetailsRow {
   policyNo: string | null
   kind: string | null
   insured: string | null
-  insuredUserId: string | null
+  policyHolderUserId: string | null
   insurer: string | null
   annualPremium: number | null
   payCycle: string | null
@@ -148,7 +148,7 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       policyNo: insuranceDetails.policyNumber,
       kind: insuranceDetails.insuranceType,
       insured: insuranceDetails.insured,
-      insuredUserId: insuranceDetails.insuredUserId,
+      policyHolderUserId: insuranceDetails.policyHolderUserId,
       insurer: insuranceDetails.insurer,
       annualPremium: insuranceDetails.annualPremium,
       payCycle: insuranceDetails.payCycle,

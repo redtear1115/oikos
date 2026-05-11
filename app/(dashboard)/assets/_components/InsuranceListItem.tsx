@@ -26,9 +26,9 @@ import { renewInsurance, lapseInsurance } from '@/actions/asset'
 interface InsuranceData {
   insuranceType: string | null
   insured: string | null
-  insuredUserId: string | null
-  insuredDisplayName: string | null
-  insuredAvatarUrl: string | null
+  policyHolderUserId: string | null
+  policyHolderDisplayName: string | null
+  policyHolderAvatarUrl: string | null
   annualPremium: number | null
   sumInsured: number | null
   startsAt: string | null
@@ -120,11 +120,10 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
 
   const i = t.assets.insuranceList
 
-  // #142 — Display name preference: Profile.display_name > legacy text > 「—」.
-  // Legacy text stays as fallback so existing policies without insured_user_id
-  // wired up don't suddenly read 「—」 after the upgrade.
-  const insuredName = data.insuredDisplayName ?? data.insured ?? null
-  const insuredInitial = insuredName?.trim().charAt(0).toUpperCase() ?? null
+  // #142 — 要保人 (policy holder) avatar replaces the generic insurance icon
+  // in the icon box. Falls back to first-letter initial if no avatar_url, and
+  // to the original AssetIcon when no policy holder is set yet (legacy data).
+  const policyHolderInitial = data.policyHolderDisplayName?.trim().charAt(0).toUpperCase() ?? null
 
   // Right-aligned secondary chip showing state for the kind.
   const renderBadge = () => {
@@ -215,32 +214,11 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 min-w-0">
         <div className="text-body font-semibold truncate">{name}</div>
-        <div className="flex items-center gap-1.5 ml-auto shrink-0">
-          {data.insuredAvatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={data.insuredAvatarUrl}
-              alt=""
-              className="w-4 h-4 rounded-full object-cover"
-              style={{ border: '1px solid var(--hairline)' }}
-            />
-          ) : insuredInitial ? (
-            <div
-              className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold"
-              style={{
-                background: 'var(--accent-soft)',
-                color: 'var(--ink-2)',
-                border: '1px solid var(--hairline)',
-              }}
-              aria-hidden
-            >
-              {insuredInitial}
-            </div>
-          ) : null}
-          <div className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
-            {i.insuredPrefix.replace('{name}', insuredName ?? '—')}
+        {data.insured && (
+          <div className="text-xs truncate ml-auto" style={{ color: 'var(--ink-3)' }}>
+            {i.insuredPrefix.replace('{name}', data.insured)}
           </div>
-        </div>
+        )}
       </div>
       <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
         {renderBadge()}
@@ -277,10 +255,27 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
           style={{ color: 'var(--ink)' }}
         >
           <div
-            className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5"
+            className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5 overflow-hidden"
             style={{ background: tint, color: 'var(--ink-2)' }}
           >
-            <AssetIcon type="insurance" size={22} />
+            {data.policyHolderAvatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- next/image rejects external URLs without configured domains.
+              <img
+                src={data.policyHolderAvatarUrl}
+                alt=""
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : policyHolderInitial ? (
+              <span
+                className="text-base font-semibold"
+                style={{ color: 'var(--ink)', fontFamily: 'var(--font-serif)' }}
+              >
+                {policyHolderInitial}
+              </span>
+            ) : (
+              <AssetIcon type="insurance" size={22} />
+            )}
           </div>
           {card}
         </Link>

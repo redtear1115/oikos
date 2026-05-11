@@ -74,7 +74,7 @@ export interface AssetSheetInitial {
   // Insurance-specific
   insKind?: string | null
   insInsured?: string | null
-  insInsuredUserId?: string | null
+  insPolicyHolderUserId?: string | null
   insInsurer?: string | null
   insPolicyNo?: string | null
   insAnnualPremium?: number | null
@@ -188,10 +188,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
-  // #142 — null = legacy text fallback (input visible); otherwise viewer/partner Profile id.
-  // Defaults to viewer.id on create so the common case (insuring oneself) is one-tap.
+  // #142 — 要保人 is always a group member (or null for legacy/unset rows).
+  // Defaults to viewer.id on create. In solo mode the toggle is hidden because
+  // there's only one possible value.
   const { viewer, partner } = useMember()
-  const [insInsuredUserId, setInsInsuredUserId] = useState<string | null>(viewer.id)
+  const [insPolicyHolderUserId, setInsPolicyHolderUserId] = useState<string | null>(viewer.id)
   const [insInsurer, setInsInsurer] = useState('')
   const [insPolicyNo, setInsPolicyNo] = useState('')
   const [insPremium, setInsPremium] = useState('')
@@ -272,7 +273,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
-        setInsInsuredUserId(initial.insInsuredUserId ?? null)
+        setInsPolicyHolderUserId(initial.insPolicyHolderUserId ?? null)
         setInsInsurer(initial.insInsurer ?? '')
         setInsPolicyNo(initial.insPolicyNo ?? '')
         setInsPremium(initial.insAnnualPremium?.toString() ?? '')
@@ -336,7 +337,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       // Insurance resets
       setInsKind('medical')
       setInsInsured('')
-      setInsInsuredUserId(viewer.id)
+      setInsPolicyHolderUserId(viewer.id)
       setInsInsurer('')
       setInsPolicyNo('')
       setInsPremium('')
@@ -459,7 +460,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             name: name.trim(),
             kind: insKind || null,
             insured: insInsured.trim() || null,
-            insuredUserId: insInsuredUserId,
+            policyHolderUserId: insPolicyHolderUserId,
             insurer: insInsurer.trim() || null,
             policyNo: insPolicyNo.trim() || null,
             annualPremium: insPremium ? parseInt(insPremium, 10) : null,
@@ -592,7 +593,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     // Insurance resets
     setInsKind('medical')
     setInsInsured('')
-    setInsInsuredUserId(viewer.id)
+    setInsPolicyHolderUserId(viewer.id)
     setInsInsurer('')
     setInsPolicyNo('')
     setInsPremium('')
@@ -1269,41 +1270,40 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </div>
               </Field>
 
+              {/* #142 — 要保人 (policy holder). Always a group member, so bound
+                  to Profile via FK. Toggle is hidden in solo mode (only one
+                  possible value; form defaults to viewer.id). */}
+              {partner && (
+                <Field label={ts.insurance.policyHolder}>
+                  <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(58,36,25,0.05)' }}>
+                    {[
+                      { id: viewer.id, label: t.common.me },
+                      { id: partner.id, label: partner.displayName ?? t.common.partner },
+                    ].map(opt => {
+                      const active = insPolicyHolderUserId === opt.id
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setInsPolicyHolderUserId(opt.id)}
+                          className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
+                            active
+                              ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
+                              : 'bg-transparent text-[var(--ink-2)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Field>
+              )}
+
               <Field label={ts.insurance.insured}>
-                {/* #142 — Pick from group members first (one tap = me/partner).
-                    「其他」reveals the legacy text fallback for non-members
-                    (child / parent / anyone outside the group). */}
-                <div className="flex gap-1 rounded-xl p-1 mb-2" style={{ background: 'rgba(58,36,25,0.05)' }}>
-                  {[
-                    { id: viewer.id, label: t.common.me },
-                    ...(partner ? [{ id: partner.id, label: partner.displayName ?? t.common.partner }] : []),
-                    { id: null, label: ts.insurance.insuredOther },
-                  ].map(opt => {
-                    const active = insInsuredUserId === opt.id
-                    return (
-                      <button
-                        key={opt.id ?? 'other'}
-                        type="button"
-                        onClick={() => {
-                          setInsInsuredUserId(opt.id)
-                          if (opt.id !== null) setInsInsured('')
-                        }}
-                        className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
-                          active
-                            ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
-                            : 'bg-transparent text-[var(--ink-2)]'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-                {insInsuredUserId === null && (
-                  <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
-                    placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-                    style={{ color: 'var(--ink)' }} />
-                )}
+                <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
+                  placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
               </Field>
 
               <Field label={ts.insurance.insurer}>

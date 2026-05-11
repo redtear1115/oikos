@@ -25,12 +25,12 @@ async function getViewerGroup() {
   return { group, viewer: user }
 }
 
-function assertInsuredUserInGroup(
+function assertPolicyHolderInGroup(
   userId: string,
   group: { memberA: string; memberB: string | null },
 ): void {
   if (userId !== group.memberA && userId !== group.memberB) {
-    throw new Error('被保人必須是 group 成員')
+    throw new Error('要保人必須是 group 成員')
   }
 }
 
@@ -699,7 +699,7 @@ export interface CreateInsuranceInput {
   name: string
   kind?: string | null
   insured?: string | null
-  insuredUserId?: string | null
+  policyHolderUserId?: string | null
   insurer?: string | null
   policyNo?: string | null
   annualPremium?: number | null
@@ -734,8 +734,8 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
     }
   }
 
-  if (validated.insuredUserId) {
-    assertInsuredUserInGroup(validated.insuredUserId, group)
+  if (validated.policyHolderUserId) {
+    assertPolicyHolderInGroup(validated.policyHolderUserId, group)
   }
 
   const [created] = await db.transaction(async (tx) => {
@@ -747,7 +747,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       assetId: asset.id,
       insuranceType: validated.kind,
       insured: validated.insured,
-      insuredUserId: validated.insuredUserId,
+      policyHolderUserId: validated.policyHolderUserId,
       insurer: validated.insurer,
       policyNumber: validated.policyNo,
       annualPremium: validated.annualPremium,
@@ -784,8 +784,8 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
     }
   }
 
-  if (validated.insuredUserId) {
-    assertInsuredUserInGroup(validated.insuredUserId, group)
+  if (validated.policyHolderUserId) {
+    assertPolicyHolderInGroup(validated.policyHolderUserId, group)
   }
 
   await db.transaction(async (tx) => {
@@ -807,7 +807,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         assetId: input.id,
         insuranceType: validated.kind,
         insured: validated.insured,
-        insuredUserId: validated.insuredUserId,
+        policyHolderUserId: validated.policyHolderUserId,
         insurer: validated.insurer,
         policyNumber: validated.policyNo,
         annualPremium: validated.annualPremium,
@@ -826,7 +826,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         set: {
           insuranceType: validated.kind,
           insured: validated.insured,
-          insuredUserId: validated.insuredUserId,
+          policyHolderUserId: validated.policyHolderUserId,
           insurer: validated.insurer,
           policyNumber: validated.policyNo,
           annualPremium: validated.annualPremium,

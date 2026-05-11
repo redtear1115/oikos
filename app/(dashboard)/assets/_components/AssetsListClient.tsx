@@ -29,9 +29,9 @@ export interface AssetsListItem {
   insurance?: {
     insuranceType: string | null
     insured: string | null
-    insuredUserId: string | null
-    insuredDisplayName: string | null
-    insuredAvatarUrl: string | null
+    policyHolderUserId: string | null
+    policyHolderDisplayName: string | null
+    policyHolderAvatarUrl: string | null
     annualPremium: number | null
     sumInsured: number | null
     startsAt: string | null
@@ -205,9 +205,9 @@ export function AssetsListClient({ items }: Props) {
                     data={a.insurance ?? {
                       insuranceType: null,
                       insured: null,
-                      insuredUserId: null,
-                      insuredDisplayName: null,
-                      insuredAvatarUrl: null,
+                      policyHolderUserId: null,
+                      policyHolderDisplayName: null,
+                      policyHolderAvatarUrl: null,
                       annualPremium: null,
                       sumInsured: null,
                       startsAt: null,

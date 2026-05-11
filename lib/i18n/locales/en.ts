@@ -662,7 +662,7 @@ export const en: Translations = {
       kindSavings: 'Savings',
       insured: 'Insured person',
       insuredPlaceholder: 'Sam',
-      insuredOther: 'Other',
+      policyHolder: 'Policy holder',
       insurer: 'Insurer',
       insurerPlaceholder: 'Nan Shan Life',
       policyNo: 'Policy no.',
