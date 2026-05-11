@@ -3,6 +3,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
@@ -18,6 +19,7 @@ export default async function AssetsPage() {
     .limit(1)
   if (!group) throw new Error('No group')
 
+  const epochWindow = await resolveViewerEpochWindow(group.id)
   const assetRows = await listAssetsForGroup(group.id)
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
@@ -28,7 +30,7 @@ export default async function AssetsPage() {
   // stats — all three groups run in parallel (no shared dependencies).
   const [childNicknames, summaries, carStatsList] = await Promise.all([
     getChildNicknames(childIds),
-    getAssetSummariesBatch(allIds, group.id),
+    getAssetSummariesBatch(allIds, group.id, epochWindow),
     Promise.all(
       carRows.map(async (a) => [a.id, await getCarHeroStats(a.id, a.initialOdometer)] as const),
     ),

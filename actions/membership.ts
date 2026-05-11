@@ -5,6 +5,7 @@ import {
   assets,
   carDetails,
   groupBalance,
+  groupEpochs,
   groupInvites,
   houseDetails,
   insuranceDetails,
@@ -284,6 +285,15 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
       version: 0,
     })
 
+    // Open the leaver's fresh solo epoch on the new group (no prior open row
+    // exists since the group itself is brand-new).
+    await tx.insert(groupEpochs).values({
+      groupId: newGroup.id,
+      startedAt: now,
+      memberAId: leaver,
+      memberBId: null,
+    })
+
     // 2. Move assets owned by the leaver
     if (movingAssetIds.length > 0) {
       await tx
@@ -419,6 +429,20 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
         currentEpochStartedAt: now,
       })
       .where(eq(oikosGroups.id, oldGroupId))
+
+    // 13a. Close the duo chapter on the old group and open the stayer's
+    // solo chapter. Same `now` so the past-times list shows a clean handoff.
+    await tx
+      .update(groupEpochs)
+      .set({ endedAt: now })
+      .where(and(eq(groupEpochs.groupId, oldGroupId), isNull(groupEpochs.endedAt)))
+
+    await tx.insert(groupEpochs).values({
+      groupId: oldGroupId,
+      startedAt: now,
+      memberAId: group.memberA,
+      memberBId: null,
+    })
 
     // 14. Recalc both balances. Both should resolve to 0 (the new group is
     // brand-new; the old group is now solo so the short-circuit applies).

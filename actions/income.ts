@@ -5,6 +5,7 @@ import { assets, incomeTransactions, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
@@ -199,7 +200,8 @@ export async function loadMoreIncomes(
   const { user, group } = await getViewerGroup()
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const incomeFilter = resolveIncomeFilter(filterWire, user.id, group)
-  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill, incomeFilter, dateRange)
+  const epochWindow = await resolveViewerEpochWindow(group.id)
+  const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill, incomeFilter, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

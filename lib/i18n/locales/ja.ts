@@ -270,6 +270,7 @@ export const ja: Translations = {
     sectionData: 'データ',
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
+    pastTimes: '過ぎた時間',
     dangerZone: {
       sectionTitle: 'この家計簿から離れる',
       leaveCta: 'この家計簿から離れたい',
@@ -349,6 +350,21 @@ export const ja: Translations = {
         fallback: '操作に失敗しました。少し時間をおいて再度お試しください。',
       },
     },
+  },
+
+  pastTimes: {
+    title: '過ぎた時間',
+    back: '戻る',
+    intro: 'この家計簿には、いくつもの時間が積もっています。どれもその時のふたりの記録です。',
+    currentChapter: 'いま · {partner} と',
+    currentChapterSolo: 'いま · ひとりで',
+    chapterRange: '{start} – {end}',
+    withPartner: '{partner} と',
+    soloLabel: 'ひとりで',
+    enterCta: 'その時間を見にいく',
+    bannerHeading: '{start} – {end} の過去を見ています',
+    bannerExitCta: '今に戻る',
+    empty: 'まだ過ぎた時間はありません。最初の時間が始まったばかりです。',
   },
 
   csvExport: {

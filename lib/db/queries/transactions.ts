@@ -1,12 +1,25 @@
 import { db } from '@/lib/db/client'
 import { cashTransactions, profiles } from '@/lib/db/schema'
-import { and, eq, isNull, desc, sql, type SQL } from 'drizzle-orm'
+import { and, eq, isNull, desc, gte, lt, sql, type SQL } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { monthRangeIso } from '@/lib/monthKey'
 import type { DrillFilter } from '@/lib/drill'
 import type { RecordStatus } from '@/lib/validators'
 import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
+import type { EpochWindow } from './epoch'
+
+/**
+ * Build the WHERE clause that scopes a feed/stats query to one epoch's
+ * `created_at` window. Returns empty SQL when no window is given.
+ */
+function epochScopeSql(window: EpochWindow | null | undefined): SQL {
+  if (!window) return sql``
+  const upper = window.endedAt
+    ? sql`AND created_at < ${window.endedAt}::timestamptz`
+    : sql``
+  return sql`AND created_at >= ${window.startedAt}::timestamptz ${upper}`
+}
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
 
@@ -74,11 +87,18 @@ export interface TxnRow {
   status: RecordStatus
 }
 
-/** Fetch most recent N active transactions for a group. */
+/** Fetch most recent N active transactions for a group, optionally scoped to an epoch. */
 export async function listRecentTransactions(
   groupId: string,
   limit = 5,
+  epochWindow?: EpochWindow | null,
 ): Promise<TxnRow[]> {
+  const epochClauses = epochWindow
+    ? [
+        gte(cashTransactions.createdAt, epochWindow.startedAt),
+        ...(epochWindow.endedAt ? [lt(cashTransactions.createdAt, epochWindow.endedAt)] : []),
+      ]
+    : []
   const rows = await db
     .select({
       id: cashTransactions.id,
@@ -97,6 +117,7 @@ export async function listRecentTransactions(
     .where(and(
       eq(cashTransactions.groupId, groupId),
       isNull(cashTransactions.deletedAt),
+      ...epochClauses,
     ))
     .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
     .limit(limit)
@@ -207,7 +228,9 @@ export async function listTransactionsPaged(
   monthKey?: string,
   drill?: DrillFilter | null,
   dateRange?: DateRange | null,
+  epochWindow?: EpochWindow | null,
 ): Promise<FeedRow[]> {
+  const epoch = epochScopeSql(epochWindow)
   const txCursor = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
     : sql``
@@ -275,6 +298,7 @@ export async function listTransactionsPaged(
       ${setCursor}
       ${setPayer}
       ${setMonth}
+      ${epoch}
     `
 
   // Income-kind drill on a cash-transaction query: short-circuit to empty
@@ -318,6 +342,7 @@ export async function listTransactionsPaged(
       ${txDrillCategory}
       ${txDrillAsset}
       ${txMonth}
+      ${epoch}
       ${settlementsBranch}
     ) AS feed
     ORDER BY transacted_at DESC, created_at DESC
@@ -360,7 +385,9 @@ export async function listFeedAllPaged(
   drill?: DrillFilter | null,
   filter?: ResolvedTxnFilter,
   dateRange?: DateRange | null,
+  epochWindow?: EpochWindow | null,
 ): Promise<FeedRow[]> {
+  const epoch = epochScopeSql(epochWindow)
   const cur = cursor
     ? sql`AND (sort_at, sort_created) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
     : sql``
@@ -453,6 +480,7 @@ export async function listFeedAllPaged(
       ${setMonth}
       ${setDrill}
       ${setFilterPayer}
+      ${epoch}
     `
 
   const rows = await db.execute<{
@@ -486,6 +514,7 @@ export async function listFeedAllPaged(
       ${txFilterCategory}
       ${txFilterAssets}
       ${txFilterCutByIncomeOnly}
+      ${epoch}
 
       ${settlementsBranch}
 
@@ -506,6 +535,7 @@ export async function listFeedAllPaged(
       ${incFilterIncomeCats}
       ${incFilterCategoryCut}
       ${incFilterSplitCut}
+      ${epoch}
     ) AS feed
     WHERE TRUE ${cur}
     ORDER BY sort_at DESC, sort_created DESC
@@ -617,8 +647,10 @@ export async function monthlyStatsByCategory(
   monthKey: string | undefined,
   dateRange?: DateRange | null,
   filter?: ResolvedTxnFilter,
+  epochWindow?: EpochWindow | null,
 ): Promise<CategoryStatRow[]> {
   const scope = statsScopeClauses(monthKey, dateRange, filter)
+  const epoch = epochScopeSql(epochWindow)
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -628,6 +660,7 @@ export async function monthlyStatsByCategory(
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
       ${scope}
+      ${epoch}
     GROUP BY category
     ORDER BY total DESC
   `)
@@ -650,8 +683,16 @@ export async function monthlyStatsByAsset(
   monthKey: string | undefined,
   dateRange?: DateRange | null,
   filter?: ResolvedTxnFilter,
+  epochWindow?: EpochWindow | null,
 ): Promise<AssetStatRow[]> {
   const scope = statsScopeClauses(monthKey, dateRange, filter, 'ct')
+  // Asset stats query aliases the cash-tx table as `ct`, so the epoch column
+  // ref needs the same alias to disambiguate from the joined Assets table.
+  const epoch = epochWindow
+    ? sql`AND ct.created_at >= ${epochWindow.startedAt}::timestamptz ${
+        epochWindow.endedAt ? sql`AND ct.created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+      }`
+    : sql``
   const rows = await db.execute<{
     asset_id: string | null
     asset_name: string | null
@@ -668,6 +709,7 @@ export async function monthlyStatsByAsset(
     WHERE ct.group_id = ${groupId}
       AND ct.deleted_at IS NULL
       ${scope}
+      ${epoch}
     GROUP BY ct.asset_id, a.name
     ORDER BY total DESC
   `)

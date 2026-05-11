@@ -270,6 +270,7 @@ export const zhCN: Translations = {
     sectionData: '数据',
     trust: '数据安全',
     exportData: '导出数据（CSV）',
+    pastTimes: '过去的时光',
     dangerZone: {
       sectionTitle: '离开账本',
       leaveCta: '我想离开这本账本',
@@ -349,6 +350,21 @@ export const zhCN: Translations = {
         fallback: '操作失败，请稍后再试',
       },
     },
+  },
+
+  pastTimes: {
+    title: '过去的时光',
+    back: '返回',
+    intro: '这本账本有过好几段时光。每一段都是当时的你们留下来的。',
+    currentChapter: '现在 · 跟 {partner}',
+    currentChapterSolo: '现在 · 一个人',
+    chapterRange: '{start} – {end}',
+    withPartner: '跟 {partner}',
+    soloLabel: '一个人',
+    enterCta: '看看那段时光',
+    bannerHeading: '你正在看 {start} – {end} 的过去',
+    bannerExitCta: '回到现在',
+    empty: '还没有过去的时光。第一段才刚开始。',
   },
 
   csvExport: {

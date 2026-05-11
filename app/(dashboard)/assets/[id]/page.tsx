@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
 import { computeAvgEcon } from '@/lib/fuelEcon'
 import { AssetDetailClient } from './_components/AssetDetailClient'
@@ -56,14 +57,19 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const asset = await getAssetById(id, group.id)
   if (!asset || asset.deletedAt) notFound()
 
+  // Past-times view: every per-asset query below scopes by this window so the
+  // detail page's txn list, summary card, and insurance/SavingsView totals all
+  // tell the same story for the chosen epoch.
+  const epochWindow = await resolveViewerEpochWindow(group.id)
+
   const allAssetsData = await listAssetsForGroup(group.id)
   const allAssets = allAssetsData.map(a => ({ id: a.id, name: a.name, type: a.type }))
 
   if (asset.type === 'child') {
     const [childDetailsData, summary, txnRows] = await Promise.all([
       getChildDetails(asset.id),
-      getAssetSummary(asset.id, group.id),
-      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
+      getAssetSummary(asset.id, group.id, epochWindow),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE, epochWindow),
     ])
     const initialTxns = serializeTxns(txnRows)
     const assetSheetInitial: AssetSheetInitial = {
@@ -102,8 +108,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   if (asset.type === 'pet') {
     const [petDetailsData, summary, txnRows] = await Promise.all([
       getPetDetails(asset.id),
-      getAssetSummary(asset.id, group.id),
-      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
+      getAssetSummary(asset.id, group.id, epochWindow),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE, epochWindow),
     ])
     const initialTxns = serializeTxns(txnRows)
     const assetSheetInitial: AssetSheetInitial = {
@@ -139,8 +145,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   if (asset.type === 'plant') {
     const [plantDetailsData, summary, txnRows] = await Promise.all([
       getPlantDetails(asset.id),
-      getAssetSummary(asset.id, group.id),
-      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
+      getAssetSummary(asset.id, group.id, epochWindow),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE, epochWindow),
     ])
     const initialTxns = serializeTxns(txnRows)
     const assetSheetInitial: AssetSheetInitial = {
@@ -172,8 +178,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   if (asset.type === 'house') {
     const [houseDetailsData, summary, txnRows] = await Promise.all([
       getHouseDetails(asset.id),
-      getAssetSummary(asset.id, group.id),
-      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE),
+      getAssetSummary(asset.id, group.id, epochWindow),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE, epochWindow),
     ])
     const initialTxns = serializeTxns(txnRows)
     const assetSheetInitial: AssetSheetInitial = {
@@ -234,10 +240,10 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
     if (framingGroup === 'savings' && insuranceDetailsData) {
       const [premiumStats, returnStats, premiumRows, returnRows] = await Promise.all([
-        getInsurancePaymentTotal(asset.id, group.id),
-        getInsuranceReturnTotal(asset.id, group.id, ['maturity']),
-        listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE),
-        listInsuranceReturnsPaged(asset.id, group.id, ['maturity'], null, PAGE_SIZE),
+        getInsurancePaymentTotal(asset.id, group.id, epochWindow),
+        getInsuranceReturnTotal(asset.id, group.id, ['maturity'], epochWindow),
+        listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE, epochWindow),
+        listInsuranceReturnsPaged(asset.id, group.id, ['maturity'], null, PAGE_SIZE, epochWindow),
       ])
 
       const initialPremiumTxns: PagedTxnRow[] = premiumRows.map((r) => ({
@@ -301,8 +307,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   }
 
   const [summary, txnRows, fuelLogs, fuelStats, linkedInsurances] = await Promise.all([
-    getAssetSummary(id, group.id),
-    listTransactionsPagedForAsset(id, group.id, null, PAGE_SIZE),
+    getAssetSummary(id, group.id, epochWindow),
+    listTransactionsPagedForAsset(id, group.id, null, PAGE_SIZE, epochWindow),
     listFuelLogsWithPrev(id),
     fuelStatsForAsset(id),
     getLinkedInsurancesForVehicle(id),

@@ -1,12 +1,13 @@
 import { db } from '@/lib/db/client'
 import { incomeTransactions } from '@/lib/db/schema'
-import { and, eq, isNull, desc, sql, type SQL } from 'drizzle-orm'
+import { and, eq, isNull, desc, gte, lt, sql, type SQL } from 'drizzle-orm'
 import type { DrillFilter } from '@/lib/drill'
 import {
   ASSET_FILTER_NONE,
   resolveDateRangeToDateBounds,
   type DateRange,
 } from '@/lib/filter'
+import type { EpochWindow } from './epoch'
 
 export interface IncomeRow {
   id: string
@@ -74,6 +75,7 @@ export async function listIncomesPaged(
   drill?: DrillFilter | null,
   filter?: ResolvedIncomeFilter,
   dateRange?: DateRange | null,
+  epochWindow?: EpochWindow | null,
 ): Promise<IncomeRow[]> {
   // Drill that doesn't target income (expense category / asset) → empty page.
   // Lets the income tab render zero rows under an incompatible drill instead
@@ -119,6 +121,13 @@ export async function listIncomesPaged(
 
   const assetCl = filter ? assetIdsClause(filter.assetIds) : null
   if (assetCl) conditions.push(assetCl)
+
+  if (epochWindow) {
+    conditions.push(gte(incomeTransactions.createdAt, epochWindow.startedAt))
+    if (epochWindow.endedAt) {
+      conditions.push(lt(incomeTransactions.createdAt, epochWindow.endedAt))
+    }
+  }
 
   const rows = await db
     .select({
@@ -185,8 +194,14 @@ export async function monthlyIncomeStatsByCategory(
   monthKey: string | undefined,
   dateRange?: DateRange | null,
   filter?: ResolvedIncomeFilter,
+  epochWindow?: EpochWindow | null,
 ): Promise<IncomeCategoryStatRow[]> {
   if (filter?.cutAll) return []
+  const epochClause = epochWindow
+    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+      }`
+    : sql``
 
   // Custom date range overrides monthKey when provided. resolveDateRangeToDateBounds
   // returns null for `kind: 'all'` → no date predicate (sum all-time).
@@ -234,6 +249,7 @@ export async function monthlyIncomeStatsByCategory(
       ${recipientClause}
       ${incomeCatClause}
       ${assetClause}
+      ${epochClause}
     GROUP BY category
     ORDER BY total DESC
   `)
