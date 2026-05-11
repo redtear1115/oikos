@@ -783,6 +783,7 @@ export const ja: Translations = {
     errors: {
       invalidOrExpired: '招待リンクが無効または期限切れです',
       alreadyUsed: '招待リンクは既に使用されています',
+      revoked: '招待リンクは無効になりました',
       expired: '招待リンクの有効期限が切れています',
       groupNotFound: '家計簿が見つかりません',
       groupFull: 'この家計簿には既に二人のメンバーがいます',

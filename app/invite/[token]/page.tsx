@@ -34,6 +34,7 @@ export default async function InvitePage({ params }: Props) {
   const errorMap: Record<typeof preview.error, string> = {
     invalid_or_expired: t.invite.errors.invalidOrExpired,
     already_used: t.invite.errors.alreadyUsed,
+    revoked: t.invite.errors.revoked,
     expired: t.invite.errors.expired,
     group_not_found: t.invite.errors.groupNotFound,
     group_full: t.invite.errors.groupFull,

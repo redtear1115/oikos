@@ -8,6 +8,7 @@ const baseInvite = {
   token: 'tok',
   expiresAt: new Date('2099-01-01'),
   acceptedAt: null,
+  revokedAt: null as Date | null,
   createdAt: new Date(),
 }
 
@@ -18,6 +19,9 @@ const baseGroup = {
   memberB: null as string | null,
   createdAt: new Date(),
   defaultSplitRatioA: null as number | null,
+  pendingSwapProposedBy: null as string | null,
+  pendingSwapExpiresAt: null as Date | null,
+  currentEpochStartedAt: new Date(),
 }
 
 describe('validateInviteAcceptance', () => {
@@ -35,6 +39,12 @@ describe('validateInviteAcceptance', () => {
     const invite = { ...baseInvite, acceptedAt: new Date('2025-01-01') }
     const result = validateInviteAcceptance(invite, baseGroup, 'user-b')
     expect(result).toMatchObject({ ok: false, error: 'already_used' })
+  })
+
+  it('rejects revoked invite (e.g. after partner left)', () => {
+    const invite = { ...baseInvite, revokedAt: new Date('2025-01-01') }
+    const result = validateInviteAcceptance(invite, baseGroup, 'user-b')
+    expect(result).toMatchObject({ ok: false, error: 'revoked' })
   })
 
   it('rejects expired invite', () => {

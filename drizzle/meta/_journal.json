@@ -197,6 +197,13 @@
       "when": 1778419161744,
       "tag": "0027_weighted_split",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1778500000000,
+      "tag": "0028_leave_group_swap",
+      "breakpoints": true
     }
   ]
 }

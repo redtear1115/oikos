@@ -783,6 +783,7 @@ export const zhCN: Translations = {
     errors: {
       invalidOrExpired: '邀请链接无效或已过期',
       alreadyUsed: '邀请链接已被使用',
+      revoked: '邀请链接已失效',
       expired: '邀请链接已过期',
       groupNotFound: '找不到群组',
       groupFull: '此账本已有两位成员',

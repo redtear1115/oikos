@@ -817,6 +817,7 @@ export type Translations = {
     errors: {
       invalidOrExpired: string
       alreadyUsed: string
+      revoked: string
       expired: string
       groupNotFound: string
       groupFull: string
@@ -1723,6 +1724,7 @@ export const zhTW: Translations = {
     errors: {
       invalidOrExpired: '邀請連結無效或已過期',
       alreadyUsed: '邀請連結已被使用',
+      revoked: '邀請連結已失效',
       expired: '邀請連結已過期',
       groupNotFound: '找不到群組',
       groupFull: '此帳本已有兩位成員',
