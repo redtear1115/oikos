@@ -13,6 +13,7 @@ import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { revalidatePath } from 'next/cache'
 
 export interface CreateTransactionInput {
@@ -42,11 +43,7 @@ export async function createTransaction(
   })
 
   // Find viewer's group
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   // Payer must be in group
@@ -116,11 +113,7 @@ export async function softDeleteTransaction(transactionId: string): Promise<void
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   await db.transaction(async (tx) => {
@@ -165,11 +158,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     splitRatioA: input.splitRatioA ?? null,
   })
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
@@ -309,11 +298,7 @@ export async function loadMoreTransactions(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
@@ -354,11 +339,7 @@ export async function loadMoreFeedAll(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
@@ -396,11 +377,7 @@ export async function loadMoreTransactionsForAsset(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   const epochWindow = await resolveViewerEpochWindow(group.id)
@@ -434,11 +411,7 @@ export async function getDescriptionSuggestions(): Promise<string[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select({ id: oikosGroups.id })
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) return []
 
   return listDescriptionSuggestions(group.id)

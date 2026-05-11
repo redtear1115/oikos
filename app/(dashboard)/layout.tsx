@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { groupEpochs, oikosGroups, profiles } from '@/lib/db/schema'
-import { and, eq, isNull, or, inArray } from 'drizzle-orm'
+import { profiles } from '@/lib/db/schema'
+import { eq, inArray } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
@@ -18,22 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
-  // Pick the group where the viewer currently has an OPEN epoch — the source
-  // of truth for「我現在屬於哪個帳本」. A user can remain a legacy member of
-  // multiple OikosGroups rows (e.g. a solo group left over after a prior
-  // leaveGroup), but at most one open epoch references them at a time
-  // (invariant enforced by acceptInvite + leaveGroup). Joining over
-  // GroupEpochs avoids the LIMIT-1 ambiguity of a bare memberA/memberB check.
-  const [groupRow] = await db
-    .select({ group: oikosGroups })
-    .from(oikosGroups)
-    .innerJoin(groupEpochs, and(
-      eq(groupEpochs.groupId, oikosGroups.id),
-      isNull(groupEpochs.endedAt),
-      or(eq(groupEpochs.memberAId, user.id), eq(groupEpochs.memberBId, user.id)),
-    ))
-    .limit(1)
-  const group = groupRow?.group
+  const group = await getActiveGroupForUser(user.id)
   if (!group) redirect('/onboarding')
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)

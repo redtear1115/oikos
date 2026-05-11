@@ -5,6 +5,7 @@ import { and, eq, isNull, or } from 'drizzle-orm'
 import { listFeedAllPaged, getGroupCreationMonthKey, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
 import type { ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
 import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
@@ -42,13 +43,9 @@ export default async function RecordsPage({
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [resolvedParams, [group]] = await Promise.all([
+  const [resolvedParams, group] = await Promise.all([
     searchParams,
-    db
-      .select()
-      .from(oikosGroups)
-      .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-      .limit(1),
+    getActiveGroupForUser(user.id),
   ])
   if (!group) throw new Error('No group')
   const { view: rawView } = resolvedParams

@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { listEpochs } from '@/lib/db/queries/epoch'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { getPinnedEpochId } from '@/actions/epoch-view'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
@@ -20,11 +21,7 @@ export default async function PastTimesPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) redirect('/setup')
 
   const [epochs, pinnedId, locale, t] = await Promise.all([

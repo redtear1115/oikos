@@ -18,6 +18,7 @@ import {
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
 import { createClient } from '@/lib/supabase/server'
 import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { revalidatePath } from 'next/cache'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
@@ -27,11 +28,7 @@ async function getViewerAndDuoGroup() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
 
   if (!group) throw new Error('找不到家計簿')
   if (group.memberB === null) throw new Error('solo_group')
@@ -205,11 +202,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
 
   if (!group) throw new Error('找不到家計簿')
   if (group.memberB === null) throw new Error('solo_group')
