@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { groupEpochs, profiles } from '@/lib/db/schema'
-import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 /** Cookie key the past-times feature uses to pin the viewer to a prior epoch. */
@@ -86,6 +86,21 @@ export async function getActiveEpochWindow(
   // somehow escaped backfill). Treat as "show everything" with a sentinel
   // far-past startedAt so the filter never excludes anything.
   return { startedAt: new Date(0), endedAt: null, epochId: null, isPast: false }
+}
+
+/**
+ * Latest closed epoch on a group, or null. Used by the post-leave card on the
+ * stayer's dashboard: when the current epoch is solo and the latest closed
+ * epoch had a memberB, that memberB just left and we surface a one-shot card.
+ */
+export async function getLatestPriorClosedEpoch(groupId: string) {
+  const [row] = await db
+    .select()
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, groupId), sql`${groupEpochs.endedAt} IS NOT NULL`))
+    .orderBy(desc(groupEpochs.endedAt))
+    .limit(1)
+  return row ?? null
 }
 
 /**

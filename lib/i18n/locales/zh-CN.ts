@@ -352,6 +352,14 @@ export const zhCN: Translations = {
     },
   },
 
+  postLeave: {
+    partnerLeftHeading: '⟂ {partner} 已离开',
+    partnerLeftBody: '到目前为止的记录都还在。从这里开始，是你一个人的时光。',
+    welcomeSoloHeading: '欢迎回到一个人',
+    welcomeSoloBody: '账本完整地跟着你过来。从今天起，可以慢慢来。',
+    dismissAria: '关闭',
+  },
+
   pastTimes: {
     title: '过去的时光',
     back: '返回',

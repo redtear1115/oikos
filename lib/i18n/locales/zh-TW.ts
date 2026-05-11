@@ -354,6 +354,16 @@ export type Translations = {
     }
   }
 
+  postLeave: {
+    /** Stayer's "your partner left" card. `{partner}` substituted with the leaver's display name. */
+    partnerLeftHeading: string
+    partnerLeftBody: string
+    /** Leaver's "welcome back to solo" card. */
+    welcomeSoloHeading: string
+    welcomeSoloBody: string
+    dismissAria: string
+  }
+
   pastTimes: {
     title: string
     back: string
@@ -1414,6 +1424,14 @@ export const zhTW: Translations = {
         fallback: '操作失敗，請稍後再試',
       },
     },
+  },
+
+  postLeave: {
+    partnerLeftHeading: '⟂ {partner} 已離開',
+    partnerLeftBody: '到目前為止的記錄都還在。從這裡開始，是你一個人的時光。',
+    welcomeSoloHeading: '歡迎回到一個人',
+    welcomeSoloBody: '帳本完整地跟著你過來。從今天起，可以慢慢來。',
+    dismissAria: '關閉',
   },
 
   pastTimes: {
