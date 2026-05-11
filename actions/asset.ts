@@ -700,6 +700,7 @@ export interface CreateInsuranceInput {
   termYears?: number | null
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
+  reminderDaysBefore?: number | null
   notes?: string | null
 }
 
@@ -743,6 +744,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       insuredType: 'user',
       vehicleId: validated.vehicleId,
       expectedMaturityAmount: validated.expectedMaturityAmount,
+      reminderDaysBefore: validated.reminderDaysBefore,
     })
     return [asset]
   })
@@ -797,6 +799,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         insuredType: 'user',
         vehicleId: validated.vehicleId,
         expectedMaturityAmount: validated.expectedMaturityAmount,
+        reminderDaysBefore: validated.reminderDaysBefore,
       })
       .onConflictDoUpdate({
         target: insuranceDetails.assetId,
@@ -813,9 +816,91 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
           termYears: validated.termYears,
           vehicleId: validated.vehicleId,
           expectedMaturityAmount: validated.expectedMaturityAmount,
+          reminderDaysBefore: validated.reminderDaysBefore,
         },
       })
   })
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+/**
+ * v0.15.0 #127 — Renew a single-year insurance policy.
+ *
+ * Extends the policy's expiry_date by exactly one year and optionally rotates
+ * the policy number (renewal typically issues a fresh number). The starts_at
+ * date is kept as-is so the original on-cover date stays intact in history.
+ *
+ * Only meaningful for term_years = 1 policies but the action does not enforce
+ * that — multi-year policies could also use it for an off-spec extension.
+ */
+export async function renewInsurance(input: {
+  id: string
+  newPolicyNumber?: string | null
+}): Promise<void> {
+  'use server'
+  const { group } = await getViewerGroup()
+
+  const [asset] = await db
+    .select({ id: assets.id })
+    .from(assets)
+    .where(and(
+      eq(assets.id, input.id),
+      eq(assets.groupId, group.id),
+      eq(assets.type, 'insurance'),
+      isNull(assets.deletedAt),
+    ))
+    .limit(1)
+  if (!asset) throw new Error('找不到該保單')
+
+  const [details] = await db
+    .select({ expiryDate: insuranceDetails.expiryDate })
+    .from(insuranceDetails)
+    .where(eq(insuranceDetails.assetId, input.id))
+    .limit(1)
+  if (!details?.expiryDate) throw new Error('保單尚未設定到期日')
+
+  const next = new Date(`${details.expiryDate}T00:00:00`)
+  next.setFullYear(next.getFullYear() + 1)
+  const nextExpiry = next.toISOString().slice(0, 10)
+
+  const trimmedPolicyNo = input.newPolicyNumber?.trim()
+  const setClause: { expiryDate: string; policyNumber?: string } = { expiryDate: nextExpiry }
+  if (trimmedPolicyNo) setClause.policyNumber = trimmedPolicyNo
+
+  await db
+    .update(insuranceDetails)
+    .set(setClause)
+    .where(eq(insuranceDetails.assetId, input.id))
+
+  revalidatePath('/assets')
+  revalidatePath(`/assets/${input.id}`)
+}
+
+/**
+ * v0.15.0 #127 — Mark an insurance policy as lapsed/stopped.
+ *
+ * Uses the existing soft-delete column on assets so the policy disappears from
+ * the list but the row is retained for history. Mirrors softDeleteAsset semantics
+ * (1-year pg_cron purge), scoped through the insurance type check so callers
+ * can't accidentally lapse a non-insurance asset through this action.
+ */
+export async function lapseInsurance(input: { id: string }): Promise<void> {
+  'use server'
+  const { group } = await getViewerGroup()
+
+  const result = await db
+    .update(assets)
+    .set({ deletedAt: new Date() })
+    .where(and(
+      eq(assets.id, input.id),
+      eq(assets.groupId, group.id),
+      eq(assets.type, 'insurance'),
+      isNull(assets.deletedAt),
+    ))
+    .returning({ id: assets.id })
+  if (result.length === 0) throw new Error('找不到該保單')
 
   revalidatePath('/assets')
   revalidatePath(`/assets/${input.id}`)

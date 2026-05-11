@@ -27,6 +27,14 @@ export interface AssetWithCar {
   initialOdometer: number | null
   // Insurance-only fields (null for non-insurance assets)
   insuranceType: string | null
+  insurancePolicyNumber: string | null
+  insuranceInsured: string | null
+  insuranceAnnualPremium: number | null
+  insuranceSumInsured: number | null
+  insuranceStartsAt: string | null
+  insuranceExpiryDate: string | null
+  insuranceTermYears: number | null
+  insuranceReminderDaysBefore: number | null
 }
 
 /**
@@ -54,6 +62,14 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       model: carDetails.model,
       initialOdometer: carDetails.initialOdometer,
       insuranceType: insuranceDetails.insuranceType,
+      insurancePolicyNumber: insuranceDetails.policyNumber,
+      insuranceInsured: insuranceDetails.insured,
+      insuranceAnnualPremium: insuranceDetails.annualPremium,
+      insuranceSumInsured: insuranceDetails.sumInsured,
+      insuranceStartsAt: insuranceDetails.startsAt,
+      insuranceExpiryDate: insuranceDetails.expiryDate,
+      insuranceTermYears: insuranceDetails.termYears,
+      insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -92,6 +108,14 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       model: carDetails.model,
       initialOdometer: carDetails.initialOdometer,
       insuranceType: insuranceDetails.insuranceType,
+      insurancePolicyNumber: insuranceDetails.policyNumber,
+      insuranceInsured: insuranceDetails.insured,
+      insuranceAnnualPremium: insuranceDetails.annualPremium,
+      insuranceSumInsured: insuranceDetails.sumInsured,
+      insuranceStartsAt: insuranceDetails.startsAt,
+      insuranceExpiryDate: insuranceDetails.expiryDate,
+      insuranceTermYears: insuranceDetails.termYears,
+      insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))

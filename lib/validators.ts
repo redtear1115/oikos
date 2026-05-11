@@ -671,6 +671,7 @@ export interface InsuranceInput {
   termYears?: number | null
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
+  reminderDaysBefore?: number | null
   notes?: string | null
 }
 
@@ -688,6 +689,7 @@ export interface ValidatedInsuranceInput {
   termYears: number | null
   vehicleId: string | null
   expectedMaturityAmount: number | null
+  reminderDaysBefore: number
   notes: string | null
 }
 
@@ -735,12 +737,20 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     expectedMaturityAmount = input.expectedMaturityAmount
   }
 
+  let reminderDaysBefore = 30
+  if (input.reminderDaysBefore !== null && input.reminderDaysBefore !== undefined) {
+    if (!Number.isInteger(input.reminderDaysBefore) || input.reminderDaysBefore < 1 || input.reminderDaysBefore > 365)
+      throw new Error('提醒天數必須是 1–365 的整數')
+    reminderDaysBefore = input.reminderDaysBefore
+  }
+
   return {
     name, kind, insured, insurer, policyNo,
     annualPremium, sumInsured, payCycle,
     startsAt, endsAt, termYears,
     vehicleId: input.vehicleId?.trim() || null,
     expectedMaturityAmount,
+    reminderDaysBefore,
     notes: validateNotes(input.notes),
   }
 }
