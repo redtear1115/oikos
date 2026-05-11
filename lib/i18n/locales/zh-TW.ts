@@ -279,6 +279,7 @@ export type Translations = {
     sectionData: string
     trust: string
     exportData: string
+    pastTimes: string
     dangerZone: {
       sectionTitle: string
       leaveCta: string
@@ -351,6 +352,26 @@ export type Translations = {
         fallback: string
       }
     }
+  }
+
+  pastTimes: {
+    title: string
+    back: string
+    intro: string
+    /** Label for the open chapter; `{partner}` replaced with partner name, or
+     *  the locale falls back to a solo phrasing if no partner is present. */
+    currentChapter: string
+    currentChapterSolo: string
+    /** Label template for a closed chapter — `{start}` / `{end}` substituted. */
+    chapterRange: string
+    /** Label inside each row; `{partner}` substituted, or the solo string if no partner. */
+    withPartner: string
+    soloLabel: string
+    enterCta: string
+    /** Banner copy across the top of dashboard / records when a past epoch is pinned. */
+    bannerHeading: string
+    bannerExitCta: string
+    empty: string
   }
 
   csvExport: {
@@ -1313,6 +1334,7 @@ export const zhTW: Translations = {
     sectionData: '資料',
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
+    pastTimes: '過去的時光',
     dangerZone: {
       sectionTitle: '離開帳本',
       leaveCta: '我想離開這本帳本',
@@ -1392,6 +1414,21 @@ export const zhTW: Translations = {
         fallback: '操作失敗，請稍後再試',
       },
     },
+  },
+
+  pastTimes: {
+    title: '過去的時光',
+    back: '返回',
+    intro: '這本帳本有過好幾段時光。每一段都是當時的你們留下來的。',
+    currentChapter: '現在 · 跟 {partner}',
+    currentChapterSolo: '現在 · 一個人',
+    chapterRange: '{start} – {end}',
+    withPartner: '跟 {partner}',
+    soloLabel: '一個人',
+    enterCta: '看看那段時光',
+    bannerHeading: '你正在看 {start} – {end} 的過去',
+    bannerExitCta: '回到現在',
+    empty: '還沒有過去的時光。第一段才剛開始。',
   },
 
   csvExport: {

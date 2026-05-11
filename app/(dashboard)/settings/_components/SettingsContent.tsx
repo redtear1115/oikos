@@ -340,6 +340,11 @@ export function SettingsContent({
         />
         <div className="mt-3" />
         <Row
+          label={t.settings.pastTimes}
+          onClick={() => router.push('/settings/past-times')}
+        />
+        <div className="mt-3" />
+        <Row
           label={t.settings.trust}
           onClick={() => router.push('/settings/trust')}
         />

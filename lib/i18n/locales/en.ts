@@ -270,6 +270,7 @@ export const en: Translations = {
     sectionData: 'Data',
     trust: 'Your data',
     exportData: 'Export data (CSV)',
+    pastTimes: 'Past chapters',
     dangerZone: {
       sectionTitle: 'Leave this ledger',
       leaveCta: 'I want to leave this ledger',
@@ -349,6 +350,21 @@ export const en: Translations = {
         fallback: 'Something went wrong. Please try again.',
       },
     },
+  },
+
+  pastTimes: {
+    title: 'Past chapters',
+    back: 'Back',
+    intro: 'This ledger has lived through several chapters. Each one is what the two of you wrote then.',
+    currentChapter: 'Now · with {partner}',
+    currentChapterSolo: 'Now · on your own',
+    chapterRange: '{start} – {end}',
+    withPartner: 'with {partner}',
+    soloLabel: 'on your own',
+    enterCta: 'Step into this chapter',
+    bannerHeading: "You're looking at {start} – {end}",
+    bannerExitCta: 'Back to now',
+    empty: "No past chapters yet. The first one is just beginning.",
   },
 
   csvExport: {

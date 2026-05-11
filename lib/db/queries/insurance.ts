@@ -1,7 +1,15 @@
 import { db } from '@/lib/db/client'
 import { incomeTransactions } from '@/lib/db/schema'
-import { and, eq, isNull, desc, inArray, sql } from 'drizzle-orm'
+import { and, eq, gte, isNull, lt, desc, inArray, sql } from 'drizzle-orm'
 import type { IncomeRow, IncomeCursor } from './incomes'
+import type { EpochWindow } from './epoch'
+
+function epochSql(epochWindow: EpochWindow | null | undefined) {
+  if (!epochWindow) return sql``
+  return sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
+    epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+  }`
+}
 
 /**
  * Sum + count of active CashTransactions linked to a specific insurance asset
@@ -10,6 +18,7 @@ import type { IncomeRow, IncomeCursor } from './incomes'
 export async function getInsurancePaymentTotal(
   assetId: string,
   groupId: string,
+  epochWindow?: EpochWindow | null,
 ): Promise<{ total: number; count: number }> {
   const [row] = await db.execute<{ total: string; count: string }>(sql`
     SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count
@@ -17,6 +26,7 @@ export async function getInsurancePaymentTotal(
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
       AND deleted_at IS NULL
+      ${epochSql(epochWindow)}
   `)
   return { total: parseInt(row.total, 10), count: parseInt(row.count, 10) }
 }
@@ -29,8 +39,15 @@ export async function getInsuranceReturnTotal(
   assetId: string,
   groupId: string,
   categories: string[],
+  epochWindow?: EpochWindow | null,
 ): Promise<{ total: number; count: number }> {
   if (categories.length === 0) return { total: 0, count: 0 }
+  const epochClauses = epochWindow
+    ? [
+        gte(incomeTransactions.createdAt, epochWindow.startedAt),
+        ...(epochWindow.endedAt ? [lt(incomeTransactions.createdAt, epochWindow.endedAt)] : []),
+      ]
+    : []
 
   const rows = await db
     .select({
@@ -43,6 +60,7 @@ export async function getInsuranceReturnTotal(
       eq(incomeTransactions.groupId, groupId),
       isNull(incomeTransactions.deletedAt),
       inArray(incomeTransactions.category, categories),
+      ...epochClauses,
     ))
   const r = rows[0]
   return { total: parseInt(r.total, 10), count: parseInt(r.count, 10) }
@@ -58,6 +76,7 @@ export async function listInsuranceReturnsPaged(
   categories: string[],
   cursor: IncomeCursor | null,
   limit = 20,
+  epochWindow?: EpochWindow | null,
 ): Promise<IncomeRow[]> {
   if (categories.length === 0) return []
 
@@ -71,6 +90,12 @@ export async function listInsuranceReturnsPaged(
     conditions.push(
       sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`,
     )
+  }
+  if (epochWindow) {
+    conditions.push(gte(incomeTransactions.createdAt, epochWindow.startedAt))
+    if (epochWindow.endedAt) {
+      conditions.push(lt(incomeTransactions.createdAt, epochWindow.endedAt))
+    }
   }
 
   const rows = await db
@@ -103,6 +128,7 @@ export async function listInsurancePaymentsPaged(
   groupId: string,
   cursor: { transactedAt: string; createdAt: string } | null,
   limit = 20,
+  epochWindow?: EpochWindow | null,
 ) {
   const cursorClause = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
@@ -131,6 +157,7 @@ export async function listInsurancePaymentsPaged(
       AND group_id = ${groupId}
       AND deleted_at IS NULL
       ${cursorClause}
+      ${epochSql(epochWindow)}
     ORDER BY transacted_at DESC, created_at DESC
     LIMIT ${limit}
   `)

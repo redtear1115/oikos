@@ -4,6 +4,7 @@ import {
   type ResolvedTxnFilter,
 } from '@/lib/db/queries/transactions'
 import { monthlyIncomeStatsByCategory, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import type { DateRange } from '@/lib/filter'
 import { MonthlyStatsView } from './MonthlyStatsView'
 import type { BreakdownView } from './StatsBreakdownToggle'
@@ -57,11 +58,12 @@ export async function MonthlyStatsSection({
   const assetFilterActive = (filter?.assetIds.length ?? 0) > 0
   const effectiveView: BreakdownView = assetFilterActive ? 'category' : view
 
+  const epochWindow = await resolveViewerEpochWindow(groupId)
   const [rows, incomeRows] = await Promise.all([
     effectiveView === 'asset'
-      ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter)
-      : monthlyStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, filter),
-    monthlyIncomeStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, incomeFilter),
+      ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
+      : monthlyStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow),
+    monthlyIncomeStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, incomeFilter, epochWindow),
   ])
   const expenseTotal = rows.reduce((acc, r) => acc + r.total, 0)
   const incomeTotal = incomeRows.reduce((acc, r) => acc + r.total, 0)

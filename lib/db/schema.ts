@@ -47,6 +47,25 @@ export const oikosGroups = pgTable('OikosGroups', {
     .defaultNow().notNull(),
 })
 
+/**
+ * History of relationship chapters on a ledger. One open row (`endedAt IS NULL`)
+ * per group at all times — that's the current epoch. Prior rows have `endedAt`
+ * set to when the *next* chapter opened.
+ *
+ * Rows are written from `acceptInvite` (close solo, open duo) and `leaveGroup`
+ * (close duo, open solo on both sides). `confirmSwap` does NOT touch this
+ * table — swap relabels members without bumping the chapter (per spec).
+ */
+export const groupEpochs = pgTable('GroupEpochs', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id, { onDelete: 'cascade' }),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+  endedAt: timestamp('ended_at', { withTimezone: true }),
+  memberAId: uuid('member_a_id').notNull().references(() => profiles.id),
+  memberBId: uuid('member_b_id').references(() => profiles.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 export const groupInvites = pgTable('GroupInvites', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
