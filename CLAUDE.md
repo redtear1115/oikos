@@ -171,5 +171,6 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
 | `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（v0.14.1 shipped；PR #112 closes #110）|
 | `docs/superpowers/specs/structured-filter-design.md` | /records 結構化篩選器（v0.15.0 shipped；closes #50；date range + 愛物 + URL-synced + 分享連結）|
+| `docs/superpowers/specs/inbox-layer-design.md` | Inbox layer 概念統一（v0.15.0 概念註解；v0.16.0 schema migration + UI）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |
