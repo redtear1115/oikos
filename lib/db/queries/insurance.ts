@@ -6,8 +6,8 @@ import type { EpochWindow } from './epoch'
 
 function epochSql(epochWindow: EpochWindow | null | undefined) {
   if (!epochWindow) return sql``
-  return sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
-    epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+  return sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
+    epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
   }`
 }
 

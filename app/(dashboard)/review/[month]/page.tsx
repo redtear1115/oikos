@@ -7,6 +7,7 @@ import {
   loadMonthlyReviewSnapshot,
   loadMonthlyReviewMessages,
 } from '@/lib/db/queries/monthlyReview'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import {
   parseYearMonth,
   currentYearMonthInTaipei,
@@ -31,11 +32,7 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   const today = currentYearMonthInTaipei()
   if (isAfter(reviewedMonth, today)) notFound()
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) redirect('/onboarding')
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)

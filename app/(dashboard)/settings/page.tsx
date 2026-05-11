@@ -6,6 +6,7 @@ import { eq, or } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { getLocale } from '@/lib/i18n/t'
 import { getGroupBalance } from '@/lib/db/queries/balance'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import {
   SettingsContent,
   type PartnerInfo,
@@ -17,13 +18,9 @@ export default async function SettingsPage() {
   const [user, currentLocale] = await Promise.all([getCurrentUser(), getLocale()])
   if (!user) throw new Error('Unauthorized')
 
-  const [[viewerProfile], [group]] = await Promise.all([
+  const [[viewerProfile], group] = await Promise.all([
     db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1),
-    db
-      .select()
-      .from(oikosGroups)
-      .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-      .limit(1),
+    getActiveGroupForUser(user.id),
   ])
   if (!group) throw new Error('No group')
 

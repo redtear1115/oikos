@@ -9,7 +9,7 @@ import {
   type InviteAcceptError,
 } from '@/lib/invite'
 import { createClient } from '@/lib/supabase/server'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, isNull, ne } from 'drizzle-orm'
 
 export type InvitePreview =
   | { ok: true; groupName: string; inviterName: string }
@@ -114,6 +114,23 @@ export async function acceptInvite(token: string): Promise<string> {
       .update(groupEpochs)
       .set({ endedAt: now })
       .where(and(eq(groupEpochs.groupId, invite.groupId), isNull(groupEpochs.endedAt)))
+
+    // Close any leftover open epoch elsewhere where the accepter is the sole
+    // member. Scenario: accepter previously leaveGroup'd into a personal solo
+    // group Y, then accepted this invite. Y's chapter ends at the moment they
+    // re-join — preserves the invariant 「a user has at most one open epoch」.
+    // Scoped to solo (member_a only, no member_b) so we never close a duo
+    // group's epoch — that case shouldn't happen via the documented flow, but
+    // the guard makes the operation impossible to misuse.
+    await tx
+      .update(groupEpochs)
+      .set({ endedAt: now })
+      .where(and(
+        isNull(groupEpochs.endedAt),
+        eq(groupEpochs.memberAId, user.id),
+        isNull(groupEpochs.memberBId),
+        ne(groupEpochs.groupId, invite.groupId),
+      ))
 
     // Open the new duo epoch — member_a stays as is, member_b is the joiner.
     await tx.insert(groupEpochs).values({

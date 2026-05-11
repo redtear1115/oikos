@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { groupEpochs, profiles } from '@/lib/db/schema'
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 /** Cookie key the past-times feature uses to pin the viewer to a prior epoch. */
@@ -104,14 +104,26 @@ export async function getLatestPriorClosedEpoch(groupId: string) {
 }
 
 /**
- * List all epochs on a group, newest first, with the partner profile names
- * inlined for the past-times page UI.
+ * List the epochs on a group that the viewer was a member of, newest first,
+ * with the partner profile names inlined for the past-times page UI.
+ *
+ * Filtering by viewer membership is what makes 過去的時光「個人的」: chapters
+ * the viewer wasn't part of (e.g. the stayer's solo period between a partner
+ * leaving and re-joining) shouldn't surface on the leaver's timeline. Issue
+ * #141 extends this further with a cross-group variant; this only covers
+ * the active group.
  */
-export async function listEpochs(groupId: string): Promise<EpochListItem[]> {
+export async function listEpochs(
+  groupId: string,
+  viewerId: string,
+): Promise<EpochListItem[]> {
   const rows = await db
     .select()
     .from(groupEpochs)
-    .where(eq(groupEpochs.groupId, groupId))
+    .where(and(
+      eq(groupEpochs.groupId, groupId),
+      or(eq(groupEpochs.memberAId, viewerId), eq(groupEpochs.memberBId, viewerId)),
+    ))
     .orderBy(desc(groupEpochs.startedAt))
 
   if (rows.length === 0) return []

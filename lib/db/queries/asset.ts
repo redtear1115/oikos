@@ -2,10 +2,10 @@ import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
 import { assets, carDetails, insuranceDetails, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
-
-const policyHolderProfile = alias(profiles, 'policy_holder_profile')
 import type { FeedRow, FeedKind, TxnCursor } from './transactions'
 import type { EpochWindow } from './epoch'
+
+const policyHolderProfile = alias(profiles, 'policy_holder_profile')
 
 export interface AssetWithCar {
   id: string
@@ -157,8 +157,8 @@ export async function getAssetSummary(
   epochWindow?: EpochWindow | null,
 ): Promise<AssetSummary> {
   const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
       }`
     : sql``
   const rows = await db.execute<{ month_amount: number | null; total_amount: number | null }>(sql`
@@ -192,8 +192,8 @@ export async function getAssetSummariesBatch(
   const out = new Map<string, AssetSummary>()
   if (assetIds.length === 0) return out
   const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
       }`
     : sql``
   const rows = await db.execute<{
@@ -242,8 +242,8 @@ export async function listTransactionsPagedForAsset(
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
     : sql``
   const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
       }`
     : sql``
 
