@@ -38,19 +38,6 @@ interface InsuranceData {
   notes: string | null
 }
 
-/**
- * #142 — Pick the left-rail tint by framing.
- *   savings    → gold
- *   protection → blue (multi-year + single-year, both non-car)
- *   car        → base insurance tint (sticks with the car-related green family)
- */
-function tintForFraming(insuranceType: string | null): string {
-  const framing = getFramingGroup(insuranceType)
-  if (framing === 'savings') return 'var(--asset-tint-insurance-savings)'
-  if (framing === 'car') return 'var(--asset-tint-insurance)'
-  return 'var(--asset-tint-insurance-protection)'
-}
-
 interface Props {
   id: string
   name: string
@@ -81,7 +68,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const [lapseOpen, setLapseOpen] = useState(false)
   const [renewPolicyNo, setRenewPolicyNo] = useState('')
 
-  const tint = tintForFraming(data.insuranceType)
+  const tint = 'var(--asset-tint-insurance)'
   const framing = getFramingGroup(data.insuranceType)
   const today = todayLocalDate()
   const startsAt = parseDate(data.startsAt)
