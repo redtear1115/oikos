@@ -7,6 +7,7 @@
  */
 
 import type { SplitType } from '@/lib/balance'
+import type { RecordStatus } from '@/lib/validators'
 
 export interface TxnRowPayload {
   id: string
@@ -18,6 +19,7 @@ export interface TxnRowPayload {
   description: string
   category: string
   notes: string | null
+  status: RecordStatus
   transactedAt: string  // ISO
   createdAt: string     // ISO
   deletedAt: string | null  // ISO when soft-deleted

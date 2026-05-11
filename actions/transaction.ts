@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import { validateTransactionInput } from '@/lib/validators'
+import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
@@ -24,6 +24,7 @@ export interface CreateTransactionInput {
   assetId?: string | null
   notes?: string | null
   splitRatioA?: number | null
+  status?: RecordStatus       // defaults to 'settled' (issue #49)
 }
 
 export async function createTransaction(
@@ -77,6 +78,7 @@ export async function createTransaction(
         description: validated.description,
         category: validated.category,
         notes: validated.notes,
+        status: validated.status,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
         splitRatioA: validated.splitRatioA,
@@ -149,6 +151,7 @@ export interface EditTransactionInput {
   assetId?: string | null
   notes?: string | null
   splitRatioA?: number | null
+  status?: RecordStatus
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
@@ -225,6 +228,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         description: validated.description,
         category: validated.category,
         notes: validated.notes,
+        status: validated.status,
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
         splitRatioA: validated.splitRatioA,
@@ -257,6 +261,7 @@ export interface PagedTxnRow {
   fuelLogId: string | null  // non-null when row was created by a FuelLog dual-write
   notes: string | null  // shared memo on a CashTransaction; null for settlements/income/empty
   splitRatioA: number | null
+  status: RecordStatus  // settlements/income are always 'settled'; only CashTransactions can be 'pending'
 }
 
 export async function loadMoreTransactions(
@@ -312,6 +317,7 @@ export async function loadMoreTransactions(
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
     splitRatioA: r.splitRatioA ?? null,
+    status: r.status ?? 'settled',
   }))
 }
 
@@ -352,6 +358,7 @@ export async function loadMoreFeedAll(
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
     splitRatioA: r.splitRatioA ?? null,
+    status: r.status ?? 'settled',
   }))
 }
 
@@ -390,6 +397,7 @@ export async function loadMoreTransactionsForAsset(
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes ?? null,
     splitRatioA: r.splitRatioA ?? null,
+    status: r.status ?? 'settled',
   }))
 }
 

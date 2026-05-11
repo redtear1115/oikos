@@ -126,6 +126,7 @@ export function AssetDetailClient({
         transactedAt: tx.transactedAt,
         assetId,
         notes: tx.notes,
+        status: tx.status,
       })
     }
   }

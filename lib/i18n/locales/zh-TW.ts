@@ -135,6 +135,12 @@ export type Translations = {
     date: string
     notesLabel: string
     notesPlaceholder: string
+    statusLabel: string
+    statusSettled: string
+    statusPending: string
+    /** Subtle hint shown under the toggle when 'pending' is selected, explaining
+     *  the row is excluded from the shared balance until promoted to settled. */
+    statusPendingHint: string
     deleteOne: string
     deleteConfirmTitle: string
     errors: {
@@ -142,6 +148,11 @@ export type Translations = {
       descriptionRequired: string
       noPartner: string
     }
+  }
+
+  compactRow: {
+    /** Small badge appended to a transaction row when its status is 'pending'. */
+    pendingBadge: string
   }
 
   incomeSheet: {
@@ -1073,6 +1084,10 @@ export const zhTW: Translations = {
     date: '日期',
     notesLabel: '備註（選填，兩人都看得到）',
     notesPlaceholder: '寫一句留給對方的話，或之後想記得的事',
+    statusLabel: '狀態',
+    statusSettled: '已扣款',
+    statusPending: '待扣款',
+    statusPendingHint: '待扣款不會算進兩個人的結算，等實際扣款後改為已扣款。',
     deleteOne: '刪除這筆',
     deleteConfirmTitle: '刪除這筆紀錄？',
     errors: {
@@ -1080,6 +1095,10 @@ export const zhTW: Translations = {
       descriptionRequired: '請輸入描述',
       noPartner: '伴侶尚未加入',
     },
+  },
+
+  compactRow: {
+    pendingBadge: '待扣款',
   },
 
   incomeSheet: {

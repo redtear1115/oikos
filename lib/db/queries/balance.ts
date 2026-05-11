@@ -36,7 +36,9 @@ export async function recalcGroupBalance(
         END
       ), 0)
       FROM "CashTransactions"
-      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      WHERE group_id = ${groupId}
+        AND deleted_at IS NULL
+        AND status = 'settled'
     ) + (
       -- Settlement deltas (matches lib/balance.ts settlementDelta):
       -- paid_by = member_a (A paid B) → +amount (B now indebted to A)

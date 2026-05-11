@@ -133,6 +133,10 @@ export const en: Translations = {
     date: 'Date',
     notesLabel: 'Note (optional, visible to both of you)',
     notesPlaceholder: 'Leave a line for your partner, or something to remember later',
+    statusLabel: 'Status',
+    statusSettled: 'Settled',
+    statusPending: 'Pending',
+    statusPendingHint: "Pending entries don't change the shared balance until you mark them settled.",
     deleteOne: 'Delete this entry',
     deleteConfirmTitle: 'Delete this entry?',
     errors: {
@@ -140,6 +144,10 @@ export const en: Translations = {
       descriptionRequired: 'Enter a description',
       noPartner: "Partner hasn't joined yet",
     },
+  },
+
+  compactRow: {
+    pendingBadge: 'Pending',
   },
 
   incomeSheet: {

@@ -20,6 +20,7 @@ export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
     assetId: r.assetId,
     fuelLogId: null,
     notes: null,
+    status: 'settled',
   }
 }
 

@@ -119,12 +119,13 @@ export async function listInsurancePaymentsPaged(
     asset_id: string | null
     fuel_log_id: string | null
     notes: string | null
+    status: 'settled' | 'pending'
     transacted_at: Date | string
     created_at: Date | string
   }>(sql`
     SELECT
       id, amount, split_type, split_ratio_a, description, category, paid_by,
-      asset_id, fuel_log_id, notes, transacted_at, created_at
+      asset_id, fuel_log_id, notes, status, transacted_at, created_at
     FROM "CashTransactions"
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
@@ -145,6 +146,7 @@ export async function listInsurancePaymentsPaged(
     assetId: r.asset_id,
     fuelLogId: r.fuel_log_id ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
     transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
     createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
   }))
