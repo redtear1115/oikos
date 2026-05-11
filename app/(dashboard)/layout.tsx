@@ -7,6 +7,7 @@ import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
 import { OfflineBanner } from './_components/OfflineBanner'
+import { ReconnectRefresh } from './_components/ReconnectRefresh'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
@@ -65,6 +66,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <RealtimeProvider groupId={group.id}>
           <OfflineLifecycle />
           <OfflineBanner />
+          <ReconnectRefresh />
           <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
             {children}
           </div>
