@@ -273,7 +273,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
-        setInsPolicyHolderUserId(initial.insPolicyHolderUserId ?? null)
+        // #142 — Legacy rows (created before 0032) have NULL policy_holder.
+        // Default to viewer on prefill so editing fills it in gracefully, same
+        // as the create flow. User can still flip to partner via the toggle.
+        setInsPolicyHolderUserId(initial.insPolicyHolderUserId ?? viewer.id)
         setInsInsurer(initial.insInsurer ?? '')
         setInsPolicyNo(initial.insPolicyNo ?? '')
         setInsPremium(initial.insAnnualPremium?.toString() ?? '')
