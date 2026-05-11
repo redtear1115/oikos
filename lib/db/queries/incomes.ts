@@ -198,8 +198,8 @@ export async function monthlyIncomeStatsByCategory(
 ): Promise<IncomeCategoryStatRow[]> {
   if (filter?.cutAll) return []
   const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
       }`
     : sql``
 
