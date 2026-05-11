@@ -22,6 +22,7 @@ remaining_issues: 後續視使用率再決定是否預設啟用；離線寫入 /
 - ✅ Sign-out cache clear：[LogoutButton](../../../app/%28dashboard%29/settings/_components/LogoutButton.tsx) 在呼叫 server action 前 `caches.delete('dynamic-v1')`
 - ✅ RealtimeProvider 離線靜音：聽 `online` / `offline` 事件呼叫 `realtime.disconnect()` / `connect()` 暫停 reconnect 迴圈
 - ✅ Records 換頁離線 empty state：[TransactionFeed](../../../app/%28dashboard%29/_components/TransactionFeed.tsx) 在 offline 時把「載入更多」換為文字提示
+- ✅ 重新上線 / PWA 回前景自動 refresh（v0.15.0, closes #126）：[ReconnectRefresh](../../../app/%28dashboard%29/_components/ReconnectRefresh.tsx) 監聽 `online` 與 `visibilitychange`，重新上線時無條件 `router.refresh()`；在 PWA 從背景回前景且距上次 refresh 超過 30s 時補一次 refresh — 解決 iOS PWA standalone 沒有下拉刷新、Router Cache + Serwist NetworkFirst 在弱網後卡住舊資料、需要關掉 app 重開才恢復的問題
 
 ---
 
