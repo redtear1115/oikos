@@ -11,6 +11,58 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.15.0] - 2026-05-12
+
+主題：**離開也保留陪伴．pending 收斂**——把「兩人關係未必恆久」這件事正式收進 schema 與 UX：member_a/b 可換位、可離開、過往 chapter（epoch）不消失只是分章；同時把日常記帳的「賒帳 / 待扣款」獨立成 record status，不再混入 balance；外加保險愛物強化、PWA 離線回前景自動刷新、`/records` 結構化篩選器與 Inbox 概念註解。
+
+完整 diff：[v0.14.2...v0.15.0](https://github.com/redtear1115/oikos/compare/v0.14.2...v0.15.0)
+
+### Added
+
+- **Pending / settled record status**（PR #122，closes #49）：CashTransactions 新增 `status: 'pending' | 'settled'`，pending 紀錄在 feed 用低 opacity + 「待扣款」badge 呈現，不計入 GroupBalance。設計理由：信用卡簽完未過帳、預授權、IOU 等都是「已承諾但未扣款」，跟「已實際移動金錢」分開計算才不會誤判餘額。預設 `'settled'`、無需 backfill。AddSheet / 編輯 sheet / filter sheet 全鏈路串通，i18n 4 語齊備。
+- **結構化篩選器 on `/records`**（PR #124，closes #50）：v1 scope 鎖在「date range × 愛物 multi-select × 收入分類 multi-select」，URL-synced（`?start=&end=&assets=&incomeCategories=`）可分享連結。Header 排版重整：「篩選」按鈕緊鄰 tab 列、`⚙ 定期` 收進 popover；stats card 同步吃同一組 filter + date range。設計理由：補的是 CWMoney 砍掉「按帳戶 + 分類篩選」後用戶反彈的設計倒退；不等 records 累積到上千筆才發現「找不到了」。詳見 [structured-filter-design.md](docs/superpowers/specs/structured-filter-design.md)。
+- **離開 group / 回到 solo mode，保留個人資料**（#79，4 個 PR：#123 / #130 / #135 / #134）：
+  - **PR #123** — schema + server actions：`OikosGroups` 加 pending swap 三欄（`pending_swap_proposed_by` / `pending_swap_proposed_at` / `pending_swap_id`）+ `current_epoch_started_at`，理由是 `member_a NOT NULL` 約束讓 a 不能直接離開、必須先 swap 角色。新增 `swapMembers()` / `leaveGroup()` 兩支 server action。
+  - **PR #130** — Settings UI：danger zone「離開兩人帳本」入口 + 4 卡片 flow（確認資料分配 → 確認離開意願 → swap proposal banner → final confirm）。
+  - **PR #135** — Chapter slicing（GroupEpochs）：每段關係期間 = 一個 epoch。`/records` / 月度 stats / dashboard 預設只看當前 chapter；新增 `/past-times` 頁讓使用者翻回過去的章節（history table + viewer-membership filter，PR #138 補 fix：epoch 只列「viewer 當時是該 group member」的）。新增 `GroupEpochs` table、`GroupBalanceEpochs` snapshot，並把 cashTransactions / settlements / incomeTransactions epoch-scope 化。
+  - **PR #134** — Post-leave UX：對方離開後 dashboard 顯示「partner-left」卡片；leave 後回 solo mode 顯示「welcome-solo」卡片，邀請使用者繼續一個人的紀錄。
+  - 後續修補：PR #138 fix `/past-times` epoch viewer-membership 篩選；commit `f0552c6` 強制 single-open-epoch invariant；commit `31c3d80` centralize active-group lookup via `getActiveGroupForUser()`；commit `e076d68` corrective backfill for migration 0029 sentinel（先前 `DEFAULT now()` 把所有舊紀錄誤踢出 current epoch）。
+- **保險愛物強化（4 件相關工作）**：
+  - **PR #129**（closes #127）：保險 asset card type-specific behaviour——險種家族對應不同 badge / 進度條 / framing；新增 `reminder_days_before` 欄位讓單年期保單可自訂續保紅燈天數（預設 30）。
+  - **PR #133**（closes #132）：儲蓄／還本險詳情頁加「分紅」與「生存金」入帳分類，記為「已拿回」並反映在 `SavingsView` 累計繳 vs 拿回比較。
+  - **PR #143**（closes #142）：要保人（policy holder）關聯 Profile（FK to `Profiles`），自動同步 displayName + 頭像；被保人（insured）保留 text 欄位（可填家屬 / group 外的人）。設計差異理由：要保人是 group 內成員、政策可隨他離開時走 → 用 FK 維持關聯；被保人不限 group 成員、free text 才不卡。編輯 prefill 預設值在 `policy_holder` 為 NULL 時 fallback 到 viewer。
+- **`/past-times` 頁面**（PR #135 含）：列出 group 過去的 chapter（epoch）+ 對應 timestamp range，讓離開／swap 後使用者仍能翻回看「我們以前的紀錄」。
+- **`AibutsuHintCard` mode-aware**（PR #134 含）：solo 模式不再顯示「邀請伴侶」勾子；改為陪伴 solo 使用者繼續記。
+- **Inbox layer 概念註解**（PR #144，closes #101）：新增 [inbox-layer-design.md](docs/superpowers/specs/inbox-layer-design.md) spec 統一「非使用者親手建立」資料（cron 產生的 pending recurring expense、未來 LINE 解析、信用卡帳單匯入）的概念邊界。v0.15.0 只 ship 概念註解；v0.16.0 才會做 `TransactionInbox` schema migration + Inbox UI。
+
+### Fixed
+
+- **PWA 離線回前景未自動 refresh**（PR #125, #128，closes #126）：iOS PWA 切回前景或 `online` 事件觸發時，現在會自動 `router.refresh()`，把離線時 cache 的 SW 回應換成最新資料。修這個前 iOS 使用者要手動 pull-to-refresh 才會看到新紀錄。
+- **保險詳情頁 contract progress bar hydration mismatch**（PR #136，closes #137）：SSR 與 client 計算 contract-progress 寬度時不同步造成的 hydration warning；改在 client `useEffect` 後再算寬度。
+- **Records 編輯 sheet 帶錯 split_ratio 給單身 group**：commit `8c2a000` 在 `leaveGroup` CASE 中處理 `movingAssetIds` empty 的情境。
+- **Drizzle raw SQL casts 對 Date 參數**：commit `f249729` 把 epoch Date 參數 stringify 後再 cast，避免 prepared-statement type 推斷錯誤。
+
+### Internal
+
+- **Doc-keeper sweep**：CLAUDE.md spec table 加 `inbox-layer-design.md` row；`structured-filter-design.md` frontmatter「PR #TBD」改為 PR #124；清掉 6 條已 merge 的 worktree（amazing-keller / hardcore-chaplygin / hungry-dubinsky / pedantic-swirles / serene-northcutt / trusting-ritchie）+ 對應 local branches（5 條 `claude/*`）。
+- **`getActiveGroupForUser()` centralised**（commit `31c3d80`）：分散在多支 server action 的 active-group lookup 收斂成單一 helper，為 epoch / swap / leave flow 提供一致的 viewer-aware group 解析。
+- **Single-open-epoch invariant**（commit `f0552c6`）：在 accept invitation + layout pick 兩個路徑強制每個 group 只能有一個 open epoch，防止 race condition 下產生多個並存 chapter。
+- **Solo-mode inline 新增按鈕移除**（commit `aeb8470`）：dashboard solo mode 的 inline「新增一筆」按鈕拿掉、改由 FAB 統一入口；簡化 hero card 排版。
+- **Insurance subtype tint revert**（commit `52087d9`）：v0.15.0 開發中嘗試過 framing-based subtype tint，最終 revert 改回 type-tinted border + avatar（commit `15b7564`）。
+
+### Migration
+
+Dev / prod 兩邊都要手動跑（`npm run db:migrate` 視 `.env.local` 指向）：
+
+- **`drizzle/0028_record_status.sql`**：`CashTransactions` 加 `status` enum；預設 `'settled'` 不需 backfill。
+- **`drizzle/0029_leave_group_swap.sql`**：`OikosGroups` 加 4 欄（pending swap × 3 + `current_epoch_started_at`）。**重要**：原始 `DEFAULT now()` 在 migrate 當下把所有 row 印上 migrate 時間，導致舊資料全被踢出 current epoch；由 0032 修正。
+- **`drizzle/0030_group_epochs.sql`**：新增 `GroupEpochs` + `GroupBalanceEpochs` 兩個 table；初始化每個 group 一個 epoch 從 0029 的 `current_epoch_started_at` 起算。
+- **`drizzle/0031_insurance_enhancements.sql`**：`InsuranceDetails` 加 `reminder_days_before` integer 欄位（預設 30）。
+- **`drizzle/0032_epoch_backfill_sentinel.sql`**：**校正性 migration**——把 0029/0030 誤踢出 current epoch 的歷史紀錄重新納入；不跑這個會看不到舊資料。
+- **`drizzle/0033_insurance_policy_holder.sql`**：`InsuranceDetails` 加 `policy_holder` 欄位（nullable FK to `Profiles`）。
+
+無 realtime publication / pg_cron job 變動。
+
 ## [0.14.2] - 2026-05-11
 
 主題：**紀錄可以更貼手**——v0.14.1 上完之後把當時暫時 revert 出來的兩件小事 ship 回去：在 `/records` 月度統計卡點 detail bar 直接套用 filter 到 transaction feed（drill-down，#102），AddSheet 描述欄位輸入時即時 surface household 歷史紀錄做 inline suggestion（#113）。
@@ -479,7 +531,9 @@ ALTER TABLE "CashTransactions" ADD COLUMN "notes" text;
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/redtear1115/oikos/compare/v0.14.2...v0.15.0
+[0.14.2]: https://github.com/redtear1115/oikos/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/redtear1115/oikos/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/redtear1115/oikos/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/redtear1115/oikos/compare/v0.13.0...v0.13.1

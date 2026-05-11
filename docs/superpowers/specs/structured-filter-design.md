@@ -1,6 +1,6 @@
 ---
 status: shipped
-shipped_in: v0.15.0（PR #TBD，closes #50；v1 scope：date range + 愛物 multi-select + URL-synced + 分享連結）
+shipped_in: v0.15.0（PR #124，closes #50；v1 scope：date range + 愛物 multi-select + URL-synced + 分享連結）
 related_issues: "#50, #22 (free-text 互補), #37 (CSV 匯出搭配)"
 note: 補的是 CWMoney 砍掉「按帳戶 + 分類篩選」後用戶反彈的設計倒退；Futari 主動補上、不等 records 累積到上千筆才發現「找不到了」。
 ---
