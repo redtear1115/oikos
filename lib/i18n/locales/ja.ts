@@ -352,6 +352,14 @@ export const ja: Translations = {
     },
   },
 
+  postLeave: {
+    partnerLeftHeading: '⟂ {partner} が離れました',
+    partnerLeftBody: 'ここまでの記録はすべて残っています。ここからは、ひとりの時間です。',
+    welcomeSoloHeading: 'おかえり、ひとりの時間に',
+    welcomeSoloBody: '家計簿はぜんぶ、あなたと一緒にここに来ました。これから、ゆっくりで大丈夫。',
+    dismissAria: '閉じる',
+  },
+
   pastTimes: {
     title: '過ぎた時間',
     back: '戻る',

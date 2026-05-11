@@ -1,11 +1,13 @@
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups } from '@/lib/db/schema'
+import { oikosGroups, profiles } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { getGroupBalance } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import { resolveViewerEpochWindow, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
+import { PartnerLeftCard } from './_components/PartnerLeftCard'
+import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
 import {
@@ -42,6 +44,28 @@ export default async function DashboardPage() {
   // Resolve once and pass to every read; keeps dashboard, banner, and feed
   // cohesive when the viewer is browsing a past epoch.
   const epochWindow = await resolveViewerEpochWindow(group.id)
+
+  // Post-leave cards (PR 4/4): only when not pinned to a past epoch (we want
+  // these on the live current view, not on a historical snapshot).
+  // - Stayer detection: viewer's group is solo *now* but the most-recent
+  //   closed epoch had a memberB. That memberB is the partner who left.
+  // - Leaver detection is fully client-side via a localStorage flag set by
+  //   LeaveGroupFlow on success — no SSR data needed beyond the group id.
+  let partnerLeftProps: { partnerName: string; currentEpochId: string } | null = null
+  if (!epochWindow.isPast && !group.memberB && epochWindow.epochId) {
+    const prior = await getLatestPriorClosedEpoch(group.id)
+    if (prior && prior.memberBId && prior.memberAId === user.id) {
+      const [leaverProfile] = await db
+        .select({ displayName: profiles.displayName })
+        .from(profiles)
+        .where(eq(profiles.id, prior.memberBId))
+        .limit(1)
+      partnerLeftProps = {
+        partnerName: leaverProfile?.displayName ?? '',
+        currentEpochId: epochWindow.epochId,
+      }
+    }
+  }
 
   const now = new Date()
   const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -154,6 +178,15 @@ export default async function DashboardPage() {
 
   return (
     <>
+      {partnerLeftProps && (
+        <PartnerLeftCard
+          partnerName={partnerLeftProps.partnerName}
+          currentEpochId={partnerLeftProps.currentEpochId}
+        />
+      )}
+      {!partnerLeftProps && !group.memberB && !epochWindow.isPast && (
+        <WelcomeSoloCard groupId={group.id} />
+      )}
       {bannerProps && (
         <MonthlyReviewBanner
           reviewedMonth={bannerProps.reviewedMonth}

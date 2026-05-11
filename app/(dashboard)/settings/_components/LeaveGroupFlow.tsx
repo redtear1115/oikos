@@ -87,8 +87,17 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        await leaveGroup()
-        // On success, the user's group has changed. Refresh + bounce to dashboard.
+        const { groupId: newGroupId } = await leaveGroup()
+        // Mark the brand-new solo group so WelcomeSoloCard can surface a
+        // dismissible "歡迎回到一個人" card on the leaver's first dashboard
+        // render. Done client-side because the new groupId only exists after
+        // the server action resolves, before the navigation lands.
+        try {
+          window.localStorage.setItem('futari_just_left_' + newGroupId, '1')
+        } catch {
+          // Private-browsing localStorage failure: the welcome card simply
+          // won't show. Not worth blocking the navigation.
+        }
         router.refresh()
         router.push('/dashboard')
       } catch (e) {

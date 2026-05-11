@@ -352,6 +352,14 @@ export const en: Translations = {
     },
   },
 
+  postLeave: {
+    partnerLeftHeading: '⟂ {partner} has left',
+    partnerLeftBody: "Everything until now is still here. From this point on, this ledger is just for you.",
+    welcomeSoloHeading: 'Welcome back to one person',
+    welcomeSoloBody: 'Your ledger came with you, all of it. Take your time from here.',
+    dismissAria: 'Dismiss',
+  },
+
   pastTimes: {
     title: 'Past chapters',
     back: 'Back',
