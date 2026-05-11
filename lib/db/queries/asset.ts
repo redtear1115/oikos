@@ -1,6 +1,9 @@
 import { db } from '@/lib/db/client'
-import { assets, carDetails, insuranceDetails } from '@/lib/db/schema'
+import { alias } from 'drizzle-orm/pg-core'
+import { assets, carDetails, insuranceDetails, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
+
+const insuredProfile = alias(profiles, 'insured_profile')
 import type { FeedRow, FeedKind, TxnCursor } from './transactions'
 import type { EpochWindow } from './epoch'
 
@@ -29,6 +32,9 @@ export interface AssetWithCar {
   insuranceType: string | null
   insurancePolicyNumber: string | null
   insuranceInsured: string | null
+  insuranceInsuredUserId: string | null
+  insuranceInsuredDisplayName: string | null
+  insuranceInsuredAvatarUrl: string | null
   insuranceAnnualPremium: number | null
   insuranceSumInsured: number | null
   insuranceStartsAt: string | null
@@ -64,6 +70,9 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceType: insuranceDetails.insuranceType,
       insurancePolicyNumber: insuranceDetails.policyNumber,
       insuranceInsured: insuranceDetails.insured,
+      insuranceInsuredUserId: insuranceDetails.insuredUserId,
+      insuranceInsuredDisplayName: insuredProfile.displayName,
+      insuranceInsuredAvatarUrl: insuredProfile.avatarUrl,
       insuranceAnnualPremium: insuranceDetails.annualPremium,
       insuranceSumInsured: insuranceDetails.sumInsured,
       insuranceStartsAt: insuranceDetails.startsAt,
@@ -74,6 +83,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
+    .leftJoin(insuredProfile, eq(insuredProfile.id, insuranceDetails.insuredUserId))
     .where(and(
       eq(assets.groupId, groupId),
       isNull(assets.deletedAt),
@@ -110,6 +120,9 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceType: insuranceDetails.insuranceType,
       insurancePolicyNumber: insuranceDetails.policyNumber,
       insuranceInsured: insuranceDetails.insured,
+      insuranceInsuredUserId: insuranceDetails.insuredUserId,
+      insuranceInsuredDisplayName: insuredProfile.displayName,
+      insuranceInsuredAvatarUrl: insuredProfile.avatarUrl,
       insuranceAnnualPremium: insuranceDetails.annualPremium,
       insuranceSumInsured: insuranceDetails.sumInsured,
       insuranceStartsAt: insuranceDetails.startsAt,
@@ -120,6 +133,7 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
+    .leftJoin(insuredProfile, eq(insuredProfile.id, insuranceDetails.insuredUserId))
     .where(and(eq(assets.id, id), eq(assets.groupId, groupId)))
     .limit(1)
   return (rows[0] as AssetWithCar) ?? null

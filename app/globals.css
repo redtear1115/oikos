@@ -29,6 +29,10 @@
   --asset-tint-plant:     #DCE7D6;
   --asset-tint-insurance: #DDE5DC;
 
+  /* Insurance subtype rails (#142). Savings 金 / Protection 藍 / Car 沿用 base. */
+  --asset-tint-insurance-savings:    #E8D4A8;
+  --asset-tint-insurance-protection: #D6E0EB;
+
   /* Savings (儲蓄險) badge — shares the muted-green family with insurance tint. */
   --saving-soft: #DDE5DC;
   --saving:      #5A7A66;

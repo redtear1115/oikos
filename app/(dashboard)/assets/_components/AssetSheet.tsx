@@ -7,6 +7,7 @@ import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBack
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -73,6 +74,7 @@ export interface AssetSheetInitial {
   // Insurance-specific
   insKind?: string | null
   insInsured?: string | null
+  insInsuredUserId?: string | null
   insInsurer?: string | null
   insPolicyNo?: string | null
   insAnnualPremium?: number | null
@@ -186,6 +188,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
+  // #142 — null = legacy text fallback (input visible); otherwise viewer/partner Profile id.
+  // Defaults to viewer.id on create so the common case (insuring oneself) is one-tap.
+  const { viewer, partner } = useMember()
+  const [insInsuredUserId, setInsInsuredUserId] = useState<string | null>(viewer.id)
   const [insInsurer, setInsInsurer] = useState('')
   const [insPolicyNo, setInsPolicyNo] = useState('')
   const [insPremium, setInsPremium] = useState('')
@@ -266,6 +272,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
+        setInsInsuredUserId(initial.insInsuredUserId ?? null)
         setInsInsurer(initial.insInsurer ?? '')
         setInsPolicyNo(initial.insPolicyNo ?? '')
         setInsPremium(initial.insAnnualPremium?.toString() ?? '')
@@ -329,6 +336,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       // Insurance resets
       setInsKind('medical')
       setInsInsured('')
+      setInsInsuredUserId(viewer.id)
       setInsInsurer('')
       setInsPolicyNo('')
       setInsPremium('')
@@ -344,7 +352,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setError('')
     const t = setTimeout(() => nameInputRef.current?.focus(), 350)
     return () => clearTimeout(t)
-  }, [open, initial])
+  }, [open, initial, viewer.id])
 
   const isCar = selectedType === 'car'
 
@@ -451,6 +459,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             name: name.trim(),
             kind: insKind || null,
             insured: insInsured.trim() || null,
+            insuredUserId: insInsuredUserId,
             insurer: insInsurer.trim() || null,
             policyNo: insPolicyNo.trim() || null,
             annualPremium: insPremium ? parseInt(insPremium, 10) : null,
@@ -583,6 +592,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     // Insurance resets
     setInsKind('medical')
     setInsInsured('')
+    setInsInsuredUserId(viewer.id)
     setInsInsurer('')
     setInsPolicyNo('')
     setInsPremium('')
@@ -1260,9 +1270,40 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
               </Field>
 
               <Field label={ts.insurance.insured}>
-                <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
-                  placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)' }} />
+                {/* #142 — Pick from group members first (one tap = me/partner).
+                    「其他」reveals the legacy text fallback for non-members
+                    (child / parent / anyone outside the group). */}
+                <div className="flex gap-1 rounded-xl p-1 mb-2" style={{ background: 'rgba(58,36,25,0.05)' }}>
+                  {[
+                    { id: viewer.id, label: t.common.me },
+                    ...(partner ? [{ id: partner.id, label: partner.displayName ?? t.common.partner }] : []),
+                    { id: null, label: ts.insurance.insuredOther },
+                  ].map(opt => {
+                    const active = insInsuredUserId === opt.id
+                    return (
+                      <button
+                        key={opt.id ?? 'other'}
+                        type="button"
+                        onClick={() => {
+                          setInsInsuredUserId(opt.id)
+                          if (opt.id !== null) setInsInsured('')
+                        }}
+                        className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
+                          active
+                            ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
+                            : 'bg-transparent text-[var(--ink-2)]'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {insInsuredUserId === null && (
+                  <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
+                    placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+                    style={{ color: 'var(--ink)' }} />
+                )}
               </Field>
 
               <Field label={ts.insurance.insurer}>

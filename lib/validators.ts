@@ -661,6 +661,7 @@ export interface InsuranceInput {
   name: string
   kind?: string | null
   insured?: string | null
+  insuredUserId?: string | null
   insurer?: string | null
   policyNo?: string | null
   annualPremium?: number | null
@@ -679,6 +680,7 @@ export interface ValidatedInsuranceInput {
   name: string
   kind: string | null
   insured: string | null
+  insuredUserId: string | null
   insurer: string | null
   policyNo: string | null
   annualPremium: number | null
@@ -702,6 +704,11 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   const insured = input.insured?.trim() || null
   const insurer = input.insurer?.trim() || null
   const policyNo = input.policyNo?.trim() || null
+
+  const insuredUserId = input.insuredUserId?.trim() || null
+  if (insuredUserId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(insuredUserId)) {
+    throw new Error('被保人格式錯誤')
+  }
 
   let annualPremium: number | null = null
   if (input.annualPremium !== null && input.annualPremium !== undefined) {
@@ -745,7 +752,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   }
 
   return {
-    name, kind, insured, insurer, policyNo,
+    name, kind, insured, insuredUserId, insurer, policyNo,
     annualPremium, sumInsured, payCycle,
     startsAt, endsAt, termYears,
     vehicleId: input.vehicleId?.trim() || null,

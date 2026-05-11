@@ -26,6 +26,9 @@ import { renewInsurance, lapseInsurance } from '@/actions/asset'
 interface InsuranceData {
   insuranceType: string | null
   insured: string | null
+  insuredUserId: string | null
+  insuredDisplayName: string | null
+  insuredAvatarUrl: string | null
   annualPremium: number | null
   sumInsured: number | null
   startsAt: string | null
@@ -33,6 +36,19 @@ interface InsuranceData {
   termYears: number | null
   reminderDaysBefore: number
   notes: string | null
+}
+
+/**
+ * #142 — Pick the left-rail tint by framing.
+ *   savings    → gold
+ *   protection → blue (multi-year + single-year, both non-car)
+ *   car        → base insurance tint (sticks with the car-related green family)
+ */
+function tintForFraming(insuranceType: string | null): string {
+  const framing = getFramingGroup(insuranceType)
+  if (framing === 'savings') return 'var(--asset-tint-insurance-savings)'
+  if (framing === 'car') return 'var(--asset-tint-insurance)'
+  return 'var(--asset-tint-insurance-protection)'
 }
 
 interface Props {
@@ -65,7 +81,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const [lapseOpen, setLapseOpen] = useState(false)
   const [renewPolicyNo, setRenewPolicyNo] = useState('')
 
-  const tint = 'var(--asset-tint-insurance)'
+  const tint = tintForFraming(data.insuranceType)
   const framing = getFramingGroup(data.insuranceType)
   const today = todayLocalDate()
   const startsAt = parseDate(data.startsAt)
@@ -116,6 +132,12 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   }
 
   const i = t.assets.insuranceList
+
+  // #142 — Display name preference: Profile.display_name > legacy text > 「—」.
+  // Legacy text stays as fallback so existing policies without insured_user_id
+  // wired up don't suddenly read 「—」 after the upgrade.
+  const insuredName = data.insuredDisplayName ?? data.insured ?? null
+  const insuredInitial = insuredName?.trim().charAt(0).toUpperCase() ?? null
 
   // Right-aligned secondary chip showing state for the kind.
   const renderBadge = () => {
@@ -206,11 +228,32 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 min-w-0">
         <div className="text-body font-semibold truncate">{name}</div>
-        {data.insured && (
-          <div className="text-xs truncate ml-auto" style={{ color: 'var(--ink-3)' }}>
-            {i.insuredPrefix.replace('{name}', data.insured)}
+        <div className="flex items-center gap-1.5 ml-auto shrink-0">
+          {data.insuredAvatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.insuredAvatarUrl}
+              alt=""
+              className="w-4 h-4 rounded-full object-cover"
+              style={{ border: '1px solid var(--hairline)' }}
+            />
+          ) : insuredInitial ? (
+            <div
+              className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-semibold"
+              style={{
+                background: 'var(--accent-soft)',
+                color: 'var(--ink-2)',
+                border: '1px solid var(--hairline)',
+              }}
+              aria-hidden
+            >
+              {insuredInitial}
+            </div>
+          ) : null}
+          <div className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
+            {i.insuredPrefix.replace('{name}', insuredName ?? '—')}
           </div>
-        )}
+        </div>
       </div>
       <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
         {renderBadge()}

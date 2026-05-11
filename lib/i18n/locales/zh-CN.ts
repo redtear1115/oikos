@@ -662,6 +662,7 @@ export const zhCN: Translations = {
       kindSavings: '储蓄',
       insured: '被保人',
       insuredPlaceholder: '小元',
+      insuredOther: '其他',
       insurer: '保险公司',
       insurerPlaceholder: '南山人寿',
       policyNo: '保单号',
