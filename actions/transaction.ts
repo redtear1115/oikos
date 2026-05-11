@@ -9,6 +9,7 @@ import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
@@ -317,7 +318,8 @@ export async function loadMoreTransactions(
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill, dateRange)
+  const epochWindow = await resolveViewerEpochWindow(group.id)
+  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
@@ -361,7 +363,8 @@ export async function loadMoreFeedAll(
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill, resolved, dateRange)
+  const epochWindow = await resolveViewerEpochWindow(group.id)
+  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill, resolved, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
@@ -400,7 +403,8 @@ export async function loadMoreTransactionsForAsset(
     .limit(1)
   if (!group) throw new Error('找不到家計簿')
 
-  const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit)
+  const epochWindow = await resolveViewerEpochWindow(group.id)
+  const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit, epochWindow)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

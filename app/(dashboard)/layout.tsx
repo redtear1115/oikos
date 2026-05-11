@@ -7,9 +7,11 @@ import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
 import { OfflineBanner } from './_components/OfflineBanner'
+import { PastEpochBanner } from './_components/PastEpochBanner'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -23,10 +25,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!group) redirect('/onboarding')
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
-  const [profilesRows, t, locale] = await Promise.all([
+  const [profilesRows, t, locale, epochWindow] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
     getLocale(),
+    resolveViewerEpochWindow(group.id),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)
@@ -65,6 +68,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <RealtimeProvider groupId={group.id}>
           <OfflineLifecycle />
           <OfflineBanner />
+          {epochWindow.isPast && epochWindow.endedAt && (
+            <PastEpochBanner
+              startedAt={epochWindow.startedAt.toISOString()}
+              endedAt={epochWindow.endedAt.toISOString()}
+              locale={locale}
+            />
+          )}
           <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
             {children}
           </div>

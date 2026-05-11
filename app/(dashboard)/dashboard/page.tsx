@@ -5,6 +5,7 @@ import { eq, or } from 'drizzle-orm'
 import { getGroupBalance } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
+import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
 import {
@@ -38,6 +39,10 @@ export default async function DashboardPage() {
     .limit(1)
   if (!group) throw new Error('No group')
 
+  // Resolve once and pass to every read; keeps dashboard, banner, and feed
+  // cohesive when the viewer is browsing a past epoch.
+  const epochWindow = await resolveViewerEpochWindow(group.id)
+
   const now = new Date()
   const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -49,7 +54,7 @@ export default async function DashboardPage() {
     listIncomeMonthSummary(group.id, yyyymm),
     listActivePendings(group.id),
     listActiveExpensePendings(group.id),
-    listIncomesPaged(group.id, null, 1),
+    listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
     getTranslations(),
   ])
 
@@ -110,8 +115,8 @@ export default async function DashboardPage() {
   // and stream the feed in after the hero paints. Both queries kick off here
   // (not awaited) and stream over the same RSC payload.
   const feedDataPromise = Promise.all([
-    listTransactionsPaged(group.id, null, PAGE_SIZE),
-    listIncomesPaged(group.id, null, PAGE_SIZE),
+    listTransactionsPaged(group.id, null, PAGE_SIZE, undefined, undefined, undefined, undefined, epochWindow),
+    listIncomesPaged(group.id, null, PAGE_SIZE, undefined, undefined, undefined, undefined, epochWindow),
   ]).then(([rows, incomeRows]) => {
     const recent: PagedTxnRow[] = rows.map((r) => ({
       id: r.id,

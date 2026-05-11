@@ -2,6 +2,7 @@ import { db } from '@/lib/db/client'
 import { assets, carDetails, insuranceDetails } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { FeedRow, FeedKind, TxnCursor } from './transactions'
+import type { EpochWindow } from './epoch'
 
 export interface AssetWithCar {
   id: string
@@ -112,7 +113,16 @@ export interface AssetSummary {
  *
  * Both are coerced to 0 when null (asset with no transactions).
  */
-export async function getAssetSummary(assetId: string, groupId: string): Promise<AssetSummary> {
+export async function getAssetSummary(
+  assetId: string,
+  groupId: string,
+  epochWindow?: EpochWindow | null,
+): Promise<AssetSummary> {
+  const epochClause = epochWindow
+    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+      }`
+    : sql``
   const rows = await db.execute<{ month_amount: number | null; total_amount: number | null }>(sql`
     SELECT
       COALESCE(SUM(amount) FILTER (
@@ -124,6 +134,7 @@ export async function getAssetSummary(assetId: string, groupId: string): Promise
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
       AND deleted_at IS NULL
+      ${epochClause}
   `)
   const r = rows[0] ?? { month_amount: 0, total_amount: 0 }
   return { monthAmount: r.month_amount ?? 0, totalAmount: r.total_amount ?? 0 }
@@ -138,9 +149,15 @@ export async function getAssetSummary(assetId: string, groupId: string): Promise
 export async function getAssetSummariesBatch(
   assetIds: string[],
   groupId: string,
+  epochWindow?: EpochWindow | null,
 ): Promise<Map<string, AssetSummary>> {
   const out = new Map<string, AssetSummary>()
   if (assetIds.length === 0) return out
+  const epochClause = epochWindow
+    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+      }`
+    : sql``
   const rows = await db.execute<{
     asset_id: string
     month_amount: number | null
@@ -157,6 +174,7 @@ export async function getAssetSummariesBatch(
     WHERE asset_id IN (${sql.join(assetIds.map((id) => sql`${id}`), sql`, `)})
       AND group_id = ${groupId}
       AND deleted_at IS NULL
+      ${epochClause}
     GROUP BY asset_id
   `)
   for (const r of rows) {
@@ -180,9 +198,15 @@ export async function listTransactionsPagedForAsset(
   groupId: string,
   cursor: TxnCursor | null,
   limit = 20,
+  epochWindow?: EpochWindow | null,
 ): Promise<FeedRow[]> {
   const cursorClause = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
+    : sql``
+  const epochClause = epochWindow
+    ? sql`AND created_at >= ${epochWindow.startedAt}::timestamptz ${
+        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+      }`
     : sql``
 
   const rows = await db.execute<{
@@ -210,6 +234,7 @@ export async function listTransactionsPagedForAsset(
       AND group_id = ${groupId}
       AND deleted_at IS NULL
       ${cursorClause}
+      ${epochClause}
     ORDER BY transacted_at DESC, created_at DESC
     LIMIT ${limit}
   `)

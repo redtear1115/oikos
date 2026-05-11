@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { groupInvites, oikosGroups, profiles } from '@/lib/db/schema'
+import { groupEpochs, groupInvites, oikosGroups, profiles } from '@/lib/db/schema'
 import {
   generateToken,
   getInviteUrl,
@@ -88,22 +88,40 @@ export async function acceptInvite(token: string): Promise<string> {
   const result = validateInviteAcceptance(invite ?? null, group ?? null, user.id)
   if (!result.ok) throw new Error(result.error)
 
+  const now = new Date()
   await db.transaction(async (tx) => {
     // Bump the epoch as the partner joins — relevant for groups that were
     // solo after a prior leave so the new relationship's timeline / stats
     // start fresh once PR 3 layers epoch filtering on top.
     const updated = await tx
       .update(oikosGroups)
-      .set({ memberB: user.id, currentEpochStartedAt: new Date() })
+      .set({ memberB: user.id, currentEpochStartedAt: now })
       .where(and(eq(oikosGroups.id, invite.groupId), isNull(oikosGroups.memberB)))
       .returning()
 
     if (updated.length === 0) throw new Error('group_full')
+    const [updatedGroup] = updated
 
     await tx
       .update(groupInvites)
-      .set({ acceptedAt: new Date() })
+      .set({ acceptedAt: now })
       .where(and(eq(groupInvites.token, token), isNull(groupInvites.acceptedAt)))
+
+    // Close the prior open epoch row on this group (if any — backfilled rows
+    // exist for groups created before 0030, and prior chapters were created
+    // by acceptInvite/leaveGroup hooks).
+    await tx
+      .update(groupEpochs)
+      .set({ endedAt: now })
+      .where(and(eq(groupEpochs.groupId, invite.groupId), isNull(groupEpochs.endedAt)))
+
+    // Open the new duo epoch — member_a stays as is, member_b is the joiner.
+    await tx.insert(groupEpochs).values({
+      groupId: invite.groupId,
+      startedAt: now,
+      memberAId: updatedGroup.memberA,
+      memberBId: user.id,
+    })
   })
 
   return invite.groupId
