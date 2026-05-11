@@ -232,6 +232,13 @@
       "when": 1778900000000,
       "tag": "0032_epoch_backfill_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0033_insurance_policy_holder",
+      "breakpoints": true
     }
   ]
 }

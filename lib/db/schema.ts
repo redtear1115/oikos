@@ -217,6 +217,10 @@ export const insuranceDetails = pgTable('InsuranceDetails', {
   // v0.15.0 #127 — red-badge threshold for single-year policies (warning stays at 60d).
   // Multi-year / savings policies ignore this at render time.
   reminderDaysBefore: integer('reminder_days_before').notNull().default(30),
+  // v0.15.0 #142 — 要保人 (policy holder). Always one of the group's members,
+  // so we bind to Profiles via FK. Distinct from `insured` (被保人, text) which
+  // can be anyone, including relatives outside the group.
+  policyHolderUserId: uuid('policy_holder_user_id').references(() => profiles.id),
 })
 
 export const invoiceCredentials = pgTable('InvoiceCredentials', {

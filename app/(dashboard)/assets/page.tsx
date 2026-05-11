@@ -49,6 +49,9 @@ export default async function AssetsPage() {
       base.insurance = {
         insuranceType: a.insuranceType,
         insured: a.insuranceInsured,
+        policyHolderUserId: a.insurancePolicyHolderUserId,
+        policyHolderDisplayName: a.insurancePolicyHolderDisplayName,
+        policyHolderAvatarUrl: a.insurancePolicyHolderAvatarUrl,
         annualPremium: a.insuranceAnnualPremium,
         sumInsured: a.insuranceSumInsured,
         startsAt: a.insuranceStartsAt,

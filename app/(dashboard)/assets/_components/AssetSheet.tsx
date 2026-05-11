@@ -7,6 +7,7 @@ import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBack
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -73,6 +74,7 @@ export interface AssetSheetInitial {
   // Insurance-specific
   insKind?: string | null
   insInsured?: string | null
+  insPolicyHolderUserId?: string | null
   insInsurer?: string | null
   insPolicyNo?: string | null
   insAnnualPremium?: number | null
@@ -186,6 +188,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
+  // #142 — 要保人 is always a group member (or null for legacy/unset rows).
+  // Defaults to viewer.id on create. In solo mode the toggle is hidden because
+  // there's only one possible value.
+  const { viewer, partner } = useMember()
+  const [insPolicyHolderUserId, setInsPolicyHolderUserId] = useState<string | null>(viewer.id)
   const [insInsurer, setInsInsurer] = useState('')
   const [insPolicyNo, setInsPolicyNo] = useState('')
   const [insPremium, setInsPremium] = useState('')
@@ -266,6 +273,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
+        // #142 — Legacy rows (created before 0032) have NULL policy_holder.
+        // Default to viewer on prefill so editing fills it in gracefully, same
+        // as the create flow. User can still flip to partner via the toggle.
+        setInsPolicyHolderUserId(initial.insPolicyHolderUserId ?? viewer.id)
         setInsInsurer(initial.insInsurer ?? '')
         setInsPolicyNo(initial.insPolicyNo ?? '')
         setInsPremium(initial.insAnnualPremium?.toString() ?? '')
@@ -329,6 +340,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       // Insurance resets
       setInsKind('medical')
       setInsInsured('')
+      setInsPolicyHolderUserId(viewer.id)
       setInsInsurer('')
       setInsPolicyNo('')
       setInsPremium('')
@@ -344,7 +356,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setError('')
     const t = setTimeout(() => nameInputRef.current?.focus(), 350)
     return () => clearTimeout(t)
-  }, [open, initial])
+  }, [open, initial, viewer.id])
 
   const isCar = selectedType === 'car'
 
@@ -451,6 +463,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             name: name.trim(),
             kind: insKind || null,
             insured: insInsured.trim() || null,
+            policyHolderUserId: insPolicyHolderUserId,
             insurer: insInsurer.trim() || null,
             policyNo: insPolicyNo.trim() || null,
             annualPremium: insPremium ? parseInt(insPremium, 10) : null,
@@ -583,6 +596,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     // Insurance resets
     setInsKind('medical')
     setInsInsured('')
+    setInsPolicyHolderUserId(viewer.id)
     setInsInsurer('')
     setInsPolicyNo('')
     setInsPremium('')
@@ -1258,6 +1272,36 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                   ))}
                 </div>
               </Field>
+
+              {/* #142 — 要保人 (policy holder). Always a group member, so bound
+                  to Profile via FK. Toggle is hidden in solo mode (only one
+                  possible value; form defaults to viewer.id). */}
+              {partner && (
+                <Field label={ts.insurance.policyHolder}>
+                  <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(58,36,25,0.05)' }}>
+                    {[
+                      { id: viewer.id, label: t.common.me },
+                      { id: partner.id, label: partner.displayName ?? t.common.partner },
+                    ].map(opt => {
+                      const active = insPolicyHolderUserId === opt.id
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setInsPolicyHolderUserId(opt.id)}
+                          className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
+                            active
+                              ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
+                              : 'bg-transparent text-[var(--ink-2)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Field>
+              )}
 
               <Field label={ts.insurance.insured}>
                 <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
