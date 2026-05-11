@@ -8,9 +8,17 @@ export type BreakdownView = 'category' | 'asset'
 
 interface Props {
   value: BreakdownView
+  /**
+   * Hide the「愛物」option. Used when the structured filter has 愛物 active
+   * — the by-asset breakdown would degenerate to a single bar, and the
+   * server has already auto-switched the value to 'category'. Hiding the
+   * option keeps the toggle from offering a degraded view; if the user
+   * clears the filter, the toggle reappears.
+   */
+  hideAsset?: boolean
 }
 
-export function StatsBreakdownToggle({ value }: Props) {
+export function StatsBreakdownToggle({ value, hideAsset = false }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations()
@@ -30,10 +38,15 @@ export function StatsBreakdownToggle({ value }: Props) {
     })
   }
 
-  const options: Array<{ id: BreakdownView; label: string }> = [
-    { id: 'category', label: t.records.stats.viewByCategory },
-    { id: 'asset', label: t.records.stats.viewByAsset },
-  ]
+  const options: Array<{ id: BreakdownView; label: string }> = hideAsset
+    ? [{ id: 'category', label: t.records.stats.viewByCategory }]
+    : [
+        { id: 'category', label: t.records.stats.viewByCategory },
+        { id: 'asset', label: t.records.stats.viewByAsset },
+      ]
+  // When only one option remains, hide the toggle entirely — it'd just be a
+  // disabled-looking single pill that doesn't toggle anything.
+  if (options.length <= 1) return null
 
   return (
     <div

@@ -9,7 +9,7 @@ import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
-import { fromWire, hidesSettlements, type TxnFilterWire } from '@/lib/filter'
+import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -264,12 +264,45 @@ export interface PagedTxnRow {
   status: RecordStatus  // settlements/income are always 'settled'; only CashTransactions can be 'pending'
 }
 
+/**
+ * Wire → ResolvedTxnFilter conversion. The 誰付 dimension is collapsed to a
+ * concrete user id ('mine' → viewer, 'theirs' → partner or an impossible UUID
+ * when no partner so the SQL just returns 0 rows). Used by the Records feed
+ * actions; the in-memory `matchesFilter` (used for realtime echo / SSR-row
+ * filtering) takes the unresolved TxnFilter and does the same resolution
+ * client-side against viewer/partner ids.
+ */
+function resolveTxnFilter(
+  filterWire: TxnFilterWire | undefined,
+  viewerId: string,
+  group: { memberA: string; memberB: string | null },
+): ResolvedTxnFilter | undefined {
+  if (!filterWire) return undefined
+  const f = fromWire(filterWire)
+  let paidBy: string | null = null
+  if (f.payer === 'mine') paidBy = viewerId
+  else if (f.payer === 'theirs') {
+    const partner = group.memberA === viewerId ? group.memberB : group.memberA
+    paidBy = partner ?? '00000000-0000-0000-0000-000000000000'
+  }
+  return {
+    paidBy,
+    splitTypes: f.split === 'all' ? [] : [f.split],
+    categories: Array.from(f.categories),
+    incomeCategories: Array.from(f.incomeCategories),
+    assetIds: Array.from(f.assetIds),
+    excludeSettlements: hidesSettlements(f),
+    cutAll: cutsExpense(f),
+  }
+}
+
 export async function loadMoreTransactions(
   cursor: TxnCursor | null,
   limit = 20,
   filterWire?: TxnFilterWire,
   monthKey?: string,
   drillWire?: DrillFilterWire,
+  dateRange?: DateRange,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -282,27 +315,9 @@ export async function loadMoreTransactions(
     .limit(1)
   if (!group) throw new Error('找不到家計簿')
 
-  let resolved: ResolvedTxnFilter | undefined
-  if (filterWire) {
-    const f = fromWire(filterWire)
-    let paidBy: string | null = null
-    if (f.payer === 'mine') paidBy = user.id
-    else if (f.payer === 'theirs') {
-      const partner = group.memberA === user.id ? group.memberB : group.memberA
-      // If no partner yet, "對方" filter matches nothing — emit an impossible UUID so
-      // the SQL returns 0 rows instead of crashing on a NULL comparison.
-      paidBy = partner ?? '00000000-0000-0000-0000-000000000000'
-    }
-    resolved = {
-      paidBy,
-      splitTypes: f.split === 'all' ? [] : [f.split],
-      categories: Array.from(f.categories),
-      excludeSettlements: hidesSettlements(f),
-    }
-  }
-
+  const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill)
+  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill, dateRange)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
@@ -330,6 +345,8 @@ export async function loadMoreFeedAll(
   limit = 20,
   monthKey?: string,
   drillWire?: DrillFilterWire,
+  filterWire?: TxnFilterWire,
+  dateRange?: DateRange,
 ): Promise<PagedTxnRow[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -342,8 +359,9 @@ export async function loadMoreFeedAll(
     .limit(1)
   if (!group) throw new Error('找不到家計簿')
 
+  const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill)
+  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill, resolved, dateRange)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,

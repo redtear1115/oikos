@@ -196,6 +196,9 @@ export type Translations = {
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    /** Top-right popover label that opens the recurring-rule menu. */
+    recurringMenuLabel: string
+    recurringMenuAriaLabel: string
     offlineMoreNeedsNetwork: string
     stats: {
       title: string         // expense-tab title (kept for back-compat)
@@ -233,6 +236,22 @@ export type Translations = {
     payerSection: string
     splitSection: string
     categorySection: string
+    incomeCategorySection: string
+    dateSection: string
+    dateThisMonth: string
+    dateLastMonth: string
+    dateAll: string
+    dateCustom: string
+    dateCustomStart: string
+    dateCustomEnd: string
+    dateRangeAll: string
+    dateRangeChipPrefix: string
+    dateRangeClear: string
+    assetSection: string
+    assetNone: string
+    shareLink: string
+    shareCopied: string
+    shareFailed: string
   }
 
   settings: {
@@ -1141,6 +1160,8 @@ export const zhTW: Translations = {
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringMenuLabel: '定期',
+    recurringMenuAriaLabel: '開啟定期收支選單',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
     stats: {
       title: '支出統計',
@@ -1175,7 +1196,23 @@ export const zhTW: Translations = {
     apply: '套用',
     payerSection: '誰付的',
     splitSection: '分攤',
-    categorySection: '分類（可多選）',
+    categorySection: '支出分類（可多選）',
+    incomeCategorySection: '收入分類（可多選）',
+    dateSection: '日期',
+    dateThisMonth: '本月',
+    dateLastMonth: '上月',
+    dateAll: '全部',
+    dateCustom: '自訂',
+    dateCustomStart: '開始日期',
+    dateCustomEnd: '結束日期',
+    dateRangeAll: '全部時間',
+    dateRangeChipPrefix: '日期',
+    dateRangeClear: '清除日期範圍',
+    assetSection: '愛物（可多選）',
+    assetNone: '未歸屬',
+    shareLink: '複製分享連結',
+    shareCopied: '已複製到剪貼簿',
+    shareFailed: '複製失敗，請稍後再試',
   },
 
   settings: {
