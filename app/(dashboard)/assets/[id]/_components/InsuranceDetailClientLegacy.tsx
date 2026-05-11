@@ -130,7 +130,11 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
             </span>
           </div>
           <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(58,36,25,0.08)' }}>
-            <div className="h-full rounded-full" style={{ width: `${pct * 100}%`, background: tint.accent }} />
+            {/* .toFixed(2) — pct is recomputed from `new Date()` on both SSR and hydration; */}
+            {/* without rounding, the few-ms wall-clock drift produces non-equal float strings */}
+            {/* and React logs a hydration mismatch. Two decimal places of precision is more */}
+            {/* than enough for a 1.5px-tall progress bar. */}
+            <div className="h-full rounded-full" style={{ width: `${(pct * 100).toFixed(2)}%`, background: tint.accent }} />
           </div>
           <div className="mt-1.5 flex justify-between text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             <span>{details.startsAt}</span>

@@ -201,10 +201,13 @@ export function SavingsView({
             </span>
           </div>
           <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(58,36,25,0.08)' }}>
+            {/* .toFixed(2) — timeProgress is computed from `new Date()` inside */}
+            {/* computeSavingsProgress at render time, so SSR and hydration get */}
+            {/* slightly different float strings. Round the percent to stabilise. */}
             <div
               className="h-full rounded-full"
               style={{
-                width: `${(progress.timeProgress ?? 0) * 100}%`,
+                width: `${((progress.timeProgress ?? 0) * 100).toFixed(2)}%`,
                 background: tint.accent,
               }}
             />
