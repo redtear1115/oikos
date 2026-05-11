@@ -21,6 +21,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { loadMoreInsuranceReturns } from '@/actions/income'
+import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import type { PagedTxnRow } from '@/actions/transaction'
 import type { PagedIncomeRow } from '@/actions/income'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
@@ -47,6 +48,10 @@ interface Props {
   details: InsuranceDetailsRow
   premiumStats: { total: number; count: number }
   returnStats: { total: number; count: number }
+  /** v0.15.0 #132 — per-category totals across SAVINGS_RETURN_CATEGORIES.
+   *  Drives the hero breakdown when >1 bucket is non-zero. Keys are
+   *  IncomeCategoryId strings; absent categories default to 0. */
+  returnBreakdown: Record<string, number>
   initialPremiumTxns: PagedTxnRow[]
   initialReturns: PagedIncomeRow[]
   pageSize: number
@@ -55,7 +60,7 @@ interface Props {
   linkedVehicle?: { id: string; name: string } | null
 }
 
-const RETURN_CATEGORIES = ['maturity']
+const RETURN_CATEGORIES: string[] = [...SAVINGS_RETURN_CATEGORIES]
 
 export function SavingsView({
   assetId,
@@ -64,6 +69,7 @@ export function SavingsView({
   details,
   premiumStats,
   returnStats,
+  returnBreakdown,
   initialPremiumTxns,
   initialReturns,
   pageSize,
@@ -183,6 +189,7 @@ export function SavingsView({
             progress={progress}
             startsAt={details.startsAt}
             endsAt={details.endsAt}
+            returnBreakdown={returnBreakdown}
             onSetExpectedMaturity={() => setEditAssetOpen(true)}
           />
         </>

@@ -33,7 +33,8 @@ export async function getInsurancePaymentTotal(
 
 /**
  * Sum + count of active IncomeTransactions linked to a specific insurance
- * asset, filtered by category. SavingsView passes `['maturity']`.
+ * asset, filtered by category. SavingsView passes the savings-return category
+ * set (maturity / dividend / survival_annuity).
  */
 export async function getInsuranceReturnTotal(
   assetId: string,
@@ -64,6 +65,51 @@ export async function getInsuranceReturnTotal(
     ))
   const r = rows[0]
   return { total: parseInt(r.total, 10), count: parseInt(r.count, 10) }
+}
+
+/**
+ * v0.15.0 #132 — Per-category breakdown of active IncomeTransactions for a
+ * savings policy. Returns a Map keyed by category id; categories with no
+ * matching rows are absent (callers should default to {total: 0, count: 0}).
+ *
+ * SavingsView uses this to render the 「已拿回 NT$ X (含分紅 / 生存金 …)」
+ * hero breakdown when more than one bucket is non-zero.
+ */
+export async function getInsuranceReturnTotalsByCategory(
+  assetId: string,
+  groupId: string,
+  categories: string[],
+  epochWindow?: EpochWindow | null,
+): Promise<Map<string, { total: number; count: number }>> {
+  const out = new Map<string, { total: number; count: number }>()
+  if (categories.length === 0) return out
+
+  const epochClauses = epochWindow
+    ? [
+        gte(incomeTransactions.createdAt, epochWindow.startedAt),
+        ...(epochWindow.endedAt ? [lt(incomeTransactions.createdAt, epochWindow.endedAt)] : []),
+      ]
+    : []
+
+  const rows = await db
+    .select({
+      category: incomeTransactions.category,
+      total: sql<string>`COALESCE(SUM(amount), 0)`,
+      count: sql<string>`COUNT(*)`,
+    })
+    .from(incomeTransactions)
+    .where(and(
+      eq(incomeTransactions.assetId, assetId),
+      eq(incomeTransactions.groupId, groupId),
+      isNull(incomeTransactions.deletedAt),
+      inArray(incomeTransactions.category, categories),
+      ...epochClauses,
+    ))
+    .groupBy(incomeTransactions.category)
+  for (const r of rows) {
+    out.set(r.category, { total: parseInt(r.total, 10), count: parseInt(r.count, 10) })
+  }
+  return out
 }
 
 /**
