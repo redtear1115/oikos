@@ -57,6 +57,8 @@ export type Translations = {
     salary: string
     bonus: string
     maturity: string
+    dividend: string
+    survival_annuity: string
     claim: string
     gift: string
     refund: string
@@ -853,6 +855,11 @@ export type Translations = {
       /** Template with `{received}`. */
       heroNoExpectedBar: string
       heroNoExpectedCta: string
+      /** v0.15.0 #132 — Prefix for the per-bucket breakdown line under the
+       *  「出」 progress bar, shown when at least two of
+       *  maturity/dividend/survival_annuity have non-zero totals.
+       *  The component appends bucket labels + NT$ amounts itself. */
+      heroBreakdownPrefix: string
       /** Template with `{date}`. */
       maturingSoonTitle: string
       maturingSoonSubtitle: string
@@ -1130,6 +1137,8 @@ export const zhTW: Translations = {
     salary: '薪水',
     bonus: '獎金',
     maturity: '滿期還本',
+    dividend: '分紅',
+    survival_annuity: '生存金',
     claim: '保險理賠',
     gift: '紅包禮金',
     refund: '退稅',
@@ -1896,6 +1905,7 @@ export const zhTW: Translations = {
       heroExpectedTag: '估',
       heroNoExpectedBar: '已拿回 NT$ {received} · 預估金額未設定',
       heroNoExpectedCta: '設定預估金額',
+      heroBreakdownPrefix: '含',
       maturingSoonTitle: '{date} 即將到期',
       maturingSoonSubtitle: '別忘了滿期金到帳要記',
       maturingSoonCta: '記滿期金 →',

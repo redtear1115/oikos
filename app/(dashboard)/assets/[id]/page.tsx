@@ -14,7 +14,8 @@ import { PlantDetailClient } from './_components/PlantDetailClient'
 import { InsuranceDetailClientLegacy } from './_components/InsuranceDetailClientLegacy'
 import { SavingsView } from './_components/insurance/SavingsView'
 import { getFramingGroup } from '@/lib/insurance'
-import { getInsurancePaymentTotal, getInsuranceReturnTotal, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
+import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
+import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
@@ -239,12 +240,20 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     const framingGroup = getFramingGroup(insuranceDetailsData?.kind)
 
     if (framingGroup === 'savings' && insuranceDetailsData) {
-      const [premiumStats, returnStats, premiumRows, returnRows] = await Promise.all([
+      const [premiumStats, returnStats, returnByCat, premiumRows, returnRows] = await Promise.all([
         getInsurancePaymentTotal(asset.id, group.id, epochWindow),
-        getInsuranceReturnTotal(asset.id, group.id, ['maturity'], epochWindow),
+        getInsuranceReturnTotal(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
+        getInsuranceReturnTotalsByCategory(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
         listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE, epochWindow),
-        listInsuranceReturnsPaged(asset.id, group.id, ['maturity'], null, PAGE_SIZE, epochWindow),
+        listInsuranceReturnsPaged(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, null, PAGE_SIZE, epochWindow),
       ])
+
+      // Plain-object shape for the client component (Map isn't serialisable
+      // through the Server → Client boundary).
+      const returnBreakdown: Record<string, number> = {}
+      for (const cat of SAVINGS_RETURN_CATEGORIES) {
+        returnBreakdown[cat] = returnByCat.get(cat)?.total ?? 0
+      }
 
       const initialPremiumTxns: PagedTxnRow[] = premiumRows.map((r) => ({
         id: r.id,
@@ -283,6 +292,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           details={insuranceDetailsData}
           premiumStats={premiumStats}
           returnStats={returnStats}
+          returnBreakdown={returnBreakdown}
           initialPremiumTxns={initialPremiumTxns}
           initialReturns={initialReturns}
           pageSize={PAGE_SIZE}

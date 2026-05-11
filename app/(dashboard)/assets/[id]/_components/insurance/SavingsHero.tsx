@@ -4,19 +4,31 @@ import { INCOME_PALETTES } from '@/lib/incomePalettes'
 import type { SavingsProgress } from '@/lib/insuranceProgress'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { SAVINGS_RETURN_CATEGORIES, getIncomeCategory } from '@/lib/incomeCategories'
 
 interface Props {
   progress: SavingsProgress
   endsAt: string | null
   startsAt: string | null
+  /** v0.15.0 #132 — per-category amount across SAVINGS_RETURN_CATEGORIES.
+   *  When ≥ 2 buckets are non-zero, we render a breakdown sub-line
+   *  beneath the「出」progress bar. */
+  returnBreakdown?: Record<string, number>
   onSetExpectedMaturity?: () => void
 }
 
-export function SavingsHero({ progress, endsAt, startsAt, onSetExpectedMaturity }: Props) {
+export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSetExpectedMaturity }: Props) {
   const t = useTranslations()
   const ts = t.assetDetail.savings
   const hasExpected = progress.expectedMaturity !== null
   const subCopy = computeSub(progress, endsAt, startsAt, ts)
+
+  // Breakdown row: only render when at least two buckets carry money. A
+  // single non-zero bucket already tells the full story via the main bar.
+  const breakdownParts = SAVINGS_RETURN_CATEGORIES
+    .map((cat) => ({ cat, amount: returnBreakdown?.[cat] ?? 0 }))
+    .filter((p) => p.amount > 0)
+  const showBreakdown = breakdownParts.length >= 2
 
   return (
     <div className="px-5 pt-5 pb-6" style={{ background: '#F7F4EE' }}>
@@ -50,6 +62,21 @@ export function SavingsHero({ progress, endsAt, startsAt, onSetExpectedMaturity 
           barTemplate={ts.heroNoExpectedBar}
           ctaLabel={ts.heroNoExpectedCta}
         />
+      )}
+
+      {showBreakdown && (
+        <div
+          className="mt-1.5 ml-[26px] text-xs tabular-nums"
+          style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+        >
+          {ts.heroBreakdownPrefix}{' '}
+          {breakdownParts.map((p, idx) => (
+            <span key={p.cat}>
+              {idx > 0 && ' · '}
+              {getIncomeCategory(p.cat).label} NT$ {p.amount.toLocaleString()}
+            </span>
+          ))}
+        </div>
       )}
 
       <div className="mt-4 text-[14px]" style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>

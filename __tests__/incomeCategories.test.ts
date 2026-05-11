@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { INCOME_CATEGORIES, getIncomeCategory, isValidIncomeCategoryId } from '@/lib/incomeCategories'
+import { INCOME_CATEGORIES, SAVINGS_RETURN_CATEGORIES, getIncomeCategory, isValidIncomeCategoryId } from '@/lib/incomeCategories'
 
 describe('INCOME_CATEGORIES', () => {
-  it('exposes 8 entries (no settle equivalent)', () => {
-    expect(INCOME_CATEGORIES).toHaveLength(8)
+  it('exposes 10 entries (8 base + dividend + survival_annuity)', () => {
+    expect(INCOME_CATEGORIES).toHaveLength(10)
   })
 
   it('every entry has the required token fields', () => {
@@ -19,7 +19,22 @@ describe('INCOME_CATEGORIES', () => {
 
   it('matches spec ids', () => {
     const ids = INCOME_CATEGORIES.map(c => c.id).sort()
-    expect(ids).toEqual(['bonus', 'claim', 'gift', 'maturity', 'other', 'refund', 'salary', 'sidehustle'])
+    expect(ids).toEqual([
+      'bonus', 'claim', 'dividend', 'gift', 'maturity',
+      'other', 'refund', 'salary', 'sidehustle', 'survival_annuity',
+    ])
+  })
+})
+
+describe('SAVINGS_RETURN_CATEGORIES', () => {
+  it('contains maturity + dividend + survival_annuity in stable order', () => {
+    expect(SAVINGS_RETURN_CATEGORIES).toEqual(['maturity', 'dividend', 'survival_annuity'])
+  })
+
+  it('every entry is a valid IncomeCategoryId', () => {
+    for (const c of SAVINGS_RETURN_CATEGORIES) {
+      expect(isValidIncomeCategoryId(c)).toBe(true)
+    }
   })
 })
 
