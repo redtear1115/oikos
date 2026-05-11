@@ -413,6 +413,50 @@ export type Translations = {
     }
     addCar: string
     addSecondCar: string
+    /** v0.15.0 #127 — strings used only by InsuranceListItem in the coverage section. */
+    insuranceList: {
+      /** Template with `{name}` placeholder. */
+      insuredPrefix: string
+      /** Template with `{amount}` placeholder. Annual-premium pill, plain NT$. */
+      annualPremium: string
+      // ── savings ─────────────────────────────────────────────────────────
+      /** Template with `{amount}` placeholder. Years-paid × annual premium. */
+      savingsCumulative: string
+      /** Shown after cumulative when notes mention "USD". */
+      savingsForeignNote: string
+      /** Shown when today > expiry for savings policies. */
+      savingsMaturedBadge: string
+      // ── multi-year protection ───────────────────────────────────────────
+      /** Template with `{amount}` placeholder. */
+      sumInsuredShort: string
+      /** Template with `{n}` placeholder — remaining years. */
+      yearsLeft: string
+      /** Shown when policy is expired (any kind). */
+      expired: string
+      // ── single-year protection ──────────────────────────────────────────
+      /** Fallback subtitle for single-year policies with no premium set. */
+      singleYearLabel: string
+      /** Template with `{n}` — amber/warning badge (≤60d, >reminderDaysBefore). */
+      daysLeftWarning: string
+      /** Template with `{n}` — red/urgent badge (≤reminderDaysBefore). */
+      daysLeftUrgent: string
+      /** Red badge shown when single-year policy is expired. */
+      expiredBadge: string
+      /** Button label — opens the renewal sheet. */
+      renewAction: string
+      /** Button label — opens the lapse confirmation. */
+      lapseAction: string
+      // ── renew sheet ─────────────────────────────────────────────────────
+      renewTitle: string
+      renewDescription: string
+      renewPolicyNoLabel: string
+      renewPolicyNoPlaceholder: string
+      renewConfirm: string
+      // ── lapse confirm ───────────────────────────────────────────────────
+      lapseTitle: string
+      lapseDescription: string
+      lapseConfirm: string
+    }
   }
 
   recurringIncome: {
@@ -1477,6 +1521,30 @@ export const zhTW: Translations = {
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',
+    insuranceList: {
+      insuredPrefix: '被保人 {name}',
+      annualPremium: '年繳 NT$ {amount}',
+      savingsCumulative: '累積投入 NT$ {amount}',
+      savingsForeignNote: '保額 USD',
+      savingsMaturedBadge: '繳費期滿',
+      sumInsuredShort: '保額 NT$ {amount}',
+      yearsLeft: '剩 {n} 年',
+      expired: '已到期',
+      singleYearLabel: '單年期',
+      daysLeftWarning: '剩 {n} 天',
+      daysLeftUrgent: '剩 {n} 天',
+      expiredBadge: '已到期',
+      renewAction: '已續保',
+      lapseAction: '已停止',
+      renewTitle: '已續保？',
+      renewDescription: '保單迄會 +1 年。若有新的保單號可順便更新，沒有就留空。',
+      renewPolicyNoLabel: '新保單號（選填）',
+      renewPolicyNoPlaceholder: '沿用原號可留空',
+      renewConfirm: '已續保',
+      lapseTitle: '已停止這份保單？',
+      lapseDescription: '保單將從列表中移除，仍可從詳細頁找回。',
+      lapseConfirm: '已停止',
+    },
   },
 
   recurringIncome: {

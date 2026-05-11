@@ -152,6 +152,23 @@ describe('validateInsuranceInput', () => {
   it('rejects termYears <= 0', () => {
     expect(() => validateInsuranceInput({ name: '保單', termYears: 0 })).toThrow(/年期/)
   })
+
+  // v0.15.0 #127
+  it('defaults reminderDaysBefore to 30 when omitted', () => {
+    const r = validateInsuranceInput(insBase)
+    expect(r.reminderDaysBefore).toBe(30)
+  })
+
+  it('accepts custom reminderDaysBefore in 1..365', () => {
+    expect(validateInsuranceInput({ name: '保單', reminderDaysBefore: 7 }).reminderDaysBefore).toBe(7)
+    expect(validateInsuranceInput({ name: '保單', reminderDaysBefore: 365 }).reminderDaysBefore).toBe(365)
+  })
+
+  it('rejects reminderDaysBefore outside 1..365', () => {
+    expect(() => validateInsuranceInput({ name: '保單', reminderDaysBefore: 0 })).toThrow(/提醒/)
+    expect(() => validateInsuranceInput({ name: '保單', reminderDaysBefore: 366 })).toThrow(/提醒/)
+    expect(() => validateInsuranceInput({ name: '保單', reminderDaysBefore: 1.5 })).toThrow(/提醒/)
+  })
 })
 
 // ── notes (shared across all six asset types) ──────────────────────────

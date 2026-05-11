@@ -48,6 +48,20 @@ export default async function AssetsPage() {
       monthAmount: summary.monthAmount,
       isSavings: a.type === 'insurance' && a.insuranceType === 'savings',
     }
+    if (a.type === 'insurance') {
+      base.insurance = {
+        insuranceType: a.insuranceType,
+        insured: a.insuranceInsured,
+        annualPremium: a.insuranceAnnualPremium,
+        sumInsured: a.insuranceSumInsured,
+        startsAt: a.insuranceStartsAt,
+        expiryDate: a.insuranceExpiryDate,
+        termYears: a.insuranceTermYears,
+        reminderDaysBefore: a.insuranceReminderDaysBefore ?? 30,
+        notes: a.notes,
+      }
+      return base
+    }
     if (a.type !== 'car') return base
     const heroStats = carStats.get(a.id)!
     return {

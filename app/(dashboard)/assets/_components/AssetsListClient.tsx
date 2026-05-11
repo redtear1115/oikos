@@ -7,6 +7,7 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { AssetSheet } from './AssetSheet'
 import { AssetListItem } from './AssetListItem'
+import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
 import { useTranslations } from '@/lib/i18n/client'
@@ -23,6 +24,19 @@ export interface AssetsListItem {
   /** Insurance-only: true when InsuranceDetails.insurance_type === 'savings'.
    *  Drives the 「儲蓄」badge in AssetListItem. */
   isSavings?: boolean
+  /** Insurance-only: full payload powering the type-specific InsuranceListItem.
+   *  Present when type === 'insurance'. */
+  insurance?: {
+    insuranceType: string | null
+    insured: string | null
+    annualPremium: number | null
+    sumInsured: number | null
+    startsAt: string | null
+    expiryDate: string | null
+    termYears: number | null
+    reminderDaysBefore: number
+    notes: string | null
+  }
   // Car-only extras (optional; ignored for non-car types)
   color?: string | null
   year?: number | null
@@ -55,7 +69,19 @@ export function AssetsListClient({ items }: Props) {
   const cars = items.filter((a) => a.type === 'car')
   const houses = items.filter((a) => a.type === 'house')
   const livings = items.filter((a) => ['child', 'pet', 'plant'].includes(a.type))
-  const insurances = items.filter((a) => a.type === 'insurance')
+  // Insurance ordered by expiry date ascending — soonest-to-expire first.
+  // Items without an expiry date sink to the bottom (treated as +∞).
+  const insurances = items
+    .filter((a) => a.type === 'insurance')
+    .slice()
+    .sort((a, b) => {
+      const aExp = a.insurance?.expiryDate ?? null
+      const bExp = b.insurance?.expiryDate ?? null
+      if (aExp && bExp) return aExp.localeCompare(bExp)
+      if (aExp) return -1
+      if (bExp) return 1
+      return 0
+    })
   const multiCar = cars.length > 1
 
   const SectionLabel = ({ label }: { label: string }) => (
@@ -164,7 +190,30 @@ export function AssetsListClient({ items }: Props) {
           {insurances.length > 0 && (
             <div className="flex flex-col gap-3">
               <SectionLabel label={t.assets.section.coverage} />
-              <AssetGroup group={insurances} />
+              <div
+                className="rounded-[20px] overflow-hidden"
+                style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+              >
+                {insurances.map((a, i) => (
+                  <InsuranceListItem
+                    key={a.id}
+                    id={a.id}
+                    name={a.name}
+                    data={a.insurance ?? {
+                      insuranceType: null,
+                      insured: null,
+                      annualPremium: null,
+                      sumInsured: null,
+                      startsAt: null,
+                      expiryDate: null,
+                      termYears: null,
+                      reminderDaysBefore: 30,
+                      notes: null,
+                    }}
+                    isLast={i === insurances.length - 1}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
