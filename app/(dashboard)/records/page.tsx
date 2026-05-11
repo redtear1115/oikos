@@ -10,6 +10,8 @@ import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
 import type { BreakdownView } from './_components/StatsBreakdownToggle'
 import { parseDrillFromRecord } from '@/lib/drill'
 import {
+  cutsExpense,
+  cutsIncome,
   parseDateRangeFromRecord,
   parseFilterFromRecord,
   hidesSettlements,
@@ -75,6 +77,7 @@ export default async function RecordsPage({
   const filterIsActive = filter.payer !== 'all'
     || filter.split !== 'all'
     || filter.categories.size > 0
+    || filter.incomeCategories.size > 0
     || filter.assetIds.size > 0
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
   const resolvedPaidBy =
@@ -88,17 +91,18 @@ export default async function RecordsPage({
         paidBy: resolvedPaidBy,
         splitTypes: filter.split === 'all' ? [] : [filter.split],
         categories: Array.from(filter.categories),
+        incomeCategories: Array.from(filter.incomeCategories),
         assetIds: Array.from(filter.assetIds),
         excludeSettlements: hidesSettlements(filter),
+        cutAll: cutsExpense(filter),
       }
     : undefined
   const resolvedIncome: ResolvedIncomeFilter | undefined = filterIsActive
     ? {
         recipientId: resolvedPaidBy,
         assetIds: Array.from(filter.assetIds),
-        // Income has no split / expense-category vocabulary — if either is
-        // active, drop income rows entirely (mirrors the feed's contract).
-        cutAll: filter.split !== 'all' || filter.categories.size > 0,
+        incomeCategories: Array.from(filter.incomeCategories),
+        cutAll: cutsIncome(filter),
       }
     : undefined
 

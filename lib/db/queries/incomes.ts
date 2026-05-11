@@ -27,16 +27,18 @@ export interface IncomeCursor {
 
 /**
  * Resolved structured-filter shape for the income tab. Mirrors the cash-tx
- * resolved filter but only keeps dimensions meaningful to income rows: payer
- * (= recipient_id), assetIds, and the implicit "drop everything if an
- * expense-only dim is active". Categories are intentionally NOT applied here
- * because the picker only emits expense CategoryIds; income has its own
- * vocabulary. If split or expense-categories are active, the caller passes
+ * resolved filter but only keeps dimensions meaningful to income rows:
+ * recipient (= payer dim), assetIds, and the income-side category multi-select.
+ * Expense categories are intentionally NOT applied here — they're a separate
+ * vocabulary. If split or expense-only categories are active (and the user
+ * hasn't picked any income category to compensate), the caller sets
  * `cutAll=true` to short-circuit to an empty result.
  */
 export interface ResolvedIncomeFilter {
   recipientId: string | null
   assetIds: string[]   // empty = all; ASSET_FILTER_NONE for unassigned
+  /** Empty = all income categories pass. Narrows by IncomeCategoryId membership. */
+  incomeCategories: string[]
   /** True when an expense-only dim is active and income rows should be hidden. */
   cutAll: boolean
 }
@@ -108,6 +110,11 @@ export async function listIncomesPaged(
   }
   if (filter?.recipientId) {
     conditions.push(eq(incomeTransactions.recipientId, filter.recipientId))
+  }
+  if (filter && filter.incomeCategories.length > 0) {
+    conditions.push(
+      sql`${incomeTransactions.category} IN (${sql.join(filter.incomeCategories.map((c) => sql`${c}`), sql`, `)})`,
+    )
   }
 
   const assetCl = filter ? assetIdsClause(filter.assetIds) : null
@@ -196,6 +203,10 @@ export async function monthlyIncomeStatsByCategory(
     ? sql`AND recipient_id = ${filter.recipientId}`
     : sql``
 
+  const incomeCatClause = filter && filter.incomeCategories.length > 0
+    ? sql`AND category IN (${sql.join(filter.incomeCategories.map((c) => sql`${c}`), sql`, `)})`
+    : sql``
+
   const assetClause = (() => {
     if (!filter || filter.assetIds.length === 0) return sql``
     const uuids: string[] = []
@@ -221,6 +232,7 @@ export async function monthlyIncomeStatsByCategory(
       AND deleted_at IS NULL
       ${dateClause}
       ${recipientClause}
+      ${incomeCatClause}
       ${assetClause}
     GROUP BY category
     ORDER BY total DESC

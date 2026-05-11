@@ -3,6 +3,8 @@ import {
   applyDateRangeToParams,
   applyFilterToParams,
   ASSET_FILTER_NONE,
+  cutsExpense,
+  cutsIncome,
   defaultFilter,
   fromWire,
   hidesSettlements,
@@ -41,6 +43,9 @@ describe('isFilterActive', () => {
   it('assetIds alone activates', () => {
     expect(isFilterActive({ ...defaultFilter(), assetIds: new Set(['11111111-1111-1111-1111-111111111111']) })).toBe(true)
   })
+  it('incomeCategories alone activates', () => {
+    expect(isFilterActive({ ...defaultFilter(), incomeCategories: new Set(['salary']) })).toBe(true)
+  })
 })
 
 describe('hidesSettlements', () => {
@@ -56,6 +61,45 @@ describe('hidesSettlements', () => {
   it('assetIds active hides settlements (settlements have no asset_id)', () => {
     expect(hidesSettlements({ ...defaultFilter(), assetIds: new Set([ASSET_FILTER_NONE]) })).toBe(true)
   })
+  it('incomeCategories active hides settlements', () => {
+    expect(hidesSettlements({ ...defaultFilter(), incomeCategories: new Set(['salary']) })).toBe(true)
+  })
+})
+
+describe('cutsIncome / cutsExpense — cross-kind cut rules', () => {
+  it('expense category alone → cuts income', () => {
+    const f = { ...defaultFilter(), categories: new Set(['dining'] as const) }
+    expect(cutsIncome(f)).toBe(true)
+    expect(cutsExpense(f)).toBe(false)
+  })
+  it('split alone → cuts income', () => {
+    const f = { ...defaultFilter(), split: 'half' as const }
+    expect(cutsIncome(f)).toBe(true)
+    expect(cutsExpense(f)).toBe(false)
+  })
+  it('income category alone → cuts expense', () => {
+    const f = { ...defaultFilter(), incomeCategories: new Set(['salary'] as const) }
+    expect(cutsIncome(f)).toBe(false)
+    expect(cutsExpense(f)).toBe(true)
+  })
+  it('expense + income categories together → neither cut (each kind narrows itself)', () => {
+    const f = {
+      ...defaultFilter(),
+      categories: new Set(['dining'] as const),
+      incomeCategories: new Set(['salary'] as const),
+    }
+    expect(cutsIncome(f)).toBe(false)
+    expect(cutsExpense(f)).toBe(false)
+  })
+  it('payer / asset alone → neither cut (orthogonal to kind)', () => {
+    const f = {
+      ...defaultFilter(),
+      payer: 'mine' as const,
+      assetIds: new Set(['11111111-1111-1111-1111-111111111111']),
+    }
+    expect(cutsIncome(f)).toBe(false)
+    expect(cutsExpense(f)).toBe(false)
+  })
 })
 
 describe('wire round-trip', () => {
@@ -64,16 +108,24 @@ describe('wire round-trip', () => {
       payer: 'theirs',
       split: 'half',
       categories: new Set(['dining', 'transit']),
+      incomeCategories: new Set(['salary', 'bonus']),
       assetIds: new Set(['11111111-1111-1111-1111-111111111111', ASSET_FILTER_NONE]),
     }
     expect(fromWire(toWire(f))).toEqual(f)
   })
-  it('reads a wire with no assetIds (back-compat)', () => {
-    const wire = { payer: 'mine' as const, split: 'all' as const, categories: ['dining'] as const, assetIds: [] }
-    expect(fromWire({ ...wire, categories: Array.from(wire.categories) })).toEqual({
+  it('reads a wire with no incomeCategories / assetIds (back-compat)', () => {
+    const wire = {
+      payer: 'mine' as const,
+      split: 'all' as const,
+      categories: ['dining'],
+      incomeCategories: [],
+      assetIds: [],
+    }
+    expect(fromWire(wire)).toEqual({
       payer: 'mine',
       split: 'all',
       categories: new Set(['dining']),
+      incomeCategories: new Set(),
       assetIds: new Set(),
     })
   })
@@ -137,6 +189,23 @@ describe('matchesFilter — category dimension', () => {
   })
 })
 
+describe('matchesFilter — incomeCategories dimension drops cash transactions when income-only', () => {
+  it('income category alone → cash tx fails', () => {
+    const f = { ...defaultFilter(), incomeCategories: new Set(['salary'] as const) }
+    expect(matchesFilter(txMine, f, 'me', 'them')).toBe(false)
+    expect(matchesFilter(settleMine, f, 'me', 'them')).toBe(false)  // settlements also drop
+  })
+  it('expense + income categories → cash tx narrows by expense cat (income-only cut does not apply)', () => {
+    const f = {
+      ...defaultFilter(),
+      categories: new Set(['dining'] as const),
+      incomeCategories: new Set(['salary'] as const),
+    }
+    expect(matchesFilter(txMine, f, 'me', 'them')).toBe(true)        // dining matches
+    expect(matchesFilter(txTheirs, f, 'me', 'them')).toBe(false)     // transit doesn't
+  })
+})
+
 describe('matchesFilter — assetIds dimension', () => {
   it('uuid match → only matching-asset tx; settle + other-asset dropped', () => {
     const f = { ...defaultFilter(), assetIds: new Set(['a-1']) }
@@ -163,21 +232,23 @@ describe('parseFilterFromSearchParams', () => {
     expect(parseFilterFromSearchParams(new URLSearchParams())).toEqual(defaultFilter())
   })
 
-  it('reads payer / split / cats / assets', () => {
-    const p = new URLSearchParams('fPayer=mine&fSplit=half&fCats=dining,transit&fAssets=11111111-1111-1111-1111-111111111111,__none__')
+  it('reads payer / split / cats / incCats / assets', () => {
+    const p = new URLSearchParams('fPayer=mine&fSplit=half&fCats=dining,transit&fIncCats=salary,bonus&fAssets=11111111-1111-1111-1111-111111111111,__none__')
     const f = parseFilterFromSearchParams(p)
     expect(f.payer).toBe('mine')
     expect(f.split).toBe('half')
     expect(f.categories).toEqual(new Set(['dining', 'transit']))
+    expect(f.incomeCategories).toEqual(new Set(['salary', 'bonus']))
     expect(f.assetIds).toEqual(new Set(['11111111-1111-1111-1111-111111111111', ASSET_FILTER_NONE]))
   })
 
-  it('drops unknown payer / split / cats / assets silently', () => {
-    const p = new URLSearchParams('fPayer=bogus&fSplit=nope&fCats=dining,zzz,settle&fAssets=not-a-uuid,11111111-1111-1111-1111-111111111111')
+  it('drops unknown payer / split / cats / incCats / assets silently', () => {
+    const p = new URLSearchParams('fPayer=bogus&fSplit=nope&fCats=dining,zzz,settle&fIncCats=salary,fakecat&fAssets=not-a-uuid,11111111-1111-1111-1111-111111111111')
     const f = parseFilterFromSearchParams(p)
     expect(f.payer).toBe('all')
     expect(f.split).toBe('all')
     expect(f.categories).toEqual(new Set(['dining']))   // 'zzz' invalid, 'settle' filtered
+    expect(f.incomeCategories).toEqual(new Set(['salary']))  // 'fakecat' rejected
     expect(f.assetIds).toEqual(new Set(['11111111-1111-1111-1111-111111111111']))  // 'not-a-uuid' rejected
   })
 })
@@ -188,6 +259,7 @@ describe('parseFilterFromRecord', () => {
       payer: 'theirs',
       split: 'all',
       categories: new Set(['dining']),
+      incomeCategories: new Set(),
       assetIds: new Set(),
     })
   })
@@ -199,6 +271,7 @@ describe('applyFilterToParams', () => {
       payer: 'mine',
       split: 'all_theirs',
       categories: new Set(['transit', 'dining']),
+      incomeCategories: new Set(['bonus', 'salary']),
       assetIds: new Set([ASSET_FILTER_NONE, '11111111-1111-1111-1111-111111111111']),
     }
     const p = new URLSearchParams()
@@ -208,11 +281,12 @@ describe('applyFilterToParams', () => {
   })
 
   it('strips params for default values', () => {
-    const p = new URLSearchParams('fPayer=mine&fSplit=half&fCats=dining&fAssets=__none__')
+    const p = new URLSearchParams('fPayer=mine&fSplit=half&fCats=dining&fIncCats=salary&fAssets=__none__')
     applyFilterToParams(p, defaultFilter())
     expect(p.get('fPayer')).toBeNull()
     expect(p.get('fSplit')).toBeNull()
     expect(p.get('fCats')).toBeNull()
+    expect(p.get('fIncCats')).toBeNull()
     expect(p.get('fAssets')).toBeNull()
   })
 
@@ -221,6 +295,13 @@ describe('applyFilterToParams', () => {
     const p = new URLSearchParams()
     applyFilterToParams(p, f)
     expect(p.get('fCats')).toBe('dining,transit')
+  })
+
+  it('serializes incomeCategories sorted (stable URL)', () => {
+    const f = { ...defaultFilter(), incomeCategories: new Set(['salary', 'bonus'] as const) }
+    const p = new URLSearchParams()
+    applyFilterToParams(p, f)
+    expect(p.get('fIncCats')).toBe('bonus,salary')
   })
 })
 
@@ -334,6 +415,7 @@ describe('end-to-end URL round-trip', () => {
       payer: 'theirs',
       split: 'half',
       categories: new Set(['dining']),
+      incomeCategories: new Set(['salary']),
       assetIds: new Set([ASSET_FILTER_NONE, '11111111-1111-1111-1111-111111111111']),
     }
     const range: DateRange = { kind: 'range', start: '2026-04-01', end: '2026-04-30' }

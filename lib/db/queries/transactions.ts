@@ -34,7 +34,14 @@ export interface FeedRow {
 export interface ResolvedTxnFilter {
   paidBy: string | null
   splitTypes: SplitType[]   // empty = all
-  categories: CategoryId[]  // empty = all
+  categories: CategoryId[]  // empty = all (expense categories)
+  /**
+   * Income categories. Used by `listFeedAllPaged` for the income branch of
+   * the union (cash-only `listTransactionsPaged` ignores it). Empty = all
+   * income passes. Carried on the same resolved filter rather than a
+   * separate type so the caller can resolve once and pass once.
+   */
+  incomeCategories: string[]
   /**
    * Empty = all. Members are uuids OR ASSET_FILTER_NONE for the「未歸屬」bucket.
    * The query expands the sentinel into an `assetId IS NULL` predicate alongside
@@ -44,6 +51,13 @@ export interface ResolvedTxnFilter {
   assetIds: string[]
   /** True when settlements should be excluded entirely. */
   excludeSettlements: boolean
+  /**
+   * True when an income-only dim is active without a compensating
+   * expense-side dim (currently: incomeCategories set, expense categories
+   * empty). The cash-transactions branch is short-circuited to nothing —
+   * mirrors how the income query handles `cutAll` for expense-only dims.
+   */
+  cutAll?: boolean
 }
 
 export interface TxnRow {
@@ -268,6 +282,10 @@ export async function listTransactionsPaged(
   // tab will see zero results, which matches the "this drill has no rows
   // for this tab" contract.
   if (drill?.kind === 'income') return []
+  // Same short-circuit for an income-only structured filter (e.g. user
+  // picked an income category but no expense category — they're saying
+  // "show me income only", so no cash rows should pass).
+  if (filter?.cutAll) return []
 
   const rows = await db.execute<{
     id: string
@@ -382,10 +400,15 @@ export async function listFeedAllPaged(
   // Per-branch structured-filter clauses. Settlements have no
   // split/category/asset; if any of those dims is active, the branch is
   // dropped wholesale (excludeSettlements). Income rows have no split, but
-  // do have asset and a category column — we apply payer + assetIds + a
-  // FALSE-cut for any expense-only category filter (income has its own
-  // category vocabulary, so an expense-category filter shouldn't return
-  // income rows).
+  // do have asset and a category column.
+  //
+  // Cross-kind cut rule (matches lib/filter.ts cutsExpense / cutsIncome):
+  //   - Income-only filter (incomeCategories set, expense categories empty)
+  //     → drop ALL cash transactions. The user is saying「show me income only」.
+  //   - Expense-only filter (expense categories set, incomeCategories empty,
+  //     OR split set) → drop ALL income rows. Same rationale, mirrored.
+  //   - Both expense AND income categories set → each kind shows only its
+  //     matching category. No cross-cutting.
   const txFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
   const txFilterSplit = filter && filter.splitTypes.length > 0
     ? sql`AND split_type IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
@@ -394,6 +417,8 @@ export async function listFeedAllPaged(
     ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
     : sql``
   const txFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
+  // Income-only filter active → no cash rows.
+  const txFilterCutByIncomeOnly = filter?.cutAll ? sql`AND FALSE` : sql``
 
   const setFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
 
@@ -401,10 +426,14 @@ export async function listFeedAllPaged(
     ? sql`AND recipient_id = ${filter.paidBy}`
     : sql``
   const incFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
-  // If any expense-category filter is active, drop income rows: income has
-  // its own category vocabulary so the filter wouldn't match anything
-  // meaningful and rows leaking through would surprise the user.
-  const incFilterCategoryCut = filter && filter.categories.length > 0 ? sql`AND FALSE` : sql``
+  const incFilterIncomeCats = filter && filter.incomeCategories.length > 0
+    ? sql`AND category IN (${sql.join(filter.incomeCategories.map(c => sql`${c}`), sql`, `)})`
+    : sql``
+  // Expense-category active → drop income UNLESS the user has also picked
+  // an income category (in which case they want both kinds, each filtered).
+  const expenseOnlyCatActive =
+    filter !== undefined && filter.categories.length > 0 && filter.incomeCategories.length === 0
+  const incFilterCategoryCut = expenseOnlyCatActive ? sql`AND FALSE` : sql``
   // 分攤 only exists on cash transactions; if the user picked one, drop income.
   const incFilterSplitCut = filter && filter.splitTypes.length > 0 ? sql`AND FALSE` : sql``
 
@@ -456,6 +485,7 @@ export async function listFeedAllPaged(
       ${txFilterSplit}
       ${txFilterCategory}
       ${txFilterAssets}
+      ${txFilterCutByIncomeOnly}
 
       ${settlementsBranch}
 
@@ -473,6 +503,7 @@ export async function listFeedAllPaged(
       ${incDrill}
       ${incFilterRecipient}
       ${incFilterAssets}
+      ${incFilterIncomeCats}
       ${incFilterCategoryCut}
       ${incFilterSplitCut}
     ) AS feed

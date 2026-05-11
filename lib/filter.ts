@@ -1,4 +1,5 @@
 import { isValidCategoryId, type CategoryId } from '@/lib/categories'
+import { isValidIncomeCategoryId, type IncomeCategoryId } from '@/lib/incomeCategories'
 import type { SplitType } from '@/lib/balance'
 
 /** Single-select dimensions use 'all' to mean "no filter". Multi-select dimensions use empty Set. */
@@ -21,8 +22,10 @@ export const ASSET_FILTER_NONE = '__none__'
 export interface TxnFilter {
   payer: PayerFilter
   split: SplitFilter
-  /** Empty set = no category filter. Includes only transaction CategoryIds; 'settle' is never selectable. */
+  /** Empty set = no expense-category filter. Only transaction CategoryIds; 'settle' is never selectable. */
   categories: Set<CategoryId>
+  /** Empty set = no income-category filter. Multi-select over IncomeCategoryIds. */
+  incomeCategories: Set<IncomeCategoryId>
   /**
    * Empty set = no asset filter. Members are asset uuids OR the ASSET_FILTER_NONE
    * sentinel for transactions/income with no asset_id (歸「未歸屬」). Multi-select.
@@ -35,6 +38,7 @@ export function defaultFilter(): TxnFilter {
     payer: 'all',
     split: 'all',
     categories: new Set(),
+    incomeCategories: new Set(),
     assetIds: new Set(),
   }
 }
@@ -45,16 +49,47 @@ export function isFilterActive(f: TxnFilter): boolean {
     f.payer !== 'all' ||
     f.split !== 'all' ||
     f.categories.size > 0 ||
+    f.incomeCategories.size > 0 ||
     f.assetIds.size > 0
   )
+}
+
+/**
+ * True when an expense-only dim is active without a compensating income-side
+ * dim — meaning the user is asking for a view that, by construction, contains
+ * no income rows. The income query / branch short-circuits to empty in that
+ * case rather than silently ignoring the filter.
+ */
+export function cutsIncome(f: TxnFilter): boolean {
+  // Categories cuts income only when there's no income-side filter that would
+  // also pick up income rows. If both are set, the user wants "expense in
+  // these cats AND income in these incCats" — both kinds shown.
+  const expenseOnlyCat = f.categories.size > 0 && f.incomeCategories.size === 0
+  return f.split !== 'all' || expenseOnlyCat
+}
+
+/**
+ * Mirror of cutsIncome — true when an income-only dim is active without a
+ * compensating expense-side dim, so the cash-transaction branch returns
+ * nothing. Currently the only income-only dim is `incomeCategories`.
+ */
+export function cutsExpense(f: TxnFilter): boolean {
+  return f.incomeCategories.size > 0 && f.categories.size === 0
 }
 
 /** True if ANY transaction-only dimension is active (split or categories). Used to decide
  *  whether settlements should be hidden — settlements have no split_type / category, so
  *  applying those dims to them is meaningless and the safest UX is to hide them.
- *  The asset dimension also drops settlements (settlements have no asset). */
+ *  The asset dimension also drops settlements (settlements have no asset).
+ *  Income categories likewise force-drop settlements: a row can only "match"
+ *  if the user wanted to see income, and settlements aren't income. */
 export function hidesSettlements(f: TxnFilter): boolean {
-  return f.split !== 'all' || f.categories.size > 0 || f.assetIds.size > 0
+  return (
+    f.split !== 'all' ||
+    f.categories.size > 0 ||
+    f.incomeCategories.size > 0 ||
+    f.assetIds.size > 0
+  )
 }
 
 /** Serialize for transport over server-action boundary (Sets aren't structured-clonable
@@ -63,6 +98,7 @@ export interface TxnFilterWire {
   payer: PayerFilter
   split: SplitFilter
   categories: CategoryId[]
+  incomeCategories: IncomeCategoryId[]
   assetIds: string[]
 }
 
@@ -71,6 +107,7 @@ export function toWire(f: TxnFilter): TxnFilterWire {
     payer: f.payer,
     split: f.split,
     categories: Array.from(f.categories),
+    incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),
   }
 }
@@ -80,6 +117,7 @@ export function fromWire(w: TxnFilterWire): TxnFilter {
     payer: w.payer,
     split: w.split,
     categories: new Set(w.categories),
+    incomeCategories: new Set(w.incomeCategories ?? []),
     assetIds: new Set(w.assetIds ?? []),
   }
 }
@@ -96,6 +134,12 @@ export interface FilterableRow {
 
 /**
  * Returns whether a row passes the given filter.
+ *
+ * Note: this is the in-memory matcher used by TransactionFeed for realtime
+ * cash-tx / settlement echoes. Income realtime triggers `router.refresh()`
+ * (full SSR re-fetch) instead of a local mutation, so income rows never reach
+ * this function — but cash transactions DO need to know about the income-side
+ * filter so that realtime adds get dropped when the user's view is income-only.
  *
  * @param row - The row to test
  * @param filter - The active filter
@@ -115,11 +159,16 @@ export function matchesFilter(
   }
 
   // Settlements pass through if no transaction-only dim is active.
-  // If split, categories, OR assetIds filter is active, settlements are dropped
-  // entirely (they have no split_type / category / asset_id).
+  // If split, categories, incomeCategories, OR assetIds filter is active,
+  // settlements are dropped entirely.
   if (row.kind === 'settlement') {
     return !hidesSettlements(filter)
   }
+
+  // Income-only filter (incomeCategories without expense categories) → drop
+  // every cash transaction. The user explicitly asked for income; bringing in
+  // unrelated cash via realtime would surprise them.
+  if (cutsExpense(filter)) return false
 
   // 分攤 dimension — transactions only
   if (filter.split !== 'all' && row.splitType !== filter.split) return false
@@ -150,6 +199,7 @@ export function matchesFilter(
 //   ?fPayer=mine|theirs               (default 'all' = absent)
 //   ?fSplit=all_mine|all_theirs|half|weighted
 //   ?fCats=dining,transit             (comma-separated CategoryIds)
+//   ?fIncCats=salary,bonus            (comma-separated IncomeCategoryIds)
 //   ?fAssets=<uuid>,<uuid>,__none__   (comma-separated; sentinel for no-asset)
 //   ?from=YYYY-MM-DD&to=YYYY-MM-DD    (custom date range; both required together)
 //   ?range=all                        (sentinel for "all-time"; overrides ?month)
@@ -195,6 +245,16 @@ export function parseFilterFromSearchParams(
     }
   }
 
+  const incCats = params.get('fIncCats')
+  if (incCats) {
+    for (const id of incCats.split(',')) {
+      const trimmed = id.trim()
+      if (trimmed && isValidIncomeCategoryId(trimmed)) {
+        f.incomeCategories.add(trimmed as IncomeCategoryId)
+      }
+    }
+  }
+
   const assets = params.get('fAssets')
   if (assets) {
     for (const id of assets.split(',')) {
@@ -213,6 +273,7 @@ export function parseFilterFromRecord(rec: {
   fPayer?: string
   fSplit?: string
   fCats?: string
+  fIncCats?: string
   fAssets?: string
 }): TxnFilter {
   const fakeParams = {
@@ -238,6 +299,10 @@ export function applyFilterToParams(params: URLSearchParams, f: TxnFilter): void
 
   if (f.categories.size > 0) params.set('fCats', Array.from(f.categories).sort().join(','))
   else params.delete('fCats')
+
+  if (f.incomeCategories.size > 0)
+    params.set('fIncCats', Array.from(f.incomeCategories).sort().join(','))
+  else params.delete('fIncCats')
 
   if (f.assetIds.size > 0) params.set('fAssets', Array.from(f.assetIds).sort().join(','))
   else params.delete('fAssets')

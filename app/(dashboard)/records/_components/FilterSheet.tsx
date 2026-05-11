@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
+import { PICKABLE_INCOME_CATEGORIES, type IncomeCategoryId } from '@/lib/incomeCategories'
 import {
   ASSET_FILTER_NONE,
   type DateRange,
@@ -127,6 +128,7 @@ export function FilterSheet({
       setDraft({
         ...currentFilter,
         categories: new Set(currentFilter.categories),
+        incomeCategories: new Set(currentFilter.incomeCategories),
         assetIds: new Set(currentFilter.assetIds),
       })
       if (currentDateRange) {
@@ -147,6 +149,13 @@ export function FilterSheet({
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setDraft({ ...draft, categories: next })
+  }
+
+  const toggleIncomeCategory = (id: IncomeCategoryId) => {
+    const next = new Set(draft.incomeCategories)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setDraft({ ...draft, incomeCategories: next })
   }
 
   const toggleAsset = (id: string) => {
@@ -179,6 +188,7 @@ export function FilterSheet({
       payer: 'all',
       split: 'all',
       categories: new Set(),
+      incomeCategories: new Set(),
       assetIds: new Set(),
     })
     setDraftMode('thisMonth')
@@ -330,7 +340,7 @@ export function FilterSheet({
             </Section>
           )}
 
-          {/* 分類 (multi) */}
+          {/* 分類 (multi) — expense vocabulary. */}
           <Section title={t.filterSheet.categorySection}>
             {PICKABLE_CATEGORIES.map((c) => (
               <Chip
@@ -341,6 +351,25 @@ export function FilterSheet({
               />
             ))}
           </Section>
+
+          {/* 收入分類 (multi) — separate vocabulary from expense categories.
+              Cross-kind cut rule: picking only an expense cat drops income
+              rows; picking only an income cat drops cash rows; picking both
+              shows both kinds, each filtered to its own cat set. Hidden in
+              lite mode (the Dashboard /dashboard FilterSheet is in-memory
+              and only handles cash transactions). */}
+          {!liteMode && (
+            <Section title={t.filterSheet.incomeCategorySection}>
+              {PICKABLE_INCOME_CATEGORIES.map((c) => (
+                <Chip
+                  key={c.id}
+                  label={t.incomeCategory[c.id]}
+                  active={draft.incomeCategories.has(c.id)}
+                  onClick={() => toggleIncomeCategory(c.id)}
+                />
+              ))}
+            </Section>
+          )}
 
           {/* Share link — surfaces the "this view is shareable" affordance.
               Sits below the dimensions because it acts on the *draft*, not on

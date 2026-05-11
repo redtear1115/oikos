@@ -7,7 +7,7 @@ import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
-import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -180,11 +180,11 @@ function resolveIncomeFilter(
     const partner = group.memberA === viewerId ? group.memberB : group.memberA
     recipientId = partner ?? '00000000-0000-0000-0000-000000000000'
   }
-  const cutAll = f.split !== 'all' || f.categories.size > 0
   return {
     recipientId,
     assetIds: Array.from(f.assetIds),
-    cutAll,
+    incomeCategories: Array.from(f.incomeCategories),
+    cutAll: cutsIncome(f),
   }
 }
 

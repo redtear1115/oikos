@@ -9,7 +9,7 @@ import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
-import { fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -289,8 +289,10 @@ function resolveTxnFilter(
     paidBy,
     splitTypes: f.split === 'all' ? [] : [f.split],
     categories: Array.from(f.categories),
+    incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),
     excludeSettlements: hidesSettlements(f),
+    cutAll: cutsExpense(f),
   }
 }
 

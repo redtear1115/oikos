@@ -236,6 +236,7 @@ export type Translations = {
     payerSection: string
     splitSection: string
     categorySection: string
+    incomeCategorySection: string
     dateSection: string
     dateThisMonth: string
     dateLastMonth: string
@@ -1195,7 +1196,8 @@ export const zhTW: Translations = {
     apply: '套用',
     payerSection: '誰付的',
     splitSection: '分攤',
-    categorySection: '分類（可多選）',
+    categorySection: '支出分類（可多選）',
+    incomeCategorySection: '收入分類（可多選）',
     dateSection: '日期',
     dateThisMonth: '本月',
     dateLastMonth: '上月',
