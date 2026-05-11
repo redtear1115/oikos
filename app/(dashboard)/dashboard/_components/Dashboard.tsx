@@ -14,7 +14,6 @@ import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
 import { IncomeSheet, type IncomeSheetInitial } from './IncomeSheet'
 import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
-import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
 import { IncomeEmptyState } from './IncomeEmptyState'
@@ -241,20 +240,12 @@ export function Dashboard({
               expensePendingCount={expensePendings.length}
             />
 
-            <div className="text-xs flex items-center justify-between mb-4" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs flex items-center justify-between" style={{ color: 'var(--ink-3)' }}>
               <span>{t.dashboard.soloHint}</span>
               <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>
                 {t.dashboard.inviteCta}
               </Link>
             </div>
-            <button
-              type="button"
-              onClick={() => dispatch({ kind: addOrIncome })}
-              className="w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center gap-1.5"
-              style={{ background: 'var(--ink)' }}
-            >
-              <PlusIcon size={16} />{mode === 'income' ? t.dashboard.addIncome : t.dashboard.addExpense}
-            </button>
           </div>
         ) : (
           <SoloBanner
