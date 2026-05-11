@@ -58,6 +58,10 @@ export function parseDateString(input: string): Date | null {
   return parsed
 }
 
+export type RecordStatus = 'settled' | 'pending'
+
+const RECORD_STATUSES: readonly RecordStatus[] = ['settled', 'pending']
+
 export interface TransactionInput {
   amount: number
   description: string
@@ -68,6 +72,7 @@ export interface TransactionInput {
   assetId?: string | null
   notes?: string | null
   splitRatioA?: number | null
+  status?: RecordStatus
 }
 
 export interface ValidatedTransactionInput {
@@ -80,11 +85,16 @@ export interface ValidatedTransactionInput {
   assetId: string | null
   notes: string | null
   splitRatioA: number | null
+  status: RecordStatus
 }
 
 /**
  * Validates a transaction input. Trims description, falls back unknown category to 'other',
  * rejects 'settle' (reserved for settlements). Throws on invalid amount or empty description.
+ *
+ * `status` defaults to 'settled' when absent — preserves existing call sites that haven't
+ * been threaded through with the new field. 'pending' is the credit-card-slip /
+ * 待扣款 case (issue #49); excluded from GroupBalance until promoted to settled.
  */
 export function validateTransactionInput(input: TransactionInput): ValidatedTransactionInput {
   const amount = validateAmount(input.amount)
@@ -103,6 +113,8 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
     }
     splitRatioA = r
   }
+  const status: RecordStatus = input.status ?? 'settled'
+  if (!RECORD_STATUSES.includes(status)) throw new Error('狀態無效')
   return {
     amount,
     description,
@@ -113,6 +125,7 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
     assetId: input.assetId ?? null,
     notes: validateNotes(input.notes),
     splitRatioA,
+    status,
   }
 }
 

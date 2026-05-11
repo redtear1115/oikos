@@ -133,6 +133,10 @@ export const ja: Translations = {
     date: '日付',
     notesLabel: 'メモ（任意・二人とも見られます）',
     notesPlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
+    statusLabel: 'ステータス',
+    statusSettled: '引落済み',
+    statusPending: '引落待ち',
+    statusPendingHint: '引落待ちの記録は実際に引き落とされるまで二人の精算には含まれません。',
     deleteOne: 'この記録を削除',
     deleteConfirmTitle: 'この記録を削除しますか？',
     errors: {
@@ -140,6 +144,10 @@ export const ja: Translations = {
       descriptionRequired: '内容を入力してください',
       noPartner: 'パートナーがまだ参加していません',
     },
+  },
+
+  compactRow: {
+    pendingBadge: '引落待ち',
   },
 
   incomeSheet: {

@@ -86,6 +86,7 @@ export default async function RecordsPage({
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
   }))
 
   return (

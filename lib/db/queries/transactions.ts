@@ -5,6 +5,7 @@ import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { monthRangeIso } from '@/lib/monthKey'
 import type { DrillFilter } from '@/lib/drill'
+import type { RecordStatus } from '@/lib/validators'
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
 
@@ -22,6 +23,7 @@ export interface FeedRow {
   assetId: string | null
   fuelLogId: string | null  // non-null when created by a FuelLog dual-write
   notes: string | null      // shared memo on a CashTransaction; always null for settlements/income
+  status: RecordStatus      // 'pending' only on transactions; settlements/income are always 'settled'
 }
 
 /**
@@ -47,6 +49,7 @@ export interface TxnRow {
   transactedAt: Date
   assetId: string | null
   notes: string | null
+  status: RecordStatus
 }
 
 /** Fetch most recent N active transactions for a group. */
@@ -66,6 +69,7 @@ export async function listRecentTransactions(
       transactedAt: cashTransactions.transactedAt,
       assetId: cashTransactions.assetId,
       notes: cashTransactions.notes,
+      status: cashTransactions.status,
     })
     .from(cashTransactions)
     .where(and(
@@ -161,6 +165,7 @@ export async function listTransactionsPaged(
         NULL::uuid AS asset_id,
         NULL::uuid AS fuel_log_id,
         NULL::text AS notes,
+        'settled'::record_status AS status,
         settled_at AS transacted_at,
         created_at,
         'settlement'::text AS kind
@@ -188,6 +193,7 @@ export async function listTransactionsPaged(
     asset_id: string | null
     fuel_log_id: string | null
     notes: string | null
+    status: RecordStatus
     transacted_at: Date
     created_at: Date
     kind: FeedKind
@@ -195,7 +201,7 @@ export async function listTransactionsPaged(
     SELECT * FROM (
       SELECT
         id, amount, split_type, split_ratio_a, description, category, paid_by,
-        asset_id, fuel_log_id, notes, transacted_at, created_at,
+        asset_id, fuel_log_id, notes, status, transacted_at, created_at,
         'transaction'::text AS kind
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
@@ -223,6 +229,7 @@ export async function listTransactionsPaged(
     assetId: r.asset_id,
     fuelLogId: r.fuel_log_id ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
     // db.execute() returns timestamps as strings (postgres-js default), not Date —
     // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
     // matches what the page projections expect.
@@ -304,6 +311,7 @@ export async function listFeedAllPaged(
     asset_id: string | null
     fuel_log_id: string | null
     notes: string | null
+    status: RecordStatus
     sort_at: Date | string
     sort_created: Date | string
     kind: 'transaction' | 'settlement' | 'income'
@@ -311,7 +319,7 @@ export async function listFeedAllPaged(
     SELECT * FROM (
       SELECT
         id, amount, split_type, split_ratio_a, description, category, paid_by,
-        asset_id, fuel_log_id, notes,
+        asset_id, fuel_log_id, notes, status,
         transacted_at AS sort_at, created_at AS sort_created,
         'transaction'::text AS kind
       FROM "CashTransactions"
@@ -324,7 +332,7 @@ export async function listFeedAllPaged(
       SELECT
         id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
         COALESCE(note, '還款'), 'settle',
-        paid_by, NULL::uuid, NULL::uuid, NULL::text,
+        paid_by, NULL::uuid, NULL::uuid, NULL::text, 'settled'::record_status,
         settled_at AS sort_at, created_at AS sort_created,
         'settlement'::text AS kind
       FROM "Settlements"
@@ -337,7 +345,7 @@ export async function listFeedAllPaged(
       SELECT
         id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
         COALESCE(source, ''), category,
-        recipient_id AS paid_by, asset_id, NULL::uuid, NULL::text,
+        recipient_id AS paid_by, asset_id, NULL::uuid, NULL::text, 'settled'::record_status,
         occurred_at::timestamptz AS sort_at, created_at AS sort_created,
         'income'::text AS kind
       FROM "IncomeTransactions"
@@ -361,6 +369,7 @@ export async function listFeedAllPaged(
     assetId: r.asset_id,
     fuelLogId: r.fuel_log_id ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
     transactedAt: r.sort_at instanceof Date ? r.sort_at : new Date(r.sort_at),
     createdAt: r.sort_created instanceof Date ? r.sort_created : new Date(r.sort_created),
     kind: r.kind,

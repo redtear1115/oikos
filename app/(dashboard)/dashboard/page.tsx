@@ -127,6 +127,7 @@ export default async function DashboardPage() {
       assetId: r.assetId,
       fuelLogId: r.fuelLogId ?? null,
       notes: r.notes,
+      status: r.status ?? 'settled',
     }))
 
     const recentIncomeFeed: PagedTxnRow[] = incomeRows.map((r) =>

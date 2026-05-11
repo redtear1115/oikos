@@ -16,6 +16,7 @@ import { editAndConfirmPending } from '@/actions/recurringExpense'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
+import type { RecordStatus } from '@/lib/validators'
 import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
 import { CategoryPicker } from './CategoryPicker'
 import { DateField } from './DateField'
@@ -36,6 +37,7 @@ export interface AddSheetInitial {
   transactedAt: string  // ISO
   assetId?: string | null
   notes?: string | null
+  status?: RecordStatus
 }
 
 interface Props {
@@ -77,6 +79,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
   const [date, setDate] = useState(localTodayISO())
   const [notes, setNotes] = useState('')
+  const [status, setStatus] = useState<RecordStatus>('settled')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
@@ -117,6 +120,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setDate(localYMD)
       setAssetId(initial.assetId ?? null)
       setNotes(initial.notes ?? '')
+      setStatus(initial.status ?? 'settled')
     } else {
       setAmount('')
       setDesc('')
@@ -127,6 +131,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setDate(localTodayISO())
       setAssetId(prefilledAssetId ?? null)
       setNotes('')
+      setStatus('settled')
     }
     setError('')
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, groupDefaultRatioA])
@@ -180,6 +185,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             transactedAt,
             assetId,
             notes,
+            status,
           })
         } else {
           const result = await createTransaction({
@@ -192,6 +198,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             transactedAt,
             assetId,
             notes,
+            status,
           })
           isFirstTransaction = result.isFirstTransaction
         }
@@ -392,6 +399,41 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             </div>
             <DateField value={date} onChange={setDate} open={open} />
           </div>
+
+          {/* Status (settled / pending). Hidden in pending-confirm mode: the
+              recurring-expense confirm flow always lands a settled record. */}
+          {!isPending && (
+            <div className="px-5 pt-1 pb-2">
+              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+                {t.addSheet.statusLabel}
+              </div>
+              <div
+                className="inline-flex rounded-full p-[3px] gap-0.5"
+                style={{ background: 'rgba(31,27,22,0.05)' }}
+              >
+                {(['settled', 'pending'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
+                    className="h-8 px-4 rounded-full border-0 text-label font-medium cursor-pointer transition-all duration-150"
+                    style={{
+                      background: status === s ? 'var(--surface)' : 'transparent',
+                      color: status === s ? 'var(--ink)' : 'var(--ink-2)',
+                      boxShadow: status === s ? '0 1px 3px rgba(31,27,22,0.10)' : 'none',
+                    }}
+                  >
+                    {s === 'settled' ? t.addSheet.statusSettled : t.addSheet.statusPending}
+                  </button>
+                ))}
+              </div>
+              {status === 'pending' && (
+                <div className="text-micro px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
+                  {t.addSheet.statusPendingHint}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Shared notes / memo (optional, both partners can read + write).
               Hidden in pending mode: editAndConfirmPending overrides do not
