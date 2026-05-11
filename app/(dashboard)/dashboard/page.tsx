@@ -6,6 +6,7 @@ import { getGroupBalance } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { resolveViewerEpochWindow, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
 import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
@@ -34,11 +35,7 @@ export default async function DashboardPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('No group')
 
   // Resolve once and pass to every read; keeps dashboard, banner, and feed

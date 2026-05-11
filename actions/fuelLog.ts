@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
 import { eq, or, and, isNull } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -25,11 +26,7 @@ export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: strin
   const validated = validateFuelLogInput(input)
 
   // Find viewer's group
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   // Asset must belong to the viewer's group and not be soft-deleted.
@@ -116,11 +113,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
   const validated = validateFuelLogInput(input)
 
   // Find viewer's group
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   // Look up existing fuel log; reject if missing or already soft-deleted.
@@ -239,11 +232,7 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
   if (!user) throw new Error('Unauthorized')
 
   // Find viewer's group
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   // Look up the fuel log; reject if missing or already soft-deleted (idempotency).
@@ -327,11 +316,7 @@ export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   const [row] = await db

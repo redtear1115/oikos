@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups, profiles } from '@/lib/db/schema'
-import { eq, or, inArray } from 'drizzle-orm'
+import { profiles } from '@/lib/db/schema'
+import { eq, inArray } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
@@ -18,11 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) redirect('/onboarding')
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)

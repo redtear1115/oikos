@@ -2,6 +2,7 @@ import { db } from '@/lib/db/client'
 import { assets, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { and, eq, or } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 
 export interface ViewerGroup {
   user: { id: string }
@@ -12,11 +13,7 @@ export async function getViewerGroup(): Promise<ViewerGroup> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
   return { user, group }
 }

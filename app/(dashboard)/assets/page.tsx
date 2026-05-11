@@ -4,6 +4,7 @@ import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
 import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
@@ -12,11 +13,7 @@ export default async function AssetsPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('No group')
 
   const epochWindow = await resolveViewerEpochWindow(group.id)

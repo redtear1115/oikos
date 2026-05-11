@@ -16,9 +16,9 @@ import type { EpochWindow } from './epoch'
 function epochScopeSql(window: EpochWindow | null | undefined): SQL {
   if (!window) return sql``
   const upper = window.endedAt
-    ? sql`AND created_at < ${window.endedAt}::timestamptz`
+    ? sql`AND created_at < ${window.endedAt.toISOString()}::timestamptz`
     : sql``
-  return sql`AND created_at >= ${window.startedAt}::timestamptz ${upper}`
+  return sql`AND created_at >= ${window.startedAt.toISOString()}::timestamptz ${upper}`
 }
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
@@ -689,8 +689,8 @@ export async function monthlyStatsByAsset(
   // Asset stats query aliases the cash-tx table as `ct`, so the epoch column
   // ref needs the same alias to disambiguate from the joined Assets table.
   const epoch = epochWindow
-    ? sql`AND ct.created_at >= ${epochWindow.startedAt}::timestamptz ${
-        epochWindow.endedAt ? sql`AND ct.created_at < ${epochWindow.endedAt}::timestamptz` : sql``
+    ? sql`AND ct.created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
+        epochWindow.endedAt ? sql`AND ct.created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
       }`
     : sql``
   const rows = await db.execute<{

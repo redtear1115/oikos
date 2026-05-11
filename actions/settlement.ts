@@ -5,6 +5,7 @@ import { settlements, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, or, and, isNull } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { revalidatePath } from 'next/cache'
 import { validateSettlementInput } from '@/lib/validators'
 
@@ -35,11 +36,7 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
     note: input.note,
   })
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
@@ -71,11 +68,7 @@ export async function softDeleteSettlement(settlementId: string): Promise<void> 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   await db.transaction(async (tx) => {
@@ -108,11 +101,7 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
     note: input.note,
   })
 
-  const [group] = await db
-    .select()
-    .from(oikosGroups)
-    .where(or(eq(oikosGroups.memberA, user.id), eq(oikosGroups.memberB, user.id)))
-    .limit(1)
+  const group = await getActiveGroupForUser(user.id)
   if (!group) throw new Error('找不到家計簿')
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
