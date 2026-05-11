@@ -163,15 +163,54 @@ export interface IncomeCategoryStatRow {
 }
 
 /**
- * Sum active IncomeTransactions for a group within a local-Taipei calendar
- * month, grouped by category, ordered by total desc. Mirrors
- * `monthlyStatsByCategory` but for the income side. occurred_at is a `date`
- * column (no tz conversion needed — it's already day-level).
+ * Sum active IncomeTransactions for a group, grouped by category, ordered by
+ * total desc. Mirrors `monthlyStatsByCategory` but for the income side.
+ * occurred_at is a `date` column (no tz conversion needed — it's already
+ * day-level).
+ *
+ * Date scope: defaults to the local-Taipei calendar month (`monthKey`), but
+ * callers can pass `dateRange` for a custom window or `filter` to narrow by
+ * recipient / assetIds. If the filter has `cutAll=true` (an expense-only dim
+ * is active), this returns an empty array — matches the feed's contract.
  */
 export async function monthlyIncomeStatsByCategory(
   groupId: string,
-  monthKey: string,  // 'YYYY-MM'
+  monthKey: string | undefined,
+  dateRange?: DateRange | null,
+  filter?: ResolvedIncomeFilter,
 ): Promise<IncomeCategoryStatRow[]> {
+  if (filter?.cutAll) return []
+
+  // Custom date range overrides monthKey when provided. resolveDateRangeToDateBounds
+  // returns null for `kind: 'all'` → no date predicate (sum all-time).
+  const bounds = dateRange
+    ? resolveDateRangeToDateBounds(dateRange)
+    : monthKey
+      ? { startDate: `${monthKey}-01`, endDateExclusive: nextMonthFirst(monthKey) }
+      : null
+  const dateClause = bounds
+    ? sql`AND occurred_at >= ${bounds.startDate}::date AND occurred_at < ${bounds.endDateExclusive}::date`
+    : sql``
+
+  const recipientClause = filter?.recipientId
+    ? sql`AND recipient_id = ${filter.recipientId}`
+    : sql``
+
+  const assetClause = (() => {
+    if (!filter || filter.assetIds.length === 0) return sql``
+    const uuids: string[] = []
+    let includeNone = false
+    for (const id of filter.assetIds) {
+      if (id === ASSET_FILTER_NONE) includeNone = true
+      else uuids.push(id)
+    }
+    if (uuids.length === 0 && includeNone) return sql`AND asset_id IS NULL`
+    if (uuids.length > 0 && !includeNone) {
+      return sql`AND asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
+    }
+    return sql`AND (asset_id IS NULL OR asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
+  })()
+
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -180,8 +219,9 @@ export async function monthlyIncomeStatsByCategory(
     FROM "IncomeTransactions"
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
-      AND occurred_at >= ${monthKey + '-01'}::date
-      AND occurred_at <  (${monthKey + '-01'}::date + INTERVAL '1 month')
+      ${dateClause}
+      ${recipientClause}
+      ${assetClause}
     GROUP BY category
     ORDER BY total DESC
   `)

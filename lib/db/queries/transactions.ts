@@ -518,17 +518,76 @@ export interface AssetStatRow {
 }
 
 /**
- * Sum active CashTransactions for a group within a local-Taipei calendar month,
- * grouped by category, ordered by total desc.
+ * Build the WHERE clauses shared by both stats queries: date scope (monthKey
+ * or dateRange) + structured filter (payer / split / categories / assetIds).
+ * Always references columns by `transacted_at` / `paid_by` / `split_type` /
+ * `category` / `asset_id` so it's safe to inline into either GROUP BY query
+ * (both alias the table or query it bare).
+ *
+ * `tableAlias` lets the caller scope the column refs (e.g. `'ct'` for the
+ * by-asset query that joins Assets), avoiding "column reference is ambiguous"
+ * errors when the JOIN exposes the same column name on both sides.
+ */
+function statsScopeClauses(
+  monthKey: string | undefined,
+  dateRange: DateRange | undefined | null,
+  filter: ResolvedTxnFilter | undefined,
+  tableAlias?: string,
+): SQL {
+  const a = tableAlias ? `${tableAlias}.` : ''
+  const dateClause = timestamptzScopeSql(
+    `${a}transacted_at` as 'transacted_at',
+    monthKey,
+    dateRange,
+  )
+  const payer = filter?.paidBy
+    ? sql`AND ${sql.raw(`${a}paid_by`)} = ${filter.paidBy}`
+    : sql``
+  const split = filter && filter.splitTypes.length > 0
+    ? sql`AND ${sql.raw(`${a}split_type`)} IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
+    : sql``
+  const cats = filter && filter.categories.length > 0
+    ? sql`AND ${sql.raw(`${a}category`)} IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
+    : sql``
+  // Reuse assetIdsScopeSql but with table-aliased column. The helper hard-codes
+  // `asset_id` so for the joined query we expand the logic inline here.
+  const assets = (() => {
+    if (!filter || filter.assetIds.length === 0) return sql``
+    const uuids: string[] = []
+    let includeNone = false
+    for (const id of filter.assetIds) {
+      if (id === ASSET_FILTER_NONE) includeNone = true
+      else uuids.push(id)
+    }
+    const col = sql.raw(`${a}asset_id`)
+    if (uuids.length === 0 && includeNone) return sql`AND ${col} IS NULL`
+    if (uuids.length > 0 && !includeNone) {
+      return sql`AND ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
+    }
+    return sql`AND (${col} IS NULL OR ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
+  })()
+  return sql`${dateClause} ${payer} ${split} ${cats} ${assets}`
+}
+
+/**
+ * Sum active CashTransactions for a group, grouped by category, ordered by
+ * total desc. The default scope is the local-Taipei calendar month
+ * (`monthKey`), but callers can pass `dateRange` to use a custom window or
+ * `filter` to narrow by payer / split / categories / assetIds — kept in lock
+ * step with the records feed so the stats card and the list always tell the
+ * same story.
  *
  * Excludes Settlements / IncomeTransactions (純支出視角) and soft-deleted rows.
- * Reused by #44 monthly review — keep the shape stable.
+ * Reused by #44 monthly review — its callers pass only `groupId` + `monthKey`,
+ * so back-compat is preserved.
  */
 export async function monthlyStatsByCategory(
   groupId: string,
-  monthKey: string,
+  monthKey: string | undefined,
+  dateRange?: DateRange | null,
+  filter?: ResolvedTxnFilter,
 ): Promise<CategoryStatRow[]> {
-  const { startIso, endIso } = monthRangeIso(monthKey)
+  const scope = statsScopeClauses(monthKey, dateRange, filter)
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -537,8 +596,7 @@ export async function monthlyStatsByCategory(
     FROM "CashTransactions"
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
-      AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
-      AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp
+      ${scope}
     GROUP BY category
     ORDER BY total DESC
   `)
@@ -550,12 +608,19 @@ export async function monthlyStatsByCategory(
  * key=null for transactions without an asset (rendered as "其他支出"). Asset names
  * are read from Assets without filtering deletedAt so soft-deleted assets still
  * show their original name instead of "未命名".
+ *
+ * Pinning the asset filter on this query is still allowed but the caller
+ * normally avoids it — the breakdown would degenerate to one bar. The
+ * MonthlyStatsSection auto-switches to the by-category breakdown when
+ * `filter.assetIds` is non-empty so this query is rarely called in that state.
  */
 export async function monthlyStatsByAsset(
   groupId: string,
-  monthKey: string,
+  monthKey: string | undefined,
+  dateRange?: DateRange | null,
+  filter?: ResolvedTxnFilter,
 ): Promise<AssetStatRow[]> {
-  const { startIso, endIso } = monthRangeIso(monthKey)
+  const scope = statsScopeClauses(monthKey, dateRange, filter, 'ct')
   const rows = await db.execute<{
     asset_id: string | null
     asset_name: string | null
@@ -571,8 +636,7 @@ export async function monthlyStatsByAsset(
     LEFT JOIN "Assets" a ON a.id = ct.asset_id
     WHERE ct.group_id = ${groupId}
       AND ct.deleted_at IS NULL
-      AND (ct.transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
-      AND (ct.transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp
+      ${scope}
     GROUP BY ct.asset_id, a.name
     ORDER BY total DESC
   `)

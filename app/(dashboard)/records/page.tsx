@@ -3,6 +3,7 @@ import { db } from '@/lib/db/client'
 import { oikosGroups, assets } from '@/lib/db/schema'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { listFeedAllPaged, getGroupCreationMonthKey, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
+import type { ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
 import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
@@ -67,24 +68,37 @@ export default async function RecordsPage({
   const drill = parseDrillFromRecord(resolvedParams)
 
   // Structured filter (URL-synced, shareable). Resolved server-side here so
-  // the initial SSR feed is filtered; the client mirrors via useSearchParams.
+  // the initial SSR feed and stats card are both filtered; the client
+  // mirrors via useSearchParams. The income variant is the same shape minus
+  // the dims that don't apply to income rows (split / expense-cat → cutAll).
   const filter = parseFilterFromRecord(resolvedParams)
-  const resolved: ResolvedTxnFilter | undefined = (filter.payer !== 'all'
+  const filterIsActive = filter.payer !== 'all'
     || filter.split !== 'all'
     || filter.categories.size > 0
-    || filter.assetIds.size > 0)
+    || filter.assetIds.size > 0
+  const partnerId = group.memberA === user.id ? group.memberB : group.memberA
+  const resolvedPaidBy =
+    filter.payer === 'mine'
+      ? user.id
+      : filter.payer === 'theirs'
+        ? partnerId ?? '00000000-0000-0000-0000-000000000000'
+        : null
+  const resolved: ResolvedTxnFilter | undefined = filterIsActive
     ? {
-        paidBy:
-          filter.payer === 'mine'
-            ? user.id
-            : filter.payer === 'theirs'
-              ? (group.memberA === user.id ? group.memberB : group.memberA)
-                ?? '00000000-0000-0000-0000-000000000000'
-              : null,
+        paidBy: resolvedPaidBy,
         splitTypes: filter.split === 'all' ? [] : [filter.split],
         categories: Array.from(filter.categories),
         assetIds: Array.from(filter.assetIds),
         excludeSettlements: hidesSettlements(filter),
+      }
+    : undefined
+  const resolvedIncome: ResolvedIncomeFilter | undefined = filterIsActive
+    ? {
+        recipientId: resolvedPaidBy,
+        assetIds: Array.from(filter.assetIds),
+        // Income has no split / expense-category vocabulary — if either is
+        // active, drop income rows entirely (mirrors the feed's contract).
+        cutAll: filter.split !== 'all' || filter.categories.size > 0,
       }
     : undefined
 
@@ -165,6 +179,9 @@ export default async function RecordsPage({
           monthKey={monthKey}
           view={view}
           forceCompact={forceCompact}
+          dateRange={dateRange}
+          filter={resolved}
+          incomeFilter={resolvedIncome}
         />
       }
     />
