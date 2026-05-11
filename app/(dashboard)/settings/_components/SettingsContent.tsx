@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
+import { DangerZone, type PendingSwap } from './DangerZone'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
@@ -33,10 +34,17 @@ interface Props {
   appVersion: string
   currentLocale: string
   groupDefaultRatioA: number | null
+  /** True iff viewer is member_a on the group. Drives the leave flow's branching. */
+  viewerIsMemberA: boolean
+  /** Signed balance from member_a's POV (positive = A owes B). */
+  groupBalance: number
+  /** A pending swap proposal on this group, or null if none. */
+  pendingSwap: PendingSwap | null
 }
 
 export function SettingsContent({
   viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
+  viewerIsMemberA, groupBalance, pendingSwap,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -347,6 +355,17 @@ export function SettingsContent({
           </div>
         )}
       </Section>
+
+      {partner && (
+        <DangerZone
+          viewerIsMemberA={viewerIsMemberA}
+          viewerName={viewer.displayName}
+          partnerName={partner.displayName}
+          groupBalance={groupBalance}
+          pendingSwap={pendingSwap}
+          locale={currentLocale}
+        />
+      )}
 
       <div className="px-4 pb-2 mt-4">
         <LogoutButton />

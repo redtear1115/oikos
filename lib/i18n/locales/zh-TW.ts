@@ -279,6 +279,78 @@ export type Translations = {
     sectionData: string
     trust: string
     exportData: string
+    dangerZone: {
+      sectionTitle: string
+      leaveCta: string
+      swapBanner: {
+        yourProposal: string
+        partnerProposal: string
+        expiresOn: string
+        cancelCta: string
+        rejectCta: string
+        acceptCta: string
+        processing: string
+        errorPrefix: string
+      }
+      flow: {
+        step: string
+        back: string
+        next: string
+        close: string
+        roleA: string
+        roleB: string
+        card1: {
+          titleA: string
+          titleB: string
+          bodyA: string
+          bodyB: string
+        }
+        card2: {
+          title: string
+          body: string
+        }
+        card3: {
+          title: string
+          intro: string
+          bullets: string[]
+        }
+        card4: {
+          title: string
+          body: string
+          yesB: string
+          yesASwap: string
+          no: string
+        }
+        finalConfirm: {
+          title: string
+          balanceOk: string
+          balanceNotZero: string
+          settleCta: string
+          typePromptPrefix: string
+          typePromptSuffix: string
+          typePlaceholder: string
+          confirmText: string
+          leaveButton: string
+          leaving: string
+        }
+        swapProposed: {
+          title: string
+          body: string
+          ok: string
+        }
+      }
+      errors: {
+        swapAlreadyPending: string
+        noPendingSwap: string
+        swapExpired: string
+        cannotConfirmOwnProposal: string
+        notAMember: string
+        onlyMemberBCanLeave: string
+        balanceNotZero: string
+        soloGroup: string
+        fallback: string
+      }
+    }
   }
 
   csvExport: {
@@ -1241,6 +1313,85 @@ export const zhTW: Translations = {
     sectionData: '資料',
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
+    dangerZone: {
+      sectionTitle: '離開帳本',
+      leaveCta: '我想離開這本帳本',
+      swapBanner: {
+        yourProposal: '你提出了身份互換，等對方確認',
+        partnerProposal: '{partner} 提出了身份互換，等你確認',
+        expiresOn: '{date} 前未確認會自動失效',
+        cancelCta: '撤回',
+        rejectCta: '拒絕',
+        acceptCta: '接受並互換',
+        processing: '處理中…',
+        errorPrefix: '操作失敗：',
+      },
+      flow: {
+        step: '第 {current} / {total} 步',
+        back: '上一步',
+        next: '下一步',
+        close: '關閉',
+        roleA: '主帳號',
+        roleB: '副帳號',
+        card1: {
+          titleA: '你目前是這本帳本的「主帳號」',
+          titleB: '你目前是這本帳本的「副帳號」',
+          bodyA: '主帳號是建立這本帳本的人。為了保留兩人共同的歷史，主帳號不能直接離開——你需要先跟 {partner} 互換身份，才能以副帳號的身份離開。',
+          bodyB: '副帳號是後來加入的人。如果你決定離開，可以直接離開，{partner} 會繼續持有這本帳本。',
+        },
+        card2: {
+          title: '如果 {memberA}（主帳號）離開會發生什麼',
+          body: '主帳號不能直接離開。如果 {memberA} 想離開，必須先發起身份互換，{memberB} 同意後兩人身份對調，{memberA} 才能以副帳號的身份離開。',
+        },
+        card3: {
+          title: '如果 {memberB}（副帳號）離開會發生什麼',
+          intro: '離開不可復原。離開時：',
+          bullets: [
+            '帳目要先結清為 0，才能離開',
+            '{memberB} 名下的車、保單、房子會跟著走',
+            '孩子、寵物、植物沒有歸屬欄位，會留在原帳本',
+            '收支記錄依「誰付的／誰收的」分配',
+            '尚未接受的邀請連結會失效',
+            '原帳本變回單人狀態，由 {memberA} 繼續使用',
+          ],
+        },
+        card4: {
+          title: '確定這些都是你跟對方一起想要的嗎？',
+          body: '離開帳本是兩個人的事。再聊聊也沒關係——這個按鈕，永遠都在。',
+          yesB: '是的，我要離開',
+          yesASwap: '是的，先發起身份互換',
+          no: '還沒，先回去',
+        },
+        finalConfirm: {
+          title: '最後一步',
+          balanceOk: '帳目已結清，可以離開',
+          balanceNotZero: '還有 NT$ {amount} 沒結清。要先在主畫面結算為 0，才能離開。',
+          settleCta: '前往主畫面結算',
+          typePromptPrefix: '請輸入「',
+          typePromptSuffix: '」來確認',
+          typePlaceholder: '離開',
+          confirmText: '離開',
+          leaveButton: '確定離開',
+          leaving: '處理中…',
+        },
+        swapProposed: {
+          title: '已送出互換邀請',
+          body: '等 {partner} 確認後，再回到設定走一次離開流程。提議 7 天內有效，你也可以在「離開帳本」面板隨時撤回。',
+          ok: '知道了',
+        },
+      },
+      errors: {
+        swapAlreadyPending: '已經有一個身份互換提議了',
+        noPendingSwap: '沒有等待中的互換提議',
+        swapExpired: '這個提議已過期',
+        cannotConfirmOwnProposal: '不能自己接受自己的提議',
+        notAMember: '你不是這本帳本的成員',
+        onlyMemberBCanLeave: '只有副帳號可以離開，請先發起身份互換',
+        balanceNotZero: '還有差額沒結清，無法離開',
+        soloGroup: '已經是單人帳本',
+        fallback: '操作失敗，請稍後再試',
+      },
+    },
   },
 
   csvExport: {

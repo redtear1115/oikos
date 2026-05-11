@@ -5,11 +5,13 @@ import { profiles, oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { getLocale } from '@/lib/i18n/t'
+import { getGroupBalance } from '@/lib/db/queries/balance'
 import {
   SettingsContent,
   type PartnerInfo,
   type ViewerInfo,
 } from './_components/SettingsContent'
+import type { PendingSwap } from './_components/DangerZone'
 
 export default async function SettingsPage() {
   const [user, currentLocale] = await Promise.all([getCurrentUser(), getLocale()])
@@ -48,6 +50,16 @@ export default async function SettingsPage() {
       }
     : null
 
+  const viewerIsMemberA = group.memberA === user.id
+  const groupBalance = await getGroupBalance(group.id)
+
+  const pendingSwap: PendingSwap | null = group.pendingSwapProposedBy && group.pendingSwapExpiresAt
+    ? {
+        by: group.pendingSwapProposedBy === user.id ? 'self' : 'partner',
+        expiresAt: group.pendingSwapExpiresAt,
+      }
+    : null
+
   return (
     <div className="relative min-h-dvh pb-[92px]">
       <SettingsContent
@@ -58,6 +70,9 @@ export default async function SettingsPage() {
         appVersion={pkg.version}
         currentLocale={currentLocale}
         groupDefaultRatioA={group?.defaultSplitRatioA ?? null}
+        viewerIsMemberA={viewerIsMemberA}
+        groupBalance={groupBalance}
+        pendingSwap={pendingSwap}
       />
       <BottomNavSkeleton />
     </div>
