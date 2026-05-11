@@ -25,7 +25,7 @@ export default async function PastTimesPage() {
   if (!group) redirect('/setup')
 
   const [epochs, pinnedId, locale, t] = await Promise.all([
-    listEpochs(group.id),
+    listEpochs(group.id, user.id),
     getPinnedEpochId(),
     getLocale(),
     getTranslations(),
