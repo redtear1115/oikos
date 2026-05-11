@@ -1,10 +1,12 @@
 import { db } from '@/lib/db/client'
 import { cashTransactions, profiles } from '@/lib/db/schema'
-import { and, eq, isNull, desc, sql } from 'drizzle-orm'
+import { and, eq, isNull, desc, sql, type SQL } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { monthRangeIso } from '@/lib/monthKey'
 import type { DrillFilter } from '@/lib/drill'
+import type { RecordStatus } from '@/lib/validators'
+import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
 
@@ -22,18 +24,40 @@ export interface FeedRow {
   assetId: string | null
   fuelLogId: string | null  // non-null when created by a FuelLog dual-write
   notes: string | null      // shared memo on a CashTransaction; always null for settlements/income
+  status: RecordStatus      // 'pending' only on transactions; settlements/income are always 'settled'
 }
 
 /**
  * Resolved filter: 誰付 dimension is collapsed to a concrete user id (or null = no filter).
- * 分攤 / categories arrive as concrete arrays (empty array = no filter).
+ * 分攤 / categories / assetIds arrive as concrete arrays (empty array = no filter).
  */
 export interface ResolvedTxnFilter {
   paidBy: string | null
   splitTypes: SplitType[]   // empty = all
-  categories: CategoryId[]  // empty = all
+  categories: CategoryId[]  // empty = all (expense categories)
+  /**
+   * Income categories. Used by `listFeedAllPaged` for the income branch of
+   * the union (cash-only `listTransactionsPaged` ignores it). Empty = all
+   * income passes. Carried on the same resolved filter rather than a
+   * separate type so the caller can resolve once and pass once.
+   */
+  incomeCategories: string[]
+  /**
+   * Empty = all. Members are uuids OR ASSET_FILTER_NONE for the「未歸屬」bucket.
+   * The query expands the sentinel into an `assetId IS NULL` predicate alongside
+   * any uuid `IN (...)` clause, so a filter like `[uuidA, '__none__']` matches
+   * "uuidA OR no-asset" the way the user expects from the chip UI.
+   */
+  assetIds: string[]
   /** True when settlements should be excluded entirely. */
   excludeSettlements: boolean
+  /**
+   * True when an income-only dim is active without a compensating
+   * expense-side dim (currently: incomeCategories set, expense categories
+   * empty). The cash-transactions branch is short-circuited to nothing —
+   * mirrors how the income query handles `cutAll` for expense-only dims.
+   */
+  cutAll?: boolean
 }
 
 export interface TxnRow {
@@ -47,6 +71,7 @@ export interface TxnRow {
   transactedAt: Date
   assetId: string | null
   notes: string | null
+  status: RecordStatus
 }
 
 /** Fetch most recent N active transactions for a group. */
@@ -66,6 +91,7 @@ export async function listRecentTransactions(
       transactedAt: cashTransactions.transactedAt,
       assetId: cashTransactions.assetId,
       notes: cashTransactions.notes,
+      status: cashTransactions.status,
     })
     .from(cashTransactions)
     .where(and(
@@ -83,6 +109,90 @@ export interface TxnCursor {
 }
 
 /**
+ * Resolve `dateRange` to SQL bounds for a Postgres timestamptz column. The
+ * column is converted to local Asia/Taipei time for comparison so a query like
+ * "May 2026" actually means May 1 00:00 → June 1 00:00 in Taipei. Returns
+ * `sql\`\`` when the scope is `all`, allowing the caller to drop the clause.
+ *
+ * Precedence: `dateRange` overrides `monthKey`. Both undefined → no scope.
+ */
+function timestamptzScopeSql(
+  column: 'transacted_at' | 'settled_at',
+  monthKey: string | undefined,
+  dateRange: DateRange | undefined | null,
+): SQL {
+  if (dateRange) {
+    if (dateRange.kind === 'all') return sql``
+    if (dateRange.kind === 'range') {
+      // end is inclusive day → exclusive day = next day
+      const next = nextDayIso(dateRange.end)
+      return sql`AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp >= ${dateRange.start}::timestamp
+                 AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp <  ${next}::timestamp`
+    }
+    // month: convert to ISO range below via monthRangeIso
+    monthKey = dateRange.monthKey
+  }
+  if (!monthKey) return sql``
+  const { startIso, endIso } = monthRangeIso(monthKey)
+  return sql`AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
+             AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp`
+}
+
+/**
+ * Same as timestamptzScopeSql but for the IncomeTransactions.occurred_at date
+ * column (no tz conversion — it's already day-level).
+ */
+function dateColumnScopeSql(
+  monthKey: string | undefined,
+  dateRange: DateRange | undefined | null,
+): SQL {
+  if (dateRange) {
+    if (dateRange.kind === 'all') return sql``
+    if (dateRange.kind === 'range') {
+      const next = nextDayIso(dateRange.end)
+      return sql`AND occurred_at >= ${dateRange.start}::date
+                 AND occurred_at <  ${next}::date`
+    }
+    monthKey = dateRange.monthKey
+  }
+  if (!monthKey) return sql``
+  const { startIso, endIso } = monthRangeIso(monthKey)
+  return sql`AND occurred_at >= ${startIso.slice(0, 10)}::date
+             AND occurred_at <  ${endIso.slice(0, 10)}::date`
+}
+
+function nextDayIso(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d + 1))
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
+}
+
+/**
+ * Build the SQL clause for the asset-multi-select filter. Splits the input
+ * into `__none__` (→ `IS NULL`) and uuid members (→ `IN (...)`), then unions
+ * them with OR so the user's mental model "match A or B or 未歸屬" maps
+ * directly to one row predicate. Returns empty SQL when no asset filter is
+ * active.
+ */
+function assetIdsScopeSql(assetIds: string[]): SQL {
+  if (assetIds.length === 0) return sql``
+  const uuids: string[] = []
+  let includeNone = false
+  for (const id of assetIds) {
+    if (id === ASSET_FILTER_NONE) includeNone = true
+    else uuids.push(id)
+  }
+  // Construct the OR-pair without leaving a stray "OR" if one side is empty.
+  if (uuids.length === 0 && includeNone) {
+    return sql`AND asset_id IS NULL`
+  }
+  if (uuids.length > 0 && !includeNone) {
+    return sql`AND asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
+  }
+  return sql`AND (asset_id IS NULL OR asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
+}
+
+/**
  * Page through active transactions + settlements (newest first) using a composite
  * (transactedAt/settledAt, createdAt) cursor. Pass `cursor=null` for the first page.
  *
@@ -96,6 +206,7 @@ export async function listTransactionsPaged(
   filter?: ResolvedTxnFilter,
   monthKey?: string,
   drill?: DrillFilter | null,
+  dateRange?: DateRange | null,
 ): Promise<FeedRow[]> {
   const txCursor = cursor
     ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
@@ -112,6 +223,7 @@ export async function listTransactionsPaged(
   const txCategory = filter && filter.categories.length > 0
     ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
     : sql``
+  const txAssetIds = filter ? assetIdsScopeSql(filter.assetIds) : sql``
 
   // Drill-down clauses (mutually exclusive with one another). Income drill is
   // not meaningful in this query (it only targets IncomeTransactions), so it
@@ -130,20 +242,13 @@ export async function listTransactionsPaged(
 
   const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
 
-  // Page-level month scope: feed shows only the selected calendar month
-  // (Asia/Taipei). When monthKey is omitted the feed remains all-time.
-  const monthRange = monthKey ? monthRangeIso(monthKey) : null
-  const txMonth = monthRange
-    ? sql`AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
-          AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
-    : sql``
-  const setMonth = monthRange
-    ? sql`AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
-          AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
-    : sql``
+  // Page-level date scope: feed shows only the selected window. Custom range
+  // (from FilterSheet) takes precedence over the legacy single-month param.
+  const txMonth = timestamptzScopeSql('transacted_at', monthKey, dateRange)
+  const setMonth = timestamptzScopeSql('settled_at', monthKey, dateRange)
 
-  // Drop the settlements branch entirely when 分攤 / 分類 dims are active OR
-  // when a drill-down is active (a category/asset drill never matches a
+  // Drop the settlements branch entirely when 分攤 / 分類 / 愛物 dims are active
+  // OR when a drill-down is active (a category/asset drill never matches a
   // settlement, and an income drill renders this query irrelevant — but we
   // still want zero settlements showing through alongside it).
   const settlementsBranch = filter?.excludeSettlements || drillExcludesSettlements
@@ -161,6 +266,7 @@ export async function listTransactionsPaged(
         NULL::uuid AS asset_id,
         NULL::uuid AS fuel_log_id,
         NULL::text AS notes,
+        'settled'::record_status AS status,
         settled_at AS transacted_at,
         created_at,
         'settlement'::text AS kind
@@ -176,6 +282,10 @@ export async function listTransactionsPaged(
   // tab will see zero results, which matches the "this drill has no rows
   // for this tab" contract.
   if (drill?.kind === 'income') return []
+  // Same short-circuit for an income-only structured filter (e.g. user
+  // picked an income category but no expense category — they're saying
+  // "show me income only", so no cash rows should pass).
+  if (filter?.cutAll) return []
 
   const rows = await db.execute<{
     id: string
@@ -188,6 +298,7 @@ export async function listTransactionsPaged(
     asset_id: string | null
     fuel_log_id: string | null
     notes: string | null
+    status: RecordStatus
     transacted_at: Date
     created_at: Date
     kind: FeedKind
@@ -195,7 +306,7 @@ export async function listTransactionsPaged(
     SELECT * FROM (
       SELECT
         id, amount, split_type, split_ratio_a, description, category, paid_by,
-        asset_id, fuel_log_id, notes, transacted_at, created_at,
+        asset_id, fuel_log_id, notes, status, transacted_at, created_at,
         'transaction'::text AS kind
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
@@ -203,6 +314,7 @@ export async function listTransactionsPaged(
       ${txPayer}
       ${txSplit}
       ${txCategory}
+      ${txAssetIds}
       ${txDrillCategory}
       ${txDrillAsset}
       ${txMonth}
@@ -223,6 +335,7 @@ export async function listTransactionsPaged(
     assetId: r.asset_id,
     fuelLogId: r.fuel_log_id ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
     // db.execute() returns timestamps as strings (postgres-js default), not Date —
     // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
     // matches what the page projections expect.
@@ -245,27 +358,18 @@ export async function listFeedAllPaged(
   limit = 20,
   monthKey?: string,
   drill?: DrillFilter | null,
+  filter?: ResolvedTxnFilter,
+  dateRange?: DateRange | null,
 ): Promise<FeedRow[]> {
   const cur = cursor
     ? sql`AND (sort_at, sort_created) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
     : sql``
 
-  // Page-level month scope. CashTransactions/Settlements use timestamptz columns
-  // (Asia/Taipei conversion); IncomeTransactions uses a date column so the range
-  // compares against bare YYYY-MM-DD.
-  const monthRange = monthKey ? monthRangeIso(monthKey) : null
-  const txMonth = monthRange
-    ? sql`AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
-          AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
-    : sql``
-  const setMonth = monthRange
-    ? sql`AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${monthRange.startIso}::timestamp
-          AND (settled_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${monthRange.endIso}::timestamp`
-    : sql``
-  const incMonth = monthRange
-    ? sql`AND occurred_at >= ${monthRange.startIso.slice(0, 10)}::date
-          AND occurred_at <  ${monthRange.endIso.slice(0, 10)}::date`
-    : sql``
+  // Page-level date scope. CashTransactions/Settlements use timestamptz
+  // (Asia/Taipei conversion); IncomeTransactions uses a date column.
+  const txMonth = timestamptzScopeSql('transacted_at', monthKey, dateRange)
+  const setMonth = timestamptzScopeSql('settled_at', monthKey, dateRange)
+  const incMonth = dateColumnScopeSql(monthKey, dateRange)
 
   // Per-drill predicates per branch. Each branch is either narrowed (the drill
   // is meaningful for that row kind) or short-circuited to FALSE (so it never
@@ -293,6 +397,64 @@ export async function listFeedAllPaged(
           ? sql`AND FALSE`
           : sql``
 
+  // Per-branch structured-filter clauses. Settlements have no
+  // split/category/asset; if any of those dims is active, the branch is
+  // dropped wholesale (excludeSettlements). Income rows have no split, but
+  // do have asset and a category column.
+  //
+  // Cross-kind cut rule (matches lib/filter.ts cutsExpense / cutsIncome):
+  //   - Income-only filter (incomeCategories set, expense categories empty)
+  //     → drop ALL cash transactions. The user is saying「show me income only」.
+  //   - Expense-only filter (expense categories set, incomeCategories empty,
+  //     OR split set) → drop ALL income rows. Same rationale, mirrored.
+  //   - Both expense AND income categories set → each kind shows only its
+  //     matching category. No cross-cutting.
+  const txFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+  const txFilterSplit = filter && filter.splitTypes.length > 0
+    ? sql`AND split_type IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
+    : sql``
+  const txFilterCategory = filter && filter.categories.length > 0
+    ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
+    : sql``
+  const txFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
+  // Income-only filter active → no cash rows.
+  const txFilterCutByIncomeOnly = filter?.cutAll ? sql`AND FALSE` : sql``
+
+  const setFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+
+  const incFilterRecipient = filter?.paidBy
+    ? sql`AND recipient_id = ${filter.paidBy}`
+    : sql``
+  const incFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
+  const incFilterIncomeCats = filter && filter.incomeCategories.length > 0
+    ? sql`AND category IN (${sql.join(filter.incomeCategories.map(c => sql`${c}`), sql`, `)})`
+    : sql``
+  // Expense-category active → drop income UNLESS the user has also picked
+  // an income category (in which case they want both kinds, each filtered).
+  const expenseOnlyCatActive =
+    filter !== undefined && filter.categories.length > 0 && filter.incomeCategories.length === 0
+  const incFilterCategoryCut = expenseOnlyCatActive ? sql`AND FALSE` : sql``
+  // 分攤 only exists on cash transactions; if the user picked one, drop income.
+  const incFilterSplitCut = filter && filter.splitTypes.length > 0 ? sql`AND FALSE` : sql``
+
+  const settlementsBranch = filter?.excludeSettlements
+    ? sql``
+    : sql`
+      UNION ALL
+
+      SELECT
+        id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
+        COALESCE(note, '還款'), 'settle',
+        paid_by, NULL::uuid, NULL::uuid, NULL::text, 'settled'::record_status,
+        settled_at AS sort_at, created_at AS sort_created,
+        'settlement'::text AS kind
+      FROM "Settlements"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${setMonth}
+      ${setDrill}
+      ${setFilterPayer}
+    `
+
   const rows = await db.execute<{
     id: string
     amount: number
@@ -304,6 +466,7 @@ export async function listFeedAllPaged(
     asset_id: string | null
     fuel_log_id: string | null
     notes: string | null
+    status: RecordStatus
     sort_at: Date | string
     sort_created: Date | string
     kind: 'transaction' | 'settlement' | 'income'
@@ -311,39 +474,38 @@ export async function listFeedAllPaged(
     SELECT * FROM (
       SELECT
         id, amount, split_type, split_ratio_a, description, category, paid_by,
-        asset_id, fuel_log_id, notes,
+        asset_id, fuel_log_id, notes, status,
         transacted_at AS sort_at, created_at AS sort_created,
         'transaction'::text AS kind
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${txMonth}
       ${txDrill}
+      ${txFilterPayer}
+      ${txFilterSplit}
+      ${txFilterCategory}
+      ${txFilterAssets}
+      ${txFilterCutByIncomeOnly}
 
-      UNION ALL
-
-      SELECT
-        id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
-        COALESCE(note, '還款'), 'settle',
-        paid_by, NULL::uuid, NULL::uuid, NULL::text,
-        settled_at AS sort_at, created_at AS sort_created,
-        'settlement'::text AS kind
-      FROM "Settlements"
-      WHERE group_id = ${groupId} AND deleted_at IS NULL
-      ${setMonth}
-      ${setDrill}
+      ${settlementsBranch}
 
       UNION ALL
 
       SELECT
         id, amount, NULL::split_type, NULL::integer AS split_ratio_a,
         COALESCE(source, ''), category,
-        recipient_id AS paid_by, asset_id, NULL::uuid, NULL::text,
+        recipient_id AS paid_by, asset_id, NULL::uuid, NULL::text, 'settled'::record_status,
         occurred_at::timestamptz AS sort_at, created_at AS sort_created,
         'income'::text AS kind
       FROM "IncomeTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${incMonth}
       ${incDrill}
+      ${incFilterRecipient}
+      ${incFilterAssets}
+      ${incFilterIncomeCats}
+      ${incFilterCategoryCut}
+      ${incFilterSplitCut}
     ) AS feed
     WHERE TRUE ${cur}
     ORDER BY sort_at DESC, sort_created DESC
@@ -361,6 +523,7 @@ export async function listFeedAllPaged(
     assetId: r.asset_id,
     fuelLogId: r.fuel_log_id ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
     transactedAt: r.sort_at instanceof Date ? r.sort_at : new Date(r.sort_at),
     createdAt: r.sort_created instanceof Date ? r.sort_created : new Date(r.sort_created),
     kind: r.kind,
@@ -386,17 +549,76 @@ export interface AssetStatRow {
 }
 
 /**
- * Sum active CashTransactions for a group within a local-Taipei calendar month,
- * grouped by category, ordered by total desc.
+ * Build the WHERE clauses shared by both stats queries: date scope (monthKey
+ * or dateRange) + structured filter (payer / split / categories / assetIds).
+ * Always references columns by `transacted_at` / `paid_by` / `split_type` /
+ * `category` / `asset_id` so it's safe to inline into either GROUP BY query
+ * (both alias the table or query it bare).
+ *
+ * `tableAlias` lets the caller scope the column refs (e.g. `'ct'` for the
+ * by-asset query that joins Assets), avoiding "column reference is ambiguous"
+ * errors when the JOIN exposes the same column name on both sides.
+ */
+function statsScopeClauses(
+  monthKey: string | undefined,
+  dateRange: DateRange | undefined | null,
+  filter: ResolvedTxnFilter | undefined,
+  tableAlias?: string,
+): SQL {
+  const a = tableAlias ? `${tableAlias}.` : ''
+  const dateClause = timestamptzScopeSql(
+    `${a}transacted_at` as 'transacted_at',
+    monthKey,
+    dateRange,
+  )
+  const payer = filter?.paidBy
+    ? sql`AND ${sql.raw(`${a}paid_by`)} = ${filter.paidBy}`
+    : sql``
+  const split = filter && filter.splitTypes.length > 0
+    ? sql`AND ${sql.raw(`${a}split_type`)} IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
+    : sql``
+  const cats = filter && filter.categories.length > 0
+    ? sql`AND ${sql.raw(`${a}category`)} IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
+    : sql``
+  // Reuse assetIdsScopeSql but with table-aliased column. The helper hard-codes
+  // `asset_id` so for the joined query we expand the logic inline here.
+  const assets = (() => {
+    if (!filter || filter.assetIds.length === 0) return sql``
+    const uuids: string[] = []
+    let includeNone = false
+    for (const id of filter.assetIds) {
+      if (id === ASSET_FILTER_NONE) includeNone = true
+      else uuids.push(id)
+    }
+    const col = sql.raw(`${a}asset_id`)
+    if (uuids.length === 0 && includeNone) return sql`AND ${col} IS NULL`
+    if (uuids.length > 0 && !includeNone) {
+      return sql`AND ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
+    }
+    return sql`AND (${col} IS NULL OR ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
+  })()
+  return sql`${dateClause} ${payer} ${split} ${cats} ${assets}`
+}
+
+/**
+ * Sum active CashTransactions for a group, grouped by category, ordered by
+ * total desc. The default scope is the local-Taipei calendar month
+ * (`monthKey`), but callers can pass `dateRange` to use a custom window or
+ * `filter` to narrow by payer / split / categories / assetIds — kept in lock
+ * step with the records feed so the stats card and the list always tell the
+ * same story.
  *
  * Excludes Settlements / IncomeTransactions (純支出視角) and soft-deleted rows.
- * Reused by #44 monthly review — keep the shape stable.
+ * Reused by #44 monthly review — its callers pass only `groupId` + `monthKey`,
+ * so back-compat is preserved.
  */
 export async function monthlyStatsByCategory(
   groupId: string,
-  monthKey: string,
+  monthKey: string | undefined,
+  dateRange?: DateRange | null,
+  filter?: ResolvedTxnFilter,
 ): Promise<CategoryStatRow[]> {
-  const { startIso, endIso } = monthRangeIso(monthKey)
+  const scope = statsScopeClauses(monthKey, dateRange, filter)
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -405,8 +627,7 @@ export async function monthlyStatsByCategory(
     FROM "CashTransactions"
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
-      AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
-      AND (transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp
+      ${scope}
     GROUP BY category
     ORDER BY total DESC
   `)
@@ -418,12 +639,19 @@ export async function monthlyStatsByCategory(
  * key=null for transactions without an asset (rendered as "其他支出"). Asset names
  * are read from Assets without filtering deletedAt so soft-deleted assets still
  * show their original name instead of "未命名".
+ *
+ * Pinning the asset filter on this query is still allowed but the caller
+ * normally avoids it — the breakdown would degenerate to one bar. The
+ * MonthlyStatsSection auto-switches to the by-category breakdown when
+ * `filter.assetIds` is non-empty so this query is rarely called in that state.
  */
 export async function monthlyStatsByAsset(
   groupId: string,
-  monthKey: string,
+  monthKey: string | undefined,
+  dateRange?: DateRange | null,
+  filter?: ResolvedTxnFilter,
 ): Promise<AssetStatRow[]> {
-  const { startIso, endIso } = monthRangeIso(monthKey)
+  const scope = statsScopeClauses(monthKey, dateRange, filter, 'ct')
   const rows = await db.execute<{
     asset_id: string | null
     asset_name: string | null
@@ -439,8 +667,7 @@ export async function monthlyStatsByAsset(
     LEFT JOIN "Assets" a ON a.id = ct.asset_id
     WHERE ct.group_id = ${groupId}
       AND ct.deleted_at IS NULL
-      AND (ct.transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
-      AND (ct.transacted_at AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp
+      ${scope}
     GROUP BY ct.asset_id, a.name
     ORDER BY total DESC
   `)

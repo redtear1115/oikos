@@ -2,17 +2,27 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
-import { FilterSheet } from './FilterSheet'
+import { FilterSheet, type AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
+import { DateRangeChip } from './DateRangeChip'
+import { RecurringMenu } from './RecurringMenu'
 import { TabProvider } from './TabContext'
-import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
+import {
+  applyDateRangeToParams,
+  applyFilterToParams,
+  defaultFilter,
+  isFilterActive,
+  parseFilterFromSearchParams,
+  toWire,
+  type DateRange,
+  type TxnFilter,
+} from '@/lib/filter'
 import {
   applyDrillToParams,
   drillAppliesToTab,
@@ -45,12 +55,24 @@ interface Props {
   /** Upper bound for MonthSwitcher (current Taipei month). */
   maxMonthKey: string
   /**
+   * Resolved date range. When `kind === 'month'`, the legacy MonthSwitcher
+   * controls the scope. When `kind === 'range'` or `kind === 'all'`, the
+   * structured filter is in effect: MonthSwitcher is hidden and replaced by
+   * a DateRangeChip showing the active range with a one-tap clear.
+   */
+  dateRange: DateRange
+  /**
    * Asset name for the active asset drill, resolved server-side. The chip
    * needs the human name and the client doesn't have it — pre-fetching here
    * avoids an extra round-trip on first paint. Null when no asset drill or
    * when the drill targets the「其他」(no-asset) bar.
    */
   drillAssetName?: string | null
+  /**
+   * Active assets in the group, used to populate the FilterSheet's 愛物
+   * multi-select. Sorted by createdAt server-side; we forward verbatim.
+   */
+  assets: AssetOption[]
   /**
    * Server-rendered stats card. Re-renders when ?month / ?view in the URL
    * change; list state is preserved because RecordsList stays mounted across
@@ -59,7 +81,16 @@ interface Props {
   statsSlot?: React.ReactNode
 }
 
-export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAssetName, statsSlot }: Props) {
+export function RecordsList({
+  initial,
+  pageSize,
+  monthKey,
+  maxMonthKey,
+  dateRange,
+  drillAssetName,
+  assets,
+  statsSlot,
+}: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations()
@@ -79,6 +110,21 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
   const effectiveDrillKey = drillKey(effectiveDrill)
   const effectiveDrillWire = effectiveDrill ? toDrillWire(effectiveDrill) : undefined
 
+  // Structured filter — also URL-derived. Server SSR already applied it; the
+  // client mirrors via useSearchParams so the FilterSheet's "current state"
+  // and the loaders / realtime row predicate share one source of truth.
+  const filter = useMemo<TxnFilter>(() => parseFilterFromSearchParams(searchParams), [searchParams])
+  const filterActive = isFilterActive(filter)
+  const filterWire = filterActive ? toWire(filter) : undefined
+  // For TransactionFeed.filter — only pass when active so the empty-state
+  // logic in TransactionFeed correctly distinguishes "no filter" from
+  // "filter that excluded everything".
+  const feedFilterProp = filterActive ? filter : undefined
+  // dateRange travels through to the loaders. SSR already used it for the
+  // initial page; the loaders need it for pagination.
+  const dateRangeForLoader = dateRange.kind === 'month' ? undefined : dateRange
+  const monthKeyForLoader = dateRange.kind === 'month' ? monthKey : undefined
+
   const handleClearDrill = () => {
     const params = new URLSearchParams(searchParams.toString())
     applyDrillToParams(params, null)
@@ -86,12 +132,35 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
     router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
   }
 
+  const handleClearDateRange = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    applyDateRangeToParams(params, { kind: 'month', monthKey: maxMonthKey })
+    const qs = params.toString()
+    router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
+  }
+
+  /**
+   * Build a shareable URL by serializing the current filter, date range, and
+   * drill into URL params. Used by the FilterSheet's "分享連結" button.
+   * Returns the absolute href (origin included) so it's safe to drop into
+   * any messaging app without context.
+   */
+  const buildShareUrl = (next: TxnFilter, nextRange: DateRange) => {
+    const params = new URLSearchParams()
+    applyFilterToParams(params, next)
+    applyDateRangeToParams(params, nextRange)
+    if (drill) applyDrillToParams(params, drill)
+    const qs = params.toString()
+    const path = `/records${qs ? `?${qs}` : ''}`
+    if (typeof window === 'undefined') return path
+    return `${window.location.origin}${path}`
+  }
+
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editingSettlement, setEditingSettlement] = useState<SettlementSheetInitial | null>(null)
   const [adding, setAdding] = useState(false)
   const [addingIncomeNew, setAddingIncomeNew] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [filter, setFilter] = useState<TxnFilter | null>(null)
 
   // Fuel log edit sheet state
   const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
@@ -178,6 +247,7 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
       transactedAt: tx.transactedAt,
       assetId: tx.assetId,
       notes: tx.notes,
+      status: tx.status,
     })
   }
 
@@ -191,8 +261,6 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
 
   const handleMutated = () => router.refresh()
 
-  const filterActive = filter !== null && isFilterActive(filter)
-
   // Tab-filtered initial data
   const tabInitial = useMemo(() => {
     if (tab === 'expense') return initial.filter(r => r.kind !== 'income')
@@ -200,20 +268,22 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
     return initial
   }, [initial, tab])
 
-  // Loaders close over the current monthKey + effective drill so paginating
-  // stays scoped to the selected month + drill-down. Recreated when month or
-  // drill changes — TransactionFeed will use the new loader on the next page
-  // fetch (initial data is already month + drill scoped via SSR, so no
-  // immediate refetch is needed for that flow).
+  // Loaders close over the current monthKey/dateRange + structured filter +
+  // effective drill so paginating stays scoped to the same view as SSR.
+  // Recreated when any of those change — TransactionFeed will use the new
+  // loader on the next page fetch. (Initial data is already SSR-scoped, so
+  // no immediate refetch is needed for that flow.)
   const tabLoader = useMemo(() => {
     if (tab === 'income') {
-      return makeIncomeLoader(20, monthKey, effectiveDrillWire)
+      return makeIncomeLoader(20, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
     }
     if (tab === 'expense') {
-      return (cursor: TxnCursor | null) => loadMoreTransactions(cursor, 20, undefined, monthKey, effectiveDrillWire)
+      return (cursor: TxnCursor | null) =>
+        loadMoreTransactions(cursor, 20, filterWire, monthKeyForLoader, effectiveDrillWire, dateRangeForLoader)
     }
-    return (cursor: TxnCursor | null) => loadMoreFeedAll(cursor, 20, monthKey, effectiveDrillWire)
-  }, [tab, monthKey, effectiveDrillWire])
+    return (cursor: TxnCursor | null) =>
+      loadMoreFeedAll(cursor, 20, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
+  }, [tab, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader])
 
   // Switching tabs keeps the drill in URL, but if the new tab can't apply it
   // we strip it on the way out so SSR initial + chip stay coherent the next
@@ -240,6 +310,25 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
     )
   }
 
+  const handleApplyFilter = (next: TxnFilter, nextRange?: DateRange) => {
+    const params = new URLSearchParams(searchParams.toString())
+    applyFilterToParams(params, next)
+    // /records always passes a concrete dateRange — the optional `?` here is
+    // only because FilterSheet supports a lite mode for /dashboard.
+    if (nextRange) applyDateRangeToParams(params, nextRange)
+    const qs = params.toString()
+    router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
+    setFilterOpen(false)
+  }
+
+  // Date-range key — used in the feed key so a date-range change triggers a
+  // clean remount the same way drill changes do.
+  const dateRangeKey = dateRange.kind === 'month'
+    ? `m:${dateRange.monthKey}`
+    : dateRange.kind === 'range'
+      ? `r:${dateRange.start}:${dateRange.end}`
+      : 'all'
+
   return (
     <div className="relative min-h-dvh pb-[92px]">
       {/* Sticky header + tab bar */}
@@ -254,34 +343,35 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
           >
             {t.records.title}
           </div>
-          {tab !== 'income' && (
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="text-xs font-medium pb-1 cursor-pointer bg-transparent border-0 flex items-center gap-1"
-              style={{ color: 'var(--ink-2)' }}
-              aria-label={t.dashboard.filterAriaLabel}
-            >
-              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
-            </button>
+          {/* Top-right: ⚙ 定期 popover. The previous design had two pills
+              (定期支出 / 定期收入) on the tab row, which crowded the
+              high-traffic tab area. Settings work is low-frequency, so we
+              fold them into a single icon entry up here and free the tab
+              row for the higher-traffic 篩選 affordance. */}
+          <RecurringMenu />
+        </div>
+
+        {/* Page-level date scope. Single-month mode uses the existing
+            MonthSwitcher (back-compat with one-tap chevrons). Custom range /
+            all-time mode hides the switcher and shows a DateRangeChip with
+            a clear button — tapping clear returns to single-month mode at
+            the current Taipei month. */}
+        <div className="px-5 pb-3">
+          {dateRange.kind === 'month' ? (
+            <MonthSwitcher monthKey={monthKey} maxMonthKey={maxMonthKey} />
+          ) : (
+            <DateRangeChip dateRange={dateRange} onClear={handleClearDateRange} />
           )}
         </div>
 
-        {/* Page-level month scope: controls both the stats card and the
-            transaction feed below. Keeps stats and list in one mental model. */}
-        <div className="px-5 pb-3">
-          <MonthSwitcher monthKey={monthKey} maxMonthKey={maxMonthKey} />
-        </div>
-
-        {/* Tabs (left, primary) + recurring-rule settings (right, secondary).
-            Two visually distinct pill styles in one row:
-            - Tabs: solid pill, high-contrast — they're the page's primary
-              control (drives stats title + feed kind).
-            - Setting buttons: outline pill in the mode colour — secondary
-              navigation to the recurring-rule settings page.
-            On narrow viewports `flex-wrap` lets the right group drop to a
-            second line; `ml-auto` keeps it right-aligned in either layout.
-            Mode colours: 深咖啡 #7A5A38 (支出) / 薄荷綠 INCOME_PALETTE.ink (收入). */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pb-3">
+        {/* Tabs (primary navigation) + 篩選 (right-aligned).
+            Both are "narrow the view" controls — placing them in one row
+            unifies the mental model. Tabs use a solid pill / high-contrast
+            style; 篩選 uses a text link style so it doesn't compete with
+            the primary tab pills for attention. Filter button surfaces on
+            every tab — date / asset / payer apply to income too, even
+            though split / category don't. */}
+        <div className="flex items-center gap-x-3 px-5 pb-3">
           <div className="flex items-center" style={{ gap: 8 }}>
             {([
               { id: 'all' as const,     label: t.records.tabAll },
@@ -312,32 +402,15 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
             })}
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Link
-              href="/settings/recurring-expense"
-              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
-              style={{
-                color: '#7A5A38',
-                border: '1px solid #7A5A3833',  // 20% alpha border = subtle outline
-                background: 'var(--surface)',
-              }}
-            >
-              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
-              {t.records.manageRecurringExpense}
-            </Link>
-            <Link
-              href="/settings/recurring-income"
-              className="h-8 px-3 rounded-full text-xs font-medium flex items-center gap-1 transition-colors duration-150"
-              style={{
-                color: P.ink,
-                border: `1px solid ${P.ink}33`,
-                background: 'var(--surface)',
-              }}
-            >
-              <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
-              {t.records.manageRecurringIncome}
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => setFilterOpen(true)}
+            className="ml-auto text-xs font-medium cursor-pointer bg-transparent border-0 flex items-center gap-1"
+            style={{ color: 'var(--ink-2)' }}
+            aria-label={t.dashboard.filterAriaLabel}
+          >
+            {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+          </button>
         </div>
       </div>
 
@@ -364,15 +437,15 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
           mounting a hidden TransactionFeed per tab) so only one feed exists
           in the DOM at a time; switching tabs unmounts the old one and the
           new one fetches its own page-1 cleanly via `key={tab}`. The drill
-          key participates so a drill change also triggers a clean remount
-          (initial data is already drill-filtered via SSR / parent useMemo). */}
+          and date-range keys participate so a change to either also
+          triggers a clean remount (initial data is already SSR-scoped). */}
       <TransactionFeed
-        key={`${tab}:${monthKey}:${effectiveDrillKey}`}
+        key={`${tab}:${dateRangeKey}:${effectiveDrillKey}`}
         initial={tabInitial}
         pageSize={pageSize}
-        monthKey={monthKey}
+        monthKey={monthKeyForLoader}
         onItemClick={handleItemClick}
-        filter={tab !== 'income' ? (filter ?? undefined) : undefined}
+        filter={tab !== 'income' ? feedFilterProp : undefined}
         loader={tabLoader}
         renderRow={tab !== 'income' ? renderRow : undefined}
         emptyState={
@@ -405,12 +478,14 @@ export function RecordsList({ initial, pageSize, monthKey, maxMonthKey, drillAss
       />
       <FilterSheet
         open={filterOpen}
-        current={filter ?? defaultFilter()}
+        currentFilter={filter}
+        currentDateRange={dateRange}
+        defaultMonthKey={maxMonthKey}
+        assets={assets}
         onClose={() => setFilterOpen(false)}
-        onApply={(next) => {
-          setFilter(isFilterActive(next) ? next : null)
-          setFilterOpen(false)
-        }}
+        onApply={handleApplyFilter}
+        onReset={() => handleApplyFilter(defaultFilter(), { kind: 'month', monthKey: maxMonthKey })}
+        onShare={(draft, draftRange) => buildShareUrl(draft, draftRange)}
       />
       <IncomeSheet
         open={editingIncome !== null || addingIncomeNew}

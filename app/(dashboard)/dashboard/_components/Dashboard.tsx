@@ -213,6 +213,7 @@ export function Dashboard({
         transactedAt: tx.transactedAt,
         assetId: tx.assetId,
         notes: tx.notes,
+        status: tx.status,
       },
     })
   }, [startFuelLoad])
@@ -370,7 +371,7 @@ export function Dashboard({
       />
       <FilterSheet
         open={modal.kind === 'filter'}
-        current={filter ?? defaultFilter()}
+        currentFilter={filter ?? defaultFilter()}
         onClose={() => dispatch({ kind: 'closed' })}
         onApply={(next) => {
           setFilter(isFilterActive(next) ? next : null)

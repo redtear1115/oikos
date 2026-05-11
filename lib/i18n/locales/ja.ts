@@ -133,6 +133,10 @@ export const ja: Translations = {
     date: '日付',
     notesLabel: 'メモ（任意・二人とも見られます）',
     notesPlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
+    statusLabel: 'ステータス',
+    statusSettled: '引落済み',
+    statusPending: '引落待ち',
+    statusPendingHint: '引落待ちの記録は実際に引き落とされるまで二人の精算には含まれません。',
     deleteOne: 'この記録を削除',
     deleteConfirmTitle: 'この記録を削除しますか？',
     errors: {
@@ -140,6 +144,10 @@ export const ja: Translations = {
       descriptionRequired: '内容を入力してください',
       noPartner: 'パートナーがまだ参加していません',
     },
+  },
+
+  compactRow: {
+    pendingBadge: '引落待ち',
   },
 
   incomeSheet: {
@@ -182,6 +190,8 @@ export const ja: Translations = {
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
+    recurringMenuLabel: '定期',
+    recurringMenuAriaLabel: '定期収支メニューを開く',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
     stats: {
       title: '支出統計',
@@ -216,7 +226,23 @@ export const ja: Translations = {
     apply: '適用',
     payerSection: '支払い者',
     splitSection: '分担',
-    categorySection: 'カテゴリー（複数選択可）',
+    categorySection: '支出カテゴリー（複数選択可）',
+    incomeCategorySection: '収入カテゴリー（複数選択可）',
+    dateSection: '日付',
+    dateThisMonth: '今月',
+    dateLastMonth: '先月',
+    dateAll: 'すべて',
+    dateCustom: 'カスタム',
+    dateCustomStart: '開始日',
+    dateCustomEnd: '終了日',
+    dateRangeAll: 'すべての期間',
+    dateRangeChipPrefix: '日付',
+    dateRangeClear: '日付範囲をクリア',
+    assetSection: '愛物（複数選択可）',
+    assetNone: '未割り当て',
+    shareLink: '共有リンクをコピー',
+    shareCopied: 'クリップボードにコピーしました',
+    shareFailed: 'コピーに失敗しました',
   },
 
   settings: {

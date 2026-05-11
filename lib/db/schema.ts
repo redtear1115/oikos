@@ -17,6 +17,9 @@ export const invoiceImportRunStatusEnum = pgEnum(
   'invoice_import_run_status',
   ['fetching', 'preview', 'committed', 'failed', 'cancelled'],
 )
+// Per-record lifecycle. 'pending' = 已承諾但未扣款 (credit-card slip / IOU);
+// excluded from GroupBalance until promoted to 'settled'. See drizzle/0028.
+export const recordStatusEnum = pgEnum('record_status', ['settled', 'pending'])
 
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
@@ -87,6 +90,7 @@ export const cashTransactions = pgTable('CashTransactions', {
   assetId: uuid('asset_id').references(() => assets.id),
   fuelLogId: uuid('fuel_log_id').references(() => fuelLogs.id),
   invoiceNumber: text('invoice_number'),
+  status: recordStatusEnum('status').notNull().default('settled'),
   transactedAt: timestamp('transacted_at', { withTimezone: true }).notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

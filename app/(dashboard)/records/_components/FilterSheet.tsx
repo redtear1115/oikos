@@ -4,23 +4,108 @@ import { useState, useEffect } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
-import { defaultFilter, type TxnFilter, type PayerFilter, type SplitFilter } from '@/lib/filter'
+import { PICKABLE_INCOME_CATEGORIES, type IncomeCategoryId } from '@/lib/incomeCategories'
+import {
+  ASSET_FILTER_NONE,
+  type DateRange,
+  type PayerFilter,
+  type SplitFilter,
+  type TxnFilter,
+} from '@/lib/filter'
+import { addMonths, currentMonthKey } from '@/lib/monthKey'
 import { useTranslations } from '@/lib/i18n/client'
+
+export interface AssetOption {
+  id: string
+  name: string
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+}
 
 interface Props {
   open: boolean
   /** Current applied filter — used to seed the draft when the sheet opens. */
-  current: TxnFilter
+  currentFilter: TxnFilter
+  /**
+   * Current applied date range. When omitted, the sheet runs in "lite mode" —
+   * the date section, the愛物 section, and the share-link affordance are
+   * hidden. Used by /dashboard, which has only an in-memory payer/split/cat
+   * filter and no per-page date scope.
+   */
+  currentDateRange?: DateRange
+  /** Fallback monthKey for the "本月" preset. Required iff `currentDateRange` is set. */
+  defaultMonthKey?: string
+  /** Active assets in the group, used to populate the 愛物 multi-select. Lite-mode = []. */
+  assets?: AssetOption[]
   onClose: () => void
-  /** Called with the new filter when the user taps 套用. The sheet does NOT close itself —
-   *  the parent decides (typically: also call onClose). */
-  onApply: (next: TxnFilter) => void
+  /**
+   * Called with the new filter + (optional) date range when the user taps
+   * 套用. The sheet does NOT close itself — the parent decides (typically:
+   * also call onClose).
+   */
+  onApply: (next: TxnFilter, nextRange?: DateRange) => void
+  /** Called when the user taps 重設 — clears all dimensions back to default. */
+  onReset?: () => void
+  /**
+   * Called with the current draft when the user taps 分享連結. Parent returns
+   * a shareable absolute URL (which the sheet writes to the clipboard). When
+   * omitted, the share button is hidden (lite mode).
+   */
+  onShare?: (draft: TxnFilter, draftRange: DateRange) => string
 }
 
-export function FilterSheet({ open, current, onClose, onApply }: Props) {
+type DateRangeMode = 'thisMonth' | 'lastMonth' | 'all' | 'custom'
+
+function dateRangeToMode(r: DateRange, defaultMonthKey: string): DateRangeMode {
+  if (r.kind === 'all') return 'all'
+  if (r.kind === 'range') return 'custom'
+  if (r.monthKey === defaultMonthKey) return 'thisMonth'
+  if (r.monthKey === addMonths(defaultMonthKey, -1)) return 'lastMonth'
+  return 'custom'
+}
+
+function todayIso(): string {
+  // Asia/Taipei calendar day. We render in TW only, so deriving from local
+  // browser date is acceptable; using Intl avoids tz-edge bugs on the date
+  // input default value.
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).formatToParts(new Date())
+  const y = parts.find(p => p.type === 'year')?.value ?? '1970'
+  const m = parts.find(p => p.type === 'month')?.value ?? '01'
+  const d = parts.find(p => p.type === 'day')?.value ?? '01'
+  return `${y}-${m}-${d}`
+}
+
+export function FilterSheet({
+  open,
+  currentFilter,
+  currentDateRange,
+  defaultMonthKey,
+  assets,
+  onClose,
+  onApply,
+  onReset,
+  onShare,
+}: Props) {
   const { isSolo } = useMember()
   const t = useTranslations()
-  const [draft, setDraft] = useState<TxnFilter>(current)
+
+  // Lite mode: no date range / asset / share when the parent doesn't provide
+  // the prerequisite props. Used by /dashboard where the filter is in-memory
+  // only and there's no per-page date scope.
+  const liteMode = currentDateRange === undefined
+  const effectiveDefaultMonthKey = defaultMonthKey ?? currentMonthKey()
+  const effectiveAssets = assets ?? []
+
+  const [draft, setDraft] = useState<TxnFilter>(currentFilter)
+  const [draftMode, setDraftMode] = useState<DateRangeMode>(
+    currentDateRange ? dateRangeToMode(currentDateRange, effectiveDefaultMonthKey) : 'thisMonth',
+  )
+  const [customStart, setCustomStart] = useState<string>(
+    currentDateRange?.kind === 'range' ? currentDateRange.start : todayIso(),
+  )
+  const [customEnd, setCustomEnd] = useState<string>(
+    currentDateRange?.kind === 'range' ? currentDateRange.end : todayIso(),
+  )
+  const [shareToast, setShareToast] = useState('')
 
   const PAYER_OPTIONS: { value: PayerFilter; label: string }[] = [
     { value: 'all',    label: t.common.all },
@@ -39,8 +124,23 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
   // Re-seed the draft whenever the sheet (re-)opens — without this, dismissing without
   // applying and reopening would show the stale draft instead of the live state.
   useEffect(() => {
-    if (open) setDraft({ ...current, categories: new Set(current.categories) })
-  }, [open, current])
+    if (open) {
+      setDraft({
+        ...currentFilter,
+        categories: new Set(currentFilter.categories),
+        incomeCategories: new Set(currentFilter.incomeCategories),
+        assetIds: new Set(currentFilter.assetIds),
+      })
+      if (currentDateRange) {
+        setDraftMode(dateRangeToMode(currentDateRange, effectiveDefaultMonthKey))
+        if (currentDateRange.kind === 'range') {
+          setCustomStart(currentDateRange.start)
+          setCustomEnd(currentDateRange.end)
+        }
+      }
+      setShareToast('')
+    }
+  }, [open, currentFilter, currentDateRange, effectiveDefaultMonthKey])
 
   if (!open) return null
 
@@ -49,6 +149,65 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setDraft({ ...draft, categories: next })
+  }
+
+  const toggleIncomeCategory = (id: IncomeCategoryId) => {
+    const next = new Set(draft.incomeCategories)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setDraft({ ...draft, incomeCategories: next })
+  }
+
+  const toggleAsset = (id: string) => {
+    const next = new Set(draft.assetIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setDraft({ ...draft, assetIds: next })
+  }
+
+  /**
+   * Convert the date-range mode + custom inputs into a concrete DateRange.
+   * Custom mode rejects an inverted range (start > end) by silently swapping
+   * the bounds — easier to recover from a stray tap than blocking the apply.
+   */
+  const resolveDraftRange = (): DateRange => {
+    if (draftMode === 'thisMonth') return { kind: 'month', monthKey: currentMonthKey() }
+    if (draftMode === 'lastMonth') return { kind: 'month', monthKey: addMonths(currentMonthKey(), -1) }
+    if (draftMode === 'all') return { kind: 'all' }
+    const start = customStart <= customEnd ? customStart : customEnd
+    const end = customStart <= customEnd ? customEnd : customStart
+    return { kind: 'range', start, end }
+  }
+
+  const handleApply = () => {
+    onApply(draft, liteMode ? undefined : resolveDraftRange())
+  }
+
+  const handleReset = () => {
+    setDraft({
+      payer: 'all',
+      split: 'all',
+      categories: new Set(),
+      incomeCategories: new Set(),
+      assetIds: new Set(),
+    })
+    setDraftMode('thisMonth')
+    onReset?.()
+  }
+
+  const handleShare = async () => {
+    if (!onShare) return
+    const url = onShare(draft, resolveDraftRange())
+    try {
+      // navigator.clipboard requires a secure context (https or localhost).
+      // Vercel preview / prod / `npm run dev` all qualify, so we don't bother
+      // with a textarea fallback for the long-tail case where it doesn't.
+      await navigator.clipboard.writeText(url)
+      setShareToast(t.filterSheet.shareCopied)
+    } catch {
+      setShareToast(t.filterSheet.shareFailed)
+    }
+    setTimeout(() => setShareToast(''), 2400)
   }
 
   return (
@@ -63,7 +222,7 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
           style={{ borderBottom: '1px solid var(--hairline)' }}
         >
           <button
-            onClick={() => setDraft(defaultFilter())}
+            onClick={handleReset}
             className="text-sm font-medium bg-transparent border-0 cursor-pointer"
             style={{ color: 'var(--ink-2)' }}
           >
@@ -71,7 +230,7 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
           </button>
           <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{t.filterSheet.title}</div>
           <button
-            onClick={() => onApply(draft)}
+            onClick={handleApply}
             className="text-sm font-semibold bg-transparent border-0 cursor-pointer"
             style={{ color: 'var(--accent)' }}
           >
@@ -80,6 +239,56 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
         </div>
 
         <div className="px-5 pt-4 space-y-5 max-h-[70vh] overflow-y-auto">
+          {/* 日期範圍 — presets + custom. Hidden in lite mode (Dashboard).
+              Custom inputs only render when the custom preset is selected so
+              the section stays compact in the common case (本月 / 上月). */}
+          {!liteMode && (
+            <Section title={t.filterSheet.dateSection}>
+              {([
+                { value: 'thisMonth' as const, label: t.filterSheet.dateThisMonth },
+                { value: 'lastMonth' as const, label: t.filterSheet.dateLastMonth },
+                { value: 'all'       as const, label: t.filterSheet.dateAll },
+                { value: 'custom'    as const, label: t.filterSheet.dateCustom },
+              ]).map((o) => (
+                <Chip
+                  key={o.value}
+                  label={o.label}
+                  active={draftMode === o.value}
+                  onClick={() => setDraftMode(o.value)}
+                />
+              ))}
+            </Section>
+          )}
+          {!liteMode && draftMode === 'custom' && (
+            <div className="flex items-center gap-2 -mt-2">
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                aria-label={t.filterSheet.dateCustomStart}
+                className="h-9 px-2 rounded-lg text-sm flex-1"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--ink)',
+                }}
+              />
+              <span style={{ color: 'var(--ink-3)' }}>→</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                aria-label={t.filterSheet.dateCustomEnd}
+                className="h-9 px-2 rounded-lg text-sm flex-1"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--ink)',
+                }}
+              />
+            </div>
+          )}
+
           {/* 誰付的 + 分攤 — pair-mode only. In solo, payer is always self and split is
               always all_mine, so these dimensions are degenerate (every row matches). */}
           {!isSolo && (
@@ -108,7 +317,30 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
             </Section>
           )}
 
-          {/* 分類 (multi) */}
+          {/* 愛物 (multi). Always shows the「未歸屬」chip so the user can
+              isolate transactions that haven't been linked to anything.
+              Empty group has no chips besides 未歸屬 — that's intended;
+              an empty愛物 section reads as "you haven't created any 愛物 yet"
+              without an extra empty-state line. Hidden in lite mode. */}
+          {!liteMode && (
+            <Section title={t.filterSheet.assetSection}>
+              <Chip
+                label={t.filterSheet.assetNone}
+                active={draft.assetIds.has(ASSET_FILTER_NONE)}
+                onClick={() => toggleAsset(ASSET_FILTER_NONE)}
+              />
+              {effectiveAssets.map((a) => (
+                <Chip
+                  key={a.id}
+                  label={a.name}
+                  active={draft.assetIds.has(a.id)}
+                  onClick={() => toggleAsset(a.id)}
+                />
+              ))}
+            </Section>
+          )}
+
+          {/* 分類 (multi) — expense vocabulary. */}
           <Section title={t.filterSheet.categorySection}>
             {PICKABLE_CATEGORIES.map((c) => (
               <Chip
@@ -119,6 +351,58 @@ export function FilterSheet({ open, current, onClose, onApply }: Props) {
               />
             ))}
           </Section>
+
+          {/* 收入分類 (multi) — separate vocabulary from expense categories.
+              Cross-kind cut rule: picking only an expense cat drops income
+              rows; picking only an income cat drops cash rows; picking both
+              shows both kinds, each filtered to its own cat set. Hidden in
+              lite mode (the Dashboard /dashboard FilterSheet is in-memory
+              and only handles cash transactions). */}
+          {!liteMode && (
+            <Section title={t.filterSheet.incomeCategorySection}>
+              {PICKABLE_INCOME_CATEGORIES.map((c) => (
+                <Chip
+                  key={c.id}
+                  label={t.incomeCategory[c.id]}
+                  active={draft.incomeCategories.has(c.id)}
+                  onClick={() => toggleIncomeCategory(c.id)}
+                />
+              ))}
+            </Section>
+          )}
+
+          {/* Share link — surfaces the "this view is shareable" affordance.
+              Sits below the dimensions because it acts on the *draft*, not on
+              what's currently applied (you might want to share a specific
+              filter combo without applying it locally first). Hidden in lite
+              mode (Dashboard's filter is in-memory and not URL-synced). */}
+          {onShare && (
+            <div className="pt-2 pb-4">
+              <button
+                type="button"
+                onClick={handleShare}
+                className="w-full h-10 rounded-[12px] text-sm font-medium cursor-pointer flex items-center justify-center gap-2"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--ink-2)',
+                  border: '1px solid var(--hairline)',
+                }}
+              >
+                <span aria-hidden style={{ fontSize: 13 }}>↗</span>
+                {t.filterSheet.shareLink}
+              </button>
+              {shareToast && (
+                <div
+                  className="text-xs text-center mt-2"
+                  style={{ color: 'var(--ink-3)' }}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {shareToast}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>

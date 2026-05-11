@@ -133,6 +133,10 @@ export const en: Translations = {
     date: 'Date',
     notesLabel: 'Note (optional, visible to both of you)',
     notesPlaceholder: 'Leave a line for your partner, or something to remember later',
+    statusLabel: 'Status',
+    statusSettled: 'Settled',
+    statusPending: 'Pending',
+    statusPendingHint: "Pending entries don't change the shared balance until you mark them settled.",
     deleteOne: 'Delete this entry',
     deleteConfirmTitle: 'Delete this entry?',
     errors: {
@@ -140,6 +144,10 @@ export const en: Translations = {
       descriptionRequired: 'Enter a description',
       noPartner: "Partner hasn't joined yet",
     },
+  },
+
+  compactRow: {
+    pendingBadge: 'Pending',
   },
 
   incomeSheet: {
@@ -182,6 +190,8 @@ export const en: Translations = {
     tabIncome: 'Income',
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
+    recurringMenuLabel: 'Recurring',
+    recurringMenuAriaLabel: 'Open recurring rules menu',
     offlineMoreNeedsNetwork: 'More records need a connection',
     stats: {
       title: 'Expense',
@@ -216,7 +226,23 @@ export const en: Translations = {
     apply: 'Apply',
     payerSection: 'Paid by',
     splitSection: 'Split',
-    categorySection: 'Categories (multi)',
+    categorySection: 'Expense categories (multi)',
+    incomeCategorySection: 'Income categories (multi)',
+    dateSection: 'Date',
+    dateThisMonth: 'This month',
+    dateLastMonth: 'Last month',
+    dateAll: 'All time',
+    dateCustom: 'Custom',
+    dateCustomStart: 'Start date',
+    dateCustomEnd: 'End date',
+    dateRangeAll: 'All time',
+    dateRangeChipPrefix: 'Date',
+    dateRangeClear: 'Clear date range',
+    assetSection: 'Beloved (multi)',
+    assetNone: 'Unassigned',
+    shareLink: 'Copy share link',
+    shareCopied: 'Copied to clipboard',
+    shareFailed: 'Copy failed, please try again',
   },
 
   settings: {

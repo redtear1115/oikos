@@ -202,7 +202,14 @@
       "idx": 28,
       "version": "7",
       "when": 1778500000000,
-      "tag": "0028_leave_group_swap",
+      "tag": "0028_record_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1778600000000,
+      "tag": "0029_leave_group_swap",
       "breakpoints": true
     }
   ]

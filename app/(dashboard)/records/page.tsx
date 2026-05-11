@@ -1,13 +1,22 @@
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups, assets } from '@/lib/db/schema'
-import { and, eq, or } from 'drizzle-orm'
-import { listFeedAllPaged, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
+import { and, eq, isNull, or } from 'drizzle-orm'
+import { listFeedAllPaged, getGroupCreationMonthKey, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
+import type { ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
-import { isMonthKey, currentMonthKey, monthKeyOf } from '@/lib/monthKey'
+import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
 import type { BreakdownView } from './_components/StatsBreakdownToggle'
 import { parseDrillFromRecord } from '@/lib/drill'
+import {
+  cutsExpense,
+  cutsIncome,
+  parseDateRangeFromRecord,
+  parseFilterFromRecord,
+  hidesSettlements,
+  type DateRange,
+} from '@/lib/filter'
 
 const PAGE_SIZE = 20
 
@@ -16,10 +25,17 @@ export default async function RecordsPage({
 }: {
   searchParams: Promise<{
     month?: string
+    from?: string
+    to?: string
+    range?: string
     view?: string
     drillCategory?: string
     drillAsset?: string
     drillIncomeCategory?: string
+    fPayer?: string
+    fSplit?: string
+    fCats?: string
+    fAssets?: string
   }>
 }) {
   const user = await getCurrentUser()
@@ -34,13 +50,17 @@ export default async function RecordsPage({
       .limit(1),
   ])
   if (!group) throw new Error('No group')
-  const { month: rawMonth, view: rawView } = resolvedParams
+  const { view: rawView } = resolvedParams
 
-  // Resolve month scope. Decision: allow scrolling earlier than group creation
-  // (those months render forced-compact, no breakdown). Only future is blocked.
+  // Resolve date scope. Custom range / "all" override the legacy single-month
+  // mode; otherwise we fall back to the current Taipei month. Months in the
+  // future get clamped to current (preserves the existing MonthSwitcher rule).
   const nowKey = currentMonthKey()
-  const requestedMonth = isMonthKey(rawMonth) ? rawMonth : nowKey
-  const monthKey = requestedMonth > nowKey ? nowKey : requestedMonth
+  const dateRange = clampDateRangeToNow(
+    parseDateRangeFromRecord(resolvedParams, nowKey),
+    nowKey,
+  )
+  const monthKey = dateRange.kind === 'month' ? dateRange.monthKey : nowKey
   const view: BreakdownView = rawView === 'asset' ? 'asset' : 'category'
 
   // Drill-down filter — set when the user taps a detail bar in the stats card.
@@ -49,9 +69,46 @@ export default async function RecordsPage({
   // useSearchParams to keep its loaders + chip in sync.
   const drill = parseDrillFromRecord(resolvedParams)
 
+  // Structured filter (URL-synced, shareable). Resolved server-side here so
+  // the initial SSR feed and stats card are both filtered; the client
+  // mirrors via useSearchParams. The income variant is the same shape minus
+  // the dims that don't apply to income rows (split / expense-cat → cutAll).
+  const filter = parseFilterFromRecord(resolvedParams)
+  const filterIsActive = filter.payer !== 'all'
+    || filter.split !== 'all'
+    || filter.categories.size > 0
+    || filter.incomeCategories.size > 0
+    || filter.assetIds.size > 0
+  const partnerId = group.memberA === user.id ? group.memberB : group.memberA
+  const resolvedPaidBy =
+    filter.payer === 'mine'
+      ? user.id
+      : filter.payer === 'theirs'
+        ? partnerId ?? '00000000-0000-0000-0000-000000000000'
+        : null
+  const resolved: ResolvedTxnFilter | undefined = filterIsActive
+    ? {
+        paidBy: resolvedPaidBy,
+        splitTypes: filter.split === 'all' ? [] : [filter.split],
+        categories: Array.from(filter.categories),
+        incomeCategories: Array.from(filter.incomeCategories),
+        assetIds: Array.from(filter.assetIds),
+        excludeSettlements: hidesSettlements(filter),
+        cutAll: cutsExpense(filter),
+      }
+    : undefined
+  const resolvedIncome: ResolvedIncomeFilter | undefined = filterIsActive
+    ? {
+        recipientId: resolvedPaidBy,
+        assetIds: Array.from(filter.assetIds),
+        incomeCategories: Array.from(filter.incomeCategories),
+        cutAll: cutsIncome(filter),
+      }
+    : undefined
+
   const creationMonthFromDb = await getGroupCreationMonthKey(group.id)
   const creationMonthKey = creationMonthFromDb ?? monthKeyOf(group.createdAt)
-  const forceCompact = monthKey < creationMonthKey
+  const forceCompact = dateRange.kind === 'month' && monthKey < creationMonthKey
 
   // For an asset drill, resolve the asset name so the chip can display it
   // without a second client round-trip. We don't filter by deletedAt — a
@@ -68,9 +125,30 @@ export default async function RecordsPage({
     drillAssetName = a?.name ?? null
   }
 
+  // Asset list for the FilterSheet's 愛物 multi-select. Active assets only —
+  // a deleted asset shouldn't appear as a fresh filter option (existing
+  // selections that reference a deleted asset still survive via the
+  // `__none__`-style sentinel handling on the server, but the UI doesn't
+  // surface them).
+  const filterAssets = await db
+    .select({ id: assets.id, name: assets.name, type: assets.type })
+    .from(assets)
+    .where(and(eq(assets.groupId, group.id), isNull(assets.deletedAt)))
+    .orderBy(assets.createdAt)
+
   // Feed and creation-month metadata in parallel; feed is now scoped to the
-  // selected month so list and stats share one time window.
-  const feedRows = await listFeedAllPaged(group.id, null, PAGE_SIZE, monthKey, drill)
+  // selected date range and structured filter.
+  const feedMonthKey = dateRange.kind === 'month' ? monthKey : undefined
+  const feedDateRange = dateRange.kind === 'month' ? null : dateRange
+  const feedRows = await listFeedAllPaged(
+    group.id,
+    null,
+    PAGE_SIZE,
+    feedMonthKey,
+    drill,
+    resolved,
+    feedDateRange,
+  )
 
   const initial = feedRows.map((r) => ({
     id: r.id,
@@ -86,6 +164,7 @@ export default async function RecordsPage({
     assetId: r.assetId,
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes,
+    status: r.status ?? 'settled',
   }))
 
   return (
@@ -94,7 +173,9 @@ export default async function RecordsPage({
       pageSize={PAGE_SIZE}
       monthKey={monthKey}
       maxMonthKey={nowKey}
+      dateRange={dateRange}
       drillAssetName={drillAssetName}
+      assets={filterAssets}
       statsSlot={
         <MonthlyStatsSection
           userId={user.id}
@@ -102,8 +183,23 @@ export default async function RecordsPage({
           monthKey={monthKey}
           view={view}
           forceCompact={forceCompact}
+          dateRange={dateRange}
+          filter={resolved}
+          incomeFilter={resolvedIncome}
         />
       }
     />
   )
+}
+
+/**
+ * Clamp a future-month-range to "now" so a tampered ?month=2099-01 or
+ * ?from=2099-01-01 falls back to the current Taipei month instead of
+ * rendering an empty page (or worse, looking like data was lost).
+ */
+function clampDateRangeToNow(r: DateRange, nowMonthKey: string): DateRange {
+  if (r.kind === 'month' && r.monthKey > nowMonthKey) {
+    return { kind: 'month', monthKey: nowMonthKey }
+  }
+  return r
 }

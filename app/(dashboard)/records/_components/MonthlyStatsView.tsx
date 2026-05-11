@@ -40,6 +40,14 @@ interface Props {
   /** When true (e.g. user scrolled to a month before group creation), the card
    *  is forced into compact mode and the toggle / expand button disappear. */
   forceCompact?: boolean
+  /**
+   * When true, the StatsBreakdownToggle hides its「愛物」option — set when
+   * the structured filter has 愛物 active, which would degenerate the
+   * by-asset breakdown to a single bar. The server has already auto-switched
+   * `view` to 'category' in this case; the toggle just reflects that there's
+   * nothing useful to switch to.
+   */
+  assetToggleHidden?: boolean
 }
 
 export function MonthlyStatsView({
@@ -50,6 +58,7 @@ export function MonthlyStatsView({
   expenseTotal,
   incomeTotal,
   forceCompact = false,
+  assetToggleHidden = false,
 }: Props) {
   const t = useTranslations()
   const tab = useRecordsTab()
@@ -131,7 +140,7 @@ export function MonthlyStatsView({
         {!isEmpty && allowToggle && (
           <div className="flex items-center gap-2">
             {!showCollapsed && hasBreakdown && !isIncomeTab && (
-              <StatsBreakdownToggle value={view} />
+              <StatsBreakdownToggle value={view} hideAsset={assetToggleHidden} />
             )}
             <ToggleButton
               onClick={toggle}
