@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.14.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.15.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -38,6 +38,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.14.0](CHANGELOG.md#0140---2026-05-10) | 沒有訊號的時候，也還看得見．本月攤開來看一次，斷線了也記得 |
 | [v0.14.1](CHANGELOG.md#0141---2026-05-10) | 分擔可以不對半．依比例分 + UI 細修 + SW 修補 |
 | [v0.14.2](CHANGELOG.md#0142---2026-05-11) | 紀錄可以更貼手．自動完成 + 點選即篩選 |
+| [v0.15.0](CHANGELOG.md#0150---2026-05-12) | 離開也保留陪伴．pending 收斂 |
 
 ## Backlog / 未釋出版本
 
@@ -45,7 +46,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
-| [v0.15.0](https://github.com/redtear1115/oikos/milestone/5) | 離開也保留陪伴．pending 收斂 |
 | [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 |
 | [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 |
 | [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
