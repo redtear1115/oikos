@@ -5,6 +5,7 @@
 
 私人家庭工具，非 SaaS。所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first PWA。
 
+> 線上服務：<https://futari.southern-light.dev/>
 > 最新版本與變更紀錄請見 [CHANGELOG.md](CHANGELOG.md)。開發脈絡見 [CLAUDE.md](CLAUDE.md)。
 
 ---
