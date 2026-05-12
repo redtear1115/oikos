@@ -52,6 +52,8 @@ export interface DashboardFeedData {
 
 export interface DashboardProps {
   balance: number
+  /** Delta to add to `balance` for the include-pending view (issue #164). */
+  pendingBalanceDelta: number
   pageSize: number
   incomeMonthTotal: number
   incomeMonthCount: number
@@ -64,6 +66,7 @@ export interface DashboardProps {
 
 export function Dashboard({
   balance,
+  pendingBalanceDelta,
   pageSize,
   incomeMonthTotal,
   incomeMonthCount,
@@ -259,6 +262,7 @@ export function Dashboard({
       ) : (
         <BalanceHero
           rawBalance={balance}
+          pendingBalanceDelta={pendingBalanceDelta}
           onSettleMutated={handleMutated}
           mode={mode}
           onModeChange={setMode}

@@ -2,7 +2,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups, profiles } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
-import { getGroupBalance } from '@/lib/db/queries/balance'
+import { getGroupBalance, getGroupPendingBalanceDelta } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { resolveViewerEpochWindow, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
@@ -70,8 +70,9 @@ export default async function DashboardPage() {
   // Fast path — what hero/banner needs to paint immediately. Awaited so
   // BalanceHero / SoloBanner / ModeTogglePlaceholder render with real data.
   // The latest income (limit 1) covers the hero label without pulling the full feed.
-  const [balance, incomeSummary, pendings, expensePendings, latestIncomes, t] = await Promise.all([
+  const [balance, pendingBalanceDelta, incomeSummary, pendings, expensePendings, latestIncomes, t] = await Promise.all([
     getGroupBalance(group.id),
+    getGroupPendingBalanceDelta(group.id),
     listIncomeMonthSummary(group.id, yyyymm),
     listActivePendings(group.id),
     listActiveExpensePendings(group.id),
@@ -194,6 +195,7 @@ export default async function DashboardPage() {
       )}
       <Dashboard
         balance={balance}
+        pendingBalanceDelta={pendingBalanceDelta}
         pageSize={PAGE_SIZE}
         incomeMonthTotal={incomeSummary.total}
         incomeMonthCount={incomeSummary.count}

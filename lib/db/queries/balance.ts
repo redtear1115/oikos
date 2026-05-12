@@ -71,3 +71,42 @@ export async function getGroupBalance(groupId: string): Promise<number> {
   `)
   return rows[0]?.balance ?? 0
 }
+
+/**
+ * Sum of balance deltas for `status = 'pending'` transactions (issue #164 v2).
+ *
+ * GroupBalance.balance caches the settled-only view (see recalcGroupBalance).
+ * Add this delta on top to get the "after-settle" / include-pending view.
+ *
+ * Returns 0 for solo groups (no member_b means balance is structurally 0;
+ * matches the recalcGroupBalance solo guard).
+ */
+export async function getGroupPendingBalanceDelta(groupId: string): Promise<number> {
+  const rows = await db.execute<{ delta: number }>(sql`
+    SELECT CASE
+      WHEN (SELECT member_b FROM "OikosGroups" WHERE id = ${groupId}) IS NULL THEN 0
+      ELSE COALESCE(SUM(
+        CASE
+          WHEN paid_by = (SELECT member_a FROM "OikosGroups" WHERE id = ${groupId})
+            THEN CASE split_type
+              WHEN 'all_mine'   THEN 0
+              WHEN 'all_theirs' THEN amount
+              WHEN 'half'       THEN CEIL(amount / 2.0)::int
+              WHEN 'weighted'   THEN CEIL(amount * (100 - split_ratio_a) / 100.0)::int
+            END
+          ELSE CASE split_type
+              WHEN 'all_mine'   THEN 0
+              WHEN 'all_theirs' THEN -amount
+              WHEN 'half'       THEN -CEIL(amount / 2.0)::int
+              WHEN 'weighted'   THEN -CEIL(amount * split_ratio_a / 100.0)::int
+            END
+        END
+      ), 0)
+    END AS delta
+    FROM "CashTransactions"
+    WHERE group_id = ${groupId}
+      AND deleted_at IS NULL
+      AND status = 'pending'
+  `)
+  return rows[0]?.delta ?? 0
+}

@@ -59,6 +59,37 @@ export function computeBalance(input: {
   return net
 }
 
+export type TxStatus = 'settled' | 'pending'
+
+export interface TxDeltaWithStatus extends TxDelta {
+  status: TxStatus
+}
+
+/**
+ * Balance display mode (issue #164).
+ *   - 'settled'         : v1 behaviour. Only `status='settled'` rows count.
+ *                         GroupBalance.balance is cached against this view.
+ *   - 'include-pending' : "after-settle" view. Pending rows (e.g. credit-card
+ *                         charges not yet billed) participate in the formula.
+ *
+ * Settlements have no status — they always count in both modes.
+ */
+export type BalanceMode = 'settled' | 'include-pending'
+
+export function computeBalanceWithMode(input: {
+  transactions: TxDeltaWithStatus[]
+  settlements: SettlementDelta[]
+  mode: BalanceMode
+}): number {
+  let net = 0
+  for (const t of input.transactions) {
+    if (input.mode === 'settled' && t.status !== 'settled') continue
+    net += transactionDelta(t)
+  }
+  for (const s of input.settlements) net += settlementDelta(s)
+  return net
+}
+
 /**
  * Flip raw balance to viewer perspective.
  * Returns positive if `viewerIsA` and balance > 0 (you are owed),

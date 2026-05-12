@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { transactionDelta, settlementDelta, computeBalance } from '@/lib/balance'
+import {
+  transactionDelta,
+  settlementDelta,
+  computeBalance,
+  computeBalanceWithMode,
+  type TxDeltaWithStatus,
+} from '@/lib/balance'
 
 describe('transactionDelta — from member_a perspective', () => {
   it('all_mine paid by A → 0', () => {
@@ -103,5 +109,88 @@ describe('computeBalance', () => {
     const memberBView = -balance             // -120 (you owe)
     expect(memberAView).toBe(120)
     expect(memberBView).toBe(-120)
+  })
+})
+
+// Issue #164 — balance computation must support two modes:
+//   - 'settled'         : v1 behaviour, only status='settled' rows count
+//   - 'include-pending' : pending rows participate in the same formula
+// Settlements always count (no status field on Settlements).
+describe('computeBalanceWithMode (issue #164)', () => {
+  const txns: TxDeltaWithStatus[] = [
+    { amount: 200, splitType: 'half', payerIs: 'a', status: 'settled' },       // +100
+    { amount: 100, splitType: 'all_theirs', payerIs: 'b', status: 'settled' }, // -100
+    { amount: 600, splitType: 'half', payerIs: 'a', status: 'pending' },       // +300 (only when include-pending)
+    { amount: 400, splitType: 'all_theirs', payerIs: 'b', status: 'pending' }, // -400 (only when include-pending)
+  ]
+  const settles = [
+    { amount: 50, payerIs: 'b' as const },  // -50 always
+  ]
+
+  it('settled mode: pending rows are ignored', () => {
+    const result = computeBalanceWithMode({
+      transactions: txns,
+      settlements: settles,
+      mode: 'settled',
+    })
+    // 100 + (-100) + (-50) = -50
+    expect(result).toBe(-50)
+  })
+
+  it('include-pending mode: pending rows participate', () => {
+    const result = computeBalanceWithMode({
+      transactions: txns,
+      settlements: settles,
+      mode: 'include-pending',
+    })
+    // 100 + (-100) + 300 + (-400) + (-50) = -150
+    expect(result).toBe(-150)
+  })
+
+  it('matches computeBalance(settled) when no pending rows', () => {
+    const noPending: TxDeltaWithStatus[] = [
+      { amount: 240, splitType: 'half', payerIs: 'a', status: 'settled' },
+      { amount: 100, splitType: 'all_mine', payerIs: 'b', status: 'settled' },
+    ]
+    const a = computeBalanceWithMode({
+      transactions: noPending,
+      settlements: [],
+      mode: 'settled',
+    })
+    const b = computeBalanceWithMode({
+      transactions: noPending,
+      settlements: [],
+      mode: 'include-pending',
+    })
+    const reference = computeBalance({
+      transactions: noPending.map(({ status: _s, ...rest }) => rest),
+      settlements: [],
+    })
+    expect(a).toBe(120)
+    expect(b).toBe(120)
+    expect(a).toBe(reference)
+  })
+
+  it('weighted pending row contributes only in include-pending mode', () => {
+    const rows: TxDeltaWithStatus[] = [
+      { amount: 3000, splitType: 'weighted', payerIs: 'a', splitRatioA: 30, status: 'pending' },
+    ]
+    // payerIs=a, ratioA=30 → owedToA = ceil(3000 * 70 / 100) = 2100
+    expect(computeBalanceWithMode({ transactions: rows, settlements: [], mode: 'settled' })).toBe(0)
+    expect(computeBalanceWithMode({ transactions: rows, settlements: [], mode: 'include-pending' })).toBe(2100)
+  })
+
+  it('settlements always count regardless of mode', () => {
+    const onlySettles = {
+      transactions: [] as TxDeltaWithStatus[],
+      settlements: [{ amount: 200, payerIs: 'a' as const }],
+    }
+    expect(computeBalanceWithMode({ ...onlySettles, mode: 'settled' })).toBe(200)
+    expect(computeBalanceWithMode({ ...onlySettles, mode: 'include-pending' })).toBe(200)
+  })
+
+  it('empty input is 0 in both modes', () => {
+    expect(computeBalanceWithMode({ transactions: [], settlements: [], mode: 'settled' })).toBe(0)
+    expect(computeBalanceWithMode({ transactions: [], settlements: [], mode: 'include-pending' })).toBe(0)
   })
 })
