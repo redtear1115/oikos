@@ -57,6 +57,9 @@ export interface AssetSheetInitial {
   insTermYears?: number | null
   insVehicleId?: string | null
   insExpectedMaturityAmount?: number | null
+  // #166 — current account value for investment-linked savings policies.
+  // Only persisted when kind === 'savings'.
+  insAccountValue?: number | null
   // House-specific
   houseAddress?: string | null
   housePurchasedAt?: string | null
