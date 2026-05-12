@@ -406,6 +406,14 @@ export const ja: Translations = {
       living: '生命体',
       coverage: '保障',
     },
+    tabs: {
+      aibutsu: '愛物',
+      guardian: '守護',
+    },
+    tabEmpty: {
+      aibutsuHint: 'まだ愛物がありません。右下のボタンから最初の一つを記録しましょう。',
+      guardianHint: 'まだ保険がありません。愛物を守る保障も一緒に記録できます。',
+    },
     addCar: '車を追加',
     addSecondCar: '2 台目の車を追加',
     insuranceList: {

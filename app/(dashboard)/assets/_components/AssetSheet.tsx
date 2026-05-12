@@ -94,14 +94,19 @@ export interface AssetSheetInitial {
   notes?: string | null
 }
 
+type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance' | 'house'
+
 interface Props {
   open: boolean
   onClose: () => void
   initial?: AssetSheetInitial
+  /** Create-mode preselection. Ignored when `initial` is provided (edit mode
+   *  always uses the row's actual type). Drives which type tile is highlighted
+   *  on open. v0.15.2 #178 — used by the 守護 tab FAB to land directly on
+   *  insurance instead of the default 'pet'. */
+  initialType?: PickerType
   onMutated?: (kind: 'saved' | 'deleted') => void
 }
-
-type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'insurance' | 'house'
 
 // Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
 // Secondary tiles (house / insurance) reveal under 「更多」 to keep the row tidy
@@ -111,7 +116,7 @@ const PRIMARY_TYPES: PickerType[] = ['car', 'child', 'pet', 'plant']
 const SECONDARY_TYPES: PickerType[] = ['house', 'insurance']
 const isSecondaryType = (t: PickerType) => SECONDARY_TYPES.includes(t)
 
-export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
+export function AssetSheet({ open, onClose, initial, initialType, onMutated }: Props) {
   const isEdit = !!initial
   const locale = useLocale()
   const t = useTranslations()
@@ -298,7 +303,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         getChildAssets().then(setChildAssets).catch(() => {})
       }
     } else {
-      setSelectedType('pet')
+      setSelectedType(initialType ?? 'pet')
       setName('')
       setPlate('')
       setPurchasedAt(null)
@@ -364,7 +369,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setError('')
     const t = setTimeout(() => nameInputRef.current?.focus(), 350)
     return () => clearTimeout(t)
-  }, [open, initial, viewer.id])
+  }, [open, initial, initialType, viewer.id])
 
   const isCar = selectedType === 'car'
 
