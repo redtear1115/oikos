@@ -48,9 +48,15 @@ interface Props {
    * Called after a successful create/edit/delete. Caller refreshes its own data.
    * Optional `info.isFirstTransaction` is only set on a successful create when
    * the per-user paid_by count for the group flipped to 1, used by Dashboard
-   * to surface the #43 phase C card.
+   * to surface the #43 phase C card. `savedAmount` / `edit` / `deleted` drive
+   * the success toast on the dashboard side.
    */
-  onMutated?: (info?: { isFirstTransaction?: boolean }) => void
+  onMutated?: (info?: {
+    isFirstTransaction?: boolean
+    savedAmount?: number
+    edit?: boolean
+    deleted?: boolean
+  }) => void
   /** When opening in create mode from a car-detail FAB, prefill the asset link. */
   prefilledAssetId?: string | null
   /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB). */
@@ -202,7 +208,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           })
           isFirstTransaction = result.isFirstTransaction
         }
-        onMutated?.({ isFirstTransaction })
+        onMutated?.({ isFirstTransaction, savedAmount: n, edit: isEdit || isPending })
         onClose()
       } catch (e) {
         const msg = describeError(e, t.common.error, t.common.offlineError)
@@ -227,7 +233,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     startTransition(async () => {
       try {
         await softDeleteTransaction(initial!.id)
-        onMutated?.()
+        onMutated?.({ deleted: true })
         onClose()
       } catch (e) {
         setError(describeError(e, t.common.error, t.common.offlineError))
