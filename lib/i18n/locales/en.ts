@@ -418,6 +418,7 @@ export const en: Translations = {
       daysLeftWarning: '{n} d left',
       daysLeftUrgent: '{n} d left',
       expiredBadge: 'Expired',
+      nextPaymentBadge: 'Premium in {n}d',
       renewAction: 'Renewed',
       lapseAction: 'Stopped',
       renewTitle: 'Mark as renewed?',
