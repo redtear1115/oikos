@@ -1262,9 +1262,9 @@ export const zhTW: Translations = {
     notesLabel: '備註（選填，兩人都看得到）',
     notesPlaceholder: '寫一句留給對方的話，或之後想記得的事',
     statusLabel: '狀態',
-    statusSettled: '已扣款',
-    statusPending: '待扣款',
-    statusPendingHint: '待扣款不會算進兩個人的結算，等實際扣款後改為已扣款。',
+    statusSettled: '已付清',
+    statusPending: '信用卡待扣',
+    statusPendingHint: '信用卡待扣不會算進兩個人的結算，等實際扣款後再改為已付清。',
     deleteOne: '刪除這筆',
     deleteConfirmTitle: '刪除這筆紀錄？',
     errors: {
@@ -1275,7 +1275,7 @@ export const zhTW: Translations = {
   },
 
   compactRow: {
-    pendingBadge: '待扣款',
+    pendingBadge: '信用卡待扣',
   },
 
   incomeSheet: {

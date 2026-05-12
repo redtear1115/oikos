@@ -211,7 +211,8 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
             </button>
           </div>
 
-          <div className="h-6" />
+          {/* Extend past the iOS home indicator (env safe-area-inset-bottom). */}
+          <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </div>
       </div>
 

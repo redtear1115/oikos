@@ -474,7 +474,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             </div>
           )}
 
-          <div className="h-6" />
+          {/* Bottom spacer: extends past the iOS home indicator (env safe-area-inset-bottom)
+              so the last input/button isn't visually clipped on devices with a gesture bar. */}
+          <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </div>
       </div>
 
