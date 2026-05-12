@@ -55,12 +55,19 @@ describe('monthlyStatsByAsset', () => {
 })
 
 describe('monthlyIncomeStatsByCategory', () => {
+  const epochWindow = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-1',
+    isPast: false,
+  }
+
   it('returns rows mapped from raw SQL output (sorted desc by total)', async () => {
     queueDbResult([
       { category: 'salary', total: 75000, count: 1 },
       { category: 'sidehustle', total: 12000, count: 3 },
     ])
-    const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05')
+    const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([
       { key: 'salary', total: 75000, count: 1 },
       { key: 'sidehustle', total: 12000, count: 3 },
@@ -70,7 +77,7 @@ describe('monthlyIncomeStatsByCategory', () => {
 
   it('returns an empty array when no rows match', async () => {
     queueDbResult([])
-    const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05')
+    const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([])
   })
 })
