@@ -1,10 +1,6 @@
 import { getCurrentUser } from '@/lib/supabase/server'
-import { db } from '@/lib/db/client'
-import { oikosGroups } from '@/lib/db/schema'
-import { eq, or } from 'drizzle-orm'
 import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
@@ -13,10 +9,10 @@ export default async function AssetsPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('No group')
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('No group')
+  const { group, window: epochWindow } = context
 
-  const epochWindow = await resolveViewerEpochWindow(group.id)
   const assetRows = await listAssetsForGroup(group.id)
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)

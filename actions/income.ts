@@ -5,7 +5,7 @@ import { assets, incomeTransactions, oikosGroups } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
@@ -28,6 +28,19 @@ async function getViewerGroup() {
   if (!group) throw new Error('找不到家計簿')
 
   return { user, group }
+}
+
+/** Read-path variant that follows the past-epoch pin (possibly cross-group,
+ *  see #141) so paged feeds match what the dashboard / records pages render. */
+async function getViewerReadContext() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('找不到家計簿')
+
+  return { user, group: context.group, epochWindow: context.window }
 }
 
 async function assertAssetInGroup(assetId: string, groupId: string) {
@@ -194,10 +207,9 @@ export async function loadMoreIncomes(
   filterWire?: TxnFilterWire,
   dateRange?: DateRange,
 ): Promise<PagedIncomeRow[]> {
-  const { user, group } = await getViewerGroup()
+  const { user, group, epochWindow } = await getViewerReadContext()
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const incomeFilter = resolveIncomeFilter(filterWire, user.id, group)
-  const epochWindow = await resolveViewerEpochWindow(group.id)
   const rows = await listIncomesPaged(group.id, cursor, limit, monthKey, drill, incomeFilter, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,
@@ -218,7 +230,7 @@ export async function loadMoreInsuranceReturns(
   cursor: IncomeCursor | null,
   limit = 20,
 ): Promise<PagedIncomeRow[]> {
-  const { group } = await getViewerGroup()
+  const { group } = await getViewerReadContext()
   const rows = await listInsuranceReturnsPaged(assetId, group.id, categories, cursor, limit)
   return rows.map((r) => ({
     id: r.id,
