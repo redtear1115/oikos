@@ -1,25 +1,25 @@
 import { db } from '@/lib/db/client'
 import { cashTransactions, profiles } from '@/lib/db/schema'
-import { and, eq, isNull, desc, gte, lt, sql, type SQL } from 'drizzle-orm'
+import { and, eq, isNull, desc, sql, type SQL } from 'drizzle-orm'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import { monthRangeIso } from '@/lib/monthKey'
 import type { DrillFilter } from '@/lib/drill'
 import type { RecordStatus } from '@/lib/validators'
-import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
+import { type DateRange } from '@/lib/filter'
 import type { EpochWindow } from './epoch'
-
-/**
- * Build the WHERE clause that scopes a feed/stats query to one epoch's
- * `created_at` window. Returns empty SQL when no window is given.
- */
-function epochScopeSql(window: EpochWindow | null | undefined): SQL {
-  if (!window) return sql``
-  const upper = window.endedAt
-    ? sql`AND created_at < ${window.endedAt.toISOString()}::timestamptz`
-    : sql``
-  return sql`AND created_at >= ${window.startedAt.toISOString()}::timestamptz ${upper}`
-}
+import {
+  amountClause,
+  andClause,
+  assetIdsClause,
+  categoryInClause,
+  cursorClause,
+  dateColumnClause,
+  dateRangeClause,
+  eqValueClause,
+  epochClause,
+  splitTypeClause,
+  statusClause,
+} from './_predicates'
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
 
@@ -107,12 +107,6 @@ export async function listRecentTransactions(
   limit = 5,
   epochWindow?: EpochWindow | null,
 ): Promise<TxnRow[]> {
-  const epochClauses = epochWindow
-    ? [
-        gte(cashTransactions.createdAt, epochWindow.startedAt),
-        ...(epochWindow.endedAt ? [lt(cashTransactions.createdAt, epochWindow.endedAt)] : []),
-      ]
-    : []
   const rows = await db
     .select({
       id: cashTransactions.id,
@@ -131,7 +125,7 @@ export async function listRecentTransactions(
     .where(and(
       eq(cashTransactions.groupId, groupId),
       isNull(cashTransactions.deletedAt),
-      ...epochClauses,
+      epochClause(cashTransactions.createdAt, epochWindow),
     ))
     .orderBy(desc(cashTransactions.transactedAt), desc(cashTransactions.createdAt))
     .limit(limit)
@@ -144,120 +138,21 @@ export interface TxnCursor {
 }
 
 /**
- * Resolve `dateRange` to SQL bounds for a Postgres timestamptz column. The
- * column is converted to local Asia/Taipei time for comparison so a query like
- * "May 2026" actually means May 1 00:00 → June 1 00:00 in Taipei. Returns
- * `sql\`\`` when the scope is `all`, allowing the caller to drop the clause.
- *
- * Precedence: `dateRange` overrides `monthKey`. Both undefined → no scope.
+ * Options shape for the cash-tx feed page-through. Replaces the previous
+ * positional signature — the param ordering had drifted between
+ * `listTransactionsPaged` and `listFeedAllPaged` (filter / monthKey swapped)
+ * which was a footgun for callers. All fields except `groupId` and `cursor`
+ * are optional.
  */
-function timestamptzScopeSql(
-  column: 'transacted_at' | 'settled_at',
-  monthKey: string | undefined,
-  dateRange: DateRange | undefined | null,
-): SQL {
-  if (dateRange) {
-    if (dateRange.kind === 'all') return sql``
-    if (dateRange.kind === 'range') {
-      // end is inclusive day → exclusive day = next day
-      const next = nextDayIso(dateRange.end)
-      return sql`AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp >= ${dateRange.start}::timestamp
-                 AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp <  ${next}::timestamp`
-    }
-    // month: convert to ISO range below via monthRangeIso
-    monthKey = dateRange.monthKey
-  }
-  if (!monthKey) return sql``
-  const { startIso, endIso } = monthRangeIso(monthKey)
-  return sql`AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp >= ${startIso}::timestamp
-             AND (${sql.raw(column)} AT TIME ZONE 'Asia/Taipei')::timestamp <  ${endIso}::timestamp`
-}
-
-/**
- * Same as timestamptzScopeSql but for the IncomeTransactions.occurred_at date
- * column (no tz conversion — it's already day-level).
- */
-function dateColumnScopeSql(
-  monthKey: string | undefined,
-  dateRange: DateRange | undefined | null,
-): SQL {
-  if (dateRange) {
-    if (dateRange.kind === 'all') return sql``
-    if (dateRange.kind === 'range') {
-      const next = nextDayIso(dateRange.end)
-      return sql`AND occurred_at >= ${dateRange.start}::date
-                 AND occurred_at <  ${next}::date`
-    }
-    monthKey = dateRange.monthKey
-  }
-  if (!monthKey) return sql``
-  const { startIso, endIso } = monthRangeIso(monthKey)
-  return sql`AND occurred_at >= ${startIso.slice(0, 10)}::date
-             AND occurred_at <  ${endIso.slice(0, 10)}::date`
-}
-
-function nextDayIso(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  const dt = new Date(Date.UTC(y, m - 1, d + 1))
-  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`
-}
-
-/**
- * Build the SQL clause for the asset-multi-select filter. Splits the input
- * into `__none__` (→ `IS NULL`) and uuid members (→ `IN (...)`), then unions
- * them with OR so the user's mental model "match A or B or 未歸屬" maps
- * directly to one row predicate. Returns empty SQL when no asset filter is
- * active.
- */
-/**
- * Build a `BETWEEN`-style SQL clause for the inclusive amount range. Either or
- * both bounds can be null (= open). The `column` is inlined verbatim with
- * `sql.raw` so the helper works for any table that uses `amount`.
- */
-function amountScopeSql(
-  min: number | null | undefined,
-  max: number | null | undefined,
-  column = 'amount',
-): SQL {
-  const col = sql.raw(column)
-  if ((min === null || min === undefined) && (max === null || max === undefined)) return sql``
-  if (min !== null && min !== undefined && (max === null || max === undefined)) {
-    return sql`AND ${col} >= ${min}`
-  }
-  if ((min === null || min === undefined) && max !== null && max !== undefined) {
-    return sql`AND ${col} <= ${max}`
-  }
-  // Both bounds present. Postgres `BETWEEN` is inclusive on both sides.
-  return sql`AND ${col} BETWEEN ${min} AND ${max}`
-}
-
-/**
- * Build the SQL clause for the cash-tx status filter. Only applies when the
- * status filter narrows to a single value; otherwise the helper returns empty
- * SQL. Settlements + IncomeTransactions don't carry status — callers drop them
- * via excludeSettlements / cutAll when `status = 'pending'`.
- */
-function statusScopeSql(status: RecordStatus | null | undefined, column = 'status'): SQL {
-  if (!status) return sql``
-  return sql`AND ${sql.raw(column)} = ${status}::record_status`
-}
-
-function assetIdsScopeSql(assetIds: string[]): SQL {
-  if (assetIds.length === 0) return sql``
-  const uuids: string[] = []
-  let includeNone = false
-  for (const id of assetIds) {
-    if (id === ASSET_FILTER_NONE) includeNone = true
-    else uuids.push(id)
-  }
-  // Construct the OR-pair without leaving a stray "OR" if one side is empty.
-  if (uuids.length === 0 && includeNone) {
-    return sql`AND asset_id IS NULL`
-  }
-  if (uuids.length > 0 && !includeNone) {
-    return sql`AND asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
-  }
-  return sql`AND (asset_id IS NULL OR asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
+export interface ListPagedOptions {
+  groupId: string
+  cursor: TxnCursor | null
+  limit?: number
+  filter?: ResolvedTxnFilter
+  monthKey?: string
+  drill?: DrillFilter | null
+  dateRange?: DateRange | null
+  epochWindow?: EpochWindow | null
 }
 
 /**
@@ -267,39 +162,33 @@ function assetIdsScopeSql(assetIds: string[]): SQL {
  * Settlements are normalized into the same row shape as transactions: settledAt → transactedAt,
  * COALESCE(note,'還款') → description, 'settle' → category, NULL → splitType.
  */
-export async function listTransactionsPaged(
-  groupId: string,
-  cursor: TxnCursor | null,
-  limit = 20,
-  filter?: ResolvedTxnFilter,
-  monthKey?: string,
-  drill?: DrillFilter | null,
-  dateRange?: DateRange | null,
-  epochWindow?: EpochWindow | null,
-): Promise<FeedRow[]> {
-  const epoch = epochScopeSql(epochWindow)
-  const txCursor = cursor
-    ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
-    : sql``
-  const setCursor = cursor
-    ? sql`AND (settled_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
-    : sql``
+export async function listTransactionsPaged(opts: ListPagedOptions): Promise<FeedRow[]> {
+  const { groupId, cursor, limit = 20, filter, monthKey, drill, dateRange, epochWindow } = opts
+
+  // Income-kind drill on a cash-transaction query: short-circuit to empty
+  // rather than returning unrelated cash rows. The page-1 refetch on this
+  // tab will see zero results, which matches the "this drill has no rows
+  // for this tab" contract.
+  if (drill?.kind === 'income') return []
+  // Same short-circuit for an income-only structured filter (e.g. user
+  // picked an income category but no expense category — they're saying
+  // "show me income only", so no cash rows should pass).
+  if (filter?.cutAll) return []
+
+  const epoch = andClause(epochClause('created_at', epochWindow))
+  const txCursor = andClause(cursorClause('transacted_at', 'created_at', cursor))
+  const setCursor = andClause(cursorClause('settled_at', 'created_at', cursor))
 
   // Per-branch filter clauses
-  const txPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
-  const txSplit = filter && filter.splitTypes.length > 0
-    ? sql`AND split_type IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
-    : sql``
-  const txCategory = filter && filter.categories.length > 0
-    ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
-    : sql``
-  const txAssetIds = filter ? assetIdsScopeSql(filter.assetIds) : sql``
-  const txAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
-  const txStatus = filter ? statusScopeSql(filter.status) : sql``
+  const txPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
+  const txSplit = andClause(filter ? splitTypeClause(filter.splitTypes) : undefined)
+  const txCategory = andClause(filter ? categoryInClause(filter.categories) : undefined)
+  const txAssetIds = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
+  const txAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
+  const txStatus = andClause(filter ? statusClause(filter.status) : undefined)
 
   // Drill-down clauses (mutually exclusive with one another). Income drill is
-  // not meaningful in this query (it only targets IncomeTransactions), so it
-  // falls through to a no-op.
+  // handled by the short-circuit above.
   const txDrillCategory = drill?.kind === 'category'
     ? sql`AND category = ${drill.categoryId}`
     : sql``
@@ -312,16 +201,16 @@ export async function listTransactionsPaged(
   // asset_id, so a drill row would never match them anyway.
   const drillExcludesSettlements = drill !== undefined && drill !== null
 
-  const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+  const setPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
   // Settlements carry amount but no status / split / category / asset — only
   // amount range is meaningful for them. status='pending' already drops the
   // entire settlements branch via excludeSettlements.
-  const setAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
+  const setAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
 
   // Page-level date scope: feed shows only the selected window. Custom range
   // (from FilterSheet) takes precedence over the legacy single-month param.
-  const txMonth = timestamptzScopeSql('transacted_at', monthKey, dateRange)
-  const setMonth = timestamptzScopeSql('settled_at', monthKey, dateRange)
+  const txMonth = andClause(dateRangeClause('transacted_at', monthKey, dateRange))
+  const setMonth = andClause(dateRangeClause('settled_at', monthKey, dateRange))
 
   // Drop the settlements branch entirely when 分攤 / 分類 / 愛物 dims are active
   // OR when a drill-down is active (a category/asset drill never matches a
@@ -354,16 +243,6 @@ export async function listTransactionsPaged(
       ${setMonth}
       ${epoch}
     `
-
-  // Income-kind drill on a cash-transaction query: short-circuit to empty
-  // rather than returning unrelated cash rows. The page-1 refetch on this
-  // tab will see zero results, which matches the "this drill has no rows
-  // for this tab" contract.
-  if (drill?.kind === 'income') return []
-  // Same short-circuit for an income-only structured filter (e.g. user
-  // picked an income category but no expense category — they're saying
-  // "show me income only", so no cash rows should pass).
-  if (filter?.cutAll) return []
 
   const rows = await db.execute<{
     id: string
@@ -405,25 +284,7 @@ export async function listTransactionsPaged(
     LIMIT ${limit}
   `)
 
-  return rows.map((r) => ({
-    id: r.id,
-    amount: r.amount,
-    splitType: r.split_type,
-    splitRatioA: r.split_ratio_a ?? null,
-    description: r.description,
-    category: r.category,
-    paidBy: r.paid_by,
-    assetId: r.asset_id,
-    fuelLogId: r.fuel_log_id ?? null,
-    notes: r.notes,
-    status: r.status ?? 'settled',
-    // db.execute() returns timestamps as strings (postgres-js default), not Date —
-    // unlike Drizzle's typed select. Coerce to Date here so the FeedRow contract
-    // matches what the page projections expect.
-    transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
-    createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
-    kind: r.kind,
-  }))
+  return rows.map(rowToFeedRow)
 }
 
 /**
@@ -433,26 +294,17 @@ export async function listTransactionsPaged(
  *
  * Income rows have null splitType, kind='income'.
  */
-export async function listFeedAllPaged(
-  groupId: string,
-  cursor: TxnCursor | null,
-  limit = 20,
-  monthKey?: string,
-  drill?: DrillFilter | null,
-  filter?: ResolvedTxnFilter,
-  dateRange?: DateRange | null,
-  epochWindow?: EpochWindow | null,
-): Promise<FeedRow[]> {
-  const epoch = epochScopeSql(epochWindow)
-  const cur = cursor
-    ? sql`AND (sort_at, sort_created) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
-    : sql``
+export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[]> {
+  const { groupId, cursor, limit = 20, filter, monthKey, drill, dateRange, epochWindow } = opts
+
+  const epoch = andClause(epochClause('created_at', epochWindow))
+  const cur = andClause(cursorClause('sort_at', 'sort_created', cursor))
 
   // Page-level date scope. CashTransactions/Settlements use timestamptz
   // (Asia/Taipei conversion); IncomeTransactions uses a date column.
-  const txMonth = timestamptzScopeSql('transacted_at', monthKey, dateRange)
-  const setMonth = timestamptzScopeSql('settled_at', monthKey, dateRange)
-  const incMonth = dateColumnScopeSql(monthKey, dateRange)
+  const txMonth = andClause(dateRangeClause('transacted_at', monthKey, dateRange))
+  const setMonth = andClause(dateRangeClause('settled_at', monthKey, dateRange))
+  const incMonth = andClause(dateColumnClause(monthKey, dateRange))
 
   // Per-drill predicates per branch. Each branch is either narrowed (the drill
   // is meaningful for that row kind) or short-circuited to FALSE (so it never
@@ -480,44 +332,26 @@ export async function listFeedAllPaged(
           ? sql`AND FALSE`
           : sql``
 
-  // Per-branch structured-filter clauses. Settlements have no
-  // split/category/asset; if any of those dims is active, the branch is
-  // dropped wholesale (excludeSettlements). Income rows have no split, but
-  // do have asset and a category column.
-  //
-  // Cross-kind cut rule (matches lib/filter.ts cutsExpense / cutsIncome):
-  //   - Income-only filter (incomeCategories set, expense categories empty)
-  //     → drop ALL cash transactions. The user is saying「show me income only」.
-  //   - Expense-only filter (expense categories set, incomeCategories empty,
-  //     OR split set) → drop ALL income rows. Same rationale, mirrored.
-  //   - Both expense AND income categories set → each kind shows only its
-  //     matching category. No cross-cutting.
-  const txFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
-  const txFilterSplit = filter && filter.splitTypes.length > 0
-    ? sql`AND split_type IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
-    : sql``
-  const txFilterCategory = filter && filter.categories.length > 0
-    ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
-    : sql``
-  const txFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
-  const txFilterAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
-  const txFilterStatus = filter ? statusScopeSql(filter.status) : sql``
+  // Per-branch structured-filter clauses. See `lib/filter.ts` cutsExpense /
+  // cutsIncome for the cross-kind-cut rules.
+  const txFilterPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
+  const txFilterSplit = andClause(filter ? splitTypeClause(filter.splitTypes) : undefined)
+  const txFilterCategory = andClause(filter ? categoryInClause(filter.categories) : undefined)
+  const txFilterAssets = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
+  const txFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
+  const txFilterStatus = andClause(filter ? statusClause(filter.status) : undefined)
   // Income-only filter active → no cash rows.
   const txFilterCutByIncomeOnly = filter?.cutAll ? sql`AND FALSE` : sql``
 
-  const setFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+  const setFilterPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
   // Settlements carry amount but no status. status='pending' already drops the
   // branch via excludeSettlements upstream.
-  const setFilterAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
+  const setFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
 
-  const incFilterRecipient = filter?.paidBy
-    ? sql`AND recipient_id = ${filter.paidBy}`
-    : sql``
-  const incFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
-  const incFilterAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
-  const incFilterIncomeCats = filter && filter.incomeCategories.length > 0
-    ? sql`AND category IN (${sql.join(filter.incomeCategories.map(c => sql`${c}`), sql`, `)})`
-    : sql``
+  const incFilterRecipient = andClause(eqValueClause('recipient_id', filter?.paidBy))
+  const incFilterAssets = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
+  const incFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
+  const incFilterIncomeCats = andClause(filter ? categoryInClause(filter.incomeCategories) : undefined)
   // Expense-category active → drop income UNLESS the user has also picked
   // an income category (in which case they want both kinds, each filtered).
   const expenseOnlyCatActive =
@@ -526,8 +360,7 @@ export async function listFeedAllPaged(
   // 分攤 only exists on cash transactions; if the user picked one, drop income.
   const incFilterSplitCut = filter && filter.splitTypes.length > 0 ? sql`AND FALSE` : sql``
   // status='pending' is cash-only; income is always 'settled', so the income
-  // branch is dropped wholesale. status='settled' is a no-op for income (all
-  // income rows are settled).
+  // branch is dropped wholesale.
   const incFilterStatusCut = filter?.status === 'pending' ? sql`AND FALSE` : sql``
 
   const settlementsBranch = filter?.excludeSettlements
@@ -613,7 +446,35 @@ export async function listFeedAllPaged(
     LIMIT ${limit}
   `)
 
-  return rows.map((r) => ({
+  return rows.map(rowToFeedRow)
+}
+
+/**
+ * Map an executed DB row (snake_case, possibly-string timestamps) to the
+ * FeedRow contract. Shared by `listTransactionsPaged` / `listFeedAllPaged` /
+ * `listTransactionsPagedForAsset` and any future feed-shaped query.
+ */
+export function rowToFeedRow(r: {
+  id: string
+  amount: number
+  split_type: 'all_mine' | 'all_theirs' | 'half' | 'weighted' | null
+  split_ratio_a: number | null
+  description: string
+  category: string
+  paid_by: string
+  asset_id: string | null
+  fuel_log_id?: string | null
+  notes: string | null
+  status: RecordStatus | null | undefined
+  transacted_at?: Date | string
+  created_at?: Date | string
+  sort_at?: Date | string
+  sort_created?: Date | string
+  kind: FeedKind
+}): FeedRow {
+  const transacted = r.transacted_at ?? r.sort_at
+  const created = r.created_at ?? r.sort_created
+  return {
     id: r.id,
     amount: r.amount,
     splitType: r.split_type,
@@ -625,10 +486,10 @@ export async function listFeedAllPaged(
     fuelLogId: r.fuel_log_id ?? null,
     notes: r.notes,
     status: r.status ?? 'settled',
-    transactedAt: r.sort_at instanceof Date ? r.sort_at : new Date(r.sort_at),
-    createdAt: r.sort_created instanceof Date ? r.sort_created : new Date(r.sort_created),
+    transactedAt: transacted instanceof Date ? transacted : new Date(transacted as string),
+    createdAt: created instanceof Date ? created : new Date(created as string),
     kind: r.kind,
-  }))
+  }
 }
 
 // ─── Monthly stats (Records 月度統計, spec: docs/superpowers/specs/stats-design.md) ─
@@ -666,41 +527,16 @@ function statsScopeClauses(
   filter: ResolvedTxnFilter | undefined,
   tableAlias?: string,
 ): SQL {
-  const a = tableAlias ? `${tableAlias}.` : ''
-  const dateClause = timestamptzScopeSql(
-    `${a}transacted_at` as 'transacted_at',
-    monthKey,
-    dateRange,
-  )
-  const payer = filter?.paidBy
-    ? sql`AND ${sql.raw(`${a}paid_by`)} = ${filter.paidBy}`
-    : sql``
-  const split = filter && filter.splitTypes.length > 0
-    ? sql`AND ${sql.raw(`${a}split_type`)} IN (${sql.join(filter.splitTypes.map(s => sql`${s}::split_type`), sql`, `)})`
-    : sql``
-  const cats = filter && filter.categories.length > 0
-    ? sql`AND ${sql.raw(`${a}category`)} IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
-    : sql``
-  // Reuse assetIdsScopeSql but with table-aliased column. The helper hard-codes
-  // `asset_id` so for the joined query we expand the logic inline here.
-  const assets = (() => {
-    if (!filter || filter.assetIds.length === 0) return sql``
-    const uuids: string[] = []
-    let includeNone = false
-    for (const id of filter.assetIds) {
-      if (id === ASSET_FILTER_NONE) includeNone = true
-      else uuids.push(id)
-    }
-    const col = sql.raw(`${a}asset_id`)
-    if (uuids.length === 0 && includeNone) return sql`AND ${col} IS NULL`
-    if (uuids.length > 0 && !includeNone) {
-      return sql`AND ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
-    }
-    return sql`AND (${col} IS NULL OR ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
-  })()
-  const amount = filter ? amountScopeSql(filter.amountMin, filter.amountMax, `${a}amount`) : sql``
-  const status = filter ? statusScopeSql(filter.status, `${a}status`) : sql``
-  return sql`${dateClause} ${payer} ${split} ${cats} ${assets} ${amount} ${status}`
+  const prefix = tableAlias ? `${tableAlias}.` : ''
+  return sql`
+    ${andClause(dateRangeClause(`${prefix}transacted_at`, monthKey, dateRange))}
+    ${andClause(eqValueClause(`${prefix}paid_by`, filter?.paidBy))}
+    ${andClause(filter ? splitTypeClause(filter.splitTypes, `${prefix}split_type`) : undefined)}
+    ${andClause(filter ? categoryInClause(filter.categories, `${prefix}category`) : undefined)}
+    ${andClause(filter ? assetIdsClause(`${prefix}asset_id`, filter.assetIds) : undefined)}
+    ${andClause(filter ? amountClause(filter.amountMin, filter.amountMax, `${prefix}amount`) : undefined)}
+    ${andClause(filter ? statusClause(filter.status, `${prefix}status`) : undefined)}
+  `
 }
 
 /**
@@ -723,7 +559,7 @@ export async function monthlyStatsByCategory(
   epochWindow?: EpochWindow | null,
 ): Promise<CategoryStatRow[]> {
   const scope = statsScopeClauses(monthKey, dateRange, filter)
-  const epoch = epochScopeSql(epochWindow)
+  const epoch = andClause(epochClause('created_at', epochWindow))
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -761,11 +597,7 @@ export async function monthlyStatsByAsset(
   const scope = statsScopeClauses(monthKey, dateRange, filter, 'ct')
   // Asset stats query aliases the cash-tx table as `ct`, so the epoch column
   // ref needs the same alias to disambiguate from the joined Assets table.
-  const epoch = epochWindow
-    ? sql`AND ct.created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
-        epochWindow.endedAt ? sql`AND ct.created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
-      }`
-    : sql``
+  const epoch = andClause(epochClause('ct.created_at', epochWindow))
   const rows = await db.execute<{
     asset_id: string | null
     asset_name: string | null
