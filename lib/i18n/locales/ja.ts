@@ -194,14 +194,11 @@ export const ja: Translations = {
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
-    recurringMenuLabel: '定期',
-    recurringMenuAriaLabel: '定期収支メニューを開く',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
     stats: {
       title: '支出統計',
       titleAll: '収支統計',
       titleIncome: '収入統計',
-      total: '合計 {amount} NT$',
       empty: '今月はまだ記録がありません',
       emptySub: '別の月を見てみる',
       viewByCategory: 'カテゴリー',
@@ -221,6 +218,7 @@ export const ja: Translations = {
       drillChipPrefix: 'のみ',
       drillChipClear: '絞り込み解除',
       drillAssetUnknown: '未設定',
+      donutCenterTotal: '合計',
     },
   },
 

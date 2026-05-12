@@ -202,15 +202,11 @@ export type Translations = {
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
-    /** Top-right popover label that opens the recurring-rule menu. */
-    recurringMenuLabel: string
-    recurringMenuAriaLabel: string
     offlineMoreNeedsNetwork: string
     stats: {
       title: string         // expense-tab title (kept for back-compat)
       titleAll: string      // 全部 tab
       titleIncome: string   // 收入 tab
-      total: string  // {amount}
       empty: string
       emptySub: string
       viewByCategory: string
@@ -232,6 +228,8 @@ export type Translations = {
       drillChipPrefix: string   // small prefix shown before the label inside the chip
       drillChipClear: string    // a11y label for the chip's X button
       drillAssetUnknown: string // fallback when an asset has no resolvable name
+      /** Donut chart center label when no slice is selected. */
+      donutCenterTotal: string
     }
   }
 
@@ -1327,14 +1325,11 @@ export const zhTW: Translations = {
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
-    recurringMenuLabel: '定期',
-    recurringMenuAriaLabel: '開啟定期收支選單',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
     stats: {
       title: '支出統計',
       titleAll: '收支統計',
       titleIncome: '收入統計',
-      total: '總共 {amount} NT$',
       empty: '這個月還沒有支出紀錄',
       emptySub: '翻翻其他月看看',
       viewByCategory: '分類',
@@ -1354,6 +1349,7 @@ export const zhTW: Translations = {
       drillChipPrefix: '只看',
       drillChipClear: '取消篩選',
       drillAssetUnknown: '未命名',
+      donutCenterTotal: '總計',
     },
   },
 

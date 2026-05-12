@@ -9,10 +9,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+主題：**Records 頁細節打磨**——把 UI/UX 審查掃出的四件小事一次處理掉：月份切換箭頭的 tap 範圍長大到 44px、donut chart 把總金額移進圓心並支援點 slice 切換顯示分類金額、stats 與 feed 中間有清楚的視覺分隔、之前藏在標題列小字的「定期 ›」改為獨立 section card 提到 stats 與 feed 之間。
+
 ### Changed
 
 - **分類色 design token 收斂**（closes #149）：`lib/categories.ts` / `lib/incomeCategories.ts` 改為每個分類只宣告一個 primary `color`，chip 用的 `tint` 透過新增的 `lib/colors.ts#lightenHex()` deterministic 推導；`chart` 設為 `color` 的 alias，舊 callsite 不動。`globals.css` 同步把 `--asset-tint-*` 改寫成 `color-mix(in srgb, var(--asset-color-*) 35%, white)`，視覺值與先前一致但 6 個 asset type 也具備 `--asset-color-*` 主色 token，未來愛物 donut 可以對得上 list rail。設計理由：解決使用者在 feed icon 與 donut slice 之間缺乏顏色辨識的問題——同一分類在哪都長同一個 hue family。
 - **Settings 分攤比例 slider 10% snap**（closes #162）：把預設分攤比例 slider 從 step=1（1–99）改成 step=10（10–90），加上 `<datalist>` tick marks 視覺化 snap 點。設計理由：使用者實際需要的是 50/50、60/40、70/30 這類整數比例；step=1 看似彈性但實際讓人很難精準停在常用值。
+- **Records 月份切換箭頭 tap target ≥ 44px**（closes #151）：MonthSwitcher 的 `‹` `›` 按鈕從 36px 放大到 44px，符合 WCAG / iOS HIG 最小可點區域；容器 vertical padding 同步調整讓 pill 視覺高度維持原樣。
+- **Records donut chart 中央顯示總金額 + slice 切換**（closes #153）：先前總金額在圓圖下方一行小字，現在搬進 donut 圓心（serif 大字 + 標籤），第一眼即可讀；點任一 slice 或對應的 detail bar，圓心切換成該分類的金額與名稱，未選中的 slice dim 至 0.35 opacity。新增 i18n key `records.stats.donutCenterTotal`（4 語），移除已不再用到的 `records.stats.total`。
+- **Records 統計與 feed 之間視覺分隔強化**（closes #152）：stats section 的標題 weight 從 `font-medium` 升為 `font-semibold`；同時 #154 的 RecurringSectionCard 落在 stats 與 feed 之間，自然成為 section break。
+- **Records 「定期」入口從 popover 升為 section card**（closes #154）：原本標題列右側的 ⚙ 定期 popover 對 v0.13.0 才剛上線的功能來說太隱密，現在改為 stats 區塊與 feed 之間的橫向 section card，「定期支出」與「定期收入」各佔一個 44px 高的 tinted pill 連結；移除 `RecurringMenu` 組件與 `records.recurringMenuLabel` / `records.recurringMenuAriaLabel` i18n keys。
 
 ## [0.15.0] - 2026-05-12
 

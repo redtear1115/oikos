@@ -123,11 +123,51 @@ export function MonthlyStatsView({
     : tab === 'income' ? t.records.stats.titleIncome
     : t.records.stats.title
 
+  // Donut center text — total when no drill, or the active slice's amount +
+  // label when the user has tapped a slice or its corresponding bar. The
+  // matching index lookup is the same shape used to render the bars, so the
+  // chart center and the highlighted bar always stay in sync.
+  const activeRowIndex = useMemo(() => {
+    if (!activeDrill || !hasBreakdown) return -1
+    if (isIncomeTab) {
+      if (activeDrill.kind !== 'income') return -1
+      return incomeRows.findIndex((r) => r.key === activeDrill.categoryId)
+    }
+    if (view === 'category') {
+      if (activeDrill.kind !== 'category') return -1
+      return (rows as CategoryStatRow[]).findIndex((r) => r.key === activeDrill.categoryId)
+    }
+    if (activeDrill.kind !== 'asset') return -1
+    return (rows as AssetStatRow[]).findIndex((r) => r.key === activeDrill.assetId)
+  }, [activeDrill, hasBreakdown, isIncomeTab, view, rows, incomeRows])
+
+  const center = useMemo(() => {
+    if (activeRowIndex < 0) {
+      return {
+        amount: breakdownTotal,
+        label: t.records.stats.donutCenterTotal,
+      }
+    }
+    if (isIncomeTab) {
+      const r = incomeRows[activeRowIndex]
+      const cat = getIncomeCategory(r.key)
+      return { amount: r.total, label: t.incomeCategory[cat.id] ?? cat.label }
+    }
+    if (view === 'category') {
+      const r = (rows as CategoryStatRow[])[activeRowIndex]
+      const cat = getCategory(r.key)
+      return { amount: r.total, label: t.category[cat.id] ?? cat.label }
+    }
+    const r = (rows as AssetStatRow[])[activeRowIndex]
+    const label = r.key === null ? t.records.stats.otherSpend : r.name ?? t.records.stats.otherSpend
+    return { amount: r.total, label }
+  }, [activeRowIndex, breakdownTotal, isIncomeTab, view, rows, incomeRows, t])
+
   return (
     <section className="px-5 pt-4 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
       <div className="flex items-center justify-between mb-3">
         <h2
-          className="text-base font-medium tracking-tight"
+          className="text-base font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {title}
@@ -167,8 +207,10 @@ export function MonthlyStatsView({
         // (固定位置) so the user's eye doesn't have to chase it.
         <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
       ) : (
-        // Expanded: donut chart on top, then total line, then detail-bar
-        // legend (each bar's coloured chip matches its pie slice).
+        // Expanded: donut chart on top (with total / active-slice amount in
+        // the center), then the detail-bar legend below — each bar's coloured
+        // chip matches its pie slice. The bottom-of-chart total line was
+        // removed when we moved the number into the donut center (#153).
         <>
           {hasBreakdown && (
             <div className="flex justify-center mt-2 mb-4">
@@ -178,6 +220,16 @@ export function MonthlyStatsView({
                   total={breakdownTotal}
                   getSliceColor={(row) => getIncomeCategory((row as IncomeCategoryStatRow).key).chart}
                   getSliceKey={(row) => (row as IncomeCategoryStatRow).key}
+                  activeIndex={activeRowIndex}
+                  onSliceClick={(_row, i) => {
+                    const r = incomeRows[i]
+                    if (!r) return
+                    const same =
+                      activeDrill?.kind === 'income' && activeDrill.categoryId === r.key
+                    setDrill(same ? null : { kind: 'income', categoryId: r.key as IncomeCategoryId })
+                  }}
+                  centerAmount={center.amount}
+                  centerLabel={center.label}
                 />
               ) : (
                 <PieChart
@@ -189,13 +241,28 @@ export function MonthlyStatsView({
                       ? (row as CategoryStatRow).key
                       : (row as AssetStatRow).key ?? `__none_${i}`
                   }
+                  activeIndex={activeRowIndex}
+                  onSliceClick={(_row, i) => {
+                    if (view === 'category') {
+                      const r = (rows as CategoryStatRow[])[i]
+                      if (!r) return
+                      const same =
+                        activeDrill?.kind === 'category' && activeDrill.categoryId === r.key
+                      setDrill(same ? null : { kind: 'category', categoryId: r.key as CategoryId })
+                      return
+                    }
+                    const r = (rows as AssetStatRow[])[i]
+                    if (!r) return
+                    const same =
+                      activeDrill?.kind === 'asset' && activeDrill.assetId === r.key
+                    setDrill(same ? null : { kind: 'asset', assetId: r.key })
+                  }}
+                  centerAmount={center.amount}
+                  centerLabel={center.label}
                 />
               )}
             </div>
           )}
-          <div className="text-sm tnum mt-2 mb-4" style={{ color: 'var(--ink-2)' }}>
-            {t.records.stats.total.replace('{amount}', breakdownTotal.toLocaleString('en-US'))}
-          </div>
           {hasBreakdown && (
             <ul className="space-y-3">
               {isIncomeTab
@@ -339,12 +406,22 @@ function hashStr(s: string): number {
  * (Recharts ~50KB+ ruled out for mobile bundle size). Slice colors are
  * sourced via a callback so the same chart renders expense (category /
  * asset) and income (category) breakdowns with their respective palettes.
+ *
+ * The center of the donut renders the active total + a label (#153 — moved
+ * from a separate line below the chart so the number lives where the eye
+ * lands). When the user taps a slice or the corresponding detail bar the
+ * center swaps to that slice's amount, and non-active slices dim so the
+ * highlighted wedge reads at a glance.
  */
 function PieChart<R extends { total: number }>({
   rows,
   total,
   getSliceColor,
   getSliceKey,
+  centerAmount,
+  centerLabel,
+  activeIndex = -1,
+  onSliceClick,
   size = 156,
   innerRatio = 0.55,
 }: {
@@ -352,6 +429,11 @@ function PieChart<R extends { total: number }>({
   total: number
   getSliceColor: (row: R, i: number) => string
   getSliceKey: (row: R, i: number) => string
+  centerAmount: number
+  centerLabel: string
+  /** Index (into `valued`-mapped rows) of the currently-active slice, or -1. */
+  activeIndex?: number
+  onSliceClick?: (row: R, i: number) => void
   size?: number
   innerRatio?: number
 }) {
@@ -363,14 +445,28 @@ function PieChart<R extends { total: number }>({
   const cy = size / 2
   const rOuter = size / 2 - 2
   const rInner = rOuter * innerRatio
+  const hasActive = activeIndex >= 0 && activeIndex < valued.length
+
+  const renderCenter = () => (
+    <CenterText cx={cx} cy={cy} amount={centerAmount} label={centerLabel} />
+  )
 
   // Single-slice fast path (full ring) — avoids the 0-degree arc edge case.
   if (valued.length === 1) {
     const chart = getSliceColor(valued[0], 0)
+    const onClick = onSliceClick ? () => onSliceClick(valued[0], 0) : undefined
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="pie chart">
-        <circle cx={cx} cy={cy} r={rOuter} fill={chart} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={rOuter}
+          fill={chart}
+          style={onClick ? { cursor: 'pointer' } : undefined}
+          onClick={onClick}
+        />
         <circle cx={cx} cy={cy} r={rInner} fill="var(--bg)" />
+        {renderCenter()}
       </svg>
     )
   }
@@ -423,7 +519,23 @@ function PieChart<R extends { total: number }>({
       'Z',
     ].join(' ')
 
-    return <path key={getSliceKey(row, i)} d={path} fill={getSliceColor(row, i)} />
+    // Dim non-active slices when one is selected — keeps the highlighted
+    // wedge clearly readable while leaving the rest visible in context.
+    const dim = hasActive && i !== activeIndex
+    const onClick = onSliceClick ? () => onSliceClick(row, i) : undefined
+    return (
+      <path
+        key={getSliceKey(row, i)}
+        d={path}
+        fill={getSliceColor(row, i)}
+        style={{
+          opacity: dim ? 0.35 : 1,
+          cursor: onClick ? 'pointer' : undefined,
+          transition: 'opacity 150ms',
+        }}
+        onClick={onClick}
+      />
+    )
   })
 
   return (
@@ -435,7 +547,57 @@ function PieChart<R extends { total: number }>({
       aria-label={`Pie chart of ${valued.length} segments`}
     >
       {slices}
+      {renderCenter()}
     </svg>
+  )
+}
+
+/**
+ * Two-line text block centered inside the donut. The amount uses the serif
+ * face (matches the page title family) so the number reads as a "headline,"
+ * while the label below sits in the muted secondary color. Kept as plain
+ * SVG `<text>` (not foreignObject) so font sizing remains predictable across
+ * mobile WebKit / Android Chrome.
+ */
+function CenterText({
+  cx,
+  cy,
+  amount,
+  label,
+}: {
+  cx: number
+  cy: number
+  amount: number
+  label: string
+}) {
+  return (
+    <g aria-hidden>
+      <text
+        x={cx}
+        y={cy - 4}
+        textAnchor="middle"
+        style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 18,
+          fontWeight: 500,
+          fill: 'var(--ink)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {amount.toLocaleString('en-US')}
+      </text>
+      <text
+        x={cx}
+        y={cy + 14}
+        textAnchor="middle"
+        style={{
+          fontSize: 11,
+          fill: 'var(--ink-3)',
+        }}
+      >
+        {label}
+      </text>
+    </g>
   )
 }
 
