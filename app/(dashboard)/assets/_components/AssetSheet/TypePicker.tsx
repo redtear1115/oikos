@@ -1,0 +1,110 @@
+'use client'
+
+import { useState } from 'react'
+import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
+import { useTranslations } from '@/lib/i18n/client'
+import type { PickerType } from './types'
+
+// Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
+// Secondary tiles (house / insurance) reveal under 「更多」 to keep the row tidy
+// as the type list grows. This avoids a wrapped 6-tile grid that pushes the form
+// down when switching types.
+const PRIMARY_TYPES: PickerType[] = ['car', 'child', 'pet', 'plant']
+const SECONDARY_TYPES: PickerType[] = ['house', 'insurance']
+const isSecondaryType = (t: PickerType) => SECONDARY_TYPES.includes(t)
+
+interface Props {
+  value: PickerType
+  onChange: (type: PickerType) => void
+}
+
+export function TypePicker({ value, onChange }: Props) {
+  const t = useTranslations()
+  const ts = t.assetSheet
+  const typeLabel = (type: PickerType): string => {
+    switch (type) {
+      case 'car': return ts.type.car
+      case 'child': return ts.type.child
+      case 'pet': return ts.type.pet
+      case 'plant': return ts.type.plant
+      case 'house': return ts.type.house
+      case 'insurance': return ts.type.insurance
+    }
+  }
+  const primaryOptions = PRIMARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))
+  const secondaryOptions = SECONDARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))
+
+  // Auto-open the secondary row if the currently selected type is secondary,
+  // so the user can see what they picked without re-tapping 更多.
+  const [moreOpen, setMoreOpen] = useState(false)
+  const showSecondaryRow = moreOpen || isSecondaryType(value)
+
+  return (
+    <div className="mb-4">
+      <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>{ts.type.label}</div>
+      <div className="grid grid-cols-5 gap-2">
+        {primaryOptions.map(opt => {
+          const sel = value === opt.value
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setMoreOpen(false) }}
+              className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+              style={{
+                background: sel ? 'var(--accent)' : 'var(--surface)',
+                color: sel ? '#fff' : 'var(--ink-2)',
+              }}
+            >
+              <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
+              <span className="text-micro font-medium">{opt.label}</span>
+            </button>
+          )
+        })}
+        {/* 「更多」 toggle — opens secondary row (房子 / 保險). */}
+        <button
+          type="button"
+          onClick={() => setMoreOpen(v => !v)}
+          aria-expanded={showSecondaryRow}
+          className="flex flex-col items-center gap-1 py-3 rounded-[14px] cursor-pointer"
+          style={{
+            background: 'var(--surface)',
+            color: 'var(--ink-2)',
+            border: showSecondaryRow ? '1px solid var(--ink)' : '1px solid transparent',
+          }}
+        >
+          <span className="text-button leading-[20px] font-semibold tracking-[1px]" aria-hidden="true">⋯</span>
+          <span className="text-micro font-medium">{ts.type.more}</span>
+        </button>
+      </div>
+
+      {showSecondaryRow && (
+        <div className="grid grid-cols-5 gap-2 mt-2">
+          {/* Right-align secondary tiles under the 「更多」 toggle so the
+              visual hierarchy reads "tap 更多 → those reveal below it". */}
+          {Array.from({ length: 5 - secondaryOptions.length }).map((_, i) => (
+            <div key={`pad-${i}`} aria-hidden="true" />
+          ))}
+          {secondaryOptions.map(opt => {
+            const sel = value === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange(opt.value)}
+                className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+                style={{
+                  background: sel ? 'var(--accent)' : 'var(--surface)',
+                  color: sel ? '#fff' : 'var(--ink-2)',
+                }}
+              >
+                <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
+                <span className="text-micro font-medium">{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
