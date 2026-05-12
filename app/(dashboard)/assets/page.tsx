@@ -25,7 +25,7 @@ export default async function AssetsPage() {
     getChildNicknames(childIds),
     getAssetSummariesBatch(allIds, group.id, epochWindow),
     Promise.all(
-      carRows.map(async (a) => [a.id, await getCarHeroStats(a.id, a.initialOdometer)] as const),
+      carRows.map(async (a) => [a.id, await getCarHeroStats(a.id, a.initialOdometer, epochWindow)] as const),
     ),
   ])
   const carStats = new Map(carStatsList)
