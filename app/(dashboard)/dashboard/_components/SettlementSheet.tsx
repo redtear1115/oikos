@@ -122,9 +122,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           {/* Past-epoch view is read-only — hide save. The sheet itself shouldn't
               open in past view (parent gates onItemClick), but keep this as a
               belt-and-braces guard. */}
-          {isPast ? (
-            <span className="text-body font-semibold p-1" style={{ color: 'var(--ink-3)' }}>儲存</span>
-          ) : (
+          {!isPast && (
             <button onClick={handleSave} disabled={!amount || pending}
               className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
               style={{ color: amount && !pending ? 'var(--accent)' : 'var(--ink-3)' }}>
