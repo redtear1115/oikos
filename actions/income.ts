@@ -10,6 +10,7 @@ import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterIncomeMutation } from '@/lib/revalidate'
 
 export type CreateIncomeInput = IncomeInput
@@ -50,7 +51,7 @@ function assertRecipientInGroup(
 
 export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
   const validated = validateIncomeInput(input)
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
@@ -73,7 +74,7 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
 
 export async function editIncome(input: EditIncomeInput): Promise<{ id: string }> {
   const validated = validateIncomeInput(input)
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
@@ -108,7 +109,7 @@ export async function editIncome(input: EditIncomeInput): Promise<{ id: string }
 }
 
 export async function softDeleteIncome(id: string): Promise<void> {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
 
   const [row] = await db
     .select({ id: incomeTransactions.id })
