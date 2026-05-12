@@ -661,6 +661,7 @@ export interface InsuranceInput {
   name: string
   kind?: string | null
   insured?: string | null
+  insuredChildId?: string | null
   policyHolderUserId?: string | null
   insurer?: string | null
   policyNo?: string | null
@@ -680,6 +681,7 @@ export interface ValidatedInsuranceInput {
   name: string
   kind: string | null
   insured: string | null
+  insuredChildId: string | null
   policyHolderUserId: string | null
   insurer: string | null
   policyNo: string | null
@@ -708,6 +710,13 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   const policyHolderUserId = input.policyHolderUserId?.trim() || null
   if (policyHolderUserId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(policyHolderUserId)) {
     throw new Error('要保人格式錯誤')
+  }
+
+  // #167 — 被保人關聯 Child 愛物. When set, the action layer flips
+  // `insuredType` to 'child' and clears the freeform `insured` text.
+  const insuredChildId = input.insuredChildId?.trim() || null
+  if (insuredChildId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(insuredChildId)) {
+    throw new Error('被保人格式錯誤')
   }
 
   let annualPremium: number | null = null
@@ -752,7 +761,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   }
 
   return {
-    name, kind, insured, policyHolderUserId, insurer, policyNo,
+    name, kind, insured, insuredChildId, policyHolderUserId, insurer, policyNo,
     annualPremium, sumInsured, payCycle,
     startsAt, endsAt, termYears,
     vehicleId: input.vehicleId?.trim() || null,
