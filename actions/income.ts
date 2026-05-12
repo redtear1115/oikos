@@ -50,8 +50,8 @@ function assertRecipientInGroup(
 }
 
 export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
-  const validated = validateIncomeInput(input)
   const { group } = await getViewerWriteContext()
+  const validated = validateIncomeInput(input)
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
@@ -73,8 +73,8 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
 }
 
 export async function editIncome(input: EditIncomeInput): Promise<{ id: string }> {
-  const validated = validateIncomeInput(input)
   const { group } = await getViewerWriteContext()
+  const validated = validateIncomeInput(input)
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
