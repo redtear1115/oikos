@@ -221,8 +221,8 @@ export async function loadMoreInsuranceReturns(
   cursor: IncomeCursor | null,
   limit = 20,
 ): Promise<PagedIncomeRow[]> {
-  const { group } = await getViewerReadContext()
-  const rows = await listInsuranceReturnsPaged(assetId, group.id, categories, cursor, limit)
+  const { group, epochWindow } = await getViewerReadContext()
+  const rows = await listInsuranceReturnsPaged(assetId, group.id, categories, cursor, limit, epochWindow)
   return rows.map((r) => ({
     id: r.id,
     amount: r.amount,
