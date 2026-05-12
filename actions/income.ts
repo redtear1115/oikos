@@ -142,6 +142,11 @@ export interface PagedIncomeRow {
   kind: 'income'
 }
 
+// Insurance dropdown options for IncomeSheet + recurring-income setup.
+// Uses ACTIVE group (not pin-aware) so the dropdown stays consistent with the
+// recurring rules path, which always writes to the viewer's active group via
+// lib/recurringActionHelpers.ts. Past-epoch viewers can still navigate here
+// to set up future rules; the data they see should match where rules write.
 export async function getInsuranceAssets(): Promise<{ id: string; name: string }[]> {
   const { group } = await requireViewerGroup()
   const rows = await db
