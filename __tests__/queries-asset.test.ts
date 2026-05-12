@@ -59,20 +59,34 @@ describe('getAssetById', () => {
 })
 
 describe('getAssetSummary', () => {
+  const epochWindow = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-1',
+    isPast: false,
+  }
+
   it('returns monthAmount + totalAmount via raw SQL execute', async () => {
     queueDbResult([{ month_amount: 3500, total_amount: 42000 }])
-    const s = await getAssetSummary('asset-1', 'grp-1')
+    const s = await getAssetSummary('asset-1', 'grp-1', epochWindow)
     expect(s).toEqual({ monthAmount: 3500, totalAmount: 42000 })
   })
 
   it('coerces nulls to 0 (asset with no transactions)', async () => {
     queueDbResult([{ month_amount: null, total_amount: null }])
-    const s = await getAssetSummary('asset-1', 'grp-1')
+    const s = await getAssetSummary('asset-1', 'grp-1', epochWindow)
     expect(s).toEqual({ monthAmount: 0, totalAmount: 0 })
   })
 })
 
 describe('listTransactionsPagedForAsset', () => {
+  const epochWindow = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-1',
+    isPast: false,
+  }
+
   it('returns FeedRow shape, normalises strings to Date', async () => {
     queueDbResult([
       {
@@ -87,7 +101,7 @@ describe('listTransactionsPagedForAsset', () => {
         kind: 'transaction',
       },
     ])
-    const rows = await listTransactionsPagedForAsset('asset-1', 'grp-1', null, 20)
+    const rows = await listTransactionsPagedForAsset('asset-1', 'grp-1', null, 20, epochWindow)
     expect(rows).toHaveLength(1)
     expect(rows[0].kind).toBe('transaction')
     expect(rows[0].transactedAt).toBeInstanceOf(Date)
