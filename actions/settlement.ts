@@ -4,7 +4,7 @@ import { db } from '@/lib/db/client'
 import { settlements } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, and, isNull } from 'drizzle-orm'
-import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { validateSettlementInput } from '@/lib/validators'
 
@@ -24,14 +24,14 @@ export interface CreateSettlementInput {
 }
 
 export async function createSettlement(input: CreateSettlementInput): Promise<{ id: string }> {
+  const { group } = await getViewerWriteContext()
+
   const validated = validateSettlementInput({
     amount: input.amount,
     payerId: input.payerId,
     settledAt: input.settledAt,
     note: input.note,
   })
-
-  const { group } = await requireViewerGroup()
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
     throw new Error('付款人不在家計簿內')
@@ -57,7 +57,7 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
 }
 
 export async function softDeleteSettlement(settlementId: string): Promise<void> {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -77,14 +77,14 @@ export async function softDeleteSettlement(settlementId: string): Promise<void> 
 }
 
 export async function editSettlement(input: EditSettlementInput): Promise<{ id: string }> {
+  const { group } = await getViewerWriteContext()
+
   const validated = validateSettlementInput({
     amount: input.amount,
     payerId: input.payerId,
     settledAt: input.settledAt,
     note: input.note,
   })
-
-  const { group } = await requireViewerGroup()
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
     throw new Error('付款人不在家計簿內')
