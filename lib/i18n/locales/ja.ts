@@ -136,9 +136,9 @@ export const ja: Translations = {
     notesLabel: 'メモ（任意・二人とも見られます）',
     notesPlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
     statusLabel: 'ステータス',
-    statusSettled: '引落済み',
-    statusPending: '引落待ち',
-    statusPendingHint: '引落待ちの記録は実際に引き落とされるまで二人の精算には含まれません。',
+    statusSettled: '支払済み',
+    statusPending: 'カード引落待ち',
+    statusPendingHint: 'カード引落待ちは実際に引き落とされるまで二人の精算には含まれません。引き落とされたら「支払済み」に変更してください。',
     deleteOne: 'この記録を削除',
     deleteConfirmTitle: 'この記録を削除しますか？',
     errors: {
@@ -149,7 +149,7 @@ export const ja: Translations = {
   },
 
   compactRow: {
-    pendingBadge: '引落待ち',
+    pendingBadge: 'カード引落待ち',
   },
 
   incomeSheet: {

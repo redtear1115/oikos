@@ -136,9 +136,9 @@ export const en: Translations = {
     notesLabel: 'Note (optional, visible to both of you)',
     notesPlaceholder: 'Leave a line for your partner, or something to remember later',
     statusLabel: 'Status',
-    statusSettled: 'Settled',
-    statusPending: 'Pending',
-    statusPendingHint: "Pending entries don't change the shared balance until you mark them settled.",
+    statusSettled: 'Paid',
+    statusPending: 'Credit card pending',
+    statusPendingHint: "Credit card pending entries don't change the shared balance until the charge clears and you mark them paid.",
     deleteOne: 'Delete this entry',
     deleteConfirmTitle: 'Delete this entry?',
     errors: {
@@ -149,7 +149,7 @@ export const en: Translations = {
   },
 
   compactRow: {
-    pendingBadge: 'Pending',
+    pendingBadge: 'Card pending',
   },
 
   incomeSheet: {
