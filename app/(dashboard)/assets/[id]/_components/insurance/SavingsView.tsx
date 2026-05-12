@@ -10,7 +10,6 @@ import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
-import { AssetSwitcher } from '../AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from '../aibutsu-ui'
 import { SavingsHero } from './SavingsHero'
 import { MaturingSoonPrompt } from './MaturingSoonPrompt'
@@ -26,8 +25,6 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import type { PagedIncomeRow } from '@/actions/income'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
-
-type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
   if (!kind) return ''
@@ -56,7 +53,6 @@ interface Props {
   initialReturns: PagedIncomeRow[]
   pageSize: number
   assetSheetInitial: AssetSheetInitial
-  allAssets: Array<{ id: string; name: string; type: AssetType }>
   linkedVehicle?: { id: string; name: string } | null
 }
 
@@ -74,7 +70,6 @@ export function SavingsView({
   initialReturns,
   pageSize,
   assetSheetInitial,
-  allAssets,
   linkedVehicle,
 }: Props) {
   const router = useRouter()
@@ -160,11 +155,7 @@ export function SavingsView({
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="insurance"
-        name={
-          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
-            <span>{name}</span>
-          </AssetSwitcher>
-        }
+        name={name}
         subtitle={subtitle}
         onEditClick={() => setEditAssetOpen(true)}
       />

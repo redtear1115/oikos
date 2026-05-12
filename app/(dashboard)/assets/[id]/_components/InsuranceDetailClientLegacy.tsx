@@ -7,13 +7,10 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
-import { AssetSwitcher } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-
-type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
   if (!kind) return ''
@@ -34,10 +31,9 @@ interface Props {
   details: InsuranceDetailsRow | null
   linkedVehicle?: { id: string; name: string } | null
   assetSheetInitial: AssetSheetInitial
-  allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function InsuranceDetailClientLegacy({ assetId, name, notes, details, linkedVehicle, assetSheetInitial, allAssets }: Props) {
+export function InsuranceDetailClientLegacy({ assetId, name, notes, details, linkedVehicle, assetSheetInitial }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.insurance
@@ -71,11 +67,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       <div style={{ background: tint.bg }}>
       <AibutsuHeader
         kind="insurance"
-        name={
-          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
-            <span>{name}</span>
-          </AssetSwitcher>
-        }
+        name={name}
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
       />

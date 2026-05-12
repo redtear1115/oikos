@@ -7,7 +7,6 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
-import { AssetSwitcher } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
 import type { PlantDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -21,8 +20,6 @@ interface AssetSummary {
   totalAmount: number
 }
 
-type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
-
 interface Props {
   assetId: string
   name: string
@@ -32,7 +29,6 @@ interface Props {
   assetSheetInitial: AssetSheetInitial
   initialTxns: PagedTxnRow[]
   pageSize: number
-  allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
 function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: string; waterEvery: number | null; accent: string; td: Translations['assetDetail']['plant'] }) {
@@ -51,7 +47,7 @@ function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: str
   )
 }
 
-export function PlantDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function PlantDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.plant
@@ -88,11 +84,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="plant"
-        name={
-          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
-            <span>{name}</span>
-          </AssetSwitcher>
-        }
+        name={name}
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
       />

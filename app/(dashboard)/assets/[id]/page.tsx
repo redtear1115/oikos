@@ -98,7 +98,6 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
-        allAssets={allAssets}
       />
     )
   }
@@ -135,7 +134,6 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
-        allAssets={allAssets}
       />
     )
   }
@@ -168,7 +166,6 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
-        allAssets={allAssets}
       />
     )
   }
@@ -199,7 +196,6 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
-        allAssets={allAssets}
       />
     )
   }
@@ -295,7 +291,6 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           initialReturns={initialReturns}
           pageSize={PAGE_SIZE}
           assetSheetInitial={assetSheetInitial}
-          allAssets={allAssets}
           linkedVehicle={linkedVehicle}
         />
       )
@@ -309,7 +304,6 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         details={insuranceDetailsData}
         linkedVehicle={linkedVehicle}
         assetSheetInitial={assetSheetInitial}
-        allAssets={allAssets}
       />
     )
   }
