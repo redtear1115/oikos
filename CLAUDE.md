@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.15.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.15.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -39,6 +39,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.14.1](CHANGELOG.md#0141---2026-05-10) | 分擔可以不對半．依比例分 + UI 細修 + SW 修補 |
 | [v0.14.2](CHANGELOG.md#0142---2026-05-11) | 紀錄可以更貼手．自動完成 + 點選即篩選 |
 | [v0.15.0](CHANGELOG.md#0150---2026-05-12) | 離開也保留陪伴．pending 收斂 |
+| [v0.15.1](CHANGELOG.md#0151---2026-05-12) | 陪伴每處小細節更貼手．光的指認也更一致 |
 
 ## Backlog / 未釋出版本
 
@@ -141,11 +142,13 @@ OikosGroups ─┬─< GroupEpochs (1 open + N closed)
 
 ### 分類色 token
 
-- 支出分類：`lib/categories.ts` — `CATEGORIES` 陣列每個 `Category` 自帶 `tint` / `ink` / `chart` / `mono`。
-- 收入分類：`lib/incomeCategories.ts` — 同樣 inline `tint` / `ink` / `chart`，另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。
+> v0.15.1 之後收斂為「每個分類只宣告一個 primary `color`，chip 用的 `tint` 由 `lightenHex()` 推得」（issue #149），確保同一分類在 feed icon 與 donut slice 之間共用同一 hue family。
+
+- 支出分類：`lib/categories.ts` — 每個 `Category` 自帶 primary `color` + derived `tint` + `ink` + `mono`；`chart` 為 `color` 的 alias，舊 callsite 不動。
+- 收入分類：`lib/incomeCategories.ts` — 同結構；另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。
 - 收入模式整體色票：`lib/incomePalettes.ts`（mint / gold / cream）— `ink` / `tint` / `glow` / `whisper` / `sheetBg` 五階。
-- 愛物 type tint：`app/globals.css` 的 `--asset-tint-{car,house,child,pet,plant,insurance}` CSS vars，`AssetListItem` 直接吃。
-- 沒有 `lib/colors.ts` 也沒有 runtime `lightenHex()` — 所有 tint 都是設計師預挑好的 hex，inline 在 source 不算出來。
+- 愛物 type token：`app/globals.css` 的 `--asset-color-{car,house,child,pet,plant,insurance}` 為主色；`--asset-tint-*` 透過 `color-mix(in srgb, var(--asset-color-*) 35%, white)` 推導，list rail 與未來愛物 donut 共用同一 hue family。
+- 派生 helper：`lib/colors.ts#lightenHex(hex, amount = 0.35)` — chip `tint` 從每個 `Category.color` deterministic 推得；新增分類只需給 `color` + `ink`，不必再挑 tint。
 
 ### Worktree 工作流
 

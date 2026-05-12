@@ -13,19 +13,58 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-主題：**Records 頁細節打磨**——把 UI/UX 審查掃出的四件小事一次處理掉：月份切換箭頭的 tap 範圍長大到 44px、donut chart 把總金額移進圓心並支援點 slice 切換顯示分類金額、stats 與 feed 中間有清楚的視覺分隔、之前藏在標題列小字的「定期 ›」改為獨立 section card 提到 stats 與 feed 之間。
-
 ### 使用者可見變化
-
-- **分類色 design token 收斂**（closes #149）：`lib/categories.ts` / `lib/incomeCategories.ts` 改為每個分類只宣告一個 primary `color`，chip 用的 `tint` 透過新增的 `lib/colors.ts#lightenHex()` deterministic 推導；`chart` 設為 `color` 的 alias，舊 callsite 不動。`globals.css` 同步把 `--asset-tint-*` 改寫成 `color-mix(in srgb, var(--asset-color-*) 35%, white)`，視覺值與先前一致但 6 個 asset type 也具備 `--asset-color-*` 主色 token，未來愛物 donut 可以對得上 list rail。設計理由：解決使用者在 feed icon 與 donut slice 之間缺乏顏色辨識的問題——同一分類在哪都長同一個 hue family。
-- **Settings 分攤比例 slider 10% snap**（closes #162）：把預設分攤比例 slider 從 step=1（1–99）改成 step=10（10–90），加上 `<datalist>` tick marks 視覺化 snap 點。設計理由：使用者實際需要的是 50/50、60/40、70/30 這類整數比例；step=1 看似彈性但實際讓人很難精準停在常用值。
-- **Records 月份切換箭頭 tap target ≥ 44px**（closes #151）：MonthSwitcher 的 `‹` `›` 按鈕從 36px 放大到 44px，符合 WCAG / iOS HIG 最小可點區域；容器 vertical padding 同步調整讓 pill 視覺高度維持原樣。
-- **Records donut chart 中央顯示總金額 + slice 切換**（closes #153）：先前總金額在圓圖下方一行小字，現在搬進 donut 圓心（serif 大字 + 標籤），第一眼即可讀；點任一 slice 或對應的 detail bar，圓心切換成該分類的金額與名稱，未選中的 slice dim 至 0.35 opacity。新增 i18n key `records.stats.donutCenterTotal`（4 語），移除已不再用到的 `records.stats.total`。
-- **Records 統計與 feed 之間視覺分隔強化**（closes #152）：stats section 的標題 weight 從 `font-medium` 升為 `font-semibold`；同時 #154 的 RecurringSectionCard 落在 stats 與 feed 之間，自然成為 section break。
-- **Records 「定期」入口從 popover 升為 section card**（closes #154）：原本標題列右側的 ⚙ 定期 popover 對 v0.13.0 才剛上線的功能來說太隱密，現在改為 stats 區塊與 feed 之間的橫向 section card，「定期支出」與「定期收入」各佔一個 44px 高的 tinted pill 連結；移除 `RecurringMenu` 組件與 `records.recurringMenuLabel` / `records.recurringMenuAriaLabel` i18n keys。
+- _尚無_
 
 ### 技術變更
 - _尚無_
+
+## [0.15.1] - 2026-05-12
+
+主題：**陪伴每處小細節更貼手．光的指認也更一致**——一輪跨頁 UX polish（Dashboard / Records / Assets list / 愛物詳情 / AddSheet 全家族），把這幾週累積的 UI/UX 審查回饋一次處理掉；底下用一份分類色 design token 把愛物與類別色彩收斂為「每個分類一個主色，chip tint 由主色推得」，鎖進「同一分類在哪都長同一個 hue」的承諾。
+
+完整 diff：[v0.15.0...v0.15.1](https://github.com/redtear1115/oikos/compare/v0.15.0...v0.15.1)
+
+### 使用者可見變化
+
+#### 設計系統 / Token 收斂
+- **分類色 design token 收斂**（PR #168，closes #149）：`lib/categories.ts` / `lib/incomeCategories.ts` 改為每個分類只宣告一個 primary `color`，chip 用的 `tint` 透過新增的 `lib/colors.ts#lightenHex()` deterministic 推導；`chart` 設為 `color` 的 alias，舊 callsite 不動。`globals.css` 同步把 `--asset-tint-*` 改寫成 `color-mix(in srgb, var(--asset-color-*) 35%, white)`，視覺值與先前一致但 6 個 asset type 也具備 `--asset-color-*` 主色 token，未來愛物 donut 可以對得上 list rail。設計理由：解決使用者在 feed icon 與 donut slice 之間缺乏顏色辨識的問題——同一分類在哪都長同一個 hue family。
+
+#### Dashboard（PR #171，closes #146/#147/#148/#150）
+- **BalanceHero 金額語意化**（closes #146）：對方欠你 → `--credit` 綠；你欠對方 → `--debit` 紅；平 → 中性；collapsed / expanded 兩種狀態都套用。
+- **Settle 按鈕加標籤 + tap target ≥ 44px**（closes #147）：⇄ icon 旁加「結算 / Settle / 结算 / 精算」label；BalanceHero / MonthlyStatsView 共用的 `ToggleButton` 透過 `::before` 把點擊範圍擴到 44×44px，視覺環維持 28px。
+- **CompactRow 常駐顯示「我的負擔」**（closes #148）：每筆紀錄都顯示「我 $XXX / You $XXX / 自分 $XXX」，從原本染色 delta 改為清楚的個人負擔金額；i18n key `compactRow.myShareLabel` 4 語譯齊。
+- **Records feed 篩選按鈕降權**（closes #150）：標題列「篩選 ›」改 `font-normal` + `var(--ink-3)` 讓 section title 領主；active filter 小點仍保留作為視覺提示。
+
+#### Records 頁 polish（PR #173，closes #151/#152/#153/#154）
+- **月份切換箭頭 tap target ≥ 44px**（closes #151）：MonthSwitcher 的 `‹` `›` 按鈕從 36px 放大到 44px，符合 WCAG / iOS HIG 最小可點區域；容器 vertical padding 同步調整讓 pill 視覺高度維持原樣。
+- **Donut chart 中央顯示總金額 + slice 切換**（closes #153）：先前總金額在圓圖下方一行小字，現在搬進 donut 圓心（serif 大字 + 標籤），第一眼即可讀；點任一 slice 或對應的 detail bar，圓心切換成該分類的金額與名稱，未選中的 slice dim 至 0.35 opacity。新增 i18n key `records.stats.donutCenterTotal`（4 語），移除已不再用到的 `records.stats.total`。
+- **統計與 feed 之間視覺分隔強化**（closes #152）：stats section 的標題 weight 從 `font-medium` 升為 `font-semibold`；同時 #154 的 RecurringSectionCard 落在 stats 與 feed 之間，自然成為 section break。
+- **「定期」入口從 popover 升為 section card**（closes #154）：原本標題列右側的 ⚙ 定期 popover 對 v0.13.0 才剛上線的功能來說太隱密，現在改為 stats 區塊與 feed 之間的橫向 section card，「定期支出」與「定期收入」各佔一個 44px 高的 tinted pill 連結；移除 `RecurringMenu` 組件與 `records.recurringMenuLabel` / `records.recurringMenuAriaLabel` i18n keys。
+
+#### Assets list 頁 polish（PR #174，closes #158/#159/#160）
+- **CarHeroCard 簡化**（closes #158）：list 卡片拿掉內聯平均油耗 stat，只放本月 / 累計 NT$（並排兩格），讓 list 維持 finance summary 定位；油耗詳情在 detail hero 已經有了。
+- **InsuranceListItem 加付款倒數 badge**（closes #159）：多期保單（savings + multi-year protection）依 `startsAt + payCycle`（年 / 半年 / 季 / 月）計算下次扣款日，預設 `min(reminderDaysBefore, halfCycle)` 天內亮橘色 `繳費剩 N 天`；月繳保單因為門檻自動收斂到 halfCycle 不會永久亮燈，年繳走 30 天提醒。Savings 已滿期 / 單年期保單維持原本「繳費期滿 / 到期」徽章不重複。
+- **Section headers 更清楚**（closes #160）：愛物分類標題改 serif `fs-button` 字級 + 各組 type tint 色點（house / child / insurance），取代原本不顯眼的 `xs ink-3` caption。
+
+#### 愛物詳情 header 統一（PR #175，closes #161）
+- **AibutsuHeader 採用 settings sub-page 三欄佈局**：`[← 返回] | [置中標題] | [編輯 ✎]`；移除 6 個 aibutsu 子頁面（Child / Pet / Plant / House / InsuranceLegacy / SavingsView）的 inline `AssetSwitcher`，跨愛物切換改回 /assets。Car detail 仍維持 AssetSwitcher。設計理由：原本 back arrow + AssetSwitcher chevron + edit pencil 三件擠在左邊，加上標題本身又是 dropdown trigger，跟 app 其他頁面慣例完全不一致；改成三欄佈局與 /settings 對齊。
+
+#### AddSheet 家族 polish（PR #170，closes #155/#156/#157）
+- **CategoryPicker overflow 提示**（closes #155）：分類 chips 右側加 fade overlay，讓使用者知道還能往右滑看更多。
+- **Status 文案更清楚**（closes #156）：「已扣款 / 待扣款」改為「已付清 / 信用卡待扣」（4 語同步），helper text 與 CompactRow pending badge 一起對齊；「信用卡待扣不會算進兩個人的結算」這句話直接寫出來。
+- **iOS home indicator 安全區**（closes #157）：AddSheet / IncomeSheet / SettlementSheet 底部 24px spacer 改 `calc(24px + env(safe-area-inset-bottom))`，notes textarea 與刪除按鈕不再被手勢列遮住。
+
+#### Settings（PR #169，closes #162）
+- **分攤比例 slider 10% snap**（closes #162）：把預設分攤比例 slider 從 step=1（1–99）改成 step=10（10–90），加上 `<datalist>` tick marks 視覺化 snap 點。設計理由：使用者實際需要的是 50/50、60/40、70/30 這類整數比例；step=1 看似彈性但實際讓人很難精準停在常用值。
+
+### 技術變更
+
+- **`lib/colors.ts` 新增**（PR #168）：`lightenHex(hex, amount = 0.35)` deterministic helper；對 malformed hex 在 module init 時 throw 而非 render 時 silently 壞掉。`Category` / `IncomeCategory` 介面新增 `color` field，`tint` 從 source 拿掉改為運算結果；callsite 透過 `chart` alias 維持 backward compatibility，無 churn。
+- **`lib/insurance.ts` 新增 payCycle helper**（PR #174）：`payCycleMonths()` 把 enum 翻成月數；`computeNextPaymentDate(startsAt, payCycle, today)` 計算下一次扣款日，含月底 clamp（1/31 + 1 月 → 2/28）。9 個 unit tests 在 `__tests__/insurance-next-payment.test.ts`。`payCycle` 從 `listAssetsForGroup` query 一路串到 `InsuranceListItem.data`，**無新欄位**（`pay_cycle` 早已存在）。
+- **`leaveGroup` 整合測試補完**（PR #172，closes #139）：新增 `__tests__/actions/leaveGroup.noOwnedAssets.test.ts` 覆蓋 viewer 沒有 owned 愛物時的 leave 路徑——驗證 epoch 正確關閉、`current_epoch_started_at` 更新、`OikosGroups.member_a/b` swap 邏輯。
+- **`AssetSwitcher` 從 6 個 aibutsu 子頁面下架**（PR #175）：`page.tsx` 不再把 `allAssets` 透過 props 串給 5 個 aibutsu DetailClient + `SavingsView`；component 本身保留（car detail 仍 inline 使用）。`tests/PetDetailClient.test.tsx` 同步移除 AssetSwitcher mock。
+- **CLAUDE.md domain model + worktree 工作流速查補完**（PR #176）：新增 entity 關係圖、Asset 沒有 owner_user_id 的設計理由、Epoch 是「時間軸 slice」而非 entity 的說明、worktree 命名與生命週期。CHANGELOG 兩小節格式（使用者可見變化／技術變更）正式定為 contract，每版皆需依此分節。
 
 ## [0.15.0] - 2026-05-12
 
