@@ -6,6 +6,7 @@ import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { SheetBackdrop } from './SheetBackdrop'
 import { DateField } from './DateField'
 import { IncomeChip } from './IncomeChip'
@@ -438,10 +439,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             >
               {t.incomeSheet.categoryLabel}
             </div>
-            <div
-              className="flex gap-2"
-              style={{ padding: '0 20px', overflowX: 'auto', scrollbarWidth: 'none' }}
-            >
+            <ScrollFadeRow className="flex gap-2" style={{ padding: '0 20px' }} fadeTo={P.sheetBg}>
               {PICKABLE_INCOME_CATEGORIES.map(c => (
                 <IncomeChip
                   key={c.id}
@@ -450,7 +448,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                   onClick={() => setCategory(c.id)}
                 />
               ))}
-            </div>
+            </ScrollFadeRow>
           </div>
 
           {/* Policy link section — only for maturity/claim */}
