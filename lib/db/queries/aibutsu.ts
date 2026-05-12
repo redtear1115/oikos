@@ -143,6 +143,7 @@ export interface InsuranceDetailsRow {
   sumInsured: number | null
   vehicleId: string | null
   expectedMaturityAmount: number | null
+  accountValue: number | null
 }
 
 export async function getInsuranceDetails(assetId: string): Promise<InsuranceDetailsRow | null> {
@@ -168,6 +169,7 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       sumInsured: insuranceDetails.sumInsured,
       vehicleId: insuranceDetails.vehicleId,
       expectedMaturityAmount: insuranceDetails.expectedMaturityAmount,
+      accountValue: insuranceDetails.accountValue,
     })
     .from(insuranceDetails)
     .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))

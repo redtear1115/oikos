@@ -7,6 +7,7 @@ import {
   validateFuelLogInput,
   validateHouseInput,
   validateIncomeInput,
+  validateInsuranceInput,
 } from '@/lib/validators'
 
 describe('validateAmount', () => {
@@ -298,5 +299,39 @@ describe('validateIncomeInput', () => {
 
   it('rejects bad date string', () => {
     expect(() => validateIncomeInput({ ...base, occurredAt: 'not-a-date' })).toThrow(/日期/)
+  })
+})
+
+describe('validateInsuranceInput — accountValue (#166)', () => {
+  const savingsBase = { name: '美元儲蓄險', kind: 'savings' }
+
+  it('keeps accountValue on savings policies', () => {
+    expect(validateInsuranceInput({ ...savingsBase, accountValue: 120000 }).accountValue).toBe(120000)
+  })
+
+  it('treats null / undefined as unset', () => {
+    expect(validateInsuranceInput({ ...savingsBase, accountValue: null }).accountValue).toBeNull()
+    expect(validateInsuranceInput(savingsBase).accountValue).toBeNull()
+  })
+
+  it('accepts zero (statement value can land at exactly 0)', () => {
+    expect(validateInsuranceInput({ ...savingsBase, accountValue: 0 }).accountValue).toBe(0)
+  })
+
+  it('rejects negatives', () => {
+    expect(() => validateInsuranceInput({ ...savingsBase, accountValue: -1 })).toThrow(/帳戶價值/)
+  })
+
+  it('rejects non-integer', () => {
+    expect(() => validateInsuranceInput({ ...savingsBase, accountValue: 12.5 })).toThrow(/帳戶價值/)
+  })
+
+  it('clears accountValue when kind is not savings (avoid stale leakage on kind switch)', () => {
+    expect(
+      validateInsuranceInput({ name: '醫療險', kind: 'health', accountValue: 999 }).accountValue,
+    ).toBeNull()
+    expect(
+      validateInsuranceInput({ name: '車險', kind: 'car', accountValue: 999 }).accountValue,
+    ).toBeNull()
   })
 })

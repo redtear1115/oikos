@@ -214,6 +214,9 @@ export const insuranceDetails = pgTable('InsuranceDetails', {
   sumInsured: integer('sum_insured'),
   vehicleId: uuid('vehicle_id').references(() => assets.id),  // optional vehicle link (car insurance)
   expectedMaturityAmount: integer('expected_maturity_amount'),  // savings framing: user-set 預估滿期金
+  // v0.15.2 #166 — current account value for investment-linked savings policies.
+  // User-set, statement-based; not derived. null = unset or not applicable.
+  accountValue: integer('account_value'),
   // v0.15.0 #127 — red-badge threshold for single-year policies (warning stays at 60d).
   // Multi-year / savings policies ignore this at render time.
   reminderDaysBefore: integer('reminder_days_before').notNull().default(30),
