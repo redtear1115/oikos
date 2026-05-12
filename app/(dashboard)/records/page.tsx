@@ -150,16 +150,16 @@ export default async function RecordsPage({
   // selected date range and structured filter.
   const feedMonthKey = dateRange.kind === 'month' ? monthKey : undefined
   const feedDateRange = dateRange.kind === 'month' ? null : dateRange
-  const feedRows = await listFeedAllPaged(
-    group.id,
-    null,
-    PAGE_SIZE,
-    feedMonthKey,
+  const feedRows = await listFeedAllPaged({
+    groupId: group.id,
+    cursor: null,
+    limit: PAGE_SIZE,
+    filter: resolved,
+    monthKey: feedMonthKey,
     drill,
-    resolved,
-    feedDateRange,
+    dateRange: feedDateRange,
     epochWindow,
-  )
+  })
 
   const initial = feedRows.map((r) => ({
     id: r.id,

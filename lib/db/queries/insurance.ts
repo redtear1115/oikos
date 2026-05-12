@@ -1,15 +1,9 @@
 import { db } from '@/lib/db/client'
 import { incomeTransactions } from '@/lib/db/schema'
-import { and, eq, gte, isNull, lt, desc, inArray, sql } from 'drizzle-orm'
+import { and, eq, isNull, desc, inArray, sql, type SQL } from 'drizzle-orm'
 import type { IncomeRow, IncomeCursor } from './incomes'
 import type { EpochWindow } from './epoch'
-
-function epochSql(epochWindow: EpochWindow | null | undefined) {
-  if (!epochWindow) return sql``
-  return sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
-    epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
-  }`
-}
+import { andClause, cursorClause, epochClause } from './_predicates'
 
 /**
  * Sum + count of active CashTransactions linked to a specific insurance asset
@@ -26,7 +20,7 @@ export async function getInsurancePaymentTotal(
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
       AND deleted_at IS NULL
-      ${epochSql(epochWindow)}
+      ${andClause(epochClause('created_at', epochWindow))}
   `)
   return { total: parseInt(row.total, 10), count: parseInt(row.count, 10) }
 }
@@ -43,13 +37,6 @@ export async function getInsuranceReturnTotal(
   epochWindow?: EpochWindow | null,
 ): Promise<{ total: number; count: number }> {
   if (categories.length === 0) return { total: 0, count: 0 }
-  const epochClauses = epochWindow
-    ? [
-        gte(incomeTransactions.createdAt, epochWindow.startedAt),
-        ...(epochWindow.endedAt ? [lt(incomeTransactions.createdAt, epochWindow.endedAt)] : []),
-      ]
-    : []
-
   const rows = await db
     .select({
       total: sql<string>`COALESCE(SUM(amount), 0)`,
@@ -61,7 +48,7 @@ export async function getInsuranceReturnTotal(
       eq(incomeTransactions.groupId, groupId),
       isNull(incomeTransactions.deletedAt),
       inArray(incomeTransactions.category, categories),
-      ...epochClauses,
+      epochClause(incomeTransactions.createdAt, epochWindow),
     ))
   const r = rows[0]
   return { total: parseInt(r.total, 10), count: parseInt(r.count, 10) }
@@ -84,13 +71,6 @@ export async function getInsuranceReturnTotalsByCategory(
   const out = new Map<string, { total: number; count: number }>()
   if (categories.length === 0) return out
 
-  const epochClauses = epochWindow
-    ? [
-        gte(incomeTransactions.createdAt, epochWindow.startedAt),
-        ...(epochWindow.endedAt ? [lt(incomeTransactions.createdAt, epochWindow.endedAt)] : []),
-      ]
-    : []
-
   const rows = await db
     .select({
       category: incomeTransactions.category,
@@ -103,7 +83,7 @@ export async function getInsuranceReturnTotalsByCategory(
       eq(incomeTransactions.groupId, groupId),
       isNull(incomeTransactions.deletedAt),
       inArray(incomeTransactions.category, categories),
-      ...epochClauses,
+      epochClause(incomeTransactions.createdAt, epochWindow),
     ))
     .groupBy(incomeTransactions.category)
   for (const r of rows) {
@@ -126,23 +106,16 @@ export async function listInsuranceReturnsPaged(
 ): Promise<IncomeRow[]> {
   if (categories.length === 0) return []
 
-  const conditions = [
+  const conditions: (SQL | undefined)[] = [
     eq(incomeTransactions.assetId, assetId),
     eq(incomeTransactions.groupId, groupId),
     isNull(incomeTransactions.deletedAt),
     inArray(incomeTransactions.category, categories),
+    cursor
+      ? sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`
+      : undefined,
+    epochClause(incomeTransactions.createdAt, epochWindow),
   ]
-  if (cursor) {
-    conditions.push(
-      sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`,
-    )
-  }
-  if (epochWindow) {
-    conditions.push(gte(incomeTransactions.createdAt, epochWindow.startedAt))
-    if (epochWindow.endedAt) {
-      conditions.push(lt(incomeTransactions.createdAt, epochWindow.endedAt))
-    }
-  }
 
   const rows = await db
     .select({
@@ -176,9 +149,7 @@ export async function listInsurancePaymentsPaged(
   limit = 20,
   epochWindow?: EpochWindow | null,
 ) {
-  const cursorClause = cursor
-    ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
-    : sql``
+  const cursorCl = andClause(cursorClause('transacted_at', 'created_at', cursor))
 
   const rows = await db.execute<{
     id: string
@@ -202,8 +173,8 @@ export async function listInsurancePaymentsPaged(
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
       AND deleted_at IS NULL
-      ${cursorClause}
-      ${epochSql(epochWindow)}
+      ${cursorCl}
+      ${andClause(epochClause('created_at', epochWindow))}
     ORDER BY transacted_at DESC, created_at DESC
     LIMIT ${limit}
   `)

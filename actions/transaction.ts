@@ -7,7 +7,7 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
-import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type FeedRow, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
@@ -307,23 +307,17 @@ export async function loadMoreTransactions(
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill, dateRange, epochWindow)
-  return rows.map((r) => ({
-    id: r.id,
-    amount: r.amount,
-    splitType: r.splitType,
-    description: r.description,
-    category: r.category,
-    paidBy: r.paidBy,
-    transactedAt: r.transactedAt.toISOString(),
-    createdAt: r.createdAt.toISOString(),
-    kind: r.kind,
-    assetId: r.assetId,
-    fuelLogId: r.fuelLogId ?? null,
-    notes: r.notes ?? null,
-    splitRatioA: r.splitRatioA ?? null,
-    status: r.status ?? 'settled',
-  }))
+  const rows = await listTransactionsPaged({
+    groupId: group.id,
+    cursor,
+    limit,
+    filter: resolved,
+    monthKey,
+    drill,
+    dateRange,
+    epochWindow,
+  })
+  return rows.map(toPagedTxnRow)
 }
 
 /**
@@ -348,23 +342,17 @@ export async function loadMoreFeedAll(
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill, resolved, dateRange, epochWindow)
-  return rows.map((r) => ({
-    id: r.id,
-    amount: r.amount,
-    splitType: r.splitType,
-    description: r.description,
-    category: r.category,
-    paidBy: r.paidBy,
-    transactedAt: r.transactedAt.toISOString(),
-    createdAt: r.createdAt.toISOString(),
-    kind: r.kind,
-    assetId: r.assetId,
-    fuelLogId: r.fuelLogId ?? null,
-    notes: r.notes ?? null,
-    splitRatioA: r.splitRatioA ?? null,
-    status: r.status ?? 'settled',
-  }))
+  const rows = await listFeedAllPaged({
+    groupId: group.id,
+    cursor,
+    limit,
+    filter: resolved,
+    monthKey,
+    drill,
+    dateRange,
+    epochWindow,
+  })
+  return rows.map(toPagedTxnRow)
 }
 
 /**
@@ -385,7 +373,17 @@ export async function loadMoreTransactionsForAsset(
   const { group, window: epochWindow } = context
 
   const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit, epochWindow)
-  return rows.map((r) => ({
+  return rows.map(toPagedTxnRow)
+}
+
+/**
+ * Serialize a query-layer FeedRow into the wire-shape PagedTxnRow returned by
+ * the loadMore* server actions. Three sites previously inlined this mapping;
+ * collapsing them keeps the wire contract (ISO timestamps, null-coalescing,
+ * 'settled' default for legacy rows) in one place.
+ */
+function toPagedTxnRow(r: FeedRow): PagedTxnRow {
+  return {
     id: r.id,
     amount: r.amount,
     splitType: r.splitType,
@@ -400,7 +398,7 @@ export async function loadMoreTransactionsForAsset(
     notes: r.notes ?? null,
     splitRatioA: r.splitRatioA ?? null,
     status: r.status ?? 'settled',
-  }))
+  }
 }
 
 /**
