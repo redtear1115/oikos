@@ -13,10 +13,14 @@ import {
 } from '@/lib/validators'
 import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
 import {
-  getViewerGroup,
   assertMemberInGroup,
   assertAssetInGroup,
 } from '@/lib/recurringActionHelpers'
+import { requireViewerGroup } from '@/lib/auth/viewer'
+import {
+  revalidateAfterRecurringIncomeRuleMutation,
+  revalidateAfterIncomeMutation,
+} from '@/lib/revalidate'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -29,7 +33,7 @@ function assertRecipientInGroup(
 
 export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id: string }> {
   const v = validateRecurringIncomeRuleInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
@@ -52,8 +56,7 @@ export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id:
     })
     .returning({ id: recurringIncomeRules.id })
 
-  revalidatePath('/settings/recurring-income')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringIncomeRuleMutation()
   return { id: created.id }
 }
 
@@ -63,7 +66,7 @@ export interface UpdateRuleInput extends RecurringIncomeRuleInput {
 
 export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }> {
   const v = validateRecurringIncomeRuleInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
@@ -104,13 +107,12 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
     .where(eq(recurringIncomeRules.id, input.id))
     .returning({ id: recurringIncomeRules.id })
 
-  revalidatePath('/settings/recurring-income')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringIncomeRuleMutation()
   return { id: updated.id }
 }
 
 export async function pauseRule(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(recurringIncomeRules)
     .set({ pausedAt: new Date() })
@@ -121,12 +123,11 @@ export async function pauseRule(id: string): Promise<void> {
     ))
     .returning({ id: recurringIncomeRules.id })
   if (!updated) throw new Error('找不到該定期規則')
-  revalidatePath('/settings/recurring-income')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringIncomeRuleMutation()
 }
 
 export async function resumeRule(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const [rule] = await db
     .select({
       id: recurringIncomeRules.id,
@@ -154,12 +155,11 @@ export async function resumeRule(id: string): Promise<void> {
     .where(eq(recurringIncomeRules.id, id))
     .returning({ id: recurringIncomeRules.id })
 
-  revalidatePath('/settings/recurring-income')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringIncomeRuleMutation()
 }
 
 export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -210,8 +210,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
     return { txId: created.id }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterIncomeMutation()
   return result
 }
 
@@ -240,7 +239,7 @@ export async function editAndConfirmPending(
     assetId: input.assetId ?? null,
   })
 
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
@@ -283,13 +282,12 @@ export async function editAndConfirmPending(
     return { txId: created.id }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterIncomeMutation()
   return result
 }
 
 export async function softDeleteRule(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     const [updated] = await tx
@@ -312,12 +310,11 @@ export async function softDeleteRule(id: string): Promise<void> {
       ))
   })
 
-  revalidatePath('/settings/recurring-income')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringIncomeRuleMutation()
 }
 
 export async function skipPending(pendingId: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(pendingIncomeOccurrences)
     .set({ skippedAt: new Date() })

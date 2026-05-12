@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db/client'
 import { monthlyReviewMessages, monthlyReviewSnapshots } from '@/lib/db/schema'
-import { getViewerGroup } from '@/lib/recurringActionHelpers'
+import { requireViewerGroup } from '@/lib/auth/viewer'
 import { validateMessageBody, formatYearMonth } from '@/lib/monthlyReview'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
@@ -23,7 +23,7 @@ export async function upsertMonthlyReviewMessage(
   input: UpsertMonthlyReviewMessageInput,
 ): Promise<{ id: string }> {
   const body = validateMessageBody(input.body)
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [existing] = await db
     .select({
@@ -104,7 +104,7 @@ export interface DismissMonthlyReviewBannerInput {
 export async function dismissMonthlyReviewBanner(
   input: DismissMonthlyReviewBannerInput,
 ): Promise<void> {
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const viewerIsA = group.memberA === user.id
   const viewerIsB = group.memberB === user.id

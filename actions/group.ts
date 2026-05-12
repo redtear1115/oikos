@@ -3,12 +3,16 @@
 import { db } from '@/lib/db/client'
 import { oikosGroups, groupBalance } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
-import { eq, or } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { revalidatePath } from 'next/cache'
+import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
+import { revalidateSettings } from '@/lib/revalidate'
 import { validateName } from '@/lib/validators'
 
 export async function getMyGroup() {
+  // Read-only "is the viewer in a group?" probe used by client RTV bootstrap.
+  // Returns null (rather than throwing) on no-user so the caller can render
+  // the unauth state without a try/catch.
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
@@ -19,9 +23,7 @@ export async function getMyGroup() {
 }
 
 export async function createGroup(name: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const existing = await getActiveGroupForUser(user.id)
 
@@ -46,41 +48,31 @@ export async function createGroup(name: string) {
 }
 
 export async function updateGroupName(name: string): Promise<{ ok: true }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
   const trimmed = validateName(name, '帳本名稱')
 
-  const active = await getActiveGroupForUser(user.id)
-  if (!active) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   await db
     .update(oikosGroups)
     .set({ name: trimmed })
-    .where(eq(oikosGroups.id, active.id))
+    .where(eq(oikosGroups.id, group.id))
 
-  revalidatePath('/settings')
+  revalidateSettings()
   return { ok: true }
 }
 
 export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
   if (!Number.isInteger(ratioA) || ratioA < 1 || ratioA > 99) {
     throw new Error('分攤比例必須為 1–99 的整數')
   }
 
-  const active = await getActiveGroupForUser(user.id)
-  if (!active) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   await db
     .update(oikosGroups)
     .set({ defaultSplitRatioA: ratioA })
-    .where(eq(oikosGroups.id, active.id))
+    .where(eq(oikosGroups.id, group.id))
 
-  revalidatePath('/settings')
+  revalidateSettings()
   return { ok: true }
 }

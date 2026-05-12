@@ -1,12 +1,11 @@
 import pkg from '@/package.json'
-import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { profiles, oikosGroups } from '@/lib/db/schema'
-import { eq, or } from 'drizzle-orm'
+import { profiles } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { getLocale } from '@/lib/i18n/t'
 import { getGroupBalance } from '@/lib/db/queries/balance'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import {
   SettingsContent,
   type PartnerInfo,
@@ -15,14 +14,16 @@ import {
 import type { PendingSwap } from './_components/DangerZone'
 
 export default async function SettingsPage() {
-  const [user, currentLocale] = await Promise.all([getCurrentUser(), getLocale()])
-  if (!user) throw new Error('Unauthorized')
-
-  const [[viewerProfile], group] = await Promise.all([
-    db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1),
-    getActiveGroupForUser(user.id),
+  const [{ user, group }, currentLocale] = await Promise.all([
+    requireViewerGroupOrRedirect(),
+    getLocale(),
   ])
-  if (!group) throw new Error('No group')
+
+  const [viewerProfile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.id, user.id))
+    .limit(1)
 
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
   let partnerProfile: typeof viewerProfile | null = null

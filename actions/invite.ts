@@ -8,7 +8,7 @@ import {
   validateInviteAcceptance,
   type InviteAcceptError,
 } from '@/lib/invite'
-import { createClient } from '@/lib/supabase/server'
+import { requireViewer } from '@/lib/auth/viewer'
 import { and, eq, isNull, ne } from 'drizzle-orm'
 
 export type InvitePreview =
@@ -16,9 +16,7 @@ export type InvitePreview =
   | { ok: false; error: InviteAcceptError }
 
 export async function createInvite(groupId: string): Promise<string> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const token = generateToken()
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -40,9 +38,7 @@ export async function createInvite(groupId: string): Promise<string> {
  * invitee clicks the confirm CTA.
  */
 export async function previewInvite(token: string): Promise<InvitePreview> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const [invite] = await db
     .select()
@@ -71,9 +67,7 @@ export async function previewInvite(token: string): Promise<InvitePreview> {
 }
 
 export async function acceptInvite(token: string): Promise<string> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const [invite] = await db
     .select()

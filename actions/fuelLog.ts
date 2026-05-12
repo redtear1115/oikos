@@ -1,13 +1,12 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, carDetails, cashTransactions, fuelLogs, oikosGroups } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
+import { assets, carDetails, cashTransactions, fuelLogs } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
-import { eq, or, and, isNull } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { revalidatePath } from 'next/cache'
+import { eq, and, isNull } from 'drizzle-orm'
+import { requireViewerGroup } from '@/lib/auth/viewer'
+import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 
 /**
  * Atomic dual-write for a new fuel-up event:
@@ -18,16 +17,10 @@ import { revalidatePath } from 'next/cache'
  * paidBy / splitType are taken from form input (Q4 B1 — user picks per-fill).
  */
 export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
   // Validate input first (rejects fuelType=electric per EV1, etc.) — runs before any DB hit.
   const validated = validateFuelLogInput(input)
 
-  // Find viewer's group
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   // Asset must belong to the viewer's group and not be soft-deleted.
   const [asset] = await db
@@ -84,9 +77,7 @@ export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: strin
     return { id: newLog.id, txnId: newTxn.id }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  revalidatePath(`/assets/${validated.assetId}`)
+  revalidateAfterTransactionMutation({ assetId: validated.assetId })
 
   return { id: result.id }
 }
@@ -106,15 +97,9 @@ export interface EditFuelLogInput extends FuelLogInputRaw {
  * not in viewer's group, or if the payer is not a current group member.
  */
 export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
   const validated = validateFuelLogInput(input)
 
-  // Find viewer's group
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   // Look up existing fuel log; reject if missing or already soft-deleted.
   const [existingLog] = await db
@@ -206,13 +191,11 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
     return { id: input.id, txnId: newTxn.id }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
   // Revalidate both old and new asset pages in case the fuel log moved between cars.
-  if (existingLog.assetId !== validated.assetId) {
-    revalidatePath(`/assets/${existingLog.assetId}`)
-  }
-  revalidatePath(`/assets/${validated.assetId}`)
+  revalidateAfterTransactionMutation({
+    assetId: validated.assetId,
+    previousAssetId: existingLog.assetId,
+  })
 
   return { id: result.id }
 }
@@ -227,13 +210,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
  * Phase 1 softDeleteTransaction semantics — no silent no-op on stale clicks).
  */
 export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  // Find viewer's group
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   // Look up the fuel log; reject if missing or already soft-deleted (idempotency).
   const [existingLog] = await db
@@ -288,9 +265,7 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
     await recalcGroupBalance(group.id, tx)
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  revalidatePath(`/assets/${existingLog.assetId}`)
+  revalidateAfterTransactionMutation({ assetId: existingLog.assetId })
 }
 
 export interface FuelLogDetail {
@@ -312,12 +287,7 @@ export interface FuelLogDetail {
  * Verifies the fuel log belongs to an asset in the viewer's group.
  */
 export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   const [row] = await db
     .select({

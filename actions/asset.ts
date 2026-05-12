@@ -1,26 +1,15 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, carDetails, cashTransactions, oikosGroups, childDetails, petDetails, plantDetails, insuranceDetails, houseDetails } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
+import { assets, carDetails, cashTransactions, childDetails, petDetails, plantDetails, insuranceDetails, houseDetails } from '@/lib/db/schema'
 import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput, validateHouseInput } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { encrypt, decrypt } from '@/lib/crypto'
-import { eq, or, and, isNull } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { revalidatePath } from 'next/cache'
+import { eq, and, isNull } from 'drizzle-orm'
+import { requireViewerGroup } from '@/lib/auth/viewer'
+import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
-
-async function getViewerGroup() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
-  return { group, viewer: user }
-}
 
 function assertPolicyHolderInGroup(
   userId: string,
@@ -60,7 +49,7 @@ export interface CreateCarInput {
  */
 export async function createCar(input: CreateCarInput): Promise<{ id: string }> {
   const validated = validateCarInput(input)
-  const { group, viewer } = await getViewerGroup()
+  const { user: viewer, group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -119,11 +108,9 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
     return [asset]
   })
 
-  revalidatePath('/assets')
   // Auto-tx affects /dashboard + /records too; revalidate unconditionally —
   // cheap, and keeps the call site simple.
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
   return { id: created.id }
 }
 
@@ -145,7 +132,7 @@ export interface EditCarInput {
 
 export async function editCar(input: EditCarInput): Promise<void> {
   const validated = validateCarInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     // UPDATE Asset; .returning proves ownership (group_id match + not deleted)
@@ -179,14 +166,12 @@ export async function editCar(input: EditCarInput): Promise<void> {
   })
   // Per spec E2: do NOT touch the linked purchase transaction (drift allowed)
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
   // Renamed car needs to flow to AddSheet's asset-picker label on the records page.
-  revalidatePath('/records')
+  revalidateAfterAssetMutation(input.id, { affectsRecords: true })
 }
 
 export async function softDeleteCar(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   // Soft delete the Asset row only. Do NOT touch CashTransactions.asset_id —
   // per spec Q7-A we preserve the historical link and let AddSheet display
@@ -203,12 +188,11 @@ export async function softDeleteCar(id: string): Promise<void> {
     .returning({ id: assets.id })
   if (updated.length === 0) throw new Error('找不到該資產')
 
-  revalidatePath('/assets')
   // Defense-in-depth: a partner viewing the detail page primarily redirects
-  // via the realtime asset-changed event, but if the WebSocket dropped, this
-  // ensures the next nav reads fresh state and notFound()s cleanly.
-  revalidatePath(`/assets/${id}`)
-  revalidatePath('/records')
+  // via the realtime asset-changed event, but if the WebSocket dropped, the
+  // /assets/${id} bust ensures the next nav reads fresh state and notFound()s
+  // cleanly.
+  revalidateAfterAssetMutation(id, { affectsRecords: true })
 }
 
 // ── Life entity (child / pet / plant) ─────────────────────────────────────
@@ -220,14 +204,14 @@ export interface CreateLifeEntityInput {
 
 export async function createLifeEntity(input: CreateLifeEntityInput): Promise<{ id: string }> {
   const validated = validateLifeEntityInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [created] = await db
     .insert(assets)
     .values({ groupId: group.id, type: validated.type, name: validated.name })
     .returning({ id: assets.id })
 
-  revalidatePath('/assets')
+  revalidateAfterAssetMutation()
   return { id: created.id }
 }
 
@@ -240,7 +224,7 @@ export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> 
   // Reuse validator for consistent name trimming + length check
   // type field is irrelevant for edit; 'pet' is used as a placeholder
   const { name } = validateLifeEntityInput({ type: 'pet', name: input.name })
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const updated = await db
     .update(assets)
@@ -253,12 +237,11 @@ export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> 
     .returning({ id: assets.id })
   if (updated.length === 0) throw new Error('找不到該愛物')
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 export async function softDeleteAsset(assetId: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const updated = await db
     .update(assets)
@@ -271,9 +254,7 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
     .returning({ id: assets.id })
   if (updated.length === 0) throw new Error('找不到該愛物')
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${assetId}`)
-  revalidatePath('/records')
+  revalidateAfterAssetMutation(assetId, { affectsRecords: true })
 }
 
 export interface PickerAsset {
@@ -294,7 +275,7 @@ export interface CarAsset {
  * Used by the insurance form vehicle picker.
  */
 export async function getCarAssets(): Promise<CarAsset[]> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows
     .filter(r => r.type === 'car')
@@ -311,7 +292,7 @@ export interface ChildAsset {
  * insurance form to bind 被保人 to a Child 愛物 (insured_child_id).
  */
 export async function getChildAssets(): Promise<ChildAsset[]> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows
     .filter(r => r.type === 'child')
@@ -323,7 +304,7 @@ export async function getChildAssets(): Promise<ChildAsset[]> {
  * deleted assets (new transaction links can never point at zombies).
  */
 export async function loadAssetsForPicker(): Promise<PickerAsset[]> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows.map(r => ({ id: r.id, type: r.type, name: r.name, plate: r.plate }))
 }
@@ -340,7 +321,7 @@ export interface LoadedAsset {
  * "我的 Tesla（已刪除）"). Returns null if not found or wrong group.
  */
 export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const row = await getAssetById(assetId, group.id)
   if (!row) return null
   return {
@@ -386,7 +367,7 @@ function encryptForInsert(value: string | null | undefined): string | null {
 export async function createChild(input: CreateChildInput): Promise<{ id: string }> {
   'use server'
   const validated = validateChildInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -408,14 +389,14 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
     return [asset]
   })
 
-  revalidatePath('/assets')
+  revalidateAfterAssetMutation()
   return { id: created.id }
 }
 
 export async function editChild(input: EditChildInput): Promise<void> {
   'use server'
   const validated = validateChildInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   // Trinary PII handling: build the partial column updates lazily so a
   // "no change" (undefined) input doesn't touch the encrypted column. Only
@@ -480,8 +461,7 @@ export async function editChild(input: EditChildInput): Promise<void> {
       })
   })
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 /**
@@ -498,7 +478,7 @@ export async function revealChildPii(
   field: 'nationalId' | 'nhiNo',
 ): Promise<string> {
   'use server'
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -544,7 +524,7 @@ export interface EditPetInput extends CreatePetInput {
 export async function createPet(input: CreatePetInput): Promise<{ id: string }> {
   'use server'
   const validated = validatePetInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -566,14 +546,14 @@ export async function createPet(input: CreatePetInput): Promise<{ id: string }> 
     return [asset]
   })
 
-  revalidatePath('/assets')
+  revalidateAfterAssetMutation()
   return { id: created.id }
 }
 
 export async function editPet(input: EditPetInput): Promise<void> {
   'use server'
   const validated = validatePetInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -618,8 +598,7 @@ export async function editPet(input: EditPetInput): Promise<void> {
       })
   })
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 // ── Plant ──────────────────────────────────────────────────────────────────
@@ -641,7 +620,7 @@ export interface EditPlantInput extends CreatePlantInput {
 export async function createPlant(input: CreatePlantInput): Promise<{ id: string }> {
   'use server'
   const validated = validatePlantInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -659,14 +638,14 @@ export async function createPlant(input: CreatePlantInput): Promise<{ id: string
     return [asset]
   })
 
-  revalidatePath('/assets')
+  revalidateAfterAssetMutation()
   return { id: created.id }
 }
 
 export async function editPlant(input: EditPlantInput): Promise<void> {
   'use server'
   const validated = validatePlantInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -703,8 +682,7 @@ export async function editPlant(input: EditPlantInput): Promise<void> {
       })
   })
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 // ── Insurance ──────────────────────────────────────────────────────────────
@@ -752,7 +730,7 @@ async function assertInsuredChildInGroup(childId: string, groupId: string): Prom
 export async function createInsurance(input: CreateInsuranceInput): Promise<{ id: string }> {
   'use server'
   const validated = validateInsuranceInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   if (input.vehicleId) {
     const [vehicle] = await db
@@ -807,14 +785,14 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
     return [asset]
   })
 
-  revalidatePath('/assets')
+  revalidateAfterAssetMutation()
   return { id: created.id }
 }
 
 export async function editInsurance(input: EditInsuranceInput): Promise<void> {
   'use server'
   const validated = validateInsuranceInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   if (input.vehicleId) {
     const [vehicle] = await db
@@ -897,8 +875,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
       })
   })
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 /**
@@ -916,7 +893,7 @@ export async function renewInsurance(input: {
   newPolicyNumber?: string | null
 }): Promise<void> {
   'use server'
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [asset] = await db
     .select({ id: assets.id })
@@ -950,8 +927,7 @@ export async function renewInsurance(input: {
     .set(setClause)
     .where(eq(insuranceDetails.assetId, input.id))
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 /**
@@ -964,7 +940,7 @@ export async function renewInsurance(input: {
  */
 export async function lapseInsurance(input: { id: string }): Promise<void> {
   'use server'
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const result = await db
     .update(assets)
@@ -978,8 +954,7 @@ export async function lapseInsurance(input: { id: string }): Promise<void> {
     .returning({ id: assets.id })
   if (result.length === 0) throw new Error('找不到該保單')
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
 
 // ── House ──────────────────────────────────────────────────────────────────
@@ -995,7 +970,7 @@ export interface CreateHouseInput {
 export async function createHouse(input: CreateHouseInput): Promise<{ id: string }> {
   'use server'
   const validated = validateHouseInput(input)
-  const { group, viewer } = await getViewerGroup()
+  const { user: viewer, group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -1044,9 +1019,7 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
     return [asset]
   })
 
-  revalidatePath('/assets')
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
   return { id: created.id }
 }
 
@@ -1062,7 +1035,7 @@ export interface EditHouseInput {
 export async function editHouse(input: EditHouseInput): Promise<void> {
   'use server'
   const validated = validateHouseInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -1087,6 +1060,5 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
       .where(eq(houseDetails.assetId, input.id))
   })
 
-  revalidatePath('/assets')
-  revalidatePath(`/assets/${input.id}`)
+  revalidateAfterAssetMutation(input.id)
 }
