@@ -1028,6 +1028,88 @@ export const zhCN: Translations = {
     },
   },
 
+  quiz: {
+    cardHeadingInvitation: '我们还不太了解彼此 — 来回答 3 题',
+    cardHeadingSelfPendingPartnerDone: '对方答完了，轮你了',
+    cardHeadingSelfPendingPartnerPending: '来回答 3 题，看看你们对钱的想象',
+    cardHeadingSelfDonePartnerPending: '答完了，等 {partnerName} 一起揭晓',
+    cardHeadingRevealed: '看看你们的理财组合',
+    cardCtaStart: '→ 开始',
+    cardCtaReveal: '→ 看揭晓',
+    answerEyebrow: '了解彼此',
+    answerProgress: '{current} / {total}',
+    answerCta: '继续',
+    answerCtaFinal: '送出这 3 题',
+    answerErrorChooseOne: '选一个吧，再继续',
+    answerBack: '返回回顾',
+    waitingHeading: '答完了，等对方一起揭晓',
+    waitingBody: '你的答案会先收着，等对方也答完了，我们会一起打开。',
+    waitingBackToReview: '回到回顾页',
+    revealHeading: '你们的理财组合',
+    revealedAtLine: '揭晓于 {date}',
+    revealSameAnswer: '在这件事上你们同方向',
+    revealFraming: '你们一个是日出、一个是月光 — 不同的时刻，照同一个家。没有谁的答案比较对，记住对方在意的就好。',
+    revealHeaderA: '你',
+    revealHeaderB: '对方',
+    soloFallback: '两个人才能一起回答这 3 题。等对方加入家计簿，再回来吧。',
+    errorNotFound: '找不到这次的问答',
+    errors: {
+      submitFailed: '送出失败，等一下再试',
+      alreadyAnswered: '你已经答完了',
+      solo: '一个人的时候还没办法答题',
+    },
+    questions: {
+      impulse: {
+        prompt: '看到很想要、但不一定需要的东西，我通常…',
+        choices: {
+          a: '先放着两天，看会不会冷下来',
+          b: '喜欢就买，这种感觉不多',
+          c: '等下次需要时再一起入手',
+        },
+      },
+      risk: {
+        prompt: '想到突然要用上一笔大钱，我的第一个感觉是…',
+        choices: {
+          a: '还好，我平常有备一份',
+          b: '紧张，但会想办法',
+          c: '先别想，到时候再说',
+        },
+      },
+      transparency: {
+        prompt: '彼此的钱，我比较希望…',
+        choices: {
+          a: '大小事都知道，比较安心',
+          b: '大笔的知道就好，小开销不必报',
+          c: '各自有空间，需要时再对',
+        },
+      },
+      big_purchase: {
+        prompt: '想买一个比较贵的东西，我会…',
+        choices: {
+          a: '先跟对方说，一起想想',
+          b: '自己决定后再告诉对方',
+          c: '看是什么，分情况',
+        },
+      },
+      future: {
+        prompt: '想到 10 年后的我们，我脑中浮现的是…',
+        choices: {
+          a: '存到一个目标，安心慢慢过',
+          b: '想去的地方都去过了',
+          c: '一个我们都喜欢的家',
+        },
+      },
+      recording_motive: {
+        prompt: '我想记账，比较像是…',
+        choices: {
+          a: '想知道日子怎么过的',
+          b: '想为以后存下一些什么',
+          c: '想跟对方有个共同的地方',
+        },
+      },
+    },
+  },
+
   inAppBrowser: {
     title: '请在外部浏览器中打开',
     description: '你正在聊天软件内置的浏览器中浏览本页。为了让 Google 登录与离线功能正常工作，请改用 Safari 或 Chrome 打开。',
