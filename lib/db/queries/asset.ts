@@ -40,6 +40,7 @@ export interface AssetWithCar {
   insuranceStartsAt: string | null
   insuranceExpiryDate: string | null
   insuranceTermYears: number | null
+  insurancePayCycle: string | null
   insuranceReminderDaysBefore: number | null
 }
 
@@ -78,6 +79,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceStartsAt: insuranceDetails.startsAt,
       insuranceExpiryDate: insuranceDetails.expiryDate,
       insuranceTermYears: insuranceDetails.termYears,
+      insurancePayCycle: insuranceDetails.payCycle,
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
     })
     .from(assets)
@@ -128,6 +130,7 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceStartsAt: insuranceDetails.startsAt,
       insuranceExpiryDate: insuranceDetails.expiryDate,
       insuranceTermYears: insuranceDetails.termYears,
+      insurancePayCycle: insuranceDetails.payCycle,
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
     })
     .from(assets)

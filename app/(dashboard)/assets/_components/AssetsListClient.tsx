@@ -37,6 +37,7 @@ export interface AssetsListItem {
     startsAt: string | null
     expiryDate: string | null
     termYears: number | null
+    payCycle: string | null
     reminderDaysBefore: number
     notes: string | null
   }
@@ -47,7 +48,6 @@ export interface AssetsListItem {
   model?: string | null
   latestOdometer?: number | null
   totalAmount?: number
-  avgFuelEcon?: number | null
 }
 
 interface Props {
@@ -87,12 +87,27 @@ export function AssetsListClient({ items }: Props) {
     })
   const multiCar = cars.length > 1
 
-  const SectionLabel = ({ label }: { label: string }) => (
-    <div
-      className="text-xs font-medium tracking-[0.5px] px-1 pb-1"
-      style={{ color: 'var(--ink-3)' }}
-    >
-      {label}
+  // #160 — section headers were too quiet to anchor the eye. Stronger weight,
+  // serif type, and a colored dot in the section's representative tint give
+  // each group a clear identity without adding chrome.
+  const SectionLabel = ({ label, dotColor }: { label: string; dotColor: string }) => (
+    <div className="flex items-center gap-2 px-1 pb-1">
+      <span
+        aria-hidden="true"
+        className="inline-block rounded-full shrink-0"
+        style={{ width: 8, height: 8, background: dotColor }}
+      />
+      <div
+        style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 'var(--fs-button)',
+          fontWeight: 500,
+          color: 'var(--ink)',
+          letterSpacing: '-0.2px',
+        }}
+      >
+        {label}
+      </div>
     </div>
   )
 
@@ -160,7 +175,7 @@ export function AssetsListClient({ items }: Props) {
         <div className="px-4 flex flex-col gap-5">
           {hasProperty && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label={t.assets.section.property} />
+              <SectionLabel label={t.assets.section.property} dotColor="var(--asset-tint-house)" />
               {cars.map((c) => (
                 <CarHeroCard
                   key={c.id}
@@ -174,7 +189,6 @@ export function AssetsListClient({ items }: Props) {
                   latestOdometer={c.latestOdometer ?? null}
                   monthAmount={c.monthAmount}
                   totalAmount={c.totalAmount ?? 0}
-                  avgFuelEcon={c.avgFuelEcon ?? null}
                   compact={multiCar}
                 />
               ))}
@@ -185,14 +199,14 @@ export function AssetsListClient({ items }: Props) {
 
           {livings.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label={t.assets.section.living} />
+              <SectionLabel label={t.assets.section.living} dotColor="var(--asset-tint-child)" />
               <AssetGroup group={livings} />
             </div>
           )}
 
           {insurances.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label={t.assets.section.coverage} />
+              <SectionLabel label={t.assets.section.coverage} dotColor="var(--asset-tint-insurance)" />
               <div
                 className="rounded-[20px] overflow-hidden"
                 style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
@@ -213,6 +227,7 @@ export function AssetsListClient({ items }: Props) {
                       startsAt: null,
                       expiryDate: null,
                       termYears: null,
+                      payCycle: null,
                       reminderDaysBefore: 30,
                       notes: null,
                     }}

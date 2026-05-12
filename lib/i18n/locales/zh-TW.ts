@@ -444,6 +444,9 @@ export type Translations = {
       daysLeftUrgent: string
       /** Red badge shown when single-year policy is expired. */
       expiredBadge: string
+      // ── multi-period (savings + multi-year protection) ──────────────────
+      /** Template with `{n}` — amber/warning badge for upcoming premium. */
+      nextPaymentBadge: string
       /** Button label — opens the renewal sheet. */
       renewAction: string
       /** Button label — opens the lapse confirmation. */
@@ -1544,6 +1547,7 @@ export const zhTW: Translations = {
       daysLeftWarning: '剩 {n} 天',
       daysLeftUrgent: '剩 {n} 天',
       expiredBadge: '已到期',
+      nextPaymentBadge: '繳費剩 {n} 天',
       renewAction: '已續保',
       lapseAction: '已停止',
       renewTitle: '已續保？',

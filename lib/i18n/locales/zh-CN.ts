@@ -418,6 +418,7 @@ export const zhCN: Translations = {
       daysLeftWarning: '剩 {n} 天',
       daysLeftUrgent: '剩 {n} 天',
       expiredBadge: '已到期',
+      nextPaymentBadge: '缴费剩 {n} 天',
       renewAction: '已续保',
       lapseAction: '已停止',
       renewTitle: '已续保？',

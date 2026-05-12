@@ -57,6 +57,7 @@ export default async function AssetsPage() {
         startsAt: a.insuranceStartsAt,
         expiryDate: a.insuranceExpiryDate,
         termYears: a.insuranceTermYears,
+        payCycle: a.insurancePayCycle,
         reminderDaysBefore: a.insuranceReminderDaysBefore ?? 30,
         notes: a.notes,
       }
@@ -72,7 +73,6 @@ export default async function AssetsPage() {
       model: a.model,
       latestOdometer: heroStats.latestOdometer,
       totalAmount: summary.totalAmount,
-      avgFuelEcon: heroStats.avgFuelEcon,
     }
   })
 

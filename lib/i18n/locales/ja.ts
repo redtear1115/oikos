@@ -418,6 +418,7 @@ export const ja: Translations = {
       daysLeftWarning: '残り {n} 日',
       daysLeftUrgent: '残り {n} 日',
       expiredBadge: '満期',
+      nextPaymentBadge: '次回払込まで {n} 日',
       renewAction: '更新済み',
       lapseAction: '停止',
       renewTitle: '更新しましたか？',

@@ -7,7 +7,7 @@ import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useTranslations } from '@/lib/i18n/client'
-import { getFramingGroup } from '@/lib/insurance'
+import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 
 /**
@@ -34,6 +34,7 @@ interface InsuranceData {
   startsAt: string | null
   expiryDate: string | null
   termYears: number | null
+  payCycle: string | null
   reminderDaysBefore: number
   notes: string | null
 }
@@ -90,6 +91,18 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const cumulativePaid = isSavings ? yearsPassed * annualPremium : 0
   const isForeignSavings = isSavings && /USD/i.test(data.notes ?? '')
 
+  // #159 — next payment urgency for multi-period policies. Anchored on
+  // startsAt + payCycle. Suppressed for single-year (its own expiry badge
+  // already covers urgency) and once the policy term has ended. Capped at
+  // half-cycle so monthly/quarterly policies don't show a permanent badge.
+  const nextPaymentDate = !isSingleYear
+    ? computeNextPaymentDate(startsAt, data.payCycle, termYears, today)
+    : null
+  const daysToNextPayment = nextPaymentDate ? daysBetween(today, nextPaymentDate) : null
+  const paymentThreshold = Math.min(data.reminderDaysBefore, Math.floor((payCycleMonths(data.payCycle) * 30) / 2))
+  const showNextPaymentBadge =
+    daysToNextPayment !== null && daysToNextPayment >= 0 && daysToNextPayment <= paymentThreshold
+
   const handleRenew = () => {
     startTransition(async () => {
       try {
@@ -134,6 +147,18 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
           style={{ fontSize: 11, background: 'var(--saving-soft)', color: 'var(--saving)' }}
         >
           {i.savingsMaturedBadge}
+        </span>
+      )
+    }
+    // #159 — multi-year / savings: next-payment warning takes precedence over
+    // the multi-year "years left" chip when close to the due date.
+    if (showNextPaymentBadge && daysToNextPayment !== null) {
+      return (
+        <span
+          className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
+          style={{ fontSize: 11, background: 'var(--warning-soft)', color: 'var(--warning)' }}
+        >
+          {i.nextPaymentBadge.replace('{n}', String(daysToNextPayment))}
         </span>
       )
     }

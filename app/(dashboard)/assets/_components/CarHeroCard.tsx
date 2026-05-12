@@ -14,7 +14,6 @@ interface Props {
   latestOdometer: number | null
   monthAmount: number
   totalAmount: number
-  avgFuelEcon: number | null
   compact?: boolean
 }
 
@@ -22,16 +21,14 @@ function fmtInt(n: number) {
   return n.toLocaleString('en-US')
 }
 
-function Stat({
+function MoneyStat({
   label,
   value,
-  unit,
   align = 'left',
 }: {
   label: string
-  value: string
-  unit: string
-  align?: 'left' | 'center' | 'right'
+  value: number
+  align?: 'left' | 'right'
 }) {
   return (
     <div style={{ flex: 1, textAlign: align }}>
@@ -48,14 +45,17 @@ function Stat({
       <div
         className="tnum"
         style={{
-          fontSize: 'var(--fs-body)',
+          fontFamily: 'var(--font-numeric)',
+          fontSize: 22,
           fontWeight: 600,
           color: 'var(--ink)',
-          marginTop: 2,
+          marginTop: 4,
+          letterSpacing: '-0.5px',
+          lineHeight: 1,
         }}
       >
-        {value}{' '}
-        <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', fontWeight: 500 }}>{unit}</span>
+        <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-2)', fontWeight: 500, marginRight: 2 }}>NT$</span>
+        {fmtInt(value)}
       </div>
     </div>
   )
@@ -72,7 +72,6 @@ export function CarHeroCard({
   latestOdometer,
   monthAmount,
   totalAmount,
-  avgFuelEcon,
   compact: _compact = false,
 }: Props) {
   const swatch = resolveCarColor(color)
@@ -179,20 +178,14 @@ export function CarHeroCard({
             marginTop: 12,
             display: 'flex',
             gap: 8,
-            padding: '10px 12px',
+            padding: '12px 14px',
             borderRadius: 12,
             background: 'rgba(58,36,25,0.04)',
           }}
         >
-          <Stat
-            label="平均油耗"
-            value={avgFuelEcon != null ? avgFuelEcon.toFixed(1) : '—'}
-            unit="km/L"
-          />
+          <MoneyStat label="本月" value={monthAmount} />
           <div style={{ width: 1, background: 'var(--hairline)' }} />
-          <Stat label="本月" value={fmtInt(monthAmount)} unit="NT$" align="center" />
-          <div style={{ width: 1, background: 'var(--hairline)' }} />
-          <Stat label="累計" value={fmtInt(totalAmount)} unit="NT$" align="right" />
+          <MoneyStat label="累計" value={totalAmount} align="right" />
         </div>
       </div>
     </Link>
