@@ -89,6 +89,9 @@ export function BalanceHero({
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const canSettle = balance !== 0
+  // Semantic color for the debt amount: green when partner owes you, red/orange
+  // when you owe partner, neutral when even. Surfaces direction at a glance (#146).
+  const balanceColor = balance > 0 ? 'var(--credit)' : balance < 0 ? 'var(--debit)' : 'var(--ink)'
 
   const toggleCollapsed = () => {
     setHeroCollapsed(prev => {
@@ -211,7 +214,7 @@ export function BalanceHero({
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-body)',
                     fontWeight: 600,
-                    color: 'var(--ink)',
+                    color: balanceColor,
                     letterSpacing: '-0.6px',
                   }}
                 >
@@ -219,7 +222,7 @@ export function BalanceHero({
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} />}
+                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} label={t.balanceHero.settleLabel} />}
                 <ToggleButton onClick={toggleCollapsed} ariaLabel="expand" expanded={false}>+</ToggleButton>
               </div>
             </div>
@@ -237,7 +240,7 @@ export function BalanceHero({
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-amount-lg)',
                     fontWeight: 600,
-                    color: 'var(--ink)',
+                    color: balanceColor,
                     opacity: fading ? 0 : 1,
                   }}
                 >
@@ -246,7 +249,7 @@ export function BalanceHero({
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0 pt-[2px]">
-                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} />}
+                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} label={t.balanceHero.settleLabel} />}
                 <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
               </div>
             </div>
@@ -267,10 +270,11 @@ export function BalanceHero({
   )
 }
 
-function SettleButton({ settleOpen, onToggle, ariaLabel }: {
+function SettleButton({ settleOpen, onToggle, ariaLabel, label }: {
   settleOpen: boolean
   onToggle: () => void
   ariaLabel: string
+  label: string
 }) {
   return (
     <button
@@ -278,18 +282,22 @@ function SettleButton({ settleOpen, onToggle, ariaLabel }: {
       onClick={onToggle}
       aria-label={ariaLabel}
       aria-expanded={settleOpen}
-      className="h-7 grid place-items-center rounded-full cursor-pointer"
+      // min-h-[44px] satisfies the 44×44 tap-target guideline (#147) while the
+      // visible chip stays compact via px-3 + flex sizing.
+      className="relative min-h-[44px] inline-flex items-center gap-1 rounded-full cursor-pointer before:absolute before:inset-y-0 before:-inset-x-1 before:content-['']"
       style={{
-        padding: '0 10px',
+        padding: '0 12px',
         border: '1px solid',
         borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
         background: settleOpen ? 'var(--ink)' : 'transparent',
         color: settleOpen ? '#fff' : 'var(--ink-2)',
-        fontSize: 14,
+        fontSize: 13,
+        fontWeight: 500,
         transition: 'background 150ms, color 150ms, border-color 150ms',
       }}
     >
-      ⇄
+      <span aria-hidden style={{ fontSize: 14 }}>⇄</span>
+      <span>{label}</span>
     </button>
   )
 }

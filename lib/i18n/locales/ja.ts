@@ -107,6 +107,7 @@ export const ja: Translations = {
     noRecord: 'まだ記録がありません',
     manage: '管理 ›',
     settleAriaLabel: '返済 / 受領を記録',
+    settleLabel: '精算',
     partnerOwesYou: 'があなたに貸し中',
     youOwePartner: 'が相手に借り中',
     currentlyEven: '差額なし',
@@ -150,6 +151,7 @@ export const ja: Translations = {
 
   compactRow: {
     pendingBadge: 'カード引落待ち',
+    myShareLabel: '自分',
   },
 
   incomeSheet: {

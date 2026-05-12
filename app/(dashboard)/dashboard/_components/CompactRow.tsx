@@ -53,8 +53,15 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
     }
   }
 
-  const dColor = delta > 0 ? 'var(--credit)' : delta < 0 ? 'var(--debit)' : 'var(--ink-3)'
-  const showDelta = tx.kind === 'transaction'
+  // Viewer's actual share of this transaction — derived from delta:
+  //   payer's share    = amount − delta (delta = what the other owes back)
+  //   non-payer's share = −delta        (delta = what they owe the payer)
+  // Shown on every transaction row (#148) so the viewer's burden is always
+  // explicit, not just visible when the split happens to create a non-zero delta.
+  const myShare = tx.kind === 'transaction'
+    ? (payerIsViewer ? tx.amount - delta : -delta)
+    : 0
+  const showMyShare = tx.kind === 'transaction'
 
   // For income rows, fall back to category label when source/description is empty.
   const displayLabel = tx.kind === 'income'
@@ -108,9 +115,9 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         >
           NT${tx.amount.toLocaleString('en-US')}
         </div>
-        {showDelta && (
-          <div className="tnum text-micro mt-px" style={{ color: dColor }}>
-            {delta === 0 ? '—' : (delta > 0 ? '+' : '−') + Math.abs(delta).toLocaleString('en-US')}
+        {showMyShare && (
+          <div className="tnum text-micro mt-px" style={{ color: 'var(--ink-2)' }}>
+            {t.compactRow.myShareLabel} ${myShare.toLocaleString('en-US')}
           </div>
         )}
       </div>
