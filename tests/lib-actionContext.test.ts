@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import './_mocks/supabase'
 import { setMockUser } from './_mocks/supabase'
-import { mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
+import { queueDbResult, resetDbMocks } from './_mocks/db'
 
 const cookieStore = new Map<string, string>()
 vi.mock('next/headers', () => ({
