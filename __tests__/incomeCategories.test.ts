@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { INCOME_CATEGORIES, SAVINGS_RETURN_CATEGORIES, getIncomeCategory, isValidIncomeCategoryId } from '@/lib/incomeCategories'
+import { lightenHex } from '@/lib/colors'
 
 describe('INCOME_CATEGORIES', () => {
   it('exposes 10 entries (8 base + dividend + survival_annuity)', () => {
@@ -11,9 +12,18 @@ describe('INCOME_CATEGORIES', () => {
       expect(c.id).toBeTruthy()
       expect(c.label).toBeTruthy()
       expect(c.mono).toMatch(/^.$/)
+      expect(c.color).toMatch(/^#[0-9A-F]{6}$/i)
       expect(c.tint).toMatch(/^#/)
       expect(c.ink).toMatch(/^#/)
       expect(c.chart).toMatch(/^#/)
+    }
+  })
+
+  // Same contract as expense categories — see __tests__/categories.test.ts.
+  it('derives tint from color and aliases chart = color', () => {
+    for (const c of INCOME_CATEGORIES) {
+      expect(c.chart).toBe(c.color)
+      expect(c.tint).toBe(lightenHex(c.color))
     }
   })
 

@@ -21,13 +21,24 @@
   --warning-soft: rgba(180, 83, 9, 0.12);  /* paused pill badge bg */
   --realtime-flash: #fffbe8;
 
-  /* Per-asset-type tints — soft warm hues for icon box bg + 3px left rail. */
-  --asset-tint-house:     #EDDCD0;
-  --asset-tint-car:       #E8E4D8;
-  --asset-tint-child:     #F1DEE0;
-  --asset-tint-pet:       #F0E2D0;
-  --asset-tint-plant:     #DCE7D6;
-  --asset-tint-insurance: #DDE5DC;
+  /* Per-asset-type colors — primary identity (saturated). Mirrors the
+   * categories/incomeCategories palette: each type has one `color` and the
+   * lighter `tint` (icon box bg + 3px left rail) is derived from it via
+   * color-mix so future charts can use `--asset-color-*` directly and
+   * stay perceptually linked to the list rail. (issue #149) */
+  --asset-color-house:     #CB9B79;
+  --asset-color-car:       #BDB290;
+  --asset-color-child:     #D7A1A6;
+  --asset-color-pet:       #D4AC79;
+  --asset-color-plant:     #9BBA8A;
+  --asset-color-insurance: #9EB59B;
+
+  --asset-tint-house:     color-mix(in srgb, var(--asset-color-house) 35%, white);
+  --asset-tint-car:       color-mix(in srgb, var(--asset-color-car) 35%, white);
+  --asset-tint-child:     color-mix(in srgb, var(--asset-color-child) 35%, white);
+  --asset-tint-pet:       color-mix(in srgb, var(--asset-color-pet) 35%, white);
+  --asset-tint-plant:     color-mix(in srgb, var(--asset-color-plant) 35%, white);
+  --asset-tint-insurance: color-mix(in srgb, var(--asset-color-insurance) 35%, white);
 
   /* Savings (儲蓄險) badge — shares the muted-green family with insurance tint. */
   --saving-soft: #DDE5DC;

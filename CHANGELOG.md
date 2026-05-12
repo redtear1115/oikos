@@ -9,7 +9,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### Changed
+
+- **分類色 design token 收斂**（closes #149）：`lib/categories.ts` / `lib/incomeCategories.ts` 改為每個分類只宣告一個 primary `color`，chip 用的 `tint` 透過新增的 `lib/colors.ts#lightenHex()` deterministic 推導；`chart` 設為 `color` 的 alias，舊 callsite 不動。`globals.css` 同步把 `--asset-tint-*` 改寫成 `color-mix(in srgb, var(--asset-color-*) 35%, white)`，視覺值與先前一致但 6 個 asset type 也具備 `--asset-color-*` 主色 token，未來愛物 donut 可以對得上 list rail。設計理由：解決使用者在 feed icon 與 donut slice 之間缺乏顏色辨識的問題——同一分類在哪都長同一個 hue family。
 
 ## [0.15.0] - 2026-05-12
 
