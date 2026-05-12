@@ -1,13 +1,18 @@
 import { db } from '@/lib/db/client'
 import { incomeTransactions } from '@/lib/db/schema'
-import { and, eq, isNull, desc, gte, lt, sql, type SQL } from 'drizzle-orm'
+import { and, eq, isNull, desc, sql, type SQL } from 'drizzle-orm'
 import type { DrillFilter } from '@/lib/drill'
-import {
-  ASSET_FILTER_NONE,
-  resolveDateRangeToDateBounds,
-  type DateRange,
-} from '@/lib/filter'
+import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
 import type { EpochWindow } from './epoch'
+import {
+  amountClause,
+  andClause,
+  assetIdsClause,
+  categoryInClause,
+  dateColumnClause,
+  epochClause,
+  eqValueClause,
+} from './_predicates'
 
 export interface IncomeRow {
   id: string
@@ -48,26 +53,24 @@ export interface ResolvedIncomeFilter {
 }
 
 /**
- * Build a drizzle SQL fragment matching the asset-multi-select filter, or
- * null when no asset filter is active. Members may include the
- * ASSET_FILTER_NONE sentinel for the「未歸屬」bucket; the helper expands it to
- * `IS NULL` and ORs it with any uuid `IN (...)` predicate.
+ * Drizzle-condition variant of the asset multi-select clause. The
+ * `_predicates` helper returns a string-or-SQL-column-aware fragment which
+ * works inline; here we need a drizzle `SQL` chunk that references the typed
+ * `incomeTransactions.assetId` column so the rest of the `and(...)` set stays
+ * typed.
  */
-function assetIdsClause(assetIds: string[]): SQL | null {
-  if (assetIds.length === 0) return null
+function assetIdsDrizzleClause(assetIds: string[]): SQL | undefined {
+  if (assetIds.length === 0) return undefined
   const uuids: string[] = []
   let includeNone = false
   for (const id of assetIds) {
     if (id === ASSET_FILTER_NONE) includeNone = true
     else uuids.push(id)
   }
-  if (uuids.length === 0 && includeNone) {
-    return isNull(incomeTransactions.assetId)
-  }
-  if (uuids.length > 0 && !includeNone) {
-    return sql`${incomeTransactions.assetId} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
-  }
-  return sql`(${incomeTransactions.assetId} IS NULL OR ${incomeTransactions.assetId} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
+  if (uuids.length === 0 && includeNone) return isNull(incomeTransactions.assetId)
+  const inList = sql`${incomeTransactions.assetId} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
+  if (!includeNone) return inList
+  return sql`(${incomeTransactions.assetId} IS NULL OR ${inList})`
 }
 
 export async function listIncomesPaged(
@@ -88,55 +91,20 @@ export async function listIncomesPaged(
   // split) → empty page on the income tab. Same UX contract as drill.
   if (filter?.cutAll) return []
 
-  const conditions: SQL[] = [
+  const conditions: (SQL | undefined)[] = [
     eq(incomeTransactions.groupId, groupId),
     isNull(incomeTransactions.deletedAt),
+    cursor
+      ? sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`
+      : undefined,
+    dateColumnClause(monthKey, dateRange, incomeTransactions.occurredAt),
+    drill?.kind === 'income' ? eq(incomeTransactions.category, drill.categoryId) : undefined,
+    eqValueClause(incomeTransactions.recipientId, filter?.recipientId),
+    filter ? categoryInClause(filter.incomeCategories, incomeTransactions.category) : undefined,
+    filter ? amountClause(filter.amountMin, filter.amountMax, incomeTransactions.amount) : undefined,
+    filter ? assetIdsDrizzleClause(filter.assetIds) : undefined,
+    epochClause(incomeTransactions.createdAt, epochWindow),
   ]
-  if (cursor) {
-    conditions.push(
-      sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`,
-    )
-  }
-
-  // Custom date range overrides monthKey when provided. Reuse the helper from
-  // lib/filter.ts so the resolution logic lives in one place.
-  const bounds = dateRange
-    ? resolveDateRangeToDateBounds(dateRange)
-    : monthKey
-      ? { startDate: `${monthKey}-01`, endDateExclusive: nextMonthFirst(monthKey) }
-      : null
-  if (bounds) {
-    conditions.push(sql`occurred_at >= ${bounds.startDate}::date`)
-    conditions.push(sql`occurred_at <  ${bounds.endDateExclusive}::date`)
-  }
-
-  if (drill?.kind === 'income') {
-    conditions.push(eq(incomeTransactions.category, drill.categoryId))
-  }
-  if (filter?.recipientId) {
-    conditions.push(eq(incomeTransactions.recipientId, filter.recipientId))
-  }
-  if (filter && filter.incomeCategories.length > 0) {
-    conditions.push(
-      sql`${incomeTransactions.category} IN (${sql.join(filter.incomeCategories.map((c) => sql`${c}`), sql`, `)})`,
-    )
-  }
-  if (filter && filter.amountMin !== null) {
-    conditions.push(sql`${incomeTransactions.amount} >= ${filter.amountMin}`)
-  }
-  if (filter && filter.amountMax !== null) {
-    conditions.push(sql`${incomeTransactions.amount} <= ${filter.amountMax}`)
-  }
-
-  const assetCl = filter ? assetIdsClause(filter.assetIds) : null
-  if (assetCl) conditions.push(assetCl)
-
-  if (epochWindow) {
-    conditions.push(gte(incomeTransactions.createdAt, epochWindow.startedAt))
-    if (epochWindow.endedAt) {
-      conditions.push(lt(incomeTransactions.createdAt, epochWindow.endedAt))
-    }
-  }
 
   const rows = await db
     .select({
@@ -156,14 +124,6 @@ export async function listIncomesPaged(
     .limit(limit)
 
   return rows
-}
-
-function nextMonthFirst(monthKey: string): string {
-  const [y, m] = monthKey.split('-').map(Number)
-  const idx = y * 12 + (m - 1) + 1
-  const ny = Math.floor(idx / 12)
-  const nm = ((idx % 12) + 12) % 12 + 1
-  return `${ny}-${String(nm).padStart(2, '0')}-01`
 }
 
 export async function listIncomeMonthSummary(
@@ -206,58 +166,6 @@ export async function monthlyIncomeStatsByCategory(
   epochWindow?: EpochWindow | null,
 ): Promise<IncomeCategoryStatRow[]> {
   if (filter?.cutAll) return []
-  const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
-      }`
-    : sql``
-
-  // Custom date range overrides monthKey when provided. resolveDateRangeToDateBounds
-  // returns null for `kind: 'all'` → no date predicate (sum all-time).
-  const bounds = dateRange
-    ? resolveDateRangeToDateBounds(dateRange)
-    : monthKey
-      ? { startDate: `${monthKey}-01`, endDateExclusive: nextMonthFirst(monthKey) }
-      : null
-  const dateClause = bounds
-    ? sql`AND occurred_at >= ${bounds.startDate}::date AND occurred_at < ${bounds.endDateExclusive}::date`
-    : sql``
-
-  const recipientClause = filter?.recipientId
-    ? sql`AND recipient_id = ${filter.recipientId}`
-    : sql``
-
-  const incomeCatClause = filter && filter.incomeCategories.length > 0
-    ? sql`AND category IN (${sql.join(filter.incomeCategories.map((c) => sql`${c}`), sql`, `)})`
-    : sql``
-
-  const assetClause = (() => {
-    if (!filter || filter.assetIds.length === 0) return sql``
-    const uuids: string[] = []
-    let includeNone = false
-    for (const id of filter.assetIds) {
-      if (id === ASSET_FILTER_NONE) includeNone = true
-      else uuids.push(id)
-    }
-    if (uuids.length === 0 && includeNone) return sql`AND asset_id IS NULL`
-    if (uuids.length > 0 && !includeNone) {
-      return sql`AND asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)})`
-    }
-    return sql`AND (asset_id IS NULL OR asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
-  })()
-
-  const amountClause = (() => {
-    if (!filter) return sql``
-    if (filter.amountMin === null && filter.amountMax === null) return sql``
-    if (filter.amountMin !== null && filter.amountMax === null) {
-      return sql`AND amount >= ${filter.amountMin}`
-    }
-    if (filter.amountMin === null && filter.amountMax !== null) {
-      return sql`AND amount <= ${filter.amountMax}`
-    }
-    return sql`AND amount BETWEEN ${filter.amountMin} AND ${filter.amountMax}`
-  })()
-
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -266,12 +174,12 @@ export async function monthlyIncomeStatsByCategory(
     FROM "IncomeTransactions"
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
-      ${dateClause}
-      ${recipientClause}
-      ${incomeCatClause}
-      ${assetClause}
-      ${amountClause}
-      ${epochClause}
+      ${andClause(dateColumnClause(monthKey, dateRange))}
+      ${andClause(eqValueClause('recipient_id', filter?.recipientId))}
+      ${andClause(filter ? categoryInClause(filter.incomeCategories) : undefined)}
+      ${andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)}
+      ${andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)}
+      ${andClause(epochClause('created_at', epochWindow))}
     GROUP BY category
     ORDER BY total DESC
   `)
