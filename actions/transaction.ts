@@ -1,8 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, cashTransactions, oikosGroups } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
+import { assets, cashTransactions } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
@@ -12,9 +11,10 @@ import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
-import { eq, or, and, isNull, sql } from 'drizzle-orm'
+import { eq, and, isNull, sql } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { revalidatePath } from 'next/cache'
+import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
+import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 
 export interface CreateTransactionInput {
   amount: number              // integer NTD, > 0
@@ -32,19 +32,14 @@ export interface CreateTransactionInput {
 export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<{ id: string; isFirstTransaction: boolean }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  // Validate
+  // Validate first so pure-input failures don't require a DB round-trip
+  // (tests rely on this order via /金額必須是正整數/ before group lookup).
   const validated = validateTransactionInput({
     ...input,
     splitRatioA: input.splitRatioA ?? null,
   })
 
-  // Find viewer's group
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { user, group } = await requireViewerGroup()
 
   // Payer must be in group
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
@@ -102,19 +97,12 @@ export async function createTransaction(
     return { id: inserted.id, isFirstTransaction }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  if (validated.assetId) revalidatePath(`/assets/${validated.assetId}`)
+  revalidateAfterTransactionMutation({ assetId: validated.assetId })
   return result
 }
 
 export async function softDeleteTransaction(transactionId: string): Promise<void> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -130,8 +118,7 @@ export async function softDeleteTransaction(transactionId: string): Promise<void
     await recalcGroupBalance(group.id, tx)
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterTransactionMutation()
 }
 
 export interface EditTransactionInput {
@@ -149,17 +136,12 @@ export interface EditTransactionInput {
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
   const validated = validateTransactionInput({
     ...input,
     splitRatioA: input.splitRatioA ?? null,
   })
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const { group } = await requireViewerGroup()
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
     throw new Error('付款人不在家計簿內')
@@ -229,10 +211,10 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     return inserted
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  if (oldRow.assetId) revalidatePath(`/assets/${oldRow.assetId}`)
-  if (validated.assetId) revalidatePath(`/assets/${validated.assetId}`)
+  revalidateAfterTransactionMutation({
+    assetId: validated.assetId,
+    previousAssetId: oldRow.assetId,
+  })
 
   return { id: created.id }
 }
@@ -297,9 +279,7 @@ export async function loadMoreTransactions(
   drillWire?: DrillFilterWire,
   dateRange?: DateRange,
 ): Promise<PagedTxnRow[]> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
   if (!context) throw new Error('找不到家計簿')
@@ -332,9 +312,7 @@ export async function loadMoreFeedAll(
   filterWire?: TxnFilterWire,
   dateRange?: DateRange,
 ): Promise<PagedTxnRow[]> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
   if (!context) throw new Error('找不到家計簿')
@@ -364,9 +342,7 @@ export async function loadMoreTransactionsForAsset(
   cursor: TxnCursor | null,
   limit = 20,
 ): Promise<PagedTxnRow[]> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
   if (!context) throw new Error('找不到家計簿')
@@ -408,10 +384,10 @@ function toPagedTxnRow(r: FeedRow): PagedTxnRow {
  * surface immediately on the next entry.
  */
 export async function getDescriptionSuggestions(): Promise<string[]> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
+  // Empty list (not a throw) when there's no group yet — autocomplete is
+  // a UX nicety, not an integrity check.
   const group = await getActiveGroupForUser(user.id)
   if (!group) return []
 

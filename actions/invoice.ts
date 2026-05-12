@@ -1,39 +1,28 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { invoiceCredentials, oikosGroups } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
+import { invoiceCredentials } from '@/lib/db/schema'
 import {
   validateInvoiceCarrierInput,
   type InvoiceCarrierInput,
 } from '@/lib/validators'
 import { encrypt } from '@/lib/crypto'
 import { fetchInvoicesByCarrier } from '@/lib/invoice/api'
-import { and, eq, isNull, or } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { revalidatePath } from 'next/cache'
+import { and, eq, isNull } from 'drizzle-orm'
+import { requireViewerGroup } from '@/lib/auth/viewer'
+import { revalidateSettings } from '@/lib/revalidate'
 
 /**
  * v0.9.0 Phase A — credential CRUD only.
  * Phase B will add previewInvoiceImport / commitInvoiceImport here.
  *
  * Conventions (mirror actions/income.ts):
- *   - All mutations open a single supabase auth check + group lookup.
+ *   - All mutations open a single supabase auth check + group lookup
+ *     (via `requireViewerGroup` from lib/auth/viewer).
  *   - Edits use soft-delete + insert atomically (DB-level UPDATE is forbidden
  *     for user-mutable fields; status / lastSyncedAt are server-only metadata
  *     and may be UPDATEd in place).
  */
-
-async function getViewerGroup() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
-
-  return { user, group }
-}
 
 function mapMofErrorToMessage(code: string): string {
   switch (code) {
@@ -79,7 +68,7 @@ export async function createInvoiceCredential(
   input: CreateInvoiceCredentialInput,
 ): Promise<{ id: string }> {
   const validated = validateInvoiceCarrierInput(input)
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   // Reject duplicate (active) registration of the same barcode by the same user.
   const [existing] = await db
@@ -108,7 +97,7 @@ export async function createInvoiceCredential(
     })
     .returning({ id: invoiceCredentials.id })
 
-  revalidatePath('/settings')
+  revalidateSettings()
   return { id: created.id }
 }
 
@@ -121,7 +110,7 @@ export async function renameInvoiceCredential(
   id: string,
   nickname: string | null,
 ): Promise<void> {
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   let trimmed: string | null = null
   if (nickname !== null && nickname !== undefined) {
@@ -142,7 +131,7 @@ export async function renameInvoiceCredential(
     .returning({ id: invoiceCredentials.id })
   if (updated.length === 0) throw new Error('找不到該載具')
 
-  revalidatePath('/settings')
+  revalidateSettings()
 }
 
 /**
@@ -155,7 +144,7 @@ export async function refreshInvoiceCredential(
   id: string,
   newVerificationCode: string,
 ): Promise<{ id: string }> {
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   // SELECT → API verify → soft-delete → insert ALL run inside the transaction
   // so a concurrent delete cannot race between verify and the soft-delete WHERE
@@ -212,7 +201,7 @@ export async function refreshInvoiceCredential(
       .returning({ id: invoiceCredentials.id })
   })
 
-  revalidatePath('/settings')
+  revalidateSettings()
   return { id: created.id }
 }
 
@@ -221,7 +210,7 @@ export async function refreshInvoiceCredential(
  * the row until the cleanup-soft-deleted cron physically purges after 1y.
  */
 export async function deleteInvoiceCredential(id: string): Promise<void> {
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const updated = await db
     .update(invoiceCredentials)
@@ -235,12 +224,12 @@ export async function deleteInvoiceCredential(id: string): Promise<void> {
     .returning({ id: invoiceCredentials.id })
   if (updated.length === 0) throw new Error('找不到該載具')
 
-  revalidatePath('/settings')
+  revalidateSettings()
 }
 
 /** Server-rendered list helper: rows the viewer (a single user) owns. */
 export async function listInvoiceCredentialsForViewer() {
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
   // shape kept thin so SettingsContent can render directly
   return await db
     .select({

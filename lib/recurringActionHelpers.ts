@@ -1,22 +1,10 @@
 import { db } from '@/lib/db/client'
-import { assets, oikosGroups } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
-import { and, eq, or } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { assets } from '@/lib/db/schema'
+import { and, eq } from 'drizzle-orm'
 
-export interface ViewerGroup {
-  user: { id: string }
-  group: typeof oikosGroups.$inferSelect
-}
-
-export async function getViewerGroup(): Promise<ViewerGroup> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
-  return { user, group }
-}
+// getViewerGroup retired in favour of `requireViewerGroup` from
+// `@/lib/auth/viewer` (#190). The membership + asset assertion helpers below
+// are still recurring-action shaped and stay here.
 
 export function assertMemberInGroup(
   memberId: string,
