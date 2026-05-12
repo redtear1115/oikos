@@ -101,6 +101,60 @@ Realtime：Client subscribes → React state mutation
 
 ---
 
+## Domain Model 速查
+
+> Schema 真相在 `lib/db/schema.ts`，這裡只說「entity 是什麼 + 怎麼接」。
+
+### 主要 entity
+
+- **`OikosGroups`（Group）** — 兩人帳本本體。`member_a` notNull / `member_b` nullable（solo 模式 = `member_b IS NULL`）。`current_epoch_started_at` 標記目前章節起點；`default_split_ratio_a` 為 group 預設依比例分。
+- **`Profiles`（OikosUser）** — mirror `auth.users.id` 的使用者 profile（displayName / avatar / `default_split_type`）。
+- **`GroupEpochs`** — 關係章節歷史。每個 group 同時間恰好一筆 `endedAt IS NULL`（current epoch）；swap 不開新 epoch、leave 才會關舊開新。`/records` / stats / dashboard 預設只看當前 chapter，`/past-times` 翻歷史。
+- **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount` + `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。
+- **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
+- **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。
+- **`GroupBalance`** — balance cache（per-group 單列）。`balance` 正數 = A 欠 B、負數 = B 欠 A；每次寫入後由 `lib/balance.ts` 全量重算。
+- **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance`），各 type 用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`。
+- **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
+- **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
+- **`MonthlyReviewSnapshots` / `MonthlyReviewMessages`** — 月初 cron 凍結的雙人月度回顧資料。
+
+### Entity 關係
+
+```
+Profiles ─┬─< OikosGroups.member_a, member_b
+          ├─< CashTransactions.paid_by
+          ├─< IncomeTransactions.recipient_id
+          └─< InsuranceDetails.policy_holder_user_id / insured_user_id
+
+OikosGroups ─┬─< GroupEpochs (1 open + N closed)
+             ├─< CashTransactions / IncomeTransactions / Settlements
+             ├─< Assets ─┬─< CarDetails ─< FuelLogs
+             │           ├─< HouseDetails / ChildDetails / PetDetails / PlantDetails
+             │           └─< InsuranceDetails (可 FK 回 Asset: vehicle_id / insured_child_id)
+             └─── GroupBalance (1:1)
+```
+
+- Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type 自己定義（`CarDetails.primary_user_id` / `HouseDetails.owner` / `InsuranceDetails.policy_holder_user_id`）。
+- CashTransaction 可 optional 關聯 `asset_id`（哪個愛物的支出）+ `fuel_log_id`（加油雙寫）。
+- Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 `transacted_at` 落在哪個 epoch 來歸屬章節。
+
+### 分類色 token
+
+- 支出分類：`lib/categories.ts` — `CATEGORIES` 陣列每個 `Category` 自帶 `tint` / `ink` / `chart` / `mono`。
+- 收入分類：`lib/incomeCategories.ts` — 同樣 inline `tint` / `ink` / `chart`，另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。
+- 收入模式整體色票：`lib/incomePalettes.ts`（mint / gold / cream）— `ink` / `tint` / `glow` / `whisper` / `sheetBg` 五階。
+- 愛物 type tint：`app/globals.css` 的 `--asset-tint-{car,house,child,pet,plant,insurance}` CSS vars，`AssetListItem` 直接吃。
+- 沒有 `lib/colors.ts` 也沒有 runtime `lightenHex()` — 所有 tint 都是設計師預挑好的 hex，inline 在 source 不算出來。
+
+### Worktree 工作流
+
+- 開發在 `.claude/worktrees/<adjective-name>-<hash>/` 的 git worktree 做事，每條 feature branch 一個 worktree，**不在 main repo 直接動**。
+- Worktree branch 命名 `claude/<adjective-name>-<hash>`；feature branch 名（要開 PR 用的）取自任務上下文（如 `chore/...` / `feat/...`），在 worktree 內 `git checkout -b` 切過去。
+- Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
+
+---
+
 ## 環境
 
 | env | project | URL |
