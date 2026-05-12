@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useCallback, useRef, useState } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
@@ -11,6 +11,8 @@ import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
 import { useTranslations } from '@/lib/i18n/client'
+
+type AssetsTab = 'aibutsu' | 'guardian'
 
 export interface AssetsListItem {
   id: string
@@ -58,6 +60,8 @@ interface Props {
 
 export function AssetsListClient({ items }: Props) {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const t = useTranslations()
   const [sheetOpen, setSheetOpen] = useState(false)
 
@@ -67,6 +71,39 @@ export function AssetsListClient({ items }: Props) {
       router.refresh()
     }
   })
+
+  const tabParam = searchParams.get('tab')
+  const activeTab: AssetsTab = tabParam === 'guardian' ? 'guardian' : 'aibutsu'
+
+  const setActiveTab = useCallback(
+    (next: AssetsTab) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (next === 'guardian') params.set('tab', 'guardian')
+      else params.delete('tab')
+      const qs = params.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [router, pathname, searchParams],
+  )
+
+  // Lightweight horizontal swipe between tabs. Threshold + axis check prevents
+  // accidental triggers during vertical scroll.
+  const touchRef = useRef<{ x: number; y: number } | null>(null)
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t0 = e.touches[0]
+    touchRef.current = { x: t0.clientX, y: t0.clientY }
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchRef.current
+    touchRef.current = null
+    if (!start) return
+    const t1 = e.changedTouches[0]
+    const dx = t1.clientX - start.x
+    const dy = t1.clientY - start.y
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+    if (dx < 0 && activeTab === 'aibutsu') setActiveTab('guardian')
+    else if (dx > 0 && activeTab === 'guardian') setActiveTab('aibutsu')
+  }
 
   const handleClose = () => setSheetOpen(false)
   const handleMutated = () => router.refresh()
@@ -160,6 +197,140 @@ export function AssetsListClient({ items }: Props) {
 
   const hasProperty = cars.length > 0 || houses.length > 0
 
+  const TabBar = (
+    <div
+      className="px-4 pb-3"
+      role="tablist"
+      aria-label={t.assets.title}
+    >
+      <div
+        className="flex rounded-full p-1"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--hairline)',
+        }}
+      >
+        {(['aibutsu', 'guardian'] as const).map((id) => {
+          const active = activeTab === id
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveTab(id)}
+              className="flex-1 rounded-full transition-colors"
+              style={{
+                padding: '8px 12px',
+                background: active ? 'var(--ink)' : 'transparent',
+                color: active ? '#fff' : 'var(--ink-2)',
+                fontFamily: 'inherit',
+                fontSize: 'var(--fs-button)',
+                fontWeight: active ? 600 : 500,
+                border: 'none',
+                cursor: 'pointer',
+                letterSpacing: '0.2px',
+              }}
+            >
+              {id === 'aibutsu' ? t.assets.tabs.aibutsu : t.assets.tabs.guardian}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  const AibutsuTab = (
+    <div className="px-4 flex flex-col gap-5">
+      {hasProperty && (
+        <div className="flex flex-col gap-3">
+          <SectionLabel label={t.assets.section.property} dotColor="var(--asset-tint-house)" />
+          {cars.map((c) => (
+            <CarHeroCard
+              key={c.id}
+              id={c.id}
+              name={c.name}
+              plate={c.plate}
+              color={c.color ?? null}
+              year={c.year ?? null}
+              brand={c.brand ?? null}
+              model={c.model ?? null}
+              latestOdometer={c.latestOdometer ?? null}
+              monthAmount={c.monthAmount}
+              totalAmount={c.totalAmount ?? 0}
+              compact={multiCar}
+            />
+          ))}
+          {cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
+          {houses.length > 0 && <AssetGroup group={houses} />}
+        </div>
+      )}
+
+      {livings.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <SectionLabel label={t.assets.section.living} dotColor="var(--asset-tint-child)" />
+          <AssetGroup group={livings} />
+        </div>
+      )}
+
+      {!hasProperty && livings.length === 0 && (
+        <div
+          className="text-sm leading-relaxed py-10 text-center"
+          style={{ color: 'var(--ink-3)' }}
+        >
+          {t.assets.tabEmpty.aibutsuHint}
+        </div>
+      )}
+    </div>
+  )
+
+  const GuardianTab = (
+    <div className="px-4 flex flex-col gap-5">
+      {insurances.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <SectionLabel label={t.assets.section.coverage} dotColor="var(--asset-tint-insurance)" />
+          <div
+            className="rounded-[20px] overflow-hidden"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            {insurances.map((a, i) => (
+              <InsuranceListItem
+                key={a.id}
+                id={a.id}
+                name={a.name}
+                data={a.insurance ?? {
+                  insuranceType: null,
+                  insured: null,
+                  insuredChildId: null,
+                  insuredChildName: null,
+                  policyHolderUserId: null,
+                  policyHolderDisplayName: null,
+                  policyHolderAvatarUrl: null,
+                  annualPremium: null,
+                  sumInsured: null,
+                  startsAt: null,
+                  expiryDate: null,
+                  termYears: null,
+                  payCycle: null,
+                  reminderDaysBefore: 30,
+                  notes: null,
+                }}
+                isLast={i === insurances.length - 1}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          className="text-sm leading-relaxed py-10 text-center"
+          style={{ color: 'var(--ink-3)' }}
+        >
+          {t.assets.tabEmpty.guardianHint}
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <div className="relative min-h-screen pb-[92px]">
       <div className="px-5 pt-[60px] pb-4">
@@ -174,74 +345,12 @@ export function AssetsListClient({ items }: Props) {
       {items.length === 0 ? (
         <AssetEmptyState />
       ) : (
-        <div className="px-4 flex flex-col gap-5">
-          {hasProperty && (
-            <div className="flex flex-col gap-3">
-              <SectionLabel label={t.assets.section.property} dotColor="var(--asset-tint-house)" />
-              {cars.map((c) => (
-                <CarHeroCard
-                  key={c.id}
-                  id={c.id}
-                  name={c.name}
-                  plate={c.plate}
-                  color={c.color ?? null}
-                  year={c.year ?? null}
-                  brand={c.brand ?? null}
-                  model={c.model ?? null}
-                  latestOdometer={c.latestOdometer ?? null}
-                  monthAmount={c.monthAmount}
-                  totalAmount={c.totalAmount ?? 0}
-                  compact={multiCar}
-                />
-              ))}
-              {cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
-              {houses.length > 0 && <AssetGroup group={houses} />}
-            </div>
-          )}
-
-          {livings.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <SectionLabel label={t.assets.section.living} dotColor="var(--asset-tint-child)" />
-              <AssetGroup group={livings} />
-            </div>
-          )}
-
-          {insurances.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <SectionLabel label={t.assets.section.coverage} dotColor="var(--asset-tint-insurance)" />
-              <div
-                className="rounded-[20px] overflow-hidden"
-                style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-              >
-                {insurances.map((a, i) => (
-                  <InsuranceListItem
-                    key={a.id}
-                    id={a.id}
-                    name={a.name}
-                    data={a.insurance ?? {
-                      insuranceType: null,
-                      insured: null,
-                      insuredChildId: null,
-                      insuredChildName: null,
-                      policyHolderUserId: null,
-                      policyHolderDisplayName: null,
-                      policyHolderAvatarUrl: null,
-                      annualPremium: null,
-                      sumInsured: null,
-                      startsAt: null,
-                      expiryDate: null,
-                      termYears: null,
-                      payCycle: null,
-                      reminderDaysBefore: 30,
-                      notes: null,
-                    }}
-                    isLast={i === insurances.length - 1}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <>
+          {TabBar}
+          <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+            {activeTab === 'aibutsu' ? AibutsuTab : GuardianTab}
+          </div>
+        </>
       )}
 
       <BottomNav
@@ -250,10 +359,13 @@ export function AssetsListClient({ items }: Props) {
         fabVariant="accent"
       />
 
-      {/* Create-only on this page; edits happen on /assets/[id] via the Hero ⋯ button. */}
+      {/* Create-only on this page; edits happen on /assets/[id] via the Hero ⋯ button.
+       *  v0.15.2 #178 — when 守護 tab is active, pre-select 'insurance' so the
+       *  FAB lands directly on the policy form instead of the default 'pet'. */}
       <AssetSheet
         open={sheetOpen}
         onClose={handleClose}
+        initialType={activeTab === 'guardian' ? 'insurance' : undefined}
         onMutated={handleMutated}
       />
     </div>

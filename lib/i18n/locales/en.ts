@@ -406,6 +406,14 @@ export const en: Translations = {
       living: 'Living',
       coverage: 'Coverage',
     },
+    tabs: {
+      aibutsu: 'Treasures',
+      guardian: 'Guardian',
+    },
+    tabEmpty: {
+      aibutsuHint: 'No treasures yet. Start with the button on the right.',
+      guardianHint: 'No policies yet. Record the coverage that guards your treasures.',
+    },
     addCar: 'Add a car',
     addSecondCar: 'Add another car',
     insuranceList: {
