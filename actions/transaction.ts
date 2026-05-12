@@ -9,7 +9,7 @@ import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, or, and, isNull, sql } from 'drizzle-orm'
@@ -298,12 +298,12 @@ export async function loadMoreTransactions(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('找不到家計簿')
+  const { group, window: epochWindow } = context
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const epochWindow = await resolveViewerEpochWindow(group.id)
   const rows = await listTransactionsPaged(group.id, cursor, limit, resolved, monthKey, drill, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,
@@ -339,12 +339,12 @@ export async function loadMoreFeedAll(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('找不到家計簿')
+  const { group, window: epochWindow } = context
 
   const resolved = resolveTxnFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
-  const epochWindow = await resolveViewerEpochWindow(group.id)
   const rows = await listFeedAllPaged(group.id, cursor, limit, monthKey, drill, resolved, dateRange, epochWindow)
   return rows.map((r) => ({
     id: r.id,
@@ -377,10 +377,10 @@ export async function loadMoreTransactionsForAsset(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('找不到家計簿')
+  const { group, window: epochWindow } = context
 
-  const epochWindow = await resolveViewerEpochWindow(group.id)
   const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit, epochWindow)
   return rows.map((r) => ({
     id: r.id,

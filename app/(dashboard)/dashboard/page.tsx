@@ -1,12 +1,11 @@
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups, profiles } from '@/lib/db/schema'
-import { eq, or } from 'drizzle-orm'
+import { profiles } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { getGroupBalance, getGroupPendingBalanceDelta } from '@/lib/db/queries/balance'
 import { listTransactionsPaged } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochWindow, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { resolveViewerEpochContext, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
 import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
@@ -35,12 +34,12 @@ export default async function DashboardPage() {
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('No group')
-
-  // Resolve once and pass to every read; keeps dashboard, banner, and feed
-  // cohesive when the viewer is browsing a past epoch.
-  const epochWindow = await resolveViewerEpochWindow(group.id)
+  // Pin-aware: when pinned to a past epoch (possibly on a different group, see
+  // #141), group + window follow the pin so feed + balance scope to the right
+  // place. Layout already redirected if no context, so this is non-null here.
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('No group')
+  const { group, window: epochWindow } = context
 
   // Post-leave cards (PR 4/4): only when not pinned to a past epoch (we want
   // these on the live current view, not on a historical snapshot).

@@ -1,11 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
-import { db } from '@/lib/db/client'
-import { oikosGroups } from '@/lib/db/schema'
-import { eq, or } from 'drizzle-orm'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
 import { computeAvgEcon } from '@/lib/fuelEcon'
 import { AssetDetailClient } from './_components/AssetDetailClient'
@@ -49,16 +45,12 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('No group')
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('No group')
+  const { group, window: epochWindow } = context
 
   const asset = await getAssetById(id, group.id)
   if (!asset || asset.deletedAt) notFound()
-
-  // Past-times view: every per-asset query below scopes by this window so the
-  // detail page's txn list, summary card, and insurance/SavingsView totals all
-  // tell the same story for the chosen epoch.
-  const epochWindow = await resolveViewerEpochWindow(group.id)
 
   const allAssetsData = await listAssetsForGroup(group.id)
   const allAssets = allAssetsData.map(a => ({ id: a.id, name: a.name, type: a.type }))
