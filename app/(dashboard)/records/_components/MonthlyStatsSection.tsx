@@ -4,7 +4,7 @@ import {
   type ResolvedTxnFilter,
 } from '@/lib/db/queries/transactions'
 import { monthlyIncomeStatsByCategory, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import type { EpochWindow } from '@/lib/db/queries/epoch'
 import type { DateRange } from '@/lib/filter'
 import { MonthlyStatsView } from './MonthlyStatsView'
 import type { BreakdownView } from './StatsBreakdownToggle'
@@ -12,6 +12,9 @@ import type { BreakdownView } from './StatsBreakdownToggle'
 interface Props {
   userId: string
   groupId: string
+  /** Pre-resolved by the page so stats scope to the same epoch (possibly
+   *  cross-group, see #141) as the records feed alongside us. */
+  epochWindow: EpochWindow
   monthKey: string
   view: BreakdownView
   /** True when the selected month is before the group was created — the card
@@ -45,6 +48,7 @@ interface Props {
 export async function MonthlyStatsSection({
   userId,
   groupId,
+  epochWindow,
   monthKey,
   view,
   forceCompact = false,
@@ -58,7 +62,6 @@ export async function MonthlyStatsSection({
   const assetFilterActive = (filter?.assetIds.length ?? 0) > 0
   const effectiveView: BreakdownView = assetFilterActive ? 'category' : view
 
-  const epochWindow = await resolveViewerEpochWindow(groupId)
   const [rows, incomeRows] = await Promise.all([
     effectiveView === 'asset'
       ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)

@@ -2,8 +2,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
-import { eq, inArray } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { inArray } from 'drizzle-orm'
 import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
@@ -13,21 +12,23 @@ import { PastEpochBanner } from './_components/PastEpochBanner'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) redirect('/onboarding')
+  // Pin-aware context: when the viewer is pinned to a past epoch (possibly
+  // on a different group, see #141), the group + window follow the pin.
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) redirect('/onboarding')
+  const { group, window: epochWindow } = context
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
-  const [profilesRows, t, locale, epochWindow] = await Promise.all([
+  const [profilesRows, t, locale] = await Promise.all([
     db.select().from(profiles).where(inArray(profiles.id, memberIds)),
     getTranslations(),
     getLocale(),
-    resolveViewerEpochWindow(group.id),
   ])
 
   const viewerProfile = profilesRows.find(p => p.id === user.id)

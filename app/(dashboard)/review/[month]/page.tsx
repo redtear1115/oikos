@@ -1,13 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups, profiles } from '@/lib/db/schema'
-import { eq, or, inArray } from 'drizzle-orm'
+import { profiles } from '@/lib/db/schema'
+import { inArray } from 'drizzle-orm'
 import {
   loadMonthlyReviewSnapshot,
   loadMonthlyReviewMessages,
 } from '@/lib/db/queries/monthlyReview'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import {
   parseYearMonth,
   currentYearMonthInTaipei,
@@ -32,8 +32,13 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   const today = currentYearMonthInTaipei()
   if (isAfter(reviewedMonth, today)) notFound()
 
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) redirect('/onboarding')
+  // Pin-aware so /review/[month] reflects the pinned chapter's group when the
+  // viewer is browsing a past epoch (possibly cross-group, see #141). The
+  // month review is intrinsically tied to a group's chapter, not the viewer's
+  // current active group.
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) redirect('/onboarding')
+  const { group } = context
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
   const profileRows = await db
