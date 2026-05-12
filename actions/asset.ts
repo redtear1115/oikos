@@ -725,6 +725,7 @@ export interface CreateInsuranceInput {
   termYears?: number | null
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
+  accountValue?: number | null
   reminderDaysBefore?: number | null
   notes?: string | null
 }
@@ -800,6 +801,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       insuredType,
       vehicleId: validated.vehicleId,
       expectedMaturityAmount: validated.expectedMaturityAmount,
+      accountValue: validated.accountValue,
       reminderDaysBefore: validated.reminderDaysBefore,
     })
     return [asset]
@@ -868,6 +870,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         insuredType,
         vehicleId: validated.vehicleId,
         expectedMaturityAmount: validated.expectedMaturityAmount,
+        accountValue: validated.accountValue,
         reminderDaysBefore: validated.reminderDaysBefore,
       })
       .onConflictDoUpdate({
@@ -888,6 +891,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
           termYears: validated.termYears,
           vehicleId: validated.vehicleId,
           expectedMaturityAmount: validated.expectedMaturityAmount,
+          accountValue: validated.accountValue,
           reminderDaysBefore: validated.reminderDaysBefore,
         },
       })
