@@ -21,6 +21,13 @@ vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHeader', () => ({
   useTint: () => ({ accent: '#000', bg: '#fff' }),
 }))
 vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHintCard', () => ({ AibutsuHintCard: () => null }))
+// PetDetailClient now reads `isPast` from MemberContext to gate write entries
+// (FAB, tap-to-edit). The notes-section test doesn't exercise those branches,
+// so a minimal stub is enough — present-epoch view (`isPast: false`) keeps
+// existing assertions identical to pre-gate behaviour.
+vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
+  useMember: () => ({ isPast: false }),
+}))
 
 import { render, screen } from '@testing-library/react'
 import { PetDetailClient } from '@/app/(dashboard)/assets/[id]/_components/PetDetailClient'

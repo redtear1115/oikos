@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
-  const { viewer, partner } = useMember()
+  const { viewer, partner, isPast } = useMember()
   const t = useTranslations()
   const locale = useLocale()
   // Default to the full outstanding amount.
@@ -171,14 +171,19 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         </div>
 
         <div className="flex gap-2 mt-4">
-          <button
-            onClick={handleConfirm}
-            disabled={!parsed || pending}
-            className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
-            style={{ background: 'var(--accent)' }}
-          >
-            {pending ? t.common.processing : `${primaryText} NT$${parsed.toLocaleString('en-US')}`}
-          </button>
+          {/* Past-epoch view is read-only — hide the create-settlement button.
+              The expander itself is also gated in BalanceHero so this branch
+              normally won't render, but keep the guard for defence in depth. */}
+          {!isPast && (
+            <button
+              onClick={handleConfirm}
+              disabled={!parsed || pending}
+              className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
+              style={{ background: 'var(--accent)' }}
+            >
+              {pending ? t.common.processing : `${primaryText} NT$${parsed.toLocaleString('en-US')}`}
+            </button>
+          )}
           <button
             onClick={onClose}
             disabled={pending}

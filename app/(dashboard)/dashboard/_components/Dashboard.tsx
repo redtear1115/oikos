@@ -89,7 +89,7 @@ export function Dashboard({
   groupDefaultRatioA,
 }: DashboardProps) {
   const router = useRouter()
-  const { isSolo } = useMember()
+  const { isSolo, isPast } = useMember()
   const t = useTranslations()
 
   useRealtimeEvents((event) => {
@@ -158,6 +158,10 @@ export function Dashboard({
   const filterActive = filter !== null && isFilterActive(filter)
 
   const handleItemClick = useCallback((tx: PagedTxnRow) => {
+    // Past-epoch view is read-only — never open an edit sheet, even if a
+    // child row missed the gate. Defence in depth on top of TransactionFeed
+    // and the custom income renderRow already dropping their onClick.
+    if (isPast) return
     if (tx.kind === 'income') {
       dispatch({
         kind: 'edit-income',
@@ -231,7 +235,7 @@ export function Dashboard({
         status: tx.status,
       },
     })
-  }, [startFuelLoad])
+  }, [startFuelLoad, isPast])
 
   const handleClose = () => dispatch({ kind: 'closed' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
@@ -350,7 +354,7 @@ export function Dashboard({
           onAddTx={() => dispatch({ kind: 'add' })}
         />
       </Suspense>
-      <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen} />
+      <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen || isPast} />
       <AddSheet
         open={modal.kind === 'add' || modal.kind === 'edit-tx' || modal.kind === 'edit-pending-expense'}
         onClose={handleClose}
