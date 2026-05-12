@@ -1028,6 +1028,88 @@ export const en: Translations = {
     },
   },
 
+  quiz: {
+    cardHeadingInvitation: "We don't quite know each other yet — 3 quick questions",
+    cardHeadingSelfPendingPartnerDone: 'They finished — your turn',
+    cardHeadingSelfPendingPartnerPending: 'Answer 3 questions, see how you each picture money',
+    cardHeadingSelfDonePartnerPending: "Done — waiting on {partnerName} so we can open them together",
+    cardHeadingRevealed: 'See how your money styles fit together',
+    cardCtaStart: '→ Start',
+    cardCtaReveal: '→ See the reveal',
+    answerEyebrow: 'Knowing each other',
+    answerProgress: '{current} / {total}',
+    answerCta: 'Continue',
+    answerCtaFinal: 'Send all 3',
+    answerErrorChooseOne: 'Pick one, then continue',
+    answerBack: 'Back to review',
+    waitingHeading: 'Done — waiting on your partner to open them together',
+    waitingBody: "Your answers are tucked away until they finish too — then we'll open them together.",
+    waitingBackToReview: 'Back to the review page',
+    revealHeading: 'How your money styles fit together',
+    revealedAtLine: 'Revealed on {date}',
+    revealSameAnswer: "You're pointing the same way on this one",
+    revealFraming: "One of you is sunrise, the other is moonlight — different hours, same home. No answer is more right; it's enough to remember what the other one cares about.",
+    revealHeaderA: 'You',
+    revealHeaderB: 'Partner',
+    soloFallback: "This one takes two — come back once your partner has joined the ledger.",
+    errorNotFound: "Couldn't find this quiz",
+    errors: {
+      submitFailed: 'Submission failed — please try again',
+      alreadyAnswered: "You've already finished",
+      solo: "Can't run this quiz on your own yet",
+    },
+    questions: {
+      impulse: {
+        prompt: 'When I see something I really want but might not need, I usually…',
+        choices: {
+          a: 'Sit on it for two days and see if the urge cools',
+          b: 'Buy it — that kind of feeling is rare',
+          c: 'Wait until I need it, then pick it up',
+        },
+      },
+      risk: {
+        prompt: 'When I imagine suddenly needing a big chunk of cash, my first feeling is…',
+        choices: {
+          a: "I'm okay — I keep a buffer for this",
+          b: "Tense, but I'll figure it out",
+          c: "Better not to think about it right now",
+        },
+      },
+      transparency: {
+        prompt: "For each other's money, I'd rather…",
+        choices: {
+          a: 'Know everything, big and small — it feels safer',
+          b: 'Know the big stuff, skip the small purchases',
+          c: 'Keep our own space, and check in when we need to',
+        },
+      },
+      big_purchase: {
+        prompt: 'For a fairly expensive purchase, I would…',
+        choices: {
+          a: 'Mention it first, think it through together',
+          b: 'Decide on my own, then tell them',
+          c: 'It depends on what it is',
+        },
+      },
+      future: {
+        prompt: 'When I picture us 10 years from now, the image that comes up is…',
+        choices: {
+          a: 'A savings goal hit, an easy slow life',
+          b: 'Having been everywhere we wanted to go',
+          c: 'A home we both love',
+        },
+      },
+      recording_motive: {
+        prompt: "For me, tracking expenses is more like…",
+        choices: {
+          a: 'Wanting to see how our days are spent',
+          b: 'Saving up something for what comes next',
+          c: 'Having a shared place with my partner',
+        },
+      },
+    },
+  },
+
   inAppBrowser: {
     title: 'Please open in your browser',
     description: "You're inside a chat app's built-in browser. Google sign-in and offline mode don't work here — please open this link in Safari or Chrome instead.",

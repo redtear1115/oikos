@@ -1133,6 +1133,72 @@ export type Translations = {
     }
   }
 
+  quiz: {
+    /** Invitation card heading when no session exists yet. */
+    cardHeadingInvitation: string
+    /** Card heading when partner has answered but viewer hasn't. */
+    cardHeadingSelfPendingPartnerDone: string
+    /** Card heading when neither has answered yet (session exists). */
+    cardHeadingSelfPendingPartnerPending: string
+    /** Card heading when viewer is waiting on partner; uses `{partnerName}`. */
+    cardHeadingSelfDonePartnerPending: string
+    /** Card heading after both reveal — uses {partnerName}. */
+    cardHeadingRevealed: string
+    /** CTA on the invitation / pending-self card variants. */
+    cardCtaStart: string
+    /** CTA on the revealed card variant. */
+    cardCtaReveal: string
+    /** Eyebrow above the question on the answer page. */
+    answerEyebrow: string
+    /** Progress indicator template with `{current}` `{total}`. */
+    answerProgress: string
+    /** Continue button on Q1/Q2 of the answer page. */
+    answerCta: string
+    /** Submit button on the final question. */
+    answerCtaFinal: string
+    /** Inline error when user tries to continue without selecting. */
+    answerErrorChooseOne: string
+    /** Back link / aria label on the answer page. */
+    answerBack: string
+    /** Page heading on the waiting (self-done, partner-pending) screen. */
+    waitingHeading: string
+    /** Body line on the waiting screen. */
+    waitingBody: string
+    /** Link back to review page from waiting / reveal. */
+    waitingBackToReview: string
+    /** Reveal page heading. */
+    revealHeading: string
+    /** Reveal time line — template with `{date}`. */
+    revealedAtLine: string
+    /** Caption shown when both members chose the same option. */
+    revealSameAnswer: string
+    /** Closing 60–80 char framing paragraph on the reveal screen. */
+    revealFraming: string
+    /** Header label for member A column. */
+    revealHeaderA: string
+    /** Header label for member B column. */
+    revealHeaderB: string
+    /** Fallback rendered when viewer is solo (member_b IS NULL). */
+    soloFallback: string
+    /** Generic error: session doesn't exist or doesn't belong to viewer. */
+    errorNotFound: string
+    /** Errors thrown by submitPartnerQuizAnswers / startPartnerQuizSession. */
+    errors: {
+      submitFailed: string
+      alreadyAnswered: string
+      solo: string
+    }
+    /** Question pool — 6 keys, each with prompt + 3 lettered choices. */
+    questions: {
+      impulse:           { prompt: string; choices: { a: string; b: string; c: string } }
+      risk:              { prompt: string; choices: { a: string; b: string; c: string } }
+      transparency:      { prompt: string; choices: { a: string; b: string; c: string } }
+      big_purchase:      { prompt: string; choices: { a: string; b: string; c: string } }
+      future:            { prompt: string; choices: { a: string; b: string; c: string } }
+      recording_motive:  { prompt: string; choices: { a: string; b: string; c: string } }
+    }
+  }
+
   inAppBrowser: {
     /** Heading on the full-screen blocker. */
     title: string
@@ -2180,6 +2246,88 @@ export const zhTW: Translations = {
       messageTooLong: '留言最長 200 字',
       saveFailed: '儲存失敗',
       locked: '這個月的留言已鎖定',
+    },
+  },
+
+  quiz: {
+    cardHeadingInvitation: '我們還不太認識彼此 — 來回答 3 題',
+    cardHeadingSelfPendingPartnerDone: '對方答完了，輪你了',
+    cardHeadingSelfPendingPartnerPending: '來回答 3 題，看看你們對錢的想像',
+    cardHeadingSelfDonePartnerPending: '答完了，等 {partnerName} 一起揭曉',
+    cardHeadingRevealed: '看看你們的理財組合',
+    cardCtaStart: '→ 開始',
+    cardCtaReveal: '→ 看揭曉',
+    answerEyebrow: '了解彼此',
+    answerProgress: '{current} / {total}',
+    answerCta: '繼續',
+    answerCtaFinal: '送出這 3 題',
+    answerErrorChooseOne: '選一個吧，再繼續',
+    answerBack: '返回回顧',
+    waitingHeading: '答完了，等對方一起揭曉',
+    waitingBody: '你的答案會先收著，等對方也答完了，我們會一起打開。',
+    waitingBackToReview: '回到回顧頁',
+    revealHeading: '你們的理財組合',
+    revealedAtLine: '揭曉於 {date}',
+    revealSameAnswer: '在這件事上你們同方向',
+    revealFraming: '你們一個是日出、一個是月光 — 不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
+    revealHeaderA: '你',
+    revealHeaderB: '對方',
+    soloFallback: '兩個人才能一起回答這 3 題。等對方加入家計簿，再回來吧。',
+    errorNotFound: '找不到這次的問答',
+    errors: {
+      submitFailed: '送出失敗，等一下再試',
+      alreadyAnswered: '你已經答完了',
+      solo: '一個人的時候還沒辦法答題',
+    },
+    questions: {
+      impulse: {
+        prompt: '看到很想要、但不一定需要的東西，我通常…',
+        choices: {
+          a: '先放著兩天，看會不會冷下來',
+          b: '喜歡就買，這種感覺不多',
+          c: '等下次需要時再一起入手',
+        },
+      },
+      risk: {
+        prompt: '想到突然要用上一筆大錢，我的第一個感覺是…',
+        choices: {
+          a: '還好，我平常有備一份',
+          b: '緊張，但會想辦法',
+          c: '先別想，到時候再說',
+        },
+      },
+      transparency: {
+        prompt: '彼此的錢，我比較希望…',
+        choices: {
+          a: '大小事都知道，比較安心',
+          b: '大筆的知道就好，小開銷不必報',
+          c: '各自有空間，需要時再對',
+        },
+      },
+      big_purchase: {
+        prompt: '想買一個比較貴的東西，我會…',
+        choices: {
+          a: '先跟對方說，一起想想',
+          b: '自己決定後再告訴對方',
+          c: '看是什麼，分情況',
+        },
+      },
+      future: {
+        prompt: '想到 10 年後的我們，我腦中浮現的是…',
+        choices: {
+          a: '存到一個目標，安心慢慢過',
+          b: '想去的地方都去過了',
+          c: '一個我們都喜歡的家',
+        },
+      },
+      recording_motive: {
+        prompt: '我想記帳，比較像是…',
+        choices: {
+          a: '想知道日子怎麼過的',
+          b: '想為以後存下一些什麼',
+          c: '想跟對方有個共同的地方',
+        },
+      },
     },
   },
 
