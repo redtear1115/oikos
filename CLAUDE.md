@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.15.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.15.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -40,6 +40,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.14.2](CHANGELOG.md#0142---2026-05-11) | 紀錄可以更貼手．自動完成 + 點選即篩選 |
 | [v0.15.0](CHANGELOG.md#0150---2026-05-12) | 離開也保留陪伴．pending 收斂 |
 | [v0.15.1](CHANGELOG.md#0151---2026-05-12) | 陪伴每處小細節更貼手．光的指認也更一致 |
+| [v0.15.2](CHANGELOG.md#0152---2026-05-13) | 問答、跨章節與守護的下一步．PartnerQuiz × 保險併入守護 × past-times 跨 group |
 
 ## Backlog / 未釋出版本
 
@@ -176,17 +177,17 @@ Vercel 連兩條 branch：
 | Branch | Vercel target | 觸發來源 |
 |---|---|---|
 | `main` | Preview | feature PR merge |
-| `release` | **Production** | 手動 merge `main` → push |
+| `release` | **Production** | `main` → `release` PR merge |
+
+`main` 與 `release` 都有 branch protection — 都只能透過 PR merge，不能直接 push。
 
 要 release 時：
 
-```bash
-git checkout release
-git merge main
-git push origin release
-```
+1. 在 `chore/release-vX.Y.Z` 上跑 `git-develop:release` skill（bump version + CHANGELOG + CLAUDE.md + tag）
+2. 開 PR `chore/release-vX.Y.Z → main`，merge 後 push tag
+3. 開 PR `main → release`，merge 後 Vercel 自動部 prod
 
-push 後 Vercel 自動部 prod。Feature PR 進 `main` 只會起 Preview，不會碰 prod。
+Feature PR 進 `main` 只會起 Preview，不會碰 prod。
 
 ---
 
@@ -227,7 +228,7 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down v0.14.2 / PR #116 closes #102）|
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
 | `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（v0.14.1 shipped；PR #112 closes #110）|
-| `docs/superpowers/specs/structured-filter-design.md` | /records 結構化篩選器（v0.15.0 shipped；closes #50；date range + 愛物 + URL-synced + 分享連結）|
+| `docs/superpowers/specs/structured-filter-design.md` | /records 結構化篩選器（v0.15.0 shipped #50 — date range + 愛物 + URL-synced；v0.15.2 v2 #165 — amount range + status）|
 | `docs/superpowers/specs/inbox-layer-design.md` | Inbox layer 概念統一（v0.15.0 概念註解；v0.16.0 schema migration + UI）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `CHANGELOG.md` | 版本歷史 |
