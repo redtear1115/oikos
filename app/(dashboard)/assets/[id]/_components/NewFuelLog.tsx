@@ -61,7 +61,7 @@ function toGasFuelType(ft: string | null | undefined): GasFuelType {
 }
 
 export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: NewFuelLogProps) {
-  const { viewer, partner } = useMember()
+  const { viewer, partner, isPast } = useMember()
   const t = useTranslations()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -226,7 +226,8 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             </div>
             <div className="text-micro text-[var(--ink-3)]">{car.name} · {car.plate}</div>
           </div>
-          {mode === 'edit' && (
+          {/* Past-epoch view is read-only — hide delete affordance. */}
+          {mode === 'edit' && !isPast && (
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
@@ -350,25 +351,31 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           </div>
         )}
 
-        <div
-          className="shrink-0 px-4 pt-3 pb-7 border-t"
-          style={{ borderColor: 'var(--hairline)', background: 'var(--bg)' }}
-        >
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="w-full h-12 rounded-2xl font-semibold text-body tracking-wide transition-opacity"
-            style={{
-              background: 'var(--ink)',
-              color: '#fff',
-              opacity: canSubmit ? 1 : 0.45,
-              cursor: canSubmit ? 'pointer' : 'default',
-            }}
+        {/* Past-epoch view is read-only — hide the submit footer entirely so
+            the sheet reads as plain detail. The sheet itself shouldn't open
+            in past view (parent gates onItemClick + FAB), but keep this guard
+            for defence in depth. */}
+        {!isPast && (
+          <div
+            className="shrink-0 px-4 pt-3 pb-7 border-t"
+            style={{ borderColor: 'var(--hairline)', background: 'var(--bg)' }}
           >
-            {pending ? '儲存中…' : '記下這筆'}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="w-full h-12 rounded-2xl font-semibold text-body tracking-wide transition-opacity"
+              style={{
+                background: 'var(--ink)',
+                color: '#fff',
+                opacity: canSubmit ? 1 : 0.45,
+                cursor: canSubmit ? 'pointer' : 'default',
+              }}
+            >
+              {pending ? '儲存中…' : '記下這筆'}
+            </button>
+          </div>
+        )}
       </div>
 
       <ConfirmModal

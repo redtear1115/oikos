@@ -101,11 +101,11 @@ export interface TxnRow {
   status: RecordStatus
 }
 
-/** Fetch most recent N active transactions for a group, optionally scoped to an epoch. */
+/** Fetch most recent N active transactions for a group, scoped to an epoch window. */
 export async function listRecentTransactions(
   groupId: string,
   limit = 5,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<TxnRow[]> {
   const rows = await db
     .select({
@@ -152,7 +152,7 @@ export interface ListPagedOptions {
   monthKey?: string
   drill?: DrillFilter | null
   dateRange?: DateRange | null
-  epochWindow?: EpochWindow | null
+  epochWindow: EpochWindow
 }
 
 /**
@@ -554,9 +554,9 @@ function statsScopeClauses(
 export async function monthlyStatsByCategory(
   groupId: string,
   monthKey: string | undefined,
-  dateRange?: DateRange | null,
-  filter?: ResolvedTxnFilter,
-  epochWindow?: EpochWindow | null,
+  dateRange: DateRange | null | undefined,
+  filter: ResolvedTxnFilter | undefined,
+  epochWindow: EpochWindow,
 ): Promise<CategoryStatRow[]> {
   const scope = statsScopeClauses(monthKey, dateRange, filter)
   const epoch = andClause(epochClause('created_at', epochWindow))
@@ -590,9 +590,9 @@ export async function monthlyStatsByCategory(
 export async function monthlyStatsByAsset(
   groupId: string,
   monthKey: string | undefined,
-  dateRange?: DateRange | null,
-  filter?: ResolvedTxnFilter,
-  epochWindow?: EpochWindow | null,
+  dateRange: DateRange | null | undefined,
+  filter: ResolvedTxnFilter | undefined,
+  epochWindow: EpochWindow,
 ): Promise<AssetStatRow[]> {
   const scope = statsScopeClauses(monthKey, dateRange, filter, 'ct')
   // Asset stats query aliases the cash-tx table as `ct`, so the epoch column

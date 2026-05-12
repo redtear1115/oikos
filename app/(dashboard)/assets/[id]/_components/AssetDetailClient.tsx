@@ -8,6 +8,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AssetHero } from './AssetHero'
 import { AssetSwitcher } from './AssetSwitcher'
 import { FuelRow } from './FuelRow'
@@ -58,6 +59,7 @@ export function AssetDetailClient({
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
+  const { isPast } = useMember()
   const [editAssetOpen, setEditAssetOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -91,6 +93,8 @@ export function AssetDetailClient({
   }
 
   const handleTxItemClick = (tx: PagedTxnRow) => {
+    // Past-epoch view is read-only — never open an edit sheet.
+    if (isPast) return
     if (tx.kind !== 'transaction') return
 
     if (tx.fuelLogId !== null) {
@@ -182,7 +186,8 @@ export function AssetDetailClient({
             <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
               {t.assetDetail.timelineEntries.replace('{count}', String(count))}
             </div>
-            {fuelType !== 'electric' && (
+            {/* "+ 其他支出" is a write entry — hide on past-epoch view. */}
+            {fuelType !== 'electric' && !isPast && (
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
@@ -251,7 +256,8 @@ export function AssetDetailClient({
         </div>
       )}
 
-      {/* Car detail FAB: 加油 (gas) / 其他支出 (electric) */}
+      {/* Car detail FAB: 加油 (gas) / 其他支出 (electric).
+          Hidden on past-epoch view — both branches create a new write. */}
       <BottomNav
         onAddClick={() => {
           if (fuelType === 'electric') {
@@ -263,6 +269,7 @@ export function AssetDetailClient({
           }
         }}
         fabVariant="primary"
+        hideFab={isPast}
         fabContent={
           fuelType === 'electric' ? (
             <>

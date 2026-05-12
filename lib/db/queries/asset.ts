@@ -167,7 +167,7 @@ export interface AssetSummary {
 export async function getAssetSummary(
   assetId: string,
   groupId: string,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<AssetSummary> {
   const epoch = andClause(epochClause('created_at', epochWindow))
   const rows = await db.execute<{ month_amount: number | null; total_amount: number | null }>(sql`
@@ -196,7 +196,7 @@ export async function getAssetSummary(
 export async function getAssetSummariesBatch(
   assetIds: string[],
   groupId: string,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<Map<string, AssetSummary>> {
   const out = new Map<string, AssetSummary>()
   if (assetIds.length === 0) return out
@@ -241,7 +241,7 @@ export async function listTransactionsPagedForAsset(
   groupId: string,
   cursor: TxnCursor | null,
   limit = 20,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<FeedRow[]> {
   const cursorCl = andClause(cursorClause('transacted_at', 'created_at', cursor))
   const epoch = andClause(epochClause('created_at', epochWindow))

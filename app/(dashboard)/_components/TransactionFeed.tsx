@@ -103,7 +103,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     })
   }
 
-  const { viewer, partner } = useMember()
+  const { viewer, partner, isPast } = useMember()
 
   useRealtimeEvents((event) => {
     if (event.kind === 'reconnect') {
@@ -263,7 +263,9 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
                     <CompactRow
                       tx={tx}
                       isLast={i === g.items.length - 1}
-                      onClick={() => onItemClick(tx)}
+                      // Past-epoch view is read-only — drop tap-to-edit affordance.
+                      // Server actions also reject; this hides the entry point.
+                      onClick={isPast ? undefined : () => onItemClick(tx)}
                     />
                   </div>
                 )

@@ -12,7 +12,7 @@ import { andClause, cursorClause, epochClause } from './_predicates'
 export async function getInsurancePaymentTotal(
   assetId: string,
   groupId: string,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<{ total: number; count: number }> {
   const [row] = await db.execute<{ total: string; count: string }>(sql`
     SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count
@@ -34,7 +34,7 @@ export async function getInsuranceReturnTotal(
   assetId: string,
   groupId: string,
   categories: string[],
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<{ total: number; count: number }> {
   if (categories.length === 0) return { total: 0, count: 0 }
   const rows = await db
@@ -66,7 +66,7 @@ export async function getInsuranceReturnTotalsByCategory(
   assetId: string,
   groupId: string,
   categories: string[],
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<Map<string, { total: number; count: number }>> {
   const out = new Map<string, { total: number; count: number }>()
   if (categories.length === 0) return out
@@ -102,7 +102,7 @@ export async function listInsuranceReturnsPaged(
   categories: string[],
   cursor: IncomeCursor | null,
   limit = 20,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ): Promise<IncomeRow[]> {
   if (categories.length === 0) return []
 
@@ -147,7 +147,7 @@ export async function listInsurancePaymentsPaged(
   groupId: string,
   cursor: { transactedAt: string; createdAt: string } | null,
   limit = 20,
-  epochWindow?: EpochWindow | null,
+  epochWindow: EpochWindow,
 ) {
   const cursorCl = andClause(cursorClause('transacted_at', 'created_at', cursor))
 

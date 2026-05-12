@@ -51,7 +51,7 @@ export function BalanceHero({
   incomePendingCount = 0,
   expensePendingCount = 0,
 }: Props) {
-  const { viewer, partner, viewerIsA } = useMember()
+  const { viewer, partner, viewerIsA, isPast } = useMember()
   const t = useTranslations()
   const [displayedRaw, setDisplayedRaw] = useState(rawBalance)
   const [fading, setFading] = useState(false)
@@ -121,7 +121,9 @@ export function BalanceHero({
   const amount = Math.abs(balance)
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
-  const canSettle = balance !== 0
+  // Past-epoch view is read-only — hide the settle entry. (Server action also
+  // rejects createSettlement, but the button shouldn't be there to start with.)
+  const canSettle = balance !== 0 && !isPast
   // Semantic color for the debt amount: green when partner owes you, red/orange
   // when you owe partner, neutral when even. Surfaces direction at a glance (#146).
   const balanceColor = balance > 0 ? 'var(--credit)' : balance < 0 ? 'var(--debit)' : 'var(--ink)'

@@ -9,7 +9,15 @@ import {
   listFeedAllPaged,
   type ResolvedTxnFilter,
 } from '@/lib/db/queries/transactions'
+import type { EpochWindow } from '@/lib/db/queries/epoch'
 import { ASSET_FILTER_NONE } from '@/lib/filter'
+
+const defaultEpoch: EpochWindow = {
+  startedAt: new Date('2026-01-01T00:00:00Z'),
+  endedAt: null,
+  epochId: 'epoch-1',
+  isPast: false,
+}
 
 // The integration-level tests below exercise listTransactionsPaged /
 // listFeedAllPaged with the mockDb in `_mocks/db`. We assert two things:
@@ -87,6 +95,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       drill: { kind: 'income', categoryId: 'salary' },
+      epochWindow: defaultEpoch,
     })
     expect(rows).toEqual([])
     expect(mockDb.execute).not.toHaveBeenCalled()
@@ -97,6 +106,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ cutAll: true, incomeCategories: ['salary'] }),
+      epochWindow: defaultEpoch,
     })
     expect(rows).toEqual([])
     expect(mockDb.execute).not.toHaveBeenCalled()
@@ -104,7 +114,7 @@ describe('listTransactionsPaged', () => {
 
   it('first page (cursor=null): WHERE excludes soft-deleted rows; coerces string timestamps to Date', async () => {
     queueDbResult([sampleRow()])
-    const rows = await listTransactionsPaged({ groupId: 'grp-1', cursor: null, limit: 20 })
+    const rows = await listTransactionsPaged({ groupId: 'grp-1', cursor: null, limit: 20, epochWindow: defaultEpoch })
 
     expect(rows).toHaveLength(1)
     expect(rows[0].transactedAt).toBeInstanceOf(Date)
@@ -123,6 +133,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: { transactedAt: '2026-05-01T00:00:00Z', createdAt: '2026-05-01T00:30:00Z' },
       limit: 20,
+      epochWindow: defaultEpoch,
     })
     const { sql, params } = executedSql()
     expect(sql).toMatch(/\(transacted_at, created_at\) </)
@@ -135,6 +146,7 @@ describe('listTransactionsPaged', () => {
     const rows = await listTransactionsPaged({
       groupId: 'grp-1',
       cursor: { transactedAt: '2026-04-01T00:00:00Z', createdAt: '2026-04-01T00:00:00Z' },
+      epochWindow: defaultEpoch,
     })
     expect(rows).toEqual([])
   })
@@ -145,6 +157,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       dateRange: { kind: 'range', start: '2026-05-01', end: '2026-05-03' },
+      epochWindow: defaultEpoch,
     })
     const { sql, params } = executedSql()
     expect(sql).toMatch(/Asia\/Taipei/)
@@ -160,6 +173,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       dateRange: { kind: 'range', start: '2026-05-30', end: '2026-06-02' },
+      epochWindow: defaultEpoch,
     })
     const { params } = executedSql()
     expect(params).toContain('2026-05-30')
@@ -172,6 +186,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ assetIds: [ASSET_FILTER_NONE, 'aaaa', 'bbbb'] }),
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     // The composite predicate is what users get when they chip-select「車 + 未歸屬」.
@@ -184,6 +199,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ assetIds: [ASSET_FILTER_NONE] }),
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     expect(sql).toMatch(/asset_id IS NULL/i)
@@ -196,6 +212,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ assetIds: ['aaaa'] }),
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     expect(sql).toMatch(/asset_id IN \(/i)
@@ -208,6 +225,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       drill: { kind: 'category', categoryId: 'dining' },
+      epochWindow: defaultEpoch,
     })
     const { sql, params } = executedSql()
     expect(sql).toMatch(/category =/i)
@@ -220,6 +238,7 @@ describe('listTransactionsPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       drill: { kind: 'asset', assetId: null },
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     expect(sql).toMatch(/asset_id IS NULL/i)
@@ -247,7 +266,7 @@ describe('listFeedAllPaged', () => {
         kind: 'income' as const,
       },
     ])
-    const rows = await listFeedAllPaged({ groupId: 'grp-1', cursor: null, limit: 20 })
+    const rows = await listFeedAllPaged({ groupId: 'grp-1', cursor: null, limit: 20, epochWindow: defaultEpoch })
     expect(rows).toHaveLength(2)
     expect(rows[0].kind).toBe('transaction')
     expect(rows[1].kind).toBe('income')
@@ -262,6 +281,7 @@ describe('listFeedAllPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ incomeCategories: ['salary'], cutAll: true }),
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     // The CashTransactions branch is short-circuited with `AND FALSE` so it
@@ -276,6 +296,7 @@ describe('listFeedAllPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ categories: ['dining'] }),
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     expect(sql).toContain('FROM "IncomeTransactions"')
@@ -287,6 +308,7 @@ describe('listFeedAllPaged', () => {
     await listFeedAllPaged({
       groupId: 'grp-1',
       cursor: { transactedAt: '2026-05-01T00:00:00Z', createdAt: '2026-05-01T00:30:00Z' },
+      epochWindow: defaultEpoch,
     })
     const { sql, params } = executedSql()
     expect(sql).toMatch(/\(sort_at, sort_created\) </)
@@ -296,7 +318,7 @@ describe('listFeedAllPaged', () => {
 
   it('SQL preserves the ORDER BY sort_at DESC, sort_created DESC ordering', async () => {
     queueDbResult([])
-    await listFeedAllPaged({ groupId: 'grp-1', cursor: null })
+    await listFeedAllPaged({ groupId: 'grp-1', cursor: null, epochWindow: defaultEpoch })
     const { sql } = executedSql()
     expect(sql).toMatch(/ORDER BY sort_at DESC, sort_created DESC/)
   })
@@ -307,6 +329,7 @@ describe('listFeedAllPaged', () => {
       groupId: 'grp-1',
       cursor: null,
       filter: baseFilter({ excludeSettlements: true, splitTypes: ['half'] }),
+      epochWindow: defaultEpoch,
     })
     const { sql } = executedSql()
     expect(sql).not.toContain('FROM "Settlements"')

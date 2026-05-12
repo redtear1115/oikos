@@ -42,6 +42,7 @@ import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/Income
 import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { DrillFilterChip } from './DrillFilterChip'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -94,6 +95,7 @@ export function RecordsList({
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations()
+  const { isPast } = useMember()
   const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
 
   // Drill is URL-derived: we read live state from useSearchParams so a
@@ -184,6 +186,8 @@ export function RecordsList({
   })
 
   const handleItemClick = (tx: PagedTxnRow) => {
+    // Past-epoch view is read-only — never open an edit sheet.
+    if (isPast) return
     if (tx.kind === 'income') {
       setEditingIncome({
         id: tx.id,
@@ -465,7 +469,7 @@ export function RecordsList({
 
       <BottomNav
         onAddClick={() => tab === 'income' ? setAddingIncomeNew(true) : setAdding(true)}
-        hideFab={sheetOpen}
+        hideFab={sheetOpen || isPast}
       />
 
       <AddSheet

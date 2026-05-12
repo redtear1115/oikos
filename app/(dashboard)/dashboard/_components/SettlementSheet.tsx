@@ -28,7 +28,7 @@ interface Props {
 }
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
-  const { viewer, partner } = useMember()
+  const { viewer, partner, isPast } = useMember()
   const locale = useLocale()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
@@ -119,11 +119,16 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
             編輯還款
           </div>
-          <button onClick={handleSave} disabled={!amount || pending}
-            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
-            style={{ color: amount && !pending ? 'var(--accent)' : 'var(--ink-3)' }}>
-            {pending ? '儲存中…' : '儲存'}
-          </button>
+          {/* Past-epoch view is read-only — hide save. The sheet itself shouldn't
+              open in past view (parent gates onItemClick), but keep this as a
+              belt-and-braces guard. */}
+          {!isPast && (
+            <button onClick={handleSave} disabled={!amount || pending}
+              className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
+              style={{ color: amount && !pending ? 'var(--accent)' : 'var(--ink-3)' }}>
+              {pending ? '儲存中…' : '儲存'}
+            </button>
+          )}
         </div>
 
         <div className="overflow-auto flex-1">
@@ -194,22 +199,24 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
             {showCal && <MiniCalendar value={date} onChange={d => { setDate(d); setShowCal(false) }} />}
           </div>
 
-          {/* Delete */}
-          <div className="px-5 pb-2">
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={pending}
-              className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
-              style={{
-                background: 'transparent',
-                color: 'var(--destructive)',
-                border: '1px solid var(--destructive-soft)',
-              }}
-            >
-              刪除這筆
-            </button>
-          </div>
+          {/* Delete — hidden in past-epoch view */}
+          {!isPast && (
+            <div className="px-5 pb-2">
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={pending}
+                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+                style={{
+                  background: 'transparent',
+                  color: 'var(--destructive)',
+                  border: '1px solid var(--destructive-soft)',
+                }}
+              >
+                刪除這筆
+              </button>
+            </div>
+          )}
 
           {/* Extend past the iOS home indicator (env safe-area-inset-bottom). */}
           <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />

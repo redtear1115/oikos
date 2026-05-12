@@ -72,7 +72,7 @@ export default async function DashboardPage() {
   const [balance, pendingBalanceDelta, incomeSummary, pendings, expensePendings, latestIncomes, t] = await Promise.all([
     getGroupBalance(group.id),
     getGroupPendingBalanceDelta(group.id),
-    listIncomeMonthSummary(group.id, yyyymm),
+    listIncomeMonthSummary(group.id, yyyymm, epochWindow),
     listActivePendings(group.id),
     listActiveExpensePendings(group.id),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),

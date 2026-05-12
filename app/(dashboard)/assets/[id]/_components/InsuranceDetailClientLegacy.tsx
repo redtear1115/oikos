@@ -10,6 +10,7 @@ import { AibutsuHeader, useTint } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
@@ -37,6 +38,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.insurance
+  const { isPast } = useMember()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const tint = useTint('insurance')
@@ -181,7 +183,9 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
         </>
       )}
 
-      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      {/* Asset CRUD (onEditClick) is exempt from past-epoch guard, but FAB
+          opens an AddSheet that creates a new transaction — hide it. */}
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" hideFab={isPast} />
       <AddSheet
         open={addOpen}
         onClose={() => setAddOpen(false)}

@@ -17,6 +17,11 @@ export interface MemberContextValue {
   partner: (MemberInfo & { who: 'T' }) | null  // null until invite accepted
   viewerIsA: boolean  // true if viewer === group.memberA
   isSolo: boolean     // partner === null
+  /** True when viewer is currently pinned to a past (closed) epoch. UI in this
+   *  mode must hide all transaction-write entry points (FAB, edit/delete/+Add).
+   *  Server actions also reject writes — UI hide is the primary defence,
+   *  server reject is the safety net. */
+  isPast: boolean
 }
 
 const MemberContext = createContext<MemberContextValue | null>(null)

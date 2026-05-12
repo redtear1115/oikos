@@ -1,19 +1,59 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
+
+// next/headers cookies() — controlled per test via setCookie below. Needed
+// because resolveViewerEpochContext (called from getViewerWriteContext) reads
+// PAST_EPOCH_COOKIE to decide whether the viewer is pinned to a past chapter.
+const cookieStore = new Map<string, string>()
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({
+    get: (key: string) => {
+      const value = cookieStore.get(key)
+      return value === undefined ? undefined : { value }
+    },
+    set: vi.fn(),
+    delete: vi.fn(),
+  })),
+}))
+
+function setCookie(key: string, value: string | null) {
+  if (value === null) cookieStore.delete(key)
+  else cookieStore.set(key, value)
+}
+
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
+import { PAST_EPOCH_COOKIE } from '@/lib/db/queries/epoch'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+const OPEN_EPOCH = {
+  id: 'epoch-current',
+  groupId: 'grp-1',
+  startedAt: new Date('2026-01-01T00:00:00Z'),
+  endedAt: null,
+  memberAId: 'user-a',
+  memberBId: 'user-b',
+}
+const CLOSED_EPOCH = {
+  id: 'epoch-old',
+  groupId: 'grp-1',
+  startedAt: new Date('2025-01-01T00:00:00Z'),
+  endedAt: new Date('2025-12-31T23:59:59Z'),
+  memberAId: 'user-a',
+  memberBId: 'user-b',
+}
 
 beforeEach(() => {
   resetDbMocks()
   setMockUser(VIEWER)
+  cookieStore.clear()
 })
 
 describe('createFuelLog', () => {
   it('atomically inserts FuelLog + CashTransaction with fuelLogId link, then recalcs', async () => {
     queueDbResult([GROUP])                                       // group lookup (.limit)
+    queueDbResult([OPEN_EPOCH])                                  // current-epoch lookup
     queueDbResult([{ id: 'asset-1', deletedAt: null }])          // asset ownership lookup (.limit)
     queueDbResult([{ id: 'fuel-log-id' }])                       // FuelLog insert .returning
     queueDbResult([{ id: 'txn-id' }])                            // CashTransaction insert .returning
@@ -61,7 +101,10 @@ describe('createFuelLog', () => {
   })
 
   it('rejects fuelType=electric (EV1)', async () => {
-    // validateFuelLogInput throws before any DB call — no queueing needed.
+    // validateFuelLogInput runs after getViewerWriteContext now — queue
+    // group + epoch so the helper succeeds and validation is reached.
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     await expect(createFuelLog({
       assetId: 'asset-1',
       liters: 30,
@@ -76,8 +119,9 @@ describe('createFuelLog', () => {
   })
 
   it('rejects when asset belongs to a different group', async () => {
-    queueDbResult([GROUP])  // viewer's group
-    queueDbResult([])       // asset not found in this group → empty
+    queueDbResult([GROUP])         // viewer's group
+    queueDbResult([OPEN_EPOCH])    // current-epoch lookup
+    queueDbResult([])              // asset not found in this group → empty
     await expect(createFuelLog({
       assetId: 'foreign-asset',
       liters: 30,
@@ -93,6 +137,7 @@ describe('createFuelLog', () => {
 
   it('auto-generates description "加油" when station is null', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1', deletedAt: null }])
     queueDbResult([{ id: 'fuel-log-id' }])
     queueDbResult([{ id: 'txn-id' }])
@@ -125,6 +170,7 @@ describe('createFuelLog', () => {
 
   it('throws when payer is not in the group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1', deletedAt: null }])
     await expect(createFuelLog({
       assetId: 'asset-1', liters: 30, odometer: 1000, cost: 500,
@@ -135,6 +181,7 @@ describe('createFuelLog', () => {
 
   it('throws when asset is soft-deleted', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1', deletedAt: new Date() }])
     await expect(createFuelLog({
       assetId: 'asset-1', liters: 30, odometer: 1000, cost: 500,
@@ -142,11 +189,30 @@ describe('createFuelLog', () => {
       paidBy: 'user-a', splitType: 'all_mine',
     })).rejects.toThrow(/已刪除/)
   })
+
+  it('rejects when viewer is pinned to a past epoch', async () => {
+    setCookie(PAST_EPOCH_COOKIE, 'epoch-old')
+    queueDbResult([CLOSED_EPOCH])
+    queueDbResult([GROUP])
+
+    await expect(createFuelLog({
+      assetId: 'asset-1',
+      liters: 30,
+      odometer: 1000,
+      cost: 500,
+      fuelType: '95',
+      loggedAt: '2026-05-05',
+      station: null,
+      paidBy: 'user-a',
+      splitType: 'all_mine',
+    })).rejects.toThrow('過去章節不可編輯')
+  })
 })
 
 describe('editFuelLog', () => {
   it('UPDATE FuelLog in place + soft-delete old txn + insert new txn (carry fuelLogId) + recalc', async () => {
     queueDbResult([GROUP])                                                          // group lookup
+    queueDbResult([OPEN_EPOCH])                                                     // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])     // fuel log lookup
     queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // asset ownership
     queueDbResult([{ id: 'old-txn-id' }])                                           // linked txn lookup
@@ -210,6 +276,7 @@ describe('editFuelLog', () => {
 
   it('rejects edit when fuel log is already soft-deleted', async () => {
     queueDbResult([GROUP])                                                                    // group
+    queueDbResult([OPEN_EPOCH])                                                               // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: new Date() }])         // fuel log soft-deleted
 
     await expect(editFuelLog({
@@ -223,6 +290,7 @@ describe('editFuelLog', () => {
 
   it('rejects edit when fuel log is not found', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // no fuel log row
 
     await expect(editFuelLog({
@@ -236,6 +304,7 @@ describe('editFuelLog', () => {
 
   it('rejects edit when fuel log asset is not in viewer group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'foreign-asset', deletedAt: null }])
     queueDbResult([])  // asset lookup empty (asset not in this group)
 
@@ -261,6 +330,7 @@ describe('editFuelLog', () => {
 
   it('rejects when payer is not in the group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])
     queueDbResult([{ id: 'asset-1', deletedAt: null }])
 
@@ -272,11 +342,26 @@ describe('editFuelLog', () => {
       paidBy: 'user-stranger', splitType: 'all_mine',
     })).rejects.toThrow('付款人不在家計簿內')
   })
+
+  it('rejects when viewer is pinned to a past epoch', async () => {
+    setCookie(PAST_EPOCH_COOKIE, 'epoch-old')
+    queueDbResult([CLOSED_EPOCH])
+    queueDbResult([GROUP])
+
+    await expect(editFuelLog({
+      id: 'fuel-log-id',
+      assetId: 'asset-1',
+      liters: 40, odometer: 87000, cost: 1500,
+      fuelType: '95', loggedAt: '2026-05-06', station: null,
+      paidBy: 'user-a', splitType: 'all_mine',
+    })).rejects.toThrow('過去章節不可編輯')
+  })
 })
 
 describe('softDeleteFuelLog', () => {
   it('soft-deletes both FuelLog and linked CashTransaction atomically + recalc', async () => {
     queueDbResult([GROUP])                                                          // group lookup
+    queueDbResult([OPEN_EPOCH])                                                     // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])     // fuel log lookup
     queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // asset ownership
     // Inside the transaction:
@@ -304,6 +389,7 @@ describe('softDeleteFuelLog', () => {
 
   it('idempotent: soft-deleting an already-deleted fuel log throws', async () => {
     queueDbResult([GROUP])                                                                    // group
+    queueDbResult([OPEN_EPOCH])                                                               // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: new Date() }])         // fuel log soft-deleted
 
     await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow(/已刪除|不存在/)
@@ -313,6 +399,7 @@ describe('softDeleteFuelLog', () => {
 
   it('throws when fuel log is not found', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // no fuel log row
 
     await expect(softDeleteFuelLog('missing-id')).rejects.toThrow(/已刪除|不存在/)
@@ -321,6 +408,7 @@ describe('softDeleteFuelLog', () => {
 
   it('rejects when fuel log asset is not in viewer group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'foreign-asset', deletedAt: null }])
     queueDbResult([])  // asset lookup empty (asset not in this group)
 
@@ -331,5 +419,13 @@ describe('softDeleteFuelLog', () => {
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('Unauthorized')
+  })
+
+  it('rejects when viewer is pinned to a past epoch', async () => {
+    setCookie(PAST_EPOCH_COOKIE, 'epoch-old')
+    queueDbResult([CLOSED_EPOCH])
+    queueDbResult([GROUP])
+
+    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('過去章節不可編輯')
   })
 })

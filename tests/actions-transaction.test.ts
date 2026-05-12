@@ -1,19 +1,59 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
+
+// next/headers cookies() — controlled per test via setCookie below. Needed
+// because resolveViewerEpochContext (called from getViewerWriteContext) reads
+// PAST_EPOCH_COOKIE to decide whether the viewer is pinned to a past chapter.
+const cookieStore = new Map<string, string>()
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({
+    get: (key: string) => {
+      const value = cookieStore.get(key)
+      return value === undefined ? undefined : { value }
+    },
+    set: vi.fn(),
+    delete: vi.fn(),
+  })),
+}))
+
+function setCookie(key: string, value: string | null) {
+  if (value === null) cookieStore.delete(key)
+  else cookieStore.set(key, value)
+}
+
 import { createTransaction, editTransaction, softDeleteTransaction } from '@/actions/transaction'
+import { PAST_EPOCH_COOKIE } from '@/lib/db/queries/epoch'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+const OPEN_EPOCH = {
+  id: 'epoch-current',
+  groupId: 'grp-1',
+  startedAt: new Date('2026-01-01T00:00:00Z'),
+  endedAt: null,
+  memberAId: 'user-a',
+  memberBId: 'user-b',
+}
+const CLOSED_EPOCH = {
+  id: 'epoch-old',
+  groupId: 'grp-1',
+  startedAt: new Date('2025-01-01T00:00:00Z'),
+  endedAt: new Date('2025-12-31T23:59:59Z'),
+  memberAId: 'user-a',
+  memberBId: 'user-b',
+}
 
 beforeEach(() => {
   resetDbMocks()
   setMockUser(VIEWER)
+  cookieStore.clear()
 })
 
 describe('createTransaction', () => {
   it('happy path: validates, inserts, recalcs, returns isFirstTransaction', async () => {
     queueDbResult([GROUP])              // group lookup (.limit)
+    queueDbResult([OPEN_EPOCH])         // current epoch lookup (.limit)
     queueDbResult([{ id: 'tx-1' }])     // insert returning (.returning)
     queueDbResult([])                   // recalcGroupBalance tx.execute
     queueDbResult([{ count: 1 }])       // per-user paid_by count → first record
@@ -33,6 +73,7 @@ describe('createTransaction', () => {
 
   it('returns isFirstTransaction=false when user already has another row', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'tx-2' }])
     queueDbResult([])
     queueDbResult([{ count: 5 }])
@@ -55,7 +96,10 @@ describe('createTransaction', () => {
   })
 
   it('throws on invalid amount', async () => {
-    // validateTransactionInput runs before group lookup — no queue needed
+    // validateTransactionInput runs after getViewerWriteContext now, so the
+    // group/epoch queue must be primed even though validation rejects.
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     await expect(createTransaction({
       amount: 0, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
@@ -63,7 +107,7 @@ describe('createTransaction', () => {
   })
 
   it('throws when group not found', async () => {
-    queueDbResult([])  // empty group lookup → throws '找不到家計簿'
+    queueDbResult([])  // empty getActiveGroupForUser → resolveViewerEpochContext returns null → '找不到家計簿'
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
@@ -72,6 +116,7 @@ describe('createTransaction', () => {
 
   it('throws when payer not in group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-stranger', transactedAt: new Date(),
@@ -80,6 +125,7 @@ describe('createTransaction', () => {
 
   it('persists trimmed notes on insert', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'tx-1' }])
 
     await createTransaction({
@@ -95,6 +141,7 @@ describe('createTransaction', () => {
 
   it('stores notes as null when omitted', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'tx-1' }])
 
     await createTransaction({
@@ -106,11 +153,27 @@ describe('createTransaction', () => {
     const insertPayload = mockBuilder.values.mock.calls[0]?.[0] as Record<string, unknown>
     expect(insertPayload.notes).toBeNull()
   })
+
+  it('rejects when viewer is pinned to a past epoch', async () => {
+    setCookie(PAST_EPOCH_COOKIE, 'epoch-old')
+    queueDbResult([CLOSED_EPOCH])  // pinned epoch lookup
+    queueDbResult([GROUP])         // group lookup for pinned epoch
+
+    await expect(createTransaction({
+      payerId: 'user-a',
+      amount: 100,
+      description: 'test',
+      category: 'dining',
+      splitType: 'half',
+      transactedAt: new Date('2026-05-01T00:00:00Z'),
+    })).rejects.toThrow('過去章節不可編輯')
+  })
 })
 
 describe('editTransaction', () => {
   it('happy path: soft-deletes old + inserts new in one transaction', async () => {
     queueDbResult([GROUP])                    // group lookup (.limit)
+    queueDbResult([OPEN_EPOCH])               // current epoch lookup (.limit)
     queueDbResult([{ assetId: null }])        // oldRow lookup (.limit)
     // no asset re-check (assetId is null)
     queueDbResult([{ id: 'tx-old' }])         // soft-delete UPDATE .returning (race-guard)
@@ -133,6 +196,7 @@ describe('editTransaction', () => {
 
   it('throws if old row not found', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // oldRow lookup empty → throws '找不到該筆紀錄'
     await expect(editTransaction({
       oldId: 'tx-missing', amount: 200, description: 'x',
@@ -152,6 +216,7 @@ describe('editTransaction', () => {
 
   it('passes notes through on edit (validated)', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ assetId: null }])
     queueDbResult([{ id: 'tx-old' }])
     queueDbResult([{ id: 'tx-new' }])
@@ -167,11 +232,28 @@ describe('editTransaction', () => {
     const insertPayload = mockBuilder.values.mock.calls[0]?.[0] as Record<string, unknown>
     expect(insertPayload.notes).toBe('改成這樣')
   })
+
+  it('rejects when viewer is pinned to a past epoch', async () => {
+    setCookie(PAST_EPOCH_COOKIE, 'epoch-old')
+    queueDbResult([CLOSED_EPOCH])
+    queueDbResult([GROUP])
+
+    await expect(editTransaction({
+      oldId: 'old-tx',
+      amount: 200,
+      description: 'updated',
+      category: 'dining',
+      splitType: 'half',
+      payerId: 'user-a',
+      transactedAt: new Date('2026-05-01T00:00:00Z'),
+    })).rejects.toThrow('過去章節不可編輯')
+  })
 })
 
 describe('createTransaction with assetId', () => {
   it('happy path: validates asset belongs to group + not deleted', async () => {
     queueDbResult([GROUP])                           // group lookup
+    queueDbResult([OPEN_EPOCH])                      // current epoch lookup
     queueDbResult([{ id: 'asset-1', deletedAt: null }])  // asset check .limit
     queueDbResult([{ id: 'tx-1' }])                  // insert .returning
     queueDbResult([])                                // recalc execute
@@ -188,6 +270,7 @@ describe('createTransaction with assetId', () => {
 
   it('rejects assetId not in group', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // asset lookup empty
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
@@ -198,6 +281,7 @@ describe('createTransaction with assetId', () => {
 
   it('rejects assetId pointing at soft-deleted asset', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
@@ -210,6 +294,7 @@ describe('createTransaction with assetId', () => {
 describe('editTransaction with assetId', () => {
   it('allows keeping old assetId even if asset is now deleted (zombie keep)', async () => {
     queueDbResult([GROUP])                              // group lookup
+    queueDbResult([OPEN_EPOCH])                         // current epoch lookup
     queueDbResult([{ assetId: 'asset-zombie' }])        // oldRow .limit — asset matches
     // No asset re-check because assetId === oldRow.assetId
     queueDbResult([{ id: 'tx-old' }])                   // soft-delete UPDATE .returning (race-guard)
@@ -227,6 +312,7 @@ describe('editTransaction with assetId', () => {
 
   it('blocks newly assigning to a deleted asset', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([{ assetId: null }])                          // oldRow had no asset
     queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])  // new asset is deleted
     await expect(editTransaction({
@@ -241,6 +327,7 @@ describe('editTransaction with assetId', () => {
 describe('softDeleteTransaction', () => {
   it('happy path: marks deleted_at, recalcs', async () => {
     queueDbResult([GROUP])              // group lookup (.limit)
+    queueDbResult([OPEN_EPOCH])         // current epoch lookup (.limit)
     queueDbResult([{ id: 'tx-1' }])     // update returning (.returning)
     // recalcGroupBalance tx.execute — gets [] from empty queue (default)
 
@@ -250,6 +337,7 @@ describe('softDeleteTransaction', () => {
 
   it('throws if not found', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
     await expect(softDeleteTransaction('tx-missing')).rejects.toThrow('找不到該筆紀錄')
   })
@@ -257,5 +345,13 @@ describe('softDeleteTransaction', () => {
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(softDeleteTransaction('tx-1')).rejects.toThrow('Unauthorized')
+  })
+
+  it('rejects when viewer is pinned to a past epoch', async () => {
+    setCookie(PAST_EPOCH_COOKIE, 'epoch-old')
+    queueDbResult([CLOSED_EPOCH])
+    queueDbResult([GROUP])
+
+    await expect(softDeleteTransaction('old-tx')).rejects.toThrow('過去章節不可編輯')
   })
 })
