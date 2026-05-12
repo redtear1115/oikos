@@ -302,13 +302,19 @@ export function SettingsContent({
               </div>
               <input
                 type="range"
-                min={1}
-                max={99}
-                step={1}
+                min={10}
+                max={90}
+                step={10}
+                list="split-ratio-ticks"
                 value={splitRatioA}
                 onChange={e => setSplitRatioA(Number(e.target.value))}
                 className="w-full accent-[var(--ink)]"
               />
+              <datalist id="split-ratio-ticks">
+                {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(v => (
+                  <option key={v} value={v} label={`${v}`} />
+                ))}
+              </datalist>
               <button
                 onClick={handleRatioSave}
                 disabled={savingRatio}
