@@ -19,6 +19,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### 技術變更
 - _尚無_
 
+## [0.15.2] - 2026-05-13
+
+主題：**陪伴繼續長大，守護也再聚一次**——v0.15.1 polish 之後一連串原本散在 backlog 的功能、refactor 與 iOS 微調終於到齊：PartnerQuiz 雙人異步問答、保險守護升級（被保人關聯 Child / 投資型 account_value / 愛物頁獨立守護 tab）、`/past-times` 跨章節歷史、filter v2 金額範圍 + status；同時把 SQL predicate、auth/group 樣板、AssetSheet 三條結構性 refactor 收尾，給下一輪 v0.16.0 多幣別工作打底；最後一輪 sheet/AddSheet iOS 觸控與視覺收齊。
+
+完整 diff：[v0.15.1...v0.15.2](https://github.com/redtear1115/oikos/compare/v0.15.1...v0.15.2)
+
+### 使用者可見變化
+
+#### 雙人陪伴
+- **PartnerQuiz 雙人異步問答**（PR #187，closes #163）：兩人各自輪流回答關於對方的問題，答完才比對；想了解伴侶又不想直接問的小儀式。
+
+#### 守護愛物升級
+- **愛物頁加「愛物 / 守護」tab，保險併入守護**（PR #184，closes #178）：保險不再混在愛物清單裡，獨立為守護 tab，視覺與語意都跟其他愛物區分開。
+- **保險 Phase B：投資型 account_value**（PR #183，closes #166）：投資連結型儲蓄險新增帳戶現值欄位，分離繳費總額與當前帳戶價值。
+- **保險被保人關聯 Child 愛物**（PR #180，closes #179）：保險詳情可指定被保人為自己 group 的 Child 愛物。
+
+#### 紀錄與篩選
+- **`/records` filter v2：金額範圍 + status**（PR #185，closes #165）：篩選器加上金額區間與 `settled / pending` status，URL-synced 可分享。
+- **Balance toggle：settled vs include-pending**（PR #179，closes #164）：可切換僅看已過帳的結算，或包含 pending 簽帳一起看 balance。
+- **`/past-times` 跨 group epoch 歷史**（PR #181）：翻過去章節時不再被當前 group 鎖住，跨多段關係章節都看得到。
+- **CompactRow 零分擔時 hide「我 $XXX」chip + 金額顏色修復**（commit `2a49c32`）：分攤比例 100/0 那側不再硬塞 0 元 chip，金額本身的染色也恢復。
+
+#### AddSheet / IncomeSheet polish
+- **金額輸入 iOS 鍵盤同步彈出**（PR #203）：開 sheet 時 synchronous focus 強制拉起 iOS 鍵盤，不再要二次點才彈。
+- **Chip row 邊緣 fade 提示可滾動**（PR #204）：分類 chips 右側 fade overlay 提示「還能往右滑」。
+- **Income chip 與 expense 統一 filled-pill style**（PR #206）：兩條 sheet 的 chip 視覺收成同一套。
+- **Sheet backdrop 關閉動畫期間維持 pointer 攔截**（PR #202）：避免 sheet 收起的瞬間誤觸下層元素。
+- **Split slider 寬度 iOS Safari fix**（PR #201）：分擔比例 slider wrapper 鎖 `w-full`，避開 iOS Safari button flex 量子。
+
+#### 操作回饋
+- **儲存／編輯／刪除一律彈 transient toast**（PR #205）：每次成功寫入都 surface toast 告訴使用者操作真的存進去了。
+
+### 技術變更
+
+- **`InsuranceDetails.account_value` 新欄位**（PR #183，#166）：投資型儲蓄險獨立紀錄帳戶現值；現有保單無需 backfill。
+- **`InsuranceDetails.insured_child_id` FK → Assets**（PR #180，#179）：限制被保人指向同 group 的 Child 愛物。
+- **PartnerQuiz schema + actions**（PR #187，#163）：新增 quiz 相關 table、RLS、Realtime publication；細節見 PR。
+- **`/records` filter schema 擴充**（PR #185，#165）：URL search params 新增 amount_min / amount_max / status；server-side WHERE clause 同步擴。
+- **Refactor: SQL predicate helpers + `ListPagedOptions`**（PR #192，#188）：把分散在 query 層的 paged + filter 範本抽成共用 helpers。
+- **Refactor: 統一 action / page auth/group 樣板 + 抽 revalidate helper**（PR #193，#190）：server actions / pages 不再各自重複寫 auth + group lookup boilerplate。
+- **Refactor: `AssetSheet` 拆成 per-type `*SheetBody`**（PR #191，#189）：原本一個巨大 sheet 拆成 Car / House / Child / Pet / Plant / Insurance 各自 body；之後新增愛物 type 不必動主 sheet。
+- **`/past-times` query 改 cross-group epoch lookup**（PR #181）：從原本「目前 group 的 epoch 歷史」改為「viewer 參與過的所有 group epoch」。
+
 ## [0.15.1] - 2026-05-12
 
 主題：**陪伴每處小細節更貼手．光的指認也更一致**——一輪跨頁 UX polish（Dashboard / Records / Assets list / 愛物詳情 / AddSheet 全家族），把這幾週累積的 UI/UX 審查回饋一次處理掉；底下用一份分類色 design token 把愛物與類別色彩收斂為「每個分類一個主色，chip tint 由主色推得」，鎖進「同一分類在哪都長同一個 hue」的承諾。
@@ -488,7 +531,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.15.2...HEAD
+[0.15.2]: https://github.com/redtear1115/oikos/compare/v0.15.1...v0.15.2
+[0.15.1]: https://github.com/redtear1115/oikos/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/redtear1115/oikos/compare/v0.14.2...v0.15.0
 [0.14.2]: https://github.com/redtear1115/oikos/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/redtear1115/oikos/compare/v0.14.0...v0.14.1
