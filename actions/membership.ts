@@ -16,21 +16,18 @@ import {
   settlements,
 } from '@/lib/db/schema'
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
-import { createClient } from '@/lib/supabase/server'
-import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { requireViewerGroup } from '@/lib/auth/viewer'
+import {
+  revalidateSettings,
+  revalidateAfterMembershipChange,
+} from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 async function getViewerAndDuoGroup() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const group = await getActiveGroupForUser(user.id)
-
-  if (!group) throw new Error('找不到家計簿')
+  const { user, group } = await requireViewerGroup()
   if (group.memberB === null) throw new Error('solo_group')
   return { user, group: { ...group, memberB: group.memberB as string } }
 }
@@ -63,7 +60,7 @@ export async function proposeSwap(): Promise<{ ok: true }> {
       isNull(oikosGroups.pendingSwapProposedBy),
     ))
 
-  revalidatePath('/settings')
+  revalidateSettings()
   return { ok: true }
 }
 
@@ -87,7 +84,7 @@ export async function cancelSwap(): Promise<{ ok: true }> {
     })
     .where(eq(oikosGroups.id, group.id))
 
-  revalidatePath('/settings')
+  revalidateSettings()
   return { ok: true }
 }
 
@@ -164,7 +161,7 @@ export async function confirmSwap(): Promise<{ ok: true }> {
     await recalcGroupBalance(group.id, tx)
   })
 
-  revalidatePath('/settings')
+  revalidateSettings()
   revalidatePath('/dashboard')
   return { ok: true }
 }
@@ -198,13 +195,8 @@ export async function confirmSwap(): Promise<{ ok: true }> {
  * Irreversible.
  */
 export async function leaveGroup(): Promise<{ groupId: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user, group } = await requireViewerGroup()
 
-  const group = await getActiveGroupForUser(user.id)
-
-  if (!group) throw new Error('找不到家計簿')
   if (group.memberB === null) throw new Error('solo_group')
   if (user.id !== group.memberB) throw new Error('only_member_b_can_leave')
 
@@ -439,8 +431,6 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     return newGroup.id
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/settings')
-  revalidatePath('/records')
+  revalidateAfterMembershipChange()
   return { groupId: newGroupId }
 }

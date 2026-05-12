@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db/client'
 import { partnerQuizAnswers, partnerQuizSessions } from '@/lib/db/schema'
-import { getViewerGroup } from '@/lib/recurringActionHelpers'
+import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
   pickQuizQuestions,
   validateAnswersBatch,
@@ -23,7 +23,7 @@ export interface StartPartnerQuizSessionResult {
  * start a session for a solo group — quiz is a two-person ritual.
  */
 export async function startPartnerQuizSession(): Promise<StartPartnerQuizSessionResult> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   if (!group.memberB) {
     throw new Error('一個人的時候還沒辦法開始這題問答')
   }
@@ -80,7 +80,7 @@ export interface SubmitPartnerQuizAnswersResult {
 export async function submitPartnerQuizAnswers(
   input: SubmitPartnerQuizAnswersInput,
 ): Promise<SubmitPartnerQuizAnswersResult> {
-  const { user, group } = await getViewerGroup()
+  const { user, group } = await requireViewerGroup()
   if (!group.memberB) {
     throw new Error('一個人的時候還沒辦法答題')
   }

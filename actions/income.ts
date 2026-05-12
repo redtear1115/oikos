@@ -1,17 +1,16 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, incomeTransactions, oikosGroups } from '@/lib/db/schema'
-import { createClient } from '@/lib/supabase/server'
+import { assets, incomeTransactions } from '@/lib/db/schema'
 import { validateIncomeInput, type IncomeInput } from '@/lib/validators'
 import { listIncomesPaged, type IncomeCursor, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
-import { and, eq, isNull, or } from 'drizzle-orm'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { revalidatePath } from 'next/cache'
+import { and, eq, isNull } from 'drizzle-orm'
+import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
+import { revalidateAfterIncomeMutation } from '@/lib/revalidate'
 
 export type CreateIncomeInput = IncomeInput
 
@@ -19,23 +18,10 @@ export interface EditIncomeInput extends IncomeInput {
   oldId: string
 }
 
-async function getViewerGroup() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const group = await getActiveGroupForUser(user.id)
-  if (!group) throw new Error('找不到家計簿')
-
-  return { user, group }
-}
-
 /** Read-path variant that follows the past-epoch pin (possibly cross-group,
  *  see #141) so paged feeds match what the dashboard / records pages render. */
 async function getViewerReadContext() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
   if (!context) throw new Error('找不到家計簿')
@@ -64,7 +50,7 @@ function assertRecipientInGroup(
 
 export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
   const validated = validateIncomeInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
@@ -81,14 +67,13 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
     })
     .returning({ id: incomeTransactions.id })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterIncomeMutation()
   return { id: created.id }
 }
 
 export async function editIncome(input: EditIncomeInput): Promise<{ id: string }> {
   const validated = validateIncomeInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertRecipientInGroup(validated.recipientId, group)
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
@@ -118,13 +103,12 @@ export async function editIncome(input: EditIncomeInput): Promise<{ id: string }
       .returning({ id: incomeTransactions.id })
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterIncomeMutation()
   return { id: created.id }
 }
 
 export async function softDeleteIncome(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [row] = await db
     .select({ id: incomeTransactions.id })
@@ -142,8 +126,7 @@ export async function softDeleteIncome(id: string): Promise<void> {
     .set({ deletedAt: new Date() })
     .where(eq(incomeTransactions.id, id))
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
+  revalidateAfterIncomeMutation()
 }
 
 export interface PagedIncomeRow {
@@ -159,7 +142,7 @@ export interface PagedIncomeRow {
 }
 
 export async function getInsuranceAssets(): Promise<{ id: string; name: string }[]> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const rows = await db
     .select({ id: assets.id, name: assets.name })
     .from(assets)

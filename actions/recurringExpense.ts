@@ -15,10 +15,14 @@ import {
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
 import {
-  getViewerGroup,
   assertMemberInGroup,
   assertAssetInGroup,
 } from '@/lib/recurringActionHelpers'
+import { requireViewerGroup } from '@/lib/auth/viewer'
+import {
+  revalidateAfterRecurringExpenseRuleMutation,
+  revalidateAfterTransactionMutation,
+} from '@/lib/revalidate'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
@@ -31,7 +35,7 @@ function assertPaidByInGroup(
 
 export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id: string }> {
   const v = validateRecurringExpenseRuleInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
@@ -56,8 +60,7 @@ export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id
     })
     .returning({ id: recurringExpenseRules.id })
 
-  revalidatePath('/settings/recurring-expense')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringExpenseRuleMutation()
   return { id: created.id }
 }
 
@@ -67,7 +70,7 @@ export interface UpdateRuleInput extends RecurringExpenseRuleInput {
 
 export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }> {
   const v = validateRecurringExpenseRuleInput(input)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
@@ -110,13 +113,12 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
     .where(eq(recurringExpenseRules.id, input.id))
     .returning({ id: recurringExpenseRules.id })
 
-  revalidatePath('/settings/recurring-expense')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringExpenseRuleMutation()
   return { id: updated.id }
 }
 
 export async function pauseRule(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(recurringExpenseRules)
     .set({ pausedAt: new Date() })
@@ -127,12 +129,11 @@ export async function pauseRule(id: string): Promise<void> {
     ))
     .returning({ id: recurringExpenseRules.id })
   if (!updated) throw new Error('找不到該定期規則')
-  revalidatePath('/settings/recurring-expense')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringExpenseRuleMutation()
 }
 
 export async function resumeRule(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const [rule] = await db
     .select({
       id: recurringExpenseRules.id,
@@ -160,12 +161,11 @@ export async function resumeRule(id: string): Promise<void> {
     .where(eq(recurringExpenseRules.id, id))
     .returning({ id: recurringExpenseRules.id })
 
-  revalidatePath('/settings/recurring-expense')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringExpenseRuleMutation()
 }
 
 export async function softDeleteRule(id: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
     const [updated] = await tx
@@ -188,12 +188,11 @@ export async function softDeleteRule(id: string): Promise<void> {
       ))
   })
 
-  revalidatePath('/settings/recurring-expense')
-  revalidatePath('/dashboard')
+  revalidateAfterRecurringExpenseRuleMutation()
 }
 
 export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -254,9 +253,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
     return { txId: created.id }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  if (row.assetId) revalidatePath(`/assets/${row.assetId}`)
+  revalidateAfterTransactionMutation({ assetId: row.assetId })
   return result
 }
 
@@ -273,7 +270,7 @@ export async function editAndConfirmPending(
   input: EditAndConfirmInput,
 ): Promise<{ txId: string }> {
   const overrides = validateConfirmPendingExpenseInput(input.overrides)
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -344,14 +341,12 @@ export async function editAndConfirmPending(
     return { txId: created.id }
   })
 
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  if (finalAssetId) revalidatePath(`/assets/${finalAssetId}`)
+  revalidateAfterTransactionMutation({ assetId: finalAssetId })
   return result
 }
 
 export async function skipPending(pendingId: string): Promise<void> {
-  const { group } = await getViewerGroup()
+  const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(pendingExpenseOccurrences)
     .set({ skippedAt: new Date() })

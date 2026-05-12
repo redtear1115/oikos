@@ -1,8 +1,8 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { revalidatePath } from 'next/cache'
 import { PAST_EPOCH_COOKIE } from '@/lib/db/queries/epoch'
+import { revalidateAfterEpochViewChange } from '@/lib/revalidate'
 
 /**
  * Pin the viewer to a historical epoch for the rest of the browser session.
@@ -23,19 +23,13 @@ export async function enterPastEpoch(epochId: string): Promise<void> {
     secure: process.env.NODE_ENV === 'production',
   })
   // Trigger a re-render of the navigation surfaces that read the cookie.
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  revalidatePath('/aibutsu')
-  revalidatePath('/settings')
+  revalidateAfterEpochViewChange()
 }
 
 export async function exitPastEpoch(): Promise<void> {
   const jar = await cookies()
   jar.delete(PAST_EPOCH_COOKIE)
-  revalidatePath('/dashboard')
-  revalidatePath('/records')
-  revalidatePath('/aibutsu')
-  revalidatePath('/settings')
+  revalidateAfterEpochViewChange()
 }
 
 /**

@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation'
-import { getCurrentUser } from '@/lib/supabase/server'
+import { requireViewerOrRedirect } from '@/lib/auth/viewer'
 import { listEpochsForViewer } from '@/lib/db/queries/epoch'
 import { getPinnedEpochId } from '@/actions/epoch-view'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
@@ -16,8 +15,7 @@ import { PastTimesList } from './_components/PastTimesList'
  * left behind on a different `OikosGroups` row.
  */
 export default async function PastTimesPage() {
-  const user = await getCurrentUser()
-  if (!user) redirect('/sign-in')
+  const { user } = await requireViewerOrRedirect()
 
   const [epochs, pinnedId, locale, t] = await Promise.all([
     listEpochsForViewer(user.id),
