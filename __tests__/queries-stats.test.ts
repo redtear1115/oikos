@@ -5,7 +5,7 @@ import {
   monthlyStatsByAsset,
   getGroupCreationMonthKey,
 } from '@/lib/db/queries/transactions'
-import { monthlyIncomeStatsByCategory } from '@/lib/db/queries/incomes'
+import { monthlyIncomeStatsByCategory, listIncomeMonthSummary } from '@/lib/db/queries/incomes'
 
 beforeEach(() => resetDbMocks())
 
@@ -79,6 +79,57 @@ describe('monthlyIncomeStatsByCategory', () => {
     queueDbResult([])
     const rows = await monthlyIncomeStatsByCategory('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([])
+  })
+})
+
+describe('listIncomeMonthSummary', () => {
+  // Bug A regression test: this function used to ignore epoch window entirely,
+  // making the dashboard hero card「本月進帳」cross-bleed across epochs.
+  // Lock in that the SQL now scopes by created_at against the epoch boundary.
+  const closedEpoch = {
+    startedAt: new Date('2025-01-01T00:00:00Z'),
+    endedAt: new Date('2025-12-31T23:59:59Z'),
+    epochId: 'epoch-old',
+    isPast: true,
+  }
+  const openEpoch = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-current',
+    isPast: false,
+  }
+
+  it('parses total + count from raw SQL row', async () => {
+    queueDbResult([{ total: '12500', count: '3' }])
+    const result = await listIncomeMonthSummary('grp-1', '2026-05', openEpoch)
+    expect(result).toEqual({ total: 12500, count: 3 })
+    expect(mockDb.execute).toHaveBeenCalledTimes(1)
+  })
+
+  it('returns zeros when group has no income in the month', async () => {
+    queueDbResult([{ total: '0', count: '0' }])
+    const result = await listIncomeMonthSummary('grp-1', '2026-05', openEpoch)
+    expect(result).toEqual({ total: 0, count: 0 })
+  })
+
+  it('SQL includes both startedAt lower bound AND endedAt upper bound for closed past epoch', async () => {
+    queueDbResult([{ total: '0', count: '0' }])
+    await listIncomeMonthSummary('grp-1', '2026-05', closedEpoch)
+    const sqlArg = (mockDb.execute as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0]
+    const sqlString = JSON.stringify(sqlArg)
+    // Lower bound (epoch start) — required, always present
+    expect(sqlString).toContain('created_at >= ')
+    // Upper bound (epoch end) — must appear for closed epoch
+    expect(sqlString).toContain('created_at < ')
+  })
+
+  it('SQL omits upper bound when current (open) epoch — endedAt is null', async () => {
+    queueDbResult([{ total: '0', count: '0' }])
+    await listIncomeMonthSummary('grp-1', '2026-05', openEpoch)
+    const sqlArg = (mockDb.execute as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0]
+    const sqlString = JSON.stringify(sqlArg)
+    expect(sqlString).toContain('created_at >= ')
+    expect(sqlString).not.toContain('created_at < ')
   })
 })
 
