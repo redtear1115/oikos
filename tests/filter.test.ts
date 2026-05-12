@@ -110,23 +110,24 @@ describe('wire round-trip', () => {
       categories: new Set(['dining', 'transit']),
       incomeCategories: new Set(['salary', 'bonus']),
       assetIds: new Set(['11111111-1111-1111-1111-111111111111', ASSET_FILTER_NONE]),
+      amountMin: 100,
+      amountMax: 5000,
+      status: 'pending',
     }
     expect(fromWire(toWire(f))).toEqual(f)
   })
-  it('reads a wire with no incomeCategories / assetIds (back-compat)', () => {
+  it('reads a wire with no incomeCategories / assetIds / amount / status (back-compat)', () => {
     const wire = {
       payer: 'mine' as const,
       split: 'all' as const,
-      categories: ['dining'],
+      categories: ['dining' as const],
       incomeCategories: [],
       assetIds: [],
     }
     expect(fromWire(wire)).toEqual({
+      ...defaultFilter(),
       payer: 'mine',
-      split: 'all',
       categories: new Set(['dining']),
-      incomeCategories: new Set(),
-      assetIds: new Set(),
     })
   })
 })
@@ -256,11 +257,17 @@ describe('parseFilterFromSearchParams', () => {
 describe('parseFilterFromRecord', () => {
   it('reads from a plain object (server searchParams shape)', () => {
     expect(parseFilterFromRecord({ fPayer: 'theirs', fCats: 'dining' })).toEqual({
+      ...defaultFilter(),
       payer: 'theirs',
-      split: 'all',
       categories: new Set(['dining']),
-      incomeCategories: new Set(),
-      assetIds: new Set(),
+    })
+  })
+  it('reads v2 params (amount + status) from a plain object', () => {
+    expect(parseFilterFromRecord({ fAmtMin: '100', fAmtMax: '500', fStatus: 'pending' })).toEqual({
+      ...defaultFilter(),
+      amountMin: 100,
+      amountMax: 500,
+      status: 'pending',
     })
   })
 })
@@ -273,6 +280,9 @@ describe('applyFilterToParams', () => {
       categories: new Set(['transit', 'dining']),
       incomeCategories: new Set(['bonus', 'salary']),
       assetIds: new Set([ASSET_FILTER_NONE, '11111111-1111-1111-1111-111111111111']),
+      amountMin: 250,
+      amountMax: 9999,
+      status: 'settled',
     }
     const p = new URLSearchParams()
     applyFilterToParams(p, original)
@@ -417,6 +427,9 @@ describe('end-to-end URL round-trip', () => {
       categories: new Set(['dining']),
       incomeCategories: new Set(['salary']),
       assetIds: new Set([ASSET_FILTER_NONE, '11111111-1111-1111-1111-111111111111']),
+      amountMin: 100,
+      amountMax: 10000,
+      status: 'pending',
     }
     const range: DateRange = { kind: 'range', start: '2026-04-01', end: '2026-04-30' }
     const p = new URLSearchParams()
@@ -425,5 +438,144 @@ describe('end-to-end URL round-trip', () => {
 
     expect(parseFilterFromSearchParams(p)).toEqual(filter)
     expect(parseDateRangeFromSearchParams(p, '2026-05')).toEqual(range)
+  })
+})
+
+// ─── v2 dimensions: amount range + status ────────────────────────────────────
+
+describe('isFilterActive — v2 dimensions', () => {
+  it('amountMin alone activates', () => {
+    expect(isFilterActive({ ...defaultFilter(), amountMin: 100 })).toBe(true)
+  })
+  it('amountMax alone activates', () => {
+    expect(isFilterActive({ ...defaultFilter(), amountMax: 500 })).toBe(true)
+  })
+  it('status alone activates', () => {
+    expect(isFilterActive({ ...defaultFilter(), status: 'pending' })).toBe(true)
+  })
+})
+
+describe('hidesSettlements — status dim', () => {
+  it('status=pending hides settlements (always settled)', () => {
+    expect(hidesSettlements({ ...defaultFilter(), status: 'pending' })).toBe(true)
+  })
+  it('status=settled does NOT hide settlements (settlements are settled)', () => {
+    expect(hidesSettlements({ ...defaultFilter(), status: 'settled' })).toBe(false)
+  })
+  it('amountMin/Max alone does NOT hide settlements', () => {
+    expect(hidesSettlements({ ...defaultFilter(), amountMin: 100 })).toBe(false)
+    expect(hidesSettlements({ ...defaultFilter(), amountMax: 500 })).toBe(false)
+  })
+})
+
+describe('cutsIncome — status dim', () => {
+  it('status=pending → cuts income (income is always settled)', () => {
+    expect(cutsIncome({ ...defaultFilter(), status: 'pending' })).toBe(true)
+  })
+  it('status=settled → does NOT cut income', () => {
+    expect(cutsIncome({ ...defaultFilter(), status: 'settled' })).toBe(false)
+  })
+  it('amount range alone → does NOT cut income', () => {
+    expect(cutsIncome({ ...defaultFilter(), amountMin: 100, amountMax: 500 })).toBe(false)
+  })
+})
+
+describe('matchesFilter — amount range', () => {
+  it('amountMin only — below threshold drops', () => {
+    const f = { ...defaultFilter(), amountMin: 100 }
+    const lo: FilterableRow = { ...txMine, amount: 50 }
+    const hi: FilterableRow = { ...txMine, amount: 200 }
+    expect(matchesFilter(lo, f, 'me', 'them')).toBe(false)
+    expect(matchesFilter(hi, f, 'me', 'them')).toBe(true)
+  })
+  it('amountMax only — above threshold drops', () => {
+    const f = { ...defaultFilter(), amountMax: 100 }
+    const lo: FilterableRow = { ...txMine, amount: 50 }
+    const hi: FilterableRow = { ...txMine, amount: 200 }
+    expect(matchesFilter(lo, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(hi, f, 'me', 'them')).toBe(false)
+  })
+  it('inclusive on both bounds', () => {
+    const f = { ...defaultFilter(), amountMin: 100, amountMax: 200 }
+    expect(matchesFilter({ ...txMine, amount: 100 }, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter({ ...txMine, amount: 200 }, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter({ ...txMine, amount: 99 }, f, 'me', 'them')).toBe(false)
+    expect(matchesFilter({ ...txMine, amount: 201 }, f, 'me', 'them')).toBe(false)
+  })
+  it('amount filter also applies to settlements', () => {
+    const f = { ...defaultFilter(), amountMin: 100 }
+    expect(matchesFilter({ ...settleMine, amount: 50 }, f, 'me', 'them')).toBe(false)
+    expect(matchesFilter({ ...settleMine, amount: 200 }, f, 'me', 'them')).toBe(true)
+  })
+  it('rows without amount fall through (no info → pass)', () => {
+    const f = { ...defaultFilter(), amountMin: 100 }
+    // No amount field — matcher skips the dim. Realistic only for legacy callers;
+    // real feed rows always carry amount.
+    expect(matchesFilter(txMine, f, 'me', 'them')).toBe(true)
+  })
+})
+
+describe('matchesFilter — status dim', () => {
+  it('status=pending → only pending tx; settled tx dropped; settlements dropped', () => {
+    const f = { ...defaultFilter(), status: 'pending' as const }
+    expect(matchesFilter({ ...txMine, status: 'pending' }, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter({ ...txMine, status: 'settled' }, f, 'me', 'them')).toBe(false)
+    expect(matchesFilter({ ...settleMine, status: 'settled' }, f, 'me', 'them')).toBe(false)
+  })
+  it('status=settled → settled tx pass; pending tx dropped; settlements pass', () => {
+    const f = { ...defaultFilter(), status: 'settled' as const }
+    expect(matchesFilter({ ...txMine, status: 'settled' }, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter({ ...txMine, status: 'pending' }, f, 'me', 'them')).toBe(false)
+    expect(matchesFilter({ ...settleMine, status: 'settled' }, f, 'me', 'them')).toBe(true)
+  })
+  it('row without status field defaults to settled', () => {
+    const f = { ...defaultFilter(), status: 'pending' as const }
+    // Legacy callers that don't pass status — drops them since default = settled
+    expect(matchesFilter(txMine, f, 'me', 'them')).toBe(false)
+  })
+})
+
+describe('parseFilterFromSearchParams — v2 params', () => {
+  it('reads amount + status', () => {
+    const p = new URLSearchParams('fAmtMin=100&fAmtMax=5000&fStatus=pending')
+    const f = parseFilterFromSearchParams(p)
+    expect(f.amountMin).toBe(100)
+    expect(f.amountMax).toBe(5000)
+    expect(f.status).toBe('pending')
+  })
+  it('drops malformed amount (decimal / negative / non-numeric)', () => {
+    const p = new URLSearchParams('fAmtMin=10.5&fAmtMax=-100&fStatus=bogus')
+    const f = parseFilterFromSearchParams(p)
+    expect(f.amountMin).toBe(null)
+    expect(f.amountMax).toBe(null)
+    expect(f.status).toBe('all')
+  })
+  it('accepts zero as a valid amount bound', () => {
+    const p = new URLSearchParams('fAmtMin=0&fAmtMax=0')
+    const f = parseFilterFromSearchParams(p)
+    expect(f.amountMin).toBe(0)
+    expect(f.amountMax).toBe(0)
+  })
+  it('one-sided amount range (min only / max only)', () => {
+    expect(parseFilterFromSearchParams(new URLSearchParams('fAmtMin=500')).amountMin).toBe(500)
+    expect(parseFilterFromSearchParams(new URLSearchParams('fAmtMin=500')).amountMax).toBe(null)
+    expect(parseFilterFromSearchParams(new URLSearchParams('fAmtMax=500')).amountMax).toBe(500)
+    expect(parseFilterFromSearchParams(new URLSearchParams('fAmtMax=500')).amountMin).toBe(null)
+  })
+})
+
+describe('applyFilterToParams — v2 params strip on defaults', () => {
+  it('strips fAmtMin/fAmtMax/fStatus when at defaults', () => {
+    const p = new URLSearchParams('fAmtMin=100&fAmtMax=500&fStatus=pending')
+    applyFilterToParams(p, defaultFilter())
+    expect(p.get('fAmtMin')).toBeNull()
+    expect(p.get('fAmtMax')).toBeNull()
+    expect(p.get('fStatus')).toBeNull()
+  })
+  it('one-sided amount: only the set bound is encoded', () => {
+    const p = new URLSearchParams()
+    applyFilterToParams(p, { ...defaultFilter(), amountMin: 100 })
+    expect(p.get('fAmtMin')).toBe('100')
+    expect(p.get('fAmtMax')).toBeNull()
   })
 })

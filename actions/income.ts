@@ -195,6 +195,8 @@ function resolveIncomeFilter(
     recipientId,
     assetIds: Array.from(f.assetIds),
     incomeCategories: Array.from(f.incomeCategories),
+    amountMin: f.amountMin,
+    amountMax: f.amountMax,
     cutAll: cutsIncome(f),
   }
 }

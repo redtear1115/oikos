@@ -62,6 +62,20 @@ export interface ResolvedTxnFilter {
    * "uuidA OR no-asset" the way the user expects from the chip UI.
    */
   assetIds: string[]
+  /**
+   * Inclusive amount bounds (NT$ integers). null on either side = open.
+   * Applies to all kinds (cash / settlement / income) — every feed row has
+   * `amount`, so this dim is orthogonal to the kind-cut rules.
+   */
+  amountMin: number | null
+  amountMax: number | null
+  /**
+   * Cash-tx status filter. null = both pending and settled pass. A 'pending'
+   * value forces `excludeSettlements=true` and the income branch to short-circuit
+   * (handled via `cutAll` on the income side) — settlements + income are always
+   * stored as 'settled'.
+   */
+  status: RecordStatus | null
   /** True when settlements should be excluded entirely. */
   excludeSettlements: boolean
   /**
@@ -195,6 +209,39 @@ function nextDayIso(iso: string): string {
  * directly to one row predicate. Returns empty SQL when no asset filter is
  * active.
  */
+/**
+ * Build a `BETWEEN`-style SQL clause for the inclusive amount range. Either or
+ * both bounds can be null (= open). The `column` is inlined verbatim with
+ * `sql.raw` so the helper works for any table that uses `amount`.
+ */
+function amountScopeSql(
+  min: number | null | undefined,
+  max: number | null | undefined,
+  column = 'amount',
+): SQL {
+  const col = sql.raw(column)
+  if ((min === null || min === undefined) && (max === null || max === undefined)) return sql``
+  if (min !== null && min !== undefined && (max === null || max === undefined)) {
+    return sql`AND ${col} >= ${min}`
+  }
+  if ((min === null || min === undefined) && max !== null && max !== undefined) {
+    return sql`AND ${col} <= ${max}`
+  }
+  // Both bounds present. Postgres `BETWEEN` is inclusive on both sides.
+  return sql`AND ${col} BETWEEN ${min} AND ${max}`
+}
+
+/**
+ * Build the SQL clause for the cash-tx status filter. Only applies when the
+ * status filter narrows to a single value; otherwise the helper returns empty
+ * SQL. Settlements + IncomeTransactions don't carry status — callers drop them
+ * via excludeSettlements / cutAll when `status = 'pending'`.
+ */
+function statusScopeSql(status: RecordStatus | null | undefined, column = 'status'): SQL {
+  if (!status) return sql``
+  return sql`AND ${sql.raw(column)} = ${status}::record_status`
+}
+
 function assetIdsScopeSql(assetIds: string[]): SQL {
   if (assetIds.length === 0) return sql``
   const uuids: string[] = []
@@ -247,6 +294,8 @@ export async function listTransactionsPaged(
     ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
     : sql``
   const txAssetIds = filter ? assetIdsScopeSql(filter.assetIds) : sql``
+  const txAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
+  const txStatus = filter ? statusScopeSql(filter.status) : sql``
 
   // Drill-down clauses (mutually exclusive with one another). Income drill is
   // not meaningful in this query (it only targets IncomeTransactions), so it
@@ -264,6 +313,10 @@ export async function listTransactionsPaged(
   const drillExcludesSettlements = drill !== undefined && drill !== null
 
   const setPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+  // Settlements carry amount but no status / split / category / asset — only
+  // amount range is meaningful for them. status='pending' already drops the
+  // entire settlements branch via excludeSettlements.
+  const setAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
 
   // Page-level date scope: feed shows only the selected window. Custom range
   // (from FilterSheet) takes precedence over the legacy single-month param.
@@ -297,6 +350,7 @@ export async function listTransactionsPaged(
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${setCursor}
       ${setPayer}
+      ${setAmount}
       ${setMonth}
       ${epoch}
     `
@@ -339,6 +393,8 @@ export async function listTransactionsPaged(
       ${txSplit}
       ${txCategory}
       ${txAssetIds}
+      ${txAmount}
+      ${txStatus}
       ${txDrillCategory}
       ${txDrillAsset}
       ${txMonth}
@@ -444,15 +500,21 @@ export async function listFeedAllPaged(
     ? sql`AND category IN (${sql.join(filter.categories.map(c => sql`${c}`), sql`, `)})`
     : sql``
   const txFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
+  const txFilterAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
+  const txFilterStatus = filter ? statusScopeSql(filter.status) : sql``
   // Income-only filter active → no cash rows.
   const txFilterCutByIncomeOnly = filter?.cutAll ? sql`AND FALSE` : sql``
 
   const setFilterPayer = filter?.paidBy ? sql`AND paid_by = ${filter.paidBy}` : sql``
+  // Settlements carry amount but no status. status='pending' already drops the
+  // branch via excludeSettlements upstream.
+  const setFilterAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
 
   const incFilterRecipient = filter?.paidBy
     ? sql`AND recipient_id = ${filter.paidBy}`
     : sql``
   const incFilterAssets = filter ? assetIdsScopeSql(filter.assetIds) : sql``
+  const incFilterAmount = filter ? amountScopeSql(filter.amountMin, filter.amountMax) : sql``
   const incFilterIncomeCats = filter && filter.incomeCategories.length > 0
     ? sql`AND category IN (${sql.join(filter.incomeCategories.map(c => sql`${c}`), sql`, `)})`
     : sql``
@@ -463,6 +525,10 @@ export async function listFeedAllPaged(
   const incFilterCategoryCut = expenseOnlyCatActive ? sql`AND FALSE` : sql``
   // 分攤 only exists on cash transactions; if the user picked one, drop income.
   const incFilterSplitCut = filter && filter.splitTypes.length > 0 ? sql`AND FALSE` : sql``
+  // status='pending' is cash-only; income is always 'settled', so the income
+  // branch is dropped wholesale. status='settled' is a no-op for income (all
+  // income rows are settled).
+  const incFilterStatusCut = filter?.status === 'pending' ? sql`AND FALSE` : sql``
 
   const settlementsBranch = filter?.excludeSettlements
     ? sql``
@@ -480,6 +546,7 @@ export async function listFeedAllPaged(
       ${setMonth}
       ${setDrill}
       ${setFilterPayer}
+      ${setFilterAmount}
       ${epoch}
     `
 
@@ -513,6 +580,8 @@ export async function listFeedAllPaged(
       ${txFilterSplit}
       ${txFilterCategory}
       ${txFilterAssets}
+      ${txFilterAmount}
+      ${txFilterStatus}
       ${txFilterCutByIncomeOnly}
       ${epoch}
 
@@ -532,9 +601,11 @@ export async function listFeedAllPaged(
       ${incDrill}
       ${incFilterRecipient}
       ${incFilterAssets}
+      ${incFilterAmount}
       ${incFilterIncomeCats}
       ${incFilterCategoryCut}
       ${incFilterSplitCut}
+      ${incFilterStatusCut}
       ${epoch}
     ) AS feed
     WHERE TRUE ${cur}
@@ -627,7 +698,9 @@ function statsScopeClauses(
     }
     return sql`AND (${col} IS NULL OR ${col} IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
   })()
-  return sql`${dateClause} ${payer} ${split} ${cats} ${assets}`
+  const amount = filter ? amountScopeSql(filter.amountMin, filter.amountMax, `${a}amount`) : sql``
+  const status = filter ? statusScopeSql(filter.status, `${a}status`) : sql``
+  return sql`${dateClause} ${payer} ${split} ${cats} ${assets} ${amount} ${status}`
 }
 
 /**

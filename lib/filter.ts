@@ -1,10 +1,13 @@
 import { isValidCategoryId, type CategoryId } from '@/lib/categories'
 import { isValidIncomeCategoryId, type IncomeCategoryId } from '@/lib/incomeCategories'
 import type { SplitType } from '@/lib/balance'
+import type { RecordStatus } from '@/lib/validators'
 
 /** Single-select dimensions use 'all' to mean "no filter". Multi-select dimensions use empty Set. */
 export type PayerFilter = 'all' | 'mine' | 'theirs'
 export type SplitFilter = 'all' | SplitType  // 'all' | 'all_mine' | 'all_theirs' | 'half'
+/** Status filter — 'pending'/'settled' from RecordStatus, plus 'all' sentinel for no filter. */
+export type StatusFilter = 'all' | RecordStatus
 
 /**
  * Date scope. `month` is the legacy single-month mode (drives MonthSwitcher);
@@ -31,6 +34,21 @@ export interface TxnFilter {
    * sentinel for transactions/income with no asset_id (歸「未歸屬」). Multi-select.
    */
   assetIds: Set<string>
+  /**
+   * Inclusive lower / upper bounds on row amount (NT$ integers). `null` = open
+   * on that side. Both null = no amount filter. `min > max` is tolerated
+   * (matches nothing) so the SQL doesn't have to special-case the inversion.
+   */
+  amountMin: number | null
+  amountMax: number | null
+  /**
+   * Status filter (v2). 'all' = no filter; 'pending' = only未扣款 cash; 'settled'
+   * = only已扣款. Settlements + IncomeTransactions are always 'settled', so a
+   * 'pending' filter drops them entirely (mirrors how the split / category dims
+   * drop settlements). The cross-kind cut for 'pending' is wired through
+   * `cutsIncome` / `hidesSettlements`.
+   */
+  status: StatusFilter
 }
 
 export function defaultFilter(): TxnFilter {
@@ -40,6 +58,9 @@ export function defaultFilter(): TxnFilter {
     categories: new Set(),
     incomeCategories: new Set(),
     assetIds: new Set(),
+    amountMin: null,
+    amountMax: null,
+    status: 'all',
   }
 }
 
@@ -50,7 +71,10 @@ export function isFilterActive(f: TxnFilter): boolean {
     f.split !== 'all' ||
     f.categories.size > 0 ||
     f.incomeCategories.size > 0 ||
-    f.assetIds.size > 0
+    f.assetIds.size > 0 ||
+    f.amountMin !== null ||
+    f.amountMax !== null ||
+    f.status !== 'all'
   )
 }
 
@@ -65,7 +89,9 @@ export function cutsIncome(f: TxnFilter): boolean {
   // also pick up income rows. If both are set, the user wants "expense in
   // these cats AND income in these incCats" — both kinds shown.
   const expenseOnlyCat = f.categories.size > 0 && f.incomeCategories.size === 0
-  return f.split !== 'all' || expenseOnlyCat
+  // status='pending' is cash-only: income rows are always settled and can
+  // never satisfy the pending predicate, so the income branch is short-circuited.
+  return f.split !== 'all' || expenseOnlyCat || f.status === 'pending'
 }
 
 /**
@@ -88,7 +114,10 @@ export function hidesSettlements(f: TxnFilter): boolean {
     f.split !== 'all' ||
     f.categories.size > 0 ||
     f.incomeCategories.size > 0 ||
-    f.assetIds.size > 0
+    f.assetIds.size > 0 ||
+    // status='pending' drops settlements (they're always settled). status='settled'
+    // keeps them — that's exactly the rows settlements naturally are.
+    f.status === 'pending'
   )
 }
 
@@ -100,6 +129,11 @@ export interface TxnFilterWire {
   categories: CategoryId[]
   incomeCategories: IncomeCategoryId[]
   assetIds: string[]
+  /** Both optional for back-compat; absent = null bound. */
+  amountMin?: number | null
+  amountMax?: number | null
+  /** Optional for back-compat; absent = 'all'. */
+  status?: StatusFilter
 }
 
 export function toWire(f: TxnFilter): TxnFilterWire {
@@ -109,6 +143,9 @@ export function toWire(f: TxnFilter): TxnFilterWire {
     categories: Array.from(f.categories),
     incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),
+    amountMin: f.amountMin,
+    amountMax: f.amountMax,
+    status: f.status,
   }
 }
 
@@ -119,6 +156,9 @@ export function fromWire(w: TxnFilterWire): TxnFilter {
     categories: new Set(w.categories),
     incomeCategories: new Set(w.incomeCategories ?? []),
     assetIds: new Set(w.assetIds ?? []),
+    amountMin: w.amountMin ?? null,
+    amountMax: w.amountMax ?? null,
+    status: w.status ?? 'all',
   }
 }
 
@@ -130,6 +170,10 @@ export interface FilterableRow {
   kind: 'transaction' | 'settlement'
   /** null when the row is unassigned (matches against ASSET_FILTER_NONE). */
   assetId?: string | null
+  /** Row amount in NT$ (integer). Required for amount-range matching. */
+  amount?: number
+  /** Row status. Settlements are always 'settled'; transactions can be either. */
+  status?: RecordStatus
 }
 
 /**
@@ -158,9 +202,17 @@ export function matchesFilter(
     if (!partnerId || row.paidBy !== partnerId) return false
   }
 
+  // 金額 dimension applies to BOTH transactions and settlements (both have
+  // amount). Inclusive bounds; null on either side = open.
+  if (row.amount !== undefined) {
+    if (filter.amountMin !== null && row.amount < filter.amountMin) return false
+    if (filter.amountMax !== null && row.amount > filter.amountMax) return false
+  }
+
   // Settlements pass through if no transaction-only dim is active.
   // If split, categories, incomeCategories, OR assetIds filter is active,
-  // settlements are dropped entirely.
+  // settlements are dropped entirely. status='pending' also drops them
+  // (settlements are always 'settled').
   if (row.kind === 'settlement') {
     return !hidesSettlements(filter)
   }
@@ -186,6 +238,14 @@ export function matchesFilter(
     if (!filter.assetIds.has(key)) return false
   }
 
+  // status dimension — only meaningful on cash transactions. When the row
+  // carries a status, narrow by it; if absent (legacy callers), assume
+  // 'settled' so a 'pending' filter still drops it correctly.
+  if (filter.status !== 'all') {
+    const rowStatus: RecordStatus = row.status ?? 'settled'
+    if (rowStatus !== filter.status) return false
+  }
+
   return true
 }
 
@@ -201,12 +261,16 @@ export function matchesFilter(
 //   ?fCats=dining,transit             (comma-separated CategoryIds)
 //   ?fIncCats=salary,bonus            (comma-separated IncomeCategoryIds)
 //   ?fAssets=<uuid>,<uuid>,__none__   (comma-separated; sentinel for no-asset)
+//   ?fAmtMin=N                        (inclusive lower bound, non-negative integer)
+//   ?fAmtMax=N                        (inclusive upper bound, non-negative integer)
+//   ?fStatus=pending|settled          (record status; absent = both)
 //   ?from=YYYY-MM-DD&to=YYYY-MM-DD    (custom date range; both required together)
 //   ?range=all                        (sentinel for "all-time"; overrides ?month)
 //   ?month=YYYY-MM                    (legacy single-month scope; pre-existing)
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const ISO_DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
+const NON_NEG_INT_RE = /^\d+$/
 
 function isValidPayer(s: string | null): s is PayerFilter {
   return s === 'mine' || s === 'theirs' || s === 'all'
@@ -214,8 +278,25 @@ function isValidPayer(s: string | null): s is PayerFilter {
 function isValidSplit(s: string | null): s is SplitFilter {
   return s === 'all' || s === 'all_mine' || s === 'all_theirs' || s === 'half' || s === 'weighted'
 }
+function isValidStatus(s: string | null): s is StatusFilter {
+  return s === 'all' || s === 'pending' || s === 'settled'
+}
 function isValidAssetMember(s: string): boolean {
   return s === ASSET_FILTER_NONE || UUID_RE.test(s)
+}
+/**
+ * Parse a non-negative integer amount from URL. Returns null on absent or
+ * malformed input — keeps the "tampered URL = no filter on that dim, never
+ * throw" contract. Decimal / negative / non-numeric all fall through.
+ */
+function parseAmountParam(s: string | null): number | null {
+  if (s === null) return null
+  const trimmed = s.trim()
+  if (trimmed === '' || !NON_NEG_INT_RE.test(trimmed)) return null
+  const n = Number(trimmed)
+  // Number.isFinite guards against the (impossibly long) overflow case.
+  if (!Number.isFinite(n)) return null
+  return n
 }
 
 /**
@@ -265,6 +346,12 @@ export function parseFilterFromSearchParams(
     }
   }
 
+  f.amountMin = parseAmountParam(params.get('fAmtMin'))
+  f.amountMax = parseAmountParam(params.get('fAmtMax'))
+
+  const status = params.get('fStatus')
+  if (status && isValidStatus(status) && status !== 'all') f.status = status
+
   return f
 }
 
@@ -275,6 +362,9 @@ export function parseFilterFromRecord(rec: {
   fCats?: string
   fIncCats?: string
   fAssets?: string
+  fAmtMin?: string
+  fAmtMax?: string
+  fStatus?: string
 }): TxnFilter {
   const fakeParams = {
     get: (name: string) => {
@@ -306,6 +396,15 @@ export function applyFilterToParams(params: URLSearchParams, f: TxnFilter): void
 
   if (f.assetIds.size > 0) params.set('fAssets', Array.from(f.assetIds).sort().join(','))
   else params.delete('fAssets')
+
+  if (f.amountMin !== null) params.set('fAmtMin', String(f.amountMin))
+  else params.delete('fAmtMin')
+
+  if (f.amountMax !== null) params.set('fAmtMax', String(f.amountMax))
+  else params.delete('fAmtMax')
+
+  if (f.status !== 'all') params.set('fStatus', f.status)
+  else params.delete('fStatus')
 }
 
 // ─── Date range URL encoding ──────────────────────────────────────────────────
