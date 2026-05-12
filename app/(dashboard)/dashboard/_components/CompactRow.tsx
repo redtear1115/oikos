@@ -61,7 +61,11 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const myShare = tx.kind === 'transaction'
     ? (payerIsViewer ? tx.amount - delta : -delta)
     : 0
-  const showMyShare = tx.kind === 'transaction'
+  // Hide the chip entirely when the viewer carries no share — a gray "我 $0"
+  // is visual noise; absence reads cleaner than a muted zero.
+  const showMyShare = tx.kind === 'transaction' && myShare !== 0
+  // 支出分攤 → debit (red); 收入分攤 → credit (green).
+  const myShareColor = tx.kind === 'income' ? 'var(--credit)' : 'var(--debit)'
 
   // For income rows, fall back to category label when source/description is empty.
   const displayLabel = tx.kind === 'income'
@@ -116,7 +120,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           NT${tx.amount.toLocaleString('en-US')}
         </div>
         {showMyShare && (
-          <div className="tnum text-micro mt-px" style={{ color: 'var(--ink-2)' }}>
+          <div className="tnum text-micro mt-px" style={{ color: myShareColor }}>
             {t.compactRow.myShareLabel} ${myShare.toLocaleString('en-US')}
           </div>
         )}
