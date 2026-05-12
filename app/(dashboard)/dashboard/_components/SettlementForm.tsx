@@ -17,7 +17,7 @@ interface Props {
   /** True if viewer owes partner (viewer is debtor). False if viewer is owed. */
   viewerIsDebtor: boolean
   onClose: () => void
-  onMutated: () => void
+  onMutated: (info?: { savedAmount?: number; edit?: boolean; deleted?: boolean }) => void
 }
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
@@ -66,7 +66,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
           payerId,
           settledAt: ymdToUTCNoon(date),
         })
-        onMutated()
+        onMutated({ savedAmount: parsed })
         onClose()
       } catch (e) {
         setError(describeError(e, t.common.error, t.common.offlineError))

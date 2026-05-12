@@ -24,8 +24,10 @@ interface Props {
    * is hidden because the two views are identical. Issue #164.
    */
   pendingBalanceDelta?: number
-  /** Called after a successful settlement so the parent can router.refresh(). */
-  onSettleMutated?: () => void
+  /** Called after a successful settlement so the parent can router.refresh().
+   *  Optional `info.savedAmount` carries the settlement amount so the parent
+   *  can surface a success toast. */
+  onSettleMutated?: (info?: { savedAmount?: number; edit?: boolean; deleted?: boolean }) => void
   // Mode toggle:
   mode: 'expense' | 'income'
   onModeChange: (m: 'expense' | 'income') => void
@@ -300,7 +302,7 @@ export function BalanceHero({
               debtAmount={amount}
               viewerIsDebtor={balance < 0}
               onClose={() => setSettleOpen(false)}
-              onMutated={() => onSettleMutated?.()}
+              onMutated={(info) => onSettleMutated?.(info)}
             />
           )}
         </div>

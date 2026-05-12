@@ -34,6 +34,18 @@ import { useTranslations } from '@/lib/i18n/client'
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 const incomeLoader = makeIncomeLoader(20)
 
+/** Info every sheet hands back through onMutated so Dashboard can drive a
+ *  success toast + the first-record card without each sheet owning its own
+ *  toast state. `savedAmount` is the integer TWD value just written;
+ *  `edit` distinguishes "updated" vs "recorded" copy; `deleted` overrides
+ *  both with a flat acknowledgement. */
+export type MutatedInfo = {
+  isFirstTransaction?: boolean
+  savedAmount?: number
+  edit?: boolean
+  deleted?: boolean
+}
+
 type ModalState =
   | { kind: 'closed' }
   | { kind: 'add' }
@@ -119,13 +131,14 @@ export function Dashboard({
   // refresh re-runs the server tree without unmounting client state.
   const [showFirstCard, setShowFirstCard] = useState(false)
 
-  // Lightweight transient toast (e.g. partner-race notice from IncomeSheet).
+  // Lightweight transient toast — surfaced both for partner-race notices and
+  // for every successful create / edit / delete via handleMutated.
   const [toast, setToast] = useState<string | null>(null)
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, durationMs = 2500) => {
     setToast(msg)
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => setToast(null), 2500)
+    toastTimerRef.current = setTimeout(() => setToast(null), durationMs)
   }
   useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current) }, [])
 
@@ -223,8 +236,14 @@ export function Dashboard({
   const handleClose = () => dispatch({ kind: 'closed' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
 
-  const handleMutated = (info?: { isFirstTransaction?: boolean }) => {
+  const handleMutated = (info?: MutatedInfo) => {
     if (info?.isFirstTransaction) setShowFirstCard(true)
+    if (info?.deleted) {
+      showToast(t.common.toast.deleted, 1500)
+    } else if (info?.savedAmount != null) {
+      const tmpl = info.edit ? t.common.toast.updated : t.common.toast.recorded
+      showToast(tmpl.replace('{amount}', info.savedAmount.toLocaleString('en-US')), 1500)
+    }
     router.refresh()
   }
 
