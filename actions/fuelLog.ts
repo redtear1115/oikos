@@ -6,6 +6,7 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { validateFuelLogInput, type FuelLogInputRaw } from '@/lib/validators'
 import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 
 /**
@@ -17,10 +18,9 @@ import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
  * paidBy / splitType are taken from form input (Q4 B1 — user picks per-fill).
  */
 export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: string }> {
-  // Validate input first (rejects fuelType=electric per EV1, etc.) — runs before any DB hit.
-  const validated = validateFuelLogInput(input)
+  const { group } = await getViewerWriteContext()
 
-  const { group } = await requireViewerGroup()
+  const validated = validateFuelLogInput(input)
 
   // Asset must belong to the viewer's group and not be soft-deleted.
   const [asset] = await db
@@ -97,9 +97,9 @@ export interface EditFuelLogInput extends FuelLogInputRaw {
  * not in viewer's group, or if the payer is not a current group member.
  */
 export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string }> {
-  const validated = validateFuelLogInput(input)
+  const { group } = await getViewerWriteContext()
 
-  const { group } = await requireViewerGroup()
+  const validated = validateFuelLogInput(input)
 
   // Look up existing fuel log; reject if missing or already soft-deleted.
   const [existingLog] = await db
@@ -210,7 +210,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
  * Phase 1 softDeleteTransaction semantics — no silent no-op on stale clicks).
  */
 export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
 
   // Look up the fuel log; reject if missing or already soft-deleted (idempotency).
   const [existingLog] = await db
