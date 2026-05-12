@@ -301,6 +301,23 @@ export async function getCarAssets(): Promise<CarAsset[]> {
     .map(r => ({ id: r.id, name: r.name, plate: r.plate }))
 }
 
+export interface ChildAsset {
+  id: string
+  name: string
+}
+
+/**
+ * #167 — Non-deleted child assets for the viewer's group, used by the
+ * insurance form to bind 被保人 to a Child 愛物 (insured_child_id).
+ */
+export async function getChildAssets(): Promise<ChildAsset[]> {
+  const { group } = await getViewerGroup()
+  const rows = await listAssetsForGroup(group.id)
+  return rows
+    .filter(r => r.type === 'child')
+    .map(r => ({ id: r.id, name: r.name }))
+}
+
 /**
  * Lightweight asset list for AssetPickerSheet — name + plate only, excludes
  * deleted assets (new transaction links can never point at zombies).
@@ -696,6 +713,7 @@ export interface CreateInsuranceInput {
   name: string
   kind?: string | null
   insured?: string | null
+  insuredChildId?: string | null
   policyHolderUserId?: string | null
   insurer?: string | null
   policyNo?: string | null
@@ -713,6 +731,21 @@ export interface CreateInsuranceInput {
 
 export interface EditInsuranceInput extends CreateInsuranceInput {
   id: string
+}
+
+/**
+ * #167 — verifies that `insured_child_id` points at a non-deleted Child 愛物
+ * belonging to the viewer's group. Mirrors the vehicleId guard pattern.
+ */
+async function assertInsuredChildInGroup(childId: string, groupId: string): Promise<void> {
+  const [child] = await db
+    .select({ id: assets.id, type: assets.type, deletedAt: assets.deletedAt })
+    .from(assets)
+    .where(and(eq(assets.id, childId), eq(assets.groupId, groupId)))
+    .limit(1)
+  if (!child || child.type !== 'child' || child.deletedAt) {
+    throw new Error('無效的被保小孩')
+  }
 }
 
 export async function createInsurance(input: CreateInsuranceInput): Promise<{ id: string }> {
@@ -735,6 +768,16 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
     assertPolicyHolderInGroup(validated.policyHolderUserId, group)
   }
 
+  if (validated.insuredChildId) {
+    await assertInsuredChildInGroup(validated.insuredChildId, group.id)
+  }
+
+  // #167 — `insured_type` discriminates between a Child 愛物 link and the
+  // freeform `insured` text. The two are mutually exclusive: linking a child
+  // clears the text so the child name is the source of truth.
+  const insuredType = validated.insuredChildId ? 'child' : 'user'
+  const insuredText = validated.insuredChildId ? null : validated.insured
+
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
@@ -743,7 +786,8 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
     await tx.insert(insuranceDetails).values({
       assetId: asset.id,
       insuranceType: validated.kind,
-      insured: validated.insured,
+      insured: insuredText,
+      insuredChildId: validated.insuredChildId,
       policyHolderUserId: validated.policyHolderUserId,
       insurer: validated.insurer,
       policyNumber: validated.policyNo,
@@ -753,7 +797,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       startsAt: validated.startsAt,
       expiryDate: validated.endsAt,
       termYears: validated.termYears,
-      insuredType: 'user',
+      insuredType,
       vehicleId: validated.vehicleId,
       expectedMaturityAmount: validated.expectedMaturityAmount,
       reminderDaysBefore: validated.reminderDaysBefore,
@@ -785,6 +829,13 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
     assertPolicyHolderInGroup(validated.policyHolderUserId, group)
   }
 
+  if (validated.insuredChildId) {
+    await assertInsuredChildInGroup(validated.insuredChildId, group.id)
+  }
+
+  const insuredType = validated.insuredChildId ? 'child' : 'user'
+  const insuredText = validated.insuredChildId ? null : validated.insured
+
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
@@ -803,7 +854,8 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
       .values({
         assetId: input.id,
         insuranceType: validated.kind,
-        insured: validated.insured,
+        insured: insuredText,
+        insuredChildId: validated.insuredChildId,
         policyHolderUserId: validated.policyHolderUserId,
         insurer: validated.insurer,
         policyNumber: validated.policyNo,
@@ -813,7 +865,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         startsAt: validated.startsAt,
         expiryDate: validated.endsAt,
         termYears: validated.termYears,
-        insuredType: 'user',
+        insuredType,
         vehicleId: validated.vehicleId,
         expectedMaturityAmount: validated.expectedMaturityAmount,
         reminderDaysBefore: validated.reminderDaysBefore,
@@ -822,7 +874,9 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         target: insuranceDetails.assetId,
         set: {
           insuranceType: validated.kind,
-          insured: validated.insured,
+          insured: insuredText,
+          insuredChildId: validated.insuredChildId,
+          insuredType,
           policyHolderUserId: validated.policyHolderUserId,
           insurer: validated.insurer,
           policyNumber: validated.policyNo,

@@ -666,6 +666,7 @@ export const ja: Translations = {
       kindSavings: '貯蓄',
       insured: '被保険者',
       insuredPlaceholder: 'たろう',
+      insuredFreeform: '手入力',
       policyHolder: '契約者',
       insurer: '保険会社',
       insurerPlaceholder: '南山生命',

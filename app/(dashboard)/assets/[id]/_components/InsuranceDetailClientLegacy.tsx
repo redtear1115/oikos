@@ -138,7 +138,8 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       <SectionHeader>{td.sectionContract}</SectionHeader>
       <InfoCard>
         <InfoRow label={td.kind} value={details?.kind ? `${lookupKindLabel(details.kind, td)}${details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : ''}` : ''} />
-        <InfoRow label={td.insured} value={details?.insured ?? ''} />
+        {/* #167 — linked Child 愛物 name wins over the freeform `insured` text when set. */}
+        <InfoRow label={td.insured} value={details?.insuredChildName ?? details?.insured ?? ''} />
         <InfoRow label={td.insurer} value={details?.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details?.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details?.payCycle, td)} last />
