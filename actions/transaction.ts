@@ -281,6 +281,9 @@ function resolveTxnFilter(
     categories: Array.from(f.categories),
     incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),
+    amountMin: f.amountMin,
+    amountMax: f.amountMax,
+    status: f.status === 'all' ? null : f.status,
     excludeSettlements: hidesSettlements(f),
     cutAll: cutsExpense(f),
   }

@@ -10,6 +10,7 @@ import {
   type DateRange,
   type PayerFilter,
   type SplitFilter,
+  type StatusFilter,
   type TxnFilter,
 } from '@/lib/filter'
 import { addMonths, currentMonthKey } from '@/lib/monthKey'
@@ -105,6 +106,18 @@ export function FilterSheet({
   const [customEnd, setCustomEnd] = useState<string>(
     currentDateRange?.kind === 'range' ? currentDateRange.end : todayIso(),
   )
+  /**
+   * Amount-range inputs are kept as text strings so the user can hold an
+   * intermediate empty state without losing focus. Parsing happens at apply
+   * time: '' → null (open), valid non-negative int → number, anything else
+   * → null (silently dropped, matches the URL parser's behavior).
+   */
+  const [amountMinText, setAmountMinText] = useState<string>(
+    currentFilter.amountMin === null ? '' : String(currentFilter.amountMin),
+  )
+  const [amountMaxText, setAmountMaxText] = useState<string>(
+    currentFilter.amountMax === null ? '' : String(currentFilter.amountMax),
+  )
   const [shareToast, setShareToast] = useState('')
 
   const PAYER_OPTIONS: { value: PayerFilter; label: string }[] = [
@@ -121,6 +134,12 @@ export function FilterSheet({
     { value: 'all_theirs',  label: t.splitType.theirs },
   ]
 
+  const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+    { value: 'all',     label: t.common.all },
+    { value: 'pending', label: t.filterSheet.statusPending },
+    { value: 'settled', label: t.filterSheet.statusSettled },
+  ]
+
   // Re-seed the draft whenever the sheet (re-)opens — without this, dismissing without
   // applying and reopening would show the stale draft instead of the live state.
   useEffect(() => {
@@ -131,6 +150,8 @@ export function FilterSheet({
         incomeCategories: new Set(currentFilter.incomeCategories),
         assetIds: new Set(currentFilter.assetIds),
       })
+      setAmountMinText(currentFilter.amountMin === null ? '' : String(currentFilter.amountMin))
+      setAmountMaxText(currentFilter.amountMax === null ? '' : String(currentFilter.amountMax))
       if (currentDateRange) {
         setDraftMode(dateRangeToMode(currentDateRange, effectiveDefaultMonthKey))
         if (currentDateRange.kind === 'range') {
@@ -179,8 +200,23 @@ export function FilterSheet({
     return { kind: 'range', start, end }
   }
 
+  /**
+   * Parse the text input to a non-negative integer or null. Empty / blank /
+   * non-numeric / negative / decimal all collapse to null — matches the URL
+   * parser's "tampered = no filter on that dim" contract. Caller still has
+   * to clamp the inputs to integers via inputMode/pattern in the UI.
+   */
+  const parseAmountInput = (s: string): number | null => {
+    const trimmed = s.trim()
+    if (trimmed === '' || !/^\d+$/.test(trimmed)) return null
+    const n = Number(trimmed)
+    return Number.isFinite(n) ? n : null
+  }
+
   const handleApply = () => {
-    onApply(draft, liteMode ? undefined : resolveDraftRange())
+    const amountMin = parseAmountInput(amountMinText)
+    const amountMax = parseAmountInput(amountMaxText)
+    onApply({ ...draft, amountMin, amountMax }, liteMode ? undefined : resolveDraftRange())
   }
 
   const handleReset = () => {
@@ -190,14 +226,23 @@ export function FilterSheet({
       categories: new Set(),
       incomeCategories: new Set(),
       assetIds: new Set(),
+      amountMin: null,
+      amountMax: null,
+      status: 'all',
     })
+    setAmountMinText('')
+    setAmountMaxText('')
     setDraftMode('thisMonth')
     onReset?.()
   }
 
   const handleShare = async () => {
     if (!onShare) return
-    const url = onShare(draft, resolveDraftRange())
+    // Share the same draft the user would Apply — including the live
+    // amount-range input, not the pre-edit Set state.
+    const amountMin = parseAmountInput(amountMinText)
+    const amountMax = parseAmountInput(amountMaxText)
+    const url = onShare({ ...draft, amountMin, amountMax }, resolveDraftRange())
     try {
       // navigator.clipboard requires a secure context (https or localhost).
       // Vercel preview / prod / `npm run dev` all qualify, so we don't bother
@@ -339,6 +384,60 @@ export function FilterSheet({
               ))}
             </Section>
           )}
+
+          {/* 狀態 (single-select) — pending / settled / all. Settlements +
+              income are always 'settled' (filter.status='pending' drops them).
+              Always rendered, including lite mode — pending tags exist in solo
+              groups too, so the filter is meaningful regardless of pair-mode. */}
+          <Section title={t.filterSheet.statusSection}>
+            {STATUS_OPTIONS.map((o) => (
+              <Chip
+                key={o.value}
+                label={o.label}
+                active={draft.status === o.value}
+                onClick={() => setDraft({ ...draft, status: o.value })}
+              />
+            ))}
+          </Section>
+
+          {/* 金額範圍 — inclusive min/max in NT$ (integers; no decimals).
+              Empty input on either side = open bound. Applies to all kinds
+              (cash / settlement / income), so it stays visible in lite mode. */}
+          <Section title={t.filterSheet.amountSection}>
+            <div className="flex items-center gap-2 w-full">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={amountMinText}
+                onChange={(e) => setAmountMinText(e.target.value)}
+                placeholder={t.filterSheet.amountMinPlaceholder}
+                aria-label={t.filterSheet.amountMinLabel}
+                className="h-9 px-2 rounded-lg text-sm flex-1 min-w-0"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--ink)',
+                }}
+              />
+              <span style={{ color: 'var(--ink-3)' }}>→</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={amountMaxText}
+                onChange={(e) => setAmountMaxText(e.target.value)}
+                placeholder={t.filterSheet.amountMaxPlaceholder}
+                aria-label={t.filterSheet.amountMaxLabel}
+                className="h-9 px-2 rounded-lg text-sm flex-1 min-w-0"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--ink)',
+                }}
+              />
+            </div>
+          </Section>
 
           {/* 分類 (multi) — expense vocabulary. */}
           <Section title={t.filterSheet.categorySection}>

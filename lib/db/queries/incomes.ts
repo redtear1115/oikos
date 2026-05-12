@@ -40,6 +40,9 @@ export interface ResolvedIncomeFilter {
   assetIds: string[]   // empty = all; ASSET_FILTER_NONE for unassigned
   /** Empty = all income categories pass. Narrows by IncomeCategoryId membership. */
   incomeCategories: string[]
+  /** Inclusive amount bounds (NT$ integers). null on either side = open. */
+  amountMin: number | null
+  amountMax: number | null
   /** True when an expense-only dim is active and income rows should be hidden. */
   cutAll: boolean
 }
@@ -117,6 +120,12 @@ export async function listIncomesPaged(
     conditions.push(
       sql`${incomeTransactions.category} IN (${sql.join(filter.incomeCategories.map((c) => sql`${c}`), sql`, `)})`,
     )
+  }
+  if (filter && filter.amountMin !== null) {
+    conditions.push(sql`${incomeTransactions.amount} >= ${filter.amountMin}`)
+  }
+  if (filter && filter.amountMax !== null) {
+    conditions.push(sql`${incomeTransactions.amount} <= ${filter.amountMax}`)
   }
 
   const assetCl = filter ? assetIdsClause(filter.assetIds) : null
@@ -237,6 +246,18 @@ export async function monthlyIncomeStatsByCategory(
     return sql`AND (asset_id IS NULL OR asset_id IN (${sql.join(uuids.map((u) => sql`${u}::uuid`), sql`, `)}))`
   })()
 
+  const amountClause = (() => {
+    if (!filter) return sql``
+    if (filter.amountMin === null && filter.amountMax === null) return sql``
+    if (filter.amountMin !== null && filter.amountMax === null) {
+      return sql`AND amount >= ${filter.amountMin}`
+    }
+    if (filter.amountMin === null && filter.amountMax !== null) {
+      return sql`AND amount <= ${filter.amountMax}`
+    }
+    return sql`AND amount BETWEEN ${filter.amountMin} AND ${filter.amountMax}`
+  })()
+
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
     SELECT
       category,
@@ -249,6 +270,7 @@ export async function monthlyIncomeStatsByCategory(
       ${recipientClause}
       ${incomeCatClause}
       ${assetClause}
+      ${amountClause}
       ${epochClause}
     GROUP BY category
     ORDER BY total DESC
