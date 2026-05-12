@@ -112,6 +112,9 @@ export const ja: Translations = {
     youOwePartner: 'が相手に借り中',
     currentlyEven: '差額なし',
     currentlyLabel: '現在',
+    modeSettledLabel: '現在',
+    modeIncludePendingLabel: '精算後',
+    modeToggleAriaLabel: '「現在」と「精算後」の残高を切り替え',
   },
 
   soloBanner: {
