@@ -78,8 +78,8 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
             }} />
         </div>
         {isWeighted && (
-          <div className="flex flex-col gap-1 pt-1" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between text-xs" style={{ color: 'var(--ink-3)' }}>
+          <div className="flex flex-col gap-1 pt-1 w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between text-xs w-full" style={{ color: 'var(--ink-3)' }}>
               <span>我 {splitRatioA}%</span>
               <span>對方 {100 - splitRatioA}%</span>
             </div>
