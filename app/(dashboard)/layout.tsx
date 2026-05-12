@@ -59,6 +59,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     } : null,
     viewerIsA,
     isSolo: !partnerProfile,
+    isPast: epochWindow.isPast,
   }
 
   return (
