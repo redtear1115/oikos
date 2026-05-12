@@ -114,6 +114,12 @@ export type Translations = {
     youOwePartner: string
     currentlyEven: string
     currentlyLabel: string
+    /** Toggle label for the settled-only balance view (issue #164). */
+    modeSettledLabel: string
+    /** Toggle label for the include-pending balance view (issue #164). */
+    modeIncludePendingLabel: string
+    /** Aria label for the settled/include-pending toggle. */
+    modeToggleAriaLabel: string
   }
 
   soloBanner: {
@@ -1243,6 +1249,9 @@ export const zhTW: Translations = {
     youOwePartner: '欠對方',
     currentlyEven: '打平',
     currentlyLabel: '目前',
+    modeSettledLabel: '現在',
+    modeIncludePendingLabel: '結算後',
+    modeToggleAriaLabel: '切換 顯示「現在」或「結算後」金額',
   },
 
   soloBanner: {
