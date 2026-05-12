@@ -36,7 +36,11 @@ export default async function RecordsPage({
     fPayer?: string
     fSplit?: string
     fCats?: string
+    fIncCats?: string
     fAssets?: string
+    fAmtMin?: string
+    fAmtMax?: string
+    fStatus?: string
   }>
 }) {
   const user = await getCurrentUser()
@@ -77,6 +81,9 @@ export default async function RecordsPage({
     || filter.categories.size > 0
     || filter.incomeCategories.size > 0
     || filter.assetIds.size > 0
+    || filter.amountMin !== null
+    || filter.amountMax !== null
+    || filter.status !== 'all'
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
   const resolvedPaidBy =
     filter.payer === 'mine'
@@ -91,6 +98,9 @@ export default async function RecordsPage({
         categories: Array.from(filter.categories),
         incomeCategories: Array.from(filter.incomeCategories),
         assetIds: Array.from(filter.assetIds),
+        amountMin: filter.amountMin,
+        amountMax: filter.amountMax,
+        status: filter.status === 'all' ? null : filter.status,
         excludeSettlements: hidesSettlements(filter),
         cutAll: cutsExpense(filter),
       }
@@ -100,6 +110,8 @@ export default async function RecordsPage({
         recipientId: resolvedPaidBy,
         assetIds: Array.from(filter.assetIds),
         incomeCategories: Array.from(filter.incomeCategories),
+        amountMin: filter.amountMin,
+        amountMax: filter.amountMax,
         cutAll: cutsIncome(filter),
       }
     : undefined
