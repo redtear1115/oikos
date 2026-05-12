@@ -386,6 +386,28 @@ export const monthlyReviewSnapshots = pgTable('MonthlyReviewSnapshots', {
   bannerDismissedByMemberBAt: timestamp('banner_dismissed_by_member_b_at', { withTimezone: true }),
 })
 
+// v0.15.2 #163 — PartnerQuiz: 6 題池抽 3，兩人各自獨立作答，全部到齊後 reveal。
+// One quiz per group (UNIQUE group_id) — MVP 鎖一次；未來放寬只需移除 constraint。
+export const partnerQuizSessions = pgTable('PartnerQuizSessions', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().unique().references(() => oikosGroups.id),
+  // Picked 3 keys, persisted so re-entering the answer page never re-randomises.
+  // Append-only at the dictionary level — keys are static i18n config, not data.
+  questionKeys: text('question_keys').array().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // Written in the same transaction as the 6th answer; NULL = waiting for partner.
+  revealedAt: timestamp('revealed_at', { withTimezone: true }),
+})
+
+export const partnerQuizAnswers = pgTable('PartnerQuizAnswers', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: uuid('session_id').notNull().references(() => partnerQuizSessions.id),
+  memberId: uuid('member_id').notNull().references(() => profiles.id),
+  questionKey: text('question_key').notNull(),
+  choiceKey: text('choice_key').notNull(),
+  answeredAt: timestamp('answered_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 export const monthlyReviewMessages = pgTable('MonthlyReviewMessages', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),

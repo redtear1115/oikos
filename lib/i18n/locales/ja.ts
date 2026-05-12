@@ -1028,6 +1028,88 @@ export const ja: Translations = {
     },
   },
 
+  quiz: {
+    cardHeadingInvitation: 'まだお互いを知り尽くしていない — 3 つだけ答えてみよう',
+    cardHeadingSelfPendingPartnerDone: '相手は答え終わったよ。次は君の番',
+    cardHeadingSelfPendingPartnerPending: 'お金の考え方を 3 問だけ — 答えてみよう',
+    cardHeadingSelfDonePartnerPending: '答え終わったよ。{partnerName} さんを待って一緒に開けよう',
+    cardHeadingRevealed: '二人のお金の組み合わせを見てみよう',
+    cardCtaStart: '→ はじめる',
+    cardCtaReveal: '→ 結果を見る',
+    answerEyebrow: 'お互いを知る',
+    answerProgress: '{current} / {total}',
+    answerCta: '続ける',
+    answerCtaFinal: 'この 3 問を送る',
+    answerErrorChooseOne: '一つ選んでから次へ進んでね',
+    answerBack: 'ふりかえりに戻る',
+    waitingHeading: '答え終わったよ。相手と一緒に開けよう',
+    waitingBody: '君の答えはそっとしまっておくよ。相手も答えたら、一緒に開けよう。',
+    waitingBackToReview: 'ふりかえりページへ戻る',
+    revealHeading: '二人のお金の組み合わせ',
+    revealedAtLine: '{date} に開いた',
+    revealSameAnswer: 'これは同じ向きを向いているね',
+    revealFraming: '君は朝日、相手は月明かり — 違う時間に、同じ家を照らしている。どっちの答えが正しいわけじゃない。相手が気にしていることを、覚えていればそれでいい。',
+    revealHeaderA: 'あなた',
+    revealHeaderB: '相手',
+    soloFallback: 'これは二人で答える 3 問。相手が家計簿に加わったら、また来てね。',
+    errorNotFound: 'この問答が見つかりません',
+    errors: {
+      submitFailed: '送信できませんでした。少し待ってから試してください',
+      alreadyAnswered: 'もう答え終わっているよ',
+      solo: '一人ではまだ答えられないよ',
+    },
+    questions: {
+      impulse: {
+        prompt: 'すごく欲しいけど、必要かわからない物を見たとき、私は…',
+        choices: {
+          a: '二日くらい置いて、熱が冷めるか見る',
+          b: '好きならその場で買う。そんな気持ちは多くない',
+          c: '次に必要になったとき、一緒に買う',
+        },
+      },
+      risk: {
+        prompt: 'いきなり大きなお金が必要になる場面を想像したとき、最初に感じるのは…',
+        choices: {
+          a: '大丈夫、普段から備えがあるから',
+          b: '焦るけど、なんとかする',
+          c: 'いまは考えない。そのときになってから',
+        },
+      },
+      transparency: {
+        prompt: 'お互いのお金のことは、どちらかというと…',
+        choices: {
+          a: '大小すべて知っていたい。そのほうが安心',
+          b: '大きなものだけ知っていればいい。細かい出費はそれぞれで',
+          c: 'それぞれの空間を残して、必要なときに話す',
+        },
+      },
+      big_purchase: {
+        prompt: '少し高めの買い物をするとき、私は…',
+        choices: {
+          a: 'まず相手に話して、一緒に考える',
+          b: '自分で決めてから、相手に伝える',
+          c: '物による。場合分けして決める',
+        },
+      },
+      future: {
+        prompt: '10 年後の二人を思い浮かべると、頭に浮かぶのは…',
+        choices: {
+          a: 'ある目標まで貯まって、ゆっくり暮らす',
+          b: '行きたかった場所はぜんぶ行った',
+          c: '二人とも好きな家',
+        },
+      },
+      recording_motive: {
+        prompt: '家計簿をつけたいのは、感覚としては…',
+        choices: {
+          a: '毎日がどう過ぎていったか知りたい',
+          b: '先のために、何かを少しずつ残したい',
+          c: '相手と共有できる場所がほしい',
+        },
+      },
+    },
+  },
+
   inAppBrowser: {
     title: '外部ブラウザで開いてください',
     description: 'チャットアプリ内蔵のブラウザでは Google ログインとオフライン機能が動きません。Safari または Chrome で開き直してください。',

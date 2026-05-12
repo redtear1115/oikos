@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import type { MonthlyReviewSnapshotRow } from '@/lib/db/queries/monthlyReview'
 import type { YearMonth } from '@/lib/monthlyReview'
+import type { PartnerQuizStatus } from '@/lib/partnerQuiz'
 import { Carousel } from './Carousel'
 import { CardCategory } from './CardCategory'
 import { CardLargest } from './CardLargest'
@@ -11,6 +12,7 @@ import { CardRecurring } from './CardRecurring'
 import { CardAssets } from './CardAssets'
 import { MessageEditor } from './MessageEditor'
 import { PastMessages } from './PastMessages'
+import { PartnerQuizCard } from './PartnerQuizCard'
 
 export interface ReviewMember {
   id: string
@@ -35,6 +37,12 @@ export interface ReviewPartnerMessage {
   body: string
 }
 
+export interface ReviewQuizState {
+  status: PartnerQuizStatus
+  partnerName: string
+  revealPreview: string[]
+}
+
 export interface ReviewClientProps {
   reviewedMonth: YearMonth
   editorMonth: YearMonth
@@ -45,6 +53,8 @@ export interface ReviewClientProps {
   viewer: ReviewMember
   partner: ReviewMember | null
   isSolo: boolean
+  /** Null when solo or before the first monthly snapshot exists. */
+  quiz: ReviewQuizState | null
 }
 
 export function ReviewClient({
@@ -57,6 +67,7 @@ export function ReviewClient({
   viewer,
   partner,
   isSolo,
+  quiz,
 }: ReviewClientProps) {
   const router = useRouter()
   const t = useTranslations()
@@ -94,6 +105,17 @@ export function ReviewClient({
             .replace('{month}', String(reviewedMonth.month))}
         </h1>
       </div>
+
+      {quiz && (
+        <div className="px-5 pb-4">
+          <PartnerQuizCard
+            reviewedMonth={reviewedMonth}
+            status={quiz.status}
+            partnerName={quiz.partnerName}
+            revealPreview={quiz.revealPreview}
+          />
+        </div>
+      )}
 
       {snapshot ? (
         <div className="px-2 pb-2">
