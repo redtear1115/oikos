@@ -7,6 +7,14 @@ import {
   loadMonthlyReviewSnapshot,
   loadMonthlyReviewMessages,
 } from '@/lib/db/queries/monthlyReview'
+import {
+  loadPartnerQuizSessionByGroup,
+  loadPartnerQuizAnswers,
+} from '@/lib/db/queries/partnerQuiz'
+import {
+  derivePartnerQuizStatus,
+  isPartnerQuizQuestionKey,
+} from '@/lib/partnerQuiz'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import {
   parseYearMonth,
@@ -59,11 +67,34 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
 
   const editorMonth = nextMonth(reviewedMonth)
 
-  const [snapshot, pastMessages, editorMessages] = await Promise.all([
+  const [snapshot, pastMessages, editorMessages, quizSession] = await Promise.all([
     loadMonthlyReviewSnapshot(group.id, reviewedMonth.year, reviewedMonth.month),
     loadMonthlyReviewMessages(group.id, reviewedMonth.year, reviewedMonth.month),
     loadMonthlyReviewMessages(group.id, editorMonth.year, editorMonth.month),
+    isSolo ? Promise.resolve(null) : loadPartnerQuizSessionByGroup(group.id),
   ])
+
+  // Quiz state — only resolved for dyad groups. Spec: solo mode 不渲染整段
+  // quiz；surface 條件「第一次有 MonthlyReviewSnapshot row 後」由 snapshot 存在判定。
+  const quizAnswers = quizSession ? await loadPartnerQuizAnswers(quizSession.id) : []
+  const selfAnswered = quizSession
+    ? quizAnswers.some((a) => a.memberId === user.id)
+    : false
+  const partnerAnswered = quizSession && partnerProfile
+    ? quizAnswers.some((a) => a.memberId === partnerProfile.id)
+    : false
+  const quizStatus = !isSolo && snapshot
+    ? derivePartnerQuizStatus({
+        hasSession: !!quizSession,
+        selfAnswered,
+        partnerAnswered,
+        revealedAt: quizSession?.revealedAt ?? null,
+      })
+    : null
+  const quizRevealPreview = quizSession && quizStatus === 'revealed'
+    ? quizSession.questionKeys
+        .filter((k): k is string => typeof k === 'string' && isPartnerQuizQuestionKey(k))
+    : []
 
   // Snapshot may be missing for the current (still-in-progress) month or for
   // any month that pre-dates the group. Spec: render a friendly "not ready"
@@ -103,6 +134,11 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
         avatarUrl: partnerProfile.avatarUrl,
       } : null}
       isSolo={isSolo}
+      quiz={quizStatus ? {
+        status: quizStatus,
+        partnerName: partnerProfile?.displayName ?? '',
+        revealPreview: quizRevealPreview,
+      } : null}
     />
   )
 }
