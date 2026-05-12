@@ -10,12 +10,19 @@ import { monthlyIncomeStatsByCategory, listIncomeMonthSummary } from '@/lib/db/q
 beforeEach(() => resetDbMocks())
 
 describe('monthlyStatsByCategory', () => {
+  const epochWindow = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-1',
+    isPast: false,
+  }
+
   it('returns rows mapped from raw SQL output', async () => {
     queueDbResult([
       { category: 'dining', total: 4500, count: 12 },
       { category: 'transit', total: 2200, count: 6 },
     ])
-    const rows = await monthlyStatsByCategory('grp-1', '2026-05')
+    const rows = await monthlyStatsByCategory('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([
       { key: 'dining', total: 4500, count: 12 },
       { key: 'transit', total: 2200, count: 6 },
@@ -25,18 +32,25 @@ describe('monthlyStatsByCategory', () => {
 
   it('returns an empty array when no rows match', async () => {
     queueDbResult([])
-    const rows = await monthlyStatsByCategory('grp-1', '2026-05')
+    const rows = await monthlyStatsByCategory('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([])
   })
 })
 
 describe('monthlyStatsByAsset', () => {
+  const epochWindow = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-1',
+    isPast: false,
+  }
+
   it('preserves nulls for asset_id IS NULL group ("其他支出")', async () => {
     queueDbResult([
       { asset_id: 'a-1', asset_name: 'Tesla', total: 5000, count: 4 },
       { asset_id: null, asset_name: null, total: 1500, count: 8 },
     ])
-    const rows = await monthlyStatsByAsset('grp-1', '2026-05')
+    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([
       { key: 'a-1', name: 'Tesla', total: 5000, count: 4 },
       { key: null, name: null, total: 1500, count: 8 },
@@ -49,7 +63,7 @@ describe('monthlyStatsByAsset', () => {
     queueDbResult([
       { asset_id: 'a-zombie', asset_name: '舊車（已刪）', total: 800, count: 1 },
     ])
-    const rows = await monthlyStatsByAsset('grp-1', '2026-05')
+    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows[0].name).toBe('舊車（已刪）')
   })
 })
