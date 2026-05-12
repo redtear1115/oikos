@@ -673,6 +673,7 @@ export interface InsuranceInput {
   termYears?: number | null
   vehicleId?: string | null
   expectedMaturityAmount?: number | null
+  accountValue?: number | null
   reminderDaysBefore?: number | null
   notes?: string | null
 }
@@ -693,6 +694,7 @@ export interface ValidatedInsuranceInput {
   termYears: number | null
   vehicleId: string | null
   expectedMaturityAmount: number | null
+  accountValue: number | null
   reminderDaysBefore: number
   notes: string | null
 }
@@ -753,6 +755,15 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     expectedMaturityAmount = input.expectedMaturityAmount
   }
 
+  // #166 — 投資型保單目前帳戶價值. Same gate as expectedMaturityAmount: only
+  // meaningful for savings policies. Cleared on kind switches.
+  let accountValue: number | null = null
+  if (kind === 'savings' && input.accountValue !== null && input.accountValue !== undefined) {
+    if (!Number.isInteger(input.accountValue) || input.accountValue < 0)
+      throw new Error('帳戶價值必須是非負整數')
+    accountValue = input.accountValue
+  }
+
   let reminderDaysBefore = 30
   if (input.reminderDaysBefore !== null && input.reminderDaysBefore !== undefined) {
     if (!Number.isInteger(input.reminderDaysBefore) || input.reminderDaysBefore < 1 || input.reminderDaysBefore > 365)
@@ -766,6 +777,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
     startsAt, endsAt, termYears,
     vehicleId: input.vehicleId?.trim() || null,
     expectedMaturityAmount,
+    accountValue,
     reminderDaysBefore,
     notes: validateNotes(input.notes),
   }
