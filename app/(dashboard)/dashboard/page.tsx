@@ -136,7 +136,7 @@ export default async function DashboardPage() {
   // and stream the feed in after the hero paints. Both queries kick off here
   // (not awaited) and stream over the same RSC payload.
   const feedDataPromise = Promise.all([
-    listTransactionsPaged(group.id, null, PAGE_SIZE, undefined, undefined, undefined, undefined, epochWindow),
+    listTransactionsPaged({ groupId: group.id, cursor: null, limit: PAGE_SIZE, epochWindow }),
     listIncomesPaged(group.id, null, PAGE_SIZE, undefined, undefined, undefined, undefined, epochWindow),
   ]).then(([rows, incomeRows]) => {
     const recent: PagedTxnRow[] = rows.map((r) => ({

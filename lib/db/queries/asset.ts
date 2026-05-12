@@ -2,8 +2,9 @@ import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
 import { assets, carDetails, insuranceDetails, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
-import type { FeedRow, FeedKind, TxnCursor } from './transactions'
+import { type FeedRow, type FeedKind, type TxnCursor, rowToFeedRow } from './transactions'
 import type { EpochWindow } from './epoch'
+import { andClause, cursorClause, epochClause } from './_predicates'
 
 const policyHolderProfile = alias(profiles, 'policy_holder_profile')
 const insuredChildAsset = alias(assets, 'insured_child_asset')
@@ -168,11 +169,7 @@ export async function getAssetSummary(
   groupId: string,
   epochWindow?: EpochWindow | null,
 ): Promise<AssetSummary> {
-  const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
-      }`
-    : sql``
+  const epoch = andClause(epochClause('created_at', epochWindow))
   const rows = await db.execute<{ month_amount: number | null; total_amount: number | null }>(sql`
     SELECT
       COALESCE(SUM(amount) FILTER (
@@ -184,7 +181,7 @@ export async function getAssetSummary(
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
       AND deleted_at IS NULL
-      ${epochClause}
+      ${epoch}
   `)
   const r = rows[0] ?? { month_amount: 0, total_amount: 0 }
   return { monthAmount: r.month_amount ?? 0, totalAmount: r.total_amount ?? 0 }
@@ -203,11 +200,7 @@ export async function getAssetSummariesBatch(
 ): Promise<Map<string, AssetSummary>> {
   const out = new Map<string, AssetSummary>()
   if (assetIds.length === 0) return out
-  const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
-      }`
-    : sql``
+  const epoch = andClause(epochClause('created_at', epochWindow))
   const rows = await db.execute<{
     asset_id: string
     month_amount: number | null
@@ -224,7 +217,7 @@ export async function getAssetSummariesBatch(
     WHERE asset_id IN (${sql.join(assetIds.map((id) => sql`${id}`), sql`, `)})
       AND group_id = ${groupId}
       AND deleted_at IS NULL
-      ${epochClause}
+      ${epoch}
     GROUP BY asset_id
   `)
   for (const r of rows) {
@@ -250,19 +243,13 @@ export async function listTransactionsPagedForAsset(
   limit = 20,
   epochWindow?: EpochWindow | null,
 ): Promise<FeedRow[]> {
-  const cursorClause = cursor
-    ? sql`AND (transacted_at, created_at) < (${cursor.transactedAt}::timestamptz, ${cursor.createdAt}::timestamptz)`
-    : sql``
-  const epochClause = epochWindow
-    ? sql`AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz ${
-        epochWindow.endedAt ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz` : sql``
-      }`
-    : sql``
+  const cursorCl = andClause(cursorClause('transacted_at', 'created_at', cursor))
+  const epoch = andClause(epochClause('created_at', epochWindow))
 
   const rows = await db.execute<{
     id: string
     amount: number
-    split_type: 'all_mine' | 'all_theirs' | 'half'
+    split_type: 'all_mine' | 'all_theirs' | 'half' | 'weighted'
     split_ratio_a: number | null
     description: string
     category: string
@@ -283,26 +270,11 @@ export async function listTransactionsPagedForAsset(
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
       AND deleted_at IS NULL
-      ${cursorClause}
-      ${epochClause}
+      ${cursorCl}
+      ${epoch}
     ORDER BY transacted_at DESC, created_at DESC
     LIMIT ${limit}
   `)
 
-  return rows.map((r) => ({
-    id: r.id,
-    amount: r.amount,
-    splitType: r.split_type,
-    splitRatioA: r.split_ratio_a ?? null,
-    description: r.description,
-    category: r.category,
-    paidBy: r.paid_by,
-    assetId: r.asset_id,
-    fuelLogId: r.fuel_log_id ?? null,
-    notes: r.notes,
-    status: r.status ?? 'settled',
-    transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
-    createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
-    kind: r.kind,
-  }))
+  return rows.map(rowToFeedRow)
 }
