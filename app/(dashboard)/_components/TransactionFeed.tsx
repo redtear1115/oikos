@@ -141,7 +141,15 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         status: row.status ?? 'settled',
       }
       if (filter) {
-        const f: FilterableRow = { paidBy: row.paidBy, splitType: row.splitType, category: row.category, kind: 'transaction' }
+        const f: FilterableRow = {
+          paidBy: row.paidBy,
+          splitType: row.splitType,
+          category: row.category,
+          kind: 'transaction',
+          assetId: row.assetId ?? null,
+          amount: row.amount,
+          status: row.status ?? 'settled',
+        }
         if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
       }
       if (acceptInsert && !acceptInsert(row)) return
@@ -192,7 +200,15 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           status: 'settled',
         }
         if (filter) {
-          const f: FilterableRow = { paidBy: row.paidBy, splitType: null, category: 'settle', kind: 'settlement' }
+          const f: FilterableRow = {
+            paidBy: row.paidBy,
+            splitType: null,
+            category: 'settle',
+            kind: 'settlement',
+            assetId: null,
+            amount: row.amount,
+            status: 'settled',
+          }
           if (!matchesFilter(f, filter, viewer.id, partner?.id ?? null)) return
         }
         setItems((cur) => {
