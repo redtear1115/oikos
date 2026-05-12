@@ -421,6 +421,15 @@ export type Translations = {
       living: string
       coverage: string
     }
+    /** v0.15.2 #178 — 愛物頁分成「愛物」/「守護」兩個 tab，保險併入守護。 */
+    tabs: {
+      aibutsu: string
+      guardian: string
+    }
+    tabEmpty: {
+      aibutsuHint: string
+      guardianHint: string
+    }
     addCar: string
     addSecondCar: string
     /** v0.15.0 #127 — strings used only by InsuranceListItem in the coverage section. */
@@ -1543,6 +1552,14 @@ export const zhTW: Translations = {
       property: '財產',
       living: '生命體',
       coverage: '保障',
+    },
+    tabs: {
+      aibutsu: '愛物',
+      guardian: '守護',
+    },
+    tabEmpty: {
+      aibutsuHint: '還沒有愛物。從右下角開始記下第一個。',
+      guardianHint: '還沒有保單。守護愛物的保障也可以一起記下。',
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',

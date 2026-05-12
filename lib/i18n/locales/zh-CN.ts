@@ -406,6 +406,14 @@ export const zhCN: Translations = {
       living: '生命体',
       coverage: '保障',
     },
+    tabs: {
+      aibutsu: '爱物',
+      guardian: '守护',
+    },
+    tabEmpty: {
+      aibutsuHint: '还没有爱物。从右下角开始记下第一个。',
+      guardianHint: '还没有保单。守护爱物的保障也可以一起记下。',
+    },
     addCar: '新增车辆',
     addSecondCar: '加入第二辆车',
     insuranceList: {
