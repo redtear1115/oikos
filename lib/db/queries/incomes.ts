@@ -131,13 +131,17 @@ export async function listIncomeMonthSummary(
   yyyymm: string,  // e.g. '2026-05'
   epochWindow: EpochWindow,
 ): Promise<{ total: number; count: number }> {
+  const upperBound = epochWindow.endedAt
+    ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz`
+    : sql``
   const [row] = await db.execute<{ total: string; count: string }>(sql`
     SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count
     FROM "IncomeTransactions"
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
       AND to_char(occurred_at, 'YYYY-MM') = ${yyyymm}
-      ${andClause(epochClause('created_at', epochWindow))}
+      AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz
+      ${upperBound}
   `)
   return { total: parseInt(row.total, 10), count: parseInt(row.count, 10) }
 }
