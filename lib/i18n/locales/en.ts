@@ -28,6 +28,11 @@ export const en: Translations = {
     shared: 'Shared',
     none: 'None',
     deleteSoftDescription: "This can't be undone, but the ledger keeps a 30-day history a developer can restore.",
+    toast: {
+      recorded: 'Recorded NT${amount}',
+      updated: 'Updated NT${amount}',
+      deleted: 'Deleted',
+    },
   },
 
   splitType: {

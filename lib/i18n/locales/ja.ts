@@ -28,6 +28,11 @@ export const ja: Translations = {
     shared: '共用',
     none: 'なし',
     deleteSoftDescription: 'この操作は取り消せませんが、家計簿の履歴は 30 日間保持され、開発者が復元できます。',
+    toast: {
+      recorded: '記録しました NT${amount}',
+      updated: '更新しました NT${amount}',
+      deleted: '削除しました',
+    },
   },
 
   splitType: {

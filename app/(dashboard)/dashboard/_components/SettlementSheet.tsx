@@ -24,7 +24,7 @@ interface Props {
   open: boolean
   onClose: () => void
   initial: SettlementSheetInitial | null
-  onMutated?: () => void
+  onMutated?: (info?: { savedAmount?: number; edit?: boolean; deleted?: boolean }) => void
 }
 
 export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
@@ -67,7 +67,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           payerId,
           settledAt: ymdToUTCNoon(date),
         })
-        onMutated?.()
+        onMutated?.({ savedAmount: n, edit: true })
         onClose()
       } catch (e) {
         setError(describeError(e, t.common.error, t.common.offlineError))
@@ -82,7 +82,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
     startTransition(async () => {
       try {
         await softDeleteSettlement(initial.id)
-        onMutated?.()
+        onMutated?.({ deleted: true })
         onClose()
       } catch (e) {
         setError(describeError(e, t.common.error, t.common.offlineError))

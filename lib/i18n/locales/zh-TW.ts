@@ -29,6 +29,14 @@ export type Translations = {
     shared: string
     none: string
     deleteSoftDescription: string
+    /** Short transient toasts. `recorded` and `updated` carry the NT$ amount
+     *  inline via `{amount}`; `deleted` is a flat acknowledgement. Surfaced
+     *  by Dashboard.handleMutated for every successful create / edit / delete. */
+    toast: {
+      recorded: string
+      updated: string
+      deleted: string
+    }
   }
 
   splitType: {
@@ -1249,6 +1257,11 @@ export const zhTW: Translations = {
     shared: '共用',
     none: '無',
     deleteSoftDescription: '這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。',
+    toast: {
+      recorded: '已記錄 NT${amount}',
+      updated: '已更新 NT${amount}',
+      deleted: '已刪除這筆',
+    },
   },
 
   splitType: {

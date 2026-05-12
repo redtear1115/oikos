@@ -78,7 +78,7 @@ interface Props {
   open: boolean
   onClose: () => void
   initial?: IncomeSheetInitial
-  onMutated?: () => void
+  onMutated?: (info?: { savedAmount?: number; edit?: boolean; deleted?: boolean }) => void
   // Called when an edit-pending submit loses to a partner race
   // (pending already confirmed/skipped). Sheet has already closed; parent
   // should surface a toast like "對方剛剛確認了這筆".
@@ -209,7 +209,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             assetId,
           })
         }
-        onMutated?.()
+        onMutated?.({ savedAmount: n, edit: isEdit || isPending })
         onClose()
       } catch (e) {
         const msg = describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError)
@@ -234,7 +234,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
     startTransition(async () => {
       try {
         await softDeleteIncome(initial!.id)
-        onMutated?.()
+        onMutated?.({ deleted: true })
         onClose()
       } catch (e) {
         setError(describeError(e, t.common.error, t.common.offlineError))
