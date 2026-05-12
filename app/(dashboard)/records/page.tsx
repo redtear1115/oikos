@@ -1,11 +1,10 @@
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
-import { oikosGroups, assets } from '@/lib/db/schema'
-import { and, eq, isNull, or } from 'drizzle-orm'
+import { assets } from '@/lib/db/schema'
+import { and, eq, isNull } from 'drizzle-orm'
 import { listFeedAllPaged, getGroupCreationMonthKey, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
 import type { ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
-import { resolveViewerEpochWindow } from '@/lib/db/queries/epoch'
-import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
 import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
@@ -43,11 +42,12 @@ export default async function RecordsPage({
   const user = await getCurrentUser()
   if (!user) throw new Error('Unauthorized')
 
-  const [resolvedParams, group] = await Promise.all([
+  const [resolvedParams, context] = await Promise.all([
     searchParams,
-    getActiveGroupForUser(user.id),
+    resolveViewerEpochContext(user.id),
   ])
-  if (!group) throw new Error('No group')
+  if (!context) throw new Error('No group')
+  const { group, window: epochWindow } = context
   const { view: rawView } = resolvedParams
 
   // Resolve date scope. Custom range / "all" override the legacy single-month
@@ -138,7 +138,6 @@ export default async function RecordsPage({
   // selected date range and structured filter.
   const feedMonthKey = dateRange.kind === 'month' ? monthKey : undefined
   const feedDateRange = dateRange.kind === 'month' ? null : dateRange
-  const epochWindow = await resolveViewerEpochWindow(group.id)
   const feedRows = await listFeedAllPaged(
     group.id,
     null,
@@ -180,6 +179,7 @@ export default async function RecordsPage({
         <MonthlyStatsSection
           userId={user.id}
           groupId={group.id}
+          epochWindow={epochWindow}
           monthKey={monthKey}
           view={view}
           forceCompact={forceCompact}

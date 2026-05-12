@@ -1,7 +1,8 @@
 import { db } from '@/lib/db/client'
-import { groupEpochs, profiles } from '@/lib/db/schema'
+import { groupEpochs, oikosGroups, profiles } from '@/lib/db/schema'
 import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 
 /** Cookie key the past-times feature uses to pin the viewer to a prior epoch. */
 export const PAST_EPOCH_COOKIE = 'futari_past_epoch'
@@ -150,4 +151,135 @@ export async function listEpochs(
     memberAName: nameById.get(r.memberAId) ?? null,
     memberBName: r.memberBId ? (nameById.get(r.memberBId) ?? null) : null,
   }))
+}
+
+export interface CrossGroupEpochListItem extends EpochListItem {
+  /** The group the epoch lives on — may differ from the viewer's current
+   *  active group (e.g. a solo Y left behind after leave + rejoin into X). */
+  groupId: string
+}
+
+/**
+ * Cross-group variant of `listEpochs`: surfaces every chapter the viewer was
+ * ever a member of, regardless of which group it lived on. Newest first.
+ *
+ * Why this exists (issue #141): after a leave + rejoin cycle, a user's life
+ * chapters span multiple `OikosGroups` rows. `listEpochs(groupId)` only sees
+ * one group at a time, hiding chapters that lived on a now-archived solo
+ * group. Past-times is「個人的」— filter by viewer membership, not by group.
+ *
+ * Each row carries its own `groupId` so the click-to-enter flow can scope
+ * downstream queries to the correct group (see `resolveViewerEpochContext`).
+ */
+export async function listEpochsForViewer(
+  viewerId: string,
+): Promise<CrossGroupEpochListItem[]> {
+  const rows = await db
+    .select()
+    .from(groupEpochs)
+    .where(or(eq(groupEpochs.memberAId, viewerId), eq(groupEpochs.memberBId, viewerId)))
+    .orderBy(desc(groupEpochs.startedAt))
+
+  if (rows.length === 0) return []
+
+  const profileIds = Array.from(new Set(
+    rows.flatMap((r) => [r.memberAId, r.memberBId].filter((x): x is string => x !== null)),
+  ))
+
+  const profileRows = profileIds.length === 0
+    ? []
+    : await db
+        .select({ id: profiles.id, displayName: profiles.displayName })
+        .from(profiles)
+        .where(inArray(profiles.id, profileIds))
+
+  const nameById = new Map(profileRows.map((p) => [p.id, p.displayName]))
+
+  return rows.map((r) => ({
+    id: r.id,
+    groupId: r.groupId,
+    startedAt: r.startedAt,
+    endedAt: r.endedAt,
+    memberAId: r.memberAId,
+    memberBId: r.memberBId,
+    memberAName: nameById.get(r.memberAId) ?? null,
+    memberBName: r.memberBId ? (nameById.get(r.memberBId) ?? null) : null,
+  }))
+}
+
+export interface ViewerEpochContext {
+  group: typeof oikosGroups.$inferSelect
+  window: EpochWindow
+}
+
+/**
+ * Resolve the viewer's currently-scoped (group, epoch window) pair for the
+ * dashboard / records / assets read paths.
+ *
+ * When the past-epoch cookie is set AND points at an epoch the viewer was a
+ * member of, the resolved group follows the pin — even if it lives on a
+ * different `OikosGroups` row than the viewer's most-recent active group.
+ * This is what makes cross-group time-travel (#141) actually work: a leaver
+ * pinning into their old solo Y gets Y's group context and Y's window, not
+ * X's. Without this, the dashboard would silently query X.id with Y's
+ * (rejected) pin falling back to X's current epoch.
+ *
+ * Returns `null` only when the viewer has no group at all AND no valid pin —
+ * pages should treat that as「未進入家計簿」(redirect to /onboarding).
+ */
+export async function resolveViewerEpochContext(
+  userId: string,
+): Promise<ViewerEpochContext | null> {
+  const jar = await cookies()
+  const pinId = jar.get(PAST_EPOCH_COOKIE)?.value ?? null
+
+  if (pinId) {
+    const [pinned] = await db
+      .select()
+      .from(groupEpochs)
+      .where(eq(groupEpochs.id, pinId))
+      .limit(1)
+
+    // Defence in depth: a hostile / stale cookie value falls through to the
+    // active-group path rather than leaking a chapter the viewer wasn't on.
+    if (pinned && (pinned.memberAId === userId || pinned.memberBId === userId)) {
+      const [group] = await db
+        .select()
+        .from(oikosGroups)
+        .where(eq(oikosGroups.id, pinned.groupId))
+        .limit(1)
+      if (group) {
+        return {
+          group,
+          window: {
+            startedAt: pinned.startedAt,
+            endedAt: pinned.endedAt,
+            epochId: pinned.id,
+            isPast: pinned.endedAt !== null,
+          },
+        }
+      }
+    }
+  }
+
+  const group = await getActiveGroupForUser(userId)
+  if (!group) return null
+
+  const [current] = await db
+    .select()
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
+    .limit(1)
+
+  return {
+    group,
+    window: current
+      ? {
+          startedAt: current.startedAt,
+          endedAt: null,
+          epochId: current.id,
+          isPast: false,
+        }
+      : { startedAt: new Date(0), endedAt: null, epochId: null, isPast: false },
+  }
 }
