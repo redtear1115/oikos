@@ -709,6 +709,7 @@ export type Translations = {
       kindSavings: string
       insured: string
       insuredPlaceholder: string
+      insuredFreeform: string
       policyHolder: string
       insurer: string
       insurerPlaceholder: string
@@ -1803,6 +1804,7 @@ export const zhTW: Translations = {
       kindSavings: '儲蓄',
       insured: '被保人',
       insuredPlaceholder: '小元',
+      insuredFreeform: '自行輸入',
       policyHolder: '要保人',
       insurer: '保險公司',
       insurerPlaceholder: '南山人壽',

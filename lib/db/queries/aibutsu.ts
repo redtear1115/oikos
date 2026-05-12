@@ -1,4 +1,5 @@
 import { db } from '@/lib/db/client'
+import { alias } from 'drizzle-orm/pg-core'
 import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets } from '@/lib/db/schema'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
 
@@ -130,6 +131,8 @@ export interface InsuranceDetailsRow {
   policyNo: string | null
   kind: string | null
   insured: string | null
+  insuredChildId: string | null
+  insuredChildName: string | null
   policyHolderUserId: string | null
   insurer: string | null
   annualPremium: number | null
@@ -143,11 +146,18 @@ export interface InsuranceDetailsRow {
 }
 
 export async function getInsuranceDetails(assetId: string): Promise<InsuranceDetailsRow | null> {
+  // #167 — LEFT JOIN the linked Child asset so the detail page can show the
+  // child's name without an extra round-trip. NULL when insured_child_id is
+  // unset or the child was hard-deleted (FK is RESTRICT but soft-delete
+  // doesn't break the join).
+  const insuredChildAsset = alias(assets, 'insured_child_asset')
   const rows = await db
     .select({
       policyNo: insuranceDetails.policyNumber,
       kind: insuranceDetails.insuranceType,
       insured: insuranceDetails.insured,
+      insuredChildId: insuranceDetails.insuredChildId,
+      insuredChildName: insuredChildAsset.name,
       policyHolderUserId: insuranceDetails.policyHolderUserId,
       insurer: insuranceDetails.insurer,
       annualPremium: insuranceDetails.annualPremium,
@@ -160,6 +170,7 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       expectedMaturityAmount: insuranceDetails.expectedMaturityAmount,
     })
     .from(insuranceDetails)
+    .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))
     .where(eq(insuranceDetails.assetId, assetId))
     .limit(1)
   return rows[0] ?? null

@@ -12,8 +12,8 @@ import { localTodayISO, dateLabel } from '@/lib/local-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { formatNhi, NHI_MAX_LENGTH } from '@/lib/format-nhi'
-import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets } from '@/actions/asset'
-import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset } from '@/actions/asset'
+import { createCar, editCar, editLifeEntity, softDeleteAsset, createChild, editChild, createPet, editPet, createPlant, editPlant, createInsurance, editInsurance, createHouse, editHouse, getCarAssets, getChildAssets } from '@/actions/asset'
+import type { EditChildInput, EditPetInput, EditInsuranceInput, CarAsset, ChildAsset } from '@/actions/asset'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 
 const CAR_COLORS = [
@@ -74,6 +74,7 @@ export interface AssetSheetInitial {
   // Insurance-specific
   insKind?: string | null
   insInsured?: string | null
+  insInsuredChildId?: string | null
   insPolicyHolderUserId?: string | null
   insInsurer?: string | null
   insPolicyNo?: string | null
@@ -188,6 +189,11 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   // Insurance state
   const [insKind, setInsKind] = useState('medical')
   const [insInsured, setInsInsured] = useState('')
+  // #167 — 被保人 can also link to a Child 愛物 in the group. Mutually
+  // exclusive with the freeform `insInsured` text: setting one clears the
+  // other so the DB stays consistent with the insured_type discriminator.
+  const [insInsuredChildId, setInsInsuredChildId] = useState<string | null>(null)
+  const [childAssets, setChildAssets] = useState<ChildAsset[]>([])
   // #142 — 要保人 is always a group member (or null for legacy/unset rows).
   // Defaults to viewer.id on create. In solo mode the toggle is hidden because
   // there's only one possible value.
@@ -273,6 +279,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       if (initial.type === 'insurance') {
         setInsKind(initial.insKind ?? 'medical')
         setInsInsured(initial.insInsured ?? '')
+        setInsInsuredChildId(initial.insInsuredChildId ?? null)
         // #142 — Legacy rows (created before 0032) have NULL policy_holder.
         // Default to viewer on prefill so editing fills it in gracefully, same
         // as the create flow. User can still flip to partner via the toggle.
@@ -288,6 +295,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setInsVehicleId(initial.insVehicleId ?? null)
         setInsExpectedMaturityAmount(initial.insExpectedMaturityAmount?.toString() ?? '')
         getCarAssets().then(setCarAssets).catch(() => {})
+        getChildAssets().then(setChildAssets).catch(() => {})
       }
     } else {
       setSelectedType('pet')
@@ -462,7 +470,12 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
           const payload = {
             name: name.trim(),
             kind: insKind || null,
+            // #167 — when a Child 愛物 is linked, the action layer flips
+            // `insured_type` to 'child' and ignores `insured` text. Send both
+            // so the action sees the picker state; the action decides which
+            // wins.
             insured: insInsured.trim() || null,
+            insuredChildId: insInsuredChildId,
             policyHolderUserId: insPolicyHolderUserId,
             insurer: insInsurer.trim() || null,
             policyNo: insPolicyNo.trim() || null,
@@ -596,6 +609,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     // Insurance resets
     setInsKind('medical')
     setInsInsured('')
+    setInsInsuredChildId(null)
     setInsPolicyHolderUserId(viewer.id)
     setInsInsurer('')
     setInsPolicyNo('')
@@ -608,6 +622,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
     setInsVehicleId(null)
     if (t === 'insurance') {
       getCarAssets().then(setCarAssets).catch(() => {})
+      getChildAssets().then(setChildAssets).catch(() => {})
     }
   }
 
@@ -1303,10 +1318,56 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </Field>
               )}
 
+              {/* #167 — 被保人 can link to a Child 愛物 in the group, or stay
+                  as freeform text (relatives outside the group, self, etc.).
+                  When at least one child exists in the group, show a chip
+                  picker above the text input: picking a child links and
+                  blanks the text; picking 自行輸入 (or just typing) clears
+                  the link. */}
               <Field label={ts.insurance.insured}>
-                <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
-                  placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)' }} />
+                <div className="flex flex-col gap-2">
+                  {childAssets.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setInsInsuredChildId(null)}
+                        className="h-[34px] px-[14px] rounded-[10px] text-label"
+                        style={{
+                          border: insInsuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                          background: insInsuredChildId === null ? 'rgba(58,36,25,0.04)' : '#fff',
+                          color: insInsuredChildId === null ? 'var(--ink)' : 'var(--ink-2)',
+                          fontWeight: insInsuredChildId === null ? 600 : 500,
+                        }}
+                      >
+                        {ts.insurance.insuredFreeform}
+                      </button>
+                      {childAssets.map(child => (
+                        <button
+                          key={child.id}
+                          type="button"
+                          onClick={() => {
+                            setInsInsuredChildId(child.id)
+                            setInsInsured('')
+                          }}
+                          className="h-[34px] px-[14px] rounded-[10px] text-label"
+                          style={{
+                            border: insInsuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                            background: insInsuredChildId === child.id ? 'rgba(58,36,25,0.04)' : '#fff',
+                            color: insInsuredChildId === child.id ? 'var(--ink)' : 'var(--ink-2)',
+                            fontWeight: insInsuredChildId === child.id ? 600 : 500,
+                          }}
+                        >
+                          {child.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {insInsuredChildId === null && (
+                    <input value={insInsured} onChange={e => setInsInsured(e.target.value.slice(0, 32))}
+                      placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+                      style={{ color: 'var(--ink)' }} />
+                  )}
+                </div>
               </Field>
 
               <Field label={ts.insurance.insurer}>

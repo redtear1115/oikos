@@ -448,7 +448,7 @@ describe('createInsurance', () => {
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
-  it('always sets insuredType=user (NOT NULL default)', async () => {
+  it('defaults insuredType=user when no Child 愛物 is linked', async () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'asset-4' }])
     queueDbResult([])
@@ -458,6 +458,49 @@ describe('createInsurance', () => {
     const valueCalls = mockBuilder.values.mock.calls
     const insPayload = valueCalls[1][0] as Record<string, unknown>
     expect(insPayload.insuredType).toBe('user')
+    expect(insPayload.insuredChildId).toBeNull()
+  })
+
+  // #167 — Linking a Child 愛物 flips insuredType to 'child' and clears the
+  // freeform `insured` text so the child name becomes the source of truth.
+  it('flips insuredType=child + clears insured text when insuredChildId is set', async () => {
+    const CHILD_ID = '11111111-1111-1111-1111-111111111111'
+    queueDbResult([GROUP])
+    queueDbResult([{ id: CHILD_ID, type: 'child', deletedAt: null }])  // child lookup
+    queueDbResult([{ id: 'asset-6' }])
+    queueDbResult([])
+
+    await createInsurance({
+      name: '醫療險',
+      insured: '會被覆蓋的文字',
+      insuredChildId: CHILD_ID,
+    })
+
+    const valueCalls = mockBuilder.values.mock.calls
+    const insPayload = valueCalls[1][0] as Record<string, unknown>
+    expect(insPayload.insuredType).toBe('child')
+    expect(insPayload.insuredChildId).toBe(CHILD_ID)
+    expect(insPayload.insured).toBeNull()
+  })
+
+  it('rejects insuredChildId when target asset is not a child', async () => {
+    const NOT_CHILD = '22222222-2222-2222-2222-222222222222'
+    queueDbResult([GROUP])
+    queueDbResult([{ id: NOT_CHILD, type: 'pet', deletedAt: null }])  // wrong type
+
+    await expect(
+      createInsurance({ name: '醫療險', insuredChildId: NOT_CHILD }),
+    ).rejects.toThrow(/被保小孩/)
+  })
+
+  it('rejects insuredChildId that does not exist in the group', async () => {
+    const MISSING = '33333333-3333-3333-3333-333333333333'
+    queueDbResult([GROUP])
+    queueDbResult([])  // child lookup returns nothing
+
+    await expect(
+      createInsurance({ name: '醫療險', insuredChildId: MISSING }),
+    ).rejects.toThrow(/被保小孩/)
   })
 
   it('passes all insuranceDetails fields to insert', async () => {

@@ -219,6 +219,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       notes: asset.notes,
       insKind: insuranceDetailsData?.kind ?? null,
       insInsured: insuranceDetailsData?.insured ?? null,
+      insInsuredChildId: insuranceDetailsData?.insuredChildId ?? null,
       insPolicyHolderUserId: insuranceDetailsData?.policyHolderUserId ?? null,
       insInsurer: insuranceDetailsData?.insurer ?? null,
       insPolicyNo: insuranceDetailsData?.policyNo ?? null,
