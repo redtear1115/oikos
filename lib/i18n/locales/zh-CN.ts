@@ -28,6 +28,11 @@ export const zhCN: Translations = {
     shared: '共用',
     none: '无',
     deleteSoftDescription: '此操作无法撤销，但账本历史会保留 30 天可由开发者还原。',
+    toast: {
+      recorded: '已记录 NT${amount}',
+      updated: '已更新 NT${amount}',
+      deleted: '已删除这笔',
+    },
   },
 
   splitType: {
