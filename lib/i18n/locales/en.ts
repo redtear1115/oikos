@@ -112,6 +112,9 @@ export const en: Translations = {
     youOwePartner: 'owe partner',
     currentlyEven: 'all settled',
     currentlyLabel: "You're",
+    modeSettledLabel: 'Now',
+    modeIncludePendingLabel: 'After settle',
+    modeToggleAriaLabel: 'Toggle between current and after-settle balance',
   },
 
   soloBanner: {

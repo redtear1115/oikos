@@ -13,9 +13,17 @@ import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
 
 const HERO_COLLAPSED_KEY = 'hero-collapsed'
+// localStorage key for the settled / include-pending balance view toggle (#164).
+const BALANCE_VIEW_KEY = 'balance-view'  // 'settled' | 'pending'
 
 interface Props {
   rawBalance: number  // member_a perspective (positive = b owes a)
+  /**
+   * Delta to add to `rawBalance` for the include-pending ("after settlement")
+   * view. 0 when no pending CashTransactions exist; in that case the toggle
+   * is hidden because the two views are identical. Issue #164.
+   */
+  pendingBalanceDelta?: number
   /** Called after a successful settlement so the parent can router.refresh(). */
   onSettleMutated?: () => void
   // Mode toggle:
@@ -31,6 +39,7 @@ interface Props {
 
 export function BalanceHero({
   rawBalance,
+  pendingBalanceDelta = 0,
   onSettleMutated,
   mode,
   onModeChange,
@@ -45,11 +54,16 @@ export function BalanceHero({
   const [displayedRaw, setDisplayedRaw] = useState(rawBalance)
   const [fading, setFading] = useState(false)
   const [heroCollapsed, setHeroCollapsed] = useState(false)
+  // Settled-only vs include-pending balance view (issue #164). Persisted in
+  // localStorage so the user's preference survives reloads.
+  const [includePendingView, setIncludePendingView] = useState(false)
   const P = DEFAULT_INCOME_PALETTE
 
   useEffect(() => {
     const stored = localStorage.getItem(HERO_COLLAPSED_KEY)
     if (stored === 'true') setHeroCollapsed(true)
+    const viewStored = localStorage.getItem(BALANCE_VIEW_KEY)
+    if (viewStored === 'pending') setIncludePendingView(true)
   }, [])
 
   // Sync if parent prop changes (e.g. after our own mutation router.refresh).
@@ -65,8 +79,25 @@ export function BalanceHero({
     }
   })
 
-  const balance = viewerBalance(displayedRaw, viewerIsA)
+  // Toggle is meaningful only when there is at least one pending row whose
+  // delta is non-zero. With no pending records, both views are identical.
+  const hasPending = pendingBalanceDelta !== 0
+  const effectiveRaw = includePendingView && hasPending
+    ? displayedRaw + pendingBalanceDelta
+    : displayedRaw
+  const balance = viewerBalance(effectiveRaw, viewerIsA)
   const [settleOpen, setSettleOpen] = useState(false)
+
+  const toggleBalanceView = () => {
+    setFading(true)
+    setIncludePendingView(prev => {
+      const next = !prev
+      localStorage.setItem(BALANCE_VIEW_KEY, next ? 'pending' : 'settled')
+      return next
+    })
+    // Match the realtime balance-change fade duration for visual consistency.
+    setTimeout(() => setFading(false), 150)
+  }
 
   let owedByWho: 'M' | 'T'
   let subjectName: string
@@ -247,6 +278,15 @@ export function BalanceHero({
                   <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
                   {amount.toLocaleString('en-US')}
                 </div>
+                {hasPending && (
+                  <BalanceViewToggle
+                    includePending={includePendingView}
+                    onToggle={toggleBalanceView}
+                    settledLabel={t.balanceHero.modeSettledLabel}
+                    pendingLabel={t.balanceHero.modeIncludePendingLabel}
+                    ariaLabel={t.balanceHero.modeToggleAriaLabel}
+                  />
+                )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0 pt-[2px]">
                 {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} label={t.balanceHero.settleLabel} />}
@@ -267,6 +307,76 @@ export function BalanceHero({
       )}
 
     </div>
+  )
+}
+
+/**
+ * Two-pill segmented toggle for the settled / include-pending balance view
+ * (issue #164). Visible only when there is at least one pending CashTransaction
+ * affecting the balance — when both views would render the same number the
+ * toggle is hidden by the caller.
+ */
+function BalanceViewToggle({
+  includePending,
+  onToggle,
+  settledLabel,
+  pendingLabel,
+  ariaLabel,
+}: {
+  includePending: boolean
+  onToggle: () => void
+  settledLabel: string
+  pendingLabel: string
+  ariaLabel: string
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className="mt-2 inline-flex rounded-full"
+      style={{
+        border: '1px solid var(--hairline)',
+        padding: 2,
+        background: 'transparent',
+      }}
+    >
+      <SegmentPill active={!includePending} onClick={() => { if (includePending) onToggle() }}>
+        {settledLabel}
+      </SegmentPill>
+      <SegmentPill active={includePending} onClick={() => { if (!includePending) onToggle() }}>
+        {pendingLabel}
+      </SegmentPill>
+    </div>
+  )
+}
+
+function SegmentPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className="rounded-full cursor-pointer"
+      style={{
+        padding: '4px 12px',
+        background: active ? 'var(--ink)' : 'transparent',
+        color: active ? '#fff' : 'var(--ink-2)',
+        fontSize: 12,
+        fontWeight: 500,
+        border: 'none',
+        transition: 'background 150ms, color 150ms',
+      }}
+    >
+      {children}
+    </button>
   )
 }
 

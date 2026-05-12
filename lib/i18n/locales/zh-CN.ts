@@ -112,6 +112,9 @@ export const zhCN: Translations = {
     youOwePartner: '欠对方',
     currentlyEven: '打平',
     currentlyLabel: '目前',
+    modeSettledLabel: '现在',
+    modeIncludePendingLabel: '结算后',
+    modeToggleAriaLabel: '切换 显示「现在」或「结算后」金额',
   },
 
   soloBanner: {
