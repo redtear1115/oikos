@@ -36,9 +36,13 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
     })
   }
 
+  // Both arrow buttons get a 44×44 tap area (WCAG / iOS HIG minimum). The
+  // pill height stays close to before by zeroing the container's vertical
+  // padding — the buttons themselves now define the height. Each chevron
+  // glyph remains visually centered via grid place-items-center.
   return (
     <div
-      className="flex items-center justify-between rounded-[14px] px-2 py-1"
+      className="flex items-center justify-between rounded-[14px] px-1"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--hairline)',
@@ -50,7 +54,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         onClick={() => go(addMonths(monthKey, -1))}
         disabled={prevDisabled || isPending}
         aria-label={t.records.stats.prevMonth}
-        className="h-9 w-9 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="h-11 w-11 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
         style={{ color: 'var(--ink-2)' }}
       >
         ‹
@@ -66,7 +70,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         onClick={() => go(addMonths(monthKey, 1))}
         disabled={nextDisabled || isPending}
         aria-label={t.records.stats.nextMonth}
-        className="h-9 w-9 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="h-11 w-11 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
         style={{ color: 'var(--ink-2)' }}
       >
         ›

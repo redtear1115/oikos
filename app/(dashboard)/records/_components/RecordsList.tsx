@@ -11,7 +11,7 @@ import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { FilterSheet, type AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
 import { DateRangeChip } from './DateRangeChip'
-import { RecurringMenu } from './RecurringMenu'
+import { RecurringSectionCard } from './RecurringSectionCard'
 import { TabProvider } from './TabContext'
 import {
   applyDateRangeToParams,
@@ -343,12 +343,10 @@ export function RecordsList({
           >
             {t.records.title}
           </div>
-          {/* Top-right: ⚙ 定期 popover. The previous design had two pills
-              (定期支出 / 定期收入) on the tab row, which crowded the
-              high-traffic tab area. Settings work is low-frequency, so we
-              fold them into a single icon entry up here and free the tab
-              row for the higher-traffic 篩選 affordance. */}
-          <RecurringMenu />
+          {/* Recurring-rule entries used to live here as a small ⚙ 定期
+              popover, but the affordance turned out too easy to miss for a
+              recently-shipped feature (#154). They now appear as a section
+              card between the monthly stats and the feed below. */}
         </div>
 
         {/* Page-level date scope. Single-month mode uses the existing
@@ -431,6 +429,12 @@ export function RecordsList({
           />
         </div>
       )}
+
+      {/* Recurring-rule entries. Doubles as the visual divider between the
+          stats card and the feed (#152) — the bordered pills + surrounding
+          padding give the eye a clear "new section" cue without a heavy
+          horizontal rule. */}
+      <RecurringSectionCard />
 
       {/* Each child below is a stable JSX sibling — React reconciles them by
           position, not as a list. We deliberately render `null` (rather than

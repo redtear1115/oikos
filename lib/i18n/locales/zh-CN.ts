@@ -192,14 +192,11 @@ export const zhCN: Translations = {
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
-    recurringMenuLabel: '定期',
-    recurringMenuAriaLabel: '打开定期收支菜单',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
     stats: {
       title: '支出统计',
       titleAll: '收支统计',
       titleIncome: '收入统计',
-      total: '总共 {amount} NT$',
       empty: '这个月还没有支出记录',
       emptySub: '翻翻其他月看看',
       viewByCategory: '分类',
@@ -219,6 +216,7 @@ export const zhCN: Translations = {
       drillChipPrefix: '只看',
       drillChipClear: '取消筛选',
       drillAssetUnknown: '未命名',
+      donutCenterTotal: '总计',
     },
   },
 

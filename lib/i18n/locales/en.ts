@@ -192,14 +192,11 @@ export const en: Translations = {
     tabIncome: 'Income',
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
-    recurringMenuLabel: 'Recurring',
-    recurringMenuAriaLabel: 'Open recurring rules menu',
     offlineMoreNeedsNetwork: 'More records need a connection',
     stats: {
       title: 'Expense',
       titleAll: 'Overview',
       titleIncome: 'Income',
-      total: 'Total {amount} NT$',
       empty: 'No expenses logged this month',
       emptySub: 'Try another month',
       viewByCategory: 'Category',
@@ -219,6 +216,7 @@ export const en: Translations = {
       drillChipPrefix: 'Only',
       drillChipClear: 'Clear filter',
       drillAssetUnknown: 'Unnamed',
+      donutCenterTotal: 'Total',
     },
   },
 
