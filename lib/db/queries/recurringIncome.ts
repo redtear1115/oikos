@@ -3,7 +3,7 @@ import {
   recurringIncomeRules,
   pendingIncomeOccurrences,
 } from '@/lib/db/schema'
-import { and, asc, eq, isNull } from 'drizzle-orm'
+import { and, asc, eq, isNull, sql } from 'drizzle-orm'
 
 export interface RecurringRuleRow {
   id: string
@@ -53,6 +53,27 @@ export interface PendingRow {
   source: string | null
   recipientId: string
   assetId: string | null
+}
+
+/**
+ * v0.15.2 #166 — Count of non-deleted RecurringIncomeRules linked to a given
+ * asset. Used by SavingsView to label its「定期進帳」section CTA
+ * ("set up" vs "already set up N rules"). Paused rules count too — they're
+ * still attached to the asset, just temporarily inactive.
+ */
+export async function countActiveRulesForAsset(
+  assetId: string,
+  groupId: string,
+): Promise<number> {
+  const rows = await db
+    .select({ count: sql<string>`COUNT(*)` })
+    .from(recurringIncomeRules)
+    .where(and(
+      eq(recurringIncomeRules.groupId, groupId),
+      eq(recurringIncomeRules.assetId, assetId),
+      isNull(recurringIncomeRules.deletedAt),
+    ))
+  return parseInt(rows[0]?.count ?? '0', 10)
 }
 
 export async function listActivePendings(groupId: string): Promise<PendingRow[]> {

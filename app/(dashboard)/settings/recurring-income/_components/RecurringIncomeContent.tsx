@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RuleListItem } from './RuleListItem'
 import { RecurringRuleSheet } from './RecurringRuleSheet'
@@ -13,13 +13,28 @@ const P = DEFAULT_INCOME_PALETTE
 interface Props {
   rules: RecurringRuleRow[]
   insuranceAssets: { id: string; name: string }[]
+  /** #166 — when set, opens the create sheet on mount with the asset
+   *  pre-selected. Set by SavingsView's link to bridge into recurring income
+   *  setup without requiring a separate manual selection. */
+  prefilledAssetId?: string | null
 }
 
-export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
+export function RecurringIncomeContent({ rules, insuranceAssets, prefilledAssetId }: Props) {
   const router = useRouter()
   const t = useTranslations()
   // null = closed, 'create' = new rule sheet, RecurringRuleRow = edit sheet
-  const [sheetState, setSheetState] = useState<null | 'create' | RecurringRuleRow>(null)
+  const [sheetState, setSheetState] = useState<null | 'create' | RecurringRuleRow>(
+    prefilledAssetId ? 'create' : null,
+  )
+
+  // Wipe the ?assetId=<> from the URL after first opening the sheet so a
+  // back-nav doesn't reopen the same flow.
+  useEffect(() => {
+    if (prefilledAssetId) {
+      router.replace('/settings/recurring-income', { scroll: false })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const isOpen = sheetState !== null
   const initial = typeof sheetState === 'object' && sheetState !== null ? sheetState : undefined
@@ -90,6 +105,7 @@ export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
         onMutated={handleMutated}
         initial={initial}
         insuranceAssets={insuranceAssets}
+        prefilledAssetId={sheetState === 'create' ? prefilledAssetId ?? null : null}
       />
     </>
   )

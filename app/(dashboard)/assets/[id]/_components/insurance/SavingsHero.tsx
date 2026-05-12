@@ -14,10 +14,14 @@ interface Props {
    *  When ≥ 2 buckets are non-zero, we render a breakdown sub-line
    *  beneath the「出」progress bar. */
   returnBreakdown?: Record<string, number>
+  /** v0.15.2 #166 — investment-linked savings policies surface current account
+   *  value as an informational row beneath the bars. null = unset / not
+   *  applicable, in which case the row hides entirely. */
+  accountValue?: number | null
   onSetExpectedMaturity?: () => void
 }
 
-export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSetExpectedMaturity }: Props) {
+export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, accountValue, onSetExpectedMaturity }: Props) {
   const t = useTranslations()
   const ts = t.assetDetail.savings
   const hasExpected = progress.expectedMaturity !== null
@@ -76,6 +80,17 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
               {getIncomeCategory(p.cat).label} NT$ {p.amount.toLocaleString()}
             </span>
           ))}
+        </div>
+      )}
+
+      {accountValue !== null && accountValue !== undefined && (
+        <div
+          className="mt-3 ml-[26px] flex items-baseline gap-2 text-xs tabular-nums"
+          style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+        >
+          <span>{ts.accountValueLabel}</span>
+          <span style={{ color: 'var(--ink)' }}>NT$ {accountValue.toLocaleString()}</span>
+          <span>· {ts.accountValueHint}</span>
         </div>
       )}
 

@@ -722,6 +722,11 @@ export type Translations = {
       sumInsuredPlaceholder: string
       expectedMaturityAmount: string
       expectedMaturityAmountPlaceholder: string
+      /** #166 — 投資型保單目前帳戶價值 (current account value). Conditional on
+       *  kind = savings; companion to expectedMaturityAmount but for投資型保單. */
+      accountValue: string
+      accountValuePlaceholder: string
+      accountValueHint: string
       payCycle: string
       payCycleAnnual: string
       payCycleSemi: string
@@ -917,6 +922,19 @@ export type Translations = {
        *  maturity/dividend/survival_annuity have non-zero totals.
        *  The component appends bucket labels + NT$ amounts itself. */
       heroBreakdownPrefix: string
+      /** v0.15.2 #166 — 投資型保單目前帳戶價值. Shown as an informational row
+       *  beneath the「入/出」bars when set; not part of the progress logic. */
+      accountValueLabel: string
+      accountValueHint: string
+      /** v0.15.2 #166 — Section linking to /settings/recurring-income so users
+       *  can let the system surface each期 dividend / survival annuity as a
+       *  pending card instead of manually recording every time. */
+      recurringSectionTitle: string
+      recurringSectionHint: string
+      recurringSectionCta: string
+      /** Template with `{count}` — shown when ≥1 recurring rule already exists
+       *  for this insurance asset. */
+      recurringSectionCtaExisting: string
       /** Template with `{date}`. */
       maturingSoonTitle: string
       maturingSoonSubtitle: string
@@ -1817,6 +1835,9 @@ export const zhTW: Translations = {
       sumInsuredPlaceholder: '3000000',
       expectedMaturityAmount: '預估滿期金',
       expectedMaturityAmountPlaceholder: '600000',
+      accountValue: '目前帳戶價值',
+      accountValuePlaceholder: '850000',
+      accountValueHint: '投資型保單 · 從對帳單抄寫',
       payCycle: '繳費週期',
       payCycleAnnual: '年繳',
       payCycleSemi: '半年',
@@ -1993,6 +2014,12 @@ export const zhTW: Translations = {
       heroNoExpectedBar: '已拿回 NT$ {received} · 預估金額未設定',
       heroNoExpectedCta: '設定預估金額',
       heroBreakdownPrefix: '含',
+      accountValueLabel: '目前帳戶價值',
+      accountValueHint: '投資型保單 · 從對帳單抄寫',
+      recurringSectionTitle: '讓系統幫忙提醒',
+      recurringSectionHint: '把分紅 / 生存金變成定期進帳，到時候只要點一下確認',
+      recurringSectionCta: '設定定期進帳 →',
+      recurringSectionCtaExisting: '已設定 {count} 項定期進帳 →',
       maturingSoonTitle: '{date} 即將到期',
       maturingSoonSubtitle: '別忘了滿期金到帳要記',
       maturingSoonCta: '記滿期金 →',

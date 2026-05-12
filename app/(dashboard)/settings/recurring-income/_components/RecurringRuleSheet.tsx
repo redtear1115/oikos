@@ -31,6 +31,8 @@ interface Props {
   /** undefined = create mode; set = edit mode */
   initial?: RecurringRuleRow
   insuranceAssets: { id: string; name: string }[]
+  /** #166 — preselect this asset on create. Ignored in edit mode (initial wins). */
+  prefilledAssetId?: string | null
 }
 
 export function RecurringRuleSheet({
@@ -39,6 +41,7 @@ export function RecurringRuleSheet({
   onMutated,
   initial,
   insuranceAssets,
+  prefilledAssetId,
 }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const t = useTranslations()
@@ -88,12 +91,15 @@ export function RecurringRuleSheet({
       setSource(initial.source ?? '')
       setAssetId(initial.assetId ?? '')
     } else {
-      setCategory('salary')
+      // #166 — preselect category as `dividend` when entering from SavingsView
+      // since that's the dominant insurance recurring case; user can still
+      // flip to survival_annuity / etc. inline.
+      setCategory(prefilledAssetId ? 'dividend' : 'salary')
       setRecipientWho('M')
       setSource('')
-      setAssetId('')
+      setAssetId(prefilledAssetId ?? '')
     }
-  }, [open, initial, viewer.id])
+  }, [open, initial, viewer.id, prefilledAssetId])
 
   const recipientId = isSolo
     ? viewer.id

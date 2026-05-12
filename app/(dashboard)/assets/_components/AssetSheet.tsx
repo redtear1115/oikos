@@ -86,6 +86,7 @@ export interface AssetSheetInitial {
   insTermYears?: number | null
   insVehicleId?: string | null
   insExpectedMaturityAmount?: number | null
+  insAccountValue?: number | null
   // House-specific
   houseAddress?: string | null
   housePurchasedAt?: string | null
@@ -209,6 +210,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   const [insTermYears, setInsTermYears] = useState('')
   const [insVehicleId, setInsVehicleId] = useState<string | null>(null)
   const [insExpectedMaturityAmount, setInsExpectedMaturityAmount] = useState('')
+  const [insAccountValue, setInsAccountValue] = useState('')
   const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [showCal, setShowCal] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -294,6 +296,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
         setInsTermYears(initial.insTermYears?.toString() ?? '')
         setInsVehicleId(initial.insVehicleId ?? null)
         setInsExpectedMaturityAmount(initial.insExpectedMaturityAmount?.toString() ?? '')
+        setInsAccountValue(initial.insAccountValue?.toString() ?? '')
         getCarAssets().then(setCarAssets).catch(() => {})
         getChildAssets().then(setChildAssets).catch(() => {})
       }
@@ -359,6 +362,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
       setInsTermYears('')
       setInsVehicleId(null)
       setInsExpectedMaturityAmount('')
+      setInsAccountValue('')
     }
     setShowCal(false)
     setError('')
@@ -489,6 +493,10 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
             expectedMaturityAmount:
               insKind === 'savings' && insExpectedMaturityAmount
                 ? parseInt(insExpectedMaturityAmount, 10)
+                : null,
+            accountValue:
+              insKind === 'savings' && insAccountValue
+                ? parseInt(insAccountValue, 10)
                 : null,
             notes: notesPayload,
           }
@@ -1418,6 +1426,23 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
                 </Field>
               )}
 
+              {/* #166 — Investment-linked savings policies (投資型保單) track a
+                  current account value separate from the projected maturity. */}
+              {insKind === 'savings' && (
+                <Field label={ts.insurance.accountValue} hint={ts.insurance.accountValueHint}>
+                  <input
+                    value={insAccountValue}
+                    onChange={e => setInsAccountValue(e.target.value)}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder={ts.insurance.accountValuePlaceholder}
+                    className="w-full bg-transparent border-0 outline-none text-base"
+                    style={{ color: 'var(--ink)' }}
+                  />
+                  <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+                </Field>
+              )}
+
               <Field label={ts.insurance.payCycle}>
                 <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
                   {([{v:'annual',label:ts.insurance.payCycleAnnual},{v:'semi',label:ts.insurance.payCycleSemi},{v:'quarterly',label:ts.insurance.payCycleQuarterly},{v:'monthly',label:ts.insurance.payCycleMonthly}]).map(o => (
@@ -1565,7 +1590,7 @@ export function AssetSheet({ open, onClose, initial, onMutated }: Props) {
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div
       className="py-3"
@@ -1573,6 +1598,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     >
       <div className="text-xs mb-1 tracking-wide" style={{ color: 'var(--ink-3)' }}>{label}</div>
       {children}
+      {hint && (
+        <div className="text-xs mt-1" style={{ color: 'var(--ink-3)' }}>{hint}</div>
+      )}
     </div>
   )
 }

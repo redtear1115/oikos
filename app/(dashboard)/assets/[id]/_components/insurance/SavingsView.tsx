@@ -49,6 +49,10 @@ interface Props {
    *  Drives the hero breakdown when >1 bucket is non-zero. Keys are
    *  IncomeCategoryId strings; absent categories default to 0. */
   returnBreakdown: Record<string, number>
+  /** v0.15.2 #166 — Count of non-deleted RecurringIncomeRules linked to this
+   *  insurance asset. Drives the "讓系統幫忙提醒" section's CTA copy
+   *  (set up vs already set up X rules). */
+  recurringRulesCount: number
   initialPremiumTxns: PagedTxnRow[]
   initialReturns: PagedIncomeRow[]
   pageSize: number
@@ -66,6 +70,7 @@ export function SavingsView({
   premiumStats,
   returnStats,
   returnBreakdown,
+  recurringRulesCount,
   initialPremiumTxns,
   initialReturns,
   pageSize,
@@ -181,6 +186,7 @@ export function SavingsView({
             startsAt={details.startsAt}
             endsAt={details.endsAt}
             returnBreakdown={returnBreakdown}
+            accountValue={details.accountValue}
             onSetExpectedMaturity={() => setEditAssetOpen(true)}
           />
         </>
@@ -267,6 +273,30 @@ export function SavingsView({
           }
         />
       </div>
+
+      {/* #166 — Bridge from the per-policy view into the recurring income
+          settings page. We don't open a sheet inline because the rule lives
+          across all assets; we pass the asset id via URL so the settings page
+          opens the create sheet pre-populated. */}
+      <Link
+        href={`/settings/recurring-income?assetId=${assetId}`}
+        className="mx-4 mt-3 block rounded-2xl px-4 py-4"
+        style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+            {ts.recurringSectionTitle}
+          </div>
+          <div className="text-xs shrink-0" style={{ color: 'var(--ink-2)' }}>
+            {recurringRulesCount > 0
+              ? ts.recurringSectionCtaExisting.replace('{count}', String(recurringRulesCount))
+              : ts.recurringSectionCta}
+          </div>
+        </div>
+        <div className="mt-1 text-xs" style={{ color: 'var(--ink-3)', lineHeight: 1.6 }}>
+          {ts.recurringSectionHint}
+        </div>
+      </Link>
 
       <SectionHeader>{td.sectionContract}</SectionHeader>
       <InfoCard>
