@@ -16,6 +16,7 @@ import { AibutsuHintCard } from './AibutsuHintCard'
 import { resolveDisplayName } from '@/lib/display-name'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
 // 10 mask characters — enough to read as "filled in" without leaking length.
 const PII_MASK = '●●●●●●●●●●'
@@ -115,6 +116,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.child
+  const { isPast } = useMember()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -133,6 +135,8 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
   }
 
   const handleTxClick = (tx: PagedTxnRow) => {
+    // Past-epoch view is read-only — never open an edit sheet.
+    if (isPast) return
     if (tx.kind !== 'transaction') return
     setEditingTx({
       id: tx.id,
@@ -228,7 +232,9 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         )}
       />
 
-      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      {/* Asset CRUD (onEditClick) is exempt from past-epoch guard, but FAB
+          opens an AddSheet that creates a new transaction — hide it. */}
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" hideFab={isPast} />
       <AddSheet
         open={addOpen || editingTx !== null}
         onClose={() => { setAddOpen(false); setEditingTx(null) }}

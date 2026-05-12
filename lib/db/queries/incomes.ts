@@ -76,12 +76,12 @@ function assetIdsDrizzleClause(assetIds: string[]): SQL | undefined {
 export async function listIncomesPaged(
   groupId: string,
   cursor: IncomeCursor | null,
-  limit = 20,
-  monthKey?: string,
-  drill?: DrillFilter | null,
-  filter?: ResolvedIncomeFilter,
-  dateRange?: DateRange | null,
-  epochWindow?: EpochWindow | null,
+  limit: number = 20,
+  monthKey: string | undefined,
+  drill: DrillFilter | null | undefined,
+  filter: ResolvedIncomeFilter | undefined,
+  dateRange: DateRange | null | undefined,
+  epochWindow: EpochWindow,
 ): Promise<IncomeRow[]> {
   // Drill that doesn't target income (expense category / asset) → empty page.
   // Lets the income tab render zero rows under an incompatible drill instead
@@ -129,13 +129,19 @@ export async function listIncomesPaged(
 export async function listIncomeMonthSummary(
   groupId: string,
   yyyymm: string,  // e.g. '2026-05'
+  epochWindow: EpochWindow,
 ): Promise<{ total: number; count: number }> {
+  const upperBound = epochWindow.endedAt
+    ? sql`AND created_at < ${epochWindow.endedAt.toISOString()}::timestamptz`
+    : sql``
   const [row] = await db.execute<{ total: string; count: string }>(sql`
     SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count
     FROM "IncomeTransactions"
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
       AND to_char(occurred_at, 'YYYY-MM') = ${yyyymm}
+      AND created_at >= ${epochWindow.startedAt.toISOString()}::timestamptz
+      ${upperBound}
   `)
   return { total: parseInt(row.total, 10), count: parseInt(row.count, 10) }
 }
@@ -161,9 +167,9 @@ export interface IncomeCategoryStatRow {
 export async function monthlyIncomeStatsByCategory(
   groupId: string,
   monthKey: string | undefined,
-  dateRange?: DateRange | null,
-  filter?: ResolvedIncomeFilter,
-  epochWindow?: EpochWindow | null,
+  dateRange: DateRange | null | undefined,
+  filter: ResolvedIncomeFilter | undefined,
+  epochWindow: EpochWindow,
 ): Promise<IncomeCategoryStatRow[]> {
   if (filter?.cutAll) return []
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`

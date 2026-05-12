@@ -14,6 +14,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
 interface AssetSummary {
   monthAmount: number
@@ -51,6 +52,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.plant
+  const { isPast } = useMember()
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -65,6 +67,8 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
   }
 
   const handleTxClick = (tx: PagedTxnRow) => {
+    // Past-epoch view is read-only — never open an edit sheet.
+    if (isPast) return
     if (tx.kind !== 'transaction') return
     setEditingTx({
       id: tx.id,
@@ -131,7 +135,9 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         )}
       />
 
-      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      {/* Asset CRUD (onEditClick) is exempt from past-epoch guard, but FAB
+          opens an AddSheet that creates a new transaction — hide it. */}
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" hideFab={isPast} />
       <AddSheet
         open={addOpen || editingTx !== null}
         onClose={() => { setAddOpen(false); setEditingTx(null) }}

@@ -13,7 +13,8 @@ import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilter
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
-import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
+import { requireViewer } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 
 export interface CreateTransactionInput {
@@ -32,14 +33,12 @@ export interface CreateTransactionInput {
 export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<{ id: string; isFirstTransaction: boolean }> {
-  // Validate first so pure-input failures don't require a DB round-trip
-  // (tests rely on this order via /金額必須是正整數/ before group lookup).
+  const { user, group } = await getViewerWriteContext()
+
   const validated = validateTransactionInput({
     ...input,
     splitRatioA: input.splitRatioA ?? null,
   })
-
-  const { user, group } = await requireViewerGroup()
 
   // Payer must be in group
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
@@ -102,7 +101,7 @@ export async function createTransaction(
 }
 
 export async function softDeleteTransaction(transactionId: string): Promise<void> {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -136,12 +135,12 @@ export interface EditTransactionInput {
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
+  const { group } = await getViewerWriteContext()
+
   const validated = validateTransactionInput({
     ...input,
     splitRatioA: input.splitRatioA ?? null,
   })
-
-  const { group } = await requireViewerGroup()
 
   if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
     throw new Error('付款人不在家計簿內')

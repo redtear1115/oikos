@@ -9,6 +9,7 @@ import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_com
 import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow } from '../aibutsu-ui'
 import { SavingsHero } from './SavingsHero'
@@ -76,6 +77,7 @@ export function SavingsView({
   const t = useTranslations()
   const td = t.assetDetail.insurance
   const ts = t.assetDetail.savings
+  const { isPast } = useMember()
   const [addOpen, setAddOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const [editAssetOpen, setEditAssetOpen] = useState(false)
@@ -160,7 +162,15 @@ export function SavingsView({
         onEditClick={() => setEditAssetOpen(true)}
       />
 
-      {progress.awaitingMaturity && details.expectedMaturityAmount !== null && details.endsAt ? (
+      {/* Maturity write-CTAs (MaturedAwaitingPrompt / MaturingSoonPrompt) are
+          unrendered in past-epoch mode: their onConfirm/onClick wires straight
+          into openRecordReturn → IncomeSheet (a write surface). Mirrors the
+          Task 7 pattern of full unrender rather than no-op handlers, and
+          matches the FAB hide on `hideFab={isPast}` below. SavingsHero is
+          read-only (its onSetExpectedMaturity opens AssetSheet, which mutates
+          the asset itself — exempt from past-epoch guard, same as PetDetail /
+          ChildDetail's onEditClick) so it stays rendered. */}
+      {!isPast && progress.awaitingMaturity && details.expectedMaturityAmount !== null && details.endsAt ? (
         <MaturedAwaitingPrompt
           maturityDate={details.endsAt}
           expectedMaturity={details.expectedMaturityAmount}
@@ -170,7 +180,7 @@ export function SavingsView({
         />
       ) : (
         <>
-          {progress.isMaturingSoon && details.endsAt && (
+          {!isPast && progress.isMaturingSoon && details.endsAt && (
             <MaturingSoonPrompt
               maturityDate={details.endsAt}
               onClick={() => openRecordReturn(details.expectedMaturityAmount ?? undefined)}
@@ -237,7 +247,9 @@ export function SavingsView({
         <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
           {ts.sectionReturn}
         </div>
-        {showRecordReturnCta && (
+        {/* Inline addReturn (記滿期金) opens IncomeSheet — write surface,
+            unrendered in past-epoch mode. */}
+        {!isPast && showRecordReturnCta && (
           <button
             type="button"
             onClick={() => openRecordReturn()}
@@ -320,7 +332,9 @@ export function SavingsView({
         </>
       )}
 
-      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" />
+      {/* Asset CRUD (onEditClick) is exempt from past-epoch guard, but FAB
+          (which opens AddSheet → cash-transaction write) hides in past mode. */}
+      <BottomNav onAddClick={() => setAddOpen(true)} fabVariant="primary" hideFab={isPast} />
 
       <AddSheet
         open={addOpen || editingTx !== null}

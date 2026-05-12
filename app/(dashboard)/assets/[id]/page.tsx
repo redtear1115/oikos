@@ -304,8 +304,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const [summary, txnRows, fuelLogs, fuelStats, linkedInsurances] = await Promise.all([
     getAssetSummary(id, group.id, epochWindow),
     listTransactionsPagedForAsset(id, group.id, null, PAGE_SIZE, epochWindow),
-    listFuelLogsWithPrev(id),
-    fuelStatsForAsset(id),
+    listFuelLogsWithPrev(id, epochWindow),
+    fuelStatsForAsset(id, epochWindow),
     getLinkedInsurancesForVehicle(id),
   ])
 
