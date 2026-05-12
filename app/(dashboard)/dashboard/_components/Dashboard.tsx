@@ -453,11 +453,13 @@ function DashboardFeed({
           {mode === 'expense' && (
             <button
               onClick={onFilterClick}
-              className="text-xs font-medium pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
-              style={{ color: 'var(--ink-2)' }}
+              // Demoted visual weight (#150): lighter color + font-normal so the
+              // section title ("最近紀錄") leads the row instead of competing.
+              className="text-xs font-normal pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
+              style={{ color: 'var(--ink-3)' }}
               aria-label={t.dashboard.filterAriaLabel}
             >
-              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} <span style={{ color: 'var(--ink-3)' }}>›</span>
+              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} ›
             </button>
           )}
         </div>

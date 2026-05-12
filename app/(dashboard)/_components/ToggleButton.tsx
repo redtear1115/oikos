@@ -15,7 +15,7 @@ export function ToggleButton({
       onClick={onClick}
       aria-expanded={expanded}
       aria-label={ariaLabel}
-      className="h-7 w-7 grid place-items-center rounded-full cursor-pointer bg-transparent"
+      className="relative h-7 w-7 grid place-items-center rounded-full cursor-pointer bg-transparent before:absolute before:inset-[-8px] before:content-['']"
       style={{
         color: 'var(--ink-2)',
         border: '1px solid var(--hairline)',

@@ -107,6 +107,7 @@ export const en: Translations = {
     noRecord: 'No records',
     manage: 'Manage ›',
     settleAriaLabel: 'Record repayment / receipt',
+    settleLabel: 'Settle',
     partnerOwesYou: 'owes you',
     youOwePartner: 'owe partner',
     currentlyEven: 'all settled',
@@ -150,6 +151,7 @@ export const en: Translations = {
 
   compactRow: {
     pendingBadge: 'Card pending',
+    myShareLabel: 'You',
   },
 
   incomeSheet: {

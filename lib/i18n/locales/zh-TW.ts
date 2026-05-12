@@ -108,6 +108,8 @@ export type Translations = {
     noRecord: string
     manage: string
     settleAriaLabel: string
+    /** Visible text label on the settle button (next to the ⇄ icon). */
+    settleLabel: string
     partnerOwesYou: string
     youOwePartner: string
     currentlyEven: string
@@ -155,6 +157,8 @@ export type Translations = {
   compactRow: {
     /** Small badge appended to a transaction row when its status is 'pending'. */
     pendingBadge: string
+    /** Short prefix shown next to the viewer's share amount on a feed row, e.g. "我 $250". */
+    myShareLabel: string
   }
 
   incomeSheet: {
@@ -1236,6 +1240,7 @@ export const zhTW: Translations = {
     noRecord: '尚無紀錄',
     manage: '管理 ›',
     settleAriaLabel: '記錄還款 / 收款',
+    settleLabel: '結算',
     partnerOwesYou: '欠你',
     youOwePartner: '欠對方',
     currentlyEven: '打平',
@@ -1279,6 +1284,7 @@ export const zhTW: Translations = {
 
   compactRow: {
     pendingBadge: '信用卡待扣',
+    myShareLabel: '我',
   },
 
   incomeSheet: {

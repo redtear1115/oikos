@@ -107,6 +107,7 @@ export const zhCN: Translations = {
     noRecord: '尚无记录',
     manage: '管理 ›',
     settleAriaLabel: '记录还款 / 收款',
+    settleLabel: '结算',
     partnerOwesYou: '欠你',
     youOwePartner: '欠对方',
     currentlyEven: '打平',
@@ -150,6 +151,7 @@ export const zhCN: Translations = {
 
   compactRow: {
     pendingBadge: '信用卡待扣',
+    myShareLabel: '我',
   },
 
   incomeSheet: {
