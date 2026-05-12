@@ -7,7 +7,6 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
-import { AssetSwitcher } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aibutsu-ui'
 import type { ChildDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -100,8 +99,6 @@ interface AssetSummary {
   totalAmount: number
 }
 
-type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
-
 interface Props {
   assetId: string
   name: string
@@ -112,10 +109,9 @@ interface Props {
   assetSheetInitial: AssetSheetInitial
   initialTxns: PagedTxnRow[]
   pageSize: number
-  allAssets: Array<{ id: string; name: string; type: AssetType }>
 }
 
-export function ChildDetailClient({ assetId, name, nickname, notes, details, summary, assetSheetInitial, initialTxns, pageSize, allAssets }: Props) {
+export function ChildDetailClient({ assetId, name, nickname, notes, details, summary, assetSheetInitial, initialTxns, pageSize }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.child
@@ -157,19 +153,17 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
       <AibutsuHeader
         kind="child"
         name={
-          <AssetSwitcher currentAssetId={assetId} allAssets={allAssets}>
-            <span className="inline-flex items-baseline gap-2 min-w-0">
-              <span className="truncate">{display.primary}</span>
-              {display.secondary && (
-                <span
-                  className="text-micro tracking-[0.5px] truncate"
-                  style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
-                >
-                  {display.secondary}
-                </span>
-              )}
-            </span>
-          </AssetSwitcher>
+          <span className="inline-flex items-baseline gap-2 min-w-0 justify-center">
+            <span className="truncate">{display.primary}</span>
+            {display.secondary && (
+              <span
+                className="text-micro tracking-[0.5px] truncate"
+                style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+              >
+                {display.secondary}
+              </span>
+            )}
+          </span>
         }
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}

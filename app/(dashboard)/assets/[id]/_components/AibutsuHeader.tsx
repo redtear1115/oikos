@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useTranslations } from '@/lib/i18n/client'
 
 const TINTS = {
@@ -14,8 +15,8 @@ type TintKind = keyof typeof TINTS
 
 interface AibutsuHeaderProps {
   kind: TintKind
-  /** Page title — pass plain string, or wrap in <AssetSwitcher>...</AssetSwitcher>
-   *  to make it a tappable switcher. */
+  /** Page title. Plain string is the norm; ReactNode is allowed for callers
+   *  that need to mix a secondary label inline (e.g. child nickname). */
   name: React.ReactNode
   subtitle?: string | null
   onEditClick?: () => void
@@ -25,25 +26,26 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
   const tint = TINTS[kind]
   const t = useTranslations()
   return (
-    <div className="px-5 pt-12 pb-3" style={{ background: tint.bg }}>
-      {/* Mirror AssetHero structure: subtitle is a sibling of the header row,
-          not nested inside the flex-1 wrapper next to the back button. This
-          keeps the subtitle flush-left with the page padding (matches car
-          detail page) instead of indenting under the title. */}
-      <div className="flex items-center gap-3">
-        <a
+    <div className="px-4 pt-12 pb-3" style={{ background: tint.bg }}>
+      <div className="flex items-center justify-between gap-2">
+        <Link
           href="/assets"
-          className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0"
-          style={{ background: 'rgba(58,36,25,0.08)' }}
-          aria-label={t.assetDetail.backAriaLabel}
+          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent shrink-0"
+          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M9 2l-5 5 5 5" stroke="#3A2419" strokeWidth="1.6"
+          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+            <path d="M6.5 1.5L1.5 6.5L6.5 11.5" stroke="currentColor" strokeWidth="1.6"
               strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </a>
-        <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}>{name}</div>
-        {onEditClick && (
+          <span>{t.assetDetail.backAriaLabel}</span>
+        </Link>
+        <div
+          className="flex-1 text-lg font-medium tracking-tight truncate min-w-0 text-center"
+          style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}
+        >
+          {name}
+        </div>
+        {onEditClick ? (
           <button
             onClick={onEditClick}
             className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center"
@@ -56,11 +58,13 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
                 strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             </svg>
           </button>
+        ) : (
+          <div className="w-[30px] shrink-0" aria-hidden="true" />
         )}
       </div>
       {subtitle && (
         <div
-          className="text-xs mt-1 tracking-[1px]"
+          className="text-xs mt-1.5 tracking-[1px] text-center"
           style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
         >{subtitle}</div>
       )}

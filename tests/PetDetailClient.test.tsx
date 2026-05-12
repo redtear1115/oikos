@@ -20,9 +20,6 @@ vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHeader', () => ({
   AibutsuHeader: () => null,
   useTint: () => ({ accent: '#000', bg: '#fff' }),
 }))
-vi.mock('@/app/(dashboard)/assets/[id]/_components/AssetSwitcher', () => ({
-  AssetSwitcher: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}))
 vi.mock('@/app/(dashboard)/assets/[id]/_components/AibutsuHintCard', () => ({ AibutsuHintCard: () => null }))
 
 import { render, screen } from '@testing-library/react'
@@ -37,7 +34,6 @@ const baseProps = {
   assetSheetInitial: { id: 'a1', type: 'pet' as const, name: '米嚕' },
   initialTxns: [],
   pageSize: 20,
-  allAssets: [],
 }
 
 describe('PetDetailClient — notes section', () => {
