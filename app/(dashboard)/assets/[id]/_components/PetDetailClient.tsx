@@ -40,8 +40,18 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('pet')
+  // Species enum (cat/dog/…/other) is set by AssetSheet's chip picker — reuse
+  // the same i18n strings rather than duplicating under assetDetail.pet.
+  const ps = t.assetSheet.pet
+  const speciesLabel = details?.species === 'cat' ? ps.speciesCat
+    : details?.species === 'dog' ? ps.speciesDog
+    : details?.species === 'rabbit' ? ps.speciesRabbit
+    : details?.species === 'bird' ? ps.speciesBird
+    : details?.species === 'fish' ? ps.speciesFish
+    : details?.species === 'other' ? ps.speciesOther
+    : null
   const subtitle = details
-    ? [details.species, details.breed,
+    ? [speciesLabel, details.breed,
         details.sex === 'female' ? td.sexFemale
           : details.sex === 'male' ? td.sexMale
           : details.sex === 'unknown' ? td.sexUnknown
