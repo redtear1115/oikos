@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, use, useCallback, useEffect, useReducer, useRef, useState, useTransition } from 'react'
+import { Suspense, use, useCallback, useEffect, useMemo, useReducer, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
@@ -17,7 +17,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
 import { IncomeEmptyState } from './IncomeEmptyState'
-import { defaultFilter, isFilterActive, type TxnFilter } from '@/lib/filter'
+import { defaultFilter, isFilterActive, toWire, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
@@ -32,7 +32,6 @@ import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
-const incomeLoader = makeIncomeLoader(20)
 
 /** Info every sheet hands back through onMutated so Dashboard can drive a
  *  success toast + the first-record card without each sheet owning its own
@@ -463,13 +462,22 @@ function DashboardFeed({
     )
   }, [onItemClick, P.glow])
 
+  // Income loader closes over the active filter so the income feed responds
+  // to FilterSheet changes the same way the cash feed does — TransactionFeed
+  // calls loader(null) on filter-prop change. Recreated each filter ref
+  // change; stable while filter is null/inactive.
+  const incomeLoader = useMemo(
+    () => makeIncomeLoader(20, undefined, undefined, filter ? toWire(filter) : undefined),
+    [filter],
+  )
+
   return (
     <TransactionFeed
       key={mode}
       initial={mode === 'income' ? recentIncomeFeed : recent}
       pageSize={pageSize}
       onItemClick={onItemClick}
-      filter={mode === 'income' ? undefined : (filter ?? undefined)}
+      filter={filter ?? undefined}
       loader={mode === 'income' ? incomeLoader : undefined}
       renderRow={mode === 'income' ? incomeRenderRow : undefined}
       label={
@@ -477,18 +485,16 @@ function DashboardFeed({
           <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
             {t.feed.header}
           </span>
-          {mode === 'expense' && (
-            <button
-              onClick={onFilterClick}
-              // Demoted visual weight (#150): lighter color + font-normal so the
-              // section title ("最近紀錄") leads the row instead of competing.
-              className="text-xs font-normal pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
-              style={{ color: 'var(--ink-3)' }}
-              aria-label={t.dashboard.filterAriaLabel}
-            >
-              {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} ›
-            </button>
-          )}
+          <button
+            onClick={onFilterClick}
+            // Demoted visual weight (#150): lighter color + font-normal so the
+            // section title ("最近紀錄") leads the row instead of competing.
+            className="text-xs font-normal pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
+            style={{ color: 'var(--ink-3)' }}
+            aria-label={t.dashboard.filterAriaLabel}
+          >
+            {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} ›
+          </button>
         </div>
       }
       emptyState={

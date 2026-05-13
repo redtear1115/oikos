@@ -60,19 +60,24 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
   }, [initial, pageSize, filter])
 
   // When the filter changes (including becoming undefined → defined), refetch page 1.
+  // Custom loaders (e.g. the income loader) own their own filter encoding by
+  // closing over it; we just trigger the refetch via `loader(null)` rather than
+  // routing through the cash-only loadMoreTransactions path.
   useEffect(() => {
     if (!filter) return  // handled by the previous effect via `initial`
     setError('')
     startLoading(async () => {
       try {
-        const fresh = await loadMoreTransactions(null, pageSize, toWire(filter), monthKey)
+        const fresh = loader
+          ? await loader(null)
+          : await loadMoreTransactions(null, pageSize, toWire(filter), monthKey)
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
         setError(describeError(e, '載入失敗', t.common.offlineError))
       }
     })
-  }, [filter, pageSize, monthKey, t])
+  }, [filter, loader, pageSize, monthKey, t])
 
   // Auto-dismiss error toast after 5s.
   useEffect(() => {
