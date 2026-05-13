@@ -84,7 +84,12 @@ export function BalanceHero({
   // Toggle is meaningful only when there is at least one pending row whose
   // delta is non-zero. With no pending records, both views are identical.
   const hasPending = pendingBalanceDelta !== 0
-  const effectiveRaw = includePendingView && hasPending
+  // `isProjectionView` = the hero is showing the "after-settle" projection
+  // (settled + pending). The projection is a hypothetical — pending rows have
+  // not yet flowed into the settled-only GroupBalance cache — so it must NOT
+  // be treated as actionable debt (issue #208).
+  const isProjectionView = includePendingView && hasPending
+  const effectiveRaw = isProjectionView
     ? displayedRaw + pendingBalanceDelta
     : displayedRaw
   const balance = viewerBalance(effectiveRaw, viewerIsA)
@@ -121,9 +126,14 @@ export function BalanceHero({
   const amount = Math.abs(balance)
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
-  // Past-epoch view is read-only — hide the settle entry. (Server action also
-  // rejects createSettlement, but the button shouldn't be there to start with.)
-  const canSettle = balance !== 0 && !isPast
+  // Hide the settle button in two cases:
+  //   - Past-epoch view is read-only (server action also rejects).
+  //   - "After-settle" projection view (issue #208): the displayed amount
+  //     includes pending deltas that haven't flowed into GroupBalance yet.
+  //     Pre-filling a settlement from the projection would create an
+  //     inflated row and skew the cache. Users must toggle back to the
+  //     settled-only view to settle.
+  const canSettle = balance !== 0 && !isPast && !isProjectionView
   // Semantic color for the debt amount: green when partner owes you, red/orange
   // when you owe partner, neutral when even. Surfaces direction at a glance (#146).
   const balanceColor = balance > 0 ? 'var(--credit)' : balance < 0 ? 'var(--debit)' : 'var(--ink)'
