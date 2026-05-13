@@ -222,6 +222,23 @@ export function FilterSheet({
   }
 
   /**
+   * Toggle "select all" for expense / income categories. Mirrors the asset
+   * sub-section's全選 behavior — adds every pickable id when not all selected,
+   * clears every id when all are selected. An empty set still means "no
+   * filter" semantically, so 全選 → 全選 again returns the user to the
+   * unfiltered baseline in two taps.
+   */
+  const toggleAllCategories = (allSelected: boolean) => {
+    const next = allSelected ? new Set<CategoryId>() : new Set(PICKABLE_CATEGORIES.map(c => c.id))
+    setDraft({ ...draft, categories: next })
+  }
+
+  const toggleAllIncomeCategories = (allSelected: boolean) => {
+    const next = allSelected ? new Set<IncomeCategoryId>() : new Set(PICKABLE_INCOME_CATEGORIES.map(c => c.id))
+    setDraft({ ...draft, incomeCategories: next })
+  }
+
+  /**
    * Convert the date-range mode + custom inputs into a concrete DateRange.
    * Custom mode rejects an inverted range (start > end) by silently swapping
    * the bounds — easier to recover from a stray tap than blocking the apply.
@@ -270,6 +287,16 @@ export function FilterSheet({
     setDraftMode('thisMonth')
     onReset?.()
   }
+
+  // Derived: are *every* pickable expense/income category currently in the
+  // draft set? Drives the 全選 chip's active state and toggle behavior. Empty
+  // set = false (no chip lit), full set = true (all chips lit + 全選 lit).
+  const allExpenseCatsSelected =
+    PICKABLE_CATEGORIES.length > 0 &&
+    PICKABLE_CATEGORIES.every((c) => draft.categories.has(c.id))
+  const allIncomeCatsSelected =
+    PICKABLE_INCOME_CATEGORIES.length > 0 &&
+    PICKABLE_INCOME_CATEGORIES.every((c) => draft.incomeCategories.has(c.id))
 
   const handleShare = async () => {
     if (!onShare) return
@@ -498,13 +525,23 @@ export function FilterSheet({
             </div>
           </Section>
 
-          {/* 分類 (multi) — expense vocabulary. */}
+          {/* 分類 (multi) — expense vocabulary. Mirrors the愛物 sub-section
+              UX: a leading「全選」chip toggles every category at once, and
+              each per-category chip carries a small colored dot in the
+              category's identity hue so the filter sheet shares the same
+              palette as feed icons / donut slices (see lib/categories.ts). */}
           <Section title={t.filterSheet.categorySection}>
+            <Chip
+              label={t.filterSheet.assetGroupSelectAll}
+              active={allExpenseCatsSelected}
+              onClick={() => toggleAllCategories(allExpenseCatsSelected)}
+            />
             {PICKABLE_CATEGORIES.map((c) => (
               <Chip
                 key={c.id}
                 label={t.category[c.id]}
                 active={draft.categories.has(c.id)}
+                dotColor={c.color}
                 onClick={() => toggleCategory(c.id)}
               />
             ))}
@@ -515,14 +552,21 @@ export function FilterSheet({
               rows; picking only an income cat drops cash rows; picking both
               shows both kinds, each filtered to its own cat set. Hidden in
               lite mode (the Dashboard /dashboard FilterSheet is in-memory
-              and only handles cash transactions). */}
+              and only handles cash transactions). Same 全選 + colored-dot
+              treatment as the expense-category section above. */}
           {!liteMode && (
             <Section title={t.filterSheet.incomeCategorySection}>
+              <Chip
+                label={t.filterSheet.assetGroupSelectAll}
+                active={allIncomeCatsSelected}
+                onClick={() => toggleAllIncomeCategories(allIncomeCatsSelected)}
+              />
               {PICKABLE_INCOME_CATEGORIES.map((c) => (
                 <Chip
                   key={c.id}
                   label={t.incomeCategory[c.id]}
                   active={draft.incomeCategories.has(c.id)}
+                  dotColor={c.color}
                   onClick={() => toggleIncomeCategory(c.id)}
                 />
               ))}
@@ -606,17 +650,42 @@ function AssetGroupSection({
   )
 }
 
-function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+/**
+ * Generic chip used across every section. Optional `dotColor` paints a small
+ * 6×6 dot to the left of the label — used by category chips to surface the
+ * category's identity hue (matches feed icons / donut slices), so the same
+ * 飲食 chip in the filter reads as the same hue family as a 飲食 row's badge.
+ * Other dimensions (payer / split / status / 全選) omit the prop and render
+ * as a plain pill.
+ */
+function Chip({
+  label,
+  active,
+  onClick,
+  dotColor,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+  dotColor?: string
+}) {
   return (
     <button
       onClick={onClick}
-      className="h-8 px-3 rounded-full text-xs font-medium cursor-pointer transition-colors"
+      className="h-8 px-3 rounded-full text-xs font-medium cursor-pointer transition-colors inline-flex items-center gap-1.5"
       style={{
         background: active ? 'var(--ink)' : 'var(--surface)',
         color: active ? '#fff' : 'var(--ink-2)',
         border: '1px solid var(--hairline)',
       }}
     >
+      {dotColor && (
+        <span
+          aria-hidden="true"
+          className="inline-block rounded-full shrink-0"
+          style={{ width: 6, height: 6, background: dotColor }}
+        />
+      )}
       {label}
     </button>
   )
