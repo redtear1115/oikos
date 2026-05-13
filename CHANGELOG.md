@@ -19,6 +19,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### 技術變更
 - _尚無_
 
+## [0.15.3] - 2026-05-13
+
+主題：**章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值**——v0.15.0 才剛建立的關係章節（epoch）框架，這版把「pin 在過去章節時還能編輯紀錄、結果整筆從過去章節人間蒸發」這條 bug 收掉，並把背後的 read/write 兩端 epoch boundary 變成型別防呆，讓「transaction 完整歸屬於某段 epoch」從靠記憶變成結構性保證。同期把 v0.9.0 的儲蓄險詳情頁延伸到「投資型保單」家族——新增目前帳戶價值欄位，並讓保險可以自動產生 RecurringIncome 規則，滿期金 / 分紅金不再需要每次手動建。
+
+完整 diff：[v0.15.2...v0.15.3](https://github.com/redtear1115/oikos/compare/v0.15.2...v0.15.3)
+
+### 使用者可見變化
+
+#### 過去章節 read-only（PR #207，closes #194/#195/#197/#198/#199/#200/#201/#202/#206）
+- **過去章節整段變唯讀**：pin 在 past epoch 時，所有 transaction（cash / income / settlement / fuelLog）的編輯與刪除按鈕都隱藏；想動就回到當前章節。設計理由：過去章節是「已經發生的歷史」，不該被改寫；同時擋住「在過去章節點編輯 → 新 row 落到當前章節 window → 在過去章節 view 整筆紀錄消失」的 ghost migration bug。
+- **Dashboard 本月進帳數值修正**：BalanceHero「本月進帳」總額先前在收錄模式（pin 在 past epoch）會吃進其他 epoch 的進帳，造成跨章節數字漂移；修掉後總額只算當下 view 的章節範圍。
+
+#### 投資型保單帳戶價值 × 自動化（PR #212，closes #166）
+- **投資型保單詳情頁顯示「目前帳戶價值」**：savings framing 新增一條 informational row，承載「投資型保單的當下市值」——與累計繳 / 已拿回兩條主軸數字並排但不混入，使用者根據對帳單自行更新。傳統儲蓄型保單沒這個概念，欄位空白不顯示。
+- **保險可自動產生定期收入規則**：建立保單時若有設定預期滿期金 / 分紅，系統會自動建一條 `RecurringIncomeRule`，到期日由 cron 產 pending 卡片，使用者一鍵 confirm 落 IncomeTransaction；滿期金 / 分紅金不再需要每次手動建紀錄。
+
+### 技術變更
+
+- **`epochWindow` 型別防呆 across all transaction reads**（PR #207）：所有 transaction-class query（`listIncomesPaged` / `listIncomeMonthSummary` / `monthlyIncomeStatsByCategory` / 等價的 cash / settlement / fuelLog 查詢）改為 required `epochWindow` 參數，從 caller 強制傳入；先前 `listIncomeMonthSummary` 漏接 `epochWindow` 造成的 Dashboard 數值漂移從根本擋掉。
+- **Write-side past-epoch guard**（PR #207）：`createTransaction` / `editTransaction` / `softDeleteTransaction` / `createIncome` / `editIncome` / `softDeleteIncome` / settlement / fuelLog 等所有 write server actions 加 past-epoch cookie 檢查，pin 在過去章節時直接 throw；同時 UI 收掉編輯/刪除按鈕作為第一道 guard。
+- **`InsuranceDetails.account_value` 欄位新增**（PR #212，#166）：migration `0035_insurance_account_value` 加 `account_value integer NULL`（純加 nullable column、metadata-only DDL）；只對投資型保單 (`insuranceType === 'savings'` 且 isInvestmentLinked) 顯示。
+- **`RecurringIncomeRules.source_type` / `source_ref_id` 跨 feature 來源欄位**（PR #212，#166）：在 `RecurringIncomeRules` schema 加上「這條規則是哪個 feature 自動產的」欄位，保險自動建立的規則會標 `source_type='insurance' / source_ref_id=<asset_id>`；後續刪除保單時可連動清掉對應規則。
+- **Doc keeper pass**（PR #217）：epoch-readonly-design.md 從 design → shipped；recurring-income-design.md 補 v0.15.3 註腳；CLAUDE.md spec table 新增 epoch-readonly-design.md 一列。
+
 ## [0.15.2] - 2026-05-13
 
 主題：**問答、跨章節與守護的下一步**——v0.15.0 才剛上線的關係章節（epoch）延伸成可跨 group 翻看的「過去」；保險脫離愛物清單獨立為「守護」tab、被保人也可以關聯 Child 愛物，讓保險紀錄真的長進了關係裡；PartnerQuiz 雙人異步問答 ship 出第一個小儀式；篩選器 v2 把金額範圍 + status 也納進來；底下三條 refactor（SQL predicate / AssetSheet 拆分 / auth/group 樣板統一）為之後的 v0.16 多幣別工作打底。
