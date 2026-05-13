@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import {
   MONTHLY_REVIEW_MESSAGE_MAX_CODEPOINTS,
   codepointLength,
@@ -42,6 +43,9 @@ export function MessageEditor({
 }) {
   const t = useTranslations()
   const tr = t.monthlyReview
+  const { viewerIsA } = useMember()
+  const viewerRole: 'a' | 'b' = viewerIsA ? 'a' : 'b'
+  const partnerRole: 'a' | 'b' = viewerIsA ? 'b' : 'a'
 
   const locked = !!ownMessage?.lockedAt
   const initial = ownMessage?.body ?? ''
@@ -112,7 +116,7 @@ export function MessageEditor({
         <div className="flex items-center gap-2 mb-2">
           <Avatar
             size={28}
-            who="M"
+            memberRole={viewerRole}
             initial={(viewer.displayName[0] ?? '?').toUpperCase()}
             src={viewer.avatarUrl}
           />
@@ -163,7 +167,7 @@ export function MessageEditor({
             <div className="flex items-center gap-2 mb-2">
               <Avatar
                 size={28}
-                who="T"
+                memberRole={partnerRole}
                 initial={(partner.displayName[0] ?? '?').toUpperCase()}
                 src={partner.avatarUrl}
               />

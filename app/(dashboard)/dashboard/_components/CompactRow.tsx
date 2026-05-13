@@ -1,6 +1,6 @@
 'use client'
 
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
@@ -26,8 +26,9 @@ export interface CompactRowProps {
 
 export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const t = useTranslations()
-  const { viewer, partner } = useMember()
+  const { viewer, partner, viewerIsA } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
+  const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
   const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const payerLabel = tx.kind === 'settlement'
@@ -101,7 +102,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           className="text-micro flex items-center gap-1.5"
           style={{ color: 'var(--ink-3)' }}
         >
-          {dateLabel} · <Avatar who={payerIsViewer ? 'M' : 'T'} initial={payerInitial} src={payerAvatar} size={16} /> {payerLabel}
+          {dateLabel} · <Avatar memberRole={payerRole} initial={payerInitial} src={payerAvatar} size={16} /> {payerLabel}
         </div>
         {noteText && (
           <div
