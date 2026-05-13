@@ -159,7 +159,6 @@ export const zhCN: Translations = {
 
   compactRow: {
     pendingBadge: '信用卡待扣',
-    myShareLabel: '我',
   },
 
   incomeSheet: {

@@ -159,7 +159,6 @@ export const ja: Translations = {
 
   compactRow: {
     pendingBadge: 'カード引落待ち',
-    myShareLabel: '自分',
   },
 
   incomeSheet: {

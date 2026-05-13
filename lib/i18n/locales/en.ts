@@ -159,7 +159,6 @@ export const en: Translations = {
 
   compactRow: {
     pendingBadge: 'Card pending',
-    myShareLabel: 'You',
   },
 
   incomeSheet: {

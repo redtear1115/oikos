@@ -171,8 +171,6 @@ export type Translations = {
   compactRow: {
     /** Small badge appended to a transaction row when its status is 'pending'. */
     pendingBadge: string
-    /** Short prefix shown next to the viewer's share amount on a feed row, e.g. "我 $250". */
-    myShareLabel: string
   }
 
   incomeSheet: {
@@ -1419,7 +1417,6 @@ export const zhTW: Translations = {
 
   compactRow: {
     pendingBadge: '信用卡待扣',
-    myShareLabel: '我',
   },
 
   incomeSheet: {
