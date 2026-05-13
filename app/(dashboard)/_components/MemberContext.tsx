@@ -22,6 +22,11 @@ export interface MemberContextValue {
    *  Server actions also reject writes — UI hide is the primary defence,
    *  server reject is the safety net. */
   isPast: boolean
+  /** #220 — Guardian module visibility. True when the viewer's group has
+   *  opted into the Guardian (守護) beta (or — eventually — has a paid
+   *  subscription). Drives nav-tab rendering on /assets and similar gates;
+   *  server-side routes also recheck via `canAccessGuardian()`. */
+  canAccessGuardian: boolean
 }
 
 const MemberContext = createContext<MemberContextValue | null>(null)

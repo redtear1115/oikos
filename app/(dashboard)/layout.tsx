@@ -13,6 +13,7 @@ import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { canAccessGuardian } from '@/lib/guardian'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -60,6 +61,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     viewerIsA,
     isSolo: !partnerProfile,
     isPast: epochWindow.isPast,
+    canAccessGuardian: canAccessGuardian(group),
   }
 
   return (

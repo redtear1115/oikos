@@ -11,6 +11,7 @@ import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
+import { canAccessGuardian } from '@/lib/guardian'
 
 function assertPolicyHolderInGroup(
   userId: string,
@@ -732,6 +733,13 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
   'use server'
   const validated = validateInsuranceInput(input)
   const { group } = await requireViewerGroup()
+
+  // #221 — server-side safety net: never let an insurance asset be created
+  // when the Guardian beta is off, even if the client surface somehow bypasses
+  // the TypePicker gate.
+  if (!canAccessGuardian(group)) {
+    throw new Error('guardian_disabled')
+  }
 
   if (input.vehicleId) {
     const [vehicle] = await db

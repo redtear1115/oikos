@@ -8,6 +8,7 @@ import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { DangerZone, type PendingSwap } from './DangerZone'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
+import { GuardianBetaToggle } from './GuardianBetaToggle'
 import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
@@ -40,11 +41,13 @@ interface Props {
   groupBalance: number
   /** A pending swap proposal on this group, or null if none. */
   pendingSwap: PendingSwap | null
+  /** #220 — Guardian beta opt-in state for this group. */
+  guardianBetaEnabled: boolean
 }
 
 export function SettingsContent({
   viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
-  viewerIsMemberA, groupBalance, pendingSwap,
+  viewerIsMemberA, groupBalance, pendingSwap, guardianBetaEnabled,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -365,6 +368,11 @@ export function SettingsContent({
             {exportError}
           </div>
         )}
+      </Section>
+
+      {/* 守護（Beta）— per-group opt-in for the Guardian module (#220) */}
+      <Section title={t.settings.sectionGuardian}>
+        <GuardianBetaToggle enabled={guardianBetaEnabled} />
       </Section>
 
       {partner && (
