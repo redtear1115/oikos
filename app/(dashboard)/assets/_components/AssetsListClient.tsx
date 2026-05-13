@@ -55,7 +55,6 @@ export interface AssetsListItem {
   brand?: string | null
   model?: string | null
   latestOdometer?: number | null
-  totalAmount?: number
 }
 
 interface Props {
@@ -277,7 +276,6 @@ export function AssetsListClient({ items }: Props) {
               model={c.model ?? null}
               latestOdometer={c.latestOdometer ?? null}
               monthAmount={c.monthAmount}
-              totalAmount={c.totalAmount ?? 0}
               compact={multiCar}
             />
           ))}
