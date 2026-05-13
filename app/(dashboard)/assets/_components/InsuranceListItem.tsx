@@ -28,6 +28,8 @@ interface InsuranceData {
   insured: string | null
   insuredChildId: string | null
   insuredChildName: string | null
+  insuredUserId: string | null
+  insuredUserDisplayName: string | null
   policyHolderUserId: string | null
   policyHolderDisplayName: string | null
   policyHolderAvatarUrl: string | null
@@ -241,11 +243,11 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 min-w-0">
         <div className="text-body font-semibold truncate">{name}</div>
-        {/* #167 — linked Child 愛物 name wins over the freeform `insured`
-            text when set; falls back to the text otherwise. */}
-        {(data.insuredChildName || data.insured) && (
+        {/* #167 + #237 — display precedence mirrors the action layer's mutex:
+            Child 愛物 name > group member displayName > freeform text. */}
+        {(data.insuredChildName || data.insuredUserDisplayName || data.insured) && (
           <div className="text-xs truncate ml-auto" style={{ color: 'var(--ink-3)' }}>
-            {i.insuredPrefix.replace('{name}', data.insuredChildName ?? data.insured ?? '')}
+            {i.insuredPrefix.replace('{name}', data.insuredChildName ?? data.insuredUserDisplayName ?? data.insured ?? '')}
           </div>
         )}
       </div>

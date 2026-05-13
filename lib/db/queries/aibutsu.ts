@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
-import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets } from '@/lib/db/schema'
+import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets, profiles } from '@/lib/db/schema'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
 
 export interface ChildDetailsRow {
@@ -133,6 +133,8 @@ export interface InsuranceDetailsRow {
   insured: string | null
   insuredChildId: string | null
   insuredChildName: string | null
+  insuredUserId: string | null
+  insuredUserDisplayName: string | null
   policyHolderUserId: string | null
   insurer: string | null
   annualPremium: number | null
@@ -151,7 +153,10 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
   // child's name without an extra round-trip. NULL when insured_child_id is
   // unset or the child was hard-deleted (FK is RESTRICT but soft-delete
   // doesn't break the join).
+  // #237 — same pattern for insured_user_id so the detail page can render
+  // the member's displayName when 被保人 is 自己 / 對方.
   const insuredChildAsset = alias(assets, 'insured_child_asset')
+  const insuredUserProfile = alias(profiles, 'insured_user_profile')
   const rows = await db
     .select({
       policyNo: insuranceDetails.policyNumber,
@@ -159,6 +164,8 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
       insured: insuranceDetails.insured,
       insuredChildId: insuranceDetails.insuredChildId,
       insuredChildName: insuredChildAsset.name,
+      insuredUserId: insuranceDetails.insuredUserId,
+      insuredUserDisplayName: insuredUserProfile.displayName,
       policyHolderUserId: insuranceDetails.policyHolderUserId,
       insurer: insuranceDetails.insurer,
       annualPremium: insuranceDetails.annualPremium,
@@ -173,6 +180,7 @@ export async function getInsuranceDetails(assetId: string): Promise<InsuranceDet
     })
     .from(insuranceDetails)
     .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))
+    .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
     .where(eq(insuranceDetails.assetId, assetId))
     .limit(1)
   return rows[0] ?? null
