@@ -289,7 +289,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 amount && !pending ? 'var(--accent)' : 'var(--ink-3)',
             }}
           >
-            {pending ? t.common.saving : t.common.save}
+            {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
           </button>
         </div>
 

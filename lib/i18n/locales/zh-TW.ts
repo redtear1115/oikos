@@ -12,6 +12,9 @@ export type Translations = {
   common: {
     cancel: string
     save: string
+    /** Edit-mode submit label. Distinct from `save` so create-vs-edit CTAs
+     *  read semantically (create = "save / jot it down", edit = "update"). */
+    update: string
     saving: string
     processing: string
     delete: string
@@ -1294,6 +1297,7 @@ export const zhTW: Translations = {
   common: {
     cancel: '取消',
     save: '儲存',
+    update: '更新',
     saving: '儲存中…',
     processing: '處理中…',
     delete: '刪除',

@@ -14,6 +14,7 @@ export const en: Translations = {
   common: {
     cancel: 'Cancel',
     save: 'Save',
+    update: 'Update',
     saving: 'Saving…',
     processing: 'Processing…',
     delete: 'Delete',

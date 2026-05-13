@@ -372,7 +372,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
                 cursor: canSubmit ? 'pointer' : 'default',
               }}
             >
-              {pending ? '儲存中…' : '記下這筆'}
+              {pending ? '儲存中…' : mode === 'edit' ? t.common.update : '記下這筆'}
             </button>
           </div>
         )}
