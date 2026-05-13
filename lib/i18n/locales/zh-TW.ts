@@ -293,7 +293,7 @@ export type Translations = {
     soloLockHint: string
     inviteCta: string
     language: string
-    sectionDevice: string
+    sectionApp: string
     offlineBrowsing: string
     offlineHintOff: string
     offlineHintOn: string
@@ -1536,7 +1536,7 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     inviteCta: '邀請對方加入',
     language: '語言',
-    sectionDevice: '裝置',
+    sectionApp: '應用',
     offlineBrowsing: '離線瀏覽',
     offlineHintOff: '在無網路時看不到歷史記錄。開啟後，最近瀏覽過的頁面會存在這台裝置上。',
     offlineHintOn: '無網路時可看最近一次連線時的記錄。資料只存在這台裝置，登出時會自動清除。',

@@ -276,7 +276,7 @@ export const ja: Translations = {
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     inviteCta: '相手を招待',
     language: '言語',
-    sectionDevice: 'デバイス',
+    sectionApp: 'アプリ',
     offlineBrowsing: 'オフライン閲覧',
     offlineHintOff: 'オフライン時には履歴を表示できません。オンにすると、最近閲覧したページがこの端末に保存されます。',
     offlineHintOn: 'オフライン時に最後の接続時の記録を閲覧できます。データはこの端末にのみ保存され、ログアウト時に削除されます。',
