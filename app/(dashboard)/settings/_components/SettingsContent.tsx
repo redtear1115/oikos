@@ -241,8 +241,8 @@ export function SettingsContent({
               type="button"
               onClick={handleInvite}
               disabled={invitePending}
-              className="w-full h-12 rounded-[14px] border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--accent)' }}
+              className="w-full h-12 rounded-[14px] border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+              style={{ background: 'var(--btn-accent-bg)', color: 'var(--btn-accent-text)' }}
             >
               {invitePending ? t.soloBanner.generating : t.settings.inviteCta}
             </button>

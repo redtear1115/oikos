@@ -135,7 +135,11 @@ function SwapPendingBanner({
             onClick={run(cancelSwap)}
             disabled={busy}
             className="flex-1 h-10 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
-            style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
+            style={{
+              background: 'var(--btn-secondary-bg)',
+              color: 'var(--btn-secondary-text)',
+              border: '1px solid var(--btn-secondary-border)',
+            }}
           >
             {busy ? banner.processing : banner.cancelCta}
           </button>
@@ -146,7 +150,11 @@ function SwapPendingBanner({
               onClick={run(cancelSwap)}
               disabled={busy}
               className="flex-1 h-10 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
-              style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
+              style={{
+                background: 'var(--btn-secondary-bg)',
+                color: 'var(--btn-secondary-text)',
+                border: '1px solid var(--btn-secondary-border)',
+              }}
             >
               {busy ? banner.processing : banner.rejectCta}
             </button>
