@@ -210,7 +210,11 @@ export function LeaveGroupFlow({
               }}
               disabled={pending}
               className="h-11 px-4 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
-              style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
+              style={{
+                background: 'var(--btn-secondary-bg)',
+                color: 'var(--btn-secondary-text)',
+                border: '1px solid var(--btn-secondary-border)',
+              }}
             >
               {step === 1 ? flow.close : flow.back}
             </button>
@@ -338,7 +342,11 @@ function Card4({
           onClick={onNo}
           disabled={pending}
           className="w-full h-12 rounded-[14px] text-sm font-medium cursor-pointer disabled:opacity-50"
-          style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
+          style={{
+            background: 'var(--btn-secondary-bg)',
+            color: 'var(--btn-secondary-text)',
+            border: '1px solid var(--btn-secondary-border)',
+          }}
         >
           {t.no}
         </button>
