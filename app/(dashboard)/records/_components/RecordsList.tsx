@@ -334,7 +334,7 @@ export function RecordsList({
       : 'all'
 
   return (
-    <div className="relative min-h-dvh pb-[92px]">
+    <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* Sticky header + tab bar */}
       <div
         className="sticky top-0 z-20 pb-1"

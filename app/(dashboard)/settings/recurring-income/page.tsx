@@ -13,7 +13,7 @@ export default async function RecurringIncomeSettingsPage() {
   ])
 
   return (
-    <div className="relative min-h-dvh pb-[92px]">
+    <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <RecurringIncomeContent
         rules={rules}
         insuranceAssets={insuranceAssets}

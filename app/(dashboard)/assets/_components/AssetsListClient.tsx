@@ -361,7 +361,7 @@ export function AssetsListClient({ items }: Props) {
   )
 
   return (
-    <div className="relative min-h-screen pb-[92px]">
+    <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       <div className="px-5 pt-[60px] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"
