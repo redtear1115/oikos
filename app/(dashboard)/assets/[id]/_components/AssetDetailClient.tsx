@@ -145,6 +145,27 @@ export function AssetDetailClient({
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
+      {/* #250 — sticky back bar so navigation stays available while scrolling.
+          Mirrors AibutsuHeader's pattern (back arrow + label); name + edit live
+          inside the AssetHero frame below to preserve the car-color identity. */}
+      <div
+        className="sticky top-0 z-20 px-4 pt-12 pb-2"
+        style={{ background: 'var(--bg)' }}
+      >
+        <Link
+          href="/assets"
+          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit"
+          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
+          aria-label={t.assetDetail.backAriaLabel}
+        >
+          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+            <path d="M6.5 1.5L1.5 6.5L6.5 11.5" stroke="currentColor" strokeWidth="1.6"
+              strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>{t.assetDetail.backAriaLabel}</span>
+        </Link>
+      </div>
+
       <AssetHero
         name={
           <AssetSwitcher

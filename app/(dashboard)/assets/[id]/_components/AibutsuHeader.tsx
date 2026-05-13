@@ -28,7 +28,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick }: AibutsuHead
   const tint = TINTS[kind]
   const t = useTranslations()
   return (
-    <div className="px-4 pt-12 pb-3" style={{ background: tint.bg }}>
+    <div className="sticky top-0 z-20 px-4 pt-12 pb-3" style={{ background: tint.bg }}>
       <div className="flex items-center justify-between gap-2">
         <Link
           href="/assets"
