@@ -452,6 +452,14 @@ export type Translations = {
       aibutsuHint: string
       guardianHint: string
     }
+    /** #227 — shown when guardian beta is off but the user lands on the
+     *  guardian tab (or insurance asset detail) via a stale URL/bookmark.
+     *  In-place gate that points to Settings → Guardian (Beta) toggle. */
+    guardianGated: {
+      title: string
+      body: string
+      cta: string
+    }
     addCar: string
     addSecondCar: string
     /** v0.15.0 #127 — strings used only by InsuranceListItem in the coverage section. */
@@ -1692,6 +1700,11 @@ export const zhTW: Translations = {
     tabEmpty: {
       aibutsuHint: '還沒有愛物。從右下角開始記下第一個。',
       guardianHint: '還沒有保單。守護愛物的保障也可以一起記下。',
+    },
+    guardianGated: {
+      title: '守護還在 Beta',
+      body: '保單與保障的紀錄都收在這裡。在設定中開啟「守護（Beta）」，就能一起照顧。',
+      cta: '前往設定開啟',
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',

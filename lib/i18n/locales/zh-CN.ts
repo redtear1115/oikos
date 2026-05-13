@@ -433,6 +433,11 @@ export const zhCN: Translations = {
       aibutsuHint: '还没有爱物。从右下角开始记下第一个。',
       guardianHint: '还没有保单。守护爱物的保障也可以一起记下。',
     },
+    guardianGated: {
+      title: '守护还在 Beta',
+      body: '保单与保障的纪录都收在这里。在设置中开启「守护（Beta）」，就能一起照顾。',
+      cta: '前往设置开启',
+    },
     addCar: '新增车辆',
     addSecondCar: '加入第二辆车',
     insuranceList: {

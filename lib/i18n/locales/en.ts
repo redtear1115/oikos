@@ -433,6 +433,11 @@ export const en: Translations = {
       aibutsuHint: 'No treasures yet. Start with the button on the right.',
       guardianHint: 'No policies yet. Record the coverage that guards your treasures.',
     },
+    guardianGated: {
+      title: 'Guardian is still in Beta',
+      body: 'Policies and protection live here. Turn on Guardian (Beta) in Settings to come in.',
+      cta: 'Open Settings',
+    },
     addCar: 'Add a car',
     addSecondCar: 'Add another car',
     insuranceList: {
