@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { resolveDisplayName } from '@/lib/display-name'
 
-type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
 
 const TYPE_LABEL: Record<AssetType, string> = {
   car: '車', child: '孩子', pet: '寵物', plant: '植物',
-  house: '房子', insurance: '保險',
+  house: '房子', insurance: '保險', item: '物品',
 }
 
 const TYPE_TINT: Record<AssetType, string> = {
@@ -18,6 +18,7 @@ const TYPE_TINT: Record<AssetType, string> = {
   pet: 'var(--asset-tint-pet)',
   plant: 'var(--asset-tint-plant)',
   insurance: 'var(--asset-tint-insurance)',
+  item: 'var(--asset-tint-item)',
 }
 
 interface Props {

@@ -418,6 +418,7 @@ export const en: Translations = {
       property: 'Property',
       living: 'Living',
       coverage: 'Coverage',
+      items: 'Items',
     },
     tabs: {
       aibutsu: 'Treasures',
@@ -570,6 +571,7 @@ export const en: Translations = {
       plant: 'Plant',
       house: 'House',
       insurance: 'Insurance',
+      item: 'Item',
       more: 'More',
     },
     name: {
@@ -719,6 +721,11 @@ export const en: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: 'e.g. camera, bike, keepsake',
+    detailSection: 'Details',
+  },
+
   assetDetail: {
     backAriaLabel: 'Back',
     editAriaLabel: 'Edit',
@@ -741,6 +748,7 @@ export const en: Translations = {
       pet: 'Pet',
       plant: 'Plant',
       insurance: 'Insurance',
+      item: 'Item',
     },
     age: {
       label: 'Age',

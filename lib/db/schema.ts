@@ -7,7 +7,15 @@ import { sql } from 'drizzle-orm'
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export const splitTypeEnum = pgEnum('split_type', ['all_mine', 'all_theirs', 'half', 'weighted'])
-export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance', 'pet', 'plant'])
+// 'item' is the asset type used by template-based assets (#222). Legacy
+// detail subtables (CarDetails / HouseDetails / etc.) only apply to the
+// other six values.
+export const assetTypeEnum = pgEnum('asset_type', ['car', 'house', 'child', 'insurance', 'pet', 'plant', 'item'])
+// #222 — template kind for new lightweight, free-text assets. NULL on the
+// Assets row = legacy path; NOT NULL = template path (template_fields jsonb
+// holds the user-entered values keyed by lib/assetTemplates.ts definitions).
+// v1 ships only `general`; the enum is appendable for future templates.
+export const assetTemplateKeyEnum = pgEnum('asset_template_key', ['general'])
 // '92' is legacy from Phase 0; pg can't drop enum values, so kept here even though UI only offers 95/98/diesel/electric.
 export const fuelTypeEnum = pgEnum('fuel_type', ['92', '95', '98', 'diesel', 'electric'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
@@ -92,6 +100,11 @@ export const assets = pgTable('Assets', {
   type: assetTypeEnum('type').notNull(),
   name: text('name').notNull(),
   notes: text('notes'),
+  // #222 — template path. NULL = legacy (uses *Details subtable + the matching
+  // legacy *SheetBody). NOT NULL = template-based (free-text fields stored in
+  // template_fields jsonb, type is always 'item').
+  templateKey: assetTemplateKeyEnum('template_key'),
+  templateFields: jsonb('template_fields'),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })

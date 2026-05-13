@@ -9,6 +9,8 @@ const TINTS = {
   plant:     { bg: '#DCE7D6', accent: '#5A7A4A' },
   insurance: { bg: '#DDE5DC', accent: '#5A7A66' },
   house:     { bg: '#EFE3D0', accent: '#7A5A38' },
+  // #222 — template-based assets
+  item:      { bg: '#E9E4DF', accent: '#6E5F52' },
 } as const
 
 type TintKind = keyof typeof TINTS

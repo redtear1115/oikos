@@ -1,7 +1,14 @@
+import type { AssetTemplateKey } from '@/lib/assetTemplates'
+
 export interface AssetSheetInitial {
   id: string
-  type: 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance'
+  type: 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance' | 'item'
   name: string
+  // #222 — template path. When set, this asset is template-based and AssetSheet
+  // routes to TemplateSheetBody regardless of `type`. `type` for these is
+  // always 'item' — `templateKey` is what drives the visible fields.
+  templateKey?: AssetTemplateKey | null
+  templateFields?: Record<string, string | number | null> | null
   // car-only fields
   plate?: string
   purchasedAt?: string | null
@@ -68,7 +75,10 @@ export interface AssetSheetInitial {
   notes?: string | null
 }
 
-export type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance'
+// Type picker covers all 6 legacy types plus the new template-based 'item'
+// (#222). Selecting 'item' routes to TemplateSheetBody; the other six route
+// to their dedicated *SheetBody.
+export type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance' | 'item'
 
 export interface BodySharedProps {
   open: boolean

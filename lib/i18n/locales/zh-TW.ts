@@ -436,6 +436,7 @@ export type Translations = {
       property: string
       living: string
       coverage: string
+      items: string
     }
     /** v0.15.2 #178 — 愛物頁分成「愛物」/「守護」兩個 tab，保險併入守護。 */
     tabs: {
@@ -617,6 +618,7 @@ export type Translations = {
       plant: string
       house: string
       insurance: string
+      item: string
       more: string
     }
     name: {
@@ -767,6 +769,12 @@ export type Translations = {
     }
   }
 
+  /** v0.16.0 #222 — 愛物模板系統 v1：只有「物品 (general)」一個模板，純文字追蹤，不接 FuelLog / 守護 等任何自動化。 */
+  assetTemplate: {
+    namePlaceholder: string
+    detailSection: string
+  }
+
   assetDetail: {
     backAriaLabel: string
     editAriaLabel: string
@@ -790,6 +798,7 @@ export type Translations = {
       pet: string
       plant: string
       insurance: string
+      item: string
     }
     age: {
       label: string
@@ -1664,6 +1673,7 @@ export const zhTW: Translations = {
       property: '財產',
       living: '生命體',
       coverage: '保障',
+      items: '物品',
     },
     tabs: {
       aibutsu: '愛物',
@@ -1816,6 +1826,7 @@ export const zhTW: Translations = {
       plant: '植物',
       house: '房子',
       insurance: '保險',
+      item: '物品',
       more: '更多',
     },
     name: {
@@ -1965,6 +1976,11 @@ export const zhTW: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: '例：相機、單車、紀念物',
+    detailSection: '基本資料',
+  },
+
   assetDetail: {
     backAriaLabel: '返回',
     editAriaLabel: '編輯',
@@ -1987,6 +2003,7 @@ export const zhTW: Translations = {
       pet: '寵物',
       plant: '植物',
       insurance: '保險',
+      item: '物品',
     },
     age: {
       label: '年齡',

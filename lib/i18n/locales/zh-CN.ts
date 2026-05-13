@@ -418,6 +418,7 @@ export const zhCN: Translations = {
       property: '财产',
       living: '生命体',
       coverage: '保障',
+      items: '物品',
     },
     tabs: {
       aibutsu: '爱物',
@@ -570,6 +571,7 @@ export const zhCN: Translations = {
       plant: '植物',
       house: '房子',
       insurance: '保险',
+      item: '物品',
       more: '更多',
     },
     name: {
@@ -719,6 +721,11 @@ export const zhCN: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: '例：相机、单车、纪念物',
+    detailSection: '基本资料',
+  },
+
   assetDetail: {
     backAriaLabel: '返回',
     editAriaLabel: '编辑',
@@ -741,6 +748,7 @@ export const zhCN: Translations = {
       pet: '宠物',
       plant: '植物',
       insurance: '保险',
+      item: '物品',
     },
     age: {
       label: '年龄',

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 
-type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
 
 interface AssetSwitcherProps {
   currentAssetId: string

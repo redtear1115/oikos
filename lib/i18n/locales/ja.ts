@@ -418,6 +418,7 @@ export const ja: Translations = {
       property: '財産',
       living: '生命体',
       coverage: '保障',
+      items: '物品',
     },
     tabs: {
       aibutsu: '愛物',
@@ -570,6 +571,7 @@ export const ja: Translations = {
       plant: '植物',
       house: '家',
       insurance: '保険',
+      item: '物品',
       more: 'その他',
     },
     name: {
@@ -719,6 +721,11 @@ export const ja: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: '例：カメラ、自転車、記念品',
+    detailSection: '基本情報',
+  },
+
   assetDetail: {
     backAriaLabel: '戻る',
     editAriaLabel: '編集',
@@ -741,6 +748,7 @@ export const ja: Translations = {
       pet: 'ペット',
       plant: '植物',
       insurance: '保険',
+      item: '物品',
     },
     age: {
       label: '年齢',

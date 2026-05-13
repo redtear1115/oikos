@@ -19,7 +19,7 @@ import { useTranslations } from '@/lib/i18n/client'
 export interface AssetOption {
   id: string
   name: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
 }
 
 interface Props {

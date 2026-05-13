@@ -6,11 +6,15 @@ import { useTranslations } from '@/lib/i18n/client'
 import type { PickerType } from './types'
 
 // Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
-// Secondary tiles (house / insurance) reveal under 「更多」 to keep the row tidy
-// as the type list grows. This avoids a wrapped 6-tile grid that pushes the form
-// down when switching types.
+// Secondary tiles reveal under 「更多」 to keep the row tidy as the type list
+// grows. This avoids a wrapped grid that pushes the form down when switching
+// types.
+//
+// #222 — 「物品」 (item, template-based) joins the secondary row alongside the
+// other less-emotive types. The five legacy emotion-rich types (car / child /
+// pet / plant) stay primary so common flows don't change.
 const PRIMARY_TYPES: PickerType[] = ['car', 'child', 'pet', 'plant']
-const SECONDARY_TYPES: PickerType[] = ['house', 'insurance']
+const SECONDARY_TYPES: PickerType[] = ['house', 'insurance', 'item']
 const isSecondaryType = (t: PickerType) => SECONDARY_TYPES.includes(t)
 
 interface Props {
@@ -29,6 +33,7 @@ export function TypePicker({ value, onChange }: Props) {
       case 'plant': return ts.type.plant
       case 'house': return ts.type.house
       case 'insurance': return ts.type.insurance
+      case 'item': return ts.type.item
     }
   }
   const primaryOptions = PRIMARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))

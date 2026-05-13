@@ -233,4 +233,5 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/inbox-layer-design.md` | Inbox layer 概念統一（v0.15.0 概念註解；v0.16.0 schema migration + UI）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `docs/superpowers/specs/epoch-readonly-design.md` | 過去章節 read-only + 所有 transaction 讀取必填 `epochWindow` 型別防呆（v0.15.3 shipped #207）|
+| `docs/superpowers/specs/asset-templates-design.md` | 愛物模板系統 v1（v0.16.0 shipped #222 — TypePicker 加「物品」第七選項 + `'item'` asset_type + 單一 `general` 模板；舊 6 種 type 完全不動）|
 | `CHANGELOG.md` | 版本歷史 |
