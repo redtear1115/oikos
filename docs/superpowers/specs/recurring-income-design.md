@@ -1,6 +1,6 @@
 ---
 status: shipped
-shipped_in: v0.8.0（schema + cron + actions + Dashboard PendingIncomeStack + Settings 子頁）· v0.8.1（polish）
+shipped_in: v0.8.0（schema + cron + actions + Dashboard PendingIncomeStack + Settings 子頁）· v0.8.1（polish）· v0.15.3（`source_type` / `source_ref_id` 跨 feature 來源欄位，給保險 RecurringIncome 自動化用 — 詳見 [insurance-design.md](insurance-design.md)）
 ---
 
 # 自訂定期收入設計 spec
