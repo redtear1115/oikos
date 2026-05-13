@@ -38,3 +38,10 @@ export function useMember(): MemberContextValue {
 }
 
 export const MemberProvider = MemberContext.Provider
+
+/** Convert viewer-relative `who` ('M' = me, 'T' = them) to absolute group role
+ *  ('a' / 'b'). Used by Avatar to pick brand color (#238 — heart-icon parity). */
+export function whoToMemberRole(who: 'M' | 'T', viewerIsA: boolean): 'a' | 'b' {
+  const isA = who === 'M' ? viewerIsA : !viewerIsA
+  return isA ? 'a' : 'b'
+}

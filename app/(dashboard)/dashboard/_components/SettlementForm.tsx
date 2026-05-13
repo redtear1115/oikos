@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { createSettlement } from '@/actions/settlement'
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated }: Props) {
-  const { viewer, partner, isPast } = useMember()
+  const { viewer, partner, isPast, viewerIsA } = useMember()
   const t = useTranslations()
   const locale = useLocale()
   // Default to the full outstanding amount.
@@ -43,7 +43,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
   useEffect(() => {
     const t = setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select() }, 250)
     return () => clearTimeout(t)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   const chips = settlementChips(debtAmount)
   const parsed = parseInt(amount, 10) || 0
@@ -82,7 +82,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
       >
         <div className="flex items-center gap-2 text-xs mb-3" style={{ color: 'var(--ink-3)' }}>
           <Avatar
-            who={viewerIsDebtor ? 'M' : 'T'}
+            memberRole={whoToMemberRole(viewerIsDebtor ? 'M' : 'T', viewerIsA)}
             initial={viewerIsDebtor ? viewer.initial : (partner?.initial ?? '?')}
             src={viewerIsDebtor ? viewer.avatarUrl : (partner?.avatarUrl ?? null)}
             size={20}

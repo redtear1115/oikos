@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { partnerQuizSessions } from '@/lib/db/schema'
 import { profiles } from '@/lib/db/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { inArray } from 'drizzle-orm'
 import {
   loadPartnerQuizSessionByGroup,
   loadPartnerQuizAnswers,

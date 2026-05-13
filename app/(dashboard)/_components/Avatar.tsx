@@ -3,17 +3,20 @@
 import { useState, useEffect } from 'react'
 
 interface Props {
-  who: 'M' | 'T'           // viewer-relative: M = me, T = them (the partner)
+  /** Absolute group role — drives ring/bg color. 'a' = deep brown (--ink), 'b' = orange (--accent).
+   *  Echoes the FutariMark heart's two lobes (#238). Convert from viewer-relative `who` via
+   *  `whoToMemberRole(who, viewerIsA)` from MemberContext. */
+  memberRole: 'a' | 'b'
   initial: string          // display_name[0] (uppercase recommended)
   /** Optional photo URL. If provided and loads successfully, it sits inside a small ring
-   *  of the who-color. On 404 / load error, falls back to the letter version. */
+   *  of the role-color. On 404 / load error, falls back to the letter version. */
   src?: string | null
   size?: number
   ring?: boolean
 }
 
-export function Avatar({ who, initial, src, size = 28, ring = false }: Props) {
-  const bg = 'var(--ink)'
+export function Avatar({ memberRole, initial, src, size = 28, ring = false }: Props) {
+  const bg = memberRole === 'b' ? 'var(--accent)' : 'var(--ink)'
   const [imgFailed, setImgFailed] = useState(false)
 
   // Reset failure state when src changes (e.g. after profile pic refresh).

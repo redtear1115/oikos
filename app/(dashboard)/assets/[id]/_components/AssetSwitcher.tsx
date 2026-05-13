@@ -76,6 +76,7 @@ export function AssetSwitcher({ currentAssetId, allAssets, chevronInk = '#3A2419
               key={a.id}
               type="button"
               role="option"
+              aria-selected={false}
               onClick={() => {
                 setOpen(false)
                 router.push(`/assets/${a.id}`)
