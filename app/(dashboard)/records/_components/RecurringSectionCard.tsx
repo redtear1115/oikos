@@ -16,12 +16,19 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 export function RecurringSectionCard() {
   const t = useTranslations()
   const P = DEFAULT_INCOME_PALETTE
+  // Mobile-first PWA: tap (active) feedback matters more than hover. We pair a
+  // subtle brightness shift with a small scale-down so the pill reads as a
+  // pressable control, plus a stronger chevron to nudge the eye toward "tap
+  // here" — addresses #264 (cards previously felt informational).
+  const pillClass =
+    'group flex-1 h-11 inline-flex items-center justify-between rounded-[12px] px-3 text-sm no-underline cursor-pointer ' +
+    'transition-[filter,transform] duration-100 hover:brightness-[0.97] active:brightness-95 active:scale-[0.99]'
   return (
     <div className="px-5 pt-4 pb-2">
       <div className="flex items-stretch gap-2">
         <Link
           href="/settings/recurring-expense"
-          className="flex-1 h-11 inline-flex items-center justify-between rounded-[12px] px-3 text-sm no-underline"
+          className={pillClass}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -32,11 +39,17 @@ export function RecurringSectionCard() {
             <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
             <span className="font-medium">{t.records.manageRecurringExpense}</span>
           </span>
-          <span aria-hidden style={{ color: 'var(--ink-3)' }}>›</span>
+          <span
+            aria-hidden
+            className="font-medium transition-transform duration-100 group-hover:translate-x-0.5"
+            style={{ fontSize: 16, color: '#7A5A38', opacity: 0.7 }}
+          >
+            ›
+          </span>
         </Link>
         <Link
           href="/settings/recurring-income"
-          className="flex-1 h-11 inline-flex items-center justify-between rounded-[12px] px-3 text-sm no-underline"
+          className={pillClass}
           style={{
             background: P.tint,
             border: '1px solid var(--hairline)',
@@ -47,7 +60,13 @@ export function RecurringSectionCard() {
             <span aria-hidden style={{ fontSize: 11 }}>⚙</span>
             <span className="font-medium">{t.records.manageRecurringIncome}</span>
           </span>
-          <span aria-hidden style={{ color: P.ink, opacity: 0.5 }}>›</span>
+          <span
+            aria-hidden
+            className="font-medium transition-transform duration-100 group-hover:translate-x-0.5"
+            style={{ fontSize: 16, color: P.ink, opacity: 0.7 }}
+          >
+            ›
+          </span>
         </Link>
       </div>
     </div>
