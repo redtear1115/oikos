@@ -267,6 +267,20 @@ export type Translations = {
     dateRangeClear: string
     assetSection: string
     assetNone: string
+    /** v0.16.0 #223 — chip label inside each asset sub-section that toggles
+     *  every asset in the group on/off. Same label across all groups (車輛 /
+     *  房子 / 生命 / 物品 / 守護). */
+    assetGroupSelectAll: string
+    /** v0.16.0 #223 — sub-section labels for the 愛物 filter, grouped by
+     *  asset type. Mirrors the section labels on /assets so the visual
+     *  identity is consistent across the filter sheet and the asset list. */
+    assetGroup: {
+      car: string
+      house: string
+      living: string
+      item: string
+      coverage: string
+    }
     amountSection: string
     amountMinPlaceholder: string
     amountMaxPlaceholder: string
@@ -1518,6 +1532,14 @@ export const zhTW: Translations = {
     dateRangeClear: '清除日期範圍',
     assetSection: '愛物（可多選）',
     assetNone: '未歸屬',
+    assetGroupSelectAll: '全選',
+    assetGroup: {
+      car: '車輛',
+      house: '房子',
+      living: '生命',
+      item: '物品',
+      coverage: '守護',
+    },
     amountSection: '金額範圍',
     amountMinPlaceholder: '最低',
     amountMaxPlaceholder: '最高',

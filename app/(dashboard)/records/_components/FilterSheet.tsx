@@ -22,6 +22,24 @@ export interface AssetOption {
   type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
 }
 
+/**
+ * Asset-type grouping for the 愛物 sub-sections. Each group bundles one or more
+ * `AssetOption.type` values into a single tap-to-select-all unit. Order here is
+ * the render order in the sheet. Insurance is kept as its own group ("守護") for
+ * backward compat — existing transactions linked to insurance assets need to
+ * stay filterable — but the issue's "out of scope" note means we don't extend
+ * any 愛物-specific behavior to it; it's just visual grouping that mirrors the
+ * /assets page's two-tab split.
+ */
+type AssetGroupKey = 'car' | 'house' | 'living' | 'item' | 'coverage'
+const ASSET_GROUPS: { key: AssetGroupKey; types: AssetOption['type'][]; dotVar: string }[] = [
+  { key: 'car',      types: ['car'],                       dotVar: 'var(--asset-tint-car)' },
+  { key: 'house',    types: ['house'],                     dotVar: 'var(--asset-tint-house)' },
+  { key: 'living',   types: ['child', 'pet', 'plant'],     dotVar: 'var(--asset-tint-child)' },
+  { key: 'item',     types: ['item'],                      dotVar: 'var(--asset-tint-item)' },
+  { key: 'coverage', types: ['insurance'],                 dotVar: 'var(--asset-tint-insurance)' },
+]
+
 interface Props {
   open: boolean
   /** Current applied filter — used to seed the draft when the sheet opens. */
@@ -86,7 +104,7 @@ export function FilterSheet({
   onReset,
   onShare,
 }: Props) {
-  const { isSolo } = useMember()
+  const { isSolo, canAccessGuardian } = useMember()
   const t = useTranslations()
 
   // Lite mode: no date range / asset / share when the parent doesn't provide
@@ -183,6 +201,23 @@ export function FilterSheet({
     const next = new Set(draft.assetIds)
     if (next.has(id)) next.delete(id)
     else next.add(id)
+    setDraft({ ...draft, assetIds: next })
+  }
+
+  /**
+   * Toggle the "select all" affordance for an asset-type group. When the group
+   * is already fully selected (every member's id is in draft.assetIds), tapping
+   * removes all of them; otherwise we add every member (including any that
+   * were already individually selected — Set semantics make this a no-op for
+   * those). The 未歸屬 sentinel is independent and unaffected.
+   */
+  const toggleAssetGroup = (groupAssets: AssetOption[], allSelected: boolean) => {
+    const next = new Set(draft.assetIds)
+    if (allSelected) {
+      for (const a of groupAssets) next.delete(a.id)
+    } else {
+      for (const a of groupAssets) next.add(a.id)
+    }
     setDraft({ ...draft, assetIds: next })
   }
 
@@ -364,9 +399,11 @@ export function FilterSheet({
 
           {/* 愛物 (multi). Always shows the「未歸屬」chip so the user can
               isolate transactions that haven't been linked to anything.
-              Empty group has no chips besides 未歸屬 — that's intended;
-              an empty愛物 section reads as "you haven't created any 愛物 yet"
-              without an extra empty-state line. Hidden in lite mode. */}
+              v0.16.0 #223 — assets are grouped by type into sub-sections (車輛 /
+              房子 / 生命 / 物品 / 守護), each with a "全選" chip that toggles
+              every asset in that group on/off. Empty sub-sections collapse so
+              the sheet doesn't show empty-state lines per category. Hidden in
+              lite mode. */}
           {!liteMode && (
             <Section title={t.filterSheet.assetSection}>
               <Chip
@@ -374,16 +411,38 @@ export function FilterSheet({
                 active={draft.assetIds.has(ASSET_FILTER_NONE)}
                 onClick={() => toggleAsset(ASSET_FILTER_NONE)}
               />
-              {effectiveAssets.map((a) => (
-                <Chip
-                  key={a.id}
-                  label={a.name}
-                  active={draft.assetIds.has(a.id)}
-                  onClick={() => toggleAsset(a.id)}
-                />
-              ))}
             </Section>
           )}
+          {!liteMode && ASSET_GROUPS.map((group) => {
+            // 守護 (insurance) is gated behind the guardian beta flag — when the
+            // group hasn't opted in, the whole sub-section disappears so the
+            // filter sheet matches the rest of the app's guardian-gating.
+            if (group.key === 'coverage' && !canAccessGuardian) return null
+            const groupAssets = effectiveAssets.filter((a) => group.types.includes(a.type))
+            if (groupAssets.length === 0) return null
+            const allSelected = groupAssets.every((a) => draft.assetIds.has(a.id))
+            return (
+              <AssetGroupSection
+                key={group.key}
+                label={t.filterSheet.assetGroup[group.key]}
+                dotColor={group.dotVar}
+              >
+                <Chip
+                  label={t.filterSheet.assetGroupSelectAll}
+                  active={allSelected}
+                  onClick={() => toggleAssetGroup(groupAssets, allSelected)}
+                />
+                {groupAssets.map((a) => (
+                  <Chip
+                    key={a.id}
+                    label={a.name}
+                    active={draft.assetIds.has(a.id)}
+                    onClick={() => toggleAsset(a.id)}
+                  />
+                ))}
+              </AssetGroupSection>
+            )
+          })}
 
           {/* 狀態 (single-select) — pending / settled / all. Settlements +
               income are always 'settled' (filter.status='pending' drops them).
@@ -512,6 +571,36 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div>
       <div className="text-xs font-medium mb-2" style={{ color: 'var(--ink-3)' }}>{title}</div>
+      <div className="flex gap-2 flex-wrap">{children}</div>
+    </div>
+  )
+}
+
+/**
+ * Asset-type sub-section header — a small colored dot (matching the asset's
+ * type tint) plus a label, mirroring the section labels on the /assets page so
+ * the visual identity is consistent across the filter sheet and the asset list.
+ * The chip-list inside is laid out the same as a plain Section.
+ */
+function AssetGroupSection({
+  label,
+  dotColor,
+  children,
+}: {
+  label: string
+  dotColor: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="-mt-3">
+      <div className="flex items-center gap-2 mb-2 px-0.5">
+        <span
+          aria-hidden="true"
+          className="inline-block rounded-full shrink-0"
+          style={{ width: 6, height: 6, background: dotColor }}
+        />
+        <div className="text-xs font-medium" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      </div>
       <div className="flex gap-2 flex-wrap">{children}</div>
     </div>
   )

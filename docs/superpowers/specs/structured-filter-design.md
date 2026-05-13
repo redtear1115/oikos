@@ -3,7 +3,8 @@ status: shipped
 shipped_in: |
   v0.15.0（PR #124，closes #50；v1 scope：date range + 愛物 multi-select + URL-synced + 分享連結）
   v0.15.2 (closes #165；v2 scope：金額範圍 + status filter)
-related_issues: "#50, #165, #22 (free-text 互補), #37 (CSV 匯出搭配)"
+  v0.16.0 (closes #223；v3 scope：愛物分組 sub-section + 全選 chip)
+related_issues: "#50, #165, #223, #22 (free-text 互補), #37 (CSV 匯出搭配)"
 note: 補的是 CWMoney 砍掉「按帳戶 + 分類篩選」後用戶反彈的設計倒退；Futari 主動補上、不等 records 累積到上千筆才發現「找不到了」。
 ---
 
@@ -127,9 +128,51 @@ window.location.origin + 同樣 URL → clipboard
 | `amountMin / amountMax` | `amountMin / amountMax` | 兩邊都帶；income 也吃 |
 | `status: RecordStatus \| null` | — | 只 cash 有；income 永遠 settled，`status='pending'` 走 `cutAll` |
 
+## v3 範圍（v0.16.0，PR closes #223）
+
+愛物 sub-section 分組 + 一鍵 select-all。純 UI 層擴充，不動 URL / 資料模型 / SQL。
+
+### 為什麼是 UI sugar 而不是新的 `assetTemplateKey` 維度
+
+原 issue 提到 query 層加 `assetTemplateKey: 'vehicle' | 'property' | 'insurance' | 'general'`，但 PR #226（愛物模板系統 v1）把實際的 `asset_template_key` enum 縮到只有 `'general'` —— 那三個 template name 在 schema 裡不存在。所以 v3 走 UI sugar：
+
+- 把 FilterSheet 的「愛物」欄位按 asset type 分組成 sub-section（車輛 / 房子 / 生命 / 物品 / 守護）
+- 每個 sub-section 開頭放一顆「全選」chip，按下後把該組所有 asset uuid 加進現有的 `fAssets` set（已選的維持已選；Set 語意天然冪等）
+- 全選後再按一次 → 移除該組全部 asset uuid（其他組不受影響）
+
+優點：
+- 零 schema / SQL / URL / matcher 變更 —— 完全沿用既有 `fAssets` URL 與 `assetIdsClause` predicate
+- Share link 保留 snapshot 語意：分享當下選的是哪幾個就是哪幾個，之後再加新愛物不會「自動納入」對方的視圖
+- 跟既有 `__none__` sentinel、`asset_id IS NULL` 行為無衝突
+
+缺點（可接受）：
+- 全選了車輛後又新建一輛車：新車不會自動加進來。對 share-snapshot 語意是 feature；對「我永遠想看所有車」是手動 re-tap。
+- URL 變長（多個 uuid 而非一個 enum）。Realtime echo 與 matchesFilter 不受影響。
+
+### Sub-section 分組
+
+| Group key | Asset types | Dot tint |
+|---|---|---|
+| `car` | `car` | `--asset-tint-car` |
+| `house` | `house` | `--asset-tint-house` |
+| `living` | `child`, `pet`, `plant` | `--asset-tint-child` |
+| `item` | `item` | `--asset-tint-item` |
+| `coverage` | `insurance` | `--asset-tint-insurance` |
+
+排序固定為上面這個順序，與 /assets 頁的 section 排版一致。
+
+`coverage` 雖然 issue 註記「守護獨立模組，不算在愛物模板分類裡」—— 我們仍保留 sub-section，因為：
+1. 既有 transaction 可能 link 到保險 asset，移除分組會讓那些 row 在 filter UI 失去可選性。
+2. 跟 /assets 頁的「守護」tab 視覺對齊。
+3. 不在「愛物 templates」中是 schema 事實（保險走 `InsuranceDetails` 子表，沒 `template_key`），但 filter UI 不需要為這條哲學區隔多開一條程式碼路徑。
+
+### Empty section 收斂
+
+沒有該類愛物的 group → 整個 sub-section 不渲染（不顯示 "你還沒有 X 類愛物" 之類的 placeholder）。Sheet 在新帳本上仍然乾淨：只有「未歸屬」chip + 看得到的支出/收入分類。
+
 ## 後續
 
-- **v3**：「儲存為快速視圖」並命名（e.g. 「車子維修」）。需要新 schema（FilterPresets table）；不在 v0.15.2 範圍。
+- **v4**：「儲存為快速視圖」並命名（e.g. 「車子維修」）。需要新 schema（FilterPresets table）；不在 v0.16.0 範圍。
 - **與 #51 競品 CSV 匯入**：篩選結果可導出當前視圖（已有 #37 CSV 匯出，未來把 filter 帶進匯出 query）。
 - **與 #42 trip 子帳本**：date range 加上「某次旅行」preset；要等 trip 模型先做完。
 
