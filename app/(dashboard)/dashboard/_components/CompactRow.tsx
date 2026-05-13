@@ -54,6 +54,28 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
     ? (payerIsViewer ? '你收入' : `${partner?.displayName ?? '對方'} 收入`)
     : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
 
+  // Viewer's share of this row, surfaced as a small colored sub-number under
+  // the total. Settlements don't have a split (they're cash transfers), so 0.
+  let delta = 0
+  if (tx.kind === 'transaction') {
+    if (tx.splitType === 'all_theirs') {
+      delta = payerIsViewer ? +tx.amount : -tx.amount
+    } else if (tx.splitType === 'half') {
+      delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
+    } else if (tx.splitType === 'weighted' && tx.splitRatioA != null) {
+      const ratioA = tx.splitRatioA
+      const otherShare = 100 - ratioA
+      delta = payerIsViewer
+        ? +Math.ceil(tx.amount * otherShare / 100)
+        : -Math.ceil(tx.amount * ratioA / 100)
+    }
+  }
+  const myShare = tx.kind === 'transaction'
+    ? (payerIsViewer ? tx.amount - delta : -delta)
+    : 0
+  const showMyShare = tx.kind === 'transaction' && myShare !== 0
+  const myShareColor = tx.kind === 'income' ? 'var(--credit)' : 'var(--debit)'
+
   // For income rows, fall back to category label when source/description is empty.
   const displayLabel = tx.kind === 'income'
     ? (tx.description || getIncomeCategory(tx.category).label)
@@ -104,6 +126,11 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         >
           NT${formatRowAmount(tx.amount)}
         </div>
+        {showMyShare && (
+          <div className="tnum text-micro mt-px" style={{ color: myShareColor }}>
+            ${myShare.toLocaleString('en-US')}
+          </div>
+        )}
       </div>
     </>
   )
