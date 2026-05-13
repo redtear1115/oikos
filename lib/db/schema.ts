@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date, jsonb,
+  timestamp, date, jsonb, boolean,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -53,6 +53,9 @@ export const oikosGroups = pgTable('OikosGroups', {
   // Downstream features filter timeline + stats by current epoch.
   currentEpochStartedAt: timestamp('current_epoch_started_at', { withTimezone: true })
     .defaultNow().notNull(),
+  // #220 — Guardian (守護) module is paywalled in the long run; per-group
+  // beta opt-in until subscription ships. Gate via lib/guardian.ts#canAccessGuardian.
+  guardianBetaEnabled: boolean('guardian_beta_enabled').notNull().default(false),
 })
 
 /**

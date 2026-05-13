@@ -11,6 +11,7 @@ import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
 type AssetsTab = 'aibutsu' | 'guardian'
 
@@ -63,6 +64,7 @@ export function AssetsListClient({ items }: Props) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useTranslations()
+  const { canAccessGuardian: guardianVisible } = useMember()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   // Refresh when partner adds/updates/deletes an asset
@@ -73,7 +75,9 @@ export function AssetsListClient({ items }: Props) {
   })
 
   const tabParam = searchParams.get('tab')
-  const activeTab: AssetsTab = tabParam === 'guardian' ? 'guardian' : 'aibutsu'
+  // When Guardian beta is off, force activeTab to 'aibutsu' regardless of URL —
+  // a stale ?tab=guardian link or browser back shouldn't bypass the gate.
+  const activeTab: AssetsTab = guardianVisible && tabParam === 'guardian' ? 'guardian' : 'aibutsu'
 
   const setActiveTab = useCallback(
     (next: AssetsTab) => {
@@ -97,6 +101,8 @@ export function AssetsListClient({ items }: Props) {
     const start = touchRef.current
     touchRef.current = null
     if (!start) return
+    // No second tab to swipe to when Guardian beta is off — short-circuit.
+    if (!guardianVisible) return
     const t1 = e.changedTouches[0]
     const dx = t1.clientX - start.x
     const dy = t1.clientY - start.y
@@ -357,9 +363,9 @@ export function AssetsListClient({ items }: Props) {
         <AssetEmptyState />
       ) : (
         <>
-          {TabBar}
+          {guardianVisible && TabBar}
           <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-            {activeTab === 'aibutsu' ? AibutsuTab : GuardianTab}
+            {guardianVisible && activeTab === 'guardian' ? GuardianTab : AibutsuTab}
           </div>
         </>
       )}

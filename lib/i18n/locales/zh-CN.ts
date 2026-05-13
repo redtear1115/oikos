@@ -289,6 +289,11 @@ export const zhCN: Translations = {
     trust: '数据安全',
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
+    sectionGuardian: '守护（Beta）',
+    guardianBeta: {
+      title: '开启守护',
+      description: '守护是把保单与保障好好收下的地方，还在 Beta 中。未来会成为订阅功能，现在先体验。关闭后既有数据还留在 DB，不会消失。',
+    },
     dangerZone: {
       sectionTitle: '离开账本',
       leaveCta: '我想离开这本账本',

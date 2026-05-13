@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import type { PickerType } from './types'
 
 // Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
@@ -24,6 +25,7 @@ interface Props {
 
 export function TypePicker({ value, onChange }: Props) {
   const t = useTranslations()
+  const { canAccessGuardian: guardianVisible } = useMember()
   const ts = t.assetSheet
   const typeLabel = (type: PickerType): string => {
     switch (type) {
@@ -37,7 +39,12 @@ export function TypePicker({ value, onChange }: Props) {
     }
   }
   const primaryOptions = PRIMARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))
-  const secondaryOptions = SECONDARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))
+  // #221 — 'insurance' is a Guardian-tab type; hide from the picker entirely
+  // when beta is off. Server action also rejects creation as a safety net.
+  const visibleSecondary = guardianVisible
+    ? SECONDARY_TYPES
+    : SECONDARY_TYPES.filter((t) => t !== 'insurance')
+  const secondaryOptions = visibleSecondary.map(v => ({ value: v, label: typeLabel(v) }))
 
   // Auto-open the secondary row if the currently selected type is secondary,
   // so the user can see what they picked without re-tapping 更多.

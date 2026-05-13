@@ -289,6 +289,11 @@ export const en: Translations = {
     trust: 'Your data',
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
+    sectionGuardian: 'Guardian (Beta)',
+    guardianBeta: {
+      title: 'Enable Guardian',
+      description: 'Guardian is where policies and protection are kept together. Still in Beta — it will become a paid feature later. Turn it off any time; existing data stays in place.',
+    },
     dangerZone: {
       sectionTitle: 'Leave this ledger',
       leaveCta: 'I want to leave this ledger',

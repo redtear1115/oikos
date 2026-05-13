@@ -289,6 +289,11 @@ export const ja: Translations = {
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
+    sectionGuardian: '守護（ベータ）',
+    guardianBeta: {
+      title: '守護をオンにする',
+      description: '守護は保険や保障をひとまとめに置いておく場所です。まだベータで、将来は有料機能になります。オフにしても保険データは消えず、DB に残ります。',
+    },
     dangerZone: {
       sectionTitle: 'この家計簿から離れる',
       leaveCta: 'この家計簿から離れたい',
