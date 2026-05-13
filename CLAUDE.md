@@ -43,7 +43,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.15.2](CHANGELOG.md#0152---2026-05-13) | 問答、跨章節與守護的下一步．PartnerQuiz × 保險併入守護 × past-times 跨 group |
 | [v0.15.3](CHANGELOG.md#0153---2026-05-13) | 章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值 |
 | [v0.16.0](CHANGELOG.md#0160---2026-05-13) | 守護成為自己的模組．物品也記得進來．設定頁長出新分組 |
-| [v0.16.1](CHANGELOG.md#0161---2026-05-13) | 守護後的細節收尾．角色色 × 收入篩選 × 兩條清理 |
+| [v0.16.1](CHANGELOG.md#0161---2026-05-13) | 守護後的細節收尾．角色色 × 收入篩選 × 被保人自己/對方 × 兩條清理 |
 
 ## Backlog / 未釋出版本
 
