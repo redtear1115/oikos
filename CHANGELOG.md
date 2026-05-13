@@ -14,10 +14,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [Unreleased]
 
 ### 使用者可見變化
-- _尚無_
+- **Sheet / Modal 全面支援 Escape 鍵關閉**（closes #255）：篩選面板、加帳 sheet、收入 sheet、結算 sheet、愛物 sheet、定期收支 sheet、確認對話框等所有 overlay 現在都可以按 Escape 關閉。Desktop / PWA 鍵盤情境的反直覺終於收掉。多層巢狀（例如加帳 sheet 開了刪除確認）每按一次 Escape 只關最上層，逐層退出。
 
 ### 技術變更
-- _尚無_
+- **`useEscapeToClose` hook + 模組層 stack**：在 `app/(dashboard)/_components/useEscapeToClose.ts` 加新的 hook，挂在 `SheetBackdrop`（14 個 sheet 共用）與 `AssetPickerSheet`（自帶 backdrop）。stack 模型確保只有最上層 open 的 handler 響應，避免一鍵關所有層。IME 組字中的 Escape（`isComposing` / keyCode 229）跳過，不影響中文輸入體驗。`InAppBrowserGuard` 是 security blocker，刻意不接此 hook。
 
 ## [0.16.1] - 2026-05-13
 
