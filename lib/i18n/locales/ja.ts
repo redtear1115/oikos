@@ -433,6 +433,11 @@ export const ja: Translations = {
       aibutsuHint: 'まだ愛物がありません。右下のボタンから最初の一つを記録しましょう。',
       guardianHint: 'まだ保険がありません。愛物を守る保障も一緒に記録できます。',
     },
+    guardianGated: {
+      title: '守護はまだベータ中',
+      body: '保険と保障の記録はここに集まります。設定で「守護（ベータ）」をオンにすると一緒に見守れます。',
+      cta: '設定を開く',
+    },
     addCar: '車を追加',
     addSecondCar: '2 台目の車を追加',
     insuranceList: {

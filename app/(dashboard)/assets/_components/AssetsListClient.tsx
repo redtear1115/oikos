@@ -10,6 +10,7 @@ import { AssetListItem } from './AssetListItem'
 import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
+import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
@@ -75,8 +76,11 @@ export function AssetsListClient({ items }: Props) {
   })
 
   const tabParam = searchParams.get('tab')
-  // When Guardian beta is off, force activeTab to 'aibutsu' regardless of URL —
-  // a stale ?tab=guardian link or browser back shouldn't bypass the gate.
+  // #227 — when Guardian beta is OFF but the URL points at the guardian tab
+  // (stale bookmark / browser back), show the GatedView in-place instead of
+  // silently collapsing to 愛物. activeTab stays on 'aibutsu' so the data
+  // arrays still resolve, but the body renders the gate.
+  const guardianGated = !guardianVisible && tabParam === 'guardian'
   const activeTab: AssetsTab = guardianVisible && tabParam === 'guardian' ? 'guardian' : 'aibutsu'
 
   const setActiveTab = useCallback(
@@ -359,7 +363,9 @@ export function AssetsListClient({ items }: Props) {
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {guardianGated ? (
+        <GatedView />
+      ) : items.length === 0 ? (
         <AssetEmptyState />
       ) : (
         <>

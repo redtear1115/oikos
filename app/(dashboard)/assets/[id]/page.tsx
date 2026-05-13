@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
@@ -10,6 +10,7 @@ import { ChildDetailClient } from './_components/ChildDetailClient'
 import { PetDetailClient } from './_components/PetDetailClient'
 import { PlantDetailClient } from './_components/PlantDetailClient'
 import { InsuranceDetailClientLegacy } from './_components/InsuranceDetailClientLegacy'
+import { InsuranceGatedClient } from './_components/InsuranceGatedClient'
 import { SavingsView } from './_components/insurance/SavingsView'
 import { getFramingGroup } from '@/lib/insurance'
 import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
@@ -56,12 +57,13 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const asset = await getAssetById(id, group.id)
   if (!asset || asset.deletedAt) notFound()
 
-  // #221 — Guardian beta gate. Insurance asset detail pages live behind the
-  // Guardian module; when beta is off, direct URL access (bookmark / shared
-  // link / back button) redirects to the dashboard rather than 404-ing,
-  // since the data still exists and will come back when beta re-enables.
+  // #221/#227 — Guardian beta gate. Insurance asset detail pages live behind
+  // the Guardian module; when beta is off, direct URL access (bookmark /
+  // shared link / back button) renders an in-place GatedView pointing at the
+  // Settings toggle, rather than redirecting silently or 404-ing. Data is
+  // preserved on the DB side and reappears when beta is re-enabled.
   if (asset.type === 'insurance' && !canAccessGuardian(group)) {
-    redirect('/dashboard')
+    return <InsuranceGatedClient />
   }
 
   const allAssetsData = await listAssetsForGroup(group.id)
