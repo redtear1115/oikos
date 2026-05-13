@@ -1,6 +1,6 @@
 ---
-status: design
-related_issues: TBD（待開 issue）
+status: shipped
+shipped_in: v0.15.3（PR #207：past-chapter read-only + required `epochWindow` 型別防呆 on all transaction reads）
 note: 起點是 dashboard hero card「本月進帳」在收錄模式下會吃進其他 epoch 的進帳；audit 後收斂成「過去章節 read-only」政策 + 「epoch 過濾型別防呆」refactor 的雙軌設計。
 ---
 
