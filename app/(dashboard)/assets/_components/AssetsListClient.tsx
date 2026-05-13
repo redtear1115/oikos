@@ -10,13 +10,15 @@ import { AssetListItem } from './AssetListItem'
 import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
+import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
 type AssetsTab = 'aibutsu' | 'guardian'
 
 export interface AssetsListItem {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
   name: string
   /** Optional nickname (currently only populated for child assets). When
    *  present, list items render nickname-first with legal name as secondary. */
@@ -63,6 +65,7 @@ export function AssetsListClient({ items }: Props) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useTranslations()
+  const { canAccessGuardian: guardianVisible } = useMember()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   // Refresh when partner adds/updates/deletes an asset
@@ -73,7 +76,12 @@ export function AssetsListClient({ items }: Props) {
   })
 
   const tabParam = searchParams.get('tab')
-  const activeTab: AssetsTab = tabParam === 'guardian' ? 'guardian' : 'aibutsu'
+  // #227 — when Guardian beta is OFF but the URL points at the guardian tab
+  // (stale bookmark / browser back), show the GatedView in-place instead of
+  // silently collapsing to 愛物. activeTab stays on 'aibutsu' so the data
+  // arrays still resolve, but the body renders the gate.
+  const guardianGated = !guardianVisible && tabParam === 'guardian'
+  const activeTab: AssetsTab = guardianVisible && tabParam === 'guardian' ? 'guardian' : 'aibutsu'
 
   const setActiveTab = useCallback(
     (next: AssetsTab) => {
@@ -97,6 +105,8 @@ export function AssetsListClient({ items }: Props) {
     const start = touchRef.current
     touchRef.current = null
     if (!start) return
+    // No second tab to swipe to when Guardian beta is off — short-circuit.
+    if (!guardianVisible) return
     const t1 = e.changedTouches[0]
     const dx = t1.clientX - start.x
     const dy = t1.clientY - start.y
@@ -111,6 +121,10 @@ export function AssetsListClient({ items }: Props) {
   const cars = items.filter((a) => a.type === 'car')
   const houses = items.filter((a) => a.type === 'house')
   const livings = items.filter((a) => ['child', 'pet', 'plant'].includes(a.type))
+  // #222 — template-based assets (type='item') get their own section so they
+  // don't get mixed into the legacy cars / houses / livings grouping. Sorted
+  // newest-first by createdAt order (already from the server query).
+  const itemsTemplated = items.filter((a) => a.type === 'item')
   // Insurance ordered by expiry date ascending — soonest-to-expire first.
   // Items without an expiry date sink to the bottom (treated as +∞).
   const insurances = items
@@ -273,7 +287,14 @@ export function AssetsListClient({ items }: Props) {
         </div>
       )}
 
-      {!hasProperty && livings.length === 0 && (
+      {itemsTemplated.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <SectionLabel label={t.assets.section.items} dotColor="var(--asset-tint-item)" />
+          <AssetGroup group={itemsTemplated} />
+        </div>
+      )}
+
+      {!hasProperty && livings.length === 0 && itemsTemplated.length === 0 && (
         <div
           className="text-sm leading-relaxed py-10 text-center"
           style={{ color: 'var(--ink-3)' }}
@@ -342,13 +363,15 @@ export function AssetsListClient({ items }: Props) {
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {guardianGated ? (
+        <GatedView />
+      ) : items.length === 0 ? (
         <AssetEmptyState />
       ) : (
         <>
-          {TabBar}
+          {guardianVisible && TabBar}
           <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-            {activeTab === 'aibutsu' ? AibutsuTab : GuardianTab}
+            {guardianVisible && activeTab === 'guardian' ? GuardianTab : AibutsuTab}
           </div>
         </>
       )}

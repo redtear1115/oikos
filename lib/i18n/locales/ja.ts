@@ -250,6 +250,14 @@ export const ja: Translations = {
     dateRangeClear: '日付範囲をクリア',
     assetSection: '愛物（複数選択可）',
     assetNone: '未割り当て',
+    assetGroupSelectAll: 'すべて選択',
+    assetGroup: {
+      car: '車',
+      house: '住まい',
+      living: '命',
+      item: '物',
+      coverage: '守護',
+    },
     amountSection: '金額範囲',
     amountMinPlaceholder: '最低',
     amountMaxPlaceholder: '最高',
@@ -276,7 +284,7 @@ export const ja: Translations = {
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     inviteCta: '相手を招待',
     language: '言語',
-    sectionDevice: 'デバイス',
+    sectionApp: 'アプリ',
     offlineBrowsing: 'オフライン閲覧',
     offlineHintOff: 'オフライン時には履歴を表示できません。オンにすると、最近閲覧したページがこの端末に保存されます。',
     offlineHintOn: 'オフライン時に最後の接続時の記録を閲覧できます。データはこの端末にのみ保存され、ログアウト時に削除されます。',
@@ -289,6 +297,11 @@ export const ja: Translations = {
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
+    sectionGuardian: '守護（ベータ）',
+    guardianBeta: {
+      title: '守護をオンにする',
+      description: '守護は保険や保障をひとまとめに置いておく場所です。まだベータで、将来は有料機能になります。オフにしても保険データは消えず、DB に残ります。',
+    },
     dangerZone: {
       sectionTitle: 'この家計簿から離れる',
       leaveCta: 'この家計簿から離れたい',
@@ -418,6 +431,7 @@ export const ja: Translations = {
       property: '財産',
       living: '生命体',
       coverage: '保障',
+      items: '物品',
     },
     tabs: {
       aibutsu: '愛物',
@@ -426,6 +440,11 @@ export const ja: Translations = {
     tabEmpty: {
       aibutsuHint: 'まだ愛物がありません。右下のボタンから最初の一つを記録しましょう。',
       guardianHint: 'まだ保険がありません。愛物を守る保障も一緒に記録できます。',
+    },
+    guardianGated: {
+      title: '守護はまだベータ中',
+      body: '保険と保障の記録はここに集まります。設定で「守護（ベータ）」をオンにすると一緒に見守れます。',
+      cta: '設定を開く',
     },
     addCar: '車を追加',
     addSecondCar: '2 台目の車を追加',
@@ -570,6 +589,7 @@ export const ja: Translations = {
       plant: '植物',
       house: '家',
       insurance: '保険',
+      item: '物品',
       more: 'その他',
     },
     name: {
@@ -719,6 +739,11 @@ export const ja: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: '例：カメラ、自転車、記念品',
+    detailSection: '基本情報',
+  },
+
   assetDetail: {
     backAriaLabel: '戻る',
     editAriaLabel: '編集',
@@ -741,6 +766,7 @@ export const ja: Translations = {
       pet: 'ペット',
       plant: '植物',
       insurance: '保険',
+      item: '物品',
     },
     age: {
       label: '年齢',

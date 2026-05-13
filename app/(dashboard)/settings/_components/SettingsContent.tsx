@@ -8,6 +8,7 @@ import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { DangerZone, type PendingSwap } from './DangerZone'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
+import { GuardianBetaToggle } from './GuardianBetaToggle'
 import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
@@ -40,11 +41,13 @@ interface Props {
   groupBalance: number
   /** A pending swap proposal on this group, or null if none. */
   pendingSwap: PendingSwap | null
+  /** #220 — Guardian beta opt-in state for this group. */
+  guardianBetaEnabled: boolean
 }
 
 export function SettingsContent({
   viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
-  viewerIsMemberA, groupBalance, pendingSwap,
+  viewerIsMemberA, groupBalance, pendingSwap, guardianBetaEnabled,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -161,13 +164,48 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* 帳本 */}
+      {/* 帳本 — group-level shared config: name + (when paired) default split ratio */}
       <Section title={t.settings.sectionGroup}>
         <Row
           label={t.settings.groupName}
           value={groupName}
           onClick={() => setEditing('group')}
         />
+        {!isSolo && (
+          <div className="mt-3">
+            <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
+              <div className="text-body font-semibold" style={{ color: 'var(--ink)' }}>分攤比例</div>
+              <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
+                <span>{viewer.displayName}（我）{splitRatioA}%</span>
+                <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
+              </div>
+              <input
+                type="range"
+                min={10}
+                max={90}
+                step={10}
+                list="split-ratio-ticks"
+                value={splitRatioA}
+                onChange={e => setSplitRatioA(Number(e.target.value))}
+                className="w-full accent-[var(--ink)]"
+              />
+              <datalist id="split-ratio-ticks">
+                {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(v => (
+                  <option key={v} value={v} label={`${v}`} />
+                ))}
+              </datalist>
+              <button
+                onClick={handleRatioSave}
+                disabled={savingRatio}
+                className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
+                style={{ background: 'var(--ink)', color: 'var(--surface)' }}
+              >
+                {savingRatio ? '儲存中…' : '儲存預設比例'}
+              </button>
+              {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
+            </section>
+          </div>
+        )}
       </Section>
 
       {/* 成員 */}
@@ -222,24 +260,13 @@ export function SettingsContent({
         )}
       </Section>
 
-      {/* 個人 */}
+      {/* 個人 — viewer-only profile + preferences */}
       <Section title={t.settings.sectionPersonal}>
-        <Row
-          label={t.settings.addToHomeScreen}
-          onClick={() => setInstallGuideOpen(true)}
-        />
-        <div className="mt-3" />
         <Row
           label={t.settings.displayName}
           value={viewer.displayName}
           onClick={() => setEditing('name')}
         />
-        <div className="mt-3">
-          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            {t.settings.language}
-          </div>
-          <LanguageSwitcher current={currentLocale} />
-        </div>
         <div className="mt-3">
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
             {t.settings.defaultSplitTitle}
@@ -292,48 +319,26 @@ export function SettingsContent({
             </div>
           )}
         </div>
-        {!isSolo && (
-          <div className="mt-3">
-            <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
-              <div className="text-body font-semibold" style={{ color: 'var(--ink)' }}>分攤比例</div>
-              <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
-                <span>{viewer.displayName}（我）{splitRatioA}%</span>
-                <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={90}
-                step={10}
-                list="split-ratio-ticks"
-                value={splitRatioA}
-                onChange={e => setSplitRatioA(Number(e.target.value))}
-                className="w-full accent-[var(--ink)]"
-              />
-              <datalist id="split-ratio-ticks">
-                {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(v => (
-                  <option key={v} value={v} label={`${v}`} />
-                ))}
-              </datalist>
-              <button
-                onClick={handleRatioSave}
-                disabled={savingRatio}
-                className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: 'var(--ink)', color: 'var(--surface)' }}
-              >
-                {savingRatio ? '儲存中…' : '儲存預設比例'}
-              </button>
-              {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
-            </section>
+      </Section>
+
+      {/* 應用 — install + language + offline (device/app-level prefs) */}
+      <Section title={t.settings.sectionApp}>
+        <Row
+          label={t.settings.addToHomeScreen}
+          onClick={() => setInstallGuideOpen(true)}
+        />
+        <div className="mt-3">
+          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
+            {t.settings.language}
           </div>
-        )}
+          <LanguageSwitcher current={currentLocale} />
+        </div>
+        <div className="mt-3">
+          <OfflineBrowsingToggle />
+        </div>
       </Section>
 
-      {/* 裝置 */}
-      <Section title={t.settings.sectionDevice}>
-        <OfflineBrowsingToggle />
-      </Section>
-
+      {/* 資料 — recurring rules → past chapters → export → trust info */}
       <Section title={t.settings.sectionData}>
         <Row
           label={t.settings.recurringIncome}
@@ -351,11 +356,6 @@ export function SettingsContent({
         />
         <div className="mt-3" />
         <Row
-          label={t.settings.trust}
-          onClick={() => router.push('/settings/trust')}
-        />
-        <div className="mt-3" />
-        <Row
           label={exportPending ? t.csvExport.preparing : t.settings.exportData}
           onClick={handleExport}
           disabled={exportPending}
@@ -365,6 +365,16 @@ export function SettingsContent({
             {exportError}
           </div>
         )}
+        <div className="mt-3" />
+        <Row
+          label={t.settings.trust}
+          onClick={() => router.push('/settings/trust')}
+        />
+      </Section>
+
+      {/* 守護（Beta）— per-group opt-in for the Guardian module (#220) */}
+      <Section title={t.settings.sectionGuardian}>
+        <GuardianBetaToggle enabled={guardianBetaEnabled} />
       </Section>
 
       {partner && (

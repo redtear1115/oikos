@@ -8,6 +8,7 @@ import { PetSheetBody } from './PetSheetBody'
 import { PlantSheetBody } from './PlantSheetBody'
 import { HouseSheetBody } from './HouseSheetBody'
 import { InsuranceSheetBody } from './InsuranceSheetBody'
+import { TemplateSheetBody } from './TemplateSheetBody'
 import type { AssetSheetInitial, PickerType } from './types'
 
 export type { AssetSheetInitial } from './types'
@@ -25,24 +26,30 @@ interface Props {
 // its own state, save/delete handlers, and sheet chrome (via shared/SheetShell).
 // The type picker (create mode only) is rendered here and threaded into the
 // body as a slot so it appears above the body's form fields.
+//
+// #222 — selecting 「物品」 (type='item') routes to TemplateSheetBody, which
+// handles the new template path (currently the single `general` template).
+// The five emotion-rich types + `insurance` keep their dedicated bodies and
+// the existing *Details subtable flows intact.
 export function AssetSheet({ open, onClose, initial, initialType, onMutated }: Props) {
   const isEdit = !!initial
-  const [selectedType, setSelectedType] = useState<PickerType>(
-    (initial?.type ?? initialType ?? 'pet') as PickerType,
-  )
+  const initialPickerType: PickerType = isEdit
+    ? (initial!.templateKey != null ? 'item' : (initial!.type as PickerType))
+    : (initialType ?? 'pet')
+  const [selectedType, setSelectedType] = useState<PickerType>(initialPickerType)
 
   useEffect(() => {
     if (!open) return
-    setSelectedType((initial?.type ?? initialType ?? 'pet') as PickerType)
-  }, [open, initial, initialType])
+    setSelectedType(initialPickerType)
+  }, [open, initialPickerType])
 
   const typePickerSlot = isEdit ? null : (
     <TypePicker value={selectedType} onChange={setSelectedType} />
   )
 
   // Keyed remount on type change in create mode mirrors the original's
-  // wholesale state reset; in edit mode `selectedType` is locked to
-  // `initial.type` so this is a stable key.
+  // wholesale state reset; in edit mode `selectedType` is locked so this is
+  // a stable key.
   const bodyKey = `${selectedType}-${initial?.id ?? 'new'}`
   const shared = { key: bodyKey, open, onClose, onMutated, typePickerSlot }
   const editInitial = isEdit ? initial : undefined
@@ -54,5 +61,6 @@ export function AssetSheet({ open, onClose, initial, initialType, onMutated }: P
     case 'plant':     return <PlantSheetBody     {...shared} initial={editInitial} />
     case 'house':     return <HouseSheetBody     {...shared} initial={editInitial} />
     case 'insurance': return <InsuranceSheetBody {...shared} initial={editInitial} />
+    case 'item':      return <TemplateSheetBody  {...shared} initial={editInitial} />
   }
 }

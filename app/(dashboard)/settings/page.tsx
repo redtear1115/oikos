@@ -71,6 +71,7 @@ export default async function SettingsPage() {
         viewerIsMemberA={viewerIsMemberA}
         groupBalance={groupBalance}
         pendingSwap={pendingSwap}
+        guardianBetaEnabled={group.guardianBetaEnabled}
       />
       <BottomNavSkeleton />
     </div>

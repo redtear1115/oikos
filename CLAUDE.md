@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.15.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.16.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -42,6 +42,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.15.1](CHANGELOG.md#0151---2026-05-12) | 陪伴每處小細節更貼手．光的指認也更一致 |
 | [v0.15.2](CHANGELOG.md#0152---2026-05-13) | 問答、跨章節與守護的下一步．PartnerQuiz × 保險併入守護 × past-times 跨 group |
 | [v0.15.3](CHANGELOG.md#0153---2026-05-13) | 章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值 |
+| [v0.16.0](CHANGELOG.md#0160---2026-05-13) | 守護成為自己的模組．物品也記得進來．設定頁長出新分組 |
 
 ## Backlog / 未釋出版本
 
@@ -49,7 +50,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
-| [v0.16.0](https://github.com/redtear1115/oikos/milestone/6) | 多幣別與設定排面 |
 | [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 |
 | [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
 | [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 |
@@ -110,14 +110,14 @@ Realtime：Client subscribes → React state mutation
 
 ### 主要 entity
 
-- **`OikosGroups`（Group）** — 兩人帳本本體。`member_a` notNull / `member_b` nullable（solo 模式 = `member_b IS NULL`）。`current_epoch_started_at` 標記目前章節起點；`default_split_ratio_a` 為 group 預設依比例分。
+- **`OikosGroups`（Group）** — 兩人帳本本體。`member_a` notNull / `member_b` nullable（solo 模式 = `member_b IS NULL`）。`current_epoch_started_at` 標記目前章節起點；`default_split_ratio_a` 為 group 預設依比例分；`guardian_beta_enabled` 控制守護模組可見性（單一閘門 `lib/guardian.ts#canAccessGuardian`，將來付費層 cut-over 只動該函式）。
 - **`Profiles`（OikosUser）** — mirror `auth.users.id` 的使用者 profile（displayName / avatar / `default_split_type`）。
 - **`GroupEpochs`** — 關係章節歷史。每個 group 同時間恰好一筆 `endedAt IS NULL`（current epoch）；swap 不開新 epoch、leave 才會關舊開新。`/records` / stats / dashboard 預設只看當前 chapter，`/past-times` 翻歷史。
 - **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount` + `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。
 - **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
 - **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。
 - **`GroupBalance`** — balance cache（per-group 單列）。`balance` 正數 = A 欠 B、負數 = B 欠 A；每次寫入後由 `lib/balance.ts` 全量重算。
-- **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance`），各 type 用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`。
+- **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance` / `item`），舊 6 種用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`；`item` 走 template path (`template_key` + `template_fields` jsonb)，不開子表。
 - **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
 - **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
 - **`MonthlyReviewSnapshots` / `MonthlyReviewMessages`** — 月初 cron 凍結的雙人月度回顧資料。
@@ -220,6 +220,7 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/transactions-design.md` | 核心記帳 UX、Onboarding、Solo Mode |
 | `docs/superpowers/specs/car-fuellog-design.md` | 車輛 + FuelLog |
 | `docs/superpowers/specs/aibutsu-design.md` | 愛物概念 + Child/Pet/Plant/House/Insurance |
+| `docs/superpowers/specs/guardian-design.md` | 守護模組獨立化 + beta gate（v0.16.0 shipped #220 #221 #227 — `canAccessGuardian()` 單一閘門 + GatedView for beta-off surfaces）|
 | `docs/superpowers/specs/income-design.md` | 進帳功能設計決策 |
 | `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
 | `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
@@ -229,8 +230,9 @@ npm run db:studio    # Drizzle Studio
 | `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down v0.14.2 / PR #116 closes #102）|
 | `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
 | `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（v0.14.1 shipped；PR #112 closes #110）|
-| `docs/superpowers/specs/structured-filter-design.md` | /records 結構化篩選器（v0.15.0 shipped #50 — date range + 愛物 + URL-synced；v0.15.2 v2 #165 — amount range + status）|
+| `docs/superpowers/specs/structured-filter-design.md` | /records 結構化篩選器（v0.15.0 shipped #50 — date range + 愛物 + URL-synced；v0.15.2 v2 #165 — amount range + status；v0.16.0 v3 #223 — 愛物分組 sub-section + 全選 chip）|
 | `docs/superpowers/specs/inbox-layer-design.md` | Inbox layer 概念統一（v0.15.0 概念註解；v0.16.0 schema migration + UI）|
 | `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
 | `docs/superpowers/specs/epoch-readonly-design.md` | 過去章節 read-only + 所有 transaction 讀取必填 `epochWindow` 型別防呆（v0.15.3 shipped #207）|
+| `docs/superpowers/specs/asset-templates-design.md` | 愛物模板系統 v1（v0.16.0 shipped #222 — TypePicker 加「物品」第七選項 + `'item'` asset_type + 單一 `general` 模板；舊 6 種 type 完全不動）|
 | `CHANGELOG.md` | 版本歷史 |

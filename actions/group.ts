@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateSettings } from '@/lib/revalidate'
+import { revalidatePath } from 'next/cache'
 import { validateName } from '@/lib/validators'
 
 export async function getMyGroup() {
@@ -74,5 +75,26 @@ export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true 
     .where(eq(oikosGroups.id, group.id))
 
   revalidateSettings()
+  return { ok: true }
+}
+
+/**
+ * #220 — flip Guardian (守護) beta on/off for the viewer's group.
+ * `requireViewerGroup()` already gates on viewer membership, so we don't
+ * accept a `groupId` arg: the only group the viewer can mutate is their own.
+ * Revalidates everywhere Guardian surfaces — settings (toggle row), assets
+ * (tab visibility), dashboard (in case a future tile shows up there).
+ */
+export async function toggleGuardianBeta(enabled: boolean): Promise<{ ok: true }> {
+  const { group } = await requireViewerGroup()
+
+  await db
+    .update(oikosGroups)
+    .set({ guardianBetaEnabled: enabled })
+    .where(eq(oikosGroups.id, group.id))
+
+  revalidatePath('/settings')
+  revalidatePath('/assets')
+  revalidatePath('/dashboard')
   return { ok: true }
 }
