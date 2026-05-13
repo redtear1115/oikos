@@ -311,7 +311,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
               fontFamily: 'inherit',
             }}
           >
-            {pending ? t.common.saving : t.common.save}
+            {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
           </button>
         </div>
 

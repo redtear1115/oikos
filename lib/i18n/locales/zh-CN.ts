@@ -14,6 +14,7 @@ export const zhCN: Translations = {
   common: {
     cancel: '取消',
     save: '保存',
+    update: '更新',
     saving: '保存中…',
     processing: '处理中…',
     delete: '删除',

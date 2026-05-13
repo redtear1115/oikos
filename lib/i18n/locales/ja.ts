@@ -14,6 +14,7 @@ export const ja: Translations = {
   common: {
     cancel: 'キャンセル',
     save: '保存',
+    update: '更新',
     saving: '保存中…',
     processing: '処理中…',
     delete: '削除',
