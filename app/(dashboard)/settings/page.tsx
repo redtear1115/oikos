@@ -59,7 +59,7 @@ export default async function SettingsPage() {
     : null
 
   return (
-    <div className="relative min-h-dvh pb-[92px]">
+    <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <SettingsContent
         viewer={viewer}
         partner={partner}

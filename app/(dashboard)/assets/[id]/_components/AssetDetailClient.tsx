@@ -144,7 +144,7 @@ export function AssetDetailClient({
   }
 
   return (
-    <div className="relative min-h-screen pb-[92px]">
+    <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       <AssetHero
         name={
           <AssetSwitcher

@@ -11,7 +11,7 @@ import { GatedView } from '@/app/(dashboard)/_components/GatedView'
  */
 export function InsuranceGatedClient() {
   return (
-    <div className="relative min-h-screen pb-[92px]" style={{ background: 'var(--bg)' }}>
+    <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]" style={{ background: 'var(--bg)' }}>
       <div className="pt-[60px]">
         <GatedView />
       </div>

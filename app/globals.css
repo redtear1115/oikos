@@ -48,6 +48,13 @@
   --saving-soft: #DDE5DC;
   --saving:      #5A7A66;
 
+  /* Bottom nav + FAB clearance for main scroll containers.
+   * BottomNav is 78px tall at bottom-0; FAB sits at bottom-[30px] h-[60px] with
+   * a 5px box-shadow ring, so FAB top edge ≈ 95px from viewport bottom (99px
+   * for the pill variant). 112px clears FAB top with ~13px breathing room so
+   * the last feed row isn't visually pinched by the FAB. (issue #253) */
+  --bottom-nav-offset: 112px;
+
   /* Typography scale — P3-1 */
   --fs-xs:        11px;   /* extra small: labels, metadata */
   --fs-micro:     11px;   /* tab label, timestamp, metadata */

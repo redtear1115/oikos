@@ -25,7 +25,7 @@ export default async function PastTimesPage() {
   ])
 
   return (
-    <div className="relative min-h-dvh pb-[92px]">
+    <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <PastTimesList
         epochs={epochs.map((e) => ({
           id: e.id,
