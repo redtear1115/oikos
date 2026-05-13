@@ -261,6 +261,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       insKind: insuranceDetailsData?.kind ?? null,
       insInsured: insuranceDetailsData?.insured ?? null,
       insInsuredChildId: insuranceDetailsData?.insuredChildId ?? null,
+      insInsuredUserId: insuranceDetailsData?.insuredUserId ?? null,
       insPolicyHolderUserId: insuranceDetailsData?.policyHolderUserId ?? null,
       insInsurer: insuranceDetailsData?.insurer ?? null,
       insPolicyNo: insuranceDetailsData?.policyNo ?? null,
