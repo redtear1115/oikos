@@ -276,7 +276,7 @@ export const zhCN: Translations = {
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     inviteCta: '邀请对方加入',
     language: '语言',
-    sectionDevice: '设备',
+    sectionApp: '应用',
     offlineBrowsing: '离线浏览',
     offlineHintOff: '在无网络时看不到历史记录。开启后，最近浏览过的页面会存在这台设备上。',
     offlineHintOn: '无网络时可查看最近一次连接时的记录。资料只存在这台设备，登出时会自动清除。',

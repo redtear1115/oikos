@@ -276,7 +276,7 @@ export const en: Translations = {
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     inviteCta: 'Invite partner',
     language: 'Language',
-    sectionDevice: 'Device',
+    sectionApp: 'App',
     offlineBrowsing: 'Offline browsing',
     offlineHintOff: "When offline, history isn't available. Turn this on to keep recently-viewed pages on this device.",
     offlineHintOn: 'When offline, you can view records from your last connection. Data lives on this device only and is cleared on sign-out.',
