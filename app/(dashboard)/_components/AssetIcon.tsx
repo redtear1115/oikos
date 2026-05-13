@@ -1,7 +1,7 @@
 'use client'
 
 interface Props {
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
   size?: number
   color?: string
 }
@@ -11,6 +11,20 @@ interface Props {
  * fall back to a neutral square placeholder (will be designed in slice 3+).
  */
 export function AssetIcon({ type, size = 24, color = 'currentColor' }: Props) {
+  if (type === 'item') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        {/* tag — generic "item / template" motif */}
+        <path
+          d="M11.4 3.6 L20.4 12.6 V20.4 H12.6 L3.6 11.4 V4.4 A0.8 0.8 0 0 1 4.4 3.6 Z"
+          stroke={color}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        <circle cx="7.5" cy="7.5" r="1.3" fill={color} />
+      </svg>
+    )
+  }
   if (type === 'car') {
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">

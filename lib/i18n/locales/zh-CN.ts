@@ -250,6 +250,14 @@ export const zhCN: Translations = {
     dateRangeClear: '清除日期范围',
     assetSection: '爱物（可多选）',
     assetNone: '未归属',
+    assetGroupSelectAll: '全选',
+    assetGroup: {
+      car: '车辆',
+      house: '房子',
+      living: '生命',
+      item: '物品',
+      coverage: '守护',
+    },
     amountSection: '金额范围',
     amountMinPlaceholder: '最低',
     amountMaxPlaceholder: '最高',
@@ -276,7 +284,7 @@ export const zhCN: Translations = {
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     inviteCta: '邀请对方加入',
     language: '语言',
-    sectionDevice: '设备',
+    sectionApp: '应用',
     offlineBrowsing: '离线浏览',
     offlineHintOff: '在无网络时看不到历史记录。开启后，最近浏览过的页面会存在这台设备上。',
     offlineHintOn: '无网络时可查看最近一次连接时的记录。资料只存在这台设备，登出时会自动清除。',
@@ -289,6 +297,11 @@ export const zhCN: Translations = {
     trust: '数据安全',
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
+    sectionGuardian: '守护（Beta）',
+    guardianBeta: {
+      title: '开启守护',
+      description: '守护是把保单与保障好好收下的地方，还在 Beta 中。未来会成为订阅功能，现在先体验。关闭后既有数据还留在 DB，不会消失。',
+    },
     dangerZone: {
       sectionTitle: '离开账本',
       leaveCta: '我想离开这本账本',
@@ -418,6 +431,7 @@ export const zhCN: Translations = {
       property: '财产',
       living: '生命体',
       coverage: '保障',
+      items: '物品',
     },
     tabs: {
       aibutsu: '爱物',
@@ -426,6 +440,11 @@ export const zhCN: Translations = {
     tabEmpty: {
       aibutsuHint: '还没有爱物。从右下角开始记下第一个。',
       guardianHint: '还没有保单。守护爱物的保障也可以一起记下。',
+    },
+    guardianGated: {
+      title: '守护还在 Beta',
+      body: '保单与保障的纪录都收在这里。在设置中开启「守护（Beta）」，就能一起照顾。',
+      cta: '前往设置开启',
     },
     addCar: '新增车辆',
     addSecondCar: '加入第二辆车',
@@ -570,6 +589,7 @@ export const zhCN: Translations = {
       plant: '植物',
       house: '房子',
       insurance: '保险',
+      item: '物品',
       more: '更多',
     },
     name: {
@@ -719,6 +739,11 @@ export const zhCN: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: '例：相机、单车、纪念物',
+    detailSection: '基本资料',
+  },
+
   assetDetail: {
     backAriaLabel: '返回',
     editAriaLabel: '编辑',
@@ -741,6 +766,7 @@ export const zhCN: Translations = {
       pet: '宠物',
       plant: '植物',
       insurance: '保险',
+      item: '物品',
     },
     age: {
       label: '年龄',

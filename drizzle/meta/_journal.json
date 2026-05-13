@@ -253,6 +253,20 @@
       "when": 1779300000000,
       "tag": "0035_insurance_account_value",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1779400000000,
+      "tag": "0036_asset_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1779500000000,
+      "tag": "0037_guardian_beta_flag",
+      "breakpoints": true
     }
   ]
 }

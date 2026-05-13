@@ -12,11 +12,15 @@ const insuredChildAsset = alias(assets, 'insured_child_asset')
 export interface AssetWithCar {
   id: string
   groupId: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
   name: string
   notes: string | null
   deletedAt: Date | null
   createdAt: Date
+  // #222 — template path. NULL for legacy assets; NOT NULL for template-based
+  // ones (which always have type='item'). v1 ships only `general`.
+  templateKey: 'general' | null
+  templateFields: Record<string, string | number | null> | null
   // Car-only fields (null for non-car assets)
   plate: string | null
   purchasedAt: string | null
@@ -60,6 +64,8 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       type: assets.type,
       name: assets.name,
       notes: assets.notes,
+      templateKey: assets.templateKey,
+      templateFields: assets.templateFields,
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
       plate: carDetails.plate,
@@ -114,6 +120,8 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       type: assets.type,
       name: assets.name,
       notes: assets.notes,
+      templateKey: assets.templateKey,
+      templateFields: assets.templateFields,
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
       plate: carDetails.plate,

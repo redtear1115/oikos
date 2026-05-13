@@ -40,7 +40,7 @@ export interface SettleRowPayload {
 export interface AssetRowPayload {
   id: string
   groupId: string
-  type: 'car' | 'house' | 'child' | 'insurance'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
   name: string
   createdAt: string  // ISO
   deletedAt: string | null  // ISO when soft-deleted

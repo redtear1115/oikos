@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
-import { createGroup, updateGroupName } from '@/actions/group'
+import { createGroup, updateGroupName, toggleGuardianBeta } from '@/actions/group'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
@@ -117,5 +117,34 @@ describe('updateDefaultSplitType', () => {
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(updateDefaultSplitType('half')).rejects.toThrow('Unauthorized')
+  })
+})
+
+describe('toggleGuardianBeta (#220)', () => {
+  it('writes the requested boolean to OikosGroups.guardianBetaEnabled', async () => {
+    const { mockBuilder } = await import('./_mocks/db')
+    queueDbResult([{ id: 'grp-1', guardianBetaEnabled: false }])
+    const r = await toggleGuardianBeta(true)
+    expect(r).toEqual({ ok: true })
+    const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setPayload.guardianBetaEnabled).toBe(true)
+  })
+
+  it('also accepts a false value (turning the flag off)', async () => {
+    const { mockBuilder } = await import('./_mocks/db')
+    queueDbResult([{ id: 'grp-1', guardianBetaEnabled: true }])
+    await toggleGuardianBeta(false)
+    const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setPayload.guardianBetaEnabled).toBe(false)
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(toggleGuardianBeta(true)).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when group not found', async () => {
+    queueDbResult([])
+    await expect(toggleGuardianBeta(true)).rejects.toThrow('找不到家計簿')
   })
 })

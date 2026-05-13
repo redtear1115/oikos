@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { canAccessGuardian } from '@/lib/guardian'
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
 import { computeAvgEcon } from '@/lib/fuelEcon'
 import { AssetDetailClient } from './_components/AssetDetailClient'
@@ -9,13 +10,16 @@ import { ChildDetailClient } from './_components/ChildDetailClient'
 import { PetDetailClient } from './_components/PetDetailClient'
 import { PlantDetailClient } from './_components/PlantDetailClient'
 import { InsuranceDetailClientLegacy } from './_components/InsuranceDetailClientLegacy'
+import { InsuranceGatedClient } from './_components/InsuranceGatedClient'
 import { SavingsView } from './_components/insurance/SavingsView'
 import { getFramingGroup } from '@/lib/insurance'
 import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
+import { TemplateAssetDetailClient } from './_components/TemplateAssetDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
+import type { AssetTemplateKey } from '@/lib/assetTemplates'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import type { PagedTxnRow } from '@/actions/transaction'
 
@@ -53,8 +57,52 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const asset = await getAssetById(id, group.id)
   if (!asset || asset.deletedAt) notFound()
 
+  // #221/#227 — Guardian beta gate. Insurance asset detail pages live behind
+  // the Guardian module; when beta is off, direct URL access (bookmark /
+  // shared link / back button) renders an in-place GatedView pointing at the
+  // Settings toggle, rather than redirecting silently or 404-ing. Data is
+  // preserved on the DB side and reappears when beta is re-enabled.
+  if (asset.type === 'insurance' && !canAccessGuardian(group)) {
+    return <InsuranceGatedClient />
+  }
+
   const allAssetsData = await listAssetsForGroup(group.id)
   const allAssets = allAssetsData.map(a => ({ id: a.id, name: a.name, type: a.type }))
+
+  // #222 — Template-based asset path. Routed first so it shadows the legacy
+  // type-based branches below (a template-based asset has type='item' anyway,
+  // but checking templateKey directly is clearer and survives a future
+  // type-enum cleanup).
+  if (asset.templateKey != null) {
+    const [summary, txnRows] = await Promise.all([
+      getAssetSummary(asset.id, group.id, epochWindow),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE, epochWindow),
+    ])
+    const initialTxns = serializeTxns(txnRows)
+    const templateKey = asset.templateKey as AssetTemplateKey
+    const templateFields = (asset.templateFields ?? {}) as Record<string, string | number | null>
+    const assetSheetInitial: AssetSheetInitial = {
+      id: asset.id,
+      type: 'item',
+      name: asset.name,
+      notes: asset.notes,
+      templateKey,
+      templateFields,
+    }
+    return (
+      <TemplateAssetDetailClient
+        assetId={asset.id}
+        name={asset.name}
+        notes={asset.notes ?? null}
+        templateKey={templateKey}
+        templateFields={templateFields}
+        summary={summary}
+        assetSheetInitial={assetSheetInitial}
+        initialTxns={initialTxns}
+        pageSize={PAGE_SIZE}
+      />
+    )
+  }
 
   if (asset.type === 'child') {
     const [childDetailsData, summary, txnRows] = await Promise.all([

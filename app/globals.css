@@ -32,6 +32,9 @@
   --asset-color-pet:       #D4AC79;
   --asset-color-plant:     #9BBA8A;
   --asset-color-insurance: #9EB59B;
+  /* #222 — template-based 「物品」 generic kind. Muted neutral so it sits
+     visually beneath the more emotive primary types. */
+  --asset-color-item:      #B7AAA0;
 
   --asset-tint-house:     color-mix(in srgb, var(--asset-color-house) 35%, white);
   --asset-tint-car:       color-mix(in srgb, var(--asset-color-car) 35%, white);
@@ -39,6 +42,7 @@
   --asset-tint-pet:       color-mix(in srgb, var(--asset-color-pet) 35%, white);
   --asset-tint-plant:     color-mix(in srgb, var(--asset-color-plant) 35%, white);
   --asset-tint-insurance: color-mix(in srgb, var(--asset-color-insurance) 35%, white);
+  --asset-tint-item:      color-mix(in srgb, var(--asset-color-item) 35%, white);
 
   /* Savings (儲蓄險) badge — shares the muted-green family with insurance tint. */
   --saving-soft: #DDE5DC;

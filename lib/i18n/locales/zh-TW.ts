@@ -267,6 +267,20 @@ export type Translations = {
     dateRangeClear: string
     assetSection: string
     assetNone: string
+    /** v0.16.0 #223 — chip label inside each asset sub-section that toggles
+     *  every asset in the group on/off. Same label across all groups (車輛 /
+     *  房子 / 生命 / 物品 / 守護). */
+    assetGroupSelectAll: string
+    /** v0.16.0 #223 — sub-section labels for the 愛物 filter, grouped by
+     *  asset type. Mirrors the section labels on /assets so the visual
+     *  identity is consistent across the filter sheet and the asset list. */
+    assetGroup: {
+      car: string
+      house: string
+      living: string
+      item: string
+      coverage: string
+    }
     amountSection: string
     amountMinPlaceholder: string
     amountMaxPlaceholder: string
@@ -293,7 +307,7 @@ export type Translations = {
     soloLockHint: string
     inviteCta: string
     language: string
-    sectionDevice: string
+    sectionApp: string
     offlineBrowsing: string
     offlineHintOff: string
     offlineHintOn: string
@@ -306,6 +320,11 @@ export type Translations = {
     trust: string
     exportData: string
     pastTimes: string
+    sectionGuardian: string
+    guardianBeta: {
+      title: string
+      description: string
+    }
     dangerZone: {
       sectionTitle: string
       leaveCta: string
@@ -436,6 +455,7 @@ export type Translations = {
       property: string
       living: string
       coverage: string
+      items: string
     }
     /** v0.15.2 #178 — 愛物頁分成「愛物」/「守護」兩個 tab，保險併入守護。 */
     tabs: {
@@ -445,6 +465,14 @@ export type Translations = {
     tabEmpty: {
       aibutsuHint: string
       guardianHint: string
+    }
+    /** #227 — shown when guardian beta is off but the user lands on the
+     *  guardian tab (or insurance asset detail) via a stale URL/bookmark.
+     *  In-place gate that points to Settings → Guardian (Beta) toggle. */
+    guardianGated: {
+      title: string
+      body: string
+      cta: string
     }
     addCar: string
     addSecondCar: string
@@ -617,6 +645,7 @@ export type Translations = {
       plant: string
       house: string
       insurance: string
+      item: string
       more: string
     }
     name: {
@@ -767,6 +796,12 @@ export type Translations = {
     }
   }
 
+  /** v0.16.0 #222 — 愛物模板系統 v1：只有「物品 (general)」一個模板，純文字追蹤，不接 FuelLog / 守護 等任何自動化。 */
+  assetTemplate: {
+    namePlaceholder: string
+    detailSection: string
+  }
+
   assetDetail: {
     backAriaLabel: string
     editAriaLabel: string
@@ -790,6 +825,7 @@ export type Translations = {
       pet: string
       plant: string
       insurance: string
+      item: string
     }
     age: {
       label: string
@@ -1496,6 +1532,14 @@ export const zhTW: Translations = {
     dateRangeClear: '清除日期範圍',
     assetSection: '愛物（可多選）',
     assetNone: '未歸屬',
+    assetGroupSelectAll: '全選',
+    assetGroup: {
+      car: '車輛',
+      house: '房子',
+      living: '生命',
+      item: '物品',
+      coverage: '守護',
+    },
     amountSection: '金額範圍',
     amountMinPlaceholder: '最低',
     amountMaxPlaceholder: '最高',
@@ -1522,7 +1566,7 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     inviteCta: '邀請對方加入',
     language: '語言',
-    sectionDevice: '裝置',
+    sectionApp: '應用',
     offlineBrowsing: '離線瀏覽',
     offlineHintOff: '在無網路時看不到歷史記錄。開啟後，最近瀏覽過的頁面會存在這台裝置上。',
     offlineHintOn: '無網路時可看最近一次連線時的記錄。資料只存在這台裝置，登出時會自動清除。',
@@ -1535,6 +1579,11 @@ export const zhTW: Translations = {
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
     pastTimes: '過去的時光',
+    sectionGuardian: '守護（Beta）',
+    guardianBeta: {
+      title: '開啟守護',
+      description: '守護是把保單與保障好好收下的地方，還在 Beta 中。未來會成為訂閱功能，現在先體驗。關閉後既有資料還留在 DB，不會消失。',
+    },
     dangerZone: {
       sectionTitle: '離開帳本',
       leaveCta: '我想離開這本帳本',
@@ -1664,6 +1713,7 @@ export const zhTW: Translations = {
       property: '財產',
       living: '生命體',
       coverage: '保障',
+      items: '物品',
     },
     tabs: {
       aibutsu: '愛物',
@@ -1672,6 +1722,11 @@ export const zhTW: Translations = {
     tabEmpty: {
       aibutsuHint: '還沒有愛物。從右下角開始記下第一個。',
       guardianHint: '還沒有保單。守護愛物的保障也可以一起記下。',
+    },
+    guardianGated: {
+      title: '守護還在 Beta',
+      body: '保單與保障的紀錄都收在這裡。在設定中開啟「守護（Beta）」，就能一起照顧。',
+      cta: '前往設定開啟',
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',
@@ -1816,6 +1871,7 @@ export const zhTW: Translations = {
       plant: '植物',
       house: '房子',
       insurance: '保險',
+      item: '物品',
       more: '更多',
     },
     name: {
@@ -1965,6 +2021,11 @@ export const zhTW: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: '例：相機、單車、紀念物',
+    detailSection: '基本資料',
+  },
+
   assetDetail: {
     backAriaLabel: '返回',
     editAriaLabel: '編輯',
@@ -1987,6 +2048,7 @@ export const zhTW: Translations = {
       pet: '寵物',
       plant: '植物',
       insurance: '保險',
+      item: '物品',
     },
     age: {
       label: '年齡',

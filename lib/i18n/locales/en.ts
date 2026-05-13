@@ -250,6 +250,14 @@ export const en: Translations = {
     dateRangeClear: 'Clear date range',
     assetSection: 'Beloved (multi)',
     assetNone: 'Unassigned',
+    assetGroupSelectAll: 'Select all',
+    assetGroup: {
+      car: 'Vehicles',
+      house: 'Property',
+      living: 'Living',
+      item: 'Items',
+      coverage: 'Guardian',
+    },
     amountSection: 'Amount range',
     amountMinPlaceholder: 'Min',
     amountMaxPlaceholder: 'Max',
@@ -276,7 +284,7 @@ export const en: Translations = {
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     inviteCta: 'Invite partner',
     language: 'Language',
-    sectionDevice: 'Device',
+    sectionApp: 'App',
     offlineBrowsing: 'Offline browsing',
     offlineHintOff: "When offline, history isn't available. Turn this on to keep recently-viewed pages on this device.",
     offlineHintOn: 'When offline, you can view records from your last connection. Data lives on this device only and is cleared on sign-out.',
@@ -289,6 +297,11 @@ export const en: Translations = {
     trust: 'Your data',
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
+    sectionGuardian: 'Guardian (Beta)',
+    guardianBeta: {
+      title: 'Enable Guardian',
+      description: 'Guardian is where policies and protection are kept together. Still in Beta — it will become a paid feature later. Turn it off any time; existing data stays in place.',
+    },
     dangerZone: {
       sectionTitle: 'Leave this ledger',
       leaveCta: 'I want to leave this ledger',
@@ -418,6 +431,7 @@ export const en: Translations = {
       property: 'Property',
       living: 'Living',
       coverage: 'Coverage',
+      items: 'Items',
     },
     tabs: {
       aibutsu: 'Treasures',
@@ -426,6 +440,11 @@ export const en: Translations = {
     tabEmpty: {
       aibutsuHint: 'No treasures yet. Start with the button on the right.',
       guardianHint: 'No policies yet. Record the coverage that guards your treasures.',
+    },
+    guardianGated: {
+      title: 'Guardian is still in Beta',
+      body: 'Policies and protection live here. Turn on Guardian (Beta) in Settings to come in.',
+      cta: 'Open Settings',
     },
     addCar: 'Add a car',
     addSecondCar: 'Add another car',
@@ -570,6 +589,7 @@ export const en: Translations = {
       plant: 'Plant',
       house: 'House',
       insurance: 'Insurance',
+      item: 'Item',
       more: 'More',
     },
     name: {
@@ -719,6 +739,11 @@ export const en: Translations = {
     },
   },
 
+  assetTemplate: {
+    namePlaceholder: 'e.g. camera, bike, keepsake',
+    detailSection: 'Details',
+  },
+
   assetDetail: {
     backAriaLabel: 'Back',
     editAriaLabel: 'Edit',
@@ -741,6 +766,7 @@ export const en: Translations = {
       pet: 'Pet',
       plant: 'Plant',
       insurance: 'Insurance',
+      item: 'Item',
     },
     age: {
       label: 'Age',

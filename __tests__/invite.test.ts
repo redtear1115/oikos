@@ -22,6 +22,7 @@ const baseGroup = {
   pendingSwapProposedBy: null as string | null,
   pendingSwapExpiresAt: null as Date | null,
   currentEpochStartedAt: new Date(),
+  guardianBetaEnabled: false,
 }
 
 describe('validateInviteAcceptance', () => {

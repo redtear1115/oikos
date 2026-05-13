@@ -82,12 +82,12 @@ Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`
 
 主要 tables（完整 schema 以 [lib/db/schema.ts](lib/db/schema.ts) 為準）：
 - `Profiles`（FK → auth.users）
-- `OikosGroups`（含 member_a / member_b）
+- `OikosGroups`（含 member_a / member_b、`guardian_beta_enabled` 守護模組 beta flag）
 - `GroupInvites`（token-based 7 天 expire）
 - `GroupBalance`（derived cache，每次寫入重算）
 - `CashTransactions`（核心，nullable `asset_id` 關聯愛物）
 - `Settlements`
-- `Assets` + `CarDetails` / `ChildDetails` / `PetDetails` / `HouseDetails` / `InsuranceDetails`
+- `Assets`（7 個 type：car / house / child / pet / plant / insurance / item；`template_key` + `template_fields` 走 [asset-templates-design.md](asset-templates-design.md) 模板路徑）+ `CarDetails` / `ChildDetails` / `PetDetails` / `HouseDetails` / `InsuranceDetails`
 - `FuelLogs`（車輛專用）
 - `IncomeTransactions`（進帳，平行於 CashTransactions）
 - `InvoiceCredentials`（v0.8.0，加密驗證碼）
@@ -102,7 +102,7 @@ Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`
 
 版本歷史與當前狀態見 [CLAUDE.md](../../../CLAUDE.md)（版本表）與 [CHANGELOG.md](../../../CHANGELOG.md)。
 
-各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [recurring-expense-design.md](recurring-expense-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md) · [i18n-design.md](i18n-design.md) · [offline-browsing-design.md](offline-browsing-design.md)
+各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [asset-templates-design.md](asset-templates-design.md) · [guardian-design.md](guardian-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [recurring-expense-design.md](recurring-expense-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md) · [i18n-design.md](i18n-design.md) · [offline-browsing-design.md](offline-browsing-design.md) · [stats-design.md](stats-design.md) · [monthly-review-design.md](monthly-review-design.md) · [structured-filter-design.md](structured-filter-design.md) · [fab-records-tab-design.md](fab-records-tab-design.md) · [epoch-readonly-design.md](epoch-readonly-design.md) · [inbox-layer-design.md](inbox-layer-design.md)
 
 ---
 

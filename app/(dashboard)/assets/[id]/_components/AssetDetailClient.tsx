@@ -46,7 +46,7 @@ interface Props {
   initialTxns: PagedTxnRow[]
   initialFuelLogs: SerializedFuelLog[]
   pageSize: number
-  allAssets: Array<{ id: string; name: string; type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' }>
+  allAssets: Array<{ id: string; name: string; type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item' }>
   linkedInsurances?: { id: string; name: string }[]
 }
 

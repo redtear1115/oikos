@@ -11,7 +11,8 @@ import {
 import { decrypt } from '@/lib/crypto'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
-const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
+const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: true }
+const GROUP_GUARDIAN_OFF = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: false }
 
 // AES-256-GCM ciphertext shape: 12-byte IV (24 hex) : 16-byte authTag (32 hex)
 // : variable-length ciphertext (hex). lib/crypto.ts produces exactly this.
@@ -547,6 +548,12 @@ describe('createInsurance', () => {
 
   it('throws on empty name', async () => {
     await expect(createInsurance({ name: '   ' })).rejects.toThrow(/名稱/)
+  })
+
+  // #221 — server-side safety net for the Guardian beta gate.
+  it('throws guardian_disabled when beta flag is off on the group', async () => {
+    queueDbResult([GROUP_GUARDIAN_OFF])
+    await expect(createInsurance({ name: '壽險A' })).rejects.toThrow('guardian_disabled')
   })
 
   it('throws when group not found', async () => {
