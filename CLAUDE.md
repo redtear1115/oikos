@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.15.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.15.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -41,6 +41,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.15.0](CHANGELOG.md#0150---2026-05-12) | 離開也保留陪伴．pending 收斂 |
 | [v0.15.1](CHANGELOG.md#0151---2026-05-12) | 陪伴每處小細節更貼手．光的指認也更一致 |
 | [v0.15.2](CHANGELOG.md#0152---2026-05-13) | 問答、跨章節與守護的下一步．PartnerQuiz × 保險併入守護 × past-times 跨 group |
+| [v0.15.3](CHANGELOG.md#0153---2026-05-13) | 章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值 |
 
 ## Backlog / 未釋出版本
 
