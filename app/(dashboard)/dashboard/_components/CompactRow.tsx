@@ -4,7 +4,8 @@ import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/Member
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { formatDateRelative } from '@/lib/format-date'
 
 export interface CompactRowProps {
   tx: {
@@ -26,6 +27,7 @@ export interface CompactRowProps {
 
 export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const { viewer, partner, viewerIsA } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
@@ -42,9 +44,7 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
     ? (tx.description || getIncomeCategory(tx.category).label)
     : tx.description
 
-  // M/D format
-  const d = new Date(tx.transactedAt)
-  const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
+  const dateLabel = formatDateRelative(tx.transactedAt, locale)
 
   const noteText = tx.notes?.trim() || null
   const isPending = tx.kind === 'transaction' && tx.status === 'pending'

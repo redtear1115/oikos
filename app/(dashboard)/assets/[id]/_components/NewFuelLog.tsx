@@ -9,7 +9,8 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 import { localTodayISO } from '@/lib/local-date'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { formatDateAbsolute } from '@/lib/format-date'
 import { describeError } from '@/lib/errors'
 import type { SplitType } from '@/lib/balance'
 
@@ -63,6 +64,7 @@ function toGasFuelType(ft: string | null | undefined): GasFuelType {
 export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: NewFuelLogProps) {
   const { viewer, partner, isPast } = useMember()
   const t = useTranslations()
+  const locale = useLocale()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [showCal, setShowCal] = useState(false)
@@ -317,7 +319,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body text-left flex items-center"
               style={{ color: 'var(--ink)' }}
             >
-              {date || '選擇日期'}
+              {date ? formatDateAbsolute(date, locale) : '選擇日期'}
             </button>
             {showCal && (
               <div className="mt-2">

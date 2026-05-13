@@ -23,8 +23,9 @@ import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
 import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
-import { getTranslations } from '@/lib/i18n/t'
+import { getTranslations, getLocale } from '@/lib/i18n/t'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { formatDateRelative } from '@/lib/format-date'
 
 const BANNER_QUOTE_MAX_CODEPOINTS = 60
 
@@ -69,7 +70,7 @@ export default async function DashboardPage() {
   // Fast path — what hero/banner needs to paint immediately. Awaited so
   // BalanceHero / SoloBanner / ModeTogglePlaceholder render with real data.
   // The latest income (limit 1) covers the hero label without pulling the full feed.
-  const [balance, pendingBalanceDelta, incomeSummary, pendings, expensePendings, latestIncomes, t] = await Promise.all([
+  const [balance, pendingBalanceDelta, incomeSummary, pendings, expensePendings, latestIncomes, t, locale] = await Promise.all([
     getGroupBalance(group.id),
     getGroupPendingBalanceDelta(group.id),
     listIncomeMonthSummary(group.id, yyyymm, epochWindow),
@@ -77,13 +78,13 @@ export default async function DashboardPage() {
     listActiveExpensePendings(group.id),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
     getTranslations(),
+    getLocale(),
   ])
 
   const recentIncomeLabel = latestIncomes.length > 0
     ? (() => {
         const r = latestIncomes[0]
-        const d = new Date(r.occurredAt + 'T00:00:00')
-        const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
+        const dateStr = formatDateRelative(r.occurredAt, locale)
         const catKey = r.category as keyof Translations['incomeCategory']
         const catLabel = t.incomeCategory[catKey] ?? t.incomeCategory.other
         return `${dateStr} · ${r.source ?? catLabel}`

@@ -201,7 +201,6 @@ export type Translations = {
     primaryRepay: string
     primaryReceive: string
     amountAriaLabel: string
-    today: string
     errors: {
       exceedsDebt: string
     }
@@ -1468,7 +1467,6 @@ export const zhTW: Translations = {
     primaryRepay: '記錄還款',
     primaryReceive: '記錄收款',
     amountAriaLabel: '還款金額',
-    today: '今天',
     errors: {
       exceedsDebt: '金額不能超過欠款',
     },

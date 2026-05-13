@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { enterPastEpoch, exitPastEpoch } from '@/actions/epoch-view'
+import { formatDateShort } from '@/lib/format-date'
 
 export interface EpochListEntry {
   id: string
@@ -52,8 +53,7 @@ export function PastTimesList({
     })
   }
 
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+  const fmt = (iso: string) => formatDateShort(iso, locale, { withYear: true })
 
   // Resolve "the partner during this chapter" from the viewer's POV. The chapter
   // could be solo (one of memberAId/memberBId is null) or duo. Whichever side

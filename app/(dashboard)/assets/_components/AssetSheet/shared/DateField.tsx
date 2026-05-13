@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
-import { localTodayISO, dateLabel } from '@/lib/local-date'
+import { localTodayISO } from '@/lib/local-date'
+import { formatDateAbsolute } from '@/lib/format-date'
 import { useLocale } from '@/lib/i18n/client'
 import { Field } from './Field'
 
@@ -28,7 +29,7 @@ export function DateField({ label, value, onChange, placeholder }: Props) {
         onClick={() => setShow(v => !v)}
       >
         <CalIcon size={16} />
-        {value ? dateLabel(value, locale) : placeholder}
+        {value ? formatDateAbsolute(value, locale) : placeholder}
         <Chevron />
       </button>
       {show && (

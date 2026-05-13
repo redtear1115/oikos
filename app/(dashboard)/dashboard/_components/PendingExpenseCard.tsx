@@ -6,8 +6,9 @@ import { getCategory } from '@/lib/categories'
 import { confirmPending, skipPending } from '@/actions/recurringExpense'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { formatDateAbsolute } from '@/lib/format-date'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import type { SplitType } from '@/lib/balance'
 
@@ -25,6 +26,7 @@ function splitLabel(split: SplitType, t: ReturnType<typeof useTranslations>): st
 export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps) {
   const router = useRouter()
   const t = useTranslations()
+  const locale = useLocale()
   const { viewer, partner, isSolo } = useMember()
   const [submitting, startTransition] = useTransition()
   const [fading, setFading] = useState(false)
@@ -137,7 +139,7 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
       <ConfirmModal
         open={confirmingSkip}
         title={t.recurringExpense.pending.skipConfirm
-          .replace('{date}', pending.proposedDate)
+          .replace('{date}', formatDateAbsolute(pending.proposedDate, locale))
           .replace('{description}', pending.proposedDescription)}
         confirmLabel={t.recurringExpense.pending.skipAction}
         pending={submitting}
