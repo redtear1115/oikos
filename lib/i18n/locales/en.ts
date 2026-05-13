@@ -189,7 +189,6 @@ export const en: Translations = {
     primaryRepay: 'Record payback',
     primaryReceive: 'Record receipt',
     amountAriaLabel: 'Repayment amount',
-    today: 'Today',
     errors: {
       exceedsDebt: "Amount can't exceed the debt",
     },

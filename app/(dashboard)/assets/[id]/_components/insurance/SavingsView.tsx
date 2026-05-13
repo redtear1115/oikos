@@ -18,7 +18,8 @@ import { MaturingSoonPrompt } from './MaturingSoonPrompt'
 import { MaturedAwaitingPrompt } from './MaturedAwaitingPrompt'
 import { computeSavingsProgress } from '@/lib/insuranceProgress'
 import { incomeToFeedRow } from '@/lib/incomeFeedRow'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { formatDateAbsolute } from '@/lib/format-date'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { loadMoreInsuranceReturns } from '@/actions/income'
@@ -82,6 +83,7 @@ export function SavingsView({
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
+  const locale = useLocale()
   const td = t.assetDetail.insurance
   const ts = t.assetDetail.savings
   const { isPast } = useMember()
@@ -335,6 +337,7 @@ export function SavingsView({
         onAdd={() => setRecurringSheetState('create')}
         onEdit={(rule) => setRecurringSheetState(rule)}
         translations={ts}
+        locale={locale}
         intervalLabels={{
           1: t.recurringIncome.rule.intervalEveryMonth,
           3: t.recurringIncome.rule.intervalEveryQuarter,
@@ -450,12 +453,14 @@ function RecurringRulesSection({
   onEdit,
   translations,
   intervalLabels,
+  locale,
 }: {
   rules: RecurringRuleRow[]
   onAdd: () => void
   onEdit: (rule: RecurringRuleRow) => void
   translations: Translations['assetDetail']['savings']
   intervalLabels: { 1: string; 3: string; 6: string; 12: string; fallback: string }
+  locale: string
 }) {
   const P = DEFAULT_INCOME_PALETTE
   return (
@@ -514,7 +519,7 @@ function RecurringRulesSection({
                       <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{translations.recurringRulePaused}</span>
                     ) : (
                       <span className="text-xs tabular-nums" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-                        {translations.recurringRuleNextDate.replace('{date}', rule.nextOccurrenceAt)}
+                        {translations.recurringRuleNextDate.replace('{date}', formatDateAbsolute(rule.nextOccurrenceAt, locale))}
                       </span>
                     )}
                   </div>

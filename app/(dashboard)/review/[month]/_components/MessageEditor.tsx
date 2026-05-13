@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useTranslations } from '@/lib/i18n/client'
+import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { formatDateAbsolute } from '@/lib/format-date'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import {
@@ -42,6 +43,7 @@ export function MessageEditor({
   isSolo: boolean
 }) {
   const t = useTranslations()
+  const locale = useLocale()
   const tr = t.monthlyReview
   const { viewerIsA } = useMember()
   const viewerRole: 'a' | 'b' = viewerIsA ? 'a' : 'b'
@@ -144,7 +146,7 @@ export function MessageEditor({
         >
           <span aria-live="polite">
             {locked
-              ? tr.lockedFooter.replace('{date}', formatLockedAt(ownMessage?.lockedAt))
+              ? tr.lockedFooter.replace('{date}', ownMessage?.lockedAt ? formatDateAbsolute(ownMessage.lockedAt, locale) : '')
               : state.kind === 'saving'
                 ? tr.savingFooter
                 : state.kind === 'saved'
@@ -191,15 +193,3 @@ export function MessageEditor({
   )
 }
 
-function formatLockedAt(iso: string | null | undefined): string {
-  if (!iso) return ''
-  try {
-    const d = new Date(iso)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${y}-${m}-${day}`
-  } catch {
-    return ''
-  }
-}

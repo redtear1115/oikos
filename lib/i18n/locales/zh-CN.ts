@@ -189,7 +189,6 @@ export const zhCN: Translations = {
     primaryRepay: '记录还款',
     primaryReceive: '记录收款',
     amountAriaLabel: '还款金额',
-    today: '今天',
     errors: {
       exceedsDebt: '金额不能超过欠款',
     },

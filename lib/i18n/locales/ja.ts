@@ -189,7 +189,6 @@ export const ja: Translations = {
     primaryRepay: '返済を記録',
     primaryReceive: '受領を記録',
     amountAriaLabel: '返済金額',
-    today: '今日',
     errors: {
       exceedsDebt: '金額が借入額を超えています',
     },

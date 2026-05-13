@@ -1,6 +1,7 @@
 'use client'
 
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { formatDateAbsolute } from '@/lib/format-date'
 
 interface Props {
   maturityDate: string
@@ -18,6 +19,7 @@ export function MaturedAwaitingPrompt({
   onConfirm,
 }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const ts = t.assetDetail.savings
   return (
     <div
@@ -25,7 +27,7 @@ export function MaturedAwaitingPrompt({
       style={{ background: '#F7F4EE' }}
     >
       <div className="text-xs tracking-[1px]" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-        {ts.maturedAwaitingTitle.replace('{date}', maturityDate)}
+        {ts.maturedAwaitingTitle.replace('{date}', formatDateAbsolute(maturityDate, locale))}
       </div>
 
       <div className="mt-3 inline-flex items-baseline gap-1.5">

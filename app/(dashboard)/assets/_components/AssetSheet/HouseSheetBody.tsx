@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { CalIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
-import { localTodayISO, dateLabel } from '@/lib/local-date'
+import { localTodayISO } from '@/lib/local-date'
+import { formatDateAbsolute } from '@/lib/format-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { createHouse, editHouse, softDeleteAsset } from '@/actions/asset'
@@ -137,7 +138,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
             style={{ background: 'var(--surface)', color: purchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--border)' }}
           >
-            <span>{purchasedAt ? dateLabel(purchasedAt, locale) : ts.house.pickDate}</span>
+            <span>{purchasedAt ? formatDateAbsolute(purchasedAt, locale) : ts.house.pickDate}</span>
             <CalIcon size={16} />
           </button>
           {showCal && (

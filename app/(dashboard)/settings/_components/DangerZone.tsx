@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { cancelSwap, confirmSwap } from '@/actions/membership'
+import { formatDateAbsolute } from '@/lib/format-date'
 import { describeMembershipError } from '@/lib/membership-errors'
 import { LeaveGroupFlow } from './LeaveGroupFlow'
 
@@ -95,9 +96,7 @@ function SwapPendingBanner({
   const [busy, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const dateLabel = pending.expiresAt.toLocaleDateString(locale, {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
+  const dateLabel = formatDateAbsolute(pending.expiresAt.toISOString(), locale)
 
   const headline = pending.by === 'self'
     ? banner.yourProposal
