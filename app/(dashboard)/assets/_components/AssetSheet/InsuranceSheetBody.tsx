@@ -22,7 +22,7 @@ import type { AssetSheetInitial, BodySharedProps } from './types'
 export type InsuranceInitial = Pick<
   AssetSheetInitial,
   | 'id' | 'name' | 'notes'
-  | 'insKind' | 'insInsured' | 'insInsuredChildId' | 'insPolicyHolderUserId'
+  | 'insKind' | 'insInsured' | 'insInsuredChildId' | 'insInsuredUserId' | 'insPolicyHolderUserId'
   | 'insInsurer' | 'insPolicyNo' | 'insAnnualPremium' | 'insSumInsured'
   | 'insPayCycle' | 'insStartsAt' | 'insEndsAt' | 'insTermYears'
   | 'insVehicleId' | 'insExpectedMaturityAmount' | 'insAccountValue'
@@ -44,10 +44,15 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const [name, setName] = useState(initial?.name ?? '')
   const [kind, setKind] = useState(initial?.insKind ?? 'medical')
   const [insured, setInsured] = useState(initial?.insInsured ?? '')
-  // #167 — 被保人 can also link to a Child 愛物 in the group. Mutually
-  // exclusive with the freeform `insured` text: setting one clears the
-  // other so the DB stays consistent with the insured_type discriminator.
+  // #167 + #237 — 被保人 has three mutually-exclusive sources:
+  //   - Child 愛物 link (insuredChildId) — pick a 孩子 愛物 in the group
+  //   - Group member link (insuredUserId) — 自己 or 對方 via Profiles FK
+  //   - Freeform text (insured) — relatives outside the group, etc.
+  // Picking any one clears the other two so the DB never carries stale data
+  // for the losing branches. The action layer enforces the same precedence
+  // (child > member > text) defensively.
   const [insuredChildId, setInsuredChildId] = useState<string | null>(initial?.insInsuredChildId ?? null)
+  const [insuredUserId, setInsuredUserId] = useState<string | null>(initial?.insInsuredUserId ?? null)
   // #142 — Legacy rows (created before 0032) have NULL policy_holder.
   // Default to viewer on prefill so editing fills it in gracefully, same
   // as the create flow. User can still flip to partner via the toggle.
@@ -77,6 +82,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
     setKind(initial?.insKind ?? 'medical')
     setInsured(initial?.insInsured ?? '')
     setInsuredChildId(initial?.insInsuredChildId ?? null)
+    setInsuredUserId(initial?.insInsuredUserId ?? null)
     setPolicyHolderUserId(initial?.insPolicyHolderUserId ?? viewer.id)
     setInsurer(initial?.insInsurer ?? '')
     setPolicyNo(initial?.insPolicyNo ?? '')
@@ -106,12 +112,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         const payload = {
           name: name.trim(),
           kind: kind || null,
-          // #167 — when a Child 愛物 is linked, the action layer flips
-          // `insured_type` to 'child' and ignores `insured` text. Send both
-          // so the action sees the picker state; the action decides which
-          // wins.
+          // #167 + #237 — three mutually-exclusive insured sources. UI keeps
+          // them mutex, but the action layer also enforces precedence
+          // (child > member > text) so we just send the picker state as-is.
           insured: insured.trim() || null,
           insuredChildId,
+          insuredUserId,
           policyHolderUserId,
           insurer: insurer.trim() || null,
           policyNo: policyNo.trim() || null,
@@ -226,51 +232,88 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         </Field>
       )}
 
-      {/* #167 — 被保人 can link to a Child 愛物 in the group, or stay
-          as freeform text (relatives outside the group, self, etc.).
-          When at least one child exists in the group, show a chip
-          picker above the text input: picking a child links and
-          blanks the text; picking 自行輸入 (or just typing) clears
-          the link. */}
+      {/* #167 + #237 — 被保人 picker. Three mutually-exclusive sources:
+          group member (自己 / 對方), Child 愛物, or freeform text. The chip
+          row always renders since 「我」is always an option; 「對方」 is hidden
+          in solo mode. Picking a member or child clears the freeform text;
+          picking 自行輸入 reveals the text input. */}
       <Field label={ts.insurance.insured}>
         <div className="flex flex-col gap-2">
-          {childAssets.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setInsuredUserId(viewer.id)
+                setInsuredChildId(null)
+                setInsured('')
+              }}
+              className="h-[34px] px-[14px] rounded-[10px] text-label"
+              style={{
+                border: insuredUserId === viewer.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                background: insuredUserId === viewer.id ? 'rgba(58,36,25,0.04)' : '#fff',
+                color: insuredUserId === viewer.id ? 'var(--ink)' : 'var(--ink-2)',
+                fontWeight: insuredUserId === viewer.id ? 600 : 500,
+              }}
+            >
+              {t.common.me}
+            </button>
+            {partner && (
               <button
                 type="button"
-                onClick={() => setInsuredChildId(null)}
+                onClick={() => {
+                  setInsuredUserId(partner.id)
+                  setInsuredChildId(null)
+                  setInsured('')
+                }}
                 className="h-[34px] px-[14px] rounded-[10px] text-label"
                 style={{
-                  border: insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
-                  background: insuredChildId === null ? 'rgba(58,36,25,0.04)' : '#fff',
-                  color: insuredChildId === null ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: insuredChildId === null ? 600 : 500,
+                  border: insuredUserId === partner.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                  background: insuredUserId === partner.id ? 'rgba(58,36,25,0.04)' : '#fff',
+                  color: insuredUserId === partner.id ? 'var(--ink)' : 'var(--ink-2)',
+                  fontWeight: insuredUserId === partner.id ? 600 : 500,
                 }}
               >
-                {ts.insurance.insuredFreeform}
+                {partner.displayName ?? t.common.partner}
               </button>
-              {childAssets.map(child => (
-                <button
-                  key={child.id}
-                  type="button"
-                  onClick={() => {
-                    setInsuredChildId(child.id)
-                    setInsured('')
-                  }}
-                  className="h-[34px] px-[14px] rounded-[10px] text-label"
-                  style={{
-                    border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
-                    background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : '#fff',
-                    color: insuredChildId === child.id ? 'var(--ink)' : 'var(--ink-2)',
-                    fontWeight: insuredChildId === child.id ? 600 : 500,
-                  }}
-                >
-                  {child.name}
-                </button>
-              ))}
-            </div>
-          )}
-          {insuredChildId === null && (
+            )}
+            {childAssets.map(child => (
+              <button
+                key={child.id}
+                type="button"
+                onClick={() => {
+                  setInsuredChildId(child.id)
+                  setInsuredUserId(null)
+                  setInsured('')
+                }}
+                className="h-[34px] px-[14px] rounded-[10px] text-label"
+                style={{
+                  border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                  background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : '#fff',
+                  color: insuredChildId === child.id ? 'var(--ink)' : 'var(--ink-2)',
+                  fontWeight: insuredChildId === child.id ? 600 : 500,
+                }}
+              >
+                {child.name}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setInsuredUserId(null)
+                setInsuredChildId(null)
+              }}
+              className="h-[34px] px-[14px] rounded-[10px] text-label"
+              style={{
+                border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
+                background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : '#fff',
+                color: insuredUserId === null && insuredChildId === null ? 'var(--ink)' : 'var(--ink-2)',
+                fontWeight: insuredUserId === null && insuredChildId === null ? 600 : 500,
+              }}
+            >
+              {ts.insurance.insuredFreeform}
+            </button>
+          </div>
+          {insuredUserId === null && insuredChildId === null && (
             <input value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
               placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
               style={{ color: 'var(--ink)' }} />

@@ -47,6 +47,8 @@ export default async function AssetsPage() {
         insured: a.insuranceInsured,
         insuredChildId: a.insuranceInsuredChildId,
         insuredChildName: a.insuranceInsuredChildName,
+        insuredUserId: a.insuranceInsuredUserId,
+        insuredUserDisplayName: a.insuranceInsuredUserDisplayName,
         policyHolderUserId: a.insurancePolicyHolderUserId,
         policyHolderDisplayName: a.insurancePolicyHolderDisplayName,
         policyHolderAvatarUrl: a.insurancePolicyHolderAvatarUrl,

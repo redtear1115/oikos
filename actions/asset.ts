@@ -22,6 +22,18 @@ function assertPolicyHolderInGroup(
   }
 }
 
+// #237 — 被保人 can be a group member (自己 / 對方). Mirrors the policy holder
+// guard. Distinct error message so the user can tell which field is wrong if
+// both happen to be misconfigured at once.
+function assertInsuredUserInGroup(
+  userId: string,
+  group: { memberA: string; memberB: string | null },
+): void {
+  if (userId !== group.memberA && userId !== group.memberB) {
+    throw new Error('被保人必須是 group 成員')
+  }
+}
+
 export interface CreateCarInput {
   name: string
   plate: string
@@ -694,6 +706,7 @@ export interface CreateInsuranceInput {
   kind?: string | null
   insured?: string | null
   insuredChildId?: string | null
+  insuredUserId?: string | null
   policyHolderUserId?: string | null
   insurer?: string | null
   policyNo?: string | null
@@ -729,6 +742,31 @@ async function assertInsuredChildInGroup(childId: string, groupId: string): Prom
   }
 }
 
+/**
+ * #167 + #237 — collapse the three insured-source inputs into the canonical
+ * shape stored in `insuranceDetails`. Precedence: child > member > text. The
+ * losers are nulled so only one source of truth lives on disk; `insuredType`
+ * stays 'user' whenever the source is a member FK or freeform text.
+ */
+function resolveInsuredFields(v: {
+  insuredChildId: string | null
+  insuredUserId: string | null
+  insured: string | null
+}): {
+  type: 'child' | 'user'
+  childId: string | null
+  userId: string | null
+  text: string | null
+} {
+  if (v.insuredChildId) {
+    return { type: 'child', childId: v.insuredChildId, userId: null, text: null }
+  }
+  if (v.insuredUserId) {
+    return { type: 'user', childId: null, userId: v.insuredUserId, text: null }
+  }
+  return { type: 'user', childId: null, userId: null, text: v.insured }
+}
+
 export async function createInsurance(input: CreateInsuranceInput): Promise<{ id: string }> {
   'use server'
   const validated = validateInsuranceInput(input)
@@ -759,12 +797,15 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
   if (validated.insuredChildId) {
     await assertInsuredChildInGroup(validated.insuredChildId, group.id)
   }
+  if (validated.insuredUserId) {
+    assertInsuredUserInGroup(validated.insuredUserId, group)
+  }
 
-  // #167 — `insured_type` discriminates between a Child 愛物 link and the
-  // freeform `insured` text. The two are mutually exclusive: linking a child
-  // clears the text so the child name is the source of truth.
-  const insuredType = validated.insuredChildId ? 'child' : 'user'
-  const insuredText = validated.insuredChildId ? null : validated.insured
+  // #167 + #237 — `insured_type` discriminates between Child 愛物 (FK to
+  // assets) and a "user" (group member FK to profiles, or freeform text).
+  // The three sources are mutually exclusive — child > member > text — and
+  // the losers are nulled so the DB only ever carries one source of truth.
+  const insured = resolveInsuredFields(validated)
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -774,8 +815,9 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
     await tx.insert(insuranceDetails).values({
       assetId: asset.id,
       insuranceType: validated.kind,
-      insured: insuredText,
-      insuredChildId: validated.insuredChildId,
+      insured: insured.text,
+      insuredChildId: insured.childId,
+      insuredUserId: insured.userId,
       policyHolderUserId: validated.policyHolderUserId,
       insurer: validated.insurer,
       policyNumber: validated.policyNo,
@@ -785,7 +827,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       startsAt: validated.startsAt,
       expiryDate: validated.endsAt,
       termYears: validated.termYears,
-      insuredType,
+      insuredType: insured.type,
       vehicleId: validated.vehicleId,
       expectedMaturityAmount: validated.expectedMaturityAmount,
       accountValue: validated.accountValue,
@@ -821,9 +863,11 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
   if (validated.insuredChildId) {
     await assertInsuredChildInGroup(validated.insuredChildId, group.id)
   }
+  if (validated.insuredUserId) {
+    assertInsuredUserInGroup(validated.insuredUserId, group)
+  }
 
-  const insuredType = validated.insuredChildId ? 'child' : 'user'
-  const insuredText = validated.insuredChildId ? null : validated.insured
+  const insured = resolveInsuredFields(validated)
 
   await db.transaction(async (tx) => {
     const updated = await tx
@@ -843,8 +887,9 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
       .values({
         assetId: input.id,
         insuranceType: validated.kind,
-        insured: insuredText,
-        insuredChildId: validated.insuredChildId,
+        insured: insured.text,
+        insuredChildId: insured.childId,
+        insuredUserId: insured.userId,
         policyHolderUserId: validated.policyHolderUserId,
         insurer: validated.insurer,
         policyNumber: validated.policyNo,
@@ -854,7 +899,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         startsAt: validated.startsAt,
         expiryDate: validated.endsAt,
         termYears: validated.termYears,
-        insuredType,
+        insuredType: insured.type,
         vehicleId: validated.vehicleId,
         expectedMaturityAmount: validated.expectedMaturityAmount,
         accountValue: validated.accountValue,
@@ -864,9 +909,10 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         target: insuranceDetails.assetId,
         set: {
           insuranceType: validated.kind,
-          insured: insuredText,
-          insuredChildId: validated.insuredChildId,
-          insuredType,
+          insured: insured.text,
+          insuredChildId: insured.childId,
+          insuredUserId: insured.userId,
+          insuredType: insured.type,
           policyHolderUserId: validated.policyHolderUserId,
           insurer: validated.insurer,
           policyNumber: validated.policyNo,

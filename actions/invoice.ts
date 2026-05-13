@@ -57,7 +57,7 @@ async function verifyCarrierAgainstApi(barcode: string, verificationCode: string
   }
 }
 
-export interface CreateInvoiceCredentialInput extends InvoiceCarrierInput {}
+export type CreateInvoiceCredentialInput = InvoiceCarrierInput
 
 /**
  * Bind a new mobile-barcode carrier to the viewer's group. Validates input,

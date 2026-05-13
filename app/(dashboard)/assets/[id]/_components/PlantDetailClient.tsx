@@ -33,7 +33,10 @@ interface Props {
 }
 
 function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: string; waterEvery: number | null; accent: string; td: Translations['assetDetail']['plant'] }) {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(sproutedAt).getTime()) / 86400000))
+  // Snapshot "now" at mount so re-renders don't bump the day count unexpectedly
+  // (react-hooks/purity); the display only needs day-resolution accuracy.
+  const [nowMs] = useState(() => Date.now())
+  const days = Math.max(0, Math.floor((nowMs - new Date(sproutedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
       <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.companionDays}</div>

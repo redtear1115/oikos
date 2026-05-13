@@ -2,6 +2,7 @@
 
 import { useTranslations } from '@/lib/i18n/client'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import type { ReviewMember, ReviewPastMessage } from './ReviewClient'
 
 export function PastMessages({
@@ -15,6 +16,7 @@ export function PastMessages({
 }) {
   const t = useTranslations()
   const tr = t.monthlyReview
+  const { viewerIsA } = useMember()
 
   function authorFor(memberId: string): ReviewMember | null {
     if (memberId === viewer.id) return viewer
@@ -38,7 +40,7 @@ export function PastMessages({
             >
               <Avatar
                 size={32}
-                who={author?.id === viewer.id ? 'M' : 'T'}
+                memberRole={whoToMemberRole(author?.id === viewer.id ? 'M' : 'T', viewerIsA)}
                 initial={(author?.displayName?.[0] ?? '?').toUpperCase()}
                 src={author?.avatarUrl ?? null}
               />
