@@ -1,0 +1,13 @@
+{
+  "name": "futari-og-render",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Render Futari landing OG images from template.html via Puppeteer.",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^23.5.0"
+  }
+}

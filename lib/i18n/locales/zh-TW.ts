@@ -9,6 +9,43 @@ export type Translations = {
     termsSuffix: string
   }
 
+  landing: {
+    /** ALL CAPS small kicker shown above the giant tagline on desktop. */
+    heroKicker: string
+    /** Tagline as inline HTML — uses `<br />` to break.
+     *  Mobile renders this twice (once as the headline, once larger);
+     *  desktop renders it once as the giant 96px headline. */
+    taglineHtml: string
+    /** Hero body copy — supports inline `<br />`. */
+    bodyHtml: string
+    /** Primary CTA label — appears in top nav (desktop), hero, and
+     *  must keep <= ~6 characters in CJK for the mobile pill. */
+    cta: string
+    /** Caption under mobile CTA, e.g. 「免費 · 不需註冊就能體驗」 */
+    ctaHint: string
+    /** Secondary desktop CTA — sign-in link for returning users. */
+    alreadyHaveAccount: string
+    /** Trust pills next to the desktop CTA. */
+    trustEncrypted: string
+    trustFree: string
+    trustPwa: string
+    /** Features section. */
+    featuresKicker: string
+    featuresTitle: string
+    /** HTML body shown on desktop only, can contain `<br />`. */
+    featuresSubtitleHtml: string
+    f1Title: string
+    f1Body: string
+    f2Title: string
+    f2Body: string
+    f3Title: string
+    f3Body: string
+    f4Title: string
+    f4Body: string
+    /** Footer trust note. */
+    footerTrust: string
+  }
+
   common: {
     cancel: string
     save: string
@@ -1291,6 +1328,30 @@ export const zhTW: Translations = {
     termsAnd: '與',
     privacyLink: '隱私權政策',
     termsSuffix: '',
+  },
+
+  landing: {
+    heroKicker: 'A COUPLE\'S LEDGER · 雙人記帳 PWA',
+    taglineHtml: '兩個人，<br />一本帳。',
+    bodyHtml: '專為伴侶設計的雙人共享帳本。<br />一起記錄日常開銷、自動分攤、看見每筆花費去了哪裡 — 把陪伴留下來。',
+    cta: '開始記錄',
+    ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
+    alreadyHaveAccount: '已經有帳號 · 登入',
+    trustEncrypted: '端對端加密',
+    trustFree: '免費使用',
+    trustPwa: 'iOS / Android / Web PWA',
+    featuresKicker: 'INSIDE ──',
+    featuresTitle: '一本帳，承接生活的四種光',
+    featuresSubtitleHtml: '從第一筆共同支出，到一起照顧的房子、車與每年保單，<br />都收進同一本帳裡。',
+    f1Title: '雙人記帳',
+    f1Body: '一筆一筆共同記下，自動分攤，可以對半也可以依比例。每月清楚結算，不必再對帳。',
+    f2Title: '愛物管理',
+    f2Body: '家、車、孩子、寵物、植物 — 一起照顧的，都收進同一本帳，每筆相關支出自動歸戶。',
+    f3Title: '守護保險',
+    f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
+    f4Title: '記帳統計',
+    f4Body: '月度回顧、分類分佈、章節歷史。讓花過的錢自己說故事，一起回頭看走過的日子。',
+    footerTrust: '端對端加密 · 資料只屬於你們兩個',
   },
 
   common: {
