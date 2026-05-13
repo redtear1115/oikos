@@ -56,16 +56,16 @@ export function AssetSheet({ open, onClose, initial, initialType, onMutated }: P
   // wholesale state reset; in edit mode `selectedType` is locked so this is
   // a stable key.
   const bodyKey = `${selectedType}-${initial?.id ?? 'new'}`
-  const shared = { key: bodyKey, open, onClose, onMutated, typePickerSlot }
+  const shared = { open, onClose, onMutated, typePickerSlot }
   const editInitial = isEdit ? initial : undefined
 
   switch (selectedType) {
-    case 'car':       return <CarSheetBody       {...shared} initial={editInitial} />
-    case 'child':     return <ChildSheetBody     {...shared} initial={editInitial} />
-    case 'pet':       return <PetSheetBody       {...shared} initial={editInitial} />
-    case 'plant':     return <PlantSheetBody     {...shared} initial={editInitial} />
-    case 'house':     return <HouseSheetBody     {...shared} initial={editInitial} />
-    case 'insurance': return <InsuranceSheetBody {...shared} initial={editInitial} />
-    case 'item':      return <TemplateSheetBody  {...shared} initial={editInitial} />
+    case 'car':       return <CarSheetBody       key={bodyKey} {...shared} initial={editInitial} />
+    case 'child':     return <ChildSheetBody     key={bodyKey} {...shared} initial={editInitial} />
+    case 'pet':       return <PetSheetBody       key={bodyKey} {...shared} initial={editInitial} />
+    case 'plant':     return <PlantSheetBody     key={bodyKey} {...shared} initial={editInitial} />
+    case 'house':     return <HouseSheetBody     key={bodyKey} {...shared} initial={editInitial} />
+    case 'insurance': return <InsuranceSheetBody key={bodyKey} {...shared} initial={editInitial} />
+    case 'item':      return <TemplateSheetBody  key={bodyKey} {...shared} initial={editInitial} />
   }
 }
