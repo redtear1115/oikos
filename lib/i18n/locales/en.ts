@@ -453,6 +453,7 @@ export const en: Translations = {
       savingsCumulative: 'Paid in NT$ {amount}',
       savingsForeignNote: 'USD-denominated',
       savingsMaturedBadge: 'Premiums fully paid',
+      activeBadge: 'Active',
       sumInsuredShort: 'Sum NT$ {amount}',
       yearsLeft: '{n} yrs left',
       expired: 'Expired',
