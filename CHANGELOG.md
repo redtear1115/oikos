@@ -19,6 +19,41 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### 技術變更
 - _尚無_
 
+## [0.16.0] - 2026-05-13
+
+主題：**守護成為自己的模組．物品也記得進來．設定頁長出新分組**——v0.15.2 才把保險從愛物清單切到「守護」tab，這版直接把守護升格為獨立模組：per-group beta flag 控制可見性、單一 `canAccessGuardian()` 是將來付費層 cut-over 唯一要動的地方、beta 關掉時用一張友善的 GatedView 而不是 silent fallback。同期愛物模板系統 v1 ship 出「物品」這第七種 type，相機、單車、紀念物這些只想被記得、不需要任何後端行為的東西終於有地方去。設定頁重新分組成 帳本 / 成員 / 個人 / 應用 / 資料 / 守護 / 離開帳本，每個 toggle 都長在它該長的層級裡；篩選器愛物 chip 也按類型分成 sub-section，可以一鍵「全選車輛」「全選生命」。順手把 v0.15.0 那條 pending balance bug 也收掉。
+
+完整 diff：[v0.15.3...v0.16.0](https://github.com/redtear1115/oikos/compare/v0.15.3...v0.16.0)
+
+### 使用者可見變化
+
+#### 守護模組獨立化（PR #225 closes #220 #221、PR #229 closes #227）
+- **守護從愛物頁升級為獨立模組 + per-group Beta toggle**：保險不再是「愛物頁的另一個 tab」，而是「將來付費才能用的工具」的第一張卡。新帳本預設關閉；在 設定 → 守護（Beta） 一鍵打開，TabBar 的「守護」tab、TypePicker 的保險選項、`/records` 篩選器的守護 sub-section 同時出現。group-level flag 保證兩人視野永遠一致。
+- **Beta 關掉時用 GatedView 取代 silent redirect**：先前 `/assets?tab=guardian` 會默默 fallback 回愛物 tab，`/assets/<insurance-id>` detail 頁會被 redirect 到 dashboard——關掉後分享連結 / 書籤 / 既有保單看起來像消失了。改成在原位顯示「守護目前是 Beta，到設定打開」一張溫和的卡，加 CTA → 設定。資料安全感維持、用戶知道東西還在。
+
+#### 愛物模板系統 v1：物品（PR #226 closes #222）
+- **TypePicker 加第七個選項「物品」**：相機、單車、紀念物這種「只想記得、不需要任何後端行為」的東西終於有地方去——選「物品」、填名稱 + 備註，就結束。**舊 6 種愛物（車 / 房 / 孩子 / 寵物 / 植物 / 保險）的建立與編輯流程完全沒變**。
+- **愛物列表新增「物品」section**：與「財產 / 生命 / 守護」並列分組，每種愛物都有自己的光。
+
+#### 設定頁重新分組（PR #228 closes #91）
+- **設定頁按心智模型分成 7 個 section**：帳本（含分攤比例，從個人移過來——它本來就是 group 設定）→ 成員 → 個人（只剩 viewer-only 偏好）→ 應用（加到主畫面 / 語言 / 離線瀏覽，全 device/app 層級）→ 資料（定期收入 / 定期支出 / 過去的時光 / 匯出 / 資料安全）→ 守護（Beta）→ 離開帳本。每個 toggle 都長在它該長的層級裡。
+
+#### 篩選器愛物分組（PR #230 closes #223）
+- **`/records` 篩選器愛物 chip 按類型分 sub-section**：車輛 / 房子 / 生命（孩子 + 寵物 + 植物）/ 物品 / 守護 五個 sub-section，每個開頭一顆「全選」chip 可以一鍵把該類愛物全選 / 全取消，其他類不受影響。「我這個月所有車的支出」「最近半年所有生命的紀錄」終於不必逐個點。
+
+#### 補修
+- **「結算後」projection view 不再讓你按結算**（PR #224 closes #208）：先前在 結算後 view 按「結算」會把 settled + pending 的浮報金額帶進結算單，造成 `GroupBalance` cache 偏離 `±pendingDelta`，連續按下還會雪球（觀察到 3,610 → 36,103,610）。Fix：projection view 隱藏結算按鈕；想結算回到 現在 view（吻合 cache 的 settled-only 數字）。
+
+### 技術變更
+
+- **`OikosGroups.guardian_beta_enabled boolean NOT NULL DEFAULT false`**（PR #225 #220）：migration `0036_guardian_beta_flag.sql`；新 helper `lib/guardian.ts#canAccessGuardian(group)` 是唯一閘門，將來付費層只改該函式（`return hasSubscription(group) || group.guardianBetaEnabled`），所有 callsite 自動受益。`toggleGuardianBeta(enabled)` server action 透過 `requireViewerGroup()` 限定 group member 操作。
+- **GatedView pattern**（PR #229 #227）：新增 `app/(dashboard)/_components/GatedView.tsx` + `InsuranceGatedClient.tsx`；`AssetsListClient` 對 `?tab=guardian` 而非 silent fallback、`/assets/[id]/page.tsx` 對 insurance asset 改 render Gated client 而非 `redirect('/dashboard')`；`createInsurance` server action 仍 throw `guardian_disabled` 作 defence in depth。
+- **`asset_type` enum 擴充到 7 值 + `asset_template_key` enum + `Assets.template_key` + `Assets.template_fields jsonb`**（PR #226 #222）：migration `0036_asset_templates.sql`；舊愛物（`template_key IS NULL`）走原有 type → 子表路徑，模板愛物（`template_key IS NOT NULL`）一律 `type='item'` 走 `TemplateSheetBody` / `TemplateAssetDetailClient`，不接任何既有自動化（無 FuelLog 雙寫 / 無 InsuranceDetails / 無 cron）。v1 只宣告 `general` 模板（無欄位）；validator 已實作 text / number / date 三型別分支供未來模板擴充。
+- **Settings UI 重組**（PR #228 #91）：i18n key `sectionDevice` → `sectionApp`（4 語同步），「分攤比例」block 從個人 section 搬到帳本 section、「加到主畫面 / 語言 / 離線瀏覽」收進新的應用 section。
+- **FilterSheet 愛物 chip 分組**（PR #230 #223）：純 UI 層擴充，不動 URL / 資料模型 / SQL；「全選」chip 把該組 asset uuid 全部加進現有的 `fAssets` Set（語意冪等）。Share link 保留 snapshot 語意——之後新建同 type 愛物不會自動納入對方視圖。新增 i18n key `filterSheet.assetGroupSelectAll` + `filterSheet.assetGroup.{car,house,living,item,coverage}`（4 語）。
+- **`isProjectionView` flag gates `canSettle`**（PR #224 #208）：`useBalanceWithPendingToggle` 派生 `isProjectionView = includePendingView && hasPending`；單一 derived flag，blast radius 為零（沒動 `debtAmount` / `createSettlement` 語意）。
+- **Doc keeper pass**（commit 1 of release PR）：新增 `guardian-design.md`（守護模組獨立化的 WHY、`canAccessGuardian()` cut-over 計畫、GatedView vs silent redirect 取捨）；`aibutsu-design.md` 加 v0.16.0 chips；`product-design.md` schema 主要 tables 補 `guardian_beta_enabled` / `template_key` / 7 個 asset_type + spec links 補齊到所有 tracked spec；`CLAUDE.md` Domain Model 速查更新。
+
 ## [0.15.3] - 2026-05-13
 
 主題：**章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值**——v0.15.0 才剛建立的關係章節（epoch）框架，這版把「pin 在過去章節時還能編輯紀錄、結果整筆從過去章節人間蒸發」這條 bug 收掉，並把背後的 read/write 兩端 epoch boundary 變成型別防呆，讓「transaction 完整歸屬於某段 epoch」從靠記憶變成結構性保證。同期把 v0.9.0 的儲蓄險詳情頁延伸到「投資型保單」家族——新增目前帳戶價值欄位，並讓保險可以自動產生 RecurringIncome 規則，滿期金 / 分紅金不再需要每次手動建。
@@ -542,7 +577,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.15.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/redtear1115/oikos/compare/v0.15.3...v0.16.0
+[0.15.3]: https://github.com/redtear1115/oikos/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/redtear1115/oikos/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/redtear1115/oikos/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/redtear1115/oikos/compare/v0.14.2...v0.15.0
