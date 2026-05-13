@@ -36,37 +36,6 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
     ? (payerIsViewer ? '你收入' : `${partner?.displayName ?? '對方'} 收入`)
     : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
 
-  // Delta is only meaningful for transactions. Settlements just transfer cash —
-  // they don't change anyone's "share owed" for this individual row.
-  let delta = 0
-  if (tx.kind === 'transaction') {
-    if (tx.splitType === 'all_theirs') {
-      delta = payerIsViewer ? +tx.amount : -tx.amount
-    } else if (tx.splitType === 'half') {
-      delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
-    } else if (tx.splitType === 'weighted' && tx.splitRatioA != null) {
-      const ratioA = tx.splitRatioA
-      const otherShare = 100 - ratioA
-      delta = payerIsViewer
-        ? +Math.ceil(tx.amount * otherShare / 100)
-        : -Math.ceil(tx.amount * ratioA / 100)
-    }
-  }
-
-  // Viewer's actual share of this transaction — derived from delta:
-  //   payer's share    = amount − delta (delta = what the other owes back)
-  //   non-payer's share = −delta        (delta = what they owe the payer)
-  // Shown on every transaction row (#148) so the viewer's burden is always
-  // explicit, not just visible when the split happens to create a non-zero delta.
-  const myShare = tx.kind === 'transaction'
-    ? (payerIsViewer ? tx.amount - delta : -delta)
-    : 0
-  // Hide the chip entirely when the viewer carries no share — a gray "我 $0"
-  // is visual noise; absence reads cleaner than a muted zero.
-  const showMyShare = tx.kind === 'transaction' && myShare !== 0
-  // 支出分攤 → debit (red); 收入分攤 → credit (green).
-  const myShareColor = tx.kind === 'income' ? 'var(--credit)' : 'var(--debit)'
-
   // For income rows, fall back to category label when source/description is empty.
   const displayLabel = tx.kind === 'income'
     ? (tx.description || getIncomeCategory(tx.category).label)
@@ -119,11 +88,6 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         >
           NT${tx.amount.toLocaleString('en-US')}
         </div>
-        {showMyShare && (
-          <div className="tnum text-micro mt-px" style={{ color: myShareColor }}>
-            {t.compactRow.myShareLabel} ${myShare.toLocaleString('en-US')}
-          </div>
-        )}
       </div>
     </>
   )
