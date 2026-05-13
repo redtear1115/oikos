@@ -747,6 +747,9 @@ export type Translations = {
       sumInsuredPlaceholder: string
       expectedMaturityAmount: string
       expectedMaturityAmountPlaceholder: string
+      /** #166 — investment-linked savings policies only. */
+      accountValue: string
+      accountValuePlaceholder: string
       payCycle: string
       payCycleAnnual: string
       payCycleSemi: string
@@ -875,6 +878,8 @@ export type Translations = {
       policyNo: string
       payCycle: string
       expectedMaturity: string
+      /** #166 — current account value for investment-linked savings policies. */
+      accountValue: string
       startsAt: string
       endsAt: string
       /** Template with `{n}` placeholder. */
@@ -952,6 +957,18 @@ export type Translations = {
       maturedAwaitingCta: string
       /** Template with `{total}` and `{count}`. */
       maturedAwaitingPremiumNote: string
+      /** #166 — informational hero row for investment-linked policies. */
+      accountValueLabel: string
+      accountValueEditCta: string
+      /** #166 — RecurringIncome integration from SavingsView. */
+      recurringSectionTitle: string
+      recurringEmptyHint: string
+      recurringAddCta: string
+      /** Template with `{day}` and `{interval}`. */
+      recurringRuleSummary: string
+      recurringRuleNextDate: string
+      recurringRulePaused: string
+      recurringManageCta: string
     }
   }
 
@@ -1929,6 +1946,8 @@ export const zhTW: Translations = {
       sumInsuredPlaceholder: '3000000',
       expectedMaturityAmount: '預估滿期金',
       expectedMaturityAmountPlaceholder: '600000',
+      accountValue: '目前帳戶價值',
+      accountValuePlaceholder: '520000',
       payCycle: '繳費週期',
       payCycleAnnual: '年繳',
       payCycleSemi: '半年',
@@ -2053,6 +2072,7 @@ export const zhTW: Translations = {
       policyNo: '保單號',
       payCycle: '繳費週期',
       expectedMaturity: '預估滿期金',
+      accountValue: '目前帳戶價值',
       startsAt: '保單起',
       endsAt: '保單迄',
       termYearsParen: '（{n} 年期）',
@@ -2112,6 +2132,15 @@ export const zhTW: Translations = {
       maturedAwaitingStatus: '待入帳',
       maturedAwaitingCta: '我已經收到滿期金了 →',
       maturedAwaitingPremiumNote: '累計繳 NT$ {total} 已記入 {count} 筆',
+      accountValueLabel: '目前帳戶價值',
+      accountValueEditCta: '更新',
+      recurringSectionTitle: '定期進帳',
+      recurringEmptyHint: '分紅或生存金每年都會回來 — 設成定期進帳就不必再記',
+      recurringAddCta: '建立定期進帳',
+      recurringRuleSummary: '每月 {day} 號 · {interval}',
+      recurringRuleNextDate: '下次 {date}',
+      recurringRulePaused: '已暫停',
+      recurringManageCta: '管理',
     },
   },
 

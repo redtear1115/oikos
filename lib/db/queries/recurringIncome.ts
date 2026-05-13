@@ -44,6 +44,37 @@ export async function listActiveRules(groupId: string): Promise<RecurringRuleRow
     .orderBy(asc(recurringIncomeRules.nextOccurrenceAt))
 }
 
+/**
+ * #166 — Rules tied to a specific asset, scoped to the viewer's group.
+ * Used by SavingsView to surface "income arrives every cycle" rules on the
+ * insurance detail page itself, so the user doesn't have to bounce to
+ * /settings/recurring-income to see them.
+ */
+export async function listRulesForAsset(groupId: string, assetId: string): Promise<RecurringRuleRow[]> {
+  return db
+    .select({
+      id: recurringIncomeRules.id,
+      recipientId: recurringIncomeRules.recipientId,
+      amount: recurringIncomeRules.amount,
+      category: recurringIncomeRules.category,
+      source: recurringIncomeRules.source,
+      assetId: recurringIncomeRules.assetId,
+      intervalMonths: recurringIncomeRules.intervalMonths,
+      dayOfMonth: recurringIncomeRules.dayOfMonth,
+      startsOn: recurringIncomeRules.startsOn,
+      endsOn: recurringIncomeRules.endsOn,
+      nextOccurrenceAt: recurringIncomeRules.nextOccurrenceAt,
+      pausedAt: recurringIncomeRules.pausedAt,
+    })
+    .from(recurringIncomeRules)
+    .where(and(
+      eq(recurringIncomeRules.groupId, groupId),
+      eq(recurringIncomeRules.assetId, assetId),
+      isNull(recurringIncomeRules.deletedAt),
+    ))
+    .orderBy(asc(recurringIncomeRules.nextOccurrenceAt))
+}
+
 export interface PendingRow {
   id: string
   ruleId: string

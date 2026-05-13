@@ -31,6 +31,13 @@ interface Props {
   /** undefined = create mode; set = edit mode */
   initial?: RecurringRuleRow
   insuranceAssets: { id: string; name: string }[]
+  /** #166 — create-mode prefill from contexts outside Settings (e.g. SavingsView).
+   *  Ignored in edit mode so the rule's own values still win. */
+  prefill?: {
+    assetId?: string
+    category?: string
+    source?: string
+  }
 }
 
 export function RecurringRuleSheet({
@@ -39,6 +46,7 @@ export function RecurringRuleSheet({
   onMutated,
   initial,
   insuranceAssets,
+  prefill,
 }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const t = useTranslations()
@@ -88,12 +96,15 @@ export function RecurringRuleSheet({
       setSource(initial.source ?? '')
       setAssetId(initial.assetId ?? '')
     } else {
-      setCategory('salary')
+      // #166 — prefill from caller (e.g. SavingsView) wins over defaults so
+      // a one-tap "set up recurring from this savings policy" flow lands on
+      // sensible values; user can still change anything before saving.
+      setCategory(prefill?.category ?? 'salary')
       setRecipientWho('M')
-      setSource('')
-      setAssetId('')
+      setSource(prefill?.source ?? '')
+      setAssetId(prefill?.assetId ?? '')
     }
-  }, [open, initial, viewer.id])
+  }, [open, initial, viewer.id, prefill?.assetId, prefill?.category, prefill?.source])
 
   const recipientId = isSolo
     ? viewer.id
