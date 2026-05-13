@@ -662,6 +662,7 @@ export interface InsuranceInput {
   kind?: string | null
   insured?: string | null
   insuredChildId?: string | null
+  insuredUserId?: string | null
   policyHolderUserId?: string | null
   insurer?: string | null
   policyNo?: string | null
@@ -683,6 +684,7 @@ export interface ValidatedInsuranceInput {
   kind: string | null
   insured: string | null
   insuredChildId: string | null
+  insuredUserId: string | null
   policyHolderUserId: string | null
   insurer: string | null
   policyNo: string | null
@@ -718,6 +720,14 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   // `insuredType` to 'child' and clears the freeform `insured` text.
   const insuredChildId = input.insuredChildId?.trim() || null
   if (insuredChildId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(insuredChildId)) {
+    throw new Error('被保人格式錯誤')
+  }
+
+  // #237 — 被保人關聯 group member (自己 / 對方). Action layer asserts the
+  // referenced user is actually a member of this group and enforces mutex
+  // with `insuredChildId` and freeform `insured` text.
+  const insuredUserId = input.insuredUserId?.trim() || null
+  if (insuredUserId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(insuredUserId)) {
     throw new Error('被保人格式錯誤')
   }
 
@@ -772,7 +782,7 @@ export function validateInsuranceInput(input: InsuranceInput): ValidatedInsuranc
   }
 
   return {
-    name, kind, insured, insuredChildId, policyHolderUserId, insurer, policyNo,
+    name, kind, insured, insuredChildId, insuredUserId, policyHolderUserId, insurer, policyNo,
     annualPremium, sumInsured, payCycle,
     startsAt, endsAt, termYears,
     vehicleId: input.vehicleId?.trim() || null,

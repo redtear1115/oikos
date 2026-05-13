@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useTranslations } from '@/lib/i18n/client'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import type { PickerType } from './types'
 
 // Primary tiles always visible (4 + 1 「更多」 toggle = 5 cells in one row).
@@ -14,8 +13,13 @@ import type { PickerType } from './types'
 // #222 — 「物品」 (item, template-based) joins the secondary row alongside the
 // other less-emotive types. The five legacy emotion-rich types (car / child /
 // pet / plant) stay primary so common flows don't change.
+//
+// #236 — 'insurance' is intentionally absent: it's a Guardian-module type
+// added via the 守護 tab's dedicated entry (which opens AssetSheet with
+// initialType='insurance' and suppresses this picker). Server action also
+// rejects creation when Guardian is off as a safety net.
 const PRIMARY_TYPES: PickerType[] = ['car', 'child', 'pet', 'plant']
-const SECONDARY_TYPES: PickerType[] = ['house', 'insurance', 'item']
+const SECONDARY_TYPES: PickerType[] = ['house', 'item']
 const isSecondaryType = (t: PickerType) => SECONDARY_TYPES.includes(t)
 
 interface Props {
@@ -25,7 +29,6 @@ interface Props {
 
 export function TypePicker({ value, onChange }: Props) {
   const t = useTranslations()
-  const { canAccessGuardian: guardianVisible } = useMember()
   const ts = t.assetSheet
   const typeLabel = (type: PickerType): string => {
     switch (type) {
@@ -39,12 +42,7 @@ export function TypePicker({ value, onChange }: Props) {
     }
   }
   const primaryOptions = PRIMARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))
-  // #221 — 'insurance' is a Guardian-tab type; hide from the picker entirely
-  // when beta is off. Server action also rejects creation as a safety net.
-  const visibleSecondary = guardianVisible
-    ? SECONDARY_TYPES
-    : SECONDARY_TYPES.filter((t) => t !== 'insurance')
-  const secondaryOptions = visibleSecondary.map(v => ({ value: v, label: typeLabel(v) }))
+  const secondaryOptions = SECONDARY_TYPES.map(v => ({ value: v, label: typeLabel(v) }))
 
   // Auto-open the secondary row if the currently selected type is secondary,
   // so the user can see what they picked without re-tapping 更多.

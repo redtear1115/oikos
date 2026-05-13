@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { viewerBalance } from '@/lib/balance'
 import { SettlementForm } from './SettlementForm'
@@ -126,6 +126,7 @@ export function BalanceHero({
   const amount = Math.abs(balance)
   const showInitial = owedByWho === 'M' ? viewer.initial : (partner?.initial ?? '?')
   const showAvatar = owedByWho === 'M' ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
+  const owedByRole = whoToMemberRole(owedByWho, viewerIsA)
   // Hide the settle button in two cases:
   //   - Past-epoch view is read-only (server action also rejects).
   //   - "After-settle" projection view (issue #208): the displayed amount
@@ -249,7 +250,7 @@ export function BalanceHero({
           {/* Buttons — always right-side of the avatar row */}
           {heroCollapsed ? (
             <div className="flex items-center gap-2">
-              <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={32} />
+              <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={32} />
               <div className="flex-1 min-w-0 truncate transition-opacity duration-150" style={{ opacity: fading ? 0 : 1 }}>
                 <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 'var(--fs-body)' }}>{subjectName}</span>{' '}
                 <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-body)' }}>{verb}</span>{' '}
@@ -273,7 +274,7 @@ export function BalanceHero({
             </div>
           ) : (
             <div className="flex items-start gap-[14px]">
-              <Avatar who={owedByWho} initial={showInitial} src={showAvatar} size={44} />
+              <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={44} />
               <div className="flex-1 pt-[2px] min-w-0">
                 <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
                   <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}

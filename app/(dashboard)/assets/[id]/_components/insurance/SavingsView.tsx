@@ -347,8 +347,8 @@ export function SavingsView({
       <SectionHeader>{td.sectionContract}</SectionHeader>
       <InfoCard>
         <InfoRow label={td.kind} value={lookupKindLabel(details.kind, td) + (details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : '')} />
-        {/* #167 — linked Child 愛物 name wins over the freeform `insured` text when set. */}
-        <InfoRow label={td.insured} value={details.insuredChildName ?? details.insured ?? ''} />
+        {/* #167 + #237 — display precedence: Child 愛物 > group member > freeform. */}
+        <InfoRow label={td.insured} value={details.insuredChildName ?? details.insuredUserDisplayName ?? details.insured ?? ''} />
         <InfoRow label={td.insurer} value={details.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details.payCycle, td)} />

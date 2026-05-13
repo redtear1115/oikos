@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Serwist-generated service worker bundle (minified Workbox runtime).
+    "public/sw.js",
   ]),
   {
     rules: {
@@ -25,6 +27,16 @@ const eslintConfig = defineConfig([
       // case the React docs themselves cite as a legitimate use of useEffect.
       // We've reviewed every callsite; opting out project-wide.
       "react-hooks/set-state-in-effect": "off",
+      // Allow underscore-prefix to mark intentionally-unused destructure / args / vars.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
     },
   },
 ]);

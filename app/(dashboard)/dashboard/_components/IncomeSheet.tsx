@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -92,7 +92,7 @@ interface Props {
 }
 
 export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved, prefilledAssetId, prefilledCategory, prefilledAmount, mode, pendingId }: Props) {
-  const { viewer, partner, isSolo } = useMember()
+  const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
   const P = DEFAULT_INCOME_PALETTE
 
@@ -163,7 +163,6 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       setShowPolicyPicker(false)
       setAssetId(null)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category])
 
   // Focus + select amount input after sheet slides up
@@ -403,7 +402,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                       }}
                     >
                       <Avatar
-                        who={w}
+                        memberRole={whoToMemberRole(w, viewerIsA)}
                         initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
                         src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
                         size={18}

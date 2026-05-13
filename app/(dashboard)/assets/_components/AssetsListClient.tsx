@@ -35,6 +35,8 @@ export interface AssetsListItem {
     insured: string | null
     insuredChildId: string | null
     insuredChildName: string | null
+    insuredUserId: string | null
+    insuredUserDisplayName: string | null
     policyHolderUserId: string | null
     policyHolderDisplayName: string | null
     policyHolderAvatarUrl: string | null
@@ -58,6 +60,55 @@ export interface AssetsListItem {
 
 interface Props {
   items: AssetsListItem[]
+}
+
+// #160 — section headers were too quiet to anchor the eye. Stronger weight,
+// serif type, and a colored dot in the section's representative tint give
+// each group a clear identity without adding chrome.
+function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) {
+  return (
+    <div className="flex items-center gap-2 px-1 pb-1">
+      <span
+        aria-hidden="true"
+        className="inline-block rounded-full shrink-0"
+        style={{ width: 8, height: 8, background: dotColor }}
+      />
+      <div
+        style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 'var(--fs-button)',
+          fontWeight: 500,
+          color: 'var(--ink)',
+          letterSpacing: '-0.2px',
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  )
+}
+
+function AssetGroup({ group }: { group: AssetsListItem[] }) {
+  return (
+    <div
+      className="rounded-[20px] overflow-hidden"
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+    >
+      {group.map((a, i) => (
+        <AssetListItem
+          key={a.id}
+          id={a.id}
+          type={a.type}
+          name={a.name}
+          nickname={a.nickname ?? null}
+          plate={a.plate ?? null}
+          monthAmount={a.monthAmount}
+          isSavings={a.isSavings}
+          isLast={i === group.length - 1}
+        />
+      ))}
+    </div>
+  )
 }
 
 export function AssetsListClient({ items }: Props) {
@@ -139,51 +190,6 @@ export function AssetsListClient({ items }: Props) {
       return 0
     })
   const multiCar = cars.length > 1
-
-  // #160 — section headers were too quiet to anchor the eye. Stronger weight,
-  // serif type, and a colored dot in the section's representative tint give
-  // each group a clear identity without adding chrome.
-  const SectionLabel = ({ label, dotColor }: { label: string; dotColor: string }) => (
-    <div className="flex items-center gap-2 px-1 pb-1">
-      <span
-        aria-hidden="true"
-        className="inline-block rounded-full shrink-0"
-        style={{ width: 8, height: 8, background: dotColor }}
-      />
-      <div
-        style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 'var(--fs-button)',
-          fontWeight: 500,
-          color: 'var(--ink)',
-          letterSpacing: '-0.2px',
-        }}
-      >
-        {label}
-      </div>
-    </div>
-  )
-
-  const AssetGroup = ({ group }: { group: AssetsListItem[] }) => (
-    <div
-      className="rounded-[20px] overflow-hidden"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-    >
-      {group.map((a, i) => (
-        <AssetListItem
-          key={a.id}
-          id={a.id}
-          type={a.type}
-          name={a.name}
-          nickname={a.nickname ?? null}
-          plate={a.plate ?? null}
-          monthAmount={a.monthAmount}
-          isSavings={a.isSavings}
-          isLast={i === group.length - 1}
-        />
-      ))}
-    </div>
-  )
 
   const dashedButton = (label: string) => (
     <button
@@ -324,6 +330,8 @@ export function AssetsListClient({ items }: Props) {
                   insured: null,
                   insuredChildId: null,
                   insuredChildName: null,
+                  insuredUserId: null,
+                  insuredUserDisplayName: null,
                   policyHolderUserId: null,
                   policyHolderDisplayName: null,
                   policyHolderAvatarUrl: null,

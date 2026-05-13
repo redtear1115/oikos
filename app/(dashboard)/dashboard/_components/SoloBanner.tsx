@@ -76,7 +76,7 @@ export function SoloBanner({
       />
 
       <div className="flex items-start gap-[14px]">
-        <Avatar who="T" initial="?" src={null} size={44} />
+        <Avatar memberRole="b" initial="?" src={null} size={44} />
         <div className="flex-1 min-w-0 pt-[2px]">
           <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
             <span className="font-semibold" style={{ color: 'var(--ink)' }}>{t.soloBanner.waiting}</span>

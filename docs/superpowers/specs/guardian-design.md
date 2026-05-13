@@ -1,6 +1,8 @@
 ---
 status: shipped
-shipped_in: v0.16.0（#220 #221 — beta flag + nav guard；#227 — GatedView for beta-off surfaces）
+shipped_in: |
+  v0.16.0（#220 #221 — beta flag + nav guard；#227 — GatedView for beta-off surfaces）
+  v0.16.1 (#236 — 保險不再出現在愛物 TypePicker；守護 tab FAB 直開 InsuranceSheetBody)
 note: 守護模組從愛物切出，作為將來付費層的 wedge。目前用 per-group beta flag 開放給朋友圈試用；單一 `canAccessGuardian(group)` 是付費層上線時唯一要改的地方。
 ---
 
@@ -71,7 +73,7 @@ return hasSubscription(group) || group.guardianBetaEnabled
 |---|---|---|
 | `/assets` TabBar | 不顯示「守護」tab；swipe handler 不允許切到 guardian segment | 顯示 tab + swipe |
 | `?tab=guardian` URL | render `<GatedView />`（非 silent fallback 到愛物 tab）| 正常顯示守護 list |
-| `AssetSheet/TypePicker` | 保險 tile 隱藏 | 顯示在「更多」展開區 |
+| `AssetSheet/TypePicker` | 保險 tile 不在列表 | 保險 tile 不在列表（v0.16.1 #236）；ON 時走守護 tab FAB → AssetSheet 直接 mount `InsuranceSheetBody`，不顯示 TypePicker |
 | `/assets/[id]`（insurance asset）| render `<InsuranceGatedClient />`（GatedView + BottomNav；FAB 隱藏）| 正常 detail 頁 |
 | `createInsurance` server action | throw `guardian_disabled` | 通過 |
 | `/records` FilterSheet「守護」sub-section | sub-section 整段不渲染 | 顯示保險 chips |
@@ -107,6 +109,12 @@ Defence in depth：`createInsurance` server action 仍 throw，避免 client-sid
 ### 為什麼 GatedView 不放在 root layout 統一處理
 
 `/assets?tab=guardian` 是 client-side tab state，`/assets/[id]` 是 server component；兩條路徑的渲染時機完全不同。統一處理會逼出抽象（HOC？middleware redirect？），不如各 surface 各自呼叫 `<GatedView />`——核心是把「該攔的點」標清楚，不是抽象一個攔截器。
+
+### 為什麼保險不在愛物 TypePicker（即使 beta ON）
+
+v0.16.0 第一輪把保險 tile 放在 TypePicker 的「更多」展開區（ON 時顯示）。問題：beta ON 後同時存在兩條建立保單路徑（愛物 FAB 的 TypePicker → 保險 vs 守護 tab FAB → 保險），對心智模型造成「保險到底屬於愛物還是守護」的回歸。
+
+v0.16.1 #236 把保險從 TypePicker 完全移除，並在守護 tab FAB 開啟 AssetSheet 時跳過 TypePicker，直接 mount `InsuranceSheetBody`。守護 tab 是進入保險的唯一前門；愛物頁徹底不再 surface 保險型別，跟「守護是獨立模組」的 framing 對齊。`createInsurance` server action 仍 throw `guardian_disabled` 作為防線（不依賴 UI 完整擋住）。
 
 ### 為什麼保險不直接放進「物品」模板
 

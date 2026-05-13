@@ -53,6 +53,7 @@ export interface AssetSheetInitial {
   insKind?: string | null
   insInsured?: string | null
   insInsuredChildId?: string | null
+  insInsuredUserId?: string | null
   insPolicyHolderUserId?: string | null
   insInsurer?: string | null
   insPolicyNo?: string | null

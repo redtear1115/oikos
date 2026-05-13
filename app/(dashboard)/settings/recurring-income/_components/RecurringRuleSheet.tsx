@@ -5,7 +5,7 @@ import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBack
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { DayPicker } from './DayPicker'
 import {
   createRule,
@@ -48,7 +48,7 @@ export function RecurringRuleSheet({
   insuranceAssets,
   prefill,
 }: Props) {
-  const { viewer, partner, isSolo } = useMember()
+  const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
   const isEdit = !!initial
 
@@ -262,7 +262,7 @@ export function RecurringRuleSheet({
                       }}
                     >
                       <Avatar
-                        who={w}
+                        memberRole={whoToMemberRole(w, viewerIsA)}
                         initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
                         src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
                         size={18}

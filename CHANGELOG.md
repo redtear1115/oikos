@@ -19,6 +19,42 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### 技術變更
 - _尚無_
 
+## [0.16.1] - 2026-05-13
+
+主題：**守護後的細節收尾．角色色 × 收入篩選 × 被保人自己/對方 × 兩條清理**——v0.16.0 把守護模組獨立化、設定頁重新分組、愛物模板與篩選分組一次到位之後，這版專注收掉幾個 surface 上的小裂縫：守護 beta 開了之後愛物頁不該再讓你選保險（兩條建立保單路徑會回到 v0.15.x 的混亂）；Dashboard 切到收入模式時 filter 入口不見了（spec 早就講過要 parity，這版補實作）；雙人帳本的頭像顏色從「以你視角左/右」改成「以絕對角色」（深咖啡 / 橘對到愛心 icon 兩瓣，跨頁面看到的我永遠是同一個顏色）；被保人原本只能選孩子愛物或自行輸入文字，這版把 schema 早就埋好的 group member FK 接到 UI，補上「我 / 對方」兩個選項；支出列每列右上的「我 $X」徽章在單人視角是冗餘訊息，拆掉留純粹。
+
+完整 diff：[v0.16.0...v0.16.1](https://github.com/redtear1115/oikos/compare/v0.16.0...v0.16.1)
+
+### 使用者可見變化
+
+#### 守護開了之後，愛物頁不再 surface 保險（PR #241 closes #236）
+- **愛物 FAB → TypePicker 不再有「保險」選項**：v0.16.0 第一輪在 ON 時把保險 tile 放進「更多」展開區，導致同時存在兩條建立保單路徑（愛物 FAB → 保險 vs 守護 tab FAB → 保險），心智上回到 v0.15.x 那種「保險到底屬於愛物還是守護」的混亂。這版直接把保險從 TypePicker 完全拿掉。
+- **守護 tab FAB 改直接開保單 sheet**：守護 tab 是進入保險的唯一前門，按 FAB 不再多看一頁 TypePicker（裡面也沒有它了），AssetSheet 直接 mount `InsuranceSheetBody`。既有保單編輯流程不動。
+
+#### Dashboard 收入模式補上 filter 入口（PR #242 closes #235）
+- **Dashboard 切到收入模式，「篩選 ›」按鈕現在會出現**：v0.15.0 lite-mode FilterSheet 從一開始就是 mode-agnostic 的設計，但 Dashboard 實作把按鈕用 `mode === 'expense' &&` 包起來、收入 loader 也是 module-level 拿不到 filter 物件——切到收入模式 entry point 整個消失。修掉之後 expense / income 兩個 mode 走同一條 filter wire：payer / 金額範圍 / status 都能套，套了之後 feed 立刻收斂。
+- 維度顯示沿用既有 lite-mode 規則（payer / amount / status 顯示，date / 愛物 / 分類 hidden），跟支出側一致。
+
+#### 頭像顏色改為依絕對角色（PR #243 closes #238）
+- **`member_a` 永遠是深咖啡（`--ink` #3A2419），`member_b` 永遠是橘色（`--accent` #E08856）**：兩個顏色已經是 `FutariMark` 愛心 icon 的兩瓣，這版把同一份 brand token 跨頁面套到所有頭像。先前是 viewer-relative —— 自己看自己永遠是某一色，看對方永遠是另一色，但雙方各自打開 Futari 看到的「自己 / 對方」恰好相反，跨裝置截圖比對會錯亂。改成絕對角色之後，兩個人在任何頁面看到同一個成員的頭像都是同一個顏色。
+- 影響範圍涵蓋 BrandHeader / BalanceHero / 支出列付款人頭像 / PayerToggle / IncomeSheet recipient toggle / Settings 成員列表 / SoloBanner 佔位頭像 / 月度回顧編輯器與過去訊息，13 個 callsite 全部對齊。
+
+#### 支出列拿掉「分擔的我」徽章（PR #240 closes #239）
+- **支出列右上不再顯示「我 $X」/「對方 $X」徽章**：Futari 是單人視角的 app，每列已經有「你付」/「對方付」+ 金額 + pending badge，再多一塊「我這份是多少」的小徽章是冗餘訊息，視覺也讓 row 變擠。拆掉之後 row 回到純粹。資料層沒動——`split_type` / 比例還在，未來如果決定再呈現會走另一個位置。
+
+#### 守護被保人支援自己/對方（PR #245 closes #237）
+- **被保人 picker 補上「我」和「對方」兩個選項**：人身保險 / 旅平險 / 失能扶助這些常見的「被保人 = 自己或對方」情境，原本只能當成 freeform 文字填，FK 接不回 group 成員。這版把 schema 早就埋好的 `insured_user_id` 接到 UI，picker chip row 在現有的 Child 愛物 chips 與「自行輸入」之間多出「我」+「對方」（solo mode 隱藏「對方」）。
+- **四個來源互斥，列卡與詳情頁優先顯示成員 displayName**：被保人四個來源（自己 / 對方 / 孩子愛物 / 自行輸入）UI 上互斥，選任何一個都把其他三個清空；action 層 `resolveInsuredFields()` 以同樣的 precedence（孩子 > 成員 > 文字）再防一層，DB 永遠只留一份真相。InsuranceListItem 與 SavingsView / InsuranceDetailClientLegacy 顯示時依同樣順序選 displayName。
+
+### 技術變更
+
+- **TypePicker 移除保險 + 守護 FAB 跳過 TypePicker**（PR #241 #236）：`TypePicker.tsx` 從 `SECONDARY_TYPES` 拿掉 `'insurance'`；`AssetSheet/index.tsx` 對 `initialType='insurance'` 的開啟流程跳過 TypePicker、直接 render `InsuranceSheetBody`。Server-side `createInsurance` 仍 throw `guardian_disabled` 作為防線。Edit flow 不動（`/assets/[id]` 對既有保單照常編輯）。詳見 [guardian-design.md](docs/superpowers/specs/guardian-design.md) 的「為什麼保險不在愛物 TypePicker」取捨小節。
+- **Dashboard 收入模式 filter wire**（PR #242 #235）：`Dashboard.tsx` 拿掉 `mode === 'expense' &&` gate；`DashboardFeed` 的 income loader 改 `useMemo` 包進元件內，closure 帶住 filter ref，filter 變動時 ref 重建——`TransactionFeed` 既有的 filter-change refetch effect 自動接走。同 effect 順手擴成「有 custom loader 時 `loader(null)`、否則才走 cash-only `loadMoreTransactions`」；income 永遠 settled，`status='pending'` 透過既有 `cutAll` 規則 drop，無害。詳見 [structured-filter-design.md](docs/superpowers/specs/structured-filter-design.md) 的 lite mode 段落。
+- **`Avatar` API: viewer-relative `who` → absolute `memberRole`**（PR #243 #238）：`Avatar.tsx` 的 prop 從 `who: 'M' \| 'T'` 換成 `memberRole: 'a' \| 'b'`，`bg` 直接讀 `--ink` / `--accent` brand token；`MemberContext` 加 `whoToMemberRole(who, viewerIsA)` helper 給仍以 viewer 視角思考的 callsite 用。13 個 callsite 全部更新；SoloBanner 的佔位頭像顯式設為 `memberRole='b'`（缺席的伴侶概念上 = member_b）。
+- **`CompactRow` 移除 myShare 計算 + i18n key 清掉**（PR #240 #239）：刪除 `delta` / `myShare` / `showMyShare` / `myShareColor` derivation 與徽章 render；移除 4 語的 `compactRow.myShareLabel` key + zh-TW 的 shared interface 宣告。data layer 完全不動。
+- **被保人接上 `insured_user_id` FK**（PR #245 #237）：`insurance_details.insured_user_id` 與 `insured_type='user'` discriminator 早就在 schema 內、`leaveGroup` 也已經依 `insured_user_id` 把保單帶走，但 form 一直沒 write path——這版補上**不需要 migration**。`actions/asset.ts` 新增 `resolveInsuredFields()` 把三個來源（child / member / text）收斂成一份正準，`assertInsuredUserInGroup()` 守 member FK 只能是 `member_a` / `member_b`；`InsuranceSheetBody` picker 加「我 / 對方」buttons，state 改成三個互斥 source；queries 加 `insuredUserProfile` LEFT JOIN 撈 displayName 給列卡與詳情頁。
+- **Doc keeper pass**（commit 1 of release PR）：`guardian-design.md` Surface 表 TypePicker 行更新 + 新增「為什麼保險不在愛物 TypePicker」取捨段；`structured-filter-design.md` shipped_in 追加 v0.16.1 #235、lite mode 段落補 Dashboard 雙 mode parity。
+
 ## [0.16.0] - 2026-05-13
 
 主題：**守護成為自己的模組．物品也記得進來．設定頁長出新分組**——v0.15.2 才把保險從愛物清單切到「守護」tab，這版直接把守護升格為獨立模組：per-group beta flag 控制可見性、單一 `canAccessGuardian()` 是將來付費層 cut-over 唯一要動的地方、beta 關掉時用一張友善的 GatedView 而不是 silent fallback。同期愛物模板系統 v1 ship 出「物品」這第七種 type，相機、單車、紀念物這些只想被記得、不需要任何後端行為的東西終於有地方去。設定頁重新分組成 帳本 / 成員 / 個人 / 應用 / 資料 / 守護 / 離開帳本，每個 toggle 都長在它該長的層級裡；篩選器愛物 chip 也按類型分成 sub-section，可以一鍵「全選車輛」「全選生命」。順手把 v0.15.0 那條 pending balance bug 也收掉。

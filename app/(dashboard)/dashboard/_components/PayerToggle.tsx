@@ -1,6 +1,6 @@
 'use client'
 
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useTranslations } from '@/lib/i18n/client'
 
@@ -10,7 +10,7 @@ interface PayerToggleProps {
 }
 
 export function PayerToggle({ value, onChange }: PayerToggleProps) {
-  const { viewer, partner } = useMember()
+  const { viewer, partner, viewerIsA } = useMember()
   const t = useTranslations()
 
   return (
@@ -35,7 +35,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
             }}
           >
             <Avatar
-              who={w}
+              memberRole={whoToMemberRole(w, viewerIsA)}
               initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
               src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
               size={18}

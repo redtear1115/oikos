@@ -215,7 +215,7 @@ export function SettingsContent({
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
           <MemberRow
-            who="M"
+            memberRole={viewerIsMemberA ? 'a' : 'b'}
             initial={viewer.displayName[0]?.toUpperCase() ?? '?'}
             avatarUrl={viewer.avatarUrl}
             displayName={viewer.displayName}
@@ -226,7 +226,7 @@ export function SettingsContent({
             <>
               <div style={{ borderTop: '1px solid var(--hairline)' }} />
               <MemberRow
-                who="T"
+                memberRole={viewerIsMemberA ? 'b' : 'a'}
                 initial={partner.displayName[0]?.toUpperCase() ?? '?'}
                 avatarUrl={partner.avatarUrl}
                 displayName={partner.displayName}
@@ -461,12 +461,12 @@ function Row({
 }
 
 function MemberRow({
-  who, initial, avatarUrl, displayName, email, youSuffix,
-}: { who: 'M' | 'T'; initial: string; avatarUrl: string | null; displayName: string; email: string; youSuffix?: boolean }) {
+  memberRole, initial, avatarUrl, displayName, email, youSuffix,
+}: { memberRole: 'a' | 'b'; initial: string; avatarUrl: string | null; displayName: string; email: string; youSuffix?: boolean }) {
   const t = useTranslations()
   return (
     <div className="flex items-center gap-3.5 px-5 py-4">
-      <Avatar who={who} initial={initial} src={avatarUrl} size={40} />
+      <Avatar memberRole={memberRole} initial={initial} src={avatarUrl} size={40} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
           {displayName}{youSuffix && <span className="ml-1" style={{ color: 'var(--ink-3)' }}>{t.settings.youSuffix}</span>}
