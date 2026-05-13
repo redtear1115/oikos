@@ -6,6 +6,21 @@ import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useTranslations } from '@/lib/i18n/client'
 
+// Beyond 1億 the full number overflows the row on mobile widths.
+// Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
+// tapping the row reveals the exact amount in the detail sheet.
+function formatRowAmount(amount: number): string {
+  const abs = Math.abs(amount)
+  const sign = amount < 0 ? '-' : ''
+  if (abs >= 1_000_000_000_000) {
+    return `${sign}${(abs / 1_000_000_000_000).toFixed(1)}兆`
+  }
+  if (abs >= 100_000_000) {
+    return `${sign}${(abs / 100_000_000).toFixed(1)}億`
+  }
+  return amount.toLocaleString('en-US')
+}
+
 export interface CompactRowProps {
   tx: {
     id: string
@@ -82,12 +97,12 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           </div>
         )}
       </div>
-      <div className="text-right">
+      <div className="text-right shrink-0">
         <div
           className="tnum text-sm font-medium tracking-[-0.2px]"
           style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
         >
-          NT${tx.amount.toLocaleString('en-US')}
+          NT${formatRowAmount(tx.amount)}
         </div>
       </div>
     </>
