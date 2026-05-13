@@ -80,8 +80,8 @@ export function ConfirmModal({
             disabled={pending}
             className="flex-1 h-11 rounded-[12px] border-0 cursor-pointer text-sm font-semibold disabled:opacity-50"
             style={{
-              background: destructive ? 'var(--destructive)' : 'var(--btn-primary-bg)',
-              color: destructive ? '#fff' : 'var(--btn-primary-text)',
+              background: destructive ? 'var(--btn-destructive-bg)' : 'var(--btn-primary-bg)',
+              color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
             }}
           >
             {confirmLabel}
