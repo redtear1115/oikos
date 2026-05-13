@@ -88,8 +88,8 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
         <div className="flex gap-2">
           <button
             type="button" onClick={handleConfirm} disabled={submitting}
-            className="flex-1 rounded-full py-2 text-[var(--fs-sm)] text-white disabled:opacity-50"
-            style={{ background: 'var(--ink)' }}
+            className="flex-1 rounded-full py-2 text-[var(--fs-sm)] disabled:opacity-50"
+            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             就這樣
           </button>

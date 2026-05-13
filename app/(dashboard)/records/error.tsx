@@ -25,7 +25,7 @@ export default function Error({
         type="button"
         onClick={reset}
         className="px-5 py-2 rounded-full text-sm cursor-pointer border-0"
-        style={{ background: 'var(--ink)', color: '#fff' }}
+        style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
       >
         重試
       </button>

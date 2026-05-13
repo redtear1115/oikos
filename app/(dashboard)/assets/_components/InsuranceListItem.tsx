@@ -402,8 +402,8 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
             type="button"
             onClick={handleRenew}
             disabled={pending}
-            className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-semibold text-white disabled:opacity-50"
-            style={{ background: 'var(--ink)' }}
+            className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-semibold disabled:opacity-50"
+            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {i.renewConfirm}
           </button>

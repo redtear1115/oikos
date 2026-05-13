@@ -19,8 +19,8 @@ export default async function ComingSoonPage({
         <p className="text-sm mb-8" style={{ color: 'var(--ink-3)' }}>
           {t.comingSoon.subtitle}
         </p>
-        <Link href="/dashboard" className="inline-block px-6 py-3 rounded-xl text-white"
-          style={{ background: 'var(--ink)' }}>
+        <Link href="/dashboard" className="inline-block px-6 py-3 rounded-xl"
+          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}>
           {t.comingSoon.backToHome}
         </Link>
       </div>

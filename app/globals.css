@@ -55,6 +55,21 @@
    * the last feed row isn't visually pinched by the FAB. (issue #253) */
   --bottom-nav-offset: 112px;
 
+  /* Button color tokens — foundation for issues #258 / #261 / #262.
+   * Map to existing brand colors so the warm-brown system stays put; later
+   * issues build on these (#262 destructive treatment, #261 Settings split). */
+  --btn-primary-bg:       var(--ink);          /* 主要 commit: 記下 / 儲存 / 繼續 / 確認 */
+  --btn-primary-text:     #fff;
+  --btn-accent-bg:        var(--accent);       /* 重點 CTA: FAB / 邀請 / 月結 entry */
+  --btn-accent-text:      #fff;
+  --btn-secondary-bg:     var(--surface);      /* 次要: 取消 / 輔助 */
+  --btn-secondary-text:   var(--ink);
+  --btn-secondary-border: var(--ink-3);
+  --btn-destructive-bg:   var(--destructive);  /* 離開帳本 / 刪除 */
+  --btn-destructive-text: #fff;
+  --btn-disabled-bg:      var(--ink-3);
+  --btn-disabled-text:    #fff;
+
   /* Typography scale — P3-1 */
   --fs-xs:        11px;   /* extra small: labels, metadata */
   --fs-micro:     11px;   /* tab label, timestamp, metadata */

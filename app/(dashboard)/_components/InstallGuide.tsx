@@ -123,7 +123,7 @@ function IosOtherSteps() {
           type="button"
           onClick={handleCopy}
           className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
-          style={{ background: 'var(--ink)', color: '#fff' }}
+          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           {copied ? '已複製' : '複製'}
         </button>

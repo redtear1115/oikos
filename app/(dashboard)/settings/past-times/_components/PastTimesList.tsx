@@ -133,7 +133,7 @@ export function PastTimesList({
                     onClick={() => handleEnter(e.id)}
                     disabled={pending || isPinned}
                     className="self-start h-10 px-4 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
-                    style={{ background: 'var(--ink)', color: 'var(--surface)' }}
+                    style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
                   >
                     {isPinned ? t.bannerHeading
                         .replace('{start}', fmt(e.startedAt))
