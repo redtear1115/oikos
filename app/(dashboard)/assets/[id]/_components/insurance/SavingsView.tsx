@@ -8,6 +8,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
+import { RecurringRuleSheet } from '@/app/(dashboard)/settings/recurring-income/_components/RecurringRuleSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
@@ -22,10 +23,12 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { loadMoreInsuranceReturns } from '@/actions/income'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import type { PagedTxnRow } from '@/actions/transaction'
 import type { PagedIncomeRow } from '@/actions/income'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
+import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
   if (!kind) return ''
@@ -55,6 +58,9 @@ interface Props {
   pageSize: number
   assetSheetInitial: AssetSheetInitial
   linkedVehicle?: { id: string; name: string } | null
+  /** #166 — recurring income rules already tied to this savings policy.
+   *  Surfaced inline so users can see / create rules without leaving the page. */
+  recurringRules: RecurringRuleRow[]
 }
 
 const RETURN_CATEGORIES: string[] = [...SAVINGS_RETURN_CATEGORIES]
@@ -72,6 +78,7 @@ export function SavingsView({
   pageSize,
   assetSheetInitial,
   linkedVehicle,
+  recurringRules,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -83,6 +90,8 @@ export function SavingsView({
   const [editAssetOpen, setEditAssetOpen] = useState(false)
   const [incomeSheetOpen, setIncomeSheetOpen] = useState(false)
   const [incomePrefillAmount, setIncomePrefillAmount] = useState<number | undefined>(undefined)
+  // #166 — null = closed; 'create' = new rule sheet; RecurringRuleRow = edit existing.
+  const [recurringSheetState, setRecurringSheetState] = useState<null | 'create' | RecurringRuleRow>(null)
   const tint = useTint('insurance')
 
   useRealtimeEvents((event) => {
@@ -97,6 +106,13 @@ export function SavingsView({
       return
     }
     if ((event.kind === 'income-insert' || event.kind === 'income-update') && event.row.assetId === assetId) {
+      router.refresh()
+      return
+    }
+    // #166 — recurring rule mutations (create / edit / pause / delete) on
+    // either device should refresh the inline list. The realtime payload
+    // doesn't include assetId, so we conservatively refresh on every change.
+    if (event.kind === 'recurring-income-changed') {
       router.refresh()
     }
   })
@@ -280,6 +296,54 @@ export function SavingsView({
         />
       </div>
 
+      {/* #166 — investment-linked savings policies: surface the current
+          account value above the recurring section, plus an Update CTA that
+          opens the AssetSheet so the user can refresh it from a statement. */}
+      {details.accountValue !== null && (
+        <>
+          <SectionHeader>{ts.accountValueLabel}</SectionHeader>
+          <div
+            className="mx-4 rounded-2xl"
+            style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+          >
+            <div className="px-4 py-3 flex items-baseline justify-between">
+              <span
+                className="text-xl font-semibold tabular-nums"
+                style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+              >
+                NT$ {details.accountValue.toLocaleString()}
+              </span>
+              <button
+                type="button"
+                onClick={() => setEditAssetOpen(true)}
+                className="text-xs font-medium underline-offset-2 underline bg-transparent border-0 cursor-pointer"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {ts.accountValueEditCta}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* #166 — Recurring income tied to this policy. Dividends / survival
+          annuities recur on a known cadence; setting a rule lets pg_cron
+          surface a confirm card on the dashboard instead of users having to
+          remember to log them manually. */}
+      <RecurringRulesSection
+        rules={recurringRules}
+        onAdd={() => setRecurringSheetState('create')}
+        onEdit={(rule) => setRecurringSheetState(rule)}
+        translations={ts}
+        intervalLabels={{
+          1: t.recurringIncome.rule.intervalEveryMonth,
+          3: t.recurringIncome.rule.intervalEveryQuarter,
+          6: t.recurringIncome.rule.intervalEveryHalfYear,
+          12: t.recurringIncome.rule.intervalEveryYear,
+          fallback: t.recurringIncome.rule.intervalEveryNMonths,
+        }}
+      />
+
       <SectionHeader>{td.sectionContract}</SectionHeader>
       <InfoCard>
         <InfoRow label={td.kind} value={lookupKindLabel(details.kind, td) + (details.termYears ? td.termYearsParen.replace('{n}', String(details.termYears)) : '')} />
@@ -359,6 +423,123 @@ export function SavingsView({
         initial={assetSheetInitial}
         onMutated={handleAssetMutated}
       />
+
+      {/* #166 — RecurringRuleSheet reused from settings/recurring-income.
+          We pass this single asset in insuranceAssets so the asset link
+          stays prefilled; prefill seeds category=dividend so users land on
+          the most common savings-policy recurrence (still editable). */}
+      <RecurringRuleSheet
+        open={recurringSheetState !== null}
+        onClose={() => setRecurringSheetState(null)}
+        onMutated={() => { setRecurringSheetState(null); router.refresh() }}
+        initial={typeof recurringSheetState === 'object' && recurringSheetState !== null ? recurringSheetState : undefined}
+        insuranceAssets={[{ id: assetId, name }]}
+        prefill={recurringSheetState === 'create' ? { assetId, category: 'dividend', source: name } : undefined}
+      />
     </div>
   )
+}
+
+/**
+ * #166 — Renders existing recurring rules for this savings asset and a CTA
+ * to add a new one. Kept inline (single call-site) until another page needs it.
+ */
+function RecurringRulesSection({
+  rules,
+  onAdd,
+  onEdit,
+  translations,
+  intervalLabels,
+}: {
+  rules: RecurringRuleRow[]
+  onAdd: () => void
+  onEdit: (rule: RecurringRuleRow) => void
+  translations: Translations['assetDetail']['savings']
+  intervalLabels: { 1: string; 3: string; 6: string; 12: string; fallback: string }
+}) {
+  const P = DEFAULT_INCOME_PALETTE
+  return (
+    <>
+      <div className="px-5 pt-[18px] pb-2 flex items-center justify-between">
+        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          {translations.recurringSectionTitle}
+        </div>
+        {rules.length > 0 && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-micro font-medium bg-transparent border-0 cursor-pointer"
+            style={{ color: P.ink }}
+          >
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            {translations.recurringAddCta}
+          </button>
+        )}
+      </div>
+      <div className="mx-4">
+        {rules.length === 0 ? (
+          <div
+            className="rounded-2xl px-4 py-5 flex flex-col items-center text-center"
+            style={{ background: P.tint, border: `1px solid ${P.ink}20` }}
+          >
+            <p className="text-sm mb-3" style={{ color: P.ink, lineHeight: 1.5 }}>
+              {translations.recurringEmptyHint}
+            </p>
+            <button
+              type="button"
+              onClick={onAdd}
+              className="h-9 px-4 rounded-full text-sm font-semibold border-0 cursor-pointer"
+              style={{ background: P.ink, color: '#fff' }}
+            >
+              {translations.recurringAddCta}
+            </button>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {rules.map((rule) => (
+              <li key={rule.id}>
+                <button
+                  type="button"
+                  onClick={() => onEdit(rule)}
+                  className="w-full text-left rounded-2xl px-4 py-3 bg-white cursor-pointer"
+                  style={{ border: '1px solid var(--hairline)' }}
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-base font-semibold tabular-nums" style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}>
+                      NT$ {rule.amount.toLocaleString()}
+                    </span>
+                    {rule.pausedAt ? (
+                      <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{translations.recurringRulePaused}</span>
+                    ) : (
+                      <span className="text-xs tabular-nums" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+                        {translations.recurringRuleNextDate.replace('{date}', rule.nextOccurrenceAt)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>
+                    {translations.recurringRuleSummary
+                      .replace('{day}', String(rule.dayOfMonth))
+                      .replace('{interval}', formatInterval(rule.intervalMonths, intervalLabels))}
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  )
+}
+
+function formatInterval(
+  months: number,
+  labels: { 1: string; 3: string; 6: string; 12: string; fallback: string },
+): string {
+  if (months === 1) return labels[1]
+  if (months === 3) return labels[3]
+  if (months === 6) return labels[6]
+  if (months === 12) return labels[12]
+  return labels.fallback.replace('{n}', String(months))
 }

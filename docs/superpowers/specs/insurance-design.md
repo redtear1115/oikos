@@ -1,6 +1,6 @@
 ---
 status: shipped
-shipped_in: v0.8.1（framing groups + 進度條基礎）· v0.9.0（SavingsView 完整：MaturityCountdown / MaturingSoonPrompt / MaturedAwaitingPrompt / 繳費 vs 拿回紀錄）
+shipped_in: v0.8.1（framing groups + 進度條基礎）· v0.9.0（SavingsView 完整：MaturityCountdown / MaturingSoonPrompt / MaturedAwaitingPrompt / 繳費 vs 拿回紀錄）· v0.15.3（投資型保單 accountValue + RecurringIncome 接入）
 ---
 
 # 保險詳情頁設計 spec — Savings framing（Phase 2 Slice 5）
@@ -41,6 +41,29 @@ v0.7.0 ship IncomeTransactions + IncomeSheet 後，滿期金可被記錄並選 `
 傳統壽險有「終身還本」型，技術上是 `life` 但實質含滿期金。處理方式：使用者建立保單時自行選 `savings`。不做自動 detect（容易誤判，且使用者最清楚自己保單的性質）。
 
 ---
+
+## Schema 變更：`account_value`（v0.15.3 / #166）
+
+投資型保單（投連型）有「目前帳戶價值」這個 statement-based 概念 — 對應持有的單位淨值 × 單位數。傳統儲蓄險沒有，所以 nullable。
+
+不由系統推算：每次使用者拿到對帳單時手動更新一次。app 不嘗試 model 標的基金的價格。
+
+| Schema | Migration | Comment |
+|---|---|---|
+| `insuranceDetails.accountValue` (integer, nullable) | [drizzle/0034](../../../drizzle/0034_insurance_account_value.sql) | 只在 `kind === 'savings'` 時 persist；其他 kind 切換時 validator 會清成 null（同 `expectedMaturityAmount` 邏輯） |
+
+SavingsView 把 accountValue 渲染成 hero 區下方的獨立資訊區塊（不混入「累計繳 vs 已拿回」雙 bar，避免和 cashflow 混淆），並提供「更新」CTA 直接打開 AssetSheet 編輯。
+
+## RecurringIncome 整合（v0.15.3 / #166）
+
+分紅 / 生存金 / 滿期金有可預測的 cadence，但 v0.13.0 以前要使用者每次手動記。Phase B 把保單詳情頁直接接上既有的 `RecurringIncomeRules` 系統：
+
+- **inline list**：SavingsView 上方新增「定期進帳」section，列出已綁定此保單的 rules（透過新 query `listRulesForAsset(groupId, assetId)`）
+- **prefill CTA**：點「建立定期進帳」開 `RecurringRuleSheet`，prefill `assetId=本保單`、`category='dividend'`、`source=保單名`，user 可改任何欄位
+- **realtime**：訂閱 `recurring-income-changed` event，rules 在 partner 端建立/編輯時即時 refresh
+- **Settings 頁不動**：rules 仍可在 `/settings/recurring-income` 集中管理；SavingsView 只是入口便利
+
+不做：保單建立時自動產 rule。原因：保單金額/頻率多樣，自動產容易誤判（例如躉繳保單不該產 rule）。
 
 ## Schema 變更：`expected_maturity_amount`
 

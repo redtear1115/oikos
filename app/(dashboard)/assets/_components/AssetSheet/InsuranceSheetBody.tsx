@@ -25,7 +25,7 @@ export type InsuranceInitial = Pick<
   | 'insKind' | 'insInsured' | 'insInsuredChildId' | 'insPolicyHolderUserId'
   | 'insInsurer' | 'insPolicyNo' | 'insAnnualPremium' | 'insSumInsured'
   | 'insPayCycle' | 'insStartsAt' | 'insEndsAt' | 'insTermYears'
-  | 'insVehicleId' | 'insExpectedMaturityAmount'
+  | 'insVehicleId' | 'insExpectedMaturityAmount' | 'insAccountValue'
 >
 
 interface Props extends BodySharedProps {
@@ -62,6 +62,8 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const [termYears, setTermYears] = useState(initial?.insTermYears?.toString() ?? '')
   const [vehicleId, setVehicleId] = useState<string | null>(initial?.insVehicleId ?? null)
   const [expectedMaturityAmount, setExpectedMaturityAmount] = useState(initial?.insExpectedMaturityAmount?.toString() ?? '')
+  // #166 — only meaningful for kind === 'savings'; cleared on save when kind switches.
+  const [accountValue, setAccountValue] = useState(initial?.insAccountValue?.toString() ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [childAssets, setChildAssets] = useState<ChildAsset[]>([])
@@ -86,6 +88,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
     setTermYears(initial?.insTermYears?.toString() ?? '')
     setVehicleId(initial?.insVehicleId ?? null)
     setExpectedMaturityAmount(initial?.insExpectedMaturityAmount?.toString() ?? '')
+    setAccountValue(initial?.insAccountValue?.toString() ?? '')
     setNotes(initial?.notes ?? '')
     setError('')
     getCarAssets().then(setCarAssets).catch(() => {})
@@ -122,6 +125,10 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
           expectedMaturityAmount:
             kind === 'savings' && expectedMaturityAmount
               ? parseInt(expectedMaturityAmount, 10)
+              : null,
+          accountValue:
+            kind === 'savings' && accountValue
+              ? parseInt(accountValue, 10)
               : null,
           notes: notesPayload,
         }
@@ -312,6 +319,21 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
             type="number"
             inputMode="numeric"
             placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
+            className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }}
+          />
+          <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+        </Field>
+      )}
+
+      {kind === 'savings' && (
+        <Field label={ts.insurance.accountValue}>
+          <input
+            value={accountValue}
+            onChange={e => setAccountValue(e.target.value)}
+            type="number"
+            inputMode="numeric"
+            placeholder={ts.insurance.accountValuePlaceholder}
             className="w-full bg-transparent border-0 outline-none text-base"
             style={{ color: 'var(--ink)' }}
           />

@@ -12,6 +12,7 @@ import { InsuranceDetailClientLegacy } from './_components/InsuranceDetailClient
 import { SavingsView } from './_components/insurance/SavingsView'
 import { getFramingGroup } from '@/lib/insurance'
 import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
+import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
@@ -223,16 +224,18 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       insTermYears: insuranceDetailsData?.termYears ?? null,
       insVehicleId: insuranceDetailsData?.vehicleId ?? null,
       insExpectedMaturityAmount: insuranceDetailsData?.expectedMaturityAmount ?? null,
+      insAccountValue: insuranceDetailsData?.accountValue ?? null,
     }
     const framingGroup = getFramingGroup(insuranceDetailsData?.kind)
 
     if (framingGroup === 'savings' && insuranceDetailsData) {
-      const [premiumStats, returnStats, returnByCat, premiumRows, returnRows] = await Promise.all([
+      const [premiumStats, returnStats, returnByCat, premiumRows, returnRows, recurringRules] = await Promise.all([
         getInsurancePaymentTotal(asset.id, group.id, epochWindow),
         getInsuranceReturnTotal(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
         getInsuranceReturnTotalsByCategory(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
         listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE, epochWindow),
         listInsuranceReturnsPaged(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, null, PAGE_SIZE, epochWindow),
+        listRulesForAsset(group.id, asset.id),
       ])
 
       // Plain-object shape for the client component (Map isn't serialisable
@@ -285,6 +288,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           pageSize={PAGE_SIZE}
           assetSheetInitial={assetSheetInitial}
           linkedVehicle={linkedVehicle}
+          recurringRules={recurringRules}
         />
       )
     }
