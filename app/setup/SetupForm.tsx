@@ -160,8 +160,8 @@ export default function SetupForm({ trust }: { trust: TrustStrings }) {
             type="button"
             onClick={handleTrustConfirm}
             disabled={pending}
-            className="h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
-            style={{ background: 'var(--ink)' }}
+            className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {pending ? '建立中…' : trust.bilateral.inviter.cta}
           </button>
@@ -227,7 +227,7 @@ export default function SetupForm({ trust }: { trust: TrustStrings }) {
               type="button"
               onClick={handleCopy}
               className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
-              style={{ background: 'var(--ink)', color: '#fff' }}
+              style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               複製
             </button>
@@ -347,8 +347,8 @@ export default function SetupForm({ trust }: { trust: TrustStrings }) {
         <button
           type="submit"
           disabled={!name.trim()}
-          className="h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
-          style={{ background: 'var(--ink)' }}
+          className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           下一步
         </button>

@@ -112,8 +112,8 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
         <div className="flex gap-2">
           <button
             type="button" onClick={handleConfirm} disabled={submitting}
-            className="flex-1 rounded-full py-2 text-[var(--fs-sm)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: 'var(--ink)' }}
+            className="flex-1 rounded-full py-2 text-[var(--fs-sm)] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {t.recurringExpense.pending.primaryAction}
           </button>

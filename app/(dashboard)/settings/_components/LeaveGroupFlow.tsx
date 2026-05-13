@@ -218,8 +218,8 @@ export function LeaveGroupFlow({
               type="button"
               onClick={() => setStep((step + 1) as Step)}
               disabled={pending}
-              className="h-11 px-5 rounded-[12px] text-sm font-semibold text-white cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--ink)' }}
+              className="h-11 px-5 rounded-[12px] text-sm font-semibold cursor-pointer disabled:opacity-50"
+              style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {flow.next}
             </button>
@@ -389,8 +389,8 @@ function FinalConfirm({
           <button
             type="button"
             onClick={onSettle}
-            className="w-full h-12 rounded-[14px] text-sm font-semibold text-white cursor-pointer"
-            style={{ background: 'var(--ink)' }}
+            className="w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer"
+            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {t.settleCta}
           </button>
@@ -446,8 +446,8 @@ function SwapSent({
       <button
         type="button"
         onClick={onClose}
-        className="mt-6 w-full h-12 rounded-[14px] text-sm font-semibold text-white cursor-pointer"
-        style={{ background: 'var(--ink)' }}
+        className="mt-6 w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer"
+        style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
       >
         {t.ok}
       </button>

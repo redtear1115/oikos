@@ -53,7 +53,7 @@ export function MaturedAwaitingPrompt({
         type="button"
         onClick={onConfirm}
         className="mt-5 inline-flex items-center justify-center px-5 h-11 rounded-full text-sm font-medium"
-        style={{ background: 'var(--ink)', color: '#fff' }}
+        style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
       >
         {ts.maturedAwaitingCta}
       </button>

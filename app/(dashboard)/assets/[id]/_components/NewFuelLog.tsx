@@ -368,8 +368,8 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               disabled={!canSubmit}
               className="w-full h-12 rounded-2xl font-semibold text-body tracking-wide transition-opacity"
               style={{
-                background: 'var(--ink)',
-                color: '#fff',
+                background: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
                 opacity: canSubmit ? 1 : 0.45,
                 cursor: canSubmit ? 'pointer' : 'default',
               }}

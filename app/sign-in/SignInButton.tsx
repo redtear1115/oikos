@@ -18,8 +18,8 @@ export function SignInButton({ label }: { label: string }) {
     <button
       type="button"
       onClick={handleSignIn}
-      className="w-full h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer flex items-center justify-center gap-2"
-      style={{ background: 'var(--ink)' }}
+      className="w-full h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer flex items-center justify-center gap-2"
+      style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
     >
       {label}
     </button>
