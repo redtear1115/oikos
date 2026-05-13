@@ -15,7 +15,9 @@ import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTo
 import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
 import { HouseDetailClient } from './_components/HouseDetailClient'
+import { TemplateAssetDetailClient } from './_components/TemplateAssetDetailClient'
 import { getChildDetails, getPetDetails, getPlantDetails, getInsuranceDetails, getHouseDetails, getLinkedInsurancesForVehicle } from '@/lib/db/queries/aibutsu'
+import type { AssetTemplateKey } from '@/lib/assetTemplates'
 import type { AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import type { PagedTxnRow } from '@/actions/transaction'
 
@@ -55,6 +57,41 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   const allAssetsData = await listAssetsForGroup(group.id)
   const allAssets = allAssetsData.map(a => ({ id: a.id, name: a.name, type: a.type }))
+
+  // #222 — Template-based asset path. Routed first so it shadows the legacy
+  // type-based branches below (a template-based asset has type='item' anyway,
+  // but checking templateKey directly is clearer and survives a future
+  // type-enum cleanup).
+  if (asset.templateKey != null) {
+    const [summary, txnRows] = await Promise.all([
+      getAssetSummary(asset.id, group.id, epochWindow),
+      listTransactionsPagedForAsset(asset.id, group.id, null, PAGE_SIZE, epochWindow),
+    ])
+    const initialTxns = serializeTxns(txnRows)
+    const templateKey = asset.templateKey as AssetTemplateKey
+    const templateFields = (asset.templateFields ?? {}) as Record<string, string | number | null>
+    const assetSheetInitial: AssetSheetInitial = {
+      id: asset.id,
+      type: 'item',
+      name: asset.name,
+      notes: asset.notes,
+      templateKey,
+      templateFields,
+    }
+    return (
+      <TemplateAssetDetailClient
+        assetId={asset.id}
+        name={asset.name}
+        notes={asset.notes ?? null}
+        templateKey={templateKey}
+        templateFields={templateFields}
+        summary={summary}
+        assetSheetInitial={assetSheetInitial}
+        initialTxns={initialTxns}
+        pageSize={PAGE_SIZE}
+      />
+    )
+  }
 
   if (asset.type === 'child') {
     const [childDetailsData, summary, txnRows] = await Promise.all([

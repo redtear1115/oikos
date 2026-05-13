@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db/client'
 import { assets, carDetails, cashTransactions, childDetails, petDetails, plantDetails, insuranceDetails, houseDetails } from '@/lib/db/schema'
-import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput, validateHouseInput } from '@/lib/validators'
+import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput, validateHouseInput, validateName, validateNotes } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { encrypt, decrypt } from '@/lib/crypto'
@@ -10,6 +10,7 @@ import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
+import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
 
 function assertPolicyHolderInGroup(
   userId: string,
@@ -259,7 +260,7 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
 
 export interface PickerAsset {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant'
+  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
   name: string
   plate: string | null
 }
@@ -1059,6 +1060,94 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
       })
       .where(eq(houseDetails.assetId, input.id))
   })
+
+  revalidateAfterAssetMutation(input.id)
+}
+
+// ── Template-based assets (#222) ──────────────────────────────────────────────
+
+export interface CreateTemplateAssetInput {
+  templateKey: AssetTemplateKey
+  name: string
+  notes?: string | null
+  fields: Record<string, unknown>
+}
+
+/**
+ * Creates a template-based asset. Always lands on type='item' so legacy
+ * queries that filter by `type` (car / house / insurance / etc.) keep their
+ * existing semantics; this is the contract that lets old + new coexist.
+ *
+ * `fields` is validated against the template's declared schema in
+ * lib/assetTemplates.ts. Unknown keys are dropped; type errors throw.
+ *
+ * NOT to be confused with the legacy create paths (createCar / createInsurance
+ * / etc.) — those write to the matching *Details subtable and participate in
+ * FuelLog / SavingsView / insurance cron. Template-based assets do not.
+ */
+export async function createTemplateAsset(input: CreateTemplateAssetInput): Promise<{ id: string }> {
+  if (!isAssetTemplateKey(input.templateKey)) {
+    throw new Error('未知的模板')
+  }
+  const name = validateName(input.name, '名稱')
+  const notes = validateNotes(input.notes)
+  const fields = validateTemplateFields(input.templateKey, input.fields)
+  const { group } = await requireViewerGroup()
+
+  const [created] = await db
+    .insert(assets)
+    .values({
+      groupId: group.id,
+      type: 'item',
+      name,
+      notes,
+      templateKey: input.templateKey,
+      templateFields: fields,
+    })
+    .returning({ id: assets.id })
+
+  revalidateAfterAssetMutation()
+  return { id: created.id }
+}
+
+export interface EditTemplateAssetInput extends CreateTemplateAssetInput {
+  id: string
+}
+
+/**
+ * Updates a template-based asset in place. The template can change between
+ * the four options (e.g. 一般 → 車輛) — when it does, validation runs against
+ * the new template's schema, so stale fields from the old template are
+ * silently dropped.
+ *
+ * Refuses to operate on legacy assets (template_key IS NULL) — those still go
+ * through the existing editCar / editChild / etc. paths.
+ */
+export async function editTemplateAsset(input: EditTemplateAssetInput): Promise<void> {
+  if (!isAssetTemplateKey(input.templateKey)) {
+    throw new Error('未知的模板')
+  }
+  const name = validateName(input.name, '名稱')
+  const notes = validateNotes(input.notes)
+  const fields = validateTemplateFields(input.templateKey, input.fields)
+  const { group } = await requireViewerGroup()
+
+  const updated = await db
+    .update(assets)
+    .set({
+      name,
+      notes,
+      templateKey: input.templateKey,
+      templateFields: fields,
+    })
+    .where(and(
+      eq(assets.id, input.id),
+      eq(assets.groupId, group.id),
+      eq(assets.type, 'item'),
+      isNull(assets.deletedAt),
+    ))
+    .returning({ id: assets.id })
+  if (updated.length === 0) throw new Error('找不到該愛物')
 
   revalidateAfterAssetMutation(input.id)
 }
