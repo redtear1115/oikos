@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { resolveCarColor } from '../../_components/carColor'
 import { useTranslations } from '@/lib/i18n/client'
 
@@ -20,7 +21,7 @@ interface AssetHeroProps {
 
 function BackButton({ ariaLabel }: { ariaLabel: string }) {
   return (
-    <a
+    <Link
       href="/assets"
       className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0 mr-3"
       style={{ background: 'rgba(58,36,25,0.08)' }}
@@ -30,7 +31,7 @@ function BackButton({ ariaLabel }: { ariaLabel: string }) {
         <path d="M9 2l-5 5 5 5" stroke="#3A2419" strokeWidth="1.6"
           strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-    </a>
+    </Link>
   )
 }
 

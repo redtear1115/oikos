@@ -493,12 +493,16 @@ function PieChart<R extends { total: number }>({
       )
     : naturalFractions  // edge: every slice is below min — fall back to natural
 
-  let cumulative = 0
+  // Prefix-sum cumulative fractions so each slice has stable start/end without
+  // mutating across map iterations (react-hooks/immutability).
+  const cumulatives = fractions.reduce<number[]>(
+    (acc, f) => { acc.push((acc.at(-1) ?? 0) + f); return acc },
+    [0],
+  )
   const slices = valued.map((row, i) => {
     const fraction = fractions[i]
-    const startAngle = cumulative * 2 * Math.PI - Math.PI / 2
-    cumulative += fraction
-    const endAngle = cumulative * 2 * Math.PI - Math.PI / 2
+    const startAngle = cumulatives[i] * 2 * Math.PI - Math.PI / 2
+    const endAngle = cumulatives[i + 1] * 2 * Math.PI - Math.PI / 2
 
     const xo1 = cx + rOuter * Math.cos(startAngle)
     const yo1 = cy + rOuter * Math.sin(startAngle)

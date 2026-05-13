@@ -163,7 +163,6 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       setShowPolicyPicker(false)
       setAssetId(null)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category])
 
   // Focus + select amount input after sheet slides up

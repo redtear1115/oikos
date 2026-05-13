@@ -17,7 +17,10 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 
 function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: string; td: Translations['assetDetail']['house'] }) {
-  const days = Math.max(0, Math.floor((Date.now() - new Date(purchasedAt).getTime()) / 86400000))
+  // Snapshot "now" at mount so re-renders don't bump the day count unexpectedly
+  // (react-hooks/purity); the display only needs day-resolution accuracy.
+  const [nowMs] = useState(() => Date.now())
+  const days = Math.max(0, Math.floor((nowMs - new Date(purchasedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
       <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>

@@ -43,7 +43,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
   useEffect(() => {
     const t = setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select() }, 250)
     return () => clearTimeout(t)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   const chips = settlementChips(debtAmount)
   const parsed = parseInt(amount, 10) || 0
