@@ -213,27 +213,11 @@ npm run db:studio    # Drizzle Studio
 
 ## 規格文件位置
 
-> 每份 spec 頂部 frontmatter 標注實作狀態（status / shipped_in / remaining_issues）。
+所有 feature 設計 spec 都在 `docs/superpowers/specs/`。入口是 [`docs/superpowers/specs/INDEX.md`](docs/superpowers/specs/INDEX.md)，含：
 
-| 文件 | 內容 |
-|---|---|
-| `docs/superpowers/specs/product-design.md` | 整體架構、Tech Stack |
-| `docs/superpowers/specs/transactions-design.md` | 核心記帳 UX、Onboarding、Solo Mode |
-| `docs/superpowers/specs/car-fuellog-design.md` | 車輛 + FuelLog |
-| `docs/superpowers/specs/aibutsu-design.md` | 愛物概念 + Child/Pet/Plant/House/Insurance |
-| `docs/superpowers/specs/guardian-design.md` | 守護模組獨立化 + beta gate（v0.16.0 shipped #220 #221 #227 — `canAccessGuardian()` 單一閘門 + GatedView for beta-off surfaces）|
-| `docs/superpowers/specs/income-design.md` | 進帳功能設計決策 |
-| `docs/superpowers/specs/insurance-design.md` | 保險 SavingsView framing |
-| `docs/superpowers/specs/recurring-income-design.md` | 自訂定期收入 |
-| `docs/superpowers/specs/recurring-expense-design.md` | 自訂定期支出（v0.13.0 shipped）|
-| `docs/superpowers/specs/cloud-invoice-design.md` | 雲端發票匯入（暫緩，APP_ID 卡點）|
-| `docs/superpowers/specs/offline-browsing-design.md` | 離線瀏覽 / PWA cache（v0.14.0 shipped — Serwist + opt-in toggle + offline fallback）|
-| `docs/superpowers/specs/stats-design.md` | Records 月度／分類統計（v0.14.0 shipped；drill-down v0.14.2 / PR #116 closes #102）|
-| `docs/superpowers/specs/monthly-review-design.md` | 雙人月度回顧儀式（v0.14.0 shipped）|
-| `docs/superpowers/specs/fab-records-tab-design.md` | /records FAB context-awareness（v0.14.1 shipped；PR #112 closes #110）|
-| `docs/superpowers/specs/structured-filter-design.md` | /records 結構化篩選器（v0.15.0 shipped #50 — date range + 愛物 + URL-synced；v0.15.2 v2 #165 — amount range + status；v0.16.0 v3 #223 — 愛物分組 sub-section + 全選 chip）|
-| `docs/superpowers/specs/inbox-layer-design.md` | Inbox layer 概念統一（v0.15.0 概念註解；v0.16.0 schema migration + UI）|
-| `docs/superpowers/specs/i18n-design.md` | i18n 架構：cookie-based locale、4 語、server fetch + provider |
-| `docs/superpowers/specs/epoch-readonly-design.md` | 過去章節 read-only + 所有 transaction 讀取必填 `epochWindow` 型別防呆（v0.15.3 shipped #207）|
-| `docs/superpowers/specs/asset-templates-design.md` | 愛物模板系統 v1（v0.16.0 shipped #222 — TypePicker 加「物品」第七選項 + `'item'` asset_type + 單一 `general` 模板；舊 6 種 type 完全不動）|
-| `CHANGELOG.md` | 版本歷史 |
+- 寫作原則（what / why / who，不寫 how）
+- Frontmatter schema（`status` / `first_shipped_in` / `updates` / `related_specs` / `related_issues` / `blocked_on`）
+- 拆分原則 + 檔案命名
+- Spec 清單分組：架構 / 記帳核心 / 體驗 / 提案與匯入 / 愛物 / 守護
+
+版本歷史看 [`CHANGELOG.md`](CHANGELOG.md)；版本對應 issue 看 GitHub milestones。

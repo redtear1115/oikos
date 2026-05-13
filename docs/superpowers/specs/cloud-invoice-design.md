@@ -1,20 +1,14 @@
 ---
-status: planned
-blocked_on: 財政部 API APP_ID（2023/3/31 新制不開放個人申請，需 ISO27001）
-remaining_issues: #16
-note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.invoiceNumber` 欄位 + AES-256-GCM helper）。實作所有 Phase A/B/C 都未進行；APP_ID 卡點未解前不啟動。
+status: blocked
+blocked_on: 財政部電子發票 API APP_ID（2023/3/31 新制不開放個人申請，需 ISO27001 認證）
+related_specs: [transactions, income, inbox-layer]
+related_issues: ["#16"]
 ---
 
-# 雲端發票匯入設計
+# 雲端發票匯入
 
 > 串接財政部電子發票 API，讓使用者用手機條碼載具一鍵把過去每月的雲端發票匯入成 CashTransaction。
-> ⚠️ **外部依賴卡點**：個人不能申請 APP_ID（2023/3/31 新制），必須解決法規路徑才能進 Phase B。詳見下方「APP_ID 申請卡點」。
-
-## 實作狀態
-
-⬜ **全部未實作**。Schema 層已預先 seed：
-- [lib/db/schema.ts](../../../lib/db/schema.ts) → `invoiceCredentials`、`cashTransactions.invoiceNumber`
-- [lib/crypto.ts](../../../lib/crypto.ts) — AES-256-GCM helper 可直接複用
+> ⚠️ Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.invoiceNumber` 欄位 + AES-256-GCM helper），等 APP_ID 卡點解掉才啟動實作。
 
 ---
 
@@ -34,8 +28,8 @@ note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.
 - Settings 頁「雲端發票」section：新增 / 移除 / 重新驗證載具
 - 匯入預覽 sheet：列出區間內發票、可勾選、可調 category、commit 後寫入 CashTransaction
 - 自動 dedup（`(groupId, invoiceNumber)` unique，同一張發票不重複匯）
-- 加密存載具驗證碼（AES-256-GCM 既有 helper）
-- `InvoiceImportRuns` 審計表 + `InvoiceImportSnapshots` 快照表（作為折讓 / 作廢 diff base）
+- 加密存載具驗證碼（複用 AES-256-GCM helper）
+- 審計表（`InvoiceImportRuns`）+ 快照表（`InvoiceImportSnapshots`，作為折讓 / 作廢 diff base）
 - 折讓 / 作廢 自動沖銷（每次預覽 fetch 時 diff MoF 狀態）
 - 商家 → category keyword 對照（靜態規則表，落空 → `other`）
 - 雙人 group：每位 member 可獨立綁自己的載具；匯入 paidBy = credential.userId
@@ -45,7 +39,7 @@ note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.
 - 自然人憑證、悠遊卡、icash（其他 cardType）
 - 發票明細 line item 拆分（一張發票永遠以總額為一筆）
 - 背景定時 sync（永遠不做）
-- 自動 asset 推測（買貓糧 → 寵物）— Phase 2 評估
+- 自動 asset 推測（買貓糧 → 寵物）— 留將來評估
 - Records 來源標示（紀錄結果一律平等，不標「來自雲端發票」）
 
 ---
@@ -56,7 +50,7 @@ note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.
 |---|---|---|
 | 載具類型 | 手機條碼 only | 涵蓋 ≥ 90% friend test 用戶；其他類型 API 雷同，留擴充位 |
 | APP_ID 來源 | 財政部 API v0.6 | 唯一官方來源；無第三方代理 |
-| 驗證碼存法 | AES-256-GCM ciphertext，key 在 Vercel env | 既有 lib/crypto.ts 沿用；DB 只看到 ciphertext |
+| 驗證碼存法 | AES-256-GCM ciphertext，key 在 Vercel env | 既有加密 helper 沿用；DB 只看到 ciphertext |
 | Barcode 存法 | 明文 | barcode 每家店嗶過，不是秘密；明文方便 SQL dedupe |
 | 觸發模式 | 使用者主動點擊 | 永遠不做背景 cron；違反陪伴原則 |
 | 匯入粒度 | 每張發票 → 一筆 CashTransaction（總額） | 不拆 line item；用戶要分類自己編輯 |
@@ -78,7 +72,7 @@ note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.
 
 ---
 
-## APP_ID 申請卡點（外部依賴 — Phase B 前必解）
+## APP_ID 申請卡點
 
 ### 法規現況
 
@@ -96,21 +90,23 @@ note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.
 
 ### 開發策略
 
-- **Phase A**：mock fixture 走完整 UI / DB / sync diff 流程，可先驗證 UX
+- **Phase A**：mock fixture 走完整 UI / DB / sync diff 流程，可先驗證 UX；不需要 APP_ID
 - **Phase B**：APP_ID 合規路徑確定才串真實 endpoint
 - Mock fixture 必須涵蓋折讓 / 作廢場景（沒 sandbox，corner case 只能在 mock 裡測）
 
 ---
 
-## 資料模型設計要點
+## 資料模型語意
+
+詳細欄位以 `lib/db/schema.ts` 為準。本節只說「為什麼這個結構」。
 
 ### 為什麼需要 `InvoiceImportSnapshots`
 
 每次預覽時 server action 向 MoF 拉同區間發票，與快照對比 status + amount，偵測折讓 / 作廢。沒有快照就沒有 diff base，無法得知「這張原來匯了多少」。
 
-### 折讓 / 作廢 偵測流程
+### 折讓 / 作廢 偵測：三向對照
 
-每次 `previewInvoiceImport` 執行時三向對照：snapshot 有無 × live cashTxn 有無 × MoF 當前狀態：
+每次 preview 執行時，snapshot 有無 × live cashTxn 有無 × MoF 當前狀態：
 
 | 情境 | 動作 |
 |---|---|
@@ -122,43 +118,33 @@ note: Schema 層已預先 seed（`invoiceCredentials` table + `cashTransactions.
 | 已匯入但 user 編輯過 + MoF 又變動 | 顯示衝突行，附「以 MoF 為準」/「保留我的版本」，不預設勾選 |
 | 已匯入但 user 軟刪 | skip — 尊重刪除意圖，不復活 |
 
-Commit 整體在一個 DB transaction 內；任何步驟失敗整批 rollback + `recalcGroupBalance` 一次。
+Commit 整體在一個 DB transaction 內；任何步驟失敗整批 rollback + balance 重算一次。
 
 ---
 
-## 分階段交付
+## Acceptance criteria
 
-| 階段 | 啟動條件 | 說明 |
-|---|---|---|
-| Phase A | 無外部依賴 | schema migration、設定 UI、CRUD credential、mock fixture（`MOF_INVOICE_APP_ID` 未設時走 mock）；**Deliverable**：使用者可在設定頁綁 / 移除手機條碼 |
-| Phase B | APP_ID 合規路徑確定 | API client、merchant→category mapper、preview sheet UI、commit server action；**Deliverable**：一鍵預覽 + 勾選 + commit |
-| Phase C | friend test 反饋後 | merchantToCategory 規則擴充、「最近 6 個月」shortcut、匯入完成動畫 |
-
----
-
-## 環境變數
-
-| name | 用途 | 階段 |
-|---|---|---|
-| `MOF_INVOICE_APP_ID` | API 必填 appID | Phase B 起 |
-| `ENCRYPTION_KEY` | 載具驗證碼加密 key | 既有 |
-| `INVOICE_MOCK_MODE` | `1` 強制走 fixture（即使 APP_ID 存在） | Phase A debug |
+- 使用者可在設定頁綁定 / 解綁 / 重新驗證一張手機條碼載具
+- 預覽 sheet 可選擇日期區間、勾選個別發票、調整 category；commit 後在 records 看到對應 CashTransaction
+- 同一張發票（同 `invoiceNumber`）匯入第二次自動 dedup，不重複建 row
+- MoF 端標記作廢 → 下一次 preview 顯示「需沖銷」+ commit 後 cashTxn 軟刪
+- MoF 端折讓 → preview 顯示「需沖銷」+ commit 後軟刪舊 row + insert net amount row
+- 使用者編輯過的 row 在 MoF 又變動時，preview 標記衝突、不預設覆蓋
+- 同 group 兩位 member 各自綁自己載具，paidBy 落各自帳上不混淆
 
 ---
 
 ## Open / deferred questions
 
-1. **載具暱稱必填？**：選填，雙人 group 兩人都綁時「我的」可能撞名 → 預設依 viewer.displayName 帶入
-2. **跨月折讓的 sync 視窗**：4 月發票 5 月折讓，5 月 preview 看不到。Phase B 末加「額外 sync 過去 6 個月有 active snapshot 的範圍」
-3. **Description 字數**：sellerName 常見 30+ 字，截斷 + 移除常見後綴（「股份有限公司」、「分公司」）
+1. **載具暱稱必填？** — 選填，雙人 group 兩人都綁時「我的」可能撞名 → 預設依 viewer.displayName 帶入
+2. **跨月折讓的 sync 視窗** — 4 月發票 5 月折讓，5 月 preview 看不到。Phase B 末加「額外 sync 過去 6 個月有 active snapshot 的範圍」
+3. **Description 字數** — sellerName 常見 30+ 字，截斷 + 移除常見後綴（「股份有限公司」、「分公司」）
 
 ---
 
 ## 索引
 
-- 財政部電子發票 API 文件：[einvoice.nat.gov.tw](https://www.einvoice.nat.gov.tw/)（申請 APP_ID 入口、規格書 PDF）
-- 既有 schema：[lib/db/schema.ts](../../../lib/db/schema.ts) → `invoiceCredentials`、`cashTransactions.invoiceNumber`
-- 既有加密 helper：[lib/crypto.ts](../../../lib/crypto.ts)
-- 設定頁：[app/(dashboard)/settings/_components/SettingsContent.tsx](../../../app/%28dashboard%29/settings/_components/SettingsContent.tsx)
-- 既有 category 系統：[lib/categories.ts](../../../lib/categories.ts)
-- 平行設計參考：[income-design.md](income-design.md)（平行 sheet 模式）
+- 財政部電子發票 API 文件：[einvoice.nat.gov.tw](https://www.einvoice.nat.gov.tw/)
+- Schema 真相：`lib/db/schema.ts`（`invoiceCredentials` / `cashTransactions.invoiceNumber`）
+- 加密 helper：`lib/crypto.ts`
+- 平行設計參考：[income](income-design.md)（平行 sheet 模式）/ [inbox-layer](inbox-layer-design.md)（將來作為 `bill_import` source 加入 Inbox 抽象）
