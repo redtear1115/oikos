@@ -35,6 +35,8 @@ export interface AssetsListItem {
     insured: string | null
     insuredChildId: string | null
     insuredChildName: string | null
+    insuredUserId: string | null
+    insuredUserDisplayName: string | null
     policyHolderUserId: string | null
     policyHolderDisplayName: string | null
     policyHolderAvatarUrl: string | null
@@ -328,6 +330,8 @@ export function AssetsListClient({ items }: Props) {
                   insured: null,
                   insuredChildId: null,
                   insuredChildName: null,
+                  insuredUserId: null,
+                  insuredUserDisplayName: null,
                   policyHolderUserId: null,
                   policyHolderDisplayName: null,
                   policyHolderAvatarUrl: null,
