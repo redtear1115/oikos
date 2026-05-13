@@ -328,8 +328,8 @@ function Card4({
           type="button"
           onClick={onYes}
           disabled={pending}
-          className="w-full h-12 rounded-[14px] text-sm font-semibold text-white cursor-pointer disabled:opacity-50"
-          style={{ background: 'var(--destructive)' }}
+          className="w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer disabled:opacity-50"
+          style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
         >
           {yesLabel}
         </button>
@@ -419,8 +419,8 @@ function FinalConfirm({
             type="button"
             onClick={onLeave}
             disabled={!matched || pending}
-            className="w-full h-12 rounded-[14px] text-sm font-semibold text-white cursor-pointer disabled:opacity-40"
-            style={{ background: 'var(--destructive)' }}
+            className="w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer disabled:opacity-40"
+            style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
           >
             {pending ? t.leaving : t.leaveButton}
           </button>
