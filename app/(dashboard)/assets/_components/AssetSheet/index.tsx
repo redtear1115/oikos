@@ -43,7 +43,12 @@ export function AssetSheet({ open, onClose, initial, initialType, onMutated }: P
     setSelectedType(initialPickerType)
   }, [open, initialPickerType])
 
-  const typePickerSlot = isEdit ? null : (
+  // #236 — 'insurance' is added via the 守護 tab, which opens the sheet with
+  // initialType='insurance'. In that flow the user has already committed to
+  // a single type, so suppress the picker (and it no longer lists insurance
+  // anyway). The 愛物 tab's FAB still gets the full picker.
+  const isGuardianInsuranceFlow = !isEdit && selectedType === 'insurance'
+  const typePickerSlot = isEdit || isGuardianInsuranceFlow ? null : (
     <TypePicker value={selectedType} onChange={setSelectedType} />
   )
 
