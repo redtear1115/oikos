@@ -45,12 +45,12 @@ export const metadata: Metadata = {
     'Futari', 'ふたり',
   ],
   alternates: {
-    canonical: '/sign-in',
+    canonical: '/',
     languages: {
-      'zh-TW': '/sign-in',
-      'zh-CN': '/sign-in?lang=zh-CN',
-      en: '/sign-in?lang=en',
-      ja: '/sign-in?lang=ja',
+      'zh-TW': '/',
+      'zh-CN': '/?lang=zh-CN',
+      en: '/?lang=en',
+      ja: '/?lang=ja',
     },
   },
   robots: {
@@ -79,9 +79,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: SEO_TITLE,
     description: OG_DESCRIPTION,
-    url: '/sign-in',
+    url: '/',
     siteName: 'Futari',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Futari · 兩個人的家計簿' }],
+    images: [
+      { url: '/og-image.png', width: 1200, height: 630, alt: 'Futari · 兩個人，一本帳' },
+      { url: '/og-line.png', width: 1200, height: 600, alt: 'Futari · 兩個人，一本帳' },
+      { url: '/og-square.png', width: 1200, height: 1200, alt: 'Futari · 兩個人，一本帳' },
+    ],
     locale: 'zh_TW',
     alternateLocale: ['zh_CN', 'en_US', 'ja_JP'],
     type: 'website',
