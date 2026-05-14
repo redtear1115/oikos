@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, cashTransactions } from '@/lib/db/schema'
+import { assets, cashTransactions, trips } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
@@ -16,6 +16,8 @@ import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { requireViewer } from '@/lib/auth/viewer'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
+import { convertAmount, type CurrencyCode } from '@/lib/currency'
+import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 
 export interface CreateTransactionInput {
   amount: number              // integer NTD, > 0
@@ -28,6 +30,10 @@ export interface CreateTransactionInput {
   notes?: string | null
   splitRatioA?: number | null
   status?: RecordStatus       // defaults to 'settled' (issue #49)
+  /** Foreign currency for this transaction. Defaults to group.baseCurrency. */
+  currency?: CurrencyCode
+  /** Trip to tag this transaction under. NULL = no trip. */
+  tripId?: string | null
 }
 
 export async function createTransaction(
@@ -59,13 +65,50 @@ export async function createTransaction(
     if (asset.deletedAt) throw new Error('關聯資產已刪除')
   }
 
+  // Multi-currency conversion (#68). When currency matches base, no conversion
+  // needed and the three snapshot fields stay NULL.
+  const inputCurrency = (input.currency ?? group.baseCurrency) as CurrencyCode
+  let baseAmount = validated.amount
+  let originalCurrency: CurrencyCode | null = null
+  let originalAmount: number | null = null
+  let rateSnapshot: string | null = null
+
+  if (inputCurrency !== group.baseCurrency) {
+    const rates = await listRatesForGroup(group.id)
+    const rate = rates.find(
+      (r) => r.fromCurrency === inputCurrency && r.toCurrency === group.baseCurrency,
+    )
+    if (!rate) {
+      throw new Error(`未設定 ${inputCurrency.toUpperCase()} → ${group.baseCurrency.toUpperCase()} 匯率`)
+    }
+    baseAmount = convertAmount({
+      amount: validated.amount,
+      from: inputCurrency,
+      to: group.baseCurrency as CurrencyCode,
+      rate: parseFloat(rate.rate),
+    })
+    originalCurrency = inputCurrency
+    originalAmount = validated.amount
+    rateSnapshot = rate.rate
+  }
+
+  // Trip ownership check (#42)
+  if (input.tripId) {
+    const [t] = await db
+      .select({ id: trips.id, groupId: trips.groupId })
+      .from(trips)
+      .where(eq(trips.id, input.tripId))
+      .limit(1)
+    if (!t || t.groupId !== group.id) throw new Error('旅行不存在')
+  }
+
   const result = await db.transaction(async (tx) => {
     const [inserted] = await tx
       .insert(cashTransactions)
       .values({
         groupId: group.id,
         paidBy: validated.payerId,
-        amount: validated.amount,
+        amount: baseAmount,
         splitType: validated.splitType,
         description: validated.description,
         category: validated.category,
@@ -74,6 +117,10 @@ export async function createTransaction(
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
         splitRatioA: validated.splitRatioA,
+        originalCurrency,
+        originalAmount,
+        rateSnapshot,
+        tripId: input.tripId ?? null,
       })
       .returning({ id: cashTransactions.id })
     await recalcGroupBalance(group.id, tx)
@@ -132,6 +179,10 @@ export interface EditTransactionInput {
   notes?: string | null
   splitRatioA?: number | null
   status?: RecordStatus
+  /** Foreign currency for the edited transaction. Defaults to group.baseCurrency. */
+  currency?: CurrencyCode
+  /** Trip to tag this transaction under. NULL = no trip. */
+  tripId?: string | null
 }
 
 export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
@@ -173,6 +224,42 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     if (asset.deletedAt) throw new Error('關聯資產已刪除')
   }
 
+  // Multi-currency conversion for the edited row (#68)
+  const editInputCurrency = (input.currency ?? group.baseCurrency) as CurrencyCode
+  let editBaseAmount = validated.amount
+  let editOriginalCurrency: CurrencyCode | null = null
+  let editOriginalAmount: number | null = null
+  let editRateSnapshot: string | null = null
+
+  if (editInputCurrency !== group.baseCurrency) {
+    const rates = await listRatesForGroup(group.id)
+    const rate = rates.find(
+      (r) => r.fromCurrency === editInputCurrency && r.toCurrency === group.baseCurrency,
+    )
+    if (!rate) {
+      throw new Error(`未設定 ${editInputCurrency.toUpperCase()} → ${group.baseCurrency.toUpperCase()} 匯率`)
+    }
+    editBaseAmount = convertAmount({
+      amount: validated.amount,
+      from: editInputCurrency,
+      to: group.baseCurrency as CurrencyCode,
+      rate: parseFloat(rate.rate),
+    })
+    editOriginalCurrency = editInputCurrency
+    editOriginalAmount = validated.amount
+    editRateSnapshot = rate.rate
+  }
+
+  // Trip ownership check for edit (#42)
+  if (input.tripId) {
+    const [t] = await db
+      .select({ id: trips.id, groupId: trips.groupId })
+      .from(trips)
+      .where(eq(trips.id, input.tripId))
+      .limit(1)
+    if (!t || t.groupId !== group.id) throw new Error('旅行不存在')
+  }
+
   // 3. Soft-delete old + insert new in one tx. Keep .returning() on the soft-delete
   //    as a race guard: if a partner soft-deleted the row between step 1 and now,
   //    the WHERE's isNull(deletedAt) makes the UPDATE no-op, and we'd silently
@@ -194,7 +281,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
       .values({
         groupId: group.id,
         paidBy: validated.payerId,
-        amount: validated.amount,
+        amount: editBaseAmount,
         splitType: validated.splitType,
         description: validated.description,
         category: validated.category,
@@ -203,6 +290,10 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         transactedAt: validated.transactedAt,
         assetId: validated.assetId,
         splitRatioA: validated.splitRatioA,
+        originalCurrency: editOriginalCurrency,
+        originalAmount: editOriginalAmount,
+        rateSnapshot: editRateSnapshot,
+        tripId: input.tripId ?? null,
       })
       .returning({ id: cashTransactions.id })
 
