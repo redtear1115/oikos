@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
-import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
@@ -20,24 +19,6 @@ import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
-
-function LightDot() {
-  const ink = DEFAULT_INCOME_PALETTE.ink // #3F6A56
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        width: 8,
-        height: 8,
-        borderRadius: '50%',
-        background: ink,
-        boxShadow: `0 0 8px ${ink}80, 0 0 0 3px ${ink}20`,
-        display: 'inline-block',
-        flexShrink: 0,
-      }}
-    />
-  )
-}
 
 function PolicyIcon({ color = '#3F6A56' }: { color?: string }) {
   return (
@@ -259,84 +240,60 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           pointerEvents: open ? 'auto' : 'none',
         }}
       >
-        {/* Radial halo at top edge */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 80,
-            background: `radial-gradient(120% 80% at 50% 0%, ${P.glow} 0%, transparent 70%)`,
-            opacity: 0.7,
-            pointerEvents: 'none',
-          }}
-        />
-
         {/* Grabber */}
-        <div className="pt-2 flex justify-center relative">
+        <div className="pt-2 flex justify-center">
           <div
             className="w-9 h-[5px] rounded-full"
-            style={{ background: 'rgba(58,36,25,0.18)' }}
+            style={{ background: 'rgba(31,27,22,0.18)' }}
           />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-3 pb-2 relative">
+        <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button
             type="button"
             onClick={onClose}
             className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)', fontFamily: 'inherit' }}
+            style={{ color: 'var(--ink-2)' }}
           >
             {t.common.cancel}
           </button>
-
           <div
-            className="flex items-center gap-2 text-base font-semibold"
+            className="text-base font-semibold tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
-            <LightDot />
-            {t.incomeSheet.title}
+            {isEdit ? t.incomeSheet.titleEdit : t.incomeSheet.title}
           </div>
-
           <button
             type="button"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
-            style={{
-              color: amount && !pending ? P.ink : 'var(--ink-3)',
-              fontFamily: 'inherit',
-            }}
+            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default transition-colors duration-150"
+            style={{ color: amount && !pending ? P.ink : 'var(--ink-3)' }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
           </button>
         </div>
 
         <div className="overflow-auto flex-1">
-          {/* Amount stage */}
-          <div className="text-center" style={{ padding: '28px 24px 32px' }}>
+          {/* Amount + recipient toggle */}
+          <div
+            className="px-6 pt-6 pb-7 text-center"
+            style={{ borderBottom: '1px solid var(--hairline)' }}
+          >
             <div
-              style={{
-                fontSize: 'var(--fs-micro)',
-                color: 'var(--ink-3)',
-                letterSpacing: 1.5,
-                textTransform: 'uppercase',
-                fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                marginBottom: 14,
-              }}
+              className="text-xs tracking-[0.6px] mb-3"
+              style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.amountLabel}
             </div>
-
             <label
-              className="flex items-baseline justify-center gap-2 cursor-text"
-              style={{ minHeight: 64 }}
+              className="flex items-baseline justify-center gap-1.5 min-h-[60px] cursor-text"
               onClick={() => {
-                amountInputRef.current?.focus()
-                amountInputRef.current?.select()
+                const el = amountInputRef.current
+                if (!el) return
+                el.focus()
+                el.select()
               }}
             >
               <span
@@ -358,33 +315,29 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 }}
                 placeholder="0"
                 aria-label={t.incomeSheet.amountLabel}
-                className="bg-transparent border-0 outline-none text-center"
+                className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
                   fontSize: 'var(--fs-amount-lg)',
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
-                  letterSpacing: -2,
-                  lineHeight: 1,
-                  fontFeatureSettings: '"tnum"',
                   width: `${Math.max((amount ? parseInt(amount, 10).toLocaleString('en-US').length : 1), 2)}ch`,
                   caretColor: P.ink,
-                  textShadow: amount ? `0 0 24px ${P.glow}80` : 'none',
-                  transition: 'text-shadow 0.4s ease',
                 }}
               />
             </label>
 
-            {/* Recipient picker */}
+            {/* Recipient picker — mirrors PayerToggle layout/spacing, with
+                income-palette accent on the selected pill. */}
             {!isSolo && (
               <div
-                className="flex items-center justify-center gap-2.5 text-label"
-                style={{ marginTop: 24, color: 'var(--ink-2)' }}
+                className="mt-[22px] flex items-center justify-center gap-2.5 text-label"
+                style={{ color: 'var(--ink-2)' }}
               >
                 <span>{t.incomeSheet.recipientPrompt}</span>
                 <div
                   className="inline-flex rounded-full p-[3px] gap-0.5"
-                  style={{ background: 'rgba(58,36,25,0.05)' }}
+                  style={{ background: 'rgba(31,27,22,0.05)' }}
                 >
                   {(['M', 'T'] as const).map(w => (
                     <button
@@ -393,11 +346,10 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                       onClick={() => setRecipientWho(w)}
                       className="h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
                       style={{
-                        background: recipientWho === w ? '#fff' : 'transparent',
+                        background: recipientWho === w ? 'var(--surface)' : 'transparent',
                         color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
-                        fontFamily: 'inherit',
                         boxShadow: recipientWho === w
-                          ? `0 1px 3px rgba(58,36,25,0.10), 0 0 0 1px ${P.tint}`
+                          ? `0 1px 3px rgba(31,27,22,0.10), 0 0 0 1px ${P.tint}`
                           : 'none',
                       }}
                     >
@@ -415,26 +367,11 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             )}
           </div>
 
-          {/* Divider */}
-          <div
-            style={{
-              height: 1,
-              margin: '0 24px',
-              background: 'linear-gradient(90deg, transparent, var(--hairline), transparent)',
-            }}
-          />
-
-          {/* Category section */}
-          <div style={{ padding: '22px 0 18px' }}>
+          {/* Categories */}
+          <div className="pt-5 pb-[18px]">
             <div
-              style={{
-                fontSize: 'var(--fs-micro)',
-                color: 'var(--ink-3)',
-                letterSpacing: 1.5,
-                fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                padding: '0 24px 14px',
-                textTransform: 'uppercase',
-              }}
+              className="text-xs tracking-[0.6px] px-6 pb-3"
+              style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.categoryLabel}
             </div>
@@ -452,16 +389,13 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
           {/* Policy link section — only for maturity/claim */}
           {policyRelevant && (
-            <div style={{ padding: '4px 20px 18px' }}>
+            <div
+              className="px-5 pt-2 pb-[18px] mt-1"
+              style={{ borderTop: '1px solid var(--hairline)' }}
+            >
               <div
-                style={{
-                  fontSize: 'var(--fs-micro)',
-                  color: 'var(--ink-3)',
-                  letterSpacing: 1.5,
-                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                  padding: '8px 4px 12px',
-                  textTransform: 'uppercase',
-                }}
+                className="text-xs tracking-[0.6px] px-1 py-3"
+                style={{ color: 'var(--ink-3)' }}
               >
                 {t.incomeSheet.policyLink}
               </div>
@@ -479,7 +413,6 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                   borderRadius: 14,
                   border: `1px dashed ${P.ink}40`,
                   background: assetId ? P.tint : 'rgba(255,255,255,0.5)',
-                  fontFamily: 'inherit',
                 }}
               >
                 <PolicyIcon color={P.ink} />
@@ -525,7 +458,6 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                           border: 'none',
                           borderBottom:
                             i < insuranceAssets.length - 1 ? '1px solid var(--hairline)' : 'none',
-                          fontFamily: 'inherit',
                         }}
                       >
                         <div>
@@ -559,52 +491,52 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             </div>
           )}
 
-          {/* Note row */}
-          <div
-            className="flex items-center gap-3.5"
-            style={{
-              padding: '14px 20px',
-              borderTop: '1px solid var(--hairline)',
-              borderBottom: '1px solid var(--hairline)',
-              background: 'rgba(255,255,255,0.4)',
-            }}
-          >
-            <DescIcon />
-            <input
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              placeholder={t.incomeSheet.notePlaceholder}
-              className="flex-1 bg-transparent border-0 outline-none py-1"
-              style={{ fontSize: 'var(--fs-body)', color: 'var(--ink)', fontFamily: 'inherit' }}
-            />
-          </div>
-
-          {/* Date section */}
-          <div style={{ padding: '14px 20px 24px' }}>
+          {/* Date */}
+          <div className="px-5 pt-1 pb-2">
             <div
-              style={{
-                fontSize: 'var(--fs-micro)',
-                color: 'var(--ink-3)',
-                letterSpacing: 1.5,
-                fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                padding: '4px 4px 12px',
-                textTransform: 'uppercase',
-              }}
+              className="text-xs tracking-[0.6px] px-1 py-3"
+              style={{ color: 'var(--ink-3)' }}
             >
               {t.addSheet.date}
             </div>
             <DateField value={date} onChange={setDate} open={open} />
           </div>
 
+          {/* Note */}
+          <div
+            className="px-5 pt-3 pb-6"
+            style={{ borderTop: '1px solid var(--hairline)' }}
+          >
+            <div
+              className="text-xs tracking-[0.6px] px-1 py-3"
+              style={{ color: 'var(--ink-3)' }}
+            >
+              {t.incomeSheet.noteLabel}
+            </div>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder={t.incomeSheet.notePlaceholder}
+              maxLength={2000}
+              rows={3}
+              className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
+              style={{ color: 'var(--ink)' }}
+            />
+          </div>
+
           {/* Delete affordance — edit mode only */}
           {isEdit && (
-            <div className="px-5 pt-2 pb-5 flex justify-center">
+            <div className="px-5 pb-2">
               <button
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
                 disabled={pending}
-                className="text-sm cursor-pointer bg-transparent border-0"
-                style={{ color: 'var(--destructive)' }}
+                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+                style={{
+                  background: 'transparent',
+                  color: 'var(--destructive)',
+                  border: '1px solid var(--destructive-soft)',
+                }}
               >
                 {t.incomeSheet.deleteIncome}
               </button>

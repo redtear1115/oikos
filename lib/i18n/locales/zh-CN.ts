@@ -188,6 +188,7 @@ export const zhCN: Translations = {
 
   incomeSheet: {
     title: '记一笔收入',
+    titleEdit: '编辑这笔收入',
     amountLabel: '收入金额',
     recipientPrompt: '谁的收入？',
     categoryLabel: '类别',
@@ -197,7 +198,8 @@ export const zhCN: Translations = {
     claimHint: '此笔会记入该保单的「理赔」记录',
     noPolicy: '尚无保单',
     insuranceBadge: '保险',
-    notePlaceholder: '备注（可选）',
+    noteLabel: '备注（选填）',
+    notePlaceholder: '写一句留给对方的话，或之后想记得的事',
     deleteIncome: '删除这笔收入',
     deleteConfirmTitle: '删除这笔收入？',
     errors: {

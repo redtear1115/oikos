@@ -329,7 +329,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 inputMode="numeric"
                 pattern="[0-9]*"
                 enterKeyHint="done"
-                value={amount}
+                value={amount ? parseInt(amount, 10).toLocaleString('en-US') : ''}
                 onChange={(e) => {
                   // strip non-digits, drop leading zeros, cap at 7 digits
                   const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
@@ -344,8 +344,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
                   // Min 2ch so empty/single-digit values still have a comfortable hit area;
-                  // grow with content up to 7ch (matches the 7-digit cap).
-                  width: `${Math.max(amount.length || 1, 2)}ch`,
+                  // grows with formatted (comma-separated) length up to 9ch (7 digits + 2 commas).
+                  width: `${Math.max((amount ? parseInt(amount, 10).toLocaleString('en-US').length : 1), 2)}ch`,
                   caretColor: 'var(--accent)',
                 }}
               />

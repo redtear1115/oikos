@@ -187,7 +187,8 @@ export const en: Translations = {
   },
 
   incomeSheet: {
-    title: 'Add income',
+    title: 'New income',
+    titleEdit: 'Edit income',
     amountLabel: 'Income amount',
     recipientPrompt: 'Whose income?',
     categoryLabel: 'Type',
@@ -197,7 +198,8 @@ export const en: Translations = {
     claimHint: "Counts toward this policy's claim history",
     noPolicy: 'No policies yet',
     insuranceBadge: 'Insurance',
-    notePlaceholder: 'Note (optional)',
+    noteLabel: 'Note (optional)',
+    notePlaceholder: 'Leave a line for your partner, or something to remember later',
     deleteIncome: 'Delete this income',
     deleteConfirmTitle: 'Delete this income?',
     errors: {
