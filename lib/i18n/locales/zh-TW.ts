@@ -359,6 +359,7 @@ export type Translations = {
     trust: string
     exportData: string
     pastTimes: string
+    currency: string
     sectionGuardian: string
     guardianBeta: {
       title: string
@@ -1645,6 +1646,7 @@ export const zhTW: Translations = {
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
     pastTimes: '過去的時光',
+    currency: '貨幣',
     sectionGuardian: '守護（Beta）',
     guardianBeta: {
       title: '開啟守護',
