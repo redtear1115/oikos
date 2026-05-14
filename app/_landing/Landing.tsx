@@ -57,7 +57,7 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
           </span>
           <span
             className="hidden md:inline text-[11px] ml-2"
-            style={{ color: 'var(--ink-3)', letterSpacing: '3px' }}
+            style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
             ふたり
           </span>
@@ -180,7 +180,7 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
             {/* Mobile sub-CTA hint */}
             <p
               className="md:hidden m-0 mt-3 text-center text-[12px]"
-              style={{ color: 'var(--ink-3)', letterSpacing: '0.3px' }}
+              style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
             >
               {t.ctaHint}
             </p>
@@ -188,7 +188,7 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
             {/* Trust row — desktop only */}
             <div
               className="hidden md:flex items-center gap-6 mt-7"
-              style={{ color: 'var(--ink-3)' }}
+              style={{ color: 'var(--ink-2)' }}
             >
               <div className="flex items-center gap-1.5">
                 <ShieldOutlineGlyph />
@@ -311,7 +311,7 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
           {languageSwitcher}
           <span
             className="text-[11px]"
-            style={{ color: 'var(--ink-3)', letterSpacing: '2px' }}
+            style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
           >
             © 2026 · MADE IN TAIWAN
           </span>
@@ -353,7 +353,7 @@ function FeatureCard({
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontStyle: 'italic',
-            color: 'var(--ink-3)',
+            color: 'var(--ink-2)',
             letterSpacing: '0.5px',
           }}
         >
