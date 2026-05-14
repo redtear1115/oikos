@@ -4,11 +4,6 @@ import { LOCALE_COOKIE, isLocale } from './lib/i18n/locales-meta'
 
 const LOCALE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
 
-// Public marketing/legal pages — Supabase cookie ops in middleware otherwise
-// taint these responses with `private, no-store`, which breaks bf-cache + edge
-// cache (issue #308). We explicitly override Cache-Control below.
-const PUBLIC_PATHS = new Set(['/', '/sign-in', '/terms', '/privacy'])
-
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -63,16 +58,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  if (PUBLIC_PATHS.has(pathname)) {
-    // Override Next's default `private, no-store` on cookie-touched responses
-    // so bf-cache + edge cache work on public pages (issue #308). Vercel won't
-    // edge-cache responses with Set-Cookie regardless, so this is mainly for
-    // bf-cache (browser back/forward instant restore) and Google WRS.
-    supabaseResponse.headers.set(
-      'Cache-Control',
-      'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
-    )
-  }
+  // Note: Cache-Control for public pages (/, /sign-in, /terms, /privacy) is
+  // set in vercel.json — middleware-set headers get clobbered by Next.js
+  // dynamic rendering, which always emits `private, no-store` for cookie-touched
+  // responses (issue #314). vercel.json runs at the edge AFTER Next.js, so its
+  // headers take effect.
 
   return supabaseResponse
 }
