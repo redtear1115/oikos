@@ -97,7 +97,12 @@
   --color-debit: var(--debit);
   --color-destructive: var(--destructive);
   --font-serif: var(--font-fraunces);
-  --font-sans: var(--font-noto-tc);
+  /* CJK fallback chain: PingFang TC (iOS/macOS) → Microsoft JhengHei (Windows) →
+   * Noto Sans CJK TC (Android/Linux). Keeps Chinese rendering crisp while the
+   * Noto Sans TC web font (~190KB CSS at 2 weights) is loading or if blocked.
+   * font-semibold (600) falls back to 500 because weight 600 was dropped to cut
+   * render-blocking CSS — keep this in mind before re-adding weights. (#289) */
+  --font-sans: var(--font-noto-tc), 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans CJK TC', sans-serif;
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
   /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()) */
