@@ -477,6 +477,7 @@ export const zhCN: Translations = {
       savingsCumulative: '累积投入 NT$ {amount}',
       savingsForeignNote: '保额 USD',
       savingsMaturedBadge: '缴费期满',
+      activeBadge: '缴费中',
       sumInsuredShort: '保额 NT$ {amount}',
       yearsLeft: '剩 {n} 年',
       expired: '已到期',

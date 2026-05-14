@@ -526,6 +526,8 @@ export type Translations = {
       savingsForeignNote: string
       /** Shown when today > expiry for savings policies. */
       savingsMaturedBadge: string
+      /** #260 — default fallback badge so every card has a visible state. */
+      activeBadge: string
       // ── multi-year protection ───────────────────────────────────────────
       /** Template with `{amount}` placeholder. */
       sumInsuredShort: string
@@ -1796,6 +1798,7 @@ export const zhTW: Translations = {
       savingsCumulative: '累積投入 NT$ {amount}',
       savingsForeignNote: '保額 USD',
       savingsMaturedBadge: '繳費期滿',
+      activeBadge: '繳費中',
       sumInsuredShort: '保額 NT$ {amount}',
       yearsLeft: '剩 {n} 年',
       expired: '已到期',

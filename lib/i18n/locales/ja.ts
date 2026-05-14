@@ -477,6 +477,7 @@ export const ja: Translations = {
       savingsCumulative: '累計払込 NT$ {amount}',
       savingsForeignNote: '保険金 USD 建て',
       savingsMaturedBadge: '払込期間満了',
+      activeBadge: '払込中',
       sumInsuredShort: '保険金 NT$ {amount}',
       yearsLeft: '残り {n} 年',
       expired: '満期',
