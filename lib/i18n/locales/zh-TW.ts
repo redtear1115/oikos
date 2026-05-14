@@ -215,6 +215,7 @@ export type Translations = {
 
   incomeSheet: {
     title: string
+    titleEdit: string
     amountLabel: string
     recipientPrompt: string
     categoryLabel: string
@@ -224,6 +225,7 @@ export type Translations = {
     claimHint: string
     noPolicy: string
     insuranceBadge: string
+    noteLabel: string
     notePlaceholder: string
     deleteIncome: string
     deleteConfirmTitle: string
@@ -1509,6 +1511,7 @@ export const zhTW: Translations = {
 
   incomeSheet: {
     title: '記一筆收入',
+    titleEdit: '編輯這筆收入',
     amountLabel: '收入金額',
     recipientPrompt: '誰的收入？',
     categoryLabel: '類別',
@@ -1518,7 +1521,8 @@ export const zhTW: Translations = {
     claimHint: '此筆會記入該保單的「理賠」紀錄',
     noPolicy: '尚無保單',
     insuranceBadge: '保險',
-    notePlaceholder: '備註（可選）',
+    noteLabel: '備註（選填）',
+    notePlaceholder: '寫一句留給對方的話，或之後想記得的事',
     deleteIncome: '刪除這筆收入',
     deleteConfirmTitle: '刪除這筆收入？',
     errors: {

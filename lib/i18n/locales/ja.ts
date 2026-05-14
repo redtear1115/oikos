@@ -188,6 +188,7 @@ export const ja: Translations = {
 
   incomeSheet: {
     title: '収入を記録',
+    titleEdit: '収入を編集',
     amountLabel: '収入金額',
     recipientPrompt: '誰の収入？',
     categoryLabel: '種類',
@@ -197,7 +198,8 @@ export const ja: Translations = {
     claimHint: 'この記録はその保険の「請求」履歴に加算されます',
     noPolicy: '保険がまだありません',
     insuranceBadge: '保険',
-    notePlaceholder: 'メモ（任意）',
+    noteLabel: 'メモ（任意）',
+    notePlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
     deleteIncome: 'この収入を削除',
     deleteConfirmTitle: 'この収入を削除しますか？',
     errors: {
