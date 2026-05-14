@@ -166,6 +166,26 @@ body {
   box-shadow: var(--toggle-focus-ring);
 }
 
+/* Switch track + thumb backgrounds — moved out of inline style so Tailwind
+ * preflight's `button { background-color: transparent }` reset can't override.
+ * Class-based rules beat element-selector preflight, and `data-state` swaps
+ * the on/off color without React re-mounting the inline-style attribute. */
+.oik-switch {
+  background: var(--switch-off-bg);
+  transition: background var(--toggle-transition);
+}
+.oik-switch[data-state="on"] {
+  background: var(--switch-on-bg);
+}
+.oik-switch[data-disabled="true"] {
+  opacity: var(--toggle-disabled-opacity);
+}
+.oik-switch [data-switch-thumb] {
+  background: var(--switch-thumb-bg);
+  box-shadow: var(--switch-thumb-shadow);
+  transition: transform var(--toggle-transition);
+}
+
 @keyframes rt-flash {
   0%   { background: var(--realtime-flash); }
   100% { background: transparent; }
