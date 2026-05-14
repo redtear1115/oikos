@@ -1,0 +1,33 @@
+# Futari (ふたり)
+
+> 兩個人的記帳框架。Two-person companion expense tracker for couples and partners — mobile-first PWA built around shared chapters of life rather than balance sheets.
+
+Futari (codebase name: Oikos) is a Traditional-Chinese-first expense tracker designed for exactly two users in a long-term relationship (spouses, partners, or co-living roommates). It is not a generic budgeting app: it assumes one shared ledger, one shared life, and zero account-visibility gating. Everything entered belongs to both people by default.
+
+## What it is
+
+- **Two-person ledger**: One account holds a single shared balance — the amount one partner currently owes the other. Splits can be 50/50, all-mine, all-theirs, or weighted by an agreed ratio.
+- **Companion records**: Beyond cash transactions, users track shared "loved things" (愛物) — cars, homes, children, pets, plants, insurance policies, and arbitrary items — with the entries tied to those entities (e.g. fuel logs on a car, vet visits on a pet).
+- **Chapters (epochs)**: Relationships have phases. When a partner joins, leaves, or is swapped, the ledger marks a new chapter. Past chapters become read-only history; current activity always lives in the current chapter.
+- **Income, recurring rules, settlements**: Income is tracked per recipient and does not affect the shared balance. Recurring income/expense rules generate pending occurrences that each partner confirms before they land. Settlements record real money transferred between the two partners.
+
+## Who it is for
+
+- Couples and long-term partners managing shared expenses in Traditional Chinese, Simplified Chinese, English, or Japanese.
+- People who reject the "hide accounts from your partner" premise that other couple-finance apps assume.
+- Users who want a record of *shared life* — not just numbers, but the car, the pet, the home, the years — rather than a bank-feed aggregator.
+
+## What it is not
+
+- Not a solo budgeting app (though a solo bootstrap mode exists before a partner joins).
+- Not a bank-aggregator. There is no Plaid, no account-linking, no automatic transaction sync. Every entry is intentional.
+- Not a subscription-pushing SaaS. The product is built around a one-time-purchase trust model; recurring AI features are a separate future tier.
+
+## Design philosophy
+
+Futari belongs to the "Freedom Project" family — a brand built on the metaphor of light and color. Records form light points; accumulated points become a life spectrum. The app is positioned as a lamp that accompanies, not a tool that judges. UI never grades you on whether you spent too much; it simply remembers, alongside you.
+
+## Links
+
+- Product: https://futari.southern-light.dev
+- Source / engineering context: private (codebase name "Oikos")

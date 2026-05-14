@@ -1,6 +1,6 @@
 {
   "name": "oikos",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -42,5 +42,14 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.5"
-  }
+  },
+  "browserslist": [
+    "Chrome >= 100",
+    "Firefox >= 100",
+    "Edge >= 100",
+    "Safari >= 16",
+    "iOS >= 16",
+    "not dead",
+    "not op_mini all"
+  ]
 }

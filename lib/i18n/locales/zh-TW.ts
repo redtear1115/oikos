@@ -676,6 +676,39 @@ export type Translations = {
     }
   }
 
+  /** /settings/currency page — base currency + 心理匯率 (issues #322–#326). */
+  currencyPage: {
+    title: string
+    back: string
+    pageHeading: string
+    pageSubtitle: string
+    base: {
+      sectionTitle: string
+      sectionHint: string
+      locked: {
+        heading: string
+        body: string
+        bodyNext: string
+      }
+    }
+    rates: {
+      sectionTitle: string
+      whyHeading: string
+      whyBody: string
+      exampleHeading: string
+      exampleBody: string
+      behaviorHeading: string
+      behaviorBody: string
+      saving: string
+      saved: string
+      defaultFallback: string
+    }
+    errors: {
+      baseChangeFailed: string
+      rateChangeFailed: string
+    }
+  }
+
   assetSheet: {
     titleNew: string
     titleEdit: string
@@ -1930,6 +1963,38 @@ export const zhTW: Translations = {
         cta: '我也是',
         confirming: '正在加入…',
       },
+    },
+  },
+
+  currencyPage: {
+    title: '貨幣',
+    back: '返回',
+    pageHeading: '兩人之間的一把尺',
+    pageSubtitle: '主體幣別是這本帳本的母語；心理匯率是你們之間的共識。',
+    base: {
+      sectionTitle: '主體幣別',
+      sectionHint: '這本帳本的母語。所有結算與顯示，都以它為基準。',
+      locked: {
+        heading: '這個章節已經開始記錄了',
+        body: '當前章節已經有紀錄，主體幣別在章節中固定不變——這樣以前寫下的金額，就一直站得住。',
+        bodyNext: '想換主體幣別的話，可以等開始下一個章節時重新選。',
+      },
+    },
+    rates: {
+      sectionTitle: '心理匯率',
+      whyHeading: '為什麼叫「心理」匯率',
+      whyBody: '不是看市場跳動的數字，是你們倆之間覺得 1 美金值多少——這把尺只屬於你們。',
+      exampleHeading: '舉個例子',
+      exampleBody: '比如你們約定 1 USD ≈ 32 TWD，那這趟在美國花的 100 美金，會記成 3,200 元。',
+      behaviorHeading: '改了之後',
+      behaviorBody: '以前已經記下的金額不會跟著動。只有從現在開始的新紀錄，會用新的匯率。',
+      saving: '儲存中…',
+      saved: '已存下',
+      defaultFallback: '預設值',
+    },
+    errors: {
+      baseChangeFailed: '無法切換主體幣別',
+      rateChangeFailed: '無法更新匯率',
     },
   },
 

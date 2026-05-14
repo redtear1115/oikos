@@ -71,7 +71,7 @@ export function PhonePreview() {
           <div className="text-center mb-[18px]">
             <p
               className="m-0 text-[10px]"
-              style={{ color: 'var(--ink-3)', letterSpacing: '2px' }}
+              style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
               YOU OWE T
             </p>
@@ -126,7 +126,7 @@ export function PhonePreview() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="m-0 text-[12px] font-medium">{r.t}</p>
-                  <p className="m-0 text-[10px]" style={{ color: 'var(--ink-3)' }}>
+                  <p className="m-0 text-[10px]" style={{ color: 'var(--ink-2)' }}>
                     {r.s}
                   </p>
                 </div>

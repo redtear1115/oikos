@@ -602,6 +602,38 @@ export const ja: Translations = {
     },
   },
 
+  currencyPage: {
+    title: '通貨',
+    back: '戻る',
+    pageHeading: 'ふたりのあいだの、ひとつのものさし',
+    pageSubtitle: '基準通貨はこの帳簿の母語、心の為替はふたりの間の取り決めです。',
+    base: {
+      sectionTitle: '基準通貨',
+      sectionHint: 'この帳簿の母語。すべての精算と表示は、この通貨を基準にします。',
+      locked: {
+        heading: 'この章はもう始まっています',
+        body: '今の章にはすでに記録があるため、基準通貨は章のあいだ変えません——そうすれば、以前に書きとめた金額が、ずっとそこに立っていられます。',
+        bodyNext: '別の基準通貨にしたいときは、次の章が始まるときにもう一度選べます。',
+      },
+    },
+    rates: {
+      sectionTitle: '心の為替',
+      whyHeading: 'どうして「心の」為替と呼ぶのか',
+      whyBody: '市場で動く数字ではなく、ふたりが 1 米ドルをどれくらいだと感じるか——このものさしは、ふたりだけのものです。',
+      exampleHeading: 'たとえば',
+      exampleBody: 'ふたりが 1 USD ≈ 32 TWD と決めたら、アメリカで使った 100 ドルは NT$3,200 として記録されます。',
+      behaviorHeading: '変えたあと',
+      behaviorBody: 'これまでに書きとめた金額は、そのときの為替のまま残ります。これからの新しい記録だけ、新しい為替で計算します。',
+      saving: '保存中…',
+      saved: '保存しました',
+      defaultFallback: '初期値',
+    },
+    errors: {
+      baseChangeFailed: '基準通貨を変更できませんでした',
+      rateChangeFailed: '為替を更新できませんでした',
+    },
+  },
+
   assetSheet: {
     titleNew: '愛物を追加',
     titleEdit: '{type}を編集',
