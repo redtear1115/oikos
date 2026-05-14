@@ -6,6 +6,8 @@ export interface TripOption {
   id: string
   name: string
   defaultCurrency: CurrencyCode | null
+  startDate: string       // 'YYYY-MM-DD'
+  endDate: string | null  // 'YYYY-MM-DD' or null (open-ended)
 }
 
 interface Props {

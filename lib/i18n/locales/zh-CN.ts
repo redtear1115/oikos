@@ -175,6 +175,9 @@ export const zhCN: Translations = {
     statusPendingHint: '信用卡待扣不会算进两人的结算，等实际扣款后再改为已付清。',
     deleteOne: '删除这笔',
     deleteConfirmTitle: '删除这笔记录？',
+    currency: '币别',
+    trip: '旅行',
+    noTrip: '无旅行',
     errors: {
       amountRequired: '请输入金额',
       descriptionRequired: '请输入描述',

@@ -201,6 +201,12 @@ export type Translations = {
     statusPendingHint: string
     deleteOne: string
     deleteConfirmTitle: string
+    /** Label for the currency selector (#68). */
+    currency: string
+    /** Label for the trip selector (#42). */
+    trip: string
+    /** "No trip" option in the trip selector. */
+    noTrip: string
     errors: {
       amountRequired: string
       descriptionRequired: string
@@ -1500,6 +1506,9 @@ export const zhTW: Translations = {
     statusPendingHint: '信用卡待扣不會算進兩個人的結算，等實際扣款後再改為已付清。',
     deleteOne: '刪除這筆',
     deleteConfirmTitle: '刪除這筆紀錄？',
+    currency: '幣別',
+    trip: '旅行',
+    noTrip: '無旅行',
     errors: {
       amountRequired: '請輸入金額',
       descriptionRequired: '請輸入描述',

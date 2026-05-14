@@ -12,6 +12,11 @@ const SYMBOL: Record<CurrencyCode, string> = {
   jpy: '¥',
 }
 
+/** Return the display symbol for a currency (e.g. 'NT$', '¥', '$'). */
+export function currencySymbol(c: CurrencyCode): string {
+  return SYMBOL[c]
+}
+
 export function formatAmount(amount: number, currency: CurrencyCode): string {
   const negative = amount < 0
   const abs = Math.abs(amount)
