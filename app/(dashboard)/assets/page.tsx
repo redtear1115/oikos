@@ -72,7 +72,6 @@ export default async function AssetsPage() {
       brand: a.brand,
       model: a.model,
       latestOdometer: heroStats.latestOdometer,
-      totalAmount: summary.totalAmount,
     }
   })
 
