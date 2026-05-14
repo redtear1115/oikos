@@ -4,8 +4,25 @@ import { db } from '@/lib/db/client'
 import { trips, groupEpochs } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import type { CurrencyCode } from '@/lib/currency'
+import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidatePath } from 'next/cache'
+
+/**
+ * Build the rate_snapshot jsonb payload for a new Trip from the group's
+ * CurrencyRates at this moment. Keys are `${FROM}_${TO}` uppercase, values
+ * are numeric (parsed from numeric(10,3)). Snapshot locks FX for the trip:
+ * later group-level CurrencyRates edits don't drift this trip's displays.
+ */
+async function buildRateSnapshot(groupId: string): Promise<Record<string, number>> {
+  const rows = await listRatesForGroup(groupId)
+  const snapshot: Record<string, number> = {}
+  for (const r of rows) {
+    const key = `${r.fromCurrency.toUpperCase()}_${r.toCurrency.toUpperCase()}`
+    snapshot[key] = parseFloat(r.rate)
+  }
+  return snapshot
+}
 
 export interface CreateTripInput {
   name: string
@@ -38,6 +55,8 @@ export async function createTrip(input: CreateTripInput) {
     .limit(1)
   if (!currentEpoch) throw new Error('找不到當前章節')
 
+  const rateSnapshot = await buildRateSnapshot(group.id)
+
   const [inserted] = await db
     .insert(trips)
     .values({
@@ -50,6 +69,7 @@ export async function createTrip(input: CreateTripInput) {
       budgetAmount: input.budgetAmount ?? null,
       budgetCurrency: input.budgetCurrency ?? null,
       status: 'active',
+      rateSnapshot,
     })
     .returning()
 
