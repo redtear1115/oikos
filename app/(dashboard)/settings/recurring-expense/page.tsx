@@ -9,7 +9,7 @@ export default async function RecurringExpenseSettingsPage() {
   const rules = await listActiveRules(group.id)
 
   return (
-    <div className="relative min-h-dvh pb-[92px]">
+    <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <RecurringExpenseContent rules={rules} groupDefaultRatioA={group.defaultSplitRatioA ?? null} />
       <BottomNavSkeleton />
     </div>

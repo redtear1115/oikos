@@ -48,6 +48,54 @@
   --saving-soft: #DDE5DC;
   --saving:      #5A7A66;
 
+  /* Bottom nav + FAB clearance for main scroll containers.
+   * BottomNav is 78px tall at bottom-0; FAB sits at bottom-[30px] h-[60px] with
+   * a 5px box-shadow ring, so FAB top edge ≈ 95px from viewport bottom (99px
+   * for the pill variant). 112px clears FAB top with ~13px breathing room so
+   * the last feed row isn't visually pinched by the FAB. (issue #253) */
+  --bottom-nav-offset: 112px;
+
+  /* Button color tokens — foundation for issues #258 / #261 / #262.
+   * Map to existing brand colors so the warm-brown system stays put; later
+   * issues build on these (#262 destructive treatment, #261 Settings split). */
+  --btn-primary-bg:       var(--ink);          /* 主要 commit: 記下 / 儲存 / 繼續 / 確認 */
+  --btn-primary-text:     #fff;
+  --btn-accent-bg:        var(--accent);       /* 重點 CTA: FAB / 邀請 / 月結 entry */
+  --btn-accent-text:      #fff;
+  --btn-secondary-bg:     var(--surface);      /* 次要: 取消 / 輔助 */
+  --btn-secondary-text:   var(--ink);
+  --btn-secondary-border: var(--ink-3);
+  --btn-destructive-bg:   var(--destructive);  /* 離開帳本 / 刪除 */
+  --btn-destructive-text: #fff;
+  --btn-disabled-bg:      var(--ink-3);
+  --btn-disabled-text:    #fff;
+
+  /* Toggle / chip / switch tokens — unification for issue #263.
+   * Three toggle families share these so the design language stays coherent:
+   *   1. Switch (settings on/off, iOS-style)         — uses --switch-* + shared transition/focus
+   *   2. Chip (filter pills, multi-select)           — uses --toggle-* fill/text
+   *   3. Segmented selector (PayerToggle, etc.)      — uses --toggle-segment-* surface
+   * Heights kept compact (chip h-8 / segment h-7-9) for dense filter UIs;
+   * touch comfort comes from focus rings + 150ms transition + opacity-50 disabled. */
+  --toggle-active-bg:        var(--ink);                          /* selected chip / segment fill */
+  --toggle-active-text:      #fff;
+  --toggle-inactive-bg:      var(--surface);                      /* unselected chip surface */
+  --toggle-inactive-text:    var(--ink-2);
+  --toggle-border:           var(--hairline);                     /* hairline outline on chips */
+  --toggle-segment-track:    rgba(58, 36, 25, 0.05);              /* segmented toggle bg track */
+  --toggle-segment-thumb:    var(--surface);                      /* selected segment "thumb" */
+  --toggle-segment-thumb-shadow: 0 1px 3px rgba(31, 27, 22, 0.10);
+  --toggle-transition:       150ms ease;                          /* shared timing across all 3 */
+  --toggle-disabled-opacity: 0.5;
+  --toggle-focus-ring:       0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+
+  /* Switch (settings on/off) specifics — separate so Settings page can keep
+   * the iOS-style accent fill while chips/segments use ink for selected. */
+  --switch-on-bg:        var(--accent);
+  --switch-off-bg:       var(--hairline);
+  --switch-thumb-bg:     var(--surface);
+  --switch-thumb-shadow: 0 1px 3px rgba(58, 36, 25, 0.20);
+
   /* Typography scale — P3-1 */
   --fs-xs:        11px;   /* extra small: labels, metadata */
   --fs-micro:     11px;   /* tab label, timestamp, metadata */
@@ -75,7 +123,12 @@
   --color-debit: var(--debit);
   --color-destructive: var(--destructive);
   --font-serif: var(--font-fraunces);
-  --font-sans: var(--font-noto-tc);
+  /* CJK fallback chain: PingFang TC (iOS/macOS) → Microsoft JhengHei (Windows) →
+   * Noto Sans CJK TC (Android/Linux). Keeps Chinese rendering crisp while the
+   * Noto Sans TC web font (~190KB CSS at 2 weights) is loading or if blocked.
+   * font-semibold (600) falls back to 500 because weight 600 was dropped to cut
+   * render-blocking CSS — keep this in mind before re-adding weights. (#289) */
+  --font-sans: var(--font-noto-tc), 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans CJK TC', sans-serif;
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
   /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()) */
@@ -100,6 +153,38 @@ body {
 
 @keyframes blink { 50% { opacity: 0; } }
 .animate-blink { animation: blink 1s step-end infinite; }
+
+/* Shared focus-visible treatment for unified toggles (issue #263).
+ * Switch / Chip / Segment all opt-in by adding the `oik-toggle` class
+ * (or one of `oik-switch` / `oik-chip` / `oik-segment` which inherit it).
+ * Keyboard focus surfaces a soft accent ring; pointer clicks stay clean. */
+.oik-toggle:focus-visible,
+.oik-switch:focus-visible,
+.oik-chip:focus-visible,
+.oik-segment:focus-visible {
+  outline: none;
+  box-shadow: var(--toggle-focus-ring);
+}
+
+/* Switch track + thumb backgrounds — moved out of inline style so Tailwind
+ * preflight's `button { background-color: transparent }` reset can't override.
+ * Class-based rules beat element-selector preflight, and `data-state` swaps
+ * the on/off color without React re-mounting the inline-style attribute. */
+.oik-switch {
+  background: var(--switch-off-bg);
+  transition: background var(--toggle-transition);
+}
+.oik-switch[data-state="on"] {
+  background: var(--switch-on-bg);
+}
+.oik-switch[data-disabled="true"] {
+  opacity: var(--toggle-disabled-opacity);
+}
+.oik-switch [data-switch-thumb] {
+  background: var(--switch-thumb-bg);
+  box-shadow: var(--switch-thumb-shadow);
+  transition: transform var(--toggle-transition);
+}
 
 @keyframes rt-flash {
   0%   { background: var(--realtime-flash); }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
@@ -269,10 +270,7 @@ export function RecurringRuleSheet({
             >
               {t.recurringExpense.sheet.categoryLabel}
             </div>
-            <div
-              className="flex gap-2"
-              style={{ padding: '0 20px', overflowX: 'auto', scrollbarWidth: 'none' }}
-            >
+            <ScrollFadeRow className="flex gap-2" style={{ padding: '0 20px' }}>
               {PICKABLE_CATEGORIES.map((c) => {
                 const sel = category === c.id
                 return (
@@ -298,7 +296,7 @@ export function RecurringRuleSheet({
                   </button>
                 )
               })}
-            </div>
+            </ScrollFadeRow>
           </div>
 
           {!isSolo && (

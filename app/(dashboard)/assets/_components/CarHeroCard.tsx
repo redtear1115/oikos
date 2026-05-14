@@ -13,52 +13,11 @@ interface Props {
   model: string | null
   latestOdometer: number | null
   monthAmount: number
-  totalAmount: number
   compact?: boolean
 }
 
 function fmtInt(n: number) {
   return n.toLocaleString('en-US')
-}
-
-function MoneyStat({
-  label,
-  value,
-  align = 'left',
-}: {
-  label: string
-  value: number
-  align?: 'left' | 'right'
-}) {
-  return (
-    <div style={{ flex: 1, textAlign: align }}>
-      <div
-        style={{
-          fontSize: 'var(--fs-micro)',
-          color: 'var(--ink-3)',
-          letterSpacing: 1,
-          fontFamily: '"JetBrains Mono", monospace',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        className="tnum"
-        style={{
-          fontFamily: 'var(--font-numeric)',
-          fontSize: 22,
-          fontWeight: 600,
-          color: 'var(--ink)',
-          marginTop: 4,
-          letterSpacing: '-0.5px',
-          lineHeight: 1,
-        }}
-      >
-        <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-2)', fontWeight: 500, marginRight: 2 }}>NT$</span>
-        {fmtInt(value)}
-      </div>
-    </div>
-  )
 }
 
 export function CarHeroCard({
@@ -71,7 +30,6 @@ export function CarHeroCard({
   model,
   latestOdometer,
   monthAmount,
-  totalAmount,
   compact: _compact = false,
 }: Props) {
   const swatch = resolveCarColor(color)
@@ -116,76 +74,56 @@ export function CarHeroCard({
         }}
       />
 
-      <div style={{ padding: '14px 16px 16px 22px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
-        >
-          {/* Inline car mark — silhouette stays in ink for light cars (so it's
-           *  always visible on white surface); dashed orbit carries the color. */}
-          <div className="shrink-0" aria-hidden="true">
-            <CarMark
-              size={40}
-              stroke={isDarkColor(swatch) ? swatch : '#3A2419'}
-              accent={swatch}
-              orbitOpacity={0.55}
-            />
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="flex items-center gap-2">
-              <div
-                className="truncate"
-                style={{ fontSize: 'var(--fs-button)', color: 'var(--ink)', fontWeight: 600 }}
-              >
-                {name}
-              </div>
-              {plate && (
-                <span
-                  className="shrink-0"
-                  style={{
-                    fontSize: 'var(--fs-micro)',
-                    color: 'var(--ink-2)',
-                    fontFamily: '"JetBrains Mono", monospace',
-                    letterSpacing: 0.8,
-                    background: 'rgba(58,36,25,0.06)',
-                    padding: '2px 7px',
-                    borderRadius: 5,
-                  }}
-                >
-                  {plate}
-                </span>
-              )}
-            </div>
+      {/* #259 — density aligned with AssetListItem: drop the bottom 本月/累計
+       *  money panel and surface only the 本月 amount at the title row's right
+       *  edge, mirroring how house/child/pet/plant/insurance/item cards render.
+       *  累計 stays available on the car detail page. */}
+      <div className="flex items-center gap-3 py-4 pr-5 pl-[22px]">
+        <div className="shrink-0" aria-hidden="true">
+          <CarMark
+            size={40}
+            stroke={isDarkColor(swatch) ? swatch : '#3A2419'}
+            accent={swatch}
+            orbitOpacity={0.55}
+          />
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="flex items-center gap-2">
             <div
               className="truncate"
-              style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', marginTop: 2 }}
+              style={{ fontSize: 'var(--fs-button)', color: 'var(--ink)', fontWeight: 600 }}
             >
-              {subtitle}
+              {name}
             </div>
+            {plate && (
+              <span
+                className="shrink-0"
+                style={{
+                  fontSize: 'var(--fs-micro)',
+                  color: 'var(--ink-2)',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  letterSpacing: 0.8,
+                  background: 'rgba(58,36,25,0.06)',
+                  padding: '2px 7px',
+                  borderRadius: 5,
+                }}
+              >
+                {plate}
+              </span>
+            )}
           </div>
-          <span
-            aria-hidden="true"
-            style={{ color: 'var(--ink-3)', fontSize: 'var(--fs-button)', lineHeight: 1, flexShrink: 0 }}
+          <div
+            className="truncate"
+            style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', marginTop: 2 }}
           >
-            ›
-          </span>
+            {subtitle}
+          </div>
         </div>
-        <div
-          style={{
-            marginTop: 12,
-            display: 'flex',
-            gap: 8,
-            padding: '12px 14px',
-            borderRadius: 12,
-            background: 'rgba(58,36,25,0.04)',
-          }}
-        >
-          <MoneyStat label="本月" value={monthAmount} />
-          <div style={{ width: 1, background: 'var(--hairline)' }} />
-          <MoneyStat label="累計" value={totalAmount} align="right" />
+        <div className="text-right shrink-0 ml-2">
+          <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
+          <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
+            NT${fmtInt(monthAmount)}
+          </div>
         </div>
       </div>
     </Link>

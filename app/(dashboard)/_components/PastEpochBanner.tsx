@@ -4,6 +4,7 @@ import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { exitPastEpoch } from '@/actions/epoch-view'
 import { useTranslations } from '@/lib/i18n/client'
+import { formatDateShort } from '@/lib/format-date'
 
 interface Props {
   /** ISO timestamp string for the pinned epoch's start. */
@@ -23,8 +24,7 @@ export function PastEpochBanner({ startedAt, endedAt, locale }: Props) {
   const t = useTranslations()
   const [pending, startTransition] = useTransition()
 
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+  const fmt = (iso: string) => formatDateShort(iso, locale, { withYear: true })
 
   const handleExit = () => {
     startTransition(async () => {

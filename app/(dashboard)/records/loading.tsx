@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="relative min-h-screen pb-[92px]">
+    <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2">
         <div
           className="text-2xl font-medium tracking-tight"

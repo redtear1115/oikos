@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
+import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose'
 import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -25,6 +26,10 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
       .then(setAssets)
       .catch((e) => setLoadError(describeError(e, '載入失敗', t.common.offlineError)))
   }, [open, t])
+
+  // Escape closes — picker uses its own inline backdrop (z-112) instead of
+  // SheetBackdrop, so the hook is wired here explicitly.
+  useEscapeToClose(open, onClose)
 
   return (
     <>

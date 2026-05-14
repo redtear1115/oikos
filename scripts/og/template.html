@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <title>Futari · OG render</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" />
+  <style>
+    /* All sizes scale via --s (CSS scale factor). The render script sets
+     * --w / --h / --s and chooses layout via the body class. */
+    html, body { margin: 0; padding: 0; }
+    body {
+      width: var(--w, 1200px);
+      height: var(--h, 630px);
+      background: #FBEDE0;
+      color: #3A2419;
+      font-family: 'Noto Sans TC', -apple-system, system-ui, sans-serif;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    *::-webkit-scrollbar { display: none; }
+    .fr { font-family: 'Fraunces', Georgia, serif; }
+
+    /* —— Wide layout (1200×630, 1200×600 LINE) —— */
+    body.wide {
+      padding: calc(70px * var(--s)) calc(80px * var(--s));
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    body.wide .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    body.wide .brand-row {
+      display: flex; align-items: center; gap: calc(14px * var(--s));
+    }
+    body.wide .brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: calc(32px * var(--s));
+      font-weight: 500;
+      letter-spacing: calc(-0.5px * var(--s));
+    }
+    body.wide .kana {
+      font-size: calc(13px * var(--s));
+      letter-spacing: calc(6px * var(--s));
+      color: #7A5848;
+      margin-left: calc(12px * var(--s));
+    }
+    body.wide .url {
+      font-family: 'Fraunces', serif; font-style: italic;
+      font-size: calc(16px * var(--s));
+      color: #B89C8B;
+      letter-spacing: calc(1px * var(--s));
+    }
+    body.wide .mid {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    body.wide .headline {
+      font-family: 'Fraunces', serif;
+      font-size: calc(180px * var(--s));
+      font-weight: 500;
+      line-height: 0.95;
+      letter-spacing: calc(-6px * var(--s));
+      margin: 0;
+    }
+    body.wide .headline .accent { color: #E08856; font-style: italic; }
+    body.wide .sub {
+      display: flex; align-items: center;
+      gap: calc(18px * var(--s));
+    }
+    body.wide .sub-line {
+      width: calc(60px * var(--s));
+      height: calc(2px * var(--s));
+      background: #E08856;
+    }
+    body.wide .sub-text {
+      font-family: 'Fraunces', serif;
+      font-size: calc(22px * var(--s));
+      color: #7A5848;
+      letter-spacing: calc(1px * var(--s));
+    }
+
+    /* —— Square layout (1200×1200) —— */
+    body.square {
+      padding: calc(80px * var(--s));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    body.square .mark-big { margin-bottom: calc(40px * var(--s)); }
+    body.square .kana-top {
+      font-family: 'Fraunces', serif;
+      font-size: calc(16px * var(--s));
+      letter-spacing: calc(8px * var(--s));
+      color: #B89C8B;
+      margin: 0 0 calc(28px * var(--s));
+    }
+    body.square .headline {
+      font-family: 'Fraunces', serif;
+      font-size: calc(180px * var(--s));
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: calc(-6px * var(--s));
+      margin: 0;
+    }
+    body.square .headline .accent { color: #E08856; font-style: italic; }
+    body.square .sub {
+      display: flex; align-items: center;
+      gap: calc(18px * var(--s));
+      margin-top: calc(48px * var(--s));
+    }
+    body.square .sub-line {
+      width: calc(60px * var(--s));
+      height: calc(2px * var(--s));
+      background: #E08856;
+    }
+    body.square .sub-text {
+      font-family: 'Fraunces', serif;
+      font-size: calc(22px * var(--s));
+      color: #7A5848;
+      letter-spacing: calc(1px * var(--s));
+    }
+    body.square .ftr {
+      position: absolute;
+      left: calc(80px * var(--s));
+      right: calc(80px * var(--s));
+      bottom: calc(60px * var(--s));
+      display: flex; align-items: center; justify-content: space-between;
+      color: #B89C8B;
+    }
+    body.square .ftr .name {
+      font-family: 'Fraunces', serif; font-style: italic; color: #7A5848;
+      font-size: calc(18px * var(--s)); letter-spacing: calc(0.5px * var(--s));
+    }
+    body.square .ftr .url {
+      font-size: calc(13px * var(--s)); letter-spacing: calc(2.5px * var(--s));
+    }
+
+    /* mark wrappers — sized via inline style for the SVG width/height */
+    .mark { display: inline-flex; }
+  </style>
+</head>
+<body>
+  <script>
+    function markSvg(size) {
+      return `<svg width="${size}" height="${size}" viewBox="0 0 32 32" shape-rendering="crispEdges" aria-hidden="true">
+        <g transform="translate(16 18.5) scale(0.55)">
+          <path d="M 0 16 C -7 11, -15 6, -15 -2 C -15 -7, -11 -10, -7 -10 C -3 -10, -1 -8, 0 -5 Z" fill="#3A2419"/>
+          <circle cx="-9" cy="-13" r="4" fill="#3A2419"/>
+          <path d="M 0 16 C 7 11, 15 6, 15 -2 C 15 -7, 11 -10, 7 -10 C 3 -10, 1 -8, 0 -5 Z" fill="#E08856"/>
+          <circle cx="9" cy="-13" r="4" fill="#E08856"/>
+        </g>
+      </svg>`;
+    }
+
+    const params = new URLSearchParams(location.search);
+    const w = parseInt(params.get('w') || '1200', 10);
+    const h = parseInt(params.get('h') || '630', 10);
+    const scale = parseFloat(params.get('s') || '1');
+    const layout = params.get('layout') || 'wide';
+
+    document.body.style.setProperty('--w', w + 'px');
+    document.body.style.setProperty('--h', h + 'px');
+    document.body.style.setProperty('--s', String(scale));
+    document.body.className = layout;
+
+    if (layout === 'wide') {
+      document.body.innerHTML = `
+        <div class="topbar">
+          <div class="brand-row">
+            <span class="mark">${markSvg(Math.round(48 * scale))}</span>
+            <span class="brand-name">Futari</span>
+            <span class="kana">ふ た り</span>
+          </div>
+          <span class="url">futari.southern-light.dev</span>
+        </div>
+        <div class="mid">
+          <h1 class="headline">兩個人，<br /><span class="accent">一本帳。</span></h1>
+        </div>
+        <div class="sub">
+          <span class="sub-line"></span>
+          <span class="sub-text">A couple's ledger · 雙人記帳 PWA</span>
+        </div>
+      `;
+    } else if (layout === 'square') {
+      document.body.innerHTML = `
+        <div class="mark-big"><span class="mark">${markSvg(Math.round(108 * scale))}</span></div>
+        <p class="kana-top">ふ　た　り</p>
+        <h1 class="headline">兩個人，<br /><span class="accent">一本帳</span>。</h1>
+        <div class="sub">
+          <span class="sub-line"></span>
+          <span class="sub-text">A couple's ledger · 雙人記帳 PWA</span>
+        </div>
+        <div class="ftr">
+          <span class="name">Futari · ふたり</span>
+          <span class="url">FUTARI.SOUTHERN-LIGHT.DEV</span>
+        </div>
+      `;
+    }
+
+    // Signal readiness once webfonts are loaded — render.mjs waits on this.
+    document.fonts.ready.then(() => {
+      window.__OG_READY__ = true;
+    });
+  </script>
+</body>
+</html>

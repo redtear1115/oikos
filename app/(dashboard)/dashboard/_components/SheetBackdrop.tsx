@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose'
 
 interface Props {
   open: boolean
@@ -25,6 +26,10 @@ export function SheetBackdrop({ open, onClick }: Props) {
     const t = setTimeout(() => setClosing(false), CLOSE_GRACE_MS)
     return () => clearTimeout(t)
   }, [open])
+
+  // Escape closes the sheet — same effect as a backdrop tap. Stacked sheets
+  // unwind one layer per press (see useEscapeToClose).
+  useEscapeToClose(open, onClick)
 
   return (
     <div

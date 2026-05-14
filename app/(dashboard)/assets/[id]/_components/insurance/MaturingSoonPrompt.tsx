@@ -1,6 +1,7 @@
 'use client'
 
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { formatDateAbsolute } from '@/lib/format-date'
 
 interface Props {
   maturityDate: string
@@ -9,6 +10,7 @@ interface Props {
 
 export function MaturingSoonPrompt({ maturityDate, onClick }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const ts = t.assetDetail.savings
   return (
     <button
@@ -22,7 +24,7 @@ export function MaturingSoonPrompt({ maturityDate, onClick }: Props) {
     >
       <div className="flex-1">
         <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-          {ts.maturingSoonTitle.replace('{date}', maturityDate)}
+          {ts.maturingSoonTitle.replace('{date}', formatDateAbsolute(maturityDate, locale))}
         </div>
         <div className="text-xs mt-0.5" style={{ color: 'var(--ink-2)' }}>
           {ts.maturingSoonSubtitle}

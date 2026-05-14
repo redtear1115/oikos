@@ -21,17 +21,18 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
       <span>{t.payerToggle.label}</span>
       <div
         className="inline-flex rounded-full p-[3px] gap-0.5"
-        style={{ background: 'rgba(31,27,22,0.05)' }}
+        style={{ background: 'var(--toggle-segment-track)' }}
       >
         {(['M', 'T'] as const).map((w) => (
           <button
             key={w}
             onClick={() => onChange(w)}
-            className="h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
+            className="oik-segment h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5"
             style={{
-              background: value === w ? 'var(--surface)' : 'transparent',
+              background: value === w ? 'var(--toggle-segment-thumb)' : 'transparent',
               color: value === w ? 'var(--ink)' : 'var(--ink-2)',
-              boxShadow: value === w ? '0 1px 3px rgba(31,27,22,0.10)' : 'none',
+              boxShadow: value === w ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+              transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
             }}
           >
             <Avatar

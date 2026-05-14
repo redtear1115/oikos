@@ -59,7 +59,7 @@ export function DrillFilterChip({ drill, assetName, onClear }: Props) {
       style={{
         background: tint,
         color: 'var(--ink)',
-        border: '1px solid var(--hairline)',
+        border: '1px solid var(--toggle-border)',
       }}
     >
       <span
@@ -73,8 +73,11 @@ export function DrillFilterChip({ drill, assetName, onClear }: Props) {
         type="button"
         onClick={onClear}
         aria-label={t.records.stats.drillChipClear}
-        className="h-6 w-6 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer"
-        style={{ color: 'var(--ink-2)' }}
+        className="oik-toggle h-6 w-6 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer"
+        style={{
+          color: 'var(--ink-2)',
+          transition: `background var(--toggle-transition), color var(--toggle-transition)`,
+        }}
       >
         ×
       </button>

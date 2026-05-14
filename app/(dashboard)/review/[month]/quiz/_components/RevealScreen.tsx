@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
+import { formatDateAbsolute } from '@/lib/format-date'
 import {
   isPartnerQuizQuestionKey,
   isPartnerQuizChoiceKey,
@@ -37,11 +38,7 @@ export function RevealScreen({
   const locale = useLocale()
   const tq = t.quiz
 
-  const formattedDate = revealedAt
-    ? new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : locale === 'en' ? 'en-US' : locale === 'zh-CN' ? 'zh-CN' : 'zh-TW', {
-        year: 'numeric', month: 'long', day: 'numeric',
-      }).format(new Date(revealedAt))
-    : ''
+  const formattedDate = revealedAt ? formatDateAbsolute(revealedAt, locale) : ''
 
   return (
     <div

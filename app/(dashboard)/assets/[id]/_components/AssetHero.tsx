@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { resolveCarColor } from '../../_components/carColor'
 import { useTranslations } from '@/lib/i18n/client'
 
@@ -17,22 +16,6 @@ interface AssetHeroProps {
   avgEcon: number | null
   fuelLogCount: number
   onEdit?: () => void
-}
-
-function BackButton({ ariaLabel }: { ariaLabel: string }) {
-  return (
-    <Link
-      href="/assets"
-      className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center shrink-0 mr-3"
-      style={{ background: 'rgba(58,36,25,0.08)' }}
-      aria-label={ariaLabel}
-    >
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M9 2l-5 5 5 5" stroke="#3A2419" strokeWidth="1.6"
-          strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </Link>
-  )
 }
 
 function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLabel: string }) {
@@ -74,10 +57,11 @@ export function AssetHero({
     </div>
   )
 
-  // Shared header — back / serif name / edit pencil
+  // Shared header — serif name + edit pencil. The back button lives in a
+  // sticky strip rendered by AssetDetailClient above this hero so it stays
+  // visible while the page scrolls (#250).
   const header = (
     <div className="flex items-center">
-      <BackButton ariaLabel={t.assetDetail.backAriaLabel} />
       <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
         {name}
       </div>
@@ -97,7 +81,7 @@ export function AssetHero({
 
   if (isElectric) {
     return (
-      <div className="px-3 pt-[60px] pb-3">
+      <div className="px-3 pt-2 pb-3">
         <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
           {header}
           {subtitle}

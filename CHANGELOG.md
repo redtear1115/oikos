@@ -13,11 +13,63 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [0.16.2] - 2026-05-14
+
+主題：**設計語言收束．第一張公開臉．效能更輕**——v0.16.0 / v0.16.1 把守護模組獨立化、設定頁重新分組、模板系統 v1 落地之後，這版集中收掉幾個跨表面的視覺裂縫：button 顏色、destructive 按鈕、Settings 按鈕、三種 toggle（switch / chip / segment）、收入支出兩個 sheet、保險卡 badge、愛物卡片資訊密度、Records 日期顯示——全部走同一份 design token 之後，視覺權重終於穩定下來。同期 `/` 從 redirect 升級為真正的 landing page，第一次面對未登入訪客有自己的臉；OG image 同步換成 Editorial direction 的「兩個人，一本帳」。效能側也順手收兩條：Noto Sans TC 移除 weight 600（render-blocking CSS −93KB）、Dashboard 首屏 query 用 `React.cache()` 去重 + `Promise.all` 合併。最後是一票 /records 與 sheet 細節 polish：篩選分類加全選 chip + 色點、分擔金額補回、大額用億/兆縮寫、Escape 鍵關 sheet、edit-mode CTA 文案、sticky 返回按鈕、定期收支 chip scroll fade 等。
+
+完整 diff：[v0.16.1...v0.16.2](https://github.com/redtear1115/oikos/compare/v0.16.1...v0.16.2)
+
 ### 使用者可見變化
-- _尚無_
+
+#### 設計語言收束：button / toggle / form / card / badge / date 全部走 token（PR #280 #281 #283 #285 #286 #288 #293、closes #258 #262 #261 #259 #260 #257 #293、含 #251）
+- **Button 顏色語意分層**（PR #280 closes #258）：新增 `--btn-{primary,secondary,destructive,accent}-{bg,text,border}` 一整組 token 取代散落在元件裡的硬編 hex / `var(--accent)` 直用。同顏色但語意不同的按鈕（primary 完成 vs accent 邀請對方）從這版開始可以單獨改而不影響另一個。
+- **Destructive 按鈕統一使用 `--btn-destructive-*`**（PR #281 closes #262）：填底紅字白的刪除按鈕全部接 token；text-only destructive（LogoutButton、各 sheet 內的「刪除這筆」連結）、警告 chip / 邊框、DangerZone 軟性入口刻意保留原樣，視覺權重維持階層差。
+- **Settings 按鈕語意差異化**（PR #283 closes #261）：邀請 CTA 接 `--btn-accent-*`、LeaveGroupFlow / SwapPending 的取消 / 拒絕 / 返回接 `--btn-secondary-*`（outlined）、Save / Settle / 同意換伴侶接 `--btn-primary-*`、Card4 yes / FinalConfirm leave 接 `--btn-destructive-*`。同畫面內 primary / destructive 一起出現時對比終於回到正確。
+- **三種 toggle 元件外觀統一（switch / chip / segment）**（PR #293 closes #293）：iOS 風 switch、單選 chip、segmented control 各自演化出不同的高亮 / 邊框 / hover 狀態。這版收斂成同一套 token，每種 toggle 在 on / off / hover / focus 之間的視覺反饋一致。
+- **收入 / 支出表單視覺語言對齊**（PR #288 closes #257）：之前 IncomeSheet 有 LightDot + radial halo + mono uppercase labels + glow amount + gradient divider + plain-link delete，AddSheet 全沒有，兩個 sheet 像兩個產品。這版把裝飾差異全拿掉、section label 統一 `text-xs tracking-[0.6px]`、欄位順序對齊（amount + recipient → category → policy → date → note → delete）、note 改成標準 textarea、delete 改成 outlined destructive 按鈕。AddSheet amount 補上千分位格式化。Mode 差異（mint sheetBg / P.ink 強調色）保留。
+- **保險卡 badge 統一顯示**（PR #286 closes #260）：之前部分保險卡有 badge（繳費剩 N 天 / 已到期 / 繳費期滿）、部分沒有，無 badge 看起來像「被隱藏」的狀態。改成每張卡一律渲染一個 badge，預設「繳費中」用保險愛物 tint 做低權重底色；urgency / destructive / saving 三層之上多了一個 baseline，視覺權重清楚。多年期保單到期改顯示「已到期」saving 色票，避免 badge 與副標互相矛盾。
+- **愛物卡片資訊密度統一**（PR #285 closes #259）：/assets 列表上車輛 hero card 之前顯示「本月 / 累計」雙欄，其他類型只有「本月」單欄，車輛變成資訊量特例。這版車輛去掉累計、本月改成與 AssetListItem 同款的右側對齊小 stat；累計 stat 留在車輛詳情頁。跨類別資訊一致性比個別類別資訊豐富更重要。
+- **日期顯示規則統一**（PR #277 closes #251）：`lib/format-date.ts` 收斂成四個 formatter 對應四種情境（Records 列表的相對日 / dashboard 詳列 / sheet 內絕對日 / past chapter 切片），跨頁面看到的「同一天」終於是同一個字串。
+
+#### 第一張公開臉：landing page + OG image refresh（PR #282 closes #269）
+- **`/` 從 redirect 升級為真正的 landing page**：未登入訪客之前直接被踢到 /sign-in，沒有任何「Futari 是什麼」的訊息；這版把 `/` 改成 server-rendered landing：mobile-first 單欄 + 2×2 feature grid、md+ 升級為兩欄 hero + 4 欄 feature row。已登入 CTA → /dashboard、未登入 CTA → /sign-in。所有顏色復用既有 globals.css token（`--bg` / `--ink` / `--accent` / `--asset-color-*` / `--saving` / `--hairline` / `--font-fraunces`），沒新增 CSS。
+- **OG image 換 Editorial direction「兩個人，一本帳」**：新增 `scripts/og/` Puppeteer 渲染器，從單一來源產生 4 種社群分享圖片（og-image / og-image-2x / og-line / og-square）。`app/layout.tsx` 的 `alternates.canonical` 改為 `/`、`openGraph.url` 改為 `/`、`openGraph.images` 加入 landscape / LINE 適用的 og-line + square 變體。Landing namespace（hero / CTA / trust pills / features / footer trust 共 19 個字串）四語齊備。
+
+#### 效能更輕（PR #291 #292、closes #290 #289）
+- **Noto Sans TC 移除 weight 600，render-blocking CSS −93KB**（PR #292 closes #289）：font weight 600 全站只在極少數位置出現，移除後 CSS 體積大幅縮減；視覺降級到 500 / 700 已驗證可接受。LCP / FCP 在實機上感覺更輕。
+- **Dashboard 首屏 `React.cache()` 去重 + `Promise.all` 合併**（PR #291 closes #290）：同一 request 內 server components 多次呼叫同一個 query 不再各跑一次 DB；dashboard 的多個獨立 query 改成 `Promise.all` 並行而非 sequential。最大 wins 在 dashboard SSR 首屏時間。
+
+#### /records 與 sheet 細節 polish
+- **篩選分類加全選 chip + 分類色點**（PR #276 closes #254）：篩選 sheet 的分類列開頭一顆「全選」chip 可一鍵把該類分類全選 / 全取消；每個 chip 前面加 4px 分類色點，視覺辨識度跟 feed icon 對齊。
+- **補回 Records 分攤金額顯示**（PR #278）：CompactRow 在 v0.16.1 拿掉「我 $X」徽章時意外帶走了某些 case 的分攤金額；補回 split_type=weighted / all_theirs 等需要呈現的數字。
+- **金額欄 shrink-0 + 大額用億/兆縮寫**（PR #267 closes #249）：CompactRow 在窄螢幕 + 大額（≥ 1 億）時金額會被擠壓；金額欄改 `shrink-0`、≥ 1 億用億、≥ 1 兆用兆縮寫，row 不再因金額長度斷版。
+- **主 scroll 容器加 FAB clearance**（PR #268 closes #253）：底部 FAB 區之前會壓到列表最末筆；加上 padding-bottom，最末筆永遠看得到。
+- **/assets sticky 返回按鈕**（PR #274 closes #250）：愛物詳情頁的返回按鈕改 sticky，捲動到底也持續可見，不必再滑回頂端。
+- **Edit-mode CTA 文案「更新」**（PR #272 closes #252）：所有 sheet 在 edit mode 的 CTA 從「儲存」改成「更新」，跟 create mode 的「新增」拉開語意。
+- **Escape 鍵關閉 sheet / modal**（PR #271 closes #255）：篩選面板、加帳 sheet、收入 sheet、結算 sheet、愛物 sheet、定期收支 sheet、確認對話框等所有 overlay 現在都可以按 Escape 關閉。多層巢狀每按一次只關最上層。IME 組字中的 Escape 跳過，不影響中文輸入。
+- **定期收支 sheet 分類 chip scroll fade**（PR #287 closes #265）：定期支出 / 定期收入規則 sheet 的分類 chip 改用共用的 `ScrollFadeRow`，捲動有視覺提示，與 AddSheet / IncomeSheet 對齊。
+- **定期收支 shortcut 卡可點擊性**（PR #275 closes #264）：強化 hit target，整張卡都可點而非只有中間文字。
+- **寵物詳情頁 species enum 翻譯**（PR #270 closes #256）：cat / dog / 等英文 enum 在詳情頁顯示為翻譯後的字串。
 
 ### 技術變更
-- _尚無_
+
+- **Button color design tokens**（PR #280 #258）：在 `globals.css` 新增 `--btn-{primary,secondary,destructive,accent}-{bg,text,border}` token family；後續 PR #281 / #283 把現有 callsite 逐批 migrate 過去。Token values 對應原本的 brand red / `--accent` / `--ink` 等，輸出 byte-identical，純 wire-up。
+- **Toggle 元件統一**（PR #293）：iOS 風 switch / 單選 chip / segmented control 共用同一份 on / off / hover / focus state token，元件內不再各自 hard-code。
+- **Form sheets 視覺合流**（PR #288 #257）：IncomeSheet 拿掉 LightDot / radial halo / mono uppercase label / glow amount / gradient divider / plain-link delete 等裝飾差異；section label 統一 `text-xs tracking-[0.6px]`；新增 `titleEdit` / `noteLabel` i18n key（四語）。
+- **`renderBadge` 每張保險卡都渲染一個 badge**（PR #286 #260）：`InsuranceListItem` 加 active 預設 state 用 `--asset-tint-insurance` 作低權重底色；多年期保單 yearsPassed ≥ termYears 時 badge 改顯示 `i.savingsMaturedBadge` 對齊副標的「已到期」文案。
+- **車輛 hero card 改用 AssetListItem 同款 stat**（PR #285 #259）：移除車輛 hero card 的底部 money panel + chevron + 累計欄；累計 stat 保留在 `/assets/[id]` 的 AssetHero。跨類別資訊一致性優先。
+- **`lib/format-date.ts` 收斂為四個 formatter**（PR #277 #251）：`formatDateRelative`（Records 列表 / dashboard recent，今天 / 昨天 / 月日 / 年月日）與其他絕對日 / sheet 內格式分離；既有 callsite 全部 migrate 走同一份規則。
+- **`/` page 改 server component + 移除 redirect**（PR #282 #269）：新增 `app/_landing/{Landing,PhonePreview,FutariMark}.tsx`；`app/page.tsx` 用 `getCurrentUser()` 決定 CTA href；`app/layout.tsx` 的 `alternates.canonical` 改 `/`、`openGraph.url` 改 `/`、`openGraph.images` 擴成 og-image + og-line + og-square 三條。Middleware `isPublic` 已含 `/` 不需動。
+- **OG image render pipeline**（PR #282 within #269）：新增 `scripts/og/template.html` + `scripts/og/render.mjs`（Puppeteer），單一來源產生 og-image / og-image-2x / og-line / og-square 四種變體。
+- **Noto Sans TC weight 600 移除**（PR #292 #289）：font-face declarations 砍掉 600；render-blocking CSS 縮減 93KB（lighthouse 量測）。
+- **`React.cache()` + dashboard `Promise.all`**（PR #291 #290）：把 dashboard SSR 期間會被多個 server component 重複呼叫的 query 用 `React.cache()` 包一層去重；dashboard 首屏多個獨立 query 從 sequential await 改 `Promise.all`。
+- **`useEscapeToClose` hook + 模組層 stack**（PR #271 #255）：在 `app/(dashboard)/_components/useEscapeToClose.ts` 加新的 hook，挂在 `SheetBackdrop`（14 個 sheet 共用）與 `AssetPickerSheet`（自帶 backdrop）。stack 模型確保只有最上層 open 的 handler 響應。IME 組字（`isComposing` / keyCode 229）跳過。`InAppBrowserGuard` 是 security blocker，刻意不接此 hook。
+- **`ScrollFadeRow` 套用到定期收支 sheet**（PR #287 #265）：定期支出 sheet fade 接 `var(--bg)`、定期收入 sheet 接 `P.sheetBg`（DEFAULT_INCOME_PALETTE，跟 IncomeSheet 對齊）。
+- **CompactRow 補回 split amount + 大額縮寫**（PR #278 / PR #267 #249）：v0.16.1 移除「我 $X」徽章時誤刪了 weighted / all_theirs 的分攤金額 render，補回；金額欄 `shrink-0`、`formatAmount` 對 ≥ 1 億 / ≥ 1 兆 以億 / 兆 縮寫。
+- **AssetSheet key 顯式傳遞**（PR #273 closes #266）：原本透過 `{...sharedProps}` spread `key`，React 19 改 warning；改為顯式 `key={...}`。
+- **`docs(specs): restructure with INDEX + writing guide`**（PR #247）：specs 目錄重整為 INDEX 入口 + 統一 frontmatter schema + 拆分原則；merge 早期合集 spec、拆出 epoch-readonly / guardian / aibutsu-templates 等獨立 spec、新增 realtime / savings-view 等。內容只動結構，不改 lock 決策。
 
 ## [0.16.1] - 2026-05-13
 
@@ -613,7 +665,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.16.2...HEAD
+[0.16.2]: https://github.com/redtear1115/oikos/compare/v0.16.1...v0.16.2
+[0.16.1]: https://github.com/redtear1115/oikos/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/redtear1115/oikos/compare/v0.15.3...v0.16.0
 [0.15.3]: https://github.com/redtear1115/oikos/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/redtear1115/oikos/compare/v0.15.1...v0.15.2

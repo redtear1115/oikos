@@ -78,9 +78,10 @@ export function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={pending}
-            className="flex-1 h-11 rounded-[12px] border-0 cursor-pointer text-sm font-semibold text-white disabled:opacity-50"
+            className="flex-1 h-11 rounded-[12px] border-0 cursor-pointer text-sm font-semibold disabled:opacity-50"
             style={{
-              background: destructive ? 'var(--destructive)' : 'var(--ink)',
+              background: destructive ? 'var(--btn-destructive-bg)' : 'var(--btn-primary-bg)',
+              color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
             }}
           >
             {confirmLabel}

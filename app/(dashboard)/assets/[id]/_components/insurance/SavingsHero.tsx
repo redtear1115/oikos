@@ -2,9 +2,10 @@
 
 import { INCOME_PALETTES } from '@/lib/incomePalettes'
 import type { SavingsProgress } from '@/lib/insuranceProgress'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { SAVINGS_RETURN_CATEGORIES, getIncomeCategory } from '@/lib/incomeCategories'
+import { formatDateAbsolute } from '@/lib/format-date'
 
 interface Props {
   progress: SavingsProgress
@@ -19,9 +20,10 @@ interface Props {
 
 export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSetExpectedMaturity }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const ts = t.assetDetail.savings
   const hasExpected = progress.expectedMaturity !== null
-  const subCopy = computeSub(progress, endsAt, startsAt, ts)
+  const subCopy = computeSub(progress, endsAt, startsAt, ts, locale)
 
   // Breakdown row: only render when at least two buckets carry money. A
   // single non-zero bucket already tells the full story via the main bar.
@@ -182,13 +184,13 @@ function NoExpectedMaturityRow({
   )
 }
 
-function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string | null, ts: Translations['assetDetail']['savings']): string {
+function computeSub(p: SavingsProgress, endsAt: string | null, startsAt: string | null, ts: Translations['assetDetail']['savings'], locale: string): string {
   if (p.awaitingMaturity) return ts.heroAwaitingMaturity
   // Not yet active: only when we have a start date and we're before it
-  if (startsAt && p.timeProgress === 0) return ts.heroNotYetActive.replace('{date}', startsAt)
+  if (startsAt && p.timeProgress === 0) return ts.heroNotYetActive.replace('{date}', formatDateAbsolute(startsAt, locale))
   if (p.returnTotal === 0) {
     return endsAt
-      ? ts.heroNotStartedWithDate.replace('{date}', endsAt)
+      ? ts.heroNotStartedWithDate.replace('{date}', formatDateAbsolute(endsAt, locale))
       : ts.heroNotStarted
   }
   if (p.returnRatio !== null && p.returnRatio < 1 && p.returnProgress !== null) {

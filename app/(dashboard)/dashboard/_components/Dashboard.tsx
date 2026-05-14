@@ -253,7 +253,7 @@ export function Dashboard({
   const addOrIncome = mode === 'income' ? 'income' : 'add'
 
   return (
-    <div className="relative min-h-dvh pb-[92px]">
+    <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <BrandHeader />
       {isSolo ? (
         bannerDismissed ? (

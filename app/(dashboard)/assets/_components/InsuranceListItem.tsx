@@ -142,63 +142,59 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   // to the original AssetIcon when no policy holder is set yet (legacy data).
   const policyHolderInitial = data.policyHolderDisplayName?.trim().charAt(0).toUpperCase() ?? null
 
-  // Right-aligned secondary chip showing state for the kind.
+  // #260 — every card renders exactly one badge so visual weight stays
+  // consistent across the list. Precedence preserved from the prior version;
+  // the only new state is the `active` fallback so cards that used to render
+  // nothing now show 繳費中.
+  // Lapsed policies aren't a badge state — lapseInsurance() soft-deletes,
+  // so they don't appear in the list at all.
   const renderBadge = () => {
-    if (isSavings && expired) {
-      return (
-        <span
-          className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
-          style={{ fontSize: 11, background: 'var(--saving-soft)', color: 'var(--saving)' }}
-        >
-          {i.savingsMaturedBadge}
-        </span>
-      )
+    type Tone = 'destructive' | 'warning' | 'saving' | 'active'
+    const TONES: Record<Tone, { bg: string; fg: string }> = {
+      destructive: { bg: 'var(--destructive-soft)', fg: 'var(--destructive)' },
+      warning:     { bg: 'var(--warning-soft)',     fg: 'var(--warning)' },
+      saving:      { bg: 'var(--saving-soft)',      fg: 'var(--saving)' },
+      active:      { bg: 'var(--asset-tint-insurance)', fg: 'var(--ink-2)' },
     }
-    // #159 — multi-year / savings: next-payment warning takes precedence over
-    // the multi-year "years left" chip when close to the due date.
-    if (showNextPaymentBadge && daysToNextPayment !== null) {
-      return (
-        <span
-          className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
-          style={{ fontSize: 11, background: 'var(--warning-soft)', color: 'var(--warning)' }}
-        >
-          {i.nextPaymentBadge.replace('{n}', String(daysToNextPayment))}
-        </span>
-      )
-    }
-    if (isSingleYear && daysToExpiry !== null) {
+
+    let tone: Tone = 'active'
+    let label = i.activeBadge
+
+    // Multi-period policies (savings + multi-year protection) reach a
+    // "term complete" state when past expiry or yearsPassed >= termYears.
+    // Subtitle already says 已到期 in those cases; mirror with the saving chip.
+    const multiPeriodTermComplete =
+      (isSavings || isMultiYearProtection) &&
+      (expired || (termYears > 0 && yearsRemaining === 0))
+
+    if (multiPeriodTermComplete) {
+      tone = 'saving'
+      label = i.savingsMaturedBadge
+    } else if (showNextPaymentBadge && daysToNextPayment !== null) {
+      tone = 'warning'
+      label = i.nextPaymentBadge.replace('{n}', String(daysToNextPayment))
+    } else if (isSingleYear && daysToExpiry !== null) {
       if (expired) {
-        return (
-          <span
-            className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
-            style={{ fontSize: 11, background: 'var(--destructive-soft)', color: 'var(--destructive)' }}
-          >
-            {i.expiredBadge}
-          </span>
-        )
-      }
-      if (daysToExpiry <= data.reminderDaysBefore) {
-        return (
-          <span
-            className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
-            style={{ fontSize: 11, background: 'var(--destructive-soft)', color: 'var(--destructive)' }}
-          >
-            {i.daysLeftUrgent.replace('{n}', String(daysToExpiry))}
-          </span>
-        )
-      }
-      if (daysToExpiry <= 60) {
-        return (
-          <span
-            className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
-            style={{ fontSize: 11, background: 'var(--warning-soft)', color: 'var(--warning)' }}
-          >
-            {i.daysLeftWarning.replace('{n}', String(daysToExpiry))}
-          </span>
-        )
+        tone = 'destructive'
+        label = i.expiredBadge
+      } else if (daysToExpiry <= data.reminderDaysBefore) {
+        tone = 'destructive'
+        label = i.daysLeftUrgent.replace('{n}', String(daysToExpiry))
+      } else if (daysToExpiry <= 60) {
+        tone = 'warning'
+        label = i.daysLeftWarning.replace('{n}', String(daysToExpiry))
       }
     }
-    return null
+
+    const { bg, fg } = TONES[tone]
+    return (
+      <span
+        className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
+        style={{ fontSize: 11, background: bg, color: fg }}
+      >
+        {label}
+      </span>
+    )
   }
 
   // Subtitle line content — varies by framing.
@@ -402,8 +398,8 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
             type="button"
             onClick={handleRenew}
             disabled={pending}
-            className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-semibold text-white disabled:opacity-50"
-            style={{ background: 'var(--ink)' }}
+            className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-semibold disabled:opacity-50"
+            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {i.renewConfirm}
           </button>

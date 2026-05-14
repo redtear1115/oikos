@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -244,21 +245,22 @@ export function RecurringRuleSheet({
                 <span>{t.recurringIncome.sheet.recipientPrompt}</span>
                 <div
                   className="inline-flex rounded-full p-[3px] gap-0.5"
-                  style={{ background: 'rgba(58,36,25,0.05)' }}
+                  style={{ background: 'var(--toggle-segment-track)' }}
                 >
                   {(['M', 'T'] as const).map((w) => (
                     <button
                       key={w}
                       type="button"
                       onClick={() => setRecipientWho(w)}
-                      className="h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
+                      className="oik-segment h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5"
                       style={{
-                        background: recipientWho === w ? '#fff' : 'transparent',
+                        background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
                         color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
                         fontFamily: 'inherit',
                         boxShadow: recipientWho === w
-                          ? `0 1px 3px rgba(58,36,25,0.10), 0 0 0 1px ${P.tint}`
+                          ? `var(--toggle-segment-thumb-shadow), 0 0 0 1px ${P.tint}`
                           : 'none',
+                        transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
                       }}
                     >
                       <Avatar
@@ -287,10 +289,7 @@ export function RecurringRuleSheet({
             >
               {t.recurringIncome.sheet.categoryLabel}
             </div>
-            <div
-              className="flex gap-2"
-              style={{ padding: '0 20px', overflowX: 'auto', scrollbarWidth: 'none' }}
-            >
+            <ScrollFadeRow className="flex gap-2" style={{ padding: '0 20px' }} fadeTo={P.sheetBg}>
               {PICKABLE_INCOME_CATEGORIES.map((c) => (
                 <IncomeChip
                   key={c.id}
@@ -299,7 +298,7 @@ export function RecurringRuleSheet({
                   onClick={() => setCategory(c.id)}
                 />
               ))}
-            </div>
+            </ScrollFadeRow>
           </div>
 
           <div style={{ height: 1, margin: '0 20px', background: 'linear-gradient(90deg, transparent, var(--hairline), transparent)' }} />

@@ -11,9 +11,34 @@ export const ja: Translations = {
     termsSuffix: 'に同意したものとみなされます。',
   },
 
+  landing: {
+    heroKicker: 'A COUPLE\'S LEDGER · ふたりの家計簿 PWA',
+    taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
+    bodyHtml: 'カップルのための共有家計アプリ。<br />毎日の支出を一緒に記録し、自動で割り勘、お金の行方が見える — 日々の暮らしを残しておきましょう。',
+    cta: '記録をはじめる',
+    ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
+    alreadyHaveAccount: 'アカウントをお持ちの方',
+    trustEncrypted: 'エンドツーエンド暗号化',
+    trustFree: '無料で使える',
+    trustPwa: 'iOS / Android / Web PWA',
+    featuresKicker: 'INSIDE ──',
+    featuresTitle: 'ひとつの家計簿、ふたりの暮らしの四つの光',
+    featuresSubtitleHtml: '初めての共同支出から、ふたりで守る家・車・保険まで、<br />すべてここに。',
+    f1Title: 'ふたりで記帳',
+    f1Body: '一筆ずつ一緒に記録、自動で割り勘。半分ずつでも比率でもOK。毎月の精算は計算いらず。',
+    f2Title: '愛しいもの',
+    f2Body: '家、車、子ども、ペット、植物 — ふたりで守るもの、すべて同じ家計簿に。',
+    f3Title: '守りの保険',
+    f3Body: '保障型と貯蓄型を並べて、被保険者・受取人・更新日を一画面で。',
+    f4Title: '振り返り',
+    f4Body: '月次レビュー、カテゴリ分布、章の履歴。使ったお金にストーリーを語らせる。',
+    footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
+  },
+
   common: {
     cancel: 'キャンセル',
     save: '保存',
+    update: '更新',
     saving: '保存中…',
     processing: '処理中…',
     delete: '削除',
@@ -163,6 +188,7 @@ export const ja: Translations = {
 
   incomeSheet: {
     title: '収入を記録',
+    titleEdit: '収入を編集',
     amountLabel: '収入金額',
     recipientPrompt: '誰の収入？',
     categoryLabel: '種類',
@@ -172,7 +198,8 @@ export const ja: Translations = {
     claimHint: 'この記録はその保険の「請求」履歴に加算されます',
     noPolicy: '保険がまだありません',
     insuranceBadge: '保険',
-    notePlaceholder: 'メモ（任意）',
+    noteLabel: 'メモ（任意）',
+    notePlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
     deleteIncome: 'この収入を削除',
     deleteConfirmTitle: 'この収入を削除しますか？',
     errors: {
@@ -188,7 +215,6 @@ export const ja: Translations = {
     primaryRepay: '返済を記録',
     primaryReceive: '受領を記録',
     amountAriaLabel: '返済金額',
-    today: '今日',
     errors: {
       exceedsDebt: '金額が借入額を超えています',
     },
@@ -453,6 +479,7 @@ export const ja: Translations = {
       savingsCumulative: '累計払込 NT$ {amount}',
       savingsForeignNote: '保険金 USD 建て',
       savingsMaturedBadge: '払込期間満了',
+      activeBadge: '払込中',
       sumInsuredShort: '保険金 NT$ {amount}',
       yearsLeft: '残り {n} 年',
       expired: '満期',

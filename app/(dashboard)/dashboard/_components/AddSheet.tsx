@@ -289,7 +289,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 amount && !pending ? 'var(--accent)' : 'var(--ink-3)',
             }}
           >
-            {pending ? t.common.saving : t.common.save}
+            {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
           </button>
         </div>
 
@@ -329,7 +329,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 inputMode="numeric"
                 pattern="[0-9]*"
                 enterKeyHint="done"
-                value={amount}
+                value={amount ? parseInt(amount, 10).toLocaleString('en-US') : ''}
                 onChange={(e) => {
                   // strip non-digits, drop leading zeros, cap at 7 digits
                   const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
@@ -344,8 +344,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                   fontWeight: 600,
                   color: amount ? 'var(--ink)' : 'var(--ink-3)',
                   // Min 2ch so empty/single-digit values still have a comfortable hit area;
-                  // grow with content up to 7ch (matches the 7-digit cap).
-                  width: `${Math.max(amount.length || 1, 2)}ch`,
+                  // grows with formatted (comma-separated) length up to 9ch (7 digits + 2 commas).
+                  width: `${Math.max((amount ? parseInt(amount, 10).toLocaleString('en-US').length : 1), 2)}ch`,
                   caretColor: 'var(--accent)',
                 }}
               />
@@ -415,23 +415,27 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               </div>
               <div
                 className="inline-flex rounded-full p-[3px] gap-0.5"
-                style={{ background: 'rgba(31,27,22,0.05)' }}
+                style={{ background: 'var(--toggle-segment-track)' }}
               >
-                {(['settled', 'pending'] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStatus(s)}
-                    className="h-8 px-4 rounded-full border-0 text-label font-medium cursor-pointer transition-all duration-150"
-                    style={{
-                      background: status === s ? 'var(--surface)' : 'transparent',
-                      color: status === s ? 'var(--ink)' : 'var(--ink-2)',
-                      boxShadow: status === s ? '0 1px 3px rgba(31,27,22,0.10)' : 'none',
-                    }}
-                  >
-                    {s === 'settled' ? t.addSheet.statusSettled : t.addSheet.statusPending}
-                  </button>
-                ))}
+                {(['settled', 'pending'] as const).map((s) => {
+                  const sel = status === s
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStatus(s)}
+                      className="oik-segment h-8 px-4 rounded-full border-0 text-label font-medium cursor-pointer"
+                      style={{
+                        background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                        color: sel ? 'var(--ink)' : 'var(--ink-2)',
+                        boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+                        transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+                      }}
+                    >
+                      {s === 'settled' ? t.addSheet.statusSettled : t.addSheet.statusPending}
+                    </button>
+                  )
+                })}
               </div>
               {status === 'pending' && (
                 <div className="text-micro px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
