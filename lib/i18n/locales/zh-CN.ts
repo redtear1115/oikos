@@ -323,6 +323,7 @@ export const zhCN: Translations = {
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
     currency: '货币',
+    trips: '旅行',
     sectionGuardian: '守护（Beta）',
     guardianBeta: {
       title: '开启守护',

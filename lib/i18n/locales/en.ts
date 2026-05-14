@@ -323,6 +323,7 @@ export const en: Translations = {
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
     currency: 'Currency',
+    trips: 'Trips',
     sectionGuardian: 'Guardian (Beta)',
     guardianBeta: {
       title: 'Enable Guardian',
