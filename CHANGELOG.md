@@ -15,6 +15,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.16.3] - 2026-05-14
+
+主題：**在搜尋裡也被看見．sitemap × canonical × middleware × cache 訊號收斂**——Google Search Console 開始持續回報 `LHR failed to render`。本機跑 Lighthouse 13.3.0 不會重現（runtimeError 為 null），但檢查站台四個 SEO/PWA 訊號發現一組互相矛盾的設定：sitemap 把 `/sign-in` 標 priority 1.0 卻沒列首頁、所有頁面的 `rel=canonical` 都寫死指 `/`、middleware 把 `/sw.js` 跟 `/manifest.webmanifest` 攔截 307 → `/sign-in`、所有公開頁面都帶 `Cache-Control: private, no-store`。PSI 跑完 LHR 試圖合成 page-experience signal 時遇到這些訊號矛盾就 bail out → 回 `LHR failed to render`。這版把四條訊號全部對齊，搜尋引擎才能重新讀懂 Futari。
+
+完整 diff：[v0.16.2...v0.16.3](https://github.com/redtear1115/oikos/compare/v0.16.2...v0.16.3)
+
+### 使用者可見變化
+
+本版沒有使用者可見的 UI 或功能變化。SEO / PWA 訊號修正後，Google Search Console 應能恢復索引；當有人搜尋「家庭記帳」「夫妻共享帳本」「雙人記帳 PWA」等關鍵字，Futari 才有可能出現在結果裡——「被找到」是另一種陪伴的開始。
+
+### 技術變更（PR #310 closes #305 #306 #307 #308）
+
+- **sitemap + canonical 訊號矛盾收斂（closes #305）**：[`app/sitemap.ts`](app/sitemap.ts) 加入 `/`（priority 1.0），`/sign-in` 降至 0.7；[`app/layout.tsx`](app/layout.tsx) 移除全站 `alternates.canonical: '/'`，改在 [`app/page.tsx`](app/page.tsx)、[`app/sign-in/page.tsx`](app/sign-in/page.tsx)、[`app/terms/page.tsx`](app/terms/page.tsx)、[`app/privacy/page.tsx`](app/privacy/page.tsx) 各自宣告自己的 canonical。Lighthouse `canonical` audit 由 score 0（"Points to the domain's root URL... instead of equivalent page"）回到 score 1，`/sign-in` 的 SEO 分數 0.92 → 1.00。
+- **middleware 攔截 PWA 資源（closes #306）**：[`middleware.ts`](middleware.ts) matcher 排除清單加入 `sw.js`、`service-worker.js`、`manifest.(json|webmanifest)`、`woff2?`、`gif`。原本 bundle 內含的 `navigator.serviceWorker.register('/sw.js')` 收到 307 → `/sign-in` HTML → MIME mismatch → SW 註冊被 `try{}` 吞掉、靜默失敗。修補後 `/sw.js` 回 200 + `content-type: application/javascript`，SW 才真的有註冊。
+- **manifest `start_url` 指向 auth 牆內（closes #307）**：[`public/manifest.json`](public/manifest.json) `start_url` 從 `/dashboard` 改成 `/`。原本未登入裝置從 home screen 開 PWA 會被 307 → /sign-in，PWA installable audit 因 redirect chain 降級。
+- **公開頁面 Cache-Control 阻擋 bf-cache（closes #308）**：[`middleware.ts`](middleware.ts) 對 `PUBLIC_PATHS`（`/`、`/sign-in`、`/terms`、`/privacy`）覆寫 `Cache-Control` 為 `public, max-age=0, s-maxage=3600, stale-while-revalidate=86400`。原本 Supabase cookie ops 讓所有回應被套上 `private, no-store`，Lighthouse `bf-cache` audit 因主資源 `no-store` 失敗（`MainResourceHasCacheControlNoStore`）。修補後 bf-cache audit 通過、Vercel edge cache 對 public 路徑生效。
+
+驗證：本機 build + Lighthouse 13.3.0 跑 `/` 與 `/sign-in`，runtimeError 為 null、`/sign-in` SEO 1.00、`/` bf-cache score 1，四個 fix 透過 `curl` 確認 response headers 已對齊。
+
 ## [0.16.2] - 2026-05-14
 
 主題：**設計語言收束．第一張公開臉．效能更輕**——v0.16.0 / v0.16.1 把守護模組獨立化、設定頁重新分組、模板系統 v1 落地之後，這版集中收掉幾個跨表面的視覺裂縫：button 顏色、destructive 按鈕、Settings 按鈕、三種 toggle（switch / chip / segment）、收入支出兩個 sheet、保險卡 badge、愛物卡片資訊密度、Records 日期顯示——全部走同一份 design token 之後，視覺權重終於穩定下來。同期 `/` 從 redirect 升級為真正的 landing page，第一次面對未登入訪客有自己的臉；OG image 同步換成 Editorial direction 的「兩個人，一本帳」。效能側也順手收兩條：Noto Sans TC 移除 weight 600（render-blocking CSS −93KB）、Dashboard 首屏 query 用 `React.cache()` 去重 + `Promise.all` 合併。最後是一票 /records 與 sheet 細節 polish：篩選分類加全選 chip + 色點、分擔金額補回、大額用億/兆縮寫、Escape 鍵關 sheet、edit-mode CTA 文案、sticky 返回按鈕、定期收支 chip scroll fade 等。
@@ -665,7 +684,8 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.16.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.16.3...HEAD
+[0.16.3]: https://github.com/redtear1115/oikos/compare/v0.16.2...v0.16.3
 [0.16.2]: https://github.com/redtear1115/oikos/compare/v0.16.1...v0.16.2
 [0.16.1]: https://github.com/redtear1115/oikos/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/redtear1115/oikos/compare/v0.15.3...v0.16.0

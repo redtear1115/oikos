@@ -4,8 +4,8 @@ import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { Landing } from './_landing/Landing'
 
-// Override the layout's `alternates.canonical: '/'` for the public
-// landing page — / is now the canonical entry point, not /sign-in.
+// Each public page declares its own canonical (root layout no longer sets one)
+// so sitemap × canonical signals agree per #305.
 export const metadata: Metadata = {
   alternates: {
     canonical: '/',
