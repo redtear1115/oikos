@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.16.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.17.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -46,6 +46,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.16.1](CHANGELOG.md#0161---2026-05-13) | 守護後的細節收尾．角色色 × 收入篩選 × 被保人自己/對方 × 兩條清理 |
 | [v0.16.2](CHANGELOG.md#0162---2026-05-14) | 設計語言收束．第一張公開臉．效能更輕 |
 | [v0.16.3](CHANGELOG.md#0163---2026-05-14) | 在搜尋裡也被看見．sitemap × canonical × middleware × cache 訊號收斂 |
+| [v0.17.0](CHANGELOG.md#0170---2026-05-14) | 架構先行．多幣別 × 旅行子帳本一次到位 |
 
 ## Backlog / 未釋出版本
 
@@ -113,13 +114,15 @@ Realtime：Client subscribes → React state mutation
 
 ### 主要 entity
 
-- **`OikosGroups`（Group）** — 兩人帳本本體。`member_a` notNull / `member_b` nullable（solo 模式 = `member_b IS NULL`）。`current_epoch_started_at` 標記目前章節起點；`default_split_ratio_a` 為 group 預設依比例分；`guardian_beta_enabled` 控制守護模組可見性（單一閘門 `lib/guardian.ts#canAccessGuardian`，將來付費層 cut-over 只動該函式）。
+- **`OikosGroups`（Group）** — 兩人帳本本體。`member_a` notNull / `member_b` nullable（solo 模式 = `member_b IS NULL`）。`current_epoch_started_at` 標記目前章節起點；`default_split_ratio_a` 為 group 預設依比例分；`guardian_beta_enabled` 控制守護模組可見性（單一閘門 `lib/guardian.ts#canAccessGuardian`，將來付費層 cut-over 只動該函式）；`base_currency` 為 group 主體幣別（TWD/CNY/USD/JPY，當前 epoch 無 record 時可改）。
 - **`Profiles`（OikosUser）** — mirror `auth.users.id` 的使用者 profile（displayName / avatar / `default_split_type`）。
 - **`GroupEpochs`** — 關係章節歷史。每個 group 同時間恰好一筆 `endedAt IS NULL`（current epoch）；swap 不開新 epoch、leave 才會關舊開新。`/records` / stats / dashboard 預設只看當前 chapter，`/past-times` 翻歷史。
-- **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount` + `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。
-- **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
-- **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。
-- **`GroupBalance`** — balance cache（per-group 單列）。`balance` 正數 = A 欠 B、負數 = B 欠 A；每次寫入後由 `lib/balance.ts` 全量重算。
+- **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount`（base 幣別整數）+ `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id` / `trip_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。多幣別 record 另存 `original_currency` / `original_amount` / `rate_snapshot`（NULL = base native）；balance 計算永遠看 base 幣別 `amount`。
+- **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。Schema 已有 `original_currency` / `original_amount` / `rate_snapshot` 欄位但 v0.17.0 UI 不接。
+- **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。強制 base 幣別。
+- **`GroupBalance`** — balance cache（per-group 單列）。`balance` 正數 = A 欠 B、負數 = B 欠 A；每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。
+- **`CurrencyRates`** — per-group 心理匯率表（PK `group_id` × `from_currency` × `to_currency`）。只存當前匯率、不存歷史；變更不影響歷史 record（snapshot 語意鎖在 record 的 `rate_snapshot`）。
+- **`Trips`** — 旅行子帳本。`epoch_id` notNull（**強制單一 epoch**：trip 不可跨章節）、`start_date >= currentEpochStartedAt`；`default_currency` 為 records 表單 currency selector 預設值；`status: 'active' | 'ended' | 'archived'`。`leaveGroup` 若有 active trip 則 reject「請先結束旅行」。
 - **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance` / `item`），舊 6 種用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`；`item` 走 template path (`template_key` + `template_fields` jsonb)，不開子表。
 - **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
 - **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
@@ -133,16 +136,17 @@ Profiles ─┬─< OikosGroups.member_a, member_b
           ├─< IncomeTransactions.recipient_id
           └─< InsuranceDetails.policy_holder_user_id / insured_user_id
 
-OikosGroups ─┬─< GroupEpochs (1 open + N closed)
+OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound)
              ├─< CashTransactions / IncomeTransactions / Settlements
              ├─< Assets ─┬─< CarDetails ─< FuelLogs
              │           ├─< HouseDetails / ChildDetails / PetDetails / PlantDetails
              │           └─< InsuranceDetails (可 FK 回 Asset: vehicle_id / insured_child_id)
+             ├─< CurrencyRates (per-group 心理匯率表)
              └─── GroupBalance (1:1)
 ```
 
 - Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type 自己定義（`CarDetails.primary_user_id` / `HouseDetails.owner` / `InsuranceDetails.policy_holder_user_id`）。
-- CashTransaction 可 optional 關聯 `asset_id`（哪個愛物的支出）+ `fuel_log_id`（加油雙寫）。
+- CashTransaction 可 optional 關聯 `asset_id`（哪個愛物的支出）+ `fuel_log_id`（加油雙寫）+ `trip_id`（屬於哪段旅行）。
 - Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 `transacted_at` 落在哪個 epoch 來歸屬章節。
 
 ### 分類色 token

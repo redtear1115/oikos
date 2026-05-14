@@ -15,6 +15,98 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.0] - 2026-05-14
+
+主題：**架構先行．多幣別 × 旅行子帳本一次到位**——Futari 從 i18n 的 ja 開始就把日本市場放在心上，但金額一直硬寫 TWD 整數，是進入日本市場、跨境家庭、海外薪資情境的硬卡點；另一頭「東京 5 日花了多少」「今年聖誕假期總共多少」這類雙人最有感的旅行子帳本需求也擱了很久。這版選擇把兩個耦合的 feature 綁在同一個 schema migration window 裡一起出——schema 一次到位、UI 走 minimal——避免將來再痛一次；同時把所有 amount 顯示路徑改成 currency-aware（TypeScript compile-time guard 防止漏接 currency 參數），讓底盤穩定下來迎接後續幣別擴張。匯率走「自訂心理匯率」（不接 API、不讓數字每天跳動讓人焦慮）+「snapshot 語意」（改 rate 後過去紀錄保留當時匯率），與 Futari「兩人共同對齊的一把尺」哲學一致。Trip 是 tag-style record 標籤（不另開子 ledger），強制單一 epoch（trip 不可跨章節），leave 群組時有 active trip 會被擋住。順手把 #299 也收掉：定期收支 list item 加上「誰的 + 分攤方式」第三條 meta 行。
+
+完整 diff：[v0.16.3...v0.17.0](https://github.com/redtear1115/oikos/compare/v0.16.3...v0.17.0)
+
+### 使用者可見變化
+
+#### 多幣別支援（closes #68）
+
+- **Group 主體幣別（4 選 1：TWD / CNY / USD / JPY）**：Settings → 貨幣可改主體幣別；balance / settlement / report 全圍繞此幣別。當前 epoch 已有紀錄時鎖住不可改（避免歷史紀錄 base currency 漂移）；新建 group 或剛開新 epoch 的群組能補設定。
+- **自訂心理匯率**：Settings → 貨幣三個匯率輸入欄（依主體幣別動態 render，例如主體 TWD 顯示「1 TWD = ___ JPY/USD/CNY」），小數三位，最小 0.001。Futari 走「兩人共同對齊的一把尺」差異化——不接外部 API、數字不每天跳動讓人焦慮。
+- **記帳表單 currency selector + 即時換算 preview**：AddSheet 新增 currency selector（4 選 1），若 currency ≠ base 幣別則金額輸入旁顯示「≈ NT$ X 換算」即時 preview。USD 走 cent 精度（`$12.50` ↔ `1250`），其他幣別存整數。
+- **Records 列表多幣別 row dual-display**：多幣別 record 主行顯示原始幣別、副小字 base 等值；同幣別 row 照常 single line。
+- **Snapshot 語意鎖在每筆 record**：每筆多幣別 record 寫入瞬間鎖定當時匯率（`rate_snapshot`），之後改 Settings 匯率不影響歷史紀錄等值；balance 計算永遠看 base 幣別整數，與幣別無關。
+
+#### 旅行子帳本（refs #42）
+
+- **`/trips` 列表 + 詳情頁**：active trips（按 start_date desc）+ past trips；點進去看單一 trip 的 records list（filter by trip_id）+ 總額。Settings 新增「旅行」入口。
+- **建立 / 結束 / 軟刪 trip**：name + start_date + end_date(opt) + default_currency(opt) + budget(opt) 五個欄位。結束 trip 把 status 改 `'ended'` + 填 `ended_at`。
+- **記帳表單 trip selector**：AddSheet 新增 trip selector（active trips dropdown + 「無旅行」），若有 active trip 且 transactedAt 在範圍內 → 預設選該 trip（可改）；trip 有 `default_currency` 時 cascade 到 currency selector。沒有 active trip 時 selector 自動隱藏。
+- **強制單一 epoch**：trip 建立時 `start_date` 必須 ≥ `currentEpochStartedAt`（不可建在過去章節），DB 層 `Trips.epoch_id` 是 notNull FK 把這條 invariant 變成結構性保證。
+- **離開帳本 / 接受邀請 reject active trip**：`leaveGroup` 若當前 epoch 有 `status='active'` 的 trip → reject「請先結束旅行再離開章節」+ 提供 trip 結束捷徑連結（注意 swap 不算結束 epoch，所以 swap 不檢查 trip）。
+- **過去章節的 trip 沿用 epoch-readonly**：pin 在 past epoch 時 trip 相關 UI 唯讀，與其他 transaction 一致。
+
+#### 定期收支 list 顯示誰的 + 分攤方式（PR #300 closes #299）
+
+- **`/settings/recurring-expense` 和 `/settings/recurring-income` list item 加第三條 meta 行**：掃一眼就能看出規則屬於誰（avatar + displayName，沿用 dashboard `CompactRow` 慣例——memberA 深色、memberB 橘色）、以及分攤方式（split chip：對等分 / 全部我的 / 全部對方的 / 依比例分）。
+- **`all_mine` / `all_theirs` 標籤對 viewer 視角**：避免「我看到 partner 規則寫『全部我的』」的歧義——永遠以 viewer 為「我」，必要時 swap label。
+- **Solo 模式整條 meta 隱藏**：單人沒對方、沒分攤，indicator 沒意義。
+- **收入無 split chip**：收入只有 recipient，沒有分攤概念。
+
+### 技術變更
+
+#### v0.17.0 為什麼把多幣別 × 旅行綁一起出（"架構先行" bundle）
+
+兩個 feature 在邏輯上獨立，但：
+- Schema migration 共用 window，分開做等於做兩次 migration
+- 記帳表單同時新增 currency selector 與 trip selector，trip 的 `default_currency` 提供 currency selector 預設值（單向弱耦合）
+- 整體立場一致：底層 schema 一次到位、UI 只做最小可用；先例如 v0.15.3 [epoch-readonly](docs/superpowers/specs/epoch-readonly-design.md)（Part 1 政策 + Part 2 型別防呆）
+
+完整設計在 [docs/superpowers/specs/multi-currency-trip-design.md](docs/superpowers/specs/multi-currency-trip-design.md)（含 locked decisions / 不採用清單 / 風險與緩解 / acceptance criteria）。
+
+#### Phase 1 — `lib/currency.ts` foundation（PR #298）
+
+新模組 `lib/currency.ts` 集中所有 currency-aware 邏輯：`formatAmount(amount, currency)` 顯示用（處理 cent ↔ 整數、千分位、幣別符號）、`convertAmount({ amount, from, to, rates })` 換算（含 cent ↔ 整數 normalize）、`currencyPrecision(currency)` USD 為 2 其他為 0、`CURRENCIES: readonly CurrencyCode[]` 排序與 i18n key 對應。TypeScript 強制 `formatAmount` 必傳 currency 參數 → compile-time guard 防漏接。
+
+#### Phase 2 — `NT$` callsite migration（PR #302）
+
+把所有散落在 codebase 裡的 `NT$${amount.toLocaleString()}` 寫死樣板改成 `formatAmount(amount, currency)` callsite。純 refactor、TypeScript pass。為 Phase 3 schema 出來後的 currency-aware 顯示鋪路。
+
+#### Phase 3 — Schema migration 0038（PR #303）
+
+`drizzle/0038_multi_currency_and_trips.sql`：
+- 新 enum `currency_code` (`twd / cny / usd / jpy`)、`trip_status` (`active / ended / archived`)
+- `OikosGroups` 加 `base_currency currency_code NOT NULL DEFAULT 'twd'`
+- 新表 `CurrencyRates`：per-group 心理匯率，PK `(group_id, from_currency, to_currency)`，rate `numeric(10,3)`；只存當前匯率、不存歷史
+- 新表 `Trips`：`epoch_id` notNull FK to `GroupEpochs`、`status` + `start_date` + `end_date` + `default_currency` + `budget_amount` + `budget_currency` + `cover_photo_url`（欄位先加，UI 不做上傳）
+- `CashTransactions` 加 `original_currency` / `original_amount` / `rate_snapshot` / `trip_id` 四欄
+- `IncomeTransactions` 加 `original_currency` / `original_amount` / `rate_snapshot` 三欄（**UI v0.17.0 不接**，但欄位先加避免未來再 migration）
+- `Settlements` 不動（強制 base 幣別）
+
+#### Phase 4 — Settings 貨幣 page + server actions（PR #304）
+
+- `app/(dashboard)/settings/currency/` page + `_components/CurrencySettings.tsx`
+- `actions/currency.ts`：`setBaseCurrency`（守「當前 epoch 無 record 時可改」guard）、`setRate`、`listRates`
+- `lib/db/queries/currencyRates.ts`：currency rate queries
+- i18n: zh-TW「貨幣 / 主體貨幣 / 匯率」/ zh-CN「货币」/ en「Currency」/ ja「通貨」
+
+#### Phase 5 — Trip CRUD + leaveGroup guard + /trips pages（PR #309）
+
+- `actions/trip.ts`：`createTrip`（含 single-epoch guard: `start_date >= currentEpochStartedAt`）、`endTrip`、`updateTrip`、`softDeleteTrip`
+- `lib/db/queries/trips.ts`：`listActiveTrips` / `listAllTrips` / `getTripById` / `hasActiveTrip` / `listTripRecords`
+- `actions/membership.ts#leaveGroup`：reject with `active_trip_exists` 若當前 epoch 有 active trip
+- `app/(dashboard)/trips/page.tsx` + `_components/{TripList,TripSheet}.tsx` + `[id]/page.tsx`：list + create sheet + detail
+- `Trips.epoch_id` FK 把「trip 單一 epoch」invariant 從靠記憶變成結構性保證；past-epoch trips 沿用既有 epoch-readonly UI 行為（list page 只 query currentEpoch）
+
+#### Phase 6 — AddSheet integration + dual-currency display + e2e（PR #313 closes #68）
+
+- `actions/transaction.ts#createTransaction`：accept `currency` + `tripId`；用 `convertAmount()` 把 foreign amount 換成 base 幣別寫入 `amount` 欄位；snapshot 當時 rate 到 `rate_snapshot`；驗證 trip 屬於同一 group + 同一 epoch
+- `CurrencySelector` + `TripSelector` 元件（`app/(dashboard)/dashboard/_components/`）：TripSelector 沒有 active trips 時自動隱藏
+- `AddSheet.tsx`：currency selector + trip selector + real-time conversion preview（例如「≈ NT$110」）；auto-select 今日的 active trip 並 cascade 其 `defaultCurrency`；從 `dashboard/page.tsx` 透過 `Dashboard.tsx` prop-drill
+- `CompactRow`：多幣別 row 主行原始幣別、副小字 base 等值
+- 所有 feed query helpers（`transactions.ts` / `asset.ts` / `insurance.ts` / `incomeFeedRow.ts` / `TransactionFeed.tsx`）擴 4 個 nullable 欄位讓 `PagedTxnRow` / `FeedRow` shape 一致
+- i18n: `幣別 / 旅行 / 無旅行`（zh-TW）、`货别 / 旅行 / 无旅行`（zh-CN）、`Currency / Trip / No trip`（en）、`通貨 / 旅行 / なし`（ja）
+- E2E golden path test（`__tests__/actions/multiCurrencyTrip.e2e.test.ts`）：seed group → createTrip(Tokyo/JPY) → setRate(JPY→TWD 0.220) → createTransaction(500 JPY) → assert DB row (`amount=110, originalCurrency=jpy, originalAmount=500, rateSnapshot=0.220`) → assert balance=0 → endTrip → hasActiveTrip=false → softDeleteTrip → getTripById=null
+
+#### 其他
+
+- **定期收支 list item 加第三條 meta 行**（PR #300 #299）：`RuleListItem.tsx`（recurring-expense / recurring-income 各一份）加 avatar16 + displayName + split chip；i18n 沿用既有 `splitType.even / allMine / allPartners / weighted` + `common.you / partner` 四語 key（無需新增）。
+- **Doc keeper pass**（commit 1 of release PR）：刪除 v0.16.0 殘留的重複 spec `asset-templates-design.md`（已被 `aibutsu-templates-design.md` 取代但舊檔沒清掉）；`multi-currency-trip-design.md` frontmatter `planned → shipped`；INDEX.md 記帳核心 section 加 multi-currency-trip 連結；CLAUDE.md Domain Model 補 `base_currency` / `CurrencyRates` / `Trips` 三個 entity 語意 + 多幣別欄位在 `CashTransactions` / `IncomeTransactions` 的角色；Entity 關係圖加入 Trips（epoch-bound）+ CurrencyRates。
+
 ## [0.16.3] - 2026-05-14
 
 主題：**在搜尋裡也被看見．sitemap × canonical × middleware × cache 訊號收斂**——Google Search Console 開始持續回報 `LHR failed to render`。本機跑 Lighthouse 13.3.0 不會重現（runtimeError 為 null），但檢查站台四個 SEO/PWA 訊號發現一組互相矛盾的設定：sitemap 把 `/sign-in` 標 priority 1.0 卻沒列首頁、所有頁面的 `rel=canonical` 都寫死指 `/`、middleware 把 `/sw.js` 跟 `/manifest.webmanifest` 攔截 307 → `/sign-in`、所有公開頁面都帶 `Cache-Control: private, no-store`。PSI 跑完 LHR 試圖合成 page-experience signal 時遇到這些訊號矛盾就 bail out → 回 `LHR failed to render`。這版把四條訊號全部對齊，搜尋引擎才能重新讀懂 Futari。
@@ -684,7 +776,8 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.16.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/redtear1115/oikos/compare/v0.16.3...v0.17.0
 [0.16.3]: https://github.com/redtear1115/oikos/compare/v0.16.2...v0.16.3
 [0.16.2]: https://github.com/redtear1115/oikos/compare/v0.16.1...v0.16.2
 [0.16.1]: https://github.com/redtear1115/oikos/compare/v0.16.0...v0.16.1
