@@ -3,6 +3,7 @@ import Link from 'next/link'
 export const metadata = {
   title: '服務條款 · Futari',
   description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
+  alternates: { canonical: '/terms' },
   openGraph: {
     title: '服務條款 · Futari',
     description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
