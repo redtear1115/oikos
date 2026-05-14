@@ -70,6 +70,32 @@
   --btn-disabled-bg:      var(--ink-3);
   --btn-disabled-text:    #fff;
 
+  /* Toggle / chip / switch tokens — unification for issue #263.
+   * Three toggle families share these so the design language stays coherent:
+   *   1. Switch (settings on/off, iOS-style)         — uses --switch-* + shared transition/focus
+   *   2. Chip (filter pills, multi-select)           — uses --toggle-* fill/text
+   *   3. Segmented selector (PayerToggle, etc.)      — uses --toggle-segment-* surface
+   * Heights kept compact (chip h-8 / segment h-7-9) for dense filter UIs;
+   * touch comfort comes from focus rings + 150ms transition + opacity-50 disabled. */
+  --toggle-active-bg:        var(--ink);                          /* selected chip / segment fill */
+  --toggle-active-text:      #fff;
+  --toggle-inactive-bg:      var(--surface);                      /* unselected chip surface */
+  --toggle-inactive-text:    var(--ink-2);
+  --toggle-border:           var(--hairline);                     /* hairline outline on chips */
+  --toggle-segment-track:    rgba(58, 36, 25, 0.05);              /* segmented toggle bg track */
+  --toggle-segment-thumb:    var(--surface);                      /* selected segment "thumb" */
+  --toggle-segment-thumb-shadow: 0 1px 3px rgba(31, 27, 22, 0.10);
+  --toggle-transition:       150ms ease;                          /* shared timing across all 3 */
+  --toggle-disabled-opacity: 0.5;
+  --toggle-focus-ring:       0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+
+  /* Switch (settings on/off) specifics — separate so Settings page can keep
+   * the iOS-style accent fill while chips/segments use ink for selected. */
+  --switch-on-bg:        var(--accent);
+  --switch-off-bg:       var(--hairline);
+  --switch-thumb-bg:     var(--surface);
+  --switch-thumb-shadow: 0 1px 3px rgba(58, 36, 25, 0.20);
+
   /* Typography scale — P3-1 */
   --fs-xs:        11px;   /* extra small: labels, metadata */
   --fs-micro:     11px;   /* tab label, timestamp, metadata */
@@ -127,6 +153,18 @@ body {
 
 @keyframes blink { 50% { opacity: 0; } }
 .animate-blink { animation: blink 1s step-end infinite; }
+
+/* Shared focus-visible treatment for unified toggles (issue #263).
+ * Switch / Chip / Segment all opt-in by adding the `oik-toggle` class
+ * (or one of `oik-switch` / `oik-chip` / `oik-segment` which inherit it).
+ * Keyboard focus surfaces a soft accent ring; pointer clicks stay clean. */
+.oik-toggle:focus-visible,
+.oik-switch:focus-visible,
+.oik-chip:focus-visible,
+.oik-segment:focus-visible {
+  outline: none;
+  box-shadow: var(--toggle-focus-ring);
+}
 
 @keyframes rt-flash {
   0%   { background: var(--realtime-flash); }

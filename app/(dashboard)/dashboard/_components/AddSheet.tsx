@@ -415,23 +415,27 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               </div>
               <div
                 className="inline-flex rounded-full p-[3px] gap-0.5"
-                style={{ background: 'rgba(31,27,22,0.05)' }}
+                style={{ background: 'var(--toggle-segment-track)' }}
               >
-                {(['settled', 'pending'] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStatus(s)}
-                    className="h-8 px-4 rounded-full border-0 text-label font-medium cursor-pointer transition-all duration-150"
-                    style={{
-                      background: status === s ? 'var(--surface)' : 'transparent',
-                      color: status === s ? 'var(--ink)' : 'var(--ink-2)',
-                      boxShadow: status === s ? '0 1px 3px rgba(31,27,22,0.10)' : 'none',
-                    }}
-                  >
-                    {s === 'settled' ? t.addSheet.statusSettled : t.addSheet.statusPending}
-                  </button>
-                ))}
+                {(['settled', 'pending'] as const).map((s) => {
+                  const sel = status === s
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStatus(s)}
+                      className="oik-segment h-8 px-4 rounded-full border-0 text-label font-medium cursor-pointer"
+                      style={{
+                        background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                        color: sel ? 'var(--ink)' : 'var(--ink-2)',
+                        boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+                        transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+                      }}
+                    >
+                      {s === 'settled' ? t.addSheet.statusSettled : t.addSheet.statusPending}
+                    </button>
+                  )
+                })}
               </div>
               {status === 'pending' && (
                 <div className="text-micro px-1 mt-2" style={{ color: 'var(--ink-3)' }}>

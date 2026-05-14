@@ -16,27 +16,30 @@ export function Switch({ checked, onChange, disabled, ariaLabel }: Props) {
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="relative inline-flex shrink-0 cursor-pointer disabled:cursor-default disabled:opacity-50 transition-colors"
+      className="oik-switch relative inline-flex shrink-0 cursor-pointer disabled:cursor-default"
       style={{
         width: 44,
         height: 26,
         borderRadius: 13,
-        background: checked ? 'var(--accent)' : 'var(--hairline)',
+        background: checked ? 'var(--switch-on-bg)' : 'var(--switch-off-bg)',
         border: 'none',
         padding: 0,
+        transition: `background var(--toggle-transition)`,
+        opacity: disabled ? 'var(--toggle-disabled-opacity)' : 1,
       }}
     >
       <span
         aria-hidden="true"
-        className="block transition-transform"
+        className="block"
         style={{
           width: 22,
           height: 22,
           borderRadius: 11,
-          background: '#fff',
+          background: 'var(--switch-thumb-bg)',
           transform: checked ? 'translateX(20px)' : 'translateX(2px)',
           marginTop: 2,
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+          boxShadow: 'var(--switch-thumb-shadow)',
+          transition: `transform var(--toggle-transition)`,
         }}
       />
     </button>

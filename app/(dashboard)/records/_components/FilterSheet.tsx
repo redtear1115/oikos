@@ -672,11 +672,12 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className="h-8 px-3 rounded-full text-xs font-medium cursor-pointer transition-colors inline-flex items-center gap-1.5"
+      className="oik-chip h-8 px-3 rounded-full text-xs font-medium cursor-pointer inline-flex items-center gap-1.5"
       style={{
-        background: active ? 'var(--ink)' : 'var(--surface)',
-        color: active ? '#fff' : 'var(--ink-2)',
-        border: '1px solid var(--hairline)',
+        background: active ? 'var(--toggle-active-bg)' : 'var(--toggle-inactive-bg)',
+        color: active ? 'var(--toggle-active-text)' : 'var(--toggle-inactive-text)',
+        border: '1px solid var(--toggle-border)',
+        transition: `background var(--toggle-transition), color var(--toggle-transition), border-color var(--toggle-transition)`,
       }}
     >
       {dotColor && (

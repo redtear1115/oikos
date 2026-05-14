@@ -53,7 +53,7 @@ export function StatsBreakdownToggle({ value, hideAsset = false }: Props) {
       className="inline-flex items-center rounded-full p-0.5"
       style={{
         background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
+        border: '1px solid var(--toggle-border)',
         opacity: isPending ? 0.6 : 1,
       }}
     >
@@ -65,10 +65,11 @@ export function StatsBreakdownToggle({ value, hideAsset = false }: Props) {
             type="button"
             onClick={() => setView(opt.id)}
             disabled={isPending}
-            className="h-7 px-3 rounded-full text-xs font-medium cursor-pointer border-0 transition-colors duration-150"
+            className="oik-segment h-7 px-3 rounded-full text-xs font-medium cursor-pointer border-0"
             style={{
-              background: sel ? 'var(--ink)' : 'transparent',
-              color: sel ? '#fff' : 'var(--ink-2)',
+              background: sel ? 'var(--toggle-active-bg)' : 'transparent',
+              color: sel ? 'var(--toggle-active-text)' : 'var(--ink-2)',
+              transition: `background var(--toggle-transition), color var(--toggle-transition)`,
             }}
           >
             {opt.label}

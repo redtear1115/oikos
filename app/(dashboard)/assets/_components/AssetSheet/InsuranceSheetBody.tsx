@@ -207,7 +207,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
           possible value; form defaults to viewer.id). */}
       {partner && (
         <Field label={ts.insurance.policyHolder}>
-          <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(58,36,25,0.05)' }}>
+          <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--toggle-segment-track)' }}>
             {[
               { id: viewer.id, label: t.common.me },
               { id: partner.id, label: partner.displayName ?? t.common.partner },
@@ -218,11 +218,15 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={opt.id}
                   type="button"
                   onClick={() => setPolicyHolderUserId(opt.id)}
-                  className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
-                    active
-                      ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
-                      : 'bg-transparent text-[var(--ink-2)]'
+                  className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
+                    active ? 'font-semibold' : ''
                   }`}
+                  style={{
+                    background: active ? 'var(--toggle-segment-thumb)' : 'transparent',
+                    color: active ? 'var(--ink)' : 'var(--ink-2)',
+                    boxShadow: active ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+                    transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -385,17 +389,21 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       )}
 
       <Field label={ts.insurance.payCycle}>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-          {([{v:'annual',label:ts.insurance.payCycleAnnual},{v:'semi',label:ts.insurance.payCycleSemi},{v:'quarterly',label:ts.insurance.payCycleQuarterly},{v:'monthly',label:ts.insurance.payCycleMonthly}]).map(o => (
-            <button key={o.v} type="button" onClick={() => setPayCycle(o.v)}
-              className="flex-1 h-8 rounded-[9px] text-xs font-medium"
-              style={{
-                border: 'none',
-                background: payCycle === o.v ? '#fff' : 'transparent',
-                color: payCycle === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                boxShadow: payCycle === o.v ? '0 1px 3px rgba(58,36,25,0.10)' : 'none',
-              }}>{o.label}</button>
-          ))}
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--toggle-segment-track)' }}>
+          {([{v:'annual',label:ts.insurance.payCycleAnnual},{v:'semi',label:ts.insurance.payCycleSemi},{v:'quarterly',label:ts.insurance.payCycleQuarterly},{v:'monthly',label:ts.insurance.payCycleMonthly}]).map(o => {
+            const sel = payCycle === o.v
+            return (
+              <button key={o.v} type="button" onClick={() => setPayCycle(o.v)}
+                className="oik-segment flex-1 h-8 rounded-[9px] text-xs font-medium"
+                style={{
+                  border: 'none',
+                  background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                  color: sel ? 'var(--ink)' : 'var(--ink-2)',
+                  boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+                  transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+                }}>{o.label}</button>
+            )
+          })}
         </div>
       </Field>
 
