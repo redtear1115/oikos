@@ -15,6 +15,48 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.1] - 2026-05-15
+
+主題：**UX × 效能 × a11y × 快取．細節讓體驗更順**——v0.17.0 把多幣別 × 旅行的底盤一次到位之後，這版回頭把幾條「能用但不夠順」的縫細收掉：`/trips` 從 stub 級往上拉成跟其他頁面同一套視覺語言；`/settings/currency` 把鎖住主體幣別的原因說清楚、把心理匯率的「為什麼叫心理」用三塊 hint card 鋪好；landing 文字色把對比拉過 WCAG AA；中文字型不再 preload 11 個 woff2 搶關鍵路徑；ES2019+ polyfill 在現代瀏覽器全部砍掉；公開頁的 Cache-Control 從 middleware 搬到 Vercel edge 才真的吃得到。沒有新功能，只有把現有的東西打磨到該有的樣子——這就是 0.x.1 的意義。
+
+完整 diff：[v0.17.0...v0.17.1](https://github.com/redtear1115/oikos/compare/v0.17.0...v0.17.1)
+
+### 使用者可見變化
+
+#### `/trips` UX 全面對齊（PR #332 closes #327 #328 #329 #330 #331）
+
+- **List page**：共用 page-header（serif h1 + soft subtitle）、FAB via `BottomNav`、空狀態插圖；past trips 換成透明背景而非灰底，與 active trips 區分但不死灰。
+- **TripSheet 重建在 `SheetShell` 之上**：Escape / backdrop tap / body scroll lock / chrome 一致行為都白送；加上 end ≥ start 的 inline 日期驗證；支援編輯模式讓 detail page 重用同一個 sheet。
+- **Detail page**：sticky back bar（對齊 `AssetDetailClient`）；內容底部 `pb-[var(--bottom-nav-offset)]` 不被 BottomNav 遮住；「編輯」「結束旅行」作為 inline CTA（past-epoch 隱藏）；結束 trip 走確認 sheet，日期選擇器以 trip `startDate` 為下限。
+- **Records list 改用 `CompactRow`**：分類 chip / payer + share 線 / dual-currency 主行原始幣別、副小字 base——與整個 app 一致。
+- **總額卡片文案**：「總額（base）」→「這趟一共花了」；外幣換算註腳改寫成 user-facing 語氣。
+
+#### `/settings/currency` UX pass（PR #333 closes #322 #323 #324 #325 #326）
+
+- **Sticky page header + 回鍵 + 「貨幣」title**（#322），hero `<h1>` 讓頁面可被識別。
+- **Design token 全面對齊**（#323）：原本散落的 `text-gray-500` / `text-red-600` / `bg-white` / `rounded border` 改成 `--ink-*` / `--surface-*` / `--hairline` / `--debit`；主體幣別選擇器從原生 `<select>` 換成 unified segmented selector（與 #263 toggle 家族同套 `--toggle-*` token）。
+- **主體幣別被鎖住時的解釋卡**（#324）：原本只有不起眼的灰色註腳——改成 hint card 用陪伴語解釋「為什麼鎖住」+ 指向「開新章節重設」的替代路徑。
+- **匯率每行 debounced save + 個別狀態**（#325）：每行 500ms debounce 自動儲存，顯示「儲存中…」「已存下」；個別 row 出錯只在那一行顯示，不再用一條紅字蓋掉全部。
+- **「心理匯率」三塊 hint card**（#326）：解釋為什麼叫「心理」/ USD→TWD 具體例子 / 改 rate 後對歷史紀錄的行為，讓第一次看到這個概念的人知道要填什麼。
+- 四語（zh-TW / zh-CN / en / ja）全部更新。
+
+#### Landing 文字色過 WCAG AA + `llms.txt`（PR #334 closes #315 #316）
+
+- **Landing 文字對比拉過 AA**（#315）：`--ink-3` (`#B89C8B`) on `--bg` (`#FBEDE0`) 的 ~2.23:1 對 normal text (4.5:1) 與 large text (3:1) 都過不了 AA，Lighthouse 在 landing 標 10 個 fail。`app/_landing/Landing.tsx`、`PhonePreview.tsx` 內所有文字使用點從 `--ink-3` 改用 `--ink-2` (`#7A5848`, ~5.5:1)。token 層的 `--ink-3` 沒動——它還是 `--btn-secondary-border` / `--btn-disabled-bg` / 裝飾邊框 / `RuleListItem` rail 等非文字用途的色，那些不適用 AA 對比規則。
+- **`public/llms.txt` for AI crawlers**（#316）：給 LLM 爬蟲一份簡介（這是什麼產品 / 給誰用 / 不是什麼 / 連結）。`middleware.ts` 把 `llms.txt` 加進排除清單（與 `robots.txt` / `sitemap.xml` 並列），未登入請求不會被 307 導到 `/sign-in`。
+
+### 技術變更
+
+#### Vercel edge cache 改由 `vercel.json` 接手（PR #335 closes #314）
+
+v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 public route 的 Cache-Control override（`public, s-maxage=3600, stale-while-revalidate=86400`），結果發現 Next.js dynamic rendering 對碰到 cookie 的 response 會把 header 蓋回 `private, no-store`——middleware 寫的 header 永遠不會到 browser / CDN，bf-cache + Google WRS 從來沒生效。把這四條搬到 `vercel.json`，因為 Vercel edge 在 Next.js 之後跑，它的 header 不會被覆蓋。`middleware.ts` 內的 override 拿掉，留一個 pointer comment 避免將來重新撞牆。`next.config.ts` 的 `/sw.js` `no-store` 不動（不同 static path）。
+
+#### Build 三件套：polyfills + CSS blocking + font subset（PR #336 closes #317 #318 #319）
+
+- **#317 browserslist**：`package.json` 加 `browserslist` field 鎖 Chrome/Firefox/Edge ≥ 100、Safari/iOS ≥ 16。SWC 不再對現代瀏覽器塞 `Array.prototype.at` / `flat` / `flatMap`、`Object.fromEntries`、`String.prototype.trimEnd` / `trimStart` 等 polyfill——7 個 ES2019+ 之中 6 個移除，只剩 ES2022 的 `Object.hasOwn`。
+- **#319 fonts**：Noto Sans TC 在 `app/layout.tsx` 加 `preload: false`。`@font-face` metadata 仍在 CSS，但 `<link rel="preload">` 不再搶 11 個 ~770 KiB woff2 的關鍵路徑頻寬。CJK 首屏靠 globals.css 既有的 PingFang TC / Microsoft JhengHei / Noto Sans CJK TC fallback chain 立即 render；Noto Sans TC 走 async + `display: swap` 補上來。Fraunces 維持預設 preload（landing hero LCP-critical）。
+- **#318 render-blocking CSS**：上面 #319 的 preload 改動同時把 render-blocking-insight savings 從 5,030ms 拉回 < 1,000ms。
+
 ## [0.17.0] - 2026-05-14
 
 主題：**架構先行．多幣別 × 旅行子帳本一次到位**——Futari 從 i18n 的 ja 開始就把日本市場放在心上，但金額一直硬寫 TWD 整數，是進入日本市場、跨境家庭、海外薪資情境的硬卡點；另一頭「東京 5 日花了多少」「今年聖誕假期總共多少」這類雙人最有感的旅行子帳本需求也擱了很久。這版選擇把兩個耦合的 feature 綁在同一個 schema migration window 裡一起出——schema 一次到位、UI 走 minimal——避免將來再痛一次；同時把所有 amount 顯示路徑改成 currency-aware（TypeScript compile-time guard 防止漏接 currency 參數），讓底盤穩定下來迎接後續幣別擴張。匯率走「自訂心理匯率」（不接 API、不讓數字每天跳動讓人焦慮）+「snapshot 語意」（改 rate 後過去紀錄保留當時匯率），與 Futari「兩人共同對齊的一把尺」哲學一致。Trip 是 tag-style record 標籤（不另開子 ledger），強制單一 epoch（trip 不可跨章節），leave 群組時有 active trip 會被擋住。順手把 #299 也收掉：定期收支 list item 加上「誰的 + 分攤方式」第三條 meta 行。
@@ -776,7 +818,8 @@ _Nothing unreleased yet._
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.1...HEAD
+[0.17.1]: https://github.com/redtear1115/oikos/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/redtear1115/oikos/compare/v0.16.3...v0.17.0
 [0.16.3]: https://github.com/redtear1115/oikos/compare/v0.16.2...v0.16.3
 [0.16.2]: https://github.com/redtear1115/oikos/compare/v0.16.1...v0.16.2
