@@ -108,6 +108,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [income](income-design.md) — IncomeTransactions + IncomeSheet（進帳獨立 ledger）
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）
+- [multi-currency-trip](multi-currency-trip-design.md) — 多幣別（自訂心理匯率、snapshot 語意）+ 旅行子帳本（trip tag、單一 epoch）架構先行 bundle
 
 ### 體驗
 

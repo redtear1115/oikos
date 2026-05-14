@@ -2,17 +2,42 @@
 
 import { getCategory } from '@/lib/categories'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import type { SplitType } from '@/lib/balance'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   rule: RecurringExpenseRuleRow
   onEdit: (rule: RecurringExpenseRuleRow) => void
 }
 
+function splitLabel(
+  split: SplitType,
+  payerIsViewer: boolean,
+  t: ReturnType<typeof useTranslations>,
+): string {
+  switch (split) {
+    case 'half':       return t.splitType.even
+    case 'all_mine':   return payerIsViewer ? t.splitType.allMine : t.splitType.allPartners
+    case 'all_theirs': return payerIsViewer ? t.splitType.allPartners : t.splitType.allMine
+    case 'weighted':   return t.splitType.weighted
+  }
+}
+
 export function RuleListItem({ rule, onEdit }: Props) {
   const t = useTranslations()
+  const { viewer, partner, viewerIsA, isSolo } = useMember()
   const cat = getCategory(rule.category)
   const isPaused = !!rule.pausedAt
+
+  const payerIsViewer = rule.paidBy === viewer.id
+  const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
+  const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
+  const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
+  const payerName = payerIsViewer ? t.common.you : (partner?.displayName ?? t.common.partner)
+  const splitText = splitLabel(rule.splitType, payerIsViewer, t)
 
   const intervalLabel: Record<number, string> = {
     1: t.recurringExpense.rule.intervalEveryMonth,
@@ -70,8 +95,23 @@ export function RuleListItem({ rule, onEdit }: Props) {
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {intervalText}
               {' · '}{dayText}
-              {' · '}NT${rule.amount.toLocaleString()}
+              {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
+            {!isSolo && (
+              <div
+                className="text-xs mt-1 flex items-center gap-1.5 flex-wrap"
+                style={{ color: 'var(--ink-3)' }}
+              >
+                <Avatar memberRole={payerRole} initial={payerInitial} src={payerAvatar} size={16} />
+                <span className="truncate">{payerName}</span>
+                <span
+                  className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-[10px] font-medium leading-none"
+                  style={{ background: 'var(--hairline)', color: 'var(--ink-2)' }}
+                >
+                  {splitText}
+                </span>
+              </div>
+            )}
           </div>
           <span className="text-sm flex-shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
         </div>

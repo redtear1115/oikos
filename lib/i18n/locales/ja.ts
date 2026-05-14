@@ -175,6 +175,9 @@ export const ja: Translations = {
     statusPendingHint: 'カード引落待ちは実際に引き落とされるまで二人の精算には含まれません。引き落とされたら「支払済み」に変更してください。',
     deleteOne: 'この記録を削除',
     deleteConfirmTitle: 'この記録を削除しますか？',
+    currency: '通貨',
+    trip: '旅行',
+    noTrip: 'なし',
     errors: {
       amountRequired: '金額を入力してください',
       descriptionRequired: '内容を入力してください',
@@ -322,6 +325,8 @@ export const ja: Translations = {
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
+    currency: '通貨',
+    trips: '旅行',
     sectionGuardian: '守護（ベータ）',
     guardianBeta: {
       title: '守護をオンにする',

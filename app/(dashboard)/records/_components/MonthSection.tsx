@@ -2,6 +2,7 @@
 
 import { monthLabel } from '@/lib/groupByMonth'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   monthKey: string
@@ -30,7 +31,7 @@ export function MonthSection({ monthKey, count, totalAmount }: Props) {
         {monthLabel(monthKey, locale)}
       </span>
       <span className="tnum text-micro" style={{ color: 'var(--ink-3)' }}>
-        {count}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`} · NT${totalAmount.toLocaleString('en-US')}
+        {count}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`} · {formatAmount(totalAmount, 'twd')}
       </span>
     </div>
   )

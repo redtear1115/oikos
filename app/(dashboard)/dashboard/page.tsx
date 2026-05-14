@@ -10,6 +10,11 @@ import { PartnerLeftCard } from './_components/PartnerLeftCard'
 import { WelcomeSoloCard } from './_components/WelcomeSoloCard'
 import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
+import { listActiveTrips } from '@/lib/db/queries/trips'
+import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
+import type { TripOption } from './_components/TripSelector'
+import type { RateEntry } from './_components/AddSheet'
+import type { CurrencyCode } from '@/lib/currency'
 import {
   loadMonthlyReviewSnapshot,
   loadMonthlyReviewMessages,
@@ -79,6 +84,8 @@ export default async function DashboardPage() {
     reviewSnapshot,
     currentMonthMessages,
     priorClosedEpoch,
+    rawActiveTrips,
+    rawRates,
   ] = await Promise.all([
     getGroupBalance(group.id),
     getGroupPendingBalanceDelta(group.id),
@@ -91,7 +98,26 @@ export default async function DashboardPage() {
     loadMonthlyReviewSnapshot(group.id, reviewedYM.year, reviewedYM.month),
     loadMonthlyReviewMessages(group.id, todayYM.year, todayYM.month),
     shouldCheckPriorLeaver ? getLatestPriorClosedEpoch(group.id) : Promise.resolve(null),
+    epochWindow.epochId
+      ? listActiveTrips(group.id, epochWindow.epochId)
+      : Promise.resolve([]),
+    listRatesForGroup(group.id),
   ])
+
+  // Map raw DB rows to the prop shapes the client components expect
+  const activeTrips: TripOption[] = rawActiveTrips.map((trip) => ({
+    id: trip.id,
+    name: trip.name,
+    defaultCurrency: (trip.defaultCurrency as CurrencyCode | null) ?? null,
+    startDate: trip.startDate,
+    endDate: trip.endDate ?? null,
+  }))
+
+  const rates: RateEntry[] = rawRates.map((r) => ({
+    fromCurrency: r.fromCurrency,
+    toCurrency: r.toCurrency,
+    rate: r.rate,
+  }))
 
   let partnerLeftProps: { partnerName: string; currentEpochId: string } | null = null
   if (
@@ -170,6 +196,10 @@ export default async function DashboardPage() {
       fuelLogId: r.fuelLogId ?? null,
       notes: r.notes,
       status: r.status ?? 'settled',
+      originalCurrency: r.originalCurrency ?? null,
+      originalAmount: r.originalAmount ?? null,
+      rateSnapshot: r.rateSnapshot ?? null,
+      tripId: r.tripId ?? null,
     }))
 
     const recentIncomeFeed: PagedTxnRow[] = incomeRows.map((r) =>
@@ -219,6 +249,9 @@ export default async function DashboardPage() {
         expensePendings={expensePendings}
         feedDataPromise={feedDataPromise}
         groupDefaultRatioA={group.defaultSplitRatioA ?? null}
+        baseCurrency={(group.baseCurrency as CurrencyCode) ?? 'twd'}
+        activeTrips={activeTrips}
+        rates={rates}
       />
     </>
   )

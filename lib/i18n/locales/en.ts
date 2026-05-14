@@ -175,6 +175,9 @@ export const en: Translations = {
     statusPendingHint: "Credit card pending entries don't change the shared balance until the charge clears and you mark them paid.",
     deleteOne: 'Delete this entry',
     deleteConfirmTitle: 'Delete this entry?',
+    currency: 'Currency',
+    trip: 'Trip',
+    noTrip: 'No trip',
     errors: {
       amountRequired: 'Enter an amount',
       descriptionRequired: 'Enter a description',
@@ -322,6 +325,8 @@ export const en: Translations = {
     trust: 'Your data',
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
+    currency: 'Currency',
+    trips: 'Trips',
     sectionGuardian: 'Guardian (Beta)',
     guardianBeta: {
       title: 'Enable Guardian',

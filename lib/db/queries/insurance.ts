@@ -165,10 +165,15 @@ export async function listInsurancePaymentsPaged(
     status: 'settled' | 'pending'
     transacted_at: Date | string
     created_at: Date | string
+    original_currency: string | null
+    original_amount: number | null
+    rate_snapshot: string | null
+    trip_id: string | null
   }>(sql`
     SELECT
       id, amount, split_type, split_ratio_a, description, category, paid_by,
-      asset_id, fuel_log_id, notes, status, transacted_at, created_at
+      asset_id, fuel_log_id, notes, status, transacted_at, created_at,
+      original_currency, original_amount, rate_snapshot, trip_id
     FROM "CashTransactions"
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}
@@ -193,6 +198,10 @@ export async function listInsurancePaymentsPaged(
     status: r.status ?? 'settled',
     transactedAt: r.transacted_at instanceof Date ? r.transacted_at : new Date(r.transacted_at),
     createdAt: r.created_at instanceof Date ? r.created_at : new Date(r.created_at),
+    originalCurrency: r.original_currency ?? null,
+    originalAmount: r.original_amount ?? null,
+    rateSnapshot: r.rate_snapshot ?? null,
+    tripId: r.trip_id ?? null,
   }))
 }
 

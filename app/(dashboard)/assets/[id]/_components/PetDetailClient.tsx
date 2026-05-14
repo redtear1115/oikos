@@ -103,6 +103,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
       <InfoCard>
         <InfoRow label={td.birthDate} value={details?.birthDate ?? ''} mono />
         <InfoRow label={td.adoptedDate} value={details?.adoptedDate ?? ''} mono />
+        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
         <InfoRow label={td.purchaseCost} value={details?.purchaseCost ? `NT$ ${details.purchaseCost.toLocaleString()}` : ''} mono />
         <InfoRow label={td.weight} value={details?.weightG ? `${(details.weightG / 1000).toFixed(1)} kg` : ''} mono last />
       </InfoCard>

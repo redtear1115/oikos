@@ -2,7 +2,10 @@
 
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useTranslations } from '@/lib/i18n/client'
+import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
+import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   rule: RecurringRuleRow
@@ -11,8 +14,15 @@ interface Props {
 
 export function RuleListItem({ rule, onEdit }: Props) {
   const t = useTranslations()
+  const { viewer, partner, viewerIsA, isSolo } = useMember()
   const cat = getIncomeCategory(rule.category)
   const isPaused = !!rule.pausedAt
+
+  const recipientIsViewer = rule.recipientId === viewer.id
+  const recipientRole = whoToMemberRole(recipientIsViewer ? 'M' : 'T', viewerIsA)
+  const recipientInitial = recipientIsViewer ? viewer.initial : (partner?.initial ?? '?')
+  const recipientAvatar = recipientIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
+  const recipientName = recipientIsViewer ? t.common.you : (partner?.displayName ?? t.common.partner)
 
   const intervalLabel: Record<number, string> = {
     1: t.recurringIncome.rule.intervalEveryMonth,
@@ -71,8 +81,17 @@ export function RuleListItem({ rule, onEdit }: Props) {
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {intervalText}
               {' · '}{dayText}
-              {' · '}NT${rule.amount.toLocaleString()}
+              {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
+            {!isSolo && (
+              <div
+                className="text-xs mt-1 flex items-center gap-1.5 flex-wrap"
+                style={{ color: 'var(--ink-3)' }}
+              >
+                <Avatar memberRole={recipientRole} initial={recipientInitial} src={recipientAvatar} size={16} />
+                <span className="truncate">{recipientName}</span>
+              </div>
+            )}
           </div>
           <span className="text-sm flex-shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
         </div>

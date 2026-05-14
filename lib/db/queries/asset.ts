@@ -278,11 +278,16 @@ export async function listTransactionsPagedForAsset(
     transacted_at: Date | string
     created_at: Date | string
     kind: FeedKind
+    original_currency: string | null
+    original_amount: number | null
+    rate_snapshot: string | null
+    trip_id: string | null
   }>(sql`
     SELECT
       id, amount, split_type, split_ratio_a, description, category, paid_by,
       asset_id, fuel_log_id, notes, status, transacted_at, created_at,
-      'transaction'::text AS kind
+      'transaction'::text AS kind,
+      original_currency, original_amount, rate_snapshot, trip_id
     FROM "CashTransactions"
     WHERE asset_id = ${assetId}
       AND group_id = ${groupId}

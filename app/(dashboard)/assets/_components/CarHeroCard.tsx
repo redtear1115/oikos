@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { CarMark, isDarkColor, resolveCarColor } from './carColor'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   id: string
@@ -122,7 +123,7 @@ export function CarHeroCard({
         <div className="text-right shrink-0 ml-2">
           <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
           <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            NT${fmtInt(monthAmount)}
+            {formatAmount(monthAmount, 'twd')}
           </div>
         </div>
       </div>

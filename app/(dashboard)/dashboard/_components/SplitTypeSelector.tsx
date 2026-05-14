@@ -2,6 +2,7 @@
 
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
+import { formatAmount } from '@/lib/currency'
 
 interface SplitTypeSelectorProps {
   value: SplitType
@@ -19,15 +20,15 @@ function weightedSub(payerWho: 'M' | 'T', amount: number, ratioA: number): strin
     if (!amount) return '各付一半'
     const half = Math.ceil(amount / 2)
     return payerWho === 'M'
-      ? `對方欠你 NT$${half.toLocaleString('en-US')}`
-      : `你欠對方 NT$${half.toLocaleString('en-US')}`
+      ? `對方欠你 ${formatAmount(half, 'twd')}`
+      : `你欠對方 ${formatAmount(half, 'twd')}`
   }
   if (!amount) return `我 ${ratioA}%・對方 ${otherShare}%`
   const otherOwed = Math.ceil(amount * otherShare / 100)
   const myOwed = Math.ceil(amount * myShare / 100)
   return payerWho === 'M'
-    ? `對方欠你 NT$${otherOwed.toLocaleString('en-US')}`
-    : `你欠對方 NT$${myOwed.toLocaleString('en-US')}`
+    ? `對方欠你 ${formatAmount(otherOwed, 'twd')}`
+    : `你欠對方 ${formatAmount(myOwed, 'twd')}`
 }
 
 function splitSub(splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 'T', amount: number): string {
@@ -36,8 +37,8 @@ function splitSub(splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 'T', amoun
   }
   if (!amount) return payerWho === 'M' ? '對方欠你全額' : '你欠對方全額'
   return payerWho === 'M'
-    ? `對方欠你 NT$${amount.toLocaleString('en-US')}`
-    : `你欠對方 NT$${amount.toLocaleString('en-US')}`
+    ? `對方欠你 ${formatAmount(amount, 'twd')}`
+    : `你欠對方 ${formatAmount(amount, 'twd')}`
 }
 
 export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onChange, amount, payerWho }: SplitTypeSelectorProps) {

@@ -30,6 +30,9 @@ export function MaturedAwaitingPrompt({
         {ts.maturedAwaitingTitle.replace('{date}', formatDateAbsolute(maturityDate, locale))}
       </div>
 
+      {/* TODO(v0.17 currency): typographic split (small NT$ + large digits) +
+           premium template (maturedAwaitingPremiumNote) has "NT$" baked in —
+           defer migration until formatAmount supports digits-only mode. */}
       <div className="mt-3 inline-flex items-baseline gap-1.5">
         <span className="text-base font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
         <span

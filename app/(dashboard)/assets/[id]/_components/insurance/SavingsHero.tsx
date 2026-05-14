@@ -72,6 +72,9 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
           style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
         >
           {ts.heroBreakdownPrefix}{' '}
+          {/* TODO(v0.17 currency): "NT$ {amount}" with space + i18n templates have
+               "NT$" baked in (heroMatured, savings*, etc.) — defer until formatAmount
+               gains digits-only mode. */}
           {breakdownParts.map((p, idx) => (
             <span key={p.cat}>
               {idx > 0 && ' · '}

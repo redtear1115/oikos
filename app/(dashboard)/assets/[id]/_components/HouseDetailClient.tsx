@@ -107,6 +107,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
       <InfoCard>
         <InfoRow label={td.address} value={details?.address ?? ''} />
         <InfoRow label={td.purchasedAt} value={details?.purchasedAt ?? ''} mono />
+        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
         <InfoRow label={td.purchasePrice} value={details?.purchasePrice ? `NT$ ${details.purchasePrice.toLocaleString()}` : ''} mono last />
       </InfoCard>
 

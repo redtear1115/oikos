@@ -176,6 +176,10 @@ export default async function RecordsPage({
     fuelLogId: r.fuelLogId ?? null,
     notes: r.notes,
     status: r.status ?? 'settled',
+    originalCurrency: r.originalCurrency ?? null,
+    originalAmount: r.originalAmount ?? null,
+    rateSnapshot: r.rateSnapshot ?? null,
+    tripId: r.tripId ?? null,
   }))
 
   return (

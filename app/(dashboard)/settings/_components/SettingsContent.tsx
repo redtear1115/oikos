@@ -356,6 +356,16 @@ export function SettingsContent({
         />
         <div className="mt-3" />
         <Row
+          label={t.settings.currency}
+          onClick={() => router.push('/settings/currency')}
+        />
+        <div className="mt-3" />
+        <Row
+          label={t.settings.trips}
+          onClick={() => router.push('/trips')}
+        />
+        <div className="mt-3" />
+        <Row
           label={exportPending ? t.csvExport.preparing : t.settings.exportData}
           onClick={handleExport}
           disabled={exportPending}

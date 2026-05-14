@@ -25,6 +25,9 @@ import { PayerToggle } from './PayerToggle'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { currencySymbol, formatAmount, convertAmount, type CurrencyCode } from '@/lib/currency'
+import { CurrencySelector } from './CurrencySelector'
+import { TripSelector, type TripOption } from './TripSelector'
 
 export interface AddSheetInitial {
   id: string
@@ -38,6 +41,13 @@ export interface AddSheetInitial {
   assetId?: string | null
   notes?: string | null
   status?: RecordStatus
+}
+
+/** Shape of a single rate entry coming from listRatesForGroup. */
+export interface RateEntry {
+  fromCurrency: string
+  toCurrency: string
+  rate: string
 }
 
 interface Props {
@@ -72,9 +82,15 @@ interface Props {
   /** Called when an edit-pending submit loses to a partner race. */
   onRaceResolved?: (message: string) => void
   groupDefaultRatioA?: number | null
+  /** The group's base currency (default: 'twd'). */
+  baseCurrency?: CurrencyCode
+  /** Active trips in the current epoch, for the TripSelector. */
+  activeTrips?: TripOption[]
+  /** Exchange rates for this group, used for conversion preview. */
+  rates?: RateEntry[]
 }
 
-export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved, groupDefaultRatioA }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved, groupDefaultRatioA, baseCurrency = 'twd', activeTrips = [], rates = [] }: Props) {
   const { viewer, partner, isSolo } = useMember()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
@@ -91,6 +107,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const amountInputRef = useRef<HTMLInputElement>(null)
   const [assetId, setAssetId] = useState<string | null>(null)
   const [descSuggestions, setDescSuggestions] = useState<string[]>([])
+
+  // Multi-currency + trip state (#68 #42)
+  const [tripId, setTripId] = useState<string | null>(null)
+  const [currency, setCurrency] = useState<CurrencyCode>(baseCurrency)
+  // Track whether the user manually changed currency (so trip-cascade doesn't clobber it)
+  const [currencyManuallySet, setCurrencyManuallySet] = useState(false)
 
   // Fetch household-wide description history when the sheet opens. Re-fetched
   // on every open so newly-added descriptions surface immediately on the next
@@ -127,6 +149,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAssetId(initial.assetId ?? null)
       setNotes(initial.notes ?? '')
       setStatus(initial.status ?? 'settled')
+      // In edit mode: reset to base currency (the stored amount is always in base)
+      setCurrency(baseCurrency)
+      setTripId(null)
+      setCurrencyManuallySet(false)
     } else {
       setAmount('')
       setDesc('')
@@ -138,9 +164,17 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAssetId(prefilledAssetId ?? null)
       setNotes('')
       setStatus('settled')
+      // Auto-select trip if today is in range; cascade currency from trip defaultCurrency
+      const todayStr = localTodayISO()
+      const foundTrip = activeTrips.find(
+        (trip) => todayStr >= trip.startDate && (!trip.endDate || todayStr <= trip.endDate),
+      ) ?? null
+      setTripId(foundTrip?.id ?? null)
+      setCurrency((foundTrip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
+      setCurrencyManuallySet(false)
     }
     setError('')
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, groupDefaultRatioA])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, groupDefaultRatioA, baseCurrency, activeTrips])
 
   // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
   // the prefilled amount in edit mode (typing replaces the selection rather than
@@ -192,6 +226,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             assetId,
             notes,
             status,
+            currency,
+            tripId,
           })
         } else {
           const result = await createTransaction({
@@ -205,6 +241,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             assetId,
             notes,
             status,
+            currency,
+            tripId,
           })
           isFirstTransaction = result.isFirstTransaction
         }
@@ -308,7 +346,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <label
               className="flex items-baseline justify-center gap-1.5 min-h-[60px] cursor-text"
               onClick={() => {
-                // Focus + select on tap anywhere in the hero (NT$ label, the gap,
+                // Focus + select on tap anywhere in the hero (currency symbol, the gap,
                 // or the digits). Native click on the inner <input> would also focus
                 // it, but tapping the label gives users a much wider hit target.
                 const el = amountInputRef.current
@@ -321,7 +359,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 className="text-title font-medium"
                 style={{ color: amount ? 'var(--ink-2)' : 'var(--ink-3)' }}
               >
-                NT$
+                {currencySymbol(currency)}
               </span>
               <input
                 ref={amountInputRef}
@@ -350,6 +388,53 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 }}
               />
             </label>
+
+            {/* Currency + trip selectors — shown below the amount hero.
+                TODO(v0.17.x): USD input UX — for now amount is integer-only across all currencies.
+                Following Phase 6 issue: spec § 1.5 says USD stores as cents but for v0.17.0 MVP
+                we keep input as integer; refine UX in a follow-up issue. */}
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <CurrencySelector
+                value={currency}
+                onChange={(next) => {
+                  setCurrency(next)
+                  setCurrencyManuallySet(true)
+                }}
+              />
+              <TripSelector
+                value={tripId}
+                options={activeTrips}
+                onChange={(next) => {
+                  setTripId(next)
+                  if (next && !currencyManuallySet) {
+                    const trip = activeTrips.find((tp) => tp.id === next)
+                    if (trip?.defaultCurrency) setCurrency(trip.defaultCurrency)
+                  }
+                }}
+                noTripLabel={t.addSheet.noTrip}
+              />
+            </div>
+
+            {/* Conversion preview: shown when foreign currency with known rate */}
+            {(() => {
+              const amountInt = parseInt(amount, 10) || 0
+              const rate = rates.find(
+                (r) => r.fromCurrency === currency && r.toCurrency === baseCurrency,
+              )
+              const showPreview = currency !== baseCurrency && rate && amountInt > 0
+              if (!showPreview) return null
+              const converted = convertAmount({
+                amount: amountInt,
+                from: currency,
+                to: baseCurrency,
+                rate: parseFloat(rate!.rate),
+              })
+              return (
+                <div className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>
+                  ≈ {formatAmount(converted, baseCurrency)}
+                </div>
+              )
+            })()}
 
             {!isSolo && (
               <PayerToggle value={payerWho} onChange={setPayerWho} />

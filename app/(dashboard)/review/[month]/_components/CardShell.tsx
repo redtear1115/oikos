@@ -75,6 +75,9 @@ export function CardEmpty({
   )
 }
 
+// TODO(v0.17 currency): formatNT returns digits-only; callers prepend "NT$ "
+// (with space). Migrate to formatAmount once it gains a digits-only/no-symbol
+// mode, or once design accepts the symbol-no-space convention.
 export function formatNT(amount: number): string {
   return new Intl.NumberFormat('en-US').format(amount)
 }
