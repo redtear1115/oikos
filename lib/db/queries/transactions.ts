@@ -38,6 +38,14 @@ export interface FeedRow {
   fuelLogId: string | null  // non-null when created by a FuelLog dual-write
   notes: string | null      // shared memo on a CashTransaction; always null for settlements/income
   status: RecordStatus      // 'pending' only on transactions; settlements/income are always 'settled'
+  /** Original currency when this was a foreign-currency write. NULL for base-currency rows. */
+  originalCurrency: string | null
+  /** Original amount in the foreign currency's storage units. NULL for base-currency rows. */
+  originalAmount: number | null
+  /** Rate snapshot at write time. NULL for base-currency rows. */
+  rateSnapshot: string | null
+  /** Trip this transaction belongs to. NULL = no trip. */
+  tripId: string | null
 }
 
 /**
@@ -234,7 +242,11 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
         'settled'::record_status AS status,
         settled_at AS transacted_at,
         created_at,
-        'settlement'::text AS kind
+        'settlement'::text AS kind,
+        NULL::currency_code AS original_currency,
+        NULL::integer AS original_amount,
+        NULL::numeric AS rate_snapshot,
+        NULL::uuid AS trip_id
       FROM "Settlements"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${setCursor}
@@ -259,12 +271,17 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
     transacted_at: Date
     created_at: Date
     kind: FeedKind
+    original_currency: string | null
+    original_amount: number | null
+    rate_snapshot: string | null
+    trip_id: string | null
   }>(sql`
     SELECT * FROM (
       SELECT
         id, amount, split_type, split_ratio_a, description, category, paid_by,
         asset_id, fuel_log_id, notes, status, transacted_at, created_at,
-        'transaction'::text AS kind
+        'transaction'::text AS kind,
+        original_currency, original_amount, rate_snapshot, trip_id
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${txCursor}
@@ -373,7 +390,11 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
         COALESCE(note, '還款'), 'settle',
         paid_by, NULL::uuid, NULL::uuid, NULL::text, 'settled'::record_status,
         settled_at AS sort_at, created_at AS sort_created,
-        'settlement'::text AS kind
+        'settlement'::text AS kind,
+        NULL::currency_code AS original_currency,
+        NULL::integer AS original_amount,
+        NULL::numeric AS rate_snapshot,
+        NULL::uuid AS trip_id
       FROM "Settlements"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${setMonth}
@@ -398,13 +419,18 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
     sort_at: Date | string
     sort_created: Date | string
     kind: 'transaction' | 'settlement' | 'income'
+    original_currency: string | null
+    original_amount: number | null
+    rate_snapshot: string | null
+    trip_id: string | null
   }>(sql`
     SELECT * FROM (
       SELECT
         id, amount, split_type, split_ratio_a, description, category, paid_by,
         asset_id, fuel_log_id, notes, status,
         transacted_at AS sort_at, created_at AS sort_created,
-        'transaction'::text AS kind
+        'transaction'::text AS kind,
+        original_currency, original_amount, rate_snapshot, trip_id
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${txMonth}
@@ -427,7 +453,11 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
         COALESCE(source, ''), category,
         recipient_id AS paid_by, asset_id, NULL::uuid, NULL::text, 'settled'::record_status,
         occurred_at::timestamptz AS sort_at, created_at AS sort_created,
-        'income'::text AS kind
+        'income'::text AS kind,
+        NULL::currency_code AS original_currency,
+        NULL::integer AS original_amount,
+        NULL::numeric AS rate_snapshot,
+        NULL::uuid AS trip_id
       FROM "IncomeTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${incMonth}
@@ -471,6 +501,10 @@ export function rowToFeedRow(r: {
   sort_at?: Date | string
   sort_created?: Date | string
   kind: FeedKind
+  original_currency?: string | null
+  original_amount?: number | null
+  rate_snapshot?: string | null
+  trip_id?: string | null
 }): FeedRow {
   const transacted = r.transacted_at ?? r.sort_at
   const created = r.created_at ?? r.sort_created
@@ -489,6 +523,10 @@ export function rowToFeedRow(r: {
     transactedAt: transacted instanceof Date ? transacted : new Date(transacted as string),
     createdAt: created instanceof Date ? created : new Date(created as string),
     kind: r.kind,
+    originalCurrency: r.original_currency ?? null,
+    originalAmount: r.original_amount ?? null,
+    rateSnapshot: r.rate_snapshot ?? null,
+    tripId: r.trip_id ?? null,
   }
 }
 

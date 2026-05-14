@@ -30,6 +30,9 @@ import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
+import type { CurrencyCode } from '@/lib/currency'
+import type { TripOption } from './TripSelector'
+import type { RateEntry } from './AddSheet'
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 
@@ -73,6 +76,12 @@ export interface DashboardProps {
   expensePendings: PendingExpenseRow[]
   feedDataPromise: Promise<DashboardFeedData>
   groupDefaultRatioA: number | null
+  /** Group's base currency (default 'twd'). */
+  baseCurrency?: CurrencyCode
+  /** Active trips in the current epoch. */
+  activeTrips?: TripOption[]
+  /** Exchange rates for this group. */
+  rates?: RateEntry[]
 }
 
 export function Dashboard({
@@ -86,6 +95,9 @@ export function Dashboard({
   expensePendings,
   feedDataPromise,
   groupDefaultRatioA,
+  baseCurrency = 'twd',
+  activeTrips = [],
+  rates = [],
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo, isPast } = useMember()
@@ -368,6 +380,9 @@ export function Dashboard({
         onMutated={handleMutated}
         onRaceResolved={showToast}
         groupDefaultRatioA={groupDefaultRatioA}
+        baseCurrency={baseCurrency}
+        activeTrips={activeTrips}
+        rates={rates}
       />
       <SettlementSheet
         open={settlementData !== null}

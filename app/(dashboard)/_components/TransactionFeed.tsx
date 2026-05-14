@@ -144,6 +144,10 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         fuelLogId: null,  // realtime payload doesn't carry this; fuel-log events handled separately
         notes: row.notes ?? null,
         status: row.status ?? 'settled',
+        originalCurrency: null,  // realtime payload does not carry currency snapshot
+        originalAmount: null,
+        rateSnapshot: null,
+        tripId: null,
       }
       if (filter) {
         const f: FilterableRow = {
@@ -203,6 +207,10 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           fuelLogId: null,
           notes: null,
           status: 'settled',
+          originalCurrency: null,
+          originalAmount: null,
+          rateSnapshot: null,
+          tripId: null,
         }
         if (filter) {
           const f: FilterableRow = {
