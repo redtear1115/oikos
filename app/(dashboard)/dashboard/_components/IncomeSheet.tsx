@@ -337,20 +337,21 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 <span>{t.incomeSheet.recipientPrompt}</span>
                 <div
                   className="inline-flex rounded-full p-[3px] gap-0.5"
-                  style={{ background: 'rgba(31,27,22,0.05)' }}
+                  style={{ background: 'var(--toggle-segment-track)' }}
                 >
                   {(['M', 'T'] as const).map(w => (
                     <button
                       key={w}
                       type="button"
                       onClick={() => setRecipientWho(w)}
-                      className="h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5 transition-all duration-150"
+                      className="oik-segment h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5"
                       style={{
-                        background: recipientWho === w ? 'var(--surface)' : 'transparent',
+                        background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
                         color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
                         boxShadow: recipientWho === w
-                          ? `0 1px 3px rgba(31,27,22,0.10), 0 0 0 1px ${P.tint}`
+                          ? `var(--toggle-segment-thumb-shadow), 0 0 0 1px ${P.tint}`
                           : 'none',
+                        transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
                       }}
                     >
                       <Avatar

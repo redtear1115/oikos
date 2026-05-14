@@ -172,17 +172,21 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <Field label={ts.child.gender}>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-          {([{v: 'male' as const, label: ts.child.genderMale}, {v: 'female' as const, label: ts.child.genderFemale}]).map(o => (
-            <button key={o.v} type="button" onClick={() => setGender(o.v)}
-              className="flex-1 h-9 rounded-[9px] text-sm font-medium"
-              style={{
-                border: 'none',
-                background: gender === o.v ? '#fff' : 'transparent',
-                color: gender === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                boxShadow: gender === o.v ? '0 1px 3px rgba(58,36,25,0.10)' : 'none',
-              }}>{o.label}</button>
-          ))}
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--toggle-segment-track)' }}>
+          {([{v: 'male' as const, label: ts.child.genderMale}, {v: 'female' as const, label: ts.child.genderFemale}]).map(o => {
+            const sel = gender === o.v
+            return (
+              <button key={o.v} type="button" onClick={() => setGender(o.v)}
+                className="oik-segment flex-1 h-9 rounded-[9px] text-sm font-medium"
+                style={{
+                  border: 'none',
+                  background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                  color: sel ? 'var(--ink)' : 'var(--ink-2)',
+                  boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+                  transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+                }}>{o.label}</button>
+            )
+          })}
         </div>
       </Field>
 
