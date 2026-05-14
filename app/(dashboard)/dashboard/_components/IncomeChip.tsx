@@ -10,12 +10,12 @@ interface IncomeChipProps {
 }
 
 /**
- * Income category chip. Mirrors the filled style of the expense CategoryPicker
- * (selected = solid background + light text on a 1px-bordered pill) so the
- * two sheets share one chip pattern. The income variant uses the mint-palette
- * `ink` colour as the selected background, which keeps the income-mode green
- * accent without falling back to a different visual language (outline + glow)
- * for what is functionally the same control. (#199)
+ * Income category chip. Shares the unified `oik-chip` toggle pattern with
+ * FilterSheet's category chips so all filter pills read as the same control
+ * (issue #263). The income variant overrides `--toggle-active-bg` with the
+ * mint-palette `ink` so the income-mode visual identity stays intact while
+ * the rest (height / border / transition / focus ring) comes from the shared
+ * toggle tokens.
  */
 export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
   const P = DEFAULT_INCOME_PALETTE
@@ -23,28 +23,19 @@ export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
     <button
       type="button"
       onClick={onClick}
+      className="oik-chip h-8 pl-1.5 pr-3 rounded-full text-label font-medium cursor-pointer inline-flex items-center gap-2 shrink-0"
       style={{
-        height: 38,
-        padding: '0 14px 0 8px',
-        borderRadius: 999,
-        border: selected ? `1px solid ${P.ink}` : '1px solid var(--hairline)',
-        background: selected ? P.ink : 'var(--surface)',
-        color: selected ? '#fff' : 'var(--ink)',
-        fontSize: 'var(--fs-body)',
-        fontWeight: 500,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        cursor: 'pointer',
-        flexShrink: 0,
-        transition: 'all 0.15s ease',
+        background: selected ? P.ink : 'var(--toggle-inactive-bg)',
+        color: selected ? 'var(--toggle-active-text)' : 'var(--ink)',
+        border: `1px solid ${selected ? P.ink : 'var(--toggle-border)'}`,
+        transition: `background var(--toggle-transition), color var(--toggle-transition), border-color var(--toggle-transition)`,
         fontFamily: 'inherit',
       }}
     >
       <span
         style={{
-          width: 24,
-          height: 24,
+          width: 22,
+          height: 22,
           borderRadius: 7,
           background: cat.tint,
           color: cat.ink,

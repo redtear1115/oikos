@@ -18,21 +18,31 @@ export function FuelTypeButtonGroup({ value, onChange }: FuelTypeButtonGroupProp
     { value: 'diesel', label: t.assetSheet.car.fuelTypeDiesel },
   ]
   return (
-    <div className="flex gap-1 rounded-xl bg-[rgba(58,36,25,0.05)] p-1">
-      {OPTIONS.map(opt => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={`flex-1 h-9 rounded-lg text-label font-medium transition-colors ${
-            value === opt.value
-              ? 'bg-white text-[var(--ink)] font-semibold shadow-sm'
-              : 'bg-transparent text-[var(--ink-2)]'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
+    <div
+      className="flex gap-1 rounded-xl p-1"
+      style={{ background: 'var(--toggle-segment-track)' }}
+    >
+      {OPTIONS.map(opt => {
+        const sel = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
+              sel ? 'font-semibold' : ''
+            }`}
+            style={{
+              background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+              color: sel ? 'var(--ink)' : 'var(--ink-2)',
+              boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+              transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+            }}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

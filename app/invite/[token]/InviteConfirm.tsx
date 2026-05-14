@@ -96,8 +96,8 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
           type="button"
           onClick={handleConfirm}
           disabled={pending}
-          className="h-12 rounded-xl border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
-          style={{ background: 'var(--ink)' }}
+          className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           {pending ? trust.bilateral.invitee.confirming : trust.bilateral.invitee.cta}
         </button>

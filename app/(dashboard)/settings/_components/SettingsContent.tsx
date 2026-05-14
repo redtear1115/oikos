@@ -198,7 +198,7 @@ export function SettingsContent({
                 onClick={handleRatioSave}
                 disabled={savingRatio}
                 className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: 'var(--ink)', color: 'var(--surface)' }}
+                style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
               >
                 {savingRatio ? '儲存中…' : '儲存預設比例'}
               </button>
@@ -241,8 +241,8 @@ export function SettingsContent({
               type="button"
               onClick={handleInvite}
               disabled={invitePending}
-              className="w-full h-12 rounded-[14px] border-0 text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--accent)' }}
+              className="w-full h-12 rounded-[14px] border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+              style={{ background: 'var(--btn-accent-bg)', color: 'var(--btn-accent-text)' }}
             >
               {invitePending ? t.soloBanner.generating : t.settings.inviteCta}
             </button>

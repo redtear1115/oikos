@@ -1,13 +1,16 @@
 ---
 status: shipped
-shipped_in: 持續演進（基礎自 v0.1.0；i18n cookie locale v0.11.1；Auth `getSession()` 分層 v0.11.1）
-note: 架構總覽，無單一 ship point；個別功能域 status 見對應 spec。
+first_shipped_in: v0.1.0
+updates:
+  - v0.11.1: Auth 分層改採 `getCurrentUser()`（內部 `getSession()`）+ i18n cookie locale 接入
+related_specs: [i18n, realtime, offline-browsing]
+related_issues: []
 ---
 
 # Oikos 整體產品設計
 
 > 家庭記帳工具，固定兩人（夫妻／伴侶）使用。
-> 本文記錄架構決定，作為實作的「為什麼」依據。具體 schema / API 細節以程式碼為準。
+> 架構總覽，無單一 ship point；個別功能域 status 看對應 spec。
 
 ---
 
@@ -22,8 +25,8 @@ note: 架構總覽，無單一 ship point；個別功能域 status 見對應 spe
 | Styling | Tailwind CSS v4 | sibling 專案習慣 |
 | 加密 | AES-256-GCM in Server Actions | key 在 Vercel env，DB 只存 ciphertext |
 | Real-time | Supabase Realtime postgres_changes | partner 異裝置變動立即反應 |
-| PWA | 是 | 加到主畫面（Service Worker 待 backlog；目前無 cache）|
-| i18n | 自製字典 + cookie-based locale | 4 語（zh-TW / zh-CN / en / ja）；不引 next-intl，詳見 [i18n-design.md](i18n-design.md) |
+| PWA | 是 | 加到主畫面；離線瀏覽見 [offline-browsing](offline-browsing-design.md) |
+| i18n | 自製字典 + cookie-based locale | 4 語（zh-TW / zh-CN / en / ja）；見 [i18n](i18n-design.md) |
 
 dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
@@ -44,11 +47,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 寫入安全：Server Action 是第一道防線；RLS 是備用安全網
 ```
 
-實作位置：
-- Server Actions：[actions/](actions/)
-- Validation helpers：[lib/validators.ts](lib/validators.ts)
-- DB queries：[lib/db/queries/](lib/db/queries/)
-- Realtime：[app/(dashboard)/_components/RealtimeProvider.tsx](app/%28dashboard%29/_components/RealtimeProvider.tsx)
+實作落地：`actions/` / `lib/validators.ts` / `lib/db/queries/` / `app/(dashboard)/_components/RealtimeProvider.tsx`
 
 ### Auth 驗證分層
 
@@ -58,9 +57,9 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 | Page / layout server components | `getCurrentUser()`（內部 `getSession()`）| Middleware 已先驗，cookie 在 page render 當下可信；省每頁 200–400ms HTTP 往返 |
 | Server actions（`actions/**.ts`）| `auth.getUser()` | Write path 直接被 client 呼叫，保守起見不省這層；單次 action 慢一點可接受 |
 
-不採用：無腦全面 `getSession()`（含 actions）/ 移除 middleware `getUser()` / process-level cache（Vercel 各 instance 不一致）/ Edge runtime（Drizzle 相容性）。
+**不採用**：無腦全面 `getSession()`（含 actions）/ 移除 middleware `getUser()` / process-level cache（Vercel 各 instance 不一致）/ Edge runtime（Drizzle 相容性）。
 
-Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`，回 `User | null`。新增 page / layout 時用這個，不要再呼叫 `auth.getUser()`。
+新增 page / layout 用 `getCurrentUser()`（in `lib/supabase/server.ts`），不要再呼叫 `auth.getUser()`。
 
 ---
 
@@ -78,34 +77,30 @@ Helper：[lib/supabase/server.ts](lib/supabase/server.ts) 的 `getCurrentUser()`
 
 ### Schema
 
-完整 schema 以 [lib/db/schema.ts](lib/db/schema.ts) 為準。Migration 在 [drizzle/](drizzle/)。
+完整 schema 以 `lib/db/schema.ts` 為準；migration 在 `drizzle/`。
 
-主要 tables（完整 schema 以 [lib/db/schema.ts](lib/db/schema.ts) 為準）：
+主要 tables 概略：
 - `Profiles`（FK → auth.users）
 - `OikosGroups`（含 member_a / member_b、`guardian_beta_enabled` 守護模組 beta flag）
 - `GroupInvites`（token-based 7 天 expire）
 - `GroupBalance`（derived cache，每次寫入重算）
 - `CashTransactions`（核心，nullable `asset_id` 關聯愛物）
 - `Settlements`
-- `Assets`（7 個 type：car / house / child / pet / plant / insurance / item；`template_key` + `template_fields` 走 [asset-templates-design.md](asset-templates-design.md) 模板路徑）+ `CarDetails` / `ChildDetails` / `PetDetails` / `HouseDetails` / `InsuranceDetails`
-- `FuelLogs`（車輛專用）
-- `IncomeTransactions`（進帳，平行於 CashTransactions）
-- `InvoiceCredentials`（v0.8.0，加密驗證碼）
+- `Assets`（7 個 type：car / house / child / pet / plant / insurance / item，見 [aibutsu](aibutsu-design.md) / [aibutsu-templates](aibutsu-templates-design.md)）+ 各 type 的 details 子表
+- `FuelLogs`（車輛專用，見 [car-fuellog](car-fuellog-design.md)）
+- `IncomeTransactions`（進帳，平行於 CashTransactions，見 [income](income-design.md)）
+- `InvoiceCredentials`（加密驗證碼，見 [cloud-invoice](cloud-invoice-design.md)）
 
-### Balance 計算規則
-
-詳見 [CLAUDE.md 的「Balance 計算規則」](../../../CLAUDE.md)。實作在 [lib/balance.ts](lib/balance.ts) + [lib/db/queries/balance.ts](lib/db/queries/balance.ts)（包含 recalc SQL）。
+Balance 計算規則詳見 `CLAUDE.md`「Balance 計算規則」段；實作在 `lib/balance.ts` + `lib/db/queries/balance.ts`。
 
 ---
 
-## 4. 版本規劃
+## 版本規劃
 
-版本歷史與當前狀態見 [CLAUDE.md](../../../CLAUDE.md)（版本表）與 [CHANGELOG.md](../../../CHANGELOG.md)。
-
-各功能域設計 spec：[transactions-design.md](transactions-design.md) · [car-fuellog-design.md](car-fuellog-design.md) · [aibutsu-design.md](aibutsu-design.md) · [asset-templates-design.md](asset-templates-design.md) · [guardian-design.md](guardian-design.md) · [income-design.md](income-design.md) · [insurance-design.md](insurance-design.md) · [recurring-income-design.md](recurring-income-design.md) · [recurring-expense-design.md](recurring-expense-design.md) · [cloud-invoice-design.md](cloud-invoice-design.md) · [i18n-design.md](i18n-design.md) · [offline-browsing-design.md](offline-browsing-design.md) · [stats-design.md](stats-design.md) · [monthly-review-design.md](monthly-review-design.md) · [structured-filter-design.md](structured-filter-design.md) · [fab-records-tab-design.md](fab-records-tab-design.md) · [epoch-readonly-design.md](epoch-readonly-design.md) · [inbox-layer-design.md](inbox-layer-design.md)
+版本歷史 + 各 milestone 主題敘事見 `CHANGELOG.md` 與 `CLAUDE.md`。各功能域 spec 入口見 [INDEX](INDEX.md)。
 
 ---
 
-## 5. 待決定
+## 待決定
 
-- Phase 3 APP_ID 申請時程（外部依賴）
+- Phase 3 雲端發票 APP_ID 申請時程（外部依賴，見 [cloud-invoice](cloud-invoice-design.md)）

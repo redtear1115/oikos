@@ -7,7 +7,8 @@ import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
-import { localTodayISO, ymdToUTCNoon, dateLabel, weekday } from '@/lib/local-date'
+import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -157,10 +158,10 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             <CalIcon size={20} />
             <div className="flex-1 text-left">
               <div className="text-label font-medium" style={{ color: 'var(--ink)' }}>
-                {dateLabel(date, locale)}
+                {formatDateAbsolute(date, locale)}
               </div>
               <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                {date === localTodayISO() ? t.settlement.today : weekday(date, locale)}
+                {formatPickerSubtitle(date, locale)}
               </div>
             </div>
             <Chevron />

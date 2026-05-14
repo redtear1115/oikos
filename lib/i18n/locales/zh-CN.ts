@@ -11,9 +11,34 @@ export const zhCN: Translations = {
     termsSuffix: '',
   },
 
+  landing: {
+    heroKicker: 'A COUPLE\'S LEDGER · 双人记账 PWA',
+    taglineHtml: '两个人，<br />一本账。',
+    bodyHtml: '专为伴侣设计的双人共享账本。<br />一起记录日常开销、自动分摊、看见每笔花费去了哪里 — 把陪伴留下来。',
+    cta: '开始记录',
+    ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
+    alreadyHaveAccount: '已有账号 · 登录',
+    trustEncrypted: '端到端加密',
+    trustFree: '免费使用',
+    trustPwa: 'iOS / Android / Web PWA',
+    featuresKicker: 'INSIDE ──',
+    featuresTitle: '一本账，承接生活的四种光',
+    featuresSubtitleHtml: '从第一笔共同支出，到一起照顾的房子、车与每年保单，<br />都收进同一本账里。',
+    f1Title: '双人记账',
+    f1Body: '一笔一笔共同记下，自动分摊，可以对半也可以按比例。每月清楚结算，不必再对账。',
+    f2Title: '爱物管理',
+    f2Body: '家、车、孩子、宠物、植物 — 一起照顾的，都收进同一本账，每笔相关支出自动归户。',
+    f3Title: '守护保险',
+    f3Body: '保护型、储蓄型保单分页，被保人、受益人、续期日，一页看完每一份为对方留下的安排。',
+    f4Title: '记账统计',
+    f4Body: '月度回顾、分类分布、章节历史。让花过的钱自己说故事，一起回头看走过的日子。',
+    footerTrust: '端到端加密 · 数据只属于你们两个',
+  },
+
   common: {
     cancel: '取消',
     save: '保存',
+    update: '更新',
     saving: '保存中…',
     processing: '处理中…',
     delete: '删除',
@@ -163,6 +188,7 @@ export const zhCN: Translations = {
 
   incomeSheet: {
     title: '记一笔收入',
+    titleEdit: '编辑这笔收入',
     amountLabel: '收入金额',
     recipientPrompt: '谁的收入？',
     categoryLabel: '类别',
@@ -172,7 +198,8 @@ export const zhCN: Translations = {
     claimHint: '此笔会记入该保单的「理赔」记录',
     noPolicy: '尚无保单',
     insuranceBadge: '保险',
-    notePlaceholder: '备注（可选）',
+    noteLabel: '备注（选填）',
+    notePlaceholder: '写一句留给对方的话，或之后想记得的事',
     deleteIncome: '删除这笔收入',
     deleteConfirmTitle: '删除这笔收入？',
     errors: {
@@ -188,7 +215,6 @@ export const zhCN: Translations = {
     primaryRepay: '记录还款',
     primaryReceive: '记录收款',
     amountAriaLabel: '还款金额',
-    today: '今天',
     errors: {
       exceedsDebt: '金额不能超过欠款',
     },
@@ -453,6 +479,7 @@ export const zhCN: Translations = {
       savingsCumulative: '累积投入 NT$ {amount}',
       savingsForeignNote: '保额 USD',
       savingsMaturedBadge: '缴费期满',
+      activeBadge: '缴费中',
       sumInsuredShort: '保额 NT$ {amount}',
       yearsLeft: '剩 {n} 年',
       expired: '已到期',

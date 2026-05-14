@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { db } from '@/lib/db/client'
 import { groupEpochs, oikosGroups, profiles } from '@/lib/db/schema'
 import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
@@ -227,9 +228,9 @@ export interface ViewerEpochContext {
  * Returns `null` only when the viewer has no group at all AND no valid pin —
  * pages should treat that as「未進入家計簿」(redirect to /onboarding).
  */
-export async function resolveViewerEpochContext(
+export const resolveViewerEpochContext = cache(async (
   userId: string,
-): Promise<ViewerEpochContext | null> {
+): Promise<ViewerEpochContext | null> => {
   const jar = await cookies()
   const pinId = jar.get(PAST_EPOCH_COOKIE)?.value ?? null
 
@@ -282,4 +283,4 @@ export async function resolveViewerEpochContext(
         }
       : { startedAt: new Date(0), endedAt: null, epochId: null, isPast: false },
   }
-}
+})

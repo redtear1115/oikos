@@ -50,8 +50,8 @@ export function RecurringExpenseContent({ rules, groupDefaultRatioA }: Props) {
         <button
           type="button"
           onClick={() => setSheetState('create')}
-          className="rounded-full px-3.5 py-1.5 text-sm font-medium text-white border-0 cursor-pointer"
-          style={{ background: 'var(--ink)' }}
+          className="rounded-full px-3.5 py-1.5 text-sm font-medium border-0 cursor-pointer"
+          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           {t.recurringExpense.add}
         </button>

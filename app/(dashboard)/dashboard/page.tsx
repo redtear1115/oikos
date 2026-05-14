@@ -23,8 +23,9 @@ import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
 import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
-import { getTranslations } from '@/lib/i18n/t'
+import { getTranslations, getLocale } from '@/lib/i18n/t'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { formatDateRelative } from '@/lib/format-date'
 
 const BANNER_QUOTE_MAX_CODEPOINTS = 60
 
@@ -47,48 +48,10 @@ export default async function DashboardPage() {
   //   closed epoch had a memberB. That memberB is the partner who left.
   // - Leaver detection is fully client-side via a localStorage flag set by
   //   LeaveGroupFlow on success — no SSR data needed beyond the group id.
-  let partnerLeftProps: { partnerName: string; currentEpochId: string } | null = null
-  if (!epochWindow.isPast && !group.memberB && epochWindow.epochId) {
-    const prior = await getLatestPriorClosedEpoch(group.id)
-    if (prior && prior.memberBId && prior.memberAId === user.id) {
-      const [leaverProfile] = await db
-        .select({ displayName: profiles.displayName })
-        .from(profiles)
-        .where(eq(profiles.id, prior.memberBId))
-        .limit(1)
-      partnerLeftProps = {
-        partnerName: leaverProfile?.displayName ?? '',
-        currentEpochId: epochWindow.epochId,
-      }
-    }
-  }
+  const shouldCheckPriorLeaver = !epochWindow.isPast && !group.memberB && !!epochWindow.epochId
 
   const now = new Date()
   const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-
-  // Fast path — what hero/banner needs to paint immediately. Awaited so
-  // BalanceHero / SoloBanner / ModeTogglePlaceholder render with real data.
-  // The latest income (limit 1) covers the hero label without pulling the full feed.
-  const [balance, pendingBalanceDelta, incomeSummary, pendings, expensePendings, latestIncomes, t] = await Promise.all([
-    getGroupBalance(group.id),
-    getGroupPendingBalanceDelta(group.id),
-    listIncomeMonthSummary(group.id, yyyymm, epochWindow),
-    listActivePendings(group.id),
-    listActiveExpensePendings(group.id),
-    listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
-    getTranslations(),
-  ])
-
-  const recentIncomeLabel = latestIncomes.length > 0
-    ? (() => {
-        const r = latestIncomes[0]
-        const d = new Date(r.occurredAt + 'T00:00:00')
-        const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
-        const catKey = r.category as keyof Translations['incomeCategory']
-        const catLabel = t.incomeCategory[catKey] ?? t.incomeCategory.other
-        return `${dateStr} · ${r.source ?? catLabel}`
-      })()
-    : null
 
   // Monthly review banner state. Surface only when:
   //   1. snapshot exists for the previous month
@@ -100,10 +63,63 @@ export default async function DashboardPage() {
   const isSolo = !group.memberB
   const viewerIsA = group.memberA === user.id
 
-  const [reviewSnapshot, currentMonthMessages] = await Promise.all([
+  // Fast path — what hero/banner/post-leave needs to paint immediately. All of
+  // these only depend on (group, epochWindow, dates) so they fan out as one
+  // Promise.all instead of two sequential awaits. The latest income (limit 1)
+  // covers the hero label without pulling the full feed.
+  const [
+    balance,
+    pendingBalanceDelta,
+    incomeSummary,
+    pendings,
+    expensePendings,
+    latestIncomes,
+    t,
+    locale,
+    reviewSnapshot,
+    currentMonthMessages,
+    priorClosedEpoch,
+  ] = await Promise.all([
+    getGroupBalance(group.id),
+    getGroupPendingBalanceDelta(group.id),
+    listIncomeMonthSummary(group.id, yyyymm, epochWindow),
+    listActivePendings(group.id),
+    listActiveExpensePendings(group.id),
+    listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
+    getTranslations(),
+    getLocale(),
     loadMonthlyReviewSnapshot(group.id, reviewedYM.year, reviewedYM.month),
     loadMonthlyReviewMessages(group.id, todayYM.year, todayYM.month),
+    shouldCheckPriorLeaver ? getLatestPriorClosedEpoch(group.id) : Promise.resolve(null),
   ])
+
+  let partnerLeftProps: { partnerName: string; currentEpochId: string } | null = null
+  if (
+    priorClosedEpoch &&
+    priorClosedEpoch.memberBId &&
+    priorClosedEpoch.memberAId === user.id &&
+    epochWindow.epochId
+  ) {
+    const [leaverProfile] = await db
+      .select({ displayName: profiles.displayName })
+      .from(profiles)
+      .where(eq(profiles.id, priorClosedEpoch.memberBId))
+      .limit(1)
+    partnerLeftProps = {
+      partnerName: leaverProfile?.displayName ?? '',
+      currentEpochId: epochWindow.epochId,
+    }
+  }
+
+  const recentIncomeLabel = latestIncomes.length > 0
+    ? (() => {
+        const r = latestIncomes[0]
+        const dateStr = formatDateRelative(r.occurredAt, locale)
+        const catKey = r.category as keyof Translations['incomeCategory']
+        const catLabel = t.incomeCategory[catKey] ?? t.incomeCategory.other
+        return `${dateStr} · ${r.source ?? catLabel}`
+      })()
+    : null
 
   let bannerProps: {
     reviewedMonth: typeof reviewedYM

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { cancelSwap, confirmSwap } from '@/actions/membership'
+import { formatDateAbsolute } from '@/lib/format-date'
 import { describeMembershipError } from '@/lib/membership-errors'
 import { LeaveGroupFlow } from './LeaveGroupFlow'
 
@@ -95,9 +96,7 @@ function SwapPendingBanner({
   const [busy, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const dateLabel = pending.expiresAt.toLocaleDateString(locale, {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
+  const dateLabel = formatDateAbsolute(pending.expiresAt.toISOString(), locale)
 
   const headline = pending.by === 'self'
     ? banner.yourProposal
@@ -136,7 +135,11 @@ function SwapPendingBanner({
             onClick={run(cancelSwap)}
             disabled={busy}
             className="flex-1 h-10 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
-            style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
+            style={{
+              background: 'var(--btn-secondary-bg)',
+              color: 'var(--btn-secondary-text)',
+              border: '1px solid var(--btn-secondary-border)',
+            }}
           >
             {busy ? banner.processing : banner.cancelCta}
           </button>
@@ -147,7 +150,11 @@ function SwapPendingBanner({
               onClick={run(cancelSwap)}
               disabled={busy}
               className="flex-1 h-10 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
-              style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
+              style={{
+                background: 'var(--btn-secondary-bg)',
+                color: 'var(--btn-secondary-text)',
+                border: '1px solid var(--btn-secondary-border)',
+              }}
             >
               {busy ? banner.processing : banner.rejectCta}
             </button>
@@ -155,8 +162,8 @@ function SwapPendingBanner({
               type="button"
               onClick={run(confirmSwap)}
               disabled={busy}
-              className="flex-1 h-10 rounded-[12px] text-sm font-semibold text-white cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--ink)' }}
+              className="flex-1 h-10 rounded-[12px] text-sm font-semibold cursor-pointer disabled:opacity-50"
+              style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {busy ? banner.processing : banner.acceptCta}
             </button>

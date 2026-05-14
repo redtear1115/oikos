@@ -150,17 +150,21 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </Field>
 
       <Field label={ts.pet.sex}>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(58,36,25,0.05)' }}>
-          {([{v: 'male' as const, label: ts.pet.sexMale}, {v: 'female' as const, label: ts.pet.sexFemale}, {v: 'unknown' as const, label: ts.pet.sexUnknown}]).map(o => (
-            <button key={o.v} type="button" onClick={() => setSex(o.v)}
-              className="flex-1 h-9 rounded-[9px] text-sm font-medium"
-              style={{
-                border: 'none',
-                background: sex === o.v ? '#fff' : 'transparent',
-                color: sex === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                boxShadow: sex === o.v ? '0 1px 3px rgba(58,36,25,0.10)' : 'none',
-              }}>{o.label}</button>
-          ))}
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--toggle-segment-track)' }}>
+          {([{v: 'male' as const, label: ts.pet.sexMale}, {v: 'female' as const, label: ts.pet.sexFemale}, {v: 'unknown' as const, label: ts.pet.sexUnknown}]).map(o => {
+            const sel = sex === o.v
+            return (
+              <button key={o.v} type="button" onClick={() => setSex(o.v)}
+                className="oik-segment flex-1 h-9 rounded-[9px] text-sm font-medium"
+                style={{
+                  border: 'none',
+                  background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
+                  color: sel ? 'var(--ink)' : 'var(--ink-2)',
+                  boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
+                  transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
+                }}>{o.label}</button>
+            )
+          })}
         </div>
       </Field>
 

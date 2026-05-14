@@ -4,7 +4,23 @@ import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/Member
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { formatDateRelative } from '@/lib/format-date'
+
+// Beyond 1億 the full number overflows the row on mobile widths.
+// Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
+// tapping the row reveals the exact amount in the detail sheet.
+function formatRowAmount(amount: number): string {
+  const abs = Math.abs(amount)
+  const sign = amount < 0 ? '-' : ''
+  if (abs >= 1_000_000_000_000) {
+    return `${sign}${(abs / 1_000_000_000_000).toFixed(1)}兆`
+  }
+  if (abs >= 100_000_000) {
+    return `${sign}${(abs / 100_000_000).toFixed(1)}億`
+  }
+  return amount.toLocaleString('en-US')
+}
 
 export interface CompactRowProps {
   tx: {
@@ -26,6 +42,7 @@ export interface CompactRowProps {
 
 export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const { viewer, partner, viewerIsA } = useMember()
   const payerIsViewer = tx.paidBy === viewer.id
   const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
@@ -37,14 +54,34 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
     ? (payerIsViewer ? '你收入' : `${partner?.displayName ?? '對方'} 收入`)
     : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
 
+  // Viewer's share of this row, surfaced as a small colored sub-number under
+  // the total. Settlements don't have a split (they're cash transfers), so 0.
+  let delta = 0
+  if (tx.kind === 'transaction') {
+    if (tx.splitType === 'all_theirs') {
+      delta = payerIsViewer ? +tx.amount : -tx.amount
+    } else if (tx.splitType === 'half') {
+      delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
+    } else if (tx.splitType === 'weighted' && tx.splitRatioA != null) {
+      const ratioA = tx.splitRatioA
+      const otherShare = 100 - ratioA
+      delta = payerIsViewer
+        ? +Math.ceil(tx.amount * otherShare / 100)
+        : -Math.ceil(tx.amount * ratioA / 100)
+    }
+  }
+  const myShare = tx.kind === 'transaction'
+    ? (payerIsViewer ? tx.amount - delta : -delta)
+    : 0
+  const showMyShare = tx.kind === 'transaction' && myShare !== 0
+  const myShareColor = tx.kind === 'income' ? 'var(--credit)' : 'var(--debit)'
+
   // For income rows, fall back to category label when source/description is empty.
   const displayLabel = tx.kind === 'income'
     ? (tx.description || getIncomeCategory(tx.category).label)
     : tx.description
 
-  // M/D format
-  const d = new Date(tx.transactedAt)
-  const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`
+  const dateLabel = formatDateRelative(tx.transactedAt, locale)
 
   const noteText = tx.notes?.trim() || null
   const isPending = tx.kind === 'transaction' && tx.status === 'pending'
@@ -82,13 +119,18 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
           </div>
         )}
       </div>
-      <div className="text-right">
+      <div className="text-right shrink-0">
         <div
           className="tnum text-sm font-medium tracking-[-0.2px]"
           style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
         >
-          NT${tx.amount.toLocaleString('en-US')}
+          NT${formatRowAmount(tx.amount)}
         </div>
+        {showMyShare && (
+          <div className="tnum text-micro mt-px" style={{ color: myShareColor }}>
+            ${myShare.toLocaleString('en-US')}
+          </div>
+        )}
       </div>
     </>
   )

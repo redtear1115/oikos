@@ -55,7 +55,6 @@ export interface AssetsListItem {
   brand?: string | null
   model?: string | null
   latestOdometer?: number | null
-  totalAmount?: number
 }
 
 interface Props {
@@ -277,7 +276,6 @@ export function AssetsListClient({ items }: Props) {
               model={c.model ?? null}
               latestOdometer={c.latestOdometer ?? null}
               monthAmount={c.monthAmount}
-              totalAmount={c.totalAmount ?? 0}
               compact={multiCar}
             />
           ))}
@@ -361,7 +359,7 @@ export function AssetsListClient({ items }: Props) {
   )
 
   return (
-    <div className="relative min-h-screen pb-[92px]">
+    <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       <div className="px-5 pt-[60px] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"

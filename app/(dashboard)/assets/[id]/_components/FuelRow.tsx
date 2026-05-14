@@ -1,6 +1,8 @@
 'use client'
 
 import { singleEcon } from '@/lib/fuelEcon'
+import { formatDateRelative } from '@/lib/format-date'
+import { useLocale } from '@/lib/i18n/client'
 
 interface FuelRowProps {
   fuelLog: {
@@ -15,16 +17,12 @@ interface FuelRowProps {
   onClick?: () => void
 }
 
-function fmtDate(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 function fmt(n: number): string {
   return n.toLocaleString('en-US')
 }
 
 export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
+  const locale = useLocale()
   // singleEcon(curr, prev): only prev.odometer matters; liters/loggedAt in prev are unused
   const econ = singleEcon(
     { liters: fuelLog.liters, odometer: fuelLog.odometer, loggedAt: new Date(fuelLog.loggedAt) },
@@ -63,7 +61,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
           )}
         </div>
         <div className="text-micro text-[var(--ink-3)] font-mono mt-1">
-          {fmtDate(fuelLog.loggedAt)} · {parseFloat(fuelLog.liters).toFixed(1)}L · {fmt(fuelLog.odometer)} km · {fuelLog.station ?? '—'}
+          {formatDateRelative(fuelLog.loggedAt, locale)} · {parseFloat(fuelLog.liters).toFixed(1)}L · {fmt(fuelLog.odometer)} km · {fuelLog.station ?? '—'}
         </div>
       </div>
 

@@ -51,8 +51,8 @@ export function GatedView() {
         href="/settings"
         className="inline-flex items-center justify-center px-6 py-3 rounded-xl"
         style={{
-          background: 'var(--ink)',
-          color: '#fff',
+          background: 'var(--btn-primary-bg)',
+          color: 'var(--btn-primary-text)',
           fontFamily: 'inherit',
           fontSize: 'var(--fs-button)',
           fontWeight: 500,
