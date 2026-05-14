@@ -162,6 +162,8 @@ describe('leaveGroup', () => {
     queueDbResult([duoGroup()])                          // group lookup
     // getGroupBalance — first execute() call: returns [{ balance: 0 }]
     queueDbResult([{ balance: 0 }])
+    queueDbResult([{ id: 'epoch-1' }])                   // active-trip guard: currentEpoch (.limit)
+    queueDbResult([{ n: 0 }])                            // active-trip guard: hasActiveTrip count (.then)
     queueDbResult([{ displayName: 'Mei' }])              // leaver profile
     queueDbResult([])                                    // movingHouse rows
     queueDbResult([])                                    // movingCar rows
@@ -209,6 +211,8 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ balance: 0 }])
+    queueDbResult([{ id: 'epoch-1' }])                   // active-trip guard: currentEpoch (.limit)
+    queueDbResult([{ n: 0 }])                            // active-trip guard: hasActiveTrip count (.then)
     queueDbResult([])                                    // no profile row
     queueDbResult([])                                    // no house
     queueDbResult([])                                    // no car

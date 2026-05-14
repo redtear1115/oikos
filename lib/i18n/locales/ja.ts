@@ -323,6 +323,7 @@ export const ja: Translations = {
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
     currency: '通貨',
+    trips: '旅行',
     sectionGuardian: '守護（ベータ）',
     guardianBeta: {
       title: '守護をオンにする',

@@ -360,6 +360,7 @@ export type Translations = {
     exportData: string
     pastTimes: string
     currency: string
+    trips: string
     sectionGuardian: string
     guardianBeta: {
       title: string
@@ -1647,6 +1648,7 @@ export const zhTW: Translations = {
     exportData: '匯出資料（CSV）',
     pastTimes: '過去的時光',
     currency: '貨幣',
+    trips: '旅行',
     sectionGuardian: '守護（Beta）',
     guardianBeta: {
       title: '開啟守護',
