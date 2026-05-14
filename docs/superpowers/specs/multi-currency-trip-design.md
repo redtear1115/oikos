@@ -1,5 +1,6 @@
 ---
-status: planned
+status: shipped
+first_shipped_in: v0.17.0
 related_specs: [transactions, income, epoch-readonly, structured-filter, product]
 related_issues: ["#68", "#42"]
 ---
