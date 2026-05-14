@@ -49,15 +49,6 @@ export const metadata: Metadata = {
     '新婚理財', '家庭預算', '存錢',
     'Futari', 'ふたり',
   ],
-  alternates: {
-    canonical: '/',
-    languages: {
-      'zh-TW': '/',
-      'zh-CN': '/?lang=zh-CN',
-      en: '/?lang=en',
-      ja: '/?lang=ja',
-    },
-  },
   robots: {
     index: true,
     follow: true,
