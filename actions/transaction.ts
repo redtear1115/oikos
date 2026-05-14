@@ -324,6 +324,14 @@ export interface PagedTxnRow {
   notes: string | null  // shared memo on a CashTransaction; null for settlements/income/empty
   splitRatioA: number | null
   status: RecordStatus  // settlements/income are always 'settled'; only CashTransactions can be 'pending'
+  /** Original currency when foreign-currency write. NULL for base-currency rows. */
+  originalCurrency: string | null
+  /** Original amount in the foreign currency's storage units. NULL for base-currency rows. */
+  originalAmount: number | null
+  /** Rate snapshot at write time. NULL for base-currency rows. */
+  rateSnapshot: string | null
+  /** Trip this transaction belongs to. NULL = no trip. */
+  tripId: string | null
 }
 
 /**
@@ -464,6 +472,10 @@ function toPagedTxnRow(r: FeedRow): PagedTxnRow {
     notes: r.notes ?? null,
     splitRatioA: r.splitRatioA ?? null,
     status: r.status ?? 'settled',
+    originalCurrency: r.originalCurrency ?? null,
+    originalAmount: r.originalAmount ?? null,
+    rateSnapshot: r.rateSnapshot ?? null,
+    tripId: r.tripId ?? null,
   }
 }
 

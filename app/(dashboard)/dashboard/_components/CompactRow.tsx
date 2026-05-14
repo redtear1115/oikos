@@ -6,6 +6,7 @@ import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateRelative } from '@/lib/format-date'
+import { formatAmount, type CurrencyCode } from '@/lib/currency'
 
 // Beyond 1億 the full number overflows the row on mobile widths.
 // Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
@@ -37,12 +38,16 @@ export interface CompactRowProps {
     kind: 'transaction' | 'settlement' | 'income'
     notes?: string | null
     status?: 'settled' | 'pending'
+    originalCurrency?: string | null
+    originalAmount?: number | null
   }
   isLast: boolean
   onClick?: () => void
+  /** The group's base currency. Used for dual-currency display when originalCurrency differs. Defaults to 'twd'. */
+  baseCurrency?: CurrencyCode
 }
 
-export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
+export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: CompactRowProps) {
   const t = useTranslations()
   const locale = useLocale()
   const { viewer, partner, viewerIsA } = useMember()
@@ -122,12 +127,30 @@ export function CompactRow({ tx, isLast, onClick }: CompactRowProps) {
         )}
       </div>
       <div className="text-right shrink-0">
-        <div
-          className="tnum text-sm font-medium tracking-[-0.2px]"
-          style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
-        >
-          NT${formatRowAmount(tx.amount)}
-        </div>
+        {tx.originalCurrency && tx.originalAmount != null ? (
+          // Foreign-currency row: show original amount on top, base equivalent below
+          <>
+            <div
+              className="tnum text-sm font-medium tracking-[-0.2px]"
+              style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
+            >
+              {formatAmount(tx.originalAmount, tx.originalCurrency as CurrencyCode)}
+            </div>
+            <div
+              className="tnum text-micro mt-px"
+              style={{ color: 'var(--ink-3)' }}
+            >
+              ≈ {formatAmount(tx.amount, baseCurrency)}
+            </div>
+          </>
+        ) : (
+          <div
+            className="tnum text-sm font-medium tracking-[-0.2px]"
+            style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
+          >
+            NT${formatRowAmount(tx.amount)}
+          </div>
+        )}
         {showMyShare && (
           <div className="tnum text-micro mt-px" style={{ color: myShareColor }}>
             ${myShare.toLocaleString('en-US')}
