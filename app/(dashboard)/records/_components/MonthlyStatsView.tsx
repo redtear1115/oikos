@@ -349,6 +349,9 @@ function SummaryText({
   t: StatsT
 }) {
   const net = incomeTotal - expenseTotal
+  // TODO(v0.17 currency): three bare digits + one trailing NT$ anchor (per
+  // spec). formatAmount returns a fully-symbolized string, so we keep
+  // toLocaleString here until formatAmount gains a digits-only mode.
   const expenseStr = t.records.stats.summaryExpense.replace(
     '{amount}',
     expenseTotal.toLocaleString('en-US'),

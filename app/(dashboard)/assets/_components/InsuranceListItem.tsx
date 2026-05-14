@@ -198,6 +198,9 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   }
 
   // Subtitle line content — varies by framing.
+  // TODO(v0.17 currency): i18n templates (annualPremium, savingsCumulative,
+  // sumInsuredShort) have "NT$ {amount}" baked in — defer migration until
+  // formatAmount gains digits-only mode or i18n strings drop the symbol.
   const renderSubtitle = () => {
     const premiumStr = annualPremium > 0 ? i.annualPremium.replace('{amount}', annualPremium.toLocaleString('en-US')) : null
 

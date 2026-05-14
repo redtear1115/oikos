@@ -3,6 +3,7 @@
 import { singleEcon } from '@/lib/fuelEcon'
 import { formatDateRelative } from '@/lib/format-date'
 import { useLocale } from '@/lib/i18n/client'
+import { formatAmount } from '@/lib/currency'
 
 interface FuelRowProps {
   fuelLog: {
@@ -66,7 +67,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
       </div>
 
       <div className="text-body font-semibold text-[var(--ink)] tabular-nums shrink-0">
-        NT${fmt(amount)}
+        {formatAmount(amount, 'twd')}
       </div>
     </button>
   )

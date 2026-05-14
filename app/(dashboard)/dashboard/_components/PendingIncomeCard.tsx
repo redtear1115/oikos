@@ -70,6 +70,8 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
             <div className="text-[var(--fs-sm)]" style={{ color: 'var(--ink-3)' }}>
               {pending.proposedDate}
             </div>
+            {/* TODO(v0.17 currency): "NT$ {amount}" with space — design-driven,
+                 defer to design before migrating to formatAmount (which has no space). */}
             <div className="mt-1 text-[var(--fs-2xl)] font-semibold" style={{ color: 'var(--ink)' }}>
               NT$ {pending.proposedAmount.toLocaleString()}
             </div>

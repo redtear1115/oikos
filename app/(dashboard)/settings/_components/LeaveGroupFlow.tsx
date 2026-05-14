@@ -392,6 +392,8 @@ function FinalConfirm({
       {!balanceOk ? (
         <>
           <p className="text-sm mb-4" style={{ color: 'var(--debit)' }}>
+            {/* TODO(v0.17 currency): i18n template has `NT$ {amount}` baked in;
+                 needs digits-only mode or removing the symbol from translations. */}
             {t.balanceNotZero.replace('{amount}', balanceAbs.toLocaleString())}
           </p>
           <button

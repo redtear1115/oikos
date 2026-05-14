@@ -6,6 +6,7 @@ import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/Member
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
 import type { SplitType } from '@/lib/balance'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   rule: RecurringExpenseRuleRow
@@ -94,7 +95,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {intervalText}
               {' · '}{dayText}
-              {' · '}NT${rule.amount.toLocaleString()}
+              {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
             {!isSolo && (
               <div

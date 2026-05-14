@@ -313,7 +313,7 @@ export function SavingsView({
                 className="text-xl font-semibold tabular-nums"
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
               >
-                NT$ {details.accountValue.toLocaleString()}
+                {/* TODO(v0.17 currency): "NT$ {amount}" with space */}NT$ {details.accountValue.toLocaleString()}
               </span>
               <button
                 type="button"
@@ -355,6 +355,7 @@ export function SavingsView({
         <InfoRow label={td.insurer} value={details.insurer ?? ''} />
         <InfoRow label={td.policyNo} value={details.policyNo ?? ''} mono />
         <InfoRow label={td.payCycle} value={lookupPayCycleLabel(details.payCycle, td)} />
+        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
         <InfoRow
           label={td.expectedMaturity}
           value={details.expectedMaturityAmount !== null ? `NT$ ${details.expectedMaturityAmount.toLocaleString()}` : ''}
@@ -513,6 +514,7 @@ function RecurringRulesSection({
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="text-base font-semibold tabular-nums" style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}>
+                      {/* TODO(v0.17 currency): "NT$ {amount}" with space */}
                       NT$ {rule.amount.toLocaleString()}
                     </span>
                     {rule.pausedAt ? (

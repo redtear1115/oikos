@@ -121,6 +121,8 @@ export function AssetHero({
           </div>
         </div>
 
+        {/* TODO(v0.17 currency): MiniStat values use "NT$ {amount}" with space —
+             defer to design before migrating to formatAmount. */}
         <div
           className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
           style={{ background: 'rgba(58,36,25,0.04)', border: '1px solid var(--hairline)' }}
@@ -148,6 +150,8 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
           color: dim ? 'var(--ink-3)' : 'var(--ink)',
         }}
       >
+        {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
+             needs formatAmount digits-only mode (or symbol/digits split). */}
         <span className="text-base mr-0.5" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>NT$</span>
         {amount.toLocaleString('en-US')}
       </div>

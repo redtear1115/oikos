@@ -105,6 +105,9 @@ export function TemplateAssetDetailClient({
           <InfoCard>
             {template.fields.map((field, i) => {
               const raw = templateFields?.[field.name]
+              // TODO(v0.17 currency): generic "number" template field — may or
+              // may not be currency. Decide per-template before routing through
+              // formatAmount (which always adds a symbol).
               const value = raw == null ? '' :
                 field.type === 'number' ? Number(raw).toLocaleString('en-US')
                 : String(raw)
