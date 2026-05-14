@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date, jsonb, boolean,
+  timestamp, date, jsonb, boolean, primaryKey,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -28,6 +28,11 @@ export const invoiceImportRunStatusEnum = pgEnum(
 // Per-record lifecycle. 'pending' = 已承諾但未扣款 (credit-card slip / IOU);
 // excluded from GroupBalance until promoted to 'settled'. See drizzle/0028.
 export const recordStatusEnum = pgEnum('record_status', ['settled', 'pending'])
+// #68 — Multi-currency support. 'twd' is the default base currency.
+// Extendable: append values here + matching migration ALTER TYPE.
+export const currencyEnum = pgEnum('currency_code', ['twd', 'cny', 'usd', 'jpy'])
+// #42 — Trip sub-ledger lifecycle.
+export const tripStatusEnum = pgEnum('trip_status', ['active', 'ended', 'archived'])
 
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
@@ -56,6 +61,9 @@ export const oikosGroups = pgTable('OikosGroups', {
   // #220 — Guardian (守護) module is paywalled in the long run; per-group
   // beta opt-in until subscription ships. Gate via lib/guardian.ts#canAccessGuardian.
   guardianBetaEnabled: boolean('guardian_beta_enabled').notNull().default(false),
+  // #68 — Per-group base currency. Locked once any record exists in the current
+  // epoch. Lock rule enforced in actions/currency.ts, not at the DB layer.
+  baseCurrency: currencyEnum('base_currency').notNull().default('twd'),
 })
 
 /**
@@ -97,6 +105,19 @@ export const groupBalance = pgTable('GroupBalance', {
   lastCalculatedAt: timestamp('last_calculated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// #68 — Per-group psychological exchange rates. Composite PK (group_id, from, to).
+// Rate semantics: 1 display unit of from_currency = rate display units of to_currency.
+// 4×4 matrix covers twd/cny/usd/jpy. CHECK from <> to enforced in migration SQL.
+export const currencyRates = pgTable('CurrencyRates', {
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id, { onDelete: 'cascade' }),
+  fromCurrency: currencyEnum('from_currency').notNull(),
+  toCurrency: currencyEnum('to_currency').notNull(),
+  rate: numeric('rate', { precision: 10, scale: 3 }).notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.groupId, t.fromCurrency, t.toCurrency] }),
+}))
+
 export const assets = pgTable('Assets', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -129,6 +150,15 @@ export const cashTransactions = pgTable('CashTransactions', {
   transactedAt: timestamp('transacted_at', { withTimezone: true }).notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // #68 — Multi-currency. NULL = native base-currency write.
+  // Tuple (original_currency, original_amount, rate_snapshot) is all-or-nothing
+  // — enforced by CHECK constraint in migration SQL. `amount` always stores the
+  // base-currency integer. rate_snapshot is locked at write time (snapshot semantics).
+  originalCurrency: currencyEnum('original_currency'),
+  originalAmount: integer('original_amount'),
+  rateSnapshot: numeric('rate_snapshot', { precision: 10, scale: 3 }),
+  // #42 — Trip sub-ledger tag. NULL = no trip.
+  tripId: uuid('trip_id').references(() => trips.id),
 })
 
 export const settlements = pgTable('Settlements', {
@@ -300,6 +330,11 @@ export const incomeTransactions = pgTable('IncomeTransactions', {
   occurredAt: date('occurred_at').notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // #68 — Multi-currency. NULL = native base-currency write. UI defers to a later phase.
+  // Tuple all-or-nothing enforced by CHECK constraint in migration SQL.
+  originalCurrency: currencyEnum('original_currency'),
+  originalAmount: integer('original_amount'),
+  rateSnapshot: numeric('rate_snapshot', { precision: 10, scale: 3 }),
 })
 
 export const recurringIncomeRules = pgTable('RecurringIncomeRules', {
@@ -422,6 +457,29 @@ export const partnerQuizAnswers = pgTable('PartnerQuizAnswers', {
   questionKey: text('question_key').notNull(),
   choiceKey: text('choice_key').notNull(),
   answeredAt: timestamp('answered_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// #42 — Trip sub-ledger. Tag-style: CashTransactions.trip_id references this.
+// Contained in a single epoch (epoch_id FK). start_date guard against
+// currentEpochStartedAt lives in actions/trip.ts (Phase 5).
+// budget_amount / budget_currency are optional user-set fields for trip planning.
+// CHECK (end_date >= start_date) and CHECK ((status = 'ended') = (ended_at IS NOT NULL))
+// are enforced in migration SQL (Drizzle schema layer can't express these).
+export const trips = pgTable('Trips', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  epochId: uuid('epoch_id').notNull().references(() => groupEpochs.id),
+  name: text('name').notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date'),
+  defaultCurrency: currencyEnum('default_currency'),
+  budgetAmount: integer('budget_amount'),
+  budgetCurrency: currencyEnum('budget_currency'),
+  coverPhotoUrl: text('cover_photo_url'),
+  status: tripStatusEnum('status').notNull().default('active'),
+  endedAt: timestamp('ended_at', { withTimezone: true }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const monthlyReviewMessages = pgTable('MonthlyReviewMessages', {
