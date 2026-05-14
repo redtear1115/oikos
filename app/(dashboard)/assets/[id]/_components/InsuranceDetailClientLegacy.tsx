@@ -98,6 +98,9 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
         ) : (
           <>
             <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>{td.annualPremiumLabel}</div>
+            {/* TODO(v0.17 currency): typographic split (small NT$ + large digits)
+                 + termAndSumLine i18n template has "NT$" baked in — defer
+                 migration until formatAmount supports digits-only mode. */}
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
               <span className="text-lg font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
               <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -1.5 }}>

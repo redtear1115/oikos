@@ -10,6 +10,8 @@ import { formatDateRelative } from '@/lib/format-date'
 // Beyond 1億 the full number overflows the row on mobile widths.
 // Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
 // tapping the row reveals the exact amount in the detail sheet.
+// TODO(v0.17 currency): truncation is TWD-specific; move to lib/currency
+// when other currencies need abbreviation. For now NT$ is concatenated outside.
 function formatRowAmount(amount: number): string {
   const abs = Math.abs(amount)
   const sign = amount < 0 ? '-' : ''

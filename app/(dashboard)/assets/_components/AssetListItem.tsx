@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { resolveDisplayName } from '@/lib/display-name'
+import { formatAmount } from '@/lib/currency'
 
 type AssetType = 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
 
@@ -88,7 +89,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
       <div className="text-right shrink-0 ml-2">
         <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
         <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
-          NT${monthAmount.toLocaleString('en-US')}
+          {formatAmount(monthAmount, 'twd')}
         </div>
       </div>
     </Link>

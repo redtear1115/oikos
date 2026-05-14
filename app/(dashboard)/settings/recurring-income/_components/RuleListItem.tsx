@@ -5,6 +5,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   rule: RecurringRuleRow
@@ -80,7 +81,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {intervalText}
               {' · '}{dayText}
-              {' · '}NT${rule.amount.toLocaleString()}
+              {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
             {!isSolo && (
               <div

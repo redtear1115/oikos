@@ -11,6 +11,7 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
+import { formatAmount } from '@/lib/currency'
 
 const HERO_COLLAPSED_KEY = 'hero-collapsed'
 // localStorage key for the settled / include-pending balance view toggle (#164).
@@ -183,7 +184,7 @@ export function BalanceHero({
                     fontFeatureSettings: '"tnum"',
                   }}
                 >
-                  {incomeMonthTotal > 0 ? `+NT$${incomeMonthTotal.toLocaleString('en-US')}` : 'NT$0'}
+                  {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, 'twd')}` : formatAmount(0, 'twd')}
                 </span>
               )}
             </div>
@@ -205,7 +206,7 @@ export function BalanceHero({
                 letterSpacing: -1.2, marginTop: 4,
                 fontFeatureSettings: '"tnum"',
               }}>
-                {incomeMonthTotal > 0 ? `+NT$${incomeMonthTotal.toLocaleString('en-US')}` : 'NT$0'}
+                {incomeMonthTotal > 0 ? `+${formatAmount(incomeMonthTotal, 'twd')}` : formatAmount(0, 'twd')}
               </div>
               <div style={{
                 marginTop: 12, paddingTop: 12,
@@ -264,7 +265,7 @@ export function BalanceHero({
                     letterSpacing: '-0.6px',
                   }}
                 >
-                  NT${amount.toLocaleString('en-US')}
+                  {formatAmount(amount, 'twd')}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
@@ -290,6 +291,8 @@ export function BalanceHero({
                     opacity: fading ? 0 : 1,
                   }}
                 >
+                  {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
+                       needs `formatAmount` digits-only mode (or symbol/digits split). */}
                   <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
                   {amount.toLocaleString('en-US')}
                 </div>

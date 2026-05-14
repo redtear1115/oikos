@@ -107,6 +107,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
       <SectionHeader>{td.sectionRecord}</SectionHeader>
       <InfoCard>
         <InfoRow label={td.sproutedAt} value={details?.sproutedAt ?? ''} mono />
+        {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
         <InfoRow label={td.cost} value={details?.cost ? `NT$ ${details.cost.toLocaleString()}` : ''} mono />
         <InfoRow label={td.location} value={details?.location ?? ''} />
         <InfoRow label={td.waterEvery} value={details?.waterEvery ? td.waterEveryValue.replace('{n}', String(details.waterEvery)) : ''} mono last />

@@ -11,6 +11,7 @@ import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { formatAmount } from '@/lib/currency'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -182,7 +183,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
               className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--accent)' }}
             >
-              {pending ? t.common.processing : `${primaryText} NT$${parsed.toLocaleString('en-US')}`}
+              {pending ? t.common.processing : `${primaryText} ${formatAmount(parsed, 'twd')}`}
             </button>
           )}
           <button

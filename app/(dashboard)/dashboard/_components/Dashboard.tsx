@@ -245,6 +245,8 @@ export function Dashboard({
       showToast(t.common.toast.deleted, 1500)
     } else if (info?.savedAmount != null) {
       const tmpl = info.edit ? t.common.toast.updated : t.common.toast.recorded
+      // TODO(v0.17 currency): toast template has `NT${amount}` baked in;
+      // needs formatAmount digits-only mode or move the symbol into the format call.
       showToast(tmpl.replace('{amount}', info.savedAmount.toLocaleString('en-US')), 1500)
     }
     router.refresh()
