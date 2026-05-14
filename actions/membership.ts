@@ -16,6 +16,7 @@ import {
   settlements,
 } from '@/lib/db/schema'
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
+import { hasActiveTrip } from '@/lib/db/queries/trips'
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
@@ -202,6 +203,16 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
 
   const balance = await getGroupBalance(group.id)
   if (balance !== 0) throw new Error('balance_not_zero')
+
+  // Guard: reject if any active trip exists in the current epoch (#42)
+  const [currentEpochRow] = await db
+    .select()
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
+    .limit(1)
+  if (currentEpochRow && await hasActiveTrip(group.id, currentEpochRow.id)) {
+    throw new Error('請先結束旅行再離開章節')
+  }
 
   const leaver = user.id
   const oldGroupId = group.id
