@@ -322,6 +322,7 @@ export const ja: Translations = {
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
+    currency: '通貨',
     sectionGuardian: '守護（ベータ）',
     guardianBeta: {
       title: '守護をオンにする',
