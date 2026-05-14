@@ -6,6 +6,8 @@ import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { InAppBrowserGuard } from '@/components/InAppBrowserGuard'
 import './globals.css'
 
+// Fraunces is the landing hero typeface — preloaded so the LCP headline doesn't
+// FOIT/FOUT. Latin only, two weights (400 mobile tagline, 500 everything else).
 const fraunces = Fraunces({
   subsets: ['latin'],
   weight: ['400', '500'],
@@ -18,11 +20,19 @@ const fraunces = Fraunces({
 // per weight (render-blocking CSS grew ~100KB per extra weight). Each weight
 // added back here is a perf cost — verify build output (`grep '@font-face'
 // .next/static/css/*.css | wc -l`) before adding more. (issue #289)
+//
+// `preload: false` keeps the @font-face definitions but skips the <link
+// rel="preload"> storm for ~11 unicode-range woff2 chunks. Initial CJK glyphs
+// render instantly via the PingFang TC / Microsoft JhengHei / Noto Sans CJK TC
+// fallback chain (see globals.css `--font-sans`); Noto Sans TC loads async and
+// swaps in via `display: swap`. Trades a tiny FOUT for ~700ms off the critical
+// path on mobile. (issues #318 / #319)
 const notoTC = Noto_Sans_TC({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-noto-tc',
   display: 'swap',
+  preload: false,
 })
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
