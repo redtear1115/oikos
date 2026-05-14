@@ -23,6 +23,7 @@ const baseGroup = {
   pendingSwapExpiresAt: null as Date | null,
   currentEpochStartedAt: new Date(),
   guardianBetaEnabled: false,
+  baseCurrency: 'twd' as const,
 }
 
 describe('validateInviteAcceptance', () => {
