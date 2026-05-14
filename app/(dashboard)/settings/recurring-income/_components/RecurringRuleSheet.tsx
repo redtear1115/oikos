@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -287,10 +288,7 @@ export function RecurringRuleSheet({
             >
               {t.recurringIncome.sheet.categoryLabel}
             </div>
-            <div
-              className="flex gap-2"
-              style={{ padding: '0 20px', overflowX: 'auto', scrollbarWidth: 'none' }}
-            >
+            <ScrollFadeRow className="flex gap-2" style={{ padding: '0 20px' }} fadeTo={P.sheetBg}>
               {PICKABLE_INCOME_CATEGORIES.map((c) => (
                 <IncomeChip
                   key={c.id}
@@ -299,7 +297,7 @@ export function RecurringRuleSheet({
                   onClick={() => setCategory(c.id)}
                 />
               ))}
-            </div>
+            </ScrollFadeRow>
           </div>
 
           <div style={{ height: 1, margin: '0 20px', background: 'linear-gradient(90deg, transparent, var(--hairline), transparent)' }} />
