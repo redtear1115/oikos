@@ -602,6 +602,38 @@ export const en: Translations = {
     },
   },
 
+  currencyPage: {
+    title: 'Currency',
+    back: 'Back',
+    pageHeading: 'A shared ruler between the two of you',
+    pageSubtitle: 'The base currency is this ledger\'s mother tongue; the felt rate is the agreement between you two.',
+    base: {
+      sectionTitle: 'Base currency',
+      sectionHint: 'The mother tongue of this ledger. Every settlement and display rests on it.',
+      locked: {
+        heading: 'This chapter has already begun',
+        body: 'There are records in the current chapter, so the base currency stays fixed — that way every amount written before still holds its ground.',
+        bodyNext: 'If you want a different base currency, you can choose again when the next chapter begins.',
+      },
+    },
+    rates: {
+      sectionTitle: 'Felt rate',
+      whyHeading: 'Why we call it the "felt" rate',
+      whyBody: 'Not the market\'s shifting numbers — it\'s the rate the two of you feel one US dollar is worth. This ruler belongs only to you.',
+      exampleHeading: 'For example',
+      exampleBody: 'If you both agree 1 USD ≈ 32 TWD, then $100 spent in the US is recorded as NT$3,200.',
+      behaviorHeading: 'When you change it',
+      behaviorBody: 'Past entries stay at the rate they were recorded with. Only new entries from now on use the updated rate.',
+      saving: 'Saving…',
+      saved: 'Saved',
+      defaultFallback: 'Default',
+    },
+    errors: {
+      baseChangeFailed: 'Could not change the base currency',
+      rateChangeFailed: 'Could not update the rate',
+    },
+  },
+
   assetSheet: {
     titleNew: 'New treasure',
     titleEdit: 'Edit {type}',
