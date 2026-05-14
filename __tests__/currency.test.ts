@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount } from '@/lib/currency'
+import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, convertAmount } from '@/lib/currency'
 
 describe('CURRENCIES constant', () => {
   it('contains the four MVP currencies in canonical order', () => {
@@ -49,5 +49,42 @@ describe('formatAmount', () => {
   })
   it('formats negative amounts with minus before symbol', () => {
     expect(formatAmount(-500, 'twd')).toBe('-NT$500')
+  })
+})
+
+describe('convertAmount', () => {
+  // Rate semantics: `rate` is "1 display unit of `from` = rate display units of `to`".
+  // Display unit examples: 1 TWD, 1 USD ($1.00, NOT 1 cent), 1 JPY.
+
+  it('same currency returns unchanged amount', () => {
+    expect(convertAmount({ amount: 100, from: 'twd', to: 'twd', rate: 1 })).toBe(100)
+  })
+
+  it('TWD → JPY: 100 TWD × 5.0 = 500 JPY (both integer-unit)', () => {
+    expect(convertAmount({ amount: 100, from: 'twd', to: 'jpy', rate: 5.0 })).toBe(500)
+  })
+
+  it('TWD → USD: 1000 TWD × 0.032 = $32.00 stored as 3200 cents', () => {
+    expect(convertAmount({ amount: 1000, from: 'twd', to: 'usd', rate: 0.032 })).toBe(3200)
+  })
+
+  it('USD → TWD: $12.50 (1250 cents) × (1/0.032) ≈ 391 TWD', () => {
+    expect(convertAmount({ amount: 1250, from: 'usd', to: 'twd', rate: 1 / 0.032 })).toBe(391)
+  })
+
+  it('JPY → TWD: 500 JPY × 0.2 = 100 TWD', () => {
+    expect(convertAmount({ amount: 500, from: 'jpy', to: 'twd', rate: 0.2 })).toBe(100)
+  })
+
+  it('USD → JPY: $1.00 (100 cents) × 150 = ¥150', () => {
+    expect(convertAmount({ amount: 100, from: 'usd', to: 'jpy', rate: 150 })).toBe(150)
+  })
+
+  it('TWD → CNY: 1000 TWD × 0.22 = 220 CNY', () => {
+    expect(convertAmount({ amount: 1000, from: 'twd', to: 'cny', rate: 0.22 })).toBe(220)
+  })
+
+  it('rounds half to nearest integer for integer target', () => {
+    expect(convertAmount({ amount: 100, from: 'twd', to: 'jpy', rate: 4.995 })).toBe(500)
   })
 })
