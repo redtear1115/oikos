@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -34,8 +35,8 @@ export async function createClient() {
  * `supabase.auth.getUser()` directly to re-validate the JWT against Supabase
  * Auth.
  */
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
   return session?.user ?? null
-}
+})
