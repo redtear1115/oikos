@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.16.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.16.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -44,6 +44,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.15.3](CHANGELOG.md#0153---2026-05-13) | 章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值 |
 | [v0.16.0](CHANGELOG.md#0160---2026-05-13) | 守護成為自己的模組．物品也記得進來．設定頁長出新分組 |
 | [v0.16.1](CHANGELOG.md#0161---2026-05-13) | 守護後的細節收尾．角色色 × 收入篩選 × 被保人自己/對方 × 兩條清理 |
+| [v0.16.2](CHANGELOG.md#0162---2026-05-14) | 設計語言收束．第一張公開臉．效能更輕 |
 
 ## Backlog / 未釋出版本
 
