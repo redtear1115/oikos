@@ -1,8 +1,21 @@
+import type { Metadata } from 'next'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/sign-in',
+    languages: {
+      'zh-TW': '/sign-in',
+      'zh-CN': '/sign-in?lang=zh-CN',
+      en: '/sign-in?lang=en',
+      ja: '/sign-in?lang=ja',
+    },
+  },
+}
 
 const softwareAppJsonLd = {
   '@context': 'https://schema.org',

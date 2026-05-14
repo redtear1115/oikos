@@ -16,10 +16,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date()
   return [
     {
+      url: `${APP_URL}/`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 1.0,
+      alternates: { languages: withLocaleAlternates('/') },
+    },
+    {
       url: `${APP_URL}/sign-in`,
       lastModified,
       changeFrequency: 'monthly',
-      priority: 1.0,
+      priority: 0.7,
       alternates: { languages: withLocaleAlternates('/sign-in') },
     },
     {
