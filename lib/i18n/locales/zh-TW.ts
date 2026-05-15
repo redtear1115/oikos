@@ -398,6 +398,7 @@ export type Translations = {
 
   settings: {
     title: string
+    sectionGroup: string
     sectionGroupSplit: string
     groupName: string
     sectionMember: string
@@ -1758,6 +1759,7 @@ export const zhTW: Translations = {
 
   settings: {
     title: '設定',
+    sectionGroup: '帳本',
     sectionGroupSplit: '預設分攤方式 & 比例',
     groupName: '帳本名稱',
     sectionMember: '成員',

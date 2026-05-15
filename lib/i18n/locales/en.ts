@@ -329,6 +329,7 @@ export const en: Translations = {
 
   settings: {
     title: 'Settings',
+    sectionGroup: 'Ledger',
     sectionGroupSplit: 'Default Split & Ratio',
     groupName: 'Ledger name',
     sectionMember: 'Members',
