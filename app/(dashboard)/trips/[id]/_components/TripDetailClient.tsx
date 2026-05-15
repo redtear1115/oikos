@@ -338,8 +338,11 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         )}
       </section>
 
-      {/* Edit + End trip CTAs — past-epoch read-only view hides both. */}
-      {!isPast && (
+      {/* Edit + End trip CTAs — read-only views (past-epoch or already-ended)
+          hide both. Once a trip is ended its TripExpenses are frozen, summary
+          CashTransactions are written, and editing currencies / dates would
+          drift the fold. */}
+      {!isPast && !isEnded && (
         <section className="mt-6 px-4 flex flex-col gap-2">
           <button
             type="button"
@@ -353,27 +356,18 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           >
             編輯這趟旅行
           </button>
-          {!isEnded && (
-            <button
-              type="button"
-              onClick={() => setEndOpen(true)}
-              className="w-full h-12 rounded-[14px] text-sm font-medium cursor-pointer"
-              style={{
-                background: 'transparent',
-                color: 'var(--ink-2)',
-                border: '1px dashed var(--ink-3)',
-              }}
-            >
-              結束這趟旅行
-            </button>
-          )}
-          <Link
-            href="/settings/currency"
-            className="mt-2 self-center text-sm no-underline min-h-11 px-3 inline-flex items-center"
-            style={{ color: 'var(--ink-3)' }}
+          <button
+            type="button"
+            onClick={() => setEndOpen(true)}
+            className="w-full h-12 rounded-[14px] text-sm font-medium cursor-pointer"
+            style={{
+              background: 'transparent',
+              color: 'var(--ink-2)',
+              border: '1px dashed var(--ink-3)',
+            }}
           >
-            {t.tripDetail.currencyRatesLink} →
-          </Link>
+            結束這趟旅行
+          </button>
         </section>
       )}
 

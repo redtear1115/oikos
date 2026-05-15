@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
@@ -131,6 +132,31 @@ export function CurrencySettings(props: {
             {baseError}
           </p>
         )}
+      </section>
+
+      <section className="px-4 pb-10">
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: 'var(--surface-alt)',
+            border: '1px solid var(--hairline)',
+          }}
+          role="note"
+        >
+          <div className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>
+            {tc.tripsHint.heading}
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+            {tc.tripsHint.body}
+          </p>
+          <Link
+            href="/trips"
+            className="mt-3 inline-flex items-center text-sm no-underline min-h-11"
+            style={{ color: 'var(--ink-2)' }}
+          >
+            {tc.tripsHint.linkLabel} →
+          </Link>
+        </div>
       </section>
 
       <BottomNav onAddClick={() => setAddOpen(true)} hideFab={props.isPast} />

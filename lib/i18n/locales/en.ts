@@ -214,7 +214,6 @@ export const en: Translations = {
     endConfirm: 'End trip',
     endDateBeforeStart: 'End date cannot be before the start date ({date})',
     endFailure: 'Failed to end the trip',
-    currencyRatesLink: 'Adjust exchange rates',
   },
 
   incomeSheet: {
@@ -641,7 +640,7 @@ export const en: Translations = {
     title: 'Currency',
     back: 'Back',
     pageHeading: 'A shared ruler between the two of you',
-    pageSubtitle: 'The base currency is this ledger\'s mother tongue; the felt rate is the agreement between you two.',
+    pageSubtitle: 'The base currency is this ledger\'s mother tongue.',
     base: {
       sectionTitle: 'Base currency',
       sectionHint: 'The mother tongue of this ledger. Every settlement and display rests on it.',
@@ -651,21 +650,13 @@ export const en: Translations = {
         bodyNext: 'If you want a different base currency, you can choose again when the next chapter begins.',
       },
     },
-    rates: {
-      sectionTitle: 'Felt rate',
-      whyHeading: 'Why we call it the "felt" rate',
-      whyBody: 'Not the market\'s shifting numbers — it\'s the rate the two of you feel one US dollar is worth. This ruler belongs only to you.',
-      exampleHeading: 'For example',
-      exampleBody: 'If you both agree 1 USD ≈ 32 TWD, then $100 spent in the US is recorded as NT$3,200.',
-      behaviorHeading: 'When you change it',
-      behaviorBody: 'Past entries stay at the rate they were recorded with. Only new entries from now on use the updated rate.',
-      saving: 'Saving…',
-      saved: 'Saved',
-      defaultFallback: 'Default',
+    tripsHint: {
+      heading: 'Felt rates moved',
+      body: 'Foreign currencies and rates now live inside each trip — every trip has its own ruler, and they don\'t affect each other.',
+      linkLabel: 'See your trips',
     },
     errors: {
       baseChangeFailed: 'Could not change the base currency',
-      rateChangeFailed: 'Could not update the rate',
     },
   },
 

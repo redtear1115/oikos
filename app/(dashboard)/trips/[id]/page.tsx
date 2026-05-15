@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
 import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import { getTripById } from '@/lib/db/queries/trips'
-import { listTripExpenses } from '@/lib/db/queries/tripExpense'
+import { listTripExpenses, countTripExpensesByCurrency } from '@/lib/db/queries/tripExpense'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
+import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 import type { RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -14,10 +15,16 @@ export default async function TripDetailPage(props: { params: Promise<{ id: stri
   const trip = await getTripById(id)
   if (!trip || trip.groupId !== group.id) notFound()
 
-  const [rawExpenses, rawRates] = await Promise.all([
+  const [rawExpenses, rawRates, usedCurrencyCounts] = await Promise.all([
     listTripExpenses(trip.id),
     listRatesForGroup(group.id),
+    countTripExpensesByCurrency(trip.id),
   ])
+
+  const rateSnapshot = parseTripCurrencySnapshot(
+    trip.rateSnapshot,
+    trip.defaultCurrency ?? group.baseCurrency,
+  )
 
   // TripExpenses store `splitRatio` as the payer's share %. The shared
   // CompactRow component expects `splitRatioA` (member A's share %), so we
@@ -66,7 +73,9 @@ export default async function TripDetailPage(props: { params: Promise<{ id: stri
         name: trip.name,
         startDate: trip.startDate,
         endDate: trip.endDate,
-        defaultCurrency: trip.defaultCurrency as CurrencyCode | null,
+        defaultCurrency: trip.defaultCurrency,
+        rateSnapshot,
+        usedCurrencyCounts,
         status: trip.status,
       }}
       records={records}
