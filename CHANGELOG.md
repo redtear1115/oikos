@@ -15,6 +15,94 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.2] - 2026-05-15
+
+主題：**旅行從沙盒到收斂．多幣別視角也站穩**——v0.17.0 把多幣別 × 旅行的底盤一次到位用 tag-style（`CashTransactions.trip_id`），出貨後重新檢視「Trip 子 ledger 不做」這個決定發現用 `TripExpenses` 隔離 table 比 tag 更乾淨：trip UI / 主帳本 query 路徑天然分離、`split_type` 完整支援、結束時收斂語意明確。這版四個 phase 把這條路走完——schema → backend → UI → 結束 fold 為主帳本 2 筆 summary `CashTransaction`，主帳本 balance 計算完全不必知道 trip 存在。順手把「幣別視角刻意分層」的立場寫進 spec：主帳本（dashboard / records / balance / AddSheet）守單一幣別、UI 不暴露幣別 picker；多幣別只在旅行子帳本出現——`complexity at the boundary, simplicity in daily use`。Pending 文案從「信用卡待扣」改為「待結算」（綁信用卡的框架誤導了實際語意），CWV LCP 三件套（Supabase preconnect / Google OAuth preconnect / lazy InAppBrowserGuard）把公開頁的 LCP 再壓一段，AI 爬蟲拿到 `llms-full.txt` 長介紹給 Perplexity / ChatGPT Search 引用。
+
+完整 diff：[v0.17.1...v0.17.2](https://github.com/redtear1115/oikos/compare/v0.17.1...v0.17.2)
+
+### 使用者可見變化
+
+#### 旅行子帳本完整收斂（refs #42）
+
+- **Trip detail FAB**：`/trips/[id]` 在 active trip + 非過去章節時 BottomNav FAB 解開隱藏，點開的 AddSheet 帶著當前 trip 預選（TripSelector 在這個 context 自動隱藏，trip 由頁面 implicit 帶入），currency 預設用 trip `default_currency`、ratio 預設用 group `default_split_ratio_a`。即使 trip 的 `start_date` 在未來，FAB 也會把記錄落到這個 trip（`prefilledTripId` 比日期 auto-detect 優先）。
+- **「依幣別」與「誰花了多少」兩段 summary**：trip 詳情頁在 records list 上方多出兩段 summary card。混幣別時上面那段秀每個原始幣別的小計（native total + base 等值，照 base value 排序）；雙人 trip 下面那段秀每位成員的實際 cash out + 分攤後負擔，per-side 計算對齊 `lib/balance.transactionDelta()` 讓這個視圖跟 group balance 一致。單幣別 trip 沒有上半段；solo trip 沒有下半段。
+- **記錄改寫到 `TripExpenses` 獨立 table**：在 trip context 建立 / 編輯記錄時走 `TripExpense` table，**不**進入 `CashTransactions`、**不**影響 `GroupBalance` 與主帳本 feed。trip 詳情頁讀的是 `TripExpenses`；v0.17.0 era 用 `CashTransactions.trip_id` tag 的舊紀錄留在主帳本，不再出現在 `/trips/[id]`（編輯時可清掉 tag）。
+- **End trip 自動產 2 筆 summary CashTransaction**：trip 結束時把 `TripExpenses` fold 回主帳本——以每位實際 fronted money 的 member 為 `paid_by`、`amount` 為其總 out-of-pocket（base 幣別、用 `Trips.rate_snapshot` 換算）、`category='entertainment'`、`description='${trip.name} 結算'`、保留 `trip_id` 作為來源標記。`split_type` / `split_ratio_a` 自動挑選讓 `lib/balance.ts` 重算產生的 balance delta = trip 淨效果（整數 ratio 精度導致最多 ~trip_total/100 漂移，已在 `lib/tripSummary.ts` 內 brute-force 0–100 挑最小誤差 ratio；0% / 100% 自動 collapse 成 `all_mine` / `all_theirs`）。Solo group 永遠走 1 筆 `all_mine` summary，balance 維持 0。
+- **End trip sheet 四語化**：新增 14 個 `tripDetail.*` i18n key（zh-TW / zh-CN / en / ja），日期驗證錯誤訊息 inline 帶入 `{date}`。
+
+#### Pending 狀態文案：「信用卡待扣」→「待結算」（PR #361 closes #360）
+
+Pending 不只是「信用卡待扣」——也可能是還沒實際付出去、或借據式 IOU。文案把「信用卡」綁進來會誤導使用者以為這個 status 專門給信用卡用。4 個 locale × 5 處 hardcoded copy（form `statusPending` + hint、`compactRow.pendingBadge`、trip 的 `perSideHint`、filter `statusPending`）全部對齊：
+
+| Locale | Before | After |
+|---|---|---|
+| zh-TW | 信用卡待扣 / 待扣款 | 待結算 |
+| zh-CN | 信用卡待扣 / 待扣款 | 待结算 |
+| en | Credit card pending / Card pending | Pending |
+| ja | カード引落待ち / 未確定 | 未精算 |
+
+Hint 文字也跟著去掉「信用卡」框架；trip 的 `perSideHint` 同步更新。DB enum (`pending` | `settled`)、`lib/validators.ts`、balance 計算邏輯都不動——純文案。
+
+#### CWV LCP 三件套（PR #357 closes #352）
+
+公開頁 (`/`、`/sign-in`) 的 LCP 收斂：
+
+- **`<head>` preconnect 到 Supabase**：warm TLS 到 `NEXT_PUBLIC_SUPABASE_URL`，Sign-In OAuth 點擊 / dashboard 首次 realtime / auth 請求都不必付完整 handshake。所有頁面覆蓋。
+- **`/sign-in` preconnect 到 `accounts.google.com`**：warm Google OAuth redirect target。僅 sign-in 頁。
+- **`InAppBrowserGuard` lazy load**：UA-match regex list + 全螢幕 modal 改用 `next/dynamic({ ssr: false })` 包成 ~3.1KB 的獨立 chunk，初始 layout bundle 不再 ship。~95% 訪客不在 in-app WebView，post-hydration delay 實際看不到。
+
+#### `public/llms-full.txt` 給 AI 爬蟲引用（PR #356 closes #347）
+
+`public/llms.txt` 之外加長版 `public/llms-full.txt`（~20KB Markdown）供 Perplexity / ChatGPT Search / Google AI Overview 在回答「雙人記帳 app?」這類 query 時有更準確內容可引用：產品 overview、功能列表（split modes / income / settlements / recurring / 愛物 / trips / 多幣別 / chapters / 月度回顧 / Guardian / PWA / i18n / solo mode）、給誰用 vs 不給誰用、5 個 use-case 場景、FAQ（定價 / 對比 Honeydue/Splitwise/YNAB / 資料留存 / 為什麼不接銀行 / 多幣別 / break-up 處理 / privacy / export）、競品定位 + 設計哲學（lamp metaphor / 光 × 顏色）、技術備註（stack / 整數金額精度 / soft-delete 語意）。`middleware.ts` 把 `/llms-full.txt` 加進排除清單（與 `llms.txt` / `robots.txt` / `sitemap.xml` 並列），避免被 307 導去 sign-in。
+
+### 技術變更
+
+#### 為什麼 v0.17.2 把 v0.17.0 的「Trip = tag」改成「Trip = isolated table」
+
+v0.17.0 出貨時 `CashTransactions.trip_id` tag-style 是最少 schema migration 的設計：trip UI 只是 main ledger 的 `WHERE trip_id = ?` view、不另開 table、reuse 既有的 split / balance / feed 邏輯。出貨後重新檢視這個決定發現幾個摩擦點：
+
+- **Main ledger 每個 query 都要 `WHERE trip_id IS NULL`** 才不污染 dashboard / `/records` / balance recompute——這條 invariant 靠人記，漏接一次就會看到旅行紀錄混在日常 feed
+- **Trip 結束時的「收斂」語意難寫**：tag-style 下「結束」只是 status 變更，但 trip 結束後的紀錄應該以什麼樣的形態存在於主帳本？要保留每一筆？還是要 fold 成一筆？tag 不給結構回答這個問題
+- **Trip-scoped split / weighted ratio 跟 main ledger 共用一套 `lib/balance.ts`** 太黏，trip 期間想另外做事（例如未來的 trip-scoped balance）會卡到主帳本
+
+v0.17.2 改為 **isolated sandbox**：trip 期間記錄落 `TripExpenses`、主帳本不知道；trip 結束時自動 fold 為主帳本 2 筆 summary `CashTransactions`（`split_type` / `split_ratio_a` 自動挑使 balance delta = trip 淨效果）。主帳本 balance 計算 0 修改。完整設計見 [docs/superpowers/specs/multi-currency-trip-design.md § v0.17.2 Architecture](docs/superpowers/specs/multi-currency-trip-design.md)。
+
+#### Phase 1 — Schema migration 0039（PR #340）
+
+`drizzle/0039_trip_expense.sql`：
+- 新表 `TripExpenses`：`id` / `trip_id` FK / `paid_by` FK / `amount` (base 幣別整數) / `original_currency` + `original_amount` (nullable, all-or-nothing CHECK) / `category` / `split_type` / `split_ratio` (payer 自己的 share %，0–100，CHECK 對應 `split_type='weighted'`) / `description` / `transacted_at` / `deleted_at` / `created_at`
+- 不需要 `group_id`（透過 `trip_id → Trips.group_id` 解析）、`status`（trip 結束時批次收斂無需 pending）、`asset_id`（旅行支出通常不關聯愛物）、`fuel_log_id`（旅行不做加油雙寫）、`notes`（簡化）
+- Partial indexes：`(trip_id) WHERE deleted_at IS NULL`、`(paid_by) WHERE deleted_at IS NULL`、`(deleted_at) WHERE deleted_at IS NOT NULL`
+- `Trips.rate_snapshot jsonb`：trip 建立時從 group `CurrencyRates` 複製當時匯率（key uppercase `${FROM}_${TO}` 例如 `"USD_TWD"`、value numeric）；trip 內所有 expenses 換算都用這份 snapshot，group `CurrencyRates` 後續改動不會 drift 已開始的 trip
+
+#### Phase 2 — Backend actions + queries（PR #341）
+
+- `actions/tripExpense.ts`：`createTripExpense`（foreign-currency 用 `trip.rate_snapshot` 即時換算成 base，不再 read `CurrencyRates`——FX 鎖在 trip 建立時）、`editTripExpense`（atomic soft-delete-then-insert via `db.transaction()`，race guard 用 `.returning()` 長度檢查同 `actions/transaction.ts` 風格）、`softDeleteTripExpense`
+- `lib/db/queries/tripExpense.ts`：`listTripExpenses(tripId)` / `getTripExpenseById(id)`
+- `actions/trip.ts#createTrip`：讀 group 的 `CurrencyRates` rows、builds jsonb payload（uppercase keys）、寫進 `Trips.rate_snapshot`；empty rates → `{}`
+- 15 個整合測試（real dev DB）：rate snapshot 正確、native vs foreign 幣別換算、weighted ratio validation、各 reject case、edit / soft delete
+
+#### Phase 3 — UI wiring（PR #342）
+
+- AddSheet `kind` discriminator：trip context 走 `createTripExpense` / `editTripExpense` / `softDeleteTripExpense`，非 trip context 維持走 `createTransaction`
+- 舊 v0.17.0 era 用 `CashTransactions.trip_id` tag 的紀錄：留在主帳本，不再出現在 `/trips/[id]`（detail page 改讀 `TripExpenses`）；編輯時可清掉 tag
+- Ratio 雙視角映射：`TripExpenses.splitRatio` 存 **payer 自己的 share %**（與 `CashTransactions.split_ratio_a` 不同；後者存 memberA 的 share %）。`/trips/[id]/page.tsx` 在讀取時根據 `group.memberA` 反向 frame 給 `CompactRow`；AddSheet 在 save 時用 `viewerIsA` + `payerWho` 反向轉
+- `TripExpense` schema 沒有 `notes` / `status` / `assetId` 欄位——AddSheet form fields 仍顯示但 trip context 下 save 時被丟棄
+
+#### Phase 4 — End trip fold 為主帳本 summary（PR #343）
+
+- `actions/trip.ts#endTrip`：把 `TripExpenses` 收斂為 0–2 筆主帳本 `CashTransactions`、recalc balance；trip status `active → ended` 同 transaction 內完成；solo group 永遠走 1 筆 `all_mine` summary（balance 不受影響）；error 路徑 `'找不到進行中的旅行'` 不做 DB writes
+- `lib/tripSummary.ts`：`bestRatioA(splits, totals)` brute-force 0–100 挑使 `lib/balance.ts` 重算的 delta 與真實 per-expense delta 差距最小的整數 ratio；0% / 100% 自動 collapse 成 `all_mine` / `all_theirs`；漂移 bound `~trip_total / 100` 在 unit test 內 assert
+- Summary record 帶 `trip_id` 作為來源標記，Records feed 可以未來標示「東京之旅結算」
+
+#### `multi-currency-trip-design.md` 與 `product-design.md` 加入「幣別視角刻意分層」立場（PR #359）
+
+- `product-design.md` 新增 **§ 4 設計立場** section：「幣別視角刻意分層」這條跨功能域取捨——主帳本（dashboard / records / balance / AddSheet）= 單一幣別視角、UI 不暴露幣別 picker；旅行子帳本（TripExpenses / TripExpenseSheet）= 多幣別；旅行結束 fold 回主帳本單幣別
+- `multi-currency-trip-design.md` 不採用 section 同步補一條 ❌ 主帳本幣別 picker、cross-link 回 `product-design.md#4-設計立場`
+- 立場：**complexity at the boundary, simplicity in daily use**——守住「記錄要素低認知負擔」，日常每筆記帳不必做幣別決定，多幣別複雜度只在有明確時間邊界（旅行）的 context 才出現
+- 配套 PR #358 把 AddSheet 主帳本路徑的 currency picker 拿掉、僅 trip-sub-ledger path 出現
+
 ## [0.17.1] - 2026-05-15
 
 主題：**UX × 效能 × a11y × 快取．細節讓體驗更順**——v0.17.0 把多幣別 × 旅行的底盤一次到位之後，這版回頭把幾條「能用但不夠順」的縫細收掉：`/trips` 從 stub 級往上拉成跟其他頁面同一套視覺語言；`/settings/currency` 把鎖住主體幣別的原因說清楚、把心理匯率的「為什麼叫心理」用三塊 hint card 鋪好；landing 文字色把對比拉過 WCAG AA；中文字型不再 preload 11 個 woff2 搶關鍵路徑；ES2019+ polyfill 在現代瀏覽器全部砍掉；公開頁的 Cache-Control 從 middleware 搬到 Vercel edge 才真的吃得到。沒有新功能，只有把現有的東西打磨到該有的樣子——這就是 0.x.1 的意義。
@@ -818,7 +906,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.2...HEAD
+[0.17.2]: https://github.com/redtear1115/oikos/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/redtear1115/oikos/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/redtear1115/oikos/compare/v0.16.3...v0.17.0
 [0.16.3]: https://github.com/redtear1115/oikos/compare/v0.16.2...v0.16.3
