@@ -386,6 +386,7 @@ export type Translations = {
     defaultSplitTitle: string
     soloLockHint: string
     inviteCta: string
+    sectionDisplay: string
     language: string
     sectionApp: string
     offlineBrowsing: string
@@ -1728,6 +1729,7 @@ export const zhTW: Translations = {
     defaultSplitTitle: '建立紀錄時的預設分攤',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     inviteCta: '邀請對方加入',
+    sectionDisplay: '語言 & 幣別',
     language: '語言',
     sectionApp: '應用',
     offlineBrowsing: '離線瀏覽',

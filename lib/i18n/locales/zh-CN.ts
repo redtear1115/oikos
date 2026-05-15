@@ -329,6 +329,7 @@ export const zhCN: Translations = {
     defaultSplitTitle: '创建记录时的默认分摊',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     inviteCta: '邀请对方加入',
+    sectionDisplay: '语言 & 币别',
     language: '语言',
     sectionApp: '应用',
     offlineBrowsing: '离线浏览',
