@@ -137,14 +137,18 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* 帳本 — group-level shared config: name + default split type/ratio */}
-      <Section title={t.settings.sectionGroupSplit}>
+      {/* 帳本 — group-level identity (just the name). */}
+      <Section title={t.settings.sectionGroup}>
         <Row
           label={t.settings.groupName}
           value={groupName}
           onClick={() => setEditing('group')}
         />
-        <div className="mt-3">
+      </Section>
+
+      {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
+      <Section title={t.settings.sectionGroupSplit}>
+        <div>
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
             {t.settings.defaultSplitTitle}
           </div>
