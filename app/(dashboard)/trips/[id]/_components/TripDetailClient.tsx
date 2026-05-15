@@ -120,23 +120,45 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         className="sticky top-0 z-20 px-4 pt-12 pb-2"
         style={{ background: 'var(--bg)' }}
       >
-        <Link
-          href="/trips"
-          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit no-underline"
-          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
-          aria-label="返回旅行列表"
-        >
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-            <path
-              d="M6.5 1.5L1.5 6.5L6.5 11.5"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span>旅行</span>
-        </Link>
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href="/trips"
+            className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit no-underline"
+            style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
+            aria-label="返回旅行列表"
+          >
+            <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+              <path
+                d="M6.5 1.5L1.5 6.5L6.5 11.5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>旅行</span>
+          </Link>
+          {!isPast && !isEnded && (
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              aria-label={t.tripDetail.editAriaLabel}
+              className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center cursor-pointer"
+              style={{ background: 'rgba(31,27,22,0.06)', border: 'none' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                <path
+                  d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
+                  stroke="var(--ink)"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <header className="px-5 pb-4">
@@ -338,35 +360,23 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         )}
       </section>
 
-      {/* Edit + End trip CTAs — read-only views (past-epoch or already-ended)
-          hide both. Once a trip is ended its TripExpenses are frozen, summary
-          CashTransactions are written, and editing currencies / dates would
-          drift the fold. */}
+      {/* Destructive entry: ending a trip writes summary CashTransactions into
+          the main ledger and cannot be reversed. Styled to match Settings →
+          DangerZone (leave group). Past-epoch + already-ended views hide it. */}
       {!isPast && !isEnded && (
-        <section className="mt-6 px-4 flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => setEditOpen(true)}
-            className="w-full h-12 rounded-[14px] text-sm font-medium cursor-pointer"
-            style={{
-              background: 'var(--surface)',
-              color: 'var(--ink)',
-              border: '1px solid var(--hairline)',
-            }}
-          >
-            編輯這趟旅行
-          </button>
+        <section className="mt-8 px-4">
           <button
             type="button"
             onClick={() => setEndOpen(true)}
-            className="w-full h-12 rounded-[14px] text-sm font-medium cursor-pointer"
+            className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
             style={{
-              background: 'transparent',
-              color: 'var(--ink-2)',
-              border: '1px dashed var(--ink-3)',
+              background: 'var(--surface)',
+              border: '1px solid var(--destructive-soft)',
+              color: 'var(--destructive)',
             }}
           >
-            結束這趟旅行
+            <div className="text-sm font-medium">{t.tripDetail.endTitle}</div>
+            <div className="text-sm">›</div>
           </button>
         </section>
       )}
@@ -489,8 +499,20 @@ function EndTripSheet(props: {
       error={err ?? ''}
       onClose={props.onClose}
       onSave={submit}
+      destructive
     >
       <div className="flex flex-col gap-3">
+        <div
+          className="rounded-[12px] px-3 py-2.5 text-sm leading-relaxed"
+          style={{
+            background: 'var(--debit-soft)',
+            color: 'var(--destructive)',
+          }}
+          role="alert"
+        >
+          {t.tripDetail.endIrreversibleNote}
+        </div>
+
         <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
           {t.tripDetail.endBody}
         </p>

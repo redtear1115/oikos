@@ -270,6 +270,11 @@ export type Translations = {
     endDateBeforeStart: string
     /** Server/network error fallback when endTrip() throws without a message. */
     endFailure: string
+    /** Aria label for the pencil edit button in the trip detail sticky header. */
+    editAriaLabel: string
+    /** Red-tinted warning shown above the end-trip date picker — emphasises
+     *  that ending writes a summary into the main ledger and cannot be undone. */
+    endIrreversibleNote: string
   }
 
   incomeSheet: {
@@ -1632,6 +1637,8 @@ export const zhTW: Translations = {
     endConfirm: '確認結束',
     endDateBeforeStart: '結束日不可早於起始日({date})',
     endFailure: '結束失敗',
+    editAriaLabel: '編輯這趟旅行',
+    endIrreversibleNote: '結束之後無法復原。這趟的支出會以總結算的形式回到主帳本。',
   },
 
   incomeSheet: {

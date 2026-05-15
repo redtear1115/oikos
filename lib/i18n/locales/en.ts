@@ -214,6 +214,8 @@ export const en: Translations = {
     endConfirm: 'End trip',
     endDateBeforeStart: 'End date cannot be before the start date ({date})',
     endFailure: 'Failed to end the trip',
+    editAriaLabel: 'Edit this trip',
+    endIrreversibleNote: 'This cannot be undone — all expenses will roll back to the main ledger as a summary.',
   },
 
   incomeSheet: {
