@@ -281,6 +281,13 @@
       "when": 1779700000000,
       "tag": "0039_trip_expense",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1779800000000,
+      "tag": "0040_trip_currencies_self_serve",
+      "breakpoints": true
     }
   ]
 }

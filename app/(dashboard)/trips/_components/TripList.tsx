@@ -13,7 +13,8 @@ type Trip = {
   name: string
   startDate: string
   endDate: string | null
-  defaultCurrency: CurrencyCode | null
+  // v0.17.4 #410: free-text since trip currencies are user-defined per trip.
+  defaultCurrency: string | null
   status: 'active' | 'ended' | 'archived'
 }
 
