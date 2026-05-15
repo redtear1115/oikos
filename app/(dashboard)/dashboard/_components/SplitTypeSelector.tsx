@@ -51,17 +51,24 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
   ]
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Weighted option (replaces half) */}
-      <button
-        onClick={() => onChange('weighted')}
-        className="flex flex-col gap-2 px-3.5 py-3 rounded-[14px] cursor-pointer text-left transition-all duration-150"
+    <div role="radiogroup" aria-label="分擔方式" className="flex flex-col gap-2">
+      {/* Weighted option (replaces half). The card wraps a radio button + an
+          optional sibling slider — keeps the same visual but flattens the
+          previously nested button > range into siblings (issue #385). */}
+      <div
+        className="flex flex-col gap-2 px-3.5 py-3 rounded-[14px]"
         style={{
           background: 'var(--surface)',
           border: isWeighted ? '1.5px solid var(--ink)' : '1px solid var(--hairline)',
         }}
       >
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={isWeighted}
+          onClick={() => onChange('weighted')}
+          className="flex items-center gap-3 w-full text-left bg-transparent border-0 p-0 cursor-pointer transition-all duration-150"
+        >
           <SplitGlyph kind="weighted" active={isWeighted} ratioA={splitRatioA} />
           <div className="flex-1">
             <div className="text-body font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
@@ -77,9 +84,9 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               background: isWeighted ? 'var(--ink)' : 'transparent',
               boxShadow: isWeighted ? 'inset 0 0 0 3px var(--surface)' : 'none',
             }} />
-        </div>
+        </button>
         {isWeighted && (
-          <div className="flex flex-col gap-1 pt-1 w-full" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-col gap-1 pt-1 w-full">
             <div className="flex justify-between text-xs w-full" style={{ color: 'var(--ink-3)' }}>
               <span>我 {splitRatioA}%</span>
               <span>對方 {100 - splitRatioA}%</span>
@@ -91,17 +98,23 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               step={1}
               value={splitRatioA}
               onChange={e => onSplitRatioAChange(Number(e.target.value))}
+              aria-label="分擔比例"
               className="w-full accent-[var(--ink)]"
             />
           </div>
         )}
-      </button>
+      </div>
 
       {/* Static options */}
       {staticOptions.map(s => {
         const sel = value === s.id
         return (
-          <button key={s.id} onClick={() => onChange(s.id)}
+          <button
+            key={s.id}
+            type="button"
+            role="radio"
+            aria-checked={sel}
+            onClick={() => onChange(s.id)}
             className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left transition-all duration-150"
             style={{
               background: 'var(--surface)',

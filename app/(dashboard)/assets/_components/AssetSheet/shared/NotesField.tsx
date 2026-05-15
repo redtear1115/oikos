@@ -12,14 +12,17 @@ interface Props {
 export function NotesField({ label, placeholder, value, onChange }: Props) {
   return (
     <Field label={label}>
-      <textarea
-        value={value}
-        onChange={e => onChange(e.target.value.slice(0, 2000))}
-        placeholder={placeholder}
-        rows={3}
-        className="w-full bg-transparent border-0 outline-none text-base resize-y"
-        style={{ color: 'var(--ink)', minHeight: 64 }}
-      />
+      {id => (
+        <textarea
+          id={id}
+          value={value}
+          onChange={e => onChange(e.target.value.slice(0, 2000))}
+          placeholder={placeholder}
+          rows={3}
+          className="w-full bg-transparent border-0 outline-none text-base resize-y"
+          style={{ color: 'var(--ink)', minHeight: 64 }}
+        />
+      )}
     </Field>
   )
 }

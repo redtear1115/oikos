@@ -166,9 +166,11 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       />
 
       <Field label={ts.child.nickname}>
-        <input value={nickname} onChange={e => setNickname(e.target.value.slice(0, 20))}
-          placeholder={ts.child.nicknamePlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={nickname} onChange={e => setNickname(e.target.value.slice(0, 20))}
+            placeholder={ts.child.nicknamePlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.child.gender}>
@@ -191,9 +193,11 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <Field label={ts.child.birthday}>
-        <input value={birthday} onChange={e => setBirthday(e.target.value)}
-          type="date" className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={birthday} onChange={e => setBirthday(e.target.value)}
+            type="date" className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
@@ -202,8 +206,10 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </div>
 
       <Field label={ts.child.nationalId}>
+        {id => (
         <div className="flex items-center gap-2">
           <input
+            id={id}
             value={nationalId}
             onChange={e => {
               setNationalId(e.target.value.slice(0, 20))
@@ -242,11 +248,14 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             </button>
           )}
         </div>
+        )}
       </Field>
 
       <Field label={ts.child.nhiNo}>
+        {id => (
         <div className="flex items-center gap-2">
           <input
+            id={id}
             value={nhiNo}
             onChange={e => {
               setNhiNo(formatNhi(e.target.value))
@@ -285,6 +294,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             </button>
           )}
         </div>
+        )}
       </Field>
 
       <Field label={ts.child.bloodType}>
@@ -303,9 +313,11 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <Field label={ts.child.hospital}>
-        <input value={hospital} onChange={e => setHospital(e.target.value.slice(0, 32))}
-          placeholder={ts.child.hospitalPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={hospital} onChange={e => setHospital(e.target.value.slice(0, 32))}
+            placeholder={ts.child.hospitalPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
@@ -316,20 +328,28 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       <div className="flex gap-2">
         <div className="flex-1">
           <Field label={ts.child.height}>
-            <input value={heightCm} onChange={e => setHeightCm(e.target.value)}
-              type="number" inputMode="numeric" placeholder={ts.child.heightPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>
+            {id => (
+              <>
+                <input id={id} value={heightCm} onChange={e => setHeightCm(e.target.value)}
+                  type="number" inputMode="numeric" placeholder={ts.child.heightPlaceholder}
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>
+              </>
+            )}
           </Field>
         </div>
         <div className="flex-1">
           <Field label={ts.child.weight}>
-            <input value={weightKg} onChange={e => setWeightKg(e.target.value)}
-              type="number" inputMode="decimal" placeholder={ts.child.weightPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
+            {id => (
+              <>
+                <input id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
+                  type="number" inputMode="decimal" placeholder={ts.child.weightPlaceholder}
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
+              </>
+            )}
           </Field>
         </div>
       </div>
