@@ -2,7 +2,6 @@ import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import { db } from '@/lib/db/client'
 import { cashTransactions, incomeTransactions, settlements } from '@/lib/db/schema'
 import { and, count, eq, gte, isNull } from 'drizzle-orm'
-import { listRatesForGroup, defaultRatesFor } from '@/lib/db/queries/currencyRates'
 import { CurrencySettings } from './_components/CurrencySettings'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 
@@ -30,20 +29,10 @@ export default async function CurrencySettingsPage() {
   ])
   const recordCount = Number(cashRow[0].n) + Number(incomeRow[0].n) + Number(settlementRow[0].n)
 
-  const storedRates = await listRatesForGroup(group.id)
-  const rates = storedRates.length > 0
-    ? storedRates.map(r => ({
-        fromCurrency: r.fromCurrency,
-        toCurrency: r.toCurrency,
-        rate: r.rate,
-      }))
-    : defaultRatesFor(group.baseCurrency)
-
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <CurrencySettings
         baseCurrency={group.baseCurrency}
-        rates={rates}
         canChangeBase={recordCount === 0}
       />
       <BottomNavSkeleton />
