@@ -410,6 +410,7 @@ export type Translations = {
     inviteCta: string
     sectionDisplay: string
     language: string
+    currency: string
     sectionApp: string
     offlineBrowsing: string
     offlineHintOff: string
@@ -1768,6 +1769,7 @@ export const zhTW: Translations = {
     inviteCta: '邀請對方加入',
     sectionDisplay: '語言 & 幣別',
     language: '語言',
+    currency: '幣別',
     sectionApp: '應用',
     offlineBrowsing: '離線瀏覽',
     offlineHintOff: '在無網路時看不到歷史記錄。開啟後，最近瀏覽過的頁面會存在這台裝置上。',

@@ -341,6 +341,7 @@ export const ja: Translations = {
     inviteCta: '相手を招待',
     sectionDisplay: '言語と通貨',
     language: '言語',
+    currency: '通貨',
     sectionApp: 'アプリ',
     offlineBrowsing: 'オフライン閲覧',
     offlineHintOff: 'オフライン時には履歴を表示できません。オンにすると、最近閲覧したページがこの端末に保存されます。',

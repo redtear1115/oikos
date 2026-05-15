@@ -341,6 +341,7 @@ export const en: Translations = {
     inviteCta: 'Invite partner',
     sectionDisplay: 'Language & Currency',
     language: 'Language',
+    currency: 'Currency',
     sectionApp: 'App',
     offlineBrowsing: 'Offline browsing',
     offlineHintOff: "When offline, history isn't available. Turn this on to keep recently-viewed pages on this device.",
