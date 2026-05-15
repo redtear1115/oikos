@@ -189,6 +189,24 @@ export const ja: Translations = {
     pendingBadge: 'カード引落待ち',
   },
 
+  tripDetail: {
+    emptyActive: 'まだ記録がありません。右下のプラスから記録を始めましょう。',
+    emptyEnded: 'この旅行には記録が残っていません。',
+    currencyBreakdown: '通貨ごとの内訳',
+    recordsSuffix: '件',
+    perSideContribution: '誰がいくら出した',
+    youPaid: 'あなたの支払い',
+    partnerPaid: '{name} の支払い',
+    share: '負担分',
+    perSideHint: '確定済みの記録のみ。カード引落待ちは含めません。',
+    endTitle: 'この旅行を終える',
+    endBody: '終えた後もリストには残ります。新しい記録だけ受け付けなくなります。日付は後でも編集できます。',
+    endDateLabel: '終了日',
+    endConfirm: '終了する',
+    endDateBeforeStart: '終了日は開始日（{date}）より前にできません',
+    endFailure: '終了に失敗しました',
+  },
+
   incomeSheet: {
     title: '収入を記録',
     titleEdit: '収入を編集',
