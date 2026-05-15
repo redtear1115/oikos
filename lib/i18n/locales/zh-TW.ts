@@ -643,7 +643,6 @@ export type Translations = {
   recurringIncome: {
     title: string
     back: string
-    add: string
     empty: {
       hint: string
       cta: string
@@ -1159,7 +1158,6 @@ export type Translations = {
   recurringExpense: {
     title: string
     back: string
-    add: string
     empty: {
       hint: string
       cta: string
@@ -1975,7 +1973,6 @@ export const zhTW: Translations = {
   recurringIncome: {
     title: '定期收入',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '還沒設定定期收入',
       cta: '新增第一個',
@@ -2456,7 +2453,6 @@ export const zhTW: Translations = {
   recurringExpense: {
     title: '定期支出',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '還沒設定定期支出',
       cta: '新增第一個',

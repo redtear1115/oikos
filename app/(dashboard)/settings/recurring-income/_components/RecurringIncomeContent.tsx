@@ -6,6 +6,7 @@ import { RuleListItem } from './RuleListItem'
 import { RecurringRuleSheet } from './RecurringRuleSheet'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
+import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 
 const P = DEFAULT_INCOME_PALETTE
@@ -13,13 +14,9 @@ const P = DEFAULT_INCOME_PALETTE
 interface Props {
   rules: RecurringRuleRow[]
   insuranceAssets: { id: string; name: string }[]
-  /** When true, skip the standalone page header (back + title). The "新增"
-   *  button moves into the list area so the merged /settings/recurring page
-   *  can render its own header + tabs above. */
-  embedded?: boolean
 }
 
-export function RecurringIncomeContent({ rules, insuranceAssets, embedded = false }: Props) {
+export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
   const router = useRouter()
   const t = useTranslations()
   // null = closed, 'create' = new rule sheet, RecurringRuleRow = edit sheet
@@ -33,49 +30,10 @@ export function RecurringIncomeContent({ rules, insuranceAssets, embedded = fals
     router.refresh()
   }
 
-  const addButton = (
-    <button
-      type="button"
-      onClick={() => setSheetState('create')}
-      className="rounded-full px-3.5 py-1.5 text-sm font-medium border-0 cursor-pointer"
-      style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-    >
-      {t.recurringIncome.add}
-    </button>
-  )
-
   return (
     <>
-      {!embedded && (
-        <div
-          className="px-4 flex items-center justify-between"
-          style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
-        >
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer min-h-11 px-2 -ml-2"
-            style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
-          >
-            <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-              <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {t.recurringIncome.back}
-          </button>
-
-          <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-            {t.recurringIncome.title}
-          </div>
-
-          {addButton}
-        </div>
-      )}
-
       {/* Rules list or empty state */}
       <div className="px-4 mt-4">
-        {embedded && rules.length > 0 && (
-          <div className="flex justify-end mb-3">{addButton}</div>
-        )}
         {rules.length === 0 ? (
           <EmptyState
             hint={t.recurringIncome.empty.hint}
@@ -103,6 +61,8 @@ export function RecurringIncomeContent({ rules, insuranceAssets, embedded = fals
         initial={initial}
         insuranceAssets={insuranceAssets}
       />
+
+      <BottomNav onAddClick={() => setSheetState('create')} hideFab={isOpen} />
     </>
   )
 }

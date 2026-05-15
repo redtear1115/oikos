@@ -545,7 +545,6 @@ export const en: Translations = {
   recurringIncome: {
     title: 'Recurring income',
     back: 'Back',
-    add: '+ Add',
     empty: {
       hint: 'No recurring income yet',
       cta: 'Add the first',
@@ -1026,7 +1025,6 @@ export const en: Translations = {
   recurringExpense: {
     title: 'Recurring expense',
     back: 'Back',
-    add: '+ Add',
     empty: {
       hint: 'No recurring expense yet',
       cta: 'Add the first',
