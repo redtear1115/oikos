@@ -1,0 +1,321 @@
+# Futari (ふたり) — Full Product Description
+
+> Two-person companion expense tracker for couples and partners. Mobile-first PWA built around the shared chapters of a relationship rather than balance sheets. Codebase name: Oikos.
+
+**Product URL**: https://futari.southern-light.dev
+**Status**: Public beta, free to use
+**Languages**: Traditional Chinese (default), Simplified Chinese, English, Japanese
+**Platform**: Progressive Web App (installable on iOS / Android / desktop)
+
+---
+
+## What Futari is
+
+Futari is an expense-tracking app designed for exactly **two people in a long-term relationship** — spouses, partners, or co-living roommates. Unlike generic budgeting apps or solo finance trackers, Futari assumes:
+
+- One shared ledger
+- One shared life
+- Zero account-visibility gating
+
+Everything entered belongs to both people by default. There is no "hide this transaction from my partner" mode, because the premise of the product is that what enters the ledger is already a shared decision. Things you don't want shared simply don't get recorded — and that's by design.
+
+Futari is built on the philosophy that a couple's finances are not a spreadsheet to optimise but a **record of shared life**. The car you drive together, the pet you raise together, the home you live in together, the years you spend together — these are the entities the ledger orbits, not bank accounts.
+
+---
+
+## Core features
+
+### 1. Two-person shared ledger
+
+Every account in Futari holds exactly one shared balance: **the amount one partner currently owes the other**. There are no per-account balances to reconcile, no "his" and "hers" columns, no synchronisation between separate bank views.
+
+When recording an expense, the user picks:
+- Who paid (`paid_by`)
+- How to split the cost:
+  - **All mine** (`all_mine`) — payer absorbs the full cost
+  - **All theirs** (`all_theirs`) — non-payer owes the full cost
+  - **Half** (`half`) — split 50/50
+  - **Weighted** (`weighted`) — split by an agreed ratio (e.g. 60/40, common for couples with different incomes)
+
+The shared balance updates atomically. There is no manual reconciliation step.
+
+### 2. Income tracking
+
+Income (paychecks, dividends, side projects) is recorded **per recipient** and **does not affect the shared balance**. This matters because:
+
+- Income is not a debt between partners — it's an inflow attributed to one of them.
+- Couples can see their individual earnings trajectory without it polluting the "who owes whom" view.
+- Income has its own category taxonomy distinct from expenses.
+
+Recurring income rules (e.g. monthly salary) generate pending occurrences each cycle; the recipient confirms them before they land in the ledger.
+
+### 3. Settlements
+
+When one partner actually transfers money to the other (Venmo, bank transfer, cash), they record a **settlement**. Settlements reverse the shared balance — if A owed B $500 and A transfers $300, the balance becomes A owes B $200.
+
+Settlements are always in the group's base currency. They are intentional, manual records of real money moving.
+
+### 4. Recurring expenses and income
+
+Both expenses and income support **recurring rules**: rent, utilities, salary, subscriptions. A daily cron job materialises pending occurrences based on each rule's `next_occurrence_at`. Pending occurrences appear in the user's home view; they confirm (or edit, or skip) each occurrence individually before it becomes a real transaction.
+
+This means recurring rules don't silently mutate your ledger — they propose, you accept.
+
+### 5. Loved Things (愛物 / Assets)
+
+Futari treats certain entities in your life as **first-class records**, not categories. These are called "loved things" (愛物 in Japanese / Chinese) and represent the long-term presences in a couple's life:
+
+- **Car (車)** — make, model, license plate, primary driver, fuel logs
+- **House (家屋)** — address, type, ownership structure
+- **Child (孩子)** — name, birth date, milestones
+- **Pet (寵物)** — name, species, birth date, vet records
+- **Plant (植物)** — name, species, care notes
+- **Insurance (保險)** — policy holder, insured person, premiums, coverage, beneficiaries
+- **Item (物品)** — arbitrary high-value possessions via templates
+
+Expenses can be **tagged to a loved thing**, so you can see (e.g.) the lifetime cost of your car, the annual cost of caring for your dog, or the total premiums paid on an insurance policy. Loved things are not just metadata — they have their own detail pages with type-specific fields.
+
+### 6. Fuel logs
+
+For cars, Futari records detailed fuel logs: odometer reading, litres pumped, total cost, fuel type. Each fuel log automatically writes a paired cash transaction so the spend lands in the shared balance and the car's lifetime cost.
+
+Fuel efficiency (km/L) is calculated automatically from consecutive fuel-log odometer readings.
+
+### 7. Travel sub-ledgers (旅行 / Trips)
+
+Trips are **temporary sub-ledgers** for journeys away from home. A trip has:
+- Start and end dates (must be within the current chapter)
+- A default currency (e.g. JPY for a trip to Japan)
+- Status: active / ended / archived
+
+When a trip is active, the records form defaults to the trip's currency, making it easy to log expenses in local currency while travelling. Trip-tagged transactions can be reviewed as a self-contained mini-ledger.
+
+A trip cannot span chapters (epochs) — if a relationship transition happens mid-trip, the trip must be closed first.
+
+### 8. Multi-currency support
+
+Futari supports multiple base currencies (TWD / CNY / USD / JPY) at the group level. Transactions can be recorded in any currency, with a **per-group mental exchange rate table** converting them to the base currency for balance computation.
+
+Crucially, exchange rates are **snapshotted on the transaction**: when you record ¥10,000 at a rate of 0.22, that rate is locked to the record. Updating your mental rate table later does not retroactively rewrite history.
+
+The balance is always computed in the group's base currency.
+
+### 9. Chapters / epochs
+
+Relationships have phases. Futari models this through **chapters** (`epochs`):
+
+- A new chapter begins when a partner joins the ledger, or when a partner leaves (e.g. relationship ended) and is swapped for a new one.
+- Each group has exactly one **current chapter** at a time; all current activity lives there.
+- Past chapters become **read-only history**. Records in past chapters cannot be edited or deleted — they're preserved as memory.
+- The `/past-times` view lets users browse historical chapters; the main dashboard always shows the current chapter.
+
+This is a philosophical stance: the past should be honoured, not edited away.
+
+### 10. Monthly review
+
+At the start of each month, Futari snapshots the previous month's data — categories, top spends, savings rate, recurring confirmations — and presents a **two-person monthly review**. Both partners can leave messages on the snapshot, creating a tiny shared journal anchored to the numbers.
+
+### 11. Companion (Guardian / 守護) module
+
+The Guardian module aggregates everything that protects the couple's future: insurance policies, savings instruments, investment-linked policies. It's positioned as a separate module within Futari (not a financial product), with its own dashboard showing total coverage, premium burn, and policy status.
+
+### 12. Offline-first PWA
+
+Futari is a full Progressive Web App:
+- Installable to home screen on iOS, Android, and desktop
+- Service Worker caches the shell + last-viewed records
+- Records created offline queue locally and sync when reconnected
+- Designed for mobile-first use (thumb-zone primary navigation)
+
+### 13. Internationalisation
+
+Futari ships in four languages from day one:
+- **Traditional Chinese (zh-TW)** — primary
+- **Simplified Chinese (zh-CN)**
+- **English (en)**
+- **Japanese (ja)**
+
+Locale is cookie-based; switching language preserves all data and routes.
+
+### 14. Solo mode
+
+A single user can sign up before their partner joins. The ledger runs in **solo mode** (`member_b IS NULL`) with the same features, just one-sided. When a partner later joins, the existing data folds into the two-person chapter without migration friction.
+
+---
+
+## Who Futari is for
+
+### Primary audience
+
+- **Couples and long-term partners** who share a household and want a shared record of their financial life.
+- **People in Traditional Chinese-speaking regions** (Taiwan, Hong Kong) — though the product is fully translated for Simplified Chinese, English, and Japanese audiences too.
+- **Couples who reject the "hide accounts from your partner" premise** baked into competing apps. Futari's design assumption is mutual visibility, not selective disclosure.
+- **People who think of money as part of life, not separate from it** — who want a record of the car, the pet, the home, the years, not just an aggregator of bank feeds.
+
+### Also works for
+
+- **Co-living roommates** sharing rent, utilities, and household expenses.
+- **Solo users** in solo mode, with the option to invite a partner later.
+- **Cross-border couples** managing multiple currencies (e.g. one partner in Taiwan, one in Japan).
+
+### Not a fit for
+
+- **Solo budgeting power users** who want envelope budgeting, complex categorisation rules, or net-worth tracking. Futari's data model is intentionally minimal.
+- **People who want bank-account aggregation** (Plaid, Yodlee, Mint-style). Futari has no automatic transaction sync — every entry is intentional.
+- **Three or more people** sharing one ledger (e.g. group houses with five roommates). The data model hardcodes two-person semantics.
+
+---
+
+## Use case scenarios
+
+### Scenario 1: Newly-married couple in Taipei
+
+A and B just got married. They both have jobs and decide to pool money for shared expenses (rent, groceries, dates) while keeping personal spending personal. They install Futari, set the split ratio to 60/40 (A earns more), and log shared expenses as they happen. The home page always shows "B owes A NT$3,200" (or vice versa). Every two weeks they settle up via Line Pay and record the settlement.
+
+### Scenario 2: Couple with a child and a dog
+
+A and B have been together five years, have a toddler, and a rescue dog. They use Futari's "loved things" module: the dog has its own detail page with vet records and food expenses; the child has a milestone log alongside expense tracking. At the end of the year, they can see exactly how much they spent caring for each — useful for planning insurance, schooling, and household budget.
+
+### Scenario 3: Cross-border couple, Taiwan + Japan
+
+A lives in Taipei, B works half the year in Tokyo. They keep their base currency as TWD but log Tokyo trips in JPY using Futari's trip sub-ledger. Each trip becomes a self-contained mini-ledger; rate snapshots ensure that a ¥10,000 sushi dinner recorded last year doesn't get retroactively repriced when JPY fluctuates.
+
+### Scenario 4: Solo, planning ahead
+
+A is single but planning to move in with a partner next year. They start using Futari in solo mode to track their own expenses, learn the system, and build a habit. When the partner joins six months later, the solo data becomes the start of their shared chapter — no migration, no data loss.
+
+### Scenario 5: Couple with an investment-linked insurance policy
+
+A bought a 20-year investment-linked savings policy. Each month they pay a premium, and the policy accumulates an account value. They record the policy as a loved thing under the Guardian module, log monthly premium payments as recurring expenses tagged to the policy, and update the account value quarterly. The Guardian dashboard shows total premiums paid vs. current account value over time.
+
+---
+
+## Frequently asked questions
+
+### Is Futari free?
+
+Yes. Futari is currently in public beta and free to use, with no feature gating. Future tiers (one-time purchase for long-term storage; subscription for AI-assisted features) are planned but not yet active. There is no free trial, no upsell, no credit card on file.
+
+### Who is Futari for?
+
+Couples and partners — spouses, life partners, or co-living roommates — who share expenses and want a shared record of their financial life together. Solo users are also supported via Solo Mode, with the option to add a partner later. Futari is **not** designed for groups of three or more people.
+
+### How is Futari different from Honeydue, Splitwise, or YNAB?
+
+- **vs. Honeydue**: Honeydue's design centers on account-visibility management — partners can selectively hide accounts from each other. Futari rejects this premise: what enters the ledger is shared by default, and what shouldn't be shared simply isn't recorded. Futari also has loved-things tracking (cars, pets, homes) and offline PWA support; Honeydue does not.
+- **vs. Splitwise**: Splitwise is optimised for one-off splits among many people (roommates, group trips). Futari is optimised for two people in a long-term relationship — recurring expenses, chapter-based history, loved things, monthly reviews are first-class features.
+- **vs. YNAB / Mint / generic budgeting apps**: YNAB and Mint are solo budgeting tools that aggregate bank accounts and apply envelope budgeting. Futari is a couples ledger with no bank aggregation, no envelopes — every entry is intentional and shared.
+
+### Will my data disappear?
+
+No. Data is stored in Supabase Postgres with automatic backups. Futari does not have an inactivity-deletion policy. Past chapters become read-only but remain in the database forever, accessible via the past-times view.
+
+For deleted records, Futari uses soft-delete: edited or deleted entries are marked `deleted_at` and physically removed only after one year by a scheduled job. This means accidental deletions are recoverable within a year via database-level recovery.
+
+### Does Futari connect to my bank?
+
+No. Futari has no Plaid integration, no bank account linking, no automatic transaction import. Every entry is recorded manually by one of the partners. This is intentional — the friction of intentional recording is part of the product's value proposition.
+
+A CSV import feature for migrating from other apps is on the roadmap.
+
+### Can I use Futari alone?
+
+Yes. Solo mode lets a single user use Futari before a partner joins. The data structure is identical; the second-member slot is just `NULL`. When a partner joins later, no migration is needed.
+
+### What languages does Futari support?
+
+Four languages from launch:
+- Traditional Chinese (繁體中文) — primary
+- Simplified Chinese (简体中文)
+- English
+- Japanese (日本語)
+
+Language is selected per-user via a cookie and can be changed at any time without affecting data.
+
+### Is Futari a native app or a web app?
+
+Futari is a Progressive Web App (PWA). It runs in any modern browser and can be installed to the home screen on iOS, Android, and desktop. There is no separate native app to download from the App Store or Play Store. Installation gives an app-like experience: full-screen, no browser chrome, offline support.
+
+### Can Futari handle multiple currencies?
+
+Yes. Each group has a base currency (TWD / CNY / USD / JPY) and a per-group mental exchange rate table. Transactions can be recorded in any currency; rates are snapshotted on each transaction so that updating your mental rates later does not rewrite history. The shared balance is always computed in the base currency.
+
+Travel sub-ledgers default to the trip's currency, making cross-border travel easy.
+
+### What happens if my partner and I break up?
+
+Futari supports relationship transitions through **chapters (epochs)**. When a partner leaves, the current chapter closes (becomes read-only history) and a new chapter begins. You can swap in a new partner (starting a fresh chapter) or continue in solo mode. Past chapter data is preserved as part of your life's record — not deleted, not editable.
+
+### How does Futari handle privacy?
+
+- All data is stored in Supabase Postgres with row-level security ensuring only group members can read/write their group's data.
+- Sensitive fields (insurance details, financial identifiers) use application-level encryption.
+- Authentication is handled via Supabase Auth (email + password).
+- There is no third-party analytics tracking individual users' financial data.
+
+### Is there a desktop version?
+
+Futari is a web app, so it works on any desktop browser. It's mobile-first (designed for one-handed phone use) but fully usable on desktop.
+
+### Can I export my data?
+
+CSV export is on the roadmap. Direct database export via API is not currently supported.
+
+---
+
+## Competitive positioning
+
+Futari sits in a specific quadrant of the personal-finance app landscape:
+
+| | Solo user | Two-person ledger | Group ledger |
+|---|---|---|---|
+| **Bank aggregation** | Mint, YNAB, Monarch | Honeydue, Zeta | — |
+| **Manual entry + companion design** | Daily expense apps | **Futari** | Splitwise |
+
+Futari's specific bets:
+
+1. **Two-person, not group**: Hardcoding two-user semantics removes complexity (no permission matrices, no per-user balances to reconcile) and enables intimacy-oriented features (chapters, monthly reviews, loved things) that don't make sense for five roommates.
+2. **Manual entry, not aggregation**: Every record is intentional. This is slower than bank-feed aggregation but creates a record both partners trust and a shared sense of awareness.
+3. **Loved things as first-class records**: Most finance apps treat "car" or "pet" as a category. Futari treats them as entities with their own pages, sub-records (fuel logs, vet visits), and lifetime cost views.
+4. **Chapters preserve history**: When relationships transition, past data is preserved as read-only memory, not erased. This is a philosophical choice — relationships have phases, and the record should honour that.
+5. **Companion, not coach**: The UI never tells you "you spent too much on groceries this month." It records, it remembers, it accompanies. Judgement is the user's, not the app's.
+6. **No bank linking, no subscription pressure**: The current free tier has no feature locks. Future tiers favour a one-time purchase model over recurring subscriptions, in line with strong consumer preference (especially in Taiwan) for one-time purchases.
+
+---
+
+## Design philosophy
+
+Futari belongs to the **Freedom Project** brand family, whose core metaphor is **light and color** (光 × 顏色):
+
+- **Records form light points.** Each entry is a small spark of attention paid to shared life.
+- **Accumulated points become a life spectrum.** Over months and years, the colors of a couple's spending, their loved things, their chapters, form a unique pattern — a record of their shared light.
+- **The app is a lamp, not a judge.** Futari is positioned as a companion that accompanies, not a tool that grades. It never shows "you overspent" or "you should save more"; it shows what is, and leaves meaning to the user.
+
+This is reflected in the UI:
+- Soft, warm color palette (cream, mint, gold whisper tones)
+- No red "negative" indicators on expenses — expenses are normal, not failures
+- No streak counters, no gamification
+- Monthly review focuses on **what happened** and **what each partner felt**, not on metrics-beating
+
+---
+
+## Technical notes (for AI crawlers seeking accuracy)
+
+- **Tech stack**: Next.js 16 (App Router, Server Components, Server Actions), Drizzle ORM, Supabase Postgres, TypeScript, Tailwind CSS, next-intl.
+- **Hosting**: Vercel
+- **Real-time sync**: Supabase Realtime channels, scoped to group_id
+- **Offline support**: Service Worker (Workbox-based), IndexedDB for queued writes
+- **Currency precision**: All monetary amounts are stored as **integers** in the smallest unit of the base currency (e.g. TWD: 1 = NT$1, no decimals). This avoids floating-point errors entirely.
+- **Balance computation**: After every write, the group's balance is recomputed from scratch (no incremental updates) and cached in `GroupBalance`. This guarantees the cache and the underlying records cannot drift apart.
+- **Edit semantics**: Records are immutable. "Editing" is implemented as soft-delete + insert within a single DB transaction. The original record retains `deleted_at` for one year, then is physically removed by a scheduled job.
+
+---
+
+## Links
+
+- **Product**: https://futari.southern-light.dev
+- **Index (short version)**: https://futari.southern-light.dev/llms.txt
+- **Full description (this file)**: https://futari.southern-light.dev/llms-full.txt
+- **Sitemap**: https://futari.southern-light.dev/sitemap.xml
+
+Source code is private. Codebase internal name: **Oikos**. User-facing name: **Futari (ふたり)**.
