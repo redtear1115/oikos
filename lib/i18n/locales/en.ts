@@ -171,8 +171,8 @@ export const en: Translations = {
     notesPlaceholder: 'Leave a line for your partner, or something to remember later',
     statusLabel: 'Status',
     statusSettled: 'Paid',
-    statusPending: 'Credit card pending',
-    statusPendingHint: "Credit card pending entries don't change the shared balance until the charge clears and you mark them paid.",
+    statusPending: 'Pending',
+    statusPendingHint: "Pending entries don't change the shared balance until you confirm payment and mark them paid.",
     deleteOne: 'Delete this entry',
     deleteConfirmTitle: 'Delete this entry?',
     currency: 'Currency',
@@ -186,7 +186,7 @@ export const en: Translations = {
   },
 
   compactRow: {
-    pendingBadge: 'Card pending',
+    pendingBadge: 'Pending',
   },
 
   tripDetail: {
@@ -198,7 +198,7 @@ export const en: Translations = {
     youPaid: 'You paid',
     partnerPaid: '{name} paid',
     share: 'Share',
-    perSideHint: 'Settled rows only; pending card charges are excluded.',
+    perSideHint: 'Settled rows only; pending entries are excluded.',
     endTitle: 'End this trip',
     endBody: 'The trip stays in the list, just stops accepting new records. The date can be edited later.',
     endDateLabel: 'End date',
