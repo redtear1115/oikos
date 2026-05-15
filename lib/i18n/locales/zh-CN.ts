@@ -205,6 +205,7 @@ export const zhCN: Translations = {
     endConfirm: '确认结束',
     endDateBeforeStart: '结束日不可早于起始日({date})',
     endFailure: '结束失败',
+    currencyRatesLink: '调整心理汇率',
   },
 
   incomeSheet: {
@@ -344,7 +345,6 @@ export const zhCN: Translations = {
     trust: '数据安全',
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
-    currency: '货币',
     trips: '旅行',
     sectionGuardian: '守护（Beta）',
     guardianBeta: {

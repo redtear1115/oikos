@@ -205,6 +205,7 @@ export const ja: Translations = {
     endConfirm: '終了する',
     endDateBeforeStart: '終了日は開始日（{date}）より前にできません',
     endFailure: '終了に失敗しました',
+    currencyRatesLink: '心の中のレートを調整',
   },
 
   incomeSheet: {
@@ -344,7 +345,6 @@ export const ja: Translations = {
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
-    currency: '通貨',
     trips: '旅行',
     sectionGuardian: '守護（ベータ）',
     guardianBeta: {

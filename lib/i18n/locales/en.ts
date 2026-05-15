@@ -205,6 +205,7 @@ export const en: Translations = {
     endConfirm: 'End trip',
     endDateBeforeStart: 'End date cannot be before the start date ({date})',
     endFailure: 'Failed to end the trip',
+    currencyRatesLink: 'Adjust exchange rates',
   },
 
   incomeSheet: {
@@ -344,7 +345,6 @@ export const en: Translations = {
     trust: 'Your data',
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
-    currency: 'Currency',
     trips: 'Trips',
     sectionGuardian: 'Guardian (Beta)',
     guardianBeta: {
