@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
@@ -137,6 +137,13 @@ export function FilterSheet({
     currentFilter.amountMax === null ? '' : String(currentFilter.amountMax),
   )
   const [shareToast, setShareToast] = useState('')
+  const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (shareToastTimerRef.current !== null) clearTimeout(shareToastTimerRef.current)
+    }
+  }, [])
 
   const PAYER_OPTIONS: { value: PayerFilter; label: string }[] = [
     { value: 'all',    label: t.common.all },
@@ -314,7 +321,8 @@ export function FilterSheet({
     } catch {
       setShareToast(t.filterSheet.shareFailed)
     }
-    setTimeout(() => setShareToast(''), 2400)
+    if (shareToastTimerRef.current !== null) clearTimeout(shareToastTimerRef.current)
+    shareToastTimerRef.current = setTimeout(() => setShareToast(''), 2400)
   }
 
   return (
