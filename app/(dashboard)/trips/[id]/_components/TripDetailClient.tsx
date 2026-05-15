@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
+import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { TripSheet, type TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
@@ -20,8 +21,6 @@ export interface TripDetailRecord {
   category: string
   paidBy: string
   transactedAt: string
-  status: 'settled' | 'pending'
-  notes: string | null
   originalCurrency: string | null
   originalAmount: number | null
 }
@@ -33,9 +32,11 @@ interface Props {
 }
 
 export function TripDetailClient({ trip, records, baseCurrency }: Props) {
+  const router = useRouter()
   const { isPast } = useMember()
   const [editOpen, setEditOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
+  const [expenseEditInitial, setExpenseEditInitial] = useState<AddSheetInitial | null>(null)
 
   const isEnded = trip.status !== 'active'
   const totalBase = records.reduce((sum, r) => sum + r.amount, 0)
@@ -141,28 +142,44 @@ export function TripDetailClient({ trip, records, baseCurrency }: Props) {
             className="rounded-[18px] overflow-hidden"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
           >
-            {records.map((r, i) => (
-              <CompactRow
-                key={r.id}
-                tx={{
-                  id: r.id,
-                  amount: r.amount,
-                  splitType: r.splitType,
-                  splitRatioA: r.splitRatioA,
-                  description: r.description,
-                  category: r.category,
-                  paidBy: r.paidBy,
-                  transactedAt: r.transactedAt,
-                  kind: 'transaction',
-                  notes: r.notes,
-                  status: r.status,
-                  originalCurrency: r.originalCurrency,
-                  originalAmount: r.originalAmount,
-                }}
-                isLast={i === records.length - 1}
-                baseCurrency={baseCurrency}
-              />
-            ))}
+            {records.map((r, i) => {
+              const canEdit = !isPast && !isEnded
+              const onRowClick = canEdit ? () => setExpenseEditInitial({
+                id: r.id,
+                kind: 'trip-expense',
+                tripId: trip.id,
+                amount: r.amount,
+                description: r.description,
+                category: r.category,
+                splitType: r.splitType,
+                splitRatioA: r.splitRatioA,
+                payerId: r.paidBy,
+                transactedAt: r.transactedAt,
+              }) : undefined
+              return (
+                <CompactRow
+                  key={r.id}
+                  tx={{
+                    id: r.id,
+                    amount: r.amount,
+                    splitType: r.splitType,
+                    splitRatioA: r.splitRatioA,
+                    description: r.description,
+                    category: r.category,
+                    paidBy: r.paidBy,
+                    transactedAt: r.transactedAt,
+                    kind: 'transaction',
+                    notes: null,
+                    status: 'settled',
+                    originalCurrency: r.originalCurrency,
+                    originalAmount: r.originalAmount,
+                  }}
+                  isLast={i === records.length - 1}
+                  baseCurrency={baseCurrency}
+                  onClick={onRowClick}
+                />
+              )
+            })}
           </div>
         )}
       </section>
@@ -206,6 +223,14 @@ export function TripDetailClient({ trip, records, baseCurrency }: Props) {
         baseCurrency={baseCurrency}
         onClose={() => setEditOpen(false)}
         initial={trip}
+      />
+
+      <AddSheet
+        open={expenseEditInitial !== null}
+        initial={expenseEditInitial ?? undefined}
+        onClose={() => setExpenseEditInitial(null)}
+        onMutated={() => { setExpenseEditInitial(null); router.refresh() }}
+        baseCurrency={baseCurrency}
       />
 
       <EndTripSheet
