@@ -341,6 +341,7 @@ export const zhCN: Translations = {
     inviteCta: '邀请对方加入',
     sectionDisplay: '语言 & 币别',
     language: '语言',
+    currency: '币别',
     sectionApp: '应用',
     offlineBrowsing: '离线浏览',
     offlineHintOff: '在无网络时看不到历史记录。开启后，最近浏览过的页面会存在这台设备上。',
