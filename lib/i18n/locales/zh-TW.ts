@@ -1570,8 +1570,8 @@ export const zhTW: Translations = {
     notesPlaceholder: '寫一句留給對方的話，或之後想記得的事',
     statusLabel: '狀態',
     statusSettled: '已付清',
-    statusPending: '信用卡待扣',
-    statusPendingHint: '信用卡待扣不會算進兩個人的結算，等實際扣款後再改為已付清。',
+    statusPending: '待結算',
+    statusPendingHint: '待結算的紀錄不會算進兩個人的結算，確認付款後再改為已付清。',
     deleteOne: '刪除這筆',
     deleteConfirmTitle: '刪除這筆紀錄？',
     currency: '幣別',
@@ -1585,7 +1585,7 @@ export const zhTW: Translations = {
   },
 
   compactRow: {
-    pendingBadge: '信用卡待扣',
+    pendingBadge: '待結算',
   },
 
   tripDetail: {
@@ -1597,7 +1597,7 @@ export const zhTW: Translations = {
     youPaid: '你付了',
     partnerPaid: '{name} 付了',
     share: '分擔',
-    perSideHint: '只計入已落地的紀錄;信用卡待扣那種還沒結算。',
+    perSideHint: '只計入已落地的紀錄;待結算的還沒進結算。',
     endTitle: '結束這趟旅行',
     endBody: '結束之後這趟還會留在列表裡,只是不再接新的紀錄。日期之後還能再編輯。',
     endDateLabel: '結束日',
@@ -1709,7 +1709,7 @@ export const zhTW: Translations = {
     amountMinLabel: '金額下限',
     amountMaxLabel: '金額上限',
     statusSection: '狀態',
-    statusPending: '待扣款',
+    statusPending: '待結算',
     statusSettled: '已扣款',
     shareLink: '複製分享連結',
     shareCopied: '已複製到剪貼簿',
