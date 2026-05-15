@@ -31,3 +31,4 @@ Futari belongs to the "Freedom Project" family — a brand built on the metaphor
 
 - Product: https://futari.southern-light.dev
 - Source / engineering context: private (codebase name "Oikos")
+- Full details: https://futari.southern-light.dev/llms-full.txt
