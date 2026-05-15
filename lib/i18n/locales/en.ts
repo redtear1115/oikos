@@ -127,6 +127,15 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
+    activeTripBanner: {
+      kicker: 'Trip in progress',
+      singleStartedAt: 'Since {date} · open this trip',
+      singleStartedAtWithCurrency: 'Since {date} · {currency} · open this trip',
+      singleAriaLabel: 'Open trip: {name}',
+      multipleHeading: '{count} trips in progress',
+      multipleCta: 'Browse all ›',
+      multipleAriaLabel: 'View {count} active trips',
+    },
   },
 
   balanceHero: {
@@ -346,6 +355,11 @@ export const en: Translations = {
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
     trips: 'Trips',
+    tripsRow: {
+      active: '{active} in progress',
+      past: '{past} past',
+      both: '{active} in progress · {past} past',
+    },
     sectionGuardian: 'Guardian (Beta)',
     guardianBeta: {
       title: 'Enable Guardian',

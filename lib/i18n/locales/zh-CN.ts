@@ -127,6 +127,15 @@ export const zhCN: Translations = {
     addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
+    activeTripBanner: {
+      kicker: '旅行进行中',
+      singleStartedAt: '{date} 起 · 点开看这趟',
+      singleStartedAtWithCurrency: '{date} 起 · {currency} · 点开看这趟',
+      singleAriaLabel: '进入旅行：{name}',
+      multipleHeading: '{count} 段旅行进行中',
+      multipleCta: '一起翻 ›',
+      multipleAriaLabel: '查看 {count} 段进行中的旅行',
+    },
   },
 
   balanceHero: {
@@ -346,6 +355,11 @@ export const zhCN: Translations = {
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
     trips: '旅行',
+    tripsRow: {
+      active: '{active} 段进行中',
+      past: '过去 {past} 段',
+      both: '{active} 段进行中 · 过去 {past} 段',
+    },
     sectionGuardian: '守护（Beta）',
     guardianBeta: {
       title: '开启守护',

@@ -127,6 +127,15 @@ export const ja: Translations = {
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
     filterAriaLabel: '絞り込みを開く',
+    activeTripBanner: {
+      kicker: '旅行中',
+      singleStartedAt: '{date} から · この旅を開く',
+      singleStartedAtWithCurrency: '{date} から · {currency} · この旅を開く',
+      singleAriaLabel: '旅行を開く：{name}',
+      multipleHeading: '{count} 件の旅行が進行中',
+      multipleCta: 'まとめて見る ›',
+      multipleAriaLabel: '進行中の {count} 件の旅行を見る',
+    },
   },
 
   balanceHero: {
@@ -346,6 +355,11 @@ export const ja: Translations = {
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
     trips: '旅行',
+    tripsRow: {
+      active: '進行中 {active} 件',
+      past: '過去 {past} 件',
+      both: '進行中 {active} 件 · 過去 {past} 件',
+    },
     sectionGuardian: '守護（ベータ）',
     guardianBeta: {
       title: '守護をオンにする',
