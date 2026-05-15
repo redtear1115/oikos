@@ -31,7 +31,6 @@ import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { currencySymbol, formatAmount, convertAmount, type CurrencyCode } from '@/lib/currency'
-import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
 
 export interface AddSheetInitial {
@@ -131,11 +130,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [assetId, setAssetId] = useState<string | null>(null)
   const [descSuggestions, setDescSuggestions] = useState<string[]>([])
 
-  // Multi-currency + trip state (#68 #42)
+  // Trip + currency state (#68 #42). Currency is no longer user-pickable —
+  // it cascades from the selected trip's defaultCurrency, or falls back to
+  // baseCurrency when no trip applies. The backend currency field is still
+  // sent through; only the UI picker is gone.
   const [tripId, setTripId] = useState<string | null>(null)
   const [currency, setCurrency] = useState<CurrencyCode>(baseCurrency)
-  // Track whether the user manually changed currency (so trip-cascade doesn't clobber it)
-  const [currencyManuallySet, setCurrencyManuallySet] = useState(false)
 
   // Fetch household-wide description history when the sheet opens. Re-fetched
   // on every open so newly-added descriptions surface immediately on the next
@@ -178,7 +178,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       // the trip selector (legacy CashTransactions can drop their trip_id tag
       // on edit — new trip-tagged records go to TripExpenses instead).
       setTripId(initial.kind === 'trip-expense' ? (initial.tripId ?? null) : null)
-      setCurrencyManuallySet(false)
     } else {
       setAmount('')
       setDesc('')
@@ -201,7 +200,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       ) ?? null
       setTripId(foundTrip?.id ?? null)
       setCurrency((foundTrip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
-      setCurrencyManuallySet(false)
     }
     setError('')
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTrips])
@@ -464,36 +462,25 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               />
             </label>
 
-            {/* Currency + trip selectors — shown below the amount hero.
-                TODO(v0.17.x): USD input UX — for now amount is integer-only across all currencies.
-                Following Phase 6 issue: spec § 1.5 says USD stores as cents but for v0.17.0 MVP
-                we keep input as integer; refine UX in a follow-up issue. */}
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <CurrencySelector
-                value={currency}
-                onChange={(next) => {
-                  setCurrency(next)
-                  setCurrencyManuallySet(true)
-                }}
-              />
-              {/* Hide the trip selector in create-mode when prefilledTripId
-                  locks us to a specific trip — the trip context is already
-                  obvious from the host page (the trip-detail FAB). */}
-              {!(prefilledTripId && !isEdit) && (
+            {/* Trip selector — currency is no longer user-pickable; it
+                follows the context (selected trip's defaultCurrency, or the
+                group's baseCurrency when no trip applies). The currency
+                symbol shown beside the amount above is the only on-screen
+                indicator of which currency we're recording in. */}
+            {!(prefilledTripId && !isEdit) && (
+              <div className="flex items-center justify-center mt-3">
                 <TripSelector
                   value={tripId}
                   options={activeTrips}
                   onChange={(next) => {
                     setTripId(next)
-                    if (next && !currencyManuallySet) {
-                      const trip = activeTrips.find((tp) => tp.id === next)
-                      if (trip?.defaultCurrency) setCurrency(trip.defaultCurrency)
-                    }
+                    const trip = next ? activeTrips.find((tp) => tp.id === next) : null
+                    setCurrency((trip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
                   }}
                   noTripLabel={t.addSheet.noTrip}
                 />
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Conversion preview: shown when foreign currency with known rate */}
             {(() => {
