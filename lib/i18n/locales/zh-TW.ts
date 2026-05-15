@@ -146,6 +146,24 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
+    /** Issue #367 — contextual surface shown when there's an active trip. */
+    activeTripBanner: {
+      /** Small kicker above the trip name, e.g. "旅行進行中". */
+      kicker: string
+      /** Single trip secondary line — `{date}` is the trip start date. */
+      singleStartedAt: string
+      /** Single trip secondary line with a currency symbol —
+       *  `{date}` start date, `{currency}` symbol like "NT$" / "¥". */
+      singleStartedAtWithCurrency: string
+      /** Aria label for the single-trip card link — `{name}` trip name. */
+      singleAriaLabel: string
+      /** Heading when N > 1 trips are active — `{count}` the count. */
+      multipleHeading: string
+      /** CTA line under the multi-trip heading. */
+      multipleCta: string
+      /** Aria label for the multi-trip card link — `{count}` the count. */
+      multipleAriaLabel: string
+    }
   }
 
   balanceHero: {
@@ -402,6 +420,12 @@ export type Translations = {
     pastTimes: string
     currency: string
     trips: string
+    /** Secondary text under the 旅行 row — counts of active / past trips. */
+    tripsRow: {
+      active: string
+      past: string
+      both: string
+    }
     sectionGuardian: string
     guardianBeta: {
       title: string
@@ -1526,6 +1550,15 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
+    activeTripBanner: {
+      kicker: '旅行進行中',
+      singleStartedAt: '{date} 起 · 點開看這趟',
+      singleStartedAtWithCurrency: '{date} 起 · {currency} · 點開看這趟',
+      singleAriaLabel: '進入旅行：{name}',
+      multipleHeading: '{count} 段旅行進行中',
+      multipleCta: '一起翻 ›',
+      multipleAriaLabel: '查看 {count} 段進行中的旅行',
+    },
   },
 
   balanceHero: {
@@ -1744,6 +1777,11 @@ export const zhTW: Translations = {
     pastTimes: '過去的時光',
     currency: '貨幣',
     trips: '旅行',
+    tripsRow: {
+      active: '{active} 段進行中',
+      past: '過去 {past} 段',
+      both: '{active} 段進行中 · 過去 {past} 段',
+    },
     sectionGuardian: '守護（Beta）',
     guardianBeta: {
       title: '開啟守護',

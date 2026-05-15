@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { getLocale } from '@/lib/i18n/t'
 import { getGroupBalance } from '@/lib/db/queries/balance'
+import { getTripSummary } from '@/lib/db/queries/trips'
 import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import {
   SettingsContent,
@@ -49,7 +50,10 @@ export default async function SettingsPage() {
     : null
 
   const viewerIsMemberA = group.memberA === user.id
-  const groupBalance = await getGroupBalance(group.id)
+  const [groupBalance, tripSummary] = await Promise.all([
+    getGroupBalance(group.id),
+    getTripSummary(group.id),
+  ])
 
   const pendingSwap: PendingSwap | null = group.pendingSwapProposedBy && group.pendingSwapExpiresAt
     ? {
@@ -72,6 +76,7 @@ export default async function SettingsPage() {
         groupBalance={groupBalance}
         pendingSwap={pendingSwap}
         guardianBetaEnabled={group.guardianBetaEnabled}
+        tripSummary={tripSummary}
       />
       <BottomNavSkeleton />
     </div>
