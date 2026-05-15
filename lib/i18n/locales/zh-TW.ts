@@ -270,10 +270,6 @@ export type Translations = {
     endDateBeforeStart: string
     /** Server/network error fallback when endTrip() throws without a message. */
     endFailure: string
-    /** Tertiary link to /settings/currency — surfaced from trip context only
-     *  (issue #366). Settings top-level no longer lists 心理匯率 since it
-     *  only matters during a trip. */
-    currencyRatesLink: string
   }
 
   incomeSheet: {
@@ -741,7 +737,8 @@ export type Translations = {
     }
   }
 
-  /** /settings/currency page — base currency + 心理匯率 (issues #322–#326). */
+  /** /settings/currency page — base currency only since v0.17.4 (#410).
+   *  Trip-scoped 心理匯率 lives inside each trip's TripSheet. */
   currencyPage: {
     title: string
     back: string
@@ -756,21 +753,14 @@ export type Translations = {
         bodyNext: string
       }
     }
-    rates: {
-      sectionTitle: string
-      whyHeading: string
-      whyBody: string
-      exampleHeading: string
-      exampleBody: string
-      behaviorHeading: string
-      behaviorBody: string
-      saving: string
-      saved: string
-      defaultFallback: string
+    /** Hint card pointing users at trip-scoped currency settings. */
+    tripsHint: {
+      heading: string
+      body: string
+      linkLabel: string
     }
     errors: {
       baseChangeFailed: string
-      rateChangeFailed: string
     }
   }
 
@@ -1642,7 +1632,6 @@ export const zhTW: Translations = {
     endConfirm: '確認結束',
     endDateBeforeStart: '結束日不可早於起始日({date})',
     endFailure: '結束失敗',
-    currencyRatesLink: '調整心理匯率',
   },
 
   incomeSheet: {
@@ -2069,7 +2058,7 @@ export const zhTW: Translations = {
     title: '貨幣',
     back: '返回',
     pageHeading: '兩人之間的一把尺',
-    pageSubtitle: '主體幣別是這本帳本的母語；心理匯率是你們之間的共識。',
+    pageSubtitle: '主體幣別是這本帳本的母語。',
     base: {
       sectionTitle: '主體幣別',
       sectionHint: '這本帳本的母語。所有結算與顯示，都以它為基準。',
@@ -2079,21 +2068,13 @@ export const zhTW: Translations = {
         bodyNext: '想換主體幣別的話，可以等開始下一個章節時重新選。',
       },
     },
-    rates: {
-      sectionTitle: '心理匯率',
-      whyHeading: '為什麼叫「心理」匯率',
-      whyBody: '不是看市場跳動的數字，是你們倆之間覺得 1 美金值多少——這把尺只屬於你們。',
-      exampleHeading: '舉個例子',
-      exampleBody: '比如你們約定 1 USD ≈ 32 TWD，那這趟在美國花的 100 美金，會記成 3,200 元。',
-      behaviorHeading: '改了之後',
-      behaviorBody: '以前已經記下的金額不會跟著動。只有從現在開始的新紀錄，會用新的匯率。',
-      saving: '儲存中…',
-      saved: '已存下',
-      defaultFallback: '預設值',
+    tripsHint: {
+      heading: '心理匯率搬家了',
+      body: '出國的時候用得到的幣別與匯率，現在跟著旅行一起設定——每一趟自己一把尺，不會互相影響。',
+      linkLabel: '看看旅行',
     },
     errors: {
       baseChangeFailed: '無法切換主體幣別',
-      rateChangeFailed: '無法更新匯率',
     },
   },
 

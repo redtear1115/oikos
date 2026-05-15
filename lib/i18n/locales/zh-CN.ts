@@ -214,7 +214,6 @@ export const zhCN: Translations = {
     endConfirm: '确认结束',
     endDateBeforeStart: '结束日不可早于起始日({date})',
     endFailure: '结束失败',
-    currencyRatesLink: '调整心理汇率',
   },
 
   incomeSheet: {
@@ -641,7 +640,7 @@ export const zhCN: Translations = {
     title: '货币',
     back: '返回',
     pageHeading: '两人之间的一把尺',
-    pageSubtitle: '主体币别是这本账本的母语；心理汇率是你们之间的共识。',
+    pageSubtitle: '主体币别是这本账本的母语。',
     base: {
       sectionTitle: '主体币别',
       sectionHint: '这本账本的母语。所有结算与显示，都以它为基准。',
@@ -651,21 +650,13 @@ export const zhCN: Translations = {
         bodyNext: '想换主体币别的话，可以等开始下一个章节时重新选。',
       },
     },
-    rates: {
-      sectionTitle: '心理汇率',
-      whyHeading: '为什么叫「心理」汇率',
-      whyBody: '不是看市场跳动的数字，是你们俩之间觉得 1 美金值多少——这把尺只属于你们。',
-      exampleHeading: '举个例子',
-      exampleBody: '比如你们约定 1 USD ≈ 32 TWD，那这趟在美国花的 100 美金，会记成 3,200 元。',
-      behaviorHeading: '改了之后',
-      behaviorBody: '以前已经记下的金额不会跟着动。只有从现在开始的新记录，会用新的汇率。',
-      saving: '保存中…',
-      saved: '已保存',
-      defaultFallback: '默认值',
+    tripsHint: {
+      heading: '心理汇率搬家了',
+      body: '出国时用得到的币别与汇率，现在跟着旅行一起设定——每一趟自己一把尺，不会互相影响。',
+      linkLabel: '看看旅行',
     },
     errors: {
       baseChangeFailed: '无法切换主体币别',
-      rateChangeFailed: '无法更新汇率',
     },
   },
 

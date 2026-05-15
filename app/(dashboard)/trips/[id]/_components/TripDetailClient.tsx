@@ -368,13 +368,6 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           >
             結束這趟旅行
           </button>
-          <Link
-            href="/settings/currency"
-            className="mt-2 self-center text-sm no-underline min-h-11 px-3 inline-flex items-center"
-            style={{ color: 'var(--ink-3)' }}
-          >
-            {t.tripDetail.currencyRatesLink} →
-          </Link>
         </section>
       )}
 
