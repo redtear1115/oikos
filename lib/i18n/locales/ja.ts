@@ -352,7 +352,7 @@ export const ja: Translations = {
     offlineUnsupported: 'このブラウザはオフライン閲覧に対応していません',
     recurringIncome: '定期収入',
     recurringExpense: '定期支出',
-    recurringSettings: '定期収支設定',
+    recurringSettings: '定期支出/収入設定',
     sectionData: 'データ',
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',

@@ -1780,7 +1780,7 @@ export const zhTW: Translations = {
     offlineUnsupported: '目前的瀏覽器不支援離線瀏覽',
     recurringIncome: '定期收入',
     recurringExpense: '定期支出',
-    recurringSettings: '定期收入/支出設定',
+    recurringSettings: '定期支出/收入設定',
     sectionData: '資料',
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
