@@ -406,7 +406,6 @@ export type Translations = {
     sectionPersonal: string
     addToHomeScreen: string
     displayName: string
-    defaultSplitTitle: string
     soloLockHint: string
     inviteCta: string
     sectionDisplay: string
@@ -1765,7 +1764,6 @@ export const zhTW: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
-    defaultSplitTitle: '建立紀錄時的預設分攤',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     inviteCta: '邀請對方加入',
     sectionDisplay: '語言 & 幣別',

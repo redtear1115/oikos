@@ -337,7 +337,6 @@ export const en: Translations = {
     sectionPersonal: 'Personal',
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
-    defaultSplitTitle: 'Default split for new entries',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     inviteCta: 'Invite partner',
     sectionDisplay: 'Language & Currency',

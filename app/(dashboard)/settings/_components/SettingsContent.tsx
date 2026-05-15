@@ -149,9 +149,6 @@ export function SettingsContent({
       {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
       <Section title={t.settings.sectionGroupSplit}>
         <div>
-          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            {t.settings.defaultSplitTitle}
-          </div>
           <div
             className="rounded-[20px] overflow-hidden flex flex-col"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}

@@ -337,7 +337,6 @@ export const ja: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
-    defaultSplitTitle: '記録時のデフォルト分担',
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     inviteCta: '相手を招待',
     sectionDisplay: '言語と通貨',
