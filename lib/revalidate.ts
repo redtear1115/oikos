@@ -61,7 +61,7 @@ export function revalidateAfterAssetMutation(
  * dashboard (which surfaces pending instances).
  */
 export function revalidateAfterRecurringExpenseRuleMutation() {
-  revalidatePath('/settings/recurring-expense')
+  revalidatePath('/settings/recurring')
   revalidatePath('/dashboard')
 }
 
@@ -70,7 +70,7 @@ export function revalidateAfterRecurringExpenseRuleMutation() {
  * dashboard (which surfaces pending instances).
  */
 export function revalidateAfterRecurringIncomeRuleMutation() {
-  revalidatePath('/settings/recurring-income')
+  revalidatePath('/settings/recurring')
   revalidatePath('/dashboard')
 }
 

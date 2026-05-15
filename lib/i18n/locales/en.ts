@@ -351,6 +351,7 @@ export const en: Translations = {
     offlineUnsupported: 'This browser does not support offline browsing.',
     recurringIncome: 'Recurring income',
     recurringExpense: 'Recurring expense',
+    recurringSettings: 'Recurring Rules',
     sectionData: 'Data',
     trust: 'Your data',
     exportData: 'Export data (CSV)',

@@ -351,6 +351,7 @@ export const zhCN: Translations = {
     offlineUnsupported: '当前的浏览器不支援离线浏览',
     recurringIncome: '定期收入',
     recurringExpense: '定期支出',
+    recurringSettings: '定期收入/支出设定',
     sectionData: '数据',
     trust: '数据安全',
     exportData: '导出数据（CSV）',
