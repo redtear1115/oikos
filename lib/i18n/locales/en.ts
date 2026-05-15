@@ -189,6 +189,24 @@ export const en: Translations = {
     pendingBadge: 'Card pending',
   },
 
+  tripDetail: {
+    emptyActive: 'No records yet for this trip. Tap the plus button to start.',
+    emptyEnded: 'This trip ended without any records.',
+    currencyBreakdown: 'By currency',
+    recordsSuffix: 'records',
+    perSideContribution: 'Who paid what',
+    youPaid: 'You paid',
+    partnerPaid: '{name} paid',
+    share: 'Share',
+    perSideHint: 'Settled rows only; pending card charges are excluded.',
+    endTitle: 'End this trip',
+    endBody: 'The trip stays in the list, just stops accepting new records. The date can be edited later.',
+    endDateLabel: 'End date',
+    endConfirm: 'End trip',
+    endDateBeforeStart: 'End date cannot be before the start date ({date})',
+    endFailure: 'Failed to end the trip',
+  },
+
   incomeSheet: {
     title: 'New income',
     titleEdit: 'Edit income',

@@ -219,6 +219,41 @@ export type Translations = {
     pendingBadge: string
   }
 
+  /** Trip detail page (#42). */
+  tripDetail: {
+    /** Empty-state copy when the trip is still active. */
+    emptyActive: string
+    /** Empty-state copy when the trip is already ended / read-only. */
+    emptyEnded: string
+    /** Section heading above the multi-currency breakdown table. */
+    currencyBreakdown: string
+    /** Suffix after currency-bucket row count, e.g. "3 筆". */
+    recordsSuffix: string
+    /** Section heading above the per-side paid/share cards. */
+    perSideContribution: string
+    /** Card label for "you paid" (viewer column). */
+    youPaid: string
+    /** Card label for partner paid — `{name}` is replaced with the partner displayName. */
+    partnerPaid: string
+    /** Sub-label under each per-side card: "share" = the slice this side carried. */
+    share: string
+    /** Hint under the per-side block clarifying scope (settled rows only). */
+    perSideHint: string
+    /** Sheet title for the "end this trip" modal. */
+    endTitle: string
+    /** Body copy under the end-trip title, explaining what end means. */
+    endBody: string
+    /** Date-input label inside the end-trip sheet. */
+    endDateLabel: string
+    /** Save button on the end-trip sheet. */
+    endConfirm: string
+    /** Validation error when end date < start date.
+     *  `{date}` is replaced with the trip's start date. */
+    endDateBeforeStart: string
+    /** Server/network error fallback when endTrip() throws without a message. */
+    endFailure: string
+  }
+
   incomeSheet: {
     title: string
     titleEdit: string
@@ -1551,6 +1586,24 @@ export const zhTW: Translations = {
 
   compactRow: {
     pendingBadge: '信用卡待扣',
+  },
+
+  tripDetail: {
+    emptyActive: '這趟還沒有任何紀錄。點右下角的加號從這裡開始記。',
+    emptyEnded: '這趟沒有留下任何紀錄。',
+    currencyBreakdown: '幣別分擔',
+    recordsSuffix: '筆',
+    perSideContribution: '誰付了多少',
+    youPaid: '你付了',
+    partnerPaid: '{name} 付了',
+    share: '分擔',
+    perSideHint: '只計入已落地的紀錄;信用卡待扣那種還沒結算。',
+    endTitle: '結束這趟旅行',
+    endBody: '結束之後這趟還會留在列表裡,只是不再接新的紀錄。日期之後還能再編輯。',
+    endDateLabel: '結束日',
+    endConfirm: '確認結束',
+    endDateBeforeStart: '結束日不可早於起始日({date})',
+    endFailure: '結束失敗',
   },
 
   incomeSheet: {

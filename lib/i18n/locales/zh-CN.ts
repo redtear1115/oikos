@@ -189,6 +189,24 @@ export const zhCN: Translations = {
     pendingBadge: '信用卡待扣',
   },
 
+  tripDetail: {
+    emptyActive: '这趟还没有任何记录。点右下角的加号从这里开始记。',
+    emptyEnded: '这趟没有留下任何记录。',
+    currencyBreakdown: '币别分担',
+    recordsSuffix: '笔',
+    perSideContribution: '谁付了多少',
+    youPaid: '你付了',
+    partnerPaid: '{name} 付了',
+    share: '分担',
+    perSideHint: '只计入已结算的记录;信用卡待扣那种还没结算。',
+    endTitle: '结束这趟旅行',
+    endBody: '结束之后这趟还会留在列表里,只是不再接新的记录。日期之后还能再编辑。',
+    endDateLabel: '结束日',
+    endConfirm: '确认结束',
+    endDateBeforeStart: '结束日不可早于起始日({date})',
+    endFailure: '结束失败',
+  },
+
   incomeSheet: {
     title: '记一笔收入',
     titleEdit: '编辑这笔收入',

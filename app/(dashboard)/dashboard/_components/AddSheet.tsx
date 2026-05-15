@@ -82,8 +82,18 @@ interface Props {
   }) => void
   /** When opening in create mode from a car-detail FAB, prefill the asset link. */
   prefilledAssetId?: string | null
-  /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB). */
+  /** Optional category prefill for create mode (e.g. 'transit' from car-detail FAB).
+   */
   prefilledCategory?: CategoryId
+  /**
+   * Force the new record into a specific trip. Wins over the date-range
+   * auto-detect so the trip-detail FAB always lands inside its own trip,
+   * even when the trip starts in the future. The TripSelector is hidden
+   * while this is set in create mode — the trip context is implicit
+   * from the host page. Ignored in edit mode (edits carry their own
+   * `initial.tripId`).
+   */
+  prefilledTripId?: string | null
   /**
    * Recurring-expense pending mode. When set, `initial` carries the prefill
    * snapshot but the sheet routes submit to editAndConfirmPending instead of
@@ -103,7 +113,7 @@ interface Props {
   rates?: RateEntry[]
 }
 
-export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved, groupDefaultRatioA, baseCurrency = 'twd', activeTrips = [], rates = [] }: Props) {
+export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, prefilledTripId, pendingExpenseId, onRaceResolved, groupDefaultRatioA, baseCurrency = 'twd', activeTrips = [], rates = [] }: Props) {
   const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
@@ -180,9 +190,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAssetId(prefilledAssetId ?? null)
       setNotes('')
       setStatus('settled')
-      // Auto-select trip if today is in range; cascade currency from trip defaultCurrency
+      // prefilledTripId (FAB on /trips/[id]) wins over the date-range
+      // auto-detect, so trips that start in the future still tag correctly.
+      const lockedTrip = prefilledTripId
+        ? activeTrips.find((trip) => trip.id === prefilledTripId) ?? null
+        : null
       const todayStr = localTodayISO()
-      const foundTrip = activeTrips.find(
+      const foundTrip = lockedTrip ?? activeTrips.find(
         (trip) => todayStr >= trip.startDate && (!trip.endDate || todayStr <= trip.endDate),
       ) ?? null
       setTripId(foundTrip?.id ?? null)
@@ -190,7 +204,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setCurrencyManuallySet(false)
     }
     setError('')
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, groupDefaultRatioA, baseCurrency, activeTrips])
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTrips])
 
   // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
   // the prefilled amount in edit mode (typing replaces the selection rather than
@@ -462,18 +476,23 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                   setCurrencyManuallySet(true)
                 }}
               />
-              <TripSelector
-                value={tripId}
-                options={activeTrips}
-                onChange={(next) => {
-                  setTripId(next)
-                  if (next && !currencyManuallySet) {
-                    const trip = activeTrips.find((tp) => tp.id === next)
-                    if (trip?.defaultCurrency) setCurrency(trip.defaultCurrency)
-                  }
-                }}
-                noTripLabel={t.addSheet.noTrip}
-              />
+              {/* Hide the trip selector in create-mode when prefilledTripId
+                  locks us to a specific trip — the trip context is already
+                  obvious from the host page (the trip-detail FAB). */}
+              {!(prefilledTripId && !isEdit) && (
+                <TripSelector
+                  value={tripId}
+                  options={activeTrips}
+                  onChange={(next) => {
+                    setTripId(next)
+                    if (next && !currencyManuallySet) {
+                      const trip = activeTrips.find((tp) => tp.id === next)
+                      if (trip?.defaultCurrency) setCurrency(trip.defaultCurrency)
+                    }
+                  }}
+                  noTripLabel={t.addSheet.noTrip}
+                />
+              )}
             </div>
 
             {/* Conversion preview: shown when foreign currency with known rate */}
