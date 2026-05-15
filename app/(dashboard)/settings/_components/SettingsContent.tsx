@@ -321,24 +321,34 @@ export function SettingsContent({
         </div>
       </Section>
 
-      {/* 應用 — install + language + offline (device/app-level prefs) */}
-      <Section title={t.settings.sectionApp}>
-        <Row
-          label={t.settings.addToHomeScreen}
-          onClick={() => setInstallGuideOpen(true)}
-        />
-        <div className="mt-3">
+      {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
+      <Section title={t.settings.sectionDisplay}>
+        <div>
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
             {t.settings.language}
           </div>
           <LanguageSwitcher current={currentLocale} />
         </div>
         <div className="mt-3">
+          <Row
+            label={t.settings.currency}
+            onClick={() => router.push('/settings/currency')}
+          />
+        </div>
+      </Section>
+
+      {/* 應用 — install + offline (device/app-level prefs) */}
+      <Section title={t.settings.sectionApp}>
+        <Row
+          label={t.settings.addToHomeScreen}
+          onClick={() => setInstallGuideOpen(true)}
+        />
+        <div className="mt-3">
           <OfflineBrowsingToggle />
         </div>
       </Section>
 
-      {/* 資料 — recurring rules → past chapters → export → trust info */}
+      {/* 資料 — recurring rules → past chapters → trips → export → trust info */}
       <Section title={t.settings.sectionData}>
         <Row
           label={t.settings.recurringIncome}
@@ -353,11 +363,6 @@ export function SettingsContent({
         <Row
           label={t.settings.pastTimes}
           onClick={() => router.push('/settings/past-times')}
-        />
-        <div className="mt-3" />
-        <Row
-          label={t.settings.currency}
-          onClick={() => router.push('/settings/currency')}
         />
         <div className="mt-3" />
         <Row
