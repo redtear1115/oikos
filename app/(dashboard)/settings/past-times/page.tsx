@@ -42,7 +42,7 @@ export default async function PastTimesPage() {
         t={t.pastTimes}
         backLabel={t.pastTimes.back}
       />
-      <BottomNavSkeleton />
+      <BottomNavSkeleton hideFab />
     </div>
   )
 }

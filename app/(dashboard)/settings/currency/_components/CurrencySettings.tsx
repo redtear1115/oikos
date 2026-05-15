@@ -5,10 +5,17 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { setBaseCurrency } from '@/actions/currency'
+import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { AddSheet, type RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 
 export function CurrencySettings(props: {
   baseCurrency: CurrencyCode
   canChangeBase: boolean
+  groupDefaultRatioA: number | null
+  activeTrips: TripOption[]
+  rates: RateEntry[]
+  isPast: boolean
 }) {
   const router = useRouter()
   const t = useTranslations()
@@ -16,6 +23,7 @@ export function CurrencySettings(props: {
   const [base, setBase] = useState(props.baseCurrency)
   const [pending, start] = useTransition()
   const [baseError, setBaseError] = useState<string | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
 
   function onBaseChange(next: CurrencyCode) {
     if (next === base) return
@@ -155,6 +163,21 @@ export function CurrencySettings(props: {
           </p>
         )}
       </section>
+
+      <BottomNav onAddClick={() => setAddOpen(true)} hideFab={props.isPast} />
+
+      <AddSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onMutated={() => {
+          setAddOpen(false)
+          router.refresh()
+        }}
+        baseCurrency={props.baseCurrency}
+        groupDefaultRatioA={props.groupDefaultRatioA}
+        activeTrips={props.activeTrips}
+        rates={props.rates}
+      />
     </>
   )
 }

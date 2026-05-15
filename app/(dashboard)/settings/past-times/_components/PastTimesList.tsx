@@ -68,19 +68,30 @@ export function PastTimesList({
 
   return (
     <>
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2">
-        <Link href="/settings" className="text-sm" style={{ color: 'var(--ink-3)' }}>
-          ‹ {backLabel}
-        </Link>
-      </div>
-      <div className="px-5 pb-3">
-        <h1
-          className="text-2xl font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
+      <div
+        className="px-4 flex items-center justify-between"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
+      >
+        <Link
+          href="/settings"
+          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer min-h-11 px-2 -ml-2 no-underline"
+          style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
         >
+          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+            <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {backLabel}
+        </Link>
+
+        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
           {t.title}
-        </h1>
-        <p className="text-sm mt-2" style={{ color: 'var(--ink-3)' }}>{t.intro}</p>
+        </div>
+
+        <div className="w-[64px]" aria-hidden="true" />
+      </div>
+
+      <div className="px-5 pt-6 pb-3">
+        <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{t.intro}</p>
       </div>
 
       {epochs.length === 0 ? (

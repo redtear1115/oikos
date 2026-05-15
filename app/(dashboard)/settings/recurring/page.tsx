@@ -2,7 +2,6 @@ import { listActiveRules as listIncomeRules } from '@/lib/db/queries/recurringIn
 import { listActiveRules as listExpenseRules } from '@/lib/db/queries/recurringExpense'
 import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import { getInsuranceAssets } from '@/actions/income'
-import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { RecurringSettingsContent } from './_components/RecurringSettingsContent'
 
 export default async function RecurringSettingsPage() {
@@ -22,7 +21,6 @@ export default async function RecurringSettingsPage() {
         insuranceAssets={insuranceAssets}
         groupDefaultRatioA={group.defaultSplitRatioA ?? null}
       />
-      <BottomNavSkeleton />
     </div>
   )
 }

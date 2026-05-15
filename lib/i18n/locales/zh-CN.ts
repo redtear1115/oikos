@@ -544,7 +544,6 @@ export const zhCN: Translations = {
   recurringIncome: {
     title: '定期收入',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '还没设定定期收入',
       cta: '新增第一个',
@@ -1025,7 +1024,6 @@ export const zhCN: Translations = {
   recurringExpense: {
     title: '定期支出',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '还没设定定期支出',
       cta: '新增第一个',

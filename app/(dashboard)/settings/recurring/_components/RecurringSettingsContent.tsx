@@ -87,13 +87,11 @@ export function RecurringSettingsContent({
           <RecurringIncomeContent
             rules={incomeRules}
             insuranceAssets={insuranceAssets}
-            embedded
           />
         ) : (
           <RecurringExpenseContent
             rules={expenseRules}
             groupDefaultRatioA={groupDefaultRatioA}
-            embedded
           />
         )}
       </div>

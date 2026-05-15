@@ -544,7 +544,6 @@ export const ja: Translations = {
   recurringIncome: {
     title: '定期収入',
     back: '戻る',
-    add: '+ 追加',
     empty: {
       hint: '定期収入はまだ設定されていません',
       cta: '最初の一件を追加',
@@ -1025,7 +1024,6 @@ export const ja: Translations = {
   recurringExpense: {
     title: '定期支出',
     back: '戻る',
-    add: '+ 追加',
     empty: {
       hint: '定期支出はまだ設定されていません',
       cta: '最初の一件を追加',
