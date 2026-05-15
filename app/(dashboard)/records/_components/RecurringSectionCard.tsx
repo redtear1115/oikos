@@ -27,7 +27,7 @@ export function RecurringSectionCard() {
     <div className="px-5 pt-4 pb-2">
       <div className="flex items-stretch gap-2">
         <Link
-          href="/settings/recurring-expense"
+          href="/settings/recurring?tab=expense"
           className={pillClass}
           style={{
             background: 'var(--surface)',
@@ -48,7 +48,7 @@ export function RecurringSectionCard() {
           </span>
         </Link>
         <Link
-          href="/settings/recurring-income"
+          href="/settings/recurring?tab=income"
           className={pillClass}
           style={{
             background: P.tint,

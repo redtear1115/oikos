@@ -353,13 +353,8 @@ export function SettingsContent({
       {/* 資料 — recurring rules → past chapters → trips → export → trust info */}
       <Section title={t.settings.sectionData}>
         <Row
-          label={t.settings.recurringIncome}
-          onClick={() => router.push('/settings/recurring-income')}
-        />
-        <div className="mt-3" />
-        <Row
-          label={t.settings.recurringExpense}
-          onClick={() => router.push('/settings/recurring-expense')}
+          label={t.settings.recurringSettings}
+          onClick={() => router.push('/settings/recurring')}
         />
         <div className="mt-3" />
         <Row

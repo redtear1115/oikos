@@ -48,7 +48,7 @@ export async function listActiveRules(groupId: string): Promise<RecurringRuleRow
  * #166 — Rules tied to a specific asset, scoped to the viewer's group.
  * Used by SavingsView to surface "income arrives every cycle" rules on the
  * insurance detail page itself, so the user doesn't have to bounce to
- * /settings/recurring-income to see them.
+ * /settings/recurring?tab=income to see them.
  */
 export async function listRulesForAsset(groupId: string, assetId: string): Promise<RecurringRuleRow[]> {
   return db

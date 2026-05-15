@@ -235,7 +235,7 @@ export function BalanceHero({
               }}>
                 <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.recurringIncome.title}</span>
                 <Link
-                  href="/settings/recurring-income"
+                  href="/settings/recurring?tab=income"
                   style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', textDecoration: 'none' }}
                 >
                   {t.balanceHero.manage}
