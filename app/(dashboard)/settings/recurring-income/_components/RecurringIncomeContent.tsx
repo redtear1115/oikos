@@ -62,7 +62,7 @@ export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
         insuranceAssets={insuranceAssets}
       />
 
-      <BottomNav onAddClick={() => setSheetState('create')} hideFab={isOpen} />
+      <BottomNav onAddClick={() => setSheetState('create')} hideFab={isOpen} fabVariant="income" />
     </>
   )
 }

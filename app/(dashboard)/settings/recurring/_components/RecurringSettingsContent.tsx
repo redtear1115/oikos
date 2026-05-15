@@ -4,8 +4,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { RecurringIncomeContent } from '../../recurring-income/_components/RecurringIncomeContent'
 import { RecurringExpenseContent } from '../../recurring-expense/_components/RecurringExpenseContent'
 import { useTranslations } from '@/lib/i18n/client'
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+
+const INCOME_P = DEFAULT_INCOME_PALETTE
 
 type TabKey = 'income' | 'expense'
 
@@ -27,7 +30,7 @@ export function RecurringSettingsContent({
   const t = useTranslations()
 
   const rawTab = searchParams.get('tab')
-  const activeTab: TabKey = rawTab === 'expense' ? 'expense' : 'income'
+  const activeTab: TabKey = rawTab === 'income' ? 'income' : 'expense'
 
   const setTab = (tab: TabKey) => {
     if (tab === activeTab) return
@@ -68,14 +71,15 @@ export function RecurringSettingsContent({
         className="px-4 mt-2 flex gap-2"
       >
         <TabButton
-          active={activeTab === 'income'}
-          onClick={() => setTab('income')}
-          label={t.settings.recurringIncome}
-        />
-        <TabButton
           active={activeTab === 'expense'}
           onClick={() => setTab('expense')}
           label={t.settings.recurringExpense}
+        />
+        <TabButton
+          active={activeTab === 'income'}
+          onClick={() => setTab('income')}
+          label={t.settings.recurringIncome}
+          tone="income"
         />
       </div>
 
@@ -103,11 +107,15 @@ function TabButton({
   active,
   onClick,
   label,
+  tone = 'default',
 }: {
   active: boolean
   onClick: () => void
   label: string
+  tone?: 'default' | 'income'
 }) {
+  const activeBg = tone === 'income' ? INCOME_P.tint : 'var(--btn-primary-bg)'
+  const activeColor = tone === 'income' ? INCOME_P.ink : 'var(--btn-primary-text)'
   return (
     <button
       type="button"
@@ -116,8 +124,8 @@ function TabButton({
       onClick={onClick}
       className="flex-1 min-h-11 px-4 rounded-full text-sm font-medium border-0 cursor-pointer transition-colors"
       style={{
-        background: active ? 'var(--btn-primary-bg)' : 'var(--surface)',
-        color: active ? 'var(--btn-primary-text)' : 'var(--ink-2)',
+        background: active ? activeBg : 'var(--surface)',
+        color: active ? activeColor : 'var(--ink-2)',
         border: active ? 'none' : '1px solid var(--hairline)',
       }}
     >

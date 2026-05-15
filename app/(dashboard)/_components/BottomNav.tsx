@@ -6,14 +6,21 @@ import { useEffect, useState } from 'react'
 import { PlusIcon } from './PlusIcon'
 import { HomeIndicator } from './HomeIndicator'
 import { NavHomeIcon, NavListIcon, NavAssetsIcon, NavSettingsIcon } from './TabIcons'
+import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 
 interface Props {
   onAddClick: () => void
   hideFab?: boolean
-  fabVariant?: 'primary' | 'accent'
+  fabVariant?: 'primary' | 'accent' | 'income'
   /** Custom FAB content. When provided, the default circular FAB is replaced
    *  with a wider pill that contains this node (e.g. "加油" + fuel pump icon). */
   fabContent?: React.ReactNode
+}
+
+function fabBg(variant: 'primary' | 'accent' | 'income'): string {
+  if (variant === 'accent') return 'var(--accent)'
+  if (variant === 'income') return DEFAULT_INCOME_PALETTE.ink
+  return 'var(--ink)'
 }
 
 const TABS = [
@@ -71,7 +78,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
           aria-label="新增一筆"
           className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
           style={{
-            background: fabVariant === 'accent' ? 'var(--accent)' : 'var(--ink)',
+            background: fabBg(fabVariant),
             color: '#fff',
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
@@ -84,7 +91,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
           onClick={onAddClick}
           className="fixed left-1/2 bottom-[34px] z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-white text-sm font-semibold tracking-[0.5px]"
           style={{
-            background: fabVariant === 'accent' ? 'var(--accent)' : 'var(--ink)',
+            background: fabBg(fabVariant),
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
           {fabContent}
