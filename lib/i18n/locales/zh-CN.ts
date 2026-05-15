@@ -329,7 +329,7 @@ export const zhCN: Translations = {
 
   settings: {
     title: '设置',
-    sectionGroup: '账本',
+    sectionGroupSplit: '预设分摊方式 & 比例',
     groupName: '账本名称',
     sectionMember: '成员',
     youSuffix: '（你）',
