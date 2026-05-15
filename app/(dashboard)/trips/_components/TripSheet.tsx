@@ -311,7 +311,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
             </span>
           </div>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-            勾選這趟用得到的幣別，挑一個當預設。數字是「1 個此幣別 = N 個預設幣別」。
+            勾選這趟用得到的幣別，挑一個當預設。每行填「1 個此幣別 = 幾個預設幣別」(例：1 JPY ≈ 0.2 TWD)。
           </p>
 
           <div className="mt-2 flex flex-col gap-2">
@@ -327,6 +327,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
                   code={code}
                   label={PRESET_LABELS[code]}
                   rate={row?.rate ?? 1}
+                  defaultCode={defaultCode}
                   checked={checked}
                   isDefault={isDefault}
                   defaultHasExpenses={defaultHasExpenses}
@@ -349,6 +350,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
                   code={row.code}
                   label={row.label ?? ''}
                   rate={row.rate}
+                  defaultCode={defaultCode}
                   isDefault={isDefault}
                   defaultHasExpenses={defaultHasExpenses}
                   locked={locked}
@@ -391,6 +393,7 @@ function CurrencyRow(props: {
   code: string
   label: string
   rate: number
+  defaultCode: string
   checked: boolean
   isDefault: boolean
   defaultHasExpenses: boolean
@@ -400,7 +403,7 @@ function CurrencyRow(props: {
   onRateChange: (raw: string) => void
   onSetDefault: () => void
 }) {
-  const { code, label, rate, checked, isDefault, defaultHasExpenses, locked, usedCount } = props
+  const { code, label, rate, defaultCode, checked, isDefault, defaultHasExpenses, locked, usedCount } = props
   const canToggleOff = checked && !locked && !isDefault
   return (
     <div
@@ -448,7 +451,7 @@ function CurrencyRow(props: {
             </div>
           ) : (
             <>
-              <span className="text-xs" style={{ color: 'var(--ink-3)' }}>1 {code} =</span>
+              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>1 {code} =</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -457,16 +460,22 @@ function CurrencyRow(props: {
                 value={rate || ''}
                 disabled={locked}
                 onChange={e => props.onRateChange(e.target.value)}
-                className="flex-1 rounded-lg px-2.5 py-1.5 text-sm"
+                className="flex-1 min-w-0 rounded-lg px-2.5 py-1.5 text-sm"
                 style={{
                   background: locked ? 'var(--surface-alt)' : 'var(--bg)',
                   border: '1px solid var(--hairline)',
                   color: 'var(--ink)',
                 }}
               />
+              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>{defaultCode}</span>
             </>
           )}
         </div>
+      )}
+      {checked && !isDefault && rate > 0 && (
+        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
+          ≈ 1 {defaultCode} = {formatInverse(rate)} {code}
+        </p>
       )}
       {checked && locked && !isDefault && (
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
@@ -487,10 +496,26 @@ function CurrencyRow(props: {
   )
 }
 
+/**
+ * Render the inverse rate (1 / rate) with sensible precision — trims trailing
+ * zeros and caps the precision so big-denomination currencies like VND don't
+ * overflow the row width (1/0.0013 = ~769 → "769" not "769.230769…").
+ */
+function formatInverse(rate: number): string {
+  if (rate <= 0) return '—'
+  const inv = 1 / rate
+  // 4 significant digits is more than enough for psychological rates.
+  if (inv >= 100) return inv.toFixed(0)
+  if (inv >= 10) return inv.toFixed(1)
+  if (inv >= 1) return inv.toFixed(2)
+  return inv.toFixed(3)
+}
+
 function CustomCurrencyRow(props: {
   code: string
   label: string
   rate: number
+  defaultCode: string
   isDefault: boolean
   defaultHasExpenses: boolean
   locked: boolean
@@ -501,7 +526,7 @@ function CustomCurrencyRow(props: {
   onSetDefault: () => void
   onRemove: () => void
 }) {
-  const { code, label, rate, isDefault, defaultHasExpenses, locked, usedCount } = props
+  const { code, label, rate, defaultCode, isDefault, defaultHasExpenses, locked, usedCount } = props
   return (
     <div
       className="rounded-xl p-3 flex flex-col gap-2"
@@ -558,7 +583,7 @@ function CustomCurrencyRow(props: {
           </div>
         ) : (
           <>
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
+            <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
               1 {code || '?'} =
             </span>
             <input
@@ -569,13 +594,14 @@ function CustomCurrencyRow(props: {
               value={rate || ''}
               disabled={locked}
               onChange={e => props.onRateChange(e.target.value)}
-              className="flex-1 rounded-lg px-2.5 py-1.5 text-sm"
+              className="flex-1 min-w-0 rounded-lg px-2.5 py-1.5 text-sm"
               style={{
                 background: locked ? 'var(--surface-alt)' : 'var(--bg)',
                 border: '1px solid var(--hairline)',
                 color: 'var(--ink)',
               }}
             />
+            <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>{defaultCode}</span>
           </>
         )}
         <label className="flex items-center gap-1 cursor-pointer text-xs" style={{ color: 'var(--ink-2)' }}>
@@ -590,6 +616,11 @@ function CustomCurrencyRow(props: {
           預設
         </label>
       </div>
+      {!isDefault && rate > 0 && code && (
+        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
+          ≈ 1 {defaultCode} = {formatInverse(rate)} {code}
+        </p>
+      )}
       {locked && !isDefault && (
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
           已記過 {usedCount} 筆，先刪除才能改
