@@ -252,6 +252,10 @@ export type Translations = {
     endDateBeforeStart: string
     /** Server/network error fallback when endTrip() throws without a message. */
     endFailure: string
+    /** Tertiary link to /settings/currency — surfaced from trip context only
+     *  (issue #366). Settings top-level no longer lists 心理匯率 since it
+     *  only matters during a trip. */
+    currencyRatesLink: string
   }
 
   incomeSheet: {
@@ -400,7 +404,6 @@ export type Translations = {
     trust: string
     exportData: string
     pastTimes: string
-    currency: string
     trips: string
     sectionGuardian: string
     guardianBeta: {
@@ -1604,6 +1607,7 @@ export const zhTW: Translations = {
     endConfirm: '確認結束',
     endDateBeforeStart: '結束日不可早於起始日({date})',
     endFailure: '結束失敗',
+    currencyRatesLink: '調整心理匯率',
   },
 
   incomeSheet: {
@@ -1742,7 +1746,6 @@ export const zhTW: Translations = {
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
     pastTimes: '過去的時光',
-    currency: '貨幣',
     trips: '旅行',
     sectionGuardian: '守護（Beta）',
     guardianBeta: {
