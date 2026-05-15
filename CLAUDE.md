@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.17.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.17.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -49,6 +49,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.17.0](CHANGELOG.md#0170---2026-05-14) | 架構先行．多幣別 × 旅行子帳本一次到位 |
 | [v0.17.1](CHANGELOG.md#0171---2026-05-15) | UX × 效能 × a11y × 快取．細節讓體驗更順 |
 | [v0.17.2](CHANGELOG.md#0172---2026-05-15) | 旅行從沙盒到收斂．多幣別視角也站穩 |
+| [v0.17.3](CHANGELOG.md#0173---2026-05-15) | Settings 收束 × 旅行感知 × AddSheet 守護分層．細節讓操作更貼手 |
 
 ## Backlog / 未釋出版本
 

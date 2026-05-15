@@ -127,6 +127,15 @@ export const zhCN: Translations = {
     addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
+    activeTripBanner: {
+      kicker: '旅行进行中',
+      singleStartedAt: '{date} 起 · 点开看这趟',
+      singleStartedAtWithCurrency: '{date} 起 · {currency} · 点开看这趟',
+      singleAriaLabel: '进入旅行：{name}',
+      multipleHeading: '{count} 段旅行进行中',
+      multipleCta: '一起翻 ›',
+      multipleAriaLabel: '查看 {count} 段进行中的旅行',
+    },
   },
 
   balanceHero: {
@@ -205,6 +214,7 @@ export const zhCN: Translations = {
     endConfirm: '确认结束',
     endDateBeforeStart: '结束日不可早于起始日({date})',
     endFailure: '结束失败',
+    currencyRatesLink: '调整心理汇率',
   },
 
   incomeSheet: {
@@ -329,6 +339,7 @@ export const zhCN: Translations = {
     defaultSplitTitle: '创建记录时的默认分摊',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     inviteCta: '邀请对方加入',
+    sectionDisplay: '语言 & 币别',
     language: '语言',
     sectionApp: '应用',
     offlineBrowsing: '离线浏览',
@@ -343,8 +354,12 @@ export const zhCN: Translations = {
     trust: '数据安全',
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
-    currency: '货币',
     trips: '旅行',
+    tripsRow: {
+      active: '{active} 段进行中',
+      past: '过去 {past} 段',
+      both: '{active} 段进行中 · 过去 {past} 段',
+    },
     sectionGuardian: '守护（Beta）',
     guardianBeta: {
       title: '开启守护',

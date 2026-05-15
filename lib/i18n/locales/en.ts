@@ -127,6 +127,15 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
+    activeTripBanner: {
+      kicker: 'Trip in progress',
+      singleStartedAt: 'Since {date} · open this trip',
+      singleStartedAtWithCurrency: 'Since {date} · {currency} · open this trip',
+      singleAriaLabel: 'Open trip: {name}',
+      multipleHeading: '{count} trips in progress',
+      multipleCta: 'Browse all ›',
+      multipleAriaLabel: 'View {count} active trips',
+    },
   },
 
   balanceHero: {
@@ -205,6 +214,7 @@ export const en: Translations = {
     endConfirm: 'End trip',
     endDateBeforeStart: 'End date cannot be before the start date ({date})',
     endFailure: 'Failed to end the trip',
+    currencyRatesLink: 'Adjust exchange rates',
   },
 
   incomeSheet: {
@@ -329,6 +339,7 @@ export const en: Translations = {
     defaultSplitTitle: 'Default split for new entries',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     inviteCta: 'Invite partner',
+    sectionDisplay: 'Language & Currency',
     language: 'Language',
     sectionApp: 'App',
     offlineBrowsing: 'Offline browsing',
@@ -343,8 +354,12 @@ export const en: Translations = {
     trust: 'Your data',
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
-    currency: 'Currency',
     trips: 'Trips',
+    tripsRow: {
+      active: '{active} in progress',
+      past: '{past} past',
+      both: '{active} in progress · {past} past',
+    },
     sectionGuardian: 'Guardian (Beta)',
     guardianBeta: {
       title: 'Enable Guardian',

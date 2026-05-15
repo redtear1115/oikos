@@ -146,6 +146,24 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
+    /** Issue #367 — contextual surface shown when there's an active trip. */
+    activeTripBanner: {
+      /** Small kicker above the trip name, e.g. "旅行進行中". */
+      kicker: string
+      /** Single trip secondary line — `{date}` is the trip start date. */
+      singleStartedAt: string
+      /** Single trip secondary line with a currency symbol —
+       *  `{date}` start date, `{currency}` symbol like "NT$" / "¥". */
+      singleStartedAtWithCurrency: string
+      /** Aria label for the single-trip card link — `{name}` trip name. */
+      singleAriaLabel: string
+      /** Heading when N > 1 trips are active — `{count}` the count. */
+      multipleHeading: string
+      /** CTA line under the multi-trip heading. */
+      multipleCta: string
+      /** Aria label for the multi-trip card link — `{count}` the count. */
+      multipleAriaLabel: string
+    }
   }
 
   balanceHero: {
@@ -252,6 +270,10 @@ export type Translations = {
     endDateBeforeStart: string
     /** Server/network error fallback when endTrip() throws without a message. */
     endFailure: string
+    /** Tertiary link to /settings/currency — surfaced from trip context only
+     *  (issue #366). Settings top-level no longer lists 心理匯率 since it
+     *  only matters during a trip. */
+    currencyRatesLink: string
   }
 
   incomeSheet: {
@@ -386,6 +408,7 @@ export type Translations = {
     defaultSplitTitle: string
     soloLockHint: string
     inviteCta: string
+    sectionDisplay: string
     language: string
     sectionApp: string
     offlineBrowsing: string
@@ -400,8 +423,13 @@ export type Translations = {
     trust: string
     exportData: string
     pastTimes: string
-    currency: string
     trips: string
+    /** Secondary text under the 旅行 row — counts of active / past trips. */
+    tripsRow: {
+      active: string
+      past: string
+      both: string
+    }
     sectionGuardian: string
     guardianBeta: {
       title: string
@@ -1526,6 +1554,15 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
+    activeTripBanner: {
+      kicker: '旅行進行中',
+      singleStartedAt: '{date} 起 · 點開看這趟',
+      singleStartedAtWithCurrency: '{date} 起 · {currency} · 點開看這趟',
+      singleAriaLabel: '進入旅行：{name}',
+      multipleHeading: '{count} 段旅行進行中',
+      multipleCta: '一起翻 ›',
+      multipleAriaLabel: '查看 {count} 段進行中的旅行',
+    },
   },
 
   balanceHero: {
@@ -1604,6 +1641,7 @@ export const zhTW: Translations = {
     endConfirm: '確認結束',
     endDateBeforeStart: '結束日不可早於起始日({date})',
     endFailure: '結束失敗',
+    currencyRatesLink: '調整心理匯率',
   },
 
   incomeSheet: {
@@ -1728,6 +1766,7 @@ export const zhTW: Translations = {
     defaultSplitTitle: '建立紀錄時的預設分攤',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     inviteCta: '邀請對方加入',
+    sectionDisplay: '語言 & 幣別',
     language: '語言',
     sectionApp: '應用',
     offlineBrowsing: '離線瀏覽',
@@ -1742,8 +1781,12 @@ export const zhTW: Translations = {
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
     pastTimes: '過去的時光',
-    currency: '貨幣',
     trips: '旅行',
+    tripsRow: {
+      active: '{active} 段進行中',
+      past: '過去 {past} 段',
+      both: '{active} 段進行中 · 過去 {past} 段',
+    },
     sectionGuardian: '守護（Beta）',
     guardianBeta: {
       title: '開啟守護',

@@ -1,7 +1,7 @@
 ---
 status: shipped
 first_shipped_in: v0.2.0
-related_specs: [solo-mode, transactions, i18n]
+related_specs: [solo-mode, transactions, locale-currency]
 related_issues: []
 ---
 
@@ -30,13 +30,14 @@ Phase 1 假設使用者一定是雙人組合。但在友人測試階段，部分
 - Google 登入按鈕
 - 服務條款小字
 - 品牌色全螢幕背景
-- 頁尾 LanguageSwitcher（footer variant；first-touch 就告訴使用者「這個 app 願意說你的語言」，見 [i18n](i18n-design.md)）
+- 頁尾 LanguageSwitcher（footer variant；first-touch 就告訴使用者「這個 app 願意說你的語言」，見 [locale-currency](locale-currency-design.md)）
 
 ### Step 2 — 建立群組（`/setup` Step 1）
 
 - 帳本名稱 input（`maxLength=20`，字數計數）
 - 建議 chips：「我們倆 / ○○家 / 日日 / Home / 一起」
 - 「下一步」disabled 當 name 為空
+- **不強推幣別選擇**：新 group 預設 `base_currency = 'twd'`，需要改幣別的使用者到 Settings → 主體貨幣調整（限當前 epoch 無 record 時可改，見 [locale-currency](locale-currency-design.md)）
 
 ### Step 3 — 邀請對方（`/setup` Step 2）
 

@@ -43,11 +43,13 @@ interface Props {
   pendingSwap: PendingSwap | null
   /** #220 — Guardian beta opt-in state for this group. */
   guardianBetaEnabled: boolean
+  /** #367 — trip counts in current epoch for the 旅行 row secondary text. */
+  tripSummary: { active: number; past: number }
 }
 
 export function SettingsContent({
   viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
-  viewerIsMemberA, groupBalance, pendingSwap, guardianBetaEnabled,
+  viewerIsMemberA, groupBalance, pendingSwap, guardianBetaEnabled, tripSummary,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -321,24 +323,34 @@ export function SettingsContent({
         </div>
       </Section>
 
-      {/* 應用 — install + language + offline (device/app-level prefs) */}
-      <Section title={t.settings.sectionApp}>
-        <Row
-          label={t.settings.addToHomeScreen}
-          onClick={() => setInstallGuideOpen(true)}
-        />
-        <div className="mt-3">
+      {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
+      <Section title={t.settings.sectionDisplay}>
+        <div>
           <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
             {t.settings.language}
           </div>
           <LanguageSwitcher current={currentLocale} />
         </div>
         <div className="mt-3">
+          <Row
+            label={t.settings.currency}
+            onClick={() => router.push('/settings/currency')}
+          />
+        </div>
+      </Section>
+
+      {/* 應用 — install + offline (device/app-level prefs) */}
+      <Section title={t.settings.sectionApp}>
+        <Row
+          label={t.settings.addToHomeScreen}
+          onClick={() => setInstallGuideOpen(true)}
+        />
+        <div className="mt-3">
           <OfflineBrowsingToggle />
         </div>
       </Section>
 
-      {/* 資料 — recurring rules → past chapters → export → trust info */}
+      {/* 資料 — recurring rules → past chapters → trips → export → trust info */}
       <Section title={t.settings.sectionData}>
         <Row
           label={t.settings.recurringIncome}
@@ -356,12 +368,8 @@ export function SettingsContent({
         />
         <div className="mt-3" />
         <Row
-          label={t.settings.currency}
-          onClick={() => router.push('/settings/currency')}
-        />
-        <div className="mt-3" />
-        <Row
           label={t.settings.trips}
+          secondary={formatTripSummary(tripSummary, t.settings.tripsRow)}
           onClick={() => router.push('/trips')}
         />
         <div className="mt-3" />
@@ -451,8 +459,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Row({
-  label, value, onClick, disabled,
-}: { label: string; value?: string; onClick: () => void; disabled?: boolean }) {
+  label, value, secondary, onClick, disabled,
+}: {
+  label: string
+  value?: string
+  /** Optional second line under the label, e.g. "1 段進行中 · 過去 3 段". */
+  secondary?: string | null
+  onClick: () => void
+  disabled?: boolean
+}) {
   return (
     <button
       type="button"
@@ -461,13 +476,32 @@ function Row({
       className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-60"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
-      <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>
-      <div className="text-sm flex items-center gap-2" style={{ color: 'var(--ink-3)' }}>
+      <div className="flex flex-col min-w-0">
+        <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>
+        {secondary && (
+          <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{secondary}</div>
+        )}
+      </div>
+      <div className="text-sm flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-3)' }}>
         {value && <span style={{ color: 'var(--ink-2)' }}>「{value}」</span>}
         <span>›</span>
       </div>
     </button>
   )
+}
+
+function formatTripSummary(
+  summary: { active: number; past: number },
+  tr: { active: string; past: string; both: string },
+): string | null {
+  if (summary.active === 0 && summary.past === 0) return null
+  if (summary.active > 0 && summary.past > 0) {
+    return tr.both
+      .replace('{active}', String(summary.active))
+      .replace('{past}', String(summary.past))
+  }
+  if (summary.active > 0) return tr.active.replace('{active}', String(summary.active))
+  return tr.past.replace('{past}', String(summary.past))
 }
 
 function MemberRow({
