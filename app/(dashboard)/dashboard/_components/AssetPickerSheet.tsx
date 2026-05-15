@@ -1,11 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+
+type PickerTab = 'aibutsu' | 'guardian'
 
 interface Props {
   open: boolean
@@ -16,12 +19,18 @@ interface Props {
 
 export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: Props) {
   const t = useTranslations()
+  const { canAccessGuardian } = useMember()
   const [assets, setAssets] = useState<PickerAsset[] | null>(null)
   const [loadError, setLoadError] = useState('')
+  // #368 — when Guardian beta is enabled, split the picker into 愛物 / 守護
+  // tabs. Insurance assets live in 守護; everything else in 愛物. Always
+  // default-open on 愛物.
+  const [tab, setTab] = useState<PickerTab>('aibutsu')
 
   useEffect(() => {
     if (!open) return
     setLoadError('')
+    setTab('aibutsu')
     loadAssetsForPicker()
       .then(setAssets)
       .catch((e) => setLoadError(describeError(e, '載入失敗', t.common.offlineError)))
@@ -30,6 +39,19 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
   // Escape closes — picker uses its own inline backdrop (z-112) instead of
   // SheetBackdrop, so the hook is wired here explicitly.
   useEscapeToClose(open, onClose)
+
+  const filteredAssets = useMemo(() => {
+    if (!assets) return null
+    if (!canAccessGuardian) return assets
+    return tab === 'guardian'
+      ? assets.filter((a) => a.type === 'insurance')
+      : assets.filter((a) => a.type !== 'insurance')
+  }, [assets, canAccessGuardian, tab])
+
+  const emptyMessage =
+    canAccessGuardian && tab === 'guardian'
+      ? '還沒有保單 — 先到「愛物 > 守護」分頁新增。'
+      : '還沒有愛物 — 先到「愛物」分頁新增。'
 
   return (
     <>
@@ -71,8 +93,48 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
           <div className="w-10" />  {/* spacer for symmetry */}
         </div>
 
+        {canAccessGuardian && (
+          <div className="px-4 pb-2" role="tablist" aria-label="選擇愛物">
+            <div
+              className="flex rounded-full p-1"
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--hairline)',
+              }}
+            >
+              {(['aibutsu', 'guardian'] as const).map((id) => {
+                const active = tab === id
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTab(id)}
+                    className="flex-1 rounded-full transition-colors"
+                    style={{
+                      padding: '8px 12px',
+                      background: active ? 'var(--ink)' : 'transparent',
+                      color: active ? '#fff' : 'var(--ink-2)',
+                      fontFamily: 'inherit',
+                      fontSize: 'var(--fs-button)',
+                      fontWeight: active ? 600 : 500,
+                      border: 'none',
+                      cursor: 'pointer',
+                      letterSpacing: '0.2px',
+                    }}
+                  >
+                    {id === 'aibutsu' ? t.assets.tabs.aibutsu : t.assets.tabs.guardian}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="overflow-auto flex-1 px-3 pb-6">
-          {/* "不關聯" option always present */}
+          {/* "不關聯" option always present in both tabs — selecting it clears
+              the link regardless of which tab the user is browsing. */}
           <PickerRow
             iconNode={<NoneIcon />}
             title="不關聯"
@@ -93,13 +155,13 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
             </div>
           )}
 
-          {assets && assets.length === 0 && (
+          {filteredAssets && filteredAssets.length === 0 && (
             <div className="text-sm py-6 px-3 text-center leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-              還沒有愛物 — 先到「愛物」分頁新增。
+              {emptyMessage}
             </div>
           )}
 
-          {assets?.map((a) => (
+          {filteredAssets?.map((a) => (
             <PickerRow
               key={a.id}
               iconNode={<AssetIcon type={a.type} size={22} />}
