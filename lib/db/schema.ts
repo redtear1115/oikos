@@ -465,6 +465,9 @@ export const partnerQuizAnswers = pgTable('PartnerQuizAnswers', {
 // budget_amount / budget_currency are optional user-set fields for trip planning.
 // CHECK (end_date >= start_date) and CHECK ((status = 'ended') = (ended_at IS NOT NULL))
 // are enforced in migration SQL (Drizzle schema layer can't express these).
+// v0.17.2 — rate_snapshot: jsonb of `${from}_${to}` → rate, copied from
+// CurrencyRates at trip creation. Keys uppercase (e.g. "USD_TWD"). Locks FX
+// for the trip so later group-level rate edits don't drift trip displays.
 export const trips = pgTable('Trips', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -478,6 +481,28 @@ export const trips = pgTable('Trips', {
   coverPhotoUrl: text('cover_photo_url'),
   status: tripStatusEnum('status').notNull().default('active'),
   endedAt: timestamp('ended_at', { withTimezone: true }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  rateSnapshot: jsonb('rate_snapshot'),
+})
+
+// v0.17.2 #42 — Isolated trip ledger. Trip UI reads from here; main ledger
+// (/records, stats, balance) reads CashTransactions and does NOT see these
+// rows. On trip end, a summary CashTransaction is written to fold the trip
+// back into the main ledger (Phase 4). split_ratio semantics: payer's share %
+// (distinct from cashTransactions.split_ratio_a which is always member A's %).
+export const tripExpenses = pgTable('TripExpenses', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  tripId: uuid('trip_id').notNull().references(() => trips.id),
+  paidBy: uuid('paid_by').notNull().references(() => profiles.id),
+  amount: integer('amount').notNull(),
+  originalCurrency: currencyEnum('original_currency'),
+  originalAmount: integer('original_amount'),
+  category: text('category').notNull(),
+  splitType: splitTypeEnum('split_type').notNull(),
+  splitRatio: integer('split_ratio'),
+  description: text('description'),
+  transactedAt: timestamp('transacted_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })

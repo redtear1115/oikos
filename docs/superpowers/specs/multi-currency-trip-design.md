@@ -1,6 +1,7 @@
 ---
 status: shipped
 first_shipped_in: v0.17.0
+updates: [v0.17.2]
 related_specs: [transactions, income, epoch-readonly, structured-filter, product]
 related_issues: ["#68", "#42"]
 ---
@@ -74,6 +75,7 @@ related_issues: ["#68", "#42"]
 - ❌ **即時匯率 API（Open Exchange Rates / ECB）** — 數字每天跳動讓人焦慮、依賴外部、與「兩人對齊的一把尺」哲學衝突
 - ❌ **Live 匯率語意**（rate 變則歷史 record 等值跳動） — balance 會在改 rate 瞬間跳、historical 失真
 - ❌ **Hybrid 匯率 toggle**（snapshot + 可切 live view） — v0.17.0 守紀律先鎖 snapshot；UX 複雜性等驗證需求才補
+- ❌ **主帳本幣別 picker（AddSheet / 主記帳表單）** — 主帳本記錄介面只走 group `base_currency`、UI 不暴露幣別 picker；多幣別輸入只在旅行子帳本（TripExpenseSheet）出現，旅行結束 fold 為 summary `CashTransaction` 後回到主視角。立場：complexity at the boundary, simplicity in daily use——守住「記錄要素低認知負擔」，日常每筆不必做幣別決定。詳見 [product-design § 4 設計立場](product-design.md#4-設計立場)
 - ❌ **Trip 跨 epoch** — 與 epoch 時間軸語意衝突
 - ❌ **Trip 子 ledger（獨立 GroupBalance）** — 碎片化總 balance、實作膨脹、不解決真實問題
 - ❌ **Settlement 多幣別** — 跨幣別結算對帳語意複雜、低頻
@@ -278,16 +280,65 @@ v0.17.0 UI 不變、強制 base 幣別。
 
 ---
 
+## v0.17.2 Architecture
+
+> v0.17.0 出貨後重新檢視「Trip 子 ledger 不做」這個決定，發現用 `TripExpense` 隔離 table 比「`CashTransactions.trip_id` tag」更乾淨：trip UI / 主帳本 query 路徑天然分離、`split_type` 完整支援、結束時收斂語意明確。v0.17.2 採用 isolated sandbox + 結束時產 2 筆 summary CashTransaction 的設計。
+
+### Trip 作為 isolated ledger sandbox
+
+- 新 table `TripExpense` — trip UI 讀這張表，主帳本 query 仍走 `CashTransactions`，天然隔離、零干擾 `GroupBalance`
+- Schema 欄位：`id, trip_id, paid_by, amount, original_currency, original_amount, category, split_type, description, transacted_at, deleted_at`
+- **不需要** `group_id`（透過 `trip_id → Trips.group_id` 解析）、`status`（trip 結束時批次收斂，無需 pending）、`asset_id`（旅行支出通常不關聯愛物）、`fuel_log_id`（旅行不做加油雙寫）
+- `split_type` 完整支援：`all_mine`（送對方的禮物）/ `all_theirs` / `half`（機票 / 飯店 / 門票）/ `weighted`（依比例分）
+- v0.17.0 的 `CashTransactions.trip_id` 欄位保留作為「結束 trip 收斂後 summary record 的來源標記」（見下方 2.3）
+
+### Trip 心理匯率 snapshot
+
+- `Trips.rate_snapshot jsonb` — trip 建立時從 group `CurrencyRates` 複製當時匯率
+- Group `CurrencyRates`（全域心理匯率）保留不動；trip 內換算永遠用 trip 自己的 snapshot
+- 旅行進行中或結束後，使用者調整 group 全域匯率不會影響該 trip 的 FX 計算
+- Rationale：旅行是「凍結那段時間的匯率視角」的自然單位；避免「東京出差時匯率設 5.0、回國改成 4.8 後 trip 總額跳動」
+
+### Trip 結束收斂
+
+- Trip 結束時：在主帳本產 **2 筆 summary `CashTransactions`**
+- 每筆帶 `trip_id`（標記來源、Records feed 顯示時可標示「東京之旅結算」）
+- `paid_by`：member_a 一筆、member_b 一筆
+- `amount`：每位成員 split 後的實際負擔金額，用 `Trips.rate_snapshot` 換算成 group base 幣別
+- `category`：`樂`（travel / fun）
+- 主帳本 balance 計算**不需任何改動** — 這 2 筆是標準 `CashTransactions`，由現有 `lib/balance.ts` 自然處理
+
+### Implementation order（v0.17.2 phases）
+
+1. **Schema migration** — `TripExpense` table + `Trips.rate_snapshot` jsonb 欄位
+2. **`TripExpense` CRUD** — AddSheet 寫入 `TripExpense`、`/trips/[id]` 詳情頁查 `TripExpense`
+3. **Trip 結束收斂邏輯** — 計算 A / B split 後總額、用 `rate_snapshot` 換算 base、產 2 筆 summary `CashTransactions`
+4. **Review page** — 結束 trip 後的回顧頁（總花費、分類分布、最大一筆、celebration）
+
+### 對 v0.17.0 既有 locked decisions 的調整
+
+| 維度 | v0.17.0 立場 | v0.17.2 調整 |
+|---|---|---|
+| Modeling | Tag-style：`CashTransactions.trip_id` | Isolated sandbox：`TripExpense` 獨立 table；`CashTransactions.trip_id` 改作「收斂後 summary 的來源標記」 |
+| Trip × Currency | 寫入時即時 snapshot 到 record 的 `rate_snapshot` | trip 建立時 snapshot 到 `Trips.rate_snapshot`，trip 內 record 用此 snapshot 換算 |
+| Trip 子 ledger | 不做（v0.17.0 立場） | 採用，但語意不是「獨立 GroupBalance」而是「隔離 expense table + 結束時 2 筆 summary 進主帳本」 |
+| Trip 回顧頁 | 不做（v0.17.0 留 backlog） | v0.17.2 phase 4 實作 |
+
+未調整：trip 強制單一 epoch、進行中阻擋 epoch 結束、過去章節唯讀、Income / Settlement 多幣別 UI 仍延後。
+
+---
+
 ## Out of scope
 
 - ❌ 即時匯率 API、加密貨幣、自訂第 5 幣別
 - ❌ Settlement / Income 多幣別 UI（schema OK、UI 留版本）
 - ❌ Live 匯率語意 / hybrid toggle
-- ❌ Trip 跨 epoch、trip 子 ledger、trip 跨 group 共享
-- ❌ Trip 回顧頁、photo memory grid、cover photo 上傳（schema 欄位 OK）、celebration
-- ❌ Trip-scoped balance UI（「東京之旅我們誰欠誰」）
+- ❌ Trip 跨 epoch、trip 跨 group 共享
+- ❌ Trip-scoped balance UI（「東京之旅我們誰欠誰」即時 balance — v0.17.2 走「結束時 2 筆 summary」收斂語意，非即時 balance）
 - ❌ 匯率 retroactive 重新換算 toggle
 - ❌ Past-times 整合 trip 呈現（沿用 epoch read-only 即可）
+- ❌ Cover photo 上傳（schema 欄位 OK，v0.17.2 phase 4 review page 評估）
+- ❌ Photo memory grid（review page 不含相片牆，留更晚版本）
 
 ---
 

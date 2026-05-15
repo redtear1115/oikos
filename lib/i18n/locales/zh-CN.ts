@@ -171,8 +171,8 @@ export const zhCN: Translations = {
     notesPlaceholder: '写一句留给对方的话，或之后想记得的事',
     statusLabel: '状态',
     statusSettled: '已付清',
-    statusPending: '信用卡待扣',
-    statusPendingHint: '信用卡待扣不会算进两人的结算，等实际扣款后再改为已付清。',
+    statusPending: '待结算',
+    statusPendingHint: '待结算的记录不会算进两人的结算，确认付款后再改为已付清。',
     deleteOne: '删除这笔',
     deleteConfirmTitle: '删除这笔记录？',
     currency: '币别',
@@ -186,7 +186,25 @@ export const zhCN: Translations = {
   },
 
   compactRow: {
-    pendingBadge: '信用卡待扣',
+    pendingBadge: '待结算',
+  },
+
+  tripDetail: {
+    emptyActive: '这趟还没有任何记录。点右下角的加号从这里开始记。',
+    emptyEnded: '这趟没有留下任何记录。',
+    currencyBreakdown: '币别分担',
+    recordsSuffix: '笔',
+    perSideContribution: '谁付了多少',
+    youPaid: '你付了',
+    partnerPaid: '{name} 付了',
+    share: '分担',
+    perSideHint: '只计入已结算的记录;待结算的还没进结算。',
+    endTitle: '结束这趟旅行',
+    endBody: '结束之后这趟还会留在列表里,只是不再接新的记录。日期之后还能再编辑。',
+    endDateLabel: '结束日',
+    endConfirm: '确认结束',
+    endDateBeforeStart: '结束日不可早于起始日({date})',
+    endFailure: '结束失败',
   },
 
   incomeSheet: {
@@ -292,7 +310,7 @@ export const zhCN: Translations = {
     amountMinLabel: '金额下限',
     amountMaxLabel: '金额上限',
     statusSection: '状态',
-    statusPending: '待扣款',
+    statusPending: '待结算',
     statusSettled: '已扣款',
     shareLink: '复制分享链接',
     shareCopied: '已复制到剪贴板',

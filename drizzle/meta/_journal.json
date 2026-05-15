@@ -274,6 +274,13 @@
       "when": 1779600000000,
       "tag": "0038_multi_currency_and_trips",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1779700000000,
+      "tag": "0039_trip_expense",
+      "breakpoints": true
     }
   ]
 }

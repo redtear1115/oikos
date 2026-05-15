@@ -171,8 +171,8 @@ export const ja: Translations = {
     notesPlaceholder: 'パートナーへひとこと、または後で思い出したいこと',
     statusLabel: 'ステータス',
     statusSettled: '支払済み',
-    statusPending: 'カード引落待ち',
-    statusPendingHint: 'カード引落待ちは実際に引き落とされるまで二人の精算には含まれません。引き落とされたら「支払済み」に変更してください。',
+    statusPending: '未精算',
+    statusPendingHint: '未精算の記録は支払いを確認して「支払済み」に変更するまで二人の精算には含まれません。',
     deleteOne: 'この記録を削除',
     deleteConfirmTitle: 'この記録を削除しますか？',
     currency: '通貨',
@@ -186,7 +186,25 @@ export const ja: Translations = {
   },
 
   compactRow: {
-    pendingBadge: 'カード引落待ち',
+    pendingBadge: '未精算',
+  },
+
+  tripDetail: {
+    emptyActive: 'まだ記録がありません。右下のプラスから記録を始めましょう。',
+    emptyEnded: 'この旅行には記録が残っていません。',
+    currencyBreakdown: '通貨ごとの内訳',
+    recordsSuffix: '件',
+    perSideContribution: '誰がいくら出した',
+    youPaid: 'あなたの支払い',
+    partnerPaid: '{name} の支払い',
+    share: '負担分',
+    perSideHint: '確定済みの記録のみ。未精算は含めません。',
+    endTitle: 'この旅行を終える',
+    endBody: '終えた後もリストには残ります。新しい記録だけ受け付けなくなります。日付は後でも編集できます。',
+    endDateLabel: '終了日',
+    endConfirm: '終了する',
+    endDateBeforeStart: '終了日は開始日（{date}）より前にできません',
+    endFailure: '終了に失敗しました',
   },
 
   incomeSheet: {
@@ -292,7 +310,7 @@ export const ja: Translations = {
     amountMinLabel: '金額下限',
     amountMaxLabel: '金額上限',
     statusSection: 'ステータス',
-    statusPending: '未確定',
+    statusPending: '未精算',
     statusSettled: '確定済み',
     shareLink: '共有リンクをコピー',
     shareCopied: 'クリップボードにコピーしました',

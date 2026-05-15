@@ -2,14 +2,18 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
+import { AddSheet, type AddSheetInitial, type RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { TripSheet, type TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
 import { endTrip } from '@/actions/trip'
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
+import { transactionDelta, type SplitType } from '@/lib/balance'
+import { useTranslations } from '@/lib/i18n/client'
 
 export interface TripDetailRecord {
   id: string
@@ -20,8 +24,6 @@ export interface TripDetailRecord {
   category: string
   paidBy: string
   transactedAt: string
-  status: 'settled' | 'pending'
-  notes: string | null
   originalCurrency: string | null
   originalAmount: number | null
 }
@@ -30,17 +32,87 @@ interface Props {
   trip: TripSheetInitial & { status: 'active' | 'ended' | 'archived' }
   records: TripDetailRecord[]
   baseCurrency: CurrencyCode
+  groupDefaultRatioA: number | null
+  activeTrips: TripOption[]
+  rates: RateEntry[]
 }
 
-export function TripDetailClient({ trip, records, baseCurrency }: Props) {
-  const { isPast } = useMember()
+export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRatioA, activeTrips, rates }: Props) {
+  const router = useRouter()
+  const t = useTranslations()
+  const { viewer, partner, viewerIsA, isSolo, isPast } = useMember()
   const [editOpen, setEditOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
+  const [expenseEditInitial, setExpenseEditInitial] = useState<AddSheetInitial | null>(null)
 
   const isEnded = trip.status !== 'active'
+  // Write-side affordances (FAB, tap-to-edit, end button) are all gated on
+  // the same condition: not in a past epoch and the trip is still active.
+  // Server actions reject writes too — UI hide is the primary defence.
+  const writeBlocked = isPast || isEnded
   const totalBase = records.reduce((sum, r) => sum + r.amount, 0)
   const displayCurrency = trip.defaultCurrency ?? baseCurrency
   const usesForeignDefault = displayCurrency !== baseCurrency
+
+  // Per-currency breakdown. Each row groups records by their `originalCurrency`
+  // (base-currency rows fall into the `baseCurrency` bucket). We surface both
+  // the native total and the base-currency equivalent so the bicultural reader
+  // can read either side. Shown only when the trip has > 1 currency.
+  const currencyBreakdown = useMemo(() => {
+    const map = new Map<string, { native: number; base: number; count: number }>()
+    for (const r of records) {
+      const cur = (r.originalCurrency ?? baseCurrency) as string
+      const native = r.originalAmount ?? r.amount
+      const entry = map.get(cur) ?? { native: 0, base: 0, count: 0 }
+      entry.native += native
+      entry.base += r.amount
+      entry.count += 1
+      map.set(cur, entry)
+    }
+    return Array.from(map.entries())
+      .map(([currency, agg]) => ({ currency: currency as CurrencyCode, ...agg }))
+      .sort((a, b) => b.base - a.base)
+  }, [records, baseCurrency])
+
+  // Per-side contribution: how much each member actually paid out of pocket
+  // vs. how much they carry after splits. Mirrors lib/balance.transactionDelta
+  // so this view agrees with the group balance. Solo mode skips the block.
+  // TripExpenses have no `status` column — all rows are settled by design,
+  // so we don't filter the way the main ledger does.
+  const perSide = useMemo(() => {
+    if (isSolo || !partner) return null
+    let aPaid = 0
+    let bPaid = 0
+    let aShare = 0
+    let bShare = 0
+    for (const r of records) {
+      const payerIs: 'a' | 'b' = r.paidBy === viewer.id
+        ? (viewerIsA ? 'a' : 'b')
+        : (viewerIsA ? 'b' : 'a')
+      if (payerIs === 'a') aPaid += r.amount
+      else bPaid += r.amount
+      const delta = transactionDelta({
+        amount: r.amount,
+        splitType: r.splitType as SplitType,
+        payerIs,
+        splitRatioA: r.splitRatioA ?? undefined,
+      })
+      if (payerIs === 'a') {
+        aShare += r.amount - delta
+        bShare += delta
+      } else {
+        bShare += r.amount + delta
+        aShare += -delta
+      }
+    }
+    return {
+      viewerPaid: viewerIsA ? aPaid : bPaid,
+      partnerPaid: viewerIsA ? bPaid : aPaid,
+      viewerShare: viewerIsA ? aShare : bShare,
+      partnerShare: viewerIsA ? bShare : aShare,
+    }
+  }, [records, isSolo, partner, viewer.id, viewerIsA])
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
@@ -118,6 +190,91 @@ export function TripDetailClient({ trip, records, baseCurrency }: Props) {
         </div>
       </section>
 
+      {/* Currency breakdown — only when there's more than one currency. */}
+      {currencyBreakdown.length > 1 && (
+        <section className="mt-5 px-4">
+          <div
+            className="text-micro tracking-[1.5px] uppercase px-1 pb-2"
+            style={{ color: 'var(--ink-3)' }}
+          >
+            {t.tripDetail.currencyBreakdown}
+          </div>
+          <div
+            className="rounded-[18px] overflow-hidden"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            {currencyBreakdown.map((row, i) => (
+              <div
+                key={row.currency}
+                className="flex items-baseline justify-between px-4 py-3"
+                style={{
+                  borderBottom: i === currencyBreakdown.length - 1 ? 'none' : '1px solid var(--hairline)',
+                }}
+              >
+                <div className="flex flex-col">
+                  <span
+                    className="text-sm font-medium tracking-wide"
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                  >
+                    {row.currency.toUpperCase()}
+                  </span>
+                  <span className="text-micro" style={{ color: 'var(--ink-3)' }}>
+                    {row.count} {t.tripDetail.recordsSuffix}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div
+                    className="text-base font-medium tnum"
+                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                  >
+                    {formatAmount(row.native, row.currency)}
+                  </div>
+                  {row.currency !== baseCurrency && (
+                    <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                      ≈ {formatAmount(row.base, baseCurrency)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Per-side contribution — solo mode skips this entire block. */}
+      {perSide && (
+        <section className="mt-5 px-4">
+          <div
+            className="text-micro tracking-[1.5px] uppercase px-1 pb-2"
+            style={{ color: 'var(--ink-3)' }}
+          >
+            {t.tripDetail.perSideContribution}
+          </div>
+          <div
+            className="rounded-[18px] p-4 flex gap-3"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            <PerSideCard
+              label={t.tripDetail.youPaid}
+              paid={perSide.viewerPaid}
+              share={perSide.viewerShare}
+              currency={baseCurrency}
+              shareLabel={t.tripDetail.share}
+            />
+            <PerSideCard
+              label={t.tripDetail.partnerPaid.replace('{name}', partner?.displayName ?? '')}
+              paid={perSide.partnerPaid}
+              share={perSide.partnerShare}
+              currency={baseCurrency}
+              shareLabel={t.tripDetail.share}
+            />
+          </div>
+          <p className="text-micro px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
+            {t.tripDetail.perSideHint}
+          </p>
+        </section>
+      )}
+
       <section className="mt-5 px-4">
         <div className="flex items-center justify-between px-1 pb-2">
           <div
@@ -133,36 +290,50 @@ export function TripDetailClient({ trip, records, baseCurrency }: Props) {
             className="rounded-[18px] py-10 px-6 text-center text-sm leading-relaxed"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-3)' }}
           >
-            這趟還沒有任何紀錄。<br />
-            從首頁加一筆,選到這次旅行,就會收進來。
+            {isEnded ? t.tripDetail.emptyEnded : t.tripDetail.emptyActive}
           </div>
         ) : (
           <div
             className="rounded-[18px] overflow-hidden"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
           >
-            {records.map((r, i) => (
-              <CompactRow
-                key={r.id}
-                tx={{
-                  id: r.id,
-                  amount: r.amount,
-                  splitType: r.splitType,
-                  splitRatioA: r.splitRatioA,
-                  description: r.description,
-                  category: r.category,
-                  paidBy: r.paidBy,
-                  transactedAt: r.transactedAt,
-                  kind: 'transaction',
-                  notes: r.notes,
-                  status: r.status,
-                  originalCurrency: r.originalCurrency,
-                  originalAmount: r.originalAmount,
-                }}
-                isLast={i === records.length - 1}
-                baseCurrency={baseCurrency}
-              />
-            ))}
+            {records.map((r, i) => {
+              const onRowClick = !writeBlocked ? () => setExpenseEditInitial({
+                id: r.id,
+                kind: 'trip-expense',
+                tripId: trip.id,
+                amount: r.amount,
+                description: r.description,
+                category: r.category,
+                splitType: r.splitType,
+                splitRatioA: r.splitRatioA,
+                payerId: r.paidBy,
+                transactedAt: r.transactedAt,
+              }) : undefined
+              return (
+                <CompactRow
+                  key={r.id}
+                  tx={{
+                    id: r.id,
+                    amount: r.amount,
+                    splitType: r.splitType,
+                    splitRatioA: r.splitRatioA,
+                    description: r.description,
+                    category: r.category,
+                    paidBy: r.paidBy,
+                    transactedAt: r.transactedAt,
+                    kind: 'transaction',
+                    notes: null,
+                    status: 'settled',
+                    originalCurrency: r.originalCurrency,
+                    originalAmount: r.originalAmount,
+                  }}
+                  isLast={i === records.length - 1}
+                  baseCurrency={baseCurrency}
+                  onClick={onRowClick}
+                />
+              )
+            })}
           </div>
         )}
       </section>
@@ -199,13 +370,37 @@ export function TripDetailClient({ trip, records, baseCurrency }: Props) {
         </section>
       )}
 
-      <BottomNav onAddClick={() => {}} hideFab />
+      <BottomNav onAddClick={() => setAddOpen(true)} hideFab={writeBlocked} />
 
       <TripSheet
         open={editOpen}
         baseCurrency={baseCurrency}
         onClose={() => setEditOpen(false)}
         initial={trip}
+      />
+
+      {/* Create sheet — locked to this trip via prefilledTripId. */}
+      <AddSheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onMutated={() => { setAddOpen(false); router.refresh() }}
+        baseCurrency={baseCurrency}
+        groupDefaultRatioA={groupDefaultRatioA}
+        activeTrips={activeTrips}
+        rates={rates}
+        prefilledTripId={trip.id}
+      />
+
+      {/* Edit sheet — driven by tap-to-edit on the row list. */}
+      <AddSheet
+        open={expenseEditInitial !== null}
+        initial={expenseEditInitial ?? undefined}
+        onClose={() => setExpenseEditInitial(null)}
+        onMutated={() => { setExpenseEditInitial(null); router.refresh() }}
+        baseCurrency={baseCurrency}
+        groupDefaultRatioA={groupDefaultRatioA}
+        activeTrips={activeTrips}
+        rates={rates}
       />
 
       <EndTripSheet
@@ -219,6 +414,34 @@ export function TripDetailClient({ trip, records, baseCurrency }: Props) {
   )
 }
 
+function PerSideCard(props: {
+  label: string
+  paid: number
+  share: number
+  currency: CurrencyCode
+  shareLabel: string
+}) {
+  return (
+    <div
+      className="flex-1 rounded-[14px] p-3"
+      style={{ background: 'var(--bg)', border: '1px solid var(--hairline)' }}
+    >
+      <div className="text-micro tracking-[0.5px]" style={{ color: 'var(--ink-3)' }}>
+        {props.label}
+      </div>
+      <div
+        className="mt-1 text-base font-medium tnum tracking-[-0.2px]"
+        style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+      >
+        {formatAmount(props.paid, props.currency)}
+      </div>
+      <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
+        {props.shareLabel}: {formatAmount(props.share, props.currency)}
+      </div>
+    </div>
+  )
+}
+
 function EndTripSheet(props: {
   open: boolean
   tripId: string
@@ -227,6 +450,7 @@ function EndTripSheet(props: {
   onClose: () => void
 }) {
   const router = useRouter()
+  const t = useTranslations()
   const [endDate, setEndDate] = useState(props.suggestedEndDate)
   const [pending, start] = useTransition()
   const [err, setErr] = useState<string | null>(null)
@@ -249,7 +473,7 @@ function EndTripSheet(props: {
         props.onClose()
         router.refresh()
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : '結束失敗')
+        setErr(e instanceof Error ? e.message : t.tripDetail.endFailure)
       }
     })
   }
@@ -257,21 +481,21 @@ function EndTripSheet(props: {
   return (
     <SheetShell
       open={props.open}
-      title="結束這趟旅行"
+      title={t.tripDetail.endTitle}
       canSave={canSave}
       pending={pending}
-      bottomSaveLabel="確認結束"
+      bottomSaveLabel={t.tripDetail.endConfirm}
       error={err ?? ''}
       onClose={props.onClose}
       onSave={submit}
     >
       <div className="flex flex-col gap-3">
         <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-          結束之後這趟還會留在列表裡,只是不再接新的紀錄。日期之後還能再編輯。
+          {t.tripDetail.endBody}
         </p>
 
         <label className="block">
-          <span className="text-sm" style={{ color: 'var(--ink-2)' }}>結束日</span>
+          <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t.tripDetail.endDateLabel}</span>
           <input
             type="date"
             className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
@@ -288,7 +512,7 @@ function EndTripSheet(props: {
 
         {dateInvalid && (
           <p className="text-xs" style={{ color: 'var(--debit, #c0392b)' }}>
-            結束日不可早於起始日({props.startDate})
+            {t.tripDetail.endDateBeforeStart.replace('{date}', props.startDate)}
           </p>
         )}
       </div>

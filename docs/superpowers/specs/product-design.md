@@ -95,6 +95,22 @@ Balance 計算規則詳見 `CLAUDE.md`「Balance 計算規則」段；實作在 
 
 ---
 
+## 4. 設計立場
+
+### 幣別視角刻意分層（主帳本單幣別 × 旅行多幣別）
+
+| Context | 視角 | 為什麼 |
+|---|---|---|
+| 主帳本（dashboard / records / balance / AddSheet）| **單一幣別**：永遠顯示 group `base_currency`，UI 不暴露幣別 picker | 守住「記錄要素低認知負擔」——日常每筆不必做幣別決定 |
+| 旅行子帳本（TripExpenses / TripExpenseSheet）| **多幣別**：每筆 record 可有不同 `currency`，預設 `trip.default_currency`、使用者可每筆覆寫 | 多幣別複雜度只在「旅行」這個有明確時間邊界的 context 才出現 |
+| 旅行結束（endTrip fold） | summary `CashTransaction` 回到主帳本**單幣別**視角 | 複雜度收斂回主視角 |
+
+**核心立場**：complexity at the boundary, simplicity in daily use。記錄介面刻意不暴露幣別選擇，避免認知負擔擴散到每一筆日常記帳；多幣別輸入鎖在有明確時間邊界的旅行 context，旅行結束就 fold 回單幣別主視角。
+
+詳細設計見 [multi-currency-trip-design](multi-currency-trip-design.md)。
+
+---
+
 ## 版本規劃
 
 版本歷史 + 各 milestone 主題敘事見 `CHANGELOG.md` 與 `CLAUDE.md`。各功能域 spec 入口見 [INDEX](INDEX.md)。
