@@ -12,6 +12,11 @@ import {
   softDeleteTransaction,
   getDescriptionSuggestions,
 } from '@/actions/transaction'
+import {
+  createTripExpense,
+  editTripExpense,
+  softDeleteTripExpense,
+} from '@/actions/tripExpense'
 import { editAndConfirmPending } from '@/actions/recurringExpense'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
@@ -31,6 +36,14 @@ import { TripSelector, type TripOption } from './TripSelector'
 
 export interface AddSheetInitial {
   id: string
+  /**
+   * Which table this record lives in. `'transaction'` = CashTransactions
+   * (main ledger). `'trip-expense'` = TripExpenses (isolated trip sandbox,
+   * v0.17.2 #42). Defaults to `'transaction'` when omitted for legacy
+   * callsites. Trip-expense rows carry a `tripId` so edit/delete can route.
+   */
+  kind?: 'transaction' | 'trip-expense'
+  tripId?: string  // required when kind = 'trip-expense'
   amount: number
   description: string
   category: string
@@ -91,7 +104,7 @@ interface Props {
 }
 
 export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, prefilledCategory, pendingExpenseId, onRaceResolved, groupDefaultRatioA, baseCurrency = 'twd', activeTrips = [], rates = [] }: Props) {
-  const { viewer, partner, isSolo } = useMember()
+  const { viewer, partner, isSolo, viewerIsA } = useMember()
   const t = useTranslations()
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
@@ -151,7 +164,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setStatus(initial.status ?? 'settled')
       // In edit mode: reset to base currency (the stored amount is always in base)
       setCurrency(baseCurrency)
-      setTripId(null)
+      // Trip-expense edits stay bound to their trip; transaction edits clear
+      // the trip selector (legacy CashTransactions can drop their trip_id tag
+      // on edit — new trip-tagged records go to TripExpenses instead).
+      setTripId(initial.kind === 'trip-expense' ? (initial.tripId ?? null) : null)
       setCurrencyManuallySet(false)
     } else {
       setAmount('')
@@ -186,6 +202,16 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // Pending occurrences are not yet real tx → no delete; submit goes to
   // editAndConfirmPending instead.
   const isEdit = !!initial && !isPending
+  const editingTripExpense = isEdit && initial?.kind === 'trip-expense'
+
+  // splitRatio on TripExpenses is the payer's share %. AddSheet tracks
+  // splitRatioA (member A's share %). Convert at the boundary using viewerIsA
+  // + the current payerWho selection. Returns null if not a weighted split.
+  function deriveTripSplitRatio(): number | null {
+    if (split !== 'weighted') return null
+    const payerIsA = payerWho === 'M' ? viewerIsA : !viewerIsA
+    return payerIsA ? splitRatioA : 100 - splitRatioA
+  }
 
   const handleSave = () => {
     const n = parseInt(amount, 10)
@@ -213,7 +239,23 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               assetId,
             },
           })
+        } else if (editingTripExpense) {
+          // Edit stays inside TripExpenses (no migration between tables).
+          await editTripExpense({
+            id: initial!.id,
+            tripId: initial!.tripId!,
+            paidBy: payerId,
+            amount: n,
+            currency,
+            category,
+            splitType,
+            splitRatio: deriveTripSplitRatio(),
+            description: desc,
+            transactedAt,
+          })
         } else if (isEdit) {
+          // CashTransaction edits drop `tripId` — new trip-tagging is only
+          // available on create (and routes to TripExpenses, not here).
           await editTransaction({
             oldId: initial!.id,
             amount: n,
@@ -227,7 +269,22 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             notes,
             status,
             currency,
+            tripId: null,
+          })
+        } else if (tripId) {
+          // Trip-tagged creates go to the isolated TripExpenses table.
+          // Asset link / notes / pending status are not supported on trip
+          // expenses by design (see lib/db/schema.ts TripExpenses block).
+          await createTripExpense({
             tripId,
+            paidBy: payerId,
+            amount: n,
+            currency,
+            category,
+            splitType,
+            splitRatio: deriveTripSplitRatio(),
+            description: desc,
+            transactedAt,
           })
         } else {
           const result = await createTransaction({
@@ -242,7 +299,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             notes,
             status,
             currency,
-            tripId,
+            tripId: null,
           })
           isFirstTransaction = result.isFirstTransaction
         }
@@ -270,7 +327,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     setConfirmingDelete(false)
     startTransition(async () => {
       try {
-        await softDeleteTransaction(initial!.id)
+        if (editingTripExpense) {
+          await softDeleteTripExpense({ id: initial!.id, tripId: initial!.tripId! })
+        } else {
+          await softDeleteTransaction(initial!.id)
+        }
         onMutated?.({ deleted: true })
         onClose()
       } catch (e) {

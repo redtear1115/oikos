@@ -27,7 +27,7 @@ export interface CreateTripExpenseInput {
   splitType: TripSplitType
   splitRatio?: number | null   // 0–100, payer's share %. Required iff splitType='weighted'.
   description?: string | null
-  transactedAt?: string        // ISO timestamp; default = now
+  transactedAt?: Date | string  // default = now
 }
 
 export interface EditTripExpenseInput extends CreateTripExpenseInput {
