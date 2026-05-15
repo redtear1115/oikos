@@ -15,6 +15,41 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.3] - 2026-05-15
+
+主題：**Settings 收束 × 旅行感知 × AddSheet 守護分層．細節讓操作更貼手**——四個獨立改善讓使用者在三個地方少一步：Settings 把「語言」與「主體幣別」合在同一區（都是選一次就好的初始設定）、心理匯率從 Settings 頂層移進旅行詳情頁（匯率設定只在旅行 context 有意義）、Dashboard 在有 active trip 時浮出 ActiveTripBanner（主動告訴你有段旅行在進行）、AddSheet 的愛物選擇器在 Guardian beta 開啟時拆成愛物 / 守護兩個 tab（讓兩個模組各自清晰）。Spec 層面同步收束：原本混在一起的「多幣別 × 旅行」與「i18n」拆成兩份各自立場清晰的 spec（[trip-multi-currency](docs/superpowers/specs/trip-multi-currency-design.md)「邊界複雜，日常無感」、[locale-currency](docs/superpowers/specs/locale-currency-design.md)「保持簡單，選一次就好」）。
+
+完整 diff：[v0.17.2...v0.17.3](https://github.com/redtear1115/oikos/compare/v0.17.2...v0.17.3)
+
+### 使用者可見變化
+
+#### Settings：語言 & 幣別合為一區（PR #371 closes #365）
+
+Settings 新增「語言 & 幣別」section，把原本分散的 LanguageSwitcher 與主體幣別 row 合在同一個視覺區塊。兩者都是「進來一次設好、之後不必再動」的初始決策，並排在同一區比散落在不同 section 更讓人一眼看到。
+
+#### 心理匯率從 Settings 移到旅行詳情頁（PR #372 closes #366）
+
+設定心理匯率只在「要開始一段旅行」時才需要，放在 Settings 頂層讓它變成一個日常都看得到的選項，反而讓人困惑。現在移到 `/trips/[id]` 詳情頁，在 active trip + 非過去章節時顯示「調整心理匯率 →」連結，確保匯率調整在正確的 context 出現。
+
+#### Dashboard ActiveTripBanner（PR #374 closes #367）
+
+有 active trip 時，Dashboard 在 MonthlyReviewBanner 同層顯示 ActiveTripBanner：單一進行中旅行時顯示名稱 + 起始日 + 幣別，點進 `/trips/{id}`；多段旅行時改為「{N} 段旅行進行中」+ 連到 `/trips`。過去章節不顯示。Settings 旅行 row 加一行 secondary text（「N 段進行中 · 過去 M 段」），讓旅行入口在沒有旅行時也有意義。
+
+#### AddSheet 愛物選擇器拆 tab（PR #373 closes #368）
+
+Guardian beta 開啟時，AddSheet 的愛物選擇器拆成「愛物」與「守護」兩個 tab（未開啟時維持原有一欄清單）。分類邏輯：`type === 'insurance'` → 守護 tab；其他 → 愛物 tab。預設開「愛物」tab；每次打開重置；「不關聯」保留在兩個 tab 最頂。
+
+### 技術變更
+
+#### Spec 重組：trip-multi-currency + locale-currency（PR #370 closes #364）
+
+原本的 `multi-currency-trip-design.md`（多幣別 + 旅行一份）和 `i18n-design.md` 各自混了兩種設計立場。拆成：
+
+- `trip-multi-currency-design.md`——**邊界複雜，日常無感**：旅行子帳本 isolated sandbox、rate_snapshot、end-trip fold、心理匯率「兩人共同的一把尺」
+- `locale-currency-design.md`——**保持簡單，選一次就好**：4 語 cookie-based locale + group base_currency，兩者完全獨立決策、onboarding 不擋完成
+
+舊的 `multi-currency-trip-design.md` / `i18n-design.md` 刪除；INDEX.md + cross-refs 對齊新 key。
+
 ## [0.17.2] - 2026-05-15
 
 主題：**旅行從沙盒到收斂．多幣別視角也站穩**——v0.17.0 把多幣別 × 旅行的底盤一次到位用 tag-style（`CashTransactions.trip_id`），出貨後重新檢視「Trip 子 ledger 不做」這個決定發現用 `TripExpenses` 隔離 table 比 tag 更乾淨：trip UI / 主帳本 query 路徑天然分離、`split_type` 完整支援、結束時收斂語意明確。這版四個 phase 把這條路走完——schema → backend → UI → 結束 fold 為主帳本 2 筆 summary `CashTransaction`，主帳本 balance 計算完全不必知道 trip 存在。順手把「幣別視角刻意分層」的立場寫進 spec：主帳本（dashboard / records / balance / AddSheet）守單一幣別、UI 不暴露幣別 picker；多幣別只在旅行子帳本出現——`complexity at the boundary, simplicity in daily use`。Pending 文案從「信用卡待扣」改為「待結算」（綁信用卡的框架誤導了實際語意），CWV LCP 三件套（Supabase preconnect / Google OAuth preconnect / lazy InAppBrowserGuard）把公開頁的 LCP 再壓一段，AI 爬蟲拿到 `llms-full.txt` 長介紹給 Perplexity / ChatGPT Search 引用。
@@ -906,7 +941,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.3...HEAD
+[0.17.3]: https://github.com/redtear1115/oikos/compare/v0.17.2...v0.17.3
 [0.17.2]: https://github.com/redtear1115/oikos/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/redtear1115/oikos/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/redtear1115/oikos/compare/v0.16.3...v0.17.0
