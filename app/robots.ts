@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: ['/', '/sign-in', '/terms', '/privacy'],
         // Auth-walled and internal paths. Even though middleware 307s these to
         // /sign-in for unauthed crawlers, declaring them keeps signals clean.
-        disallow: ['/dashboard', '/setup', '/invite/', '/auth/', '/api/'],
+        disallow: ['/dashboard', '/setup', '/onboarding', '/invite/', '/auth/', '/api/'],
       },
     ],
     sitemap: `${APP_URL}/sitemap.xml`,

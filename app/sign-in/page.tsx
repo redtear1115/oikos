@@ -3,42 +3,30 @@ import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
+const SIGNIN_TITLE = '登入 Futari · 開始兩個人的記帳生活'
+const SIGNIN_DESCRIPTION =
+  '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、管理保險與資產的雙人記帳 PWA。'
+const SIGNIN_OG_DESCRIPTION = '用 Google 一鍵登入，開始兩個人的家計簿。'
 
+// hreflang ?lang=xx variants dropped (#392) — cookie-based locale doesn't map to
+// canonical URL variants. SoftwareApplication JSON-LD moved to landing (#390).
 export const metadata: Metadata = {
-  alternates: {
-    canonical: '/sign-in',
-    languages: {
-      'zh-TW': '/sign-in',
-      'zh-CN': '/sign-in?lang=zh-CN',
-      en: '/sign-in?lang=en',
-      ja: '/sign-in?lang=ja',
-    },
+  title: SIGNIN_TITLE,
+  description: SIGNIN_DESCRIPTION,
+  alternates: { canonical: '/sign-in' },
+  openGraph: {
+    title: SIGNIN_TITLE,
+    description: SIGNIN_OG_DESCRIPTION,
+    url: '/sign-in',
+    siteName: 'Futari',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SIGNIN_TITLE,
+    description: SIGNIN_OG_DESCRIPTION,
   },
 }
-
-const softwareAppJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'Futari · ふたり',
-  alternateName: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿'],
-  applicationCategory: 'FinanceApplication',
-  operatingSystem: 'Web, iOS, Android (PWA)',
-  description:
-    '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
-  url: `${APP_URL}/sign-in`,
-  inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },
-  featureList: [
-    '雙人共享記帳',
-    '費用自動分攤與 AA 結算',
-    '家庭資產盤點',
-    '保險管理（保護型／儲蓄型）',
-    '汽車與油耗紀錄',
-    '定期收入',
-    '離線瀏覽 PWA',
-  ],
-} as const
 
 export default async function SignInPage() {
   const [locale, t] = await Promise.all([getLocale(), getTranslations()])
@@ -53,12 +41,6 @@ export default async function SignInPage() {
           accounts.google.com is sign-in-specific. (#352) */}
       <link rel="preconnect" href="https://accounts.google.com" crossOrigin="anonymous" />
       <link rel="dns-prefetch" href="https://accounts.google.com" />
-
-      <script
-        type="application/ld+json"
-        // Static SoftwareApplication schema → structured-data signals to crawlers.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
-      />
 
       <div className="flex-1" />
 
