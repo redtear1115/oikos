@@ -153,6 +153,16 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     return () => { cancelled = true }
   }, [open])
 
+  // Stable trip-id hash for the reset effect's deps. The parent re-creates
+  // `activeTrips` on every render (new array reference), which would otherwise
+  // re-fire the reset effect mid-edit and wipe the user's typed amount (#386).
+  // Hashing by id collapses identity churn to value equality — the effect only
+  // re-runs when the *set* of active trips actually changes (trip created /
+  // ended / archived). startDate / endDate / defaultCurrency changes on an
+  // existing trip don't trigger a reset, which is the desired behavior: a
+  // mid-edit reset is more disruptive than a marginally stale prefill.
+  const activeTripsKey = activeTrips.map((trip) => trip.id).join('|')
+
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
     if (!open) return
@@ -205,7 +215,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setCurrency((foundTrip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
     }
     setError('')
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTrips])
+  // `activeTrips` is intentionally excluded — its identity changes every parent
+  // render but its meaningful state is captured by `activeTripsKey`.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTripsKey])
 
   // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
   // the prefilled amount in edit mode (typing replaces the selection rather than

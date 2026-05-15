@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCategory } from '@/lib/categories'
 import { confirmPending, skipPending } from '@/actions/recurringExpense'
@@ -32,7 +32,14 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
   const [fading, setFading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmingSkip, setConfirmingSkip] = useState(false)
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cat = getCategory(pending.category)
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current)
+    }
+  }, [])
 
   const payerName = pending.proposedPaidBy === viewer.id
     ? t.common.you
@@ -42,7 +49,7 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
     try {
       await confirmPending(pending.id)
       setFading(true)
-      setTimeout(() => router.refresh(), 800)
+      refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
     } catch (e) {
       setError(describeError(e, t.recurringExpense.errors.operationFailed, t.common.offlineError))
     }
@@ -54,7 +61,7 @@ export function PendingExpenseCard({ pending, onEdit }: PendingExpenseCardProps)
       try {
         await skipPending(pending.id)
         setFading(true)
-        setTimeout(() => router.refresh(), 800)
+        refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
       } catch (e) {
         setError(describeError(e, t.recurringExpense.errors.operationFailed, t.common.offlineError))
       }
