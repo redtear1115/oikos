@@ -1,10 +1,12 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { trips, groupEpochs } from '@/lib/db/schema'
+import { trips, groupEpochs, tripExpenses, cashTransactions } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import type { CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
+import { recalcGroupBalance } from '@/lib/db/queries/balance'
+import { buildTripSummaries } from '@/lib/tripSummary'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidatePath } from 'next/cache'
 
@@ -79,19 +81,77 @@ export async function createTrip(input: CreateTripInput) {
 
 export async function endTrip(input: { tripId: string; endDate: string }) {
   const { group } = await requireViewerGroup()
-  const [updated] = await db
-    .update(trips)
-    .set({
-      status: 'ended',
-      endDate: input.endDate,
-      endedAt: new Date(),
+
+  const updated = await db.transaction(async (tx) => {
+    // Conditional update on status='active' makes this idempotent: a second
+    // endTrip on an already-ended trip yields no rows and no summary writes,
+    // even if the caller races with itself.
+    const [row] = await tx
+      .update(trips)
+      .set({
+        status: 'ended',
+        endDate: input.endDate,
+        endedAt: new Date(),
+      })
+      .where(and(
+        eq(trips.id, input.tripId),
+        eq(trips.groupId, group.id),
+        eq(trips.status, 'active'),
+      ))
+      .returning()
+    if (!row) {
+      // Either trip doesn't exist in this group, or it's already 'ended'.
+      // Surface a single error string — the caller can decide whether the
+      // trip is missing or just already closed by checking on the client.
+      throw new Error('找不到進行中的旅行')
+    }
+
+    // Fold the isolated trip ledger into the main ledger via 0–2 summary
+    // CashTransactions. recalcGroupBalance picks them up alongside existing
+    // settled rows. See lib/tripSummary.ts for the splitRatioA math.
+    const expenses = await tx
+      .select({
+        amount: tripExpenses.amount,
+        paidBy: tripExpenses.paidBy,
+        splitType: tripExpenses.splitType,
+        splitRatio: tripExpenses.splitRatio,
+      })
+      .from(tripExpenses)
+      .where(and(
+        eq(tripExpenses.tripId, input.tripId),
+        isNull(tripExpenses.deletedAt),
+      ))
+
+    const summaries = buildTripSummaries({
+      expenses,
+      memberA: group.memberA,
+      memberB: group.memberB,
     })
-    .where(and(eq(trips.id, input.tripId), eq(trips.groupId, group.id)))
-    .returning()
-  if (!updated) throw new Error('找不到旅行')
+
+    if (summaries.length > 0) {
+      const endedAt = row.endedAt ?? new Date()
+      await tx.insert(cashTransactions).values(summaries.map((s) => ({
+        groupId: group.id,
+        paidBy: s.paidBy,
+        amount: s.amount,
+        splitType: s.splitType,
+        splitRatioA: s.splitRatioA,
+        description: `${row.name} 結算`,
+        category: 'entertainment',
+        status: 'settled' as const,
+        transactedAt: endedAt,
+        tripId: row.id,
+      })))
+      await recalcGroupBalance(group.id, tx)
+    }
+
+    return row
+  })
 
   revalidatePath('/trips')
   revalidatePath(`/trips/${input.tripId}`)
+  revalidatePath('/dashboard')
+  revalidatePath('/records')
   return updated
 }
 

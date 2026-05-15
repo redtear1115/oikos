@@ -48,10 +48,13 @@ const {
   groupBalance,
   groupEpochs,
   trips,
+  tripExpenses,
+  cashTransactions,
 } = await import('@/lib/db/schema')
 const { createTrip, endTrip, updateTrip, softDeleteTrip } = await import('@/actions/trip')
+const { createTripExpense } = await import('@/actions/tripExpense')
 const { getTripById } = await import('@/lib/db/queries/trips')
-const { eq, inArray } = await import('drizzle-orm')
+const { eq, inArray, and } = await import('drizzle-orm')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -63,6 +66,7 @@ beforeAll(() => {
 
 interface SeedRefs {
   userId: string
+  partnerId?: string
   groupId: string
   epochId: string
   epochStartedAt: Date
@@ -100,12 +104,51 @@ async function seedGroup(): Promise<SeedRefs> {
 
 async function cleanup(refs: SeedRefs) {
   if (refs.tripIds.length) {
+    // Summary CashTransactions and TripExpenses both reference Trips —
+    // drop them before the trips themselves to keep FK happy.
+    await db.delete(cashTransactions).where(inArray(cashTransactions.tripId, refs.tripIds))
+    await db.delete(tripExpenses).where(inArray(tripExpenses.tripId, refs.tripIds))
     await db.delete(trips).where(inArray(trips.id, refs.tripIds))
   }
   await db.delete(groupEpochs).where(eq(groupEpochs.groupId, refs.groupId))
   await db.delete(groupBalance).where(eq(groupBalance.groupId, refs.groupId))
   await db.delete(oikosGroups).where(eq(oikosGroups.id, refs.groupId))
-  await db.delete(profiles).where(eq(profiles.id, refs.userId))
+  const profileIds = refs.partnerId ? [refs.userId, refs.partnerId] : [refs.userId]
+  await db.delete(profiles).where(inArray(profiles.id, profileIds))
+}
+
+interface DuoSeedRefs extends SeedRefs {
+  partnerId: string
+}
+
+async function seedDuoGroup(): Promise<DuoSeedRefs> {
+  const userId = randomUUID()
+  const partnerId = randomUUID()
+  const epochStartedAt = new Date('2026-05-10T00:00:00Z')
+
+  await db.insert(profiles).values([
+    { id: userId, displayName: 'TEST_TRIP_END_user' },
+    { id: partnerId, displayName: 'TEST_TRIP_END_partner' },
+  ])
+
+  const [group] = await db.insert(oikosGroups).values({
+    name: 'TEST_TRIP_END_group',
+    memberA: userId,
+    memberB: partnerId,
+    currentEpochStartedAt: epochStartedAt,
+    baseCurrency: 'twd',
+  }).returning({ id: oikosGroups.id })
+
+  await db.insert(groupBalance).values({ groupId: group.id, balance: 0, version: 0 })
+
+  const [epoch] = await db.insert(groupEpochs).values({
+    groupId: group.id,
+    startedAt: epochStartedAt,
+    memberAId: userId,
+    memberBId: partnerId,
+  }).returning({ id: groupEpochs.id })
+
+  return { userId, partnerId, groupId: group.id, epochId: epoch.id, epochStartedAt, tripIds: [] }
 }
 
 describe('createTrip', () => {
@@ -253,6 +296,192 @@ describe('updateTrip', () => {
     })
     expect(result.name).toBe('Updated name')
     expect(result.startDate).toBe('2026-05-12')
+  })
+})
+
+describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
+  let activeRefs: DuoSeedRefs | null = null
+
+  afterEach(async () => {
+    if (activeRefs) {
+      try { await cleanup(activeRefs) } catch (e) { console.error('cleanup failed', e) }
+      activeRefs = null
+    }
+  })
+
+  async function listSummaryRows(groupId: string, tripId: string) {
+    return db
+      .select()
+      .from(cashTransactions)
+      .where(and(
+        eq(cashTransactions.groupId, groupId),
+        eq(cashTransactions.tripId, tripId),
+      ))
+  }
+
+  async function readBalance(groupId: string): Promise<number> {
+    const [row] = await db
+      .select({ balance: groupBalance.balance })
+      .from(groupBalance)
+      .where(eq(groupBalance.groupId, groupId))
+    return row.balance
+  }
+
+  it('writes no summary rows when the trip has no expenses', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({ name: 'Empty', startDate: '2026-05-10' })
+    refs.tripIds.push(trip.id)
+
+    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+
+    expect(await listSummaryRows(refs.groupId, trip.id)).toHaveLength(0)
+    expect(await readBalance(refs.groupId)).toBe(0)
+  })
+
+  it('writes 1 summary when only one member paid', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({ name: 'A-only', startDate: '2026-05-10' })
+    refs.tripIds.push(trip.id)
+
+    await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 1000, category: '食', splitType: 'half',
+    })
+
+    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+
+    const rows = await listSummaryRows(refs.groupId, trip.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].paidBy).toBe(refs.userId)
+    expect(rows[0].amount).toBe(1000)
+    expect(rows[0].category).toBe('entertainment')
+    expect(rows[0].description).toBe('A-only 結算')
+    // Balance: A paid 1000 half → B owes A 500 → positive 500 (B owes A).
+    expect(await readBalance(refs.groupId)).toBe(500)
+  })
+
+  it('writes 2 summaries when both members paid', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({ name: 'Both', startDate: '2026-05-10' })
+    refs.tripIds.push(trip.id)
+
+    await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 1000, category: '食', splitType: 'half',
+    })
+    await createTripExpense({
+      tripId: trip.id, paidBy: refs.partnerId, amount: 600, category: '食', splitType: 'half',
+    })
+
+    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+
+    const rows = await listSummaryRows(refs.groupId, trip.id)
+    expect(rows).toHaveLength(2)
+    const paidByList = rows.map(r => r.paidBy).sort()
+    expect(paidByList).toEqual([refs.userId, refs.partnerId].sort())
+    // Net: A overpaid 200 (A paid 1000, share 500+300=800; B paid 600, share 800).
+    // Balance positive = B owes A. Expect ~+200 (small drift OK).
+    const balance = await readBalance(refs.groupId)
+    expect(Math.abs(balance - 200)).toBeLessThanOrEqual(2)
+  })
+
+  it('handles weighted split with B as payer (splitRatio is payer share; splitRatioA on summary is A share)', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({ name: 'Weighted', startDate: '2026-05-10' })
+    refs.tripIds.push(trip.id)
+
+    // B paid 1000, B's share = 70%, so A's share = 30%.
+    await createTripExpense({
+      tripId: trip.id, paidBy: refs.partnerId, amount: 1000,
+      category: '食', splitType: 'weighted', splitRatio: 70,
+    })
+
+    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+
+    const rows = await listSummaryRows(refs.groupId, trip.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].paidBy).toBe(refs.partnerId)
+    expect(rows[0].splitType).toBe('weighted')
+    // The summary's splitRatioA = A's share % = 30.
+    expect(rows[0].splitRatioA).toBe(30)
+    // Balance: B paid 1000 with A's share = 30% = 300 → A owes B 300 → -300.
+    expect(await readBalance(refs.groupId)).toBe(-300)
+  })
+
+  it('is idempotent: a second endTrip on the same trip throws and writes no extra rows', async () => {
+    const refs = await seedDuoGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({ name: 'Idempotent', startDate: '2026-05-10' })
+    refs.tripIds.push(trip.id)
+    await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 500, category: '食', splitType: 'half',
+    })
+
+    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    const beforeRows = await listSummaryRows(refs.groupId, trip.id)
+    const beforeBalance = await readBalance(refs.groupId)
+
+    await expect(endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
+      .rejects.toThrow('找不到進行中的旅行')
+
+    const afterRows = await listSummaryRows(refs.groupId, trip.id)
+    expect(afterRows).toHaveLength(beforeRows.length)
+    expect(await readBalance(refs.groupId)).toBe(beforeBalance)
+  })
+})
+
+describe('endTrip — solo group', () => {
+  let activeRefs: SeedRefs | null = null
+
+  afterEach(async () => {
+    if (activeRefs) {
+      try { await cleanup(activeRefs) } catch (e) { console.error('cleanup failed', e) }
+      activeRefs = null
+    }
+  })
+
+  it('writes a 1-row all_mine summary for a solo group with expenses', async () => {
+    const refs = await seedGroup()  // solo (memberB = null)
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({ name: 'Solo', startDate: '2026-05-10' })
+    refs.tripIds.push(trip.id)
+    await createTripExpense({
+      tripId: trip.id, paidBy: refs.userId, amount: 800, category: '食', splitType: 'all_mine',
+    })
+
+    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+
+    const [row] = await db
+      .select()
+      .from(cashTransactions)
+      .where(and(
+        eq(cashTransactions.groupId, refs.groupId),
+        eq(cashTransactions.tripId, trip.id),
+      ))
+    expect(row).toBeTruthy()
+    expect(row.paidBy).toBe(refs.userId)
+    expect(row.amount).toBe(800)
+    expect(row.splitType).toBe('all_mine')
+    // Solo balance is structurally 0 (recalcGroupBalance solo guard).
+    const [balRow] = await db
+      .select({ balance: groupBalance.balance })
+      .from(groupBalance)
+      .where(eq(groupBalance.groupId, refs.groupId))
+    expect(balRow.balance).toBe(0)
   })
 })
 
