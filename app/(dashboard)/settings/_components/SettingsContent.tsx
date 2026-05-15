@@ -80,35 +80,6 @@ export function SettingsContent({
 
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
 
-  const [exportPending, startExportTransition] = useTransition()
-  const [exportError, setExportError] = useState<string | null>(null)
-
-  const handleExport = () => {
-    setExportError(null)
-    startExportTransition(async () => {
-      try {
-        const res = await fetch('/api/export/transactions', { credentials: 'same-origin' })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const blob = await res.blob()
-        // Filename: prefer Content-Disposition from server, fall back to a sensible default.
-        const disposition = res.headers.get('Content-Disposition') ?? ''
-        const match = /filename="?([^";]+)"?/i.exec(disposition)
-        const filename = match?.[1] ?? 'futari-transactions.csv'
-
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        URL.revokeObjectURL(url)
-      } catch {
-        setExportError(t.csvExport.failed)
-      }
-    })
-  }
-
   const handleInvite = () => {
     setInviteError(null)
     startInviteTransition(async () => {
@@ -325,12 +296,7 @@ export function SettingsContent({
 
       {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
       <Section title={t.settings.sectionDisplay}>
-        <div>
-          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            {t.settings.language}
-          </div>
-          <LanguageSwitcher current={currentLocale} />
-        </div>
+        <LanguageSwitcher current={currentLocale} />
         <div className="mt-3">
           <Row
             label={t.settings.currency}
@@ -372,17 +338,6 @@ export function SettingsContent({
           secondary={formatTripSummary(tripSummary, t.settings.tripsRow)}
           onClick={() => router.push('/trips')}
         />
-        <div className="mt-3" />
-        <Row
-          label={exportPending ? t.csvExport.preparing : t.settings.exportData}
-          onClick={handleExport}
-          disabled={exportPending}
-        />
-        {exportError && (
-          <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
-            {exportError}
-          </div>
-        )}
         <div className="mt-3" />
         <Row
           label={t.settings.trust}
