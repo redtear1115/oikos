@@ -164,7 +164,9 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     // Confirm trip is 'active'
     const trip = await getTripById(tripResult.id)
     expect(trip?.status).toBe('active')
-    expect(trip?.defaultCurrency).toBe('jpy')
+    // v0.17.4 #410: trip default_currency is stored uppercase (free-text since the
+    // column moved off the currency_code enum).
+    expect(trip?.defaultCurrency).toBe('JPY')
 
     // 2. Set JPY → TWD rate
     await setRate({ fromCurrency: 'jpy', toCurrency: 'twd', rate: '0.220' })

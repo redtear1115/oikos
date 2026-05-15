@@ -3,36 +3,50 @@
 import { db } from '@/lib/db/client'
 import { trips, groupEpochs, tripExpenses, cashTransactions } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
-import type { CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { buildTripSummaries } from '@/lib/tripSummary'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import {
+  buildSnapshotFromCurrencyRates,
+  validateTripCurrencySnapshot,
+  type TripCurrencySnapshot,
+} from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
 
 /**
- * Build the rate_snapshot jsonb payload for a new Trip from the group's
- * CurrencyRates at this moment. Keys are `${FROM}_${TO}` uppercase, values
- * are numeric (parsed from numeric(10,3)). Snapshot locks FX for the trip:
- * later group-level CurrencyRates edits don't drift this trip's displays.
+ * Build the new-shape rate_snapshot for a fresh trip.
+ *
+ * Two paths:
+ *   - If the caller supplied an explicit `currencies` snapshot (new TripSheet
+ *     UI in v0.17.4+), validate + use it directly. This is the long-term path.
+ *   - Otherwise, fall back to deriving from the legacy per-group CurrencyRates
+ *     table. Preserves behaviour for any client still on the pre-v0.17.4
+ *     single-default-currency form.
  */
-async function buildRateSnapshot(groupId: string): Promise<Record<string, number>> {
-  const rows = await listRatesForGroup(groupId)
-  const snapshot: Record<string, number> = {}
-  for (const r of rows) {
-    const key = `${r.fromCurrency.toUpperCase()}_${r.toCurrency.toUpperCase()}`
-    snapshot[key] = parseFloat(r.rate)
-  }
-  return snapshot
+async function resolveRateSnapshot(
+  groupId: string,
+  defaultCode: string,
+  explicit: TripCurrencySnapshot | undefined,
+): Promise<TripCurrencySnapshot> {
+  if (explicit) return validateTripCurrencySnapshot(explicit)
+  const rates = await listRatesForGroup(groupId)
+  return buildSnapshotFromCurrencyRates(rates, defaultCode)
 }
 
 export interface CreateTripInput {
   name: string
   startDate: string  // ISO 'YYYY-MM-DD'
   endDate?: string | null
-  defaultCurrency?: CurrencyCode | null
+  defaultCurrency?: string | null
   budgetAmount?: number | null
-  budgetCurrency?: CurrencyCode | null
+  budgetCurrency?: string | null
+  /**
+   * Explicit currency / rate selection from the new TripSheet UI. When omitted,
+   * createTrip falls back to deriving the snapshot from the group's legacy
+   * CurrencyRates table.
+   */
+  currencies?: TripCurrencySnapshot
 }
 
 export async function createTrip(input: CreateTripInput) {
@@ -57,7 +71,8 @@ export async function createTrip(input: CreateTripInput) {
     .limit(1)
   if (!currentEpoch) throw new Error('找不到當前章節')
 
-  const rateSnapshot = await buildRateSnapshot(group.id)
+  const defaultCode = (input.defaultCurrency ?? group.baseCurrency).toUpperCase()
+  const rateSnapshot = await resolveRateSnapshot(group.id, defaultCode, input.currencies)
 
   const [inserted] = await db
     .insert(trips)
@@ -67,9 +82,9 @@ export async function createTrip(input: CreateTripInput) {
       name,
       startDate: input.startDate,
       endDate: input.endDate ?? null,
-      defaultCurrency: input.defaultCurrency ?? null,
+      defaultCurrency: rateSnapshot.default,
       budgetAmount: input.budgetAmount ?? null,
-      budgetCurrency: input.budgetCurrency ?? null,
+      budgetCurrency: input.budgetCurrency ? input.budgetCurrency.toUpperCase() : null,
       status: 'active',
       rateSnapshot,
     })
@@ -160,16 +175,23 @@ export async function updateTrip(input: {
   name?: string
   startDate?: string
   endDate?: string | null
-  defaultCurrency?: CurrencyCode | null
+  defaultCurrency?: string | null
   budgetAmount?: number | null
-  budgetCurrency?: CurrencyCode | null
+  budgetCurrency?: string | null
 }) {
   const { group } = await requireViewerGroup()
   const epochStartDate = group.currentEpochStartedAt.toISOString().slice(0, 10)
   if (input.startDate && input.startDate < epochStartDate) {
     throw new Error('不可移動至過去章節')
   }
-  const { tripId, ...patch } = input
+  const { tripId, defaultCurrency, budgetCurrency, ...rest } = input
+  const patch: Record<string, unknown> = { ...rest }
+  if (defaultCurrency !== undefined) {
+    patch.defaultCurrency = defaultCurrency ? defaultCurrency.toUpperCase() : null
+  }
+  if (budgetCurrency !== undefined) {
+    patch.budgetCurrency = budgetCurrency ? budgetCurrency.toUpperCase() : null
+  }
   const [updated] = await db
     .update(trips)
     .set(patch)
