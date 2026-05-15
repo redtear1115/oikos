@@ -31,6 +31,7 @@ import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { currencySymbol, formatAmount, convertAmount, type CurrencyCode } from '@/lib/currency'
+import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
 
 export interface AddSheetInitial {
@@ -130,10 +131,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [assetId, setAssetId] = useState<string | null>(null)
   const [descSuggestions, setDescSuggestions] = useState<string[]>([])
 
-  // Trip + currency state (#68 #42). Currency is no longer user-pickable —
-  // it cascades from the selected trip's defaultCurrency, or falls back to
-  // baseCurrency when no trip applies. The backend currency field is still
-  // sent through; only the UI picker is gone.
+  // Trip + currency state (#68 #42). Multi-currency is a trip-sub-ledger
+  // affordance: the main ledger (CashTransactions) is single-currency,
+  // always in baseCurrency. The CurrencySelector is therefore only shown
+  // when the record is going to TripExpenses (tripId set). For main-ledger
+  // creates / edits, handleSave forces `currency: baseCurrency` regardless
+  // of internal state, so this stays correct even if the state lags.
   const [tripId, setTripId] = useState<string | null>(null)
   const [currency, setCurrency] = useState<CurrencyCode>(baseCurrency)
 
@@ -268,6 +271,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         } else if (isEdit) {
           // CashTransaction edits drop `tripId` — new trip-tagging is only
           // available on create (and routes to TripExpenses, not here).
+          // Main ledger is single-currency by design; force baseCurrency so
+          // the row never carries an originalCurrency snapshot.
           await editTransaction({
             oldId: initial!.id,
             amount: n,
@@ -280,7 +285,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             assetId,
             notes,
             status,
-            currency,
+            currency: baseCurrency,
             tripId: null,
           })
         } else if (tripId) {
@@ -299,6 +304,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             transactedAt,
           })
         } else {
+          // Main ledger create. Single-currency by design — force
+          // baseCurrency on the wire even if `currency` state got cascaded
+          // by an earlier trip selection that's since been cleared.
           const result = await createTransaction({
             amount: n,
             description: desc,
@@ -310,7 +318,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             assetId,
             notes,
             status,
-            currency,
+            currency: baseCurrency,
             tripId: null,
           })
           isFirstTransaction = result.isFirstTransaction
@@ -462,25 +470,36 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               />
             </label>
 
-            {/* Trip selector — currency is no longer user-pickable; it
-                follows the context (selected trip's defaultCurrency, or the
-                group's baseCurrency when no trip applies). The currency
-                symbol shown beside the amount above is the only on-screen
-                indicator of which currency we're recording in. */}
-            {!(prefilledTripId && !isEdit) && (
-              <div className="flex items-center justify-center mt-3">
+            {/* Trip + currency selectors — currency is only user-pickable
+                in the trip-sub-ledger path (tripId set). Main-ledger records
+                are single-currency by design and always saved in
+                baseCurrency, so we hide the picker there. The trip selector
+                is hidden when prefilledTripId locks us to the host page's
+                trip (the FAB on /trips/[id]). */}
+            <div className="flex items-center justify-center gap-2 mt-3">
+              {!(prefilledTripId && !isEdit) && (
                 <TripSelector
                   value={tripId}
                   options={activeTrips}
                   onChange={(next) => {
                     setTripId(next)
+                    // Trip set → cascade currency from its defaultCurrency.
+                    // Trip cleared → snap back to baseCurrency (the main
+                    // ledger is single-currency; we won't render a picker
+                    // anyway, but keep state coherent).
                     const trip = next ? activeTrips.find((tp) => tp.id === next) : null
                     setCurrency((trip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
                   }}
                   noTripLabel={t.addSheet.noTrip}
                 />
-              </div>
-            )}
+              )}
+              {tripId && (
+                <CurrencySelector
+                  value={currency}
+                  onChange={(next) => setCurrency(next)}
+                />
+              )}
+            </div>
 
             {/* Conversion preview: shown when foreign currency with known rate */}
             {(() => {
