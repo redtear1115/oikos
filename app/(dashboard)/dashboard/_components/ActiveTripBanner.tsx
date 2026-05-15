@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { useTranslations } from '@/lib/i18n/client'
-import { currencySymbol, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol } from '@/lib/currency'
 
 export interface ActiveTripBannerTrip {
   id: string
   name: string
-  defaultCurrency: CurrencyCode | null
+  // v0.17.4 #410: free-text since trip currencies are user-defined.
+  defaultCurrency: string | null
   startDate: string  // 'YYYY-MM-DD'
 }
 

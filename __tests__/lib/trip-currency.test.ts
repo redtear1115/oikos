@@ -4,6 +4,7 @@ import {
   validateTripCurrencySnapshot,
   buildSnapshotFromCurrencyRates,
   findRate,
+  convertViaSnapshot,
 } from '@/lib/trip-currency'
 
 describe('parseTripCurrencySnapshot', () => {
@@ -167,6 +168,51 @@ describe('buildSnapshotFromCurrencyRates', () => {
   it('emits only default entry when no rates supplied', () => {
     const s = buildSnapshotFromCurrencyRates([], 'TWD')
     expect(s.entries).toEqual([{ code: 'TWD', label: null, rate: 1 }])
+  })
+})
+
+describe('convertViaSnapshot', () => {
+  const snap = parseTripCurrencySnapshot(
+    {
+      default: 'TWD',
+      entries: [
+        { code: 'TWD', label: null, rate: 1 },
+        { code: 'JPY', label: null, rate: 0.2 },
+        { code: 'USD', label: null, rate: 32 },
+      ],
+    },
+    'TWD',
+  )
+
+  it('returns input unchanged when from === to', () => {
+    expect(convertViaSnapshot(1000, 'TWD', 'TWD', snap)).toBe(1000)
+  })
+
+  it('converts non-default → default using entry rate', () => {
+    // 10000 JPY × 0.2 = 2000 TWD
+    expect(convertViaSnapshot(10000, 'JPY', 'TWD', snap)).toBe(2000)
+  })
+
+  it('converts default → non-default by inverting the entry rate', () => {
+    // 2000 TWD / 0.2 = 10000 JPY (uses 1/0.2 = 5)
+    expect(convertViaSnapshot(2000, 'TWD', 'JPY', snap)).toBe(10000)
+  })
+
+  it('chains non-default → default → non-default', () => {
+    // USD stores cents → 100 = $1. $1 × 32 = 32 TWD → 32 / 0.2 = 160 JPY.
+    expect(convertViaSnapshot(100, 'USD', 'JPY', snap)).toBe(160)
+  })
+
+  it('returns null when source code is not in snapshot', () => {
+    expect(convertViaSnapshot(100, 'EUR', 'TWD', snap)).toBeNull()
+  })
+
+  it('returns null when target code is not in snapshot', () => {
+    expect(convertViaSnapshot(100, 'JPY', 'EUR', snap)).toBeNull()
+  })
+
+  it('is case-insensitive on codes', () => {
+    expect(convertViaSnapshot(10000, 'jpy', 'twd', snap)).toBe(2000)
   })
 })
 

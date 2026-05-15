@@ -55,9 +55,10 @@ export default async function TripDetailPage(props: { params: Promise<{ id: stri
   const activeTrips: TripOption[] = [{
     id: trip.id,
     name: trip.name,
-    defaultCurrency: (trip.defaultCurrency as CurrencyCode | null) ?? null,
+    defaultCurrency: trip.defaultCurrency,
     startDate: trip.startDate,
     endDate: trip.endDate ?? null,
+    currencies: rateSnapshot,
   }]
 
   const rates: RateEntry[] = rawRates.map((r) => ({

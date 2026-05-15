@@ -6,9 +6,9 @@ import { and, count, eq, gte, isNull } from 'drizzle-orm'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { listActiveTrips } from '@/lib/db/queries/trips'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 import type { RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
-import type { CurrencyCode } from '@/lib/currency'
 import { CurrencySettings } from './_components/CurrencySettings'
 
 export default async function CurrencySettingsPage() {
@@ -53,9 +53,13 @@ export default async function CurrencySettingsPage() {
   const activeTrips: TripOption[] = rawActiveTrips.map((trip) => ({
     id: trip.id,
     name: trip.name,
-    defaultCurrency: (trip.defaultCurrency as CurrencyCode | null) ?? null,
+    defaultCurrency: trip.defaultCurrency,
     startDate: trip.startDate,
     endDate: trip.endDate ?? null,
+    currencies: parseTripCurrencySnapshot(
+      trip.rateSnapshot,
+      trip.defaultCurrency ?? group.baseCurrency,
+    ),
   }))
 
   return (
