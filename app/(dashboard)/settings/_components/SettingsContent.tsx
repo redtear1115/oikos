@@ -200,7 +200,6 @@ export function SettingsContent({
         {!isSolo && (
           <div className="mt-3">
             <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
-              <div className="text-body font-semibold" style={{ color: 'var(--ink)' }}>分攤比例</div>
               <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
                 <span>{viewer.displayName}（我）{splitRatioA}%</span>
                 <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
@@ -226,7 +225,7 @@ export function SettingsContent({
                 className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
                 style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
               >
-                {savingRatio ? '儲存中…' : '儲存預設比例'}
+                {savingRatio ? t.common.saving : t.settings.saveDefaultRatio}
               </button>
               {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
             </section>

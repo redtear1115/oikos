@@ -407,6 +407,8 @@ export type Translations = {
     addToHomeScreen: string
     displayName: string
     soloLockHint: string
+    /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
+    saveDefaultRatio: string
     inviteCta: string
     sectionDisplay: string
     language: string
@@ -1765,6 +1767,7 @@ export const zhTW: Translations = {
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+    saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     sectionDisplay: '語言 & 幣別',
     language: '語言',

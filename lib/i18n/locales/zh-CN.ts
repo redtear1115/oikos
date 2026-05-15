@@ -338,6 +338,7 @@ export const zhCN: Translations = {
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
+    saveDefaultRatio: '保存默认比例',
     inviteCta: '邀请对方加入',
     sectionDisplay: '语言 & 币别',
     language: '语言',

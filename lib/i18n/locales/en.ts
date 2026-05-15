@@ -338,6 +338,7 @@ export const en: Translations = {
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
+    saveDefaultRatio: 'Save default ratio',
     inviteCta: 'Invite partner',
     sectionDisplay: 'Language & Currency',
     language: 'Language',
