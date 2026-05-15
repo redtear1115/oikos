@@ -3,8 +3,19 @@ import { Fraunces, Noto_Sans_TC } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
-import { InAppBrowserGuard } from '@/components/InAppBrowserGuard'
+import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import './globals.css'
+
+// Preconnect target derived once at module load — used to warm TLS to Supabase
+// before any real fetch (sign-in OAuth click on public pages, realtime + auth
+// on dashboard). Keeps the URL origin only; preconnect ignores the path. (#352)
+const SUPABASE_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').origin
+  } catch {
+    return null
+  }
+})()
 
 // Fraunces is the landing hero typeface — preloaded so the LCP headline doesn't
 // FOIT/FOUT. Latin only, two weights (400 mobile tagline, 500 everything else).
@@ -117,8 +128,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const t = await getTranslations()
   return (
     <html lang={locale} className={`${fraunces.variable} ${notoTC.variable}`}>
+      <head>
+        {/* Preconnect to Supabase so the TLS handshake is already done by the
+            time the user clicks Sign-In (OAuth) or hits the dashboard. React
+            hoists these to <head> automatically; rendering them explicitly in
+            <head> keeps the intent clear. (#352) */}
+        {SUPABASE_ORIGIN && (
+          <>
+            <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
+          </>
+        )}
+      </head>
       <body className="antialiased">
-        <InAppBrowserGuard strings={t.inAppBrowser} />
+        <InAppBrowserGuardLazy strings={t.inAppBrowser} />
         {children}
         <Analytics />
         <SpeedInsights />

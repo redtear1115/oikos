@@ -48,6 +48,12 @@ export default async function SignInPage() {
       className="flex min-h-screen flex-col items-center justify-between px-6 py-12"
       style={{ background: 'var(--bg)' }}
     >
+      {/* Warm TLS to Google's OAuth host so the post-click redirect costs less.
+          Supabase preconnect lives in the root layout (covers every page);
+          accounts.google.com is sign-in-specific. (#352) */}
+      <link rel="preconnect" href="https://accounts.google.com" crossOrigin="anonymous" />
+      <link rel="dns-prefetch" href="https://accounts.google.com" />
+
       <script
         type="application/ld+json"
         // Static SoftwareApplication schema → structured-data signals to crawlers.
