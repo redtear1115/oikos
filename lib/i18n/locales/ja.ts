@@ -329,7 +329,7 @@ export const ja: Translations = {
 
   settings: {
     title: '設定',
-    sectionGroup: '家計簿',
+    sectionGroupSplit: 'デフォルト分担方式 & 比率',
     groupName: '家計簿名',
     sectionMember: 'メンバー',
     youSuffix: '（あなた）',

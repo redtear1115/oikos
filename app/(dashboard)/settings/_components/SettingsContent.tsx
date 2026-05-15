@@ -137,13 +137,65 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* 帳本 — group-level shared config: name + (when paired) default split ratio */}
-      <Section title={t.settings.sectionGroup}>
+      {/* 帳本 — group-level shared config: name + default split type/ratio */}
+      <Section title={t.settings.sectionGroupSplit}>
         <Row
           label={t.settings.groupName}
           value={groupName}
           onClick={() => setEditing('group')}
         />
+        <div className="mt-3">
+          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
+            {t.settings.defaultSplitTitle}
+          </div>
+          <div
+            className="rounded-[20px] overflow-hidden flex flex-col"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            {([
+              { id: 'half' as const,       label: t.splitType.even },
+              { id: 'all_mine' as const,   label: t.splitType.allMine },
+              { id: 'all_theirs' as const, label: t.splitType.allPartners },
+            ]).map((opt, i) => {
+              const sel = displayedSplit === opt.id
+              return (
+                <button
+                  type="button"
+                  key={opt.id}
+                  onClick={() => handleSplitChange(opt.id)}
+                  disabled={savingSplit || isSolo}
+                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
+                  style={{
+                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
+                    background: 'transparent',
+                  }}
+                >
+                  <span className="text-body" style={{ color: 'var(--ink)' }}>
+                    {opt.label}
+                  </span>
+                  <div
+                    className="w-5 h-5 rounded-full transition-all duration-150"
+                    style={{
+                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
+                      background: sel ? 'var(--ink)' : 'transparent',
+                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
+                    }}
+                  />
+                </button>
+              )
+            })}
+          </div>
+          {isSolo && (
+            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
+              {t.settings.soloLockHint}
+            </div>
+          )}
+          {splitError && (
+            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
+              {splitError}
+            </div>
+          )}
+        </div>
         {!isSolo && (
           <div className="mt-3">
             <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
@@ -240,58 +292,6 @@ export function SettingsContent({
           value={viewer.displayName}
           onClick={() => setEditing('name')}
         />
-        <div className="mt-3">
-          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            {t.settings.defaultSplitTitle}
-          </div>
-          <div
-            className="rounded-[20px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            {([
-              { id: 'half' as const,       label: t.splitType.even },
-              { id: 'all_mine' as const,   label: t.splitType.allMine },
-              { id: 'all_theirs' as const, label: t.splitType.allPartners },
-            ]).map((opt, i) => {
-              const sel = displayedSplit === opt.id
-              return (
-                <button
-                  type="button"
-                  key={opt.id}
-                  onClick={() => handleSplitChange(opt.id)}
-                  disabled={savingSplit || isSolo}
-                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
-                  style={{
-                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-                    background: 'transparent',
-                  }}
-                >
-                  <span className="text-body" style={{ color: 'var(--ink)' }}>
-                    {opt.label}
-                  </span>
-                  <div
-                    className="w-5 h-5 rounded-full transition-all duration-150"
-                    style={{
-                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
-                      background: sel ? 'var(--ink)' : 'transparent',
-                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
-                    }}
-                  />
-                </button>
-              )
-            })}
-          </div>
-          {isSolo && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
-              {t.settings.soloLockHint}
-            </div>
-          )}
-          {splitError && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
-              {splitError}
-            </div>
-          )}
-        </div>
       </Section>
 
       {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
