@@ -5,6 +5,7 @@ import { RecurringIncomeContent } from '../../recurring-income/_components/Recur
 import { RecurringExpenseContent } from '../../recurring-expense/_components/RecurringExpenseContent'
 import { useTranslations } from '@/lib/i18n/client'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
 
@@ -41,29 +42,10 @@ export function RecurringSettingsContent({
 
   return (
     <>
-      <div
-        className="px-4 flex items-center justify-between"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
-      >
-        <button
-          type="button"
-          onClick={() => router.push('/settings')}
-          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer min-h-11 px-2 -ml-2"
-          style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
-        >
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-            <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {t.recurringIncome.back}
-        </button>
-
-        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          {t.settings.recurringSettings}
-        </div>
-
-        {/* Spacer to keep the title visually centred against the back button. */}
-        <div className="min-h-11 w-12" aria-hidden="true" />
-      </div>
+      <SubpageHeader
+        title={t.settings.recurringSettings}
+        backLabel={t.recurringIncome.back}
+      />
 
       <div
         role="tablist"

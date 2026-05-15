@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useTranslations } from '@/lib/i18n/client'
 import { TripSheet } from './TripSheet'
 import type { CurrencyCode } from '@/lib/currency'
 
@@ -19,6 +21,7 @@ type Trip = {
 
 export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
   const router = useRouter()
+  const t = useTranslations()
   const { isPast } = useMember()
   const [open, setOpen] = useState(false)
   const active = props.trips.filter(t => t.status === 'active')
@@ -28,14 +31,10 @@ export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
-      <div className="px-5 pt-[60px] pb-4">
-        <div
-          className="text-2xl font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
-        >
-          旅行
-        </div>
-        <p className="mt-1 text-sm" style={{ color: 'var(--ink-3)' }}>
+      <SubpageHeader title={t.settings.trips} backLabel={t.common.back} />
+
+      <div className="px-5 pt-6 pb-4">
+        <p className="text-sm" style={{ color: 'var(--ink-3)' }}>
           一趟一趟收下來，這段路就有自己的章節。
         </p>
       </div>

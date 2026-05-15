@@ -2,10 +2,10 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { enterPastEpoch, exitPastEpoch } from '@/actions/epoch-view'
 import { formatDateShort } from '@/lib/format-date'
+import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 
 export interface EpochListEntry {
   id: string
@@ -68,27 +68,7 @@ export function PastTimesList({
 
   return (
     <>
-      <div
-        className="px-4 flex items-center justify-between"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
-      >
-        <Link
-          href="/settings"
-          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer min-h-11 px-2 -ml-2 no-underline"
-          style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
-        >
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-            <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {backLabel}
-        </Link>
-
-        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          {t.title}
-        </div>
-
-        <div className="w-[64px]" aria-hidden="true" />
-      </div>
+      <SubpageHeader title={t.title} backLabel={backLabel} />
 
       <div className="px-5 pt-6 pb-3">
         <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{t.intro}</p>
