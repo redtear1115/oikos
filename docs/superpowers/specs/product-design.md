@@ -3,7 +3,7 @@ status: shipped
 first_shipped_in: v0.1.0
 updates:
   - v0.11.1: Auth 分層改採 `getCurrentUser()`（內部 `getSession()`）+ i18n cookie locale 接入
-related_specs: [i18n, realtime, offline-browsing]
+related_specs: [locale-currency, trip-multi-currency, realtime, offline-browsing]
 related_issues: []
 ---
 
@@ -26,7 +26,7 @@ related_issues: []
 | 加密 | AES-256-GCM in Server Actions | key 在 Vercel env，DB 只存 ciphertext |
 | Real-time | Supabase Realtime postgres_changes | partner 異裝置變動立即反應 |
 | PWA | 是 | 加到主畫面；離線瀏覽見 [offline-browsing](offline-browsing-design.md) |
-| i18n | 自製字典 + cookie-based locale | 4 語（zh-TW / zh-CN / en / ja）；見 [i18n](i18n-design.md) |
+| i18n | 自製字典 + cookie-based locale | 4 語（zh-TW / zh-CN / en / ja）；見 [locale-currency](locale-currency-design.md) |
 
 dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
@@ -107,7 +107,9 @@ Balance 計算規則詳見 `CLAUDE.md`「Balance 計算規則」段；實作在 
 
 **核心立場**：complexity at the boundary, simplicity in daily use。記錄介面刻意不暴露幣別選擇，避免認知負擔擴散到每一筆日常記帳；多幣別輸入鎖在有明確時間邊界的旅行 context，旅行結束就 fold 回單幣別主視角。
 
-詳細設計見 [multi-currency-trip-design](multi-currency-trip-design.md)。
+兩條哲學各自獨立成 spec：
+- **保持簡單**（主帳本單幣別 + onboarding 一次性選 locale / base currency）→ [locale-currency](locale-currency-design.md)
+- **邊界複雜**（旅行子帳本 + 多幣別 record + 心理匯率 snapshot + 結束 fold）→ [trip-multi-currency](trip-multi-currency-design.md)
 
 ---
 

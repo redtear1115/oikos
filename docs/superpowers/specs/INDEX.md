@@ -76,7 +76,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - **一個 spec = 一個 feature**（一個可獨立講清楚的產品能力）
 - **小 feature 併進母 spec**：例如 FAB 在 /records tab 的 context-awareness 不獨立成 spec，併進記帳核心 spec
 - **合集要拆**：早期的「Phase X 設計 bundle」這類混合 spec 隨時間累積，應拆成各自獨立的 feature spec
-- **橫切關注獨立成 spec**：i18n、離線、epoch read-only 這類跨多個 feature 的決策
+- **橫切關注獨立成 spec**：locale / 幣別、離線、epoch read-only 這類跨多個 feature 的決策
 
 判斷一個東西是不是 feature 的標準：能不能用「這個 feature 是什麼 / 為什麼存在 / 給誰用」三句話講完。如果只能講「這個元件怎麼改」，那是 implementation 不是 feature。
 
@@ -98,7 +98,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ### 架構
 
 - [product](product-design.md) — Tech stack / 整體架構 / Auth 分層 / Schema 設計原則
-- [i18n](i18n-design.md) — 四語架構：cookie-based locale + server fetch + provider
+- [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語 cookie-based locale）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
 - [offline-browsing](offline-browsing-design.md) — PWA / Service Worker / opt-in 離線瀏覽
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
 
@@ -108,7 +108,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [income](income-design.md) — IncomeTransactions + IncomeSheet（進帳獨立 ledger）
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）
-- [multi-currency-trip](multi-currency-trip-design.md) — 多幣別（自訂心理匯率、snapshot 語意）+ 旅行子帳本（trip tag、單一 epoch）架構先行 bundle
+- [trip-multi-currency](trip-multi-currency-design.md) — 「邊界複雜」：旅行子帳本（TripExpense sandbox）+ 多幣別 record + 心理匯率 snapshot；建立時鎖匯率、結束時 fold 為 2 筆 summary 回主帳本
 
 ### 體驗
 
