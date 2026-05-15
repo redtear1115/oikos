@@ -1,13 +1,17 @@
 'use client'
 
-import type { CurrencyCode } from '@/lib/currency'
+import type { TripCurrencySnapshot } from '@/lib/trip-currency'
 
 export interface TripOption {
   id: string
   name: string
-  defaultCurrency: CurrencyCode | null
+  // v0.17.4 #410: free-text since trip currencies are user-defined per trip.
+  defaultCurrency: string | null
   startDate: string       // 'YYYY-MM-DD'
   endDate: string | null  // 'YYYY-MM-DD' or null (open-ended)
+  // v0.17.4 #410: trip's full currency snapshot. AddSheet's currency picker
+  // and conversion preview read this; null = legacy trips not yet hydrated.
+  currencies?: TripCurrencySnapshot | null
 }
 
 interface Props {

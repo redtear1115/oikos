@@ -1,3 +1,5 @@
+import { convertAmount } from './currency'
+
 // Trip-scoped currency snapshot. Stored on Trips.rate_snapshot (jsonb).
 //
 // Each trip picks 1–5 currencies (free-text codes — TWD/JPY/USD/CNY plus any
@@ -102,6 +104,41 @@ export function findRate(snapshot: TripCurrencySnapshot, code: string): number |
   const target = code.toUpperCase()
   const entry = snapshot.entries.find(e => e.code === target)
   return entry ? entry.rate : null
+}
+
+/**
+ * Convert `amount` from `fromCode` to `toCode` units using a trip's snapshot.
+ * Both currencies must be in the snapshot (or equal `default`); returns null
+ * otherwise. Chains through `snapshot.default` when neither code is default.
+ *
+ * Uses `convertAmount` from lib/currency.ts so cent-vs-integer precision is
+ * handled consistently with the save path (TripExpense.normalizeAmount).
+ */
+export function convertViaSnapshot(
+  amount: number,
+  fromCode: string,
+  toCode: string,
+  snapshot: TripCurrencySnapshot,
+): number | null {
+  const from = fromCode.toUpperCase()
+  const to = toCode.toUpperCase()
+  if (from === to) return amount
+  const def = snapshot.default
+  // from → default (entry.rate semantics: 1 from = entry.rate default)
+  let fromRate: number
+  if (from === def) {
+    fromRate = 1
+  } else {
+    const r = findRate(snapshot, from)
+    if (r == null) return null
+    fromRate = r
+  }
+  const inDefault = convertAmount({ amount, from, to: def, rate: fromRate })
+  if (to === def) return inDefault
+  const toRate = findRate(snapshot, to)
+  if (toRate == null) return null
+  // default → to: invert (1 to = toRate default, so 1 default = 1/toRate to)
+  return convertAmount({ amount: inDefault, from: def, to, rate: 1 / toRate })
 }
 
 /**

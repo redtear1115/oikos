@@ -12,6 +12,7 @@ import { listActivePendings } from '@/lib/db/queries/recurringIncome'
 import { listActivePendings as listActiveExpensePendings } from '@/lib/db/queries/recurringExpense'
 import { listActiveTrips } from '@/lib/db/queries/trips'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
+import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
 import type { TripOption } from './_components/TripSelector'
 import type { RateEntry } from './_components/AddSheet'
 import type { CurrencyCode } from '@/lib/currency'
@@ -105,13 +106,19 @@ export default async function DashboardPage() {
     listRatesForGroup(group.id),
   ])
 
-  // Map raw DB rows to the prop shapes the client components expect
+  // Map raw DB rows to the prop shapes the client components expect.
+  // v0.17.4 #410: parse rate_snapshot so AddSheet's currency picker can show
+  // the trip's own selected codes (not the 4-preset fallback).
   const activeTrips: TripOption[] = rawActiveTrips.map((trip) => ({
     id: trip.id,
     name: trip.name,
-    defaultCurrency: (trip.defaultCurrency as CurrencyCode | null) ?? null,
+    defaultCurrency: trip.defaultCurrency,
     startDate: trip.startDate,
     endDate: trip.endDate ?? null,
+    currencies: parseTripCurrencySnapshot(
+      trip.rateSnapshot,
+      trip.defaultCurrency ?? group.baseCurrency,
+    ),
   }))
 
   const rates: RateEntry[] = rawRates.map((r) => ({

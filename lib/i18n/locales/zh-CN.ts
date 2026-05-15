@@ -214,6 +214,8 @@ export const zhCN: Translations = {
     endConfirm: '确认结束',
     endDateBeforeStart: '结束日不可早于起始日({date})',
     endFailure: '结束失败',
+    editAriaLabel: '编辑这趟旅行',
+    endIrreversibleNote: '结束之后无法复原。这趟的支出会以总结算的形式回到主账本。',
   },
 
   incomeSheet: {

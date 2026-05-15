@@ -214,6 +214,8 @@ export const ja: Translations = {
     endConfirm: '終了する',
     endDateBeforeStart: '終了日は開始日（{date}）より前にできません',
     endFailure: '終了に失敗しました',
+    editAriaLabel: 'この旅を編集',
+    endIrreversibleNote: '締めたあとは戻せません — 支出はすべて、まとめて主帳簿に戻ります。',
   },
 
   incomeSheet: {
