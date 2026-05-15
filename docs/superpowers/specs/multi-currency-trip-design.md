@@ -74,6 +74,7 @@ related_issues: ["#68", "#42"]
 - ❌ **即時匯率 API（Open Exchange Rates / ECB）** — 數字每天跳動讓人焦慮、依賴外部、與「兩人對齊的一把尺」哲學衝突
 - ❌ **Live 匯率語意**（rate 變則歷史 record 等值跳動） — balance 會在改 rate 瞬間跳、historical 失真
 - ❌ **Hybrid 匯率 toggle**（snapshot + 可切 live view） — v0.17.0 守紀律先鎖 snapshot；UX 複雜性等驗證需求才補
+- ❌ **主帳本幣別 picker（AddSheet / 主記帳表單）** — 主帳本記錄介面只走 group `base_currency`、UI 不暴露幣別 picker；多幣別輸入只在旅行子帳本（TripExpenseSheet）出現，旅行結束 fold 為 summary `CashTransaction` 後回到主視角。立場：complexity at the boundary, simplicity in daily use——守住「記錄要素低認知負擔」，日常每筆不必做幣別決定。詳見 [product-design § 4 設計立場](product-design.md#4-設計立場)
 - ❌ **Trip 跨 epoch** — 與 epoch 時間軸語意衝突
 - ❌ **Trip 子 ledger（獨立 GroupBalance）** — 碎片化總 balance、實作膨脹、不解決真實問題
 - ❌ **Settlement 多幣別** — 跨幣別結算對帳語意複雜、低頻
