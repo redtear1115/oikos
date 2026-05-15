@@ -293,6 +293,8 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
               <img
                 src={data.policyHolderAvatarUrl}
                 alt=""
+                width={40}
+                height={40}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />

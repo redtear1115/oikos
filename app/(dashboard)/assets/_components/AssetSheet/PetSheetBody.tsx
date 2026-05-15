@@ -144,9 +144,11 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </Field>
 
       <Field label={ts.pet.breed}>
-        <input value={breed} onChange={e => setBreed(e.target.value.slice(0, 32))}
-          placeholder={ts.pet.breedPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={breed} onChange={e => setBreed(e.target.value.slice(0, 32))}
+            placeholder={ts.pet.breedPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.pet.sex}>
@@ -169,31 +171,43 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </Field>
 
       <Field label={ts.pet.birthDate}>
-        <input value={birthDate} onChange={e => setBirthDate(e.target.value)}
-          type="date" className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={birthDate} onChange={e => setBirthDate(e.target.value)}
+            type="date" className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.pet.adoptedDate}>
-        <input value={adoptedDate} onChange={e => setAdoptedDate(e.target.value)}
-          type="date" className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={adoptedDate} onChange={e => setAdoptedDate(e.target.value)}
+            type="date" className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.pet.purchaseCost}>
-        <input value={cost} onChange={e => setCost(e.target.value)}
-          type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
-        <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+        {id => (
+          <>
+            <input id={id} value={cost} onChange={e => setCost(e.target.value)}
+              type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
+              className="w-full bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)' }} />
+            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+          </>
+        )}
       </Field>
 
       <Field label={ts.pet.weight}>
-        <input value={weightKg} onChange={e => setWeightKg(e.target.value)}
-          type="number" inputMode="decimal" placeholder={ts.pet.weightPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
-        <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
+        {id => (
+          <>
+            <input id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
+              type="number" inputMode="decimal" placeholder={ts.pet.weightPlaceholder}
+              className="w-full bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)' }} />
+            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
+          </>
+        )}
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
@@ -202,15 +216,19 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </div>
 
       <Field label={ts.pet.chipNo}>
-        <input value={chipNo} onChange={e => setChipNo(e.target.value.slice(0, 20))}
-          placeholder={ts.pet.chipNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+        {id => (
+          <input id={id} value={chipNo} onChange={e => setChipNo(e.target.value.slice(0, 20))}
+            placeholder={ts.pet.chipNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+        )}
       </Field>
 
       <Field label={ts.pet.vet}>
-        <input value={vet} onChange={e => setVet(e.target.value.slice(0, 32))}
-          placeholder={ts.pet.vetPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={vet} onChange={e => setVet(e.target.value.slice(0, 32))}
+            placeholder={ts.pet.vetPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <NotesField
