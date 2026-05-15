@@ -131,35 +131,15 @@ describe('createTrip — rate_snapshot population', () => {
     if (activeRefs) { try { await cleanup(activeRefs) } catch (e) { console.error(e) }; activeRefs = null }
   })
 
-  it('derives new-shape rate_snapshot {default, entries[]} from group CurrencyRates', async () => {
+  it('defaults to single-entry snapshot when currencies omitted', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({ name: '東京之旅', startDate: '2026-05-10' })
+    const created = await createTrip({ name: '單一幣別', startDate: '2026-05-10' })
     refs.tripIds.push(created.id)
 
     const snapshot = created.rateSnapshot as { default: string; entries: Array<{ code: string; rate: number; label: string | null }> }
-    expect(snapshot.default).toBe('TWD')
-    const byCode = Object.fromEntries(snapshot.entries.map(e => [e.code, e.rate]))
-    // default itself is 1
-    expect(byCode['TWD']).toBe(1)
-    // JPY → TWD rate (1 JPY = 0.200 TWD)
-    expect(byCode['JPY']).toBe(0.2)
-    // USD → TWD rate (1 USD = 32 TWD)
-    expect(byCode['USD']).toBe(32)
-  })
-
-  it('writes a single-entry snapshot when group has no CurrencyRates set', async () => {
-    const refs = await seedDuoGroup()
-    activeRefs = refs
-    mockUserId = refs.userId
-    await db.delete(currencyRates).where(eq(currencyRates.groupId, refs.groupId))
-
-    const created = await createTrip({ name: '無匯率', startDate: '2026-05-10' })
-    refs.tripIds.push(created.id)
-
-    const snapshot = created.rateSnapshot as { default: string; entries: Array<{ code: string; rate: number }> }
     expect(snapshot.default).toBe('TWD')
     expect(snapshot.entries).toEqual([{ code: 'TWD', label: null, rate: 1 }])
   })
@@ -223,10 +203,20 @@ describe('createTripExpense — happy paths', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = await createTrip({
+      name: 'JP',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.2 },
+        ],
+      },
+    })
     refs.tripIds.push(trip.id)
 
-    // 10000 JPY → JPY_TWD = 0.200 → 2000 TWD
+    // 10000 JPY → JPY rate 0.200 → 2000 TWD
     const expense = await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
