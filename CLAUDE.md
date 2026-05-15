@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.17.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v0.17.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 | 版本 | 範圍 |
 |---|---|
@@ -48,6 +48,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 | [v0.16.3](CHANGELOG.md#0163---2026-05-14) | 在搜尋裡也被看見．sitemap × canonical × middleware × cache 訊號收斂 |
 | [v0.17.0](CHANGELOG.md#0170---2026-05-14) | 架構先行．多幣別 × 旅行子帳本一次到位 |
 | [v0.17.1](CHANGELOG.md#0171---2026-05-15) | UX × 效能 × a11y × 快取．細節讓體驗更順 |
+| [v0.17.2](CHANGELOG.md#0172---2026-05-15) | 旅行從沙盒到收斂．多幣別視角也站穩 |
 
 ## Backlog / 未釋出版本
 
