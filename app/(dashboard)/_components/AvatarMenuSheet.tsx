@@ -52,13 +52,8 @@ export function AvatarMenuSheet({ open, onClose, data: _data }: Props) {
           </div>
         </div>
 
-        {/* Scrollable body — sections wired in Task 7 */}
-        <div className="overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),16px)]">
-          <div className="text-xs text-center py-8" style={{ color: 'var(--ink-3)' }}>
-            {/* placeholder; replaced by sections in Task 7 */}
-            sheet shell — sections come next
-          </div>
-        </div>
+        {/* Scrollable body — sections wired in the next commit (#427). */}
+        <div className="overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),16px)]" />
       </div>
     </>
   )
