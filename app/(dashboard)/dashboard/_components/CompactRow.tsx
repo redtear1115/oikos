@@ -128,13 +128,16 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
       </div>
       <div className="text-right shrink-0">
         {tx.originalCurrency && tx.originalAmount != null ? (
-          // Foreign-currency row: show original amount on top, base equivalent below
+          // Foreign-currency row: show original amount on top, base equivalent below.
+          // `originalCurrency` is free-text from trip-multi-currency (e.g. 'vnd' / 'eur')
+          // — formatAmount already accepts any string and falls back to "${CODE} ${amount}"
+          // for unknown codes, so no enum narrowing needed here.
           <>
             <div
               className="tnum text-sm font-medium tracking-[-0.2px]"
               style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
             >
-              {formatAmount(tx.originalAmount, tx.originalCurrency as CurrencyCode)}
+              {formatAmount(tx.originalAmount, tx.originalCurrency)}
             </div>
             <div
               className="tnum text-micro mt-px"

@@ -55,6 +55,14 @@ export type Translations = {
     saving: string
     processing: string
     delete: string
+    /** Default confirm-button label used by `ConfirmModal` when the caller
+     *  doesn't override `confirmLabel`. Generic affirmative — destructive
+     *  modals pass an explicit verb (e.g. `t.common.delete`). */
+    confirm: string
+    /** "Done" — used by sheet headers that submit on tap (e.g. EditTextSheet
+     *  iOS-style header right action). Distinct from `save` because some
+     *  contexts read better as "Done" than as "Save". */
+    done: string
     me: string
     partner: string
     you: string
@@ -163,6 +171,14 @@ export type Translations = {
       multipleCta: string
       /** Aria label for the multi-trip card link — `{count}` the count. */
       multipleAriaLabel: string
+      /** Single-line CTA shown when there are no active trips. */
+      emptyCta: string
+      /** Aria label for the ✈ add-trip button. */
+      addAriaLabel: string
+      /** Aria label for the − collapse toggle. */
+      collapseAriaLabel: string
+      /** Aria label for the + expand toggle. */
+      expandAriaLabel: string
     }
   }
 
@@ -417,9 +433,52 @@ export type Translations = {
     primaryRepay: string
     primaryReceive: string
     amountAriaLabel: string
+    /** SettlementSheet (edit-existing) header title. */
+    editTitle: string
+    /** Label above the amount block in SettlementSheet. */
+    amountLabel: string
+    /** Label above the date picker in SettlementSheet. */
+    dateLabel: string
+    /** Inline delete CTA at the bottom of SettlementSheet. */
+    deleteOne: string
+    /** Confirm-modal title shown when the user taps `deleteOne`. */
+    deleteConfirmTitle: string
     errors: {
       exceedsDebt: string
+      /** Inline validation when the amount input is empty or zero. */
+      amountRequired: string
+      /** Inline validation when "對方付" is selected but no partner exists. */
+      noPartner: string
     }
+  }
+
+  /** Generic single-input sheet (e.g. rename帳本 / 顯示名稱). */
+  editTextSheet: {
+    /** Inline error when the user tries to save an empty value. */
+    errorEmpty: string
+    /** Fallback error message when the onSubmit callback rejects without one. */
+    saveFailed: string
+  }
+
+  /** Bottom-sheet asset picker — opens from AddSheet to link a record to
+   *  an existing 愛物 (or to clear the link). */
+  assetPickerSheet: {
+    title: string
+    /** Tab/aria label — same wording as `title` so SR users hear the
+     *  picker's purpose when focus enters the tablist. */
+    tablistAriaLabel: string
+    /** "No link" sentinel option always shown at the top of the picker. */
+    noneTitle: string
+    /** Subtitle under `noneTitle` explaining what "no link" means. */
+    noneSubtitle: string
+    /** Placeholder while assets are being fetched. */
+    loading: string
+    /** Fallback error string passed to `describeError` when the fetch throws. */
+    loadFailed: string
+    /** Empty-state copy when the 愛物 tab has no assets. */
+    emptyAibutsu: string
+    /** Empty-state copy when the 守護 tab has no insurance assets. */
+    emptyGuardian: string
   }
 
   records: {
@@ -521,6 +580,8 @@ export type Translations = {
     /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
     saveDefaultRatio: string
     inviteCta: string
+    /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
+    quickAccessRow: string
     sectionDisplay: string
     language: string
     currency: string
@@ -1532,6 +1593,51 @@ export type Translations = {
     /** Android-specific hint. */
     instructionAndroid: string
   }
+
+  /** Platform-aware "Add to Home Screen" bottom sheet. Surfaced after the
+   *  first /setup completion (if not already a PWA) and re-openable from
+   *  /settings → 加到主畫面. */
+  installGuide: {
+    /** Sheet header — matches the settings row label. */
+    title: string
+    /** Header left button. */
+    close: string
+    /** Intro paragraph above the platform-specific steps. */
+    intro: string
+    /** iOS Safari (the only iOS browser that supports A2HS). Step 1 ends with
+     *  the share-icon JSX; the icon is rendered by the component, not the
+     *  string, so the text here intentionally has no trailing space. */
+    iosSafari: {
+      step1: string
+      /** Contains `<strong>` — rendered via dangerouslySetInnerHTML. */
+      step2Html: string
+      /** Contains `<strong>` — rendered via dangerouslySetInnerHTML. */
+      step3Html: string
+    }
+    /** iOS users in non-Safari browsers — we can't install from here, so we
+     *  show a copy-link affordance and instructions to switch to Safari. */
+    iosOther: {
+      /** Contains `<strong>` — rendered via dangerouslySetInnerHTML. */
+      bodyHtml: string
+      copy: string
+      copied: string
+    }
+    /** Android (Chrome / Edge / Samsung). */
+    android: {
+      step1: string
+      /** Contains `<strong>` — rendered via dangerouslySetInnerHTML. */
+      step2Html: string
+      step3: string
+    }
+    /** Desktop (Chrome / Edge install button in the URL bar). */
+    desktop: {
+      step1: string
+      step2: string
+      step3: string
+    }
+    /** Unknown platform — generic instruction. Contains `<strong>`. */
+    fallbackHtml: string
+  }
 }
 
 export const zhTW: Translations = {
@@ -1576,6 +1682,8 @@ export const zhTW: Translations = {
     saving: '儲存中…',
     processing: '處理中…',
     delete: '刪除',
+    confirm: '確認',
+    done: '完成',
     me: '我',
     partner: '對方',
     you: '你',
@@ -1669,6 +1777,10 @@ export const zhTW: Translations = {
       multipleHeading: '{count} 段旅行進行中',
       multipleCta: '一起翻 ›',
       multipleAriaLabel: '查看 {count} 段進行中的旅行',
+      emptyCta: '開始一段旅行',
+      addAriaLabel: '新增旅行',
+      collapseAriaLabel: '收合旅行卡',
+      expandAriaLabel: '展開旅行卡',
     },
   },
 
@@ -1841,9 +1953,32 @@ export const zhTW: Translations = {
     primaryRepay: '記錄還款',
     primaryReceive: '記錄收款',
     amountAriaLabel: '還款金額',
+    editTitle: '編輯還款',
+    amountLabel: '金額',
+    dateLabel: '日期',
+    deleteOne: '刪除這筆',
+    deleteConfirmTitle: '刪除這筆還款？',
     errors: {
       exceedsDebt: '金額不能超過欠款',
+      amountRequired: '請輸入金額',
+      noPartner: '伴侶尚未加入',
     },
+  },
+
+  editTextSheet: {
+    errorEmpty: '不能為空',
+    saveFailed: '儲存失敗',
+  },
+
+  assetPickerSheet: {
+    title: '選擇愛物',
+    tablistAriaLabel: '選擇愛物',
+    noneTitle: '不關聯',
+    noneSubtitle: '這筆與任何愛物無關',
+    loading: '載入中…',
+    loadFailed: '載入失敗',
+    emptyAibutsu: '還沒有愛物 — 先到「愛物」分頁新增。',
+    emptyGuardian: '還沒有保單 — 先到「愛物 > 守護」分頁新增。',
   },
 
   records: {
@@ -1935,6 +2070,7 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
+    quickAccessRow: '個人與帳本設定',
     sectionDisplay: '語言 & 幣別',
     language: '語言',
     currency: '幣別',
@@ -2847,5 +2983,32 @@ export const zhTW: Translations = {
     instructionGeneric: '複製上方網址，貼到 Safari 或 Chrome 開啟。',
     instructionIos: '點上方按鈕跳到 Safari，或複製網址後手動貼到 Safari。',
     instructionAndroid: '點右上角選單，選「在瀏覽器中開啟」，或複製網址貼到 Chrome。',
+  },
+
+  installGuide: {
+    title: '加到主畫面',
+    close: '關閉',
+    intro: '把 Futari 加到主畫面後，會像一個 app 一樣全螢幕開啟，不會再看到網址列。',
+    iosSafari: {
+      step1: '點底部正中間的分享按鈕',
+      step2Html: '往下捲動，找到「<strong>加入主畫面</strong>」',
+      step3Html: '點右上角「<strong>加入</strong>」就完成了',
+    },
+    iosOther: {
+      bodyHtml: '在 iOS 上只有 <strong>Safari</strong> 可以把網頁加到主畫面。請複製下方網址，貼到 Safari 開啟之後再回到這個教學。',
+      copy: '複製',
+      copied: '已複製',
+    },
+    android: {
+      step1: '點右上角的選單',
+      step2Html: '找「<strong>安裝應用程式</strong>」或「<strong>加到主畫面</strong>」',
+      step3: '確認後，icon 會出現在你的主畫面',
+    },
+    desktop: {
+      step1: '看網址列右側，會有一個小小的安裝按鈕',
+      step2: '點下去，確認安裝',
+      step3: 'Futari 會像一個獨立的 app 開啟',
+    },
+    fallbackHtml: '在你的瀏覽器選單裡找「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。不同瀏覽器位置不太一樣，但通常都在右上的選單裡。',
   },
 }

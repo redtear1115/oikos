@@ -12,6 +12,8 @@ import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
 import { canAccessGuardian } from '@/lib/guardian'
+import type { AssetType } from '@/lib/assets'
+import type { GasFuelType } from '@/lib/fuel'
 
 function assertPolicyHolderInGroup(
   userId: string,
@@ -40,7 +42,7 @@ export interface CreateCarInput {
   purchasedAt?: string | null
   purchasePrice?: number | null
   primaryUserId?: string | null
-  fuelType?: '92' | '95' | '98' | 'diesel'
+  fuelType?: GasFuelType
   color?: string | null
   year?: number | null
   brand?: string | null
@@ -135,7 +137,7 @@ export interface EditCarInput {
   purchasedAt: string | null
   purchasePrice: number | null
   primaryUserId?: string | null      // NEW — Slice 2
-  fuelType?: '92' | '95' | '98' | 'diesel'
+  fuelType?: GasFuelType
   color?: string | null
   year?: number | null
   brand?: string | null
@@ -273,7 +275,7 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
 
 export interface PickerAsset {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
+  type: AssetType
   name: string
   plate: string | null
 }

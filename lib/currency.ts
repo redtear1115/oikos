@@ -4,6 +4,20 @@
 export const CURRENCIES = ['twd', 'cny', 'usd', 'jpy'] as const
 export type CurrencyCode = typeof CURRENCIES[number]
 
+/**
+ * Boundary helper for narrowing untyped DB strings / external input to the
+ * main-ledger `CurrencyCode` enum. Returns null for unknown / empty / non-string
+ * inputs, callers decide on a fallback (typically the group's base currency or
+ * 'twd'). Use this instead of `value as CurrencyCode` at any DB-→-enum edge
+ * so unknown values fail loudly via the null branch rather than silently
+ * propagating into formatting / conversion logic. Input is case-insensitive.
+ */
+export function parseCurrencyCode(input: unknown): CurrencyCode | null {
+  if (typeof input !== 'string') return null
+  const lower = input.toLowerCase()
+  return (CURRENCIES as readonly string[]).includes(lower) ? (lower as CurrencyCode) : null
+}
+
 // USD is the only known sub-unit currency (stored in cents). All other codes —
 // including free-text like VND / EUR — are treated as integer-storage. This is
 // a deliberate simplification for v0.17.4; refine per-currency precision if/when

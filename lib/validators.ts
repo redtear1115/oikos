@@ -1,6 +1,7 @@
 import { isValidCategoryId, type CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
+import { GAS_FUEL_TYPES, type GasFuelType } from '@/lib/fuel'
 
 /**
  * Validates a positive integer NTD amount. Returns the value or throws.
@@ -163,7 +164,7 @@ export interface CarInput {
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
   primaryUserId?: string | null
-  fuelType?: '92' | '95' | '98' | 'diesel'
+  fuelType?: GasFuelType
   color?: string | null
   year?: number | null
   brand?: string | null
@@ -178,7 +179,7 @@ export interface ValidatedCarInput {
   purchasedAt: string | null
   purchasePrice: number | null
   primaryUserId: string | null
-  fuelType: '92' | '95' | '98' | 'diesel'
+  fuelType: GasFuelType
   color: string | null
   year: number | null
   brand: string | null
@@ -187,7 +188,7 @@ export interface ValidatedCarInput {
   notes: string | null
 }
 
-const CAR_FUEL_TYPES = ['92', '95', '98', 'diesel'] as const
+const CAR_FUEL_TYPES = GAS_FUEL_TYPES
 
 /**
  * Validates a car asset input. Trims + max-length-checks name and plate, uppercases plate,
@@ -301,14 +302,14 @@ export interface FuelLogInputValidated {
   liters: number      // numeric, > 0
   odometer: number    // >= 0
   cost: number        // > 0
-  fuelType: '92' | '95' | '98' | 'diesel'
+  fuelType: GasFuelType
   loggedAt: Date
   station: string | null
   paidBy: string
   splitType: 'all_mine' | 'all_theirs' | 'half'
 }
 
-const FUEL_TYPES_GAS = ['92', '95', '98', 'diesel'] as const
+const FUEL_TYPES_GAS = GAS_FUEL_TYPES
 
 /**
  * Validates a FuelLog input. FuelLog is gas-only per EV1 spec — electric cars
@@ -378,7 +379,7 @@ export function validateFuelLogInput(input: FuelLogInputRaw): FuelLogInputValida
     liters,
     odometer: input.odometer,
     cost,
-    fuelType: input.fuelType as '92' | '95' | '98' | 'diesel',
+    fuelType: input.fuelType as GasFuelType,
     loggedAt,
     station,
     paidBy: input.paidBy,

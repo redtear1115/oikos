@@ -42,6 +42,8 @@ export const ja: Translations = {
     saving: '保存中…',
     processing: '処理中…',
     delete: '削除',
+    confirm: '確認',
+    done: '完了',
     me: '自分',
     partner: '相手',
     you: 'あなた',
@@ -135,6 +137,10 @@ export const ja: Translations = {
       multipleHeading: '{count} 件の旅行が進行中',
       multipleCta: 'まとめて見る ›',
       multipleAriaLabel: '進行中の {count} 件の旅行を見る',
+      emptyCta: '旅を始める',
+      addAriaLabel: '新しい旅行',
+      collapseAriaLabel: '旅行カードを折りたたむ',
+      expandAriaLabel: '旅行カードを開く',
     },
   },
 
@@ -307,9 +313,32 @@ export const ja: Translations = {
     primaryRepay: '返済を記録',
     primaryReceive: '受領を記録',
     amountAriaLabel: '返済金額',
+    editTitle: '返済を編集',
+    amountLabel: '金額',
+    dateLabel: '日付',
+    deleteOne: 'この記録を削除',
+    deleteConfirmTitle: 'この返済を削除しますか？',
     errors: {
       exceedsDebt: '金額が借入額を超えています',
+      amountRequired: '金額を入力してください',
+      noPartner: 'パートナーがまだ参加していません',
     },
+  },
+
+  editTextSheet: {
+    errorEmpty: '空にはできません',
+    saveFailed: '保存に失敗しました',
+  },
+
+  assetPickerSheet: {
+    title: '愛物を選ぶ',
+    tablistAriaLabel: '愛物を選ぶ',
+    noneTitle: '紐づけしない',
+    noneSubtitle: 'この記録はどの愛物にも関連しません',
+    loading: '読み込み中…',
+    loadFailed: '読み込みに失敗しました',
+    emptyAibutsu: 'まだ愛物がありません — まず「愛物」タブから追加してください。',
+    emptyGuardian: 'まだ保険がありません — まず「愛物 > 守護」から追加してください。',
   },
 
   records: {
@@ -401,6 +430,7 @@ export const ja: Translations = {
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     saveDefaultRatio: 'デフォルト比率を保存',
     inviteCta: '相手を招待',
+    quickAccessRow: '個人と家計の設定',
     sectionDisplay: '言語と通貨',
     language: '言語',
     currency: '通貨',
@@ -1313,5 +1343,32 @@ export const ja: Translations = {
     instructionGeneric: '上のリンクをコピーして、Safari や Chrome に貼り付けてください。',
     instructionIos: '上のボタンで Safari に移動、または手動でリンクをコピーして Safari に貼り付けてください。',
     instructionAndroid: '右上のメニューから「ブラウザで開く」を選ぶか、リンクをコピーして Chrome に貼り付けてください。',
+  },
+
+  installGuide: {
+    title: 'ホーム画面に追加',
+    close: '閉じる',
+    intro: 'Futari をホーム画面に追加すると、アプリのように全画面で開き、アドレスバーが表示されなくなります。',
+    iosSafari: {
+      step1: '画面下中央の共有ボタンをタップ',
+      step2Html: '下にスクロールして「<strong>ホーム画面に追加</strong>」を見つける',
+      step3Html: '右上の「<strong>追加</strong>」をタップして完了',
+    },
+    iosOther: {
+      bodyHtml: 'iOS では <strong>Safari</strong> だけがホーム画面に追加できます。下のリンクをコピーして Safari で開いてから、このガイドに戻ってください。',
+      copy: 'コピー',
+      copied: 'コピー済み',
+    },
+    android: {
+      step1: '右上のメニューをタップ',
+      step2Html: '「<strong>アプリをインストール</strong>」または「<strong>ホーム画面に追加</strong>」を選ぶ',
+      step3: '確認すると、ホーム画面にアイコンが追加されます',
+    },
+    desktop: {
+      step1: 'アドレスバーの右側に小さなインストールボタンがあります',
+      step2: 'クリックしてインストールを確認',
+      step3: 'Futari が独立したアプリのように開きます',
+    },
+    fallbackHtml: 'ブラウザのメニューから「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を探してください。ブラウザによって場所は違いますが、たいてい右上のメニュー内にあります。',
   },
 }

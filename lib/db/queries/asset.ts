@@ -5,6 +5,8 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { type FeedRow, type FeedKind, type TxnCursor, rowToFeedRow } from './transactions'
 import type { EpochWindow } from './epoch'
 import { andClause, cursorClause, epochClause } from './_predicates'
+import type { AssetType } from '@/lib/assets'
+import type { FuelType } from '@/lib/fuel'
 
 const policyHolderProfile = alias(profiles, 'policy_holder_profile')
 const insuredUserProfile = alias(profiles, 'insured_user_profile')
@@ -13,7 +15,7 @@ const insuredChildAsset = alias(assets, 'insured_child_asset')
 export interface AssetWithCar {
   id: string
   groupId: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
+  type: AssetType
   name: string
   notes: string | null
   deletedAt: Date | null
@@ -27,7 +29,7 @@ export interface AssetWithCar {
   purchasedAt: string | null
   purchasePrice: number | null
   // Slice 2 additions
-  fuelType: 'electric' | '92' | '95' | '98' | 'diesel' | null
+  fuelType: FuelType | null
   primaryUserId: string | null
   // Extended car fields
   color: string | null

@@ -2,12 +2,13 @@ import { db } from '@/lib/db/client'
 import { fuelLogs } from '@/lib/db/schema'
 import { and, desc, eq, gte, isNull, lt, sql } from 'drizzle-orm'
 import { type EpochWindow } from './epoch'
+import type { FuelType } from '@/lib/fuel'
 
 export interface FuelLogRow {
   id: string
   assetId: string
   liters: string  // Drizzle numeric returns string; caller parses
-  fuelType: '92' | '95' | '98' | 'diesel' | 'electric'
+  fuelType: FuelType
   odometer: number
   station: string | null
   loggedAt: Date
@@ -72,7 +73,7 @@ export async function listFuelLogsWithPrev(
     id: string
     asset_id: string
     liters: string
-    fuel_type: '92' | '95' | '98' | 'diesel' | 'electric'
+    fuel_type: FuelType
     odometer: number
     station: string | null
     logged_at: Date | string

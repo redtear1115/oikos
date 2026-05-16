@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useTransition } from 'react'
-import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
@@ -13,12 +13,13 @@ import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateAbsolute } from '@/lib/format-date'
 import { describeError } from '@/lib/errors'
 import type { SplitType } from '@/lib/balance'
+import type { FuelType, GasFuelType } from '@/lib/fuel'
 
 interface CarLite {
   id: string
   name: string
   plate: string
-  fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  fuelType: FuelType | null
   primaryUserId: string | null
 }
 
@@ -28,7 +29,7 @@ export interface NewFuelLogInitial {
   liters: string
   odometer: number
   station: string | null
-  fuelType: '92' | '95' | '98' | 'diesel'
+  fuelType: GasFuelType
   loggedAt: string    // ISO string
   cost: number
   paidBy: string
@@ -51,8 +52,6 @@ function isoToLocalDate(iso: string): string {
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
-
-type GasFuelType = '92' | '95' | '98' | 'diesel'
 
 function toGasFuelType(ft: string | null | undefined): GasFuelType {
   if (ft === '92') return '92'
@@ -190,25 +189,13 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
 
   return (
     <>
-      <SheetBackdrop open={open} onClick={onClose} />
-      <div
-        className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
-        style={{
-          background: 'var(--bg)',
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
-          maxHeight: '94dvh',
-          transform: open ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-          pointerEvents: open ? 'auto' : 'none',
-        }}
+      <SheetFrame
+        open={open}
+        onClose={onClose}
+        ariaLabel={mode === 'edit' ? '編輯加油記錄' : '加油記錄'}
+        topRadius={28}
+        heightDvh={94}
       >
-        {/* Grabber */}
-        <div className="pt-2 flex justify-center shrink-0">
-          <div className="w-9 h-[5px] rounded-full" style={{ background: 'rgba(31,27,22,0.18)' }} />
-        </div>
-
         {/* Header */}
         <div className="px-4 pt-3 pb-2 flex items-center gap-3 shrink-0">
           <button
@@ -378,7 +365,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             </button>
           </div>
         )}
-      </div>
+      </SheetFrame>
 
       <ConfirmModal
         open={confirmDelete}

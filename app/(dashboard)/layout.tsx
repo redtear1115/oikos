@@ -14,6 +14,7 @@ import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { canAccessGuardian } from '@/lib/guardian'
+import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -64,6 +65,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     canAccessGuardian: canAccessGuardian(group),
   }
 
+  const avatarMenuData: AvatarMenuData = {
+    viewerEmail: user.email ?? '',
+    groupDefaultRatioA: group.defaultSplitRatioA ?? null,
+    guardianBetaEnabled: group.guardianBetaEnabled,
+    currentLocale: locale,
+  }
+
   return (
     <TranslationsProvider value={t} locale={locale}>
       <ViewerProvider value={value}>
@@ -78,9 +86,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
               locale={locale}
             />
           )}
-          <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
-            {children}
-          </div>
+          <AvatarMenuProvider data={avatarMenuData}>
+            <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
+              {children}
+            </div>
+          </AvatarMenuProvider>
         </RealtimeProvider>
       </ViewerProvider>
     </TranslationsProvider>

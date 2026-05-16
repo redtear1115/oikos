@@ -2,6 +2,7 @@
 
 import { resolveCarColor } from '../../_components/carColor'
 import { useTranslations } from '@/lib/i18n/client'
+import type { FuelType } from '@/lib/fuel'
 
 interface AssetHeroProps {
   name: React.ReactNode
@@ -9,7 +10,7 @@ interface AssetHeroProps {
   brand: string | null
   model: string | null
   year: number | null
-  fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  fuelType: FuelType | null
   color: string | null
   monthAmount: number
   totalAmount: number
