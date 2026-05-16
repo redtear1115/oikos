@@ -20,7 +20,13 @@ export function useFocusAndSelectOnOpen(
 ): void {
   useLayoutEffect(() => {
     if (!open) return
-    ref.current?.focus()
+    // preventScroll stops iOS Safari's focus-driven scroll-into-view from
+    // running its own scroll on the nearest scrollable ancestor — that
+    // auto-scroll fights `useScrollToTopOnOpen` and can land the inner
+    // container mid-sheet even though we just set scrollTop = 0. The
+    // keyboard still pops because trust comes from the user gesture, not
+    // the scroll behavior. (#434 follow-up.)
+    ref.current?.focus({ preventScroll: true })
     ref.current?.select()
   // ref is a stable RefObject — omitting it from deps is intentional
   // eslint-disable-next-line react-hooks/exhaustive-deps
