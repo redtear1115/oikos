@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef, useTransition, useId } from 'react'
 import { CalIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { localTodayISO } from '@/lib/local-date'
@@ -38,6 +38,9 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const addressId = useId()
+  const purchaseDateId = useId()
+  const purchasePriceId = useId()
 
   useEffect(() => {
     if (!open) return
@@ -117,8 +120,9 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       <div className="flex flex-col gap-3 px-5 pb-2">
         {/* Address */}
         <div className="flex flex-col gap-1">
-          <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
+          <label htmlFor={addressId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
           <input
+            id={addressId}
             type="text"
             placeholder={ts.house.addressPlaceholder}
             value={address}
@@ -131,8 +135,9 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
         {/* Purchase date */}
         <div className="flex flex-col gap-1">
-          <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasedAt}</label>
+          <label htmlFor={purchaseDateId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasedAt}</label>
           <button
+            id={purchaseDateId}
             type="button"
             onClick={() => setShowCal(c => !c)}
             className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
@@ -151,8 +156,9 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
         {/* Purchase price */}
         <div className="flex flex-col gap-1">
-          <label className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
+          <label htmlFor={purchasePriceId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
           <input
+            id={purchasePriceId}
             type="number"
             inputMode="numeric"
             placeholder={ts.house.purchasePricePlaceholder}

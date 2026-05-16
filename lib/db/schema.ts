@@ -105,6 +105,11 @@ export const groupBalance = pgTable('GroupBalance', {
   lastCalculatedAt: timestamp('last_calculated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+// ⚠️ Deprecated since #410 (v0.17.4): trip-scoped rates moved into
+// Trips.rate_snapshot. This table is retained for historical compatibility of
+// legacy trips whose rate_snapshot was hydrated from it; new trips no longer
+// read from here. Drop migration scheduled in a future cleanup pass.
+//
 // #68 — Per-group psychological exchange rates. Composite PK (group_id, from, to).
 // Rate semantics: 1 display unit of from_currency = rate display units of to_currency.
 // 4×4 matrix covers twd/cny/usd/jpy. CHECK from <> to enforced in migration SQL.
@@ -465,9 +470,12 @@ export const partnerQuizAnswers = pgTable('PartnerQuizAnswers', {
 // budget_amount / budget_currency are optional user-set fields for trip planning.
 // CHECK (end_date >= start_date) and CHECK ((status = 'ended') = (ended_at IS NOT NULL))
 // are enforced in migration SQL (Drizzle schema layer can't express these).
-// v0.17.2 — rate_snapshot: jsonb of `${from}_${to}` → rate, copied from
-// CurrencyRates at trip creation. Keys uppercase (e.g. "USD_TWD"). Locks FX
-// for the trip so later group-level rate edits don't drift trip displays.
+// v0.17.4 #410 — rate_snapshot stores trip-scoped currencies + rates as
+// `{ default: string, entries: [{ code, label, rate }] }`. Currency codes are
+// free-text (uppercase by convention) to allow user-defined currencies (e.g.
+// VND, EUR). default_currency / budget_currency widen to text accordingly.
+// Main ledger columns (CashTransactions.original_currency etc.) stay on the
+// 4-value `currency_code` enum. See lib/trip-currency.ts.
 export const trips = pgTable('Trips', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -475,9 +483,9 @@ export const trips = pgTable('Trips', {
   name: text('name').notNull(),
   startDate: date('start_date').notNull(),
   endDate: date('end_date'),
-  defaultCurrency: currencyEnum('default_currency'),
+  defaultCurrency: text('default_currency'),
   budgetAmount: integer('budget_amount'),
-  budgetCurrency: currencyEnum('budget_currency'),
+  budgetCurrency: text('budget_currency'),
   coverPhotoUrl: text('cover_photo_url'),
   status: tripStatusEnum('status').notNull().default('active'),
   endedAt: timestamp('ended_at', { withTimezone: true }),
@@ -496,7 +504,9 @@ export const tripExpenses = pgTable('TripExpenses', {
   tripId: uuid('trip_id').notNull().references(() => trips.id),
   paidBy: uuid('paid_by').notNull().references(() => profiles.id),
   amount: integer('amount').notNull(),
-  originalCurrency: currencyEnum('original_currency'),
+  // v0.17.4 #410 — Free-text since trip currencies are user-defined per trip.
+  // Must match an entry.code in the parent Trips.rate_snapshot (app-enforced).
+  originalCurrency: text('original_currency'),
   originalAmount: integer('original_amount'),
   category: text('category').notNull(),
   splitType: splitTypeEnum('split_type').notNull(),

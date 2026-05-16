@@ -237,6 +237,108 @@ export type Translations = {
     pendingBadge: string
   }
 
+  /** Trip list page (#42). */
+  tripList: {
+    /** Page heading at the top of /trips. */
+    title: string
+    /** Soft subtitle under the page title. */
+    subtitle: string
+    /** Section label above the active trips list. */
+    sectionActive: string
+    /** Section label above the past / ended trips list. */
+    sectionPast: string
+    /** Inline tag appended after the date range on past rows. */
+    endedTag: string
+    /** Date range "{startDate} 起,進行中" — `{startDate}` is the trip start ISO date. */
+    dateRangeActive: string
+    /** Aria label for the back link in the page header (where applicable). */
+    backAriaLabel: string
+    /** Empty-state copy when the group has no trips at all. */
+    empty: {
+      heading: string
+      body: string
+    }
+  }
+
+  /** Trip create/edit sheet (#42, #410). */
+  tripSheet: {
+    /** Sheet title for creating a new trip. */
+    titleNew: string
+    /** Sheet title for editing an existing trip. */
+    titleEdit: string
+    /** Bottom save button when creating. */
+    saveNew: string
+    /** Bottom save button when editing. */
+    saveEdit: string
+    errors: {
+      /** Server fallback when createTrip throws without a message. */
+      createFailed: string
+      /** Server fallback when updateTrip throws without a message. */
+      updateFailed: string
+      /** Inline error under a custom row whose code is blank. */
+      codeBlank: string
+      /** Inline error when two rows have the same code. */
+      codeDuplicate: string
+      /** Inline error when any row's rate ≤ 0 — bound near the offending input. */
+      rateInvalid: string
+      /** Inline error under a rate input that is blank or non-positive. */
+      rateInvalidInline: string
+      /** Soft toast-style error when the user tries to exceed MAX_ENTRIES.
+       *  `{max}` is the cap (5). */
+      maxCurrencies: string
+    }
+    /** Label above the trip name input. */
+    nameLabel: string
+    /** Placeholder inside the trip name input. */
+    namePlaceholder: string
+    /** Label above the start date picker. */
+    startDateLabel: string
+    /** Label above the (optional) end date picker. */
+    endDateLabel: string
+    /** Inline alert under the date pair when end < start. */
+    endBeforeStart: string
+    /** Section heading above the currency picker. */
+    currenciesSectionTitle: string
+    /** One-line hint under the section heading explaining rate direction. */
+    currenciesHint: string
+    /** "{n} / {max}" pill in the section header. */
+    currencyCountFormat: string
+    /** Pill button to add a custom (non-preset) currency row. */
+    addCustomCta: string
+    /** Bottom-of-sheet reassurance about how trip-tagged expenses are routed. */
+    footerNote: string
+    /** Inline hint under the rate input showing the inverse direction.
+     *  `{default}` is the base currency code. */
+    rateInverseFormat: string
+    /** Pill on the base currency's header row — base is always present and
+     *  is the trip's reference currency (no longer user-switchable). */
+    basePill: string
+    /** Soft note shown beneath a non-base currency row when there are already
+     *  TripExpenses recorded against it. `{n}` is the count. Reassures that
+     *  rate edits only affect future records. */
+    usedCountNote: string
+    customRow: {
+      /** Aria label on the custom-row code input. */
+      codeAriaLabel: string
+      /** Placeholder text in the custom-row code input. */
+      codePlaceholder: string
+      /** Aria label on the custom-row display name input. */
+      labelAriaLabel: string
+      /** Placeholder text in the custom-row display name input. */
+      labelPlaceholder: string
+      /** Aria label on the × remove button. */
+      removeAriaLabel: string
+    }
+    /** Localised display name for each preset currency code (the 4 codes are
+     *  universal; the labels next to them are not). */
+    presetLabels: {
+      TWD: string
+      CNY: string
+      USD: string
+      JPY: string
+    }
+  }
+
   /** Trip detail page (#42). */
   tripDetail: {
     /** Empty-state copy when the trip is still active. */
@@ -270,10 +372,19 @@ export type Translations = {
     endDateBeforeStart: string
     /** Server/network error fallback when endTrip() throws without a message. */
     endFailure: string
-    /** Tertiary link to /settings/currency — surfaced from trip context only
-     *  (issue #366). Settings top-level no longer lists 心理匯率 since it
-     *  only matters during a trip. */
-    currencyRatesLink: string
+    /** Aria label for the pencil edit button in the trip detail sticky header. */
+    editAriaLabel: string
+    /** Red-tinted warning shown above the end-trip date picker — emphasises
+     *  that ending writes a summary into the main ledger and cannot be undone. */
+    endIrreversibleNote: string
+    /** Tiny label above the trip total in the top fold-preview card. */
+    totalLabel: string
+    /** Pill on the top card showing this trip's settlement currency. `{code}` is the base code. */
+    baseCurrencyTag: string
+    /** Title attribute on the base currency pill. */
+    baseCurrencyTagTitle: string
+    /** Section header above the records list. `{n}` is the record count. */
+    recordsCountLabel: string
   }
 
   incomeSheet: {
@@ -399,14 +510,16 @@ export type Translations = {
   settings: {
     title: string
     sectionGroup: string
+    sectionGroupSplit: string
     groupName: string
     sectionMember: string
     youSuffix: string
     sectionPersonal: string
     addToHomeScreen: string
     displayName: string
-    defaultSplitTitle: string
     soloLockHint: string
+    /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
+    saveDefaultRatio: string
     inviteCta: string
     sectionDisplay: string
     language: string
@@ -420,6 +533,7 @@ export type Translations = {
     offlineUnsupported: string
     recurringIncome: string
     recurringExpense: string
+    recurringSettings: string
     sectionData: string
     trust: string
     exportData: string
@@ -641,7 +755,6 @@ export type Translations = {
   recurringIncome: {
     title: string
     back: string
-    add: string
     empty: {
       hint: string
       cta: string
@@ -740,7 +853,8 @@ export type Translations = {
     }
   }
 
-  /** /settings/currency page — base currency + 心理匯率 (issues #322–#326). */
+  /** /settings/currency page — base currency only since v0.17.4 (#410).
+   *  Trip-scoped 心理匯率 lives inside each trip's TripSheet. */
   currencyPage: {
     title: string
     back: string
@@ -755,21 +869,14 @@ export type Translations = {
         bodyNext: string
       }
     }
-    rates: {
-      sectionTitle: string
-      whyHeading: string
-      whyBody: string
-      exampleHeading: string
-      exampleBody: string
-      behaviorHeading: string
-      behaviorBody: string
-      saving: string
-      saved: string
-      defaultFallback: string
+    /** Hint card pointing users at trip-scoped currency settings. */
+    tripsHint: {
+      heading: string
+      body: string
+      linkLabel: string
     }
     errors: {
       baseChangeFailed: string
-      rateChangeFailed: string
     }
   }
 
@@ -1157,7 +1264,6 @@ export type Translations = {
   recurringExpense: {
     title: string
     back: string
-    add: string
     empty: {
       hint: string
       cta: string
@@ -1626,6 +1732,62 @@ export const zhTW: Translations = {
     pendingBadge: '待結算',
   },
 
+  tripList: {
+    title: '旅行',
+    subtitle: '一趟一趟收下來，這段路就有自己的章節。',
+    sectionActive: '進行中',
+    sectionPast: '過去的旅行',
+    endedTag: '已結束',
+    dateRangeActive: '{startDate} 起,進行中',
+    backAriaLabel: '返回旅行列表',
+    empty: {
+      heading: '還沒有旅行紀錄',
+      body: '建一趟旅行，這段日子裡的每筆支出，就會自動收進來，回來再一起翻。',
+    },
+  },
+
+  tripSheet: {
+    titleNew: '建立旅行',
+    titleEdit: '編輯旅行',
+    saveNew: '開始這趟',
+    saveEdit: '保存變更',
+    errors: {
+      createFailed: '建立失敗',
+      updateFailed: '更新失敗',
+      codeBlank: '請輸入幣別代碼',
+      codeDuplicate: '幣別不可重複',
+      rateInvalid: '匯率必須是正數',
+      rateInvalidInline: '請輸入大於 0 的匯率',
+      maxCurrencies: '最多 {max} 個幣別',
+    },
+    nameLabel: '名稱',
+    namePlaceholder: '例：東京 5 日',
+    startDateLabel: '起始日',
+    endDateLabel: '結束日（可選）',
+    endBeforeStart: '結束日不可早於起始日',
+    currenciesSectionTitle: '幣別與匯率',
+    currenciesHint: '勾選這趟用得到的幣別。每行填「1 個此幣別 = 幾個基礎貨幣」(例：1 JPY ≈ 0.2 TWD)。改了匯率，舊紀錄保留當時的金額，只影響之後新增的紀錄。',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ 自訂幣別',
+    footerNote: '這趟期間記錄的支出，會自動掛在這次旅行底下。',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: '基礎貨幣',
+    usedCountNote: '已記過 {n} 筆；改匯率不影響舊紀錄',
+    customRow: {
+      codeAriaLabel: '幣別代碼',
+      codePlaceholder: 'VND',
+      labelAriaLabel: '顯示名稱',
+      labelPlaceholder: '越南盾（可選）',
+      removeAriaLabel: '移除幣別',
+    },
+    presetLabels: {
+      TWD: '台幣',
+      CNY: '人民幣',
+      USD: '美元',
+      JPY: '日圓',
+    },
+  },
+
   tripDetail: {
     emptyActive: '這趟還沒有任何紀錄。點右下角的加號從這裡開始記。',
     emptyEnded: '這趟沒有留下任何紀錄。',
@@ -1642,7 +1804,12 @@ export const zhTW: Translations = {
     endConfirm: '確認結束',
     endDateBeforeStart: '結束日不可早於起始日({date})',
     endFailure: '結束失敗',
-    currencyRatesLink: '調整心理匯率',
+    editAriaLabel: '編輯這趟旅行',
+    endIrreversibleNote: '結束之後無法復原。這趟的支出會以總結算的形式回到主帳本。',
+    totalLabel: '這趟一共花了',
+    baseCurrencyTag: '基礎貨幣 {code}',
+    baseCurrencyTagTitle: '這趟以這個幣別結算',
+    recordsCountLabel: '這趟的紀錄 · {n} 筆',
   },
 
   incomeSheet: {
@@ -1758,14 +1925,15 @@ export const zhTW: Translations = {
   settings: {
     title: '設定',
     sectionGroup: '帳本',
+    sectionGroupSplit: '預設分攤方式 & 比例',
     groupName: '帳本名稱',
     sectionMember: '成員',
     youSuffix: '（你）',
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
-    defaultSplitTitle: '建立紀錄時的預設分攤',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+    saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     sectionDisplay: '語言 & 幣別',
     language: '語言',
@@ -1779,6 +1947,7 @@ export const zhTW: Translations = {
     offlineUnsupported: '目前的瀏覽器不支援離線瀏覽',
     recurringIncome: '定期收入',
     recurringExpense: '定期支出',
+    recurringSettings: '定期支出/收入設定',
     sectionData: '資料',
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
@@ -1971,7 +2140,6 @@ export const zhTW: Translations = {
   recurringIncome: {
     title: '定期收入',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '還沒設定定期收入',
       cta: '新增第一個',
@@ -2068,7 +2236,7 @@ export const zhTW: Translations = {
     title: '貨幣',
     back: '返回',
     pageHeading: '兩人之間的一把尺',
-    pageSubtitle: '主體幣別是這本帳本的母語；心理匯率是你們之間的共識。',
+    pageSubtitle: '主體幣別是這本帳本的母語。',
     base: {
       sectionTitle: '主體幣別',
       sectionHint: '這本帳本的母語。所有結算與顯示，都以它為基準。',
@@ -2078,21 +2246,13 @@ export const zhTW: Translations = {
         bodyNext: '想換主體幣別的話，可以等開始下一個章節時重新選。',
       },
     },
-    rates: {
-      sectionTitle: '心理匯率',
-      whyHeading: '為什麼叫「心理」匯率',
-      whyBody: '不是看市場跳動的數字，是你們倆之間覺得 1 美金值多少——這把尺只屬於你們。',
-      exampleHeading: '舉個例子',
-      exampleBody: '比如你們約定 1 USD ≈ 32 TWD，那這趟在美國花的 100 美金，會記成 3,200 元。',
-      behaviorHeading: '改了之後',
-      behaviorBody: '以前已經記下的金額不會跟著動。只有從現在開始的新紀錄，會用新的匯率。',
-      saving: '儲存中…',
-      saved: '已存下',
-      defaultFallback: '預設值',
+    tripsHint: {
+      heading: '心理匯率搬家了',
+      body: '出國的時候用得到的幣別與匯率，現在跟著旅行一起設定——每一趟自己一把尺，不會互相影響。',
+      linkLabel: '看看旅行',
     },
     errors: {
       baseChangeFailed: '無法切換主體幣別',
-      rateChangeFailed: '無法更新匯率',
     },
   },
 
@@ -2452,7 +2612,6 @@ export const zhTW: Translations = {
   recurringExpense: {
     title: '定期支出',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '還沒設定定期支出',
       cta: '新增第一個',

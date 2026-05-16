@@ -198,6 +198,62 @@ export const zhCN: Translations = {
     pendingBadge: '待结算',
   },
 
+  tripList: {
+    title: '旅行',
+    subtitle: '一趟一趟收下来，这段路就有自己的章节。',
+    sectionActive: '进行中',
+    sectionPast: '过去的旅行',
+    endedTag: '已结束',
+    dateRangeActive: '{startDate} 起，进行中',
+    backAriaLabel: '返回旅行列表',
+    empty: {
+      heading: '还没有旅行记录',
+      body: '建一趟旅行，这段日子里的每笔支出，就会自动收进来，回来再一起翻。',
+    },
+  },
+
+  tripSheet: {
+    titleNew: '建立旅行',
+    titleEdit: '编辑旅行',
+    saveNew: '开始这趟',
+    saveEdit: '保存更改',
+    errors: {
+      createFailed: '建立失败',
+      updateFailed: '更新失败',
+      codeBlank: '请输入币别代码',
+      codeDuplicate: '币别不可重复',
+      rateInvalid: '汇率必须是正数',
+      rateInvalidInline: '请输入大于 0 的汇率',
+      maxCurrencies: '最多 {max} 个币别',
+    },
+    nameLabel: '名称',
+    namePlaceholder: '例：东京 5 日',
+    startDateLabel: '起始日',
+    endDateLabel: '结束日（可选）',
+    endBeforeStart: '结束日不可早于起始日',
+    currenciesSectionTitle: '币别与汇率',
+    currenciesHint: '勾选这趟用得到的币别。每行填「1 个此币别 = 几个基础货币」(例：1 JPY ≈ 0.2 TWD)。改了汇率，旧记录保留当时的金额，只影响之后新增的记录。',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ 自定义币别',
+    footerNote: '这趟期间记录的支出，会自动挂在这次旅行底下。',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: '基础货币',
+    usedCountNote: '已记过 {n} 笔；改汇率不影响旧记录',
+    customRow: {
+      codeAriaLabel: '币别代码',
+      codePlaceholder: 'VND',
+      labelAriaLabel: '显示名称',
+      labelPlaceholder: '越南盾（可选）',
+      removeAriaLabel: '移除币别',
+    },
+    presetLabels: {
+      TWD: '台币',
+      CNY: '人民币',
+      USD: '美元',
+      JPY: '日元',
+    },
+  },
+
   tripDetail: {
     emptyActive: '这趟还没有任何记录。点右下角的加号从这里开始记。',
     emptyEnded: '这趟没有留下任何记录。',
@@ -214,7 +270,12 @@ export const zhCN: Translations = {
     endConfirm: '确认结束',
     endDateBeforeStart: '结束日不可早于起始日({date})',
     endFailure: '结束失败',
-    currencyRatesLink: '调整心理汇率',
+    editAriaLabel: '编辑这趟旅行',
+    endIrreversibleNote: '结束之后无法复原。这趟的支出会以总结算的形式回到主账本。',
+    totalLabel: '这趟一共花了',
+    baseCurrencyTag: '基础货币 {code}',
+    baseCurrencyTagTitle: '这趟以这个币别结算',
+    recordsCountLabel: '这趟的记录 · {n} 笔',
   },
 
   incomeSheet: {
@@ -329,15 +390,16 @@ export const zhCN: Translations = {
 
   settings: {
     title: '设置',
-    sectionGroup: '账本',
+    sectionGroup: '帐本',
+    sectionGroupSplit: '预设分摊方式 & 比例',
     groupName: '账本名称',
     sectionMember: '成员',
     youSuffix: '（你）',
     sectionPersonal: '个人',
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
-    defaultSplitTitle: '创建记录时的默认分摊',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
+    saveDefaultRatio: '保存默认比例',
     inviteCta: '邀请对方加入',
     sectionDisplay: '语言 & 币别',
     language: '语言',
@@ -351,6 +413,7 @@ export const zhCN: Translations = {
     offlineUnsupported: '当前的浏览器不支援离线浏览',
     recurringIncome: '定期收入',
     recurringExpense: '定期支出',
+    recurringSettings: '定期支出/收入设定',
     sectionData: '数据',
     trust: '数据安全',
     exportData: '导出数据（CSV）',
@@ -543,7 +606,6 @@ export const zhCN: Translations = {
   recurringIncome: {
     title: '定期收入',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '还没设定定期收入',
       cta: '新增第一个',
@@ -640,7 +702,7 @@ export const zhCN: Translations = {
     title: '货币',
     back: '返回',
     pageHeading: '两人之间的一把尺',
-    pageSubtitle: '主体币别是这本账本的母语；心理汇率是你们之间的共识。',
+    pageSubtitle: '主体币别是这本账本的母语。',
     base: {
       sectionTitle: '主体币别',
       sectionHint: '这本账本的母语。所有结算与显示，都以它为基准。',
@@ -650,21 +712,13 @@ export const zhCN: Translations = {
         bodyNext: '想换主体币别的话，可以等开始下一个章节时重新选。',
       },
     },
-    rates: {
-      sectionTitle: '心理汇率',
-      whyHeading: '为什么叫「心理」汇率',
-      whyBody: '不是看市场跳动的数字，是你们俩之间觉得 1 美金值多少——这把尺只属于你们。',
-      exampleHeading: '举个例子',
-      exampleBody: '比如你们约定 1 USD ≈ 32 TWD，那这趟在美国花的 100 美金，会记成 3,200 元。',
-      behaviorHeading: '改了之后',
-      behaviorBody: '以前已经记下的金额不会跟着动。只有从现在开始的新记录，会用新的汇率。',
-      saving: '保存中…',
-      saved: '已保存',
-      defaultFallback: '默认值',
+    tripsHint: {
+      heading: '心理汇率搬家了',
+      body: '出国时用得到的币别与汇率，现在跟着旅行一起设定——每一趟自己一把尺，不会互相影响。',
+      linkLabel: '看看旅行',
     },
     errors: {
       baseChangeFailed: '无法切换主体币别',
-      rateChangeFailed: '无法更新汇率',
     },
   },
 
@@ -1024,7 +1078,6 @@ export const zhCN: Translations = {
   recurringExpense: {
     title: '定期支出',
     back: '返回',
-    add: '+ 新增',
     empty: {
       hint: '还没设定定期支出',
       cta: '新增第一个',

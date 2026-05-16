@@ -5,7 +5,8 @@ import { tripExpenses, trips } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidatePath } from 'next/cache'
-import { convertAmount, type CurrencyCode } from '@/lib/currency'
+import { convertAmount } from '@/lib/currency'
+import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
 
 /**
  * v0.17.2 #42 — Trip sub-ledger actions.
@@ -22,7 +23,7 @@ export interface CreateTripExpenseInput {
   tripId: string
   paidBy: string
   amount: number               // in `currency` units (post-cent for USD)
-  currency?: CurrencyCode | null  // null = group base currency
+  currency?: string | null     // free-text trip currency code; null = trip default
   category: string
   splitType: TripSplitType
   splitRatio?: number | null   // 0–100, payer's share %. Required iff splitType='weighted'.
@@ -51,28 +52,65 @@ async function loadActiveTripForViewer(tripId: string, groupId: string) {
 
 interface NormalizedAmount {
   amount: number                            // base currency integer
-  originalCurrency: CurrencyCode | null
+  originalCurrency: string | null           // free-text trip code, uppercase
   originalAmount: number | null
 }
 
+/**
+ * Convert an expense entered in any trip-scoped currency into the group's base
+ * currency. The trip's rate_snapshot must include both the input currency and
+ * the base (or the input == trip.default == base, in which case it's a no-op).
+ *
+ * Note: the snapshot's `default` may or may not equal `base`. If they differ,
+ * we chain conversions through the snapshot's default: input → default → base.
+ * For PR 1 we still require that the snapshot covers the path; future work
+ * will look at lifting base = snapshot.default.
+ */
 function normalizeAmount(
-  input: { amount: number; currency: CurrencyCode | null | undefined },
-  base: CurrencyCode,
+  input: { amount: number; currency: string | null | undefined },
+  base: string,
   rateSnapshot: unknown,
+  fallbackDefault: string,
 ): NormalizedAmount {
-  const inputCurrency = input.currency ?? base
-  if (inputCurrency === base) {
+  const baseUpper = base.toUpperCase()
+  const snapshot = parseTripCurrencySnapshot(rateSnapshot, fallbackDefault)
+  const inputCode = (input.currency ?? snapshot.default).toUpperCase()
+
+  if (inputCode === baseUpper) {
     return { amount: input.amount, originalCurrency: null, originalAmount: null }
   }
-  const snapshot = rateSnapshot as Record<string, number> | null
-  const key = `${inputCurrency.toUpperCase()}_${base.toUpperCase()}`
-  const rate = snapshot?.[key]
-  if (rate == null) {
-    throw new Error(`旅行匯率 snapshot 缺少 ${inputCurrency} → ${base}`)
+
+  // input → snapshot.default
+  const inputRate = findRate(snapshot, inputCode)
+  if (inputRate == null) throw new Error(`旅行匯率缺少 ${inputCode}`)
+  const inDefaultUnits = convertAmount({
+    amount: input.amount,
+    from: inputCode,
+    to: snapshot.default,
+    rate: inputRate,
+  })
+
+  // snapshot.default → base. If snapshot.default === base, we're done.
+  if (snapshot.default === baseUpper) {
+    return {
+      amount: inDefaultUnits,
+      originalCurrency: inputCode,
+      originalAmount: input.amount,
+    }
   }
+  const baseRate = findRate(snapshot, baseUpper)
+  if (baseRate == null) throw new Error(`旅行匯率缺少 ${baseUpper}`)
+  // entries store `1 unit of code = rate units of default`, so to go from
+  // default → base we invert base's rate.
+  const baseFromDefault = convertAmount({
+    amount: inDefaultUnits,
+    from: snapshot.default,
+    to: baseUpper,
+    rate: 1 / baseRate,
+  })
   return {
-    amount: convertAmount({ amount: input.amount, from: inputCurrency, to: base, rate }),
-    originalCurrency: inputCurrency,
+    amount: baseFromDefault,
+    originalCurrency: inputCode,
     originalAmount: input.amount,
   }
 }
@@ -104,6 +142,7 @@ export async function createTripExpense(input: CreateTripExpenseInput) {
     { amount: input.amount, currency: input.currency },
     group.baseCurrency,
     trip.rateSnapshot,
+    trip.defaultCurrency ?? group.baseCurrency,
   )
 
   const [inserted] = await db
@@ -135,6 +174,7 @@ export async function editTripExpense(input: EditTripExpenseInput) {
     { amount: input.amount, currency: input.currency },
     group.baseCurrency,
     trip.rateSnapshot,
+    trip.defaultCurrency ?? group.baseCurrency,
   )
 
   const inserted = await db.transaction(async (tx) => {

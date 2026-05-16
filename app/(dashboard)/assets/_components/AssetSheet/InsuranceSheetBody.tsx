@@ -326,15 +326,19 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       </Field>
 
       <Field label={ts.insurance.insurer}>
-        <input value={insurer} onChange={e => setInsurer(e.target.value.slice(0, 32))}
-          placeholder={ts.insurance.insurerPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={insurer} onChange={e => setInsurer(e.target.value.slice(0, 32))}
+            placeholder={ts.insurance.insurerPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.insurance.policyNo}>
-        <input value={policyNo} onChange={e => setPolicyNo(e.target.value.slice(0, 32))}
-          placeholder={ts.insurance.policyNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+        {id => (
+          <input id={id} value={policyNo} onChange={e => setPolicyNo(e.target.value.slice(0, 32))}
+            placeholder={ts.insurance.policyNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+        )}
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
@@ -343,48 +347,66 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       </div>
 
       <Field label={ts.insurance.annualPremium}>
-        <input value={premium} onChange={e => setPremium(e.target.value)}
-          type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
-        <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+        {id => (
+          <>
+            <input id={id} value={premium} onChange={e => setPremium(e.target.value)}
+              type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
+              className="w-full bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)' }} />
+            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+          </>
+        )}
       </Field>
 
       <Field label={ts.insurance.sumInsured}>
-        <input value={sumInsured} onChange={e => setSumInsured(e.target.value)}
-          type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
-        <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+        {id => (
+          <>
+            <input id={id} value={sumInsured} onChange={e => setSumInsured(e.target.value)}
+              type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
+              className="w-full bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)' }} />
+            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+          </>
+        )}
       </Field>
 
       {kind === 'savings' && (
         <Field label={ts.insurance.expectedMaturityAmount}>
-          <input
-            value={expectedMaturityAmount}
-            onChange={e => setExpectedMaturityAmount(e.target.value)}
-            type="number"
-            inputMode="numeric"
-            placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
-            className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }}
-          />
-          <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+          {id => (
+            <>
+              <input
+                id={id}
+                value={expectedMaturityAmount}
+                onChange={e => setExpectedMaturityAmount(e.target.value)}
+                type="number"
+                inputMode="numeric"
+                placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
+                className="w-full bg-transparent border-0 outline-none text-base"
+                style={{ color: 'var(--ink)' }}
+              />
+              <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+            </>
+          )}
         </Field>
       )}
 
       {kind === 'savings' && (
         <Field label={ts.insurance.accountValue}>
-          <input
-            value={accountValue}
-            onChange={e => setAccountValue(e.target.value)}
-            type="number"
-            inputMode="numeric"
-            placeholder={ts.insurance.accountValuePlaceholder}
-            className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }}
-          />
-          <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+          {id => (
+            <>
+              <input
+                id={id}
+                value={accountValue}
+                onChange={e => setAccountValue(e.target.value)}
+                type="number"
+                inputMode="numeric"
+                placeholder={ts.insurance.accountValuePlaceholder}
+                className="w-full bg-transparent border-0 outline-none text-base"
+                style={{ color: 'var(--ink)' }}
+              />
+              <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+            </>
+          )}
         </Field>
       )}
 
@@ -413,23 +435,31 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       </div>
 
       <Field label={ts.insurance.startsAt}>
-        <input value={startsAt} onChange={e => setStartsAt(e.target.value)}
-          type="date" className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={startsAt} onChange={e => setStartsAt(e.target.value)}
+            type="date" className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.insurance.endsAt}>
-        <input value={endsAt} onChange={e => setEndsAt(e.target.value)}
-          type="date" className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
+        {id => (
+          <input id={id} value={endsAt} onChange={e => setEndsAt(e.target.value)}
+            type="date" className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }} />
+        )}
       </Field>
 
       <Field label={ts.insurance.termYears}>
-        <input value={termYears} onChange={e => setTermYears(e.target.value)}
-          type="number" inputMode="numeric" placeholder={ts.insurance.termYearsPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }} />
-        <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{ts.insurance.termYearsSuffix}</span>
+        {id => (
+          <>
+            <input id={id} value={termYears} onChange={e => setTermYears(e.target.value)}
+              type="number" inputMode="numeric" placeholder={ts.insurance.termYearsPlaceholder}
+              className="w-full bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)' }} />
+            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{ts.insurance.termYearsSuffix}</span>
+          </>
+        )}
       </Field>
 
       {carAssets.length > 0 && (

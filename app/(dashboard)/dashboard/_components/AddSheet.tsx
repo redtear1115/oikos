@@ -30,7 +30,8 @@ import { PayerToggle } from './PayerToggle'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
-import { currencySymbol, formatAmount, convertAmount, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
+import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
 
@@ -138,7 +139,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // creates / edits, handleSave forces `currency: baseCurrency` regardless
   // of internal state, so this stays correct even if the state lags.
   const [tripId, setTripId] = useState<string | null>(null)
-  const [currency, setCurrency] = useState<CurrencyCode>(baseCurrency)
+  // Free-text since v0.17.4 #410 — trip currencies can be user-defined (VND etc.)
+  const [currency, setCurrency] = useState<string>(baseCurrency)
 
   // Fetch household-wide description history when the sheet opens. Re-fetched
   // on every open so newly-added descriptions surface immediately on the next
@@ -152,6 +154,16 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       .catch(() => { /* autocomplete is best-effort; failing it shouldn't surface an error */ })
     return () => { cancelled = true }
   }, [open])
+
+  // Stable trip-id hash for the reset effect's deps. The parent re-creates
+  // `activeTrips` on every render (new array reference), which would otherwise
+  // re-fire the reset effect mid-edit and wipe the user's typed amount (#386).
+  // Hashing by id collapses identity churn to value equality — the effect only
+  // re-runs when the *set* of active trips actually changes (trip created /
+  // ended / archived). startDate / endDate / defaultCurrency changes on an
+  // existing trip don't trigger a reset, which is the desired behavior: a
+  // mid-edit reset is more disruptive than a marginally stale prefill.
+  const activeTripsKey = activeTrips.map((trip) => trip.id).join('|')
 
   // Reset / prefill on open. Re-runs if `initial` changes.
   useEffect(() => {
@@ -202,10 +214,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         (trip) => todayStr >= trip.startDate && (!trip.endDate || todayStr <= trip.endDate),
       ) ?? null
       setTripId(foundTrip?.id ?? null)
-      setCurrency((foundTrip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
+      setCurrency(foundTrip?.defaultCurrency ?? baseCurrency)
     }
     setError('')
-  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTrips])
+  // `activeTrips` is intentionally excluded — its identity changes every parent
+  // render but its meaningful state is captured by `activeTripsKey`.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTripsKey])
 
   // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
   // the prefilled amount in edit mode (typing replaces the selection rather than
@@ -488,33 +503,40 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     // ledger is single-currency; we won't render a picker
                     // anyway, but keep state coherent).
                     const trip = next ? activeTrips.find((tp) => tp.id === next) : null
-                    setCurrency((trip?.defaultCurrency ?? baseCurrency) as CurrencyCode)
+                    setCurrency(trip?.defaultCurrency ?? baseCurrency)
                   }}
                   noTripLabel={t.addSheet.noTrip}
                 />
               )}
-              {tripId && (
-                <CurrencySelector
-                  value={currency}
-                  onChange={(next) => setCurrency(next)}
-                />
-              )}
+              {tripId && (() => {
+                const trip = activeTrips.find((tp) => tp.id === tripId)
+                // Trip-scoped currency picker: only the codes this trip selected
+                // at creation (see TripSheet). Falls back to defaultCurrency-only
+                // for legacy trips whose snapshot lacks entries (shouldn't happen
+                // post-#410 migration; defensive).
+                const codes = trip?.currencies?.entries.map((e) => e.code)
+                  ?? (trip?.defaultCurrency ? [trip.defaultCurrency] : undefined)
+                return (
+                  <CurrencySelector
+                    value={currency}
+                    onChange={setCurrency}
+                    codes={codes}
+                  />
+                )
+              })()}
             </div>
 
-            {/* Conversion preview: shown when foreign currency with known rate */}
+            {/* Conversion preview: shown when foreign currency with known rate.
+                v0.17.4 #410 — uses the trip's frozen rate_snapshot rather than
+                the deprecated group-wide CurrencyRates. */}
             {(() => {
               const amountInt = parseInt(amount, 10) || 0
-              const rate = rates.find(
-                (r) => r.fromCurrency === currency && r.toCurrency === baseCurrency,
-              )
-              const showPreview = currency !== baseCurrency && rate && amountInt > 0
-              if (!showPreview) return null
-              const converted = convertAmount({
-                amount: amountInt,
-                from: currency,
-                to: baseCurrency,
-                rate: parseFloat(rate!.rate),
-              })
+              if (!tripId || currency === baseCurrency || amountInt <= 0) return null
+              const trip = activeTrips.find((tp) => tp.id === tripId)
+              const snapshot = trip?.currencies
+              if (!snapshot) return null
+              const converted = convertViaSnapshot(amountInt, currency, baseCurrency, snapshot)
+              if (converted == null) return null
               return (
                 <div className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>
                   ≈ {formatAmount(converted, baseCurrency)}
@@ -577,9 +599,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <DateField value={date} onChange={setDate} open={open} />
           </div>
 
-          {/* Status (settled / pending). Hidden in pending-confirm mode: the
-              recurring-expense confirm flow always lands a settled record. */}
-          {!isPending && (
+          {/* Status (settled / pending). Hidden in:
+              - pending-confirm mode (recurring-expense confirm lands settled)
+              - trip mode (#410: TripExpenses have no `status` column; all rows
+                are settled by design — surfacing the toggle would lie). */}
+          {!isPending && !tripId && (
             <div className="px-5 pt-1 pb-2">
               <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.statusLabel}

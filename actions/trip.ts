@@ -3,36 +3,43 @@
 import { db } from '@/lib/db/client'
 import { trips, groupEpochs, tripExpenses, cashTransactions } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
-import type { CurrencyCode } from '@/lib/currency'
-import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { buildTripSummaries } from '@/lib/tripSummary'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import {
+  validateTripCurrencySnapshot,
+  type TripCurrencySnapshot,
+} from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
 
 /**
- * Build the rate_snapshot jsonb payload for a new Trip from the group's
- * CurrencyRates at this moment. Keys are `${FROM}_${TO}` uppercase, values
- * are numeric (parsed from numeric(10,3)). Snapshot locks FX for the trip:
- * later group-level CurrencyRates edits don't drift this trip's displays.
+ * Build the rate_snapshot for a fresh trip. The default currency is always the
+ * group's `base_currency` (the trip-level default picker was removed — see
+ * #410 follow-up). When `explicit` is provided, its `default` field is ignored
+ * and overridden to `baseCurrency`; a base entry with rate=1 is auto-inserted
+ * if missing. When omitted, we emit a trivial single-entry snapshot with base.
  */
-async function buildRateSnapshot(groupId: string): Promise<Record<string, number>> {
-  const rows = await listRatesForGroup(groupId)
-  const snapshot: Record<string, number> = {}
-  for (const r of rows) {
-    const key = `${r.fromCurrency.toUpperCase()}_${r.toCurrency.toUpperCase()}`
-    snapshot[key] = parseFloat(r.rate)
-  }
-  return snapshot
+function resolveRateSnapshot(
+  baseCurrency: string,
+  explicit: TripCurrencySnapshot | undefined,
+): TripCurrencySnapshot {
+  const base = baseCurrency.toUpperCase()
+  if (explicit) return validateTripCurrencySnapshot(explicit, base)
+  return { default: base, entries: [{ code: base, label: null, rate: 1 }] }
 }
 
 export interface CreateTripInput {
   name: string
   startDate: string  // ISO 'YYYY-MM-DD'
   endDate?: string | null
-  defaultCurrency?: CurrencyCode | null
   budgetAmount?: number | null
-  budgetCurrency?: CurrencyCode | null
+  budgetCurrency?: string | null
+  /**
+   * Explicit currency / rate selection from the TripSheet UI. The `default`
+   * field, if present, is ignored — the trip's default always equals the
+   * group's base currency. When omitted, the trip starts as base-only.
+   */
+  currencies?: TripCurrencySnapshot
 }
 
 export async function createTrip(input: CreateTripInput) {
@@ -57,7 +64,7 @@ export async function createTrip(input: CreateTripInput) {
     .limit(1)
   if (!currentEpoch) throw new Error('找不到當前章節')
 
-  const rateSnapshot = await buildRateSnapshot(group.id)
+  const rateSnapshot = resolveRateSnapshot(group.baseCurrency, input.currencies)
 
   const [inserted] = await db
     .insert(trips)
@@ -67,9 +74,9 @@ export async function createTrip(input: CreateTripInput) {
       name,
       startDate: input.startDate,
       endDate: input.endDate ?? null,
-      defaultCurrency: input.defaultCurrency ?? null,
+      defaultCurrency: rateSnapshot.default,
       budgetAmount: input.budgetAmount ?? null,
-      budgetCurrency: input.budgetCurrency ?? null,
+      budgetCurrency: input.budgetCurrency ? input.budgetCurrency.toUpperCase() : null,
       status: 'active',
       rateSnapshot,
     })
@@ -160,16 +167,46 @@ export async function updateTrip(input: {
   name?: string
   startDate?: string
   endDate?: string | null
-  defaultCurrency?: CurrencyCode | null
   budgetAmount?: number | null
-  budgetCurrency?: CurrencyCode | null
+  budgetCurrency?: string | null
+  /**
+   * When provided, replaces the trip's rate_snapshot. The default is always
+   * forced to `group.base_currency` (the trip-level default picker was removed
+   * — see #410 follow-up). Rates can be edited mid-trip; existing
+   * TripExpenses.amount stays as already-stored base integers, so editing
+   * rates only affects future records.
+   */
+  currencies?: TripCurrencySnapshot
 }) {
   const { group } = await requireViewerGroup()
   const epochStartDate = group.currentEpochStartedAt.toISOString().slice(0, 10)
   if (input.startDate && input.startDate < epochStartDate) {
     throw new Error('不可移動至過去章節')
   }
-  const { tripId, ...patch } = input
+
+  const [existing] = await db
+    .select()
+    .from(trips)
+    .where(and(eq(trips.id, input.tripId), eq(trips.groupId, group.id)))
+    .limit(1)
+  if (!existing) throw new Error('找不到旅行')
+
+  const { tripId, budgetCurrency, currencies, ...rest } = input
+  const patch: Record<string, unknown> = { ...rest }
+  if (budgetCurrency !== undefined) {
+    patch.budgetCurrency = budgetCurrency ? budgetCurrency.toUpperCase() : null
+  }
+
+  if (currencies !== undefined) {
+    // validateTripCurrencySnapshot ensures default = base, base entry exists,
+    // and rates are positive. We don't enforce a used-currency rate lock any
+    // more — rate edits only affect future writes; historical TripExpenses.amount
+    // (base integer) stays as-is.
+    const validated = validateTripCurrencySnapshot(currencies, group.baseCurrency)
+    patch.rateSnapshot = validated
+    patch.defaultCurrency = validated.default
+  }
+
   const [updated] = await db
     .update(trips)
     .set(patch)

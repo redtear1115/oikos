@@ -1,23 +1,33 @@
+// Main-ledger currency enum (OikosGroups.base_currency + CashTransactions /
+// IncomeTransactions / Settlements). Trip-scoped currencies are free-text —
+// see lib/trip-currency.ts.
 export const CURRENCIES = ['twd', 'cny', 'usd', 'jpy'] as const
 export type CurrencyCode = typeof CURRENCIES[number]
 
-export function currencyPrecision(c: CurrencyCode): 0 | 2 {
-  return c === 'usd' ? 2 : 0
+// USD is the only known sub-unit currency (stored in cents). All other codes —
+// including free-text like VND / EUR — are treated as integer-storage. This is
+// a deliberate simplification for v0.17.4; refine per-currency precision if/when
+// users want EUR cents semantics.
+export function currencyPrecision(c: string): 0 | 2 {
+  return c.toLowerCase() === 'usd' ? 2 : 0
 }
 
-const SYMBOL: Record<CurrencyCode, string> = {
+const SYMBOL: Record<string, string> = {
   twd: 'NT$',
   cny: 'CN¥',
   usd: '$',
   jpy: '¥',
 }
 
-/** Return the display symbol for a currency (e.g. 'NT$', '¥', '$'). */
-export function currencySymbol(c: CurrencyCode): string {
-  return SYMBOL[c]
+/**
+ * Display symbol for a currency. Unknown codes fall back to `${CODE} ` so
+ * formatAmount stays readable for user-defined trip currencies (e.g. "VND 12,000").
+ */
+export function currencySymbol(c: string): string {
+  return SYMBOL[c.toLowerCase()] ?? `${c.toUpperCase()} `
 }
 
-export function formatAmount(amount: number, currency: CurrencyCode): string {
+export function formatAmount(amount: number, currency: string): string {
   const negative = amount < 0
   const abs = Math.abs(amount)
   const precision = currencyPrecision(currency)
@@ -26,7 +36,7 @@ export function formatAmount(amount: number, currency: CurrencyCode): string {
     minimumFractionDigits: precision,
     maximumFractionDigits: precision,
   })
-  return `${negative ? '-' : ''}${SYMBOL[currency]}${formatted}`
+  return `${negative ? '-' : ''}${currencySymbol(currency)}${formatted}`
 }
 
 /**
@@ -43,12 +53,12 @@ export function formatAmount(amount: number, currency: CurrencyCode): string {
  */
 export function convertAmount(input: {
   amount: number
-  from: CurrencyCode
-  to: CurrencyCode
+  from: string
+  to: string
   rate: number
 }): number {
   const { amount, from, to, rate } = input
-  if (from === to) return amount
+  if (from.toLowerCase() === to.toLowerCase()) return amount
   const fromDisplay = currencyPrecision(from) === 2 ? amount / 100 : amount
   const toDisplay = fromDisplay * rate
   const toStorage = currencyPrecision(to) === 2 ? toDisplay * 100 : toDisplay

@@ -8,7 +8,7 @@ export default async function TrustPage() {
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <TrustContent />
-      <BottomNavSkeleton />
+      <BottomNavSkeleton hideFab />
     </div>
   )
 }

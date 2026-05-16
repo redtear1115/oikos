@@ -80,35 +80,6 @@ export function SettingsContent({
 
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
 
-  const [exportPending, startExportTransition] = useTransition()
-  const [exportError, setExportError] = useState<string | null>(null)
-
-  const handleExport = () => {
-    setExportError(null)
-    startExportTransition(async () => {
-      try {
-        const res = await fetch('/api/export/transactions', { credentials: 'same-origin' })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const blob = await res.blob()
-        // Filename: prefer Content-Disposition from server, fall back to a sensible default.
-        const disposition = res.headers.get('Content-Disposition') ?? ''
-        const match = /filename="?([^";]+)"?/i.exec(disposition)
-        const filename = match?.[1] ?? 'futari-transactions.csv'
-
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        URL.revokeObjectURL(url)
-      } catch {
-        setExportError(t.csvExport.failed)
-      }
-    })
-  }
-
   const handleInvite = () => {
     setInviteError(null)
     startInviteTransition(async () => {
@@ -166,17 +137,69 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* 帳本 — group-level shared config: name + (when paired) default split ratio */}
+      {/* 帳本 — group-level identity (just the name). */}
       <Section title={t.settings.sectionGroup}>
         <Row
           label={t.settings.groupName}
           value={groupName}
           onClick={() => setEditing('group')}
         />
+      </Section>
+
+      {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
+      <Section title={t.settings.sectionGroupSplit}>
+        <div>
+          <div
+            className="rounded-[20px] overflow-hidden flex flex-col"
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          >
+            {([
+              { id: 'half' as const,       label: t.splitType.even },
+              { id: 'all_mine' as const,   label: t.splitType.allMine },
+              { id: 'all_theirs' as const, label: t.splitType.allPartners },
+            ]).map((opt, i) => {
+              const sel = displayedSplit === opt.id
+              return (
+                <button
+                  type="button"
+                  key={opt.id}
+                  onClick={() => handleSplitChange(opt.id)}
+                  disabled={savingSplit || isSolo}
+                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
+                  style={{
+                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
+                    background: 'transparent',
+                  }}
+                >
+                  <span className="text-body" style={{ color: 'var(--ink)' }}>
+                    {opt.label}
+                  </span>
+                  <div
+                    className="w-5 h-5 rounded-full transition-all duration-150"
+                    style={{
+                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
+                      background: sel ? 'var(--ink)' : 'transparent',
+                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
+                    }}
+                  />
+                </button>
+              )
+            })}
+          </div>
+          {isSolo && (
+            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
+              {t.settings.soloLockHint}
+            </div>
+          )}
+          {splitError && (
+            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
+              {splitError}
+            </div>
+          )}
+        </div>
         {!isSolo && (
           <div className="mt-3">
             <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
-              <div className="text-body font-semibold" style={{ color: 'var(--ink)' }}>分攤比例</div>
               <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
                 <span>{viewer.displayName}（我）{splitRatioA}%</span>
                 <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
@@ -202,7 +225,7 @@ export function SettingsContent({
                 className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
                 style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
               >
-                {savingRatio ? '儲存中…' : '儲存預設比例'}
+                {savingRatio ? t.common.saving : t.settings.saveDefaultRatio}
               </button>
               {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
             </section>
@@ -269,68 +292,11 @@ export function SettingsContent({
           value={viewer.displayName}
           onClick={() => setEditing('name')}
         />
-        <div className="mt-3">
-          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            {t.settings.defaultSplitTitle}
-          </div>
-          <div
-            className="rounded-[20px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            {([
-              { id: 'half' as const,       label: t.splitType.even },
-              { id: 'all_mine' as const,   label: t.splitType.allMine },
-              { id: 'all_theirs' as const, label: t.splitType.allPartners },
-            ]).map((opt, i) => {
-              const sel = displayedSplit === opt.id
-              return (
-                <button
-                  type="button"
-                  key={opt.id}
-                  onClick={() => handleSplitChange(opt.id)}
-                  disabled={savingSplit || isSolo}
-                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
-                  style={{
-                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-                    background: 'transparent',
-                  }}
-                >
-                  <span className="text-body" style={{ color: 'var(--ink)' }}>
-                    {opt.label}
-                  </span>
-                  <div
-                    className="w-5 h-5 rounded-full transition-all duration-150"
-                    style={{
-                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
-                      background: sel ? 'var(--ink)' : 'transparent',
-                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
-                    }}
-                  />
-                </button>
-              )
-            })}
-          </div>
-          {isSolo && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
-              {t.settings.soloLockHint}
-            </div>
-          )}
-          {splitError && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
-              {splitError}
-            </div>
-          )}
-        </div>
       </Section>
 
       {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
       <Section title={t.settings.sectionDisplay}>
-        <div>
-          <div className="text-xs px-1 pb-2" style={{ color: 'var(--ink-3)' }}>
-            {t.settings.language}
-          </div>
-          <LanguageSwitcher current={currentLocale} />
-        </div>
+        <LanguageSwitcher current={currentLocale} />
         <div className="mt-3">
           <Row
             label={t.settings.currency}
@@ -353,13 +319,8 @@ export function SettingsContent({
       {/* 資料 — recurring rules → past chapters → trips → export → trust info */}
       <Section title={t.settings.sectionData}>
         <Row
-          label={t.settings.recurringIncome}
-          onClick={() => router.push('/settings/recurring-income')}
-        />
-        <div className="mt-3" />
-        <Row
-          label={t.settings.recurringExpense}
-          onClick={() => router.push('/settings/recurring-expense')}
+          label={t.settings.recurringSettings}
+          onClick={() => router.push('/settings/recurring')}
         />
         <div className="mt-3" />
         <Row
@@ -372,17 +333,6 @@ export function SettingsContent({
           secondary={formatTripSummary(tripSummary, t.settings.tripsRow)}
           onClick={() => router.push('/trips')}
         />
-        <div className="mt-3" />
-        <Row
-          label={exportPending ? t.csvExport.preparing : t.settings.exportData}
-          onClick={handleExport}
-          disabled={exportPending}
-        />
-        {exportError && (
-          <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
-            {exportError}
-          </div>
-        )}
         <div className="mt-3" />
         <Row
           label={t.settings.trust}

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function EditRuleRedirect() {
-  redirect('/settings/recurring-expense')
+  redirect('/settings/recurring?tab=expense')
 }

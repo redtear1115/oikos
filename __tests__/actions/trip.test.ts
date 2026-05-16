@@ -485,6 +485,268 @@ describe('endTrip — solo group', () => {
   })
 })
 
+describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip)', () => {
+  let activeRefs: SeedRefs | null = null
+
+  afterEach(async () => {
+    if (activeRefs) {
+      try { await cleanup(activeRefs) } catch (e) { console.error('cleanup failed', e) }
+      activeRefs = null
+    }
+  })
+
+  it('persists a fresh multi-currency snapshot when no expenses exist', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({
+      name: 'Tokyo',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [{ code: 'TWD', label: null, rate: 1 }],
+      },
+    })
+    refs.tripIds.push(trip.id)
+
+    await updateTrip({
+      tripId: trip.id,
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+          { code: 'VND', label: '越南盾', rate: 0.0013 },
+        ],
+      },
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { default: string; entries: Array<{ code: string; rate: number }> }
+    expect(snap.default).toBe('TWD')
+    expect(snap.entries).toHaveLength(3)
+    expect(after!.defaultCurrency).toBe('TWD')
+  })
+
+  it('allows changing a used currency\'s rate mid-trip; existing TripExpense.amount untouched', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({
+      name: 'Tokyo',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+        ],
+      },
+    })
+    refs.tripIds.push(trip.id)
+
+    const tripExpense = await createTripExpense({
+      tripId: trip.id,
+      paidBy: refs.userId,
+      amount: 1000,
+      currency: 'JPY',
+      category: '食',
+      splitType: 'all_mine',
+    })
+    const originalBaseAmount = tripExpense.amount  // 1000 * 0.22 = 220
+
+    await updateTrip({
+      tripId: trip.id,
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.25 },  // changed
+        ],
+      },
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { entries: Array<{ code: string; rate: number }> }
+    expect(snap.entries.find(e => e.code === 'JPY')?.rate).toBe(0.25)
+
+    // Old TripExpense.amount stays — base integer was frozen at write time.
+    const [stored] = await db
+      .select({ amount: tripExpenses.amount })
+      .from(tripExpenses)
+      .where(eq(tripExpenses.id, tripExpense.id))
+      .limit(1)
+    expect(stored.amount).toBe(originalBaseAmount)
+  })
+
+  it('allows removing a used currency from the snapshot', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({
+      name: 'Tokyo',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+        ],
+      },
+    })
+    refs.tripIds.push(trip.id)
+
+    await createTripExpense({
+      tripId: trip.id,
+      paidBy: refs.userId,
+      amount: 1000,
+      currency: 'JPY',
+      category: '食',
+      splitType: 'all_mine',
+    })
+
+    await updateTrip({
+      tripId: trip.id,
+      currencies: {
+        default: 'TWD',
+        entries: [{ code: 'TWD', label: null, rate: 1 }],
+      },
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { entries: Array<{ code: string }> }
+    expect(snap.entries.map(e => e.code)).toEqual(['TWD'])
+  })
+
+  it('forces default = group.base_currency even if caller asks for something else', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({
+      name: 'Tokyo',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+        ],
+      },
+    })
+    refs.tripIds.push(trip.id)
+
+    await updateTrip({
+      tripId: trip.id,
+      currencies: {
+        default: 'JPY',  // ignored
+        entries: [
+          { code: 'TWD', label: null, rate: 4.5 },
+          { code: 'JPY', label: null, rate: 1 },
+        ],
+      },
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { default: string }
+    expect(snap.default).toBe('TWD')
+    expect(after!.defaultCurrency).toBe('TWD')
+  })
+
+  it('allows adding a new currency to a trip with existing expenses', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({
+      name: 'Tokyo',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+        ],
+      },
+    })
+    refs.tripIds.push(trip.id)
+
+    await createTripExpense({
+      tripId: trip.id,
+      paidBy: refs.userId,
+      amount: 1000,
+      currency: 'JPY',
+      category: '食',
+      splitType: 'all_mine',
+    })
+
+    // Add VND — should succeed; JPY rate untouched.
+    await updateTrip({
+      tripId: trip.id,
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+          { code: 'VND', label: '越南盾', rate: 0.0013 },
+        ],
+      },
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { default: string; entries: Array<{ code: string }> }
+    expect(snap.entries.map(e => e.code).sort()).toEqual(['JPY', 'TWD', 'VND'])
+  })
+
+  it('allows removing an unused currency', async () => {
+    const refs = await seedGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const trip = await createTrip({
+      name: 'Tokyo',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+          { code: 'USD', label: null, rate: 32 },
+        ],
+      },
+    })
+    refs.tripIds.push(trip.id)
+
+    // Use JPY but not USD.
+    await createTripExpense({
+      tripId: trip.id,
+      paidBy: refs.userId,
+      amount: 1000,
+      currency: 'JPY',
+      category: '食',
+      splitType: 'all_mine',
+    })
+
+    await updateTrip({
+      tripId: trip.id,
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.22 },
+        ],
+      },
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { default: string; entries: Array<{ code: string }> }
+    expect(snap.entries.map(e => e.code).sort()).toEqual(['JPY', 'TWD'])
+  })
+})
+
 describe('softDeleteTrip', () => {
   let activeRefs: SeedRefs | null = null
 

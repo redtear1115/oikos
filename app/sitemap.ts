@@ -2,16 +2,9 @@ import type { MetadataRoute } from 'next'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-// Locale variants are signaled via ?lang=xx (cookie-backed); see middleware.ts.
-function withLocaleAlternates(path: string) {
-  return {
-    'zh-TW': `${APP_URL}${path}`,
-    'zh-CN': `${APP_URL}${path}?lang=zh-CN`,
-    en: `${APP_URL}${path}?lang=en`,
-    ja: `${APP_URL}${path}?lang=ja`,
-  }
-}
-
+// hreflang variants were removed (#392): locale is cookie-based with no canonical
+// URL per language, so `?lang=xx` URLs aren't crawlable hreflang targets — they
+// confuse search engines more than they help. Single canonical per path wins.
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date()
   return [
@@ -20,14 +13,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: 'weekly',
       priority: 1.0,
-      alternates: { languages: withLocaleAlternates('/') },
     },
     {
       url: `${APP_URL}/sign-in`,
       lastModified,
       changeFrequency: 'monthly',
       priority: 0.7,
-      alternates: { languages: withLocaleAlternates('/sign-in') },
     },
     {
       url: `${APP_URL}/terms`,

@@ -131,32 +131,43 @@ describe('createTrip — rate_snapshot population', () => {
     if (activeRefs) { try { await cleanup(activeRefs) } catch (e) { console.error(e) }; activeRefs = null }
   })
 
-  it('copies group CurrencyRates into rate_snapshot jsonb with uppercase keys', async () => {
+  it('defaults to single-entry snapshot when currencies omitted', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({ name: '東京之旅', startDate: '2026-05-10' })
+    const created = await createTrip({ name: '單一幣別', startDate: '2026-05-10' })
     refs.tripIds.push(created.id)
 
-    const snapshot = created.rateSnapshot as Record<string, number>
-    expect(snapshot).toBeTruthy()
-    expect(snapshot['TWD_JPY']).toBe(5)
-    expect(snapshot['JPY_TWD']).toBe(0.2)
-    expect(snapshot['USD_TWD']).toBe(32)
-    expect(snapshot['TWD_USD']).toBe(0.031)
+    const snapshot = created.rateSnapshot as { default: string; entries: Array<{ code: string; rate: number; label: string | null }> }
+    expect(snapshot.default).toBe('TWD')
+    expect(snapshot.entries).toEqual([{ code: 'TWD', label: null, rate: 1 }])
   })
 
-  it('writes an empty rate_snapshot when group has no CurrencyRates set', async () => {
+  it('accepts explicit currencies payload with self-defined codes', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    await db.delete(currencyRates).where(eq(currencyRates.groupId, refs.groupId))
 
-    const created = await createTrip({ name: '無匯率', startDate: '2026-05-10' })
+    const created = await createTrip({
+      name: '越南之旅',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'VND', label: '越南盾', rate: 0.0013 },
+        ],
+      },
+    })
     refs.tripIds.push(created.id)
 
-    expect(created.rateSnapshot).toEqual({})
+    const snapshot = created.rateSnapshot as { default: string; entries: Array<{ code: string; label: string | null; rate: number }> }
+    expect(snapshot.default).toBe('TWD')
+    expect(snapshot.entries).toHaveLength(2)
+    const vnd = snapshot.entries.find(e => e.code === 'VND')
+    expect(vnd?.rate).toBe(0.0013)
+    expect(vnd?.label).toBe('越南盾')
   })
 })
 
@@ -192,10 +203,20 @@ describe('createTripExpense — happy paths', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = await createTrip({
+      name: 'JP',
+      startDate: '2026-05-10',
+      currencies: {
+        default: 'TWD',
+        entries: [
+          { code: 'TWD', label: null, rate: 1 },
+          { code: 'JPY', label: null, rate: 0.2 },
+        ],
+      },
+    })
     refs.tripIds.push(trip.id)
 
-    // 10000 JPY → JPY_TWD = 0.200 → 2000 TWD
+    // 10000 JPY → JPY rate 0.200 → 2000 TWD
     const expense = await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
@@ -206,7 +227,7 @@ describe('createTripExpense — happy paths', () => {
     })
 
     expect(expense.amount).toBe(2000)
-    expect(expense.originalCurrency).toBe('jpy')
+    expect(expense.originalCurrency).toBe('JPY')
     expect(expense.originalAmount).toBe(10000)
   })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { confirmPending, skipPending } from '@/actions/recurringIncome'
@@ -21,13 +21,20 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
   const [fading, setFading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmingSkip, setConfirmingSkip] = useState(false)
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cat = getIncomeCategory(pending.category)
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current)
+    }
+  }, [])
 
   const handleConfirm = () => startTransition(async () => {
     try {
       await confirmPending(pending.id)
       setFading(true)
-      setTimeout(() => router.refresh(), 800)
+      refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
     } catch (e) {
       setError(describeError(e, '確認失敗', t.common.offlineError))
     }
@@ -39,7 +46,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
       try {
         await skipPending(pending.id)
         setFading(true)
-        setTimeout(() => router.refresh(), 800)
+        refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
       } catch (e) {
         setError(describeError(e, '跳過失敗', t.common.offlineError))
       }

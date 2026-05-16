@@ -196,45 +196,57 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </Field>
 
       <Field label={ts.car.plate}>
-        <input
-          value={plate}
-          onChange={e => setPlate(e.target.value.slice(0, 16))}
-          placeholder={ts.car.platePlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-        />
+        {id => (
+          <input
+            id={id}
+            value={plate}
+            onChange={e => setPlate(e.target.value.slice(0, 16))}
+            placeholder={ts.car.platePlaceholder}
+            className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+          />
+        )}
       </Field>
 
       <Field label={ts.car.year}>
-        <input
-          value={year}
-          onChange={e => setYear(e.target.value.slice(0, 4))}
-          type="number"
-          inputMode="numeric"
-          placeholder={ts.car.yearPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }}
-        />
+        {id => (
+          <input
+            id={id}
+            value={year}
+            onChange={e => setYear(e.target.value.slice(0, 4))}
+            type="number"
+            inputMode="numeric"
+            placeholder={ts.car.yearPlaceholder}
+            className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }}
+          />
+        )}
       </Field>
 
       <Field label={ts.car.brand}>
-        <input
-          value={brand}
-          onChange={e => setBrand(e.target.value.slice(0, 32))}
-          placeholder={ts.car.brandPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }}
-        />
+        {id => (
+          <input
+            id={id}
+            value={brand}
+            onChange={e => setBrand(e.target.value.slice(0, 32))}
+            placeholder={ts.car.brandPlaceholder}
+            className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }}
+          />
+        )}
       </Field>
 
       <Field label={ts.car.model}>
-        <input
-          value={model}
-          onChange={e => setModel(e.target.value.slice(0, 32))}
-          placeholder={ts.car.modelPlaceholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }}
-        />
+        {id => (
+          <input
+            id={id}
+            value={model}
+            onChange={e => setModel(e.target.value.slice(0, 32))}
+            placeholder={ts.car.modelPlaceholder}
+            className="w-full bg-transparent border-0 outline-none text-base"
+            style={{ color: 'var(--ink)' }}
+          />
+        )}
       </Field>
 
       <DateField
@@ -245,32 +257,38 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       />
 
       <Field label={ts.car.purchasePrice}>
-        <div className="flex items-center gap-1">
-          <span className="text-sm" style={{ color: 'var(--ink-3)' }}>NT$</span>
-          <input
-            value={purchasePrice}
-            onChange={e => setPurchasePrice(e.target.value.replace(/\D/g, '').slice(0, 9))}
-            placeholder="0"
-            inputMode="numeric"
-            className="flex-1 bg-transparent border-0 outline-none text-base tnum"
-            style={{ color: 'var(--ink)' }}
-          />
-        </div>
+        {id => (
+          <div className="flex items-center gap-1">
+            <span className="text-sm" style={{ color: 'var(--ink-3)' }}>NT$</span>
+            <input
+              id={id}
+              value={purchasePrice}
+              onChange={e => setPurchasePrice(e.target.value.replace(/\D/g, '').slice(0, 9))}
+              placeholder="0"
+              inputMode="numeric"
+              className="flex-1 bg-transparent border-0 outline-none text-base tnum"
+              style={{ color: 'var(--ink)' }}
+            />
+          </div>
+        )}
       </Field>
 
       <Field label={ts.car.initialOdometer}>
-        <div className="flex items-center gap-1">
-          <input
-            value={initialOdometer}
-            onChange={e => setInitialOdometer(e.target.value)}
-            type="number"
-            inputMode="numeric"
-            placeholder={ts.car.initialOdometerPlaceholder}
-            className="flex-1 bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-          />
-          <span className="text-sm" style={{ color: 'var(--ink-3)' }}>km</span>
-        </div>
+        {id => (
+          <div className="flex items-center gap-1">
+            <input
+              id={id}
+              value={initialOdometer}
+              onChange={e => setInitialOdometer(e.target.value)}
+              type="number"
+              inputMode="numeric"
+              placeholder={ts.car.initialOdometerPlaceholder}
+              className="flex-1 bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+            />
+            <span className="text-sm" style={{ color: 'var(--ink-3)' }}>km</span>
+          </div>
+        )}
       </Field>
 
       <Field label={ts.car.fuelType}>

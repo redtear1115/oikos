@@ -13,6 +13,12 @@ interface Props {
   onClose: () => void
   onSave: () => void
   children: React.ReactNode
+  /**
+   * When true, both save buttons (top-right + bottom) render in destructive
+   * styling — for sheets that confirm irreversible actions like ending a trip
+   * or deleting an asset.
+   */
+  destructive?: boolean
 }
 
 // Shared sheet chrome: backdrop, slide-up container with fixed height,
@@ -29,8 +35,14 @@ export function SheetShell({
   onClose,
   onSave,
   children,
+  destructive = false,
 }: Props) {
   const t = useTranslations()
+  const accentColor = destructive ? 'var(--destructive)' : 'var(--accent)'
+  const bottomBg = destructive ? 'var(--btn-destructive-bg)' : 'var(--accent)'
+  const bottomShadow = destructive
+    ? '0 2px 6px rgba(184, 90, 72, 0.3)'
+    : '0 2px 6px rgba(224,136,86,0.3)'
   return (
     <>
       <SheetBackdrop open={open} onClick={onClose} />
@@ -66,7 +78,7 @@ export function SheetShell({
             onClick={onSave}
             disabled={!canSave}
             className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
-            style={{ color: canSave ? 'var(--accent)' : 'var(--ink-3)' }}
+            style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
           >
             {pending ? t.common.saving : t.common.save}
           </button>
@@ -76,7 +88,11 @@ export function SheetShell({
           {children}
 
           {error && (
-            <div className="mt-3 text-sm" style={{ color: 'var(--error, #c0392b)' }}>
+            <div
+              className="mt-3 text-sm"
+              style={{ color: 'var(--error, #c0392b)' }}
+              role="alert"
+            >
               {error}
             </div>
           )}
@@ -90,9 +106,9 @@ export function SheetShell({
             disabled={!canSave}
             className="mt-6 w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
             style={{
-              background: canSave ? 'var(--accent)' : 'var(--ink-3)',
+              background: canSave ? bottomBg : 'var(--ink-3)',
               opacity: canSave ? 1 : 0.55,
-              boxShadow: canSave ? '0 2px 6px rgba(224,136,86,0.3)' : 'none',
+              boxShadow: canSave ? bottomShadow : 'none',
             }}
           >
             {pending ? t.common.saving : bottomSaveLabel}

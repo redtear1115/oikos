@@ -43,22 +43,25 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
   return (
     <Link
       href={`/assets/${id}`}
-      className="flex items-center gap-3.5 px-5 py-4 no-underline"
+      className="flex items-center gap-3 px-[14px] py-3 no-underline"
       style={{
         color: 'var(--ink)',
         borderLeft: `3px solid ${tint}`,
         borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
       }}
     >
+      {/* 32×32 tint square matches CategoryChip on /records (size={32}) so
+          asset rows read at the same density as transaction rows. The earlier
+          40×40 made /assets feel ~16px taller than every other list. */}
       <div
-        className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0"
+        className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
         style={{ background: tint, color: 'var(--ink-2)' }}
       >
-        <AssetIcon type={type} size={22} />
+        <AssetIcon type={type} size={18} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 min-w-0">
-          <div className="text-body font-semibold truncate">{display.primary}</div>
+          <div className="text-sm font-semibold truncate">{display.primary}</div>
           {display.secondary && (
             <div
               className="text-xs truncate"

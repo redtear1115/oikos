@@ -118,16 +118,20 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       <div className="flex gap-2">
         <div className="flex-1">
           <Field label={ts.plant.species}>
-            <input value={species} onChange={e => setSpecies(e.target.value.slice(0, 32))}
-              placeholder={ts.plant.speciesPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
+            {id => (
+              <input id={id} value={species} onChange={e => setSpecies(e.target.value.slice(0, 32))}
+                placeholder={ts.plant.speciesPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+                style={{ color: 'var(--ink)' }} />
+            )}
           </Field>
         </div>
         <div className="flex-1">
           <Field label={ts.plant.location}>
-            <input value={location} onChange={e => setLocation(e.target.value.slice(0, 32))}
-              placeholder={ts.plant.locationPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
+            {id => (
+              <input id={id} value={location} onChange={e => setLocation(e.target.value.slice(0, 32))}
+                placeholder={ts.plant.locationPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
+                style={{ color: 'var(--ink)' }} />
+            )}
           </Field>
         </div>
       </div>
@@ -135,18 +139,24 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       <div className="flex gap-2">
         <div className="flex-1">
           <Field label={ts.plant.sproutedAt}>
-            <input value={sproutedAt} onChange={e => setSproutedAt(e.target.value)}
-              type="date" className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
+            {id => (
+              <input id={id} value={sproutedAt} onChange={e => setSproutedAt(e.target.value)}
+                type="date" className="w-full bg-transparent border-0 outline-none text-base"
+                style={{ color: 'var(--ink)' }} />
+            )}
           </Field>
         </div>
         <div className="flex-1">
           <Field label={ts.plant.cost}>
-            <input value={cost} onChange={e => setCost(e.target.value)}
-              type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+            {id => (
+              <>
+                <input id={id} value={cost} onChange={e => setCost(e.target.value)}
+                  type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
+                  className="w-full bg-transparent border-0 outline-none text-base"
+                  style={{ color: 'var(--ink)' }} />
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
+              </>
+            )}
           </Field>
         </div>
       </div>

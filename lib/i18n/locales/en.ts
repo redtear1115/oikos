@@ -198,6 +198,62 @@ export const en: Translations = {
     pendingBadge: 'Pending',
   },
 
+  tripList: {
+    title: 'Trips',
+    subtitle: 'A trip at a time — each becomes its own chapter.',
+    sectionActive: 'In progress',
+    sectionPast: 'Past trips',
+    endedTag: 'Ended',
+    dateRangeActive: 'From {startDate}, ongoing',
+    backAriaLabel: 'Back to trips',
+    empty: {
+      heading: 'No trips yet',
+      body: 'Start a trip — every expense during those days gets collected here, ready to flip through later.',
+    },
+  },
+
+  tripSheet: {
+    titleNew: 'New trip',
+    titleEdit: 'Edit trip',
+    saveNew: 'Begin this trip',
+    saveEdit: 'Save changes',
+    errors: {
+      createFailed: 'Could not create trip',
+      updateFailed: 'Could not update trip',
+      codeBlank: 'Please enter a currency code',
+      codeDuplicate: 'Currencies cannot repeat',
+      rateInvalid: 'Rate must be positive',
+      rateInvalidInline: 'Enter a rate greater than 0',
+      maxCurrencies: 'Up to {max} currencies',
+    },
+    nameLabel: 'Name',
+    namePlaceholder: 'e.g. 5 days in Tokyo',
+    startDateLabel: 'Start date',
+    endDateLabel: 'End date (optional)',
+    endBeforeStart: 'End date cannot be before the start date',
+    currenciesSectionTitle: 'Currencies & rates',
+    currenciesHint: 'Pick the currencies you\'ll use. Each row: "1 of this currency = N of base" (e.g. 1 JPY ≈ 0.2 TWD). Editing a rate only affects new records; existing entries keep their original amount.',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ Custom currency',
+    footerNote: 'Expenses recorded during this trip will be tagged here automatically.',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: 'Base',
+    usedCountNote: '{n} record(s) so far; editing the rate keeps them unchanged',
+    customRow: {
+      codeAriaLabel: 'Currency code',
+      codePlaceholder: 'VND',
+      labelAriaLabel: 'Display name',
+      labelPlaceholder: 'Vietnamese dong (optional)',
+      removeAriaLabel: 'Remove currency',
+    },
+    presetLabels: {
+      TWD: 'Taiwan dollar',
+      CNY: 'Chinese yuan',
+      USD: 'US dollar',
+      JPY: 'Japanese yen',
+    },
+  },
+
   tripDetail: {
     emptyActive: 'No records yet for this trip. Tap the plus button to start.',
     emptyEnded: 'This trip ended without any records.',
@@ -214,7 +270,12 @@ export const en: Translations = {
     endConfirm: 'End trip',
     endDateBeforeStart: 'End date cannot be before the start date ({date})',
     endFailure: 'Failed to end the trip',
-    currencyRatesLink: 'Adjust exchange rates',
+    editAriaLabel: 'Edit this trip',
+    endIrreversibleNote: 'This cannot be undone — all expenses will roll back to the main ledger as a summary.',
+    totalLabel: 'This trip cost',
+    baseCurrencyTag: 'Base {code}',
+    baseCurrencyTagTitle: 'This trip settles in this currency',
+    recordsCountLabel: 'Records · {n}',
   },
 
   incomeSheet: {
@@ -330,14 +391,15 @@ export const en: Translations = {
   settings: {
     title: 'Settings',
     sectionGroup: 'Ledger',
+    sectionGroupSplit: 'Default Split & Ratio',
     groupName: 'Ledger name',
     sectionMember: 'Members',
     youSuffix: ' (you)',
     sectionPersonal: 'Personal',
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
-    defaultSplitTitle: 'Default split for new entries',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
+    saveDefaultRatio: 'Save default ratio',
     inviteCta: 'Invite partner',
     sectionDisplay: 'Language & Currency',
     language: 'Language',
@@ -351,6 +413,7 @@ export const en: Translations = {
     offlineUnsupported: 'This browser does not support offline browsing.',
     recurringIncome: 'Recurring income',
     recurringExpense: 'Recurring expense',
+    recurringSettings: 'Recurring Rules',
     sectionData: 'Data',
     trust: 'Your data',
     exportData: 'Export data (CSV)',
@@ -543,7 +606,6 @@ export const en: Translations = {
   recurringIncome: {
     title: 'Recurring income',
     back: 'Back',
-    add: '+ Add',
     empty: {
       hint: 'No recurring income yet',
       cta: 'Add the first',
@@ -640,7 +702,7 @@ export const en: Translations = {
     title: 'Currency',
     back: 'Back',
     pageHeading: 'A shared ruler between the two of you',
-    pageSubtitle: 'The base currency is this ledger\'s mother tongue; the felt rate is the agreement between you two.',
+    pageSubtitle: 'The base currency is this ledger\'s mother tongue.',
     base: {
       sectionTitle: 'Base currency',
       sectionHint: 'The mother tongue of this ledger. Every settlement and display rests on it.',
@@ -650,21 +712,13 @@ export const en: Translations = {
         bodyNext: 'If you want a different base currency, you can choose again when the next chapter begins.',
       },
     },
-    rates: {
-      sectionTitle: 'Felt rate',
-      whyHeading: 'Why we call it the "felt" rate',
-      whyBody: 'Not the market\'s shifting numbers — it\'s the rate the two of you feel one US dollar is worth. This ruler belongs only to you.',
-      exampleHeading: 'For example',
-      exampleBody: 'If you both agree 1 USD ≈ 32 TWD, then $100 spent in the US is recorded as NT$3,200.',
-      behaviorHeading: 'When you change it',
-      behaviorBody: 'Past entries stay at the rate they were recorded with. Only new entries from now on use the updated rate.',
-      saving: 'Saving…',
-      saved: 'Saved',
-      defaultFallback: 'Default',
+    tripsHint: {
+      heading: 'Felt rates moved',
+      body: 'Foreign currencies and rates now live inside each trip — every trip has its own ruler, and they don\'t affect each other.',
+      linkLabel: 'See your trips',
     },
     errors: {
       baseChangeFailed: 'Could not change the base currency',
-      rateChangeFailed: 'Could not update the rate',
     },
   },
 
@@ -1024,7 +1078,6 @@ export const en: Translations = {
   recurringExpense: {
     title: 'Recurring expense',
     back: 'Back',
-    add: '+ Add',
     empty: {
       hint: 'No recurring expense yet',
       cta: 'Add the first',

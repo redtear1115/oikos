@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -60,6 +60,7 @@ export function BalanceHero({
   // Settled-only vs include-pending balance view (issue #164). Persisted in
   // localStorage so the user's preference survives reloads.
   const [includePendingView, setIncludePendingView] = useState(false)
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const P = DEFAULT_INCOME_PALETTE
 
   useEffect(() => {
@@ -69,13 +70,19 @@ export function BalanceHero({
     if (viewStored === 'pending') setIncludePendingView(true)
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (fadeTimerRef.current !== null) clearTimeout(fadeTimerRef.current)
+    }
+  }, [])
+
   // Sync if parent prop changes (e.g. after our own mutation router.refresh).
   useEffect(() => { setDisplayedRaw(rawBalance) }, [rawBalance])
 
   useRealtimeEvents((event) => {
     if (event.kind === 'balance-change') {
       setFading(true)
-      setTimeout(() => {
+      fadeTimerRef.current = setTimeout(() => {
         setDisplayedRaw(event.balance)
         setFading(false)
       }, 150)
@@ -104,7 +111,7 @@ export function BalanceHero({
       return next
     })
     // Match the realtime balance-change fade duration for visual consistency.
-    setTimeout(() => setFading(false), 150)
+    fadeTimerRef.current = setTimeout(() => setFading(false), 150)
   }
 
   let owedByWho: 'M' | 'T'
@@ -235,7 +242,7 @@ export function BalanceHero({
               }}>
                 <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.recurringIncome.title}</span>
                 <Link
-                  href="/settings/recurring-income"
+                  href="/settings/recurring?tab=income"
                   style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', textDecoration: 'none' }}
                 >
                   {t.balanceHero.manage}

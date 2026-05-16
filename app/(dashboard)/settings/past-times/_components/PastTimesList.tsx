@@ -2,10 +2,10 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { enterPastEpoch, exitPastEpoch } from '@/actions/epoch-view'
 import { formatDateShort } from '@/lib/format-date'
+import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 
 export interface EpochListEntry {
   id: string
@@ -68,19 +68,10 @@ export function PastTimesList({
 
   return (
     <>
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2">
-        <Link href="/settings" className="text-sm" style={{ color: 'var(--ink-3)' }}>
-          ‹ {backLabel}
-        </Link>
-      </div>
-      <div className="px-5 pb-3">
-        <h1
-          className="text-2xl font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
-        >
-          {t.title}
-        </h1>
-        <p className="text-sm mt-2" style={{ color: 'var(--ink-3)' }}>{t.intro}</p>
+      <SubpageHeader title={t.title} backLabel={backLabel} />
+
+      <div className="px-5 pt-6 pb-3">
+        <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{t.intro}</p>
       </div>
 
       {epochs.length === 0 ? (

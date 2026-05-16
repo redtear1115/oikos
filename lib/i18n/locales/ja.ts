@@ -198,6 +198,62 @@ export const ja: Translations = {
     pendingBadge: '未精算',
   },
 
+  tripList: {
+    title: '旅',
+    subtitle: '一つひとつ収めていけば、その道のりは自分だけの章になります。',
+    sectionActive: '進行中',
+    sectionPast: '過去の旅',
+    endedTag: '終了',
+    dateRangeActive: '{startDate} から、進行中',
+    backAriaLabel: '旅の一覧へ戻る',
+    empty: {
+      heading: 'まだ旅の記録がありません',
+      body: '旅をひとつ立ち上げると、その期間の支出が自動でここに集まり、後で一緒にめくれます。',
+    },
+  },
+
+  tripSheet: {
+    titleNew: '新しい旅',
+    titleEdit: '旅を編集',
+    saveNew: 'この旅を始める',
+    saveEdit: '変更を保存',
+    errors: {
+      createFailed: '作成に失敗しました',
+      updateFailed: '更新に失敗しました',
+      codeBlank: '通貨コードを入力してください',
+      codeDuplicate: '通貨は重複できません',
+      rateInvalid: 'レートは正の数で入力してください',
+      rateInvalidInline: '0 より大きいレートを入力してください',
+      maxCurrencies: '通貨は最大 {max} 個までです',
+    },
+    nameLabel: '名称',
+    namePlaceholder: '例：東京 5 日間',
+    startDateLabel: '開始日',
+    endDateLabel: '終了日（任意）',
+    endBeforeStart: '終了日は開始日より前にできません',
+    currenciesSectionTitle: '通貨とレート',
+    currenciesHint: '使う通貨を選びます。各行は「1 この通貨 = 何 基準通貨」(例：1 JPY ≈ 0.2 TWD)。レートを変えても、以前の記録の金額はそのまま。今後の記録だけ新しいレートが使われます。',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ 通貨を追加',
+    footerNote: 'この旅の期間に記録した支出は、自動的にこの旅にひも付きます。',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: '基準',
+    usedCountNote: '{n} 件の記録あり。レートを変えても既存の金額は変わりません',
+    customRow: {
+      codeAriaLabel: '通貨コード',
+      codePlaceholder: 'VND',
+      labelAriaLabel: '表示名',
+      labelPlaceholder: 'ベトナム・ドン（任意）',
+      removeAriaLabel: '通貨を削除',
+    },
+    presetLabels: {
+      TWD: '台湾ドル',
+      CNY: '人民元',
+      USD: '米ドル',
+      JPY: '円',
+    },
+  },
+
   tripDetail: {
     emptyActive: 'まだ記録がありません。右下のプラスから記録を始めましょう。',
     emptyEnded: 'この旅行には記録が残っていません。',
@@ -214,7 +270,12 @@ export const ja: Translations = {
     endConfirm: '終了する',
     endDateBeforeStart: '終了日は開始日（{date}）より前にできません',
     endFailure: '終了に失敗しました',
-    currencyRatesLink: '心の中のレートを調整',
+    editAriaLabel: 'この旅を編集',
+    endIrreversibleNote: '締めたあとは戻せません — 支出はすべて、まとめて主帳簿に戻ります。',
+    totalLabel: 'この旅の合計',
+    baseCurrencyTag: '基準 {code}',
+    baseCurrencyTagTitle: 'この旅はこの通貨で精算します',
+    recordsCountLabel: '記録 · {n} 件',
   },
 
   incomeSheet: {
@@ -330,14 +391,15 @@ export const ja: Translations = {
   settings: {
     title: '設定',
     sectionGroup: '家計簿',
+    sectionGroupSplit: 'デフォルト分担方式 & 比率',
     groupName: '家計簿名',
     sectionMember: 'メンバー',
     youSuffix: '（あなた）',
     sectionPersonal: '個人',
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
-    defaultSplitTitle: '記録時のデフォルト分担',
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
+    saveDefaultRatio: 'デフォルト比率を保存',
     inviteCta: '相手を招待',
     sectionDisplay: '言語と通貨',
     language: '言語',
@@ -351,6 +413,7 @@ export const ja: Translations = {
     offlineUnsupported: 'このブラウザはオフライン閲覧に対応していません',
     recurringIncome: '定期収入',
     recurringExpense: '定期支出',
+    recurringSettings: '定期支出/収入設定',
     sectionData: 'データ',
     trust: 'データの安心',
     exportData: 'データを書き出す（CSV）',
@@ -543,7 +606,6 @@ export const ja: Translations = {
   recurringIncome: {
     title: '定期収入',
     back: '戻る',
-    add: '+ 追加',
     empty: {
       hint: '定期収入はまだ設定されていません',
       cta: '最初の一件を追加',
@@ -640,7 +702,7 @@ export const ja: Translations = {
     title: '通貨',
     back: '戻る',
     pageHeading: 'ふたりのあいだの、ひとつのものさし',
-    pageSubtitle: '基準通貨はこの帳簿の母語、心の為替はふたりの間の取り決めです。',
+    pageSubtitle: '基準通貨はこの帳簿の母語です。',
     base: {
       sectionTitle: '基準通貨',
       sectionHint: 'この帳簿の母語。すべての精算と表示は、この通貨を基準にします。',
@@ -650,21 +712,13 @@ export const ja: Translations = {
         bodyNext: '別の基準通貨にしたいときは、次の章が始まるときにもう一度選べます。',
       },
     },
-    rates: {
-      sectionTitle: '心の為替',
-      whyHeading: 'どうして「心の」為替と呼ぶのか',
-      whyBody: '市場で動く数字ではなく、ふたりが 1 米ドルをどれくらいだと感じるか——このものさしは、ふたりだけのものです。',
-      exampleHeading: 'たとえば',
-      exampleBody: 'ふたりが 1 USD ≈ 32 TWD と決めたら、アメリカで使った 100 ドルは NT$3,200 として記録されます。',
-      behaviorHeading: '変えたあと',
-      behaviorBody: 'これまでに書きとめた金額は、そのときの為替のまま残ります。これからの新しい記録だけ、新しい為替で計算します。',
-      saving: '保存中…',
-      saved: '保存しました',
-      defaultFallback: '初期値',
+    tripsHint: {
+      heading: '心の為替は引っ越しました',
+      body: '海外で使う通貨と為替は、旅ごとに設定するようになりました——それぞれの旅が自分のものさしを持ち、お互いに影響しません。',
+      linkLabel: '旅を見る',
     },
     errors: {
       baseChangeFailed: '基準通貨を変更できませんでした',
-      rateChangeFailed: '為替を更新できませんでした',
     },
   },
 
@@ -1024,7 +1078,6 @@ export const ja: Translations = {
   recurringExpense: {
     title: '定期支出',
     back: '戻る',
-    add: '+ 追加',
     empty: {
       hint: '定期支出はまだ設定されていません',
       cta: '最初の一件を追加',
