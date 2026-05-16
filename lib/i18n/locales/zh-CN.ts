@@ -137,6 +137,10 @@ export const zhCN: Translations = {
       multipleHeading: '{count} 段旅行进行中',
       multipleCta: '一起翻 ›',
       multipleAriaLabel: '查看 {count} 段进行中的旅行',
+      emptyCta: '开始一段旅行',
+      addAriaLabel: '新增旅行',
+      collapseAriaLabel: '收起旅行卡',
+      expandAriaLabel: '展开旅行卡',
     },
   },
 

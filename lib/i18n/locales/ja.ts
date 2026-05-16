@@ -137,6 +137,10 @@ export const ja: Translations = {
       multipleHeading: '{count} 件の旅行が進行中',
       multipleCta: 'まとめて見る ›',
       multipleAriaLabel: '進行中の {count} 件の旅行を見る',
+      emptyCta: '旅を始める',
+      addAriaLabel: '新しい旅行',
+      collapseAriaLabel: '旅行カードを折りたたむ',
+      expandAriaLabel: '旅行カードを開く',
     },
   },
 

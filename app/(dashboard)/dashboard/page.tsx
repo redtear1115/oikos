@@ -246,7 +246,12 @@ export default async function DashboardPage() {
           isSolo={bannerProps.isSolo}
         />
       )}
-      {!epochWindow.isPast && <ActiveTripBanner trips={activeTrips} />}
+      {!epochWindow.isPast && (
+        <ActiveTripBanner
+          trips={activeTrips}
+          baseCurrency={(group.baseCurrency as CurrencyCode) ?? 'twd'}
+        />
+      )}
       <Dashboard
         balance={balance}
         pendingBalanceDelta={pendingBalanceDelta}

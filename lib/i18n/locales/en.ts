@@ -137,6 +137,10 @@ export const en: Translations = {
       multipleHeading: '{count} trips in progress',
       multipleCta: 'Browse all ›',
       multipleAriaLabel: 'View {count} active trips',
+      emptyCta: 'Start a trip',
+      addAriaLabel: 'New trip',
+      collapseAriaLabel: 'Collapse trip card',
+      expandAriaLabel: 'Expand trip card',
     },
   },
 
