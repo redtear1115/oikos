@@ -7,6 +7,7 @@ import { AvatarMenuSheet } from '@/app/(dashboard)/_components/AvatarMenuSheet'
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  usePathname: () => '/dashboard',
 }))
 
 vi.mock('next/cache', () => ({

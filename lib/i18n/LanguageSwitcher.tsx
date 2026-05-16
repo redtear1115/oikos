@@ -1,7 +1,9 @@
 'use client'
 
 import { Fragment } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { buildLocaleUrl } from '@/lib/i18n/routing'
+import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
 
 const LOCALES = [
   { value: 'zh-TW', label: '繁中' },
@@ -21,11 +23,35 @@ interface Props {
   variant?: Variant
 }
 
+// Public pages are URL-routed (issue #400). Anything else uses cookie + refresh
+// because the URL doesn't carry locale.
+const PUBLIC_PATTERNS = [
+  /^\/$/,
+  /^\/sign-in$/,
+  /^\/terms$/,
+  /^\/privacy$/,
+  /^\/(zh-TW|zh-CN|en|ja)(\/(sign-in|terms|privacy))?$/,
+]
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATTERNS.some((re) => re.test(pathname))
+}
+
 export function LanguageSwitcher({ current, variant = 'pill' }: Props) {
   const router = useRouter()
+  const pathname = usePathname()
 
   function switchLang(lang: string) {
     if (lang === current) return
+    if (!isLocale(lang)) return
+
+    if (isPublicPath(pathname)) {
+      // URL-based: push to new locale path
+      router.push(buildLocaleUrl(pathname, lang as Locale))
+      return
+    }
+
+    // Cookie-based: dashboard URLs don't carry locale
     // eslint-disable-next-line react-hooks/immutability -- document.cookie is the standard browser API for setting cookies client-side; there is no immutable alternative.
     document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
     router.refresh()
