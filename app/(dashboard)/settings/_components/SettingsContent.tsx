@@ -20,7 +20,6 @@ export interface PartnerInfo { id: string; displayName: string; email: string | 
 interface Props {
   viewer: ViewerInfo
   partner: PartnerInfo | null
-  groupId: string
   appVersion: string
   currentLocale: string
   /** True iff viewer is member_a on the group. Drives the leave flow's branching. */
@@ -34,7 +33,7 @@ interface Props {
 }
 
 export function SettingsContent({
-  viewer, partner, groupId, appVersion, currentLocale,
+  viewer, partner, appVersion, currentLocale,
   viewerIsMemberA, groupBalance, pendingSwap, tripSummary,
 }: Props) {
   const router = useRouter()

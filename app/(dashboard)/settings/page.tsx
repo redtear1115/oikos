@@ -66,7 +66,6 @@ export default async function SettingsPage() {
       <SettingsContent
         viewer={viewer}
         partner={partner}
-        groupId={group.id}
         appVersion={pkg.version}
         currentLocale={currentLocale}
         viewerIsMemberA={viewerIsMemberA}
