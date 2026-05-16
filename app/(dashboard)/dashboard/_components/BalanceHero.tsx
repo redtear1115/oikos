@@ -441,21 +441,22 @@ function SettleButton({ settleOpen, onToggle, ariaLabel, label }: {
       onClick={onToggle}
       aria-label={ariaLabel}
       aria-expanded={settleOpen}
-      // min-h-[44px] satisfies the 44×44 tap-target guideline (#147) while the
-      // visible chip stays compact via px-3 + flex sizing.
-      className="relative min-h-[44px] inline-flex items-center gap-1 rounded-full cursor-pointer before:absolute before:inset-y-0 before:-inset-x-1 before:content-['']"
+      // Visible chip shrunk to ~30px to match the BalanceViewToggle pill height
+      // in the actions row. Hit target stays ≥44px via the ::before pseudo
+      // extending 7px vertically + 4px horizontally (30 + 14 = 44; #147).
+      className="relative min-h-[30px] inline-flex items-center gap-1 rounded-full cursor-pointer before:absolute before:-inset-y-[7px] before:-inset-x-1 before:content-['']"
       style={{
-        padding: '0 12px',
+        padding: '0 11px',
         border: '1px solid',
         borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
         background: settleOpen ? 'var(--ink)' : 'transparent',
         color: settleOpen ? '#fff' : 'var(--ink-2)',
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: 500,
         transition: 'background 150ms, color 150ms, border-color 150ms',
       }}
     >
-      <span aria-hidden style={{ fontSize: 14 }}>⇄</span>
+      <span aria-hidden style={{ fontSize: 13 }}>⇄</span>
       <span>{label}</span>
     </button>
   )
