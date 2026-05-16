@@ -11,14 +11,18 @@ export function stripLocaleFromPath(pathname: string): {
   locale: Locale | null
   rest: string
 } {
-  const segs = pathname.split('/').filter(Boolean)
+  // Normalize trailing slash so '/sign-in/' is treated as '/sign-in'.
+  // Middleware normally normalizes upstream, but a defensive strip here
+  // keeps callers (sitemap, switcher) honest if they ever pass non-normalized input.
+  const normalized = pathname === '/' ? '/' : pathname.replace(/\/+$/, '') || '/'
+  const segs = normalized.split('/').filter(Boolean)
   if (segs.length === 0) return { locale: null, rest: '/' }
   const first = segs[0]
   if (isLocale(first)) {
     const remainder = segs.slice(1).join('/')
     return { locale: first, rest: remainder ? `/${remainder}` : '/' }
   }
-  return { locale: null, rest: pathname }
+  return { locale: null, rest: normalized }
 }
 
 export type LocaleRoutingDecision =
@@ -32,8 +36,8 @@ export function decideLocaleRouting(pathname: string): LocaleRoutingDecision {
 
   // No locale prefix
   if (locale === null) {
-    if (isPublicPage(pathname)) {
-      const target = pathname === '/' ? `/${DEFAULT_LOCALE}` : `/${DEFAULT_LOCALE}${pathname}`
+    if (isPublicPage(rest)) {
+      const target = rest === '/' ? `/${DEFAULT_LOCALE}` : `/${DEFAULT_LOCALE}${rest}`
       return { action: 'rewrite', targetPath: target, locale: DEFAULT_LOCALE }
     }
     return { action: 'passthrough' }
@@ -58,10 +62,7 @@ export function buildLocaleUrl(currentPath: string, target: Locale): string {
   return rest === '/' ? `/${target}` : `/${target}${rest}`
 }
 
-export function getHreflangAlternates(
-  publicPath: '/' | '/sign-in' | '/terms' | '/privacy',
-  baseUrl: string,
-) {
+export function getHreflangAlternates(publicPath: PublicPage, baseUrl: string) {
   const url = (locale: Locale | 'default'): string => {
     if (locale === 'default' || locale === DEFAULT_LOCALE) {
       return `${baseUrl}${publicPath}`

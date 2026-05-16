@@ -24,6 +24,12 @@ describe('stripLocaleFromPath', () => {
     expect(stripLocaleFromPath('/foobar')).toEqual({ locale: null, rest: '/foobar' })
     expect(stripLocaleFromPath('/EN')).toEqual({ locale: null, rest: '/EN' }) // case-sensitive
   })
+
+  it('normalizes trailing slashes', () => {
+    expect(stripLocaleFromPath('/sign-in/')).toEqual({ locale: null, rest: '/sign-in' })
+    expect(stripLocaleFromPath('/en/terms/')).toEqual({ locale: 'en', rest: '/terms' })
+    expect(stripLocaleFromPath('/')).toEqual({ locale: null, rest: '/' }) // root unchanged
+  })
 })
 
 describe('decideLocaleRouting', () => {
@@ -91,6 +97,14 @@ describe('decideLocaleRouting', () => {
   // (Next.js resolves them through [locale]/layout.tsx which calls notFound)
   it('passes through unknown locale-prefixed paths (handled downstream by [locale]/layout.tsx)', () => {
     expect(decideLocaleRouting('/en/some-bogus-path')).toEqual({ action: 'passthrough' })
+  })
+
+  it('handles trailing slashes on public pages', () => {
+    expect(decideLocaleRouting('/sign-in/')).toEqual({
+      action: 'rewrite',
+      targetPath: '/zh-TW/sign-in',
+      locale: 'zh-TW',
+    })
   })
 })
 
