@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
@@ -135,20 +136,13 @@ export function RecurringRuleSheet({
 
   return (
     <>
-      <SheetBackdrop open={open} onClick={onClose} />
-
-      <div
-        className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
-        style={{
-          background: P.sheetBg,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          boxShadow: '0 -10px 40px rgba(58,36,25,0.18)',
-          maxHeight: '92dvh',
-          transform: open ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-          pointerEvents: open ? 'auto' : 'none',
-        }}
+      <SheetFrame
+        open={open}
+        onClose={onClose}
+        ariaLabel={isEdit ? t.recurringIncome.sheet.titleEdit : t.recurringIncome.sheet.titleNew}
+        background={P.sheetBg}
+        boxShadow="0 -10px 40px rgba(58,36,25,0.18)"
+        grabberColor="var(--grabber)"
       >
         {/* Halo */}
         <div
@@ -160,11 +154,6 @@ export function RecurringRuleSheet({
             pointerEvents: 'none',
           }}
         />
-
-        {/* Grabber */}
-        <div className="pt-2 flex justify-center relative">
-          <div className="w-9 h-[5px] rounded-full" style={{ background: 'var(--grabber)' }} />
-        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2 relative">
@@ -208,33 +197,13 @@ export function RecurringRuleSheet({
             >
               {t.recurringIncome.sheet.amountLabel}
             </div>
-            <label className="flex items-baseline justify-center gap-2 cursor-text">
-              <span className="text-title font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                enterKeyHint="done"
-                value={amount ? amount.toLocaleString('en-US') : ''}
-                onChange={(e) => {
-                  const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
-                  setAmount(next ? parseInt(next, 10) : 0)
-                }}
-                placeholder="0"
-                aria-label={t.recurringIncome.sheet.amountLabel}
-                className="bg-transparent border-0 outline-none text-center"
-                style={{
-                  fontFamily: 'var(--font-numeric)',
-                  fontSize: 'var(--fs-amount-lg)',
-                  fontWeight: 600,
-                  color: amount ? 'var(--ink)' : 'var(--ink-3)',
-                  letterSpacing: -2,
-                  lineHeight: 1,
-                  width: `${Math.max((amount ? amount.toLocaleString('en-US').length : 1), 2)}ch`,
-                  caretColor: P.ink,
-                }}
-              />
-            </label>
+            <AmountInput
+              value={amount ? String(amount) : ''}
+              onChange={(next) => setAmount(next ? parseInt(next, 10) : 0)}
+              symbol="NT$"
+              ariaLabel={t.recurringIncome.sheet.amountLabel}
+              caretColor={P.ink}
+            />
 
             {/* Recipient toggle */}
             {!isSolo && (
@@ -513,7 +482,7 @@ export function RecurringRuleSheet({
 
           <div className="h-8" />
         </div>
-      </div>
+      </SheetFrame>
 
       <ConfirmModal
         open={confirmingDelete && open}

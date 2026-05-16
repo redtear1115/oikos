@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { SheetFrame } from './SheetFrame'
 import { getPlatform, type Platform } from '@/lib/install-guide'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
@@ -26,55 +26,35 @@ export function InstallGuide({ open, onClose }: Props) {
   }, [open])
 
   return (
-    <>
-      <SheetBackdrop open={open} onClick={onClose} />
-      <div
-        className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
-        style={{
-          background: 'var(--bg)',
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
-          maxHeight: '92dvh',
-          transform: open ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-      >
-        {/* Grabber */}
-        <div className="pt-2 flex justify-center">
-          <div className="w-9 h-[5px] rounded-full" style={{ background: 'rgba(31,27,22,0.18)' }} />
+    <SheetFrame open={open} onClose={onClose} ariaLabel={t.installGuide.title} topRadius={28}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-3 pb-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="bg-transparent border-0 text-body cursor-pointer p-1"
+          style={{ color: 'var(--ink-2)' }}
+        >
+          {t.installGuide.close}
+        </button>
+        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
+          {t.installGuide.title}
         </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-3 pb-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)' }}
-          >
-            {t.installGuide.close}
-          </button>
-          <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-            {t.installGuide.title}
-          </div>
-          <div className="w-10" />
-        </div>
-
-        <div className="overflow-auto flex-1 px-6 pb-8">
-          <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-            {t.installGuide.intro}
-          </p>
-
-          {platform === 'ios-safari' && <IosSafariSteps t={t} />}
-          {platform === 'ios-other' && <IosOtherSteps t={t} />}
-          {platform === 'android' && <AndroidSteps t={t} />}
-          {platform === 'desktop' && <DesktopSteps t={t} />}
-          {platform === 'unknown' && <FallbackSteps t={t} />}
-        </div>
+        <div className="w-10" />
       </div>
-    </>
+
+      <div className="overflow-auto flex-1 px-6 pb-8">
+        <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+          {t.installGuide.intro}
+        </p>
+
+        {platform === 'ios-safari' && <IosSafariSteps t={t} />}
+        {platform === 'ios-other' && <IosOtherSteps t={t} />}
+        {platform === 'android' && <AndroidSteps t={t} />}
+        {platform === 'desktop' && <DesktopSteps t={t} />}
+        {platform === 'unknown' && <FallbackSteps t={t} />}
+      </div>
+    </SheetFrame>
   )
 }
 
