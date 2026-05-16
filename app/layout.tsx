@@ -17,13 +17,19 @@ const SUPABASE_ORIGIN = (() => {
   }
 })()
 
-// Fraunces is the landing hero typeface — preloaded so the LCP headline doesn't
-// FOIT/FOUT. Latin only, two weights (400 mobile tagline, 500 everything else).
+// Fraunces is the landing hero typeface. Latin only, two weights (400 mobile
+// tagline, 500 everything else). `preload: false` skips the <link rel="preload">
+// for every woff2 unicode-range subset — those were putting 12 font files on the
+// LCP critical path (~1.9s on mobile, flagged by Lighthouse). `display: swap`
+// already prevents FOIT, so the trade-off is a brief FOUT swap on the hero
+// headline in exchange for removing the font chain from the critical path.
+// Same reasoning as Noto Sans TC below. (issue #454)
 const fraunces = Fraunces({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-fraunces',
   display: 'swap',
+  preload: false,
 })
 
 // CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
