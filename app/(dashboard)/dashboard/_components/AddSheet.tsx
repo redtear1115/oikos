@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
-import { SheetBackdrop } from './SheetBackdrop'
+import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DescriptionAutocomplete } from './DescriptionAutocomplete'
 import {
   createTransaction,
@@ -377,28 +378,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
   return (
     <>
-      <SheetBackdrop open={open} onClick={onClose} />
-      <div
-        className="fixed left-1/2 bottom-0 z-[100] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
-        style={{
-          background: 'var(--bg)',
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
-          maxHeight: '92dvh',
-          transform: open ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-      >
-        {/* Grabber */}
-        <div className="pt-2 flex justify-center">
-          <div
-            className="w-9 h-[5px] rounded-full"
-            style={{ background: 'rgba(31,27,22,0.18)' }}
-          />
-        </div>
-
+      <SheetFrame open={open} onClose={onClose} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button
@@ -439,51 +419,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             >
               {t.addSheet.amount}
             </div>
-            <label
-              className="flex items-baseline justify-center gap-1.5 min-h-[60px] cursor-text"
-              onClick={() => {
-                // Focus + select on tap anywhere in the hero (currency symbol, the gap,
-                // or the digits). Native click on the inner <input> would also focus
-                // it, but tapping the label gives users a much wider hit target.
-                const el = amountInputRef.current
-                if (!el) return
-                el.focus()
-                el.select()
-              }}
-            >
-              <span
-                className="text-title font-medium"
-                style={{ color: amount ? 'var(--ink-2)' : 'var(--ink-3)' }}
-              >
-                {currencySymbol(currency)}
-              </span>
-              <input
-                ref={amountInputRef}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                enterKeyHint="done"
-                value={amount ? parseInt(amount, 10).toLocaleString('en-US') : ''}
-                onChange={(e) => {
-                  // strip non-digits, drop leading zeros, cap at 7 digits
-                  const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 7).replace(/^0+(\d)/, '$1')
-                  setAmount(next)
-                }}
-                placeholder="0"
-                aria-label={t.addSheet.amount}
-                className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
-                style={{
-                  fontFamily: 'var(--font-numeric)',
-                  fontSize: 'var(--fs-amount-lg)',
-                  fontWeight: 600,
-                  color: amount ? 'var(--ink)' : 'var(--ink-3)',
-                  // Min 2ch so empty/single-digit values still have a comfortable hit area;
-                  // grows with formatted (comma-separated) length up to 9ch (7 digits + 2 commas).
-                  width: `${Math.max((amount ? parseInt(amount, 10).toLocaleString('en-US').length : 1), 2)}ch`,
-                  caretColor: 'var(--accent)',
-                }}
-              />
-            </label>
+            <AmountInput
+              value={amount}
+              onChange={setAmount}
+              symbol={currencySymbol(currency)}
+              ariaLabel={t.addSheet.amount}
+              inputRef={amountInputRef}
+            />
 
             {/* Trip + currency selectors — currency is only user-pickable
                 in the trip-sub-ledger path (tripId set). Main-ledger records
@@ -683,7 +625,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               so the last input/button isn't visually clipped on devices with a gesture bar. */}
           <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </div>
-      </div>
+      </SheetFrame>
 
       {error && open && (
         <div
