@@ -15,7 +15,7 @@ import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
 import type { TripOption } from './_components/TripSelector'
 import type { RateEntry } from './_components/AddSheet'
-import type { CurrencyCode } from '@/lib/currency'
+import { parseCurrencyCode } from '@/lib/currency'
 import {
   loadMonthlyReviewSnapshot,
   loadMonthlyReviewMessages,
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
         expensePendings={expensePendings}
         feedDataPromise={feedDataPromise}
         groupDefaultRatioA={group.defaultSplitRatioA ?? null}
-        baseCurrency={(group.baseCurrency as CurrencyCode) ?? 'twd'}
+        baseCurrency={parseCurrencyCode(group.baseCurrency) ?? 'twd'}
         activeTrips={activeTrips}
         rates={rates}
       />
