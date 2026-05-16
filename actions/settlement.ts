@@ -12,14 +12,16 @@ export interface EditSettlementInput {
   oldId: string
   amount: number
   payerId: string
-  settledAt: Date
+  /** Calendar date 'YYYY-MM-DD'. Validator anchors at UTC noon (#453). */
+  settledAt: string
   note?: string
 }
 
 export interface CreateSettlementInput {
   amount: number       // integer NTD, > 0
   payerId: string      // user.id paying down their debt (must be in group)
-  settledAt: Date
+  /** Calendar date 'YYYY-MM-DD'. Validator anchors at UTC noon (#453). */
+  settledAt: string
   note?: string
 }
 

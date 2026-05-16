@@ -20,7 +20,14 @@ export function useFocusAndSelectOnOpen(
 ): void {
   useLayoutEffect(() => {
     if (!open) return
-    ref.current?.focus()
+    // preventScroll stops iOS Safari's focus-driven scroll-into-view —
+    // without it, focusing an input inside a `position: fixed` sheet
+    // scrolls the *document* (window.scrollY went 0 → 639 in real-iOS
+    // debug HUD), which then visually shifts the sheet via WebKit's
+    // fixed-element jumping behavior. The sibling `useScrollToTopOnOpen`
+    // resets window.scrollY too as a belt — preventing the scroll in
+    // the first place is the suspenders.
+    ref.current?.focus({ preventScroll: true })
     ref.current?.select()
   // ref is a stable RefObject — omitting it from deps is intentional
   // eslint-disable-next-line react-hooks/exhaustive-deps

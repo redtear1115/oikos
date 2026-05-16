@@ -296,7 +296,7 @@ export function BalanceHero({
               </div>
 
               <div
-                className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150 mt-1.5"
+                className="tnum text-center leading-[1.05] tracking-[-1.4px] transition-opacity duration-150 mt-1.5"
                 style={{
                   fontFamily: 'var(--font-numeric)',
                   // clamp keeps the visual hierarchy on normal amounts while

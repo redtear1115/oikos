@@ -77,8 +77,14 @@ const AssetRowSchema = v.object({
 const FuelLogRowSchema = v.object({
   id: v.string(),
   assetId: v.string(),
-  // liters is `numeric` in Postgres, serialized as string by Realtime
-  liters: v.string(),
+  // `liters` is `numeric(_, 2)` in Postgres. Supabase Realtime serializes
+  // numeric columns as JSON numbers (verified on Realtime v2 — both integer
+  // and decimal values come through as `number`, not `string`). Drizzle's
+  // SSR fetch path still types `liters` as `string` because the JS driver
+  // wraps numeric, so realtime payload and SSR row shape diverge here; the
+  // sole consumer (`fuel-log-changed` → `router.refresh()`) only reads
+  // `assetId`, never `liters`, so the divergence is harmless.
+  liters: v.number(),
   fuelType: FUEL_TYPE,
   odometer: v.number(),
   station: v.nullable(v.string()),

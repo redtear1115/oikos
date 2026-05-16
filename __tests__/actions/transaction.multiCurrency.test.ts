@@ -156,7 +156,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
-      transactedAt: new Date('2026-05-14T01:00:00Z'),
+      transactedAt: '2026-05-14',
     })
     refs.txIds.push(result.id)
 
@@ -199,7 +199,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
-      transactedAt: new Date('2026-05-14T01:00:00Z'),
+      transactedAt: '2026-05-14',
     })
     refs.txIds.push(result.id)
 
@@ -239,7 +239,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
-      transactedAt: new Date('2026-05-14T01:00:00Z'),
+      transactedAt: '2026-05-14',
     })
     refs.txIds.push(result.id)
 
@@ -273,7 +273,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
-      transactedAt: new Date('2026-05-14T01:00:00Z'),
+      transactedAt: '2026-05-14',
     })).rejects.toThrow()
   })
 
@@ -297,7 +297,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
-      transactedAt: new Date('2026-05-14T01:00:00Z'),
+      transactedAt: '2026-05-14',
       tripId: trip.id,
     })
     refs.txIds.push(result.id)
@@ -346,7 +346,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
         category: 'dining',
         splitType: 'all_mine',
         payerId: refs.userId,
-        transactedAt: new Date('2026-05-14T01:00:00Z'),
+        transactedAt: '2026-05-14',
         tripId: trip2.id,
       })
     } catch (e) {

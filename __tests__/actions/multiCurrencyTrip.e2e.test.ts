@@ -189,7 +189,7 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
-      transactedAt: new Date('2026-05-14T12:00:00Z'),
+      transactedAt: '2026-05-14',
     })
     expect(txResult.id).toBeTruthy()
     refs.txIds.push(txResult.id)

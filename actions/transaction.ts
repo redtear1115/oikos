@@ -25,7 +25,8 @@ export interface CreateTransactionInput {
   category: CategoryId | string  // 'other' fallback if invalid
   splitType: SplitType
   payerId: string             // user.id of payer (must be in group)
-  transactedAt: Date
+  /** Calendar date 'YYYY-MM-DD'. Validator anchors at UTC noon (#453). */
+  transactedAt: string
   assetId?: string | null
   notes?: string | null
   splitRatioA?: number | null
@@ -174,7 +175,8 @@ export interface EditTransactionInput {
   category: CategoryId | string
   splitType: SplitType
   payerId: string
-  transactedAt: Date
+  /** Calendar date 'YYYY-MM-DD'. Validator anchors at UTC noon (#453). */
+  transactedAt: string
   assetId?: string | null
   notes?: string | null
   splitRatioA?: number | null
