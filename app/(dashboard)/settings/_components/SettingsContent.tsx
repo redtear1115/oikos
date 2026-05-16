@@ -1,21 +1,21 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { EditableNameRow } from './sections/EditableNameRow'
 import { MemberListSection } from './sections/MemberListSection'
 import { SplitTypeSection } from './sections/SplitTypeSection'
+import { SplitRatioSection } from './sections/SplitRatioSection'
 import { DangerZone, type PendingSwap } from './DangerZone'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { GuardianBetaToggle } from './GuardianBetaToggle'
-import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
+import { updateGroupName } from '@/actions/group'
 import { updateDisplayName } from '@/actions/profile'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
-import { describeError } from '@/lib/errors'
 
 export interface ViewerInfo {
   id: string
@@ -54,25 +54,7 @@ export function SettingsContent({
   const t = useTranslations()
   const isSolo = partner === null
 
-  const refresh = () => router.refresh()
-
-  const [splitRatioA, setSplitRatioA] = useState<number>(groupDefaultRatioA ?? 50)
-  const [savingRatio, startRatioTransition] = useTransition()
-  const [ratioError, setRatioError] = useState<string | null>(null)
-
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
-
-  const handleRatioSave = () => {
-    setRatioError(null)
-    startRatioTransition(async () => {
-      try {
-        await updateGroupSplitRatio(splitRatioA)
-        refresh()
-      } catch (e) {
-        setRatioError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
-      }
-    })
-  }
 
   return (
     <>
@@ -97,38 +79,13 @@ export function SettingsContent({
       {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
       <Section title={t.settings.sectionGroupSplit}>
         <SplitTypeSection current={viewer.defaultSplitType} isSolo={isSolo} />
-        {!isSolo && (
+        {!isSolo && partner && (
           <div className="mt-3">
-            <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
-              <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
-                <span>{viewer.displayName}（我）{splitRatioA}%</span>
-                <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={90}
-                step={10}
-                list="split-ratio-ticks"
-                value={splitRatioA}
-                onChange={e => setSplitRatioA(Number(e.target.value))}
-                className="w-full accent-[var(--ink)]"
-              />
-              <datalist id="split-ratio-ticks">
-                {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(v => (
-                  <option key={v} value={v} label={`${v}`} />
-                ))}
-              </datalist>
-              <button
-                onClick={handleRatioSave}
-                disabled={savingRatio}
-                className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-              >
-                {savingRatio ? t.common.saving : t.settings.saveDefaultRatio}
-              </button>
-              {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
-            </section>
+            <SplitRatioSection
+              viewerName={viewer.displayName}
+              partnerName={partner.displayName}
+              initialRatioA={groupDefaultRatioA}
+            />
           </div>
         )}
       </Section>
