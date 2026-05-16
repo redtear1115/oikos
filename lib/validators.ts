@@ -2,6 +2,7 @@ import { isValidCategoryId, type CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 import { GAS_FUEL_TYPES, type GasFuelType } from '@/lib/fuel'
+import { ymdToUTCNoon } from '@/lib/local-date'
 
 /**
  * Validates a positive integer NTD amount. Returns the value or throws.
@@ -42,9 +43,19 @@ export function validateNotes(input: string | null | undefined): string | null {
 }
 
 /**
- * Parses a YYYY-MM-DD date string into a Date anchored at local midnight.
+ * Parses a YYYY-MM-DD date string into a Date anchored at LOCAL midnight.
  * Returns null on format/calendar errors (e.g. '2024-02-30' silently coerced
  * by `new Date(...)` is rejected). Caller decides which error message to throw.
+ *
+ * ⚠️ The returned `Date` is local-midnight, which serializes to a UTC instant
+ * that depends on the writer's runtime timezone. **Do not write it into a
+ * `TIMESTAMPTZ` column** (`transactedAt`, `settledAt`, `loggedAt`, …) — mixed
+ * with `ymdToUTCNoon` writes elsewhere it produces a sort skew on
+ * `ORDER BY <timestamptz> DESC` (we hit this on the records feed; see git log
+ * for the FuelLog `loggedAt` fix). For TIMESTAMPTZ writes use
+ * `ymdToUTCNoon` from `@/lib/local-date`. This helper remains valid for
+ * `DATE` columns (Postgres `date`, e.g. `purchasedAt`, `birthday`,
+ * `occurredAt`) and for pure format/calendar validation.
  */
 export function parseDateString(input: string): Date | null {
   if (!input || typeof input !== 'string') return null
@@ -358,11 +369,15 @@ export function validateFuelLogInput(input: FuelLogInputRaw): FuelLogInputValida
     }
   }
 
-  // loggedAt — YYYY-MM-DD
-  const loggedAt = parseDateString(input.loggedAt)
-  if (!loggedAt) {
+  // loggedAt — YYYY-MM-DD. We validate calendar correctness with
+  // `parseDateString` but discard its local-midnight Date and re-anchor at
+  // UTC noon so the stored timestamp matches AddSheet / SettlementSheet,
+  // which both go through `ymdToUTCNoon`. Without this, fuel-log txns
+  // ordered ~20h behind same-day cash txns on the records feed.
+  if (!parseDateString(input.loggedAt)) {
     throw new Error('日期格式無效')
   }
+  const loggedAt = ymdToUTCNoon(input.loggedAt)
 
   // paidBy — string presence
   if (!input.paidBy || typeof input.paidBy !== 'string') {
