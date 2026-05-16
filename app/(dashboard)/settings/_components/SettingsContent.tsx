@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
+import { EditableNameRow } from './sections/EditableNameRow'
 import { DangerZone, type PendingSwap } from './DangerZone'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
@@ -53,10 +53,8 @@ export function SettingsContent({
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
   const isSolo = partner === null
 
-  const handleClose = () => setEditing(null)
   const refresh = () => router.refresh()
 
   const [savingSplit, startSplitTransition] = useTransition()
@@ -139,10 +137,10 @@ export function SettingsContent({
 
       {/* 帳本 — group-level identity (just the name). */}
       <Section title={t.settings.sectionGroup}>
-        <Row
+        <EditableNameRow
           label={t.settings.groupName}
           value={groupName}
-          onClick={() => setEditing('group')}
+          onSave={updateGroupName}
         />
       </Section>
 
@@ -287,10 +285,10 @@ export function SettingsContent({
 
       {/* 個人 — viewer-only profile + preferences */}
       <Section title={t.settings.sectionPersonal}>
-        <Row
+        <EditableNameRow
           label={t.settings.displayName}
           value={viewer.displayName}
-          onClick={() => setEditing('name')}
+          onSave={updateDisplayName}
         />
       </Section>
 
@@ -370,26 +368,6 @@ export function SettingsContent({
         <a href="/privacy" className="underline" style={{ color: 'var(--ink-3)' }}>{t.signIn.privacyLink}</a>
       </div>
 
-      <EditTextSheet
-        open={editing === 'group'}
-        title={t.settings.groupName}
-        initialValue={groupName}
-        onClose={handleClose}
-        onSubmit={async (v) => {
-          await updateGroupName(v)
-          refresh()
-        }}
-      />
-      <EditTextSheet
-        open={editing === 'name'}
-        title={t.settings.displayName}
-        initialValue={viewer.displayName}
-        onClose={handleClose}
-        onSubmit={async (v) => {
-          await updateDisplayName(v)
-          refresh()
-        }}
-      />
       <InstallGuide
         open={installGuideOpen}
         onClose={() => setInstallGuideOpen(false)}
