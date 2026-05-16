@@ -51,7 +51,11 @@ export interface AssetRowPayload {
 export interface FuelLogRowPayload {
   id: string
   assetId: string
-  liters: string
+  // Realtime serializes Postgres numeric as JSON number (not string).
+  // SSR fetch path types `liters` as string because the JS driver wraps
+  // numeric — these two paths diverge but the sole realtime consumer
+  // only reads `assetId`, so it doesn't matter.
+  liters: number
   // 'electric' excluded — EV cars cannot have FuelLog entries (EV1 spec constraint)
   fuelType: GasFuelType
   odometer: number
