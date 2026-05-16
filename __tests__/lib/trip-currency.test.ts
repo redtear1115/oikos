@@ -86,13 +86,27 @@ describe('validateTripCurrencySnapshot', () => {
     expect(s.entries[0].rate).toBe(1)
   })
 
-  it('rejects when default not in entries', () => {
+  it('rejects when default not in entries (no requiredDefault)', () => {
     expect(() =>
       validateTripCurrencySnapshot({
         default: 'JPY',
         entries: [{ code: 'TWD', label: null, rate: 1 }],
       }),
-    ).toThrow('預設幣別不在列表中')
+    ).toThrow('基礎貨幣不在列表中')
+  })
+
+  it('auto-inserts base entry when requiredDefault is supplied and missing', () => {
+    const s = validateTripCurrencySnapshot(
+      {
+        default: 'JPY',  // overridden
+        entries: [{ code: 'JPY', label: null, rate: 0.2 }],
+      },
+      'TWD',
+    )
+    expect(s.default).toBe('TWD')
+    const codes = s.entries.map(e => e.code).sort()
+    expect(codes).toEqual(['JPY', 'TWD'])
+    expect(s.entries.find(e => e.code === 'TWD')?.rate).toBe(1)
   })
 
   it('rejects duplicate codes', () => {
@@ -131,10 +145,18 @@ describe('validateTripCurrencySnapshot', () => {
     ).toThrow('最多 5 個幣別')
   })
 
-  it('rejects empty entries', () => {
+  it('rejects empty entries with no requiredDefault', () => {
     expect(() =>
       validateTripCurrencySnapshot({ default: 'TWD', entries: [] }),
-    ).toThrow('至少需要一個幣別')
+    ).toThrow('基礎貨幣不在列表中')
+  })
+
+  it('with requiredDefault, empty entries auto-fill base with rate=1', () => {
+    const s = validateTripCurrencySnapshot({ default: 'TWD', entries: [] }, 'TWD')
+    expect(s).toEqual({
+      default: 'TWD',
+      entries: [{ code: 'TWD', label: null, rate: 1 }],
+    })
   })
 
   it('rejects > 16 char codes', () => {

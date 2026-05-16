@@ -360,7 +360,11 @@ export function AssetsListClient({ items }: Props) {
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
-      <div className="px-5 pt-[60px] pb-4">
+      {/* Page title sits at the same vertical position as /settings + /records
+          by honouring the safe-area inset (handles iOS notch) with a 24px
+          floor (desktop / no-notch PWA). The previous hardcoded 60px only
+          looked right on iOS — pushed the title down ~36px on desktop. */}
+      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}

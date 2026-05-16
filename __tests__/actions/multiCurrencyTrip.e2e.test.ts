@@ -156,7 +156,6 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     const tripResult = await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-14',
-      defaultCurrency: 'jpy',
     })
     expect(tripResult.id).toBeTruthy()
     refs.tripIds.push(tripResult.id)
@@ -164,9 +163,9 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     // Confirm trip is 'active'
     const trip = await getTripById(tripResult.id)
     expect(trip?.status).toBe('active')
-    // v0.17.4 #410: trip default_currency is stored uppercase (free-text since the
-    // column moved off the currency_code enum).
-    expect(trip?.defaultCurrency).toBe('JPY')
+    // v0.17.4 follow-up: trip default_currency always equals group base (TWD
+    // here). The per-trip default picker was removed.
+    expect(trip?.defaultCurrency).toBe('TWD')
 
     // 2. Set JPY → TWD rate
     await setRate({ fromCurrency: 'jpy', toCurrency: 'twd', rate: '0.220' })

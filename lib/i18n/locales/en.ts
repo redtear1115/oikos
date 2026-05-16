@@ -198,6 +198,62 @@ export const en: Translations = {
     pendingBadge: 'Pending',
   },
 
+  tripList: {
+    title: 'Trips',
+    subtitle: 'A trip at a time — each becomes its own chapter.',
+    sectionActive: 'In progress',
+    sectionPast: 'Past trips',
+    endedTag: 'Ended',
+    dateRangeActive: 'From {startDate}, ongoing',
+    backAriaLabel: 'Back to trips',
+    empty: {
+      heading: 'No trips yet',
+      body: 'Start a trip — every expense during those days gets collected here, ready to flip through later.',
+    },
+  },
+
+  tripSheet: {
+    titleNew: 'New trip',
+    titleEdit: 'Edit trip',
+    saveNew: 'Begin this trip',
+    saveEdit: 'Save changes',
+    errors: {
+      createFailed: 'Could not create trip',
+      updateFailed: 'Could not update trip',
+      codeBlank: 'Please enter a currency code',
+      codeDuplicate: 'Currencies cannot repeat',
+      rateInvalid: 'Rate must be positive',
+      rateInvalidInline: 'Enter a rate greater than 0',
+      maxCurrencies: 'Up to {max} currencies',
+    },
+    nameLabel: 'Name',
+    namePlaceholder: 'e.g. 5 days in Tokyo',
+    startDateLabel: 'Start date',
+    endDateLabel: 'End date (optional)',
+    endBeforeStart: 'End date cannot be before the start date',
+    currenciesSectionTitle: 'Currencies & rates',
+    currenciesHint: 'Pick the currencies you\'ll use. Each row: "1 of this currency = N of base" (e.g. 1 JPY ≈ 0.2 TWD). Editing a rate only affects new records; existing entries keep their original amount.',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ Custom currency',
+    footerNote: 'Expenses recorded during this trip will be tagged here automatically.',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: 'Base',
+    usedCountNote: '{n} record(s) so far; editing the rate keeps them unchanged',
+    customRow: {
+      codeAriaLabel: 'Currency code',
+      codePlaceholder: 'VND',
+      labelAriaLabel: 'Display name',
+      labelPlaceholder: 'Vietnamese dong (optional)',
+      removeAriaLabel: 'Remove currency',
+    },
+    presetLabels: {
+      TWD: 'Taiwan dollar',
+      CNY: 'Chinese yuan',
+      USD: 'US dollar',
+      JPY: 'Japanese yen',
+    },
+  },
+
   tripDetail: {
     emptyActive: 'No records yet for this trip. Tap the plus button to start.',
     emptyEnded: 'This trip ended without any records.',
@@ -216,6 +272,10 @@ export const en: Translations = {
     endFailure: 'Failed to end the trip',
     editAriaLabel: 'Edit this trip',
     endIrreversibleNote: 'This cannot be undone — all expenses will roll back to the main ledger as a summary.',
+    totalLabel: 'This trip cost',
+    baseCurrencyTag: 'Base {code}',
+    baseCurrencyTagTitle: 'This trip settles in this currency',
+    recordsCountLabel: 'Records · {n}',
   },
 
   incomeSheet: {

@@ -237,6 +237,108 @@ export type Translations = {
     pendingBadge: string
   }
 
+  /** Trip list page (#42). */
+  tripList: {
+    /** Page heading at the top of /trips. */
+    title: string
+    /** Soft subtitle under the page title. */
+    subtitle: string
+    /** Section label above the active trips list. */
+    sectionActive: string
+    /** Section label above the past / ended trips list. */
+    sectionPast: string
+    /** Inline tag appended after the date range on past rows. */
+    endedTag: string
+    /** Date range "{startDate} 起,進行中" — `{startDate}` is the trip start ISO date. */
+    dateRangeActive: string
+    /** Aria label for the back link in the page header (where applicable). */
+    backAriaLabel: string
+    /** Empty-state copy when the group has no trips at all. */
+    empty: {
+      heading: string
+      body: string
+    }
+  }
+
+  /** Trip create/edit sheet (#42, #410). */
+  tripSheet: {
+    /** Sheet title for creating a new trip. */
+    titleNew: string
+    /** Sheet title for editing an existing trip. */
+    titleEdit: string
+    /** Bottom save button when creating. */
+    saveNew: string
+    /** Bottom save button when editing. */
+    saveEdit: string
+    errors: {
+      /** Server fallback when createTrip throws without a message. */
+      createFailed: string
+      /** Server fallback when updateTrip throws without a message. */
+      updateFailed: string
+      /** Inline error under a custom row whose code is blank. */
+      codeBlank: string
+      /** Inline error when two rows have the same code. */
+      codeDuplicate: string
+      /** Inline error when any row's rate ≤ 0 — bound near the offending input. */
+      rateInvalid: string
+      /** Inline error under a rate input that is blank or non-positive. */
+      rateInvalidInline: string
+      /** Soft toast-style error when the user tries to exceed MAX_ENTRIES.
+       *  `{max}` is the cap (5). */
+      maxCurrencies: string
+    }
+    /** Label above the trip name input. */
+    nameLabel: string
+    /** Placeholder inside the trip name input. */
+    namePlaceholder: string
+    /** Label above the start date picker. */
+    startDateLabel: string
+    /** Label above the (optional) end date picker. */
+    endDateLabel: string
+    /** Inline alert under the date pair when end < start. */
+    endBeforeStart: string
+    /** Section heading above the currency picker. */
+    currenciesSectionTitle: string
+    /** One-line hint under the section heading explaining rate direction. */
+    currenciesHint: string
+    /** "{n} / {max}" pill in the section header. */
+    currencyCountFormat: string
+    /** Pill button to add a custom (non-preset) currency row. */
+    addCustomCta: string
+    /** Bottom-of-sheet reassurance about how trip-tagged expenses are routed. */
+    footerNote: string
+    /** Inline hint under the rate input showing the inverse direction.
+     *  `{default}` is the base currency code. */
+    rateInverseFormat: string
+    /** Pill on the base currency's header row — base is always present and
+     *  is the trip's reference currency (no longer user-switchable). */
+    basePill: string
+    /** Soft note shown beneath a non-base currency row when there are already
+     *  TripExpenses recorded against it. `{n}` is the count. Reassures that
+     *  rate edits only affect future records. */
+    usedCountNote: string
+    customRow: {
+      /** Aria label on the custom-row code input. */
+      codeAriaLabel: string
+      /** Placeholder text in the custom-row code input. */
+      codePlaceholder: string
+      /** Aria label on the custom-row display name input. */
+      labelAriaLabel: string
+      /** Placeholder text in the custom-row display name input. */
+      labelPlaceholder: string
+      /** Aria label on the × remove button. */
+      removeAriaLabel: string
+    }
+    /** Localised display name for each preset currency code (the 4 codes are
+     *  universal; the labels next to them are not). */
+    presetLabels: {
+      TWD: string
+      CNY: string
+      USD: string
+      JPY: string
+    }
+  }
+
   /** Trip detail page (#42). */
   tripDetail: {
     /** Empty-state copy when the trip is still active. */
@@ -275,6 +377,14 @@ export type Translations = {
     /** Red-tinted warning shown above the end-trip date picker — emphasises
      *  that ending writes a summary into the main ledger and cannot be undone. */
     endIrreversibleNote: string
+    /** Tiny label above the trip total in the top fold-preview card. */
+    totalLabel: string
+    /** Pill on the top card showing this trip's settlement currency. `{code}` is the base code. */
+    baseCurrencyTag: string
+    /** Title attribute on the base currency pill. */
+    baseCurrencyTagTitle: string
+    /** Section header above the records list. `{n}` is the record count. */
+    recordsCountLabel: string
   }
 
   incomeSheet: {
@@ -1622,6 +1732,62 @@ export const zhTW: Translations = {
     pendingBadge: '待結算',
   },
 
+  tripList: {
+    title: '旅行',
+    subtitle: '一趟一趟收下來，這段路就有自己的章節。',
+    sectionActive: '進行中',
+    sectionPast: '過去的旅行',
+    endedTag: '已結束',
+    dateRangeActive: '{startDate} 起,進行中',
+    backAriaLabel: '返回旅行列表',
+    empty: {
+      heading: '還沒有旅行紀錄',
+      body: '建一趟旅行，這段日子裡的每筆支出，就會自動收進來，回來再一起翻。',
+    },
+  },
+
+  tripSheet: {
+    titleNew: '建立旅行',
+    titleEdit: '編輯旅行',
+    saveNew: '開始這趟',
+    saveEdit: '保存變更',
+    errors: {
+      createFailed: '建立失敗',
+      updateFailed: '更新失敗',
+      codeBlank: '請輸入幣別代碼',
+      codeDuplicate: '幣別不可重複',
+      rateInvalid: '匯率必須是正數',
+      rateInvalidInline: '請輸入大於 0 的匯率',
+      maxCurrencies: '最多 {max} 個幣別',
+    },
+    nameLabel: '名稱',
+    namePlaceholder: '例：東京 5 日',
+    startDateLabel: '起始日',
+    endDateLabel: '結束日（可選）',
+    endBeforeStart: '結束日不可早於起始日',
+    currenciesSectionTitle: '幣別與匯率',
+    currenciesHint: '勾選這趟用得到的幣別。每行填「1 個此幣別 = 幾個基礎貨幣」(例：1 JPY ≈ 0.2 TWD)。改了匯率，舊紀錄保留當時的金額，只影響之後新增的紀錄。',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ 自訂幣別',
+    footerNote: '這趟期間記錄的支出，會自動掛在這次旅行底下。',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: '基礎貨幣',
+    usedCountNote: '已記過 {n} 筆；改匯率不影響舊紀錄',
+    customRow: {
+      codeAriaLabel: '幣別代碼',
+      codePlaceholder: 'VND',
+      labelAriaLabel: '顯示名稱',
+      labelPlaceholder: '越南盾（可選）',
+      removeAriaLabel: '移除幣別',
+    },
+    presetLabels: {
+      TWD: '台幣',
+      CNY: '人民幣',
+      USD: '美元',
+      JPY: '日圓',
+    },
+  },
+
   tripDetail: {
     emptyActive: '這趟還沒有任何紀錄。點右下角的加號從這裡開始記。',
     emptyEnded: '這趟沒有留下任何紀錄。',
@@ -1640,6 +1806,10 @@ export const zhTW: Translations = {
     endFailure: '結束失敗',
     editAriaLabel: '編輯這趟旅行',
     endIrreversibleNote: '結束之後無法復原。這趟的支出會以總結算的形式回到主帳本。',
+    totalLabel: '這趟一共花了',
+    baseCurrencyTag: '基礎貨幣 {code}',
+    baseCurrencyTagTitle: '這趟以這個幣別結算',
+    recordsCountLabel: '這趟的紀錄 · {n} 筆',
   },
 
   incomeSheet: {

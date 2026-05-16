@@ -198,6 +198,62 @@ export const zhCN: Translations = {
     pendingBadge: '待结算',
   },
 
+  tripList: {
+    title: '旅行',
+    subtitle: '一趟一趟收下来，这段路就有自己的章节。',
+    sectionActive: '进行中',
+    sectionPast: '过去的旅行',
+    endedTag: '已结束',
+    dateRangeActive: '{startDate} 起，进行中',
+    backAriaLabel: '返回旅行列表',
+    empty: {
+      heading: '还没有旅行记录',
+      body: '建一趟旅行，这段日子里的每笔支出，就会自动收进来，回来再一起翻。',
+    },
+  },
+
+  tripSheet: {
+    titleNew: '建立旅行',
+    titleEdit: '编辑旅行',
+    saveNew: '开始这趟',
+    saveEdit: '保存更改',
+    errors: {
+      createFailed: '建立失败',
+      updateFailed: '更新失败',
+      codeBlank: '请输入币别代码',
+      codeDuplicate: '币别不可重复',
+      rateInvalid: '汇率必须是正数',
+      rateInvalidInline: '请输入大于 0 的汇率',
+      maxCurrencies: '最多 {max} 个币别',
+    },
+    nameLabel: '名称',
+    namePlaceholder: '例：东京 5 日',
+    startDateLabel: '起始日',
+    endDateLabel: '结束日（可选）',
+    endBeforeStart: '结束日不可早于起始日',
+    currenciesSectionTitle: '币别与汇率',
+    currenciesHint: '勾选这趟用得到的币别。每行填「1 个此币别 = 几个基础货币」(例：1 JPY ≈ 0.2 TWD)。改了汇率，旧记录保留当时的金额，只影响之后新增的记录。',
+    currencyCountFormat: '{n} / {max}',
+    addCustomCta: '+ 自定义币别',
+    footerNote: '这趟期间记录的支出，会自动挂在这次旅行底下。',
+    rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    basePill: '基础货币',
+    usedCountNote: '已记过 {n} 笔；改汇率不影响旧记录',
+    customRow: {
+      codeAriaLabel: '币别代码',
+      codePlaceholder: 'VND',
+      labelAriaLabel: '显示名称',
+      labelPlaceholder: '越南盾（可选）',
+      removeAriaLabel: '移除币别',
+    },
+    presetLabels: {
+      TWD: '台币',
+      CNY: '人民币',
+      USD: '美元',
+      JPY: '日元',
+    },
+  },
+
   tripDetail: {
     emptyActive: '这趟还没有任何记录。点右下角的加号从这里开始记。',
     emptyEnded: '这趟没有留下任何记录。',
@@ -216,6 +272,10 @@ export const zhCN: Translations = {
     endFailure: '结束失败',
     editAriaLabel: '编辑这趟旅行',
     endIrreversibleNote: '结束之后无法复原。这趟的支出会以总结算的形式回到主账本。',
+    totalLabel: '这趟一共花了',
+    baseCurrencyTag: '基础货币 {code}',
+    baseCurrencyTagTitle: '这趟以这个币别结算',
+    recordsCountLabel: '这趟的记录 · {n} 笔',
   },
 
   incomeSheet: {
