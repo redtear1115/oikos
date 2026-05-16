@@ -15,6 +15,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.6] - 2026-05-17
+
+主題：**首屏 1.9 秒回神．日期型別收緊**——這版只做兩件事：把 landing 首屏的 Fraunces 字型從 critical path 拔下來（12 個 unicode-range woff2 子集不再 preload，Lighthouse 量測 LCP 大約 -1.9s），然後把 transaction / settlement validator 對 calendar-date 的處理收成單一來源（#452 fuel-log sort skew 的同類問題以後不會再從 caller 端洩出來）。沒有 schema migration、沒有 UI 行為變化、沒有 RFC。
+完整 diff：[v0.17.5...v0.17.6](https://github.com/redtear1115/oikos/compare/v0.17.5...v0.17.6)
+
+### 使用者可見變化
+
+- **Landing 首屏更快（#454）**：Fraunces 字型改 async 載入，文字先用系統 fallback 顯示再 swap 進來。Lighthouse 報告的 ~1,964ms font chain 從 critical path 移除，LCP 顯著改善。視覺成本是一次短暫的字體 swap，hero 標題肉眼幾乎無感。
+
+### 技術變更
+
+- **validators 收 calendar-date 單一來源（#453）**：`validateTransactionInput` / `validateSettlementInput` 從吃 `Date` 改吃 `YYYY-MM-DD` 字串，validator 內部統一呼叫 `parseDateString` + `ymdToUTCNoon` 轉成 UTC-noon `Date` 落庫。AddSheet / SettlementSheet / SettlementForm 不再各自 `ymdToUTCNoon(date)`，把那個容易漏的轉換點關起來——#452 fuel-log sort skew 就是漏在 caller 側，未來新 action 不會再從同一個破口出去。DB 寫入值與行為與改前完全一致，純內部 invariant 收緊。
+
 ## [0.17.5] - 2026-05-16
 
 主題：**身份識別離 Dashboard 半秒．Settings 主頁瘦身．執行階段更穩**——這版做兩件事：把「我是誰／我們是誰」的高頻設定從 Settings 列表搬到 Dashboard 右上角 avatar，點開 bottom sheet 集中顯示名、分攤、語言、帳本名、幣別、守護 Beta、成員、登出；同時 Settings 主頁瘦身成「app + data + danger」三區，把資料層與身份層分開。底層同步補了幾道穩態化：每個 dashboard segment 加 error.tsx 單頁壞掉不會拉垮全頁、realtime payload 客戶端加 valibot runtime validator 拒收欄位缺漏、AssetType / FuelType 散落 union 收成單一來源、AddSheet / IncomeSheet 抽出 SheetFrame + AmountInput 共用 primitive。其他細修：dashboard hero 金額溢出修正 + trip CTA、banner 視覺收斂、AddSheet/IncomeSheet 開啟自動回頂、Sheet 殘存 hard-coded zh 字串 i18n 化。
@@ -1016,7 +1029,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.6...HEAD
+[0.17.6]: https://github.com/redtear1115/oikos/compare/v0.17.5...v0.17.6
 [0.17.5]: https://github.com/redtear1115/oikos/compare/v0.17.4...v0.17.5
 [0.17.4]: https://github.com/redtear1115/oikos/compare/v0.17.3...v0.17.4
 [0.17.3]: https://github.com/redtear1115/oikos/compare/v0.17.2...v0.17.3
