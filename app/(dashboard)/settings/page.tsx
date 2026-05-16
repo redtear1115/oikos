@@ -68,14 +68,11 @@ export default async function SettingsPage() {
         viewer={viewer}
         partner={partner}
         groupId={group.id}
-        groupName={group.name}
         appVersion={pkg.version}
         currentLocale={currentLocale}
-        groupDefaultRatioA={group?.defaultSplitRatioA ?? null}
         viewerIsMemberA={viewerIsMemberA}
         groupBalance={groupBalance}
         pendingSwap={pendingSwap}
-        guardianBetaEnabled={group.guardianBetaEnabled}
         tripSummary={tripSummary}
       />
       <BottomNavSkeleton />

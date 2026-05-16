@@ -3,19 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
-import { EditableNameRow } from './sections/EditableNameRow'
-import { MemberListSection } from './sections/MemberListSection'
-import { SplitTypeSection } from './sections/SplitTypeSection'
-import { SplitRatioSection } from './sections/SplitRatioSection'
 import { DangerZone, type PendingSwap } from './DangerZone'
-import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
-import { GuardianBetaToggle } from './GuardianBetaToggle'
-import { updateGroupName } from '@/actions/group'
-import { updateDisplayName } from '@/actions/profile'
+import { useAvatarMenu } from '@/app/(dashboard)/_components/AvatarMenuProvider'
+import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
-import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 
 export interface ViewerInfo {
   id: string
@@ -30,29 +23,25 @@ interface Props {
   viewer: ViewerInfo
   partner: PartnerInfo | null
   groupId: string
-  groupName: string
   appVersion: string
   currentLocale: string
-  groupDefaultRatioA: number | null
   /** True iff viewer is member_a on the group. Drives the leave flow's branching. */
   viewerIsMemberA: boolean
   /** Signed balance from member_a's POV (positive = A owes B). */
   groupBalance: number
   /** A pending swap proposal on this group, or null if none. */
   pendingSwap: PendingSwap | null
-  /** #220 — Guardian beta opt-in state for this group. */
-  guardianBetaEnabled: boolean
   /** #367 — trip counts in current epoch for the 旅行 row secondary text. */
   tripSummary: { active: number; past: number }
 }
 
 export function SettingsContent({
-  viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
-  viewerIsMemberA, groupBalance, pendingSwap, guardianBetaEnabled, tripSummary,
+  viewer, partner, groupId, appVersion, currentLocale,
+  viewerIsMemberA, groupBalance, pendingSwap, tripSummary,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const isSolo = partner === null
+  const { open: openAvatarMenu } = useAvatarMenu()
 
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
 
@@ -67,69 +56,32 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* 帳本 — group-level identity (just the name). */}
-      <Section title={t.settings.sectionGroup}>
-        <EditableNameRow
-          label={t.settings.groupName}
-          value={groupName}
-          onSave={updateGroupName}
-        />
-      </Section>
-
-      {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
-      <Section title={t.settings.sectionGroupSplit}>
-        <SplitTypeSection current={viewer.defaultSplitType} isSolo={isSolo} />
-        {!isSolo && partner && (
-          <div className="mt-3">
-            <SplitRatioSection
-              viewerName={viewer.displayName}
-              partnerName={partner.displayName}
-              initialRatioA={groupDefaultRatioA}
-            />
+      {/* Entry row to the avatar quick-settings sheet — Settings page has no
+          avatar to tap, so this row is its inline equivalent. */}
+      <div className="px-4 mt-2 mb-5">
+        <button
+          type="button"
+          onClick={openAvatarMenu}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+        >
+          <div className="flex items-center gap-3">
+            {/* mini avatar pair as visual hint — matches the dashboard avatar cluster */}
+            <div className="flex">
+              <Avatar memberRole={viewerIsMemberA ? 'a' : 'b'} initial={viewer.displayName[0]?.toUpperCase() ?? '?'} src={viewer.avatarUrl} size={22} />
+              {partner && (
+                <div className="-ml-[6px]">
+                  <Avatar memberRole={viewerIsMemberA ? 'b' : 'a'} initial={partner.displayName[0]?.toUpperCase() ?? '?'} src={partner.avatarUrl} size={22} ring />
+                </div>
+              )}
+            </div>
+            <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+              {t.settings.quickAccessRow}
+            </div>
           </div>
-        )}
-      </Section>
-
-      {/* 成員 */}
-      <Section title={t.settings.sectionMember}>
-        <MemberListSection
-          viewer={{
-            memberRole: viewerIsMemberA ? 'a' : 'b',
-            initial: viewer.displayName[0]?.toUpperCase() ?? '?',
-            avatarUrl: viewer.avatarUrl,
-            displayName: viewer.displayName,
-            email: viewer.email,
-          }}
-          partner={partner ? {
-            memberRole: viewerIsMemberA ? 'b' : 'a',
-            initial: partner.displayName[0]?.toUpperCase() ?? '?',
-            avatarUrl: partner.avatarUrl,
-            displayName: partner.displayName,
-            email: partner.email ?? '',
-          } : null}
-          groupId={groupId}
-        />
-      </Section>
-
-      {/* 個人 — viewer-only profile + preferences */}
-      <Section title={t.settings.sectionPersonal}>
-        <EditableNameRow
-          label={t.settings.displayName}
-          value={viewer.displayName}
-          onSave={updateDisplayName}
-        />
-      </Section>
-
-      {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
-      <Section title={t.settings.sectionDisplay}>
-        <LanguageSwitcher current={currentLocale} />
-        <div className="mt-3">
-          <Row
-            label={t.settings.currency}
-            onClick={() => router.push('/settings/currency')}
-          />
-        </div>
-      </Section>
+          <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
+        </button>
+      </div>
 
       {/* 應用 — install + offline (device/app-level prefs) */}
       <Section title={t.settings.sectionApp}>
@@ -166,11 +118,6 @@ export function SettingsContent({
         />
       </Section>
 
-      {/* 守護（Beta）— per-group opt-in for the Guardian module (#220) */}
-      <Section title={t.settings.sectionGuardian}>
-        <GuardianBetaToggle enabled={guardianBetaEnabled} />
-      </Section>
-
       {partner && (
         <DangerZone
           viewerIsMemberA={viewerIsMemberA}
@@ -182,9 +129,6 @@ export function SettingsContent({
         />
       )}
 
-      <div className="px-4 pb-2 mt-4">
-        <LogoutButton />
-      </div>
       <div
         className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
@@ -259,4 +203,3 @@ function formatTripSummary(
   if (summary.active > 0) return tr.active.replace('{active}', String(summary.active))
   return tr.past.replace('{past}', String(summary.past))
 }
-
