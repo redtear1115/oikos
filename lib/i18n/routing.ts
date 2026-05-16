@@ -56,6 +56,16 @@ export function decideLocaleRouting(pathname: string): LocaleRoutingDecision {
   return { action: 'passthrough' }
 }
 
+// Public-page detection for client-side helpers (LanguageSwitcher). Returns
+// true for both unprefixed (/sign-in) and locale-prefixed (/en/sign-in)
+// public URLs, including the bare locale root (/en, /ja). Uses
+// stripLocaleFromPath + PUBLIC_PAGES so SUPPORTED_LOCALES is the single
+// source of truth for what counts as a locale segment.
+export function isPublicPath(pathname: string): boolean {
+  const { rest } = stripLocaleFromPath(pathname)
+  return isPublicPage(rest)
+}
+
 export function buildLocaleUrl(currentPath: string, target: Locale): string {
   const { rest } = stripLocaleFromPath(currentPath)
   if (target === DEFAULT_LOCALE) return rest

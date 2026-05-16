@@ -4,6 +4,7 @@ import {
   stripLocaleFromPath,
   buildLocaleUrl,
   getHreflangAlternates,
+  isPublicPath,
 } from '@/lib/i18n/routing'
 
 describe('stripLocaleFromPath', () => {
@@ -122,6 +123,38 @@ describe('buildLocaleUrl', () => {
   it('swaps locale prefix when switching between non-default locales', () => {
     expect(buildLocaleUrl('/en/sign-in', 'ja')).toBe('/ja/sign-in')
     expect(buildLocaleUrl('/zh-CN', 'en')).toBe('/en')
+  })
+})
+
+describe('isPublicPath', () => {
+  it('returns true for unprefixed public pages', () => {
+    expect(isPublicPath('/')).toBe(true)
+    expect(isPublicPath('/sign-in')).toBe(true)
+    expect(isPublicPath('/terms')).toBe(true)
+    expect(isPublicPath('/privacy')).toBe(true)
+  })
+
+  it('returns true for locale-prefixed public pages (all 4 locales)', () => {
+    expect(isPublicPath('/en')).toBe(true)
+    expect(isPublicPath('/en/sign-in')).toBe(true)
+    expect(isPublicPath('/zh-CN/terms')).toBe(true)
+    expect(isPublicPath('/ja/privacy')).toBe(true)
+    expect(isPublicPath('/zh-TW/sign-in')).toBe(true)
+  })
+
+  it('returns false for dashboard / auth / unknown paths', () => {
+    expect(isPublicPath('/dashboard')).toBe(false)
+    expect(isPublicPath('/records')).toBe(false)
+    expect(isPublicPath('/assets/abc')).toBe(false)
+    expect(isPublicPath('/auth/callback')).toBe(false)
+    expect(isPublicPath('/invite/abc')).toBe(false)
+    expect(isPublicPath('/en/dashboard')).toBe(false) // dashboard isn't a public sub-path
+    expect(isPublicPath('/foobar')).toBe(false)
+  })
+
+  it('handles trailing slashes (via stripLocaleFromPath normalization)', () => {
+    expect(isPublicPath('/sign-in/')).toBe(true)
+    expect(isPublicPath('/en/terms/')).toBe(true)
   })
 })
 

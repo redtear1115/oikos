@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 
+// Note on fireEvent vs userEvent: this project doesn't depend on
+// @testing-library/user-event, so we use fireEvent. fireEvent.click does NOT
+// respect `disabled` attribute (it dispatches regardless), so the
+// "click active locale" no-op test passes because of switchLang's
+// `if (lang === current) return` guard, not because of `disabled`.
+
 const pushMock = vi.fn()
 const refreshMock = vi.fn()
 const pathnameRef = { current: '/' }
