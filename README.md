@@ -180,6 +180,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 | [v0.17.1](CHANGELOG.md#0171---2026-05-15) | UX × 效能 × a11y × 快取．細節讓體驗更順 |
 | [v0.17.2](CHANGELOG.md#0172---2026-05-15) | 旅行從沙盒到收斂．多幣別視角也站穩 |
 | [v0.17.3](CHANGELOG.md#0173---2026-05-15) | Settings 收束 × 旅行感知 × AddSheet 守護分層．細節讓操作更貼手 |
+| [v0.17.4](CHANGELOG.md#0174---2026-05-16) | 旅行幣別 self-serve．Settings 結構收束．子頁面語言對齊 |
 
 ---
 
