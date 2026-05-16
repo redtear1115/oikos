@@ -249,7 +249,7 @@ export default async function DashboardPage() {
       {!epochWindow.isPast && (
         <ActiveTripBanner
           trips={activeTrips}
-          baseCurrency={(group.baseCurrency as CurrencyCode) ?? 'twd'}
+          baseCurrency={parseCurrencyCode(group.baseCurrency) ?? 'twd'}
         />
       )}
       <Dashboard
