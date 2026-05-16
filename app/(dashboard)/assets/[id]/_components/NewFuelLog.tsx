@@ -13,12 +13,13 @@ import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateAbsolute } from '@/lib/format-date'
 import { describeError } from '@/lib/errors'
 import type { SplitType } from '@/lib/balance'
+import type { FuelType, GasFuelType } from '@/lib/fuel'
 
 interface CarLite {
   id: string
   name: string
   plate: string
-  fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  fuelType: FuelType | null
   primaryUserId: string | null
 }
 
@@ -28,7 +29,7 @@ export interface NewFuelLogInitial {
   liters: string
   odometer: number
   station: string | null
-  fuelType: '92' | '95' | '98' | 'diesel'
+  fuelType: GasFuelType
   loggedAt: string    // ISO string
   cost: number
   paidBy: string
@@ -51,8 +52,6 @@ function isoToLocalDate(iso: string): string {
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
-
-type GasFuelType = '92' | '95' | '98' | 'diesel'
 
 function toGasFuelType(ft: string | null | undefined): GasFuelType {
   if (ft === '92') return '92'

@@ -1,7 +1,9 @@
 'use client'
 
+import type { AssetType } from '@/lib/assets'
+
 interface Props {
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
+  type: AssetType
   size?: number
   color?: string
 }

@@ -8,6 +8,8 @@
 
 import type { SplitType } from '@/lib/balance'
 import type { RecordStatus } from '@/lib/validators'
+import type { AssetType } from '@/lib/assets'
+import type { GasFuelType } from '@/lib/fuel'
 
 export interface TxnRowPayload {
   id: string
@@ -40,7 +42,7 @@ export interface SettleRowPayload {
 export interface AssetRowPayload {
   id: string
   groupId: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
+  type: AssetType
   name: string
   createdAt: string  // ISO
   deletedAt: string | null  // ISO when soft-deleted
@@ -51,7 +53,7 @@ export interface FuelLogRowPayload {
   assetId: string
   liters: string
   // 'electric' excluded — EV cars cannot have FuelLog entries (EV1 spec constraint)
-  fuelType: '92' | '95' | '98' | 'diesel'
+  fuelType: GasFuelType
   odometer: number
   station: string | null
   loggedAt: string    // ISO

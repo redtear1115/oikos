@@ -13,6 +13,7 @@ import { DateField } from './shared/DateField'
 import { SheetShell } from './shared/SheetShell'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import type { AssetSheetInitial, BodySharedProps } from './types'
+import type { GasFuelType } from '@/lib/fuel'
 
 const CAR_COLORS = [
   { key: 'white',     hex: '#F0EDE8', border: '#D4CFC7' },
@@ -44,7 +45,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
   const [plate, setPlate] = useState(initial?.plate ?? '')
   const [purchasedAt, setPurchasedAt] = useState<string | null>(initial?.purchasedAt ?? null)
   const [purchasePrice, setPurchasePrice] = useState(initial?.purchasePrice ? String(initial.purchasePrice) : '')
-  const [fuelType, setFuelType] = useState<'92' | '95' | '98' | 'diesel'>(initial?.fuelType ?? '95')
+  const [fuelType, setFuelType] = useState<GasFuelType>(initial?.fuelType ?? '95')
   const [primaryUserId, setPrimaryUserId] = useState<string | null>(initial?.primaryUserId ?? null)
   const [color, setColor] = useState<string | null>(initial?.color ?? null)
   const [year, setYear] = useState(initial?.year ? String(initial.year) : '')

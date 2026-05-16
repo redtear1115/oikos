@@ -15,29 +15,31 @@ import {
 } from '@/lib/filter'
 import { addMonths, currentMonthKey } from '@/lib/monthKey'
 import { useTranslations } from '@/lib/i18n/client'
+import { assetTypeMeta, type AssetType } from '@/lib/assets'
 
 export interface AssetOption {
   id: string
   name: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
+  type: AssetType
 }
 
 /**
  * Asset-type grouping for the 愛物 sub-sections. Each group bundles one or more
- * `AssetOption.type` values into a single tap-to-select-all unit. Order here is
- * the render order in the sheet. Insurance is kept as its own group ("守護") for
+ * `AssetType` values into a single tap-to-select-all unit. Order here is the
+ * render order in the sheet. Insurance is kept as its own group ("守護") for
  * backward compat — existing transactions linked to insurance assets need to
  * stay filterable — but the issue's "out of scope" note means we don't extend
  * any 愛物-specific behavior to it; it's just visual grouping that mirrors the
- * /assets page's two-tab split.
+ * /assets page's two-tab split. The `living` group uses `child`'s tint as the
+ * representative dot color since it bundles three living-thing types.
  */
 type AssetGroupKey = 'car' | 'house' | 'living' | 'item' | 'coverage'
-const ASSET_GROUPS: { key: AssetGroupKey; types: AssetOption['type'][]; dotVar: string }[] = [
-  { key: 'car',      types: ['car'],                       dotVar: 'var(--asset-tint-car)' },
-  { key: 'house',    types: ['house'],                     dotVar: 'var(--asset-tint-house)' },
-  { key: 'living',   types: ['child', 'pet', 'plant'],     dotVar: 'var(--asset-tint-child)' },
-  { key: 'item',     types: ['item'],                      dotVar: 'var(--asset-tint-item)' },
-  { key: 'coverage', types: ['insurance'],                 dotVar: 'var(--asset-tint-insurance)' },
+const ASSET_GROUPS: { key: AssetGroupKey; types: AssetType[]; dotVar: string }[] = [
+  { key: 'car',      types: ['car'],                   dotVar: assetTypeMeta('car').tintVar },
+  { key: 'house',    types: ['house'],                 dotVar: assetTypeMeta('house').tintVar },
+  { key: 'living',   types: ['child', 'pet', 'plant'], dotVar: assetTypeMeta('child').tintVar },
+  { key: 'item',     types: ['item'],                  dotVar: assetTypeMeta('item').tintVar },
+  { key: 'coverage', types: ['insurance'],             dotVar: assetTypeMeta('insurance').tintVar },
 ]
 
 interface Props {

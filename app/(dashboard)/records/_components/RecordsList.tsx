@@ -38,6 +38,7 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
+import type { FuelType } from '@/lib/fuel'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
 import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { DrillFilterChip } from './DrillFilterChip'
@@ -169,7 +170,7 @@ export function RecordsList({
   const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
   const [fuelCar, setFuelCar] = useState<{
     id: string; name: string; plate: string
-    fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+    fuelType: FuelType | null
     primaryUserId: string | null
   } | null>(null)
   const [, startFuelLoad] = useTransition()

@@ -1,8 +1,10 @@
 import type { AssetTemplateKey } from '@/lib/assetTemplates'
+import type { AssetType } from '@/lib/assets'
+import type { GasFuelType } from '@/lib/fuel'
 
 export interface AssetSheetInitial {
   id: string
-  type: 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance' | 'item'
+  type: AssetType
   name: string
   // #222 — template path. When set, this asset is template-based and AssetSheet
   // routes to TemplateSheetBody regardless of `type`. `type` for these is
@@ -13,7 +15,7 @@ export interface AssetSheetInitial {
   plate?: string
   purchasedAt?: string | null
   purchasePrice?: number | null
-  fuelType?: '92' | '95' | '98' | 'diesel'
+  fuelType?: GasFuelType
   primaryUserId?: string | null
   // extended car fields
   color?: string | null
@@ -78,8 +80,9 @@ export interface AssetSheetInitial {
 
 // Type picker covers all 6 legacy types plus the new template-based 'item'
 // (#222). Selecting 'item' routes to TemplateSheetBody; the other six route
-// to their dedicated *SheetBody.
-export type PickerType = 'car' | 'child' | 'pet' | 'plant' | 'house' | 'insurance' | 'item'
+// to their dedicated *SheetBody. Aliased to AssetType since both cover every
+// type — keeping the alias so the picker's intent stays readable at call sites.
+export type PickerType = AssetType
 
 export interface BodySharedProps {
   open: boolean

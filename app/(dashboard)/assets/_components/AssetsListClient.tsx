@@ -13,12 +13,13 @@ import { CarHeroCard } from './CarHeroCard'
 import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import type { AssetType } from '@/lib/assets'
 
 type AssetsTab = 'aibutsu' | 'guardian'
 
 export interface AssetsListItem {
   id: string
-  type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item'
+  type: AssetType
   name: string
   /** Optional nickname (currently only populated for child assets). When
    *  present, list items render nickname-first with legal name as secondary. */

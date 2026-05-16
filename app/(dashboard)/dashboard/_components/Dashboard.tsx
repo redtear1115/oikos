@@ -24,6 +24,7 @@ import { CompactRow } from './CompactRow'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
+import type { FuelType } from '@/lib/fuel'
 import { PendingIncomeStack } from './PendingIncomeStack'
 import { PendingExpenseStack } from './PendingExpenseStack'
 import { FirstRecordCard } from './FirstRecordCard'
@@ -131,7 +132,7 @@ export function Dashboard({
   const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
   const [fuelCar, setFuelCar] = useState<{
     id: string; name: string; plate: string
-    fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+    fuelType: FuelType | null
     primaryUserId: string | null
   } | null>(null)
   const [, startFuelLoad] = useTransition()

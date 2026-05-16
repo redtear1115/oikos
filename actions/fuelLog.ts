@@ -8,6 +8,7 @@ import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
+import type { FuelType } from '@/lib/fuel'
 
 /**
  * Atomic dual-write for a new fuel-up event:
@@ -274,11 +275,11 @@ export interface FuelLogDetail {
   liters: string
   odometer: number
   station: string | null
-  fuelType: '92' | '95' | '98' | 'diesel' | 'electric'
+  fuelType: FuelType
   loggedAt: string    // ISO
   carName: string
   carPlate: string | null
-  carFuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  carFuelType: FuelType | null
   carPrimaryUserId: string | null
 }
 
