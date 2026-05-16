@@ -19,9 +19,12 @@ const mockCookie = (value: string | undefined) => {
   } as unknown as Awaited<ReturnType<typeof cookies>>)
 }
 
+// vi.resetModules() clears the non-mocked module cache so each test re-evaluates
+// lib/i18n/t.ts (bypassing React cache() memoization), but vi.mock-registered
+// modules stay registered — so the static `headers` / `cookies` mock fn refs at
+// the top of this file are the SAME instances t.ts sees after the dynamic import.
 beforeEach(() => {
   vi.clearAllMocks()
-  // React cache() memoizes per-render; tests run in fresh module scope each it().
   vi.resetModules()
 })
 
