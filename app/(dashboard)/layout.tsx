@@ -15,6 +15,7 @@ import { TranslationsProvider } from '@/lib/i18n/client'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
+import { DebugScrollOverlay } from './_components/DebugScrollOverlay'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -90,6 +91,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
               {children}
             </div>
+            <DebugScrollOverlay />
           </AvatarMenuProvider>
         </RealtimeProvider>
       </ViewerProvider>
