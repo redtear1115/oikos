@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
@@ -127,10 +126,21 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         style={{ background: 'var(--bg)' }}
       >
         <div className="flex items-center justify-between gap-2">
-          <Link
-            href="/trips"
-            className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit no-underline"
-            style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
+          {/* Pop the previous history entry instead of pushing /trips — otherwise
+              the back chain becomes [Settings, /trips, /trips/[id], /trips] and
+              hitting back on /trips loops to /trips/[id]. Cold-load (no in-app
+              history) falls back to /trips so the link doesn't dead-end. */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.history.length > 1) {
+                router.back()
+              } else {
+                router.push('/trips')
+              }
+            }}
+            className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit cursor-pointer"
+            style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)', border: 'none' }}
             aria-label="返回旅行列表"
           >
             <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
@@ -143,7 +153,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
               />
             </svg>
             <span>旅行</span>
-          </Link>
+          </button>
           {!isPast && !isEnded ? (
             <button
               type="button"
