@@ -15,6 +15,41 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.5] - 2026-05-16
+
+主題：**身份識別離 Dashboard 半秒．Settings 主頁瘦身．執行階段更穩**——這版做兩件事：把「我是誰／我們是誰」的高頻設定從 Settings 列表搬到 Dashboard 右上角 avatar，點開 bottom sheet 集中顯示名、分攤、語言、帳本名、幣別、守護 Beta、成員、登出；同時 Settings 主頁瘦身成「app + data + danger」三區，把資料層與身份層分開。底層同步補了幾道穩態化：每個 dashboard segment 加 error.tsx 單頁壞掉不會拉垮全頁、realtime payload 客戶端加 valibot runtime validator 拒收欄位缺漏、AssetType / FuelType 散落 union 收成單一來源、AddSheet / IncomeSheet 抽出 SheetFrame + AmountInput 共用 primitive。其他細修：dashboard hero 金額溢出修正 + trip CTA、banner 視覺收斂、AddSheet/IncomeSheet 開啟自動回頂、Sheet 殘存 hard-coded zh 字串 i18n 化。
+完整 diff：[v0.17.4...v0.17.5](https://github.com/redtear1115/oikos/compare/v0.17.4...v0.17.5)
+
+### 使用者可見變化
+
+#### Avatar 變身份入口．Settings 主頁瘦身（#427）
+
+- **Dashboard 右上角 avatar 可點**：原本是死的視覺資產，現在 tap 開啟 quick-settings bottom sheet（avatarMenu）。
+- **個人 section**：顯示名稱、預設分攤方式、語言。
+- **帳本 section**：帳本名稱、預設分攤比例（paired only）、幣別、守護 Beta toggle。
+- **成員 section**：成員列表；solo 模式下出現邀請對方 CTA。
+- **登出**：sheet 底部獨立 row。
+- **Settings 主頁瘦身**：移走以上身份識別 row 後，Settings 主頁收斂成 app（語言／顯示）、data（定期收支、過去章節）、danger（swap／leave）三區。Settings 主頁頂部加一條「個人 & 帳本設定」row 引導用戶到 avatar sheet（避免老用戶找不到）。
+
+#### Dashboard 細修
+
+- **Hero 金額溢出修正 + Trip CTA**：金額過長時 dashboard hero 區壓字／截斷規則重做；有 active trip 時 hero 區補上 trip CTA（#429）。
+- **Banner 視覺收斂**：dashboard 各 banner 按鈕視覺與 chevron 強度對齊，減少視覺噪音。
+
+#### Sheet 操作細修
+
+- **AddSheet / IncomeSheet 開啟自動回頂**：避免上次滑到底未重置時新建 record 看不到第一個欄位（#435）。
+
+### 技術變更
+
+- **Dashboard error boundary（#399）**：每個 dashboard segment（`/records`、`/aibutsu`、`/trips`、`/past-times` 等）各自 `error.tsx`，單頁 throw 不再把整個 dashboard 一起拉下去。
+- **Realtime payload runtime validation（#397）**：客戶端 realtime subscription 收到 DB payload 時加 valibot validator，欄位缺漏／型別不符直接拒收並 log，取代原本寬鬆的 `as` cast。DB→enum 轉換點同步收斂到 narrow casts。
+- **AssetType / FuelType 單一來源**：原本散在 schema、validators、UI 多處的 literal union 收成同一份宣告，避免漂移。
+- **Sheet primitives 抽出**：AddSheet / IncomeSheet 共用的殼層（SheetFrame）與金額輸入（AmountInput）抽成 shared primitives，重複實作消掉。
+- **i18n hard-coded zh 清理（#398）**：Sheet 系列殘存的硬編 zh 字串全部搬到 i18n key（4 語對齊由既有 coverage test 守住）。
+- **SettingsContent 拆元件**：為 #427 重組做準備，把 EditableNameRow / MemberListSection / SplitTypeSection / SplitRatioSection 從 SettingsContent 抽出。
+- **Dead code 清理**：avatar sheet 移走 row 後，刪除不再使用的 props（groupId / defaultSplitType / baseCurrency）與 i18n key。
+
 ## [0.17.4] - 2026-05-16
 
 主題：**旅行幣別 self-serve．Settings 結構收束．子頁面語言對齊**——v0.17.0 把多幣別 × 旅行的骨架立起來、v0.17.2 把旅行子帳本收斂完成，這版把「幣別 self-serve」最後一哩補齊：trip 自己挑要追蹤哪些幣別（不再綁 group base），AddSheet 在 trip context 出現對應的 currency picker，TripSheet 從 schema → UI → a11y/touch → 視覺密度 → 文案方向（rate direction）完整 polish 一輪，detail page 改成「fold preview 在上、per-currency × per-member 在下」更好掃讀。Settings 同步做了一輪結構收束——recurring 收入/支出合併成一個 tab 入口、帳本 vs 預設分攤拆成兩個 section、display/data 群組整理、subpage header + FAB 規則統一（extract `SubpageHeader` 共用於 /trips 與 Settings 子頁）。其他細修：愛物列表密度對齊 /records、a11y 多處（SplitTypeSelector、AssetSheet Field、InsuranceListItem、manifest）、SEO（metadata × JSON-LD × noindex × hreflang）、AddSheet reset deps 穩定化、i18n locale key coverage 加 test gate。
@@ -981,7 +1016,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.5...HEAD
+[0.17.5]: https://github.com/redtear1115/oikos/compare/v0.17.4...v0.17.5
 [0.17.4]: https://github.com/redtear1115/oikos/compare/v0.17.3...v0.17.4
 [0.17.3]: https://github.com/redtear1115/oikos/compare/v0.17.2...v0.17.3
 [0.17.2]: https://github.com/redtear1115/oikos/compare/v0.17.1...v0.17.2
