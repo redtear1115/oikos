@@ -25,10 +25,9 @@ interface Props {
 export function AvatarMenuSheet({ open, onClose, data }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const { group, viewer, partner, viewerIsA } = useMember()
+  const { group, viewer, partner, viewerIsA, isSolo } = useMember()
   const viewerRole = viewerIsA ? 'a' : 'b'
   const partnerRole = viewerIsA ? 'b' : 'a'
-  const isSolo = partner === null
 
   return (
     <>
