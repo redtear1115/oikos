@@ -88,7 +88,11 @@ export function SheetShell({
           {children}
 
           {error && (
-            <div className="mt-3 text-sm" style={{ color: 'var(--error, #c0392b)' }}>
+            <div
+              className="mt-3 text-sm"
+              style={{ color: 'var(--error, #c0392b)' }}
+              role="alert"
+            >
               {error}
             </div>
           )}

@@ -117,7 +117,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       <div
-        className="sticky top-0 z-20 px-4 pt-12 pb-2"
+        className="sticky top-0 z-20 px-4 pt-12 pb-3"
         style={{ background: 'var(--bg)' }}
       >
         <div className="flex items-center justify-between gap-2">
@@ -138,39 +138,48 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             </svg>
             <span>旅行</span>
           </Link>
-          {!isPast && !isEnded && (
+          {!isPast && !isEnded ? (
             <button
               type="button"
               onClick={() => setEditOpen(true)}
               aria-label={t.tripDetail.editAriaLabel}
-              className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center cursor-pointer"
-              style={{ background: 'rgba(31,27,22,0.06)', border: 'none' }}
+              className="min-w-11 min-h-11 -mr-2 flex items-center justify-center bg-transparent cursor-pointer"
+              style={{ border: 'none' }}
             >
-              <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-                <path
-                  d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
-                  stroke="var(--ink)"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </svg>
+              <span
+                className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center"
+                style={{ background: 'rgba(31,27,22,0.06)' }}
+                aria-hidden="true"
+              >
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                  <path
+                    d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
+                    stroke="var(--ink)"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+              </span>
             </button>
+          ) : (
+            <div className="min-w-11" aria-hidden="true" />
           )}
         </div>
-      </div>
 
-      <header className="px-5 pb-4">
-        <div className="flex items-start justify-between gap-3">
+        {/* Title block lives inside the sticky region so the trip name + status
+            stay visible while scrolling through long expense lists — pattern
+            matches AibutsuHeader on /assets/[id]. */}
+        <div className="mt-1 flex items-baseline justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1
-              className="text-2xl font-medium tracking-tight"
+              className="text-2xl font-medium tracking-tight truncate"
               style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
             >
               {trip.name}
             </h1>
-            <p className="mt-1 text-sm" style={{ color: 'var(--ink-3)' }}>
+            <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-3)' }}>
               {trip.endDate
                 ? `${trip.startDate} – ${trip.endDate}`
                 : `${trip.startDate} 起,進行中`}
@@ -178,7 +187,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           </div>
           {isEnded && (
             <span
-              className="shrink-0 mt-1 px-2 py-0.5 rounded-full text-[11px] tracking-[0.5px]"
+              className="shrink-0 px-2 py-0.5 rounded-full text-[11px] tracking-[0.5px]"
               style={{
                 background: 'var(--hairline)',
                 color: 'var(--ink-2)',
@@ -188,9 +197,9 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             </span>
           )}
         </div>
-      </header>
+      </div>
 
-      <section className="px-4">
+      <section className="mt-4 px-4">
         <div
           className="rounded-[20px] p-5"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}

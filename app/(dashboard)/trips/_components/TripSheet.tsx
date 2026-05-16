@@ -298,7 +298,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
         </div>
 
         {dateInvalid && (
-          <p className="text-xs -mt-2" style={{ color: 'var(--debit, #c0392b)' }}>
+          <p className="text-xs -mt-2" style={{ color: 'var(--debit, #c0392b)' }} role="alert">
             結束日不可早於起始日
           </p>
         )}
@@ -368,7 +368,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
               <button
                 type="button"
                 onClick={addCustom}
-                className="self-start mt-1 text-sm rounded-full px-3 py-1.5 cursor-pointer"
+                className="self-start mt-1 min-h-11 text-sm rounded-full px-4 cursor-pointer"
                 style={{
                   background: 'transparent',
                   border: '1px dashed var(--hairline)',
@@ -404,95 +404,51 @@ function CurrencyRow(props: {
   onSetDefault: () => void
 }) {
   const { code, label, rate, defaultCode, checked, isDefault, defaultHasExpenses, locked, usedCount } = props
-  const canToggleOff = checked && !locked && !isDefault
+  const toggleDisabled = checked && (locked || isDefault)
+  const rateInvalid = checked && !isDefault && (!Number.isFinite(rate) || rate <= 0)
+
   return (
-    <div
-      className="rounded-xl p-3 flex flex-col gap-2"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
-        opacity: !checked && locked ? 0.5 : 1,
-      }}
-    >
-      <div className="flex items-center gap-2">
+    <RowFrame locked={locked}>
+      {/* Header — full-width label so the entire row is a 44pt+ tap area. */}
+      <label
+        className="flex items-center gap-3 min-h-11 px-3 py-1"
+        style={{ cursor: toggleDisabled ? 'default' : 'pointer' }}
+      >
         <input
           type="checkbox"
           checked={checked}
-          disabled={(!checked && false) || (checked && (locked || isDefault))}
+          disabled={toggleDisabled}
           onChange={props.onToggle}
           aria-label={`${code} ${label}`}
-          className="cursor-pointer"
+          className="cursor-pointer w-4 h-4"
           style={{ accentColor: 'var(--ink)' }}
         />
-        <div className="flex-1">
-          <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            {code} <span className="font-normal" style={{ color: 'var(--ink-3)' }}>{label}</span>
-          </div>
+        <div className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>
+          {code} <span className="font-normal" style={{ color: 'var(--ink-3)' }}>{label}</span>
         </div>
-        {checked && (
-          <label className="flex items-center gap-1 cursor-pointer text-xs" style={{ color: 'var(--ink-2)' }}>
-            <input
-              type="radio"
-              name="trip-default-currency"
-              checked={isDefault}
-              disabled={defaultHasExpenses && !isDefault}
-              onChange={props.onSetDefault}
-              style={{ accentColor: 'var(--ink)' }}
-            />
-            預設
-          </label>
-        )}
-      </div>
+      </label>
+
       {checked && (
-        <div className="flex items-center gap-2">
-          {isDefault ? (
-            <div className="flex-1 text-xs" style={{ color: 'var(--ink-3)' }}>
-              預設幣別匯率固定為 1
-            </div>
-          ) : (
-            <>
-              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>1 {code} =</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.001"
-                min="0"
-                value={rate || ''}
-                disabled={locked}
-                onChange={e => props.onRateChange(e.target.value)}
-                className="flex-1 min-w-0 rounded-lg px-2.5 py-1.5 text-sm"
-                style={{
-                  background: locked ? 'var(--surface-alt)' : 'var(--bg)',
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                }}
-              />
-              <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>{defaultCode}</span>
-            </>
-          )}
-        </div>
+        <>
+          <RateRow
+            code={code}
+            defaultCode={defaultCode}
+            rate={rate}
+            isDefault={isDefault}
+            locked={locked}
+            invalid={rateInvalid}
+            onRateChange={props.onRateChange}
+          />
+          <FooterRow
+            isDefault={isDefault}
+            defaultHasExpenses={defaultHasExpenses}
+            locked={locked}
+            usedCount={usedCount}
+            onSetDefault={props.onSetDefault}
+          />
+        </>
       )}
-      {checked && !isDefault && rate > 0 && (
-        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          ≈ 1 {defaultCode} = {formatInverse(rate)} {code}
-        </p>
-      )}
-      {checked && locked && !isDefault && (
-        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          已記過 {usedCount} 筆，先刪除才能改
-        </p>
-      )}
-      {checked && isDefault && defaultHasExpenses && (
-        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          已記過預設幣別支出，無法變更預設
-        </p>
-      )}
-      {!canToggleOff && checked && isDefault && (
-        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          這是預設幣別，需要先改別的幣別為預設才能移除
-        </p>
-      )}
-    </div>
+    </RowFrame>
   )
 }
 
@@ -527,15 +483,13 @@ function CustomCurrencyRow(props: {
   onRemove: () => void
 }) {
   const { code, label, rate, defaultCode, isDefault, defaultHasExpenses, locked, usedCount } = props
+  const rateInvalid = !isDefault && (!Number.isFinite(rate) || rate <= 0)
+
   return (
-    <div
-      className="rounded-xl p-3 flex flex-col gap-2"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
-      }}
-    >
-      <div className="flex items-center gap-2">
+    <RowFrame locked={locked}>
+      {/* Custom row header: code + label inputs + remove. The remove button
+          is a separate 44pt target since the inputs themselves are 36px tall. */}
+      <div className="flex items-center gap-2 px-3 pt-3">
         <input
           type="text"
           value={code}
@@ -543,7 +497,8 @@ function CustomCurrencyRow(props: {
           onChange={e => props.onCodeChange(e.target.value)}
           placeholder="VND"
           maxLength={16}
-          className="w-20 rounded-lg px-2 py-1.5 text-sm uppercase"
+          aria-label="幣別代碼"
+          className="w-20 rounded-lg px-2 py-2 text-sm uppercase"
           style={{
             background: locked ? 'var(--surface-alt)' : 'var(--bg)',
             border: '1px solid var(--hairline)',
@@ -557,7 +512,8 @@ function CustomCurrencyRow(props: {
           onChange={e => props.onLabelChange(e.target.value)}
           placeholder="越南盾（可選）"
           maxLength={32}
-          className="flex-1 rounded-lg px-2 py-1.5 text-sm"
+          aria-label="顯示名稱"
+          className="flex-1 min-w-0 rounded-lg px-2 py-2 text-sm"
           style={{
             background: locked ? 'var(--surface-alt)' : 'var(--bg)',
             border: '1px solid var(--hairline)',
@@ -569,13 +525,78 @@ function CustomCurrencyRow(props: {
             type="button"
             onClick={props.onRemove}
             aria-label="移除幣別"
-            className="text-sm cursor-pointer"
-            style={{ color: 'var(--ink-3)', background: 'transparent', border: 'none' }}
+            className="min-w-11 min-h-11 -mr-1 flex items-center justify-center bg-transparent cursor-pointer"
+            style={{ border: 'none', color: 'var(--ink-3)' }}
           >
-            ×
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path
+                d="M3 3l8 8M11 3l-8 8"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         )}
       </div>
+
+      <RateRow
+        code={code || '?'}
+        defaultCode={defaultCode}
+        rate={rate}
+        isDefault={isDefault}
+        locked={locked}
+        invalid={rateInvalid}
+        onRateChange={props.onRateChange}
+      />
+      <FooterRow
+        isDefault={isDefault}
+        defaultHasExpenses={defaultHasExpenses}
+        locked={locked}
+        usedCount={usedCount}
+        onSetDefault={props.onSetDefault}
+        disableSetDefault={!code}
+      />
+    </RowFrame>
+  )
+}
+
+/**
+ * Shared chrome for both preset and custom currency rows. Locked rows use
+ * `--surface-alt` (no opacity reduction — opacity 0.5 was failing WCAG on
+ * already-secondary text per the UX audit).
+ */
+function RowFrame({ locked, children }: { locked: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className="rounded-xl flex flex-col"
+      style={{
+        background: locked ? 'var(--surface-alt)' : 'var(--surface)',
+        border: '1px solid var(--hairline)',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/**
+ * The "1 [code] = [input] [default]" rate row with inverse hint underneath.
+ * `step="any"` (instead of 0.001) so user-defined small currencies like VND
+ * (rate ≈ 0.0013) can be entered without UI clamping.
+ */
+function RateRow(props: {
+  code: string
+  defaultCode: string
+  rate: number
+  isDefault: boolean
+  locked: boolean
+  invalid: boolean
+  onRateChange: (raw: string) => void
+}) {
+  const { code, defaultCode, rate, isDefault, locked, invalid } = props
+  return (
+    <div className="px-3 pt-2 flex flex-col gap-1">
       <div className="flex items-center gap-2">
         {isDefault ? (
           <div className="flex-1 text-xs" style={{ color: 'var(--ink-3)' }}>
@@ -584,47 +605,85 @@ function CustomCurrencyRow(props: {
         ) : (
           <>
             <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
-              1 {code || '?'} =
+              1 {code} =
             </span>
             <input
               type="number"
               inputMode="decimal"
-              step="0.001"
+              step="any"
               min="0"
               value={rate || ''}
               disabled={locked}
               onChange={e => props.onRateChange(e.target.value)}
-              className="flex-1 min-w-0 rounded-lg px-2.5 py-1.5 text-sm"
+              aria-invalid={invalid}
+              className="flex-1 min-w-0 rounded-lg px-2.5 py-2 text-sm"
               style={{
                 background: locked ? 'var(--surface-alt)' : 'var(--bg)',
-                border: '1px solid var(--hairline)',
+                border: invalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
                 color: 'var(--ink)',
               }}
             />
-            <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>{defaultCode}</span>
+            <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
+              {defaultCode}
+            </span>
           </>
         )}
-        <label className="flex items-center gap-1 cursor-pointer text-xs" style={{ color: 'var(--ink-2)' }}>
-          <input
-            type="radio"
-            name="trip-default-currency"
-            checked={isDefault}
-            disabled={(defaultHasExpenses && !isDefault) || !code}
-            onChange={props.onSetDefault}
-            style={{ accentColor: 'var(--ink)' }}
-          />
-          預設
-        </label>
       </div>
-      {!isDefault && rate > 0 && code && (
+      {!isDefault && invalid && (
+        <p className="text-xs" style={{ color: 'var(--debit)' }} role="alert">
+          請輸入大於 0 的匯率
+        </p>
+      )}
+      {!isDefault && !invalid && rate > 0 && (
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
           ≈ 1 {defaultCode} = {formatInverse(rate)} {code}
         </p>
       )}
+    </div>
+  )
+}
+
+/**
+ * Footer row carrying the "set as default" chip + any lock status. The chip
+ * replaces the old native radio so the tap target meets 44pt and the toggle
+ * state is obvious without a tiny radio dot.
+ */
+function FooterRow(props: {
+  isDefault: boolean
+  defaultHasExpenses: boolean
+  locked: boolean
+  usedCount: number
+  onSetDefault: () => void
+  disableSetDefault?: boolean
+}) {
+  const { isDefault, defaultHasExpenses, locked, usedCount, disableSetDefault } = props
+  const chipDisabled = isDefault || (defaultHasExpenses && !isDefault) || !!disableSetDefault
+  return (
+    <div className="px-3 pb-3 pt-2 flex items-center justify-between gap-2">
+      <button
+        type="button"
+        onClick={props.onSetDefault}
+        disabled={chipDisabled}
+        aria-pressed={isDefault}
+        className="min-h-11 px-3 rounded-full text-xs font-medium cursor-pointer disabled:cursor-default"
+        style={{
+          background: isDefault ? 'var(--ink)' : 'transparent',
+          color: isDefault ? 'var(--bg)' : 'var(--ink-2)',
+          border: isDefault ? '1px solid var(--ink)' : '1px solid var(--hairline)',
+          opacity: chipDisabled && !isDefault ? 0.55 : 1,
+        }}
+      >
+        {isDefault ? '已是預設' : '設為預設'}
+      </button>
       {locked && !isDefault && (
-        <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
+        <span className="text-xs text-right" style={{ color: 'var(--ink-3)' }} role="status">
           已記過 {usedCount} 筆，先刪除才能改
-        </p>
+        </span>
+      )}
+      {isDefault && defaultHasExpenses && (
+        <span className="text-xs text-right" style={{ color: 'var(--ink-3)' }} role="status">
+          已有支出，無法變更預設
+        </span>
       )}
     </div>
   )
