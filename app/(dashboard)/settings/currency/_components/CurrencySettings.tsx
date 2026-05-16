@@ -7,6 +7,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { setBaseCurrency } from '@/actions/currency'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import { AddSheet, type RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 
@@ -43,39 +44,7 @@ export function CurrencySettings(props: {
 
   return (
     <>
-      <div
-        className="sticky top-0 z-20 px-4 flex items-center justify-between"
-        style={{
-          background: 'var(--bg)',
-          paddingTop: 'max(env(safe-area-inset-top), 24px)',
-          paddingBottom: 8,
-          borderBottom: '1px solid var(--hairline)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex items-center gap-1.5 bg-transparent border-0 cursor-pointer min-h-11 px-2 -ml-2"
-          style={{ color: 'var(--ink-2)', fontFamily: 'inherit', fontSize: 'var(--fs-sm)' }}
-        >
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-            <path
-              d="M7 1L1 6.5L7 12"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          {tc.back}
-        </button>
-
-        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          {tc.title}
-        </div>
-
-        <div className="w-[64px]" aria-hidden="true" />
-      </div>
+      <SubpageHeader title={tc.title} backLabel={tc.back} />
 
       <div className="px-5 pt-6 pb-6">
         <h1

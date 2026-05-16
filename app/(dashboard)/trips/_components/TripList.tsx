@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
+import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { useTranslations } from '@/lib/i18n/client'
 import { TripSheet } from './TripSheet'
 import type { CurrencyCode } from '@/lib/currency'
-import { useTranslations } from '@/lib/i18n/client'
 
 type Trip = {
   id: string
@@ -32,14 +33,13 @@ export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
-      <div className="px-5 pt-[60px] pb-4">
-        <div
-          className="text-2xl font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
-        >
-          {tl.title}
-        </div>
-        <p className="mt-1 text-sm" style={{ color: 'var(--ink-3)' }}>
+      {/* Shared subpage chrome (matches /settings/*). The big serif title was
+          intentionally dropped in #411 — SubpageHeader's centred small title
+          covers naming, and the page just goes straight to the subtitle. */}
+      <SubpageHeader title={tl.title} backLabel={t.common.back} />
+
+      <div className="px-5 pt-6 pb-4">
+        <p className="text-sm" style={{ color: 'var(--ink-3)' }}>
           {tl.subtitle}
         </p>
       </div>
