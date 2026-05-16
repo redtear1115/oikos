@@ -7,7 +7,6 @@ import { DangerZone, type PendingSwap } from './DangerZone'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { useAvatarMenu } from '@/app/(dashboard)/_components/AvatarMenuProvider'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 
 export interface ViewerInfo {
@@ -15,7 +14,6 @@ export interface ViewerInfo {
   displayName: string
   email: string
   avatarUrl: string | null
-  defaultSplitType: SplitType
 }
 export interface PartnerInfo { id: string; displayName: string; email: string | null; avatarUrl: string | null }
 
