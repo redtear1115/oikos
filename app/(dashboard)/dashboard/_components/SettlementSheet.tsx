@@ -57,8 +57,8 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   const handleSave = () => {
     if (!initial) return
     const n = parseInt(amount, 10)
-    if (!n || n <= 0) { setError('請輸入金額'); return }
-    if (payerWho === 'T' && !partner) { setError('伴侶尚未加入'); return }
+    if (!n || n <= 0) { setError(t.settlement.errors.amountRequired); return }
+    if (payerWho === 'T' && !partner) { setError(t.settlement.errors.noPartner); return }
     const payerId = payerWho === 'M' ? viewer.id : partner!.id
     startTransition(async () => {
       try {
@@ -116,9 +116,9 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button onClick={onClose}
             className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)' }}>取消</button>
+            style={{ color: 'var(--ink-2)' }}>{t.common.cancel}</button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
-            編輯還款
+            {t.settlement.editTitle}
           </div>
           {/* Past-epoch view is read-only — hide save. The sheet itself shouldn't
               open in past view (parent gates onItemClick), but keep this as a
@@ -127,7 +127,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
             <button onClick={handleSave} disabled={!amount || pending}
               className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
               style={{ color: amount && !pending ? 'var(--accent)' : 'var(--ink-3)' }}>
-              {pending ? '儲存中…' : '儲存'}
+              {pending ? t.common.saving : t.common.save}
             </button>
           )}
         </div>
@@ -137,7 +137,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           <div className="px-6 pt-6 pb-7 text-center"
             style={{ borderBottom: '1px solid var(--hairline)' }}>
             <div className="text-xs tracking-[0.6px] mb-3" style={{ color: 'var(--ink-3)' }}>
-              金額
+              {t.settlement.amountLabel}
             </div>
             <label
               className="flex items-baseline justify-center gap-1.5 min-h-[60px] cursor-text"
@@ -162,7 +162,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
                   setAmount(next)
                 }}
                 placeholder="0"
-                aria-label="還款金額"
+                aria-label={t.settlement.amountAriaLabel}
                 className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
                 style={{
                   fontFamily: 'var(--font-numeric)',
@@ -181,7 +181,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           {/* Date */}
           <div className="px-5 pt-1 pb-6">
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
-              日期
+              {t.settlement.dateLabel}
             </div>
             <button onClick={() => setShowCal(v => !v)}
               className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
@@ -214,7 +214,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
                   border: '1px solid var(--destructive-soft)',
                 }}
               >
-                刪除這筆
+                {t.settlement.deleteOne}
               </button>
             </div>
           )}
@@ -235,9 +235,9 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
 
       <ConfirmModal
         open={confirmingDelete && open}
-        title="刪除這筆還款？"
-        description="這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。"
-        confirmLabel="刪除"
+        title={t.settlement.deleteConfirmTitle}
+        description={t.common.deleteSoftDescription}
+        confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmingDelete(false)}
         onConfirm={performDelete}

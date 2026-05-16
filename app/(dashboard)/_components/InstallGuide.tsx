@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { getPlatform, type Platform } from '@/lib/install-guide'
+import { useTranslations } from '@/lib/i18n/client'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 interface Props {
   open: boolean
@@ -16,6 +18,7 @@ interface Props {
  *   2. Reopenable from /settings → 加到主畫面
  */
 export function InstallGuide({ open, onClose }: Props) {
+  const t = useTranslations()
   // Detect on open (not on mount) so SSR doesn't render platform-specific UI.
   const [platform, setPlatform] = useState<Platform>('unknown')
   useEffect(() => {
@@ -51,24 +54,24 @@ export function InstallGuide({ open, onClose }: Props) {
             className="bg-transparent border-0 text-body cursor-pointer p-1"
             style={{ color: 'var(--ink-2)' }}
           >
-            關閉
+            {t.installGuide.close}
           </button>
           <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-            加到主畫面
+            {t.installGuide.title}
           </div>
           <div className="w-10" />
         </div>
 
         <div className="overflow-auto flex-1 px-6 pb-8">
           <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-            把 Futari 加到主畫面後，會像一個 app 一樣全螢幕開啟，不會再看到網址列。
+            {t.installGuide.intro}
           </p>
 
-          {platform === 'ios-safari' && <IosSafariSteps />}
-          {platform === 'ios-other' && <IosOtherSteps />}
-          {platform === 'android' && <AndroidSteps />}
-          {platform === 'desktop' && <DesktopSteps />}
-          {platform === 'unknown' && <FallbackSteps />}
+          {platform === 'ios-safari' && <IosSafariSteps t={t} />}
+          {platform === 'ios-other' && <IosOtherSteps t={t} />}
+          {platform === 'android' && <AndroidSteps t={t} />}
+          {platform === 'desktop' && <DesktopSteps t={t} />}
+          {platform === 'unknown' && <FallbackSteps t={t} />}
         </div>
       </div>
     </>
@@ -77,23 +80,23 @@ export function InstallGuide({ open, onClose }: Props) {
 
 /* -------------------- Platform-specific steps -------------------- */
 
-function IosSafariSteps() {
+function IosSafariSteps({ t }: { t: Translations }) {
   return (
     <Steps>
       <Step n={1}>
-        點底部正中間的分享按鈕 <ShareIcon />
+        {t.installGuide.iosSafari.step1} <ShareIcon />
       </Step>
       <Step n={2}>
-        往下捲動，找到「<strong>加入主畫面</strong>」<HomeIcon />
+        <span dangerouslySetInnerHTML={{ __html: t.installGuide.iosSafari.step2Html }} /> <HomeIcon />
       </Step>
       <Step n={3}>
-        點右上角「<strong>加入</strong>」就完成了
+        <span dangerouslySetInnerHTML={{ __html: t.installGuide.iosSafari.step3Html }} />
       </Step>
     </Steps>
   )
 }
 
-function IosOtherSteps() {
+function IosOtherSteps({ t }: { t: Translations }) {
   const url = typeof window !== 'undefined' ? window.location.origin : ''
   const [copied, setCopied] = useState(false)
   const handleCopy = async () => {
@@ -108,10 +111,11 @@ function IosOtherSteps() {
   }
   return (
     <>
-      <p className="text-sm mb-5 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-        在 iOS 上只有 <strong>Safari</strong> 可以把網頁加到主畫面。請複製下方網址，
-        貼到 Safari 開啟之後再回到這個教學。
-      </p>
+      <p
+        className="text-sm mb-5 leading-relaxed"
+        style={{ color: 'var(--ink-2)' }}
+        dangerouslySetInnerHTML={{ __html: t.installGuide.iosOther.bodyHtml }}
+      />
       <div
         className="rounded-[14px] p-3 flex items-center gap-3 mb-4"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
@@ -125,51 +129,52 @@ function IosOtherSteps() {
           className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
           style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
-          {copied ? '已複製' : '複製'}
+          {copied ? t.installGuide.iosOther.copied : t.installGuide.iosOther.copy}
         </button>
       </div>
     </>
   )
 }
 
-function AndroidSteps() {
+function AndroidSteps({ t }: { t: Translations }) {
   return (
     <Steps>
       <Step n={1}>
-        點右上角的選單 <DotsIcon />
+        {t.installGuide.android.step1} <DotsIcon />
       </Step>
       <Step n={2}>
-        找「<strong>安裝應用程式</strong>」或「<strong>加到主畫面</strong>」
+        <span dangerouslySetInnerHTML={{ __html: t.installGuide.android.step2Html }} />
       </Step>
       <Step n={3}>
-        確認後，icon 會出現在你的主畫面
+        {t.installGuide.android.step3}
       </Step>
     </Steps>
   )
 }
 
-function DesktopSteps() {
+function DesktopSteps({ t }: { t: Translations }) {
   return (
     <Steps>
       <Step n={1}>
-        看網址列右側，會有一個小小的安裝按鈕 <InstallIcon />
+        {t.installGuide.desktop.step1} <InstallIcon />
       </Step>
       <Step n={2}>
-        點下去，確認安裝
+        {t.installGuide.desktop.step2}
       </Step>
       <Step n={3}>
-        Futari 會像一個獨立的 app 開啟
+        {t.installGuide.desktop.step3}
       </Step>
     </Steps>
   )
 }
 
-function FallbackSteps() {
+function FallbackSteps({ t }: { t: Translations }) {
   return (
-    <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-      在你的瀏覽器選單裡找「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。
-      不同瀏覽器位置不太一樣，但通常都在右上的選單裡。
-    </p>
+    <p
+      className="text-sm leading-relaxed"
+      style={{ color: 'var(--ink-2)' }}
+      dangerouslySetInnerHTML={{ __html: t.installGuide.fallbackHtml }}
+    />
   )
 }
 

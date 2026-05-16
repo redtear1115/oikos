@@ -42,6 +42,8 @@ export const zhCN: Translations = {
     saving: '保存中…',
     processing: '处理中…',
     delete: '删除',
+    confirm: '确认',
+    done: '完成',
     me: '我',
     partner: '对方',
     you: '你',
@@ -307,9 +309,32 @@ export const zhCN: Translations = {
     primaryRepay: '记录还款',
     primaryReceive: '记录收款',
     amountAriaLabel: '还款金额',
+    editTitle: '编辑还款',
+    amountLabel: '金额',
+    dateLabel: '日期',
+    deleteOne: '删除这笔',
+    deleteConfirmTitle: '删除这笔还款？',
     errors: {
       exceedsDebt: '金额不能超过欠款',
+      amountRequired: '请输入金额',
+      noPartner: '伴侣尚未加入',
     },
+  },
+
+  editTextSheet: {
+    errorEmpty: '不能为空',
+    saveFailed: '保存失败',
+  },
+
+  assetPickerSheet: {
+    title: '选择爱物',
+    tablistAriaLabel: '选择爱物',
+    noneTitle: '不关联',
+    noneSubtitle: '这笔与任何爱物无关',
+    loading: '加载中…',
+    loadFailed: '加载失败',
+    emptyAibutsu: '还没有爱物 — 先到「爱物」分页新增。',
+    emptyGuardian: '还没有保单 — 先到「爱物 > 守护」分页新增。',
   },
 
   records: {
@@ -1313,5 +1338,32 @@ export const zhCN: Translations = {
     instructionGeneric: '复制上方链接，粘贴到 Safari 或 Chrome 中打开。',
     instructionIos: '点上方按钮跳转到 Safari，或复制链接后手动粘贴到 Safari。',
     instructionAndroid: '点右上角菜单，选「在浏览器中打开」，或复制链接粘贴到 Chrome。',
+  },
+
+  installGuide: {
+    title: '添加到主屏幕',
+    close: '关闭',
+    intro: '把 Futari 加到主屏幕后，会像一个 app 一样全屏打开，不会再看到地址栏。',
+    iosSafari: {
+      step1: '点底部正中间的分享按钮',
+      step2Html: '向下滑动，找到「<strong>添加到主屏幕</strong>」',
+      step3Html: '点右上角「<strong>添加</strong>」就完成了',
+    },
+    iosOther: {
+      bodyHtml: '在 iOS 上只有 <strong>Safari</strong> 可以把网页加到主屏幕。请复制下方链接，粘贴到 Safari 打开后再回到这个教程。',
+      copy: '复制',
+      copied: '已复制',
+    },
+    android: {
+      step1: '点右上角的菜单',
+      step2Html: '找「<strong>安装应用</strong>」或「<strong>添加到主屏幕</strong>」',
+      step3: '确认后，图标会出现在你的主屏幕',
+    },
+    desktop: {
+      step1: '看地址栏右侧，会有一个小小的安装按钮',
+      step2: '点下去，确认安装',
+      step3: 'Futari 会像一个独立的 app 打开',
+    },
+    fallbackHtml: '在你的浏览器菜单里找「<strong>添加到主屏幕</strong>」或「<strong>安装应用</strong>」。不同浏览器位置不太一样，但通常都在右上角的菜单里。',
   },
 }
