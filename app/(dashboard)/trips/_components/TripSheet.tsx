@@ -5,14 +5,9 @@ import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { createTrip, updateTrip } from '@/actions/trip'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import type { TripCurrencyEntry, TripCurrencySnapshot } from '@/lib/trip-currency'
+import { useTranslations } from '@/lib/i18n/client'
 
 const PRESET_CURRENCIES = CURRENCIES.map(c => c.toUpperCase())
-const PRESET_LABELS: Record<string, string> = {
-  TWD: '台幣',
-  CNY: '人民幣',
-  USD: '美元',
-  JPY: '日圓',
-}
 const MAX_ENTRIES = 5
 
 export interface TripSheetInitial {
@@ -77,6 +72,8 @@ function initialDraft(initial: TripSheetInitial | null | undefined, baseCurrency
 }
 
 export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Props) {
+  const t = useTranslations()
+  const ts = t.tripSheet
   const editing = !!initial
   const today = new Date().toISOString().slice(0, 10)
   const usedCounts = initial?.usedCurrencyCounts ?? {}
@@ -117,7 +114,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
       setEntries(prev => prev.filter(e => e.code !== upper))
     } else {
       if (entries.length >= MAX_ENTRIES) {
-        setErr(`最多 ${MAX_ENTRIES} 個幣別`)
+        setErr(ts.errors.maxCurrencies.replace('{max}', String(MAX_ENTRIES)))
         return
       }
       setErr(null)
@@ -188,10 +185,10 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
   }, [entries, defaultCode])
 
   const formError = err
-    ?? (codeIssues.blank ? '請輸入幣別代碼' : null)
-    ?? (codeIssues.dup ? '幣別不可重複' : null)
-    ?? (codeIssues.badRate ? '匯率必須是正數' : null)
-    ?? (codeIssues.defaultMissing ? '預設幣別不在列表中' : null)
+    ?? (codeIssues.blank ? ts.errors.codeBlank : null)
+    ?? (codeIssues.dup ? ts.errors.codeDuplicate : null)
+    ?? (codeIssues.badRate ? ts.errors.rateInvalid : null)
+    ?? (codeIssues.defaultMissing ? ts.errors.defaultMissing : null)
 
   const canSave = !!trimmedName
     && !!startDate
@@ -228,7 +225,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
         onSaved?.()
         onClose()
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : editing ? '更新失敗' : '建立失敗')
+        setErr(e instanceof Error ? e.message : editing ? ts.errors.updateFailed : ts.errors.createFailed)
       }
     })
   }
@@ -240,17 +237,17 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
   return (
     <SheetShell
       open={open}
-      title={editing ? '編輯旅行' : '建立旅行'}
+      title={editing ? ts.titleEdit : ts.titleNew}
       canSave={canSave}
       pending={pending}
-      bottomSaveLabel={editing ? '保存變更' : '開始這趟'}
+      bottomSaveLabel={editing ? ts.saveEdit : ts.saveNew}
       error={formError ?? ''}
       onClose={onClose}
       onSave={submit}
     >
       <div className="flex flex-col gap-4">
         <label className="block">
-          <span className="text-sm" style={{ color: 'var(--ink-2)' }}>名稱</span>
+          <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.nameLabel}</span>
           <input
             className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
             style={{
@@ -260,14 +257,14 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
             }}
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="例：東京 5 日"
+            placeholder={ts.namePlaceholder}
             maxLength={100}
           />
         </label>
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>起始日</span>
+            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.startDateLabel}</span>
             <input
               type="date"
               className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
@@ -281,7 +278,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
             />
           </label>
           <label className="block">
-            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>結束日（可選）</span>
+            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.endDateLabel}</span>
             <input
               type="date"
               className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
@@ -299,19 +296,19 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
 
         {dateInvalid && (
           <p className="text-xs -mt-2" style={{ color: 'var(--debit, #c0392b)' }} role="alert">
-            結束日不可早於起始日
+            {ts.endBeforeStart}
           </p>
         )}
 
         <div className="block">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>幣別與匯率</span>
+            <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.currenciesSectionTitle}</span>
             <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
-              {entries.length} / {MAX_ENTRIES}
+              {ts.currencyCountFormat.replace('{n}', String(entries.length)).replace('{max}', String(MAX_ENTRIES))}
             </span>
           </div>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-            勾選這趟用得到的幣別，挑一個當預設。每行填「1 個此幣別 = 幾個預設幣別」(例：1 JPY ≈ 0.2 TWD)。
+            {ts.currenciesHint}
           </p>
 
           <div className="mt-2 flex flex-col gap-2">
@@ -325,7 +322,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
                 <CurrencyRow
                   key={code}
                   code={code}
-                  label={PRESET_LABELS[code]}
+                  label={ts.presetLabels[code as keyof typeof ts.presetLabels]}
                   rate={row?.rate ?? 1}
                   defaultCode={defaultCode}
                   checked={checked}
@@ -375,14 +372,14 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
                   color: 'var(--ink-2)',
                 }}
               >
-                + 自訂幣別
+                {ts.addCustomCta}
               </button>
             )}
           </div>
         </div>
 
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          這趟期間記錄的支出，會自動掛在這次旅行底下。
+          {ts.footerNote}
         </p>
       </div>
     </SheetShell>
@@ -403,12 +400,14 @@ function CurrencyRow(props: {
   onRateChange: (raw: string) => void
   onSetDefault: () => void
 }) {
+  const t = useTranslations()
+  const ts = t.tripSheet
   const { code, label, rate, defaultCode, checked, isDefault, defaultHasExpenses, locked, usedCount } = props
   const toggleDisabled = checked && (locked || isDefault)
   const rateInvalid = checked && !isDefault && (!Number.isFinite(rate) || rate <= 0)
 
   return (
-    <RowFrame locked={locked}>
+    <RowFrame locked={locked} ghost={!checked}>
       {/* Header — full-width label so the entire row is a 44pt+ tap area. */}
       <label
         className="flex items-center gap-3 min-h-11 px-3 py-1"
@@ -423,30 +422,42 @@ function CurrencyRow(props: {
           className="cursor-pointer w-4 h-4"
           style={{ accentColor: 'var(--ink)' }}
         />
-        <div className="flex-1 text-sm font-medium" style={{ color: 'var(--ink)' }}>
+        <div className="flex-1 text-sm font-medium" style={{ color: checked ? 'var(--ink)' : 'var(--ink-2)' }}>
           {code} <span className="font-normal" style={{ color: 'var(--ink-3)' }}>{label}</span>
         </div>
+        {checked && isDefault && (
+          <span
+            className="text-[11px] tracking-[0.5px] px-2 py-0.5 rounded-full"
+            style={{ background: 'var(--ink)', color: 'var(--bg)' }}
+          >
+            {ts.defaultPill}
+          </span>
+        )}
       </label>
 
-      {checked && (
+      {checked && !isDefault && (
         <>
           <RateRow
             code={code}
             defaultCode={defaultCode}
             rate={rate}
-            isDefault={isDefault}
             locked={locked}
             invalid={rateInvalid}
             onRateChange={props.onRateChange}
           />
           <FooterRow
-            isDefault={isDefault}
+            isDefault={false}
             defaultHasExpenses={defaultHasExpenses}
             locked={locked}
             usedCount={usedCount}
             onSetDefault={props.onSetDefault}
           />
         </>
+      )}
+      {checked && isDefault && defaultHasExpenses && (
+        <p className="text-xs px-3 pb-3" style={{ color: 'var(--ink-3)' }} role="status">
+          {ts.defaultLockedNote}
+        </p>
       )}
     </RowFrame>
   )
@@ -482,6 +493,8 @@ function CustomCurrencyRow(props: {
   onSetDefault: () => void
   onRemove: () => void
 }) {
+  const t = useTranslations()
+  const tsRow = t.tripSheet.customRow
   const { code, label, rate, defaultCode, isDefault, defaultHasExpenses, locked, usedCount } = props
   const rateInvalid = !isDefault && (!Number.isFinite(rate) || rate <= 0)
 
@@ -495,9 +508,9 @@ function CustomCurrencyRow(props: {
           value={code}
           disabled={locked}
           onChange={e => props.onCodeChange(e.target.value)}
-          placeholder="VND"
+          placeholder={tsRow.codePlaceholder}
           maxLength={16}
-          aria-label="幣別代碼"
+          aria-label={tsRow.codeAriaLabel}
           className="w-20 rounded-lg px-2 py-2 text-sm uppercase"
           style={{
             background: locked ? 'var(--surface-alt)' : 'var(--bg)',
@@ -510,9 +523,9 @@ function CustomCurrencyRow(props: {
           value={label}
           disabled={locked}
           onChange={e => props.onLabelChange(e.target.value)}
-          placeholder="越南盾（可選）"
+          placeholder={tsRow.labelPlaceholder}
           maxLength={32}
-          aria-label="顯示名稱"
+          aria-label={tsRow.labelAriaLabel}
           className="flex-1 min-w-0 rounded-lg px-2 py-2 text-sm"
           style={{
             background: locked ? 'var(--surface-alt)' : 'var(--bg)',
@@ -524,7 +537,7 @@ function CustomCurrencyRow(props: {
           <button
             type="button"
             onClick={props.onRemove}
-            aria-label="移除幣別"
+            aria-label={tsRow.removeAriaLabel}
             className="min-w-11 min-h-11 -mr-1 flex items-center justify-center bg-transparent cursor-pointer"
             style={{ border: 'none', color: 'var(--ink-3)' }}
           >
@@ -540,15 +553,16 @@ function CustomCurrencyRow(props: {
         )}
       </div>
 
-      <RateRow
-        code={code || '?'}
-        defaultCode={defaultCode}
-        rate={rate}
-        isDefault={isDefault}
-        locked={locked}
-        invalid={rateInvalid}
-        onRateChange={props.onRateChange}
-      />
+      {!isDefault && (
+        <RateRow
+          code={code || '?'}
+          defaultCode={defaultCode}
+          rate={rate}
+          locked={locked}
+          invalid={rateInvalid}
+          onRateChange={props.onRateChange}
+        />
+      )}
       <FooterRow
         isDefault={isDefault}
         defaultHasExpenses={defaultHasExpenses}
@@ -562,17 +576,30 @@ function CustomCurrencyRow(props: {
 }
 
 /**
- * Shared chrome for both preset and custom currency rows. Locked rows use
- * `--surface-alt` (no opacity reduction — opacity 0.5 was failing WCAG on
- * already-secondary text per the UX audit).
+ * Shared chrome for both preset and custom currency rows.
+ *
+ * - `locked`: row's currency has expenses → background switches to
+ *   `--surface-alt` (no opacity reduction — opacity 0.5 was failing WCAG on
+ *   already-secondary text per the UX audit).
+ * - `ghost`: preset row that's unchecked → transparent background + softer
+ *   text. Reduces visual weight so the section doesn't feel like 4 stacked
+ *   cards before the user picks anything.
  */
-function RowFrame({ locked, children }: { locked: boolean; children: React.ReactNode }) {
+function RowFrame({
+  locked,
+  ghost = false,
+  children,
+}: {
+  locked: boolean
+  ghost?: boolean
+  children: React.ReactNode
+}) {
   return (
     <div
       className="rounded-xl flex flex-col"
       style={{
-        background: locked ? 'var(--surface-alt)' : 'var(--surface)',
-        border: '1px solid var(--hairline)',
+        background: ghost ? 'transparent' : (locked ? 'var(--surface-alt)' : 'var(--surface)'),
+        border: `1px solid ${ghost ? 'transparent' : 'var(--hairline)'}`,
       }}
     >
       {children}
@@ -582,6 +609,8 @@ function RowFrame({ locked, children }: { locked: boolean; children: React.React
 
 /**
  * The "1 [code] = [input] [default]" rate row with inverse hint underneath.
+ * Only rendered for non-default currencies (the default's rate is implicitly
+ * 1 and showing a row that says so is just noise — see UX review §14).
  * `step="any"` (instead of 0.001) so user-defined small currencies like VND
  * (rate ≈ 0.0013) can be entered without UI clamping.
  */
@@ -589,56 +618,51 @@ function RateRow(props: {
   code: string
   defaultCode: string
   rate: number
-  isDefault: boolean
   locked: boolean
   invalid: boolean
   onRateChange: (raw: string) => void
 }) {
-  const { code, defaultCode, rate, isDefault, locked, invalid } = props
+  const t = useTranslations()
+  const ts = t.tripSheet
+  const { code, defaultCode, rate, locked, invalid } = props
   return (
     <div className="px-3 pt-2 flex flex-col gap-1">
       <div className="flex items-center gap-2">
-        {isDefault ? (
-          <div className="flex-1 text-xs" style={{ color: 'var(--ink-3)' }}>
-            預設幣別匯率固定為 1
-          </div>
-        ) : (
-          <>
-            <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
-              1 {code} =
-            </span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              min="0"
-              value={rate || ''}
-              disabled={locked}
-              onChange={e => props.onRateChange(e.target.value)}
-              aria-invalid={invalid}
-              className="flex-1 min-w-0 rounded-lg px-2.5 py-2 text-sm"
-              style={{
-                background: locked ? 'var(--surface-alt)' : 'var(--bg)',
-                border: invalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
-                color: 'var(--ink)',
-              }}
-            />
-            <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
-              {defaultCode}
-            </span>
-          </>
-        )}
+        <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
+          1 {code} =
+        </span>
+        <input
+          type="number"
+          inputMode="decimal"
+          step="any"
+          min="0"
+          value={rate || ''}
+          disabled={locked}
+          onChange={e => props.onRateChange(e.target.value)}
+          aria-invalid={invalid}
+          className="flex-1 min-w-0 rounded-lg px-2.5 py-2 text-sm"
+          style={{
+            background: locked ? 'var(--surface-alt)' : 'var(--bg)',
+            border: invalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
+            color: 'var(--ink)',
+          }}
+        />
+        <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
+          {defaultCode}
+        </span>
       </div>
-      {!isDefault && invalid && (
+      {invalid ? (
         <p className="text-xs" style={{ color: 'var(--debit)' }} role="alert">
-          請輸入大於 0 的匯率
+          {ts.errors.rateInvalidInline}
         </p>
-      )}
-      {!isDefault && !invalid && rate > 0 && (
+      ) : rate > 0 ? (
         <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
-          ≈ 1 {defaultCode} = {formatInverse(rate)} {code}
+          {ts.rateInverseFormat
+            .replace('{default}', defaultCode)
+            .replace('{inverse}', formatInverse(rate))
+            .replace('{code}', code)}
         </p>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -656,6 +680,8 @@ function FooterRow(props: {
   onSetDefault: () => void
   disableSetDefault?: boolean
 }) {
+  const t = useTranslations()
+  const ts = t.tripSheet
   const { isDefault, defaultHasExpenses, locked, usedCount, disableSetDefault } = props
   const chipDisabled = isDefault || (defaultHasExpenses && !isDefault) || !!disableSetDefault
   return (
@@ -673,16 +699,16 @@ function FooterRow(props: {
           opacity: chipDisabled && !isDefault ? 0.55 : 1,
         }}
       >
-        {isDefault ? '已是預設' : '設為預設'}
+        {isDefault ? ts.chipIsDefault : ts.chipSetDefault}
       </button>
       {locked && !isDefault && (
         <span className="text-xs text-right" style={{ color: 'var(--ink-3)' }} role="status">
-          已記過 {usedCount} 筆，先刪除才能改
+          {ts.usedCountNote.replace('{n}', String(usedCount))}
         </span>
       )}
       {isDefault && defaultHasExpenses && (
         <span className="text-xs text-right" style={{ color: 'var(--ink-3)' }} role="status">
-          已有支出，無法變更預設
+          {ts.defaultLockedNote}
         </span>
       )}
     </div>

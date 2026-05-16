@@ -7,6 +7,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { TripSheet } from './TripSheet'
 import type { CurrencyCode } from '@/lib/currency'
+import { useTranslations } from '@/lib/i18n/client'
 
 type Trip = {
   id: string
@@ -20,6 +21,8 @@ type Trip = {
 
 export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
   const router = useRouter()
+  const t = useTranslations()
+  const tl = t.tripList
   const { isPast } = useMember()
   const [open, setOpen] = useState(false)
   const active = props.trips.filter(t => t.status === 'active')
@@ -34,10 +37,10 @@ export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
-          旅行
+          {tl.title}
         </div>
         <p className="mt-1 text-sm" style={{ color: 'var(--ink-3)' }}>
-          一趟一趟收下來，這段路就有自己的章節。
+          {tl.subtitle}
         </p>
       </div>
 
@@ -47,14 +50,14 @@ export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
         <div className="px-4 flex flex-col gap-6">
           {active.length > 0 && (
             <section className="flex flex-col gap-3">
-              <SectionLabel label="進行中" dotColor="var(--accent)" />
+              <SectionLabel label={tl.sectionActive} dotColor="var(--accent)" />
               <TripGroup trips={active} variant="active" />
             </section>
           )}
 
           {past.length > 0 && (
             <section className="flex flex-col gap-3">
-              <SectionLabel label="過去的旅行" dotColor="var(--ink-3)" />
+              <SectionLabel label={tl.sectionPast} dotColor="var(--ink-3)" />
               <TripGroup trips={past} variant="past" />
             </section>
           )}
@@ -122,10 +125,12 @@ function TripGroup({ trips, variant }: { trips: Trip[]; variant: 'active' | 'pas
 }
 
 function TripRow({ trip, variant, isLast }: { trip: Trip; variant: 'active' | 'past'; isLast: boolean }) {
+  const t = useTranslations()
+  const tl = t.tripList
   const isPast = variant === 'past'
   const dateLabel = trip.endDate
     ? `${trip.startDate} – ${trip.endDate}`
-    : `${trip.startDate} 起，進行中`
+    : tl.dateRangeActive.replace('{startDate}', trip.startDate)
 
   return (
     <Link
@@ -151,7 +156,7 @@ function TripRow({ trip, variant, isLast }: { trip: Trip; variant: 'active' | 'p
           {isPast && (
             <>
               <span aria-hidden="true">·</span>
-              <span>已結束</span>
+              <span>{tl.endedTag}</span>
             </>
           )}
         </div>
@@ -177,6 +182,8 @@ function TripRow({ trip, variant, isLast }: { trip: Trip; variant: 'active' | 'p
 }
 
 function TripsEmptyState() {
+  const t = useTranslations()
+  const tl = t.tripList
   return (
     <div className="flex flex-col items-center justify-center pt-16 pb-12 px-6 text-center">
       <div
@@ -200,13 +207,13 @@ function TripsEmptyState() {
         </svg>
       </div>
       <div className="text-base font-medium mb-2" style={{ color: 'var(--ink)' }}>
-        還沒有旅行紀錄
+        {tl.empty.heading}
       </div>
       <div
         className="text-sm leading-relaxed"
         style={{ color: 'var(--ink-3)', maxWidth: 260 }}
       >
-        建一趟旅行，這段日子裡的每筆支出，就會自動收進來，回來再一起翻。
+        {tl.empty.body}
       </div>
     </div>
   )
