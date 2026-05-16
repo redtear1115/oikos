@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateGroupSplitRatio } from '@/actions/group'
 import { useTranslations } from '@/lib/i18n/client'
@@ -17,6 +17,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
   const t = useTranslations()
   const [ratioA, setRatioA] = useState<number>(initialRatioA ?? 50)
   const [saving, startTransition] = useTransition()
+  const ticksId = useId()
   const [error, setError] = useState<string | null>(null)
 
   const handleSave = () => {
@@ -42,12 +43,12 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
         min={10}
         max={90}
         step={10}
-        list="split-ratio-ticks"
+        list={ticksId}
         value={ratioA}
         onChange={e => setRatioA(Number(e.target.value))}
         className="w-full accent-[var(--ink)]"
       />
-      <datalist id="split-ratio-ticks">
+      <datalist id={ticksId}>
         {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(v => (
           <option key={v} value={v} label={`${v}`} />
         ))}
