@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusTrap } from './useFocusTrap'
 
@@ -69,6 +69,23 @@ export function SheetFrame({
   const fallbackRef = useRef<HTMLDivElement>(null)
   const ref = panelRef ?? fallbackRef
   useFocusTrap(open, ref)
+
+  // Dismiss the iOS soft keyboard when the sheet closes. `useFocusTrap`
+  // restores focus to `previouslyFocused`, but on iOS that's often `document
+  // .body` (touch on a button doesn't set focus the way mouse-click does)
+  // or a now-hidden FAB — focusing those doesn't reliably blur the input
+  // that was focused inside the sheet, so the keyboard sticks around after
+  // the slide-down. An explicit `blur()` on the sheet's active element is
+  // the deterministic signal iOS needs.
+  useEffect(() => {
+    if (open) return
+    const panel = ref.current
+    if (!panel) return
+    const active = document.activeElement
+    if (active instanceof HTMLElement && panel.contains(active)) {
+      active.blur()
+    }
+  }, [open, ref])
 
   const fallbackId = useId()
   const labelAttrs = labelledBy
