@@ -1,130 +1,46 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { DangerZone, type PendingSwap } from './DangerZone'
-import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
-import { GuardianBetaToggle } from './GuardianBetaToggle'
-import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
-import { createInvite } from '@/actions/invite'
-import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
-import { shareInviteLink } from '@/lib/share'
-import type { SplitType } from '@/lib/balance'
+import { useAvatarMenu } from '@/app/(dashboard)/_components/AvatarMenuProvider'
+import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useTranslations } from '@/lib/i18n/client'
-import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
-import { describeError } from '@/lib/errors'
 
 export interface ViewerInfo {
   id: string
   displayName: string
   email: string
   avatarUrl: string | null
-  defaultSplitType: SplitType
 }
 export interface PartnerInfo { id: string; displayName: string; email: string | null; avatarUrl: string | null }
 
 interface Props {
   viewer: ViewerInfo
   partner: PartnerInfo | null
-  groupId: string
-  groupName: string
   appVersion: string
   currentLocale: string
-  groupDefaultRatioA: number | null
   /** True iff viewer is member_a on the group. Drives the leave flow's branching. */
   viewerIsMemberA: boolean
   /** Signed balance from member_a's POV (positive = A owes B). */
   groupBalance: number
   /** A pending swap proposal on this group, or null if none. */
   pendingSwap: PendingSwap | null
-  /** #220 — Guardian beta opt-in state for this group. */
-  guardianBetaEnabled: boolean
   /** #367 — trip counts in current epoch for the 旅行 row secondary text. */
   tripSummary: { active: number; past: number }
 }
 
 export function SettingsContent({
-  viewer, partner, groupId, groupName, appVersion, currentLocale, groupDefaultRatioA,
-  viewerIsMemberA, groupBalance, pendingSwap, guardianBetaEnabled, tripSummary,
+  viewer, partner, appVersion, currentLocale,
+  viewerIsMemberA, groupBalance, pendingSwap, tripSummary,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const [editing, setEditing] = useState<null | 'group' | 'name'>(null)
-  const isSolo = partner === null
-
-  const handleClose = () => setEditing(null)
-  const refresh = () => router.refresh()
-
-  const [savingSplit, startSplitTransition] = useTransition()
-  const [splitError, setSplitError] = useState<string | null>(null)
-
-  const [splitRatioA, setSplitRatioA] = useState<number>(groupDefaultRatioA ?? 50)
-  const [savingRatio, startRatioTransition] = useTransition()
-  const [ratioError, setRatioError] = useState<string | null>(null)
-
-  // Solo-mode invite flow (only relevant when partner === null).
-  const [invitePending, startInviteTransition] = useTransition()
-  const [inviteToast, setInviteToast] = useState<string | null>(null)
-  const [inviteError, setInviteError] = useState<string | null>(null)
-  const inviteToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
-    }
-  }, [])
+  const { open: openAvatarMenu } = useAvatarMenu()
 
   const [installGuideOpen, setInstallGuideOpen] = useState(false)
-
-  const handleInvite = () => {
-    setInviteError(null)
-    startInviteTransition(async () => {
-      try {
-        const url = await createInvite(groupId)
-        const result = await shareInviteLink(url)
-        // Always confirm — see SoloBanner for the same rationale.
-        setInviteToast(result === 'shared' ? t.soloBanner.sharedAndCopied : t.soloBanner.copied)
-        if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
-        inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
-      } catch (e) {
-        setInviteError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
-  }
-
-  const handleRatioSave = () => {
-    setRatioError(null)
-    startRatioTransition(async () => {
-      try {
-        await updateGroupSplitRatio(splitRatioA)
-        refresh()
-      } catch (e) {
-        setRatioError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
-      }
-    })
-  }
-
-  // In solo mode the only valid configuration is all_mine, so we lock the radio
-  // to that value visually and disable interaction. The user's stored preference
-  // (in DB) is preserved untouched and re-takes effect when partner joins.
-  const displayedSplit: SplitType = isSolo ? 'all_mine' : viewer.defaultSplitType
-
-  const handleSplitChange = (next: SplitType) => {
-    if (next === viewer.defaultSplitType) return  // no-op if same
-    setSplitError(null)
-    startSplitTransition(async () => {
-      try {
-        await updateDefaultSplitType(next)
-        router.refresh()
-      } catch (e) {
-        setSplitError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
-      }
-    })
-  }
 
   return (
     <>
@@ -137,173 +53,32 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* 帳本 — group-level identity (just the name). */}
-      <Section title={t.settings.sectionGroup}>
-        <Row
-          label={t.settings.groupName}
-          value={groupName}
-          onClick={() => setEditing('group')}
-        />
-      </Section>
-
-      {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
-      <Section title={t.settings.sectionGroupSplit}>
-        <div>
-          <div
-            className="rounded-[20px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            {([
-              { id: 'half' as const,       label: t.splitType.even },
-              { id: 'all_mine' as const,   label: t.splitType.allMine },
-              { id: 'all_theirs' as const, label: t.splitType.allPartners },
-            ]).map((opt, i) => {
-              const sel = displayedSplit === opt.id
-              return (
-                <button
-                  type="button"
-                  key={opt.id}
-                  onClick={() => handleSplitChange(opt.id)}
-                  disabled={savingSplit || isSolo}
-                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
-                  style={{
-                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-                    background: 'transparent',
-                  }}
-                >
-                  <span className="text-body" style={{ color: 'var(--ink)' }}>
-                    {opt.label}
-                  </span>
-                  <div
-                    className="w-5 h-5 rounded-full transition-all duration-150"
-                    style={{
-                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
-                      background: sel ? 'var(--ink)' : 'transparent',
-                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
-                    }}
-                  />
-                </button>
-              )
-            })}
-          </div>
-          {isSolo && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
-              {t.settings.soloLockHint}
-            </div>
-          )}
-          {splitError && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
-              {splitError}
-            </div>
-          )}
-        </div>
-        {!isSolo && (
-          <div className="mt-3">
-            <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
-              <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
-                <span>{viewer.displayName}（我）{splitRatioA}%</span>
-                <span>{partner?.displayName}（對方）{100 - splitRatioA}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={90}
-                step={10}
-                list="split-ratio-ticks"
-                value={splitRatioA}
-                onChange={e => setSplitRatioA(Number(e.target.value))}
-                className="w-full accent-[var(--ink)]"
-              />
-              <datalist id="split-ratio-ticks">
-                {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(v => (
-                  <option key={v} value={v} label={`${v}`} />
-                ))}
-              </datalist>
-              <button
-                onClick={handleRatioSave}
-                disabled={savingRatio}
-                className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
-                style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-              >
-                {savingRatio ? t.common.saving : t.settings.saveDefaultRatio}
-              </button>
-              {ratioError && <p className="text-xs" style={{ color: 'var(--debit)' }}>{ratioError}</p>}
-            </section>
-          </div>
-        )}
-      </Section>
-
-      {/* 成員 */}
-      <Section title={t.settings.sectionMember}>
-        <div
-          className="rounded-[20px] overflow-hidden"
+      {/* Entry row to the avatar quick-settings sheet — Settings page has no
+          avatar to tap, so this row is its inline equivalent. */}
+      <div className="px-4 mt-2 mb-5">
+        <button
+          type="button"
+          onClick={openAvatarMenu}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
-          <MemberRow
-            memberRole={viewerIsMemberA ? 'a' : 'b'}
-            initial={viewer.displayName[0]?.toUpperCase() ?? '?'}
-            avatarUrl={viewer.avatarUrl}
-            displayName={viewer.displayName}
-            email={viewer.email}
-            youSuffix
-          />
-          {partner && (
-            <>
-              <div style={{ borderTop: '1px solid var(--hairline)' }} />
-              <MemberRow
-                memberRole={viewerIsMemberA ? 'b' : 'a'}
-                initial={partner.displayName[0]?.toUpperCase() ?? '?'}
-                avatarUrl={partner.avatarUrl}
-                displayName={partner.displayName}
-                email={partner.email ?? ''}
-              />
-            </>
-          )}
-        </div>
-        {isSolo && (
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={handleInvite}
-              disabled={invitePending}
-              className="w-full h-12 rounded-[14px] border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--btn-accent-bg)', color: 'var(--btn-accent-text)' }}
-            >
-              {invitePending ? t.soloBanner.generating : t.settings.inviteCta}
-            </button>
-            {inviteToast && (
-              <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--ink-2)' }}>
-                {inviteToast}
-              </div>
-            )}
-            {inviteError && (
-              <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--debit)' }}>
-                {inviteError}
-              </div>
-            )}
+          <div className="flex items-center gap-3">
+            {/* mini avatar pair as visual hint — matches the dashboard avatar cluster */}
+            <div className="flex">
+              <Avatar memberRole={viewerIsMemberA ? 'a' : 'b'} initial={viewer.displayName[0]?.toUpperCase() ?? '?'} src={viewer.avatarUrl} size={22} />
+              {partner && (
+                <div className="-ml-[6px]">
+                  <Avatar memberRole={viewerIsMemberA ? 'b' : 'a'} initial={partner.displayName[0]?.toUpperCase() ?? '?'} src={partner.avatarUrl} size={22} ring />
+                </div>
+              )}
+            </div>
+            <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
+              {t.settings.quickAccessRow}
+            </div>
           </div>
-        )}
-      </Section>
-
-      {/* 個人 — viewer-only profile + preferences */}
-      <Section title={t.settings.sectionPersonal}>
-        <Row
-          label={t.settings.displayName}
-          value={viewer.displayName}
-          onClick={() => setEditing('name')}
-        />
-      </Section>
-
-      {/* 語言 & 幣別 — "who I am / which viewpoint" identity prefs (issue #365) */}
-      <Section title={t.settings.sectionDisplay}>
-        <LanguageSwitcher current={currentLocale} />
-        <div className="mt-3">
-          <Row
-            label={t.settings.currency}
-            onClick={() => router.push('/settings/currency')}
-          />
-        </div>
-      </Section>
+          <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
+        </button>
+      </div>
 
       {/* 應用 — install + offline (device/app-level prefs) */}
       <Section title={t.settings.sectionApp}>
@@ -340,11 +115,6 @@ export function SettingsContent({
         />
       </Section>
 
-      {/* 守護（Beta）— per-group opt-in for the Guardian module (#220) */}
-      <Section title={t.settings.sectionGuardian}>
-        <GuardianBetaToggle enabled={guardianBetaEnabled} />
-      </Section>
-
       {partner && (
         <DangerZone
           viewerIsMemberA={viewerIsMemberA}
@@ -356,9 +126,6 @@ export function SettingsContent({
         />
       )}
 
-      <div className="px-4 pb-2 mt-4">
-        <LogoutButton />
-      </div>
       <div
         className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
@@ -370,26 +137,6 @@ export function SettingsContent({
         <a href="/privacy" className="underline" style={{ color: 'var(--ink-3)' }}>{t.signIn.privacyLink}</a>
       </div>
 
-      <EditTextSheet
-        open={editing === 'group'}
-        title={t.settings.groupName}
-        initialValue={groupName}
-        onClose={handleClose}
-        onSubmit={async (v) => {
-          await updateGroupName(v)
-          refresh()
-        }}
-      />
-      <EditTextSheet
-        open={editing === 'name'}
-        title={t.settings.displayName}
-        initialValue={viewer.displayName}
-        onClose={handleClose}
-        onSubmit={async (v) => {
-          await updateDisplayName(v)
-          refresh()
-        }}
-      />
       <InstallGuide
         open={installGuideOpen}
         onClose={() => setInstallGuideOpen(false)}
@@ -452,23 +199,4 @@ function formatTripSummary(
   }
   if (summary.active > 0) return tr.active.replace('{active}', String(summary.active))
   return tr.past.replace('{past}', String(summary.past))
-}
-
-function MemberRow({
-  memberRole, initial, avatarUrl, displayName, email, youSuffix,
-}: { memberRole: 'a' | 'b'; initial: string; avatarUrl: string | null; displayName: string; email: string; youSuffix?: boolean }) {
-  const t = useTranslations()
-  return (
-    <div className="flex items-center gap-3.5 px-5 py-4">
-      <Avatar memberRole={memberRole} initial={initial} src={avatarUrl} size={40} />
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
-          {displayName}{youSuffix && <span className="ml-1" style={{ color: 'var(--ink-3)' }}>{t.settings.youSuffix}</span>}
-        </div>
-        {email && (
-          <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>{email}</div>
-        )}
-      </div>
-    </div>
-  )
 }
