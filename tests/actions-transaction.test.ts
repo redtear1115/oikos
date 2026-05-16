@@ -30,7 +30,7 @@ const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們
 const OPEN_EPOCH = {
   id: 'epoch-current',
   groupId: 'grp-1',
-  startedAt: new Date('2026-01-01T00:00:00Z'),
+  startedAt: '2026-01-01',
   endedAt: null,
   memberAId: 'user-a',
   memberBId: 'user-b',
@@ -38,8 +38,8 @@ const OPEN_EPOCH = {
 const CLOSED_EPOCH = {
   id: 'epoch-old',
   groupId: 'grp-1',
-  startedAt: new Date('2025-01-01T00:00:00Z'),
-  endedAt: new Date('2025-12-31T23:59:59Z'),
+  startedAt: '2025-01-01',
+  endedAt: '2025-12-31',
   memberAId: 'user-a',
   memberBId: 'user-b',
 }
@@ -64,7 +64,7 @@ describe('createTransaction', () => {
       category: 'dining',
       splitType: 'half',
       payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
     })
 
     expect(result).toEqual({ id: 'tx-1', isFirstTransaction: true })
@@ -81,7 +81,7 @@ describe('createTransaction', () => {
     const result = await createTransaction({
       amount: 100, description: '晚餐', category: 'dining',
       splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
     })
 
     expect(result).toEqual({ id: 'tx-2', isFirstTransaction: false })
@@ -91,7 +91,7 @@ describe('createTransaction', () => {
     setMockUser(null)
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
-      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      splitType: 'half', payerId: 'user-a', transactedAt: '2026-05-16',
     })).rejects.toThrow('Unauthorized')
   })
 
@@ -102,7 +102,7 @@ describe('createTransaction', () => {
     queueDbResult([OPEN_EPOCH])
     await expect(createTransaction({
       amount: 0, description: 'x', category: 'dining',
-      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      splitType: 'half', payerId: 'user-a', transactedAt: '2026-05-16',
     })).rejects.toThrow(/金額必須是正整數/)
   })
 
@@ -110,7 +110,7 @@ describe('createTransaction', () => {
     queueDbResult([])  // empty getActiveGroupForUser → resolveViewerEpochContext returns null → '找不到家計簿'
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
-      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      splitType: 'half', payerId: 'user-a', transactedAt: '2026-05-16',
     })).rejects.toThrow('找不到家計簿')
   })
 
@@ -119,7 +119,7 @@ describe('createTransaction', () => {
     queueDbResult([OPEN_EPOCH])
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
-      splitType: 'half', payerId: 'user-stranger', transactedAt: new Date(),
+      splitType: 'half', payerId: 'user-stranger', transactedAt: '2026-05-16',
     })).rejects.toThrow('付款人不在家計簿內')
   })
 
@@ -131,7 +131,7 @@ describe('createTransaction', () => {
     await createTransaction({
       amount: 100, description: '午餐', category: 'dining',
       splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
       notes: '  下次別忘了  ',
     })
 
@@ -147,7 +147,7 @@ describe('createTransaction', () => {
     await createTransaction({
       amount: 100, description: '午餐', category: 'dining',
       splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
     })
 
     const insertPayload = mockBuilder.values.mock.calls[0]?.[0] as Record<string, unknown>
@@ -165,7 +165,7 @@ describe('createTransaction', () => {
       description: 'test',
       category: 'dining',
       splitType: 'half',
-      transactedAt: new Date('2026-05-01T00:00:00Z'),
+      transactedAt: '2026-05-01',
     })).rejects.toThrow('過去章節不可編輯')
   })
 })
@@ -187,7 +187,7 @@ describe('editTransaction', () => {
       category: 'dining',
       splitType: 'half',
       payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
     })
 
     expect(result).toEqual({ id: 'tx-new' })
@@ -201,7 +201,7 @@ describe('editTransaction', () => {
     await expect(editTransaction({
       oldId: 'tx-missing', amount: 200, description: 'x',
       category: 'dining', splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date(),
+      transactedAt: '2026-05-16',
     })).rejects.toThrow('找不到該筆紀錄')
   })
 
@@ -210,7 +210,7 @@ describe('editTransaction', () => {
     await expect(editTransaction({
       oldId: 'tx-1', amount: 100, description: 'x',
       category: 'dining', splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date(),
+      transactedAt: '2026-05-16',
     })).rejects.toThrow('Unauthorized')
   })
 
@@ -225,7 +225,7 @@ describe('editTransaction', () => {
       oldId: 'tx-old',
       amount: 200, description: 'updated', category: 'dining',
       splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
       notes: '改成這樣 ',
     })
 
@@ -245,7 +245,7 @@ describe('editTransaction', () => {
       category: 'dining',
       splitType: 'half',
       payerId: 'user-a',
-      transactedAt: new Date('2026-05-01T00:00:00Z'),
+      transactedAt: '2026-05-01',
     })).rejects.toThrow('過去章節不可編輯')
   })
 })
@@ -262,7 +262,7 @@ describe('createTransaction with assetId', () => {
     const result = await createTransaction({
       amount: 100, description: '加油', category: 'transit',
       splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date('2026-05-03'),
+      transactedAt: '2026-05-03',
       assetId: 'asset-1',
     })
     expect(result).toEqual({ id: 'tx-1', isFirstTransaction: true })
@@ -274,7 +274,7 @@ describe('createTransaction with assetId', () => {
     queueDbResult([])  // asset lookup empty
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
-      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      splitType: 'half', payerId: 'user-a', transactedAt: '2026-05-16',
       assetId: 'foreign-asset',
     })).rejects.toThrow(/不在家計簿內/)
   })
@@ -285,7 +285,7 @@ describe('createTransaction with assetId', () => {
     queueDbResult([{ id: 'asset-zombie', deletedAt: new Date() }])
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
-      splitType: 'half', payerId: 'user-a', transactedAt: new Date(),
+      splitType: 'half', payerId: 'user-a', transactedAt: '2026-05-16',
       assetId: 'asset-zombie',
     })).rejects.toThrow(/已刪除/)
   })
@@ -304,7 +304,7 @@ describe('editTransaction with assetId', () => {
     const result = await editTransaction({
       oldId: 'tx-old', amount: 200, description: 'x',
       category: 'dining', splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date(),
+      transactedAt: '2026-05-16',
       assetId: 'asset-zombie',  // same as before — exempt from not-deleted check
     })
     expect(result).toEqual({ id: 'tx-new' })
@@ -318,7 +318,7 @@ describe('editTransaction with assetId', () => {
     await expect(editTransaction({
       oldId: 'tx-old', amount: 200, description: 'x',
       category: 'dining', splitType: 'half', payerId: 'user-a',
-      transactedAt: new Date(),
+      transactedAt: '2026-05-16',
       assetId: 'asset-zombie',
     })).rejects.toThrow(/已刪除/)
   })

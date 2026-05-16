@@ -80,7 +80,12 @@ export interface TransactionInput {
   category: string
   splitType: SplitType
   payerId: string
-  transactedAt: Date
+  /**
+   * Calendar date 'YYYY-MM-DD'. Validator anchors at UTC noon internally via
+   * `ymdToUTCNoon` so all entry paths land at the same TIMESTAMPTZ value
+   * (see #453 — caller-side padding choices used to disagree).
+   */
+  transactedAt: string
   assetId?: string | null
   notes?: string | null
   splitRatioA?: number | null
@@ -107,6 +112,9 @@ export interface ValidatedTransactionInput {
  * `status` defaults to 'settled' when absent — preserves existing call sites that haven't
  * been threaded through with the new field. 'pending' is the credit-card-slip /
  * 待扣款 case (issue #49); excluded from GroupBalance until promoted to settled.
+ *
+ * `transactedAt` is a calendar date string; the validator owns the conversion
+ * to a UTC-noon TIMESTAMPTZ value — callers must not pre-convert.
  */
 export function validateTransactionInput(input: TransactionInput): ValidatedTransactionInput {
   const amount = validateAmount(input.amount)
@@ -127,13 +135,14 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
   }
   const status: RecordStatus = input.status ?? 'settled'
   if (!RECORD_STATUSES.includes(status)) throw new Error('狀態無效')
+  if (!parseDateString(input.transactedAt)) throw new Error('日期格式無效')
   return {
     amount,
     description,
     category,
     splitType: input.splitType,
     payerId: input.payerId,
-    transactedAt: input.transactedAt,
+    transactedAt: ymdToUTCNoon(input.transactedAt),
     assetId: input.assetId ?? null,
     notes: validateNotes(input.notes),
     splitRatioA,
@@ -144,7 +153,11 @@ export function validateTransactionInput(input: TransactionInput): ValidatedTran
 export interface SettlementInput {
   amount: number
   payerId: string
-  settledAt: Date
+  /**
+   * Calendar date 'YYYY-MM-DD'. Validator anchors at UTC noon internally via
+   * `ymdToUTCNoon` (see #453).
+   */
+  settledAt: string
   note?: string
 }
 
@@ -157,14 +170,17 @@ export interface ValidatedSettlementInput {
 
 /**
  * Validates a settlement input. Note is optional; empty/whitespace becomes null.
+ * `settledAt` is a calendar date string; the validator owns the conversion
+ * to a UTC-noon TIMESTAMPTZ value — callers must not pre-convert.
  */
 export function validateSettlementInput(input: SettlementInput): ValidatedSettlementInput {
   const amount = validateAmount(input.amount)
   const note = input.note?.trim() || null
+  if (!parseDateString(input.settledAt)) throw new Error('日期格式無效')
   return {
     amount,
     payerId: input.payerId,
-    settledAt: input.settledAt,
+    settledAt: ymdToUTCNoon(input.settledAt),
     note,
   }
 }

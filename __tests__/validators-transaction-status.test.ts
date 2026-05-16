@@ -7,7 +7,7 @@ const baseInput = {
   category: 'dining',
   splitType: 'half' as const,
   payerId: '00000000-0000-0000-0000-000000000001',
-  transactedAt: new Date('2026-05-10T04:00:00Z'),
+  transactedAt: '2026-05-10',
 }
 
 describe('validateTransactionInput — record status (issue #49)', () => {

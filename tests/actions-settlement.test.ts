@@ -30,7 +30,7 @@ const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們
 const OPEN_EPOCH = {
   id: 'epoch-current',
   groupId: 'grp-1',
-  startedAt: new Date('2026-01-01T00:00:00Z'),
+  startedAt: '2026-01-01',
   endedAt: null,
   memberAId: 'user-a',
   memberBId: 'user-b',
@@ -38,8 +38,8 @@ const OPEN_EPOCH = {
 const CLOSED_EPOCH = {
   id: 'epoch-old',
   groupId: 'grp-1',
-  startedAt: new Date('2025-01-01T00:00:00Z'),
-  endedAt: new Date('2025-12-31T23:59:59Z'),
+  startedAt: '2025-01-01',
+  endedAt: '2025-12-31',
   memberAId: 'user-a',
   memberBId: 'user-b',
 }
@@ -60,7 +60,7 @@ describe('createSettlement', () => {
     const r = await createSettlement({
       amount: 50,
       payerId: 'user-a',
-      settledAt: new Date('2026-05-03'),
+      settledAt: '2026-05-03',
     })
     expect(r).toEqual({ id: 'set-1' })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
@@ -72,7 +72,7 @@ describe('createSettlement', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     await expect(createSettlement({
-      amount: 0, payerId: 'user-a', settledAt: new Date(),
+      amount: 0, payerId: 'user-a', settledAt: '2026-05-16',
     })).rejects.toThrow(/金額必須是正整數/)
   })
 
@@ -80,21 +80,21 @@ describe('createSettlement', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     await expect(createSettlement({
-      amount: 50, payerId: 'user-stranger', settledAt: new Date(),
+      amount: 50, payerId: 'user-stranger', settledAt: '2026-05-16',
     })).rejects.toThrow('付款人不在家計簿內')
   })
 
   it('throws when group not found', async () => {
     queueDbResult([])  // empty group lookup → resolveViewerEpochContext returns null
     await expect(createSettlement({
-      amount: 50, payerId: 'user-a', settledAt: new Date(),
+      amount: 50, payerId: 'user-a', settledAt: '2026-05-16',
     })).rejects.toThrow('找不到家計簿')
   })
 
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(createSettlement({
-      amount: 50, payerId: 'user-a', settledAt: new Date(),
+      amount: 50, payerId: 'user-a', settledAt: '2026-05-16',
     })).rejects.toThrow('Unauthorized')
   })
 
@@ -106,7 +106,7 @@ describe('createSettlement', () => {
     await expect(createSettlement({
       amount: 50,
       payerId: 'user-a',
-      settledAt: new Date('2026-05-03'),
+      settledAt: '2026-05-03',
     })).rejects.toThrow('過去章節不可編輯')
   })
 })
@@ -155,7 +155,7 @@ describe('editSettlement', () => {
       oldId: 'set-old',
       amount: 75,
       payerId: 'user-a',
-      settledAt: new Date('2026-05-03'),
+      settledAt: '2026-05-03',
     })
     expect(r).toEqual({ id: 'set-new' })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
@@ -166,7 +166,7 @@ describe('editSettlement', () => {
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
     await expect(editSettlement({
-      oldId: 'set-missing', amount: 75, payerId: 'user-a', settledAt: new Date(),
+      oldId: 'set-missing', amount: 75, payerId: 'user-a', settledAt: '2026-05-16',
     })).rejects.toThrow('找不到該筆紀錄')
   })
 
@@ -174,14 +174,14 @@ describe('editSettlement', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     await expect(editSettlement({
-      oldId: 'set-1', amount: 75, payerId: 'user-stranger', settledAt: new Date(),
+      oldId: 'set-1', amount: 75, payerId: 'user-stranger', settledAt: '2026-05-16',
     })).rejects.toThrow('付款人不在家計簿內')
   })
 
   it('throws unauthorized when no user', async () => {
     setMockUser(null)
     await expect(editSettlement({
-      oldId: 'set-1', amount: 75, payerId: 'user-a', settledAt: new Date(),
+      oldId: 'set-1', amount: 75, payerId: 'user-a', settledAt: '2026-05-16',
     })).rejects.toThrow('Unauthorized')
   })
 
@@ -194,7 +194,7 @@ describe('editSettlement', () => {
       oldId: 'set-old',
       amount: 75,
       payerId: 'user-a',
-      settledAt: new Date('2026-05-03'),
+      settledAt: '2026-05-03',
     })).rejects.toThrow('過去章節不可編輯')
   })
 })

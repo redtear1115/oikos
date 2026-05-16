@@ -10,7 +10,7 @@ import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
-import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { localTodayISO } from '@/lib/local-date'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -67,7 +67,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           oldId: initial.id,
           amount: n,
           payerId,
-          settledAt: ymdToUTCNoon(date),
+          settledAt: date,
         })
         onMutated?.({ savedAmount: n, edit: true })
         onClose()
