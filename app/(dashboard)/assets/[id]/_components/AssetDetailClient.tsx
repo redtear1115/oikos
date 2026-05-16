@@ -17,6 +17,8 @@ import { SectionHeader, InfoCard } from './aibutsu-ui'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { useTranslations } from '@/lib/i18n/client'
+import type { AssetType } from '@/lib/assets'
+import type { FuelType } from '@/lib/fuel'
 
 interface SerializedFuelLog {
   id: string
@@ -32,7 +34,7 @@ interface Props {
   assetId: string
   notes: string | null
   assetSheetInitial: AssetSheetInitial
-  fuelType: '92' | '95' | '98' | 'diesel' | 'electric' | null
+  fuelType: FuelType | null
   primaryUserId: string | null
   brand: string | null
   model: string | null
@@ -46,7 +48,7 @@ interface Props {
   initialTxns: PagedTxnRow[]
   initialFuelLogs: SerializedFuelLog[]
   pageSize: number
-  allAssets: Array<{ id: string; name: string; type: 'car' | 'house' | 'child' | 'insurance' | 'pet' | 'plant' | 'item' }>
+  allAssets: Array<{ id: string; name: string; type: AssetType }>
   linkedInsurances?: { id: string; name: string }[]
 }
 

@@ -1,17 +1,16 @@
 'use client'
 
 import { useTranslations } from '@/lib/i18n/client'
-
-type FuelType = '92' | '95' | '98' | 'diesel'
+import type { GasFuelType } from '@/lib/fuel'
 
 interface FuelTypeButtonGroupProps {
-  value: FuelType
-  onChange: (value: FuelType) => void
+  value: GasFuelType
+  onChange: (value: GasFuelType) => void
 }
 
 export function FuelTypeButtonGroup({ value, onChange }: FuelTypeButtonGroupProps) {
   const t = useTranslations()
-  const OPTIONS: Array<{ value: FuelType; label: string }> = [
+  const OPTIONS: Array<{ value: GasFuelType; label: string }> = [
     { value: '92', label: '92' },
     { value: '95', label: '95' },
     { value: '98', label: '98' },
