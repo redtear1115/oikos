@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
+import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -93,6 +94,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   const [insuranceAssets, setInsuranceAssets] = useState<{ id: string; name: string }[]>([])
 
   const amountInputRef = useRef<HTMLInputElement>(null)
+  const scrollableRef = useRef<HTMLDivElement>(null)
 
   // Derived: resolve the selected policy name from assetId + loaded assets
   const selectedPolicyName = assetId
@@ -146,6 +148,11 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       setAssetId(null)
     }
   }, [category])
+
+  // Reset scroll position before paint so the sheet always opens at the top —
+  // the container stays mounted across closes and would otherwise preserve
+  // scrollTop from the previous session.
+  useScrollToTopOnOpen(scrollableRef, open)
 
   // Focus + select amount input after sheet slides up
   useFocusAndSelectOnOpen(open, amountInputRef)
@@ -260,7 +267,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           </button>
         </div>
 
-        <div className="overflow-auto flex-1">
+        <div ref={scrollableRef} className="overflow-auto flex-1">
           {/* Amount + recipient toggle */}
           <div
             className="px-6 pt-6 pb-7 text-center"
