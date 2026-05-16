@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
+import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from './SheetBackdrop'
@@ -129,6 +130,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const amountInputRef = useRef<HTMLInputElement>(null)
+  const scrollableRef = useRef<HTMLDivElement>(null)
   const [assetId, setAssetId] = useState<string | null>(null)
   const [descSuggestions, setDescSuggestions] = useState<string[]>([])
 
@@ -221,6 +223,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // render but its meaningful state is captured by `activeTripsKey`.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial, viewer.id, viewer.defaultSplitType, isSolo, prefilledAssetId, prefilledCategory, prefilledTripId, groupDefaultRatioA, baseCurrency, activeTripsKey])
+
+  // Reset scroll position before paint so the sheet always opens at the top —
+  // the container stays mounted across closes and would otherwise preserve
+  // scrollTop from the previous session.
+  useScrollToTopOnOpen(scrollableRef, open)
 
   // Wait for slide-up to finish, then focus + select-all so users can type-to-replace
   // the prefilled amount in edit mode (typing replaces the selection rather than
@@ -427,7 +434,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           </button>
         </div>
 
-        <div className="overflow-auto flex-1">
+        <div ref={scrollableRef} className="overflow-auto flex-1">
           {/* Amount + payer toggle */}
           <div
             className="px-6 pt-6 pb-7 text-center"
