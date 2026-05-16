@@ -116,6 +116,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [solo-mode](solo-mode-design.md) — 單人帳本模式：分攤鎖 all_mine、balance hero 隱藏、邀請 banner、升雙人不 retroactive
 - [epoch-readonly](epoch-readonly-design.md) — 過去章節 read-only + read-path 型別防呆
 - [monthly-review](monthly-review-design.md) — 雙人月度回顧儀式
+- [avatar-quick-settings](avatar-quick-settings-design.md) — Dashboard avatar 可點開 bottom sheet（個人 + 帳本身份設定）；Settings 主頁瘦身成 app + data + 危險區
 
 ### 提案與匯入
 
