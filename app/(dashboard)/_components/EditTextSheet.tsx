@@ -60,13 +60,13 @@ export function EditTextSheet({
 
   const handleConfirm = () => {
     const trimmed = value.trim()
-    if (!trimmed) { setError('不能為空'); return }
+    if (!trimmed) { setError(t.editTextSheet.errorEmpty); return }
     startTransition(async () => {
       try {
         await onSubmit(trimmed)
         onClose()
       } catch (e) {
-        setError(describeError(e, '儲存失敗', t.common.offlineError))
+        setError(describeError(e, t.editTextSheet.saveFailed, t.common.offlineError))
       }
     })
   }
@@ -100,7 +100,7 @@ export function EditTextSheet({
             className="bg-transparent border-0 text-body cursor-pointer p-1 disabled:opacity-50"
             style={{ color: 'var(--ink-2)' }}
           >
-            取消
+            {t.common.cancel}
           </button>
           <span className="text-body font-semibold" style={{ color: 'var(--ink)' }}>
             {title}
@@ -111,7 +111,7 @@ export function EditTextSheet({
             className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:opacity-50"
             style={{ color: 'var(--accent)' }}
           >
-            {pending ? '儲存中…' : '完成'}
+            {pending ? t.common.saving : t.common.done}
           </button>
         </div>
 

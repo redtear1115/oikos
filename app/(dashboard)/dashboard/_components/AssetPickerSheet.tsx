@@ -33,7 +33,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     setTab('aibutsu')
     loadAssetsForPicker()
       .then(setAssets)
-      .catch((e) => setLoadError(describeError(e, '載入失敗', t.common.offlineError)))
+      .catch((e) => setLoadError(describeError(e, t.assetPickerSheet.loadFailed, t.common.offlineError)))
   }, [open, t])
 
   // Escape closes — picker uses its own inline backdrop (z-112) instead of
@@ -50,8 +50,8 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
 
   const emptyMessage =
     canAccessGuardian && tab === 'guardian'
-      ? '還沒有保單 — 先到「愛物 > 守護」分頁新增。'
-      : '還沒有愛物 — 先到「愛物」分頁新增。'
+      ? t.assetPickerSheet.emptyGuardian
+      : t.assetPickerSheet.emptyAibutsu
 
   return (
     <>
@@ -85,16 +85,16 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
           <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
-            取消
+            {t.common.cancel}
           </button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
-            選擇愛物
+            {t.assetPickerSheet.title}
           </div>
           <div className="w-10" />  {/* spacer for symmetry */}
         </div>
 
         {canAccessGuardian && (
-          <div className="px-4 pb-2" role="tablist" aria-label="選擇愛物">
+          <div className="px-4 pb-2" role="tablist" aria-label={t.assetPickerSheet.tablistAriaLabel}>
             <div
               className="flex rounded-full p-1"
               style={{
@@ -137,8 +137,8 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
               the link regardless of which tab the user is browsing. */}
           <PickerRow
             iconNode={<NoneIcon />}
-            title="不關聯"
-            subtitle="這筆與任何愛物無關"
+            title={t.assetPickerSheet.noneTitle}
+            subtitle={t.assetPickerSheet.noneSubtitle}
             selected={selectedAssetId === null}
             onClick={() => { onSelect(null); onClose() }}
           />
@@ -151,7 +151,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
 
           {assets === null && !loadError && (
             <div className="text-sm py-3 px-3" style={{ color: 'var(--ink-3)' }}>
-              載入中…
+              {t.assetPickerSheet.loading}
             </div>
           )}
 

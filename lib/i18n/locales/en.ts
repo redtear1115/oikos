@@ -42,6 +42,8 @@ export const en: Translations = {
     saving: 'Saving…',
     processing: 'Processing…',
     delete: 'Delete',
+    confirm: 'Confirm',
+    done: 'Done',
     me: 'Me',
     partner: 'Partner',
     you: 'You',
@@ -307,9 +309,32 @@ export const en: Translations = {
     primaryRepay: 'Record payback',
     primaryReceive: 'Record receipt',
     amountAriaLabel: 'Repayment amount',
+    editTitle: 'Edit payback',
+    amountLabel: 'Amount',
+    dateLabel: 'Date',
+    deleteOne: 'Delete this entry',
+    deleteConfirmTitle: 'Delete this payback?',
     errors: {
       exceedsDebt: "Amount can't exceed the debt",
+      amountRequired: 'Please enter an amount',
+      noPartner: "Your partner hasn't joined yet",
     },
+  },
+
+  editTextSheet: {
+    errorEmpty: "Can't be empty",
+    saveFailed: 'Failed to save',
+  },
+
+  assetPickerSheet: {
+    title: 'Pick a loved-one',
+    tablistAriaLabel: 'Pick a loved-one',
+    noneTitle: 'No link',
+    noneSubtitle: 'This entry is not tied to any loved-one',
+    loading: 'Loading…',
+    loadFailed: 'Failed to load',
+    emptyAibutsu: 'No loved-ones yet — add one from the 愛物 tab first.',
+    emptyGuardian: 'No policies yet — add one from 愛物 > 守護 first.',
   },
 
   records: {
@@ -1313,5 +1338,32 @@ export const en: Translations = {
     instructionGeneric: 'Copy the link above, then paste it into Safari or Chrome.',
     instructionIos: 'Tap the button above to jump to Safari, or copy the link and paste it into Safari manually.',
     instructionAndroid: 'Tap the menu (top-right) and choose "Open in browser", or copy the link and paste it into Chrome.',
+  },
+
+  installGuide: {
+    title: 'Add to Home Screen',
+    close: 'Close',
+    intro: 'Once Futari is on your Home Screen, it opens full-screen like an app — no more address bar.',
+    iosSafari: {
+      step1: 'Tap the Share button at the bottom centre',
+      step2Html: 'Scroll down and find "<strong>Add to Home Screen</strong>"',
+      step3Html: 'Tap "<strong>Add</strong>" in the top-right corner — done',
+    },
+    iosOther: {
+      bodyHtml: 'On iOS, only <strong>Safari</strong> can add a webpage to the Home Screen. Copy the link below, open it in Safari, then come back to this guide.',
+      copy: 'Copy',
+      copied: 'Copied',
+    },
+    android: {
+      step1: 'Tap the menu in the top-right corner',
+      step2Html: 'Find "<strong>Install app</strong>" or "<strong>Add to Home screen</strong>"',
+      step3: "Confirm, and the icon appears on your home screen",
+    },
+    desktop: {
+      step1: 'Look for a small install button on the right side of the address bar',
+      step2: 'Click it and confirm the install',
+      step3: 'Futari opens like a standalone app',
+    },
+    fallbackHtml: 'Look inside your browser menu for "<strong>Add to Home Screen</strong>" or "<strong>Install app</strong>". The exact location differs between browsers, but it\'s usually in the top-right menu.',
   },
 }

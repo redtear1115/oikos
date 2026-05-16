@@ -1,15 +1,16 @@
 'use client'
 
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   open: boolean
   title: string
   /** Optional supporting copy under the title. */
   description?: string
-  /** Confirm-button label, defaults to "確認". */
+  /** Confirm-button label. Defaults to `t.common.confirm` (e.g. "確認"). */
   confirmLabel?: string
-  /** Cancel-button label, defaults to "取消". */
+  /** Cancel-button label. Defaults to `t.common.cancel` (e.g. "取消"). */
   cancelLabel?: string
   /** Confirm-button styled with destructive color (red). Defaults true since this
    *  modal exists primarily for destructive flows. */
@@ -28,13 +29,16 @@ export function ConfirmModal({
   open,
   title,
   description,
-  confirmLabel = '確認',
-  cancelLabel = '取消',
+  confirmLabel,
+  cancelLabel,
   destructive = true,
   pending = false,
   onCancel,
   onConfirm,
 }: Props) {
+  const t = useTranslations()
+  const finalConfirmLabel = confirmLabel ?? t.common.confirm
+  const finalCancelLabel = cancelLabel ?? t.common.cancel
   return (
     <>
       <SheetBackdrop open={open} onClick={onCancel} />
@@ -72,7 +76,7 @@ export function ConfirmModal({
               border: '1px solid var(--hairline)',
             }}
           >
-            {cancelLabel}
+            {finalCancelLabel}
           </button>
           <button
             type="button"
@@ -84,7 +88,7 @@ export function ConfirmModal({
               color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
             }}
           >
-            {confirmLabel}
+            {finalConfirmLabel}
           </button>
         </div>
       </div>
