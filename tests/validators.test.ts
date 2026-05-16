@@ -42,7 +42,7 @@ describe('validateTransactionInput', () => {
     category: 'dining',
     splitType: 'half' as const,
     payerId: 'user-a',
-    transactedAt: new Date('2026-05-03'),
+    transactedAt: '2026-05-03',
   }
 
   it('happy path: trims description, accepts valid category', () => {
@@ -87,7 +87,7 @@ describe('validateTransactionInput — weighted split', () => {
     description: '測試',
     category: 'dining',
     payerId: 'user-a',
-    transactedAt: new Date(),
+    transactedAt: '2026-05-16',
   }
 
   it('weighted with valid splitRatioA passes', () => {
@@ -131,7 +131,7 @@ describe('validateSettlementInput', () => {
   const baseValid = {
     amount: 100,
     payerId: 'user-a',
-    settledAt: new Date('2026-05-03'),
+    settledAt: '2026-05-03',
   }
   it('accepts minimal valid input', () => {
     const r = validateSettlementInput(baseValid)

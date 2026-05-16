@@ -258,7 +258,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     if (payerWho === 'T' && !partner) { setError(t.addSheet.errors.noPartner); return }
     const payerId = isSolo ? viewer.id : (payerWho === 'M' ? viewer.id : partner!.id)
     const splitType: SplitType = isSolo ? 'all_mine' : split
-    const transactedAt = ymdToUTCNoon(date)
 
     startTransition(async () => {
       try {
@@ -279,6 +278,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           })
         } else if (editingTripExpense) {
           // Edit stays inside TripExpenses (no migration between tables).
+          // TripExpense action still accepts Date/string and does its own
+          // conversion (out of scope for #453).
           await editTripExpense({
             id: initial!.id,
             tripId: initial!.tripId!,
@@ -289,7 +290,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             splitType,
             splitRatio: deriveTripSplitRatio(),
             description: desc,
-            transactedAt,
+            transactedAt: ymdToUTCNoon(date),
           })
         } else if (isEdit) {
           // CashTransaction edits drop `tripId` — new trip-tagging is only
@@ -304,7 +305,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             splitType,
             splitRatioA: split === 'weighted' ? splitRatioA : null,
             payerId,
-            transactedAt,
+            transactedAt: date,
             assetId,
             notes,
             status,
@@ -324,7 +325,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             splitType,
             splitRatio: deriveTripSplitRatio(),
             description: desc,
-            transactedAt,
+            transactedAt: ymdToUTCNoon(date),
           })
         } else {
           // Main ledger create. Single-currency by design — force
@@ -337,7 +338,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             splitType,
             splitRatioA: split === 'weighted' ? splitRatioA : null,
             payerId,
-            transactedAt,
+            transactedAt: date,
             assetId,
             notes,
             status,

@@ -7,7 +7,7 @@ import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { createSettlement } from '@/actions/settlement'
 import { settlementChips } from '@/lib/settlement'
 import { MiniCalendar } from './MiniCalendar'
-import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { localTodayISO } from '@/lib/local-date'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -66,7 +66,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         await createSettlement({
           amount: parsed,
           payerId,
-          settledAt: ymdToUTCNoon(date),
+          settledAt: date,
         })
         onMutated({ savedAmount: parsed })
         onClose()
