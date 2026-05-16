@@ -401,6 +401,8 @@ export const ja: Translations = {
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     saveDefaultRatio: 'デフォルト比率を保存',
     inviteCta: '相手を招待',
+    quickAccessRow: '個人と家計の設定',
+    avatarMenu: { title: 'あなたと家計' },
     sectionDisplay: '言語と通貨',
     language: '言語',
     currency: '通貨',

@@ -401,6 +401,8 @@ export const en: Translations = {
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
     saveDefaultRatio: 'Save default ratio',
     inviteCta: 'Invite partner',
+    quickAccessRow: 'Personal & group settings',
+    avatarMenu: { title: 'You & your group' },
     sectionDisplay: 'Language & Currency',
     language: 'Language',
     currency: 'Currency',

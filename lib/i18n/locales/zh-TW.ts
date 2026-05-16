@@ -521,6 +521,12 @@ export type Translations = {
     /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
     saveDefaultRatio: string
     inviteCta: string
+    /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
+    quickAccessRow: string
+    /** Header label for the avatar menu sheet (reserved). */
+    avatarMenu: {
+      title: string
+    }
     sectionDisplay: string
     language: string
     currency: string
@@ -1935,6 +1941,8 @@ export const zhTW: Translations = {
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
+    quickAccessRow: '個人與帳本設定',
+    avatarMenu: { title: '帳本與個人' },
     sectionDisplay: '語言 & 幣別',
     language: '語言',
     currency: '幣別',
