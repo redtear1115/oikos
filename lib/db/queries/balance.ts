@@ -69,7 +69,7 @@ export async function getGroupBalance(groupId: string): Promise<number> {
   const rows = await db.execute<{ balance: number }>(sql`
     SELECT balance FROM "GroupBalance" WHERE group_id = ${groupId} LIMIT 1
   `)
-  return rows[0]?.balance ?? 0
+  return Number(rows[0]?.balance ?? 0)
 }
 
 /**
@@ -108,5 +108,5 @@ export async function getGroupPendingBalanceDelta(groupId: string): Promise<numb
       AND deleted_at IS NULL
       AND status = 'pending'
   `)
-  return rows[0]?.delta ?? 0
+  return Number(rows[0]?.delta ?? 0)
 }
