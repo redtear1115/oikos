@@ -281,11 +281,13 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
       >
         <Link
           href={`/assets/${id}`}
-          className="flex items-start gap-3.5 px-5 py-4 no-underline"
+          className="flex items-start gap-3 px-[14px] py-3 no-underline"
           style={{ color: 'var(--ink)' }}
         >
+          {/* Match AssetListItem's 32×32 tint square — keeps insurance rows
+              at the same density as regular asset rows / records rows. */}
           <div
-            className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5 overflow-hidden"
+            className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5 overflow-hidden"
             style={{ background: tint, color: 'var(--ink-2)' }}
           >
             {data.policyHolderAvatarUrl ? (
@@ -293,26 +295,26 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
               <img
                 src={data.policyHolderAvatarUrl}
                 alt=""
-                width={40}
-                height={40}
+                width={32}
+                height={32}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
             ) : policyHolderInitial ? (
               <span
-                className="text-base font-semibold"
+                className="text-sm font-semibold"
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-serif)' }}
               >
                 {policyHolderInitial}
               </span>
             ) : (
-              <AssetIcon type="insurance" size={22} />
+              <AssetIcon type="insurance" size={18} />
             )}
           </div>
           {card}
         </Link>
         {showActionRow && (
-          <div className="flex gap-2 px-5 pb-4 -mt-1">
+          <div className="flex gap-2 px-[14px] pb-3 -mt-1">
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
