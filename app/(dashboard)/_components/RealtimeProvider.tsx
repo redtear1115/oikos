@@ -4,7 +4,15 @@ import { createContext, useCallback, useContext, useEffect, useRef } from 'react
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { REALTIME_SUBSCRIBE_STATES, RealtimePostgresChangesPayload } from '@supabase/realtime-js'
 import { createClient } from '@/lib/supabase/client'
-import type { RealtimeEvent, TxnRowPayload, SettleRowPayload, AssetRowPayload, FuelLogRowPayload, IncomeRowPayload } from '@/lib/realtime/event'
+import type { RealtimeEvent } from '@/lib/realtime/event'
+import {
+  parseTxnRow,
+  parseSettleRow,
+  parseAssetRow,
+  parseFuelLogRow,
+  parseIncomeRow,
+  parseBalanceUpdate,
+} from '@/lib/realtime/payload-schema'
 
 type PgPayload = RealtimePostgresChangesPayload<Record<string, unknown>>
 
@@ -73,9 +81,11 @@ export function RealtimeProvider({ groupId, children }: Props) {
         { event: '*', schema: 'public', table: 'CashTransactions', filter: `group_id=eq.${groupId}` },
         (payload: PgPayload) => {
           if (payload.eventType === 'INSERT') {
-            dispatch({ kind: 'txn-insert', row: rowFromPayload(payload.new) as TxnRowPayload })
+            const row = parseTxnRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'txn-insert', row })
           } else if (payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'txn-update', row: rowFromPayload(payload.new) as TxnRowPayload })
+            const row = parseTxnRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'txn-update', row })
           }
           // DELETE: we soft-delete, so DELETE events shouldn't fire. Hard delete via pg_cron fires DELETE
           // but those rows are >1yr stale and likely already off-screen. Ignore.
@@ -85,17 +95,19 @@ export function RealtimeProvider({ groupId, children }: Props) {
         { event: '*', schema: 'public', table: 'Settlements', filter: `group_id=eq.${groupId}` },
         (payload: PgPayload) => {
           if (payload.eventType === 'INSERT') {
-            dispatch({ kind: 'settle-insert', row: rowFromPayload(payload.new) as SettleRowPayload })
+            const row = parseSettleRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'settle-insert', row })
           } else if (payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'settle-update', row: rowFromPayload(payload.new) as SettleRowPayload })
+            const row = parseSettleRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'settle-update', row })
           }
         })
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'GroupBalance', filter: `group_id=eq.${groupId}` },
         (payload: PgPayload) => {
-          const b = payload.new as { balance: number; version: number }
-          dispatch({ kind: 'balance-change', balance: b.balance, version: b.version })
+          const parsed = parseBalanceUpdate(payload.new)
+          if (parsed) dispatch({ kind: 'balance-change', balance: parsed.balance, version: parsed.version })
         })
       // OikosGroups UPDATE fires when member_b is set after invite acceptance.
       // Dispatch group-updated so Dashboard can router.refresh() and re-derive MemberContext.
@@ -110,7 +122,8 @@ export function RealtimeProvider({ groupId, children }: Props) {
         { event: '*', schema: 'public', table: 'Assets', filter: `group_id=eq.${groupId}` },
         (payload: PgPayload) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'asset-changed', row: rowFromPayload(payload.new) as AssetRowPayload })
+            const row = parseAssetRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'asset-changed', row })
           }
           // DELETE: we soft-delete; hard delete via pg_cron only happens >1yr later. Ignore.
         })
@@ -121,17 +134,20 @@ export function RealtimeProvider({ groupId, children }: Props) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'FuelLogs' },
         (payload: PgPayload) => {
-          const row = payload.eventType === 'DELETE' ? payload.old : payload.new
-          dispatch({ kind: 'fuel-log-changed', row: rowFromPayload(row) as FuelLogRowPayload })
+          const raw = payload.eventType === 'DELETE' ? payload.old : payload.new
+          const row = parseFuelLogRow(rowFromPayload(raw))
+          if (row) dispatch({ kind: 'fuel-log-changed', row })
         })
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'IncomeTransactions', filter: `group_id=eq.${groupId}` },
         (payload: PgPayload) => {
           if (payload.eventType === 'INSERT') {
-            dispatch({ kind: 'income-insert', row: rowFromPayload(payload.new) as IncomeRowPayload })
+            const row = parseIncomeRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'income-insert', row })
           } else if (payload.eventType === 'UPDATE') {
-            dispatch({ kind: 'income-update', row: rowFromPayload(payload.new) as IncomeRowPayload })
+            const row = parseIncomeRow(rowFromPayload(payload.new))
+            if (row) dispatch({ kind: 'income-update', row })
           }
         })
       .on(

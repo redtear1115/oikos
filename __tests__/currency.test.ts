@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, convertAmount } from '@/lib/currency'
+import { CURRENCIES, type CurrencyCode, currencyPrecision, formatAmount, convertAmount, parseCurrencyCode } from '@/lib/currency'
 
 describe('CURRENCIES constant', () => {
   it('contains the four MVP currencies in canonical order', () => {
@@ -86,5 +86,36 @@ describe('convertAmount', () => {
 
   it('rounds half to nearest integer for integer target', () => {
     expect(convertAmount({ amount: 100, from: 'twd', to: 'jpy', rate: 4.995 })).toBe(500)
+  })
+})
+
+describe('parseCurrencyCode', () => {
+  it('accepts canonical lowercase codes', () => {
+    expect(parseCurrencyCode('twd')).toBe('twd')
+    expect(parseCurrencyCode('cny')).toBe('cny')
+    expect(parseCurrencyCode('usd')).toBe('usd')
+    expect(parseCurrencyCode('jpy')).toBe('jpy')
+  })
+
+  it('normalizes uppercase / mixed case to lowercase', () => {
+    expect(parseCurrencyCode('TWD')).toBe('twd')
+    expect(parseCurrencyCode('Usd')).toBe('usd')
+  })
+
+  it('returns null for unknown currency codes (free-text trip currencies, typos)', () => {
+    expect(parseCurrencyCode('eur')).toBeNull()
+    expect(parseCurrencyCode('vnd')).toBeNull()
+    expect(parseCurrencyCode('xyz')).toBeNull()
+  })
+
+  it('returns null for empty string', () => {
+    expect(parseCurrencyCode('')).toBeNull()
+  })
+
+  it('returns null for non-string inputs', () => {
+    expect(parseCurrencyCode(null)).toBeNull()
+    expect(parseCurrencyCode(undefined)).toBeNull()
+    expect(parseCurrencyCode(123)).toBeNull()
+    expect(parseCurrencyCode({})).toBeNull()
   })
 })

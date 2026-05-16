@@ -109,6 +109,38 @@ export function LeaveGroupFlow({
   const stepIndex = step === 'final' ? 5 : step === 'swap-sent' ? 5 : step
   const showStepIndicator = typeof step === 'number'
 
+  // Explicit step transitions for the numbered cards (1–3). Card 4 has
+  // role-specific branching handled inline. Returning the new step here
+  // (instead of `(step ± 1) as Step` math) keeps Step union narrow and
+  // type-safe — no cast required, and lifts the implicit "step is always 1/2/3
+  // when these handlers fire" assumption to an explicit switch.
+  const goBack = () => {
+    switch (step) {
+      case 1:
+        handleClose()
+        return
+      case 2:
+        setStep(1)
+        return
+      case 3:
+        setStep(2)
+        return
+    }
+  }
+  const goNext = () => {
+    switch (step) {
+      case 1:
+        setStep(2)
+        return
+      case 2:
+        setStep(3)
+        return
+      case 3:
+        setStep(4)
+        return
+    }
+  }
+
   return (
     <>
       <SheetBackdrop open={open} onClick={handleClose} />
@@ -204,10 +236,7 @@ export function LeaveGroupFlow({
           <div className="px-5 pb-5 pt-2 flex items-center justify-between gap-3 border-t" style={{ borderColor: 'var(--hairline)' }}>
             <button
               type="button"
-              onClick={() => {
-                if (step === 1) handleClose()
-                else setStep((step - 1) as Step)
-              }}
+              onClick={goBack}
               disabled={pending}
               className="h-11 px-4 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{
@@ -220,7 +249,7 @@ export function LeaveGroupFlow({
             </button>
             <button
               type="button"
-              onClick={() => setStep((step + 1) as Step)}
+              onClick={goNext}
               disabled={pending}
               className="h-11 px-5 rounded-[12px] text-sm font-semibold cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
