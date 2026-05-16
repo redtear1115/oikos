@@ -281,43 +281,67 @@ export function BalanceHero({
               </div>
             </div>
           ) : (
-            <div className="flex items-start gap-[14px]">
-              <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={44} />
-              <div className="flex-1 pt-[2px] min-w-0">
-                <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
+            // Expanded layout — amount gets its own full-width row so very large
+            // values (e.g. NT$ 999,999) don't crowd the action buttons; settle
+            // moves into the action row below the amount instead of sharing
+            // horizontal space with it. (Issue: hero amount overflow.)
+            <>
+              <div className="flex items-center gap-[14px]">
+                <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={44} />
+                <div className="flex-1 min-w-0 text-sm" style={{ color: 'var(--ink-2)' }}>
                   <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
                   <span>{verb}</span>
                 </div>
-                <div
-                  className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150"
-                  style={{
-                    fontFamily: 'var(--font-numeric)',
-                    fontSize: 'var(--fs-amount-lg)',
-                    fontWeight: 600,
-                    color: balanceColor,
-                    opacity: fading ? 0 : 1,
-                  }}
-                >
-                  {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
-                       needs `formatAmount` digits-only mode (or symbol/digits split). */}
-                  <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
-                  {amount.toLocaleString('en-US')}
-                </div>
-                {hasPending && (
-                  <BalanceViewToggle
-                    includePending={includePendingView}
-                    onToggle={toggleBalanceView}
-                    settledLabel={t.balanceHero.modeSettledLabel}
-                    pendingLabel={t.balanceHero.modeIncludePendingLabel}
-                    ariaLabel={t.balanceHero.modeToggleAriaLabel}
-                  />
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0 pt-[2px]">
-                {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} label={t.balanceHero.settleLabel} />}
                 <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
               </div>
-            </div>
+
+              <div
+                className="tnum leading-[1.05] tracking-[-1.4px] transition-opacity duration-150 mt-1.5"
+                style={{
+                  fontFamily: 'var(--font-numeric)',
+                  // clamp keeps the visual hierarchy on normal amounts while
+                  // shrinking gracefully on 7-digit balances so they fit a
+                  // 375px viewport without truncation.
+                  fontSize: 'clamp(40px, 12vw, 56px)',
+                  fontWeight: 600,
+                  color: balanceColor,
+                  opacity: fading ? 0 : 1,
+                }}
+              >
+                {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
+                     needs `formatAmount` digits-only mode (or symbol/digits split). */}
+                <span className="text-title font-medium mr-1" style={{ color: 'var(--ink-2)' }}>NT$</span>
+                {amount.toLocaleString('en-US')}
+              </div>
+
+              {(hasPending || canSettle) && (
+                <div
+                  className="mt-3 flex items-center gap-3"
+                  style={{
+                    justifyContent:
+                      hasPending && canSettle ? 'space-between' : hasPending ? 'flex-start' : 'flex-end',
+                  }}
+                >
+                  {hasPending && (
+                    <BalanceViewToggle
+                      includePending={includePendingView}
+                      onToggle={toggleBalanceView}
+                      settledLabel={t.balanceHero.modeSettledLabel}
+                      pendingLabel={t.balanceHero.modeIncludePendingLabel}
+                      ariaLabel={t.balanceHero.modeToggleAriaLabel}
+                    />
+                  )}
+                  {canSettle && (
+                    <SettleButton
+                      settleOpen={settleOpen}
+                      onToggle={() => setSettleOpen(v => !v)}
+                      ariaLabel={t.balanceHero.settleAriaLabel}
+                      label={t.balanceHero.settleLabel}
+                    />
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {settleOpen && canSettle && (
@@ -358,7 +382,7 @@ function BalanceViewToggle({
     <div
       role="group"
       aria-label={ariaLabel}
-      className="mt-2 inline-flex rounded-full"
+      className="inline-flex rounded-full"
       style={{
         border: '1px solid var(--hairline)',
         padding: 2,

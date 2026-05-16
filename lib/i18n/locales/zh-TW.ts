@@ -163,6 +163,14 @@ export type Translations = {
       multipleCta: string
       /** Aria label for the multi-trip card link — `{count}` the count. */
       multipleAriaLabel: string
+      /** Single-line CTA shown when there are no active trips. */
+      emptyCta: string
+      /** Aria label for the ✈ add-trip button. */
+      addAriaLabel: string
+      /** Aria label for the − collapse toggle. */
+      collapseAriaLabel: string
+      /** Aria label for the + expand toggle. */
+      expandAriaLabel: string
     }
   }
 
@@ -1669,6 +1677,10 @@ export const zhTW: Translations = {
       multipleHeading: '{count} 段旅行進行中',
       multipleCta: '一起翻 ›',
       multipleAriaLabel: '查看 {count} 段進行中的旅行',
+      emptyCta: '開始一段旅行',
+      addAriaLabel: '新增旅行',
+      collapseAriaLabel: '收合旅行卡',
+      expandAriaLabel: '展開旅行卡',
     },
   },
 
