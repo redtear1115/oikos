@@ -485,7 +485,7 @@ describe('endTrip — solo group', () => {
   })
 })
 
-describe('updateTrip — currencies + edit lock (#410)', () => {
+describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip)', () => {
   let activeRefs: SeedRefs | null = null
 
   afterEach(async () => {
@@ -529,7 +529,7 @@ describe('updateTrip — currencies + edit lock (#410)', () => {
     expect(after!.defaultCurrency).toBe('TWD')
   })
 
-  it('rejects when a used-currency rate is changed', async () => {
+  it('allows changing a used currency\'s rate mid-trip; existing TripExpense.amount untouched', async () => {
     const refs = await seedGroup()
     activeRefs = refs
     mockUserId = refs.userId
@@ -547,7 +547,7 @@ describe('updateTrip — currencies + edit lock (#410)', () => {
     })
     refs.tripIds.push(trip.id)
 
-    await createTripExpense({
+    const tripExpense = await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1000,
@@ -555,8 +555,9 @@ describe('updateTrip — currencies + edit lock (#410)', () => {
       category: '食',
       splitType: 'all_mine',
     })
+    const originalBaseAmount = tripExpense.amount  // 1000 * 0.22 = 220
 
-    await expect(updateTrip({
+    await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
@@ -565,10 +566,22 @@ describe('updateTrip — currencies + edit lock (#410)', () => {
           { code: 'JPY', label: null, rate: 0.25 },  // changed
         ],
       },
-    })).rejects.toThrow(/JPY 已有支出紀錄/)
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { entries: Array<{ code: string; rate: number }> }
+    expect(snap.entries.find(e => e.code === 'JPY')?.rate).toBe(0.25)
+
+    // Old TripExpense.amount stays — base integer was frozen at write time.
+    const [stored] = await db
+      .select({ amount: tripExpenses.amount })
+      .from(tripExpenses)
+      .where(eq(tripExpenses.id, tripExpense.id))
+      .limit(1)
+    expect(stored.amount).toBe(originalBaseAmount)
   })
 
-  it('rejects when a used currency is removed', async () => {
+  it('allows removing a used currency from the snapshot', async () => {
     const refs = await seedGroup()
     activeRefs = refs
     mockUserId = refs.userId
@@ -595,16 +608,20 @@ describe('updateTrip — currencies + edit lock (#410)', () => {
       splitType: 'all_mine',
     })
 
-    await expect(updateTrip({
+    await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
         entries: [{ code: 'TWD', label: null, rate: 1 }],
       },
-    })).rejects.toThrow(/JPY 已有支出紀錄/)
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { entries: Array<{ code: string }> }
+    expect(snap.entries.map(e => e.code)).toEqual(['TWD'])
   })
 
-  it('rejects when default is reassigned while default has expenses', async () => {
+  it('forces default = group.base_currency even if caller asks for something else', async () => {
     const refs = await seedGroup()
     activeRefs = refs
     mockUserId = refs.userId
@@ -622,25 +639,21 @@ describe('updateTrip — currencies + edit lock (#410)', () => {
     })
     refs.tripIds.push(trip.id)
 
-    // Expense in default (no `currency` field) → original_currency NULL.
-    await createTripExpense({
-      tripId: trip.id,
-      paidBy: refs.userId,
-      amount: 100,
-      category: '食',
-      splitType: 'all_mine',
-    })
-
-    await expect(updateTrip({
+    await updateTrip({
       tripId: trip.id,
       currencies: {
-        default: 'JPY',
+        default: 'JPY',  // ignored
         entries: [
           { code: 'TWD', label: null, rate: 4.5 },
           { code: 'JPY', label: null, rate: 1 },
         ],
       },
-    })).rejects.toThrow('預設幣別已有支出紀錄')
+    })
+
+    const after = await getTripById(trip.id)
+    const snap = after!.rateSnapshot as { default: string }
+    expect(snap.default).toBe('TWD')
+    expect(after!.defaultCurrency).toBe('TWD')
   })
 
   it('allows adding a new currency to a trip with existing expenses', async () => {

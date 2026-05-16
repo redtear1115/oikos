@@ -5,7 +5,8 @@ updates:
   - v0.17.2: Trip 從 tag-style (`CashTransactions.trip_id`) 改為 isolated sandbox (`TripExpenses` 獨立 table + `Trips.rate_snapshot` jsonb)，結束時 fold 回主帳本 2 筆 summary `CashTransactions`（PR 系列、closes #42 細項）
   - v0.17.2: 「幣別視角刻意分層」立場明文化，AddSheet 主帳本路徑移除 currency picker，多幣別只在 TripExpenseSheet 出現（PR #358 / #359）
   - v0.17.3: spec 重組，把 base_currency 設定 / locale 等「一次性設定」哲學切出至 [locale-currency](locale-currency-design.md)（#364）
-  - v0.17.4: 心理匯率從群組層搬進 trip — 建立旅程時自選 1–5 個幣別（含自訂 free-text 如 VND / EUR）並逐一設匯率；`Trips.rate_snapshot` jsonb 改為 `{default, entries[]}`；`CurrencyRates` 表標記 deprecated；TripSheet 編輯模式對已用幣別的 rate 鎖定（#410）
+  - v0.17.4: 心理匯率從群組層搬進 trip — 建立旅程時自選 1–5 個幣別（含自訂 free-text 如 VND / EUR）並逐一設匯率；`Trips.rate_snapshot` jsonb 改為 `{default, entries[]}`；`CurrencyRates` 表標記 deprecated（#410）
+  - v0.17.4 follow-up: trip-level default-currency picker 移除；`rate_snapshot.default` 一律等於 group `base_currency`（術語也統一為「基礎貨幣 / base currency」）；mid-trip 可改匯率，舊 `TripExpenses.amount` 不受影響；AddSheet 的 settled/pending toggle 在 trip 模式隱藏（migration 0041 回填舊 default 到 TripExpenses.original_currency 後 swap default = base）
 related_specs: [locale-currency, epoch-readonly, transactions, product]
 related_issues: ["#42", "#68", "#364", "#410"]
 ---
@@ -76,7 +77,7 @@ Futari 的目標 TA 是後者。「兩人共同對齊的一把尺」是商業立
 | 群組層 `CurrencyRates`（v0.17.3 及之前） | **Deprecated**：保留 schema 與 setRate action 供既有資料相容，新 trip 不再讀 | 一個 group 共用一張表的模型對「每趟旅行各自心理匯率」這個常見場景不夠靈活；v0.17.4 之後 trip 全部自帶匯率，CurrencyRates 進入廢棄路徑 |
 | Trip 建立時 | 由 TripSheet 直接寫入完整 `rate_snapshot` jsonb（`{default, entries[]}`） | 「凍結那段時間的匯率視角」——旅行進行中、即使主帳本層做了什麼，trip 內的換算永遠用這份 snapshot |
 | Trip 內 expense | 換算永遠用 `trip.rate_snapshot`，**不讀任何全域表** | FX 鎖在 trip 建立時；之後任何調整都不會 drift 已開始的 trip |
-| Trip 編輯時的鎖 | 已有 `TripExpenses` 的幣別其 rate / code 不可改、不可移除；default 幣別有支出時不可換指 | 已寫入的金額是用舊 rate 換算過的整數，改 rate 會讓歷史金額語意漂移 |
+| Trip 編輯時的鎖（v0.17.4 follow-up：拿掉了）| **無 lock**。已有 `TripExpenses` 的幣別其 rate / code 可改、可移除；UI 顯示「已記過 N 筆；改匯率不影響舊紀錄」當資訊性提示 | 既有 `TripExpenses.amount` 是已凍結的 base 整數、不會 retroactively 變動。鎖死沒有 protect 任何資料，反而擋住使用者修正錯估的匯率 |
 | 主帳本歷史 record | v0.17.0 schema 保留 `CashTransactions.{original_currency, original_amount, rate_snapshot}` 三欄作為 write-time snapshot | 早期 tag-style 路徑的歷史紀錄相容；snapshot 語意一致——改 rate 後過去 record 等值不變 |
 | 精度 | 心理匯率 `numeric(10,3)`、最小 0.001 | 「夠用」精度；避免讓使用者覺得需要會計級嚴謹 |
 
@@ -92,11 +93,12 @@ Futari 的目標 TA 是後者。「兩人共同對齊的一把尺」是商業立
 
 | 維度 | 決定 | 理由 |
 |---|---|---|
-| Trip 幣別組成（v0.17.4+） | TripSheet 建立 / 編輯時自選 **1–5 個幣別**（4 preset checkbox + 「+ 自訂幣別」free-text row）+ 挑一個當 `default` | 多幣別只發生在旅行邊界、且每趟用到的幣別組合不同；按 trip 自選比群組層全域設定更貼用戶 mental model |
+| Trip 幣別組成（v0.17.4+） | TripSheet 建立 / 編輯時自選 **1–5 個幣別**（4 preset checkbox + 「+ 自訂幣別」free-text row）；**沒有 default picker** — `rate_snapshot.default` 一律 = group `base_currency`（v0.17.4 follow-up） | 「trip 的基礎貨幣」與「主帳本的基礎貨幣」是同一回事；多一層 default 切換只是讓使用者多做一次決定、然後在 fold 時又收回 base，沒帶來實值 |
 | 自訂幣別 code | **Free-text**（uppercase、最長 16 字元）— 名字不是重點，能換算即可 | 想接住 VND / EUR / KRW 等非預設幣別，又不想讓 enum / i18n / symbol 字典爆開；display 用 raw code fallback |
-| `Trips.default_currency` 欄位 | mirror `rate_snapshot.default`、free-text；建立時若不指定取 group `base_currency` | 提供 query convenience，但真實 source of truth 在 jsonb |
-| TripExpenseSheet currency | currency picker 列**該 trip 的 entries**（≤ 5 個），預設 `trip.default_currency` | 邊界 context、複雜度允許出現；但只看這趟用到的幣別、不再固定 4 種 |
+| `Trips.default_currency` 欄位 | mirror `rate_snapshot.default`（一律 = base） | 提供 query convenience；真實 source of truth 在 jsonb |
+| TripExpenseSheet currency | currency picker 列**該 trip 的 entries**（≤ 5 個），預設 base | 邊界 context、複雜度允許出現；但只看這趟用到的幣別、不再固定 4 種 |
 | Trip 結束 fold 後的 summary | 強制 base 幣別 | 主帳本永遠單幣別 |
+| Mid-trip 改匯率（v0.17.4 follow-up） | 允許 — `TripExpenses.amount` 是寫入時凍結的 base 整數，事後改 rate 不會 retroactively 變動；新紀錄用新 rate | 「兩人對齊的一把尺」也會隨經驗微調（看完報表覺得抓太低 / 太高）；既有金額既然已凍結就讓使用者調 rate 而不必刪重記 |
 
 ### 主帳本（非 trip context）
 
@@ -248,15 +250,15 @@ Trip 結束時 (`actions/trip.ts#endTrip`)：
 
 兩種 snapshot 都遵守同一個立場：**改 rate 後過去等值不變**。
 
-#### 2.4 Trip 編輯時的鎖（v0.17.4+）
+#### 2.4 Mid-trip 改匯率（v0.17.4 follow-up）
 
-`actions/trip.ts#updateTrip` 收到 `currencies` payload 時，先以 `TripExpenses` 的 `original_currency` group-by 計數，然後：
+之前版本（v0.17.4 initial）對 used currencies 強制 rate-lock；後來改回**允許自由編輯**：
 
-- 任何 `count(originalCurrency = X) > 0` 的 X：rate 不可動、code 不可改、不可從 entries 移除
-- `count(originalCurrency IS NULL) > 0`（= 有 expense 寫在 default 幣別）：default 不可換指
-- 不在 used 集合內的幣別仍可自由 add / remove / 改 rate / 改 label
+- 改 rate → 既有 `TripExpenses.amount` 不動（早就凍結成 base 整數），只影響之後新增的紀錄
+- 移除幣別 → 該幣別歷史 expense 仍可顯示 native amount（從 `original_amount` + `original_currency` 讀），base amount 早就算過、不會壞
+- UI 仍會抓 `countTripExpensesByCurrency(tripId)` 回填 `usedCurrencyCounts`，但**只當資訊性 hint**（「已記過 N 筆；改匯率不影響舊紀錄」），不再 disable 任何控件
 
-UI 對應：TripSheet edit 模式撈 `countTripExpensesByCurrency(tripId)` 當 `usedCurrencyCounts` prop，已用 row 的 rate input / checkbox / remove button / default radio 各自 disable，旁邊小字「已記過 N 筆，先刪除才能改」。
+理由：實際使用情境是「來日本一週，第三天才發現匯率抓錯了」 — 鎖死只是擋使用者修正、卻沒 protect 任何資料完整性。
 
 ---
 

@@ -599,9 +599,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             <DateField value={date} onChange={setDate} open={open} />
           </div>
 
-          {/* Status (settled / pending). Hidden in pending-confirm mode: the
-              recurring-expense confirm flow always lands a settled record. */}
-          {!isPending && (
+          {/* Status (settled / pending). Hidden in:
+              - pending-confirm mode (recurring-expense confirm lands settled)
+              - trip mode (#410: TripExpenses have no `status` column; all rows
+                are settled by design — surfacing the toggle would lie). */}
+          {!isPending && !tripId && (
             <div className="px-5 pt-1 pb-2">
               <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.statusLabel}

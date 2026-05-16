@@ -169,16 +169,25 @@ export function buildSnapshotFromCurrencyRates(
 /**
  * Sanitize + validate a snapshot received from the client. Throws on invalid
  * input. Codes are uppercased and trimmed; labels are trimmed (empty → null).
+ *
+ * When `requiredDefault` is supplied (now mandatory at all callsites since the
+ * trip-default picker was removed), the snapshot's default code is overridden
+ * to match and an entry with rate=1 is auto-inserted if absent. This enforces
+ * the invariant "trip default == group base_currency" at the validation layer.
  */
-export function validateTripCurrencySnapshot(input: unknown): TripCurrencySnapshot {
+export function validateTripCurrencySnapshot(
+  input: unknown,
+  requiredDefault?: string,
+): TripCurrencySnapshot {
   if (!input || typeof input !== 'object') throw new Error('幣別資料缺失')
   const obj = input as Record<string, unknown>
-  if (typeof obj.default !== 'string' || !obj.default.trim()) {
-    throw new Error('預設幣別未指定')
+  const forced = requiredDefault?.trim().toUpperCase() || null
+  if (!forced && (typeof obj.default !== 'string' || !obj.default.trim())) {
+    throw new Error('基礎貨幣未指定')
   }
   if (!Array.isArray(obj.entries)) throw new Error('幣別列表缺失')
 
-  const defaultCode = obj.default.trim().toUpperCase()
+  const defaultCode = forced ?? (obj.default as string).trim().toUpperCase()
   if (defaultCode.length > 16) throw new Error('幣別代碼過長')
 
   const entries: TripCurrencyEntry[] = []
@@ -205,9 +214,18 @@ export function validateTripCurrencySnapshot(input: unknown): TripCurrencySnapsh
     seenCodes.add(code)
   }
 
+  // Ensure the base/default currency is always present in entries.
+  if (!seenCodes.has(defaultCode)) {
+    if (forced) {
+      entries.unshift({ code: defaultCode, label: null, rate: 1 })
+      seenCodes.add(defaultCode)
+    } else {
+      throw new Error('基礎貨幣不在列表中')
+    }
+  }
+
   if (entries.length < 1) throw new Error('至少需要一個幣別')
   if (entries.length > 5) throw new Error('最多 5 個幣別')
-  if (!seenCodes.has(defaultCode)) throw new Error('預設幣別不在列表中')
 
   // Force default entry's rate to exactly 1.
   for (const entry of entries) {

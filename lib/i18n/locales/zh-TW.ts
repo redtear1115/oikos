@@ -283,8 +283,6 @@ export type Translations = {
       rateInvalid: string
       /** Inline error under a rate input that is blank or non-positive. */
       rateInvalidInline: string
-      /** Inline error when the default code is not present in entries. */
-      defaultMissing: string
       /** Soft toast-style error when the user tries to exceed MAX_ENTRIES.
        *  `{max}` is the cap (5). */
       maxCurrencies: string
@@ -309,18 +307,16 @@ export type Translations = {
     addCustomCta: string
     /** Bottom-of-sheet reassurance about how trip-tagged expenses are routed. */
     footerNote: string
-    /** Inline hint under the rate input showing the inverse direction. */
+    /** Inline hint under the rate input showing the inverse direction.
+     *  `{default}` is the base currency code. */
     rateInverseFormat: string
-    /** Inline pill on the default currency's header row. */
-    defaultPill: string
-    /** Chip label when this row is already the default. */
-    chipIsDefault: string
-    /** Chip label to set this row as the default. */
-    chipSetDefault: string
-    /** Lock note: "{n} 筆..." — `{n}` is the count of TripExpenses using this code. */
+    /** Pill on the base currency's header row — base is always present and
+     *  is the trip's reference currency (no longer user-switchable). */
+    basePill: string
+    /** Soft note shown beneath a non-base currency row when there are already
+     *  TripExpenses recorded against it. `{n}` is the count. Reassures that
+     *  rate edits only affect future records. */
     usedCountNote: string
-    /** Lock note when the default currency already has expenses. */
-    defaultLockedNote: string
     customRow: {
       /** Aria label on the custom-row code input. */
       codeAriaLabel: string
@@ -1753,7 +1749,6 @@ export const zhTW: Translations = {
       codeDuplicate: '幣別不可重複',
       rateInvalid: '匯率必須是正數',
       rateInvalidInline: '請輸入大於 0 的匯率',
-      defaultMissing: '預設幣別不在列表中',
       maxCurrencies: '最多 {max} 個幣別',
     },
     nameLabel: '名稱',
@@ -1762,16 +1757,13 @@ export const zhTW: Translations = {
     endDateLabel: '結束日（可選）',
     endBeforeStart: '結束日不可早於起始日',
     currenciesSectionTitle: '幣別與匯率',
-    currenciesHint: '勾選這趟用得到的幣別，挑一個當預設。每行填「1 個此幣別 = 幾個預設幣別」(例：1 JPY ≈ 0.2 TWD)。',
+    currenciesHint: '勾選這趟用得到的幣別。每行填「1 個此幣別 = 幾個基礎貨幣」(例：1 JPY ≈ 0.2 TWD)。改了匯率，舊紀錄保留當時的金額，只影響之後新增的紀錄。',
     currencyCountFormat: '{n} / {max}',
     addCustomCta: '+ 自訂幣別',
     footerNote: '這趟期間記錄的支出，會自動掛在這次旅行底下。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
-    defaultPill: '預設',
-    chipIsDefault: '已是預設',
-    chipSetDefault: '設為預設',
-    usedCountNote: '已記過 {n} 筆，先刪除才能改',
-    defaultLockedNote: '已有支出，無法變更預設',
+    basePill: '基礎貨幣',
+    usedCountNote: '已記過 {n} 筆；改匯率不影響舊紀錄',
     customRow: {
       codeAriaLabel: '幣別代碼',
       codePlaceholder: 'VND',

@@ -2,45 +2,42 @@
 
 import { db } from '@/lib/db/client'
 import { trips, groupEpochs, tripExpenses, cashTransactions } from '@/lib/db/schema'
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { buildTripSummaries } from '@/lib/tripSummary'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
-  parseTripCurrencySnapshot,
   validateTripCurrencySnapshot,
   type TripCurrencySnapshot,
 } from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
 
 /**
- * Build the rate_snapshot for a fresh trip. The caller passes an explicit
- * currencies payload (the new TripSheet UI); when omitted we degrade to a
- * trivial single-entry snapshot whose only currency is the trip's `default`
- * (which itself defaults to the group's base currency). This keeps single-
- * currency trips simple and removes the prior dependency on the deprecated
- * CurrencyRates table.
+ * Build the rate_snapshot for a fresh trip. The default currency is always the
+ * group's `base_currency` (the trip-level default picker was removed — see
+ * #410 follow-up). When `explicit` is provided, its `default` field is ignored
+ * and overridden to `baseCurrency`; a base entry with rate=1 is auto-inserted
+ * if missing. When omitted, we emit a trivial single-entry snapshot with base.
  */
 function resolveRateSnapshot(
-  defaultCode: string,
+  baseCurrency: string,
   explicit: TripCurrencySnapshot | undefined,
 ): TripCurrencySnapshot {
-  if (explicit) return validateTripCurrencySnapshot(explicit)
-  const def = defaultCode.toUpperCase()
-  return { default: def, entries: [{ code: def, label: null, rate: 1 }] }
+  const base = baseCurrency.toUpperCase()
+  if (explicit) return validateTripCurrencySnapshot(explicit, base)
+  return { default: base, entries: [{ code: base, label: null, rate: 1 }] }
 }
 
 export interface CreateTripInput {
   name: string
   startDate: string  // ISO 'YYYY-MM-DD'
   endDate?: string | null
-  defaultCurrency?: string | null
   budgetAmount?: number | null
   budgetCurrency?: string | null
   /**
-   * Explicit currency / rate selection from the TripSheet UI. When omitted,
-   * the trip is created as a single-currency trip in `defaultCurrency` (or the
-   * group's base currency if that's also omitted).
+   * Explicit currency / rate selection from the TripSheet UI. The `default`
+   * field, if present, is ignored — the trip's default always equals the
+   * group's base currency. When omitted, the trip starts as base-only.
    */
   currencies?: TripCurrencySnapshot
 }
@@ -67,8 +64,7 @@ export async function createTrip(input: CreateTripInput) {
     .limit(1)
   if (!currentEpoch) throw new Error('找不到當前章節')
 
-  const defaultCode = (input.defaultCurrency ?? group.baseCurrency).toUpperCase()
-  const rateSnapshot = resolveRateSnapshot(defaultCode, input.currencies)
+  const rateSnapshot = resolveRateSnapshot(group.baseCurrency, input.currencies)
 
   const [inserted] = await db
     .insert(trips)
@@ -166,21 +162,19 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
   return updated
 }
 
-const RATE_EPSILON = 1e-6
-
 export async function updateTrip(input: {
   tripId: string
   name?: string
   startDate?: string
   endDate?: string | null
-  defaultCurrency?: string | null
   budgetAmount?: number | null
   budgetCurrency?: string | null
   /**
-   * When provided, replaces the trip's rate_snapshot. Guards: any currency
-   * already used by a TripExpense (incl. the default if expenses exist with
-   * NULL original_currency) cannot be removed or have its rate changed, and
-   * the default cannot be reassigned while expenses exist.
+   * When provided, replaces the trip's rate_snapshot. The default is always
+   * forced to `group.base_currency` (the trip-level default picker was removed
+   * — see #410 follow-up). Rates can be edited mid-trip; existing
+   * TripExpenses.amount stays as already-stored base integers, so editing
+   * rates only affects future records.
    */
   currencies?: TripCurrencySnapshot
 }) {
@@ -197,82 +191,20 @@ export async function updateTrip(input: {
     .limit(1)
   if (!existing) throw new Error('找不到旅行')
 
-  const { tripId, defaultCurrency, budgetCurrency, currencies, ...rest } = input
+  const { tripId, budgetCurrency, currencies, ...rest } = input
   const patch: Record<string, unknown> = { ...rest }
   if (budgetCurrency !== undefined) {
     patch.budgetCurrency = budgetCurrency ? budgetCurrency.toUpperCase() : null
   }
 
   if (currencies !== undefined) {
-    const validated = validateTripCurrencySnapshot(currencies)
-    const oldSnap = parseTripCurrencySnapshot(
-      existing.rateSnapshot,
-      existing.defaultCurrency ?? group.baseCurrency,
-    )
-
-    // Determine which currencies have expenses recorded. NULL original_currency
-    // means an expense in the OLD default; track that as a "default has expenses" flag.
-    const usedCounts = await db
-      .select({
-        currency: tripExpenses.originalCurrency,
-        n: sql<number>`count(*)::int`,
-      })
-      .from(tripExpenses)
-      .where(and(
-        eq(tripExpenses.tripId, tripId),
-        isNull(tripExpenses.deletedAt),
-      ))
-      .groupBy(tripExpenses.originalCurrency)
-
-    const usedExplicitCodes = new Set<string>()
-    let defaultHasExpenses = false
-    for (const row of usedCounts) {
-      if (Number(row.n) <= 0) continue
-      if (row.currency == null) {
-        defaultHasExpenses = true
-      } else {
-        usedExplicitCodes.add(row.currency.toUpperCase())
-      }
-    }
-
-    if (defaultHasExpenses && oldSnap.default !== validated.default) {
-      throw new Error('預設幣別已有支出紀錄，無法變更')
-    }
-
-    const newByCode = new Map(validated.entries.map(e => [e.code, e]))
-    const oldByCode = new Map(oldSnap.entries.map(e => [e.code, e]))
-
-    for (const used of usedExplicitCodes) {
-      if (!newByCode.has(used)) {
-        throw new Error(`${used} 已有支出紀錄，無法移除`)
-      }
-      const oldEntry = oldByCode.get(used)
-      const newEntry = newByCode.get(used)!
-      if (oldEntry && Math.abs(oldEntry.rate - newEntry.rate) > RATE_EPSILON) {
-        throw new Error(`${used} 已有支出紀錄，無法變更匯率`)
-      }
-    }
-
+    // validateTripCurrencySnapshot ensures default = base, base entry exists,
+    // and rates are positive. We don't enforce a used-currency rate lock any
+    // more — rate edits only affect future writes; historical TripExpenses.amount
+    // (base integer) stays as-is.
+    const validated = validateTripCurrencySnapshot(currencies, group.baseCurrency)
     patch.rateSnapshot = validated
     patch.defaultCurrency = validated.default
-  } else if (defaultCurrency !== undefined) {
-    // Currencies not supplied — bare defaultCurrency rename. Keep the snapshot
-    // structurally intact: just relabel the `default` field if the new default
-    // is already an entry; otherwise reject.
-    const next = defaultCurrency ? defaultCurrency.toUpperCase() : null
-    if (next) {
-      const snap = parseTripCurrencySnapshot(
-        existing.rateSnapshot,
-        existing.defaultCurrency ?? group.baseCurrency,
-      )
-      if (!snap.entries.some(e => e.code === next)) {
-        throw new Error('預設幣別不在幣別列表中')
-      }
-      patch.defaultCurrency = next
-      patch.rateSnapshot = { ...snap, default: next }
-    } else {
-      patch.defaultCurrency = null
-    }
   }
 
   const [updated] = await db
