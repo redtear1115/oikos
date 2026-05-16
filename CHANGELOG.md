@@ -15,6 +15,46 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [0.17.4] - 2026-05-16
+
+主題：**旅行幣別 self-serve．Settings 結構收束．子頁面語言對齊**——v0.17.0 把多幣別 × 旅行的骨架立起來、v0.17.2 把旅行子帳本收斂完成，這版把「幣別 self-serve」最後一哩補齊：trip 自己挑要追蹤哪些幣別（不再綁 group base），AddSheet 在 trip context 出現對應的 currency picker，TripSheet 從 schema → UI → a11y/touch → 視覺密度 → 文案方向（rate direction）完整 polish 一輪，detail page 改成「fold preview 在上、per-currency × per-member 在下」更好掃讀。Settings 同步做了一輪結構收束——recurring 收入/支出合併成一個 tab 入口、帳本 vs 預設分攤拆成兩個 section、display/data 群組整理、subpage header + FAB 規則統一（extract `SubpageHeader` 共用於 /trips 與 Settings 子頁）。其他細修：愛物列表密度對齊 /records、a11y 多處（SplitTypeSelector、AssetSheet Field、InsuranceListItem、manifest）、SEO（metadata × JSON-LD × noindex × hreflang）、AddSheet reset deps 穩定化、i18n locale key coverage 加 test gate。
+
+完整 diff：[v0.17.3...v0.17.4](https://github.com/redtear1115/oikos/compare/v0.17.3...v0.17.4)
+
+### 使用者可見變化
+
+#### 旅行幣別 self-serve（#410 epic + follow-ups）
+
+- **Trip-scoped self-serve currencies**：每段旅行可自選要追蹤哪些原始幣別（不再綁 group base 衍生），schema foundation + 設定 UI 在 TripSheet 內（#410：2b90c7e、757f4db）。
+- **AddSheet trip-scoped currency picker**：在 trip context 開啟 AddSheet 時，currency picker 只列該 trip 已啟用的幣別，並附 snapshot-based preview（#410：9fb2a54）。
+- **Trip default = base currency + mid-trip rate edits**：新增 trip 時預設幣別 = group base、旅行進行中也能調整心理匯率（既有記錄維持 rate_snapshot 不動，新記錄套新匯率）（#410 fu：edd3a52）。
+- **退場全域匯率 UI**：Settings 不再放心理匯率入口（v0.17.3 已從頂層移到 trip 詳情；這版徹底退掉相關 global UI），點過去的位置會回引到 trips（#410：27f7334）。
+- **TripSheet 視覺與互動全面 polish**：a11y/touch target 補齊 + header hoist（c4ea75f）、視覺密度 + i18n 全 hoist（bc49a79）、rate direction 文案釐清「from → to」（99083e2）、edit 操作收到 header pencil + end-trip 走 destructive 確認流程（4bdaf48）、ended trip 隱藏 edit/end CTA（c02e0f5）、trip 詳情按返回回到原本進入頁面（0111036）。
+- **Trip detail page 結構**：上半部 fold 出 preview，下半部用 per-currency × per-member 兩軸鋪開，混幣別 + 雙人 trip 一眼看完支出輪廓（3bc6a9d）。
+
+#### Settings 結構收束
+
+- **Recurring 收入 / 支出合併成一個 tab 入口**：原本兩個分散入口收進同一頁，tab 切換 支出 / 收入；income tab FAB 改用收入綠以區隔（34d4608、0db199e）。
+- **帳本 vs 預設分攤拆兩個 section**：`帳本` section 只放 group-level 設定，`預設分攤方式` 獨立成自己的 section，視覺與語意都更清楚（2b66144、3ae3a14、3b085fb、461118c）。
+- **Display / data 群組整理**：把 display 與 data 兩類設定 row 重新分群、消掉冗餘 subtitle（b8c5537）。
+- **子頁 header + FAB 規則統一**：abstracted `SubpageHeader` 元件，/trips 與 Settings 各子頁共用同一個 header pattern；FAB 規則對齊（#402：9367e99；#411：7b88746）。
+
+#### 愛物列表細修
+
+- **行高密度對齊 /records**：愛物列表 row 從原本較寬鬆密度收緊到與 /records 一致（eea00c3）。
+- **標題位置對齊**：頁面標題 vertical 對齊 /settings 與 /records 的位置（e60e566）。
+
+#### 其他修正
+
+- **a11y 多處補強**：SplitTypeSelector、AssetSheet Field、InsuranceListItem、PWA manifest（00c8257）。
+- **SEO 清理**：metadata / JSON-LD / noindex / hreflang 統一收斂（5c40c3d）。
+- **AddSheet 穩定化**：reset 依賴穩定化 + setTimeout 清理，避免 stale closure 與 timer leak（#386、#387：e0ce4c1）。
+
+### 技術變更
+
+- **i18n locale key coverage test**：新增 vitest test 確保 4 個 locale（zh-TW / zh-CN / en / ja）key 集合一致，遺漏會在 CI 擋下（#379：eaf4a41）。
+- **文件結構**：版本歷史表從 CLAUDE.md 搬到 README，CLAUDE.md 只保留 `Latest released` 單行 pointer（#423：9b6028f）。
+
 ## [0.17.3] - 2026-05-15
 
 主題：**Settings 收束 × 旅行感知 × AddSheet 守護分層．細節讓操作更貼手**——四個獨立改善讓使用者在三個地方少一步：Settings 把「語言」與「主體幣別」合在同一區（都是選一次就好的初始設定）、心理匯率從 Settings 頂層移進旅行詳情頁（匯率設定只在旅行 context 有意義）、Dashboard 在有 active trip 時浮出 ActiveTripBanner（主動告訴你有段旅行在進行）、AddSheet 的愛物選擇器在 Guardian beta 開啟時拆成愛物 / 守護兩個 tab（讓兩個模組各自清晰）。Spec 層面同步收束：原本混在一起的「多幣別 × 旅行」與「i18n」拆成兩份各自立場清晰的 spec（[trip-multi-currency](docs/superpowers/specs/trip-multi-currency-design.md)「邊界複雜，日常無感」、[locale-currency](docs/superpowers/specs/locale-currency-design.md)「保持簡單，選一次就好」）。
@@ -941,7 +981,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.4...HEAD
+[0.17.4]: https://github.com/redtear1115/oikos/compare/v0.17.3...v0.17.4
 [0.17.3]: https://github.com/redtear1115/oikos/compare/v0.17.2...v0.17.3
 [0.17.2]: https://github.com/redtear1115/oikos/compare/v0.17.1...v0.17.2
 [0.17.1]: https://github.com/redtear1115/oikos/compare/v0.17.0...v0.17.1
