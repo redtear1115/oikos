@@ -272,6 +272,10 @@ export const ja: Translations = {
     endFailure: '終了に失敗しました',
     editAriaLabel: 'この旅を編集',
     endIrreversibleNote: '締めたあとは戻せません — 支出はすべて、まとめて主帳簿に戻ります。',
+    totalLabel: 'この旅の合計',
+    baseCurrencyTag: '基準 {code}',
+    baseCurrencyTagTitle: 'この旅はこの通貨で精算します',
+    recordsCountLabel: '記録 · {n} 件',
   },
 
   incomeSheet: {

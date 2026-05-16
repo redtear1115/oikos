@@ -272,6 +272,10 @@ export const zhCN: Translations = {
     endFailure: '结束失败',
     editAriaLabel: '编辑这趟旅行',
     endIrreversibleNote: '结束之后无法复原。这趟的支出会以总结算的形式回到主账本。',
+    totalLabel: '这趟一共花了',
+    baseCurrencyTag: '基础货币 {code}',
+    baseCurrencyTagTitle: '这趟以这个币别结算',
+    recordsCountLabel: '这趟的记录 · {n} 笔',
   },
 
   incomeSheet: {

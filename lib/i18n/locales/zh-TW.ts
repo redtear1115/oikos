@@ -377,6 +377,14 @@ export type Translations = {
     /** Red-tinted warning shown above the end-trip date picker — emphasises
      *  that ending writes a summary into the main ledger and cannot be undone. */
     endIrreversibleNote: string
+    /** Tiny label above the trip total in the top fold-preview card. */
+    totalLabel: string
+    /** Pill on the top card showing this trip's settlement currency. `{code}` is the base code. */
+    baseCurrencyTag: string
+    /** Title attribute on the base currency pill. */
+    baseCurrencyTagTitle: string
+    /** Section header above the records list. `{n}` is the record count. */
+    recordsCountLabel: string
   }
 
   incomeSheet: {
@@ -1797,6 +1805,10 @@ export const zhTW: Translations = {
     endFailure: '結束失敗',
     editAriaLabel: '編輯這趟旅行',
     endIrreversibleNote: '結束之後無法復原。這趟的支出會以總結算的形式回到主帳本。',
+    totalLabel: '這趟一共花了',
+    baseCurrencyTag: '基礎貨幣 {code}',
+    baseCurrencyTagTitle: '這趟以這個幣別結算',
+    recordsCountLabel: '這趟的紀錄 · {n} 筆',
   },
 
   incomeSheet: {

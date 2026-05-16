@@ -12,7 +12,8 @@ import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shar
 import { TripSheet, type TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
 import { endTrip } from '@/actions/trip'
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
-import { transactionDelta, type SplitType } from '@/lib/balance'
+import type { SplitType } from '@/lib/balance'
+import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useTranslations } from '@/lib/i18n/client'
 
 export interface TripDetailRecord {
@@ -51,68 +52,73 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
   // the same condition: not in a past epoch and the trip is still active.
   // Server actions reject writes too — UI hide is the primary defence.
   const writeBlocked = isPast || isEnded
-  const totalBase = records.reduce((sum, r) => sum + r.amount, 0)
-  const displayCurrency = trip.defaultCurrency ?? baseCurrency
-  const usesForeignDefault = displayCurrency !== baseCurrency
 
-  // Per-currency breakdown. Each row groups records by their `originalCurrency`
-  // (base-currency rows fall into the `baseCurrency` bucket). We surface both
-  // the native total and the base-currency equivalent so the bicultural reader
-  // can read either side. Shown only when the trip has > 1 currency.
-  const currencyBreakdown = useMemo(() => {
-    const map = new Map<string, { native: number; base: number; count: number }>()
-    for (const r of records) {
-      const cur = (r.originalCurrency ?? baseCurrency) as string
-      const native = r.originalAmount ?? r.amount
-      const entry = map.get(cur) ?? { native: 0, base: 0, count: 0 }
-      entry.native += native
-      entry.base += r.amount
-      entry.count += 1
-      map.set(cur, entry)
+  // Per-currency aggregation. For each currency the trip uses (base + any
+  // foreign), we accumulate:
+  //   - native total / base equivalent / record count
+  //   - per-side paid / share in the row's *native* unit
+  //   - per-side paid / share in *base* unit (used for the top fold-preview)
+  //
+  // Both views walk the same record set; doing them in one pass keeps the
+  // code honest about what each number means.
+  const { byCurrency, perSideBase, totalBase } = useMemo(() => {
+    interface CurrencyAgg {
+      currency: string
+      native: number      // sum of original_amount (or amount when base)
+      base: number        // sum of amount (base integer)
+      count: number
+      aPaidNative: number
+      bPaidNative: number
+      aShareNative: number
+      bShareNative: number
     }
-    return Array.from(map.entries())
-      .map(([currency, agg]) => ({ currency: currency as CurrencyCode, ...agg }))
-      .sort((a, b) => b.base - a.base)
-  }, [records, baseCurrency])
+    const map = new Map<string, CurrencyAgg>()
+    let totalBaseSum = 0
+    let aPaidBase = 0
+    let bPaidBase = 0
+    let aShareBase = 0
+    let bShareBase = 0
 
-  // Per-side contribution: how much each member actually paid out of pocket
-  // vs. how much they carry after splits. Mirrors lib/balance.transactionDelta
-  // so this view agrees with the group balance. Solo mode skips the block.
-  // TripExpenses have no `status` column — all rows are settled by design,
-  // so we don't filter the way the main ledger does.
-  const perSide = useMemo(() => {
-    if (isSolo || !partner) return null
-    let aPaid = 0
-    let bPaid = 0
-    let aShare = 0
-    let bShare = 0
     for (const r of records) {
+      const cur = (r.originalCurrency ?? baseCurrency).toUpperCase()
+      const native = r.originalAmount ?? r.amount
       const payerIs: 'a' | 'b' = r.paidBy === viewer.id
         ? (viewerIsA ? 'a' : 'b')
         : (viewerIsA ? 'b' : 'a')
-      if (payerIs === 'a') aPaid += r.amount
-      else bPaid += r.amount
-      const delta = transactionDelta({
-        amount: r.amount,
-        splitType: r.splitType as SplitType,
-        payerIs,
-        splitRatioA: r.splitRatioA ?? undefined,
-      })
-      if (payerIs === 'a') {
-        aShare += r.amount - delta
-        bShare += delta
-      } else {
-        bShare += r.amount + delta
-        aShare += -delta
+      const aShareFrac = aShareFraction(r.splitType as SplitType, r.splitRatioA, payerIs)
+
+      const entry = map.get(cur) ?? {
+        currency: cur,
+        native: 0, base: 0, count: 0,
+        aPaidNative: 0, bPaidNative: 0, aShareNative: 0, bShareNative: 0,
       }
+      entry.native += native
+      entry.base += r.amount
+      entry.count += 1
+      if (payerIs === 'a') entry.aPaidNative += native
+      else entry.bPaidNative += native
+      entry.aShareNative += native * aShareFrac
+      entry.bShareNative += native * (1 - aShareFrac)
+      map.set(cur, entry)
+
+      totalBaseSum += r.amount
+      if (payerIs === 'a') aPaidBase += r.amount
+      else bPaidBase += r.amount
+      aShareBase += r.amount * aShareFrac
+      bShareBase += r.amount * (1 - aShareFrac)
     }
-    return {
-      viewerPaid: viewerIsA ? aPaid : bPaid,
-      partnerPaid: viewerIsA ? bPaid : aPaid,
-      viewerShare: viewerIsA ? aShare : bShare,
-      partnerShare: viewerIsA ? bShare : aShare,
+
+    const byCur = Array.from(map.values()).sort((a, b) => b.base - a.base)
+
+    const perSideBase = (isSolo || !partner) ? null : {
+      viewerPaid: viewerIsA ? aPaidBase : bPaidBase,
+      partnerPaid: viewerIsA ? bPaidBase : aPaidBase,
+      viewerShare: Math.round(viewerIsA ? aShareBase : bShareBase),
+      partnerShare: Math.round(viewerIsA ? bShareBase : aShareBase),
     }
-  }, [records, isSolo, partner, viewer.id, viewerIsA])
+
+    return { byCurrency: byCur, perSideBase, totalBase: totalBaseSum }
+  }, [records, baseCurrency, isSolo, partner, viewer.id, viewerIsA])
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
@@ -199,30 +205,72 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         </div>
       </div>
 
+      {/* Top section — end-trip fold preview in base currency. Shows the
+          total + (duo mode) per-side paid/share. This is the view the user
+          will see in the main ledger once they end the trip. */}
       <section className="mt-4 px-4">
         <div
           className="rounded-[20px] p-5"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
-          <p className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)' }}>
-            這趟一共花了
-          </p>
-          <p
-            className="mt-1 text-3xl font-medium tnum tracking-[-0.5px]"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-          >
-            {formatAmount(totalBase, baseCurrency)}
-          </p>
-          {usesForeignDefault && (
-            <p className="mt-2 text-xs" style={{ color: 'var(--ink-3)' }}>
-              這趟預設用 {displayCurrency.toUpperCase()} 記帳,上方為以 {baseCurrency.toUpperCase()} 結算後的金額。
-            </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)' }}>
+                {t.tripDetail.totalLabel}
+              </p>
+              <p
+                className="mt-1 text-3xl font-medium tnum tracking-[-0.5px]"
+                style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+              >
+                {formatAmount(totalBase, baseCurrency)}
+              </p>
+            </div>
+            <span
+              className="shrink-0 mt-1 px-2 py-0.5 rounded-full text-[11px] tracking-[0.5px]"
+              style={{
+                background: 'var(--hairline)',
+                color: 'var(--ink-2)',
+                fontFamily: 'var(--font-numeric)',
+              }}
+              title={t.tripDetail.baseCurrencyTagTitle}
+            >
+              {t.tripDetail.baseCurrencyTag.replace('{code}', baseCurrency.toUpperCase())}
+            </span>
+          </div>
+
+          {perSideBase && (
+            <div className="mt-4 flex gap-3">
+              <PerSideMemberCard
+                memberRole={viewerIsA ? 'a' : 'b'}
+                avatarUrl={viewer.avatarUrl ?? null}
+                initial={(viewer.displayName?.[0] ?? '?').toUpperCase()}
+                label={t.tripDetail.youPaid}
+                paid={perSideBase.viewerPaid}
+                share={perSideBase.viewerShare}
+                currency={baseCurrency}
+                shareLabel={t.tripDetail.share}
+              />
+              <PerSideMemberCard
+                memberRole={viewerIsA ? 'b' : 'a'}
+                avatarUrl={partner?.avatarUrl ?? null}
+                initial={(partner?.displayName?.[0] ?? '?').toUpperCase()}
+                label={t.tripDetail.partnerPaid.replace('{name}', partner?.displayName ?? '')}
+                paid={perSideBase.partnerPaid}
+                share={perSideBase.partnerShare}
+                currency={baseCurrency}
+                shareLabel={t.tripDetail.share}
+              />
+            </div>
           )}
         </div>
       </section>
 
-      {/* Currency breakdown — only when there's more than one currency. */}
-      {currencyBreakdown.length > 1 && (
+      {/* Mid-trip per-currency view — only when the trip mixes currencies.
+          Each row carries the native total, base equivalent, and (duo mode)
+          per-member paid + share IN NATIVE UNITS so the row is self-contained
+          for the "while I'm still in Japan, how much have we each spent in
+          JPY" reading. */}
+      {byCurrency.length > 1 && (
         <section className="mt-5 px-4">
           <div
             className="text-micro tracking-[1.5px] uppercase px-1 pb-2"
@@ -230,79 +278,27 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           >
             {t.tripDetail.currencyBreakdown}
           </div>
-          <div
-            className="rounded-[18px] overflow-hidden"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            {currencyBreakdown.map((row, i) => (
-              <div
+          <div className="flex flex-col gap-2">
+            {byCurrency.map((row) => (
+              <CurrencyBreakdownCard
                 key={row.currency}
-                className="flex items-baseline justify-between px-4 py-3"
-                style={{
-                  borderBottom: i === currencyBreakdown.length - 1 ? 'none' : '1px solid var(--hairline)',
+                row={row}
+                baseCurrency={baseCurrency}
+                showPerSide={!isSolo && !!partner}
+                viewer={{
+                  avatarUrl: viewer.avatarUrl ?? null,
+                  initial: (viewer.displayName?.[0] ?? '?').toUpperCase(),
+                  isA: viewerIsA,
                 }}
-              >
-                <div className="flex flex-col">
-                  <span
-                    className="text-sm font-medium tracking-wide"
-                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-                  >
-                    {row.currency.toUpperCase()}
-                  </span>
-                  <span className="text-micro" style={{ color: 'var(--ink-3)' }}>
-                    {row.count} {t.tripDetail.recordsSuffix}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <div
-                    className="text-base font-medium tnum"
-                    style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-                  >
-                    {formatAmount(row.native, row.currency)}
-                  </div>
-                  {row.currency !== baseCurrency && (
-                    <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                      ≈ {formatAmount(row.base, baseCurrency)}
-                    </div>
-                  )}
-                </div>
-              </div>
+                partner={partner ? {
+                  avatarUrl: partner.avatarUrl ?? null,
+                  initial: (partner.displayName?.[0] ?? '?').toUpperCase(),
+                  displayName: partner.displayName ?? '',
+                } : null}
+                t={t.tripDetail}
+              />
             ))}
           </div>
-        </section>
-      )}
-
-      {/* Per-side contribution — solo mode skips this entire block. */}
-      {perSide && (
-        <section className="mt-5 px-4">
-          <div
-            className="text-micro tracking-[1.5px] uppercase px-1 pb-2"
-            style={{ color: 'var(--ink-3)' }}
-          >
-            {t.tripDetail.perSideContribution}
-          </div>
-          <div
-            className="rounded-[18px] p-4 flex gap-3"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            <PerSideCard
-              label={t.tripDetail.youPaid}
-              paid={perSide.viewerPaid}
-              share={perSide.viewerShare}
-              currency={baseCurrency}
-              shareLabel={t.tripDetail.share}
-            />
-            <PerSideCard
-              label={t.tripDetail.partnerPaid.replace('{name}', partner?.displayName ?? '')}
-              paid={perSide.partnerPaid}
-              share={perSide.partnerShare}
-              currency={baseCurrency}
-              shareLabel={t.tripDetail.share}
-            />
-          </div>
-          <p className="text-micro px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
-            {t.tripDetail.perSideHint}
-          </p>
         </section>
       )}
 
@@ -312,7 +308,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             className="text-micro tracking-[1.5px] uppercase"
             style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
           >
-            這趟的紀錄 · {records.length} 筆
+            {t.tripDetail.recordsCountLabel.replace('{n}', String(records.length))}
           </div>
         </div>
 
@@ -434,32 +430,164 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
   )
 }
 
-function PerSideCard(props: {
+/**
+ * One half of the per-side fold preview. Avatar + member label, then
+ * "付了 NT$X" and "分擔: NT$Y" stacked below. Works for both the top fold-
+ * preview (base currency) and per-currency native rows.
+ */
+function PerSideMemberCard(props: {
+  memberRole: 'a' | 'b'
+  avatarUrl: string | null
+  initial: string
   label: string
   paid: number
   share: number
-  currency: CurrencyCode
+  currency: string
   shareLabel: string
 }) {
   return (
     <div
-      className="flex-1 rounded-[14px] p-3"
+      className="flex-1 rounded-[14px] p-3 flex gap-2.5 items-start"
       style={{ background: 'var(--bg)', border: '1px solid var(--hairline)' }}
     >
-      <div className="text-micro tracking-[0.5px]" style={{ color: 'var(--ink-3)' }}>
-        {props.label}
-      </div>
-      <div
-        className="mt-1 text-base font-medium tnum tracking-[-0.2px]"
-        style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-      >
-        {formatAmount(props.paid, props.currency)}
-      </div>
-      <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
-        {props.shareLabel}: {formatAmount(props.share, props.currency)}
+      <Avatar
+        memberRole={props.memberRole}
+        initial={props.initial}
+        src={props.avatarUrl}
+        size={28}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="text-micro tracking-[0.5px] truncate" style={{ color: 'var(--ink-3)' }}>
+          {props.label}
+        </div>
+        <div
+          className="mt-0.5 text-base font-medium tnum tracking-[-0.2px]"
+          style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+        >
+          {formatAmount(props.paid, props.currency)}
+        </div>
+        <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
+          {props.shareLabel}: {formatAmount(props.share, props.currency)}
+        </div>
       </div>
     </div>
   )
+}
+
+/**
+ * One currency row in the mid-trip per-currency block. Header line carries
+ * the native total + base equivalent + record count; the body (duo only)
+ * carries per-side paid/share in NATIVE units of this currency.
+ */
+function CurrencyBreakdownCard(props: {
+  row: {
+    currency: string
+    native: number
+    base: number
+    count: number
+    aPaidNative: number
+    bPaidNative: number
+    aShareNative: number
+    bShareNative: number
+  }
+  baseCurrency: string
+  showPerSide: boolean
+  viewer: { avatarUrl: string | null; initial: string; isA: boolean }
+  partner: { avatarUrl: string | null; initial: string; displayName: string } | null
+  t: {
+    youPaid: string
+    partnerPaid: string
+    share: string
+    recordsSuffix: string
+  }
+}) {
+  const { row, baseCurrency, showPerSide, viewer, partner, t: ts } = props
+  const isBase = row.currency === baseCurrency.toUpperCase()
+  // Aggregated native amounts may have float remainders (from share fractions).
+  // Round before display so the column doesn't show "5000.0000…".
+  const round = (n: number) => Math.round(n)
+  return (
+    <div
+      className="rounded-[18px]"
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+    >
+      <div className="flex items-baseline justify-between px-4 pt-3 pb-2">
+        <div className="flex flex-col">
+          <span
+            className="text-sm font-medium tracking-wide"
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+          >
+            {row.currency}
+          </span>
+          <span className="text-micro" style={{ color: 'var(--ink-3)' }}>
+            {row.count} {ts.recordsSuffix}
+          </span>
+        </div>
+        <div className="text-right">
+          <div
+            className="text-base font-medium tnum"
+            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+          >
+            {formatAmount(row.native, row.currency)}
+          </div>
+          {!isBase && (
+            <div className="text-xs tnum mt-0.5" style={{ color: 'var(--ink-3)' }}>
+              ≈ {formatAmount(row.base, baseCurrency)}
+            </div>
+          )}
+        </div>
+      </div>
+      {showPerSide && partner && (
+        <div className="px-3 pb-3 flex gap-2">
+          <PerSideMemberCard
+            memberRole={viewer.isA ? 'a' : 'b'}
+            avatarUrl={viewer.avatarUrl}
+            initial={viewer.initial}
+            label={ts.youPaid}
+            paid={round(viewer.isA ? row.aPaidNative : row.bPaidNative)}
+            share={round(viewer.isA ? row.aShareNative : row.bShareNative)}
+            currency={row.currency}
+            shareLabel={ts.share}
+          />
+          <PerSideMemberCard
+            memberRole={viewer.isA ? 'b' : 'a'}
+            avatarUrl={partner.avatarUrl}
+            initial={partner.initial}
+            label={ts.partnerPaid.replace('{name}', partner.displayName)}
+            paid={round(viewer.isA ? row.bPaidNative : row.aPaidNative)}
+            share={round(viewer.isA ? row.bShareNative : row.aShareNative)}
+            currency={row.currency}
+            shareLabel={ts.share}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Fraction of a record that member A carries after the split. Used by the
+ * per-currency × per-member aggregation to translate a TripExpense (with its
+ * splitType + payer + ratio) into a "how much did each side bear" number in
+ * any unit (native or base, since the fraction is unitless).
+ *
+ * Semantics:
+ *   - 'half'        → 50/50
+ *   - 'all_mine'    → payer carries 100%
+ *   - 'all_theirs'  → non-payer carries 100% (the "you spotted me" case)
+ *   - 'weighted'    → splitRatioA% / (100 - splitRatioA)%
+ */
+function aShareFraction(
+  splitType: SplitType,
+  splitRatioA: number | null,
+  payerIs: 'a' | 'b',
+): number {
+  switch (splitType) {
+    case 'half':       return 0.5
+    case 'all_mine':   return payerIs === 'a' ? 1 : 0
+    case 'all_theirs': return payerIs === 'a' ? 0 : 1
+    case 'weighted':   return splitRatioA == null ? 0.5 : splitRatioA / 100
+  }
 }
 
 function EndTripSheet(props: {

@@ -272,6 +272,10 @@ export const en: Translations = {
     endFailure: 'Failed to end the trip',
     editAriaLabel: 'Edit this trip',
     endIrreversibleNote: 'This cannot be undone — all expenses will roll back to the main ledger as a summary.',
+    totalLabel: 'This trip cost',
+    baseCurrencyTag: 'Base {code}',
+    baseCurrencyTagTitle: 'This trip settles in this currency',
+    recordsCountLabel: 'Records · {n}',
   },
 
   incomeSheet: {
