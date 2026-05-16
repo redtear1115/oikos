@@ -402,7 +402,6 @@ export const zhCN: Translations = {
     saveDefaultRatio: '保存默认比例',
     inviteCta: '邀请对方加入',
     quickAccessRow: '个人与帐本设定',
-    avatarMenu: { title: '帐本与个人' },
     sectionDisplay: '语言 & 币别',
     language: '语言',
     currency: '币别',

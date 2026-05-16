@@ -523,10 +523,6 @@ export type Translations = {
     inviteCta: string
     /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
     quickAccessRow: string
-    /** Header label for the avatar menu sheet (reserved). */
-    avatarMenu: {
-      title: string
-    }
     sectionDisplay: string
     language: string
     currency: string
@@ -1942,7 +1938,6 @@ export const zhTW: Translations = {
     saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',
-    avatarMenu: { title: '帳本與個人' },
     sectionDisplay: '語言 & 幣別',
     language: '語言',
     currency: '幣別',

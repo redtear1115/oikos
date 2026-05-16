@@ -69,7 +69,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     viewerEmail: user.email ?? '',
     groupDefaultRatioA: group.defaultSplitRatioA ?? null,
     guardianBetaEnabled: group.guardianBetaEnabled,
-    baseCurrency: group.baseCurrency,
     currentLocale: locale,
   }
 

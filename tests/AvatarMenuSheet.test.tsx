@@ -37,7 +37,6 @@ const data: AvatarMenuData = {
   viewerEmail: 'me@example.com',
   groupDefaultRatioA: 60,
   guardianBetaEnabled: false,
-  baseCurrency: 'twd',
   currentLocale: 'zh-TW',
 }
 

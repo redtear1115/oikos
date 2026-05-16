@@ -1,14 +1,12 @@
 'use client'
 
 import { createContext, useCallback, useContext, useState } from 'react'
-import type { CurrencyCode } from '@/lib/currency'
 import { AvatarMenuSheet } from './AvatarMenuSheet'
 
 export interface AvatarMenuData {
   viewerEmail: string
   groupDefaultRatioA: number | null
   guardianBetaEnabled: boolean
-  baseCurrency: CurrencyCode
   currentLocale: string
 }
 

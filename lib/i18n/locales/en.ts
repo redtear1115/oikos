@@ -402,7 +402,6 @@ export const en: Translations = {
     saveDefaultRatio: 'Save default ratio',
     inviteCta: 'Invite partner',
     quickAccessRow: 'Personal & group settings',
-    avatarMenu: { title: 'You & your group' },
     sectionDisplay: 'Language & Currency',
     language: 'Language',
     currency: 'Currency',
