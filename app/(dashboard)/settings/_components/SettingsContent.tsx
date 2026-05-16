@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { EditableNameRow } from './sections/EditableNameRow'
 import { MemberListSection } from './sections/MemberListSection'
+import { SplitTypeSection } from './sections/SplitTypeSection'
 import { DangerZone, type PendingSwap } from './DangerZone'
 import { LogoutButton } from './LogoutButton'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { GuardianBetaToggle } from './GuardianBetaToggle'
 import { updateGroupName, updateGroupSplitRatio } from '@/actions/group'
-import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
+import { updateDisplayName } from '@/actions/profile'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
@@ -55,9 +56,6 @@ export function SettingsContent({
 
   const refresh = () => router.refresh()
 
-  const [savingSplit, startSplitTransition] = useTransition()
-  const [splitError, setSplitError] = useState<string | null>(null)
-
   const [splitRatioA, setSplitRatioA] = useState<number>(groupDefaultRatioA ?? 50)
   const [savingRatio, startRatioTransition] = useTransition()
   const [ratioError, setRatioError] = useState<string | null>(null)
@@ -72,24 +70,6 @@ export function SettingsContent({
         refresh()
       } catch (e) {
         setRatioError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
-      }
-    })
-  }
-
-  // In solo mode the only valid configuration is all_mine, so we lock the radio
-  // to that value visually and disable interaction. The user's stored preference
-  // (in DB) is preserved untouched and re-takes effect when partner joins.
-  const displayedSplit: SplitType = isSolo ? 'all_mine' : viewer.defaultSplitType
-
-  const handleSplitChange = (next: SplitType) => {
-    if (next === viewer.defaultSplitType) return  // no-op if same
-    setSplitError(null)
-    startSplitTransition(async () => {
-      try {
-        await updateDefaultSplitType(next)
-        router.refresh()
-      } catch (e) {
-        setSplitError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
       }
     })
   }
@@ -116,55 +96,7 @@ export function SettingsContent({
 
       {/* 預設分攤方式 & 比例 — default split type + (paired) ratio slider. */}
       <Section title={t.settings.sectionGroupSplit}>
-        <div>
-          <div
-            className="rounded-[20px] overflow-hidden flex flex-col"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            {([
-              { id: 'half' as const,       label: t.splitType.even },
-              { id: 'all_mine' as const,   label: t.splitType.allMine },
-              { id: 'all_theirs' as const, label: t.splitType.allPartners },
-            ]).map((opt, i) => {
-              const sel = displayedSplit === opt.id
-              return (
-                <button
-                  type="button"
-                  key={opt.id}
-                  onClick={() => handleSplitChange(opt.id)}
-                  disabled={savingSplit || isSolo}
-                  className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
-                  style={{
-                    borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-                    background: 'transparent',
-                  }}
-                >
-                  <span className="text-body" style={{ color: 'var(--ink)' }}>
-                    {opt.label}
-                  </span>
-                  <div
-                    className="w-5 h-5 rounded-full transition-all duration-150"
-                    style={{
-                      border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
-                      background: sel ? 'var(--ink)' : 'transparent',
-                      boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
-                    }}
-                  />
-                </button>
-              )
-            })}
-          </div>
-          {isSolo && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
-              {t.settings.soloLockHint}
-            </div>
-          )}
-          {splitError && (
-            <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
-              {splitError}
-            </div>
-          )}
-        </div>
+        <SplitTypeSection current={viewer.defaultSplitType} isSolo={isSolo} />
         {!isSolo && (
           <div className="mt-3">
             <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
