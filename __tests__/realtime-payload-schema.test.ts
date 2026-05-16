@@ -128,8 +128,10 @@ describe('realtime payload-schema parsers', () => {
     const valid = {
       id: 'f1',
       assetId: 'a1',
-      // Postgres numeric is serialized by Realtime as a string
-      liters: '42.5',
+      // Realtime serializes Postgres numeric as JSON number, not string.
+      // Both decimal (42.5) and whole-number (40) values come through as
+      // `number` — verified empirically against Supabase Realtime v2.
+      liters: 42.5,
       fuelType: '95',
       odometer: 12345,
       station: 'Shell',
@@ -142,12 +144,16 @@ describe('realtime payload-schema parsers', () => {
       expect(parseFuelLogRow(valid)?.id).toBe('f1')
     })
 
+    it('accepts whole-number liters (Realtime emits 40, not "40.00")', () => {
+      expect(parseFuelLogRow({ ...valid, liters: 40 })?.liters).toBe(40)
+    })
+
     it('rejects electric fuelType (EV cars have no FuelLog)', () => {
       expect(parseFuelLogRow({ ...valid, fuelType: 'electric' })).toBeNull()
     })
 
-    it('rejects numeric `liters` (Realtime sends as string)', () => {
-      expect(parseFuelLogRow({ ...valid, liters: 42.5 })).toBeNull()
+    it('rejects string-encoded `liters` (Realtime sends as number)', () => {
+      expect(parseFuelLogRow({ ...valid, liters: '42.5' })).toBeNull()
     })
   })
 
