@@ -66,6 +66,9 @@ export const ja: Translations = {
     blog: {
       heading: '開発ログ',
     },
+    srTagline: ' · ふたりの家計簿｜カップル・夫婦のための共有家計 PWA',
+    srDescription:
+      'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
   },
 
   landing: {
@@ -90,6 +93,27 @@ export const ja: Translations = {
     f4Title: '振り返り',
     f4Body: '月次レビュー、カテゴリ分布、章の履歴。使ったお金にストーリーを語らせる。',
     footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ['ふたり 家計簿', 'Futari 家計簿', '二人の家計簿', "Futari · couple's ledger"],
+    jsonLdAppDescription:
+      'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
+    jsonLdFeatureList: [
+      'ふたりで共有する家計簿',
+      '自動割り勘と月次精算',
+      '家計の資産インベントリ',
+      '保険管理（保障型／貯蓄型）',
+      '愛車と給油の記録',
+      '定期収入',
+      'オフライン対応 PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: '今月 · 5月',
+    phoneMockFeed1Title: '夕食 · 火鍋',
+    phoneMockFeed1Sub: '今日',
+    phoneMockFeed2Title: '電気代',
+    phoneMockFeed2Sub: '昨日',
+    phoneMockFeed3Title: 'ペットの通院',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -1261,6 +1285,54 @@ export const ja: Translations = {
     linkRecords: '記録',
     linkAssets: '愛用品',
     footer: 'オンラインに戻ったら自動で更新されます',
+    metadataTitle: 'オフライン · Futari',
+  },
+
+  termsPage: {
+    heading: '利用規約',
+    lastUpdated: '最終更新：2026年5月3日',
+    intro: 'Futari（以下「本サービス」）は現在アルファテスト中で、招待された一部のユーザーのみ試用できます。正式版リリースまでに、以下の点にご注意ください：',
+    bullets: [
+      '本サービスはデータの長期保存を保証しません。テスト期間中はデータベースのリセット、スキーマ変更、デプロイエラーなどにより記録が失われる可能性があります。',
+      '本サービスは、利用者が本サービスを通じて作成した費用分担記録の正確性について責任を負いません。すべての精算結果はご自身の参考用です。',
+      '個人情報（マイナンバー、クレジットカード番号など）など、外部に漏らすべきでない情報を本サービスに記録しないでください。',
+      'Google サインインを使用することで、Google が利用者の基本アカウント情報（氏名、アバター、メールアドレス）を本サービスに提供することに同意したものとみなされます。',
+      '設定ページからいつでもサインアウトできます。アカウントの削除をご希望の場合は開発者までご連絡ください。',
+    ],
+    outro: '正式版では完全な利用規約をご提供します。それまでにご不明点があれば、開発者まで直接ご連絡ください。',
+    backHome: '← ホームに戻る',
+    privacyLink: 'プライバシーポリシー',
+  },
+
+  privacyPage: {
+    heading: 'プライバシーポリシー',
+    lastUpdated: '最終更新：2026年5月3日',
+    intro: 'Futari は現在アルファテスト中です。本ページはテスト期間中のデータ収集と取り扱いについて説明します。',
+    sectionCollectTitle: '収集するデータ',
+    sectionCollectItems: [
+      'Google OAuth から提供される基本アカウント情報：氏名、アバター、メールアドレス。',
+      '利用者が手動で入力する家計簿名、取引記録、精算記録、デフォルト分担設定など。',
+      '招待リンクと招待受諾日時（双方のアカウントを連携するため）。',
+    ],
+    sectionPurposeTitle: 'データの用途',
+    sectionPurposeItems: [
+      'パートナーと共有する家計簿画面の表示。',
+      'ふたりの貸し借り金額の計算。',
+      '正式版リリース前の開発者によるデバッグ用途（公開しません）。',
+    ],
+    sectionStorageTitle: 'データの保存',
+    sectionStorageBody: 'データはバックエンドサービス Supabase のサーバー（日本・東京リージョン）に保存されます。テスト版ではデータの長期保存を保証せず、データベースのリセットやスキーマ変更により失われる可能性があります。',
+    sectionThirdPartyTitle: '第三者サービス',
+    sectionThirdPartyItems: [
+      'Google（OAuth サインイン）',
+      'Supabase（バックエンド、データベース、リアルタイム）',
+      'Vercel（Web ホスティング）',
+    ],
+    sectionRightsTitle: '利用者の権利',
+    sectionRightsBody: '設定ページからいつでもサインアウトできます。アカウントと関連するすべてのデータの削除をご希望の場合は、開発者までご連絡ください。',
+    outro: '正式版では完全なプライバシーポリシーをご提供します。それまでにご不明点があれば、開発者まで直接ご連絡ください。',
+    backHome: '← ホームに戻る',
+    termsLink: '利用規約',
   },
 
   monthlyReview: {

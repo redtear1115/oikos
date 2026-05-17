@@ -37,51 +37,6 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-// JSON-LD bundle for the public landing — WebSite (sitelinks search box hint),
-// Organization (brand identity), SoftwareApplication (rich card for the app
-// itself, moved from /sign-in per #390 so the canonical lives on the entry page).
-const webSiteJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Futari · ふたり',
-  alternateName: ['Futari 家計簿', '兩個人的家計簿'],
-  url: APP_URL,
-  inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
-} as const
-
-const organizationJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Futari',
-  url: APP_URL,
-  logo: `${APP_URL}/icons/apple-touch-icon.png`,
-} as const
-
-const softwareAppJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'Futari · ふたり',
-  alternateName: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿'],
-  applicationCategory: 'FinanceApplication',
-  operatingSystem: 'Web, iOS, Android (PWA)',
-  description:
-    '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
-  url: APP_URL,
-  inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
-  author: { '@type': 'Person', name: 'Ray Lee' },
-  datePublished: '2026-05-03',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },
-  featureList: [
-    '雙人共享記帳',
-    '費用自動分攤與 AA 結算',
-    '家庭資產盤點',
-    '保險管理（保護型／儲蓄型）',
-    '汽車與油耗紀錄',
-    '定期收入',
-    '離線瀏覽 PWA',
-  ],
-} as const
-
 // FAQPage JSON-LD (#344) — zh-TW only to match the dominant audience and avoid
 // per-locale schema duplication. Answers held to ~40–60 字 to fit AI Overview's
 // Answer Capsule extraction window.
@@ -127,6 +82,44 @@ export default async function RootPage({ params }: { params: Params }) {
   // /sign-in. Either way the page renders.
   const user = await getCurrentUser()
   const ctaHref = user ? '/dashboard' : localizedHref('/sign-in', locale)
+
+  // JSON-LD bundle for the public landing — WebSite (sitelinks search box hint),
+  // Organization (brand identity), SoftwareApplication (rich card for the app
+  // itself, moved from /sign-in per #390 so the canonical lives on the entry page).
+  // Built per-request so alternateName / description / featureList follow the
+  // active locale (#467).
+  const webSiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: t.landing.jsonLdAppName,
+    alternateName: t.landing.jsonLdAlternateNames,
+    url: APP_URL,
+    inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
+  }
+
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Futari',
+    url: APP_URL,
+    logo: `${APP_URL}/icons/apple-touch-icon.png`,
+  }
+
+  const softwareAppJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: t.landing.jsonLdAppName,
+    alternateName: t.landing.jsonLdAlternateNames,
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web, iOS, Android (PWA)',
+    description: t.landing.jsonLdAppDescription,
+    url: APP_URL,
+    inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
+    author: { '@type': 'Person', name: 'Ray Lee' },
+    datePublished: '2026-05-03',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },
+    featureList: t.landing.jsonLdFeatureList,
+  }
 
   return (
     <>

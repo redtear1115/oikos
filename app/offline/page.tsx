@@ -1,9 +1,13 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getTranslations } from '@/lib/i18n/t'
 
-export const metadata = {
-  title: '離線中 · Futari',
-  robots: { index: false, follow: false },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations()
+  return {
+    title: t.offlinePage.metadataTitle,
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function OfflinePage() {

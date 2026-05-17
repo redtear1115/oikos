@@ -88,7 +88,7 @@ export default async function SignInPage({ params }: { params: Params }) {
               style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
             >
               Futari
-              <span className="sr-only"> · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA</span>
+              <span className="sr-only">{t.signIn.srTagline}</span>
             </h1>
             <p className="text-sm tracking-[3px] m-0" style={{ color: 'var(--ink-2)' }}>
               ふたり
@@ -99,9 +99,7 @@ export default async function SignInPage({ params }: { params: Params }) {
             >
               {t.signIn.tagline}
             </p>
-            <p className="sr-only">
-              專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。
-            </p>
+            <p className="sr-only">{t.signIn.srDescription}</p>
           </div>
 
           <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">

@@ -212,7 +212,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
 
           {/* Phone preview — desktop only */}
           <div className="hidden md:flex flex-1 items-center justify-center">
-            <PhonePreview />
+            <PhonePreview t={t} />
           </div>
         </div>
       </section>

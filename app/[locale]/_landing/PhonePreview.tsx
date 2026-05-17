@@ -1,11 +1,32 @@
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { FutariMark } from './FutariMark'
 
 // PhonePreview — decorative product mock shown in the desktop hero. Static
 // markup; not the real dashboard. Mirrors the real product's visual rhythm
 // (BalanceHero / feed / asset chips / FAB) so visitors see what the app
-// actually looks like, not a generic illustration.
+// actually looks like, not a generic illustration. Copy is locale-aware
+// (via `phoneMock*` keys in landing) so the mock doesn't sit in Chinese
+// when the page itself is rendering in EN/JA. Asset chips stay as emoji —
+// universally readable, no translation needed.
 
-export function PhonePreview() {
+type Props = {
+  t: Translations['landing']
+}
+
+export function PhonePreview({ t }: Props) {
+  const feedRows = [
+    { c: 'var(--accent)', title: t.phoneMockFeed1Title, sub: t.phoneMockFeed1Sub, amount: '−840' },
+    { c: 'var(--asset-color-house)', title: t.phoneMockFeed2Title, sub: t.phoneMockFeed2Sub, amount: '−1,520' },
+    { c: 'var(--asset-color-pet)', title: t.phoneMockFeed3Title, sub: t.phoneMockFeed3Sub, amount: '−2,800' },
+  ]
+  const assetChips = [
+    { c: 'var(--asset-color-house)', emoji: '🏠' },
+    { c: 'var(--asset-color-car)', emoji: '🚗' },
+    { c: 'var(--asset-color-child)', emoji: '👶' },
+    { c: 'var(--asset-color-pet)', emoji: '🐾' },
+    { c: 'var(--asset-color-plant)', emoji: '🌿' },
+  ]
+
   return (
     <div
       className="relative shrink-0"
@@ -73,7 +94,7 @@ export function PhonePreview() {
               className="m-0 text-[10px]"
               style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
-              YOU OWE T
+              {t.phoneMockBalanceCaption}
             </p>
             <p
               className="m-0 tnum"
@@ -91,7 +112,7 @@ export function PhonePreview() {
               className="m-0 mt-1 text-[11px]"
               style={{ color: 'var(--ink-2)' }}
             >
-              本月 · 5 月
+              {t.phoneMockBalancePeriod}
             </p>
           </div>
 
@@ -100,11 +121,7 @@ export function PhonePreview() {
             className="rounded-2xl p-3 mb-2.5"
             style={{ background: 'var(--surface)' }}
           >
-            {[
-              { c: 'var(--accent)', t: '晚餐 · 麻辣鍋', s: '今天', a: '−840' },
-              { c: 'var(--asset-color-house)', t: '電費', s: '昨天', a: '−1,520' },
-              { c: 'var(--asset-color-pet)', t: '小白看醫生', s: '5/11', a: '−2,800' },
-            ].map((r, i, arr) => (
+            {feedRows.map((r, i, arr) => (
               <div
                 key={i}
                 className="flex items-center gap-2.5 py-2"
@@ -125,9 +142,9 @@ export function PhonePreview() {
                   ·
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="m-0 text-[12px] font-medium">{r.t}</p>
+                  <p className="m-0 text-[12px] font-medium">{r.title}</p>
                   <p className="m-0 text-[10px]" style={{ color: 'var(--ink-2)' }}>
-                    {r.s}
+                    {r.sub}
                   </p>
                 </div>
                 <span
@@ -137,7 +154,7 @@ export function PhonePreview() {
                     color: 'var(--ink)',
                   }}
                 >
-                  {r.a}
+                  {r.amount}
                 </span>
               </div>
             ))}
@@ -145,22 +162,16 @@ export function PhonePreview() {
 
           {/* asset chips */}
           <div className="flex gap-1.5 mt-2.5">
-            {[
-              { c: 'var(--asset-color-house)', l: '家' },
-              { c: 'var(--asset-color-car)', l: '車' },
-              { c: 'var(--asset-color-child)', l: '孩' },
-              { c: 'var(--asset-color-pet)', l: '寵' },
-              { c: 'var(--asset-color-plant)', l: '植' },
-            ].map((a, i) => (
+            {assetChips.map((a, i) => (
               <div
                 key={i}
-                className="flex-1 h-9 rounded-[11px] flex items-center justify-center text-[13px] font-semibold"
+                className="flex-1 h-9 rounded-[11px] flex items-center justify-center text-[15px]"
                 style={{
                   background: `color-mix(in srgb, ${a.c} 35%, white)`,
                   color: a.c,
                 }}
               >
-                {a.l}
+                {a.emoji}
               </div>
             ))}
           </div>

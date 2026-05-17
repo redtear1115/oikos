@@ -42,6 +42,10 @@ export type Translations = {
       /** Section heading above the dev-log article list (issue #460). */
       heading: string
     }
+    /** sr-only suffix appended to the "Futari" H1 for screen-reader / SEO context (#467). */
+    srTagline: string
+    /** sr-only paragraph below the visible tagline describing the app (#467). */
+    srDescription: string
   }
 
   landing: {
@@ -79,6 +83,23 @@ export type Translations = {
     f4Body: string
     /** Footer trust note. */
     footerTrust: string
+    /** schema.org `name` for WebSite + SoftwareApplication JSON-LD (#467). */
+    jsonLdAppName: string
+    /** schema.org `alternateName` array for WebSite + SoftwareApplication (#467). */
+    jsonLdAlternateNames: readonly string[]
+    /** schema.org SoftwareApplication `description` (#467). */
+    jsonLdAppDescription: string
+    /** schema.org SoftwareApplication `featureList` (#467). */
+    jsonLdFeatureList: readonly string[]
+    /** Decorative PhonePreview mock (desktop hero) — not real data (#467). */
+    phoneMockBalanceCaption: string
+    phoneMockBalancePeriod: string
+    phoneMockFeed1Title: string
+    phoneMockFeed1Sub: string
+    phoneMockFeed2Title: string
+    phoneMockFeed2Sub: string
+    phoneMockFeed3Title: string
+    phoneMockFeed3Sub: string
   }
 
   common: {
@@ -1460,6 +1481,40 @@ export type Translations = {
     linkRecords: string
     linkAssets: string
     footer: string
+    /** HTML <title> for /offline (also surfaces in PWA cache fallback). */
+    metadataTitle: string
+  }
+
+  termsPage: {
+    heading: string
+    /** Localized "Last updated: <date>" line. */
+    lastUpdated: string
+    intro: string
+    /** Bullet list following the intro. */
+    bullets: readonly string[]
+    outro: string
+    backHome: string
+    privacyLink: string
+  }
+
+  privacyPage: {
+    heading: string
+    /** Localized "Last updated: <date>" line. */
+    lastUpdated: string
+    intro: string
+    sectionCollectTitle: string
+    sectionCollectItems: readonly string[]
+    sectionPurposeTitle: string
+    sectionPurposeItems: readonly string[]
+    sectionStorageTitle: string
+    sectionStorageBody: string
+    sectionThirdPartyTitle: string
+    sectionThirdPartyItems: readonly string[]
+    sectionRightsTitle: string
+    sectionRightsBody: string
+    outro: string
+    backHome: string
+    termsLink: string
   }
 
   monthlyReview: {
@@ -1764,6 +1819,9 @@ export const zhTW: Translations = {
     blog: {
       heading: '開發日誌',
     },
+    srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
+    srDescription:
+      '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
   },
 
   landing: {
@@ -1788,6 +1846,27 @@ export const zhTW: Translations = {
     f4Title: '記帳統計',
     f4Body: '月度回顧、分類分佈、章節歷史。讓花過的錢自己說故事，一起回頭看走過的日子。',
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
+    jsonLdAppDescription:
+      '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
+    jsonLdFeatureList: [
+      '雙人共享記帳',
+      '費用自動分攤與 AA 結算',
+      '家庭資產盤點',
+      '保險管理（保護型／儲蓄型）',
+      '汽車與油耗紀錄',
+      '定期收入',
+      '離線瀏覽 PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: '本月 · 5 月',
+    phoneMockFeed1Title: '晚餐 · 麻辣鍋',
+    phoneMockFeed1Sub: '今天',
+    phoneMockFeed2Title: '電費',
+    phoneMockFeed2Sub: '昨天',
+    phoneMockFeed3Title: '小白看醫生',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -2959,6 +3038,54 @@ export const zhTW: Translations = {
     linkRecords: '紀錄',
     linkAssets: '愛物',
     footer: '等連線回來會自動更新',
+    metadataTitle: '離線中 · Futari',
+  },
+
+  termsPage: {
+    heading: '服務條款',
+    lastUpdated: '最後更新：2026 年 5 月 3 日',
+    intro: 'Futari（以下簡稱「本服務」）目前處於 alpha 測試階段，僅提供受邀的小範圍使用者試用。正式版本上線前，使用者應留意：',
+    bullets: [
+      '本服務不保證資料的長期保存。測試期間可能因為資料庫重置、結構變更或部署錯誤導致紀錄遺失。',
+      '本服務不對使用者透過本服務所產生的金錢分攤紀錄之正確性負責。所有結算結果僅供使用者自行參考。',
+      '請勿在本服務上記錄不適合外洩的敏感資訊（例如身分證字號、信用卡號等）。',
+      '使用 Google 登入即表示您同意 Google 將您的基本帳號資訊（姓名、頭像、Email）提供給本服務。',
+      '您可隨時透過設定頁登出，或聯絡開發者刪除帳號。',
+    ],
+    outro: '正式版本將提供完整的服務條款。目前如有任何疑慮，請直接聯絡開發者。',
+    backHome: '← 回首頁',
+    privacyLink: '隱私權政策',
+  },
+
+  privacyPage: {
+    heading: '隱私權政策',
+    lastUpdated: '最後更新：2026 年 5 月 3 日',
+    intro: 'Futari 目前處於 alpha 測試階段，本頁說明測試期間的資料蒐集與處理方式。',
+    sectionCollectTitle: '蒐集的資料',
+    sectionCollectItems: [
+      'Google OAuth 提供的基本帳號資訊：姓名、頭像、Email 地址。',
+      '您手動輸入的家計簿名稱、交易紀錄、結算紀錄、預設分攤偏好等。',
+      '邀請連結、邀請接受時間（用於連結雙方帳號）。',
+    ],
+    sectionPurposeTitle: '資料用途',
+    sectionPurposeItems: [
+      '顯示您與伴侶共用的記帳介面。',
+      '計算雙方欠款金額。',
+      '正式版上線前，可能用於開發者除錯（不會公開）。',
+    ],
+    sectionStorageTitle: '資料儲存',
+    sectionStorageBody: '資料儲存於 Supabase（後端服務）的伺服器，位於日本東京區。測試版本不保證資料的長期保存，可能因為資料庫重置或結構變更而遺失。',
+    sectionThirdPartyTitle: '第三方服務',
+    sectionThirdPartyItems: [
+      'Google（OAuth 登入）',
+      'Supabase（後端、資料庫、實時更新）',
+      'Vercel（網站託管）',
+    ],
+    sectionRightsTitle: '您的權利',
+    sectionRightsBody: '您可隨時透過設定頁登出，或聯絡開發者刪除您的帳號與所有相關資料。',
+    outro: '正式版本將提供完整的隱私權政策。目前如有任何疑慮，請直接聯絡開發者。',
+    backHome: '← 回首頁',
+    termsLink: '服務條款',
   },
 
   monthlyReview: {
