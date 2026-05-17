@@ -5,7 +5,7 @@
 
 私人家庭工具，非 SaaS。所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first PWA。
 
-> 線上服務：<https://futari.southern-light.dev/>
+> 線上服務：<https://futari.southern-light.dev/> — v1.0 起對外有公開 landing（繁中／簡中／英／日），登入後是兩人專屬空間。
 > 最新版本與變更紀錄請見 [CHANGELOG.md](CHANGELOG.md)。開發脈絡見 [CLAUDE.md](CLAUDE.md)。
 
 ---
@@ -116,10 +116,10 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 ### Branch 說明
 
-- `main`：受保護分支，所有經過測試的新功能都會合入此處；Vercel 會 build preview。
-- `release`：部署分支，Vercel **prod** 以此分支為準。要 release 時手動 `git checkout release && git merge main && git push origin release`。
+- `main`：所有經過測試的新功能透過 feature PR merge 進來；Vercel 會 build preview。
+- `release`：Vercel **prod** 以此分支為準。要 release 時開一條 `main → release` 的 PR，merge 後 Vercel 自動部署 production。
 
-兩條 branch 都受 protection 保護，一律走 PR merge，不直接 push。
+兩條 branch 都受 branch protection，只能走 PR merge，不能直接 push。完整 release 流程（version bump / CHANGELOG / tag / GH release）見 [CLAUDE.md](CLAUDE.md) 的「部署流程」段落。
 
 ### 初次設定
 
@@ -144,6 +144,15 @@ docs/superpowers/specs/   架構規格 + 設計決策
 ## 版本歷史
 
 完整變更內容見 [CHANGELOG.md](CHANGELOG.md)。
+
+| 版本 | 範圍 |
+|---|---|
+| [v1.0.0](CHANGELOG.md#100---2026-05-17) | 公開 landing．接住歷史 |
+| [v1.0.1](CHANGELOG.md#101---2026-05-17) | 新用戶第一步修補．/setup 500 修復 |
+| [v1.0.2](CHANGELOG.md#102---2026-05-17) | Prod log 修復．RSC × iOS icon × Supabase 警告 |
+
+<details>
+<summary>更早版本（v0.1.0 → v0.17.6，共 36 筆）</summary>
 
 | 版本 | 範圍 |
 |---|---|
@@ -181,6 +190,10 @@ docs/superpowers/specs/   架構規格 + 設計決策
 | [v0.17.2](CHANGELOG.md#0172---2026-05-15) | 旅行從沙盒到收斂．多幣別視角也站穩 |
 | [v0.17.3](CHANGELOG.md#0173---2026-05-15) | Settings 收束 × 旅行感知 × AddSheet 守護分層．細節讓操作更貼手 |
 | [v0.17.4](CHANGELOG.md#0174---2026-05-16) | 旅行幣別 self-serve．Settings 結構收束．子頁面語言對齊 |
+| [v0.17.5](CHANGELOG.md#0175---2026-05-16) | 身份識別離 Dashboard 半秒．Settings 主頁瘦身．執行階段更穩 |
+| [v0.17.6](CHANGELOG.md#0176---2026-05-17) | 首屏 1.9 秒回神．日期型別收緊 |
+
+</details>
 
 ---
 

@@ -15,6 +15,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.0.3] - 2026-05-17
+
+主題：**Supabase Advisor 全面清零**——把 security advisor 與 performance advisor 上累積的 RLS / SECURITY DEFINER / search_path / 多重 permissive policy 警告一次掃乾淨。沒有 schema 改動、沒有 UI 變化；其中 5 張表（CurrencyRates / PetDetails / PlantDetails / Trips / TripExpenses）原本因為缺 RLS policy，Realtime 訂閱者收不到 INSERT/UPDATE 事件，本版修好。
+完整 diff：[v1.0.2...v1.0.3](https://github.com/redtear1115/oikos/compare/v1.0.2...v1.0.3)
+
+### 使用者可見變化
+
+- **Realtime 即時更新補齊（#504）**：愛物頁的寵物 / 植物細節、旅行子帳本、心理匯率表的變更，另一位伴侶現在會即時看到（過去需重整頁面）。
+
+### 技術變更
+
+- **補齊 5 張表的 RLS policy（#504, migration 0044）**：`CurrencyRates` / `PetDetails` / `PlantDetails` / `Trips` / `TripExpenses` 原本未啟用 RLS，anon role 無法 SELECT；Supabase Realtime 用同一套 RLS 做訂閱檢查，導致 client 端收不到變更事件。Server-side（postgres role）讀寫不受影響、不存在資料外洩，純 Realtime 沒接上。pattern 對齊 0023/0024/0030（`ENABLE RLS` + group-membership SELECT policy + `(select auth.uid())`）。
+- **`auth.uid()` 全面包進 `(select ...)`（#505, migration 0045）**：剩餘 22 條 RLS policy 把 per-row 的 `auth.uid()` 改成 `(select auth.uid())`，planner 可以 hoist 成 InitPlan 每 query 只算一次。`CashTransactions` / `Settlements` / `GroupBalance` / 各 Detail table / `FuelLogs` / `IncomeTransactions` / recurring + pending 配對 / Invoice 三表 / MonthlyReview 配對 / PartnerQuiz 配對。USING / WITH CHECK 邏輯逐字保留，純機械改寫。
+- **合併重複的 permissive SELECT policy（#506, migration 0046）**：三類 duplication 處理掉，advisor 5 條 `multiple_permissive_policies` WARN 清零。(1) `db/rls/policies.sql` 的舊版 `_select` policy 與 0005/0006 為 Realtime 加的 `_member_select` 在 OR-combine 下完全 dominated；(2) `invoice_creds_select`（任一成員可見）默默放寬了 0018 的 `invoice_credentials_owner_select`（owner-only，spec 明定「partner 看不到 barcode／驗證碼」），順手收緊（雲端發票功能未上線，無 client read，無風險）；(3) `profiles_self_select` + `profiles_partner_select` OR-merge 成 `profiles_self_or_partner_select`。同時把 3 張 Invoice 表從 `supabase_realtime` publication 移除（client 端從未訂閱）。
+- **`rls_auto_enable` REVOKE EXECUTE（#502, migration 0043 → migration 0047）**：SECURITY DEFINER migration helper 不應該被 anon / authenticated 透過 `/rest/v1/rpc` 呼叫。0043 用了 `REVOKE FROM PUBLIC` 想跟 0023 對齊，但實測 Supabase 對 public-schema 函式預設直接 grant 給 anon/authenticated（不是只走 PUBLIC 繼承），所以 0043 對 advisor 而言是 no-op；0047 補上 direct REVOKE FROM anon, authenticated，advisor 兩條 `*_security_definer_function_executable` 清零。
+- **pg_cron helper 固定 `search_path`（#501, migration 0042）**：`compute_next_occurrence` 與 `compute_monthly_review_snapshot` 用 `ALTER FUNCTION ... SET search_path = public, pg_temp`，對齊 0022 對 `handle_new_user` 的處理，advisor `function_search_path_mutable` 清零；用 ALTER 而非 CREATE OR REPLACE 是為了讓 function body 留在原 migration（0016 / 0026），避免將來改 body 時意外漂移。
+- **`package-lock.json` 同步到 v1.0.2**：lockfile 在 v1.0.0 → v1.0.2 cycle 沒跟著 bump，`npm install` 下次跑時自動修正。
+
 ## [1.0.2] - 2026-05-17
 
 主題：**Prod log 修復**——修正從 production log 發現的三類問題：RSC 導航繞過 layout guard、iOS apple-touch-icon 404、以及 Supabase security warning。
@@ -1087,7 +1105,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/redtear1115/oikos/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/redtear1115/oikos/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/redtear1115/oikos/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/redtear1115/oikos/compare/v0.17.6...v1.0.0
