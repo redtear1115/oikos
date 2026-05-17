@@ -18,7 +18,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Server Components cannot set cookies; middleware handles session refresh.
+            // Server Components cannot set cookies; proxy handles session refresh.
           }
         },
       },
@@ -29,7 +29,7 @@ export async function createClient() {
 /**
  * Read the current user from the local session cookie without an Auth API
  * round-trip. Use ONLY in page / layout server components where read latency
- * matters and the trust boundary is already enforced by middleware.
+ * matters and the trust boundary is already enforced by proxy.
  *
  * Do NOT use in server actions — those mutate state and must call
  * `supabase.auth.getUser()` directly to re-validate the JWT against Supabase

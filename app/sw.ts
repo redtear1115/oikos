@@ -23,7 +23,7 @@ const STATIC_CACHE = 'static-v1'
 const DYNAMIC_CACHE = 'dynamic-v1'
 
 // Cache only successful, non-redirected, authenticated responses. Next.js
-// `redirect()` from a server component or middleware lands here as a followed
+// `redirect()` from a server component or proxy lands here as a followed
 // 3xx → response.redirected = true; this keeps a /sign-in body from being
 // stored under /dashboard.
 const onlyCacheSuccessfulHtml = {

@@ -6,9 +6,9 @@ import {
   localizedHref,
 } from '@/lib/i18n/path'
 
-// Middleware itself is hard to unit test (NextRequest mocking + supabase init).
-// These guard the pure-helper assumptions that middleware encodes.
-describe('middleware locale routing — input cases', () => {
+// Proxy itself is hard to unit test (NextRequest mocking + supabase init).
+// These guard the pure-helper assumptions that proxy encodes.
+describe('proxy locale routing — input cases', () => {
   it('unprefixed public path → needs rewrite to /zh-TW', () => {
     const pathname = '/sign-in'
     expect(isPublicLocalizedPath(pathname)).toBe(true)
@@ -19,7 +19,7 @@ describe('middleware locale routing — input cases', () => {
     expect(isPublicLocalizedPath(pathname)).toBe(true)
     expect(parseLocaleFromPath(pathname)).toBe('en')
   })
-  it('auth-walled path → middleware should not touch locale', () => {
+  it('auth-walled path → proxy should not touch locale', () => {
     expect(isPublicLocalizedPath('/dashboard')).toBe(false)
     expect(isPublicLocalizedPath('/onboarding')).toBe(false)
   })

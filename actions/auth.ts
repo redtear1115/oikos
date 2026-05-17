@@ -8,7 +8,7 @@ export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
   // Preserve user's locale on the sign-in destination — without an explicit
-  // prefix, middleware sees an unprefixed public path and downgrades the
+  // prefix, proxy sees an unprefixed public path and downgrades the
   // `lang` cookie to DEFAULT_LOCALE.
   redirect(await localizedSignInPath())
 }
