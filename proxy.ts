@@ -22,7 +22,7 @@ function copyCookies(from: NextResponse, to: NextResponse): NextResponse {
   return to
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
   // Sync cookie 讓 root layout (cookie-based getLocale) 跟 URL 對齊；
   // unprefixed public path 內部 rewrite 到 /<DEFAULT_LOCALE>/<path>。
   // 非 public-localized path（dashboard / onboarding / setup / invite / auth / api / offline）：
-  // middleware 不動 cookie，沿用既有 cookie-based locale。
+  // proxy 不動 cookie，沿用既有 cookie-based locale。
   let needsRewrite = false
   if (isPublicLocalizedPath(pathname)) {
     const effectiveLocale: Locale = urlLocale ?? DEFAULT_LOCALE
@@ -99,7 +99,7 @@ export async function middleware(request: NextRequest) {
     return copyCookies(supabaseResponse, rewriteResponse)
   }
 
-  // Note: Cache-Control for public pages is set in vercel.json — middleware-set
+  // Note: Cache-Control for public pages is set in vercel.json — proxy-set
   // headers get clobbered by Next.js dynamic rendering, which always emits
   // `private, no-store` for cookie-touched responses (issue #314). vercel.json
   // runs at the edge AFTER Next.js, so its headers take effect.

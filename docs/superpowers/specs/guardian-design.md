@@ -109,7 +109,7 @@ Defence in depth：`createInsurance` server action 仍 throw，避免 client-sid
 
 ### 為什麼 GatedView 不放在 root layout 統一處理
 
-`/assets?tab=guardian` 是 client-side tab state，`/assets/[id]` 是 server component；兩條路徑的渲染時機完全不同。統一處理會逼出抽象（HOC？middleware redirect？），不如各 surface 各自呼叫 `<GatedView />`——核心是把「該攔的點」標清楚，不是抽象一個攔截器。
+`/assets?tab=guardian` 是 client-side tab state，`/assets/[id]` 是 server component；兩條路徑的渲染時機完全不同。統一處理會逼出抽象（HOC？proxy redirect？），不如各 surface 各自呼叫 `<GatedView />`——核心是把「該攔的點」標清楚，不是抽象一個攔截器。
 
 ### 為什麼保險不在愛物 TypePicker（即使 beta ON）
 

@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
 
   // Keep the user on their picked locale even when OAuth fails — without an
-  // explicit prefix the response 302s to /sign-in, middleware then resets
+  // explicit prefix the response 302s to /sign-in, proxy then resets
   // their lang cookie to DEFAULT_LOCALE.
   const signInOnError = await localizedSignInPath('?error=auth_failed')
 

@@ -1,4 +1,4 @@
-// Edge-safe: 不 import next/headers。middleware + server components 都會用。
+// Edge-safe: 不 import next/headers。proxy + server components 都會用。
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE, isLocale, type Locale } from './locales-meta'
 
 /** Phase 1 範圍內、有 [locale] segment 對應的 public path。 */
@@ -31,7 +31,7 @@ export function localizedHref(path: string, locale: Locale): string {
 
 /**
  * 是否為 phase 1 「可帶 locale prefix 的 public page」。
- * 用於 middleware 判斷是否要做 rewrite + cookie sync。
+ * 用於 proxy 判斷是否要做 rewrite + cookie sync。
  */
 export function isPublicLocalizedPath(pathname: string): boolean {
   const stripped = stripLocaleFromPath(pathname)

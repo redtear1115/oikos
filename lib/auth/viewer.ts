@@ -47,7 +47,7 @@ export async function requireViewerOrRedirect(): Promise<{ user: User }> {
 
 /**
  * Server-page / layout gate. Uses the cached session (no Auth round-trip)
- * since middleware already enforced the trust boundary, and redirects on
+ * since proxy already enforced the trust boundary, and redirects on
  * missing user / group instead of throwing.
  *
  * Do NOT use in server actions — those mutate state and must call
