@@ -28,6 +28,12 @@ export type Translations = {
       s6Body: string[]
       s7Heading: string
       s7Body: string[]
+      /** Quiet footer line shown under the featured article — signals that
+       *  Futari has more stories rotating in on future visits. The literal
+       *  number ("6") refers to the count of non-featured sections; if the
+       *  total section count moves away from 7, update this string in all
+       *  4 locales. */
+      moreStoriesHint: string
     }
     /** Right-column 4 feature highlight cards on /sign-in (#417).
      *  Scene-style titles (not feature-list titles), one short body each. */
@@ -1981,6 +1987,7 @@ export const zhTW: Translations = {
         'Futari 不評判你們怎麼花錢。它不會推播「你這個月超支了」，不會給你消費評分，不會建議你少喝一杯咖啡。你們的消費習慣是你們自己的事。',
         '它也不是一個要幫你們「優化財務」的工具。它只是想陪著你們記下共同生活的每一筆帳，不多，也不少。',
       ],
+      moreStoriesHint: 'Futari 還有 6 個故事，下次再來會是另一個。',
     },
     features: {
       c1Title: '今天誰付的？',

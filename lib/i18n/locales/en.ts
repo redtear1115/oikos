@@ -53,6 +53,7 @@ export const en: Translations = {
         'Futari doesn\'t judge how you spend. It won\'t push "you\'re over budget this month." It won\'t score your spending. It won\'t suggest you skip a coffee. Your spending habits are your business.',
         'It\'s also not a tool here to "optimize your finances." It just wants to sit beside the two of you and help you record everyday life — one entry at a time. Not more, not less.',
       ],
+      moreStoriesHint: 'Futari has six more stories. Next time you stop by, it\'ll be a different one.',
     },
     features: {
       c1Title: 'Who paid today?',
