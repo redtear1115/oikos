@@ -285,7 +285,7 @@ export function Dashboard({
       </div>
       {isSolo ? (
         bannerDismissed ? (
-          <div className="px-5 pb-5">
+          <div className="px-5 pt-3 pb-5">
             <div className="text-xs flex items-center justify-between" style={{ color: 'var(--ink-3)' }}>
               <span>{t.dashboard.soloHint}</span>
               <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>
