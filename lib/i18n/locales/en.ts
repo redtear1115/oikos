@@ -283,6 +283,107 @@ export const en: Translations = {
 
   compactRow: {
     pendingBadge: 'Pending',
+    iSettled: 'I settled',
+    partnerSettled: '{name} settled',
+    youIncome: 'Your income',
+    partnerIncome: '{name}\'s income',
+    youPaid: 'You paid',
+    partnerPaid: '{name} paid',
+    trillion: 'T',
+    hundredMillion: 'B',
+  },
+
+  transactionFeed: {
+    loading: 'Loading…',
+    loadMore: 'Load more',
+    endOfFeed: 'No earlier records',
+    closeAriaLabel: 'Close',
+    settlementFallback: 'Settlement',
+  },
+
+  bottomNav: {
+    home: 'Home',
+    records: 'Records',
+    assets: 'Things',
+    settings: 'Settings',
+    addAriaLabel: 'Add record',
+  },
+
+  miniCalendar: {
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    prevYear: 'Previous year',
+    nextYear: 'Next year',
+    prevDecade: 'Previous decade',
+    nextDecade: 'Next decade',
+    selectMonth: 'Select month',
+    selectYear: 'Select year',
+    splitRatioAriaLabel: 'Split ratio',
+    dayViewTitle: '{month} {year} ˅',
+    monthViewTitle: '{year} ˅',
+    monthLabel: '{month}',
+    weekdays: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: 'Split method',
+    ratioAriaLabel: 'Split ratio',
+    evenSub: 'Split evenly',
+    partnerOwesYouAmount: 'Partner owes you {amount}',
+    youOwePartnerAmount: 'You owe partner {amount}',
+    ratioNoAmount: 'Me {me}% · Partner {other}%',
+    allMineSelfPaid: 'You paid for yourself — no debt',
+    allMinePartnerPaid: 'Partner paid for themselves — no debt',
+    allTheirsNoAmount: 'Partner owes you the full amount',
+    allTheirsPartnerNoAmount: 'You owe partner the full amount',
+    allTheirsYouPaid: 'Partner owes you {amount}',
+    allTheirsPartnerPaid: 'You owe partner {amount}',
+    meRatio: 'Me {ratio}%',
+    partnerRatio: 'Partner {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: 'A few items waiting for you',
+    collapse: 'Collapse',
+    expand: 'Show all ({count} more)',
+  },
+
+  pendingIncomeCard: {
+    confirm: 'Confirm',
+    edit: 'Edit',
+    skip: 'Skip',
+    skipTitle: 'Skip {date} {name}?',
+    skipDescription: 'This occurrence won\'t appear on the ledger. The next one will still remind you.',
+    confirmError: 'Confirmation failed',
+    skipError: 'Skip failed',
+  },
+
+  logoutButton: {
+    label: 'Log out',
+    pending: 'Logging out…',
+    title: 'Log out of Futari?',
+    description: 'You\'ll need to sign in again with Google next time. Records you\'ve added without inviting your partner won\'t be lost.',
+  },
+
+  splitRatioSection: {
+    meSuffix: ' (me)',
+    partnerSuffix: ' (partner)',
+  },
+
+  errorPage: {
+    retry: 'Retry',
+    subtitle: 'Please try again later.',
+    dashboard: 'Failed to load dashboard',
+    records: 'Failed to load records',
+    settings: 'Failed to load settings',
+    trips: 'Failed to load trips',
+    assets: 'Failed to load things',
+    review: 'Failed to load monthly review',
+  },
+
+  assetListItem: {
+    savingsBadge: 'Savings',
+    thisMonth: 'This month',
   },
 
   tripList: {
@@ -1499,27 +1600,5 @@ export const en: Translations = {
       step3: 'Futari opens like a standalone app',
     },
     fallbackHtml: 'Look inside your browser menu for "<strong>Add to Home Screen</strong>" or "<strong>Install app</strong>". The exact location differs between browsers, but it\'s usually in the top-right menu.',
-  },
-
-  // TODO(seo-copy): native-speaker review
-  seo: {
-    landing: {
-      title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
-      description: 'A shared household ledger built for couples and partners. Auto-split expenses, settle balances, track family assets, insurance, and fuel logs. Mobile-first PWA, crafted in Taiwan.',
-      ogDescription: 'Two people, one ledger. Log together, split automatically, settle effortlessly.',
-    },
-    signIn: {
-      title: 'Sign in to Futari · Start budgeting together',
-      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, manage insurance and assets, all in a mobile-first PWA.',
-      ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
-    },
-    terms: {
-      title: 'Terms of Service · Futari',
-      description: 'Terms of service and user notes for the Futari alpha test build.',
-    },
-    privacy: {
-      title: 'Privacy Policy · Futari',
-      description: 'How the Futari alpha test build collects and handles your data.',
-    },
   },
 }
