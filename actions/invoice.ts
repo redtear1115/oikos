@@ -24,13 +24,18 @@ import { revalidateSettings } from '@/lib/revalidate'
  *     and may be UPDATEd in place).
  */
 
+// Known 財政部 MoF API error codes mapped to user-readable Chinese messages.
+// Unknown codes fall through to a generic 驗證失敗 message in `mapMofErrorToMessage`.
+// Add new codes here as we encounter them — keeping this as a const Record (vs a
+// switch) keeps additions a one-line change and makes the full coverage greppable.
+const MOF_ERROR_MESSAGES: Record<string, string> = {
+  '919': '條碼或驗證碼有誤，請確認',
+  '953': '服務暫時無法使用，稍後再試',
+  '998': '服務暫時無法使用，稍後再試',
+}
+
 function mapMofErrorToMessage(code: string): string {
-  switch (code) {
-    case '919': return '條碼或驗證碼有誤，請確認'
-    case '953': return '服務暫時無法使用，稍後再試'
-    case '998': return '服務暫時無法使用，稍後再試'
-    default:    return `驗證失敗（${code}）`
-  }
+  return MOF_ERROR_MESSAGES[code] ?? `驗證失敗（${code}）`
 }
 
 /**
