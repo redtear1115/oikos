@@ -111,6 +111,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
           </>
         )}
+        {/* Warm Google Fonts so Fraunces + Noto Sans TC woff2 fetches don't
+            wait for document parse. preconnect to fonts.googleapis.com (CSS
+            host); dns-prefetch to fonts.gstatic.com (font binary host) since
+            the actual binary URL isn't known until the CSS resolves. (#511) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
       </head>
       <body className="antialiased">
         <InAppBrowserGuardLazy strings={t.inAppBrowser} />
