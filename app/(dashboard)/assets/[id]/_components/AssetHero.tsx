@@ -5,7 +5,8 @@ import { useTranslations } from '@/lib/i18n/client'
 import type { FuelType } from '@/lib/fuel'
 
 interface AssetHeroProps {
-  name: React.ReactNode
+  /** When omitted the card renders without the name/subtitle header row (headless mode). */
+  name?: React.ReactNode
   plate: string | null
   brand: string | null
   model: string | null
@@ -82,11 +83,11 @@ export function AssetHero({
 
   if (isElectric) {
     return (
-      <div className="px-3 pt-2 pb-3">
+      <div className="px-3 pt-4 pb-3">
         <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
-          {header}
-          {subtitle}
-          <div className="flex items-baseline gap-7 mt-6">
+          {name && header}
+          {name && subtitle}
+          <div className={`flex items-baseline gap-7 ${name ? 'mt-6' : ''}`}>
             <Stat label={t.assetDetail.money.thisMonth} amount={monthAmount} accent={false} />
             <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
             <Stat label={t.assetDetail.money.cumulative} amount={totalAmount} accent />
@@ -97,10 +98,10 @@ export function AssetHero({
   }
 
   return (
-    <div className="px-3 pt-[60px] pb-3">
+    <div className="px-3 pt-4 pb-3">
       <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
-        {header}
-        {subtitle}
+        {name && header}
+        {name && subtitle}
 
         <div className="text-center mt-5 pb-1">
           <div className="text-micro font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>{t.assetDetail.car.avgEcon}</div>

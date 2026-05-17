@@ -8,6 +8,7 @@ import type { AssetType } from '@/lib/assets'
 import type { BadgeTone } from '@/lib/insuranceBadge'
 
 const TINTS = {
+  car:       { bg: '#E5E2DC', accent: '#5A5045' },
   child:     { bg: '#F1DEE0', accent: '#A85B6A' },
   pet:       { bg: '#F0E2D0', accent: '#9A6B3F' },
   plant:     { bg: '#DCE7D6', accent: '#5A7A4A' },

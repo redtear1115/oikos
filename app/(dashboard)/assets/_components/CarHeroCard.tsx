@@ -92,7 +92,7 @@ export function CarHeroCard({
   model,
   latestOdometer,
   monthAmount,
-  compact: _compact = false,
+  compact = false,
   avgFuelEcon,
   lastFuelDate,
 }: Props) {
@@ -112,7 +112,7 @@ export function CarHeroCard({
       className="block no-underline relative"
       style={{
         background: 'var(--surface)',
-        borderRadius: 18,
+        borderRadius: 16,
         border: '1px solid var(--hairline)',
         overflow: 'hidden',
         color: 'var(--ink)',
@@ -145,7 +145,7 @@ export function CarHeroCard({
        *  累計 stays available on the car detail page. */}
       <div className="flex items-center gap-3 py-4 pr-5 pl-[22px]">
         <div className="shrink-0" aria-hidden="true">
-          <CarListMark swatch={swatch} size={40} />
+          <CarListMark swatch={swatch} size={compact ? 36 : 44} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export function CarHeroCard({
         </div>
       </div>
 
-      {(avgFuelEcon != null || lastFuelDate != null) && (
+      {!compact && (avgFuelEcon != null || lastFuelDate != null) && (
         <div
           style={{
             borderTop: '1px solid var(--hairline)',

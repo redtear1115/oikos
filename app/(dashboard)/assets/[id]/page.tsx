@@ -475,6 +475,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       assetId={asset.id}
       notes={asset.notes ?? null}
       linkedInsurances={linkedInsurances}
+      siblings={buildSiblings(allAssetsData, asset.id, today)}
       assetSheetInitial={{
         id: asset.id,
         type: asset.type,
