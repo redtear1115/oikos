@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient, getCurrentUser } from '@/lib/supabase/server'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { oikosGroups } from '@/lib/db/schema'
+import { localizedSignInPath } from '@/lib/i18n/server-redirect'
 
 export type ViewerGroup = typeof oikosGroups.$inferSelect
 
@@ -40,7 +41,7 @@ export async function requireViewerGroup(): Promise<{ user: User; group: ViewerG
  */
 export async function requireViewerOrRedirect(): Promise<{ user: User }> {
   const user = await getCurrentUser()
-  if (!user) redirect('/sign-in')
+  if (!user) redirect(await localizedSignInPath())
   return { user }
 }
 
