@@ -1,6 +1,6 @@
 # Futari OG image renderer
 
-Renders 4 OG / social-share images for the Futari landing from a single
+Renders 3 OG / social-share images for the Futari landing from a single
 `template.html` source (Editorial direction — 「兩個人，**一本帳**。」).
 
 ## What gets generated
@@ -8,7 +8,6 @@ Renders 4 OG / social-share images for the Futari landing from a single
 | File | Size | Where it goes | Use |
 |---|---|---|---|
 | `og-image.png` | 1200 × 630 | `public/og-image.png` | Default OG (referenced in `app/layout.tsx`) |
-| `og-image-2x.png` | 2400 × 1260 | `public/og-image-2x.png` | Retina version; same design captured at DSR 2 |
 | `og-line.png` | 1200 × 600 | `public/og-line.png` | LINE Talk share image (slightly shorter aspect) |
 | `og-square.png` | 1200 × 1200 | `public/og-square.png` | Instagram / Threads square preview |
 
@@ -26,7 +25,6 @@ Outputs:
 
 ```
 ✓ og-image.png    → /path/to/oikos/public/og-image.png      (1200×630 px)
-✓ og-image-2x.png → /path/to/oikos/public/og-image-2x.png   (2400×1260 px)
 ✓ og-line.png     → /path/to/oikos/public/og-line.png       (1200×600 px)
 ✓ og-square.png   → /path/to/oikos/public/og-square.png     (1200×1200 px)
 ```

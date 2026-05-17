@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition, useId } from 'react'
+import { useState, useId } from 'react'
 import { CalIcon } from '@/app/(dashboard)/_components/sheet-icons'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { localTodayISO } from '@/lib/local-date'
 import { formatDateAbsolute } from '@/lib/format-date'
-import { useLocale, useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
-import { createHouse, editHouse, softDeleteAsset } from '@/actions/asset'
+import { useLocale } from '@/lib/i18n/client'
+import { createHouse, editHouse } from '@/actions/asset'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
+import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 
 export type HouseInitial = Pick<
@@ -25,73 +25,48 @@ interface Props extends BodySharedProps {
 }
 
 export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
-  const isEdit = !!initial
   const locale = useLocale()
-  const t = useTranslations()
-  const ts = t.assetSheet
-  const [name, setName] = useState(initial?.name ?? '')
   const [address, setAddress] = useState(initial?.houseAddress ?? '')
   const [purchasedAt, setPurchasedAt] = useState(initial?.housePurchasedAt ?? '')
   const [purchasePrice, setPurchasePrice] = useState(initial?.housePurchasePrice?.toString() ?? '')
-  const [notes, setNotes] = useState(initial?.notes ?? '')
   const [showCal, setShowCal] = useState(false)
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const nameInputRef = useRef<HTMLInputElement>(null)
   const addressId = useId()
   const purchaseDateId = useId()
   const purchasePriceId = useId()
 
-  useEffect(() => {
-    if (!open) return
-    setName(initial?.name ?? '')
-    setAddress(initial?.houseAddress ?? '')
-    setPurchasedAt(initial?.housePurchasedAt ?? '')
-    setPurchasePrice(initial?.housePurchasePrice?.toString() ?? '')
-    setNotes(initial?.notes ?? '')
-    setShowCal(false)
-    setError('')
-    const id = setTimeout(() => nameInputRef.current?.focus(), 350)
-    return () => clearTimeout(id)
-  }, [open, initial])
+  const {
+    isEdit, name, setName, notes, setNotes, pending, error,
+    nameInputRef, ts, performDelete, runMutation,
+  } = useAssetSheetCommon({
+    open, initial, onClose, onMutated,
+    resetDomain: () => {
+      setAddress(initial?.houseAddress ?? '')
+      setPurchasedAt(initial?.housePurchasedAt ?? '')
+      setPurchasePrice(initial?.housePurchasePrice?.toString() ?? '')
+      setShowCal(false)
+    },
+  })
 
   const canSave = name.trim() !== '' && !pending
 
   const handleSave = () => {
-    const notesPayload = notes.trim() || null
-    startTransition(async () => {
-      try {
-        const payload = {
-          name: name.trim(),
-          address: address.trim() || null,
-          purchasedAt: purchasedAt || null,
-          purchasePrice: purchasePrice ? parseInt(purchasePrice, 10) : null,
-          notes: notesPayload,
-        }
+    const payload = {
+      name: name.trim(),
+      address: address.trim() || null,
+      purchasedAt: purchasedAt || null,
+      purchasePrice: purchasePrice ? parseInt(purchasePrice, 10) : null,
+      notes: notes.trim() || null,
+    }
+    runMutation(
+      async () => {
         if (isEdit) {
           await editHouse({ id: initial!.id, ...payload })
         } else {
           await createHouse(payload)
         }
-        onMutated?.('saved')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
-  }
-
-  const performDelete = () => {
-    if (!isEdit) return
-    startTransition(async () => {
-      try {
-        await softDeleteAsset(initial!.id)
-        onMutated?.('deleted')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+      },
+      () => { onMutated?.('saved'); onClose() },
+    )
   }
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.house) : ts.titleNew

@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
+import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
-import { DateField } from './DateField'
+import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { IncomeChip } from './IncomeChip'
 import { createIncome, editIncome, softDeleteIncome, getInsuranceAssets } from '@/actions/income'
 import { editAndConfirmPending } from '@/actions/recurringIncome'
@@ -18,7 +19,6 @@ import type { IncomeCategoryId } from '@/lib/incomeCategories'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
 
@@ -85,9 +85,11 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   const [date, setDate] = useState(localTodayISO())
   const [note, setNote] = useState('')
   const [assetId, setAssetId] = useState<string | null>(null)
-  const [error, setError] = useState('')
-  const [pending, startTransition] = useTransition()
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const {
+    pending, error, setError,
+    confirmingDelete, setConfirmingDelete,
+    runMutation, performDelete: dispatchDelete,
+  } = useSheetMutation()
 
   // Policy picker state
   const [showPolicyPicker, setShowPolicyPicker] = useState(false)
@@ -134,7 +136,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
     setError('')
     setConfirmingDelete(false)
     setShowPolicyPicker(false)
-  }, [open, initial, viewer.id, prefilledAssetId, prefilledCategory, prefilledAmount])
+  }, [open, initial, viewer.id, prefilledAssetId, prefilledCategory, prefilledAmount, setError, setConfirmingDelete])
 
   // Auto-suggest policy picker when category is maturity/claim
   useEffect(() => {
@@ -165,8 +167,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
     const n = parseInt(amount, 10)
     if (!n || n <= 0) { setError(t.incomeSheet.errors.amountRequired); return }
 
-    startTransition(async () => {
-      try {
+    runMutation(
+      async () => {
         if (isPending) {
           if (!pendingId) throw new Error(t.incomeSheet.errors.missingPendingId)
           await editAndConfirmPending({
@@ -198,37 +200,43 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             assetId,
           })
         }
-        onMutated?.({ savedAmount: n, edit: isEdit || isPending })
-        onClose()
-      } catch (e) {
-        const msg = describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError)
-        // Race: partner confirmed/skipped this pending in another tab/device
-        // before our edit-confirm landed. The error messages from
-        // editAndConfirmPending in that case are: '待確認收入已被處理或找不到'
-        // (pre-check) or '待確認收入已被其他裝置處理' (in-tx guard).
-        if (isPending && msg.includes('待確認收入')) {
-          onMutated?.()
+      },
+      {
+        fallbackMsg: t.incomeSheet.errors.saveFailed,
+        offlineMsg: t.common.offlineError,
+        onSuccess: () => {
+          onMutated?.({ savedAmount: n, edit: isEdit || isPending })
           onClose()
-          onRaceResolved?.(t.recurringIncome.raceMessage)
-          return
-        }
-        setError(msg)
-      }
-    })
+        },
+        onError: (msg) => {
+          // Race: partner confirmed/skipped this pending in another tab/device
+          // before our edit-confirm landed. The error messages from
+          // editAndConfirmPending in that case are: '待確認收入已被處理或找不到'
+          // (pre-check) or '待確認收入已被其他裝置處理' (in-tx guard).
+          if (isPending && msg.includes('待確認收入')) {
+            onMutated?.()
+            onClose()
+            onRaceResolved?.(t.recurringIncome.raceMessage)
+            return true
+          }
+        },
+      },
+    )
   }
 
   const performDelete = () => {
     if (!isEdit) return
-    setConfirmingDelete(false)
-    startTransition(async () => {
-      try {
-        await softDeleteIncome(initial!.id)
-        onMutated?.({ deleted: true })
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+    dispatchDelete(
+      async () => { await softDeleteIncome(initial!.id) },
+      {
+        fallbackMsg: t.common.error,
+        offlineMsg: t.common.offlineError,
+        onSuccess: () => {
+          onMutated?.({ deleted: true })
+          onClose()
+        },
+      },
+    )
   }
 
   return (

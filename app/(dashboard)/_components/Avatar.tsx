@@ -46,6 +46,8 @@ export function Avatar({ memberRole, initial, src, size = 28, ring = false }: Pr
           width={size - ringPx * 2}
           height={size - ringPx * 2}
           referrerPolicy="no-referrer"
+          loading="lazy"
+          decoding="async"
           onError={() => setImgFailed(true)}
           className="w-full h-full rounded-full object-cover"
         />

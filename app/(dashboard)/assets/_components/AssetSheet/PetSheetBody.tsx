@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
-import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
-import { createPet, editPet, softDeleteAsset } from '@/actions/asset'
+import { useState } from 'react'
+import { createPet, editPet } from '@/actions/asset'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
+import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 
 export type PetInitial = Pick<
@@ -23,11 +22,7 @@ interface Props extends BodySharedProps {
 }
 
 export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
-  const isEdit = !!initial
-  const t = useTranslations()
-  const ts = t.assetSheet
   const initSex = (initial?.petSex === 'male' || initial?.petSex === 'female' || initial?.petSex === 'unknown') ? initial.petSex : null
-  const [name, setName] = useState(initial?.name ?? '')
   const [species, setSpecies] = useState(initial?.petSpecies ?? '')
   const [breed, setBreed] = useState(initial?.petBreed ?? '')
   const [sex, setSex] = useState<'male' | 'female' | 'unknown' | null>(initSex)
@@ -37,72 +32,51 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
   const [weightKg, setWeightKg] = useState(initial?.petWeightG ? (initial.petWeightG / 1000).toFixed(1) : '')
   const [chipNo, setChipNo] = useState(initial?.petChipNo ?? '')
   const [vet, setVet] = useState(initial?.petVet ?? '')
-  const [notes, setNotes] = useState(initial?.notes ?? '')
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const nameInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    setName(initial?.name ?? '')
-    setSpecies(initial?.petSpecies ?? '')
-    setBreed(initial?.petBreed ?? '')
-    setSex((initial?.petSex === 'male' || initial?.petSex === 'female' || initial?.petSex === 'unknown') ? initial.petSex : null)
-    setBirthDate(initial?.petBirthDate ?? '')
-    setAdoptedDate(initial?.petAdoptedDate ?? '')
-    setCost(initial?.petPurchaseCost?.toString() ?? '')
-    setWeightKg(initial?.petWeightG ? (initial.petWeightG / 1000).toFixed(1) : '')
-    setChipNo(initial?.petChipNo ?? '')
-    setVet(initial?.petVet ?? '')
-    setNotes(initial?.notes ?? '')
-    setError('')
-    const id = setTimeout(() => nameInputRef.current?.focus(), 350)
-    return () => clearTimeout(id)
-  }, [open, initial])
+  const {
+    isEdit, name, setName, notes, setNotes, pending, error,
+    nameInputRef, ts, performDelete, runMutation,
+  } = useAssetSheetCommon({
+    open, initial, onClose, onMutated,
+    resetDomain: () => {
+      setSpecies(initial?.petSpecies ?? '')
+      setBreed(initial?.petBreed ?? '')
+      setSex((initial?.petSex === 'male' || initial?.petSex === 'female' || initial?.petSex === 'unknown') ? initial.petSex : null)
+      setBirthDate(initial?.petBirthDate ?? '')
+      setAdoptedDate(initial?.petAdoptedDate ?? '')
+      setCost(initial?.petPurchaseCost?.toString() ?? '')
+      setWeightKg(initial?.petWeightG ? (initial.petWeightG / 1000).toFixed(1) : '')
+      setChipNo(initial?.petChipNo ?? '')
+      setVet(initial?.petVet ?? '')
+    },
+  })
 
   const canSave = name.trim() !== '' && !pending
 
   const handleSave = () => {
-    const notesPayload = notes.trim() || null
-    startTransition(async () => {
-      try {
-        const payload = {
-          name: name.trim(),
-          species: species.trim() || null,
-          breed: breed.trim() || null,
-          sex,
-          birthDate: birthDate || null,
-          adoptedDate: adoptedDate || null,
-          purchaseCost: cost ? parseInt(cost, 10) : null,
-          weightG: weightKg ? Math.round(parseFloat(weightKg) * 1000) : null,
-          chipNo: chipNo.trim() || null,
-          vet: vet.trim() || null,
-          notes: notesPayload,
-        }
+    const payload = {
+      name: name.trim(),
+      species: species.trim() || null,
+      breed: breed.trim() || null,
+      sex,
+      birthDate: birthDate || null,
+      adoptedDate: adoptedDate || null,
+      purchaseCost: cost ? parseInt(cost, 10) : null,
+      weightG: weightKg ? Math.round(parseFloat(weightKg) * 1000) : null,
+      chipNo: chipNo.trim() || null,
+      vet: vet.trim() || null,
+      notes: notes.trim() || null,
+    }
+    runMutation(
+      async () => {
         if (isEdit) {
           await editPet({ id: initial!.id, ...payload })
         } else {
           await createPet(payload)
         }
-        onMutated?.('saved')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
-  }
-
-  const performDelete = () => {
-    if (!isEdit) return
-    startTransition(async () => {
-      try {
-        await softDeleteAsset(initial!.id)
-        onMutated?.('deleted')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+      },
+      () => { onMutated?.('saved'); onClose() },
+    )
   }
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.pet) : ts.titleNew

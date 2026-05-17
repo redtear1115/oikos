@@ -15,6 +15,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.0.4] - 2026-05-17
+
+主題：**前端 refactor 大掃除 + 效能優化**——清掉 `actions/` + `app/(dashboard)/` 累積的重複 / 巨大 component / 散落 helpers（#512 八個 PR），同時把首次載入跟靜態資源體積順手優化（#511 三個 PR + #517 一個 RLS 補洞）。零 schema 改動、零使用者 flow 變化，但啟動更快、icon 更小。
+完整 diff：[v1.0.3...v1.0.4](https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4)
+
+### 使用者可見變化
+
+- **首次載入更快（#518, #521）**：`next.config` 加上 AVIF/WebP image format 協商、Google Fonts preconnect；avatar 圖片改成 lazy load、guardian 模組改成 UA-gate 動態載入（沒開守護 beta 的客戶端不下載對應 chunk）。
+- **App icon 變小 64–71%（#524）**：iOS / Android 主畫面 icon PNG 重新壓縮並加 WebP 變體；icon-512 從 382 KB → 112 KB、icon-192 從 63 KB → 23 KB。
+
+### 技術變更
+
+- **`lib/auth/asset.ts` + `lib/auth/member.ts` 抽出（#519, #512 pt 1）**：`actions/transaction.ts` / `income.ts` / `settlement.ts` / `tripExpense.ts` 內三份重複的 `assertAssetInGroup` / `assertMemberInGroup` 收歸統一 helpers；`lib/recurringActionHelpers.ts` 保留為 re-export shim 不破壞 recurring action imports。順手把「關聯資產」錯誤訊息統一為「關聯愛物」（CLAUDE.md 命名規範）。
+- **`DateField` 統一（#520, #512 pt 2）**：dashboard sheet 與 asset sheet 兩份近似實作收成一個 `app/(dashboard)/_components/DateField.tsx`，card / inline 兩種變體用 `label` prop 判別；刪掉舊兩個檔案。
+- **`lib/local-date.ts` 補三個 helper（#522, #512 pt 3）**：`todayLocalDate` / `daysBetween` / `parseLocalDate` 從 `InsuranceListItem.tsx` 內聯 helper 抽出，alongside 既有的 `localTodayISO` / `ymdToUTCNoon`。
+- **`useSheetMutation` hook（#528, #512 pt 4）**：AddSheet + IncomeSheet 共用的 pending / error / confirmingDelete / runMutation / performDelete + race-resolution `onError` callback 收成 `app/(dashboard)/_components/useSheetMutation.ts`。TripSheet 的 error shape 不同（string | null + 與 sync validation 組合）未納入。
+- **`useAssetSheetCommon` hook（#527, #512 pt 5）**：6 個 AssetSheet body（Car / Child / House / Insurance / Pet / Plant）共用的 name + notes + error + pending + open-reset effect + 350ms focus timeout + performDelete 收成 `shared/useAssetSheetCommon.ts`；每個 body 透過 `resetDomain` callback 重設自己的 domain 欄位。每個 body 約少 25 LOC。
+- **MonthlyStatsView 拆檔（#529, #512 pt 6）**：791 LOC 拆成 `MonthlyStatsView.tsx`（376）+ `MonthlyStatsPieChart.tsx`（211）+ `MonthlyStatsBars.tsx`（237）；同時把 FilterSheet 的 `Section` / `Chip` / `AssetGroupSection` 抽到 `FilterSheetChrome.tsx`，FilterSheet 從 704 → 623 LOC。URL sync 留在 main component 內，不擴散到 chrome primitives。
+- **`EndTripSheet` 抽出（#526, #512 pt 7）**：從 TripDetailClient 內 88 LOC 的 mini-form 提到 sibling 檔，parent 從 691 → 601 LOC。
+- **MoF error map + recurring sync 註解（#525, #512 pt 8）**：`actions/invoice.ts` 的 `mapMofErrorToMessage` switch 改成 `const Record<string, string>`；`actions/recurringExpense.ts` + `recurringIncome.ts` 加 keep-in-sync header 註解。
+- **`next.config.ts` hardening（#518, #511 phase 1）**：image AVIF/WebP format、mobile-first deviceSizes 收窄、Cache-Control headers 給 static assets、Google Fonts preconnect。零功能變更，純 config。
+- **Avatar lazy + guardian UA-gate（#521, #511 phase 2）**：`<Avatar>` 加 `loading="lazy"` + `decoding="async"`，below-the-fold avatars（BottomNav / AvatarMenu / feed / settings）不再 eager fetch。Guardian module 改成 UA-check 動態載入，沒開 beta flag 的客戶端不下載對應 chunk。
+- **PNG icons 壓縮 + WebP 變體（#524, #511 phase 3）**：512 / 192 icon 壓縮 64–71%，總共少傳 ~700 KB；加 WebP 變體讓 Accept-aware client 拿到更小檔。
+- **`invites_select` RLS InitPlan 補洞（#523, #517）**：v1.0.3 的 0045 migration 漏到的 legacy `db/rls/policies.sql` 內 `invites_select` policy，0048 補上 `(select auth.uid())` wrap，Supabase advisor `auth_rls_initplan` WARN 完全清零。
+
 ## [1.0.3] - 2026-05-17
 
 主題：**Supabase Advisor 全面清零**——把 security advisor 與 performance advisor 上累積的 RLS / SECURITY DEFINER / search_path / 多重 permissive policy 警告一次掃乾淨。沒有 schema 改動、沒有 UI 變化；其中 5 張表（CurrencyRates / PetDetails / PlantDetails / Trips / TripExpenses）原本因為缺 RLS policy，Realtime 訂閱者收不到 INSERT/UPDATE 事件，本版修好。
@@ -1105,7 +1130,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/redtear1115/oikos/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/redtear1115/oikos/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/redtear1115/oikos/compare/v1.0.0...v1.0.1

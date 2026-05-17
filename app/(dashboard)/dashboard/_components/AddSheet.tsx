@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
+import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
@@ -26,12 +27,11 @@ import type { SplitType } from '@/lib/balance'
 import type { RecordStatus } from '@/lib/validators'
 import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
 import { CategoryPicker } from './CategoryPicker'
-import { DateField } from './DateField'
+import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { AssetLinkField } from './AssetLinkField'
 import { PayerToggle } from './PayerToggle'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
 import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
 import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
@@ -128,8 +128,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [date, setDate] = useState(localTodayISO())
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<RecordStatus>('settled')
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
+  const {
+    pending, error, setError,
+    confirmingDelete, setConfirmingDelete,
+    runMutation, performDelete: dispatchDelete,
+  } = useSheetMutation()
   const amountInputRef = useRef<HTMLInputElement>(null)
   const scrollableRef = useRef<HTMLDivElement>(null)
   const [assetId, setAssetId] = useState<string | null>(null)
@@ -259,9 +262,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     const payerId = isSolo ? viewer.id : (payerWho === 'M' ? viewer.id : partner!.id)
     const splitType: SplitType = isSolo ? 'all_mine' : split
 
-    startTransition(async () => {
-      try {
-        let isFirstTransaction = false
+    // Capture isFirstTransaction across the closure since runMutation's
+    // op/onSuccess split breaks the linear flow.
+    let isFirstTransaction = false
+
+    runMutation(
+      async () => {
         if (isPending) {
           await editAndConfirmPending({
             pendingId: pendingExpenseId!,
@@ -347,41 +353,48 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           })
           isFirstTransaction = result.isFirstTransaction
         }
-        onMutated?.({ isFirstTransaction, savedAmount: n, edit: isEdit || isPending })
-        onClose()
-      } catch (e) {
-        const msg = describeError(e, t.common.error, t.common.offlineError)
-        // Race: partner confirmed/skipped this pending in another tab/device
-        // before our edit-confirm landed. Action errors in that case contain
-        // '待確認支出' (matches both '已被處理或找不到' and '已被其他裝置處理').
-        if (isPending && msg.includes('待確認支出')) {
-          onMutated?.()
+      },
+      {
+        fallbackMsg: t.common.error,
+        offlineMsg: t.common.offlineError,
+        onSuccess: () => {
+          onMutated?.({ isFirstTransaction, savedAmount: n, edit: isEdit || isPending })
           onClose()
-          onRaceResolved?.(t.recurringExpense.raceMessage)
-          return
-        }
-        setError(msg)
-      }
-    })
+        },
+        onError: (msg) => {
+          // Race: partner confirmed/skipped this pending in another tab/device
+          // before our edit-confirm landed. Action errors in that case contain
+          // '待確認支出' (matches both '已被處理或找不到' and '已被其他裝置處理').
+          if (isPending && msg.includes('待確認支出')) {
+            onMutated?.()
+            onClose()
+            onRaceResolved?.(t.recurringExpense.raceMessage)
+            return true
+          }
+        },
+      },
+    )
   }
 
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const performDelete = () => {
     if (!isEdit) return
-    setConfirmingDelete(false)
-    startTransition(async () => {
-      try {
+    dispatchDelete(
+      async () => {
         if (editingTripExpense) {
           await softDeleteTripExpense({ id: initial!.id, tripId: initial!.tripId! })
         } else {
           await softDeleteTransaction(initial!.id)
         }
-        onMutated?.({ deleted: true })
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+      },
+      {
+        fallbackMsg: t.common.error,
+        offlineMsg: t.common.offlineError,
+        onSuccess: () => {
+          onMutated?.({ deleted: true })
+          onClose()
+        },
+      },
+    )
   }
 
   return (
