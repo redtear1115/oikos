@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v0.17.6**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.0.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -21,7 +21,6 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
-| [v1.0.0](https://github.com/redtear1115/oikos/milestone/1) | 公開 landing．接住歷史 |
 | [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
 | [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 |
 
