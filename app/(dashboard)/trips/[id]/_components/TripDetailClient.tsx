@@ -1,15 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import { AddSheet, type AddSheetInitial, type RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { TripSheet, type TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
-import { endTrip } from '@/actions/trip'
+import { EndTripSheet } from './EndTripSheet'
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
 import type { SplitType } from '@/lib/balance'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -600,92 +599,3 @@ function aShareFraction(
   }
 }
 
-function EndTripSheet(props: {
-  open: boolean
-  tripId: string
-  startDate: string
-  suggestedEndDate: string
-  onClose: () => void
-}) {
-  const router = useRouter()
-  const t = useTranslations()
-  const [endDate, setEndDate] = useState(props.suggestedEndDate)
-  const [pending, start] = useTransition()
-  const [err, setErr] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!props.open) return
-    setEndDate(props.suggestedEndDate)
-    setErr(null)
-  }, [props.open, props.suggestedEndDate])
-
-  const dateInvalid = endDate < props.startDate
-  const canSave = !dateInvalid && !pending
-
-  function submit() {
-    if (!canSave) return
-    setErr(null)
-    start(async () => {
-      try {
-        await endTrip({ tripId: props.tripId, endDate })
-        props.onClose()
-        router.refresh()
-      } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : t.tripDetail.endFailure)
-      }
-    })
-  }
-
-  return (
-    <SheetShell
-      open={props.open}
-      title={t.tripDetail.endTitle}
-      canSave={canSave}
-      pending={pending}
-      bottomSaveLabel={t.tripDetail.endConfirm}
-      error={err ?? ''}
-      onClose={props.onClose}
-      onSave={submit}
-      destructive
-    >
-      <div className="flex flex-col gap-3">
-        <div
-          className="rounded-[12px] px-3 py-2.5 text-sm leading-relaxed"
-          style={{
-            background: 'var(--debit-soft)',
-            color: 'var(--destructive)',
-          }}
-          role="alert"
-        >
-          {t.tripDetail.endIrreversibleNote}
-        </div>
-
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-          {t.tripDetail.endBody}
-        </p>
-
-        <label className="block">
-          <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t.tripDetail.endDateLabel}</span>
-          <input
-            type="date"
-            className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
-            style={{
-              background: 'var(--surface)',
-              border: dateInvalid ? '1px solid var(--debit, #c0392b)' : '1px solid var(--hairline)',
-              color: 'var(--ink)',
-            }}
-            min={props.startDate}
-            value={endDate}
-            onChange={e => setEndDate(e.target.value)}
-          />
-        </label>
-
-        {dateInvalid && (
-          <p className="text-xs" style={{ color: 'var(--debit, #c0392b)' }}>
-            {t.tripDetail.endDateBeforeStart.replace('{date}', props.startDate)}
-          </p>
-        )}
-      </div>
-    </SheetShell>
-  )
-}
