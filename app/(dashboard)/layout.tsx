@@ -63,6 +63,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     isSolo: !partnerProfile,
     isPast: epochWindow.isPast,
     canAccessGuardian: canAccessGuardian(group),
+    epochStartedAt: epochWindow.startedAt.toISOString(),
+    epochEndedAt: epochWindow.endedAt ? epochWindow.endedAt.toISOString() : null,
   }
 
   const avatarMenuData: AvatarMenuData = {

@@ -27,6 +27,11 @@ export interface MemberContextValue {
    *  subscription). Drives nav-tab rendering on /assets and similar gates;
    *  server-side routes also recheck via `canAccessGuardian()`. */
   canAccessGuardian: boolean
+  /** ISO date string of when the current (or pinned past) epoch started.
+   *  Used by ContextStrip to display the date range in past-epoch banners. */
+  epochStartedAt: string
+  /** ISO date string of when the epoch ended; null if this is the current epoch. */
+  epochEndedAt: string | null
 }
 
 const MemberContext = createContext<MemberContextValue | null>(null)
