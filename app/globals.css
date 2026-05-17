@@ -202,3 +202,21 @@ body {
   animation: rt-fade-out 0.5s ease-out forwards;
   overflow: hidden;
 }
+
+/* Sign-in /about narrative — scroll-driven fade-up per article. Uses
+ * CSS scroll-driven animation (animation-timeline: view()) so each <article>
+ * animates independently when it enters the viewport, with all 7 sections
+ * staying in the DOM at all times (SEO-safe). Browsers without view-timeline
+ * support (e.g. Firefox stable as of 2026-05) skip the animation entirely
+ * via the @supports guard and just render the content normally. */
+@keyframes about-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@supports (animation-timeline: view()) {
+  .about-article {
+    animation: about-fade-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+}

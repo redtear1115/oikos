@@ -149,7 +149,7 @@ function AboutNarrative({ about }: { about: AboutStrings }) {
       {sections.map((s, i) => {
         const lastIdx = s.body.length - 1
         return (
-          <article key={i} className="flex flex-col gap-4">
+          <article key={i} className="about-article flex flex-col gap-4">
             <h2
               className="m-0 text-[19px] lg:text-[22px] leading-snug"
               style={{
