@@ -6,7 +6,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
-import { AibutsuHeader } from './AibutsuHeader'
+import { AibutsuHeader, type SiblingChip } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
@@ -29,6 +29,7 @@ interface Props {
   assetSheetInitial: AssetSheetInitial
   initialTxns: PagedTxnRow[]
   pageSize: number
+  siblings?: SiblingChip[]
 }
 
 // #222 — detail page for template-based assets. Renders the template's
@@ -49,6 +50,7 @@ export function TemplateAssetDetailClient({
   assetSheetInitial,
   initialTxns,
   pageSize,
+  siblings,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -95,6 +97,8 @@ export function TemplateAssetDetailClient({
         name={name}
         subtitle={subtitle}
         onEditClick={() => setEditOpen(true)}
+        siblings={siblings}
+        currentAssetId={assetId}
       />
 
       <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={accent} />

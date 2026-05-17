@@ -1113,6 +1113,11 @@ export const zhCN: Translations = {
     backAriaLabel: '返回',
     editAriaLabel: '编辑',
     switcherAriaLabel: '切换爱物',
+    siblingRailAriaLabel: '其他爱物',
+    switcher: {
+      emptyGroup: '（无）',
+      currentLabel: '当前',
+    },
     notesSection: '备注',
     recentExpenses: '近期支出',
     timelineEntries: '时间轴 · {count} 笔',

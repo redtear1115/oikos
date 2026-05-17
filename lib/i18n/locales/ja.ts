@@ -1112,6 +1112,11 @@ export const ja: Translations = {
     backAriaLabel: '戻る',
     editAriaLabel: '編集',
     switcherAriaLabel: '愛物を切り替え',
+    siblingRailAriaLabel: '他の愛物',
+    switcher: {
+      emptyGroup: '（なし）',
+      currentLabel: '現在',
+    },
     notesSection: 'メモ',
     recentExpenses: '最近の支出',
     timelineEntries: 'タイムライン · {count} 件',

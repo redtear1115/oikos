@@ -129,14 +129,15 @@ export async function getCarHeroStats(
   assetId: string,
   initialOdometer: number | null,
   epochWindow: EpochWindow,
-): Promise<{ latestOdometer: number | null; avgFuelEcon: number | null }> {
+): Promise<{ latestOdometer: number | null; avgFuelEcon: number | null; lastFuelDate: Date | null }> {
   const logs = await listFuelLogsForAsset(assetId, epochWindow)  // desc by loggedAt
   if (logs.length === 0) {
-    return { latestOdometer: initialOdometer, avgFuelEcon: null }
+    return { latestOdometer: initialOdometer, avgFuelEcon: null, lastFuelDate: null }
   }
   const latestOdometer = logs[0].odometer
+  const lastFuelDate = logs[0].loggedAt
   if (logs.length < 2) {
-    return { latestOdometer, avgFuelEcon: null }
+    return { latestOdometer, avgFuelEcon: null, lastFuelDate }
   }
   // logs are desc; earliest is logs[logs.length - 1]
   const earliest = logs[logs.length - 1]
@@ -146,9 +147,9 @@ export async function getCarHeroStats(
     .slice(0, logs.length - 1)
     .reduce((acc, l) => acc + parseFloat(l.liters), 0)
   if (distance <= 0 || litersSum <= 0) {
-    return { latestOdometer, avgFuelEcon: null }
+    return { latestOdometer, avgFuelEcon: null, lastFuelDate }
   }
-  return { latestOdometer, avgFuelEcon: distance / litersSum }
+  return { latestOdometer, avgFuelEcon: distance / litersSum, lastFuelDate }
 }
 
 /**
