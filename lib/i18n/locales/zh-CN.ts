@@ -603,6 +603,7 @@ export const zhCN: Translations = {
 
   settings: {
     title: '设置',
+    subtitle: '账号 · 应用 · 数据',
     sectionGroup: '账本',
     sectionGroupSplit: '预设分摊方式 & 比例',
     groupName: '账本名称',
@@ -760,6 +761,10 @@ export const zhCN: Translations = {
       splitType: '分摊',
       notes: '备注',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: '伙伴已离开账本。之前的记录都还在。',
   },
 
   assets: {

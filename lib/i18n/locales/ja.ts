@@ -602,6 +602,7 @@ export const ja: Translations = {
 
   settings: {
     title: '設定',
+    subtitle: 'アカウント・アプリ・データ',
     sectionGroup: '家計簿',
     sectionGroupSplit: 'デフォルト分担方式 & 比率',
     groupName: '家計簿名',
@@ -759,6 +760,10 @@ export const ja: Translations = {
       splitType: '負担',
       notes: 'メモ',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: 'パートナーがアカウントを離れました。これまでの記録はすべて残っています。',
   },
 
   assets: {

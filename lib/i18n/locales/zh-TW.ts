@@ -805,6 +805,7 @@ export type Translations = {
 
   settings: {
     title: string
+    subtitle: string
     sectionGroup: string
     sectionGroupSplit: string
     groupName: string
@@ -966,6 +967,10 @@ export type Translations = {
       splitType: string
       notes: string
     }
+  }
+
+  contextStrip: {
+    partnerLeftLine: string
   }
 
   assets: {
@@ -2542,6 +2547,7 @@ export const zhTW: Translations = {
 
   settings: {
     title: '設定',
+    subtitle: '帳號 · 應用 · 資料',
     sectionGroup: '帳本',
     sectionGroupSplit: '預設分攤方式 & 比例',
     groupName: '帳本名稱',
@@ -2699,6 +2705,10 @@ export const zhTW: Translations = {
       splitType: '分攤',
       notes: '備註',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: '夥伴已離開帳本。之前的紀錄都還在。',
   },
 
   assets: {

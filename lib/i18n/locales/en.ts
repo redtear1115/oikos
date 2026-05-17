@@ -604,6 +604,7 @@ export const en: Translations = {
 
   settings: {
     title: 'Settings',
+    subtitle: 'Account · App · Data',
     sectionGroup: 'Ledger',
     sectionGroupSplit: 'Default Split & Ratio',
     groupName: 'Ledger name',
@@ -761,6 +762,10 @@ export const en: Translations = {
       splitType: 'Split',
       notes: 'Notes',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: 'Your partner has left the account. All previous records are still here.',
   },
 
   assets: {
