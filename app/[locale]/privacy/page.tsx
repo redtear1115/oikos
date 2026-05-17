@@ -28,6 +28,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
   const { locale: raw } = await params
   if (!isLocale(raw)) return null
   const locale: Locale = raw
+  const t = dictionaries[locale]
 
   return (
     <main
@@ -39,70 +40,61 @@ export default async function PrivacyPage({ params }: { params: Params }) {
           className="text-page leading-tight mb-2"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
-          隱私權政策
+          {t.privacyPage.heading}
         </h1>
         <p className="text-xs mb-8" style={{ color: 'var(--ink-3)' }}>
-          最後更新：2026 年 5 月 3 日
+          {t.privacyPage.lastUpdated}
         </p>
 
         <div className="space-y-5 text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-          <p>
-            Futari 目前處於 alpha 測試階段，本頁說明測試期間的資料蒐集與處理方式。
-          </p>
+          <p>{t.privacyPage.intro}</p>
 
           <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
-            蒐集的資料
+            {t.privacyPage.sectionCollectTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Google OAuth 提供的基本帳號資訊：姓名、頭像、Email 地址。</li>
-            <li>您手動輸入的家計簿名稱、交易紀錄、結算紀錄、預設分攤偏好等。</li>
-            <li>邀請連結、邀請接受時間（用於連結雙方帳號）。</li>
+            {t.privacyPage.sectionCollectItems.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
           </ul>
 
           <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
-            資料用途
+            {t.privacyPage.sectionPurposeTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">
-            <li>顯示您與伴侶共用的記帳介面。</li>
-            <li>計算雙方欠款金額。</li>
-            <li>正式版上線前，可能用於開發者除錯（不會公開）。</li>
+            {t.privacyPage.sectionPurposeItems.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
           </ul>
 
           <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
-            資料儲存
+            {t.privacyPage.sectionStorageTitle}
           </h2>
-          <p>
-            資料儲存於 Supabase（後端服務）的伺服器，位於日本東京區。
-            測試版本不保證資料的長期保存，可能因為資料庫重置或結構變更而遺失。
-          </p>
+          <p>{t.privacyPage.sectionStorageBody}</p>
 
           <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
-            第三方服務
+            {t.privacyPage.sectionThirdPartyTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Google（OAuth 登入）</li>
-            <li>Supabase（後端、資料庫、實時更新）</li>
-            <li>Vercel（網站託管）</li>
+            {t.privacyPage.sectionThirdPartyItems.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
           </ul>
 
           <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
-            您的權利
+            {t.privacyPage.sectionRightsTitle}
           </h2>
-          <p>
-            您可隨時透過設定頁登出，或聯絡開發者刪除您的帳號與所有相關資料。
-          </p>
+          <p>{t.privacyPage.sectionRightsBody}</p>
 
-          <p className="pt-2">
-            正式版本將提供完整的隱私權政策。目前如有任何疑慮，請直接聯絡開發者。
-          </p>
+          <p className="pt-2">{t.privacyPage.outro}</p>
         </div>
 
         <div className="mt-12 flex gap-4 text-sm">
           <Link href={localizedHref('/', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
-            ← 回首頁
+            {t.privacyPage.backHome}
           </Link>
           <Link href={localizedHref('/terms', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
-            服務條款
+            {t.privacyPage.termsLink}
           </Link>
         </div>
       </div>

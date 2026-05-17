@@ -66,6 +66,9 @@ export const en: Translations = {
     blog: {
       heading: 'Dev log',
     },
+    srTagline: " · A shared ledger for couples · Two-person finance PWA",
+    srDescription:
+      'A shared finance app built for couples. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs side by side.',
   },
 
   landing: {
@@ -90,6 +93,27 @@ export const en: Translations = {
     f4Title: 'Reflection',
     f4Body: 'Monthly reviews, category breakdowns, chapter history. Let what you spent tell its own story.',
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ["Futari · couple's ledger", 'Futari shared finance app', '兩個人的家計簿', 'ふたり 家計簿'],
+    jsonLdAppDescription:
+      "A shared finance app built for couples and partners. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs.",
+    jsonLdFeatureList: [
+      'Shared expense tracking for two',
+      'Auto-split and monthly settlement',
+      'Household asset inventory',
+      'Insurance management (protection / savings)',
+      'Vehicle and fuel logs',
+      'Recurring income',
+      'Offline-capable PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: 'This month · May',
+    phoneMockFeed1Title: 'Dinner · Hot pot',
+    phoneMockFeed1Sub: 'Today',
+    phoneMockFeed2Title: 'Electricity bill',
+    phoneMockFeed2Sub: 'Yesterday',
+    phoneMockFeed3Title: 'Vet visit',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -1261,6 +1285,54 @@ export const en: Translations = {
     linkRecords: 'Records',
     linkAssets: 'Things you love',
     footer: "We'll catch up when you're back online",
+    metadataTitle: 'Offline · Futari',
+  },
+
+  termsPage: {
+    heading: 'Terms of Service',
+    lastUpdated: 'Last updated: May 3, 2026',
+    intro: 'Futari (the "Service") is currently in alpha testing and available only to a small group of invited users. Before the public release, please note:',
+    bullets: [
+      'The Service does not guarantee long-term data preservation. During testing, records may be lost due to database resets, schema changes, or deployment errors.',
+      'The Service is not responsible for the accuracy of any cost-sharing records you create through it. All settlement results are for your own reference.',
+      'Please do not record sensitive information unsuitable for disclosure (such as national ID numbers or credit card numbers) on the Service.',
+      'By signing in with Google, you agree that Google will share your basic account information (name, avatar, email) with the Service.',
+      'You can sign out at any time from the settings page, or contact the developer to delete your account.',
+    ],
+    outro: 'A complete Terms of Service will accompany the public release. If you have any concerns in the meantime, please contact the developer directly.',
+    backHome: '← Back to home',
+    privacyLink: 'Privacy Policy',
+  },
+
+  privacyPage: {
+    heading: 'Privacy Policy',
+    lastUpdated: 'Last updated: May 3, 2026',
+    intro: 'Futari is currently in alpha testing. This page explains how data is collected and handled during the test period.',
+    sectionCollectTitle: 'Data we collect',
+    sectionCollectItems: [
+      'Basic account information from Google OAuth: name, avatar, and email address.',
+      'Ledger name, transactions, settlements, and default split preferences you enter manually.',
+      'Invite links and acceptance times (used to connect the two accounts).',
+    ],
+    sectionPurposeTitle: 'How we use your data',
+    sectionPurposeItems: [
+      'To display the shared ledger interface between you and your partner.',
+      'To calculate balances owed between the two of you.',
+      'For developer debugging before public release (never shared publicly).',
+    ],
+    sectionStorageTitle: 'Where data is stored',
+    sectionStorageBody: 'Data is stored on Supabase (our backend provider) servers in the Tokyo, Japan region. The test build does not guarantee long-term preservation and data may be lost due to database resets or schema changes.',
+    sectionThirdPartyTitle: 'Third-party services',
+    sectionThirdPartyItems: [
+      'Google (OAuth sign-in)',
+      'Supabase (backend, database, realtime)',
+      'Vercel (web hosting)',
+    ],
+    sectionRightsTitle: 'Your rights',
+    sectionRightsBody: 'You can sign out at any time from the settings page, or contact the developer to delete your account and all related data.',
+    outro: 'A complete Privacy Policy will accompany the public release. If you have any concerns in the meantime, please contact the developer directly.',
+    backHome: '← Back to home',
+    termsLink: 'Terms of Service',
   },
 
   monthlyReview: {

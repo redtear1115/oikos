@@ -66,6 +66,9 @@ export const zhCN: Translations = {
     blog: {
       heading: '开发日志',
     },
+    srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
+    srDescription:
+      '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
   },
 
   landing: {
@@ -90,6 +93,27 @@ export const zhCN: Translations = {
     f4Title: '记账统计',
     f4Body: '月度回顾、分类分布、章节历史。让花过的钱自己说故事，一起回头看走过的日子。',
     footerTrust: '端到端加密 · 数据只属于你们两个',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ['Futari 家计簿', '两个人的家计簿', 'ふたり 家計簿', "Futari · couple's ledger"],
+    jsonLdAppDescription:
+      '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
+    jsonLdFeatureList: [
+      '双人共享记账',
+      '费用自动分摊与 AA 结算',
+      '家庭资产盘点',
+      '保险管理（保护型／储蓄型）',
+      '汽车与油耗记录',
+      '定期收入',
+      '离线浏览 PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: '本月 · 5 月',
+    phoneMockFeed1Title: '晚餐 · 麻辣锅',
+    phoneMockFeed1Sub: '今天',
+    phoneMockFeed2Title: '电费',
+    phoneMockFeed2Sub: '昨天',
+    phoneMockFeed3Title: '小白看医生',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -1261,6 +1285,54 @@ export const zhCN: Translations = {
     linkRecords: '记录',
     linkAssets: '爱物',
     footer: '联网后会自动更新',
+    metadataTitle: '离线中 · Futari',
+  },
+
+  termsPage: {
+    heading: '服务条款',
+    lastUpdated: '最后更新：2026 年 5 月 3 日',
+    intro: 'Futari（以下简称「本服务」）目前处于 alpha 测试阶段，仅提供受邀的小范围使用者试用。正式版本上线前，使用者应留意：',
+    bullets: [
+      '本服务不保证资料的长期保存。测试期间可能因为数据库重置、结构变更或部署错误导致记录丢失。',
+      '本服务不对使用者透过本服务所产生的金钱分摊记录之正确性负责。所有结算结果仅供使用者自行参考。',
+      '请勿在本服务上记录不适合外泄的敏感信息（例如身份证号、信用卡号等）。',
+      '使用 Google 登录即表示您同意 Google 将您的基本账号信息（姓名、头像、Email）提供给本服务。',
+      '您可随时透过设置页登出，或联系开发者删除账号。',
+    ],
+    outro: '正式版本将提供完整的服务条款。目前如有任何疑虑，请直接联系开发者。',
+    backHome: '← 回首页',
+    privacyLink: '隐私权政策',
+  },
+
+  privacyPage: {
+    heading: '隐私权政策',
+    lastUpdated: '最后更新：2026 年 5 月 3 日',
+    intro: 'Futari 目前处于 alpha 测试阶段，本页说明测试期间的资料蒐集与处理方式。',
+    sectionCollectTitle: '蒐集的资料',
+    sectionCollectItems: [
+      'Google OAuth 提供的基本账号信息：姓名、头像、Email 地址。',
+      '您手动输入的家计簿名称、交易记录、结算记录、预设分摊偏好等。',
+      '邀请链接、邀请接受时间（用于关联双方账号）。',
+    ],
+    sectionPurposeTitle: '资料用途',
+    sectionPurposeItems: [
+      '显示您与伴侣共用的记账界面。',
+      '计算双方欠款金额。',
+      '正式版上线前，可能用于开发者除错（不会公开）。',
+    ],
+    sectionStorageTitle: '资料储存',
+    sectionStorageBody: '资料储存于 Supabase（后端服务）的服务器，位于日本东京区。测试版本不保证资料的长期保存，可能因为数据库重置或结构变更而丢失。',
+    sectionThirdPartyTitle: '第三方服务',
+    sectionThirdPartyItems: [
+      'Google（OAuth 登录）',
+      'Supabase（后端、数据库、实时更新）',
+      'Vercel（网站托管）',
+    ],
+    sectionRightsTitle: '您的权利',
+    sectionRightsBody: '您可随时透过设置页登出，或联系开发者删除您的账号与所有相关资料。',
+    outro: '正式版本将提供完整的隐私权政策。目前如有任何疑虑，请直接联系开发者。',
+    backHome: '← 回首页',
+    termsLink: '服务条款',
   },
 
   monthlyReview: {
