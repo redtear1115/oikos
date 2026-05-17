@@ -71,6 +71,11 @@ export const zhCN: Translations = {
     srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
     srDescription:
       '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
+    installHint: {
+      cta: '也可以先添加到主屏幕',
+      iosStep1: '点底部正中间的分享按钮',
+      iosStep2: '向下滑动，选「添加到主屏幕」',
+    },
   },
 
   landing: {

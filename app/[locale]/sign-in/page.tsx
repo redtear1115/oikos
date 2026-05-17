@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
 import { SignInButton } from './SignInButton'
+import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
 import { BlogSection } from './BlogSection'
 
@@ -116,6 +117,7 @@ export default async function SignInPage({ params }: { params: Params }) {
 
           <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">
             <SignInButton label={t.signIn.continueWithGoogle} />
+            <InstallHint t={t.signIn.installHint} />
             <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
               {t.signIn.termsPrefix}{' '}
               <Link href={localizedHref('/terms', locale)} className="underline">{t.signIn.termsLink}</Link>

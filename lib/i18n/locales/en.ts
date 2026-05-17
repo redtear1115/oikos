@@ -71,6 +71,11 @@ export const en: Translations = {
     srTagline: " · A shared ledger for couples · Two-person finance PWA",
     srDescription:
       'A shared finance app built for couples. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs side by side.',
+    installHint: {
+      cta: 'Or add to your home screen first',
+      iosStep1: 'Tap the Share button at the bottom centre',
+      iosStep2: 'Scroll down and tap "Add to Home Screen"',
+    },
   },
 
   landing: {
