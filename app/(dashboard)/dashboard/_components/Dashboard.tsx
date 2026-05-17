@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
 import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
+import { ContextStrip } from '@/app/(dashboard)/_components/ContextStrip'
 import { SoloBanner } from './SoloBanner'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
@@ -269,17 +270,22 @@ export function Dashboard({
 
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
-      <BrandHeader />
+      {/* L1: Brand identity */}
+      <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => { /* no-op for now */ }} />
+      {/* L3: Contextual strip (offline / past-epoch / partner-left / active-trip) */}
+      <ContextStrip activeTrips={activeTrips} baseCurrency={baseCurrency} />
+      {/* L2: Mode toggle — left-aligned */}
+      <div className="px-5 pb-3">
+        <ModeTogglePlaceholder
+          mode={mode}
+          onChange={setMode}
+          incomePendingCount={pendings.length}
+          expensePendingCount={expensePendings.length}
+        />
+      </div>
       {isSolo ? (
         bannerDismissed ? (
-          <div className="px-5 pt-6 pb-5">
-            <ModeTogglePlaceholder
-              mode={mode}
-              onChange={setMode}
-              incomePendingCount={pendings.length}
-              expensePendingCount={expensePendings.length}
-            />
-
+          <div className="px-5 pb-5">
             <div className="text-xs flex items-center justify-between" style={{ color: 'var(--ink-3)' }}>
               <span>{t.dashboard.soloHint}</span>
               <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>
@@ -306,8 +312,6 @@ export function Dashboard({
           incomeMonthTotal={incomeMonthTotal}
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
-          incomePendingCount={pendings.length}
-          expensePendingCount={expensePendings.length}
         />
       )}
       {mode === 'expense' && expensePendings.length > 0 && (
