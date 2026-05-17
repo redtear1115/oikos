@@ -202,3 +202,23 @@ body {
   animation: rt-fade-out 0.5s ease-out forwards;
   overflow: hidden;
 }
+
+/* Sign-in /about — featured-article fade-up on page load.
+ *
+ * The about narrative shows ONE article per request (the other 6 are
+ * sr-only in the DOM for SEO). That one article sits near top-of-page,
+ * so a scroll-driven timeline would never tick — a time-based animation
+ * plays it as a quiet opening beat when the page paints. Honors
+ * `prefers-reduced-motion`. */
+@keyframes about-fade-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.about-article {
+  animation: about-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-article {
+    animation: none;
+  }
+}

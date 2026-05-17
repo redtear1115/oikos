@@ -2,20 +2,82 @@ import type { Translations } from './zh-TW'
 
 export const en: Translations = {
   signIn: {
-    tagline: 'Days for two, written together.',
+    tagline: 'Your ledger is ready — for the two of you.',
     continueWithGoogle: 'Continue with Google',
     termsPrefix: 'By continuing, you agree to our',
     termsLink: 'Terms of Service',
     termsAnd: 'and',
     privacyLink: 'Privacy Policy',
+    // intentionally empty — English sentence ends naturally on "Privacy Policy"; only SOV languages (ja) need a trailing particle
     termsSuffix: '',
+    about: {
+      s1Heading: 'Is there a better way to split expenses as a couple?',
+      s1Body: [
+        'My wife and I started going Dutch before we got married. Over those years we tried plenty of apps — some looked beautiful, others were packed with features, but every one of them eventually felt off. It wasn\'t that they lacked features. It was that every time I opened one, it felt like an app built for a single person. You had to create a group yourself, set up the splits yourself, chase down who owed whom yourself — like prying a solo expense tracker open and forcing two people inside.',
+        'So at some point I thought: maybe I\'ll just build one. Nothing grand. I just wanted an expense tracker that assumed, from the very first screen, that the user is two people. That\'s where Futari started.',
+      ],
+      s2Heading: 'How do newlyweds split household costs without it getting weird?',
+      s2Body: [
+        'No two couples have the same income, and there isn\'t one right way to split.',
+        'Some people prefer 50/50, clean and simple. Others have a real income gap, and splitting by ratio feels fairer — you earned more this month, you put in a little more, it isn\'t a big deal, it\'s just life. Some take turns paying ("I got this one, you get the next one"), or each take on a category — one covers groceries, the other covers utilities.',
+        'My wife and I mix it up: fixed costs by ratio, dinners out sometimes 50/50, trips on a separate ledger. There\'s no best way, only the way that fits where the two of you are right now. Futari supports all four modes. It\'s not here to decide how you split — once you\'ve decided, it just makes sure the math is clean.',
+      ],
+      s3Heading: 'We used a spreadsheet for trips, until we had a trip ledger',
+      s3Body: [
+        'Travel is where shared expenses fall apart fastest. Day-to-day splitting was fine, but the moment we landed somewhere — they booked the hotel, I covered the cab, both of us paid for a dozen tiny things in between — by the time we got home, neither of us knew who was up by how much. Reconciling meant scrolling back through everything, receipt by receipt.',
+        'Our old fix was a dedicated travel spreadsheet, cleaned up by hand after the trip. It worked, but it was tedious — and more than once we just gave up halfway and let it go.',
+        'The trip ledger was one of the most exciting things to build into Futari. Travel money lives apart from the everyday ledger. When you get home, you can see exactly who put in what and how much one side is owed — at a glance. Next time you plan a trip, you can flip back and see what the last one cost. That part is genuinely useful.',
+      ],
+      s4Heading: 'How do you keep car costs separate from daily spending without losing track?',
+      s4Body: [
+        'A question that comes up now and then in expense-tracking forums: how do you record car-related costs? Gas, parking, maintenance, insurance — the timing is irregular, the amounts are uneven, and they get lost the moment you mix them into the daily ledger. But nobody wants to juggle multiple ledgers either.',
+        'Futari lets each expense link to a vehicle, and you can jot down a fuel log in the same gesture. The daily ledger and the car ledger aren\'t two separate things — they\'re the same entry with one extra tag. Want to see how much the car cost this month? Filter, done. Don\'t feel like thinking about it? Just record normally and move on.',
+        'If the two of you share a car, this is the kind of design that should let your shoulders drop a little.',
+      ],
+      s5Heading: 'Behind every expense, there\'s an "I remember"',
+      s5Body: [
+        'That jar of face mask you picked up for them, the gas you topped off on the way home, the internet bill you paid this month — if these are just numbers, nothing of them is left a few days later.',
+        'Every entry in Futari can hold one line. It doesn\'t have to be long. Just enough to give the entry a little weight. "The one you wanted to try." "Bought it in the rain." "The week you were away on the trip." The person who records it knows why it\'s there. The person who reads it later can see the moment too.',
+        'For the monthly review, I\'ve been avoiding the word "reconciliation." Reconciliation sounds like finding problems and assigning blame. I\'d rather think of it as: what did the two of you do this month, where did you go, what did you spend on each other. Strung together, those numbers are a record of a life lived together.',
+        'The money I spent on you — I want you to see it.',
+      ],
+      s6Heading: 'What if the app disappears? What happens to our data?',
+      s6Body: [
+        'That worry is fair. Honeydue has been slowly fading. Spendee once made user data vanish. If those stories have made you cautious, your caution is the right instinct.',
+        'Futari is something I use every day myself. That\'s the most direct evidence that "someone is maintaining it." It doesn\'t mean nothing will ever break — it means there\'s a real person on the other end who cares whether it works.',
+        'On data: Futari supports CSV export. Whenever you want to take your data with you, you can. I\'m not going to convince you with "we\'ll never disappear" — but I can tell you this: your data won\'t be locked in.',
+      ],
+      s7Heading: 'What Futari is — and isn\'t',
+      s7Body: [
+        'Futari is a couple-first expense tracker. Whatever comes in is shared between the two of you. There\'s no "my ledger" vs. "your ledger" visibility split, no role-based permissions design. That choice is deliberate — the money between partners should be shared.',
+        'Futari doesn\'t judge how you spend. It won\'t push "you\'re over budget this month." It won\'t score your spending. It won\'t suggest you skip a coffee. Your spending habits are your business.',
+        'It\'s also not a tool here to "optimize your finances." It just wants to sit beside the two of you and help you record everyday life — one entry at a time. Not more, not less.',
+      ],
+      moreStoriesHint: 'Futari has six more stories. Next time you stop by, it\'ll be a different one.',
+    },
+    features: {
+      c1Title: 'Who paid today?',
+      c1Body: 'Day-to-day splitting without relying on memory. Every entry, balance auto-calculated — who owes whom is obvious at a glance.',
+      c2Title: 'Trips stay separate',
+      c2Body: 'A dedicated trip ledger. When you get home, see exactly who put in more — no more scrolling through chat logs.',
+      c3Title: 'This one was for you',
+      c3Body: 'Every entry can hold one line. So the "picked it up for you" isn\'t just a number — it\'s an "I remember."',
+      c4Title: 'Your ledger, just for the two of you',
+      c4Body: 'No "my entries" vs. "your entries." Whatever\'s recorded is shared — no visibility tiers, by design.',
+    },
+    blog: {
+      heading: 'Dev log',
+    },
+    srTagline: " · A shared ledger for couples · Two-person finance PWA",
+    srDescription:
+      'A shared finance app built for couples. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs side by side.',
   },
 
   landing: {
-    heroKicker: "A COUPLE'S LEDGER · A SHARED PWA",
+    heroKicker: "A COUPLE'S LEDGER",
     taglineHtml: 'Two of you,<br />one ledger.',
-    bodyHtml: 'A shared finance app built for couples.<br />Track daily spending together, split fairly, see where money goes — keep the everyday close.',
-    cta: 'Start tracking',
+    bodyHtml: 'A ledger built for two.<br />Day by day, looking back will feel warm.',
+    cta: 'Begin together',
     ctaHint: 'Free · Try without signing up · For two',
     alreadyHaveAccount: 'I already have an account',
     trustEncrypted: 'End-to-end encrypted',
@@ -33,6 +95,27 @@ export const en: Translations = {
     f4Title: 'Reflection',
     f4Body: 'Monthly reviews, category breakdowns, chapter history. Let what you spent tell its own story.',
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ["Futari · couple's ledger", 'Futari shared finance app', '兩個人的家計簿', 'ふたり 家計簿'],
+    jsonLdAppDescription:
+      "A shared finance app built for couples and partners. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs.",
+    jsonLdFeatureList: [
+      'Shared expense tracking for two',
+      'Auto-split and monthly settlement',
+      'Household asset inventory',
+      'Insurance management (protection / savings)',
+      'Vehicle and fuel logs',
+      'Recurring income',
+      'Offline-capable PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: 'This month · May',
+    phoneMockFeed1Title: 'Dinner · Hot pot',
+    phoneMockFeed1Sub: 'Today',
+    phoneMockFeed2Title: 'Electricity bill',
+    phoneMockFeed2Sub: 'Yesterday',
+    phoneMockFeed3Title: 'Vet visit',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -104,7 +187,7 @@ export const en: Translations = {
     noRecordsHint: "Start with one — a coffee, a dinner. Day by day, looking back will feel warm.",
     addFirst: 'Add the first',
     noIncome: 'No household income recorded yet',
-    noFilteredAddHint: 'No records yet. Tap + below to add one.',
+    noFilteredAddHint: 'No records here yet — tap + below to begin.',
   },
 
   firstRecordCard: {
@@ -123,7 +206,7 @@ export const en: Translations = {
   },
 
   dashboard: {
-    soloHint: "Still tracking on your own",
+    soloHint: "For now, it's just you",
     inviteCta: 'Invite partner →',
     addExpense: 'Add entry',
     addIncome: 'Add income',
@@ -147,10 +230,11 @@ export const en: Translations = {
   balanceHero: {
     monthlyIncome: 'Income this month',
     countLabel: 'Entries',
+    // intentionally empty — English uses bare numerals; only CJK locales render a measure word (zh-TW 筆 / zh-CN 笔 / ja 件)
     countSuffix: '',
     recent: 'Recent',
     noRecord: 'No records',
-    manage: 'Manage ›',
+    manage: 'View ›',
     settleAriaLabel: 'Record repayment / receipt',
     settleLabel: 'Settle',
     partnerOwesYou: 'owes you',
@@ -163,8 +247,8 @@ export const en: Translations = {
   },
 
   soloBanner: {
-    waiting: 'Still waiting for partner to join',
-    sendInviteHint: 'Send them a link to invite',
+    waiting: 'Your ledger is ready — for the two of you',
+    sendInviteHint: 'Send the link to your partner',
     dismissAriaLabel: 'Dismiss',
     generating: 'Generating…',
     sendInvite: 'Send invite',
@@ -202,6 +286,107 @@ export const en: Translations = {
 
   compactRow: {
     pendingBadge: 'Pending',
+    iSettled: 'I settled',
+    partnerSettled: '{name} settled',
+    youIncome: 'Your income',
+    partnerIncome: '{name}\'s income',
+    youPaid: 'You paid',
+    partnerPaid: '{name} paid',
+    trillion: 'T',
+    hundredMillion: 'B',
+  },
+
+  transactionFeed: {
+    loading: 'Loading…',
+    loadMore: 'Load more',
+    endOfFeed: 'No earlier records',
+    closeAriaLabel: 'Close',
+    settlementFallback: 'Settlement',
+  },
+
+  bottomNav: {
+    home: 'Home',
+    records: 'Records',
+    assets: 'Things',
+    settings: 'Settings',
+    addAriaLabel: 'Add record',
+  },
+
+  miniCalendar: {
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+    prevYear: 'Previous year',
+    nextYear: 'Next year',
+    prevDecade: 'Previous decade',
+    nextDecade: 'Next decade',
+    selectMonth: 'Select month',
+    selectYear: 'Select year',
+    splitRatioAriaLabel: 'Split ratio',
+    dayViewTitle: '{month} {year} ˅',
+    monthViewTitle: '{year} ˅',
+    monthLabel: '{month}',
+    weekdays: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: 'Split method',
+    ratioAriaLabel: 'Split ratio',
+    evenSub: 'Split evenly',
+    partnerOwesYouAmount: 'Partner owes you {amount}',
+    youOwePartnerAmount: 'You owe partner {amount}',
+    ratioNoAmount: 'Me {me}% · Partner {other}%',
+    allMineSelfPaid: 'You paid for yourself — no debt',
+    allMinePartnerPaid: 'Partner paid for themselves — no debt',
+    allTheirsNoAmount: 'Partner owes you the full amount',
+    allTheirsPartnerNoAmount: 'You owe partner the full amount',
+    allTheirsYouPaid: 'Partner owes you {amount}',
+    allTheirsPartnerPaid: 'You owe partner {amount}',
+    meRatio: 'Me {ratio}%',
+    partnerRatio: 'Partner {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: 'A few items waiting for you',
+    collapse: 'Collapse',
+    expand: 'Show all ({count} more)',
+  },
+
+  pendingIncomeCard: {
+    confirm: 'Confirm',
+    edit: 'Edit',
+    skip: 'Skip',
+    skipTitle: 'Skip {date} {name}?',
+    skipDescription: 'This occurrence won\'t appear on the ledger. The next one will still remind you.',
+    confirmError: 'Confirmation failed',
+    skipError: 'Skip failed',
+  },
+
+  logoutButton: {
+    label: 'Log out',
+    pending: 'Logging out…',
+    title: 'Log out of Futari?',
+    description: 'You\'ll need to sign in again with Google next time. Records you\'ve added without inviting your partner won\'t be lost.',
+  },
+
+  splitRatioSection: {
+    meSuffix: ' (me)',
+    partnerSuffix: ' (partner)',
+  },
+
+  errorPage: {
+    retry: 'Retry',
+    subtitle: 'Please try again later.',
+    dashboard: 'Failed to load dashboard',
+    records: 'Failed to load records',
+    settings: 'Failed to load settings',
+    trips: 'Failed to load trips',
+    assets: 'Failed to load things',
+    review: 'Failed to load monthly review',
+  },
+
+  assetListItem: {
+    savingsBadge: 'Savings',
+    thisMonth: 'This month',
   },
 
   tripList: {
@@ -1101,7 +1286,7 @@ export const en: Translations = {
       recurringRuleSummary: 'Day {day} · {interval}',
       recurringRuleNextDate: 'Next {date}',
       recurringRulePaused: 'Paused',
-      recurringManageCta: 'Manage',
+      recurringManageCta: 'View',
     },
   },
 
@@ -1204,6 +1389,54 @@ export const en: Translations = {
     linkRecords: 'Records',
     linkAssets: 'Things you love',
     footer: "We'll catch up when you're back online",
+    metadataTitle: 'Offline · Futari',
+  },
+
+  termsPage: {
+    heading: 'Terms of Service',
+    lastUpdated: 'Last updated: May 3, 2026',
+    intro: 'Futari (the "Service") is currently in alpha testing and available only to a small group of invited users. Before the public release, please note:',
+    bullets: [
+      'The Service does not guarantee long-term data preservation. During testing, records may be lost due to database resets, schema changes, or deployment errors.',
+      'The Service is not responsible for the accuracy of any cost-sharing records you create through it. All settlement results are for your own reference.',
+      'Please do not record sensitive information unsuitable for disclosure (such as national ID numbers or credit card numbers) on the Service.',
+      'By signing in with Google, you agree that Google will share your basic account information (name, avatar, email) with the Service.',
+      'You can sign out at any time from the settings page, or contact the developer to delete your account.',
+    ],
+    outro: 'A complete Terms of Service will accompany the public release. If you have any concerns in the meantime, please contact the developer directly.',
+    backHome: '← Back to home',
+    privacyLink: 'Privacy Policy',
+  },
+
+  privacyPage: {
+    heading: 'Privacy Policy',
+    lastUpdated: 'Last updated: May 3, 2026',
+    intro: 'Futari is currently in alpha testing. This page explains how data is collected and handled during the test period.',
+    sectionCollectTitle: 'Data we collect',
+    sectionCollectItems: [
+      'Basic account information from Google OAuth: name, avatar, and email address.',
+      'Ledger name, transactions, settlements, and default split preferences you enter manually.',
+      'Invite links and acceptance times (used to connect the two accounts).',
+    ],
+    sectionPurposeTitle: 'How we use your data',
+    sectionPurposeItems: [
+      'To display the shared ledger interface between you and your partner.',
+      'To calculate balances owed between the two of you.',
+      'For developer debugging before public release (never shared publicly).',
+    ],
+    sectionStorageTitle: 'Where data is stored',
+    sectionStorageBody: 'Data is stored on Supabase (our backend provider) servers in the Tokyo, Japan region. The test build does not guarantee long-term preservation and data may be lost due to database resets or schema changes.',
+    sectionThirdPartyTitle: 'Third-party services',
+    sectionThirdPartyItems: [
+      'Google (OAuth sign-in)',
+      'Supabase (backend, database, realtime)',
+      'Vercel (web hosting)',
+    ],
+    sectionRightsTitle: 'Your rights',
+    sectionRightsBody: 'You can sign out at any time from the settings page, or contact the developer to delete your account and all related data.',
+    outro: 'A complete Privacy Policy will accompany the public release. If you have any concerns in the meantime, please contact the developer directly.',
+    backHome: '← Back to home',
+    termsLink: 'Terms of Service',
   },
 
   monthlyReview: {
@@ -1370,5 +1603,26 @@ export const en: Translations = {
       step3: 'Futari opens like a standalone app',
     },
     fallbackHtml: 'Look inside your browser menu for "<strong>Add to Home Screen</strong>" or "<strong>Install app</strong>". The exact location differs between browsers, but it\'s usually in the top-right menu.',
+  },
+
+  seo: {
+    landing: {
+      title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
+      description: 'A shared household ledger built for couples and partners. Auto-split expenses, settle balances, track family assets, insurance, and fuel logs. Mobile-first PWA, crafted in Taiwan.',
+      ogDescription: 'Two people, one ledger. Log together, split automatically, settle effortlessly.',
+    },
+    signIn: {
+      title: 'Sign in to Futari · Start budgeting together',
+      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, manage insurance and assets, all in a mobile-first PWA.',
+      ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
+    },
+    terms: {
+      title: 'Terms of Service · Futari',
+      description: 'Terms of service and user notes for the Futari alpha test build.',
+    },
+    privacy: {
+      title: 'Privacy Policy · Futari',
+      description: 'How the Futari alpha test build collects and handles your data.',
+    },
   },
 }

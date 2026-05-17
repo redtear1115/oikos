@@ -6,7 +6,55 @@ export type Translations = {
     termsLink: string
     termsAnd: string
     privacyLink: string
+    /** Trailing copy after the privacy link. Empty for languages whose
+     *  sentence ends naturally on the noun (en, zh-TW, zh-CN); populated
+     *  for SOV languages that need a trailing verb particle (ja). */
     termsSuffix: string
+    /** Left-column about narrative on /sign-in (#416). First-person from Ray.
+     *  Each section has a long-tail SEO H2 heading + 2–4 body paragraphs;
+     *  s5 ends with a short standalone punchline (last array item). */
+    about: {
+      s1Heading: string
+      s1Body: string[]
+      s2Heading: string
+      s2Body: string[]
+      s3Heading: string
+      s3Body: string[]
+      s4Heading: string
+      s4Body: string[]
+      s5Heading: string
+      s5Body: string[]
+      s6Heading: string
+      s6Body: string[]
+      s7Heading: string
+      s7Body: string[]
+      /** Quiet footer line shown under the featured article — signals that
+       *  Futari has more stories rotating in on future visits. The literal
+       *  number ("6") refers to the count of non-featured sections; if the
+       *  total section count moves away from 7, update this string in all
+       *  4 locales. */
+      moreStoriesHint: string
+    }
+    /** Right-column 4 feature highlight cards on /sign-in (#417).
+     *  Scene-style titles (not feature-list titles), one short body each. */
+    features: {
+      c1Title: string
+      c1Body: string
+      c2Title: string
+      c2Body: string
+      c3Title: string
+      c3Body: string
+      c4Title: string
+      c4Body: string
+    }
+    blog: {
+      /** Section heading above the dev-log article list (issue #460). */
+      heading: string
+    }
+    /** sr-only suffix appended to the "Futari" H1 for screen-reader / SEO context (#467). */
+    srTagline: string
+    /** sr-only paragraph below the visible tagline describing the app (#467). */
+    srDescription: string
   }
 
   landing: {
@@ -44,6 +92,23 @@ export type Translations = {
     f4Body: string
     /** Footer trust note. */
     footerTrust: string
+    /** schema.org `name` for WebSite + SoftwareApplication JSON-LD (#467). */
+    jsonLdAppName: string
+    /** schema.org `alternateName` array for WebSite + SoftwareApplication (#467). */
+    jsonLdAlternateNames: readonly string[]
+    /** schema.org SoftwareApplication `description` (#467). */
+    jsonLdAppDescription: string
+    /** schema.org SoftwareApplication `featureList` (#467). */
+    jsonLdFeatureList: readonly string[]
+    /** Decorative PhonePreview mock (desktop hero) — not real data (#467). */
+    phoneMockBalanceCaption: string
+    phoneMockBalancePeriod: string
+    phoneMockFeed1Title: string
+    phoneMockFeed1Sub: string
+    phoneMockFeed2Title: string
+    phoneMockFeed2Sub: string
+    phoneMockFeed3Title: string
+    phoneMockFeed3Sub: string
   }
 
   common: {
@@ -185,6 +250,10 @@ export type Translations = {
   balanceHero: {
     monthlyIncome: string
     countLabel: string
+    /** Measure word rendered after the entry count (e.g. "5 筆").
+     *  Empty for languages without a counter word (en); populated for
+     *  CJK languages (zh-TW 筆 / zh-CN 笔 / ja 件). Callers gate the
+     *  leading space on truthiness, so empty cleanly omits the suffix. */
     countSuffix: string
     recent: string
     noRecord: string
@@ -251,6 +320,174 @@ export type Translations = {
   compactRow: {
     /** Small badge appended to a transaction row when its status is 'pending'. */
     pendingBadge: string
+    /** Transaction row payer label — viewer paid (settlement). */
+    iSettled: string
+    /** Transaction row payer label — partner paid (settlement). `{name}` = partner displayName. */
+    partnerSettled: string
+    /** Transaction row payer label — viewer paid (income). */
+    youIncome: string
+    /** Transaction row payer label — partner paid (income). `{name}` = partner displayName. */
+    partnerIncome: string
+    /** Transaction row payer label — viewer paid (expense). */
+    youPaid: string
+    /** Transaction row payer label — partner paid (expense). `{name}` = partner displayName. */
+    partnerPaid: string
+    /** Abbreviation suffix for trillions (兆). */
+    trillion: string
+    /** Abbreviation suffix for hundred millions (億). */
+    hundredMillion: string
+  }
+
+  transactionFeed: {
+    /** Load-more button while fetching. */
+    loading: string
+    /** Load-more button idle state. */
+    loadMore: string
+    /** End-of-feed sentinel shown when there are no more pages. */
+    endOfFeed: string
+    /** Aria-label on the error toast close button. */
+    closeAriaLabel: string
+    /** Fallback description for settlement rows (when note is absent). */
+    settlementFallback: string
+  }
+
+  bottomNav: {
+    home: string
+    records: string
+    assets: string
+    settings: string
+    /** Aria-label for the floating add button. */
+    addAriaLabel: string
+  }
+
+  miniCalendar: {
+    /** Aria-label for the "previous month" nav button. */
+    prevMonth: string
+    /** Aria-label for the "next month" nav button. */
+    nextMonth: string
+    /** Aria-label for the "previous year" nav button. */
+    prevYear: string
+    /** Aria-label for the "next year" nav button. */
+    nextYear: string
+    /** Aria-label for the "previous decade" nav button. */
+    prevDecade: string
+    /** Aria-label for the "next decade" nav button. */
+    nextDecade: string
+    /** Aria-label for the month-picker trigger in day view. */
+    selectMonth: string
+    /** Aria-label for the year-picker trigger in month view. */
+    selectYear: string
+    /** Aria-label for the split-ratio slider. */
+    splitRatioAriaLabel: string
+    /** Title in day view. `{year}` and `{month}` are replaced. */
+    dayViewTitle: string
+    /** Title in month view. `{year}` is replaced. */
+    monthViewTitle: string
+    /** Single month cell label. `{month}` is replaced (1–12). */
+    monthLabel: string
+    /** Weekday header labels, Sunday first. Array of 7 strings. */
+    weekdays: string[]
+  }
+
+  splitTypeSelector: {
+    /** Aria-label for the radiogroup wrapper. */
+    groupAriaLabel: string
+    /** Aria-label for the ratio slider. */
+    ratioAriaLabel: string
+    /** Sub-label when weighted ratio is 50/50 and amount is 0. */
+    evenSub: string
+    /** Sub-label when viewer paid, weighted, amount > 0. `{amount}` replaced. */
+    partnerOwesYouAmount: string
+    /** Sub-label when partner paid, weighted, amount > 0. `{amount}` replaced. */
+    youOwePartnerAmount: string
+    /** Sub-label when ratio is not 50/50 and amount is 0. `{me}` and `{other}` replaced. */
+    ratioNoAmount: string
+    /** Sub-label for all_mine when viewer paid. */
+    allMineSelfPaid: string
+    /** Sub-label for all_mine when partner paid. */
+    allMinePartnerPaid: string
+    /** Sub-label for all_theirs when viewer paid and amount is 0. */
+    allTheirsNoAmount: string
+    /** Sub-label for all_theirs when partner paid and amount is 0. */
+    allTheirsPartnerNoAmount: string
+    /** Sub-label for all_theirs when viewer paid, amount > 0. `{amount}` replaced. */
+    allTheirsYouPaid: string
+    /** Sub-label for all_theirs when partner paid, amount > 0. `{amount}` replaced. */
+    allTheirsPartnerPaid: string
+    /** Me ratio label. `{ratio}` replaced. */
+    meRatio: string
+    /** Partner ratio label. `{ratio}` replaced. */
+    partnerRatio: string
+  }
+
+  pendingIncomeStack: {
+    /** Section heading above the pending income cards. */
+    heading: string
+    /** Collapse button label (when expanded). */
+    collapse: string
+    /** Expand button label. `{count}` replaced with remaining hidden count. */
+    expand: string
+  }
+
+  pendingIncomeCard: {
+    /** Primary confirm button label. */
+    confirm: string
+    /** Edit button label. */
+    edit: string
+    /** Skip button label. */
+    skip: string
+    /** Skip confirm modal title. `{date}` and `{name}` replaced. */
+    skipTitle: string
+    /** Skip confirm modal body. */
+    skipDescription: string
+    /** Error fallback when confirm fails. */
+    confirmError: string
+    /** Error fallback when skip fails. */
+    skipError: string
+  }
+
+  logoutButton: {
+    /** Button label when idle. */
+    label: string
+    /** Button label while signing out. */
+    pending: string
+    /** Confirm modal title. */
+    title: string
+    /** Confirm modal description. */
+    description: string
+  }
+
+  splitRatioSection: {
+    /** Inline label suffix for viewer. `{name}` replaced with displayName. */
+    meSuffix: string
+    /** Inline label suffix for partner. `{name}` replaced with displayName. */
+    partnerSuffix: string
+  }
+
+  errorPage: {
+    /** Retry button label. */
+    retry: string
+    /** Generic subtitle asking the user to try again. */
+    subtitle: string
+    /** Title for the dashboard error page. */
+    dashboard: string
+    /** Title for the records error page. */
+    records: string
+    /** Title for the settings error page. */
+    settings: string
+    /** Title for the trips error page. */
+    trips: string
+    /** Title for the assets error page. */
+    assets: string
+    /** Title for the monthly review error page. */
+    review: string
+  }
+
+  assetListItem: {
+    /** Badge label for savings-type insurance assets. */
+    savingsBadge: string
+    /** Small label above the monthly amount column. */
+    thisMonth: string
   }
 
   /** Trip list page (#42). */
@@ -1425,6 +1662,40 @@ export type Translations = {
     linkRecords: string
     linkAssets: string
     footer: string
+    /** HTML <title> for /offline (also surfaces in PWA cache fallback). */
+    metadataTitle: string
+  }
+
+  termsPage: {
+    heading: string
+    /** Localized "Last updated: <date>" line. */
+    lastUpdated: string
+    intro: string
+    /** Bullet list following the intro. */
+    bullets: readonly string[]
+    outro: string
+    backHome: string
+    privacyLink: string
+  }
+
+  privacyPage: {
+    heading: string
+    /** Localized "Last updated: <date>" line. */
+    lastUpdated: string
+    intro: string
+    sectionCollectTitle: string
+    sectionCollectItems: readonly string[]
+    sectionPurposeTitle: string
+    sectionPurposeItems: readonly string[]
+    sectionStorageTitle: string
+    sectionStorageBody: string
+    sectionThirdPartyTitle: string
+    sectionThirdPartyItems: readonly string[]
+    sectionRightsTitle: string
+    sectionRightsBody: string
+    outro: string
+    backHome: string
+    termsLink: string
   }
 
   monthlyReview: {
@@ -1638,24 +1909,109 @@ export type Translations = {
     /** Unknown platform — generic instruction. Contains `<strong>`. */
     fallbackHtml: string
   }
+
+  /** Per-page SEO strings — title / description / ogDescription used by
+   *  generateMetadata in each app/[locale]/*\/page.tsx. Not rendered in UI. */
+  seo: {
+    landing: {
+      title: string
+      description: string
+      ogDescription: string
+    }
+    signIn: {
+      title: string
+      description: string
+      ogDescription: string
+    }
+    terms: {
+      title: string
+      description: string
+    }
+    privacy: {
+      title: string
+      description: string
+    }
+  }
 }
 
 export const zhTW: Translations = {
   signIn: {
-    tagline: '兩個人的日子，可以一起記下來。',
+    tagline: '帳本準備好了，等你們一起。',
     continueWithGoogle: '以 Google 帳號繼續',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
     termsAnd: '與',
     privacyLink: '隱私權政策',
+    // intentionally empty — 中文句子在「政策」名詞處自然收尾，無需 SOV 收尾詞
     termsSuffix: '',
+    about: {
+      s1Heading: '情侶 AA 制記帳，到底有沒有更好的辦法？',
+      s1Body: [
+        '我和太太在結婚前就開始 AA 了。那幾年試過不少 app——有的介面很漂亮，有的功能很齊全，但用到後來都有點卡。不是功能不夠，是每次打開來，都感覺那個 app 是設計給一個人用的。你得自己建群組、自己設分帳、自己追誰欠誰多少，像是把一個個人記帳工具硬拗成雙人用途。',
+        '後來我就想，要不自己做一個。不是要做什麼偉大的產品，只是想要一個從一開始就假設「使用者是兩個人」的記帳工具。這就是 Futari 的起點。',
+      ],
+      s2Heading: '新婚夫妻的生活費怎麼分攤才不傷感情？',
+      s2Body: [
+        '每對伴侶的收入結構都不一樣，分攤方式也不會只有一種答案。',
+        '有些人習慣對半切，一人一半，乾淨俐落；有些人薪水差距比較大，按比例比較公平——這個月你賺比較多，你多出一點，不是什麼大事，就是現實。也有人輪流結帳，「這頓我的，下頓你的」，或是某一方習慣負擔某類支出，另一方負擔另一類。',
+        '我和太太現在是混用的：固定開銷按比例，出去吃飯有時候對半，出遊就另立帳本。沒有哪種方式最好，只有哪種方式最適合你們現在的狀態。Futari 支援這四種模式，不是要幫你決定怎麼分，而是讓你們選定之後，帳能記清楚。',
+      ],
+      s3Heading: '我們以前用 Excel 記旅行帳，直到有了旅行子帳本',
+      s3Body: [
+        '出國旅行是最容易讓帳亂掉的場景。平常 AA 已經記得差不多了，一出國，訂房他付、計程車我付、行程中間各種零碎消費——回來之後不知道誰多出了多少，要對帳就得翻回去一筆一筆找。',
+        '我們以前的解法是開一個旅行專用的 Excel，回國再手動整理。有用，但麻煩，而且有幾次根本懶得整理就算了。',
+        '旅行子帳本是我在做 Futari 的過程中最興奮的功能之一。旅行的錢跟日常帳分開，回來之後清楚看到這趟誰出了多少、差多少，一目瞭然。下次計畫旅行，還可以翻回來看上次的開銷大概是什麼量級，很實用。',
+      ],
+      s4Heading: '車輛費用怎麼跟日常帳分開又不失聯？',
+      s4Body: [
+        'PTT 的記帳版偶爾會看到有人問：車輛相關的費用要怎麼記？油錢、停車、保養、保險——這些支出的頻率和金額都不規律，混在日常帳裡很快就看不清楚，但又不想開太多帳本搞得更複雜。',
+        'Futari 的設計是讓每筆支出可以關聯車輛，油耗也可以順手記下來。日常帳和車輛帳不是完全切開的兩件事，而是同一筆支出多了一個標記。想看這個月車花了多少，篩一下就出來了；不想特別管，正常記帳就好。',
+        '如果你們有一台共同的車，這個設計應該會讓你鬆一口氣。',
+      ],
+      s5Heading: '每一筆支出背後，都是一個「我記得」',
+      s5Body: [
+        '幫對方買的那罐面膜、順路加的油、繳掉的網路費——這些事情如果只是數字，幾天後就什麼都不剩了。',
+        'Futari 的每筆帳都可以留一句話。不需要很長，就是讓那筆帳有一點點重量。「妳說要試試看的」、「下雨天出去買的」、「你去出差那週」。記帳的人知道為什麼記，看帳的人也看得見那個當下。',
+        '月底的帳目回顧，我比較不想把它叫做「對帳」。對帳聽起來像是在找問題、分配責任。我更想把它理解成：這個月你們一起做了什麼、去了哪裡、為彼此花了什麼。那些數字串起來，是一段共同生活的記錄。',
+        '為你花的錢，我想讓你看見。',
+      ],
+      s6Heading: '記帳 app 會不會突然消失？我們的資料怎麼辦？',
+      s6Body: [
+        '這個擔心很合理。Honeydue 這幾年慢慢式微，Spendee 曾經讓用戶的資料憑空消失——如果你被這些事嚇過，你的警覺是對的。',
+        'Futari 是我自己每天在用的工具，這是最直接的「有人在維護」的證明。不是說它永遠不會出問題，而是說背後有一個真實的人在意它能不能用。',
+        '資料方面，Futari 支援 CSV 匯出。任何時候你想把資料帶走，都可以。我不想用「我們不會消失」這種話來說服你，但我可以告訴你：你的資料不會被綁住。',
+      ],
+      s7Heading: 'Futari 是什麼，也是什麼不是',
+      s7Body: [
+        'Futari 是雙人優先的記帳工具。進來的就是兩個人共同的帳，沒有「我的帳」和「你的帳」的能見度分級，也沒有誰有權限、誰沒有權限的設計。這個選擇是刻意的——伴侶之間的帳，應該是共同的。',
+        'Futari 不評判你們怎麼花錢。它不會推播「你這個月超支了」，不會給你消費評分，不會建議你少喝一杯咖啡。你們的消費習慣是你們自己的事。',
+        '它也不是一個要幫你們「優化財務」的工具。它只是想陪著你們記下共同生活的每一筆帳，不多，也不少。',
+      ],
+      moreStoriesHint: 'Futari 還有 6 個故事，下次再來會是另一個。',
+    },
+    features: {
+      c1Title: '今天誰付的？',
+      c1Body: '日常 AA 不用靠記憶。每筆帳記下來，餘額自動算，誰欠誰多少一眼就清楚。',
+      c2Title: '出國帳不跟日常混',
+      c2Body: '旅行子帳本獨立記帳，回來清楚看這趟誰多付了多少，不用再翻聊天記錄對帳。',
+      c3Title: '這筆是幫你買的',
+      c3Body: '每筆帳可以留一句話。讓那個「順手幫你繳的」不只是數字，是一句記得。',
+      c4Title: '你們的帳，只有你們看得到',
+      c4Body: '沒有「我的帳」跟「你的帳」之分。進來的就是共同的，沒有能見度分級。',
+    },
+    blog: {
+      heading: '開發日誌',
+    },
+    srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
+    srDescription:
+      '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
   },
 
   landing: {
-    heroKicker: 'A COUPLE\'S LEDGER · 雙人記帳 PWA',
+    heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '兩個人，<br />一本帳。',
-    bodyHtml: '專為伴侶設計的雙人共享帳本。<br />一起記錄日常開銷、自動分攤、看見每筆花費去了哪裡 — 把陪伴留下來。',
-    cta: '開始記錄',
+    bodyHtml: '專為兩個人設計的帳本。<br />日子一天天記下來，回頭看會很暖。',
+    cta: '一起記錄',
     ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
     alreadyHaveAccount: '已經有帳號 · 登入',
     trustEncrypted: '端對端加密',
@@ -1666,13 +2022,34 @@ export const zhTW: Translations = {
     featuresSubtitleHtml: '從第一筆共同支出，到一起照顧的房子、車與每年保單，<br />都收進同一本帳裡。',
     f1Title: '雙人記帳',
     f1Body: '一筆一筆共同記下，自動分攤，可以對半也可以依比例。每月清楚結算，不必再對帳。',
-    f2Title: '愛物管理',
+    f2Title: '我們的愛物',
     f2Body: '家、車、孩子、寵物、植物 — 一起照顧的，都收進同一本帳，每筆相關支出自動歸戶。',
     f3Title: '守護保險',
     f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
     f4Title: '記帳統計',
     f4Body: '月度回顧、分類分佈、章節歷史。讓花過的錢自己說故事，一起回頭看走過的日子。',
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
+    jsonLdAppDescription:
+      '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
+    jsonLdFeatureList: [
+      '雙人共享記帳',
+      '費用自動分攤與 AA 結算',
+      '家庭資產盤點',
+      '保險管理（保護型／儲蓄型）',
+      '汽車與油耗紀錄',
+      '定期收入',
+      '離線瀏覽 PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: '本月 · 5 月',
+    phoneMockFeed1Title: '晚餐 · 麻辣鍋',
+    phoneMockFeed1Sub: '今天',
+    phoneMockFeed2Title: '電費',
+    phoneMockFeed2Sub: '昨天',
+    phoneMockFeed3Title: '小白看醫生',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -1744,7 +2121,7 @@ export const zhTW: Translations = {
     noRecordsHint: '從第一筆開始 ─ 一杯咖啡、一頓晚餐都算數。日子一天天記下來，回頭看會很暖。',
     addFirst: '記第一筆',
     noIncome: '還沒記過家裡的收入',
-    noFilteredAddHint: '還沒有紀錄。按下方 + 記第一筆吧。',
+    noFilteredAddHint: '這裡還沒有紀錄，按下方 + 開始記吧。',
   },
 
   firstRecordCard: {
@@ -1763,7 +2140,7 @@ export const zhTW: Translations = {
   },
 
   dashboard: {
-    soloHint: '你還在獨自記帳',
+    soloHint: '目前是你一個人在記',
     inviteCta: '邀請對方 →',
     addExpense: '新增一筆',
     addIncome: '記一筆收入',
@@ -1790,7 +2167,7 @@ export const zhTW: Translations = {
     countSuffix: '筆',
     recent: '最近',
     noRecord: '尚無紀錄',
-    manage: '管理 ›',
+    manage: '查看 ›',
     settleAriaLabel: '記錄還款 / 收款',
     settleLabel: '結算',
     partnerOwesYou: '欠你',
@@ -1803,8 +2180,8 @@ export const zhTW: Translations = {
   },
 
   soloBanner: {
-    waiting: '還在等對方加入',
-    sendInviteHint: '傳連結邀請他',
+    waiting: '帳本準備好了，等你們一起',
+    sendInviteHint: '把連結傳給對方',
     dismissAriaLabel: '關閉提示',
     generating: '產生中…',
     sendInvite: '傳送邀請',
@@ -1842,6 +2219,107 @@ export const zhTW: Translations = {
 
   compactRow: {
     pendingBadge: '待結算',
+    iSettled: '我還款',
+    partnerSettled: '{name} 還款',
+    youIncome: '你收入',
+    partnerIncome: '{name} 收入',
+    youPaid: '你付',
+    partnerPaid: '{name} 付',
+    trillion: '兆',
+    hundredMillion: '億',
+  },
+
+  transactionFeed: {
+    loading: '載入中…',
+    loadMore: '載入更多',
+    endOfFeed: '已是最早的紀錄',
+    closeAriaLabel: '關閉',
+    settlementFallback: '還款',
+  },
+
+  bottomNav: {
+    home: '首頁',
+    records: '紀錄',
+    assets: '愛物',
+    settings: '設定',
+    addAriaLabel: '新增一筆',
+  },
+
+  miniCalendar: {
+    prevMonth: '上個月',
+    nextMonth: '下個月',
+    prevYear: '上一年',
+    nextYear: '下一年',
+    prevDecade: '上一個十年',
+    nextDecade: '下一個十年',
+    selectMonth: '選擇月份',
+    selectYear: '選擇年份',
+    splitRatioAriaLabel: '分擔比例',
+    dayViewTitle: '{year} 年 {month} 月 ˅',
+    monthViewTitle: '{year} 年 ˅',
+    monthLabel: '{month} 月',
+    weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: '分擔方式',
+    ratioAriaLabel: '分擔比例',
+    evenSub: '各付一半',
+    partnerOwesYouAmount: '對方欠你 {amount}',
+    youOwePartnerAmount: '你欠對方 {amount}',
+    ratioNoAmount: '我 {me}%・對方 {other}%',
+    allMineSelfPaid: '你自己花的，不會欠款',
+    allMinePartnerPaid: '對方自己花的，不會欠款',
+    allTheirsNoAmount: '對方欠你全額',
+    allTheirsPartnerNoAmount: '你欠對方全額',
+    allTheirsYouPaid: '對方欠你 {amount}',
+    allTheirsPartnerPaid: '你欠對方 {amount}',
+    meRatio: '我 {ratio}%',
+    partnerRatio: '對方 {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: '這幾筆等你看看',
+    collapse: '收合',
+    expand: '展開全部（還有 {count} 筆）',
+  },
+
+  pendingIncomeCard: {
+    confirm: '就這樣',
+    edit: '改一下',
+    skip: '跳過',
+    skipTitle: '跳過 {date} {name}？',
+    skipDescription: '這一期就不會出現在帳上，下一期照常提醒。',
+    confirmError: '確認失敗',
+    skipError: '跳過失敗',
+  },
+
+  logoutButton: {
+    label: '登出',
+    pending: '登出中…',
+    title: '登出 Futari？',
+    description: '下次需要重新用 Google 登入。未邀請對方加入的紀錄不會遺失。',
+  },
+
+  splitRatioSection: {
+    meSuffix: '（我）',
+    partnerSuffix: '（對方）',
+  },
+
+  errorPage: {
+    retry: '重試',
+    subtitle: '請稍後再試一次',
+    dashboard: '載入儀表板失敗',
+    records: '載入紀錄失敗',
+    settings: '載入設定失敗',
+    trips: '載入旅行失敗',
+    assets: '載入愛物失敗',
+    review: '載入月度回顧失敗',
+  },
+
+  assetListItem: {
+    savingsBadge: '儲蓄',
+    thisMonth: '本月',
   },
 
   tripList: {
@@ -2741,7 +3219,7 @@ export const zhTW: Translations = {
       recurringRuleSummary: '每月 {day} 號 · {interval}',
       recurringRuleNextDate: '下次 {date}',
       recurringRulePaused: '已暫停',
-      recurringManageCta: '管理',
+      recurringManageCta: '查看',
     },
   },
 
@@ -2844,6 +3322,54 @@ export const zhTW: Translations = {
     linkRecords: '紀錄',
     linkAssets: '愛物',
     footer: '等連線回來會自動更新',
+    metadataTitle: '離線中 · Futari',
+  },
+
+  termsPage: {
+    heading: '服務條款',
+    lastUpdated: '最後更新：2026 年 5 月 3 日',
+    intro: 'Futari（以下簡稱「本服務」）目前處於 alpha 測試階段，僅提供受邀的小範圍使用者試用。正式版本上線前，使用者應留意：',
+    bullets: [
+      '本服務不保證資料的長期保存。測試期間可能因為資料庫重置、結構變更或部署錯誤導致紀錄遺失。',
+      '本服務不對使用者透過本服務所產生的金錢分攤紀錄之正確性負責。所有結算結果僅供使用者自行參考。',
+      '請勿在本服務上記錄不適合外洩的敏感資訊（例如身分證字號、信用卡號等）。',
+      '使用 Google 登入即表示您同意 Google 將您的基本帳號資訊（姓名、頭像、Email）提供給本服務。',
+      '您可隨時透過設定頁登出，或聯絡開發者刪除帳號。',
+    ],
+    outro: '正式版本將提供完整的服務條款。目前如有任何疑慮，請直接聯絡開發者。',
+    backHome: '← 回首頁',
+    privacyLink: '隱私權政策',
+  },
+
+  privacyPage: {
+    heading: '隱私權政策',
+    lastUpdated: '最後更新：2026 年 5 月 3 日',
+    intro: 'Futari 目前處於 alpha 測試階段，本頁說明測試期間的資料蒐集與處理方式。',
+    sectionCollectTitle: '蒐集的資料',
+    sectionCollectItems: [
+      'Google OAuth 提供的基本帳號資訊：姓名、頭像、Email 地址。',
+      '您手動輸入的家計簿名稱、交易紀錄、結算紀錄、預設分攤偏好等。',
+      '邀請連結、邀請接受時間（用於連結雙方帳號）。',
+    ],
+    sectionPurposeTitle: '資料用途',
+    sectionPurposeItems: [
+      '顯示您與伴侶共用的記帳介面。',
+      '計算雙方欠款金額。',
+      '正式版上線前，可能用於開發者除錯（不會公開）。',
+    ],
+    sectionStorageTitle: '資料儲存',
+    sectionStorageBody: '資料儲存於 Supabase（後端服務）的伺服器，位於日本東京區。測試版本不保證資料的長期保存，可能因為資料庫重置或結構變更而遺失。',
+    sectionThirdPartyTitle: '第三方服務',
+    sectionThirdPartyItems: [
+      'Google（OAuth 登入）',
+      'Supabase（後端、資料庫、實時更新）',
+      'Vercel（網站託管）',
+    ],
+    sectionRightsTitle: '您的權利',
+    sectionRightsBody: '您可隨時透過設定頁登出，或聯絡開發者刪除您的帳號與所有相關資料。',
+    outro: '正式版本將提供完整的隱私權政策。目前如有任何疑慮，請直接聯絡開發者。',
+    backHome: '← 回首頁',
+    termsLink: '服務條款',
   },
 
   monthlyReview: {
@@ -3010,5 +3536,26 @@ export const zhTW: Translations = {
       step3: 'Futari 會像一個獨立的 app 開啟',
     },
     fallbackHtml: '在你的瀏覽器選單裡找「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。不同瀏覽器位置不太一樣，但通常都在右上的選單裡。',
+  },
+
+  seo: {
+    landing: {
+      title: 'Futari · 兩個人，一本帳｜伴侶共享記帳 PWA',
+      description: '專為夫妻、伴侶設計的雙人共享帳本。自動分攤、AA 結算、家庭資產盤點、保險與愛車油耗紀錄，台灣團隊製作的 Mobile-first PWA 家計簿。',
+      ogDescription: '兩個人，一本帳。一起記錄、自動分攤、輕鬆結算。',
+    },
+    signIn: {
+      title: '登入 Futari · 開始兩個人的記帳生活',
+      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、管理保險與資產的雙人記帳 PWA。',
+      ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+    },
+    terms: {
+      title: '服務條款 · Futari',
+      description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
+    },
+    privacy: {
+      title: '隱私權政策 · Futari',
+      description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
+    },
   },
 }

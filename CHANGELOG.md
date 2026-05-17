@@ -15,6 +15,36 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.0.0] - 2026-05-17
+
+主題：**公開 landing．接住歷史**——v1.0.0 把 Futari 從「兩個人的內部記帳工具」翻成「對外有臉面的產品」。`/` landing 全新三欄敘事（SEO 長文 + brand mark + 場景卡 + 部落格 feed），公開頁面改 URL-prefix locale routing（`/en` `/zh-CN` `/ja`），OG / Twitter / FAQ / SoftwareApplication / Organization JSON-LD 全套接好，品牌語氣與 i18n 全面收斂——任何陌生人從搜尋或社群點進來看到的，都是同一個產品聲音。沒有 schema migration，純前台 + SEO + copy。
+完整 diff：[v0.17.6...v1.0.0](https://github.com/redtear1115/oikos/compare/v0.17.6...v1.0.0)
+
+### 使用者可見變化
+
+#### 公開 landing 三欄敘事（#416 #417 #418 #460 #482）
+
+- **/sign-in 三欄結構**：桌機左欄七段 about narrative（每次造訪靜默輪播一段，#482）、中欄品牌 mark + Google CTA、右欄四張場景卡（#417）+ 部落格 feed（#460，從 southern-light.dev RSS 拉）。Mobile 自動垂直堆疊。
+- **i18n landing narrative（#422）**：about narrative + feature cards 4 語齊備（zh-TW / zh-CN / en / ja）。
+- **品牌語氣收斂（#474 #483）**：landing / sign-in / solo mode copy 對齊《品牌文案準則》（landing「有溫度的清醒」、sign-in「安靜的邀請」、solo「不預設等待焦慮」），禁用詞（管理 / 追蹤 / 監控 / 感嘆號）清查到 0 違規。
+
+#### SEO 與分享
+
+- **多語 URL-prefix routing（#400 #462）**：公開頁面（landing / sign-in / privacy / terms）改為 URL prefix `/<locale>`，每個 locale 都是獨立可索引 URL，搭配 hreflang alternates + sitemap per-locale 條目。
+- **結構化資料齊備（#459 #467）**：landing 同時 ship WebSite / Organization / SoftwareApplication / FAQPage 四套 JSON-LD，全部跟著 locale 走。
+- **OG / Twitter 預覽卡（#487）**：landing / sign-in / privacy / terms 全部接上 `og:image` 與 `twitter:image`（1200×630，`alt` locale-aware），LINE / FB / Slack / Threads 分享有圖。
+
+#### 文件 / 流程
+
+- **《品牌文案準則》（#478）**：CLAUDE.md 明定流量分層 × tone 對應、landing / sign-in / solo 寫作規則、app 內禁用詞、i18n 同步規則——任何動 copy 的 PR 之前都對照這份。
+- **ja-i18n skill + 漢字白名單（#477）**：日文翻譯巡檢自動化，假陽性漢字白名單可從外部資料更新。
+
+### 技術變更
+
+- **i18n 完整覆蓋（#467 #468 #469 #471 #481）**：dashboard / public pages 殘存 hardcode 中文清完；zh-CN 213 個 + ja 68 個未翻譯 key 補完；intentional 空字串 key 加文件註記避免下次 audit 誤報。
+- **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
+- **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
+
 ## [0.17.6] - 2026-05-17
 
 主題：**首屏 1.9 秒回神．日期型別收緊**——這版只做兩件事：把 landing 首屏的 Fraunces 字型從 critical path 拔下來（12 個 unicode-range woff2 子集不再 preload，Lighthouse 量測 LCP 大約 -1.9s），然後把 transaction / settlement validator 對 calendar-date 的處理收成單一來源（#452 fuel-log sort skew 的同類問題以後不會再從 caller 端洩出來）。沒有 schema migration、沒有 UI 行為變化、沒有 RFC。
@@ -1029,7 +1059,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v0.17.6...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/redtear1115/oikos/compare/v0.17.6...v1.0.0
 [0.17.6]: https://github.com/redtear1115/oikos/compare/v0.17.5...v0.17.6
 [0.17.5]: https://github.com/redtear1115/oikos/compare/v0.17.4...v0.17.5
 [0.17.4]: https://github.com/redtear1115/oikos/compare/v0.17.3...v0.17.4

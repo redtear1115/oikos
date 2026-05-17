@@ -36,7 +36,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
       setFading(true)
       refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
     } catch (e) {
-      setError(describeError(e, '確認失敗', t.common.offlineError))
+      setError(describeError(e, t.pendingIncomeCard.confirmError, t.common.offlineError))
     }
   })
 
@@ -48,7 +48,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
         setFading(true)
         refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
       } catch (e) {
-        setError(describeError(e, '跳過失敗', t.common.offlineError))
+        setError(describeError(e, t.pendingIncomeCard.skipError, t.common.offlineError))
       }
     })
   }
@@ -100,7 +100,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
             className="flex-1 rounded-full py-2 text-[var(--fs-sm)] disabled:opacity-50"
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
-            就這樣
+            {t.pendingIncomeCard.confirm}
           </button>
           <button
             type="button"
@@ -109,23 +109,23 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
             className="rounded-full px-4 py-2 text-[var(--fs-sm)] disabled:opacity-30"
             style={{ border: `1px solid ${cat.ink}40`, color: 'var(--ink-2)', background: 'transparent' }}
           >
-            改一下
+            {t.pendingIncomeCard.edit}
           </button>
           <button
             type="button" onClick={() => setConfirmingSkip(true)} disabled={submitting}
             className="rounded-full px-4 py-2 text-[var(--fs-sm)] disabled:opacity-30"
             style={{ border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
           >
-            跳過
+            {t.pendingIncomeCard.skip}
           </button>
         </div>
       </div>
 
       <ConfirmModal
         open={confirmingSkip}
-        title={`跳過 ${pending.proposedDate} ${pending.source ?? cat.label}？`}
-        description="這一期就不會出現在帳上，下一期照常提醒。"
-        confirmLabel="跳過"
+        title={t.pendingIncomeCard.skipTitle.replace('{date}', pending.proposedDate).replace('{name}', pending.source ?? cat.label)}
+        description={t.pendingIncomeCard.skipDescription}
+        confirmLabel={t.pendingIncomeCard.skip}
         pending={submitting}
         onCancel={() => setConfirmingSkip(false)}
         onConfirm={performSkip}

@@ -2,20 +2,81 @@ import type { Translations } from './zh-TW'
 
 export const ja: Translations = {
   signIn: {
-    tagline: 'ふたりの毎日を、一緒に記そう。',
+    tagline: '家計簿の準備はできました。ふたりで始めましょう。',
     continueWithGoogle: 'Google アカウントで続ける',
     termsPrefix: '続行すると、当社の',
     termsLink: '利用規約',
     termsAnd: 'および',
     privacyLink: 'プライバシーポリシー',
     termsSuffix: 'に同意したものとみなされます。',
+    about: {
+      s1Heading: 'カップルの割り勘、もっといいやり方はないかな？',
+      s1Body: [
+        '妻と私は、結婚する前から割り勘でやってきました。その頃いろんなアプリを試したのですが——見た目がきれいなもの、機能が豊富なもの、いろいろあったのに、使い続けると必ずどこかで引っかかる。機能が足りないわけじゃない。開くたびに、このアプリは「ひとりで使う前提」で設計されているな、と感じてしまうのです。グループを自分で作って、分担を自分で設定して、誰がいくら立て替えているかも自分で追いかける——個人向けの家計簿アプリを、無理やりふたり用に拡張しているような感覚でした。',
+        'それなら自分で作ってみようかな、と思ったのがきっかけです。大それた製品を作ろうとしたわけではありません。ただ、最初から「使うのはふたり」と前提する家計簿が欲しかった。それが Futari の始まりです。',
+      ],
+      s2Heading: '新婚夫婦の生活費、関係を傷つけずにどう分ける？',
+      s2Body: [
+        'カップルごとに収入の形は違うので、分け方にひとつの正解はありません。',
+        '半分こでさっぱり済ませる人もいれば、収入差が大きいから比率で分ける方が公平、というカップルもいます——今月は私がたくさん稼いだから、少し多めに出す。それは大したことじゃなくて、ただの現実です。「今日は私が、次はあなたが」と交代で支払う人もいるし、片方が固定費、もう片方が食費、というふうにカテゴリで分担している人もいます。',
+        '私たちは今、いろいろ混ぜています。固定費は比率、外食は半々のこともあれば、旅行は別立て。どれがいちばん、というのはなくて、今のふたりに合うやり方があるだけです。Futari はこの 4 つのモードに対応しています。分け方を決めるのは私たちじゃない——決まった後で、ちゃんと記録できるように整えるのが役目です。',
+      ],
+      s3Heading: '以前は Excel で旅行の家計簿を作っていました。旅行サブ家計簿ができるまでは',
+      s3Body: [
+        '海外旅行は、家計が一番乱れやすい場面です。普段の割り勘はそれなりに記録できているのに、現地に着いた途端、宿は彼が、タクシーは私が、そのあいだにこまごまとした支払いがたくさん——帰国するころには、どちらがいくら多く出したのか、お互い分からなくなっている。精算しようとすると、一件一件遡って探すことになります。',
+        '私たちの以前のやり方は、旅行専用の Excel を作って、帰国後に手作業で整理することでした。役には立ったけれど、面倒で、何度かは整理する気にもならず、そのまま流してしまったことも。',
+        '旅行サブ家計簿は、Futari を作っていて一番ワクワクした機能のひとつです。旅行のお金は日常の家計簿から切り離されているので、帰ってきたあと、この旅で誰がいくら出して、いくら差があるのかが一目で分かります。次の旅行を計画するときも、前回いくらかかったか振り返れる。これは本当に便利です。',
+      ],
+      s4Heading: '車の費用を日常と分けつつ、見失わないようにするには？',
+      s4Body: [
+        '家計簿系の掲示板でときどき見かける質問です。車関連の費用はどう記録すればいい？ ガソリン代、駐車場、整備、保険——支出の頻度も金額も不規則で、日常の家計簿に混ぜるとすぐに見えなくなる。でも、家計簿をいくつも分けて複雑にしたいわけでもない。',
+        'Futari では、それぞれの支出に車を紐づけられます。給油記録もそのまま残せます。日常の家計簿と車の家計簿は別々のものではなく、同じ一件の支出にタグがひとつ多くついているだけ。今月、車にいくらかかったか見たいときはフィルターをかければすぐ出てきますし、気にしたくないときは普通に記録するだけで大丈夫です。',
+        '共有している車があるカップルなら、この設計で少し肩の力が抜けるはずです。',
+      ],
+      s5Heading: '一つ一つの支出の後ろには、いつも「覚えてるよ」がある',
+      s5Body: [
+        '相手のために買ったフェイスマスク、ついでに入れたガソリン、払っておいたネット代——こういうものが数字だけになってしまうと、数日後には何も残らないんです。',
+        'Futari のすべての記録には、一言メモを添えられます。長くなくていい。その一件にほんの少しの重みを持たせるだけ。「試してみたいって言ってたやつ」「雨の日に買いに行った」「あなたが出張に行っていた週」。書いた人は何のための記録か分かっていて、見る人もそのときの瞬間を感じ取れる。',
+        '月末の振り返りを、私はあまり「精算」と呼びたくありません。「精算」というと、問題を探して責任を割り振る作業のように聞こえる。私はもう少し違うふうに理解したい——今月ふたりは何をしたか、どこへ行ったか、お互いのために何を払ったか。その数字たちを繋げると、ふたりで生きてきた日々の記録になります。',
+        'あなたのために使ったお金を、あなたに見ていてほしい。',
+      ],
+      s6Heading: '家計簿アプリが突然消えたら？ 私たちのデータはどうなる？',
+      s6Body: [
+        'もっともな心配だと思います。Honeydue はここ数年でゆっくり衰退していて、Spendee は過去にユーザーのデータが消えてしまったこともあります——そういう話で怖い思いをしたことがあるなら、その警戒は正しいです。',
+        'Futari は私自身が毎日使っているツールです。それが「ちゃんと誰かが手入れしている」という一番直接的な証拠です。永遠に問題が起きないという話ではなく、その裏側に、ちゃんと使えるかどうかを気にかけている本物の人間がいる、ということ。',
+        'データについては、Futari は CSV エクスポートに対応しています。いつでも、データを持ち出したくなったら、持ち出せます。「私たちは消えません」という言葉で安心させようとは思いません——けれど、これは言えます。あなたのデータが囲い込まれることはない、と。',
+      ],
+      s7Heading: 'Futari がそうであるもの、そうでないもの',
+      s7Body: [
+        'Futari は「ふたり優先」の家計簿ツールです。ここに入ってくるものは、ふたりで共有する家計簿そのもの。「私の家計簿」「あなたの家計簿」というふうに可視性を分ける設計はありませんし、誰に権限があって誰にはないという作りでもありません。これは意図した選択です——ふたりの間のお金は、共有されているべきだと思うから。',
+        'Futari は、お金の使い方を評価しません。「今月は予算オーバーです」とプッシュしたり、消費にスコアをつけたり、コーヒーを我慢するように促したりはしない。どうお金を使うかは、ふたりのことだから。',
+        '「家計を最適化する」ためのツールでもありません。ただ、ふたりの暮らしの一件一件をそばで一緒に記録する——それだけ。それ以上でも、それ以下でもありません。',
+      ],
+      moreStoriesHint: 'Futari にはあと 6 つの物語があります。次に来たときは、また別の物語に。',
+    },
+    features: {
+      c1Title: '今日は誰が払った？',
+      c1Body: '日々の割り勘を記憶に頼らない。記録すれば残高が自動で更新され、誰がいくら立て替えているか一目で分かります。',
+      c2Title: '旅行のお金は日常と混ぜない',
+      c2Body: '旅行サブ家計簿で独立して記録。帰ってきたら、この旅で誰がいくら多く出したかが見えます。チャット履歴を遡らなくていい。',
+      c3Title: 'これは、あなたのために',
+      c3Body: '記録ごとに一言メモを残せます。「ついでに払っておいたよ」を、数字じゃなくて「覚えているよ」にする。',
+      c4Title: 'ふたりの家計簿は、ふたりだけのもの',
+      c4Body: '「私の記録」と「あなたの記録」を分けません。入ってきたものは共有——可視性のランク分けはしない設計です。',
+    },
+    blog: {
+      heading: '開発ログ',
+    },
+    srTagline: ' · ふたりの家計簿｜カップル・夫婦のための共有家計 PWA',
+    srDescription:
+      'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
   },
 
   landing: {
-    heroKicker: 'A COUPLE\'S LEDGER · ふたりの家計簿 PWA',
+    heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
-    bodyHtml: 'カップルのための共有家計アプリ。<br />毎日の支出を一緒に記録し、自動で割り勘、お金の行方が見える — 日々の暮らしを残しておきましょう。',
-    cta: '記録をはじめる',
+    bodyHtml: 'ふたりのための家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
+    cta: 'ふたりではじめる',
     ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
     alreadyHaveAccount: 'アカウントをお持ちの方',
     trustEncrypted: 'エンドツーエンド暗号化',
@@ -33,6 +94,27 @@ export const ja: Translations = {
     f4Title: '振り返り',
     f4Body: '月次レビュー、カテゴリ分布、章の履歴。使ったお金にストーリーを語らせる。',
     footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ['ふたり 家計簿', 'Futari 家計簿', '二人の家計簿', "Futari · couple's ledger"],
+    jsonLdAppDescription:
+      'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
+    jsonLdFeatureList: [
+      'ふたりで共有する家計簿',
+      '自動割り勘と月次精算',
+      '家計の資産インベントリ',
+      '保険管理（保障型／貯蓄型）',
+      '愛車と給油の記録',
+      '定期収入',
+      'オフライン対応 PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: '今月 · 5月',
+    phoneMockFeed1Title: '夕食 · 火鍋',
+    phoneMockFeed1Sub: '今日',
+    phoneMockFeed2Title: '電気代',
+    phoneMockFeed2Sub: '昨日',
+    phoneMockFeed3Title: 'ペットの通院',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -104,7 +186,7 @@ export const ja: Translations = {
     noRecordsHint: '一杯のコーヒーでも、ひとつの夕食でも。一日ずつ記録すれば、振り返ったとき心が温かくなります。',
     addFirst: '最初の一件を記録',
     noIncome: '家計の収入はまだ記録されていません',
-    noFilteredAddHint: 'まだ記録がありません。下の + で最初の一件を記録しましょう。',
+    noFilteredAddHint: 'ここにはまだ記録がありません。下の + から始めましょう。',
   },
 
   firstRecordCard: {
@@ -123,7 +205,7 @@ export const ja: Translations = {
   },
 
   dashboard: {
-    soloHint: 'まだひとりで記録中',
+    soloHint: '今はひとりで記録中',
     inviteCta: '相手を招待 →',
     addExpense: '記録を追加',
     addIncome: '収入を記録',
@@ -150,7 +232,7 @@ export const ja: Translations = {
     countSuffix: '件',
     recent: '最近',
     noRecord: 'まだ記録がありません',
-    manage: '管理 ›',
+    manage: '見る ›',
     settleAriaLabel: '返済 / 受領を記録',
     settleLabel: '精算',
     partnerOwesYou: 'があなたに貸し中',
@@ -163,8 +245,8 @@ export const ja: Translations = {
   },
 
   soloBanner: {
-    waiting: 'まだ相手の参加を待っています',
-    sendInviteHint: 'リンクで招待しましょう',
+    waiting: '家計簿の準備はできました。ふたりで始めましょう',
+    sendInviteHint: 'リンクを相手に送りましょう',
     dismissAriaLabel: '通知を閉じる',
     generating: '生成中…',
     sendInvite: '招待を送る',
@@ -202,6 +284,107 @@ export const ja: Translations = {
 
   compactRow: {
     pendingBadge: '未精算',
+    iSettled: '精算した',
+    partnerSettled: '{name} が精算',
+    youIncome: '収入',
+    partnerIncome: '{name} の収入',
+    youPaid: 'あなたが支払',
+    partnerPaid: '{name} が支払',
+    trillion: '兆',
+    hundredMillion: '億',
+  },
+
+  transactionFeed: {
+    loading: '読み込み中…',
+    loadMore: 'もっと見る',
+    endOfFeed: '最初の記録です',
+    closeAriaLabel: '閉じる',
+    settlementFallback: '精算',
+  },
+
+  bottomNav: {
+    home: 'ホーム',
+    records: '記録',
+    assets: 'もの',
+    settings: '設定',
+    addAriaLabel: '記録を追加',
+  },
+
+  miniCalendar: {
+    prevMonth: '前の月',
+    nextMonth: '次の月',
+    prevYear: '前の年',
+    nextYear: '次の年',
+    prevDecade: '前の10年',
+    nextDecade: '次の10年',
+    selectMonth: '月を選択',
+    selectYear: '年を選択',
+    splitRatioAriaLabel: '分担比率',
+    dayViewTitle: '{year}年{month}月 ˅',
+    monthViewTitle: '{year}年 ˅',
+    monthLabel: '{month}月',
+    weekdays: ['日', '月', '火', '水', '木', '金', '土'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: '分担方法',
+    ratioAriaLabel: '分担比率',
+    evenSub: '折半',
+    partnerOwesYouAmount: 'パートナーが {amount} 借りている',
+    youOwePartnerAmount: 'パートナーに {amount} 借りている',
+    ratioNoAmount: '自分 {me}%・相手 {other}%',
+    allMineSelfPaid: '自分で払った分なので借りなし',
+    allMinePartnerPaid: '相手が自分で払った分なので借りなし',
+    allTheirsNoAmount: '全額パートナーが借りている',
+    allTheirsPartnerNoAmount: '全額パートナーに借りている',
+    allTheirsYouPaid: 'パートナーが {amount} 借りている',
+    allTheirsPartnerPaid: 'パートナーに {amount} 借りている',
+    meRatio: '自分 {ratio}%',
+    partnerRatio: '相手 {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: '確認待ちの収入',
+    collapse: '閉じる',
+    expand: 'すべて表示（あと {count} 件）',
+  },
+
+  pendingIncomeCard: {
+    confirm: 'OK',
+    edit: '修正',
+    skip: 'スキップ',
+    skipTitle: '{date} {name} をスキップしますか？',
+    skipDescription: 'この期間は記録されません。次の期間は通常どおり通知されます。',
+    confirmError: '確認に失敗しました',
+    skipError: 'スキップに失敗しました',
+  },
+
+  logoutButton: {
+    label: 'ログアウト',
+    pending: 'ログアウト中…',
+    title: 'Futari からログアウト？',
+    description: '次回は Google でサインインする必要があります。パートナーを招待していない記録は失われません。',
+  },
+
+  splitRatioSection: {
+    meSuffix: '（自分）',
+    partnerSuffix: '（相手）',
+  },
+
+  errorPage: {
+    retry: '再試行',
+    subtitle: 'しばらくしてからもう一度お試しください。',
+    dashboard: 'ダッシュボードの読み込みに失敗しました',
+    records: '記録の読み込みに失敗しました',
+    settings: '設定の読み込みに失敗しました',
+    trips: '旅の読み込みに失敗しました',
+    assets: 'ものの読み込みに失敗しました',
+    review: '月次レビューの読み込みに失敗しました',
+  },
+
+  assetListItem: {
+    savingsBadge: '貯蓄',
+    thisMonth: '今月',
   },
 
   tripList: {
@@ -515,8 +698,8 @@ export const ja: Translations = {
           settleCta: 'ホーム画面で精算する',
           typePromptPrefix: '「',
           typePromptSuffix: '」と入力して確認',
-          typePlaceholder: 'leave',
-          confirmText: 'leave',
+          typePlaceholder: '離れる',
+          confirmText: '離れる',
           leaveButton: '離れる',
           leaving: '処理中…',
         },
@@ -821,7 +1004,7 @@ export const ja: Translations = {
       encryptedHint: '暗号化済み。空欄のままで変更しません。',
       pendingClearHint: '消去マーク済み（保存後に反映）',
       clear: '消去',
-      cancelClear: '取消',
+      cancelClear: '取り消し',
       bloodType: '血液型',
       hospital: '出生病院',
       hospitalPlaceholder: '〇〇病院',
@@ -1101,7 +1284,7 @@ export const ja: Translations = {
       recurringRuleSummary: '毎月 {day} 日 · {interval}',
       recurringRuleNextDate: '次回 {date}',
       recurringRulePaused: '一時停止中',
-      recurringManageCta: '管理',
+      recurringManageCta: '確認',
     },
   },
 
@@ -1204,6 +1387,54 @@ export const ja: Translations = {
     linkRecords: '記録',
     linkAssets: '愛用品',
     footer: 'オンラインに戻ったら自動で更新されます',
+    metadataTitle: 'オフライン · Futari',
+  },
+
+  termsPage: {
+    heading: '利用規約',
+    lastUpdated: '最終更新：2026年5月3日',
+    intro: 'Futari（以下「本サービス」）は現在アルファテスト中で、招待された一部のユーザーのみ試用できます。正式版リリースまでに、以下の点にご注意ください：',
+    bullets: [
+      '本サービスはデータの長期保存を保証しません。テスト期間中はデータベースのリセット、スキーマ変更、デプロイエラーなどにより記録が失われる可能性があります。',
+      '本サービスは、利用者が本サービスを通じて作成した費用分担記録の正確性について責任を負いません。すべての精算結果はご自身の参考用です。',
+      '個人情報（マイナンバー、クレジットカード番号など）など、外部に漏らすべきでない情報を本サービスに記録しないでください。',
+      'Google サインインを使用することで、Google が利用者の基本アカウント情報（氏名、アバター、メールアドレス）を本サービスに提供することに同意したものとみなされます。',
+      '設定ページからいつでもサインアウトできます。アカウントの削除をご希望の場合は開発者までご連絡ください。',
+    ],
+    outro: '正式版では完全な利用規約をご提供します。それまでにご不明点があれば、開発者まで直接ご連絡ください。',
+    backHome: '← ホームに戻る',
+    privacyLink: 'プライバシーポリシー',
+  },
+
+  privacyPage: {
+    heading: 'プライバシーポリシー',
+    lastUpdated: '最終更新：2026年5月3日',
+    intro: 'Futari は現在アルファテスト中です。本ページはテスト期間中のデータ収集と取り扱いについて説明します。',
+    sectionCollectTitle: '収集するデータ',
+    sectionCollectItems: [
+      'Google OAuth から提供される基本アカウント情報：氏名、アバター、メールアドレス。',
+      '利用者が手動で入力する家計簿名、取引記録、精算記録、デフォルト分担設定など。',
+      '招待リンクと招待受諾日時（双方のアカウントを連携するため）。',
+    ],
+    sectionPurposeTitle: 'データの用途',
+    sectionPurposeItems: [
+      'パートナーと共有する家計簿画面の表示。',
+      'ふたりの貸し借り金額の計算。',
+      '正式版リリース前の開発者によるデバッグ用途（公開しません）。',
+    ],
+    sectionStorageTitle: 'データの保存',
+    sectionStorageBody: 'データはバックエンドサービス Supabase のサーバー（日本・東京リージョン）に保存されます。テスト版ではデータの長期保存を保証せず、データベースのリセットやスキーマ変更により失われる可能性があります。',
+    sectionThirdPartyTitle: '第三者サービス',
+    sectionThirdPartyItems: [
+      'Google（OAuth サインイン）',
+      'Supabase（バックエンド、データベース、リアルタイム）',
+      'Vercel（Web ホスティング）',
+    ],
+    sectionRightsTitle: '利用者の権利',
+    sectionRightsBody: '設定ページからいつでもサインアウトできます。アカウントと関連するすべてのデータの削除をご希望の場合は、開発者までご連絡ください。',
+    outro: '正式版では完全なプライバシーポリシーをご提供します。それまでにご不明点があれば、開発者まで直接ご連絡ください。',
+    backHome: '← ホームに戻る',
+    termsLink: '利用規約',
   },
 
   monthlyReview: {
@@ -1370,5 +1601,26 @@ export const ja: Translations = {
       step3: 'Futari が独立したアプリのように開きます',
     },
     fallbackHtml: 'ブラウザのメニューから「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を探してください。ブラウザによって場所は違いますが、たいてい右上のメニュー内にあります。',
+  },
+
+  seo: {
+    landing: {
+      title: 'Futari · ふたりの家計簿｜カップル向け共有家計アプリ',
+      description: 'カップル・夫婦のための共有家計簿。費用の自動按分、精算、家計資産の管理、保険、愛車の燃費記録まで。モバイルファーストの PWA、台湾チーム制作。',
+      ogDescription: 'ふたりで、ひとつの家計簿。一緒に記録、自動で按分、ラクに精算。',
+    },
+    signIn: {
+      title: 'Futari にサインイン · ふたりの家計簿をはじめよう',
+      description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までまとめて管理できる PWA。',
+      ogDescription: 'Google でワンタップサインイン、ふたりの家計簿をはじめよう。',
+    },
+    terms: {
+      title: '利用規約 · Futari',
+      description: 'Futari アルファ版の利用規約とご利用にあたっての注意事項。',
+    },
+    privacy: {
+      title: 'プライバシーポリシー · Futari',
+      description: 'Futari アルファ版でのデータ収集と取り扱いについて。',
+    },
   },
 }

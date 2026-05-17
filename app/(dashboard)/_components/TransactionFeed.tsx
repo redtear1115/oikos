@@ -74,7 +74,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
-        setError(describeError(e, '載入失敗', t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }, [filter, loader, pageSize, monthKey, t])
@@ -103,7 +103,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
       } catch (e) {
-        setError(describeError(e, '載入失敗', t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError))
       }
     })
   }
@@ -197,7 +197,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           amount: row.amount,
           splitType: null,
           splitRatioA: null,
-          description: row.note ?? '還款',
+          description: row.note ?? t.transactionFeed.settlementFallback,
           category: 'settle',
           paidBy: row.paidBy,
           transactedAt: row.settledAt,
@@ -301,7 +301,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
                 border: '1px solid var(--hairline)',
               }}
             >
-              {loading ? '載入中…' : '載入更多'}
+              {loading ? t.transactionFeed.loading : t.transactionFeed.loadMore}
             </button>
           ) : (
             <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
@@ -310,7 +310,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           )
         ) : (
           <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
-            已是最早的紀錄
+            {t.transactionFeed.endOfFeed}
           </div>
         )}
       </div>
@@ -324,7 +324,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           <button
             type="button"
             onClick={() => setError('')}
-            aria-label="關閉"
+            aria-label={t.transactionFeed.closeAriaLabel}
             className="bg-transparent border-0 text-white text-base leading-none cursor-pointer p-0"
           >
             ×

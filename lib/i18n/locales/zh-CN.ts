@@ -2,20 +2,82 @@ import type { Translations } from './zh-TW'
 
 export const zhCN: Translations = {
   signIn: {
-    tagline: '两个人的日子，可以一起记下来。',
+    tagline: '账本准备好了，等你们一起。',
     continueWithGoogle: '以 Google 账号继续',
     termsPrefix: '继续即表示您同意我们的',
     termsLink: '服务条款',
     termsAnd: '与',
     privacyLink: '隐私权政策',
+    // intentionally empty — 中文句子在「政策」名词处自然收尾，无需 SOV 收尾词
     termsSuffix: '',
+    about: {
+      s1Heading: '情侣 AA 制记账，到底有没有更好的办法？',
+      s1Body: [
+        '我和太太在结婚前就开始 AA 了。那几年试过不少 app——有的界面很漂亮，有的功能很齐全，但用到后来都有点卡。不是功能不够，是每次打开来，都感觉那个 app 是设计给一个人用的。你得自己建群组、自己设分账、自己追谁欠谁多少，像是把一个个人记账工具硬拗成两人用途。',
+        '后来我就想，要不自己做一个。不是要做什么伟大的产品，只是想要一个从一开始就假设「用户是两个人」的记账工具。这就是 Futari 的起点。',
+      ],
+      s2Heading: '新婚夫妻的生活费怎么分摊才不伤感情？',
+      s2Body: [
+        '每对伴侣的收入结构都不一样，分摊方式也不会只有一种答案。',
+        '有些人习惯对半切，一人一半，干净利落；有些人薪水差距比较大，按比例比较公平——这个月你赚比较多，你多出一点，不是什么大事，就是现实。也有人轮流结账，「这顿我的，下顿你的」，或是某一方习惯负担某类支出，另一方负担另一类。',
+        '我和太太现在是混用的：固定开销按比例，出去吃饭有时候对半，出游就另立账本。没有哪种方式最好，只有哪种方式最适合你们现在的状态。Futari 支持这四种模式，不是要帮你决定怎么分，而是让你们选定之后，账能记清楚。',
+      ],
+      s3Heading: '我们以前用 Excel 记旅行账，直到有了旅行子账本',
+      s3Body: [
+        '出国旅行是最容易让账乱掉的场景。平常 AA 已经记得差不多了，一出国，订房他付、出租车我付、行程中间各种零碎消费——回来之后不知道谁多出了多少，要对账就得翻回去一笔一笔找。',
+        '我们以前的解法是开一个旅行专用的 Excel，回国再手动整理。有用，但麻烦，而且有几次根本懒得整理就算了。',
+        '旅行子账本是我在做 Futari 的过程中最兴奋的功能之一。旅行的钱跟日常账分开，回来之后清楚看到这趟谁出了多少、差多少，一目了然。下次计划旅行，还可以翻回来看上次的开销大概是什么量级，很实用。',
+      ],
+      s4Heading: '车辆费用怎么跟日常账分开又不失联？',
+      s4Body: [
+        '记账社区里偶尔会看到有人问：车辆相关的费用要怎么记？油钱、停车、保养、保险——这些支出的频率和金额都不规律，混在日常账里很快就看不清楚，但又不想开太多账本搞得更复杂。',
+        'Futari 的设计是让每笔支出可以关联车辆，油耗也可以顺手记下来。日常账和车辆账不是完全切开的两件事，而是同一笔支出多了一个标记。想看这个月车花了多少，筛一下就出来了；不想特别管，正常记账就好。',
+        '如果你们有一台共同的车，这个设计应该会让你松一口气。',
+      ],
+      s5Heading: '每一笔支出背后，都是一个「我记得」',
+      s5Body: [
+        '帮对方买的那罐面膜、顺路加的油、缴掉的网费——这些事情如果只是数字，几天后就什么都不剩了。',
+        'Futari 的每笔账都可以留一句话。不需要很长，就是让那笔账有一点点重量。「你说要试试看的」、「下雨天出去买的」、「你去出差那周」。记账的人知道为什么记，看账的人也看得见那个当下。',
+        '月底的账目回顾，我比较不想把它叫做「对账」。对账听起来像是在找问题、分配责任。我更想把它理解成：这个月你们一起做了什么、去了哪里、为彼此花了什么。那些数字串起来，是一段共同生活的记录。',
+        '为你花的钱，我想让你看见。',
+      ],
+      s6Heading: '记账 app 会不会突然消失？我们的数据怎么办？',
+      s6Body: [
+        '这个担心很合理。Honeydue 这几年慢慢式微，Spendee 曾经让用户的数据凭空消失——如果你被这些事吓过，你的警觉是对的。',
+        'Futari 是我自己每天在用的工具，这是最直接的「有人在维护」的证明。不是说它永远不会出问题，而是说背后有一个真实的人在意它能不能用。',
+        '数据方面，Futari 支持 CSV 导出。任何时候你想把数据带走，都可以。我不想用「我们不会消失」这种话来说服你，但我可以告诉你：你的数据不会被绑住。',
+      ],
+      s7Heading: 'Futari 是什么，也是什么不是',
+      s7Body: [
+        'Futari 是两人优先的记账工具。进来的就是两个人共同的账，没有「我的账」和「你的账」的可见度分级，也没有谁有权限、谁没有权限的设计。这个选择是刻意的——伴侣之间的账，应该是共同的。',
+        'Futari 不评判你们怎么花钱。它不会推送「你这个月超支了」，不会给你消费评分，不会建议你少喝一杯咖啡。你们的消费习惯是你们自己的事。',
+        '它也不是一个要帮你们「优化财务」的工具。它只是想陪着你们记下共同生活的每一笔账，不多，也不少。',
+      ],
+      moreStoriesHint: 'Futari 还有 6 个故事，下次再来会是另一个。',
+    },
+    features: {
+      c1Title: '今天谁付的？',
+      c1Body: '日常 AA 不用靠记忆。每笔账记下来，余额自动算，谁欠谁多少一眼就清楚。',
+      c2Title: '出国账不跟日常混',
+      c2Body: '旅行子账本独立记账，回来清楚看这趟谁多付了多少，不用再翻聊天记录对账。',
+      c3Title: '这笔是帮你买的',
+      c3Body: '每笔账可以留一句话。让那个「顺手帮你缴的」不只是数字，是一句记得。',
+      c4Title: '你们的账，只有你们看得到',
+      c4Body: '没有「我的账」跟「你的账」之分。进来的就是共同的，没有可见度分级。',
+    },
+    blog: {
+      heading: '开发日志',
+    },
+    srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
+    srDescription:
+      '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
   },
 
   landing: {
-    heroKicker: 'A COUPLE\'S LEDGER · 双人记账 PWA',
+    heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '两个人，<br />一本账。',
-    bodyHtml: '专为伴侣设计的双人共享账本。<br />一起记录日常开销、自动分摊、看见每笔花费去了哪里 — 把陪伴留下来。',
-    cta: '开始记录',
+    bodyHtml: '专为两个人设计的账本。<br />日子一天天记下来，回头看会很暖。',
+    cta: '一起记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
     trustEncrypted: '端到端加密',
@@ -26,13 +88,34 @@ export const zhCN: Translations = {
     featuresSubtitleHtml: '从第一笔共同支出，到一起照顾的房子、车与每年保单，<br />都收进同一本账里。',
     f1Title: '双人记账',
     f1Body: '一笔一笔共同记下，自动分摊，可以对半也可以按比例。每月清楚结算，不必再对账。',
-    f2Title: '爱物管理',
+    f2Title: '我们的爱物',
     f2Body: '家、车、孩子、宠物、植物 — 一起照顾的，都收进同一本账，每笔相关支出自动归户。',
     f3Title: '守护保险',
     f3Body: '保护型、储蓄型保单分页，被保人、受益人、续期日，一页看完每一份为对方留下的安排。',
     f4Title: '记账统计',
     f4Body: '月度回顾、分类分布、章节历史。让花过的钱自己说故事，一起回头看走过的日子。',
     footerTrust: '端到端加密 · 数据只属于你们两个',
+    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAlternateNames: ['Futari 家计簿', '两个人的家计簿', 'ふたり 家計簿', "Futari · couple's ledger"],
+    jsonLdAppDescription:
+      '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
+    jsonLdFeatureList: [
+      '双人共享记账',
+      '费用自动分摊与 AA 结算',
+      '家庭资产盘点',
+      '保险管理（保护型／储蓄型）',
+      '汽车与油耗记录',
+      '定期收入',
+      '离线浏览 PWA',
+    ],
+    phoneMockBalanceCaption: 'YOU OWE T',
+    phoneMockBalancePeriod: '本月 · 5 月',
+    phoneMockFeed1Title: '晚餐 · 麻辣锅',
+    phoneMockFeed1Sub: '今天',
+    phoneMockFeed2Title: '电费',
+    phoneMockFeed2Sub: '昨天',
+    phoneMockFeed3Title: '小白看医生',
+    phoneMockFeed3Sub: '5/11',
   },
 
   common: {
@@ -52,7 +135,7 @@ export const zhCN: Translations = {
     offlineError: '目前离线中，等网络回来再试一次',
     back: '返回',
     edit: '编辑',
-    shared: '共用',
+    shared: '共享',
     none: '无',
     deleteSoftDescription: '此操作无法撤销，但账本历史会保留 30 天可由开发者还原。',
     toast: {
@@ -104,7 +187,7 @@ export const zhCN: Translations = {
     noRecordsHint: '从第一笔开始 ─ 一杯咖啡、一顿晚餐都算数。日子一天天记下来，回头看会很暖。',
     addFirst: '记第一笔',
     noIncome: '还没记过家里的收入',
-    noFilteredAddHint: '还没有记录。按下方 + 记第一笔吧。',
+    noFilteredAddHint: '这里还没有记录，按下方 + 开始记吧。',
   },
 
   firstRecordCard: {
@@ -123,7 +206,7 @@ export const zhCN: Translations = {
   },
 
   dashboard: {
-    soloHint: '你还在独自记账',
+    soloHint: '目前是你一个人在记',
     inviteCta: '邀请对方 →',
     addExpense: '新增一笔',
     addIncome: '记一笔收入',
@@ -150,7 +233,7 @@ export const zhCN: Translations = {
     countSuffix: '笔',
     recent: '最近',
     noRecord: '尚无记录',
-    manage: '管理 ›',
+    manage: '查看 ›',
     settleAriaLabel: '记录还款 / 收款',
     settleLabel: '结算',
     partnerOwesYou: '欠你',
@@ -163,8 +246,8 @@ export const zhCN: Translations = {
   },
 
   soloBanner: {
-    waiting: '还在等对方加入',
-    sendInviteHint: '发链接邀请他',
+    waiting: '账本准备好了，等你们一起',
+    sendInviteHint: '把链接发给对方',
     dismissAriaLabel: '关闭提示',
     generating: '生成中…',
     sendInvite: '发送邀请',
@@ -190,7 +273,7 @@ export const zhCN: Translations = {
     statusPendingHint: '待结算的记录不会算进两人的结算，确认付款后再改为已付清。',
     deleteOne: '删除这笔',
     deleteConfirmTitle: '删除这笔记录？',
-    currency: '币别',
+    currency: '货币',
     trip: '旅行',
     noTrip: '无旅行',
     errors: {
@@ -202,6 +285,107 @@ export const zhCN: Translations = {
 
   compactRow: {
     pendingBadge: '待结算',
+    iSettled: '我还款',
+    partnerSettled: '{name} 还款',
+    youIncome: '你收入',
+    partnerIncome: '{name} 收入',
+    youPaid: '你付',
+    partnerPaid: '{name} 付',
+    trillion: '兆',
+    hundredMillion: '亿',
+  },
+
+  transactionFeed: {
+    loading: '加载中…',
+    loadMore: '加载更多',
+    endOfFeed: '已是最早的记录',
+    closeAriaLabel: '关闭',
+    settlementFallback: '还款',
+  },
+
+  bottomNav: {
+    home: '首页',
+    records: '记录',
+    assets: '爱物',
+    settings: '设置',
+    addAriaLabel: '新增一笔',
+  },
+
+  miniCalendar: {
+    prevMonth: '上个月',
+    nextMonth: '下个月',
+    prevYear: '上一年',
+    nextYear: '下一年',
+    prevDecade: '上一个十年',
+    nextDecade: '下一个十年',
+    selectMonth: '选择月份',
+    selectYear: '选择年份',
+    splitRatioAriaLabel: '分担比例',
+    dayViewTitle: '{year} 年 {month} 月 ˅',
+    monthViewTitle: '{year} 年 ˅',
+    monthLabel: '{month} 月',
+    weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: '分担方式',
+    ratioAriaLabel: '分担比例',
+    evenSub: '各付一半',
+    partnerOwesYouAmount: '对方欠你 {amount}',
+    youOwePartnerAmount: '你欠对方 {amount}',
+    ratioNoAmount: '我 {me}%・对方 {other}%',
+    allMineSelfPaid: '你自己花的，不会欠款',
+    allMinePartnerPaid: '对方自己花的，不会欠款',
+    allTheirsNoAmount: '对方欠你全额',
+    allTheirsPartnerNoAmount: '你欠对方全额',
+    allTheirsYouPaid: '对方欠你 {amount}',
+    allTheirsPartnerPaid: '你欠对方 {amount}',
+    meRatio: '我 {ratio}%',
+    partnerRatio: '对方 {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: '这几笔等你看看',
+    collapse: '收起',
+    expand: '展开全部（还有 {count} 笔）',
+  },
+
+  pendingIncomeCard: {
+    confirm: '就这样',
+    edit: '改一下',
+    skip: '跳过',
+    skipTitle: '跳过 {date} {name}？',
+    skipDescription: '这一期不会出现在账上，下一期照常提醒。',
+    confirmError: '确认失败',
+    skipError: '跳过失败',
+  },
+
+  logoutButton: {
+    label: '登出',
+    pending: '登出中…',
+    title: '登出 Futari？',
+    description: '下次需要重新用 Google 登录。未邀请对方加入的记录不会丢失。',
+  },
+
+  splitRatioSection: {
+    meSuffix: '（我）',
+    partnerSuffix: '（对方）',
+  },
+
+  errorPage: {
+    retry: '重试',
+    subtitle: '请稍后再试一次',
+    dashboard: '加载仪表板失败',
+    records: '加载记录失败',
+    settings: '加载设置失败',
+    trips: '加载旅行失败',
+    assets: '加载爱物失败',
+    review: '加载月度回顾失败',
+  },
+
+  assetListItem: {
+    savingsBadge: '储蓄',
+    thisMonth: '本月',
   },
 
   tripList: {
@@ -226,31 +410,31 @@ export const zhCN: Translations = {
     errors: {
       createFailed: '建立失败',
       updateFailed: '更新失败',
-      codeBlank: '请输入币别代码',
-      codeDuplicate: '币别不可重复',
+      codeBlank: '请输入货币代码',
+      codeDuplicate: '货币不可重复',
       rateInvalid: '汇率必须是正数',
       rateInvalidInline: '请输入大于 0 的汇率',
-      maxCurrencies: '最多 {max} 个币别',
+      maxCurrencies: '最多 {max} 个货币',
     },
     nameLabel: '名称',
     namePlaceholder: '例：东京 5 日',
     startDateLabel: '起始日',
     endDateLabel: '结束日（可选）',
     endBeforeStart: '结束日不可早于起始日',
-    currenciesSectionTitle: '币别与汇率',
-    currenciesHint: '勾选这趟用得到的币别。每行填「1 个此币别 = 几个基础货币」(例：1 JPY ≈ 0.2 TWD)。改了汇率，旧记录保留当时的金额，只影响之后新增的记录。',
+    currenciesSectionTitle: '货币与汇率',
+    currenciesHint: '勾选这趟用得到的货币。每行填「1 个此货币 = 几个基础货币」(例：1 JPY ≈ 0.2 TWD)。改了汇率，旧记录保留当时的金额，只影响之后新增的记录。',
     currencyCountFormat: '{n} / {max}',
-    addCustomCta: '+ 自定义币别',
+    addCustomCta: '+ 自定义货币',
     footerNote: '这趟期间记录的支出，会自动挂在这次旅行底下。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
     basePill: '基础货币',
     usedCountNote: '已记过 {n} 笔；改汇率不影响旧记录',
     customRow: {
-      codeAriaLabel: '币别代码',
+      codeAriaLabel: '货币代码',
       codePlaceholder: 'VND',
       labelAriaLabel: '显示名称',
       labelPlaceholder: '越南盾（可选）',
-      removeAriaLabel: '移除币别',
+      removeAriaLabel: '移除货币',
     },
     presetLabels: {
       TWD: '台币',
@@ -263,7 +447,7 @@ export const zhCN: Translations = {
   tripDetail: {
     emptyActive: '这趟还没有任何记录。点右下角的加号从这里开始记。',
     emptyEnded: '这趟没有留下任何记录。',
-    currencyBreakdown: '币别分担',
+    currencyBreakdown: '货币分担',
     recordsSuffix: '笔',
     perSideContribution: '谁付了多少',
     youPaid: '你付了',
@@ -280,7 +464,7 @@ export const zhCN: Translations = {
     endIrreversibleNote: '结束之后无法复原。这趟的支出会以总结算的形式回到主账本。',
     totalLabel: '这趟一共花了',
     baseCurrencyTag: '基础货币 {code}',
-    baseCurrencyTagTitle: '这趟以这个币别结算',
+    baseCurrencyTagTitle: '这趟以这个货币结算',
     recordsCountLabel: '这趟的记录 · {n} 笔',
   },
 
@@ -360,7 +544,7 @@ export const zhCN: Translations = {
       otherSpend: '其他支出',
       prevMonth: '上一月',
       nextMonth: '下一月',
-      collapse: '收合统计',
+      collapse: '收起统计',
       expand: '展开统计',
       summaryExpense: '支出 {amount}',
       summaryIncome: '收入 {amount}',
@@ -419,7 +603,7 @@ export const zhCN: Translations = {
 
   settings: {
     title: '设置',
-    sectionGroup: '帐本',
+    sectionGroup: '账本',
     sectionGroupSplit: '预设分摊方式 & 比例',
     groupName: '账本名称',
     sectionMember: '成员',
@@ -430,20 +614,20 @@ export const zhCN: Translations = {
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     saveDefaultRatio: '保存默认比例',
     inviteCta: '邀请对方加入',
-    quickAccessRow: '个人与帐本设定',
-    sectionDisplay: '语言 & 币别',
+    quickAccessRow: '个人与账本设置',
+    sectionDisplay: '语言 & 货币',
     language: '语言',
-    currency: '币别',
+    currency: '货币',
     sectionApp: '应用',
     offlineBrowsing: '离线浏览',
     offlineHintOff: '在无网络时看不到历史记录。开启后，最近浏览过的页面会存在这台设备上。',
-    offlineHintOn: '无网络时可查看最近一次连接时的记录。资料只存在这台设备，登出时会自动清除。',
+    offlineHintOn: '无网络时可查看最近一次连接时的记录。数据只存在这台设备，登出时会自动清除。',
     offlineToggling: '处理中…',
     offlineToggleError: '无法切换，请稍后再试',
-    offlineUnsupported: '当前的浏览器不支援离线浏览',
+    offlineUnsupported: '当前的浏览器不支持离线浏览',
     recurringIncome: '定期收入',
     recurringExpense: '定期支出',
-    recurringSettings: '定期支出/收入设定',
+    recurringSettings: '定期支出/收入设置',
     sectionData: '数据',
     trust: '数据安全',
     exportData: '导出数据（CSV）',
@@ -522,7 +706,7 @@ export const zhCN: Translations = {
         },
         swapProposed: {
           title: '已发出互换邀请',
-          body: '等 {partner} 确认后，再回到设定走一次离开流程。提议 7 天内有效，你也可以在「离开账本」面板随时撤回。',
+          body: '等 {partner} 确认后，再回到设置走一次离开流程。提议 7 天内有效，你也可以在「离开账本」面板随时撤回。',
           ok: '知道了',
         },
       },
@@ -600,7 +784,7 @@ export const zhCN: Translations = {
     },
     guardianGated: {
       title: '守护还在 Beta',
-      body: '保单与保障的纪录都收在这里。在设置中开启「守护（Beta）」，就能一起照顾。',
+      body: '保单与保障的记录都收在这里。在设置中开启「守护（Beta）」，就能一起照顾。',
       cta: '前往设置开启',
     },
     addCar: '新增车辆',
@@ -637,7 +821,7 @@ export const zhCN: Translations = {
     title: '定期收入',
     back: '返回',
     empty: {
-      hint: '还没设定定期收入',
+      hint: '还没设置定期收入',
       cta: '新增第一个',
     },
     rule: {
@@ -732,23 +916,23 @@ export const zhCN: Translations = {
     title: '货币',
     back: '返回',
     pageHeading: '两人之间的一把尺',
-    pageSubtitle: '主体币别是这本账本的母语。',
+    pageSubtitle: '主体货币是这本账本的母语。',
     base: {
-      sectionTitle: '主体币别',
+      sectionTitle: '主体货币',
       sectionHint: '这本账本的母语。所有结算与显示，都以它为基准。',
       locked: {
         heading: '这个章节已经开始记录了',
-        body: '当前章节已经有记录，主体币别在章节中固定不变——这样以前写下的金额，就一直站得住。',
-        bodyNext: '想换主体币别的话，可以等开始下一个章节时重新选。',
+        body: '当前章节已经有记录，主体货币在章节中固定不变——这样以前写下的金额，就一直站得住。',
+        bodyNext: '想换主体货币的话，可以等开始下一个章节时重新选。',
       },
     },
     tripsHint: {
       heading: '心理汇率搬家了',
-      body: '出国时用得到的币别与汇率，现在跟着旅行一起设定——每一趟自己一把尺，不会互相影响。',
+      body: '出国时用得到的货币与汇率，现在跟着旅行一起设置——每一趟自己一把尺，不会互相影响。',
       linkLabel: '看看旅行',
     },
     errors: {
-      baseChangeFailed: '无法切换主体币别',
+      baseChangeFailed: '无法切换主体货币',
     },
   },
 
@@ -816,7 +1000,7 @@ export const zhCN: Translations = {
       sectionId: '身份证件',
       nationalId: '身份证号',
       nationalIdPlaceholder: 'A123456789',
-      nhiNo: '健保卡号',
+      nhiNo: '医保卡号',
       nhiNoPlaceholder: '0000 0000 0000',
       encryptedHint: '已加密保存，留空即不变更',
       pendingClearHint: '已标记清除（保存后生效）',
@@ -977,7 +1161,7 @@ export const zhCN: Translations = {
       sectionBody: '身体记录',
       bornDate: '出生日',
       nationalId: '身份证号',
-      nhiNo: '健保卡号',
+      nhiNo: '医保卡号',
       bornHospital: '出生医院',
       bloodType: '血型',
       bloodTypeValue: '{type} 型',
@@ -1083,8 +1267,8 @@ export const zhCN: Translations = {
       heroPaymentLabel: '累计缴',
       heroReturnLabel: '已拿回',
       heroExpectedTag: '估',
-      heroNoExpectedBar: '已拿回 NT$ {received} · 预估金额未设定',
-      heroNoExpectedCta: '设定预估金额',
+      heroNoExpectedBar: '已拿回 NT$ {received} · 预估金额未设置',
+      heroNoExpectedCta: '设置预估金额',
       heroBreakdownPrefix: '含',
       maturingSoonTitle: '{date} 即将到期',
       maturingSoonSubtitle: '别忘了满期金到账要记',
@@ -1095,13 +1279,13 @@ export const zhCN: Translations = {
       maturedAwaitingPremiumNote: '累计缴 NT$ {total} 已记入 {count} 笔',
       accountValueLabel: '当前账户价值',
       accountValueEditCta: '更新',
-      recurringSectionTitle: '定期进帐',
-      recurringEmptyHint: '分红或生存金每年都会回来 — 设成定期进帐就不必再记',
-      recurringAddCta: '建立定期进帐',
+      recurringSectionTitle: '定期进账',
+      recurringEmptyHint: '分红或生存金每年都会回来 — 设成定期进账就不必再记',
+      recurringAddCta: '建立定期进账',
       recurringRuleSummary: '每月 {day} 号 · {interval}',
       recurringRuleNextDate: '下次 {date}',
       recurringRulePaused: '已暂停',
-      recurringManageCta: '管理',
+      recurringManageCta: '查看',
     },
   },
 
@@ -1109,7 +1293,7 @@ export const zhCN: Translations = {
     title: '定期支出',
     back: '返回',
     empty: {
-      hint: '还没设定定期支出',
+      hint: '还没设置定期支出',
       cta: '新增第一个',
     },
     rule: {
@@ -1194,7 +1378,7 @@ export const zhCN: Translations = {
   },
 
   offlineBanner: {
-    text: '离线中・显示最近一次连接的资料',
+    text: '离线中・显示最近一次连接的数据',
   },
 
   offlinePage: {
@@ -1204,6 +1388,54 @@ export const zhCN: Translations = {
     linkRecords: '记录',
     linkAssets: '爱物',
     footer: '联网后会自动更新',
+    metadataTitle: '离线中 · Futari',
+  },
+
+  termsPage: {
+    heading: '服务条款',
+    lastUpdated: '最后更新：2026 年 5 月 3 日',
+    intro: 'Futari（以下简称「本服务」）目前处于 alpha 测试阶段，仅提供受邀的小范围用户试用。正式版本上线前，用户应留意：',
+    bullets: [
+      '本服务不保证数据的长期保存。测试期间可能因为数据库重置、结构变更或部署错误导致记录丢失。',
+      '本服务不对用户通过本服务所产生的金钱分摊记录之正确性负责。所有结算结果仅供用户自行参考。',
+      '请勿在本服务上记录不适合泄露的敏感信息（例如身份证号、信用卡号等）。',
+      '使用 Google 登录即表示您同意 Google 将您的基本账号信息（姓名、头像、Email）提供给本服务。',
+      '您可随时通过设置页登出，或联系开发者删除账号。',
+    ],
+    outro: '正式版本将提供完整的服务条款。目前如有任何疑虑，请直接联系开发者。',
+    backHome: '← 回首页',
+    privacyLink: '隐私权政策',
+  },
+
+  privacyPage: {
+    heading: '隐私权政策',
+    lastUpdated: '最后更新：2026 年 5 月 3 日',
+    intro: 'Futari 目前处于 alpha 测试阶段，本页说明测试期间的数据收集与处理方式。',
+    sectionCollectTitle: '收集的数据',
+    sectionCollectItems: [
+      'Google OAuth 提供的基本账号信息：姓名、头像、Email 地址。',
+      '您手动输入的家计簿名称、交易记录、结算记录、预设分摊偏好等。',
+      '邀请链接、邀请接受时间（用于关联双方账号）。',
+    ],
+    sectionPurposeTitle: '数据用途',
+    sectionPurposeItems: [
+      '显示您与伴侣共享的记账界面。',
+      '计算双方欠款金额。',
+      '正式版上线前，可能用于开发者除错（不会公开）。',
+    ],
+    sectionStorageTitle: '数据存储',
+    sectionStorageBody: '数据存储于 Supabase（后端服务）的服务器，位于日本东京区。测试版本不保证数据的长期保存，可能因为数据库重置或结构变更而丢失。',
+    sectionThirdPartyTitle: '第三方服务',
+    sectionThirdPartyItems: [
+      'Google（OAuth 登录）',
+      'Supabase（后端、数据库、实时更新）',
+      'Vercel（网站托管）',
+    ],
+    sectionRightsTitle: '您的权利',
+    sectionRightsBody: '您可随时通过设置页登出，或联系开发者删除您的账号与所有相关数据。',
+    outro: '正式版本将提供完整的隐私权政策。目前如有任何疑虑，请直接联系开发者。',
+    backHome: '← 回首页',
+    termsLink: '服务条款',
   },
 
   monthlyReview: {
@@ -1370,5 +1602,26 @@ export const zhCN: Translations = {
       step3: 'Futari 会像一个独立的 app 打开',
     },
     fallbackHtml: '在你的浏览器菜单里找「<strong>添加到主屏幕</strong>」或「<strong>安装应用</strong>」。不同浏览器位置不太一样，但通常都在右上角的菜单里。',
+  },
+
+  seo: {
+    landing: {
+      title: 'Futari · 两个人，一本账｜情侣共享记账 PWA',
+      description: '专为夫妻、情侣设计的双人共享账本。自动分摊、AA 结算、家庭资产盘点、保险与爱车油耗记录，台湾团队制作的 Mobile-first PWA 家计簿。',
+      ogDescription: '两个人，一本账。一起记录、自动分摊、轻松结算。',
+    },
+    signIn: {
+      title: '登录 Futari · 开始两个人的记账生活',
+      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、管理保险与资产的双人记账 PWA。',
+      ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
+    },
+    terms: {
+      title: '服务条款 · Futari',
+      description: 'Futari alpha 测试版本的服务条款与用户注意事项。',
+    },
+    privacy: {
+      title: '隐私权政策 · Futari',
+      description: 'Futari alpha 测试版本的数据收集与隐私权处理方式。',
+    },
   },
 }

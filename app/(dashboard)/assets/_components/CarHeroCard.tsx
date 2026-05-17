@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { CarMark, isDarkColor, resolveCarColor } from './carColor'
 import { formatAmount } from '@/lib/currency'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   id: string
@@ -33,6 +34,7 @@ export function CarHeroCard({
   monthAmount,
   compact: _compact = false,
 }: Props) {
+  const t = useTranslations()
   const swatch = resolveCarColor(color)
 
   const subtitleParts: string[] = []
@@ -121,7 +123,7 @@ export function CarHeroCard({
           </div>
         </div>
         <div className="text-right shrink-0 ml-2">
-          <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
+          <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
           <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
             {formatAmount(monthAmount, 'twd')}
           </div>

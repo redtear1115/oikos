@@ -54,28 +54,14 @@ const notoTC = Noto_Sans_TC({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-const SEO_TITLE = 'Futari · 兩個人的家計簿｜伴侶／夫妻共享記帳'
-const SEO_DESCRIPTION =
-  '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。Mobile-first PWA 家計簿，台灣團隊製作。'
-const OG_DESCRIPTION = '一起記錄、自動分攤、輕鬆結算。雙人共享的家庭記帳 PWA。'
-
+// Root layout metadata: platform / PWA / icons only.
+// Per-page title / description / openGraph / twitter are set in each
+// app/[locale]/*/page.tsx via generateMetadata({ params }).
 export const metadata: Metadata = {
   // metadataBase resolves all relative metadata URLs (OG image, Twitter card, etc.)
   // against the canonical domain. Without it, Next.js logs warnings + falls back to
   // a guessed origin which is wrong on Vercel preview deployments.
   metadataBase: new URL(APP_URL),
-  title: SEO_TITLE,
-  description: SEO_DESCRIPTION,
-  // Google ignores `keywords`, but Bing and 百度 still read it. Cheap to include.
-  keywords: [
-    '家庭記帳', '共享帳本', '雙人記帳', '家計簿',
-    '伴侶理財', '夫妻記帳', '兩人生活費',
-    '費用分攤', '分割帳單', 'AA 制', 'AA制',
-    '家庭資產管理', '資產盤點', '保險管理',
-    '汽車記帳', '油耗計算', '汽油記錄',
-    '新婚理財', '家庭預算', '存錢',
-    'Futari', 'ふたり',
-  ],
   robots: {
     index: true,
     follow: true,
@@ -98,26 +84,6 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', sizes: 'any' },
     ],
     apple: '/icons/apple-touch-icon.png',
-  },
-  openGraph: {
-    title: SEO_TITLE,
-    description: OG_DESCRIPTION,
-    url: '/',
-    siteName: 'Futari',
-    images: [
-      { url: '/og-image.png', width: 1200, height: 630, alt: 'Futari · 兩個人，一本帳' },
-      { url: '/og-line.png', width: 1200, height: 600, alt: 'Futari · 兩個人，一本帳' },
-      { url: '/og-square.png', width: 1200, height: 1200, alt: 'Futari · 兩個人，一本帳' },
-    ],
-    locale: 'zh_TW',
-    alternateLocale: ['zh_CN', 'en_US', 'ja_JP'],
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: SEO_TITLE,
-    description: OG_DESCRIPTION,
-    images: ['/og-image.png'],
   },
 }
 

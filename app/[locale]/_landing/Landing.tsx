@@ -15,7 +15,10 @@ type LandingStrings = Translations['landing']
 
 type Props = {
   t: LandingStrings
+  /** 主 CTA — 已登入 → /dashboard；未登入 → 該 locale 的 /sign-in。 */
   ctaHref: string
+  /** 「已有帳號」次要 link — 永遠指 sign-in（locale-aware）。 */
+  signInHref: string
   languageSwitcher?: ReactNode
 }
 
@@ -23,7 +26,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, languageSwitcher }: Props) {
+export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -165,7 +168,7 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
                 {t.cta}
               </Link>
               <Link
-                href="/sign-in"
+                href={signInHref}
                 className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-[14px] text-[14px] cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
@@ -190,13 +193,6 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
               className="hidden md:flex items-center gap-6 mt-7"
               style={{ color: 'var(--ink-2)' }}
             >
-              <div className="flex items-center gap-1.5">
-                <ShieldOutlineGlyph />
-                <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
-                  {t.trustEncrypted}
-                </span>
-              </div>
-              <span style={{ color: 'var(--hairline)' }}>·</span>
               <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
                 {t.trustFree}
               </span>
@@ -204,12 +200,19 @@ export function Landing({ t, ctaHref, languageSwitcher }: Props) {
               <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
                 {t.trustPwa}
               </span>
+              <span style={{ color: 'var(--hairline)' }}>·</span>
+              <div className="flex items-center gap-1.5">
+                <ShieldOutlineGlyph />
+                <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+                  {t.trustEncrypted}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Phone preview — desktop only */}
           <div className="hidden md:flex flex-1 items-center justify-center">
-            <PhonePreview />
+            <PhonePreview t={t} />
           </div>
         </div>
       </section>

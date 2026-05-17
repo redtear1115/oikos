@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { PendingIncomeCard } from './PendingIncomeCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import { useTranslations } from '@/lib/i18n/client'
 
 export interface PendingIncomeStackProps {
   pendings: PendingRow[]
@@ -10,6 +11,7 @@ export interface PendingIncomeStackProps {
 }
 
 export function PendingIncomeStack({ pendings, onEdit }: PendingIncomeStackProps) {
+  const t = useTranslations()
   const [expanded, setExpanded] = useState(false)
   if (pendings.length === 0) return null
 
@@ -19,7 +21,7 @@ export function PendingIncomeStack({ pendings, onEdit }: PendingIncomeStackProps
   return (
     <section className="mb-4 space-y-3">
       <div className="text-[var(--fs-xs)]" style={{ color: 'var(--ink-3)' }}>
-        這幾筆等你看看
+        {t.pendingIncomeStack.heading}
       </div>
       <div className="space-y-3">
         {visible.map((p, i) => (
@@ -41,7 +43,9 @@ export function PendingIncomeStack({ pendings, onEdit }: PendingIncomeStackProps
           className="w-full rounded-full py-2 text-[var(--fs-sm)]"
           style={{ border: '1px solid var(--hairline)', color: 'var(--ink-3)' }}
         >
-          {expanded ? '收合' : `展開全部（還有 ${pendings.length - 2} 筆）`}
+          {expanded
+            ? t.pendingIncomeStack.collapse
+            : t.pendingIncomeStack.expand.replace('{count}', String(pendings.length - 2))}
         </button>
       )}
     </section>
