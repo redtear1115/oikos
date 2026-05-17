@@ -5,6 +5,7 @@ import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { resolveDisplayName } from '@/lib/display-name'
 import { formatAmount } from '@/lib/currency'
 import { assetTypeMeta, type AssetType } from '@/lib/assets'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   id: string
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function AssetListItem({ id, type, name, nickname, plate, monthAmount, isSavings, isLast }: Props) {
+  const t = useTranslations()
   const meta = assetTypeMeta(type)
   const subtitle = type === 'car' ? (plate ?? '') : meta.label
   const display = resolveDisplayName(name, nickname)
@@ -66,7 +68,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
                 color: 'var(--saving)',
               }}
             >
-              儲蓄
+              {t.assetListItem.savingsBadge}
             </span>
           )}
           <span className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
@@ -75,7 +77,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
         </div>
       </div>
       <div className="text-right shrink-0 ml-2">
-        <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>本月</div>
+        <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
         <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
           {formatAmount(monthAmount, 'twd')}
         </div>
