@@ -6,6 +6,7 @@ import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
+import { FeatureCards } from './FeatureCards'
 
 type Params = Promise<{ locale: string }>
 
@@ -113,18 +114,13 @@ export default async function SignInPage({ params }: { params: Params }) {
           </div>
         </section>
 
-        {/* Right column: 4 feature cards placeholder. Content lands in #417. */}
+        {/* Right column: 4 scene-style feature cards (#417). */}
         <section
           className="order-3 flex flex-col"
           aria-label="Features"
           data-shell-slot="right"
         >
-          <div
-            className="rounded-lg border border-dashed p-6 text-sm leading-relaxed opacity-40"
-            style={{ borderColor: 'var(--ink-3)', color: 'var(--ink-2)' }}
-          >
-            右欄 — feature cards (#417)
-          </div>
+          <FeatureCards t={t.signIn.features} />
         </section>
       </div>
 
