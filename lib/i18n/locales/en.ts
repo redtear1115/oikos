@@ -88,6 +88,21 @@ export const en: Translations = {
     trustEncrypted: 'End-to-end encrypted',
     trustFree: 'Free to use',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: 'Your records belong only to the two of you. No ads, no data selling.',
+      encryption: {
+        title: 'End-to-end encrypted',
+        body: 'Your data is encrypted in transit and at rest. Not even we can read it.',
+      },
+      portability: {
+        title: 'Take it with you',
+        body: 'Export to CSV anytime. Your data is always yours — never locked in.',
+      },
+      forever: {
+        title: 'Free forever',
+        body: 'Core features are free. No hidden terms.',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: 'One ledger, four kinds of light',
     featuresSubtitleHtml: 'From the first shared receipt to the house, car, and yearly policies you look after together,<br />all in one place.',

@@ -84,10 +84,20 @@ export type Translations = {
     ctaHint: string
     /** Secondary desktop CTA — sign-in link for returning users. */
     alreadyHaveAccount: string
-    /** Trust pills next to the desktop CTA. */
+    /** Trust pills next to the desktop CTA (compact variant of `<TrustSection>`). */
     trustEncrypted: string
     trustFree: string
     trustPwa: string
+    /** Full trust section (#538) — shown between Features and footer. The
+     *  compact variant above stays available via `<TrustSection variant="compact">`
+     *  for reuse elsewhere; landing renders the `full` variant which uses these. */
+    trust: {
+      /** One-line narrative above the three trust cards. */
+      narrative: string
+      encryption: { title: string; body: string }
+      portability: { title: string; body: string }
+      forever: { title: string; body: string }
+    }
     /** Features section. */
     featuresKicker: string
     featuresTitle: string
@@ -2049,6 +2059,21 @@ export const zhTW: Translations = {
     trustEncrypted: '端對端加密',
     trustFree: '免費使用',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
+      encryption: {
+        title: '端對端加密',
+        body: '資料傳輸與儲存全程加密，連我們自己也讀不到內容。',
+      },
+      portability: {
+        title: '隨時帶走',
+        body: 'CSV 匯出，資料永遠是你的。想離開時不會被綁在這裡。',
+      },
+      forever: {
+        title: '永久免費',
+        body: '核心功能不收費，沒有隱藏條款。',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: '一本帳，承接生活的四種光',
     featuresSubtitleHtml: '從第一筆共同支出，到一起照顧的房子、車與每年保單，<br />都收進同一本帳裡。',
