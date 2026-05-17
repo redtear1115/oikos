@@ -1,17 +1,34 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
+import { dictionaries } from '@/lib/i18n/t'
+import { buildAlternates } from '@/lib/i18n/seo'
+import { localizedHref } from '@/lib/i18n/path'
 
-export const metadata = {
-  title: '服務條款 · Futari',
-  description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
-  alternates: { canonical: '/terms' },
-  openGraph: {
-    title: '服務條款 · Futari',
-    description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
-    type: 'article',
-  },
+type Params = Promise<{ locale: string }>
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return {}
+  const locale: Locale = raw
+  const t = dictionaries[locale].seo.terms
+  return {
+    title: t.title,
+    description: t.description,
+    alternates: buildAlternates('/terms', locale),
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      type: 'article',
+    },
+  }
 }
 
-export default function TermsPage() {
+export default async function TermsPage({ params }: { params: Params }) {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return null
+  const locale: Locale = raw
+
   return (
     <main
       className="min-h-screen px-6 py-12"
@@ -46,10 +63,10 @@ export default function TermsPage() {
         </div>
 
         <div className="mt-12 flex gap-4 text-sm">
-          <Link href="/" className="underline" style={{ color: 'var(--ink-2)' }}>
+          <Link href={localizedHref('/', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
             ← 回首頁
           </Link>
-          <Link href="/privacy" className="underline" style={{ color: 'var(--ink-2)' }}>
+          <Link href={localizedHref('/privacy', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
             隱私權政策
           </Link>
         </div>

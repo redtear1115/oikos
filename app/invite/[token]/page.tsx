@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { previewInvite } from '@/actions/invite'
 import { getTranslations } from '@/lib/i18n/t'
+import { localizedSignInPath } from '@/lib/i18n/server-redirect'
 import { InviteConfirm } from './InviteConfirm'
 
 interface Props {
@@ -13,7 +14,7 @@ export default async function InvitePage({ params }: Props) {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect(`/sign-in?next=/invite/${token}`)
+    redirect(await localizedSignInPath(`?next=/invite/${token}`))
   }
 
   const preview = await previewInvite(token)

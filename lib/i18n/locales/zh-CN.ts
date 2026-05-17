@@ -1425,4 +1425,26 @@ export const zhCN: Translations = {
     },
     fallbackHtml: '在你的浏览器菜单里找「<strong>添加到主屏幕</strong>」或「<strong>安装应用</strong>」。不同浏览器位置不太一样，但通常都在右上角的菜单里。',
   },
+
+  // TODO(seo-copy): native-speaker review
+  seo: {
+    landing: {
+      title: 'Futari · 两个人，一本账｜情侣共享记账 PWA',
+      description: '专为夫妻、情侣设计的双人共享账本。自动分摊、AA 结算、家庭资产盘点、保险与爱车油耗记录，台湾团队制作的 Mobile-first PWA 家计簿。',
+      ogDescription: '两个人，一本账。一起记录、自动分摊、轻松结算。',
+    },
+    signIn: {
+      title: '登录 Futari · 开始两个人的记账生活',
+      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、管理保险与资产的双人记账 PWA。',
+      ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
+    },
+    terms: {
+      title: '服务条款 · Futari',
+      description: 'Futari alpha 测试版本的服务条款与使用者注意事项。',
+    },
+    privacy: {
+      title: '隐私权政策 · Futari',
+      description: 'Futari alpha 测试版本的资料收集与隐私权处理方式。',
+    },
+  },
 }

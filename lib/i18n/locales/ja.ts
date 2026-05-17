@@ -1425,4 +1425,26 @@ export const ja: Translations = {
     },
     fallbackHtml: 'ブラウザのメニューから「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を探してください。ブラウザによって場所は違いますが、たいてい右上のメニュー内にあります。',
   },
+
+  // TODO(seo-copy): native-speaker review
+  seo: {
+    landing: {
+      title: 'Futari · ふたりの家計簿｜カップル向け共有家計アプリ',
+      description: 'カップル・夫婦のための共有家計簿。費用の自動按分、精算、家計資産の管理、保険、愛車の燃費記録まで。モバイルファーストの PWA、台湾チーム制作。',
+      ogDescription: 'ふたりで、ひとつの家計簿。一緒に記録、自動で按分、ラクに精算。',
+    },
+    signIn: {
+      title: 'Futari にサインイン · ふたりの家計簿をはじめよう',
+      description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までまとめて管理できる PWA。',
+      ogDescription: 'Google でワンタップサインイン、ふたりの家計簿をはじめよう。',
+    },
+    terms: {
+      title: '利用規約 · Futari',
+      description: 'Futari アルファ版の利用規約とご利用にあたっての注意事項。',
+    },
+    privacy: {
+      title: 'プライバシーポリシー · Futari',
+      description: 'Futari アルファ版でのデータ収集と取り扱いについて。',
+    },
+  },
 }

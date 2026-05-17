@@ -1,7 +1,9 @@
 'use client'
 
 import { Fragment } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { type Locale } from './locales-meta'
+import { localizedHref, stripLocaleFromPath } from './path'
 
 const LOCALES = [
   { value: 'zh-TW', label: '繁中' },
@@ -11,6 +13,7 @@ const LOCALES = [
 ] as const
 
 type Variant = 'pill' | 'footer'
+type Mode = 'url' | 'cookie'
 
 interface Props {
   current: string
@@ -19,16 +22,40 @@ interface Props {
    * - `footer`：低調 inline 文字（sign-in footer 用）
    */
   variant?: Variant
+  /**
+   * - `url`：public pages 用 — 切換時 cookie 同步 + 跳到對應 locale URL
+   * - `cookie`：dashboard 用 — 只設 cookie + refresh，URL 不動
+   *
+   * 省略時依 pathname 自動判斷：[locale] 結構下的 phase-1 public path → 'url'，其餘 → 'cookie'。
+   */
+  mode?: Mode
 }
 
-export function LanguageSwitcher({ current, variant = 'pill' }: Props) {
+// Phase 1 內的 public path（解過 locale prefix 後的形狀）
+const PHASE_ONE_PUBLIC_PATHS = ['/', '/sign-in', '/terms', '/privacy'] as const
+
+function inferMode(pathname: string): Mode {
+  const stripped = stripLocaleFromPath(pathname)
+  return (PHASE_ONE_PUBLIC_PATHS as readonly string[]).includes(stripped) ? 'url' : 'cookie'
+}
+
+export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
   const router = useRouter()
+  const pathname = usePathname()
+  const effectiveMode: Mode = mode ?? inferMode(pathname)
 
   function switchLang(lang: string) {
     if (lang === current) return
+    // 兩種 mode 都同步 cookie：dashboard 才會用到、public 也方便登入後 dashboard 繼承
     // eslint-disable-next-line react-hooks/immutability -- document.cookie is the standard browser API for setting cookies client-side; there is no immutable alternative.
     document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
-    router.refresh()
+
+    if (effectiveMode === 'url') {
+      const basePath = stripLocaleFromPath(pathname)
+      router.push(localizedHref(basePath, lang as Locale))
+    } else {
+      router.refresh()
+    }
   }
 
   if (variant === 'footer') {

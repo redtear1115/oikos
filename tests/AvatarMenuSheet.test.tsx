@@ -7,6 +7,9 @@ import { AvatarMenuSheet } from '@/app/(dashboard)/_components/AvatarMenuSheet'
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  // LanguageSwitcher uses usePathname to decide between URL-navigate (public)
+  // and cookie+refresh (dashboard). Dashboard tests fix it to a dashboard path.
+  usePathname: () => '/dashboard',
 }))
 
 vi.mock('next/cache', () => ({
