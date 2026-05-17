@@ -1,5 +1,16 @@
 'use server'
 
+/**
+ * Recurring expense rules — paired with `actions/recurringIncome.ts`. The two
+ * files are structurally parallel (createRule / editRule / deleteRule / list /
+ * confirm), differing only in table / validator / field names (expense vs
+ * income, paidBy vs recipientId, splitType, etc.).
+ *
+ * Keep them in sync: any signature, validation, or DB-write change here should
+ * be mirrored on the income side (and vice versa). A future factoring may
+ * collapse the shared shell — see #512 item 8.
+ */
+
 import { db } from '@/lib/db/client'
 import {
   cashTransactions,
