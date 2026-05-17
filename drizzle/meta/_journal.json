@@ -337,6 +337,13 @@
       "when": 1780500000000,
       "tag": "0047_rls_auto_enable_revoke_direct",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1780600000000,
+      "tag": "0048_rls_invites_select_initplan",
+      "breakpoints": true
     }
   ]
 }
