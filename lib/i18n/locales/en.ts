@@ -9,6 +9,60 @@ export const en: Translations = {
     termsAnd: 'and',
     privacyLink: 'Privacy Policy',
     termsSuffix: '',
+    about: {
+      s1Heading: 'Is there a better way to split expenses as a couple?',
+      s1Body: [
+        'My wife and I started going Dutch before we got married. Over those years we tried plenty of apps — some looked beautiful, others were packed with features, but every one of them eventually felt off. It wasn\'t that they lacked features. It was that every time I opened one, it felt like an app built for a single person. You had to create a group yourself, set up the splits yourself, chase down who owed whom yourself — like prying a solo expense tracker open and forcing two people inside.',
+        'So at some point I thought: maybe I\'ll just build one. Nothing grand. I just wanted an expense tracker that assumed, from the very first screen, that the user is two people. That\'s where Futari started.',
+      ],
+      s2Heading: 'How do newlyweds split household costs without it getting weird?',
+      s2Body: [
+        'No two couples have the same income, and there isn\'t one right way to split.',
+        'Some people prefer 50/50, clean and simple. Others have a real income gap, and splitting by ratio feels fairer — you earned more this month, you put in a little more, it isn\'t a big deal, it\'s just life. Some take turns paying ("I got this one, you get the next one"), or each take on a category — one covers groceries, the other covers utilities.',
+        'My wife and I mix it up: fixed costs by ratio, dinners out sometimes 50/50, trips on a separate ledger. There\'s no best way, only the way that fits where the two of you are right now. Futari supports all four modes. It\'s not here to decide how you split — once you\'ve decided, it just makes sure the math is clean.',
+      ],
+      s3Heading: 'We used a spreadsheet for trips, until we had a trip ledger',
+      s3Body: [
+        'Travel is where shared expenses fall apart fastest. Day-to-day splitting was fine, but the moment we landed somewhere — they booked the hotel, I covered the cab, both of us paid for a dozen tiny things in between — by the time we got home, neither of us knew who was up by how much. Reconciling meant scrolling back through everything, receipt by receipt.',
+        'Our old fix was a dedicated travel spreadsheet, cleaned up by hand after the trip. It worked, but it was tedious — and more than once we just gave up halfway and let it go.',
+        'The trip ledger was one of the most exciting things to build into Futari. Travel money lives apart from the everyday ledger. When you get home, you can see exactly who put in what and how much one side is owed — at a glance. Next time you plan a trip, you can flip back and see what the last one cost. That part is genuinely useful.',
+      ],
+      s4Heading: 'How do you keep car costs separate from daily spending without losing track?',
+      s4Body: [
+        'A question that comes up now and then in expense-tracking forums: how do you record car-related costs? Gas, parking, maintenance, insurance — the timing is irregular, the amounts are uneven, and they get lost the moment you mix them into the daily ledger. But nobody wants to juggle multiple ledgers either.',
+        'Futari lets each expense link to a vehicle, and you can jot down a fuel log in the same gesture. The daily ledger and the car ledger aren\'t two separate things — they\'re the same entry with one extra tag. Want to see how much the car cost this month? Filter, done. Don\'t feel like thinking about it? Just record normally and move on.',
+        'If the two of you share a car, this is the kind of design that should let your shoulders drop a little.',
+      ],
+      s5Heading: 'Behind every expense, there\'s an "I remember"',
+      s5Body: [
+        'That jar of face mask you picked up for them, the gas you topped off on the way home, the internet bill you paid this month — if these are just numbers, nothing of them is left a few days later.',
+        'Every entry in Futari can hold one line. It doesn\'t have to be long. Just enough to give the entry a little weight. "The one you wanted to try." "Bought it in the rain." "The week you were away on the trip." The person who records it knows why it\'s there. The person who reads it later can see the moment too.',
+        'For the monthly review, I\'ve been avoiding the word "reconciliation." Reconciliation sounds like finding problems and assigning blame. I\'d rather think of it as: what did the two of you do this month, where did you go, what did you spend on each other. Strung together, those numbers are a record of a life lived together.',
+        'The money I spent on you — I want you to see it.',
+      ],
+      s6Heading: 'What if the app disappears? What happens to our data?',
+      s6Body: [
+        'That worry is fair. Honeydue has been slowly fading. Spendee once made user data vanish. If those stories have made you cautious, your caution is the right instinct.',
+        'Futari is something I use every day myself. That\'s the most direct evidence that "someone is maintaining it." It doesn\'t mean nothing will ever break — it means there\'s a real person on the other end who cares whether it works.',
+        'On data: Futari supports CSV export. Whenever you want to take your data with you, you can. I\'m not going to convince you with "we\'ll never disappear" — but I can tell you this: your data won\'t be locked in.',
+      ],
+      s7Heading: 'What Futari is — and isn\'t',
+      s7Body: [
+        'Futari is a couple-first expense tracker. Whatever comes in is shared between the two of you. There\'s no "my ledger" vs. "your ledger" visibility split, no role-based permissions design. That choice is deliberate — the money between partners should be shared.',
+        'Futari doesn\'t judge how you spend. It won\'t push "you\'re over budget this month." It won\'t score your spending. It won\'t suggest you skip a coffee. Your spending habits are your business.',
+        'It\'s also not a tool here to "optimize your finances." It just wants to sit beside the two of you and help you record everyday life — one entry at a time. Not more, not less.',
+      ],
+    },
+    features: {
+      c1Title: 'Who paid today?',
+      c1Body: 'Day-to-day splitting without relying on memory. Every entry, balance auto-calculated — who owes whom is obvious at a glance.',
+      c2Title: 'Trips stay separate',
+      c2Body: 'A dedicated trip ledger. When you get home, see exactly who put in more — no more scrolling through chat logs.',
+      c3Title: 'This one was for you',
+      c3Body: 'Every entry can hold one line. So the "picked it up for you" isn\'t just a number — it\'s an "I remember."',
+      c4Title: 'Your ledger, just for the two of you',
+      c4Body: 'No "my entries" vs. "your entries." Whatever\'s recorded is shared — no visibility tiers, by design.',
+    },
   },
 
   landing: {
