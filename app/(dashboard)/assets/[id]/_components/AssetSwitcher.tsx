@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useTranslations } from '@/lib/i18n/client'
@@ -57,13 +58,24 @@ export function AssetSwitcher({
   const router = useRouter()
   const t = useTranslations()
   const [open, setOpen] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
 
+  // Compute portal position whenever the popover opens.
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    setPopoverPos({ top: rect.bottom + 6, left: rect.left })
+  }, [open])
+
+  // Close on outside click (check both trigger and portal popover).
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
-      if (!wrapRef.current) return
-      if (!wrapRef.current.contains(e.target as Node)) setOpen(false)
+      if (triggerRef.current?.contains(e.target as Node)) return
+      if (popoverRef.current?.contains(e.target as Node)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -78,24 +90,71 @@ export function AssetSwitcher({
     return () => document.removeEventListener('keydown', handler)
   }, [open])
 
-  // Determine if there are any non-current items to switch to
-  const hasOthers = groups
-    ? groups.some(g => g.items.some(i => i.id !== currentAssetId))
-    : (allAssets ?? []).some(a => a.id !== currentAssetId)
-
-  // No others to switch to — render the trigger inert (just the name, no chevron).
-  if (!hasOthers) {
-    return <div className="inline-flex items-center min-w-0">{children}</div>
-  }
-
   const navigate = (id: string) => {
     setOpen(false)
     router.push(`/assets/${id}`)
   }
 
+  const popover = open ? (
+    <div
+      ref={popoverRef}
+      className="overflow-auto rounded-[12px] py-2"
+      role="listbox"
+      style={{
+        position: 'fixed',
+        top: popoverPos.top,
+        left: popoverPos.left,
+        zIndex: 9999,
+        width: 320,
+        maxHeight: 'min(60vh, 400px)',
+        background: '#fff',
+        border: '1px solid var(--hairline)',
+        boxShadow: '0 16px 40px rgba(58,36,25,0.18)',
+      }}
+    >
+      {groups
+        ? groups.map((group) => (
+            <div key={group.label}>
+              <div
+                style={{
+                  padding: '8px 14px 4px',
+                  fontFamily: 'var(--font-numeric)',
+                  fontSize: 9,
+                  letterSpacing: '1.2px',
+                  color: 'var(--ink-3)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {group.label}
+              </div>
+              {group.items.map((item) => (
+                <SwitcherRow
+                  key={item.id}
+                  item={item}
+                  isCurrent={item.id === currentAssetId}
+                  onSelect={navigate}
+                />
+              ))}
+            </div>
+          ))
+        : (allAssets ?? [])
+            .filter(a => a.id !== currentAssetId)
+            .map(a => (
+              <SwitcherRow
+                key={a.id}
+                item={{ id: a.id, type: a.type, name: a.name }}
+                isCurrent={false}
+                onSelect={navigate}
+              />
+            ))
+      }
+    </div>
+  ) : null
+
   return (
-    <div ref={wrapRef} className="relative inline-flex items-center min-w-0">
+    <div className="relative inline-flex items-center min-w-0">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(v => !v)}
         className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
@@ -111,56 +170,7 @@ export function AssetSwitcher({
         </svg>
       </button>
 
-      {open && (
-        <div
-          className="absolute left-0 top-[calc(100%+6px)] z-50 overflow-auto rounded-[12px] py-2"
-          role="listbox"
-          style={{
-            width: 320,
-            maxHeight: 'min(60vh, 400px)',
-            background: '#fff',
-            border: '1px solid var(--hairline)',
-            boxShadow: '0 16px 40px rgba(58,36,25,0.18)',
-          }}
-        >
-          {groups
-            ? groups.map((group) => (
-                <div key={group.label}>
-                  <div
-                    style={{
-                      padding: '8px 14px 4px',
-                      fontFamily: 'var(--font-numeric)',
-                      fontSize: 9,
-                      letterSpacing: '1.2px',
-                      color: 'var(--ink-3)',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {group.label}
-                  </div>
-                  {group.items.map((item) => (
-                    <SwitcherRow
-                      key={item.id}
-                      item={item}
-                      isCurrent={item.id === currentAssetId}
-                      onSelect={navigate}
-                    />
-                  ))}
-                </div>
-              ))
-            : (allAssets ?? [])
-                .filter(a => a.id !== currentAssetId)
-                .map(a => (
-                  <SwitcherRow
-                    key={a.id}
-                    item={{ id: a.id, type: a.type, name: a.name }}
-                    isCurrent={false}
-                    onSelect={navigate}
-                  />
-                ))
-          }
-        </div>
-      )}
+      {typeof document !== 'undefined' && createPortal(popover, document.body)}
     </div>
   )
 }
