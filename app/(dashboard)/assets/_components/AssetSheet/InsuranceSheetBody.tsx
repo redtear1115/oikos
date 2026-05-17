@@ -1,13 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
 import {
   createInsurance,
   editInsurance,
-  softDeleteAsset,
   getCarAssets,
   getChildAssets,
 } from '@/actions/asset'
@@ -17,6 +14,7 @@ import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
+import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 
 export type InsuranceInitial = Pick<
@@ -33,15 +31,11 @@ interface Props extends BodySharedProps {
 }
 
 export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
-  const isEdit = !!initial
-  const t = useTranslations()
-  const ts = t.assetSheet
   // #142 — 要保人 is always a group member (or null for legacy/unset rows).
   // Defaults to viewer.id on create. In solo mode the toggle is hidden because
   // there's only one possible value.
   const { viewer, partner } = useMember()
 
-  const [name, setName] = useState(initial?.name ?? '')
   const [kind, setKind] = useState(initial?.insKind ?? 'medical')
   const [insured, setInsured] = useState(initial?.insInsured ?? '')
   // #167 + #237 — 被保人 has three mutually-exclusive sources:
@@ -69,99 +63,81 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   const [expectedMaturityAmount, setExpectedMaturityAmount] = useState(initial?.insExpectedMaturityAmount?.toString() ?? '')
   // #166 — only meaningful for kind === 'savings'; cleared on save when kind switches.
   const [accountValue, setAccountValue] = useState(initial?.insAccountValue?.toString() ?? '')
-  const [notes, setNotes] = useState(initial?.notes ?? '')
   const [carAssets, setCarAssets] = useState<CarAsset[]>([])
   const [childAssets, setChildAssets] = useState<ChildAsset[]>([])
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const nameInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    setName(initial?.name ?? '')
-    setKind(initial?.insKind ?? 'medical')
-    setInsured(initial?.insInsured ?? '')
-    setInsuredChildId(initial?.insInsuredChildId ?? null)
-    setInsuredUserId(initial?.insInsuredUserId ?? null)
-    setPolicyHolderUserId(initial?.insPolicyHolderUserId ?? viewer.id)
-    setInsurer(initial?.insInsurer ?? '')
-    setPolicyNo(initial?.insPolicyNo ?? '')
-    setPremium(initial?.insAnnualPremium?.toString() ?? '')
-    setSumInsured(initial?.insSumInsured?.toString() ?? '')
-    setPayCycle(initial?.insPayCycle ?? 'annual')
-    setStartsAt(initial?.insStartsAt ?? '')
-    setEndsAt(initial?.insEndsAt ?? '')
-    setTermYears(initial?.insTermYears?.toString() ?? '')
-    setVehicleId(initial?.insVehicleId ?? null)
-    setExpectedMaturityAmount(initial?.insExpectedMaturityAmount?.toString() ?? '')
-    setAccountValue(initial?.insAccountValue?.toString() ?? '')
-    setNotes(initial?.notes ?? '')
-    setError('')
-    getCarAssets().then(setCarAssets).catch(() => {})
-    getChildAssets().then(setChildAssets).catch(() => {})
-    const id = setTimeout(() => nameInputRef.current?.focus(), 350)
-    return () => clearTimeout(id)
-  }, [open, initial, viewer.id])
+  const {
+    isEdit, name, setName, notes, setNotes, pending, error,
+    nameInputRef, t, ts, performDelete, runMutation,
+  } = useAssetSheetCommon({
+    open, initial, onClose, onMutated,
+    resetDomain: () => {
+      setKind(initial?.insKind ?? 'medical')
+      setInsured(initial?.insInsured ?? '')
+      setInsuredChildId(initial?.insInsuredChildId ?? null)
+      setInsuredUserId(initial?.insInsuredUserId ?? null)
+      setPolicyHolderUserId(initial?.insPolicyHolderUserId ?? viewer.id)
+      setInsurer(initial?.insInsurer ?? '')
+      setPolicyNo(initial?.insPolicyNo ?? '')
+      setPremium(initial?.insAnnualPremium?.toString() ?? '')
+      setSumInsured(initial?.insSumInsured?.toString() ?? '')
+      setPayCycle(initial?.insPayCycle ?? 'annual')
+      setStartsAt(initial?.insStartsAt ?? '')
+      setEndsAt(initial?.insEndsAt ?? '')
+      setTermYears(initial?.insTermYears?.toString() ?? '')
+      setVehicleId(initial?.insVehicleId ?? null)
+      setExpectedMaturityAmount(initial?.insExpectedMaturityAmount?.toString() ?? '')
+      setAccountValue(initial?.insAccountValue?.toString() ?? '')
+      // Data loads — only fire on open, not every render. Errors swallowed so
+      // a network blip doesn't prevent the sheet from opening (lists fall back
+      // to empty arrays from initial state).
+      getCarAssets().then(setCarAssets).catch(() => {})
+      getChildAssets().then(setChildAssets).catch(() => {})
+    },
+  })
 
   const canSave = name.trim() !== '' && !pending
 
   const handleSave = () => {
-    const notesPayload = notes.trim() || null
-    startTransition(async () => {
-      try {
-        const payload = {
-          name: name.trim(),
-          kind: kind || null,
-          // #167 + #237 — three mutually-exclusive insured sources. UI keeps
-          // them mutex, but the action layer also enforces precedence
-          // (child > member > text) so we just send the picker state as-is.
-          insured: insured.trim() || null,
-          insuredChildId,
-          insuredUserId,
-          policyHolderUserId,
-          insurer: insurer.trim() || null,
-          policyNo: policyNo.trim() || null,
-          annualPremium: premium ? parseInt(premium, 10) : null,
-          sumInsured: sumInsured ? parseInt(sumInsured, 10) : null,
-          payCycle: payCycle || null,
-          startsAt: startsAt || null,
-          endsAt: endsAt || null,
-          termYears: termYears ? parseInt(termYears, 10) : null,
-          vehicleId: vehicleId || null,
-          expectedMaturityAmount:
-            kind === 'savings' && expectedMaturityAmount
-              ? parseInt(expectedMaturityAmount, 10)
-              : null,
-          accountValue:
-            kind === 'savings' && accountValue
-              ? parseInt(accountValue, 10)
-              : null,
-          notes: notesPayload,
-        }
+    const payload = {
+      name: name.trim(),
+      kind: kind || null,
+      // #167 + #237 — three mutually-exclusive insured sources. UI keeps
+      // them mutex, but the action layer also enforces precedence
+      // (child > member > text) so we just send the picker state as-is.
+      insured: insured.trim() || null,
+      insuredChildId,
+      insuredUserId,
+      policyHolderUserId,
+      insurer: insurer.trim() || null,
+      policyNo: policyNo.trim() || null,
+      annualPremium: premium ? parseInt(premium, 10) : null,
+      sumInsured: sumInsured ? parseInt(sumInsured, 10) : null,
+      payCycle: payCycle || null,
+      startsAt: startsAt || null,
+      endsAt: endsAt || null,
+      termYears: termYears ? parseInt(termYears, 10) : null,
+      vehicleId: vehicleId || null,
+      expectedMaturityAmount:
+        kind === 'savings' && expectedMaturityAmount
+          ? parseInt(expectedMaturityAmount, 10)
+          : null,
+      accountValue:
+        kind === 'savings' && accountValue
+          ? parseInt(accountValue, 10)
+          : null,
+      notes: notes.trim() || null,
+    }
+    runMutation(
+      async () => {
         if (isEdit) {
           await editInsurance({ id: initial!.id, ...payload })
         } else {
           await createInsurance(payload)
         }
-        onMutated?.('saved')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
-  }
-
-  const performDelete = () => {
-    if (!isEdit) return
-    startTransition(async () => {
-      try {
-        await softDeleteAsset(initial!.id)
-        onMutated?.('deleted')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+      },
+      () => { onMutated?.('saved'); onClose() },
+    )
   }
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.insurance) : ts.titleNew
