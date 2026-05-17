@@ -8,6 +8,7 @@ export const en: Translations = {
     termsLink: 'Terms of Service',
     termsAnd: 'and',
     privacyLink: 'Privacy Policy',
+    // intentionally empty — English sentence ends naturally on "Privacy Policy"; only SOV languages (ja) need a trailing particle
     termsSuffix: '',
     about: {
       s1Heading: 'Is there a better way to split expenses as a couple?',
@@ -228,6 +229,7 @@ export const en: Translations = {
   balanceHero: {
     monthlyIncome: 'Income this month',
     countLabel: 'Entries',
+    // intentionally empty — English uses bare numerals; only CJK locales render a measure word (zh-TW 筆 / zh-CN 笔 / ja 件)
     countSuffix: '',
     recent: 'Recent',
     noRecord: 'No records',

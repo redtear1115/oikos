@@ -6,6 +6,9 @@ export type Translations = {
     termsLink: string
     termsAnd: string
     privacyLink: string
+    /** Trailing copy after the privacy link. Empty for languages whose
+     *  sentence ends naturally on the noun (en, zh-TW, zh-CN); populated
+     *  for SOV languages that need a trailing verb particle (ja). */
     termsSuffix: string
     /** Left-column about narrative on /sign-in (#416). First-person from Ray.
      *  Each section has a long-tail SEO H2 heading + 2–4 body paragraphs;
@@ -241,6 +244,10 @@ export type Translations = {
   balanceHero: {
     monthlyIncome: string
     countLabel: string
+    /** Measure word rendered after the entry count (e.g. "5 筆").
+     *  Empty for languages without a counter word (en); populated for
+     *  CJK languages (zh-TW 筆 / zh-CN 笔 / ja 件). Callers gate the
+     *  leading space on truthiness, so empty cleanly omits the suffix. */
     countSuffix: string
     recent: string
     noRecord: string
@@ -1929,6 +1936,7 @@ export const zhTW: Translations = {
     termsLink: '服務條款',
     termsAnd: '與',
     privacyLink: '隱私權政策',
+    // intentionally empty — 中文句子在「政策」名詞處自然收尾，無需 SOV 收尾詞
     termsSuffix: '',
     about: {
       s1Heading: '情侶 AA 制記帳，到底有沒有更好的辦法？',
