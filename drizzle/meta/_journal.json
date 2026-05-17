@@ -295,6 +295,13 @@
       "when": 1779900000000,
       "tag": "0041_trip_default_unify_base",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1780000000000,
+      "tag": "0042_function_search_path",
+      "breakpoints": true
     }
   ]
 }
