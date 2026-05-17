@@ -330,6 +330,13 @@
       "when": 1780400000000,
       "tag": "0046_rls_consolidate_permissive_select",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1780500000000,
+      "tag": "0047_rls_auto_enable_revoke_direct",
+      "breakpoints": true
     }
   ]
 }
