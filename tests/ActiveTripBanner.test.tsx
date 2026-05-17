@@ -43,7 +43,7 @@ beforeEach(() => {
 describe('ActiveTripBanner', () => {
   it('renders nothing when no trips', () => {
     const { container } = render(
-      <ActiveTripBanner trips={[]} baseCurrency="TWD" />,
+      <ActiveTripBanner trips={[]} baseCurrency="twd" />,
       { wrapper: I18nWrapper }
     )
     expect(container).toBeEmptyDOMElement()
