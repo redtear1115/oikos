@@ -13,14 +13,14 @@ import { formatAmount, type CurrencyCode } from '@/lib/currency'
 // tapping the row reveals the exact amount in the detail sheet.
 // TODO(v0.17 currency): truncation is TWD-specific; move to lib/currency
 // when other currencies need abbreviation. For now NT$ is concatenated outside.
-function formatRowAmount(amount: number): string {
+function formatRowAmount(amount: number, trillion: string, hundredMillion: string): string {
   const abs = Math.abs(amount)
   const sign = amount < 0 ? '-' : ''
   if (abs >= 1_000_000_000_000) {
-    return `${sign}${(abs / 1_000_000_000_000).toFixed(1)}兆`
+    return `${sign}${(abs / 1_000_000_000_000).toFixed(1)}${trillion}`
   }
   if (abs >= 100_000_000) {
-    return `${sign}${(abs / 100_000_000).toFixed(1)}億`
+    return `${sign}${(abs / 100_000_000).toFixed(1)}${hundredMillion}`
   }
   return amount.toLocaleString('en-US')
 }
@@ -55,11 +55,12 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
   const payerRole = whoToMemberRole(payerIsViewer ? 'M' : 'T', viewerIsA)
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
   const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
+  const partnerName = partner?.displayName ?? t.common.partner
   const payerLabel = tx.kind === 'settlement'
-    ? (payerIsViewer ? '我還款' : `${partner?.displayName ?? '對方'} 還款`)
+    ? (payerIsViewer ? t.compactRow.iSettled : t.compactRow.partnerSettled.replace('{name}', partnerName))
     : tx.kind === 'income'
-    ? (payerIsViewer ? '你收入' : `${partner?.displayName ?? '對方'} 收入`)
-    : (payerIsViewer ? '你付' : `${partner?.displayName ?? '對方'} 付`)
+    ? (payerIsViewer ? t.compactRow.youIncome : t.compactRow.partnerIncome.replace('{name}', partnerName))
+    : (payerIsViewer ? t.compactRow.youPaid : t.compactRow.partnerPaid.replace('{name}', partnerName))
 
   // Viewer's share of this row, surfaced as a small colored sub-number under
   // the total. Settlements don't have a split (they're cash transfers), so 0.
@@ -151,7 +152,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
             className="tnum text-sm font-medium tracking-[-0.2px]"
             style={{ fontFamily: 'var(--font-numeric)', color: 'var(--ink)' }}
           >
-            NT${formatRowAmount(tx.amount)}
+            NT${formatRowAmount(tx.amount, t.compactRow.trillion, t.compactRow.hundredMillion)}
           </div>
         )}
         {showMyShare && (
