@@ -8,6 +8,7 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
+import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 
 /**
@@ -50,21 +51,6 @@ interface Props {
   isLast: boolean
 }
 
-function todayLocalDate(): Date {
-  const now = new Date()
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-}
-
-function daysBetween(a: Date, b: Date): number {
-  return Math.floor((b.getTime() - a.getTime()) / 86400000)
-}
-
-function parseDate(s: string | null): Date | null {
-  if (!s) return null
-  const d = new Date(`${s}T00:00:00`)
-  return Number.isNaN(d.getTime()) ? null : d
-}
-
 export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const t = useTranslations()
   const router = useRouter()
@@ -76,8 +62,8 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const tint = 'var(--asset-tint-insurance)'
   const framing = getFramingGroup(data.insuranceType)
   const today = todayLocalDate()
-  const startsAt = parseDate(data.startsAt)
-  const expiryDate = parseDate(data.expiryDate)
+  const startsAt = parseLocalDate(data.startsAt)
+  const expiryDate = parseLocalDate(data.expiryDate)
   const annualPremium = data.annualPremium ?? 0
   const termYears = data.termYears ?? 0
   const isSingleYear = framing === 'protection' && termYears === 1
