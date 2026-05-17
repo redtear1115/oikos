@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
-import { assets, carDetails, insuranceDetails, profiles } from '@/lib/db/schema'
+import { assets, carDetails, childDetails, insuranceDetails, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { type FeedRow, type FeedKind, type TxnCursor, rowToFeedRow } from './transactions'
 import type { EpochWindow } from './epoch'
@@ -57,6 +57,8 @@ export interface AssetWithCar {
   insuranceReminderDaysBefore: number | null
   insuranceVehicleId: string | null
   insuranceInsurer: string | null
+  // Child-only fields (null for non-child assets)
+  childBirthday: string | null
 }
 
 /**
@@ -104,9 +106,11 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
+      childBirthday: childDetails.birthday,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .leftJoin(childDetails, eq(childDetails.assetId, assets.id))
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
@@ -165,9 +169,11 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
+      childBirthday: childDetails.birthday,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .leftJoin(childDetails, eq(childDetails.assetId, assets.id))
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))

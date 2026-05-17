@@ -99,7 +99,7 @@ export function AssetSwitcher({
         type="button"
         onClick={() => setOpen(v => !v)}
         className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
-        style={{ background: triggerBg }}
+        style={{ background: open ? 'rgba(255,255,255,0.75)' : triggerBg }}
         aria-label={t.assetDetail.switcherAriaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -120,7 +120,7 @@ export function AssetSwitcher({
             maxHeight: 'min(60vh, 400px)',
             background: '#fff',
             border: '1px solid var(--hairline)',
-            boxShadow: '0 12px 32px rgba(58,36,25,0.18)',
+            boxShadow: '0 16px 40px rgba(58,36,25,0.18)',
           }}
         >
           {groups
@@ -187,7 +187,7 @@ function SwitcherRow({
       style={{
         padding: '10px 14px',
         background: isCurrent ? 'rgba(58,36,25,0.05)' : 'transparent',
-        borderLeft: isCurrent ? '3px solid var(--ink)' : '3px solid transparent',
+        borderLeft: isCurrent ? `3px solid var(--asset-color-${item.type})` : '3px solid transparent',
       }}
       onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(58,36,25,0.04)' }}
       onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent' }}

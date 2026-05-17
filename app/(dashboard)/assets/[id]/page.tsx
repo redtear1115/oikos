@@ -59,12 +59,20 @@ function buildSiblings(
   today: Date,
 ): SiblingChip[] {
   const allInsurances = allAssetsData.filter(a => a.type === 'insurance')
+  const todayMonth = today.getMonth() + 1
+  const todayDay = today.getDate()
   return allAssetsData
     .filter(a => a.type !== 'insurance' && a.id !== currentId)
     .map(a => {
       let badge: SiblingChip['badge'] = null
       if (a.type === 'car') {
         badge = deriveCarInsuranceBadge(a.id, allInsurances, today)
+      } else if (a.type === 'child' && a.childBirthday) {
+        // childBirthday is a date string 'YYYY-MM-DD'
+        const [, mm, dd] = a.childBirthday.split('-').map(Number)
+        if (mm === todayMonth && dd === todayDay) {
+          badge = { tone: 'accent', label: '🎂' }
+        }
       }
       return { id: a.id, type: a.type as SiblingChip['type'], name: a.name, badge }
     })
