@@ -18,7 +18,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
 import { IncomeEmptyState } from './IncomeEmptyState'
-import { defaultFilter, isFilterActive, toWire, type TxnFilter } from '@/lib/filter'
+import { defaultFilter, isFilterActive, toWire, type TxnFilter, type PayerFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
@@ -175,7 +175,15 @@ export function Dashboard({
   }
 
   const sheetOpen = modal.kind !== 'closed'
-  const filterActive = filter !== null && isFilterActive(filter)
+
+  // Merge L3 payer chip into the FilterSheet filter. 'me' → 'mine', 'partner' → 'theirs'.
+  const effectiveFilter = useMemo<TxnFilter | null>(() => {
+    const payer: PayerFilter = payerFilter === 'me' ? 'mine' : payerFilter === 'partner' ? 'theirs' : 'all'
+    if (payer === 'all') return filter
+    return { ...(filter ?? defaultFilter()), payer }
+  }, [filter, payerFilter])
+
+  const filterActive = effectiveFilter !== null && isFilterActive(effectiveFilter)
 
   const handleItemClick = useCallback((tx: PagedTxnRow) => {
     // Past-epoch view is read-only — never open an edit sheet, even if a
@@ -431,12 +439,11 @@ export function Dashboard({
         </div>
       )}
       <Suspense fallback={<DashboardFeedSkeleton />}>
-        {/* TODO: wire payerFilter ('me' | 'partner') to feed query once server action supports paid_by filter */}
         <DashboardFeed
           feedDataPromise={feedDataPromise}
           mode={mode}
           pageSize={pageSize}
-          filter={filter}
+          filter={effectiveFilter}
           filterActive={filterActive}
           onItemClick={handleItemClick}
           onFilterClick={() => dispatch({ kind: 'filter' })}
