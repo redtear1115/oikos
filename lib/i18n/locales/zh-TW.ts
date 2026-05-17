@@ -1923,7 +1923,7 @@ export type Translations = {
 
 export const zhTW: Translations = {
   signIn: {
-    tagline: '兩個人的日子，可以一起記下來。',
+    tagline: '帳本準備好了，等你們一起。',
     continueWithGoogle: '以 Google 帳號繼續',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
@@ -1995,7 +1995,7 @@ export const zhTW: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER · 雙人記帳 PWA',
     taglineHtml: '兩個人，<br />一本帳。',
-    bodyHtml: '專為伴侶設計的雙人共享帳本。<br />一起記錄日常開銷、自動分攤、看見每筆花費去了哪裡 — 把陪伴留下來。',
+    bodyHtml: '專為兩個人設計的帳本。<br />日子一天天記下來，回頭看會很暖。',
     cta: '開始記錄',
     ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
     alreadyHaveAccount: '已經有帳號 · 登入',
@@ -2106,7 +2106,7 @@ export const zhTW: Translations = {
     noRecordsHint: '從第一筆開始 ─ 一杯咖啡、一頓晚餐都算數。日子一天天記下來，回頭看會很暖。',
     addFirst: '記第一筆',
     noIncome: '還沒記過家裡的收入',
-    noFilteredAddHint: '還沒有紀錄。按下方 + 記第一筆吧。',
+    noFilteredAddHint: '這裡還沒有紀錄，按下方 + 開始記吧。',
   },
 
   firstRecordCard: {
@@ -2125,7 +2125,7 @@ export const zhTW: Translations = {
   },
 
   dashboard: {
-    soloHint: '你還在獨自記帳',
+    soloHint: '目前是你一個人在記',
     inviteCta: '邀請對方 →',
     addExpense: '新增一筆',
     addIncome: '記一筆收入',
@@ -2152,7 +2152,7 @@ export const zhTW: Translations = {
     countSuffix: '筆',
     recent: '最近',
     noRecord: '尚無紀錄',
-    manage: '管理 ›',
+    manage: '查看 ›',
     settleAriaLabel: '記錄還款 / 收款',
     settleLabel: '結算',
     partnerOwesYou: '欠你',
@@ -2165,8 +2165,8 @@ export const zhTW: Translations = {
   },
 
   soloBanner: {
-    waiting: '還在等對方加入',
-    sendInviteHint: '傳連結邀請他',
+    waiting: '帳本準備好了，等你們一起',
+    sendInviteHint: '把連結傳給對方',
     dismissAriaLabel: '關閉提示',
     generating: '產生中…',
     sendInvite: '傳送邀請',

@@ -2,7 +2,7 @@ import type { Translations } from './zh-TW'
 
 export const en: Translations = {
   signIn: {
-    tagline: 'Days for two, written together.',
+    tagline: 'Your ledger is ready — for the two of you.',
     continueWithGoogle: 'Continue with Google',
     termsPrefix: 'By continuing, you agree to our',
     termsLink: 'Terms of Service',
@@ -74,7 +74,7 @@ export const en: Translations = {
   landing: {
     heroKicker: "A COUPLE'S LEDGER · A SHARED PWA",
     taglineHtml: 'Two of you,<br />one ledger.',
-    bodyHtml: 'A shared finance app built for couples.<br />Track daily spending together, split fairly, see where money goes — keep the everyday close.',
+    bodyHtml: 'A ledger built for two.<br />Day by day, looking back will feel warm.',
     cta: 'Start tracking',
     ctaHint: 'Free · Try without signing up · For two',
     alreadyHaveAccount: 'I already have an account',
@@ -185,7 +185,7 @@ export const en: Translations = {
     noRecordsHint: "Start with one — a coffee, a dinner. Day by day, looking back will feel warm.",
     addFirst: 'Add the first',
     noIncome: 'No household income recorded yet',
-    noFilteredAddHint: 'No records yet. Tap + below to add one.',
+    noFilteredAddHint: 'No records here yet — tap + below to begin.',
   },
 
   firstRecordCard: {
@@ -204,7 +204,7 @@ export const en: Translations = {
   },
 
   dashboard: {
-    soloHint: "Still tracking on your own",
+    soloHint: "For now, it's just you",
     inviteCta: 'Invite partner →',
     addExpense: 'Add entry',
     addIncome: 'Add income',
@@ -231,7 +231,7 @@ export const en: Translations = {
     countSuffix: '',
     recent: 'Recent',
     noRecord: 'No records',
-    manage: 'Manage ›',
+    manage: 'View ›',
     settleAriaLabel: 'Record repayment / receipt',
     settleLabel: 'Settle',
     partnerOwesYou: 'owes you',
@@ -244,8 +244,8 @@ export const en: Translations = {
   },
 
   soloBanner: {
-    waiting: 'Still waiting for partner to join',
-    sendInviteHint: 'Send them a link to invite',
+    waiting: 'Your ledger is ready — for the two of you',
+    sendInviteHint: 'Send the link to your partner',
     dismissAriaLabel: 'Dismiss',
     generating: 'Generating…',
     sendInvite: 'Send invite',

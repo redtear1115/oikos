@@ -2,7 +2,7 @@ import type { Translations } from './zh-TW'
 
 export const zhCN: Translations = {
   signIn: {
-    tagline: '两个人的日子，可以一起记下来。',
+    tagline: '账本准备好了，等你们一起。',
     continueWithGoogle: '以 Google 账号继续',
     termsPrefix: '继续即表示您同意我们的',
     termsLink: '服务条款',
@@ -74,7 +74,7 @@ export const zhCN: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER · 双人记账 PWA',
     taglineHtml: '两个人，<br />一本账。',
-    bodyHtml: '专为伴侣设计的双人共享账本。<br />一起记录日常开销、自动分摊、看见每笔花费去了哪里 — 把陪伴留下来。',
+    bodyHtml: '专为两个人设计的账本。<br />日子一天天记下来，回头看会很暖。',
     cta: '开始记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
@@ -185,7 +185,7 @@ export const zhCN: Translations = {
     noRecordsHint: '从第一笔开始 ─ 一杯咖啡、一顿晚餐都算数。日子一天天记下来，回头看会很暖。',
     addFirst: '记第一笔',
     noIncome: '还没记过家里的收入',
-    noFilteredAddHint: '还没有记录。按下方 + 记第一笔吧。',
+    noFilteredAddHint: '这里还没有记录，按下方 + 开始记吧。',
   },
 
   firstRecordCard: {
@@ -204,7 +204,7 @@ export const zhCN: Translations = {
   },
 
   dashboard: {
-    soloHint: '你还在独自记账',
+    soloHint: '目前是你一个人在记',
     inviteCta: '邀请对方 →',
     addExpense: '新增一笔',
     addIncome: '记一笔收入',
@@ -231,7 +231,7 @@ export const zhCN: Translations = {
     countSuffix: '笔',
     recent: '最近',
     noRecord: '尚无记录',
-    manage: '管理 ›',
+    manage: '查看 ›',
     settleAriaLabel: '记录还款 / 收款',
     settleLabel: '结算',
     partnerOwesYou: '欠你',
@@ -244,8 +244,8 @@ export const zhCN: Translations = {
   },
 
   soloBanner: {
-    waiting: '还在等对方加入',
-    sendInviteHint: '发链接邀请他',
+    waiting: '账本准备好了，等你们一起',
+    sendInviteHint: '把链接发给对方',
     dismissAriaLabel: '关闭提示',
     generating: '生成中…',
     sendInvite: '发送邀请',
