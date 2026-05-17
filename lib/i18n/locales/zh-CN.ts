@@ -8,6 +8,7 @@ export const zhCN: Translations = {
     termsLink: '服务条款',
     termsAnd: '与',
     privacyLink: '隐私权政策',
+    // intentionally empty — 中文句子在「政策」名词处自然收尾，无需 SOV 收尾词
     termsSuffix: '',
     about: {
       s1Heading: '情侣 AA 制记账，到底有没有更好的办法？',
