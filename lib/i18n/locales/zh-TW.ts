@@ -219,6 +219,12 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
+    /** Payer filter options in the dashboard L3 filter sheet. */
+    payerAll: string
+    /** Payer filter — viewer paid (uses viewer displayName at runtime). */
+    payerMe: string
+    /** Payer filter — partner paid (uses partner displayName at runtime). */
+    payerPartner: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
@@ -2156,6 +2162,9 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
+    payerAll: '全部',
+    payerMe: '我付',
+    payerPartner: '對方付',
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',

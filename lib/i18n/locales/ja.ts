@@ -211,6 +211,9 @@ export const ja: Translations = {
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
     filterAriaLabel: '絞り込みを開く',
+    payerAll: 'すべて',
+    payerMe: '自分が払った',
+    payerPartner: '相手が払った',
     activeTripBanner: {
       kicker: '旅行中',
       singleStartedAt: '{date} から · この旅を開く',

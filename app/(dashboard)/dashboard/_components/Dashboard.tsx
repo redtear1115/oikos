@@ -31,7 +31,8 @@ import { PendingExpenseStack } from './PendingExpenseStack'
 import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
-import { useTranslations } from '@/lib/i18n/client'
+import { useTranslations, useLocale } from '@/lib/i18n/client'
+import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
 import type { RateEntry } from './AddSheet'
@@ -102,8 +103,9 @@ export function Dashboard({
   rates = [],
 }: DashboardProps) {
   const router = useRouter()
-  const { isSolo, isPast } = useMember()
+  const { isSolo, isPast, viewer, partner } = useMember()
   const t = useTranslations()
+  const locale = useLocale()
 
   useRealtimeEvents((event) => {
     if (
@@ -127,6 +129,11 @@ export function Dashboard({
   const [mode, setMode] = useState<'expense' | 'income'>('expense')
   const [modal, dispatch] = useReducer((_prev: ModalState, next: ModalState) => next, { kind: 'closed' })
   const [filter, setFilter] = useState<TxnFilter | null>(null)
+
+  // L3 payer filter state
+  type DashboardPayer = 'all' | 'me' | 'partner'
+  const [payerFilter, setPayerFilter] = useState<DashboardPayer>('all')
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   // Fuel log edit sheet state
   const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
@@ -283,6 +290,70 @@ export function Dashboard({
           expensePendingCount={expensePendings.length}
         />
       </div>
+      {/* L3: month chip + payer filter chip */}
+      <div className="flex items-center gap-2 px-5 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
+        {/* Month chip — read-only, shows current Taipei month */}
+        <div
+          className="h-8 px-3 rounded-full text-sm flex items-center shrink-0"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+        >
+          {new Date().toLocaleDateString(locale, { month: 'long' })}
+        </div>
+        {/* Payer filter chip */}
+        <button
+          type="button"
+          onClick={() => setFilterSheetOpen(true)}
+          className="h-8 px-3 rounded-full text-sm flex items-center gap-1.5 shrink-0 cursor-pointer"
+          style={{
+            background: payerFilter !== 'all' ? 'var(--ink)' : 'var(--surface)',
+            color: payerFilter !== 'all' ? '#fff' : 'var(--ink-2)',
+            border: payerFilter !== 'all' ? 'none' : '1px solid var(--hairline)',
+          }}
+        >
+          {t.dashboard.filterLabel}
+          {payerFilter !== 'all' && (
+            <span aria-hidden className="inline-block rounded-full shrink-0" style={{ width: 6, height: 6, background: 'var(--accent)' }} />
+          )}
+        </button>
+      </div>
+      {/* Payer filter bottom sheet */}
+      <SheetFrame
+        open={filterSheetOpen}
+        onClose={() => setFilterSheetOpen(false)}
+        ariaLabel={t.dashboard.filterLabel}
+        heightMode="max"
+        heightDvh={50}
+      >
+        <div className="flex flex-col px-5 pt-4 pb-8 gap-1">
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--ink-2)' }}>
+            {t.dashboard.filterLabel}
+          </p>
+          {(
+            [
+              { key: 'all' as DashboardPayer, label: t.dashboard.payerAll },
+              { key: 'me' as DashboardPayer, label: `${t.dashboard.payerMe}（${viewer.displayName}）` },
+              ...(!isSolo && partner ? [{ key: 'partner' as DashboardPayer, label: `${t.dashboard.payerPartner}（${partner.displayName}）` }] : []),
+            ] as Array<{ key: DashboardPayer; label: string }>
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => { setPayerFilter(key); setFilterSheetOpen(false) }}
+              className="flex items-center justify-between w-full h-12 px-4 rounded-xl text-sm text-left"
+              style={{
+                background: payerFilter === key ? 'var(--surface)' : 'transparent',
+                color: payerFilter === key ? 'var(--ink)' : 'var(--ink-2)',
+                fontWeight: payerFilter === key ? 600 : 400,
+              }}
+            >
+              <span>{label}</span>
+              {payerFilter === key && (
+                <span style={{ color: 'var(--accent)' }}>✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </SheetFrame>
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-3 pb-5">
@@ -360,6 +431,7 @@ export function Dashboard({
         </div>
       )}
       <Suspense fallback={<DashboardFeedSkeleton />}>
+        {/* TODO: wire payerFilter ('me' | 'partner') to feed query once server action supports paid_by filter */}
         <DashboardFeed
           feedDataPromise={feedDataPromise}
           mode={mode}
