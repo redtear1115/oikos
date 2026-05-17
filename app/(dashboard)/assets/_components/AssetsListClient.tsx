@@ -197,6 +197,7 @@ export function AssetsListClient({ items }: Props) {
   const t = useTranslations()
   const { canAccessGuardian: guardianVisible } = useMember()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [typeFilter, setTypeFilter] = useState<AssetType | 'all'>('all')
 
   // Refresh when partner adds/updates/deletes an asset
   useRealtimeEvents((event) => {
@@ -300,8 +301,52 @@ export function AssetsListClient({ items }: Props) {
     </button>
   )
 
-  const hasProperty = cars.length > 0 || houses.length > 0
-  const hasLiving = children.length > 0 || pets.length > 0 || plants.length > 0
+  const typeVisible = (type: AssetType) => typeFilter === 'all' || typeFilter === type
+
+  const TYPE_CHIPS: { key: AssetType | 'all'; label: string; color: string }[] = [
+    { key: 'all', label: '全部', color: 'var(--ink-3)' },
+    { key: 'house', label: '房', color: 'var(--asset-color-house)' },
+    { key: 'car', label: '車', color: 'var(--asset-color-car)' },
+    { key: 'child', label: '孩', color: 'var(--asset-color-child)' },
+    { key: 'pet', label: '寵', color: 'var(--asset-color-pet)' },
+    { key: 'plant', label: '植', color: 'var(--asset-color-plant)' },
+    { key: 'item', label: '物', color: 'var(--asset-color-item, var(--ink-3))' },
+  ]
+
+  const TypeFilterStrip = (
+    <div className="px-4 pb-3 overflow-x-auto">
+      <div className="flex gap-2">
+        {TYPE_CHIPS.map(({ key, label, color }) => {
+          const active = typeFilter === key
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTypeFilter(key)}
+              style={{
+                background: active ? color : 'var(--surface)',
+                color: active ? '#fff' : 'var(--ink-2)',
+                border: active ? 'none' : '1px solid var(--hairline)',
+              }}
+              className="h-8 px-3 rounded-full text-sm flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              {key !== 'all' && (
+                <span
+                  aria-hidden
+                  className="inline-block rounded-full shrink-0"
+                  style={{ width: 6, height: 6, background: active ? 'rgba(255,255,255,0.7)' : color }}
+                />
+              )}
+              {label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  const hasProperty = (typeVisible('car') && cars.length > 0) || (typeVisible('house') && houses.length > 0)
+  const hasLiving = (typeVisible('child') && children.length > 0) || (typeVisible('pet') && pets.length > 0) || (typeVisible('plant') && plants.length > 0)
 
   const defaultInsuranceData = {
     insuranceType: null,
@@ -331,7 +376,7 @@ export function AssetsListClient({ items }: Props) {
       aria-label={t.assets.title}
     >
       <div
-        className="flex rounded-full p-1"
+        className="inline-flex rounded-full p-1"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
@@ -346,7 +391,7 @@ export function AssetsListClient({ items }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="flex-1 rounded-full transition-colors"
+              className="rounded-full transition-colors"
               style={{
                 padding: '8px 12px',
                 background: active ? 'var(--ink)' : 'transparent',
@@ -372,7 +417,7 @@ export function AssetsListClient({ items }: Props) {
       {hasProperty && (
         <div className="flex flex-col gap-3">
           <SectionLabel label={t.assets.section.property} dotColor="var(--asset-tint-house)" />
-          {cars.map((c) => (
+          {typeVisible('car') && cars.map((c) => (
             <CarHeroCard
               key={c.id}
               id={c.id}
@@ -389,8 +434,8 @@ export function AssetsListClient({ items }: Props) {
               lastFuelDate={c.lastFuelDate ?? null}
             />
           ))}
-          {cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
-          {houses.map((h) => (
+          {typeVisible('car') && cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
+          {typeVisible('house') && houses.map((h) => (
             <HouseCard
               key={h.id}
               id={h.id}
@@ -406,7 +451,7 @@ export function AssetsListClient({ items }: Props) {
         <div className="flex flex-col gap-3">
           <SectionLabel label={t.assets.section.living} dotColor="var(--asset-tint-child)" />
           <div className="flex flex-col gap-2.5">
-            {children.map((c) => (
+            {typeVisible('child') && children.map((c) => (
               <ChildCard
                 key={c.id}
                 id={c.id}
@@ -418,7 +463,7 @@ export function AssetsListClient({ items }: Props) {
                 childWeightG={c.childWeightG}
               />
             ))}
-            {pets.map((p) => (
+            {typeVisible('pet') && pets.map((p) => (
               <PetCard
                 key={p.id}
                 id={p.id}
@@ -430,7 +475,7 @@ export function AssetsListClient({ items }: Props) {
                 petWeightG={p.petWeightG}
               />
             ))}
-            {plants.map((pl) => (
+            {typeVisible('plant') && plants.map((pl) => (
               <PlantCard
                 key={pl.id}
                 id={pl.id}
@@ -445,7 +490,7 @@ export function AssetsListClient({ items }: Props) {
         </div>
       )}
 
-      {itemsTemplated.length > 0 && (
+      {typeVisible('item') && itemsTemplated.length > 0 && (
         <div className="flex flex-col gap-3">
           <SectionLabel label={t.assets.section.items} dotColor="var(--asset-tint-item)" />
           <div className="flex flex-col gap-2.5">
@@ -463,7 +508,7 @@ export function AssetsListClient({ items }: Props) {
         </div>
       )}
 
-      {!hasProperty && !hasLiving && itemsTemplated.length === 0 && (
+      {!hasProperty && !hasLiving && (!typeVisible('item') || itemsTemplated.length === 0) && (
         <div
           className="text-sm leading-relaxed py-10 text-center"
           style={{ color: 'var(--ink-3)' }}
@@ -551,17 +596,17 @@ export function AssetsListClient({ items }: Props) {
         </div>
       </div>
 
+      {guardianVisible && TabBar}
+      {activeTab === 'aibutsu' && TypeFilterStrip}
+
       {guardianGated ? (
         <GatedView />
       ) : items.length === 0 ? (
         <AssetEmptyState />
       ) : (
-        <>
-          {guardianVisible && TabBar}
-          <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-            {guardianVisible && activeTab === 'guardian' ? GuardianTab : AibutsuTab}
-          </div>
-        </>
+        <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          {guardianVisible && activeTab === 'guardian' ? GuardianTab : AibutsuTab}
+        </div>
       )}
 
       <BottomNav

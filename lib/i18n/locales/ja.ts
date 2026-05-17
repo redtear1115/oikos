@@ -211,6 +211,9 @@ export const ja: Translations = {
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
     filterAriaLabel: '絞り込みを開く',
+    payerAll: 'すべて',
+    payerMe: '自分が払った',
+    payerPartner: '相手が払った',
     activeTripBanner: {
       kicker: '旅行中',
       singleStartedAt: '{date} から · この旅を開く',
@@ -602,6 +605,7 @@ export const ja: Translations = {
 
   settings: {
     title: '設定',
+    subtitle: 'アカウント・アプリ・データ',
     sectionGroup: '家計簿',
     sectionGroupSplit: 'デフォルト分担方式 & 比率',
     groupName: '家計簿名',
@@ -759,6 +763,10 @@ export const ja: Translations = {
       splitType: '負担',
       notes: 'メモ',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: 'パートナーがアカウントを離れました。これまでの記録はすべて残っています。',
   },
 
   assets: {

@@ -30,7 +30,6 @@ import { incomeToFeedRow } from '@/lib/incomeFeedRow'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { Dashboard } from './_components/Dashboard'
 import { MonthlyReviewBanner } from './_components/MonthlyReviewBanner'
-import { ActiveTripBanner } from './_components/ActiveTripBanner'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { formatDateRelative } from '@/lib/format-date'
@@ -245,12 +244,6 @@ export default async function DashboardPage() {
           currentMonth={bannerProps.currentMonth}
           quote={bannerProps.quote}
           isSolo={bannerProps.isSolo}
-        />
-      )}
-      {!epochWindow.isPast && (
-        <ActiveTripBanner
-          trips={activeTrips}
-          baseCurrency={parseCurrencyCode(group.baseCurrency) ?? 'twd'}
         />
       )}
       <Dashboard

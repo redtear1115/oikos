@@ -219,6 +219,12 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
+    /** Payer filter options in the dashboard L3 filter sheet. */
+    payerAll: string
+    /** Payer filter — viewer paid (uses viewer displayName at runtime). */
+    payerMe: string
+    /** Payer filter — partner paid (uses partner displayName at runtime). */
+    payerPartner: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
@@ -805,6 +811,7 @@ export type Translations = {
 
   settings: {
     title: string
+    subtitle: string
     sectionGroup: string
     sectionGroupSplit: string
     groupName: string
@@ -966,6 +973,10 @@ export type Translations = {
       splitType: string
       notes: string
     }
+  }
+
+  contextStrip: {
+    partnerLeftLine: string
   }
 
   assets: {
@@ -2151,6 +2162,9 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
+    payerAll: '全部',
+    payerMe: '我付',
+    payerPartner: '對方付',
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',
@@ -2542,6 +2556,7 @@ export const zhTW: Translations = {
 
   settings: {
     title: '設定',
+    subtitle: '帳號 · 應用 · 資料',
     sectionGroup: '帳本',
     sectionGroupSplit: '預設分攤方式 & 比例',
     groupName: '帳本名稱',
@@ -2699,6 +2714,10 @@ export const zhTW: Translations = {
       splitType: '分攤',
       notes: '備註',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: '夥伴已離開帳本。之前的紀錄都還在。',
   },
 
   assets: {

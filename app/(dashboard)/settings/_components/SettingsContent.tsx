@@ -51,6 +51,9 @@ export function SettingsContent({
         >
           {t.settings.title}
         </div>
+        <div className="text-sm mt-0.5" style={{ color: 'var(--ink-3)' }}>
+          {t.settings.subtitle}
+        </div>
       </div>
 
       {/* Entry row to the avatar quick-settings sheet — Settings page has no

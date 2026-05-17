@@ -212,6 +212,9 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
+    payerAll: 'All',
+    payerMe: 'I paid',
+    payerPartner: 'They paid',
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',
@@ -604,6 +607,7 @@ export const en: Translations = {
 
   settings: {
     title: 'Settings',
+    subtitle: 'Account · App · Data',
     sectionGroup: 'Ledger',
     sectionGroupSplit: 'Default Split & Ratio',
     groupName: 'Ledger name',
@@ -761,6 +765,10 @@ export const en: Translations = {
       splitType: 'Split',
       notes: 'Notes',
     },
+  },
+
+  contextStrip: {
+    partnerLeftLine: 'Your partner has left the account. All previous records are still here.',
   },
 
   assets: {

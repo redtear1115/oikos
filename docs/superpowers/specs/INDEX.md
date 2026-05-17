@@ -112,6 +112,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 ### 體驗
 
+- [ia-unified-header](ia-unified-header-design.md) — 四大入口三層標頭統一（L1/L2/L3）+ ContextStrip 取代分散 banner
 - [onboarding](onboarding-design.md) — 新人 onboarding flow（sign-in → 建群組 → 邀請對方／稍後再說）
 - [solo-mode](solo-mode-design.md) — 單人帳本模式：分攤鎖 all_mine、balance hero 隱藏、邀請 banner、升雙人不 retroactive
 - [epoch-readonly](epoch-readonly-design.md) — 過去章節 read-only + read-path 型別防呆

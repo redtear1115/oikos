@@ -6,9 +6,7 @@ import { inArray } from 'drizzle-orm'
 import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
-import { OfflineBanner } from './_components/OfflineBanner'
 import { ReconnectRefresh } from './_components/ReconnectRefresh'
-import { PastEpochBanner } from './_components/PastEpochBanner'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
@@ -63,6 +61,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     isSolo: !partnerProfile,
     isPast: epochWindow.isPast,
     canAccessGuardian: canAccessGuardian(group),
+    epochStartedAt: epochWindow.startedAt.toISOString(),
+    epochEndedAt: epochWindow.endedAt ? epochWindow.endedAt.toISOString() : null,
+    hadPartner: group.memberB !== null,
   }
 
   const avatarMenuData: AvatarMenuData = {
@@ -77,15 +78,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <ViewerProvider value={value}>
         <RealtimeProvider groupId={group.id}>
           <OfflineLifecycle />
-          <OfflineBanner />
           <ReconnectRefresh />
-          {epochWindow.isPast && epochWindow.endedAt && (
-            <PastEpochBanner
-              startedAt={epochWindow.startedAt.toISOString()}
-              endedAt={epochWindow.endedAt.toISOString()}
-              locale={locale}
-            />
-          )}
           <AvatarMenuProvider data={avatarMenuData}>
             <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
               {children}
