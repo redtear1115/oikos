@@ -82,6 +82,21 @@ export const ja: Translations = {
     trustEncrypted: 'エンドツーエンド暗号化',
     trustFree: '無料で使える',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
+      encryption: {
+        title: 'エンドツーエンド暗号化',
+        body: 'データは送信時も保存時も常に暗号化。私たちにも中身は読めません。',
+      },
+      portability: {
+        title: 'いつでも持ち出せる',
+        body: 'CSVでエクスポート可能。データはずっとあなたのもの、囲い込みません。',
+      },
+      forever: {
+        title: 'ずっと無料',
+        body: 'コア機能は無料。隠れた条件はありません。',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: 'ひとつの家計簿、ふたりの暮らしの四つの光',
     featuresSubtitleHtml: '初めての共同支出から、ふたりで守る家・車・保険まで、<br />すべてここに。',

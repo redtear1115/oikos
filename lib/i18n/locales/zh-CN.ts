@@ -83,6 +83,21 @@ export const zhCN: Translations = {
     trustEncrypted: '端到端加密',
     trustFree: '免费使用',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
+      encryption: {
+        title: '端到端加密',
+        body: '数据传输与存储全程加密，连我们自己也读不到内容。',
+      },
+      portability: {
+        title: '随时带走',
+        body: 'CSV 导出，数据永远是你的。想离开时不会被绑在这里。',
+      },
+      forever: {
+        title: '永久免费',
+        body: '核心功能不收费，没有隐藏条款。',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: '一本账，承接生活的四种光',
     featuresSubtitleHtml: '从第一笔共同支出，到一起照顾的房子、车与每年保单，<br />都收进同一本账里。',

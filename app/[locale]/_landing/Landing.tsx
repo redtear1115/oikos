@@ -10,6 +10,7 @@ import {
   ShieldOutlineGlyph,
 } from './FutariMark'
 import { PhonePreview } from './PhonePreview'
+import { TrustSection } from './TrustSection'
 
 type LandingStrings = Translations['landing']
 
@@ -188,25 +189,10 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
               {t.ctaHint}
             </p>
 
-            {/* Trust row — desktop only */}
-            <div
-              className="hidden md:flex items-center gap-6 mt-7"
-              style={{ color: 'var(--ink-2)' }}
-            >
-              <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
-                {t.trustFree}
-              </span>
-              <span style={{ color: 'var(--hairline)' }}>·</span>
-              <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
-                {t.trustPwa}
-              </span>
-              <span style={{ color: 'var(--hairline)' }}>·</span>
-              <div className="flex items-center gap-1.5">
-                <ShieldOutlineGlyph />
-                <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
-                  {t.trustEncrypted}
-                </span>
-              </div>
+            {/* Trust row — desktop only; full version lives below the
+                Features section (see <TrustSection variant="full" /> below). */}
+            <div className="hidden md:block mt-7">
+              <TrustSection t={t} variant="compact" />
             </div>
           </div>
 
@@ -291,6 +277,10 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
           </div>
         </div>
       </section>
+
+      {/* TRUST — public-facing trust statement (#538). Sits between Features
+          and Footer so it lands in the user's decision moment. */}
+      <TrustSection t={t} variant="full" />
 
       {/* FOOTER */}
       <footer
