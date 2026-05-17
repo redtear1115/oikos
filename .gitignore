@@ -46,11 +46,12 @@ next-env.d.ts
 /public/sw.js.map
 /public/swe-worker-*.js
 /public/swe-worker-*.js.map
-# .claude — roles are versioned; tasks/handoff/reports are transient
+# .claude — roles/skills are versioned; tasks/handoff/reports/local settings are transient
 .claude/tasks/
 .claude/handoff/
 .claude/reports/
 .claude/worktrees/
+.claude/settings.local.json
 .superpowers/
 .worktrees/
 

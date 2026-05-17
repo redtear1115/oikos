@@ -184,6 +184,55 @@ npm run db:studio    # Drizzle Studio
 
 ---
 
+## 品牌文案準則（Futari Copy Guidelines）
+
+> 任何涉及 copy 的 PR，動筆前先對照以下原則。
+
+### 流量分層 × tone 對應
+
+| 流量層 | 進入點 | 用戶狀態 | 核心任務 | tone |
+|---|---|---|---|---|
+| Landing | `/` | 陌生人，搜尋到達 | 建立情感認同，讓人願意試試 | 有溫度的清醒 |
+| Sign-in | `/sign-in` | 有信任基礎（朋友推薦） | 減少摩擦，說清楚「接下來會發生什麼」 | 安靜的邀請 |
+| App 內功能 | dashboard, records… | 已是用戶 | 清楚操作，不干擾 | 簡潔中性 |
+| App 內情感節點 | 空狀態、首次設定、結算… | 已是用戶 | 溫和的見證，不說教 | 溫和的見證者 |
+
+### Landing — 寫作規則
+
+- **Hero copy 不放功能列表**：「記帳 / 分攤 / 圖表」不是 hero 要說的事，hero 要說的是「為什麼這兩個人要一起記帳」
+- `heroKicker` 不放 SEO 語法（`·` / 斜線關鍵字），交給 `<meta>`
+- Trust row 排序：免費 → 裝置 → 加密（加密是最強 claim，放最後）
+- 情境感 > 功能感：「回頭看會很暖」比「追蹤花費」更對
+
+### Sign-in — 寫作規則
+
+- Tagline 不重複 landing 的「what is this」，要說「what happens next」
+- 不以感嘆號製造興奮感
+- 不用「開始」「立即」「免費試用」等 conversion 語言
+
+### Solo 模式 — 寫作規則
+
+- 不預設「他還沒加入」的性別（用「對方」「你的伴侶」）
+- 不用「還在等」製造焦慮感；solo 本身不是問題狀態
+- `soloHint` / `soloBanner` / `sendInviteHint` 每次改動都要對照此原則
+
+### App 內 — 禁用詞
+
+在 dashboard / app 情境中，以下詞匯**禁止使用**：
+
+- 「管理」→ 改用「查看」「記錄」「整理」
+- 「追蹤」→ 改用「記下」「看見」
+- 「監控」→ 禁用，無替換
+- 感嘆號（`！` / `!`）→ 禁用於 UI copy
+
+### i18n 同步規則
+
+- 任何 copy 改動一律 4 語同步（zh-TW / zh-CN / en / ja）
+- zh-TW 是主稿；zh-CN 跟進但保留繁簡差異，不要機翻
+- en / ja 如無 native reviewer，PR description 列出建議譯文，標記「待確認」
+
+---
+
 ## 規格文件位置
 
 所有 feature 設計 spec 都在 `docs/superpowers/specs/`。入口是 [`docs/superpowers/specs/INDEX.md`](docs/superpowers/specs/INDEX.md)，含：
