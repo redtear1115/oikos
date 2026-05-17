@@ -2,7 +2,7 @@ import type { Translations } from './zh-TW'
 
 export const ja: Translations = {
   signIn: {
-    tagline: 'ふたりの毎日を、一緒に記そう。',
+    tagline: '家計簿の準備はできました。ふたりで始めましょう。',
     continueWithGoogle: 'Google アカウントで続ける',
     termsPrefix: '続行すると、当社の',
     termsLink: '利用規約',
@@ -74,7 +74,7 @@ export const ja: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER · ふたりの家計簿 PWA',
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
-    bodyHtml: 'カップルのための共有家計アプリ。<br />毎日の支出を一緒に記録し、自動で割り勘、お金の行方が見える — 日々の暮らしを残しておきましょう。',
+    bodyHtml: 'ふたりのための家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
     cta: '記録をはじめる',
     ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
     alreadyHaveAccount: 'アカウントをお持ちの方',
@@ -185,7 +185,7 @@ export const ja: Translations = {
     noRecordsHint: '一杯のコーヒーでも、ひとつの夕食でも。一日ずつ記録すれば、振り返ったとき心が温かくなります。',
     addFirst: '最初の一件を記録',
     noIncome: '家計の収入はまだ記録されていません',
-    noFilteredAddHint: 'まだ記録がありません。下の + で最初の一件を記録しましょう。',
+    noFilteredAddHint: 'ここにはまだ記録がありません。下の + から始めましょう。',
   },
 
   firstRecordCard: {
@@ -204,7 +204,7 @@ export const ja: Translations = {
   },
 
   dashboard: {
-    soloHint: 'まだひとりで記録中',
+    soloHint: '今はひとりで記録中',
     inviteCta: '相手を招待 →',
     addExpense: '記録を追加',
     addIncome: '収入を記録',
@@ -231,7 +231,7 @@ export const ja: Translations = {
     countSuffix: '件',
     recent: '最近',
     noRecord: 'まだ記録がありません',
-    manage: '管理 ›',
+    manage: '見る ›',
     settleAriaLabel: '返済 / 受領を記録',
     settleLabel: '精算',
     partnerOwesYou: 'があなたに貸し中',
@@ -244,8 +244,8 @@ export const ja: Translations = {
   },
 
   soloBanner: {
-    waiting: 'まだ相手の参加を待っています',
-    sendInviteHint: 'リンクで招待しましょう',
+    waiting: '家計簿の準備はできました。ふたりで始めましょう',
+    sendInviteHint: 'リンクを相手に送りましょう',
     dismissAriaLabel: '通知を閉じる',
     generating: '生成中…',
     sendInvite: '招待を送る',
