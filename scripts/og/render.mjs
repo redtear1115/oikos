@@ -2,7 +2,6 @@
 //
 // Outputs go to ../../public/ (i.e. oikos/public/):
 //   - og-image.png      1200 × 630   · default OG, used in layout.tsx
-//   - og-image-2x.png   2400 × 1260  · retina; same source captured at DSR 2
 //   - og-line.png       1200 × 600   · LINE share image
 //   - og-square.png     1200 × 1200  · IG / Threads square
 //
@@ -26,7 +25,6 @@ const OUT_DIR = resolve(__dirname, '..', '..', 'public')
 /** @type {Array<{name: string, w: number, h: number, layout: 'wide'|'square', dsr: number}>} */
 const targets = [
   { name: 'og-image.png',    w: 1200, h: 630,  layout: 'wide',   dsr: 1 },
-  { name: 'og-image-2x.png', w: 1200, h: 630,  layout: 'wide',   dsr: 2 },
   { name: 'og-line.png',     w: 1200, h: 600,  layout: 'wide',   dsr: 1 },
   { name: 'og-square.png',   w: 1200, h: 1200, layout: 'square', dsr: 1 },
 ]
