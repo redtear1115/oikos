@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { CarMark, isDarkColor, resolveCarColor } from './carColor'
+import { isDarkColor, resolveCarColor } from './carColor'
+import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
 
@@ -17,9 +18,20 @@ interface Props {
   monthAmount: number
   compact?: boolean
   avgFuelEcon?: number | null
+  lastFuelDate?: string | null
 }
 
-function FactChip({ label }: { label: string }) {
+type ChipTone = 'neutral' | 'warning' | 'destructive' | 'saving'
+
+const CHIP_TONES: Record<ChipTone, { bg: string; fg: string }> = {
+  neutral:     { bg: 'rgba(58,36,25,0.045)', fg: 'var(--ink-2)' },
+  warning:     { bg: 'var(--warning-soft)',     fg: 'var(--warning)' },
+  destructive: { bg: 'var(--destructive-soft)', fg: 'var(--destructive)' },
+  saving:      { bg: 'var(--saving-soft)',       fg: 'var(--saving)' },
+}
+
+function FactChip({ label, tone = 'neutral' }: { label: string; tone?: ChipTone }) {
+  const { bg, fg } = CHIP_TONES[tone]
   return (
     <div
       style={{
@@ -28,14 +40,40 @@ function FactChip({ label }: { label: string }) {
         gap: 5,
         padding: '4px 9px',
         borderRadius: 999,
-        background: 'rgba(58,36,25,0.045)',
-        color: 'var(--ink-2)',
+        background: bg,
+        color: fg,
         fontSize: 11,
         fontWeight: 500,
         letterSpacing: 0.2,
       }}
     >
       {label}
+    </div>
+  )
+}
+
+/** Solid-color square mark — matches design v2 CarCard icon mark. */
+function CarListMark({ swatch, size = 40 }: { swatch: string; size?: number }) {
+  const dark = isDarkColor(swatch)
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 10,
+        background: swatch,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: 'inset 0 0 0 1px rgba(58,36,25,0.10)',
+      }}
+    >
+      <AssetIcon
+        type="car"
+        size={Math.round(size * 0.5)}
+        color={dark ? '#FFF6EC' : '#3A2419'}
+      />
     </div>
   )
 }
@@ -56,6 +94,7 @@ export function CarHeroCard({
   monthAmount,
   compact: _compact = false,
   avgFuelEcon,
+  lastFuelDate,
 }: Props) {
   const t = useTranslations()
   const swatch = resolveCarColor(color)
@@ -106,12 +145,7 @@ export function CarHeroCard({
        *  累計 stays available on the car detail page. */}
       <div className="flex items-center gap-3 py-4 pr-5 pl-[22px]">
         <div className="shrink-0" aria-hidden="true">
-          <CarMark
-            size={40}
-            stroke={isDarkColor(swatch) ? swatch : '#3A2419'}
-            accent={swatch}
-            orbitOpacity={0.55}
-          />
+          <CarListMark swatch={swatch} size={40} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="flex items-center gap-2">
@@ -153,16 +187,18 @@ export function CarHeroCard({
         </div>
       </div>
 
-      {avgFuelEcon != null && (
+      {(avgFuelEcon != null || lastFuelDate != null) && (
         <div
           style={{
             borderTop: '1px solid var(--hairline)',
             padding: '8px 16px 10px 22px',
             display: 'flex',
             gap: 8,
+            flexWrap: 'wrap',
           }}
         >
-          <FactChip label={`${avgFuelEcon.toFixed(1)} km/L`} />
+          {avgFuelEcon != null && <FactChip label={`${avgFuelEcon.toFixed(1)} km/L`} />}
+          {lastFuelDate != null && <FactChip label={`上次加油 ${lastFuelDate}`} />}
         </div>
       )}
     </Link>

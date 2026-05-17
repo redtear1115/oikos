@@ -60,6 +60,9 @@ export interface AssetsListItem {
   model?: string | null
   latestOdometer?: number | null
   avgFuelEcon?: number | null
+  lastFuelDate?: string | null
+  // House extras
+  houseAddress?: string | null
   // Child extras
   childBirthday?: string | null
   childHeightCm?: number | null
@@ -383,6 +386,7 @@ export function AssetsListClient({ items }: Props) {
               monthAmount={c.monthAmount}
               compact={multiCar}
               avgFuelEcon={c.avgFuelEcon ?? null}
+              lastFuelDate={c.lastFuelDate ?? null}
             />
           ))}
           {cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
@@ -392,7 +396,7 @@ export function AssetsListClient({ items }: Props) {
               id={h.id}
               name={h.name}
               monthAmount={h.monthAmount}
-              notes={undefined}
+              houseAddress={h.houseAddress ?? null}
             />
           ))}
         </div>

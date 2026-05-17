@@ -95,8 +95,14 @@ export default async function AssetsPage() {
         plantWaterEvery: plantDetail?.waterEvery ?? null,
       }
     }
+    if (a.type === 'house') {
+      return { ...base, houseAddress: a.houseAddress }
+    }
     if (a.type !== 'car') return base
     const heroStats = carStats.get(a.id)!
+    const lastFuelDate = heroStats.lastFuelDate
+      ? `${heroStats.lastFuelDate.getMonth() + 1}/${heroStats.lastFuelDate.getDate()}`
+      : null
     return {
       ...base,
       color: a.color,
@@ -105,6 +111,7 @@ export default async function AssetsPage() {
       model: a.model,
       latestOdometer: heroStats.latestOdometer,
       avgFuelEcon: heroStats.avgFuelEcon,
+      lastFuelDate,
     }
   })
 

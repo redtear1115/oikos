@@ -498,10 +498,10 @@ interface HouseCardProps {
   id: string
   name: string
   monthAmount: number
-  notes?: string | null
+  houseAddress?: string | null
 }
 
-export function HouseCard({ id, name, monthAmount, notes }: HouseCardProps) {
+export function HouseCard({ id, name, monthAmount, houseAddress }: HouseCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -536,7 +536,7 @@ export function HouseCard({ id, name, monthAmount, notes }: HouseCardProps) {
             >
               {name}
             </div>
-            {notes && (
+            {houseAddress && (
               <div
                 style={{
                   marginTop: 3,
@@ -547,7 +547,7 @@ export function HouseCard({ id, name, monthAmount, notes }: HouseCardProps) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {notes}
+                {houseAddress}
               </div>
             )}
           </div>
