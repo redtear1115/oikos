@@ -6,13 +6,15 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
 import { AssetSheet } from './AssetSheet'
-import { AssetListItem } from './AssetListItem'
 import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
 import { CarHeroCard } from './CarHeroCard'
+import { ChildCard, PetCard, PlantCard, ItemCard, HouseCard } from './AibutsuCard'
 import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { getFramingGroup } from '@/lib/insurance'
+import { parseLocalDate, todayLocalDate, daysBetween } from '@/lib/local-date'
 import type { AssetType } from '@/lib/assets'
 
 type AssetsTab = 'aibutsu' | 'guardian'
@@ -41,6 +43,7 @@ export interface AssetsListItem {
     policyHolderUserId: string | null
     policyHolderDisplayName: string | null
     policyHolderAvatarUrl: string | null
+    insurer: string | null
     annualPremium: number | null
     sumInsured: number | null
     startsAt: string | null
@@ -56,6 +59,20 @@ export interface AssetsListItem {
   brand?: string | null
   model?: string | null
   latestOdometer?: number | null
+  avgFuelEcon?: number | null
+  // Child extras
+  childBirthday?: string | null
+  childHeightCm?: number | null
+  childWeightG?: number | null
+  // Pet extras
+  petSpecies?: string | null
+  petBreed?: string | null
+  petBirthDate?: string | null
+  petWeightG?: number | null
+  // Plant extras
+  plantLocation?: string | null
+  plantSproutedAt?: string | null
+  plantWaterEvery?: number | null
 }
 
 interface Props {
@@ -88,25 +105,84 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
   )
 }
 
-function AssetGroup({ group }: { group: AssetsListItem[] }) {
+/** Guardian summary card — totals + next renewal */
+function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
+  const today = todayLocalDate()
+  const totalAnnual = insurances.reduce((sum, a) => sum + (a.insurance?.annualPremium ?? 0), 0)
+  const count = insurances.length
+
+  // Next renewal: single-year policies with future expiry, min expiryDate
+  const singleYears = insurances.filter((a) => {
+    const framing = getFramingGroup(a.insurance?.insuranceType)
+    const termYears = a.insurance?.termYears ?? 0
+    return framing === 'protection' && termYears <= 1 && a.insurance?.expiryDate
+  })
+  const upcoming = singleYears
+    .map((a) => {
+      const d = parseLocalDate(a.insurance?.expiryDate)
+      return d ? { a, d, days: daysBetween(today, d) } : null
+    })
+    .filter((x): x is { a: AssetsListItem; d: Date; days: number } => x !== null && x.days >= 0)
+    .sort((x, y) => x.days - y.days)[0]
+
   return (
     <div
-      className="rounded-[20px] overflow-hidden"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+      style={{
+        padding: '16px 18px',
+        borderRadius: 16,
+        background: 'var(--surface)',
+        border: '1px solid var(--hairline)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+      }}
     >
-      {group.map((a, i) => (
-        <AssetListItem
-          key={a.id}
-          id={a.id}
-          type={a.type}
-          name={a.name}
-          nickname={a.nickname ?? null}
-          plate={a.plate ?? null}
-          monthAmount={a.monthAmount}
-          isSavings={a.isSavings}
-          isLast={i === group.length - 1}
-        />
-      ))}
+      <div style={{ flex: 1 }}>
+        <div
+          className="font-mono"
+          style={{ fontSize: 10, letterSpacing: 1.2, color: 'var(--ink-3)' }}
+        >
+          年繳保費
+        </div>
+        <div
+          className="tnum"
+          style={{ marginTop: 4, fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}
+        >
+          NT$ {totalAnnual.toLocaleString('en-US')}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-3)' }}>
+          共{' '}
+          <span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{count}</span>
+          {' '}張保單
+        </div>
+      </div>
+      <div
+        aria-hidden="true"
+        style={{ width: 1, alignSelf: 'stretch', background: 'var(--hairline)' }}
+      />
+      <div style={{ flex: 1 }}>
+        <div
+          className="font-mono"
+          style={{ fontSize: 10, letterSpacing: 1.2, color: 'var(--ink-3)' }}
+        >
+          下次續約
+        </div>
+        {upcoming ? (
+          <>
+            <div
+              className="font-mono tnum"
+              style={{ marginTop: 4, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}
+            >
+              {upcoming.a.insurance?.expiryDate ?? '—'}
+            </div>
+            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--ink-3)' }}>
+              {upcoming.a.name} · {upcoming.days} 天後
+            </div>
+          </>
+        ) : (
+          <div style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-3)' }}>—</div>
+        )}
+      </div>
     </div>
   )
 }
@@ -129,8 +205,7 @@ export function AssetsListClient({ items }: Props) {
   const tabParam = searchParams.get('tab')
   // #227 — when Guardian beta is OFF but the URL points at the guardian tab
   // (stale bookmark / browser back), show the GatedView in-place instead of
-  // silently collapsing to 愛物. activeTab stays on 'aibutsu' so the data
-  // arrays still resolve, but the body renders the gate.
+  // silently collapsing to 愛物.
   const guardianGated = !guardianVisible && tabParam === 'guardian'
   const activeTab: AssetsTab = guardianVisible && tabParam === 'guardian' ? 'guardian' : 'aibutsu'
 
@@ -145,8 +220,6 @@ export function AssetsListClient({ items }: Props) {
     [router, pathname, searchParams],
   )
 
-  // Lightweight horizontal swipe between tabs. Threshold + axis check prevents
-  // accidental triggers during vertical scroll.
   const touchRef = useRef<{ x: number; y: number } | null>(null)
   const onTouchStart = (e: React.TouchEvent) => {
     const t0 = e.touches[0]
@@ -156,7 +229,6 @@ export function AssetsListClient({ items }: Props) {
     const start = touchRef.current
     touchRef.current = null
     if (!start) return
-    // No second tab to swipe to when Guardian beta is off — short-circuit.
     if (!guardianVisible) return
     const t1 = e.changedTouches[0]
     const dx = t1.clientX - start.x
@@ -171,13 +243,10 @@ export function AssetsListClient({ items }: Props) {
 
   const cars = items.filter((a) => a.type === 'car')
   const houses = items.filter((a) => a.type === 'house')
-  const livings = items.filter((a) => ['child', 'pet', 'plant'].includes(a.type))
-  // #222 — template-based assets (type='item') get their own section so they
-  // don't get mixed into the legacy cars / houses / livings grouping. Sorted
-  // newest-first by createdAt order (already from the server query).
+  const children = items.filter((a) => a.type === 'child')
+  const pets = items.filter((a) => a.type === 'pet')
+  const plants = items.filter((a) => a.type === 'plant')
   const itemsTemplated = items.filter((a) => a.type === 'item')
-  // Insurance ordered by expiry date ascending — soonest-to-expire first.
-  // Items without an expiry date sink to the bottom (treated as +∞).
   const insurances = items
     .filter((a) => a.type === 'insurance')
     .slice()
@@ -190,6 +259,19 @@ export function AssetsListClient({ items }: Props) {
       return 0
     })
   const multiCar = cars.length > 1
+
+  // Guardian tab: section grouping by framing
+  const insuranceSingleYear = insurances.filter((a) => {
+    const framing = getFramingGroup(a.insurance?.insuranceType)
+    return framing !== 'savings' && (a.insurance?.termYears ?? 0) <= 1
+  })
+  const insuranceMultiYear = insurances.filter((a) => {
+    const framing = getFramingGroup(a.insurance?.insuranceType)
+    return framing !== 'savings' && (a.insurance?.termYears ?? 0) > 1
+  })
+  const insuranceSavings = insurances.filter((a) => {
+    return getFramingGroup(a.insurance?.insuranceType) === 'savings'
+  })
 
   const dashedButton = (label: string) => (
     <button
@@ -216,6 +298,28 @@ export function AssetsListClient({ items }: Props) {
   )
 
   const hasProperty = cars.length > 0 || houses.length > 0
+  const hasLiving = children.length > 0 || pets.length > 0 || plants.length > 0
+
+  const defaultInsuranceData = {
+    insuranceType: null,
+    insured: null,
+    insuredChildId: null,
+    insuredChildName: null,
+    insuredUserId: null,
+    insuredUserDisplayName: null,
+    policyHolderUserId: null,
+    policyHolderDisplayName: null,
+    policyHolderAvatarUrl: null,
+    insurer: null,
+    annualPremium: null,
+    sumInsured: null,
+    startsAt: null,
+    expiryDate: null,
+    termYears: null,
+    payCycle: null,
+    reminderDaysBefore: 30,
+    notes: null,
+  }
 
   const TabBar = (
     <div
@@ -278,28 +382,84 @@ export function AssetsListClient({ items }: Props) {
               latestOdometer={c.latestOdometer ?? null}
               monthAmount={c.monthAmount}
               compact={multiCar}
+              avgFuelEcon={c.avgFuelEcon ?? null}
             />
           ))}
           {cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
-          {houses.length > 0 && <AssetGroup group={houses} />}
+          {houses.map((h) => (
+            <HouseCard
+              key={h.id}
+              id={h.id}
+              name={h.name}
+              monthAmount={h.monthAmount}
+              notes={undefined}
+            />
+          ))}
         </div>
       )}
 
-      {livings.length > 0 && (
+      {hasLiving && (
         <div className="flex flex-col gap-3">
           <SectionLabel label={t.assets.section.living} dotColor="var(--asset-tint-child)" />
-          <AssetGroup group={livings} />
+          <div className="flex flex-col gap-2.5">
+            {children.map((c) => (
+              <ChildCard
+                key={c.id}
+                id={c.id}
+                name={c.name}
+                nickname={c.nickname}
+                monthAmount={c.monthAmount}
+                childBirthday={c.childBirthday}
+                childHeightCm={c.childHeightCm}
+                childWeightG={c.childWeightG}
+              />
+            ))}
+            {pets.map((p) => (
+              <PetCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                monthAmount={p.monthAmount}
+                petSpecies={p.petSpecies}
+                petBreed={p.petBreed}
+                petBirthDate={p.petBirthDate}
+                petWeightG={p.petWeightG}
+              />
+            ))}
+            {plants.map((pl) => (
+              <PlantCard
+                key={pl.id}
+                id={pl.id}
+                name={pl.name}
+                monthAmount={pl.monthAmount}
+                plantLocation={pl.plantLocation}
+                plantSproutedAt={pl.plantSproutedAt}
+                plantWaterEvery={pl.plantWaterEvery}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       {itemsTemplated.length > 0 && (
         <div className="flex flex-col gap-3">
           <SectionLabel label={t.assets.section.items} dotColor="var(--asset-tint-item)" />
-          <AssetGroup group={itemsTemplated} />
+          <div className="flex flex-col gap-2.5">
+            {itemsTemplated.map((item) => (
+              <ItemCard
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                monthAmount={item.monthAmount}
+                templateKey={item.type === 'item' ? 'item' : null}
+                notes={undefined}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {!hasProperty && livings.length === 0 && itemsTemplated.length === 0 && (
+      {!hasProperty && !hasLiving && itemsTemplated.length === 0 && (
         <div
           className="text-sm leading-relaxed py-10 text-center"
           style={{ color: 'var(--ink-3)' }}
@@ -313,41 +473,57 @@ export function AssetsListClient({ items }: Props) {
   const GuardianTab = (
     <div className="px-4 flex flex-col gap-5">
       {insurances.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          <SectionLabel label={t.assets.section.coverage} dotColor="var(--asset-tint-insurance)" />
-          <div
-            className="rounded-[20px] overflow-hidden"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            {insurances.map((a, i) => (
-              <InsuranceListItem
-                key={a.id}
-                id={a.id}
-                name={a.name}
-                data={a.insurance ?? {
-                  insuranceType: null,
-                  insured: null,
-                  insuredChildId: null,
-                  insuredChildName: null,
-                  insuredUserId: null,
-                  insuredUserDisplayName: null,
-                  policyHolderUserId: null,
-                  policyHolderDisplayName: null,
-                  policyHolderAvatarUrl: null,
-                  annualPremium: null,
-                  sumInsured: null,
-                  startsAt: null,
-                  expiryDate: null,
-                  termYears: null,
-                  payCycle: null,
-                  reminderDaysBefore: 30,
-                  notes: null,
-                }}
-                isLast={i === insurances.length - 1}
-              />
-            ))}
-          </div>
-        </div>
+        <>
+          <GuardianSummary insurances={insurances} />
+
+          {insuranceSingleYear.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel label="保護型 · 一年期" dotColor="var(--asset-color-insurance)" />
+              <div className="flex flex-col gap-2.5">
+                {insuranceSingleYear.map((a) => (
+                  <InsuranceListItem
+                    key={a.id}
+                    id={a.id}
+                    name={a.name}
+                    data={a.insurance ?? defaultInsuranceData}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {insuranceMultiYear.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel label="保護型 · 多年期" dotColor="var(--asset-color-insurance)" />
+              <div className="flex flex-col gap-2.5">
+                {insuranceMultiYear.map((a) => (
+                  <InsuranceListItem
+                    key={a.id}
+                    id={a.id}
+                    name={a.name}
+                    data={a.insurance ?? defaultInsuranceData}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {insuranceSavings.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel label="儲蓄型" dotColor="var(--saving)" />
+              <div className="flex flex-col gap-2.5">
+                {insuranceSavings.map((a) => (
+                  <InsuranceListItem
+                    key={a.id}
+                    id={a.id}
+                    name={a.name}
+                    data={a.insurance ?? defaultInsuranceData}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div
           className="text-sm leading-relaxed py-10 text-center"
@@ -361,10 +537,7 @@ export function AssetsListClient({ items }: Props) {
 
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
-      {/* Page title sits at the same vertical position as /settings + /records
-          by honouring the safe-area inset (handles iOS notch) with a 24px
-          floor (desktop / no-notch PWA). The previous hardcoded 60px only
-          looked right on iOS — pushed the title down ~36px on desktop. */}
+      {/* Page title */}
       <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"

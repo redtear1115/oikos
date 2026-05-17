@@ -3,6 +3,64 @@ import { alias } from 'drizzle-orm/pg-core'
 import { childDetails, petDetails, plantDetails, insuranceDetails, houseDetails, assets, profiles } from '@/lib/db/schema'
 import { eq, and, isNull, inArray } from 'drizzle-orm'
 
+export interface PetListDetail {
+  species: string | null
+  breed: string | null
+  birthDate: string | null
+  weightG: number | null
+}
+
+/**
+ * Batch-fetch pet list details (species, breed, birthDate, weightG) for a list
+ * of pet asset ids. Returns a Map keyed by assetId.
+ */
+export async function getPetListDetailsBatch(assetIds: string[]): Promise<Map<string, PetListDetail>> {
+  const out = new Map<string, PetListDetail>()
+  if (assetIds.length === 0) return out
+  const rows = await db
+    .select({
+      assetId: petDetails.assetId,
+      species: petDetails.species,
+      breed: petDetails.breed,
+      birthDate: petDetails.birthDate,
+      weightG: petDetails.weightG,
+    })
+    .from(petDetails)
+    .where(inArray(petDetails.assetId, assetIds))
+  for (const r of rows) {
+    out.set(r.assetId, { species: r.species, breed: r.breed, birthDate: r.birthDate, weightG: r.weightG })
+  }
+  return out
+}
+
+export interface PlantListDetail {
+  location: string | null
+  sproutedAt: string | null
+  waterEvery: number | null
+}
+
+/**
+ * Batch-fetch plant list details (location, sproutedAt, waterEvery) for a list
+ * of plant asset ids. Returns a Map keyed by assetId.
+ */
+export async function getPlantListDetailsBatch(assetIds: string[]): Promise<Map<string, PlantListDetail>> {
+  const out = new Map<string, PlantListDetail>()
+  if (assetIds.length === 0) return out
+  const rows = await db
+    .select({
+      assetId: plantDetails.assetId,
+      location: plantDetails.location,
+      sproutedAt: plantDetails.sproutedAt,
+      waterEvery: plantDetails.waterEvery,
+    })
+    .from(plantDetails)
+    .where(inArray(plantDetails.assetId, assetIds))
+  for (const r of rows) {
+    out.set(r.assetId, { location: r.location, sproutedAt: r.sproutedAt, waterEvery: r.waterEvery })
+  }
+  return out
+}
+
 export interface ChildDetailsRow {
   birthday: string | null
   gender: 'male' | 'female' | 'other' | null

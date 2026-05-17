@@ -59,6 +59,8 @@ export interface AssetWithCar {
   insuranceInsurer: string | null
   // Child-only fields (null for non-child assets)
   childBirthday: string | null
+  childHeightCm: number | null
+  childWeightG: number | null
 }
 
 /**
@@ -107,6 +109,8 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
       childBirthday: childDetails.birthday,
+      childHeightCm: childDetails.heightCm,
+      childWeightG: childDetails.weightG,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -170,6 +174,8 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
       childBirthday: childDetails.birthday,
+      childHeightCm: childDetails.heightCm,
+      childWeightG: childDetails.weightG,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))

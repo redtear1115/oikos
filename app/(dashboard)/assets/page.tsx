@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
-import { getChildNicknames } from '@/lib/db/queries/aibutsu'
+import { getChildNicknames, getPetListDetailsBatch, getPlantListDetailsBatch } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
 
 export default async function AssetsPage() {
@@ -17,17 +17,20 @@ export default async function AssetsPage() {
   const assetRows = await listAssetsForGroup(group.id)
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
+  const petIds = assetRows.filter((a) => a.type === 'pet').map((a) => a.id)
+  const plantIds = assetRows.filter((a) => a.type === 'plant').map((a) => a.id)
   const allIds = assetRows.map((a) => a.id)
   const carRows = assetRows.filter((a) => a.type === 'car')
 
-  // One batched SUM for all asset summaries; nickname lookup; per-car hero
-  // stats — all three groups run in parallel (no shared dependencies).
-  const [childNicknames, summaries, carStatsList] = await Promise.all([
+  // Batch all fetches in parallel — no shared dependencies.
+  const [childNicknames, summaries, carStatsList, petListDetails, plantListDetails] = await Promise.all([
     getChildNicknames(childIds),
     getAssetSummariesBatch(allIds, group.id, epochWindow),
     Promise.all(
       carRows.map(async (a) => [a.id, await getCarHeroStats(a.id, a.initialOdometer, epochWindow)] as const),
     ),
+    getPetListDetailsBatch(petIds),
+    getPlantListDetailsBatch(plantIds),
   ])
   const carStats = new Map(carStatsList)
 
@@ -53,6 +56,7 @@ export default async function AssetsPage() {
         policyHolderUserId: a.insurancePolicyHolderUserId,
         policyHolderDisplayName: a.insurancePolicyHolderDisplayName,
         policyHolderAvatarUrl: a.insurancePolicyHolderAvatarUrl,
+        insurer: a.insuranceInsurer,
         annualPremium: a.insuranceAnnualPremium,
         sumInsured: a.insuranceSumInsured,
         startsAt: a.insuranceStartsAt,
@@ -64,6 +68,33 @@ export default async function AssetsPage() {
       }
       return base
     }
+    if (a.type === 'child') {
+      return {
+        ...base,
+        childBirthday: a.childBirthday,
+        childHeightCm: a.childHeightCm,
+        childWeightG: a.childWeightG,
+      }
+    }
+    if (a.type === 'pet') {
+      const petDetail = petListDetails.get(a.id)
+      return {
+        ...base,
+        petSpecies: petDetail?.species ?? null,
+        petBreed: petDetail?.breed ?? null,
+        petBirthDate: petDetail?.birthDate ?? null,
+        petWeightG: petDetail?.weightG ?? null,
+      }
+    }
+    if (a.type === 'plant') {
+      const plantDetail = plantListDetails.get(a.id)
+      return {
+        ...base,
+        plantLocation: plantDetail?.location ?? null,
+        plantSproutedAt: plantDetail?.sproutedAt ?? null,
+        plantWaterEvery: plantDetail?.waterEvery ?? null,
+      }
+    }
     if (a.type !== 'car') return base
     const heroStats = carStats.get(a.id)!
     return {
@@ -73,6 +104,7 @@ export default async function AssetsPage() {
       brand: a.brand,
       model: a.model,
       latestOdometer: heroStats.latestOdometer,
+      avgFuelEcon: heroStats.avgFuelEcon,
     }
   })
 

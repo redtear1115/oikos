@@ -16,6 +16,28 @@ interface Props {
   latestOdometer: number | null
   monthAmount: number
   compact?: boolean
+  avgFuelEcon?: number | null
+}
+
+function FactChip({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: '4px 9px',
+        borderRadius: 999,
+        background: 'rgba(58,36,25,0.045)',
+        color: 'var(--ink-2)',
+        fontSize: 11,
+        fontWeight: 500,
+        letterSpacing: 0.2,
+      }}
+    >
+      {label}
+    </div>
+  )
 }
 
 function fmtInt(n: number) {
@@ -33,6 +55,7 @@ export function CarHeroCard({
   latestOdometer,
   monthAmount,
   compact: _compact = false,
+  avgFuelEcon,
 }: Props) {
   const t = useTranslations()
   const swatch = resolveCarColor(color)
@@ -129,6 +152,19 @@ export function CarHeroCard({
           </div>
         </div>
       </div>
+
+      {avgFuelEcon != null && (
+        <div
+          style={{
+            borderTop: '1px solid var(--hairline)',
+            padding: '8px 16px 10px 22px',
+            display: 'flex',
+            gap: 8,
+          }}
+        >
+          <FactChip label={`${avgFuelEcon.toFixed(1)} km/L`} />
+        </div>
+      )}
     </Link>
   )
 }
