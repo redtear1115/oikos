@@ -167,6 +167,7 @@ describe('ContextStrip', () => {
     fireEvent.click(dismissBtn)
 
     expect(container.firstChild).toBeNull()
+    expect(localStorage.getItem('context-strip-partner-left-dismissed')).toBe('1')
   })
 
   it('renders trip name when activeTrips provided (collapsed default)', () => {
