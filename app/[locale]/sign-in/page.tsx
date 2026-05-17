@@ -5,8 +5,11 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { SignInButton } from './SignInButton'
 import { FeatureCards } from './FeatureCards'
+
+type AboutStrings = Translations['signIn']['about']
 
 type Params = Promise<{ locale: string }>
 
@@ -61,18 +64,15 @@ export default async function SignInPage({ params }: { params: Params }) {
           lg:px-12 lg:py-16
         "
       >
-        {/* Left column: about narrative placeholder. Content lands in #416. */}
+        {/* Left column: about narrative (#416). 7 sections, each with an SEO
+            long-tail H2 + 2–4 body paragraphs. s5's last paragraph is a short
+            standalone punchline (Fraunces, italic, larger spacing). */}
         <section
           className="order-2 flex flex-col lg:order-1"
           aria-label="About"
           data-shell-slot="left"
         >
-          <div
-            className="rounded-lg border border-dashed p-6 text-sm leading-relaxed opacity-40"
-            style={{ borderColor: 'var(--ink-3)', color: 'var(--ink-2)' }}
-          >
-            左欄 — about narrative (#416)
-          </div>
+          <AboutNarrative about={t.signIn.about} />
         </section>
 
         {/* Center column: existing brand mark + tagline + CTA. */}
@@ -128,5 +128,68 @@ export default async function SignInPage({ params }: { params: Params }) {
         <LanguageSwitcher current={locale} variant="footer" />
       </div>
     </main>
+  )
+}
+
+function AboutNarrative({ about }: { about: AboutStrings }) {
+  const sections: { heading: string; body: string[]; punchlineLast?: boolean }[] = [
+    { heading: about.s1Heading, body: about.s1Body },
+    { heading: about.s2Heading, body: about.s2Body },
+    { heading: about.s3Heading, body: about.s3Body },
+    { heading: about.s4Heading, body: about.s4Body },
+    { heading: about.s5Heading, body: about.s5Body, punchlineLast: true },
+    { heading: about.s6Heading, body: about.s6Body },
+    { heading: about.s7Heading, body: about.s7Body },
+  ]
+
+  return (
+    <div className="flex flex-col gap-10 lg:gap-12">
+      {sections.map((s, i) => {
+        const lastIdx = s.body.length - 1
+        return (
+          <article key={i} className="flex flex-col gap-4">
+            <h2
+              className="m-0 text-[19px] lg:text-[22px] leading-snug"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontWeight: 500,
+                color: 'var(--ink)',
+                letterSpacing: '-0.3px',
+              }}
+            >
+              {s.heading}
+            </h2>
+            {s.body.map((p, j) => {
+              const isPunchline = s.punchlineLast && j === lastIdx
+              if (isPunchline) {
+                return (
+                  <p
+                    key={j}
+                    className="m-0 mt-2 text-[17px] lg:text-[19px] leading-relaxed italic"
+                    style={{
+                      fontFamily: 'var(--font-fraunces)',
+                      fontWeight: 400,
+                      color: 'var(--ink)',
+                      letterSpacing: '-0.1px',
+                    }}
+                  >
+                    {p}
+                  </p>
+                )
+              }
+              return (
+                <p
+                  key={j}
+                  className="m-0 text-[14.5px] lg:text-[15px] leading-[1.85]"
+                  style={{ color: 'var(--ink-2)' }}
+                >
+                  {p}
+                </p>
+              )
+            })}
+          </article>
+        )
+      })}
+    </div>
   )
 }
