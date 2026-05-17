@@ -63,6 +63,9 @@ export const ja: Translations = {
       c4Title: 'ふたりの家計簿は、ふたりだけのもの',
       c4Body: '「私の記録」と「あなたの記録」を分けません。入ってきたものは共有——可視性のランク分けはしない設計です。',
     },
+    blog: {
+      heading: '開発ログ',
+    },
   },
 
   landing: {

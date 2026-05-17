@@ -38,6 +38,10 @@ export type Translations = {
       c4Title: string
       c4Body: string
     }
+    blog: {
+      /** Section heading above the dev-log article list (issue #460). */
+      heading: string
+    }
   }
 
   landing: {
@@ -1756,6 +1760,9 @@ export const zhTW: Translations = {
       c3Body: '每筆帳可以留一句話。讓那個「順手幫你繳的」不只是數字，是一句記得。',
       c4Title: '你們的帳，只有你們看得到',
       c4Body: '沒有「我的帳」跟「你的帳」之分。進來的就是共同的，沒有能見度分級。',
+    },
+    blog: {
+      heading: '開發日誌',
     },
   },
 
