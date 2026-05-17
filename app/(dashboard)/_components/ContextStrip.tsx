@@ -6,7 +6,7 @@ import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { getOfflinePref } from '@/lib/offline/preference'
 import { exitPastEpoch } from '@/actions/epoch-view'
-import { useTranslations } from '@/lib/i18n/client'
+import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { formatDateShort } from '@/lib/format-date'
 import type { ActiveTripBannerTrip } from '@/app/(dashboard)/dashboard/_components/ActiveTripBanner'
 
@@ -29,6 +29,7 @@ interface Props {
  */
 export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const router = useRouter()
   const { isPast, isSolo, hadPartner, epochStartedAt, epochEndedAt } = useMember()
   const isOnline = useOnlineStatus()
@@ -53,8 +54,12 @@ export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
 
   const handleExitPastEpoch = () => {
     startTransition(async () => {
-      await exitPastEpoch()
-      router.refresh()
+      try {
+        await exitPastEpoch()
+        router.refresh()
+      } catch {
+        // action can throw on network failure; pending state clears automatically
+      }
     })
   }
 
@@ -95,7 +100,7 @@ export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
 
   // ─── Priority 2: past-epoch ───────────────────────────────────────────────
   if (isPast) {
-    const fmt = (iso: string) => formatDateShort(iso, 'zh-TW', { withYear: true })
+    const fmt = (iso: string) => formatDateShort(iso, locale, { withYear: true })
     const startLabel = epochStartedAt ? fmt(epochStartedAt) : ''
     const endLabel = epochEndedAt ? fmt(epochEndedAt) : ''
 
