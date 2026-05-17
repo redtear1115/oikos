@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
-import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
-import { createPlant, editPlant, softDeleteAsset } from '@/actions/asset'
+import { useState } from 'react'
+import { createPlant, editPlant } from '@/actions/asset'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
+import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 
 export type PlantInitial = Pick<
@@ -23,73 +22,48 @@ interface Props extends BodySharedProps {
 }
 
 export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
-  const isEdit = !!initial
-  const t = useTranslations()
-  const ts = t.assetSheet
-  const [name, setName] = useState(initial?.name ?? '')
   const [species, setSpecies] = useState(initial?.plantSpecies ?? '')
   const [location, setLocation] = useState(initial?.plantLocation ?? '')
   const [sproutedAt, setSproutedAt] = useState(initial?.plantSproutedAt ?? '')
   const [cost, setCost] = useState(initial?.plantCost?.toString() ?? '')
   const [waterEvery, setWaterEvery] = useState<number | null>(initial?.plantWaterEvery ?? 7)
-  const [notes, setNotes] = useState(initial?.notes ?? '')
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const nameInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    setName(initial?.name ?? '')
-    setSpecies(initial?.plantSpecies ?? '')
-    setLocation(initial?.plantLocation ?? '')
-    setSproutedAt(initial?.plantSproutedAt ?? '')
-    setCost(initial?.plantCost?.toString() ?? '')
-    setWaterEvery(initial?.plantWaterEvery ?? 7)
-    setNotes(initial?.notes ?? '')
-    setError('')
-    const id = setTimeout(() => nameInputRef.current?.focus(), 350)
-    return () => clearTimeout(id)
-  }, [open, initial])
+  const {
+    isEdit, name, setName, notes, setNotes, pending, error,
+    nameInputRef, ts, performDelete, runMutation,
+  } = useAssetSheetCommon({
+    open, initial, onClose, onMutated,
+    resetDomain: () => {
+      setSpecies(initial?.plantSpecies ?? '')
+      setLocation(initial?.plantLocation ?? '')
+      setSproutedAt(initial?.plantSproutedAt ?? '')
+      setCost(initial?.plantCost?.toString() ?? '')
+      setWaterEvery(initial?.plantWaterEvery ?? 7)
+    },
+  })
 
   const canSave = name.trim() !== '' && !pending
 
   const handleSave = () => {
-    const notesPayload = notes.trim() || null
-    startTransition(async () => {
-      try {
-        const payload = {
-          name: name.trim(),
-          species: species.trim() || null,
-          location: location.trim() || null,
-          sproutedAt: sproutedAt || null,
-          cost: cost ? parseInt(cost, 10) : null,
-          waterEvery,
-          notes: notesPayload,
-        }
+    const payload = {
+      name: name.trim(),
+      species: species.trim() || null,
+      location: location.trim() || null,
+      sproutedAt: sproutedAt || null,
+      cost: cost ? parseInt(cost, 10) : null,
+      waterEvery,
+      notes: notes.trim() || null,
+    }
+    runMutation(
+      async () => {
         if (isEdit) {
           await editPlant({ id: initial!.id, ...payload })
         } else {
           await createPlant(payload)
         }
-        onMutated?.('saved')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
-  }
-
-  const performDelete = () => {
-    if (!isEdit) return
-    startTransition(async () => {
-      try {
-        await softDeleteAsset(initial!.id)
-        onMutated?.('deleted')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+      },
+      () => { onMutated?.('saved'); onClose() },
+    )
   }
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.plant) : ts.titleNew

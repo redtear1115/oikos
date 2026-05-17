@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState } from 'react'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
-import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
-import { createCar, editCar, softDeleteAsset } from '@/actions/asset'
+import { createCar, editCar } from '@/actions/asset'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { DateField } from './shared/DateField'
 import { SheetShell } from './shared/SheetShell'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
+import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 import type { GasFuelType } from '@/lib/fuel'
 
@@ -38,10 +37,6 @@ interface Props extends BodySharedProps {
 }
 
 export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
-  const isEdit = !!initial
-  const t = useTranslations()
-  const ts = t.assetSheet
-  const [name, setName] = useState(initial?.name ?? '')
   const [plate, setPlate] = useState(initial?.plate ?? '')
   const [purchasedAt, setPurchasedAt] = useState<string | null>(initial?.purchasedAt ?? null)
   const [purchasePrice, setPurchasePrice] = useState(initial?.purchasePrice ? String(initial.purchasePrice) : '')
@@ -52,37 +47,33 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
   const [brand, setBrand] = useState(initial?.brand ?? '')
   const [model, setModel] = useState(initial?.model ?? '')
   const [initialOdometer, setInitialOdometer] = useState(initial?.initialOdometer ? String(initial.initialOdometer) : '')
-  const [notes, setNotes] = useState(initial?.notes ?? '')
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const nameInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    setName(initial?.name ?? '')
-    setPlate(initial?.plate ?? '')
-    setPurchasedAt(initial?.purchasedAt ?? null)
-    setPurchasePrice(initial?.purchasePrice ? String(initial.purchasePrice) : '')
-    setFuelType(initial?.fuelType ?? '95')
-    setPrimaryUserId(initial?.primaryUserId ?? null)
-    setColor(initial?.color ?? null)
-    setYear(initial?.year ? String(initial.year) : '')
-    setBrand(initial?.brand ?? '')
-    setModel(initial?.model ?? '')
-    setInitialOdometer(initial?.initialOdometer ? String(initial.initialOdometer) : '')
-    setNotes(initial?.notes ?? '')
-    setError('')
-    const id = setTimeout(() => nameInputRef.current?.focus(), 350)
-    return () => clearTimeout(id)
-  }, [open, initial])
+  const {
+    isEdit, name, setName, notes, setNotes, pending, error,
+    nameInputRef, ts, performDelete, runMutation,
+  } = useAssetSheetCommon({
+    open, initial, onClose, onMutated,
+    resetDomain: () => {
+      setPlate(initial?.plate ?? '')
+      setPurchasedAt(initial?.purchasedAt ?? null)
+      setPurchasePrice(initial?.purchasePrice ? String(initial.purchasePrice) : '')
+      setFuelType(initial?.fuelType ?? '95')
+      setPrimaryUserId(initial?.primaryUserId ?? null)
+      setColor(initial?.color ?? null)
+      setYear(initial?.year ? String(initial.year) : '')
+      setBrand(initial?.brand ?? '')
+      setModel(initial?.model ?? '')
+      setInitialOdometer(initial?.initialOdometer ? String(initial.initialOdometer) : '')
+    },
+  })
 
   const canSave = name.trim() !== '' && plate.trim() !== '' && !pending
 
   const handleSave = () => {
     const notesPayload = notes.trim() || null
-    startTransition(async () => {
-      try {
-        const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+    const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+    runMutation(
+      async () => {
         if (isEdit) {
           await editCar({
             id: initial!.id,
@@ -115,25 +106,9 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             notes: notesPayload,
           })
         }
-        onMutated?.('saved')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
-  }
-
-  const performDelete = () => {
-    if (!isEdit) return
-    startTransition(async () => {
-      try {
-        await softDeleteAsset(initial!.id)
-        onMutated?.('deleted')
-        onClose()
-      } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
-      }
-    })
+      },
+      () => { onMutated?.('saved'); onClose() },
+    )
   }
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.car) : ts.titleNew
