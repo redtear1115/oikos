@@ -10,6 +10,8 @@ import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { cutsIncome, fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
+import { assertMemberInGroup } from '@/lib/auth/member'
+import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterIncomeMutation } from '@/lib/revalidate'
 
@@ -30,29 +32,10 @@ async function getViewerReadContext() {
   return { user, group: context.group, epochWindow: context.window }
 }
 
-async function assertAssetInGroup(assetId: string, groupId: string) {
-  const [asset] = await db
-    .select({ id: assets.id, deletedAt: assets.deletedAt })
-    .from(assets)
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, groupId)))
-    .limit(1)
-  if (!asset) throw new Error('關聯愛物不在家計簿內')
-  if (asset.deletedAt) throw new Error('關聯愛物已刪除')
-}
-
-function assertRecipientInGroup(
-  recipientId: string,
-  group: { memberA: string; memberB: string | null },
-) {
-  if (recipientId !== group.memberA && recipientId !== group.memberB) {
-    throw new Error('收入歸屬不在家計簿內')
-  }
-}
-
 export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
   const { group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
-  assertRecipientInGroup(validated.recipientId, group)
+  assertMemberInGroup(validated.recipientId, group, '收入歸屬不在家計簿內')
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
   const [created] = await db
@@ -75,7 +58,7 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
 export async function editIncome(input: EditIncomeInput): Promise<{ id: string }> {
   const { group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
-  assertRecipientInGroup(validated.recipientId, group)
+  assertMemberInGroup(validated.recipientId, group, '收入歸屬不在家計簿內')
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
   const [created] = await db.transaction(async (tx) => {
