@@ -76,14 +76,32 @@ export function parseBlogFeed(xml: string, { tag, limit }: ParseOptions): BlogPo
 
 /** Build-time fetch (ISR via `next.revalidate`). Returns `[]` on any
  *  network/parse error so the landing page never breaks because the
- *  upstream blog is down. */
+ *  upstream blog is down.
+ *
+ *  Explicit `User-Agent` + 8s timeout: defaults make Cloudflare-fronted
+ *  hosts more likely to bot-challenge or hang on cold start, which then
+ *  pollutes the `s-maxage=3600` CDN cache (vercel.json) with an empty
+ *  section for an hour. Errors are logged to stderr so Vercel runtime
+ *  logs surface why the section is empty when it happens. */
 export async function fetchBlogPosts(): Promise<BlogPost[]> {
   try {
-    const res = await fetch(RSS_URL, { next: { revalidate: REVALIDATE_SECONDS } })
-    if (!res.ok) return []
+    const res = await fetch(RSS_URL, {
+      next: { revalidate: REVALIDATE_SECONDS },
+      headers: { 'User-Agent': 'Futari/1.0 (+https://futari.app; landing dev-log section)' },
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) {
+      console.error(`[blog-feed] RSS fetch returned ${res.status} ${res.statusText}`)
+      return []
+    }
     const xml = await res.text()
-    return parseBlogFeed(xml, { tag: 'futari', limit: 12 })
-  } catch {
+    const posts = parseBlogFeed(xml, { tag: 'futari', limit: 12 })
+    if (posts.length === 0) {
+      console.warn(`[blog-feed] RSS fetched ok (${xml.length} bytes) but 0 posts matched`)
+    }
+    return posts
+  } catch (err) {
+    console.error('[blog-feed] RSS fetch failed:', err)
     return []
   }
 }
