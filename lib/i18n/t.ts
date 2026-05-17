@@ -26,7 +26,7 @@ export const getLocale = cache(async (): Promise<Locale> => {
   return isLocale(value) ? value : DEFAULT_LOCALE
 })
 
-const dictionaries: Record<Locale, Translations> = {
+export const dictionaries: Record<Locale, Translations> = {
   'zh-TW': zhTW,
   'zh-CN': zhCN,
   en,

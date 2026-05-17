@@ -1,17 +1,32 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
+import { dictionaries } from '@/lib/i18n/t'
+import { buildAlternates } from '@/lib/i18n/seo'
 
-export const metadata = {
-  title: '隱私權政策 · Futari',
-  description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
-  alternates: { canonical: '/privacy' },
-  openGraph: {
-    title: '隱私權政策 · Futari',
-    description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
-    type: 'article',
-  },
+type Params = Promise<{ locale: string }>
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return {}
+  const locale: Locale = raw
+  const t = dictionaries[locale].seo.privacy
+  return {
+    title: t.title,
+    description: t.description,
+    alternates: buildAlternates('/privacy', locale),
+    openGraph: {
+      title: t.title,
+      description: t.description,
+      type: 'article',
+    },
+  }
 }
 
-export default function PrivacyPage() {
+export default async function PrivacyPage({ params }: { params: Params }) {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return null
+
   return (
     <main
       className="min-h-screen px-6 py-12"

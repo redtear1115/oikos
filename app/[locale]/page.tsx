@@ -1,35 +1,40 @@
 import type { Metadata } from 'next'
 import { getCurrentUser } from '@/lib/supabase/server'
-import { getLocale, getTranslations } from '@/lib/i18n/t'
+import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
+import { dictionaries } from '@/lib/i18n/t'
+import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
+import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { Landing } from './_landing/Landing'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-const LANDING_TITLE = 'Futari · 兩個人，一本帳｜伴侶共享記帳 PWA'
-const LANDING_DESCRIPTION =
-  '專為夫妻、伴侶設計的雙人共享帳本。自動分攤、AA 結算、家庭資產盤點、保險與愛車油耗紀錄，台灣團隊製作的 Mobile-first PWA 家計簿。'
-const LANDING_OG_DESCRIPTION = '兩個人，一本帳。一起記錄、自動分攤、輕鬆結算。'
+type Params = Promise<{ locale: string }>
 
-// Each public page declares its own canonical (root layout no longer sets one)
-// so sitemap × canonical signals agree per #305. hreflang ?lang=xx variants were
-// dropped (#392) — cookie-based locale doesn't map to canonical URL variants.
-export const metadata: Metadata = {
-  title: LANDING_TITLE,
-  description: LANDING_DESCRIPTION,
-  alternates: { canonical: '/' },
-  openGraph: {
-    title: LANDING_TITLE,
-    description: LANDING_OG_DESCRIPTION,
-    url: '/',
-    siteName: 'Futari',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: LANDING_TITLE,
-    description: LANDING_OG_DESCRIPTION,
-  },
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return {}
+  const locale: Locale = raw
+  const t = dictionaries[locale].seo.landing
+  return {
+    title: t.title,
+    description: t.description,
+    alternates: buildAlternates('/', locale),
+    openGraph: {
+      title: t.title,
+      description: t.ogDescription,
+      url: localizedHref('/', locale),
+      siteName: 'Futari',
+      type: 'website',
+      locale: ogLocale(locale),
+      alternateLocale: alternateOgLocales(locale),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.title,
+      description: t.ogDescription,
+    },
+  }
 }
 
 // JSON-LD bundle for the public landing — WebSite (sitelinks search box hint),
@@ -112,17 +117,16 @@ const faqJsonLd = {
   ],
 } as const
 
-export default async function RootPage() {
+export default async function RootPage({ params }: { params: Params }) {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return null
+  const locale: Locale = raw
+  const t = dictionaries[locale]
   // Public landing — never redirect. Signed-in viewers get the CTA pointed at
   // /dashboard so they land back in the app in one tap; new viewers get
   // /sign-in. Either way the page renders.
-  const [user, t, locale] = await Promise.all([
-    getCurrentUser(),
-    getTranslations(),
-    getLocale(),
-  ])
-
-  const ctaHref = user ? '/dashboard' : '/sign-in'
+  const user = await getCurrentUser()
+  const ctaHref = user ? '/dashboard' : localizedHref('/sign-in', locale)
 
   return (
     <>

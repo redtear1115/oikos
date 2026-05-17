@@ -1,35 +1,44 @@
 import type { Metadata } from 'next'
-import { getLocale, getTranslations } from '@/lib/i18n/t'
+import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
+import { dictionaries } from '@/lib/i18n/t'
+import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
+import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { SignInButton } from './SignInButton'
 
-const SIGNIN_TITLE = '登入 Futari · 開始兩個人的記帳生活'
-const SIGNIN_DESCRIPTION =
-  '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、管理保險與資產的雙人記帳 PWA。'
-const SIGNIN_OG_DESCRIPTION = '用 Google 一鍵登入，開始兩個人的家計簿。'
+type Params = Promise<{ locale: string }>
 
-// hreflang ?lang=xx variants dropped (#392) — cookie-based locale doesn't map to
-// canonical URL variants. SoftwareApplication JSON-LD moved to landing (#390).
-export const metadata: Metadata = {
-  title: SIGNIN_TITLE,
-  description: SIGNIN_DESCRIPTION,
-  alternates: { canonical: '/sign-in' },
-  openGraph: {
-    title: SIGNIN_TITLE,
-    description: SIGNIN_OG_DESCRIPTION,
-    url: '/sign-in',
-    siteName: 'Futari',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: SIGNIN_TITLE,
-    description: SIGNIN_OG_DESCRIPTION,
-  },
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return {}
+  const locale: Locale = raw
+  const t = dictionaries[locale].seo.signIn
+  return {
+    title: t.title,
+    description: t.description,
+    alternates: buildAlternates('/sign-in', locale),
+    openGraph: {
+      title: t.title,
+      description: t.ogDescription,
+      url: localizedHref('/sign-in', locale),
+      siteName: 'Futari',
+      type: 'website',
+      locale: ogLocale(locale),
+      alternateLocale: alternateOgLocales(locale),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.title,
+      description: t.ogDescription,
+    },
+  }
 }
 
-export default async function SignInPage() {
-  const [locale, t] = await Promise.all([getLocale(), getTranslations()])
+export default async function SignInPage({ params }: { params: Params }) {
+  const { locale: raw } = await params
+  if (!isLocale(raw)) return null
+  const locale: Locale = raw
+  const t = dictionaries[locale]
 
   return (
     <main

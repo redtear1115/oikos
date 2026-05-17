@@ -1638,6 +1638,29 @@ export type Translations = {
     /** Unknown platform — generic instruction. Contains `<strong>`. */
     fallbackHtml: string
   }
+
+  /** Per-page SEO strings — title / description / ogDescription used by
+   *  generateMetadata in each app/[locale]/*\/page.tsx. Not rendered in UI. */
+  seo: {
+    landing: {
+      title: string
+      description: string
+      ogDescription: string
+    }
+    signIn: {
+      title: string
+      description: string
+      ogDescription: string
+    }
+    terms: {
+      title: string
+      description: string
+    }
+    privacy: {
+      title: string
+      description: string
+    }
+  }
 }
 
 export const zhTW: Translations = {
@@ -3010,5 +3033,26 @@ export const zhTW: Translations = {
       step3: 'Futari 會像一個獨立的 app 開啟',
     },
     fallbackHtml: '在你的瀏覽器選單裡找「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。不同瀏覽器位置不太一樣，但通常都在右上的選單裡。',
+  },
+
+  seo: {
+    landing: {
+      title: 'Futari · 兩個人，一本帳｜伴侶共享記帳 PWA',
+      description: '專為夫妻、伴侶設計的雙人共享帳本。自動分攤、AA 結算、家庭資產盤點、保險與愛車油耗紀錄，台灣團隊製作的 Mobile-first PWA 家計簿。',
+      ogDescription: '兩個人，一本帳。一起記錄、自動分攤、輕鬆結算。',
+    },
+    signIn: {
+      title: '登入 Futari · 開始兩個人的記帳生活',
+      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、管理保險與資產的雙人記帳 PWA。',
+      ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+    },
+    terms: {
+      title: '服務條款 · Futari',
+      description: 'Futari alpha 測試版本的服務條款與使用者注意事項。',
+    },
+    privacy: {
+      title: '隱私權政策 · Futari',
+      description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
+    },
   },
 }
