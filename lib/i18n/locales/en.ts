@@ -1114,6 +1114,11 @@ export const en: Translations = {
     backAriaLabel: 'Back',
     editAriaLabel: 'Edit',
     switcherAriaLabel: 'Switch treasure',
+    siblingRailAriaLabel: 'Other treasures',
+    switcher: {
+      emptyGroup: '(none)',
+      currentLabel: 'Current',
+    },
     notesSection: 'Notes',
     recentExpenses: 'Recent expenses',
     timelineEntries: 'Timeline · {count} entries',

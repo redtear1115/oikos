@@ -1357,6 +1357,11 @@ export type Translations = {
     backAriaLabel: string
     editAriaLabel: string
     switcherAriaLabel: string
+    siblingRailAriaLabel: string
+    switcher: {
+      emptyGroup: string
+      currentLabel: string
+    }
     notesSection: string
     recentExpenses: string
     /** Template with `{count}` placeholder. */
@@ -3047,6 +3052,11 @@ export const zhTW: Translations = {
     backAriaLabel: '返回',
     editAriaLabel: '編輯',
     switcherAriaLabel: '切換愛物',
+    siblingRailAriaLabel: '其他愛物',
+    switcher: {
+      emptyGroup: '（無）',
+      currentLabel: '目前',
+    },
     notesSection: '備註',
     recentExpenses: '近期支出',
     timelineEntries: '時間軸 · {count} 筆',

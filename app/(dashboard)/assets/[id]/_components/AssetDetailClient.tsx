@@ -10,14 +10,13 @@ import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_co
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AssetHero } from './AssetHero'
-import { AssetSwitcher } from './AssetSwitcher'
+import { AssetSwitcher, type SwitcherGroup } from './AssetSwitcher'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import { SectionHeader, InfoCard } from './aibutsu-ui'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { useTranslations } from '@/lib/i18n/client'
-import type { AssetType } from '@/lib/assets'
 import type { FuelType } from '@/lib/fuel'
 
 interface SerializedFuelLog {
@@ -48,7 +47,8 @@ interface Props {
   initialTxns: PagedTxnRow[]
   initialFuelLogs: SerializedFuelLog[]
   pageSize: number
-  allAssets: Array<{ id: string; name: string; type: AssetType }>
+  /** Grouped switcher items for the car name dropdown. */
+  groups: SwitcherGroup[]
   linkedInsurances?: { id: string; name: string }[]
 }
 
@@ -56,7 +56,7 @@ export function AssetDetailClient({
   assetId, notes, assetSheetInitial, fuelType, primaryUserId,
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
-  initialTxns, initialFuelLogs, pageSize, allAssets,
+  initialTxns, initialFuelLogs, pageSize, groups,
   linkedInsurances,
 }: Props) {
   const router = useRouter()
@@ -172,7 +172,7 @@ export function AssetDetailClient({
         name={
           <AssetSwitcher
             currentAssetId={assetId}
-            allAssets={allAssets}
+            groups={groups}
           >
             <span>{assetSheetInitial.name}</span>
           </AssetSwitcher>

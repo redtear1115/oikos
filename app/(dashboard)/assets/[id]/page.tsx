@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
+import type { AssetWithCar } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { canAccessGuardian } from '@/lib/guardian'
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
@@ -13,6 +14,9 @@ import { InsuranceDetailClientLegacy } from './_components/InsuranceDetailClient
 import { InsuranceGatedClient } from './_components/InsuranceGatedClient'
 import { SavingsView } from './_components/insurance/SavingsView'
 import { getFramingGroup } from '@/lib/insurance'
+import { deriveInsuranceBadge, deriveCarInsuranceBadge, insuranceSubtitle } from '@/lib/insuranceBadge'
+import type { SiblingChip } from './_components/AibutsuHeader'
+import type { SwitcherGroup } from './_components/AssetSwitcher'
 import { getInsurancePaymentTotal, getInsuranceReturnTotal, getInsuranceReturnTotalsByCategory, listInsurancePaymentsPaged, listInsuranceReturnsPaged } from '@/lib/db/queries/insurance'
 import { listRulesForAsset } from '@/lib/db/queries/recurringIncome'
 import { SAVINGS_RETURN_CATEGORIES } from '@/lib/incomeCategories'
@@ -48,6 +52,56 @@ function serializeTxns(rows: Awaited<ReturnType<typeof listTransactionsPagedForA
   }))
 }
 
+/** Build the sibling pill rail chips for aibutsu detail pages (non-insurance assets). */
+function buildSiblings(
+  allAssetsData: AssetWithCar[],
+  currentId: string,
+  today: Date,
+): SiblingChip[] {
+  const allInsurances = allAssetsData.filter(a => a.type === 'insurance')
+  return allAssetsData
+    .filter(a => a.type !== 'insurance' && a.id !== currentId)
+    .map(a => {
+      let badge: SiblingChip['badge'] = null
+      if (a.type === 'car') {
+        badge = deriveCarInsuranceBadge(a.id, allInsurances, today)
+      }
+      return { id: a.id, type: a.type as SiblingChip['type'], name: a.name, badge }
+    })
+}
+
+/** Build SwitcherGroup[] for the insurance dropdown switcher. */
+function buildInsuranceGroups(allAssetsData: AssetWithCar[], today: Date): SwitcherGroup[] {
+  const allIns = allAssetsData.filter(a => a.type === 'insurance')
+  const toItem = (ins: AssetWithCar) => ({
+    id: ins.id,
+    type: ins.type,
+    name: ins.name,
+    subtitle: insuranceSubtitle(ins, getFramingGroup(ins.insuranceType), today),
+    badge: deriveInsuranceBadge(ins, today),
+  })
+  return [
+    {
+      label: '保護型 · 一年期',
+      items: allIns
+        .filter(i => getFramingGroup(i.insuranceType) === 'protection' && (i.insuranceTermYears ?? 0) <= 1)
+        .map(toItem),
+    },
+    {
+      label: '保護型 · 多年期',
+      items: allIns
+        .filter(i => getFramingGroup(i.insuranceType) === 'protection' && (i.insuranceTermYears ?? 0) > 1)
+        .map(toItem),
+    },
+    {
+      label: '儲蓄型',
+      items: allIns
+        .filter(i => getFramingGroup(i.insuranceType) === 'savings')
+        .map(toItem),
+    },
+  ].filter(g => g.items.length > 0)
+}
+
 export default async function AssetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
@@ -71,7 +125,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   }
 
   const allAssetsData = await listAssetsForGroup(group.id)
-  const allAssets = allAssetsData.map(a => ({ id: a.id, name: a.name, type: a.type }))
+  const today = new Date()
 
   // #222 — Template-based asset path. Routed first so it shadows the legacy
   // type-based branches below (a template-based asset has type='item' anyway,
@@ -104,6 +158,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
+        siblings={buildSiblings(allAssetsData, asset.id, today)}
       />
     )
   }
@@ -143,6 +198,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
+        siblings={buildSiblings(allAssetsData, asset.id, today)}
       />
     )
   }
@@ -179,6 +235,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
+        siblings={buildSiblings(allAssetsData, asset.id, today)}
       />
     )
   }
@@ -211,6 +268,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
+        siblings={buildSiblings(allAssetsData, asset.id, today)}
       />
     )
   }
@@ -241,6 +299,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         assetSheetInitial={assetSheetInitial}
         initialTxns={initialTxns}
         pageSize={PAGE_SIZE}
+        siblings={buildSiblings(allAssetsData, asset.id, today)}
       />
     )
   }
@@ -346,6 +405,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           assetSheetInitial={assetSheetInitial}
           linkedVehicle={linkedVehicle}
           recurringRules={recurringRules}
+          allInsuranceGroups={buildInsuranceGroups(allAssetsData, today)}
         />
       )
     }
@@ -358,6 +418,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         details={insuranceDetailsData}
         linkedVehicle={linkedVehicle}
         assetSheetInitial={assetSheetInitial}
+        allInsuranceGroups={buildInsuranceGroups(allAssetsData, today)}
       />
     )
   }
@@ -386,6 +447,20 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     prevOdometer: f.prevOdometer,
     fuelType: f.fuelType,
   }))
+
+  const carGroups: SwitcherGroup[] = [
+    {
+      label: '車輛',
+      items: allAssetsData
+        .filter(a => a.type === 'car')
+        .map(a => ({
+          id: a.id,
+          type: a.type,
+          name: a.name,
+          badge: deriveCarInsuranceBadge(a.id, allAssetsData.filter(x => x.type === 'insurance'), today),
+        })),
+    },
+  ]
 
   return (
     <AssetDetailClient
@@ -423,7 +498,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       initialTxns={initialTxns}
       initialFuelLogs={initialFuelLogs}
       pageSize={PAGE_SIZE}
-      allAssets={allAssets}
+      groups={carGroups}
     />
   )
 }

@@ -55,6 +55,8 @@ export interface AssetWithCar {
   insuranceTermYears: number | null
   insurancePayCycle: string | null
   insuranceReminderDaysBefore: number | null
+  insuranceVehicleId: string | null
+  insuranceInsurer: string | null
 }
 
 /**
@@ -100,6 +102,8 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceTermYears: insuranceDetails.termYears,
       insurancePayCycle: insuranceDetails.payCycle,
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
+      insuranceVehicleId: insuranceDetails.vehicleId,
+      insuranceInsurer: insuranceDetails.insurer,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
@@ -159,6 +163,8 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceTermYears: insuranceDetails.termYears,
       insurancePayCycle: insuranceDetails.payCycle,
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
+      insuranceVehicleId: insuranceDetails.vehicleId,
+      insuranceInsurer: insuranceDetails.insurer,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
