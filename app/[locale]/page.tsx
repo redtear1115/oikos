@@ -149,6 +149,7 @@ export default async function RootPage({ params }: { params: Params }) {
       <Landing
         t={t.landing}
         ctaHref={ctaHref}
+        signInHref={localizedHref('/sign-in', locale)}
         languageSwitcher={<LanguageSwitcher current={locale} variant="footer" />}
       />
     </>

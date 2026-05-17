@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
 import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
@@ -104,9 +105,9 @@ export default async function SignInPage({ params }: { params: Params }) {
             <SignInButton label={t.signIn.continueWithGoogle} />
             <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
               {t.signIn.termsPrefix}{' '}
-              <a href="/terms" className="underline">{t.signIn.termsLink}</a>
+              <Link href={localizedHref('/terms', locale)} className="underline">{t.signIn.termsLink}</Link>
               {' '}{t.signIn.termsAnd}{' '}
-              <a href="/privacy" className="underline">{t.signIn.privacyLink}</a>
+              <Link href={localizedHref('/privacy', locale)} className="underline">{t.signIn.privacyLink}</Link>
               {t.signIn.termsSuffix}
             </p>
           </div>

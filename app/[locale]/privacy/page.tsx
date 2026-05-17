@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
 import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates } from '@/lib/i18n/seo'
+import { localizedHref } from '@/lib/i18n/path'
 
 type Params = Promise<{ locale: string }>
 
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function PrivacyPage({ params }: { params: Params }) {
   const { locale: raw } = await params
   if (!isLocale(raw)) return null
+  const locale: Locale = raw
 
   return (
     <main
@@ -96,10 +98,10 @@ export default async function PrivacyPage({ params }: { params: Params }) {
         </div>
 
         <div className="mt-12 flex gap-4 text-sm">
-          <Link href="/" className="underline" style={{ color: 'var(--ink-2)' }}>
+          <Link href={localizedHref('/', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
             ← 回首頁
           </Link>
-          <Link href="/terms" className="underline" style={{ color: 'var(--ink-2)' }}>
+          <Link href={localizedHref('/terms', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
             服務條款
           </Link>
         </div>
