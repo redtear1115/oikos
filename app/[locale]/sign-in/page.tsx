@@ -6,8 +6,10 @@ import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { fetchBlogPosts } from '@/lib/blog-feed'
 import { SignInButton } from './SignInButton'
 import { FeatureCards } from './FeatureCards'
+import { BlogSection } from './BlogSection'
 
 type AboutStrings = Translations['signIn']['about']
 
@@ -40,7 +42,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function SignInPage({ params }: { params: Params }) {
-  const { locale: raw } = await params
+  const [{ locale: raw }, blogPosts] = await Promise.all([params, fetchBlogPosts()])
   if (!isLocale(raw)) return null
   const locale: Locale = raw
   const t = dictionaries[locale]
@@ -123,6 +125,8 @@ export default async function SignInPage({ params }: { params: Params }) {
           <FeatureCards t={t.signIn.features} />
         </section>
       </div>
+
+      <BlogSection posts={blogPosts} t={t} locale={locale} />
 
       <div className="flex justify-center px-6 py-6">
         <LanguageSwitcher current={locale} variant="footer" />

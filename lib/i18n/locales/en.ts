@@ -63,6 +63,9 @@ export const en: Translations = {
       c4Title: 'Your ledger, just for the two of you',
       c4Body: 'No "my entries" vs. "your entries." Whatever\'s recorded is shared — no visibility tiers, by design.',
     },
+    blog: {
+      heading: 'Dev log',
+    },
   },
 
   landing: {

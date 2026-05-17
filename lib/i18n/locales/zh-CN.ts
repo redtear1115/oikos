@@ -63,6 +63,9 @@ export const zhCN: Translations = {
       c4Title: '你们的账，只有你们看得到',
       c4Body: '没有「我的账」跟「你的账」之分。进来的就是共同的，没有可见度分级。',
     },
+    blog: {
+      heading: '开发日志',
+    },
   },
 
   landing: {
