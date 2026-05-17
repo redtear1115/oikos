@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
   // #141), group + window follow the pin so feed + balance scope to the right
   // place. Layout already redirected if no context, so this is non-null here.
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('No group')
+  if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
 
   // Post-leave cards (PR 4/4): only when not pinned to a past epoch (we want

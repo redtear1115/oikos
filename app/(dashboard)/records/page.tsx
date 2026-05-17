@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { assets } from '@/lib/db/schema'
@@ -50,7 +51,7 @@ export default async function RecordsPage({
     searchParams,
     resolveViewerEpochContext(user.id),
   ])
-  if (!context) throw new Error('No group')
+  if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
   const { view: rawView } = resolvedParams
 
