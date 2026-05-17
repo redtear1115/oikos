@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: t.title,
       description: t.description,
       type: 'article',
+      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: t.title }],
     },
   }
 }
