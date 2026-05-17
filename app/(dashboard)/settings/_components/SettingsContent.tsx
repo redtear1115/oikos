@@ -140,6 +140,7 @@ export function SettingsContent({
       <InstallGuide
         open={installGuideOpen}
         onClose={() => setInstallGuideOpen(false)}
+        t={t}
       />
 
     </>

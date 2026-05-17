@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
 import { getPlatform, type Platform } from '@/lib/install-guide'
-import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 interface Props {
   open: boolean
   onClose: () => void
+  t: Translations
 }
 
 /**
@@ -17,8 +17,7 @@ interface Props {
  *   1. Auto-shown after first /setup completion (if not already a PWA)
  *   2. Reopenable from /settings → 加到主畫面
  */
-export function InstallGuide({ open, onClose }: Props) {
-  const t = useTranslations()
+export function InstallGuide({ open, onClose, t }: Props) {
   // Detect on open (not on mount) so SSR doesn't render platform-specific UI.
   const [platform, setPlatform] = useState<Platform>('unknown')
   useEffect(() => {
