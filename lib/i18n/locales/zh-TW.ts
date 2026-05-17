@@ -307,6 +307,174 @@ export type Translations = {
   compactRow: {
     /** Small badge appended to a transaction row when its status is 'pending'. */
     pendingBadge: string
+    /** Transaction row payer label — viewer paid (settlement). */
+    iSettled: string
+    /** Transaction row payer label — partner paid (settlement). `{name}` = partner displayName. */
+    partnerSettled: string
+    /** Transaction row payer label — viewer paid (income). */
+    youIncome: string
+    /** Transaction row payer label — partner paid (income). `{name}` = partner displayName. */
+    partnerIncome: string
+    /** Transaction row payer label — viewer paid (expense). */
+    youPaid: string
+    /** Transaction row payer label — partner paid (expense). `{name}` = partner displayName. */
+    partnerPaid: string
+    /** Abbreviation suffix for trillions (兆). */
+    trillion: string
+    /** Abbreviation suffix for hundred millions (億). */
+    hundredMillion: string
+  }
+
+  transactionFeed: {
+    /** Load-more button while fetching. */
+    loading: string
+    /** Load-more button idle state. */
+    loadMore: string
+    /** End-of-feed sentinel shown when there are no more pages. */
+    endOfFeed: string
+    /** Aria-label on the error toast close button. */
+    closeAriaLabel: string
+    /** Fallback description for settlement rows (when note is absent). */
+    settlementFallback: string
+  }
+
+  bottomNav: {
+    home: string
+    records: string
+    assets: string
+    settings: string
+    /** Aria-label for the floating add button. */
+    addAriaLabel: string
+  }
+
+  miniCalendar: {
+    /** Aria-label for the "previous month" nav button. */
+    prevMonth: string
+    /** Aria-label for the "next month" nav button. */
+    nextMonth: string
+    /** Aria-label for the "previous year" nav button. */
+    prevYear: string
+    /** Aria-label for the "next year" nav button. */
+    nextYear: string
+    /** Aria-label for the "previous decade" nav button. */
+    prevDecade: string
+    /** Aria-label for the "next decade" nav button. */
+    nextDecade: string
+    /** Aria-label for the month-picker trigger in day view. */
+    selectMonth: string
+    /** Aria-label for the year-picker trigger in month view. */
+    selectYear: string
+    /** Aria-label for the split-ratio slider. */
+    splitRatioAriaLabel: string
+    /** Title in day view. `{year}` and `{month}` are replaced. */
+    dayViewTitle: string
+    /** Title in month view. `{year}` is replaced. */
+    monthViewTitle: string
+    /** Single month cell label. `{month}` is replaced (1–12). */
+    monthLabel: string
+    /** Weekday header labels, Sunday first. Array of 7 strings. */
+    weekdays: string[]
+  }
+
+  splitTypeSelector: {
+    /** Aria-label for the radiogroup wrapper. */
+    groupAriaLabel: string
+    /** Aria-label for the ratio slider. */
+    ratioAriaLabel: string
+    /** Sub-label when weighted ratio is 50/50 and amount is 0. */
+    evenSub: string
+    /** Sub-label when viewer paid, weighted, amount > 0. `{amount}` replaced. */
+    partnerOwesYouAmount: string
+    /** Sub-label when partner paid, weighted, amount > 0. `{amount}` replaced. */
+    youOwePartnerAmount: string
+    /** Sub-label when ratio is not 50/50 and amount is 0. `{me}` and `{other}` replaced. */
+    ratioNoAmount: string
+    /** Sub-label for all_mine when viewer paid. */
+    allMineSelfPaid: string
+    /** Sub-label for all_mine when partner paid. */
+    allMinePartnerPaid: string
+    /** Sub-label for all_theirs when viewer paid and amount is 0. */
+    allTheirsNoAmount: string
+    /** Sub-label for all_theirs when partner paid and amount is 0. */
+    allTheirsPartnerNoAmount: string
+    /** Sub-label for all_theirs when viewer paid, amount > 0. `{amount}` replaced. */
+    allTheirsYouPaid: string
+    /** Sub-label for all_theirs when partner paid, amount > 0. `{amount}` replaced. */
+    allTheirsPartnerPaid: string
+    /** Me ratio label. `{ratio}` replaced. */
+    meRatio: string
+    /** Partner ratio label. `{ratio}` replaced. */
+    partnerRatio: string
+  }
+
+  pendingIncomeStack: {
+    /** Section heading above the pending income cards. */
+    heading: string
+    /** Collapse button label (when expanded). */
+    collapse: string
+    /** Expand button label. `{count}` replaced with remaining hidden count. */
+    expand: string
+  }
+
+  pendingIncomeCard: {
+    /** Primary confirm button label. */
+    confirm: string
+    /** Edit button label. */
+    edit: string
+    /** Skip button label. */
+    skip: string
+    /** Skip confirm modal title. `{date}` and `{name}` replaced. */
+    skipTitle: string
+    /** Skip confirm modal body. */
+    skipDescription: string
+    /** Error fallback when confirm fails. */
+    confirmError: string
+    /** Error fallback when skip fails. */
+    skipError: string
+  }
+
+  logoutButton: {
+    /** Button label when idle. */
+    label: string
+    /** Button label while signing out. */
+    pending: string
+    /** Confirm modal title. */
+    title: string
+    /** Confirm modal description. */
+    description: string
+  }
+
+  splitRatioSection: {
+    /** Inline label suffix for viewer. `{name}` replaced with displayName. */
+    meSuffix: string
+    /** Inline label suffix for partner. `{name}` replaced with displayName. */
+    partnerSuffix: string
+  }
+
+  errorPage: {
+    /** Retry button label. */
+    retry: string
+    /** Generic subtitle asking the user to try again. */
+    subtitle: string
+    /** Title for the dashboard error page. */
+    dashboard: string
+    /** Title for the records error page. */
+    records: string
+    /** Title for the settings error page. */
+    settings: string
+    /** Title for the trips error page. */
+    trips: string
+    /** Title for the assets error page. */
+    assets: string
+    /** Title for the monthly review error page. */
+    review: string
+  }
+
+  assetListItem: {
+    /** Badge label for savings-type insurance assets. */
+    savingsBadge: string
+    /** Small label above the monthly amount column. */
+    thisMonth: string
   }
 
   /** Trip list page (#42). */
@@ -2036,6 +2204,107 @@ export const zhTW: Translations = {
 
   compactRow: {
     pendingBadge: '待結算',
+    iSettled: '我還款',
+    partnerSettled: '{name} 還款',
+    youIncome: '你收入',
+    partnerIncome: '{name} 收入',
+    youPaid: '你付',
+    partnerPaid: '{name} 付',
+    trillion: '兆',
+    hundredMillion: '億',
+  },
+
+  transactionFeed: {
+    loading: '載入中…',
+    loadMore: '載入更多',
+    endOfFeed: '已是最早的紀錄',
+    closeAriaLabel: '關閉',
+    settlementFallback: '還款',
+  },
+
+  bottomNav: {
+    home: '首頁',
+    records: '紀錄',
+    assets: '愛物',
+    settings: '設定',
+    addAriaLabel: '新增一筆',
+  },
+
+  miniCalendar: {
+    prevMonth: '上個月',
+    nextMonth: '下個月',
+    prevYear: '上一年',
+    nextYear: '下一年',
+    prevDecade: '上一個十年',
+    nextDecade: '下一個十年',
+    selectMonth: '選擇月份',
+    selectYear: '選擇年份',
+    splitRatioAriaLabel: '分擔比例',
+    dayViewTitle: '{year} 年 {month} 月 ˅',
+    monthViewTitle: '{year} 年 ˅',
+    monthLabel: '{month} 月',
+    weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: '分擔方式',
+    ratioAriaLabel: '分擔比例',
+    evenSub: '各付一半',
+    partnerOwesYouAmount: '對方欠你 {amount}',
+    youOwePartnerAmount: '你欠對方 {amount}',
+    ratioNoAmount: '我 {me}%・對方 {other}%',
+    allMineSelfPaid: '你自己花的，不會欠款',
+    allMinePartnerPaid: '對方自己花的，不會欠款',
+    allTheirsNoAmount: '對方欠你全額',
+    allTheirsPartnerNoAmount: '你欠對方全額',
+    allTheirsYouPaid: '對方欠你 {amount}',
+    allTheirsPartnerPaid: '你欠對方 {amount}',
+    meRatio: '我 {ratio}%',
+    partnerRatio: '對方 {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: '這幾筆等你看看',
+    collapse: '收合',
+    expand: '展開全部（還有 {count} 筆）',
+  },
+
+  pendingIncomeCard: {
+    confirm: '就這樣',
+    edit: '改一下',
+    skip: '跳過',
+    skipTitle: '跳過 {date} {name}？',
+    skipDescription: '這一期就不會出現在帳上，下一期照常提醒。',
+    confirmError: '確認失敗',
+    skipError: '跳過失敗',
+  },
+
+  logoutButton: {
+    label: '登出',
+    pending: '登出中…',
+    title: '登出 Futari？',
+    description: '下次需要重新用 Google 登入。未邀請對方加入的紀錄不會遺失。',
+  },
+
+  splitRatioSection: {
+    meSuffix: '（我）',
+    partnerSuffix: '（對方）',
+  },
+
+  errorPage: {
+    retry: '重試',
+    subtitle: '請稍後再試一次',
+    dashboard: '載入儀表板失敗',
+    records: '載入紀錄失敗',
+    settings: '載入設定失敗',
+    trips: '載入旅行失敗',
+    assets: '載入愛物失敗',
+    review: '載入月度回顧失敗',
+  },
+
+  assetListItem: {
+    savingsBadge: '儲蓄',
+    thisMonth: '本月',
   },
 
   tripList: {

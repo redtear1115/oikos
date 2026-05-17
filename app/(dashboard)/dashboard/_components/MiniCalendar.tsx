@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   value: string  // YYYY-MM-DD
@@ -15,6 +16,8 @@ type Mode = 'days' | 'months' | 'years'
  * (days → months → years); tap a cell in months/years view to drill back down.
  */
 export function MiniCalendar({ value, onChange }: Props) {
+  const t = useTranslations()
+  const mc = t.miniCalendar
   const today = new Date()
   const todayIso = today.toISOString().slice(0, 10)
   const [valueY, valueM] = value.split('-').map(Number)
@@ -39,17 +42,17 @@ export function MiniCalendar({ value, onChange }: Props) {
     return (
       <Shell>
         <Header
-          prevLabel="上個月"
-          nextLabel="下個月"
+          prevLabel={mc.prevMonth}
+          nextLabel={mc.nextMonth}
           onPrev={goPrev}
           onNext={goNext}
-          title={`${view.year} 年 ${view.month} 月 ˅`}
-          titleAriaLabel="選擇月份"
+          title={mc.dayViewTitle.replace('{year}', String(view.year)).replace('{month}', String(view.month))}
+          titleAriaLabel={mc.selectMonth}
           onTitle={() => setMode('months')}
         />
         <div className="grid grid-cols-7 text-micro text-center mb-1.5"
           style={{ color: 'var(--ink-3)' }}>
-          {['日','一','二','三','四','五','六'].map(d => <div key={d}>{d}</div>)}
+          {mc.weekdays.map(d => <div key={d}>{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
@@ -85,12 +88,12 @@ export function MiniCalendar({ value, onChange }: Props) {
     return (
       <Shell>
         <Header
-          prevLabel="上一年"
-          nextLabel="下一年"
+          prevLabel={mc.prevYear}
+          nextLabel={mc.nextYear}
           onPrev={goPrev}
           onNext={goNext}
-          title={`${view.year} 年 ˅`}
-          titleAriaLabel="選擇年份"
+          title={mc.monthViewTitle.replace('{year}', String(view.year))}
+          titleAriaLabel={mc.selectYear}
           onTitle={() => setMode('years')}
         />
         <div className="grid grid-cols-3 gap-1.5">
@@ -105,7 +108,7 @@ export function MiniCalendar({ value, onChange }: Props) {
                   color: sel ? '#fff' : 'var(--ink)',
                   fontFamily: 'var(--font-numeric)',
                 }}>
-                {m} 月
+                {mc.monthLabel.replace('{month}', String(m))}
               </button>
             )
           })}
@@ -121,8 +124,8 @@ export function MiniCalendar({ value, onChange }: Props) {
   return (
     <Shell>
       <Header
-        prevLabel="上一個十年"
-        nextLabel="下一個十年"
+        prevLabel={mc.prevDecade}
+        nextLabel={mc.nextDecade}
         onPrev={goPrev}
         onNext={goNext}
         title={`${decadeStart} – ${decadeStart + 9}`}

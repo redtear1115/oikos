@@ -283,6 +283,107 @@ export const zhCN: Translations = {
 
   compactRow: {
     pendingBadge: '待结算',
+    iSettled: '我还款',
+    partnerSettled: '{name} 还款',
+    youIncome: '你收入',
+    partnerIncome: '{name} 收入',
+    youPaid: '你付',
+    partnerPaid: '{name} 付',
+    trillion: '兆',
+    hundredMillion: '亿',
+  },
+
+  transactionFeed: {
+    loading: '加载中…',
+    loadMore: '加载更多',
+    endOfFeed: '已是最早的记录',
+    closeAriaLabel: '关闭',
+    settlementFallback: '还款',
+  },
+
+  bottomNav: {
+    home: '首页',
+    records: '记录',
+    assets: '爱物',
+    settings: '设置',
+    addAriaLabel: '新增一笔',
+  },
+
+  miniCalendar: {
+    prevMonth: '上个月',
+    nextMonth: '下个月',
+    prevYear: '上一年',
+    nextYear: '下一年',
+    prevDecade: '上一个十年',
+    nextDecade: '下一个十年',
+    selectMonth: '选择月份',
+    selectYear: '选择年份',
+    splitRatioAriaLabel: '分担比例',
+    dayViewTitle: '{year} 年 {month} 月 ˅',
+    monthViewTitle: '{year} 年 ˅',
+    monthLabel: '{month} 月',
+    weekdays: ['日', '一', '二', '三', '四', '五', '六'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: '分担方式',
+    ratioAriaLabel: '分担比例',
+    evenSub: '各付一半',
+    partnerOwesYouAmount: '对方欠你 {amount}',
+    youOwePartnerAmount: '你欠对方 {amount}',
+    ratioNoAmount: '我 {me}%・对方 {other}%',
+    allMineSelfPaid: '你自己花的，不会欠款',
+    allMinePartnerPaid: '对方自己花的，不会欠款',
+    allTheirsNoAmount: '对方欠你全额',
+    allTheirsPartnerNoAmount: '你欠对方全额',
+    allTheirsYouPaid: '对方欠你 {amount}',
+    allTheirsPartnerPaid: '你欠对方 {amount}',
+    meRatio: '我 {ratio}%',
+    partnerRatio: '对方 {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: '这几笔等你看看',
+    collapse: '收合',
+    expand: '展开全部（还有 {count} 笔）',
+  },
+
+  pendingIncomeCard: {
+    confirm: '就这样',
+    edit: '改一下',
+    skip: '跳过',
+    skipTitle: '跳过 {date} {name}？',
+    skipDescription: '这一期不会出现在账上，下一期照常提醒。',
+    confirmError: '确认失败',
+    skipError: '跳过失败',
+  },
+
+  logoutButton: {
+    label: '登出',
+    pending: '登出中…',
+    title: '登出 Futari？',
+    description: '下次需要重新用 Google 登录。未邀请对方加入的记录不会丢失。',
+  },
+
+  splitRatioSection: {
+    meSuffix: '（我）',
+    partnerSuffix: '（对方）',
+  },
+
+  errorPage: {
+    retry: '重试',
+    subtitle: '请稍后再试一次',
+    dashboard: '加载仪表板失败',
+    records: '加载记录失败',
+    settings: '加载设置失败',
+    trips: '加载旅行失败',
+    assets: '加载爱物失败',
+    review: '加载月度回顾失败',
+  },
+
+  assetListItem: {
+    savingsBadge: '储蓄',
+    thisMonth: '本月',
   },
 
   tripList: {
@@ -1501,7 +1602,6 @@ export const zhCN: Translations = {
     fallbackHtml: '在你的浏览器菜单里找「<strong>添加到主屏幕</strong>」或「<strong>安装应用</strong>」。不同浏览器位置不太一样，但通常都在右上角的菜单里。',
   },
 
-  // TODO(seo-copy): native-speaker review
   seo: {
     landing: {
       title: 'Futari · 两个人，一本账｜情侣共享记账 PWA',

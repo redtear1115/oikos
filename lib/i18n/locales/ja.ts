@@ -283,6 +283,107 @@ export const ja: Translations = {
 
   compactRow: {
     pendingBadge: '未精算',
+    iSettled: '精算した',
+    partnerSettled: '{name} が精算',
+    youIncome: '収入',
+    partnerIncome: '{name} の収入',
+    youPaid: 'あなたが支払',
+    partnerPaid: '{name} が支払',
+    trillion: '兆',
+    hundredMillion: '億',
+  },
+
+  transactionFeed: {
+    loading: '読み込み中…',
+    loadMore: 'もっと見る',
+    endOfFeed: '最初の記録です',
+    closeAriaLabel: '閉じる',
+    settlementFallback: '精算',
+  },
+
+  bottomNav: {
+    home: 'ホーム',
+    records: '記録',
+    assets: 'もの',
+    settings: '設定',
+    addAriaLabel: '記録を追加',
+  },
+
+  miniCalendar: {
+    prevMonth: '前の月',
+    nextMonth: '次の月',
+    prevYear: '前の年',
+    nextYear: '次の年',
+    prevDecade: '前の10年',
+    nextDecade: '次の10年',
+    selectMonth: '月を選択',
+    selectYear: '年を選択',
+    splitRatioAriaLabel: '分担比率',
+    dayViewTitle: '{year}年{month}月 ˅',
+    monthViewTitle: '{year}年 ˅',
+    monthLabel: '{month}月',
+    weekdays: ['日', '月', '火', '水', '木', '金', '土'],
+  },
+
+  splitTypeSelector: {
+    groupAriaLabel: '分担方法',
+    ratioAriaLabel: '分担比率',
+    evenSub: '折半',
+    partnerOwesYouAmount: 'パートナーが {amount} 借りている',
+    youOwePartnerAmount: 'パートナーに {amount} 借りている',
+    ratioNoAmount: '自分 {me}%・相手 {other}%',
+    allMineSelfPaid: '自分で払った分なので借りなし',
+    allMinePartnerPaid: '相手が自分で払った分なので借りなし',
+    allTheirsNoAmount: '全額パートナーが借りている',
+    allTheirsPartnerNoAmount: '全額パートナーに借りている',
+    allTheirsYouPaid: 'パートナーが {amount} 借りている',
+    allTheirsPartnerPaid: 'パートナーに {amount} 借りている',
+    meRatio: '自分 {ratio}%',
+    partnerRatio: '相手 {ratio}%',
+  },
+
+  pendingIncomeStack: {
+    heading: '確認待ちの収入',
+    collapse: '閉じる',
+    expand: 'すべて表示（あと {count} 件）',
+  },
+
+  pendingIncomeCard: {
+    confirm: 'OK',
+    edit: '修正',
+    skip: 'スキップ',
+    skipTitle: '{date} {name} をスキップしますか？',
+    skipDescription: 'この期間は記録されません。次の期間は通常どおり通知されます。',
+    confirmError: '確認に失敗しました',
+    skipError: 'スキップに失敗しました',
+  },
+
+  logoutButton: {
+    label: 'ログアウト',
+    pending: 'ログアウト中…',
+    title: 'Futari からログアウト？',
+    description: '次回は Google でサインインする必要があります。パートナーを招待していない記録は失われません。',
+  },
+
+  splitRatioSection: {
+    meSuffix: '（自分）',
+    partnerSuffix: '（相手）',
+  },
+
+  errorPage: {
+    retry: '再試行',
+    subtitle: 'しばらくしてからもう一度お試しください。',
+    dashboard: 'ダッシュボードの読み込みに失敗しました',
+    records: '記録の読み込みに失敗しました',
+    settings: '設定の読み込みに失敗しました',
+    trips: '旅の読み込みに失敗しました',
+    assets: 'ものの読み込みに失敗しました',
+    review: '月次レビューの読み込みに失敗しました',
+  },
+
+  assetListItem: {
+    savingsBadge: '貯蓄',
+    thisMonth: '今月',
   },
 
   tripList: {
@@ -596,8 +697,8 @@ export const ja: Translations = {
           settleCta: 'ホーム画面で精算する',
           typePromptPrefix: '「',
           typePromptSuffix: '」と入力して確認',
-          typePlaceholder: 'leave',
-          confirmText: 'leave',
+          typePlaceholder: '離れる',
+          confirmText: '離れる',
           leaveButton: '離れる',
           leaving: '処理中…',
         },
@@ -1501,7 +1602,6 @@ export const ja: Translations = {
     fallbackHtml: 'ブラウザのメニューから「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を探してください。ブラウザによって場所は違いますが、たいてい右上のメニュー内にあります。',
   },
 
-  // TODO(seo-copy): native-speaker review
   seo: {
     landing: {
       title: 'Futari · ふたりの家計簿｜カップル向け共有家計アプリ',

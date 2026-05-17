@@ -3,6 +3,8 @@
 import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
 import { formatAmount } from '@/lib/currency'
+import { useTranslations } from '@/lib/i18n/client'
+import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 interface SplitTypeSelectorProps {
   value: SplitType
@@ -13,45 +15,49 @@ interface SplitTypeSelectorProps {
   payerWho: 'M' | 'T'
 }
 
-function weightedSub(payerWho: 'M' | 'T', amount: number, ratioA: number): string {
+type STS = Translations['splitTypeSelector']
+
+function weightedSub(sts: STS, payerWho: 'M' | 'T', amount: number, ratioA: number): string {
   const otherShare = 100 - ratioA
   const myShare = ratioA
   if (ratioA === 50) {
-    if (!amount) return '各付一半'
+    if (!amount) return sts.evenSub
     const half = Math.ceil(amount / 2)
     return payerWho === 'M'
-      ? `對方欠你 ${formatAmount(half, 'twd')}`
-      : `你欠對方 ${formatAmount(half, 'twd')}`
+      ? sts.partnerOwesYouAmount.replace('{amount}', formatAmount(half, 'twd'))
+      : sts.youOwePartnerAmount.replace('{amount}', formatAmount(half, 'twd'))
   }
-  if (!amount) return `我 ${ratioA}%・對方 ${otherShare}%`
+  if (!amount) return sts.ratioNoAmount.replace('{me}', String(ratioA)).replace('{other}', String(otherShare))
   const otherOwed = Math.ceil(amount * otherShare / 100)
   const myOwed = Math.ceil(amount * myShare / 100)
   return payerWho === 'M'
-    ? `對方欠你 ${formatAmount(otherOwed, 'twd')}`
-    : `你欠對方 ${formatAmount(myOwed, 'twd')}`
+    ? sts.partnerOwesYouAmount.replace('{amount}', formatAmount(otherOwed, 'twd'))
+    : sts.youOwePartnerAmount.replace('{amount}', formatAmount(myOwed, 'twd'))
 }
 
-function splitSub(splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 'T', amount: number): string {
+function splitSub(sts: STS, splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 'T', amount: number): string {
   if (splitId === 'all_mine') {
-    return payerWho === 'M' ? '你自己花的，不會欠款' : '對方自己花的，不會欠款'
+    return payerWho === 'M' ? sts.allMineSelfPaid : sts.allMinePartnerPaid
   }
-  if (!amount) return payerWho === 'M' ? '對方欠你全額' : '你欠對方全額'
+  if (!amount) return payerWho === 'M' ? sts.allTheirsNoAmount : sts.allTheirsPartnerNoAmount
   return payerWho === 'M'
-    ? `對方欠你 ${formatAmount(amount, 'twd')}`
-    : `你欠對方 ${formatAmount(amount, 'twd')}`
+    ? sts.allTheirsYouPaid.replace('{amount}', formatAmount(amount, 'twd'))
+    : sts.allTheirsPartnerPaid.replace('{amount}', formatAmount(amount, 'twd'))
 }
 
 export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onChange, amount, payerWho }: SplitTypeSelectorProps) {
-  const weightedLabel = splitRatioA === 50 ? '平分' : '依比例分'
+  const t = useTranslations()
+  const sts = t.splitTypeSelector
+  const weightedLabel = splitRatioA === 50 ? t.splitType.even : t.splitType.weighted
   const isWeighted = value === 'weighted' || value === 'half'
 
   const staticOptions = [
-    { id: 'all_mine'   as const, label: '全部我的',   sub: splitSub('all_mine',   payerWho, amount) },
-    { id: 'all_theirs' as const, label: '全部對方的', sub: splitSub('all_theirs', payerWho, amount) },
+    { id: 'all_mine'   as const, label: t.splitType.allMine,     sub: splitSub(sts, 'all_mine',   payerWho, amount) },
+    { id: 'all_theirs' as const, label: t.splitType.allPartners, sub: splitSub(sts, 'all_theirs', payerWho, amount) },
   ]
 
   return (
-    <div role="radiogroup" aria-label="分擔方式" className="flex flex-col gap-2">
+    <div role="radiogroup" aria-label={sts.groupAriaLabel} className="flex flex-col gap-2">
       {/* Weighted option (replaces half). The card wraps a radio button + an
           optional sibling slider — keeps the same visual but flattens the
           previously nested button > range into siblings (issue #385). */}
@@ -75,7 +81,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               {weightedLabel}
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-              {weightedSub(payerWho, amount, splitRatioA)}
+              {weightedSub(sts, payerWho, amount, splitRatioA)}
             </div>
           </div>
           <div className="w-5 h-5 rounded-full transition-all duration-150"
@@ -88,8 +94,8 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
         {isWeighted && (
           <div className="flex flex-col gap-1 pt-1 w-full">
             <div className="flex justify-between text-xs w-full" style={{ color: 'var(--ink-3)' }}>
-              <span>我 {splitRatioA}%</span>
-              <span>對方 {100 - splitRatioA}%</span>
+              <span>{sts.meRatio.replace('{ratio}', String(splitRatioA))}</span>
+              <span>{sts.partnerRatio.replace('{ratio}', String(100 - splitRatioA))}</span>
             </div>
             <input
               type="range"
@@ -98,7 +104,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               step={1}
               value={splitRatioA}
               onChange={e => onSplitRatioAChange(Number(e.target.value))}
-              aria-label="分擔比例"
+              aria-label={sts.ratioAriaLabel}
               className="w-full accent-[var(--ink)]"
             />
           </div>

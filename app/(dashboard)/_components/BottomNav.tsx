@@ -7,6 +7,7 @@ import { PlusIcon } from './PlusIcon'
 import { HomeIndicator } from './HomeIndicator'
 import { NavHomeIcon, NavListIcon, NavAssetsIcon, NavSettingsIcon } from './TabIcons'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
   onAddClick: () => void
@@ -24,13 +25,14 @@ function fabBg(variant: 'primary' | 'accent' | 'income'): string {
 }
 
 const TABS = [
-  { id: 'home', label: '首頁', href: '/dashboard', icon: NavHomeIcon },
-  { id: 'list', label: '紀錄', href: '/records', icon: NavListIcon },
-  { id: 'assets', label: '愛物', href: '/assets', icon: NavAssetsIcon },
-  { id: 'settings', label: '設定', href: '/settings', icon: NavSettingsIcon },
+  { id: 'home'    as const, href: '/dashboard', icon: NavHomeIcon     },
+  { id: 'list'    as const, href: '/records',   icon: NavListIcon     },
+  { id: 'assets'  as const, href: '/assets',    icon: NavAssetsIcon   },
+  { id: 'settings' as const, href: '/settings', icon: NavSettingsIcon },
 ] as const
 
 export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary', fabContent }: Props) {
+  const t = useTranslations()
   const pathname = usePathname()
 
   // Defer auto-prefetch of the four tab destinations until after the host page
@@ -65,17 +67,17 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
     <>
       <div className="fixed left-1/2 bottom-0 z-[80] h-[78px] w-full max-w-md -translate-x-1/2 flex pb-[22px]"
         style={{ background: 'var(--surface)', borderTop: '1px solid var(--hairline)' }}>
-        <NavTab tab={TABS[0]} active={activeId === TABS[0].id} allowPrefetch={allowPrefetch} />
-        <NavTab tab={TABS[1]} active={activeId === TABS[1].id} allowPrefetch={allowPrefetch} />
+        <NavTab tab={TABS[0]} label={t.bottomNav.home}     active={activeId === TABS[0].id} allowPrefetch={allowPrefetch} />
+        <NavTab tab={TABS[1]} label={t.bottomNav.records}  active={activeId === TABS[1].id} allowPrefetch={allowPrefetch} />
         <div className="w-[76px] shrink-0" />
-        <NavTab tab={TABS[2]} active={activeId === TABS[2].id} allowPrefetch={allowPrefetch} />
-        <NavTab tab={TABS[3]} active={activeId === TABS[3].id} allowPrefetch={allowPrefetch} />
+        <NavTab tab={TABS[2]} label={t.bottomNav.assets}   active={activeId === TABS[2].id} allowPrefetch={allowPrefetch} />
+        <NavTab tab={TABS[3]} label={t.bottomNav.settings} active={activeId === TABS[3].id} allowPrefetch={allowPrefetch} />
       </div>
 
       {!hideFab && !fabContent && (
         <button
           onClick={onAddClick}
-          aria-label="新增一筆"
+          aria-label={t.bottomNav.addAriaLabel}
           className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
           style={{
             background: fabBg(fabVariant),
@@ -103,7 +105,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
   )
 }
 
-function NavTab({ tab, active, allowPrefetch }: { tab: typeof TABS[number]; active: boolean; allowPrefetch: boolean }) {
+function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number]; label: string; active: boolean; allowPrefetch: boolean }) {
   const Icon = tab.icon
   const color = active ? 'var(--ink)' : 'var(--ink-3)'
   return (
@@ -114,7 +116,7 @@ function NavTab({ tab, active, allowPrefetch }: { tab: typeof TABS[number]; acti
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
       <span className="text-micro tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
-        {tab.label}
+        {label}
       </span>
     </Link>
   )
