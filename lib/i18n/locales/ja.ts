@@ -1003,7 +1003,7 @@ export const ja: Translations = {
       encryptedHint: '暗号化済み。空欄のままで変更しません。',
       pendingClearHint: '消去マーク済み（保存後に反映）',
       clear: '消去',
-      cancelClear: '取消',
+      cancelClear: '取り消し',
       bloodType: '血液型',
       hospital: '出生病院',
       hospitalPlaceholder: '〇〇病院',
