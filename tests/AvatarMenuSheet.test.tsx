@@ -60,6 +60,7 @@ function makeCtx(opts: { solo: boolean }): MemberContextValue {
     canAccessGuardian: false,
     epochStartedAt: '2024-01-01T00:00:00.000Z',
     epochEndedAt: null,
+    hadPartner: false,
   }
 }
 

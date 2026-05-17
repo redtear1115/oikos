@@ -30,7 +30,7 @@ interface Props {
 export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
   const t = useTranslations()
   const router = useRouter()
-  const { isPast, isSolo, epochStartedAt, epochEndedAt, group } = useMember()
+  const { isPast, isSolo, hadPartner, epochStartedAt, epochEndedAt } = useMember()
   const isOnline = useOnlineStatus()
 
   // getOfflinePref reads localStorage, which is safe here because this is a
@@ -77,11 +77,6 @@ export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
     setTripCollapsed(next)
   }
 
-  // partner-left: isSolo AND the group previously had member_b.
-  // The group object in MemberContext only carries { id, name }; the
-  // member_b field will become available once MemberContext is extended
-  // with that field. Until then this branch correctly never fires.
-  const hadPartner = Boolean((group as unknown as { member_b?: string | null })?.member_b)
   const showPartnerLeft = isSolo && hadPartner && !partnerDismissed
 
   // ─── Priority 1: offline ─────────────────────────────────────────────────
