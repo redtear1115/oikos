@@ -13,6 +13,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.0.4] - 2026-05-17
+
 主題：**前端 refactor 大掃除 + 效能優化**——清掉 `actions/` + `app/(dashboard)/` 累積的重複 / 巨大 component / 散落 helpers（#512 八個 PR），同時把首次載入跟靜態資源體積順手優化（#511 三個 PR + #517 一個 RLS 補洞）。零 schema 改動、零使用者 flow 變化，但啟動更快、icon 更小。
 完整 diff：[v1.0.3...v1.0.4](https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4)
 
@@ -1126,7 +1130,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/redtear1115/oikos/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/redtear1115/oikos/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/redtear1115/oikos/compare/v1.0.0...v1.0.1
