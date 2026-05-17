@@ -302,6 +302,13 @@
       "when": 1780000000000,
       "tag": "0042_function_search_path",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1780100000000,
+      "tag": "0043_rls_auto_enable_revoke",
+      "breakpoints": true
     }
   ]
 }
