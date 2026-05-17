@@ -15,6 +15,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.0.2] - 2026-05-17
+
+主題：**Prod log 修復**——修正從 production log 發現的三類問題：RSC 導航繞過 layout guard、iOS apple-touch-icon 404、以及 Supabase security warning。
+
+### 使用者可見變化
+
+- **修復 RSC 導航 error state（#493）**：在 app 內部點選導航到 dashboard、紀錄、愛物頁面時，若 group context 遺失不再出現 error state，改為正確導向 `/onboarding`。
+- **修復 iOS 主畫面圖示 404**：iOS 裝置請求 `/apple-touch-icon.png` 不再 404，主畫面 icon 正常顯示。
+
+### 技術變更
+
+- **RSC navigation group guard（#493）**：`dashboard` / `records` / `assets` / `assets/[id]` 四個 page 的 `if (!context) throw new Error('No group')` 改為 `redirect('/onboarding')`。RSC navigation（`_rsc=` 請求）不重新執行 layout，page 本身必須負責 guard。
+- **`getCurrentUser()` 改用 `getUser()`（#494）**：消除 prod log 每次請求出現的 Supabase security warning（`getSession()` 從 cookie 讀取不驗證真實性）。
+- **新增 `apple-touch-icon.png` / `precomposed`**：iOS 標準路徑 `/apple-touch-icon.png` 請求原本落入 `[locale]` dynamic route 回 404；將 `public/icons/` 的圖示複製至 `public/` 根目錄修復。
+- **`InstallGuide` regression test**：補上 #490 修復的單元測試，防止 `TranslationsProvider` 缺失問題回歸。
+
 ## [1.0.1] - 2026-05-17
 
 修復 `/setup` 頁面 500 錯誤：`InstallGuide` 元件在 `<TranslationsProvider>` 之外呼叫 `useTranslations()`，導致新用戶完成 Google OAuth 後無法進入建立帳本流程。
@@ -1071,7 +1087,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/redtear1115/oikos/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/redtear1115/oikos/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/redtear1115/oikos/compare/v0.17.6...v1.0.0
 [0.17.6]: https://github.com/redtear1115/oikos/compare/v0.17.5...v0.17.6
