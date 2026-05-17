@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
@@ -10,7 +11,7 @@ export default async function AssetsPage() {
   if (!user) throw new Error('Unauthorized')
 
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('No group')
+  if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
 
   const assetRows = await listAssetsForGroup(group.id)
