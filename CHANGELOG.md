@@ -15,6 +15,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.0.1] - 2026-05-17
+
+修復 `/setup` 頁面 500 錯誤：`InstallGuide` 元件在 `<TranslationsProvider>` 之外呼叫 `useTranslations()`，導致新用戶完成 Google OAuth 後無法進入建立帳本流程。
+
+### 使用者可見變化
+
+- **修復新用戶 /setup 500（#490）**：Google 登入後跳轉 `/setup` 不再 500，建立帳本流程恢復正常。
+
+### 技術變更
+
+- **`InstallGuide` 改接 `t` prop（#490）**：移除元件內部的 `useTranslations()` hook，改由 caller 傳入 `t: Translations`。`/setup` 在 `(dashboard)` layout 之外，沒有 `TranslationsProvider`，導致 SSR render throw；此修法讓元件在任何 context 下都能使用。
+
 ## [1.0.0] - 2026-05-17
 
 主題：**公開 landing．接住歷史**——v1.0.0 把 Futari 從「兩個人的內部記帳工具」翻成「對外有臉面的產品」。`/` landing 全新三欄敘事（SEO 長文 + brand mark + 場景卡 + 部落格 feed），公開頁面改 URL-prefix locale routing（`/en` `/zh-CN` `/ja`），OG / Twitter / FAQ / SoftwareApplication / Organization JSON-LD 全套接好，品牌語氣與 i18n 全面收斂——任何陌生人從搜尋或社群點進來看到的，都是同一個產品聲音。沒有 schema migration，純前台 + SEO + copy。
@@ -1059,7 +1071,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/redtear1115/oikos/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/redtear1115/oikos/compare/v0.17.6...v1.0.0
 [0.17.6]: https://github.com/redtear1115/oikos/compare/v0.17.5...v0.17.6
 [0.17.5]: https://github.com/redtear1115/oikos/compare/v0.17.4...v0.17.5

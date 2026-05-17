@@ -9,7 +9,6 @@ import { isStandalone } from '@/lib/install-guide'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-
 const NAME_SUGGESTIONS = ['我們倆', '○○家', '日日', 'Home', '一起']
 const NAME_MAX = 20
 const INSTALL_GUIDE_SEEN_KEY = 'oikos_install_guide_seen'
@@ -21,9 +20,8 @@ interface CreatedGroup {
   name: string
 }
 
-type TrustStrings = Translations['trust']
-
-export default function SetupForm({ trust }: { trust: TrustStrings }) {
+export default function SetupForm({ t }: { t: Translations }) {
+  const trust = t.trust
   const router = useRouter()
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
@@ -115,7 +113,7 @@ export default function SetupForm({ trust }: { trust: TrustStrings }) {
   const handleSkip = () => goToDashboard()
 
   const installGuideJsx = (
-    <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} />
+    <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} t={t} />
   )
 
   if (step === 'trust') {
