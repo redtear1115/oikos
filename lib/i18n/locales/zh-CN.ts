@@ -73,10 +73,10 @@ export const zhCN: Translations = {
   },
 
   landing: {
-    heroKicker: 'A COUPLE\'S LEDGER · 双人记账 PWA',
+    heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '两个人，<br />一本账。',
     bodyHtml: '专为两个人设计的账本。<br />日子一天天记下来，回头看会很暖。',
-    cta: '开始记录',
+    cta: '一起记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
     trustEncrypted: '端到端加密',
@@ -87,7 +87,7 @@ export const zhCN: Translations = {
     featuresSubtitleHtml: '从第一笔共同支出，到一起照顾的房子、车与每年保单，<br />都收进同一本账里。',
     f1Title: '双人记账',
     f1Body: '一笔一笔共同记下，自动分摊，可以对半也可以按比例。每月清楚结算，不必再对账。',
-    f2Title: '爱物管理',
+    f2Title: '我们的爱物',
     f2Body: '家、车、孩子、宠物、植物 — 一起照顾的，都收进同一本账，每笔相关支出自动归户。',
     f3Title: '守护保险',
     f3Body: '保护型、储蓄型保单分页，被保人、受益人、续期日，一页看完每一份为对方留下的安排。',
@@ -1284,7 +1284,7 @@ export const zhCN: Translations = {
       recurringRuleSummary: '每月 {day} 号 · {interval}',
       recurringRuleNextDate: '下次 {date}',
       recurringRulePaused: '已暂停',
-      recurringManageCta: '管理',
+      recurringManageCta: '查看',
     },
   },
 

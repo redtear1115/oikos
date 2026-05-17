@@ -72,10 +72,10 @@ export const ja: Translations = {
   },
 
   landing: {
-    heroKicker: 'A COUPLE\'S LEDGER · ふたりの家計簿 PWA',
+    heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
     bodyHtml: 'ふたりのための家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
-    cta: '記録をはじめる',
+    cta: 'ふたりではじめる',
     ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
     alreadyHaveAccount: 'アカウントをお持ちの方',
     trustEncrypted: 'エンドツーエンド暗号化',
@@ -1283,7 +1283,7 @@ export const ja: Translations = {
       recurringRuleSummary: '毎月 {day} 日 · {interval}',
       recurringRuleNextDate: '次回 {date}',
       recurringRulePaused: '一時停止中',
-      recurringManageCta: '管理',
+      recurringManageCta: '確認',
     },
   },
 

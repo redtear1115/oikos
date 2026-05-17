@@ -73,10 +73,10 @@ export const en: Translations = {
   },
 
   landing: {
-    heroKicker: "A COUPLE'S LEDGER · A SHARED PWA",
+    heroKicker: "A COUPLE'S LEDGER",
     taglineHtml: 'Two of you,<br />one ledger.',
     bodyHtml: 'A ledger built for two.<br />Day by day, looking back will feel warm.',
-    cta: 'Start tracking',
+    cta: 'Begin together',
     ctaHint: 'Free · Try without signing up · For two',
     alreadyHaveAccount: 'I already have an account',
     trustEncrypted: 'End-to-end encrypted',
@@ -1285,7 +1285,7 @@ export const en: Translations = {
       recurringRuleSummary: 'Day {day} · {interval}',
       recurringRuleNextDate: 'Next {date}',
       recurringRulePaused: 'Paused',
-      recurringManageCta: 'Manage',
+      recurringManageCta: 'View',
     },
   },
 

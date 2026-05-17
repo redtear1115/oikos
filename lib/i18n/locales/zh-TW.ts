@@ -2001,10 +2001,10 @@ export const zhTW: Translations = {
   },
 
   landing: {
-    heroKicker: 'A COUPLE\'S LEDGER · 雙人記帳 PWA',
+    heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '兩個人，<br />一本帳。',
     bodyHtml: '專為兩個人設計的帳本。<br />日子一天天記下來，回頭看會很暖。',
-    cta: '開始記錄',
+    cta: '一起記錄',
     ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
     alreadyHaveAccount: '已經有帳號 · 登入',
     trustEncrypted: '端對端加密',
@@ -2015,7 +2015,7 @@ export const zhTW: Translations = {
     featuresSubtitleHtml: '從第一筆共同支出，到一起照顧的房子、車與每年保單，<br />都收進同一本帳裡。',
     f1Title: '雙人記帳',
     f1Body: '一筆一筆共同記下，自動分攤，可以對半也可以依比例。每月清楚結算，不必再對帳。',
-    f2Title: '愛物管理',
+    f2Title: '我們的愛物',
     f2Body: '家、車、孩子、寵物、植物 — 一起照顧的，都收進同一本帳，每筆相關支出自動歸戶。',
     f3Title: '守護保險',
     f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
@@ -3212,7 +3212,7 @@ export const zhTW: Translations = {
       recurringRuleSummary: '每月 {day} 號 · {interval}',
       recurringRuleNextDate: '下次 {date}',
       recurringRulePaused: '已暫停',
-      recurringManageCta: '管理',
+      recurringManageCta: '查看',
     },
   },
 
