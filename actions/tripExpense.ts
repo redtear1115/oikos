@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { tripExpenses, trips } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidatePath } from 'next/cache'
 import { convertAmount } from '@/lib/currency'
 import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
@@ -116,9 +117,7 @@ function normalizeAmount(
 }
 
 function validateCommon(input: CreateTripExpenseInput, group: { memberA: string; memberB: string | null }) {
-  if (input.paidBy !== group.memberA && input.paidBy !== group.memberB) {
-    throw new Error('付款人不在帳本中')
-  }
+  assertMemberInGroup(input.paidBy, group, '付款人不在帳本中')
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     throw new Error('金額需大於 0')
   }

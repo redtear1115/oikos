@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { assets, cashTransactions, trips } from '@/lib/db/schema'
+import { cashTransactions, trips } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
@@ -14,6 +14,8 @@ import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { requireViewer } from '@/lib/auth/viewer'
+import { assertMemberInGroup } from '@/lib/auth/member'
+import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { convertAmount, type CurrencyCode } from '@/lib/currency'
@@ -48,22 +50,11 @@ export async function createTransaction(
   })
 
   // Payer must be in group
-  if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
-    throw new Error('付款人不在家計簿內')
-  }
+  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
 
   // Asset ownership + not-deleted check (only if assetId provided)
   if (validated.assetId) {
-    const [asset] = await db
-      .select({ id: assets.id, deletedAt: assets.deletedAt })
-      .from(assets)
-      .where(and(
-        eq(assets.id, validated.assetId),
-        eq(assets.groupId, group.id),
-      ))
-      .limit(1)
-    if (!asset) throw new Error('關聯資產不在家計簿內')
-    if (asset.deletedAt) throw new Error('關聯資產已刪除')
+    await assertAssetInGroup(validated.assetId, group.id)
   }
 
   // Multi-currency conversion (#68). When currency matches base, no conversion
@@ -195,9 +186,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     splitRatioA: input.splitRatioA ?? null,
   })
 
-  if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
-    throw new Error('付款人不在家計簿內')
-  }
+  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
 
   // 1. Look up old row to (a) prove existence, (b) get its assetId for the
   //    "kept zombie" exemption check.
@@ -214,16 +203,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
 
   // 2. Asset check — only when newly assigning (or changing) to a different asset.
   if (validated.assetId && validated.assetId !== oldRow.assetId) {
-    const [asset] = await db
-      .select({ id: assets.id, deletedAt: assets.deletedAt })
-      .from(assets)
-      .where(and(
-        eq(assets.id, validated.assetId),
-        eq(assets.groupId, group.id),
-      ))
-      .limit(1)
-    if (!asset) throw new Error('關聯資產不在家計簿內')
-    if (asset.deletedAt) throw new Error('關聯資產已刪除')
+    await assertAssetInGroup(validated.assetId, group.id)
   }
 
   // Multi-currency conversion for the edited row (#68)

@@ -5,6 +5,7 @@ import { settlements } from '@/lib/db/schema'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { eq, and, isNull } from 'drizzle-orm'
 import { getViewerWriteContext } from '@/lib/actionContext'
+import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { validateSettlementInput } from '@/lib/validators'
 
@@ -35,9 +36,7 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
     note: input.note,
   })
 
-  if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
-    throw new Error('付款人不在家計簿內')
-  }
+  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
 
   const [created] = await db.transaction(async (tx) => {
     const inserted = await tx
@@ -88,9 +87,7 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
     note: input.note,
   })
 
-  if (input.payerId !== group.memberA && input.payerId !== group.memberB) {
-    throw new Error('付款人不在家計簿內')
-  }
+  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
 
   const [created] = await db.transaction(async (tx) => {
     const deleted = await tx

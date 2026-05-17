@@ -1,27 +1,7 @@
-import { db } from '@/lib/db/client'
-import { assets } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
-
-// getViewerGroup retired in favour of `requireViewerGroup` from
-// `@/lib/auth/viewer` (#190). The membership + asset assertion helpers below
-// are still recurring-action shaped and stay here.
-
-export function assertMemberInGroup(
-  memberId: string,
-  group: { memberA: string; memberB: string | null },
-  errorMessage: string,
-): void {
-  if (memberId !== group.memberA && memberId !== group.memberB) {
-    throw new Error(errorMessage)
-  }
-}
-
-export async function assertAssetInGroup(assetId: string, groupId: string): Promise<void> {
-  const [asset] = await db
-    .select({ id: assets.id, deletedAt: assets.deletedAt })
-    .from(assets)
-    .where(and(eq(assets.id, assetId), eq(assets.groupId, groupId)))
-    .limit(1)
-  if (!asset) throw new Error('關聯愛物不在家計簿內')
-  if (asset.deletedAt) throw new Error('關聯愛物已刪除')
-}
+// Back-compat re-export shim (#512 PR 1). The membership + asset assertion
+// helpers moved to `@/lib/auth/member` and `@/lib/auth/asset` so all write
+// actions can share the same auth gate alongside `requireViewerGroup` (#190).
+// `recurringExpense.ts` / `recurringIncome.ts` still import from this path —
+// next cleanup will switch them over and delete this shim.
+export { assertMemberInGroup } from '@/lib/auth/member'
+export { assertAssetInGroup } from '@/lib/auth/asset'
