@@ -1601,4 +1601,25 @@ export const en: Translations = {
     },
     fallbackHtml: 'Look inside your browser menu for "<strong>Add to Home Screen</strong>" or "<strong>Install app</strong>". The exact location differs between browsers, but it\'s usually in the top-right menu.',
   },
+
+  seo: {
+    landing: {
+      title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
+      description: 'A shared household ledger built for couples and partners. Auto-split expenses, settle balances, track family assets, insurance, and fuel logs. Mobile-first PWA, crafted in Taiwan.',
+      ogDescription: 'Two people, one ledger. Log together, split automatically, settle effortlessly.',
+    },
+    signIn: {
+      title: 'Sign in to Futari · Start budgeting together',
+      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, manage insurance and assets, all in a mobile-first PWA.',
+      ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
+    },
+    terms: {
+      title: 'Terms of Service · Futari',
+      description: 'Terms of service and user notes for the Futari alpha test build.',
+    },
+    privacy: {
+      title: 'Privacy Policy · Futari',
+      description: 'How the Futari alpha test build collects and handles your data.',
+    },
+  },
 }
