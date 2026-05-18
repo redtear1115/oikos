@@ -551,11 +551,11 @@ export const en: Translations = {
 
   records: {
     title: 'Records',
-    tabAll: 'All',
     tabExpense: 'Expense',
     tabIncome: 'Income',
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
+    recurringShortcut: 'Recurring',
     offlineMoreNeedsNetwork: 'More records need a connection',
     stats: {
       title: 'Expense',

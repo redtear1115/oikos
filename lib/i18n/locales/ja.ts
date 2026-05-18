@@ -549,11 +549,11 @@ export const ja: Translations = {
 
   records: {
     title: '記録',
-    tabAll: 'すべて',
     tabExpense: '支出',
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
     stats: {
       title: '支出統計',

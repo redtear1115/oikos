@@ -747,11 +747,11 @@ export type Translations = {
 
   records: {
     title: string
-    tabAll: string
     tabExpense: string
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    recurringShortcut: string
     offlineMoreNeedsNetwork: string
     stats: {
       title: string         // expense-tab title (kept for back-compat)
@@ -2528,11 +2528,11 @@ export const zhTW: Translations = {
 
   records: {
     title: '紀錄',
-    tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
     stats: {
       title: '支出統計',

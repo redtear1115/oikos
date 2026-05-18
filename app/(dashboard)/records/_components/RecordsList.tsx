@@ -8,11 +8,11 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
+import Link from 'next/link'
 import { FilterSheet, type AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
 import { DateRangeChip } from './DateRangeChip'
-import { RecurringSectionCard } from './RecurringSectionCard'
-import { TabProvider } from './TabContext'
+import { TabProvider, type RecordsTab } from './TabContext'
 import {
   applyDateRangeToParams,
   applyFilterToParams,
@@ -97,7 +97,19 @@ export function RecordsList({
   const searchParams = useSearchParams()
   const t = useTranslations()
   const { isPast } = useMember()
-  const [tab, setTab] = useState<'all' | 'expense' | 'income'>('all')
+  // L2 dual toggle — internal state is the set of selected kinds; both
+  // selected = 全部. Downstream (TabContext, stats title, feed loader,
+  // drill-applies-to-tab) keeps the legacy `'all' | 'expense' | 'income'`
+  // shape via `tab` derived below.
+  const [selectedKinds, setSelectedKinds] = useState<Set<'expense' | 'income'>>(
+    () => new Set(['expense', 'income']),
+  )
+  const tab: RecordsTab =
+    selectedKinds.size === 2
+      ? 'all'
+      : selectedKinds.has('expense')
+        ? 'expense'
+        : 'income'
 
   // Drill is URL-derived: we read live state from useSearchParams so a
   // tap-bar handler that just calls router.replace reflects here on the very
@@ -290,12 +302,23 @@ export function RecordsList({
       loadMoreFeedAll(cursor, 20, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
   }, [tab, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader])
 
-  // Switching tabs keeps the drill in URL, but if the new tab can't apply it
-  // we strip it on the way out so SSR initial + chip stay coherent the next
-  // time the user lands on this tab. (See drillAppliesToTab for the rules.)
-  const handleSelectTab = (next: 'all' | 'expense' | 'income') => {
-    setTab(next)
-    if (drill && !drillAppliesToTab(drill, next)) {
+  // Toggle one kind of the L2 dual-pill. Disallow deselecting the last
+  // selected kind — there's no useful "neither" state, and we want the toggle
+  // to read as "subtract a slice" rather than "off". If the resulting tab
+  // can't apply the active drill, strip it so SSR initial + chip stay
+  // coherent the next time the user lands on this tab.
+  const toggleKind = (kind: 'expense' | 'income') => {
+    const next = new Set(selectedKinds)
+    if (next.has(kind)) {
+      if (next.size === 1) return
+      next.delete(kind)
+    } else {
+      next.add(kind)
+    }
+    setSelectedKinds(next)
+    const nextTab: RecordsTab =
+      next.size === 2 ? 'all' : next.has('expense') ? 'expense' : 'income'
+    if (drill && !drillAppliesToTab(drill, nextTab)) {
       handleClearDrill()
     }
   }
@@ -341,39 +364,75 @@ export function RecordsList({
         className="sticky top-0 z-20"
         style={{ background: 'var(--bg)' }}
       >
-        {/* L1: title */}
-        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-3 flex items-end justify-between">
+        {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
+        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-center justify-between">
           <div
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
           >
             {t.records.title}
           </div>
-          {/* Recurring-rule entries used to live here as a small ⚙ 定期
-              popover, but the affordance turned out too easy to miss for a
-              recently-shipped feature (#154). They now appear as a section
-              card between the monthly stats and the feed below. */}
+          {/* Recurring entry — moved from the inline section card (#545 §4)
+              to keep L3 focused on time/filter chips. */}
+          <Link
+            href="/settings/recurring"
+            className="text-sm no-underline flex items-center gap-1 cursor-pointer"
+            style={{ color: 'var(--ink-2)' }}
+          >
+            {t.records.recurringShortcut}
+            <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>›</span>
+          </Link>
         </div>
 
-        {/* L2: tab pills — inline-flex left-aligned */}
+        {/* L2: dual toggle pill — 支出 + 收入 wrapped in one pill (#545 §3).
+            Both selected = 全部 (no separate "all" pill). Disallow zero-
+            selected — see toggleKind for why. */}
         <div className="px-5 pb-2">
-          <div className="inline-flex items-center gap-2">
-            {(['all', 'expense', 'income'] as const).map((id) => {
-              const sel = tab === id
-              const isIncome = id === 'income'
+          <div
+            className="inline-flex items-center"
+            style={{
+              background: 'var(--surface)',
+              border: '0.5px solid var(--hairline)',
+              borderRadius: 999,
+              padding: 3,
+              gap: 2,
+            }}
+          >
+            {([
+              { kind: 'expense' as const, label: t.records.tabExpense, dotColor: 'rgba(255,255,255,0.55)' },
+              { kind: 'income' as const, label: t.records.tabIncome, dotColor: '#3F6A56' },
+            ]).map(({ kind, label, dotColor }) => {
+              const sel = selectedKinds.has(kind)
+              const isIncome = kind === 'income'
               return (
                 <button
-                  key={id}
+                  key={kind}
                   type="button"
-                  onClick={() => handleSelectTab(id)}
-                  className="h-8 px-4 rounded-full text-sm font-medium cursor-pointer transition-all duration-150"
+                  onClick={() => toggleKind(kind)}
+                  className="inline-flex items-center gap-[5px] cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
                   style={{
-                    background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'var(--surface)',
-                    color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-2)',
-                    border: sel ? 'none' : '1px solid var(--hairline)',
+                    height: 28,
+                    padding: '0 14px',
+                    borderRadius: 999,
+                    background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
+                    color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-3)',
                   }}
+                  aria-pressed={sel}
                 >
-                  {id === 'all' ? t.records.tabAll : id === 'expense' ? t.records.tabExpense : t.records.tabIncome}
+                  {sel && (
+                    <span
+                      aria-hidden
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        background: dotColor,
+                        opacity: isIncome ? 0.7 : 1,
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                  {label}
                 </button>
               )
             })}
@@ -432,12 +491,6 @@ export function RecordsList({
           via TabContext: title becomes 收支統計 / 支出統計 / 收入統計,
           income tab forces compact (no expense breakdown to show). */}
       <TabProvider value={tab}>{statsSlot}</TabProvider>
-
-      {/* Recurring-rule entries. Doubles as the visual divider between the
-          stats card and the feed (#152) — the bordered pills + surrounding
-          padding give the eye a clear "new section" cue without a heavy
-          horizontal rule. */}
-      <RecurringSectionCard />
 
       {/* Each child below is a stable JSX sibling — React reconciles them by
           position, not as a list. We deliberately render `null` (rather than

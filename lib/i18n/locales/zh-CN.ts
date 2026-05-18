@@ -550,11 +550,11 @@ export const zhCN: Translations = {
 
   records: {
     title: '记录',
-    tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
     stats: {
       title: '支出统计',
