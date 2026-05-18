@@ -1653,6 +1653,132 @@ export const en: Translations = {
     fallbackHtml: 'Look inside your browser menu for "<strong>Add to Home Screen</strong>" or "<strong>Install app</strong>". The exact location differs between browsers, but it\'s usually in the top-right menu.',
   },
 
+  migrate: {
+    backToHome: '← Back to Futari',
+    upload: {
+      prompt: 'Drop your CSV here, or pick a file',
+      button: 'Choose CSV',
+      constraint: 'Parsed in your browser. Nothing is uploaded.',
+      parsing: 'Reading the file…',
+      error: "Couldn't read that file. Make sure it's a CSV and try again.",
+      retry: 'Try another file',
+    },
+    preview: {
+      title: 'Here is what we found',
+      sourceLabel: 'Source · {source}',
+      encodingLabel: 'Encoding · {encoding}',
+      totalRowsLabel: '{count} records',
+      expenseRowsLabel: '~{count} look like expenses',
+      dateRangeLabel: '{first} → {last}',
+      topCategoriesLabel: 'Categories that show up most',
+      empty: 'No rows to preview in this file.',
+    },
+    cta: {
+      button: 'Create an account and bring it in',
+      hint: "Sign up, then import this CSV — you won't have to log it again.",
+      privacyNote: 'Preview runs in your browser. Nothing leaves your device.',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: 'Other',
+    },
+    differentiatorsHeading: 'Why Futari',
+    trust: {
+      heading: 'Why this is safe to do',
+      items: [
+        {
+          title: 'End-to-end encrypted',
+          body: 'Nobody outside the two of you can read what is in this ledger.',
+        },
+        {
+          title: 'Yours to take back',
+          body: 'Export the whole ledger as CSV any time. Moving in is not a lock-in.',
+        },
+        {
+          title: 'Free for the long haul',
+          body: 'The core ledger stays free. We do not run ads or sell data.',
+        },
+      ],
+    },
+    footerTrust: 'End-to-end encrypted · this ledger belongs to the two of you',
+    pages: {
+      honeydue: {
+        heroKicker: 'HONEYDUE → FUTARI',
+        heroTitle: 'Your Honeydue history can come with you',
+        heroSubtitle: 'Upload your CSV and bring years of shared budgeting into Futari in about three minutes.',
+        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home — free, ad-free, and end-to-end encrypted.",
+        differentiators: [
+          {
+            title: 'Still actively shipping',
+            body: 'A new build roughly every two weeks. Bugs get seen, feedback gets read.',
+          },
+          {
+            title: 'Both of you see everything',
+            body: 'No asymmetric visibility split by separate accounts — built for one shared home from day one.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We don\'t run ads or auction your data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Honeydue → Settings → Export Data, download the CSV.',
+        step2: 'Upload the CSV here and preview your records.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+      },
+      spendee: {
+        heroKicker: 'SPENDEE → FUTARI',
+        heroTitle: 'Your Spendee history can come with you',
+        heroSubtitle: 'Upload your Spendee CSV, preview everything, and decide if Futari feels right.',
+        differentiators: [
+          {
+            title: 'Sharing is the default, not a paid unlock',
+            body: 'A shared ledger isn\'t behind a paywall. Free to share from day one.',
+          },
+          {
+            title: 'Realtime sync',
+            body: 'One person logs, the other sees it immediately — no refresh dance.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'No ad surfaces, no data brokerage. Budgeting just stays budgeting.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Spendee → More → Export Data, download the CSV.',
+        step2: 'Upload the CSV here and preview your records.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+      },
+      cwmoney: {
+        heroKicker: 'CWMONEY → FUTARI',
+        heroTitle: 'Your CWMoney history can come with you',
+        heroSubtitle: 'Use our conversion template to turn CWMoney Excel exports into a CSV Futari can read.',
+        differentiators: [
+          {
+            title: 'A two-person ledger by default',
+            body: 'No more stitching two separate ledgers together with workarounds.',
+          },
+          {
+            title: 'Whole-number TWD amounts',
+            body: 'Numbers are exactly the local currency — no decimal-place math.',
+          },
+          {
+            title: 'No grading, no judgement',
+            body: 'No scores, no marks, no hints that one of you spent too much.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In CWMoney, export your records as Excel (requires VIP).',
+        step2: 'Download the template below and paste your data in.',
+        step3: 'Upload the converted CSV, preview it, then create an account to import.',
+        templateDownloadLabel: 'Download the template',
+        templateNote: "The template maps CWMoney's columns to a layout Futari supports.",
+      },
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
@@ -1671,6 +1797,23 @@ export const en: Translations = {
     privacy: {
       title: 'Privacy Policy · Futari',
       description: 'How the Futari alpha test build collects and handles your data.',
+    },
+    migrate: {
+      honeydue: {
+        title: 'Move from Honeydue to Futari — a free shared-budgeting alternative',
+        description: 'Honeydue is winding down. Move your data to Futari in about 3 minutes and keep budgeting together with your partner. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
+      },
+      spendee: {
+        title: 'Move from Spendee to Futari — a shared-budgeting alternative',
+        description: 'Bring your Spendee history into Futari and keep budgeting with your partner. Upload your CSV — three minutes, done.',
+        ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
+      },
+      cwmoney: {
+        title: 'Move from CWMoney to Futari — how to bring your records over',
+        description: 'Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari can import.',
+        ogDescription: "Moving from CWMoney: convert your Excel with our template, then import into Futari.",
+      },
     },
   },
 }

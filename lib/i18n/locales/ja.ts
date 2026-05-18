@@ -1651,6 +1651,132 @@ export const ja: Translations = {
     fallbackHtml: 'ブラウザのメニューから「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を探してください。ブラウザによって場所は違いますが、たいてい右上のメニュー内にあります。',
   },
 
+  migrate: {
+    backToHome: '← Futari へ戻る',
+    upload: {
+      prompt: 'CSV をここにドロップ、またはファイルを選ぶ',
+      button: 'CSV を選ぶ',
+      constraint: 'ファイルはブラウザ内で読むだけ。どこにもアップロードしません。',
+      parsing: '読み込み中⋯',
+      error: 'このファイルは読めませんでした。CSV か確認してもう一度試してください。',
+      retry: '別のファイルを選ぶ',
+    },
+    preview: {
+      title: 'なかみをちらっと確認',
+      sourceLabel: '出どころ · {source}',
+      encodingLabel: 'エンコーディング · {encoding}',
+      totalRowsLabel: '{count} 件のレコード',
+      expenseRowsLabel: '支出らしきもの {count} 件',
+      dateRangeLabel: '{first} 〜 {last}',
+      topCategoriesLabel: 'よく出てくるカテゴリ',
+      empty: 'このファイルには表示できる中身がありませんでした。',
+    },
+    cta: {
+      button: 'アカウントを作って取り込む',
+      hint: 'アカウントを作ってから CSV を取り込めば、もう一度入力し直す必要はありません。',
+      privacyNote: 'プレビューはブラウザ内だけで動きます。データは外に出ません。',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: 'そのほか',
+    },
+    differentiatorsHeading: 'Futari を選ぶ理由',
+    trust: {
+      heading: '安心して引っ越せる理由',
+      items: [
+        {
+          title: 'エンドツーエンド暗号化',
+          body: 'ふたり以外、誰もこの家計簿の中身を見られません。',
+        },
+        {
+          title: 'いつでも持ち出せる',
+          body: '気が変わったら、まるごと CSV で書き出し可能。引っ越しは縛りの始まりではありません。',
+        },
+        {
+          title: 'ずっと無料で使える',
+          body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+        },
+      ],
+    },
+    footerTrust: 'エンドツーエンド暗号化 · この家計簿はふたりだけのもの',
+    pages: {
+      honeydue: {
+        heroKicker: 'HONEYDUE → FUTARI',
+        heroTitle: 'Honeydue のデータは、そのまま連れていけます',
+        heroSubtitle: 'CSV をアップロードして、これまでの記録を 3 分で Futari に引っ越し。',
+        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります — 無料、広告なし、エンドツーエンド暗号化。',
+        differentiators: [
+          {
+            title: '今もアップデートが続いています',
+            body: 'およそ 2 週ごとに新しいアップデート。バグはきちんと見ていますし、フィードバックも読んでいます。',
+          },
+          {
+            title: 'ふたりとも、ぜんぶ見られる',
+            body: 'アカウントごとに見えるものが違う、ということはありません。最初からひとつの家のために設計されています。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告も、データの転売もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'Honeydue アプリ → 設定 → データを書き出す、で CSV をダウンロード。',
+        step2: 'CSV をここにアップロードして、家計の履歴を確認。',
+        step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+      },
+      spendee: {
+        heroKicker: 'SPENDEE → FUTARI',
+        heroTitle: 'Spendee のデータは、そのまま連れていけます',
+        heroSubtitle: 'Spendee の CSV をアップロードして、なかみを確かめてから引っ越すか決められます。',
+        differentiators: [
+          {
+            title: '共有は標準。課金で解放するものじゃない',
+            body: '共有家計簿は課金が必要な機能ではありません。初日から無料でふたりで使えます。',
+          },
+          {
+            title: 'リアルタイムで同期',
+            body: '片方が記録すれば、もう片方にもすぐ見える。更新を待つ必要はありません。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '広告もデータの転売もない。家計簿は家計簿のままで。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'Spendee → More → Export Data で CSV をダウンロード。',
+        step2: 'CSV をここにアップロードして、家計の履歴を確認。',
+        step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+      },
+      cwmoney: {
+        heroKicker: 'CWMONEY → FUTARI',
+        heroTitle: 'CWMoney のデータは、そのまま連れていけます',
+        heroSubtitle: '変換テンプレートで CWMoney の Excel を CSV にしてから、Futari にアップロード。',
+        differentiators: [
+          {
+            title: 'ふたりの家計簿が標準',
+            body: 'ふたつの家計簿を、回りくどい工夫でつなぎ合わせる必要はもうありません。',
+          },
+          {
+            title: '通貨は整数のまま',
+            body: '入力した数字はそのまま通貨単位。小数の計算が要りません。',
+          },
+          {
+            title: '採点しない、評価しない',
+            body: 'スコアもランクも、使いすぎを匂わせる演出もありません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'CWMoney で Excel 形式の家計データを書き出す（VIP が必要）。',
+        step2: '下の変換テンプレートをダウンロードして、データを貼り付ける。',
+        step3: '変換した CSV をアップロードして、なかみを見てからアカウントを作って取り込む。',
+        templateDownloadLabel: '変換テンプレートをダウンロード',
+        templateNote: 'テンプレートが CWMoney の列を Futari の形式に揃えてくれます。',
+      },
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · ふたりの家計簿｜カップル向け共有家計アプリ',
@@ -1669,6 +1795,23 @@ export const ja: Translations = {
     privacy: {
       title: 'プライバシーポリシー · Futari',
       description: 'Futari アルファ版でのデータ収集と取り扱いについて。',
+    },
+    migrate: {
+      honeydue: {
+        title: 'Honeydue から Futari へ — 無料のふたり家計簿',
+        description: 'Honeydue の更新が落ち着いてきた今、Futari なら 3 分でデータを引っ越して、パートナーとの家計記録をそのまま続けられます。無料、広告なし、暗号化。',
+        ogDescription: 'Honeydue ユーザーの次の住みか — Futari でふたりの家計をそのまま続ける。',
+      },
+      spendee: {
+        title: 'Spendee から Futari へ — ふたり向け家計簿の引っ越し',
+        description: 'Spendee の家計データを Futari に持ってきて、パートナーとの記録を続けましょう。CSV をアップロードして 3 分で完了。',
+        ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
+      },
+      cwmoney: {
+        title: 'CWMoney から Futari へ — データ引っ越しガイド',
+        description: '配布している Excel 変換テンプレートで CWMoney のデータを CSV に整え、Futari にアップロードするだけ。',
+        ogDescription: 'CWMoney の引っ越し手順 — 変換テンプレートで Excel を CSV にして Futari へ。',
+      },
     },
   },
 }

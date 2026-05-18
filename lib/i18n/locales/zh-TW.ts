@@ -1963,6 +1963,131 @@ export type Translations = {
     fallbackHtml: string
   }
 
+  /** Shared shell + tool strings for the /migrate/<source> SEO landing pages.
+   *  Per-source SEO copy (title / h1 / body) lives in seo.migrate.* below;
+   *  this block is the upload / preview / CTA scaffolding reused across all
+   *  three pages. Anonymous + client-side — no bytes leave the browser. */
+  migrate: {
+    /** Top-bar back link to the main Futari landing. */
+    backToHome: string
+    upload: {
+      /** Drag-drop zone prompt (mobile shows just the button). */
+      prompt: string
+      /** File-picker button. */
+      button: string
+      /** Footnote under the picker — emphasizes privacy. */
+      constraint: string
+      /** Status shown while parsing. */
+      parsing: string
+      /** Generic parse failure message. */
+      error: string
+      /** Reset link after error or successful preview. */
+      retry: string
+    }
+    preview: {
+      /** Section heading above the stats. */
+      title: string
+      /** Label for the detected source row. Replace `{source}` with sources.*. */
+      sourceLabel: string
+      /** Label for detected encoding row. Replace `{encoding}` literally. */
+      encodingLabel: string
+      /** Total parsed rows. Replace `{count}`. */
+      totalRowsLabel: string
+      /** Estimated expense rows (negative-amount heuristic). Replace `{count}`. */
+      expenseRowsLabel: string
+      /** Date span. Replace `{first}` / `{last}` with raw date strings. */
+      dateRangeLabel: string
+      /** Heading for the top-categories list. */
+      topCategoriesLabel: string
+      /** Empty state — file parsed but has zero rows. */
+      empty: string
+    }
+    cta: {
+      /** Primary button → sign-in with `?from=<source>` query. */
+      button: string
+      /** Sub-copy under the CTA — what happens after sign-up. */
+      hint: string
+      /** Reassurance line shown below upload + CTA. */
+      privacyNote: string
+    }
+    sources: {
+      honeydue: string
+      spendee: string
+      cwmoney: string
+      /** Fallback shown when header sniffer + page hint both fail. */
+      unknown: string
+    }
+    /** Section kicker above the "Why Futari" differentiators block. */
+    differentiatorsHeading: string
+    /** Closing trust block — narrative + 3 items, mounted between
+     *  steps and footer on every /migrate/<source> page (#578). */
+    trust: {
+      heading: string
+      items: readonly [
+        { title: string; body: string },
+        { title: string; body: string },
+        { title: string; body: string },
+      ]
+    }
+    /** Slim footer trust copy (mirrors landing footer). */
+    footerTrust: string
+    /** Per-source landing page copy — hero + 3-step walkthrough + optional
+     *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
+     *  Hero h1 / steps live here; SEO `<title>`/`<meta>` live in seo.migrate.*. */
+    pages: {
+      honeydue: {
+        /** Italic Fraunces kicker above the hero h1. */
+        heroKicker: string
+        heroTitle: string
+        heroSubtitle: string
+        /** Objective background about Honeydue — never攻擊性 framing. */
+        intro: string
+        /** Per-source "Why Futari" differentiators (3 cards). */
+        differentiators: readonly [
+          { title: string; body: string },
+          { title: string; body: string },
+          { title: string; body: string },
+        ]
+        stepsHeading: string
+        step1: string
+        step2: string
+        step3: string
+      }
+      spendee: {
+        heroKicker: string
+        heroTitle: string
+        heroSubtitle: string
+        differentiators: readonly [
+          { title: string; body: string },
+          { title: string; body: string },
+          { title: string; body: string },
+        ]
+        stepsHeading: string
+        step1: string
+        step2: string
+        step3: string
+      }
+      cwmoney: {
+        heroKicker: string
+        heroTitle: string
+        heroSubtitle: string
+        differentiators: readonly [
+          { title: string; body: string },
+          { title: string; body: string },
+          { title: string; body: string },
+        ]
+        stepsHeading: string
+        step1: string
+        step2: string
+        step3: string
+        /** Download CTA label embedded inside step 2 (#579, IA option A). */
+        templateDownloadLabel: string
+        /** Caption under the download button explaining what the template does. */
+        templateNote: string
+      }
+    }
+  }
+
   /** Per-page SEO strings — title / description / ogDescription used by
    *  generateMetadata in each app/[locale]/*\/page.tsx. Not rendered in UI. */
   seo: {
@@ -1983,6 +2108,24 @@ export type Translations = {
     privacy: {
       title: string
       description: string
+    }
+    /** SEO copy for the per-source /migrate landing pages. */
+    migrate: {
+      honeydue: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      spendee: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      cwmoney: {
+        title: string
+        description: string
+        ogDescription: string
+      }
     }
   }
 }
@@ -3639,6 +3782,132 @@ export const zhTW: Translations = {
     fallbackHtml: '在你的瀏覽器選單裡找「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。不同瀏覽器位置不太一樣，但通常都在右上的選單裡。',
   },
 
+  migrate: {
+    backToHome: '← 回 Futari 首頁',
+    upload: {
+      prompt: '把 CSV 拖到這裡，或選擇檔案',
+      button: '選擇 CSV',
+      constraint: '檔案只會在你的瀏覽器解析，不會上傳。',
+      parsing: '解析中⋯',
+      error: '讀不懂這個檔案。確認是 CSV 後再試一次。',
+      retry: '換一個檔案',
+    },
+    preview: {
+      title: '看一下你的資料長什麼樣',
+      sourceLabel: '來源 · {source}',
+      encodingLabel: '編碼 · {encoding}',
+      totalRowsLabel: '{count} 筆紀錄',
+      expenseRowsLabel: '約 {count} 筆支出',
+      dateRangeLabel: '{first} ~ {last}',
+      topCategoriesLabel: '常出現的分類',
+      empty: '這個檔案沒有可預覽的內容。',
+    },
+    cta: {
+      button: '建立帳號，把這些搬進來',
+      hint: '建立完帳號再把這份 CSV 匯入，原本記過的不用再記一次。',
+      privacyNote: '預覽只在你的瀏覽器跑，沒有東西被傳出去。',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: '其他',
+    },
+    differentiatorsHeading: '為什麼選 Futari',
+    trust: {
+      heading: '為什麼可以放心搬過來',
+      items: [
+        {
+          title: '端對端加密',
+          body: '你們之外，沒有人能看見這本帳的內容。',
+        },
+        {
+          title: '隨時可以帶走',
+          body: '不喜歡的話，整本帳隨時匯出 CSV，搬家不是綁約的起點。',
+        },
+        {
+          title: '免費長期使用',
+          body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+        },
+      ],
+    },
+    footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    pages: {
+      honeydue: {
+        heroKicker: 'HONEYDUE → FUTARI',
+        heroTitle: '你的 Honeydue 資料，可以帶走',
+        heroSubtitle: '上傳 CSV，三分鐘把這幾年的記帳搬到 Futari。',
+        intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、資料加密。',
+        differentiators: [
+          {
+            title: '仍在持續迭代',
+            body: '每兩週都有新版本，bug 看得到、回饋有人讀。',
+          },
+          {
+            title: '兩個人都看得到所有紀錄',
+            body: '沒有「分開帳戶」的不對稱能見度，從一開始就為共同的家設計。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或資料變現。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 Honeydue App → 設定 → 匯出資料，下載 CSV。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+      },
+      spendee: {
+        heroKicker: 'SPENDEE → FUTARI',
+        heroTitle: '你的 Spendee 資料，可以帶走',
+        heroSubtitle: '上傳 Spendee 匯出的 CSV，預覽完整紀錄再決定要不要搬。',
+        differentiators: [
+          {
+            title: '雙人是核心，不是付費才解鎖',
+            body: '共享帳本不在訂閱牆後面，從第一天就免費共用。',
+          },
+          {
+            title: '即時同步',
+            body: '一個人記下，另一個人馬上看見，不用等對方刷新。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '不靠廣告或拍賣資料生活，記帳就是記帳。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 Spendee → More → Export Data，下載 CSV。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+      },
+      cwmoney: {
+        heroKicker: 'CWMONEY → FUTARI',
+        heroTitle: '你的 CWMoney 資料，可以帶走',
+        heroSubtitle: '用轉換模板把 CWMoney 的 Excel 整理成 CSV，再上傳到 Futari。',
+        differentiators: [
+          {
+            title: '雙人帳本是預設',
+            body: '不必再靠折衷的工作流接合兩本各自的帳。',
+          },
+          {
+            title: '台幣整數金額',
+            body: '數字直接就是新台幣，不用再換算分位。',
+          },
+          {
+            title: '紀錄不評判',
+            body: '沒有評分、不打分數、不暗示誰花得太多。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 CWMoney 匯出 Excel 格式的記帳資料（需 VIP）。',
+        step2: '下載下方的轉換模板，把資料貼進去。',
+        step3: '上傳轉換後的 CSV，預覽並建立帳號匯入。',
+        templateDownloadLabel: '下載轉換模板',
+        templateNote: '模板會把 CWMoney 的欄位對應到 Futari 支援的格式。',
+      },
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · 兩個人，一本帳｜伴侶共享記帳 PWA',
@@ -3657,6 +3926,23 @@ export const zhTW: Translations = {
     privacy: {
       title: '隱私權政策 · Futari',
       description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
+    },
+    migrate: {
+      honeydue: {
+        title: '從 Honeydue 搬到 Futari — 免費雙人記帳替代方案',
+        description: 'Honeydue 逐漸停止維護，Futari 讓你 3 分鐘完成資料搬遷，繼續和伴侶一起記帳。免費、無廣告、資料加密。',
+        ogDescription: 'Honeydue 用戶的下一站：Futari 雙人記帳，把資料一起帶走。',
+      },
+      spendee: {
+        title: '從 Spendee 搬到 Futari — 雙人記帳替代方案',
+        description: '把 Spendee 的記帳資料帶來 Futari，繼續和伴侶一起記帳。上傳 CSV，3 分鐘完成搬遷。',
+        ogDescription: 'Spendee 用戶的雙人記帳新選擇：上傳 CSV，3 分鐘搬完。',
+      },
+      cwmoney: {
+        title: '從 CWMoney 搬到 Futari — 記帳資料搬遷教學',
+        description: '用我們提供的 Excel 轉換模板，把 CWMoney 資料整理成 CSV，再上傳到 Futari 完成搬遷。',
+        ogDescription: 'CWMoney 用戶搬家指南：用轉換模板把 Excel 變成 CSV，搬進 Futari。',
+      },
     },
   },
 }

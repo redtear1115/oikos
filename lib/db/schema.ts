@@ -164,6 +164,9 @@ export const cashTransactions = pgTable('CashTransactions', {
   rateSnapshot: numeric('rate_snapshot', { precision: 10, scale: 3 }),
   // #42 — Trip sub-ledger tag. NULL = no trip.
   tripId: uuid('trip_id').references(() => trips.id),
+  // #556 — CSV import audit + rollback. NULL = not from an import.
+  // FK to ImportBatches; lets a batch be undone by deleting rows that share this id.
+  importBatchId: uuid('import_batch_id').references(() => importBatches.id),
 })
 
 export const settlements = pgTable('Settlements', {
@@ -514,6 +517,39 @@ export const tripExpenses = pgTable('TripExpenses', {
   description: text('description'),
   transactedAt: timestamp('transacted_at', { withTimezone: true }).defaultNow().notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+// #556 — CSV import metadata. One row per "用戶按匯入" action. Sibling
+// InvoiceImportRuns serves the same audit role for invoice imports; kept
+// separate because invoice imports have voiding / debounce semantics that
+// CSV imports don't share. `source` / `status` are free-text for now — spec
+// (#552) is still in flux; promote to pgEnum once values stabilise.
+export const importBatches = pgTable('ImportBatches', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
+  importedBy: uuid('imported_by').notNull().references(() => profiles.id),
+  source: text('source').notNull(),
+  fileName: text('file_name').notNull(),
+  totalRows: integer('total_rows').notNull(),
+  importedCount: integer('imported_count').notNull().default(0),
+  skippedCount: integer('skipped_count').notNull().default(0),
+  errorCount: integer('error_count').notNull().default(0),
+  status: text('status').notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  rolledBackAt: timestamp('rolled_back_at', { withTimezone: true }),
+})
+
+// #556 — Per-row failure log for a batch. Lets the result page render
+// "下載失敗行 CSV" without re-running the parser. `raw_row` preserves the
+// original CSV cells as jsonb so the user can fix and re-upload.
+export const importErrors = pgTable('ImportErrors', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  batchId: uuid('batch_id').notNull().references(() => importBatches.id, { onDelete: 'cascade' }),
+  rowNumber: integer('row_number').notNull(),
+  rawRow: jsonb('raw_row').notNull(),
+  errorType: text('error_type').notNull(),
+  errorDetail: text('error_detail'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

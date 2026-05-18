@@ -3,10 +3,18 @@
 > 家庭記帳工具，固定兩人（夫妻／伴侶）使用。
 > 對使用者顯示為 **Futari**；codebase 用 Oikos。
 
-私人家庭工具，非 SaaS。所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first PWA。
+Futari 是給兩人（夫妻／伴侶）的私密記帳 PWA，支援雙人支出分攤、愛物（車 / 房 / 子女 / 寵物 / 植物 / 保險 / 物品）管理與月度回顧。私人家庭工具，非 SaaS — 所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first。
 
 > 線上服務：<https://futari.southern-light.dev/> — v1.0 起對外有公開 landing（繁中／簡中／英／日），登入後是兩人專屬空間。
 > 最新版本與變更紀錄請見 [CHANGELOG.md](CHANGELOG.md)。開發脈絡見 [CLAUDE.md](CLAUDE.md)。
+
+---
+
+## 使用方式（給使用者）
+
+直接用瀏覽器開 <https://futari.southern-light.dev/>，用 Google 登入。第一位登入會被導到建帳本流程；第二位透過第一位產生的 invite link 加入。無需安裝、無需付費。
+
+要加到主畫面當 App 用（PWA）：登入後在 Settings 頁面有對應的安裝引導。
 
 ---
 
@@ -90,7 +98,7 @@ app/
   (dashboard)/            登入後的 routes
     dashboard/            主頁（收支 / 結算）
     records/              帳務紀錄列表
-    assets/               愛物（車 / 保險 / 子女 / 寵物 / 植物 / 房屋）
+    assets/               愛物（車 / 房屋 / 子女 / 寵物 / 植物 / 保險 / 物品）
     settings/             設定
   auth/callback/          OAuth callback
   invite/[token]/         加入 group 的 invite link
@@ -150,9 +158,12 @@ docs/superpowers/specs/   架構規格 + 設計決策
 | [v1.0.0](CHANGELOG.md#100---2026-05-17) | 公開 landing．接住歷史 |
 | [v1.0.1](CHANGELOG.md#101---2026-05-17) | 新用戶第一步修補．/setup 500 修復 |
 | [v1.0.2](CHANGELOG.md#102---2026-05-17) | Prod log 修復．RSC × iOS icon × Supabase 警告 |
+| [v1.0.3](CHANGELOG.md#103---2026-05-17) | Supabase Advisor 清零．Realtime 補齊 |
+| [v1.0.4](CHANGELOG.md#104---2026-05-17) | 前端 refactor 大掃除．首載 × icon 更輕 |
+| [v1.0.5](CHANGELOG.md#105---2026-05-18) | 三大入口 header / filter 統一．Records 月份改 picker |
 
 <details>
-<summary>更早版本（v0.1.0 → v0.17.6，共 36 筆）</summary>
+<summary>展開更早的版本歷史（v0.1.0 → v0.17.6，共 36 筆）</summary>
 
 | 版本 | 範圍 |
 |---|---|

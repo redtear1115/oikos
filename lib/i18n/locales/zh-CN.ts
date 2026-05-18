@@ -1652,6 +1652,132 @@ export const zhCN: Translations = {
     fallbackHtml: '在你的浏览器菜单里找「<strong>添加到主屏幕</strong>」或「<strong>安装应用</strong>」。不同浏览器位置不太一样，但通常都在右上角的菜单里。',
   },
 
+  migrate: {
+    backToHome: '← 回 Futari 首页',
+    upload: {
+      prompt: '把 CSV 拖到这里，或选择文件',
+      button: '选择 CSV',
+      constraint: '文件只会在你的浏览器解析，不会上传。',
+      parsing: '解析中⋯',
+      error: '读不懂这个文件。确认是 CSV 后再试一次。',
+      retry: '换一个文件',
+    },
+    preview: {
+      title: '看一下你的数据长什么样',
+      sourceLabel: '来源 · {source}',
+      encodingLabel: '编码 · {encoding}',
+      totalRowsLabel: '{count} 条记录',
+      expenseRowsLabel: '约 {count} 条支出',
+      dateRangeLabel: '{first} ~ {last}',
+      topCategoriesLabel: '常出现的分类',
+      empty: '这个文件没有可预览的内容。',
+    },
+    cta: {
+      button: '建账号，把这些搬过来',
+      hint: '建完账号再把这份 CSV 导入，原本记过的不用再记一次。',
+      privacyNote: '预览只在你的浏览器跑，没有东西被传出去。',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: '其他',
+    },
+    differentiatorsHeading: '为什么选 Futari',
+    trust: {
+      heading: '为什么可以放心搬过来',
+      items: [
+        {
+          title: '端到端加密',
+          body: '你们之外，没有人能看见这本账的内容。',
+        },
+        {
+          title: '随时可以带走',
+          body: '不喜欢的话，整本账随时导出 CSV，搬家不是绑约的起点。',
+        },
+        {
+          title: '免费长期使用',
+          body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+        },
+      ],
+    },
+    footerTrust: '端到端加密 · 数据只属于你们两个',
+    pages: {
+      honeydue: {
+        heroKicker: 'HONEYDUE → FUTARI',
+        heroTitle: '你的 Honeydue 数据，可以带走',
+        heroSubtitle: '上传 CSV，三分钟把这几年的记账搬到 Futari。',
+        intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、数据加密。',
+        differentiators: [
+          {
+            title: '仍在持续迭代',
+            body: '每两周都有新版本，bug 看得到、反馈有人读。',
+          },
+          {
+            title: '两个人都看得到所有记录',
+            body: '没有「分开账户」的不对称能见度，从一开始就为共同的家设计。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或数据变现。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 Honeydue App → 设置 → 导出数据，下载 CSV。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '创建 Futari 账号，一键完成搬迁。',
+      },
+      spendee: {
+        heroKicker: 'SPENDEE → FUTARI',
+        heroTitle: '你的 Spendee 数据，可以带走',
+        heroSubtitle: '上传 Spendee 导出的 CSV，预览完整记录再决定要不要搬。',
+        differentiators: [
+          {
+            title: '双人是核心，不是付费才解锁',
+            body: '共享账本不在订阅墙后面，从第一天就免费共用。',
+          },
+          {
+            title: '即时同步',
+            body: '一个人记下，另一个人马上看见，不用等对方刷新。',
+          },
+          {
+            title: '免费、无广告',
+            body: '不靠广告或拍卖数据生活，记账就是记账。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 Spendee → More → Export Data，下载 CSV。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '创建 Futari 账号，一键完成搬迁。',
+      },
+      cwmoney: {
+        heroKicker: 'CWMONEY → FUTARI',
+        heroTitle: '你的 CWMoney 数据，可以带走',
+        heroSubtitle: '用转换模板把 CWMoney 的 Excel 整理成 CSV，再上传到 Futari。',
+        differentiators: [
+          {
+            title: '双人账本是默认',
+            body: '不必再靠折衷的工作流拼合两本各自的账。',
+          },
+          {
+            title: '人民币整数金额',
+            body: '数字直接就是元，不用再换算分位。',
+          },
+          {
+            title: '记录不评判',
+            body: '没有评分、不打分数、不暗示谁花得太多。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 CWMoney 导出 Excel 格式的记账数据（需 VIP）。',
+        step2: '下载下方的转换模板，把数据粘进去。',
+        step3: '上传转换后的 CSV，预览并创建账号导入。',
+        templateDownloadLabel: '下载转换模板',
+        templateNote: '模板会把 CWMoney 的字段对应到 Futari 支持的格式。',
+      },
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · 两个人，一本账｜情侣共享记账 PWA',
@@ -1670,6 +1796,23 @@ export const zhCN: Translations = {
     privacy: {
       title: '隐私权政策 · Futari',
       description: 'Futari alpha 测试版本的数据收集与隐私权处理方式。',
+    },
+    migrate: {
+      honeydue: {
+        title: '从 Honeydue 搬到 Futari — 免费双人记账替代方案',
+        description: 'Honeydue 逐渐停止维护，Futari 让你 3 分钟完成数据搬迁，继续和伴侣一起记账。免费、无广告、数据加密。',
+        ogDescription: 'Honeydue 用户的下一站：Futari 双人记账，把数据一起带走。',
+      },
+      spendee: {
+        title: '从 Spendee 搬到 Futari — 双人记账替代方案',
+        description: '把 Spendee 的记账数据带来 Futari，继续和伴侣一起记账。上传 CSV，3 分钟完成搬迁。',
+        ogDescription: 'Spendee 用户的双人记账新选择：上传 CSV，3 分钟搬完。',
+      },
+      cwmoney: {
+        title: '从 CWMoney 搬到 Futari — 记账数据搬迁教程',
+        description: '用我们提供的 Excel 转换模板，把 CWMoney 数据整理成 CSV，再上传到 Futari 完成搬迁。',
+        ogDescription: 'CWMoney 用户搬家指南：用转换模板把 Excel 变成 CSV，搬进 Futari。',
+      },
     },
   },
 }

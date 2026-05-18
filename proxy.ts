@@ -111,8 +111,8 @@ export const config = {
   // Skip auth check on Next internals, SEO assets, PWA artifacts, and static
   // files in /public. Without these exclusions: /sw.js + /manifest.* get 307'd
   // to /sign-in (PWA registration silently fails, MIME mismatch); robots.txt +
-  // sitemap.xml get 307'd too, defeating SEO. See issues #305, #306.
+  // sitemap.xml get 307'd too, defeating SEO. See issues #305, #306, #575.
   matcher: [
-    '/((?!_next/static|_next/image|favicon\\.ico|icons/|sw\\.js|service-worker\\.js|manifest\\.(?:json|webmanifest)|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|icons/|sw\\.js|service-worker\\.js|manifest\\.(?:json|webmanifest)|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|xlsx?)$).*)',
   ],
 }
