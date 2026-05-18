@@ -1,7 +1,8 @@
 ---
-status: planned
+status: shipped
+first_shipped_in: v1.1.0
 related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency]
-related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557"]
+related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586"]
 ---
 
 # CSV 匯入歷史紀錄
