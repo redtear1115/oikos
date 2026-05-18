@@ -232,9 +232,12 @@ export const zhCN: Translations = {
     addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
-    payerAll: '全部',
-    payerMe: '我付',
-    payerPartner: '对方付',
+    payerMe: '我',
+    payerPartner: '对方',
+    splitFilter: {
+      mine: '我负担',
+      theirs: '对方负担',
+    },
     activeTripBanner: {
       kicker: '旅行进行中',
       singleStartedAt: '{date} 起 · 点开看这趟',
@@ -550,12 +553,18 @@ export const zhCN: Translations = {
 
   records: {
     title: '记录',
-    tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
+    monthPicker: {
+      triggerLabel: '选择月份',
+      dialogLabel: '月份选择器',
+      prevYear: '前一年',
+      nextYear: '下一年',
+    },
     stats: {
       title: '支出统计',
       titleAll: '收支统计',

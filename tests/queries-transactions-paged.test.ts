@@ -53,6 +53,7 @@ function baseFilter(overrides: Partial<ResolvedTxnFilter> = {}): ResolvedTxnFilt
   return {
     paidBy: null,
     splitTypes: [],
+    burden: null,
     categories: [],
     incomeCategories: [],
     assetIds: [],

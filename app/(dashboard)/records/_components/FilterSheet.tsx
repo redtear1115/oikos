@@ -285,6 +285,7 @@ export function FilterSheet({
     setDraft({
       payer: 'all',
       split: 'all',
+      burden: 'all',
       categories: new Set(),
       incomeCategories: new Set(),
       assetIds: new Set(),

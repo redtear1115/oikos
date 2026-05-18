@@ -231,9 +231,12 @@ export const ja: Translations = {
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
     filterAriaLabel: '絞り込みを開く',
-    payerAll: 'すべて',
-    payerMe: '自分が払った',
-    payerPartner: '相手が払った',
+    payerMe: '自分',
+    payerPartner: '相手',
+    splitFilter: {
+      mine: '自分が負担',
+      theirs: '相手が負担',
+    },
     activeTripBanner: {
       kicker: '旅行中',
       singleStartedAt: '{date} から · この旅を開く',
@@ -549,12 +552,18 @@ export const ja: Translations = {
 
   records: {
     title: '記録',
-    tabAll: 'すべて',
     tabExpense: '支出',
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
+    monthPicker: {
+      triggerLabel: '月を選ぶ',
+      dialogLabel: '月選択',
+      prevYear: '前の年',
+      nextYear: '次の年',
+    },
     stats: {
       title: '支出統計',
       titleAll: '収支統計',

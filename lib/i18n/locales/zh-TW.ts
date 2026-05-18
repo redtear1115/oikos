@@ -240,12 +240,15 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
-    /** Payer filter options in the dashboard L3 filter sheet. */
-    payerAll: string
-    /** Payer filter — viewer paid (uses viewer displayName at runtime). */
+    /** Payer dual-toggle — viewer side. */
     payerMe: string
-    /** Payer filter — partner paid (uses partner displayName at runtime). */
+    /** Payer dual-toggle — partner side. */
     payerPartner: string
+    /** Split-type dual-toggle on Dashboard L3. */
+    splitFilter: {
+      mine: string
+      theirs: string
+    }
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
@@ -747,12 +750,18 @@ export type Translations = {
 
   records: {
     title: string
-    tabAll: string
     tabExpense: string
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    recurringShortcut: string
     offlineMoreNeedsNetwork: string
+    monthPicker: {
+      triggerLabel: string
+      dialogLabel: string
+      prevYear: string
+      nextYear: string
+    }
     stats: {
       title: string         // expense-tab title (kept for back-compat)
       titleAll: string      // 全部 tab
@@ -2210,9 +2219,12 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
-    payerAll: '全部',
-    payerMe: '我付',
-    payerPartner: '對方付',
+    payerMe: '我',
+    payerPartner: '對方',
+    splitFilter: {
+      mine: '我負擔',
+      theirs: '對方負擔',
+    },
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',
@@ -2528,12 +2540,18 @@ export const zhTW: Translations = {
 
   records: {
     title: '紀錄',
-    tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
+    monthPicker: {
+      triggerLabel: '選擇月份',
+      dialogLabel: '月份選擇器',
+      prevYear: '前一年',
+      nextYear: '下一年',
+    },
     stats: {
       title: '支出統計',
       titleAll: '收支統計',

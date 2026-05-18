@@ -9,7 +9,7 @@ import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type FeedRow, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
-import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { cutsExpense, fromWire, hidesSettlements, splitFilterToTypes, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -331,15 +331,19 @@ function resolveTxnFilter(
 ): ResolvedTxnFilter | undefined {
   if (!filterWire) return undefined
   const f = fromWire(filterWire)
+  const partnerId = group.memberA === viewerId ? group.memberB : group.memberA
   let paidBy: string | null = null
   if (f.payer === 'mine') paidBy = viewerId
   else if (f.payer === 'theirs') {
-    const partner = group.memberA === viewerId ? group.memberB : group.memberA
-    paidBy = partner ?? '00000000-0000-0000-0000-000000000000'
+    paidBy = partnerId ?? '00000000-0000-0000-0000-000000000000'
   }
   return {
     paidBy,
-    splitTypes: f.split === 'all' ? [] : [f.split],
+    splitTypes: splitFilterToTypes(f.split),
+    burden:
+      f.burden === 'all'
+        ? null
+        : { side: f.burden, viewerId, partnerId },
     categories: Array.from(f.categories),
     incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),

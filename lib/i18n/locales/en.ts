@@ -232,9 +232,12 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
-    payerAll: 'All',
-    payerMe: 'I paid',
-    payerPartner: 'They paid',
+    payerMe: 'Me',
+    payerPartner: 'Them',
+    splitFilter: {
+      mine: 'My cost',
+      theirs: 'Their cost',
+    },
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',
@@ -551,12 +554,18 @@ export const en: Translations = {
 
   records: {
     title: 'Records',
-    tabAll: 'All',
     tabExpense: 'Expense',
     tabIncome: 'Income',
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
+    recurringShortcut: 'Recurring',
     offlineMoreNeedsNetwork: 'More records need a connection',
+    monthPicker: {
+      triggerLabel: 'Select month',
+      dialogLabel: 'Month picker',
+      prevYear: 'Previous year',
+      nextYear: 'Next year',
+    },
     stats: {
       title: 'Expense',
       titleAll: 'Overview',

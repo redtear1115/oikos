@@ -5,7 +5,37 @@ import type { RecordStatus } from '@/lib/validators'
 
 /** Single-select dimensions use 'all' to mean "no filter". Multi-select dimensions use empty Set. */
 export type PayerFilter = 'all' | 'mine' | 'theirs'
-export type SplitFilter = 'all' | SplitType  // 'all' | 'all_mine' | 'all_theirs' | 'half'
+/**
+ * Split-type filter. Concrete `SplitType` values map to a single DB
+ * split_type each. `'shared'` is a UI-level aggregate matching the two
+ * ratio-based modes (`half` + `weighted`) under one user-facing label.
+ *
+ * NOTE: "viewer-bears-cost" and "partner-bears-cost" are NOT expressible
+ * as a single SplitFilter value — split_type is payer-relative (`all_mine`
+ * means "all on the payer", not "all on the viewer"), so resolving "who
+ * really pays" requires a join with `paid_by`. See `BurdenFilter` below
+ * for that dimension.
+ */
+export type SplitFilter = 'all' | SplitType | 'shared'
+
+/**
+ * Burden filter — who actually bears the cost of a record, after netting
+ * payer × split_type. Requires viewer context to evaluate (the in-memory
+ * matcher takes viewerId + partnerId; the SQL layer takes them too via
+ * `ResolvedTxnFilter.burden`).
+ *
+ * `'mine'`  matches: (paid_by = viewer ∧ split = all_mine)
+ *                  ∨ (paid_by = partner ∧ split = all_theirs)
+ *                  ∨ split ∈ {half, weighted}
+ *
+ * `'theirs'` matches: (paid_by = partner ∧ split = all_mine)
+ *                   ∨ (paid_by = viewer ∧ split = all_theirs)
+ *                   ∨ split ∈ {half, weighted}
+ *
+ * Settlements + income rows have no split_type and are dropped whenever
+ * `burden !== 'all'` (same shape as the split dim).
+ */
+export type BurdenFilter = 'all' | 'mine' | 'theirs'
 /** Status filter — 'pending'/'settled' from RecordStatus, plus 'all' sentinel for no filter. */
 export type StatusFilter = 'all' | RecordStatus
 
@@ -25,6 +55,14 @@ export const ASSET_FILTER_NONE = '__none__'
 export interface TxnFilter {
   payer: PayerFilter
   split: SplitFilter
+  /**
+   * Burden filter — see `BurdenFilter` doc above. `'all'` = no filter.
+   * Powered by the Dashboard L3「我負擔」/「對方負擔」dual toggle.
+   * Independent from `payer` (誰付) and `split` (DB split_type): all three
+   * dimensions AND together, but `burden` resolves the payer × split
+   * cross-product that neither dimension can express alone.
+   */
+  burden: BurdenFilter
   /** Empty set = no expense-category filter. Only transaction CategoryIds; 'settle' is never selectable. */
   categories: Set<CategoryId>
   /** Empty set = no income-category filter. Multi-select over IncomeCategoryIds. */
@@ -55,6 +93,7 @@ export function defaultFilter(): TxnFilter {
   return {
     payer: 'all',
     split: 'all',
+    burden: 'all',
     categories: new Set(),
     incomeCategories: new Set(),
     assetIds: new Set(),
@@ -69,6 +108,7 @@ export function isFilterActive(f: TxnFilter): boolean {
   return (
     f.payer !== 'all' ||
     f.split !== 'all' ||
+    f.burden !== 'all' ||
     f.categories.size > 0 ||
     f.incomeCategories.size > 0 ||
     f.assetIds.size > 0 ||
@@ -91,7 +131,9 @@ export function cutsIncome(f: TxnFilter): boolean {
   const expenseOnlyCat = f.categories.size > 0 && f.incomeCategories.size === 0
   // status='pending' is cash-only: income rows are always settled and can
   // never satisfy the pending predicate, so the income branch is short-circuited.
-  return f.split !== 'all' || expenseOnlyCat || f.status === 'pending'
+  // burden is cash-only too: income has no split_type / paid_by-vs-recipient
+  // distinction that maps to "who bears cost", so any non-'all' burden cuts income.
+  return f.split !== 'all' || f.burden !== 'all' || expenseOnlyCat || f.status === 'pending'
 }
 
 /**
@@ -112,6 +154,7 @@ export function cutsExpense(f: TxnFilter): boolean {
 export function hidesSettlements(f: TxnFilter): boolean {
   return (
     f.split !== 'all' ||
+    f.burden !== 'all' ||
     f.categories.size > 0 ||
     f.incomeCategories.size > 0 ||
     f.assetIds.size > 0 ||
@@ -134,6 +177,8 @@ export interface TxnFilterWire {
   amountMax?: number | null
   /** Optional for back-compat; absent = 'all'. */
   status?: StatusFilter
+  /** Optional for back-compat; absent = 'all'. */
+  burden?: BurdenFilter
 }
 
 export function toWire(f: TxnFilter): TxnFilterWire {
@@ -146,13 +191,28 @@ export function toWire(f: TxnFilter): TxnFilterWire {
     amountMin: f.amountMin,
     amountMax: f.amountMax,
     status: f.status,
+    burden: f.burden,
   }
+}
+
+/**
+ * Resolve a `SplitFilter` to the array of concrete DB split_types it
+ * covers. `'all'` → `[]` (the query layer treats empty as "no filter").
+ * Single concrete values → `[value]`. `'shared'` expands to the two
+ * ratio-based modes. Single source of truth for action / page.tsx —
+ * keeps the aggregate semantics from drifting between callsites.
+ */
+export function splitFilterToTypes(s: SplitFilter): SplitType[] {
+  if (s === 'all') return []
+  if (s === 'shared') return ['half', 'weighted']
+  return [s]
 }
 
 export function fromWire(w: TxnFilterWire): TxnFilter {
   return {
     payer: w.payer,
     split: w.split,
+    burden: w.burden ?? 'all',
     categories: new Set(w.categories),
     incomeCategories: new Set(w.incomeCategories ?? []),
     assetIds: new Set(w.assetIds ?? []),
@@ -222,8 +282,38 @@ export function matchesFilter(
   // unrelated cash via realtime would surprise them.
   if (cutsExpense(filter)) return false
 
-  // 分攤 dimension — transactions only
-  if (filter.split !== 'all' && row.splitType !== filter.split) return false
+  // 分攤 dimension — transactions only. Concrete values match by equality;
+  // 'shared' matches the two ratio-based modes (half / weighted).
+  if (filter.split !== 'all') {
+    const st = row.splitType
+    if (filter.split === 'shared') {
+      if (st !== 'half' && st !== 'weighted') return false
+    } else if (st !== filter.split) {
+      return false
+    }
+  }
+
+  // 負擔方 dimension — transactions only. Needs viewer/payer context
+  // because split_type is payer-relative. half + weighted always pass
+  // (both sides bear something); the two `all_*` modes flip meaning
+  // depending on who paid.
+  if (filter.burden !== 'all') {
+    const st = row.splitType
+    if (st === 'half' || st === 'weighted') {
+      // both sides bear → passes either filter direction
+    } else if (filter.burden === 'mine') {
+      const viewerBears =
+        (row.paidBy === viewerId && st === 'all_mine') ||
+        (partnerId !== null && row.paidBy === partnerId && st === 'all_theirs')
+      if (!viewerBears) return false
+    } else {
+      // 'theirs'
+      const partnerBears =
+        (partnerId !== null && row.paidBy === partnerId && st === 'all_mine') ||
+        (row.paidBy === viewerId && st === 'all_theirs')
+      if (!partnerBears) return false
+    }
+  }
 
   // 分類 dimension — transactions only
   if (filter.categories.size > 0 && !filter.categories.has(row.category as CategoryId)) {
@@ -276,7 +366,17 @@ function isValidPayer(s: string | null): s is PayerFilter {
   return s === 'mine' || s === 'theirs' || s === 'all'
 }
 function isValidSplit(s: string | null): s is SplitFilter {
-  return s === 'all' || s === 'all_mine' || s === 'all_theirs' || s === 'half' || s === 'weighted'
+  return (
+    s === 'all' ||
+    s === 'all_mine' ||
+    s === 'all_theirs' ||
+    s === 'half' ||
+    s === 'weighted' ||
+    s === 'shared'
+  )
+}
+function isValidBurden(s: string | null): s is BurdenFilter {
+  return s === 'all' || s === 'mine' || s === 'theirs'
 }
 function isValidStatus(s: string | null): s is StatusFilter {
   return s === 'all' || s === 'pending' || s === 'settled'
@@ -315,6 +415,9 @@ export function parseFilterFromSearchParams(
 
   const split = params.get('fSplit')
   if (split && isValidSplit(split) && split !== 'all') f.split = split
+
+  const burden = params.get('fBurden')
+  if (burden && isValidBurden(burden) && burden !== 'all') f.burden = burden
 
   const cats = params.get('fCats')
   if (cats) {
@@ -359,6 +462,7 @@ export function parseFilterFromSearchParams(
 export function parseFilterFromRecord(rec: {
   fPayer?: string
   fSplit?: string
+  fBurden?: string
   fCats?: string
   fIncCats?: string
   fAssets?: string
@@ -386,6 +490,9 @@ export function applyFilterToParams(params: URLSearchParams, f: TxnFilter): void
 
   if (f.split !== 'all') params.set('fSplit', f.split)
   else params.delete('fSplit')
+
+  if (f.burden !== 'all') params.set('fBurden', f.burden)
+  else params.delete('fBurden')
 
   if (f.categories.size > 0) params.set('fCats', Array.from(f.categories).sort().join(','))
   else params.delete('fCats')
