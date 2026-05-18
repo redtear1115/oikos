@@ -128,7 +128,7 @@ _Nothing unreleased yet._
 
 #### SEO 與分享
 
-- **多語 URL-prefix routing（#400 #462）**：公開頁面（landing / sign-in / privacy / terms）改為 URL prefix `/<locale>`，每個 locale 都是獨立可索引 URL，搭配 hreflang alternates + sitemap per-locale 條目。
+- ⚠️ **多語 URL-prefix routing（#400 #462）**：公開頁面（landing / sign-in / privacy / terms）改為 URL prefix `/<locale>`，每個 locale 都是獨立可索引 URL，搭配 hreflang alternates + sitemap per-locale 條目。
 - **結構化資料齊備（#459 #467）**：landing 同時 ship WebSite / Organization / SoftwareApplication / FAQPage 四套 JSON-LD，全部跟著 locale 走。
 - **OG / Twitter 預覽卡（#487）**：landing / sign-in / privacy / terms 全部接上 `og:image` 與 `twitter:image`（1200×630，`alt` locale-aware），LINE / FB / Slack / Threads 分享有圖。
 
@@ -154,7 +154,7 @@ _Nothing unreleased yet._
 
 ### 技術變更
 
-- **validators 收 calendar-date 單一來源（#453）**：`validateTransactionInput` / `validateSettlementInput` 從吃 `Date` 改吃 `YYYY-MM-DD` 字串，validator 內部統一呼叫 `parseDateString` + `ymdToUTCNoon` 轉成 UTC-noon `Date` 落庫。AddSheet / SettlementSheet / SettlementForm 不再各自 `ymdToUTCNoon(date)`，把那個容易漏的轉換點關起來——#452 fuel-log sort skew 就是漏在 caller 側，未來新 action 不會再從同一個破口出去。DB 寫入值與行為與改前完全一致，純內部 invariant 收緊。
+- ⚠️ **validators 收 calendar-date 單一來源（#453）**：`validateTransactionInput` / `validateSettlementInput` 從吃 `Date` 改吃 `YYYY-MM-DD` 字串，validator 內部統一呼叫 `parseDateString` + `ymdToUTCNoon` 轉成 UTC-noon `Date` 落庫。AddSheet / SettlementSheet / SettlementForm 不再各自 `ymdToUTCNoon(date)`，把那個容易漏的轉換點關起來——#452 fuel-log sort skew 就是漏在 caller 側，未來新 action 不會再從同一個破口出去。DB 寫入值與行為與改前完全一致，純內部 invariant 收緊。
 
 ## [0.17.5] - 2026-05-16
 
@@ -278,7 +278,7 @@ Guardian beta 開啟時，AddSheet 的愛物選擇器拆成「愛物」與「守
 
 - **Trip detail FAB**：`/trips/[id]` 在 active trip + 非過去章節時 BottomNav FAB 解開隱藏，點開的 AddSheet 帶著當前 trip 預選（TripSelector 在這個 context 自動隱藏，trip 由頁面 implicit 帶入），currency 預設用 trip `default_currency`、ratio 預設用 group `default_split_ratio_a`。即使 trip 的 `start_date` 在未來，FAB 也會把記錄落到這個 trip（`prefilledTripId` 比日期 auto-detect 優先）。
 - **「依幣別」與「誰花了多少」兩段 summary**：trip 詳情頁在 records list 上方多出兩段 summary card。混幣別時上面那段秀每個原始幣別的小計（native total + base 等值，照 base value 排序）；雙人 trip 下面那段秀每位成員的實際 cash out + 分攤後負擔，per-side 計算對齊 `lib/balance.transactionDelta()` 讓這個視圖跟 group balance 一致。單幣別 trip 沒有上半段；solo trip 沒有下半段。
-- **記錄改寫到 `TripExpenses` 獨立 table**：在 trip context 建立 / 編輯記錄時走 `TripExpense` table，**不**進入 `CashTransactions`、**不**影響 `GroupBalance` 與主帳本 feed。trip 詳情頁讀的是 `TripExpenses`；v0.17.0 era 用 `CashTransactions.trip_id` tag 的舊紀錄留在主帳本，不再出現在 `/trips/[id]`（編輯時可清掉 tag）。
+- ⚠️ **記錄改寫到 `TripExpenses` 獨立 table**：在 trip context 建立 / 編輯記錄時走 `TripExpense` table，**不**進入 `CashTransactions`、**不**影響 `GroupBalance` 與主帳本 feed。trip 詳情頁讀的是 `TripExpenses`；v0.17.0 era 用 `CashTransactions.trip_id` tag 的舊紀錄留在主帳本，不再出現在 `/trips/[id]`（編輯時可清掉 tag）。
 - **End trip 自動產 2 筆 summary CashTransaction**：trip 結束時把 `TripExpenses` fold 回主帳本——以每位實際 fronted money 的 member 為 `paid_by`、`amount` 為其總 out-of-pocket（base 幣別、用 `Trips.rate_snapshot` 換算）、`category='entertainment'`、`description='${trip.name} 結算'`、保留 `trip_id` 作為來源標記。`split_type` / `split_ratio_a` 自動挑選讓 `lib/balance.ts` 重算產生的 balance delta = trip 淨效果（整數 ratio 精度導致最多 ~trip_total/100 漂移，已在 `lib/tripSummary.ts` 內 brute-force 0–100 挑最小誤差 ratio；0% / 100% 自動 collapse 成 `all_mine` / `all_theirs`）。Solo group 永遠走 1 筆 `all_mine` summary，balance 維持 0。
 - **End trip sheet 四語化**：新增 14 個 `tripDetail.*` i18n key（zh-TW / zh-CN / en / ja），日期驗證錯誤訊息 inline 帶入 `{date}`。
 
@@ -319,7 +319,7 @@ v0.17.0 出貨時 `CashTransactions.trip_id` tag-style 是最少 schema migratio
 
 v0.17.2 改為 **isolated sandbox**：trip 期間記錄落 `TripExpenses`、主帳本不知道；trip 結束時自動 fold 為主帳本 2 筆 summary `CashTransactions`（`split_type` / `split_ratio_a` 自動挑使 balance delta = trip 淨效果）。主帳本 balance 計算 0 修改。完整設計見 [docs/superpowers/specs/multi-currency-trip-design.md § v0.17.2 Architecture](docs/superpowers/specs/multi-currency-trip-design.md)。
 
-#### Phase 1 — Schema migration 0039（PR #340）
+#### ⚠️ Phase 1 — Schema migration 0039（PR #340）
 
 `drizzle/0039_trip_expense.sql`：
 - 新表 `TripExpenses`：`id` / `trip_id` FK / `paid_by` FK / `amount` (base 幣別整數) / `original_currency` + `original_amount` (nullable, all-or-nothing CHECK) / `category` / `split_type` / `split_ratio` (payer 自己的 share %，0–100，CHECK 對應 `split_type='weighted'`) / `description` / `transacted_at` / `deleted_at` / `created_at`
@@ -398,6 +398,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ## [0.17.0] - 2026-05-14
 
+> ⚠️ 本版包含 5+ 個 breaking change，需 migration（Migration 0038）。
+
 主題：**架構先行．多幣別 × 旅行子帳本一次到位**——Futari 從 i18n 的 ja 開始就把日本市場放在心上，但金額一直硬寫 TWD 整數，是進入日本市場、跨境家庭、海外薪資情境的硬卡點；另一頭「東京 5 日花了多少」「今年聖誕假期總共多少」這類雙人最有感的旅行子帳本需求也擱了很久。這版選擇把兩個耦合的 feature 綁在同一個 schema migration window 裡一起出——schema 一次到位、UI 走 minimal——避免將來再痛一次；同時把所有 amount 顯示路徑改成 currency-aware（TypeScript compile-time guard 防止漏接 currency 參數），讓底盤穩定下來迎接後續幣別擴張。匯率走「自訂心理匯率」（不接 API、不讓數字每天跳動讓人焦慮）+「snapshot 語意」（改 rate 後過去紀錄保留當時匯率），與 Futari「兩人共同對齊的一把尺」哲學一致。Trip 是 tag-style record 標籤（不另開子 ledger），強制單一 epoch（trip 不可跨章節），leave 群組時有 active trip 會被擋住。順手把 #299 也收掉：定期收支 list item 加上「誰的 + 分攤方式」第三條 meta 行。
 
 完整 diff：[v0.16.3...v0.17.0](https://github.com/redtear1115/oikos/compare/v0.16.3...v0.17.0)
@@ -408,7 +410,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 - **Group 主體幣別（4 選 1：TWD / CNY / USD / JPY）**：Settings → 貨幣可改主體幣別；balance / settlement / report 全圍繞此幣別。當前 epoch 已有紀錄時鎖住不可改（避免歷史紀錄 base currency 漂移）；新建 group 或剛開新 epoch 的群組能補設定。
 - **自訂心理匯率**：Settings → 貨幣三個匯率輸入欄（依主體幣別動態 render，例如主體 TWD 顯示「1 TWD = ___ JPY/USD/CNY」），小數三位，最小 0.001。Futari 走「兩人共同對齊的一把尺」差異化——不接外部 API、數字不每天跳動讓人焦慮。
-- **記帳表單 currency selector + 即時換算 preview**：AddSheet 新增 currency selector（4 選 1），若 currency ≠ base 幣別則金額輸入旁顯示「≈ NT$ X 換算」即時 preview。USD 走 cent 精度（`$12.50` ↔ `1250`），其他幣別存整數。
+- ⚠️ **記帳表單 currency selector + 即時換算 preview**：AddSheet 新增 currency selector（4 選 1），若 currency ≠ base 幣別則金額輸入旁顯示「≈ NT$ X 換算」即時 preview。USD 走 cent 精度（`$12.50` ↔ `1250`），其他幣別存整數。
 - **Records 列表多幣別 row dual-display**：多幣別 record 主行顯示原始幣別、副小字 base 等值；同幣別 row 照常 single line。
 - **Snapshot 語意鎖在每筆 record**：每筆多幣別 record 寫入瞬間鎖定當時匯率（`rate_snapshot`），之後改 Settings 匯率不影響歷史紀錄等值；balance 計算永遠看 base 幣別整數，與幣別無關。
 
@@ -417,8 +419,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 - **`/trips` 列表 + 詳情頁**：active trips（按 start_date desc）+ past trips；點進去看單一 trip 的 records list（filter by trip_id）+ 總額。Settings 新增「旅行」入口。
 - **建立 / 結束 / 軟刪 trip**：name + start_date + end_date(opt) + default_currency(opt) + budget(opt) 五個欄位。結束 trip 把 status 改 `'ended'` + 填 `ended_at`。
 - **記帳表單 trip selector**：AddSheet 新增 trip selector（active trips dropdown + 「無旅行」），若有 active trip 且 transactedAt 在範圍內 → 預設選該 trip（可改）；trip 有 `default_currency` 時 cascade 到 currency selector。沒有 active trip 時 selector 自動隱藏。
-- **強制單一 epoch**：trip 建立時 `start_date` 必須 ≥ `currentEpochStartedAt`（不可建在過去章節），DB 層 `Trips.epoch_id` 是 notNull FK 把這條 invariant 變成結構性保證。
-- **離開帳本 / 接受邀請 reject active trip**：`leaveGroup` 若當前 epoch 有 `status='active'` 的 trip → reject「請先結束旅行再離開章節」+ 提供 trip 結束捷徑連結（注意 swap 不算結束 epoch，所以 swap 不檢查 trip）。
+- ⚠️ **強制單一 epoch**：trip 建立時 `start_date` 必須 ≥ `currentEpochStartedAt`（不可建在過去章節），DB 層 `Trips.epoch_id` 是 notNull FK 把這條 invariant 變成結構性保證。
+- ⚠️ **離開帳本 / 接受邀請 reject active trip**：`leaveGroup` 若當前 epoch 有 `status='active'` 的 trip → reject「請先結束旅行再離開章節」+ 提供 trip 結束捷徑連結（注意 swap 不算結束 epoch，所以 swap 不檢查 trip）。
 - **過去章節的 trip 沿用 epoch-readonly**：pin 在 past epoch 時 trip 相關 UI 唯讀，與其他 transaction 一致。
 
 #### 定期收支 list 顯示誰的 + 分攤方式（PR #300 closes #299）
@@ -447,7 +449,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 把所有散落在 codebase 裡的 `NT$${amount.toLocaleString()}` 寫死樣板改成 `formatAmount(amount, currency)` callsite。純 refactor、TypeScript pass。為 Phase 3 schema 出來後的 currency-aware 顯示鋪路。
 
-#### Phase 3 — Schema migration 0038（PR #303）
+#### ⚠️ Phase 3 — Schema migration 0038（PR #303）
 
 `drizzle/0038_multi_currency_and_trips.sql`：
 - 新 enum `currency_code` (`twd / cny / usd / jpy`)、`trip_status` (`active / ended / archived`)
@@ -626,15 +628,17 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`OikosGroups.guardian_beta_enabled boolean NOT NULL DEFAULT false`**（PR #225 #220）：migration `0036_guardian_beta_flag.sql`；新 helper `lib/guardian.ts#canAccessGuardian(group)` 是唯一閘門，將來付費層只改該函式（`return hasSubscription(group) || group.guardianBetaEnabled`），所有 callsite 自動受益。`toggleGuardianBeta(enabled)` server action 透過 `requireViewerGroup()` 限定 group member 操作。
+- ⚠️ **`OikosGroups.guardian_beta_enabled boolean NOT NULL DEFAULT false`**（PR #225 #220）：migration `0036_guardian_beta_flag.sql`；新 helper `lib/guardian.ts#canAccessGuardian(group)` 是唯一閘門，將來付費層只改該函式（`return hasSubscription(group) || group.guardianBetaEnabled`），所有 callsite 自動受益。`toggleGuardianBeta(enabled)` server action 透過 `requireViewerGroup()` 限定 group member 操作。
 - **GatedView pattern**（PR #229 #227）：新增 `app/(dashboard)/_components/GatedView.tsx` + `InsuranceGatedClient.tsx`；`AssetsListClient` 對 `?tab=guardian` 而非 silent fallback、`/assets/[id]/page.tsx` 對 insurance asset 改 render Gated client 而非 `redirect('/dashboard')`；`createInsurance` server action 仍 throw `guardian_disabled` 作 defence in depth。
-- **`asset_type` enum 擴充到 7 值 + `asset_template_key` enum + `Assets.template_key` + `Assets.template_fields jsonb`**（PR #226 #222）：migration `0036_asset_templates.sql`；舊愛物（`template_key IS NULL`）走原有 type → 子表路徑，模板愛物（`template_key IS NOT NULL`）一律 `type='item'` 走 `TemplateSheetBody` / `TemplateAssetDetailClient`，不接任何既有自動化（無 FuelLog 雙寫 / 無 InsuranceDetails / 無 cron）。v1 只宣告 `general` 模板（無欄位）；validator 已實作 text / number / date 三型別分支供未來模板擴充。
+- ⚠️ **`asset_type` enum 擴充到 7 值 + `asset_template_key` enum + `Assets.template_key` + `Assets.template_fields jsonb`**（PR #226 #222）：migration `0036_asset_templates.sql`；舊愛物（`template_key IS NULL`）走原有 type → 子表路徑，模板愛物（`template_key IS NOT NULL`）一律 `type='item'` 走 `TemplateSheetBody` / `TemplateAssetDetailClient`，不接任何既有自動化（無 FuelLog 雙寫 / 無 InsuranceDetails / 無 cron）。v1 只宣告 `general` 模板（無欄位）；validator 已實作 text / number / date 三型別分支供未來模板擴充。
 - **Settings UI 重組**（PR #228 #91）：i18n key `sectionDevice` → `sectionApp`（4 語同步），「分攤比例」block 從個人 section 搬到帳本 section、「加到主畫面 / 語言 / 離線瀏覽」收進新的應用 section。
 - **FilterSheet 愛物 chip 分組**（PR #230 #223）：純 UI 層擴充，不動 URL / 資料模型 / SQL；「全選」chip 把該組 asset uuid 全部加進現有的 `fAssets` Set（語意冪等）。Share link 保留 snapshot 語意——之後新建同 type 愛物不會自動納入對方視圖。新增 i18n key `filterSheet.assetGroupSelectAll` + `filterSheet.assetGroup.{car,house,living,item,coverage}`（4 語）。
 - **`isProjectionView` flag gates `canSettle`**（PR #224 #208）：`useBalanceWithPendingToggle` 派生 `isProjectionView = includePendingView && hasPending`；單一 derived flag，blast radius 為零（沒動 `debtAmount` / `createSettlement` 語意）。
 - **Doc keeper pass**（commit 1 of release PR）：新增 `guardian-design.md`（守護模組獨立化的 WHY、`canAccessGuardian()` cut-over 計畫、GatedView vs silent redirect 取捨）；`aibutsu-design.md` 加 v0.16.0 chips；`product-design.md` schema 主要 tables 補 `guardian_beta_enabled` / `template_key` / 7 個 asset_type + spec links 補齊到所有 tracked spec；`CLAUDE.md` Domain Model 速查更新。
 
 ## [0.15.3] - 2026-05-13
+
+> ⚠️ 本版包含 4 個 breaking change，需 migration（Migration 0035 + schema rows on `RecurringIncomeRules`）。
 
 主題：**章節邊界長進結構裡．過去章節變唯讀 + 投資型保單帳戶價值**——v0.15.0 才剛建立的關係章節（epoch）框架，這版把「pin 在過去章節時還能編輯紀錄、結果整筆從過去章節人間蒸發」這條 bug 收掉，並把背後的 read/write 兩端 epoch boundary 變成型別防呆，讓「transaction 完整歸屬於某段 epoch」從靠記憶變成結構性保證。同期把 v0.9.0 的儲蓄險詳情頁延伸到「投資型保單」家族——新增目前帳戶價值欄位，並讓保險可以自動產生 RecurringIncome 規則，滿期金 / 分紅金不再需要每次手動建。
 
@@ -652,10 +656,10 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`epochWindow` 型別防呆 across all transaction reads**（PR #207）：所有 transaction-class query（`listIncomesPaged` / `listIncomeMonthSummary` / `monthlyIncomeStatsByCategory` / 等價的 cash / settlement / fuelLog 查詢）改為 required `epochWindow` 參數，從 caller 強制傳入；先前 `listIncomeMonthSummary` 漏接 `epochWindow` 造成的 Dashboard 數值漂移從根本擋掉。
-- **Write-side past-epoch guard**（PR #207）：`createTransaction` / `editTransaction` / `softDeleteTransaction` / `createIncome` / `editIncome` / `softDeleteIncome` / settlement / fuelLog 等所有 write server actions 加 past-epoch cookie 檢查，pin 在過去章節時直接 throw；同時 UI 收掉編輯/刪除按鈕作為第一道 guard。
-- **`InsuranceDetails.account_value` 欄位新增**（PR #212，#166）：migration `0035_insurance_account_value` 加 `account_value integer NULL`（純加 nullable column、metadata-only DDL）；只對投資型保單 (`insuranceType === 'savings'` 且 isInvestmentLinked) 顯示。
-- **`RecurringIncomeRules.source_type` / `source_ref_id` 跨 feature 來源欄位**（PR #212，#166）：在 `RecurringIncomeRules` schema 加上「這條規則是哪個 feature 自動產的」欄位，保險自動建立的規則會標 `source_type='insurance' / source_ref_id=<asset_id>`；後續刪除保單時可連動清掉對應規則。
+- ⚠️ **`epochWindow` 型別防呆 across all transaction reads**（PR #207）：所有 transaction-class query（`listIncomesPaged` / `listIncomeMonthSummary` / `monthlyIncomeStatsByCategory` / 等價的 cash / settlement / fuelLog 查詢）改為 required `epochWindow` 參數，從 caller 強制傳入；先前 `listIncomeMonthSummary` 漏接 `epochWindow` 造成的 Dashboard 數值漂移從根本擋掉。
+- ⚠️ **Write-side past-epoch guard**（PR #207）：`createTransaction` / `editTransaction` / `softDeleteTransaction` / `createIncome` / `editIncome` / `softDeleteIncome` / settlement / fuelLog 等所有 write server actions 加 past-epoch cookie 檢查，pin 在過去章節時直接 throw；同時 UI 收掉編輯/刪除按鈕作為第一道 guard。
+- ⚠️ **`InsuranceDetails.account_value` 欄位新增**（PR #212，#166）：migration `0035_insurance_account_value` 加 `account_value integer NULL`（純加 nullable column、metadata-only DDL）；只對投資型保單 (`insuranceType === 'savings'` 且 isInvestmentLinked) 顯示。
+- ⚠️ **`RecurringIncomeRules.source_type` / `source_ref_id` 跨 feature 來源欄位**（PR #212，#166）：在 `RecurringIncomeRules` schema 加上「這條規則是哪個 feature 自動產的」欄位，保險自動建立的規則會標 `source_type='insurance' / source_ref_id=<asset_id>`；後續刪除保單時可連動清掉對應規則。
 - **Doc keeper pass**（PR #217）：epoch-readonly-design.md 從 design → shipped；recurring-income-design.md 補 v0.15.3 註腳；CLAUDE.md spec table 新增 epoch-readonly-design.md 一列。
 
 ## [0.15.2] - 2026-05-13
@@ -681,8 +685,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`PartnerQuizSessions` + `PartnerQuizAnswers` schema**（PR #187，#163）：新增雙人異步問答的 session + answer 兩 table，RLS + Realtime publication；migration `0034_partner_quiz`。
-- **`InsuranceDetails.insured_child_id` FK → Assets**（PR #180，#167）：限制被保人指向同 group 的 Child 愛物；同步覆蓋 `validateInsuranceInput` 與 server actions。
+- ⚠️ **`PartnerQuizSessions` + `PartnerQuizAnswers` schema**（PR #187，#163）：新增雙人異步問答的 session + answer 兩 table，RLS + Realtime publication；migration `0034_partner_quiz`。
+- ⚠️ **`InsuranceDetails.insured_child_id` FK → Assets**（PR #180，#167）：限制被保人指向同 group 的 Child 愛物；同步覆蓋 `validateInsuranceInput` 與 server actions。
 - **`/records` filter schema 擴充**（PR #185，#165）：URL search params 新增 `amount_min` / `amount_max` / `status`；server-side WHERE clause 同步擴。
 - **Refactor: SQL predicate helpers + `ListPagedOptions`**（PR #192，closes #188）：把分散在 query 層的 paged + filter 範本抽成共用 helpers；新增 `lib/db/queries/_predicates.ts` + 兩支 unit test。
 - **Refactor: 統一 action / page auth/group 樣板 + 抽 revalidate helper**（PR #193，closes #190）：新增 `lib/auth/viewer.ts` + `lib/revalidate.ts`；server actions / pages 不再各自重複寫 auth + group lookup boilerplate。
@@ -737,6 +741,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ## [0.15.0] - 2026-05-12
 
+> ⚠️ 本版包含 5+ 個 breaking change，需 migration（Migrations 0028–0033）。
+
 主題：**離開也保留陪伴．pending 收斂**——把「兩人關係未必恆久」這件事正式收進 schema 與 UX：member_a/b 可換位、可離開、過往 chapter（epoch）不消失只是分章；同時把日常記帳的「賒帳 / 待扣款」獨立成 record status，不再混入 balance；外加保險愛物強化、PWA 離線回前景自動刷新、`/records` 結構化篩選器與 Inbox 概念註解。
 
 完整 diff：[v0.14.2...v0.15.0](https://github.com/redtear1115/oikos/compare/v0.14.2...v0.15.0)
@@ -755,13 +761,13 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`record_status` enum**（`'settled' | 'pending'`）+ `CashTransactions.status` 欄位；pending 不計入 `GroupBalance`，預設 `'settled'` 無需 backfill。
-- **Chapter slicing（GroupEpochs）**：新增 `GroupEpochs` + `GroupBalanceEpochs` 兩 table；`cashTransactions` / `settlements` / `incomeTransactions` 全 epoch-scope 化；`/records` / stats / dashboard 預設只看當前 chapter。`OikosGroups` 加 pending swap 三欄 + `current_epoch_started_at`；新增 `swapMembers()` / `leaveGroup()` server actions。
+- ⚠️ **`record_status` enum**（`'settled' | 'pending'`）+ `CashTransactions.status` 欄位；pending 不計入 `GroupBalance`，預設 `'settled'` 無需 backfill。
+- ⚠️ **Chapter slicing（GroupEpochs）**：新增 `GroupEpochs` + `GroupBalanceEpochs` 兩 table；`cashTransactions` / `settlements` / `incomeTransactions` 全 epoch-scope 化；`/records` / stats / dashboard 預設只看當前 chapter。`OikosGroups` 加 pending swap 三欄 + `current_epoch_started_at`；新增 `swapMembers()` / `leaveGroup()` server actions。
 - **`getActiveGroupForUser()` 收斂**（commit `31c3d80`）：分散的 active-group lookup 整合成單一 helper，為 epoch / swap / leave flow 提供 viewer-aware 一致解析。
 - **Single-open-epoch invariant**（commit `f0552c6`）：accept invitation + layout pick 兩條路徑強制每 group 只一個 open epoch。
 - **Inbox layer 概念註解**（PR #144，closes #101）：新增 `inbox-layer-design.md` spec 統一非使用者親手建立的資料邊界；v0.16.0 才實作 schema migration + UI。
-- **保險 schema 強化**：`InsuranceDetails.reminder_days_before` (integer, 預設 30)；`policy_holder_user_id` (FK to `Profiles`)；要保人離開 group 可帶走政策、被保人保留 free text。
-- **Migrations 0028–0033**：含校正性 migration 0032 修 0029/0030 把舊紀錄誤踢出 current epoch 的 bug（`DEFAULT now()` sentinel issue）。
+- ⚠️ **保險 schema 強化**：`InsuranceDetails.reminder_days_before` (integer, 預設 30)；`policy_holder_user_id` (FK to `Profiles`)；要保人離開 group 可帶走政策、被保人保留 free text。
+- ⚠️ **Migrations 0028–0033**：含校正性 migration 0032 修 0029/0030 把舊紀錄誤踢出 current epoch 的 bug（`DEFAULT now()` sentinel issue）。
 - **Drizzle raw SQL casts 對 Date 參數**（commit `f249729`）：epoch Date 參數 stringify 後再 cast 避免 prepared-statement type 推斷錯誤。
 - **Insurance subtype tint revert**（commit `52087d9` → `15b7564`）：嘗試 framing-based subtype tint 後改回 type-tinted border + avatar。
 - **Solo-mode inline 新增按鈕移除**（commit `aeb8470`）：dashboard solo mode 改由 FAB 統一入口。
@@ -798,8 +804,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`split_type` enum 加 `'weighted'`**；`OikosGroups.default_split_ratio_a` / `CashTransactions.split_ratio_a` / `RecurringExpenseRules.split_ratio_a` / `PendingExpenseOccurrences.split_ratio_a` 全部加欄位（Migration 0027）。Postgres `ALTER TYPE ... ADD VALUE` 不能跑 in transaction，drizzle migrator 預設逐句執行即可。
-- **Balance 算法**：付款人 A → B 欠 `ceil(amount × (100−ratioA) / 100)`；付款人 B → A 欠 `ceil(amount × ratioA / 100)`。`half` enum 保留作為 legacy，新舊紀錄都正確 render。
+- ⚠️ **`split_type` enum 加 `'weighted'`**；`OikosGroups.default_split_ratio_a` / `CashTransactions.split_ratio_a` / `RecurringExpenseRules.split_ratio_a` / `PendingExpenseOccurrences.split_ratio_a` 全部加欄位（Migration 0027）。Postgres `ALTER TYPE ... ADD VALUE` 不能跑 in transaction，drizzle migrator 預設逐句執行即可。
+- ⚠️ **Balance 算法**：付款人 A → B 欠 `ceil(amount × (100−ratioA) / 100)`；付款人 B → A 欠 `ceil(amount × ratioA / 100)`。`half` enum 保留作為 legacy，新舊紀錄都正確 render。
 - **`/sw.js` Cache-Control: no-store**（`next.config.ts` headers）：Vercel CDN 把 SW 回 304 cache 導致 `register()` 靜默失敗。
 - **延期到 v0.14.2**：PR #114（AddSheet 描述自動完成）與 PR #116（stats drill-down filter）在 main 上以 revert commits 暫時抽離。
 
@@ -819,7 +825,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **新 schema**：`MonthlyReviewSnapshots`（denormalised paid_by name / asset names 凍結）+ `MonthlyReviewMessages`（lockable autosave）；`compute_monthly_review_snapshot(group, year, month)` plpgsql function；pg_cron `monthly-review-snapshot` 每月 1 號 16:00 UTC。Migration 0026。
+- ⚠️ **新 schema**：`MonthlyReviewSnapshots`（denormalised paid_by name / asset names 凍結）+ `MonthlyReviewMessages`（lockable autosave）；`compute_monthly_review_snapshot(group, year, month)` plpgsql function；pg_cron `monthly-review-snapshot` 每月 1 號 16:00 UTC。Migration 0026。
 - **Donut 用 inline SVG（~80 行）** 而非 Recharts / Chart.js：mobile bundle 不引入 ~50 KB+ 圖表 lib。
 - **PWA 採 Serwist (`@serwist/next`)**，opt-in via Settings（preference 存 `localStorage` 非 Supabase — SW 是 per-device 而非 per-user 能力）；L1 precache app shell、L2 runtime cache NetworkFirst + 3s timeout（不 SWR — oikos 寫入路徑會 `revalidatePath`）；Sign-out 前 `caches.delete('dynamic-v1')` 防 PII 跨使用者。
 - **Build script 改 `next build --webpack`**：Serwist 9.x 不相容 Next.js 16 預設 Turbopack production build；`app/sw.ts` 從主 tsconfig 排除（webworker 型別會把 `Navigator` 染成 `WorkerNavigator` 污染整個 client component typecheck）。
@@ -865,7 +871,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 - **與 income 的差異**：rule 帶 `paid_by` + `split_type` + `description` (notNull) 而非 `recipient_id` + `source`；`confirmPending` 在同個 drizzle transaction 內寫 `CashTransactions` + 跑 `recalcGroupBalance`（mirror `createTransaction`，income 沒 balance impact 不需要）。**刻意不對稱**：抽共用層會讓 income 多扛不必要的 transaction overhead。
 - **first-record signal 不增加 dashboard query**：`createTransaction` 回傳 `{ id, isFirstTransaction }`，trigger 在 insert path 一次 `count(*) WHERE paid_by = me`；per-user flag 存 `localStorage`（`oikos_first_record_card_seen_{userId}`）。
 - **`RealtimeProvider`** 新增 `RecurringExpenseRules` + `PendingExpenseOccurrences` 兩個 event kinds。
-- **Breaking**：`ModeTogglePlaceholder.pendingCount` → 拆 `incomePendingCount` + `expensePendingCount`，4 處 callsite 同 PR 替換。
+- ⚠️ **Breaking**：`ModeTogglePlaceholder.pendingCount` → 拆 `incomePendingCount` + `expensePendingCount`，4 處 callsite 同 PR 替換。
 - **`paid_by` 作為 row creator 代理**：CashTransactions 沒 `created_by` 欄位；first-record 場景是「記自己的支出」，代理對暖訊息文案足夠。
 
 ## [0.12.0] - 2026-05-09
@@ -883,8 +889,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **Migration 0025**：`CashTransactions` 加 nullable `notes` text 欄位。
-- `validateInviteAcceptance` 改回傳 `InviteAcceptError` code，不再吐 zh-TW 字串；`acceptInvite` race condition 訊息也 code 化由頁面 map。
+- ⚠️ **Migration 0025**：`CashTransactions` 加 nullable `notes` text 欄位。
+- ⚠️ `validateInviteAcceptance` 改回傳 `InviteAcceptError` code，不再吐 zh-TW 字串；`acceptInvite` race condition 訊息也 code 化由頁面 map。
 - `MiniCalendar` props (`value`, `onChange`) 不變，5 個既有 caller 零 break。
 - v1 CSV 範圍只匯出活躍 CashTransactions；Settlements / IncomeTransactions / 日期範圍 / Google Sheets OAuth 留後續。
 
@@ -960,9 +966,9 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`childDetails.id_number_encrypted` 與 `insurance_id_encrypted`** 過去寫入未呼叫 `encrypt()`、讀取也直接 plaintext；本版補上加密／解密、改以 `revealChildPii` server action 按需解密。
+- ⚠️ **`childDetails.id_number_encrypted` 與 `insurance_id_encrypted`** 過去寫入未呼叫 `encrypt()`、讀取也直接 plaintext；本版補上加密／解密、改以 `revealChildPii` server action 按需解密。
 - **既有 plaintext 已 wipe 為 NULL**：dev / prod 兩個 Supabase project 都 wipe，本版不需資料 migration。
-- **Migration 0020**：`Assets.notes` 新增 nullable text column。
+- ⚠️ **Migration 0020**：`Assets.notes` 新增 nullable text column。
 - 三條 hero 路徑（`BalanceHero` / Dashboard solo-dismissed / `SoloBanner`）均接通 pending 指示器，banner 開／關都一致。
 
 ## [0.9.0] - 2026-05-08
@@ -976,7 +982,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **Migration 0015**：`InsuranceDetails.expected_maturity_amount` (nullable)。
+- ⚠️ **Migration 0015**：`InsuranceDetails.expected_maturity_amount` (nullable)。
 - 新增 `computeSavingsProgress` helper（`lib/insuranceProgress.ts`）+ 14 unit tests 覆蓋全部 edge cases。
 - **`IncomeSheet`** 新增 `prefilledCategory` / `prefilledAmount` props 供 `MaturedAwaitingPrompt` 一鍵預填。
 - 非 savings 險種 fallback 到 `InsuranceDetailClientLegacy`（維持原樣）。
@@ -997,7 +1003,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 - 新增 `DayPicker` 元件（7 欄 × 5 列 + `aria-pressed` / `aria-label`）。
 - 新增 `RecurringRuleSheet` bottom sheet 取代獨立全頁表單。
 - `/settings/recurring-income` 改為 server component（`RecurringIncomeContent` client shell）；`/new` 與 `/[id]` sub-routes 廢除改 redirect 回列表；`RuleForm.tsx` 刪除。
-- **雲端發票匯入 schema 預置**（migrations 0017–0019）：`InvoiceCredentials` table + `cashTransactions.invoiceNumber`——功能因財政部 API 申請限制暫緩，不對使用者顯示。
+- ⚠️ **雲端發票匯入 schema 預置**（migrations 0017–0019）：`InvoiceCredentials` table + `cashTransactions.invoiceNumber`——功能因財政部 API 申請限制暫緩，不對使用者顯示。
 
 ## [0.8.0] - 2026-05-07
 
@@ -1009,7 +1015,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`RecurringIncomeRules` + `PendingIncomeOccurrences` schema** + RLS + Realtime publication。
+- ⚠️ **`RecurringIncomeRules` + `PendingIncomeOccurrences` schema** + RLS + Realtime publication。
 - **`compute_next_occurrence` SQL helper**（PL/pgSQL，含月底 day clamp）+ `computeNextOccurrence` / `snapToFuture` / `firstAnchorFromStart` TS mirror helpers。
 - **pg_cron `generate-pending-income`**：每日 16:00 UTC（= 台北 00:00），idempotent。
 - 8 個 server actions（含 Phase 2 預留的 `editAndConfirmPending`）。
@@ -1028,9 +1034,9 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- **`IncomeTransactions` schema** + RLS + Realtime publication + pg_cron cleanup；獨立 income category 定義 + mint palette token。
+- ⚠️ **`IncomeTransactions` schema** + RLS + Realtime publication + pg_cron cleanup；獨立 income category 定義 + mint palette token。
 - 進帳 server actions（create / edit / softDelete + loadMoreIncomes）。
-- `InsuranceDetails.vehicleId` FK；驗證保險只能關聯自己 group 的車。
+- ⚠️ `InsuranceDetails.vehicleId` FK；驗證保險只能關聯自己 group 的車。
 - **Typography tokens**：新增 `--fs-*` scale，統一替換全站 inline `fontSize` / `text-[Xpx]`。
 - `EditTextSheet` 改 bottom sheet，支援 keyboard push-up；bottom sheet radius 統一頂角 24px。
 - Avatar bg 改用 `--ink` token，移除 `--me-color` / `--them-color` aliases。
@@ -1047,8 +1053,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- `HouseDetails` schema + migration + `getHouseDetails` query + `validateHouseInput` + `createHouse` / `editHouse` server actions + `HouseDetailClient`。
-- `InsuranceDetails` schema + CRUD actions + `InsuranceDetailClient`。
+- ⚠️ `HouseDetails` schema + migration + `getHouseDetails` query + `validateHouseInput` + `createHouse` / `editHouse` server actions + `HouseDetailClient`。
+- ⚠️ `InsuranceDetails` schema + CRUD actions + `InsuranceDetailClient`。
 - `AssetSheet` 高度改 fixed height（移除 maxHeight）。
 
 ## [0.5.0] - 2026-05-05
@@ -1064,9 +1070,9 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- `ChildDetails` / `PetDetails` / `InsuranceDetails` / `PlantDetails` 子表 schema。
+- ⚠️ `ChildDetails` / `PetDetails` / `InsuranceDetails` / `PlantDetails` 子表 schema。
 - 對應 validators（`validateChildInput` / `validatePetInput` / `validatePlantInput` / `validateInsuranceInput`）+ server actions（create / edit）。
-- `asset_type` enum 補上 `pet` + `plant`；`listAssetsForGroup` 不再限制 `type='car'`。
+- ⚠️ `asset_type` enum 補上 `pet` + `plant`；`listAssetsForGroup` 不再限制 `type='car'`。
 - `AssetIcon` 新增 paw + plant SVG。
 
 ## [0.4.0] - 2026-05-05
@@ -1082,10 +1088,10 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- `FuelLog` table reshape + `cashTransactions.fuelLogId` + `carDetails.primaryUser` / `fuelType`。
+- ⚠️ `FuelLog` table reshape + `cashTransactions.fuelLogId` + `carDetails.primaryUser` / `fuelType`。
 - `createFuelLog` 雙寫 `FuelLog` + `CashTransaction`；`editFuelLog` / `softDeleteFuelLog`。
 - `singleEcon` + `computeAvgEcon`（近 6 個月均值）helpers。
-- `fuelType` enum：移除 `electric`，改 `92` / `95` / `98` / `diesel`（'92' legacy 留在 enum 因為 pg 無法 drop value）。
+- ⚠️ `fuelType` enum：移除 `electric`，改 `92` / `95` / `98` / `diesel`（'92' legacy 留在 enum 因為 pg 無法 drop value）。
 - `AssetDetailClient` 訂閱 `fuel-log-changed` realtime event；加油 station 欄位移除。
 
 ## [0.3.0] - 2026-05-05
@@ -1100,7 +1106,7 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ### 技術變更
 
-- `Assets` + `CarDetails` schema + RLS policies + Realtime publication。
+- ⚠️ `Assets` + `CarDetails` schema + RLS policies + Realtime publication。
 - `validateCarInput`、`createCar`（含購車自動產 `CashTransaction`）、`editCar`、`softDeleteCar` server actions + queries（list / get / summary / paged transactions）。
 - `editTransaction` 補上 soft-delete `.returning()` race guard。
 - `PayerToggle` / `SplitTypeSelector` 抽出共用元件；Realtime payload 全面型別化。
