@@ -11,21 +11,16 @@ interface BrandHeaderProps {
   onTripClick?: () => void
 }
 
-function PaperPlaneIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
+function JetIcon({ size = 14, color = 'currentColor' }: { size?: number; color?: string }) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      fill={color}
       aria-hidden
     >
-      <path d="M22 2L11 13" />
-      <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+      <path d="M21 14l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5v4.5L7 19.5V21l5-1.5L17 21v-1.5L13 18v-4.5l8 2.5z" />
     </svg>
   )
 }
@@ -58,7 +53,7 @@ export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = 
               border: '1px solid var(--hairline)',
             }}
           >
-            <PaperPlaneIcon size={14} color="var(--ink-2)" />
+            <JetIcon size={14} color="var(--ink-2)" />
           </button>
         )}
         <button
