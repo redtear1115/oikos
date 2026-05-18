@@ -1684,6 +1684,35 @@ export const en: Translations = {
       cwmoney: 'CWMoney',
       unknown: 'Other',
     },
+    pages: {
+      honeydue: {
+        heroTitle: 'Your Honeydue history can come with you',
+        heroSubtitle: 'Upload your CSV and bring years of shared budgeting into Futari in about three minutes.',
+        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home — free, ad-free, and end-to-end encrypted.",
+        stepsHeading: 'Three steps',
+        step1: 'In Honeydue → Settings → Export Data, download the CSV.',
+        step2: 'Upload the CSV here and preview your records.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+      },
+      spendee: {
+        heroTitle: 'Your Spendee history can come with you',
+        heroSubtitle: 'Upload your Spendee CSV, preview everything, and decide if Futari feels right.',
+        stepsHeading: 'Three steps',
+        step1: 'In Spendee → More → Export Data, download the CSV.',
+        step2: 'Upload the CSV here and preview your records.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+      },
+      cwmoney: {
+        heroTitle: 'Your CWMoney history can come with you',
+        heroSubtitle: 'Use our conversion template to turn CWMoney Excel exports into a CSV Futari can read.',
+        stepsHeading: 'Three steps',
+        step1: 'In CWMoney, export your records as Excel (requires VIP).',
+        step2: 'Download the template below and paste your data in.',
+        step3: 'Upload the converted CSV, preview it, then create an account to import.',
+        templateDownloadLabel: 'Download the template',
+        templateNote: "The template maps CWMoney's columns to a layout Futari supports.",
+      },
+    },
   },
 
   seo: {
@@ -1704,6 +1733,23 @@ export const en: Translations = {
     privacy: {
       title: 'Privacy Policy · Futari',
       description: 'How the Futari alpha test build collects and handles your data.',
+    },
+    migrate: {
+      honeydue: {
+        title: 'Move from Honeydue to Futari — a free shared-budgeting alternative',
+        description: 'Honeydue is winding down. Move your data to Futari in about 3 minutes and keep budgeting together with your partner. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
+      },
+      spendee: {
+        title: 'Move from Spendee to Futari — a shared-budgeting alternative',
+        description: 'Bring your Spendee history into Futari and keep budgeting with your partner. Upload your CSV — three minutes, done.',
+        ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
+      },
+      cwmoney: {
+        title: 'Move from CWMoney to Futari — how to bring your records over',
+        description: 'Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari can import.',
+        ogDescription: "Moving from CWMoney: convert your Excel with our template, then import into Futari.",
+      },
     },
   },
 }

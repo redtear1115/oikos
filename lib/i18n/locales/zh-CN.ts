@@ -1683,6 +1683,35 @@ export const zhCN: Translations = {
       cwmoney: 'CWMoney',
       unknown: '其他',
     },
+    pages: {
+      honeydue: {
+        heroTitle: '你的 Honeydue 数据，可以带走',
+        heroSubtitle: '上传 CSV，三分钟把这几年的记账搬到 Futari。',
+        intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、数据加密。',
+        stepsHeading: '搬迁三步',
+        step1: '在 Honeydue App → 设置 → 导出数据，下载 CSV。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '创建 Futari 账号，一键完成搬迁。',
+      },
+      spendee: {
+        heroTitle: '你的 Spendee 数据，可以带走',
+        heroSubtitle: '上传 Spendee 导出的 CSV，预览完整记录再决定要不要搬。',
+        stepsHeading: '搬迁三步',
+        step1: '在 Spendee → More → Export Data，下载 CSV。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '创建 Futari 账号，一键完成搬迁。',
+      },
+      cwmoney: {
+        heroTitle: '你的 CWMoney 数据，可以带走',
+        heroSubtitle: '用转换模板把 CWMoney 的 Excel 整理成 CSV，再上传到 Futari。',
+        stepsHeading: '搬迁三步',
+        step1: '在 CWMoney 导出 Excel 格式的记账数据（需 VIP）。',
+        step2: '下载下方的转换模板，把数据粘进去。',
+        step3: '上传转换后的 CSV，预览并创建账号导入。',
+        templateDownloadLabel: '下载转换模板',
+        templateNote: '模板会把 CWMoney 的字段对应到 Futari 支持的格式。',
+      },
+    },
   },
 
   seo: {
@@ -1703,6 +1732,23 @@ export const zhCN: Translations = {
     privacy: {
       title: '隐私权政策 · Futari',
       description: 'Futari alpha 测试版本的数据收集与隐私权处理方式。',
+    },
+    migrate: {
+      honeydue: {
+        title: '从 Honeydue 搬到 Futari — 免费双人记账替代方案',
+        description: 'Honeydue 逐渐停止维护，Futari 让你 3 分钟完成数据搬迁，继续和伴侣一起记账。免费、无广告、数据加密。',
+        ogDescription: 'Honeydue 用户的下一站：Futari 双人记账，把数据一起带走。',
+      },
+      spendee: {
+        title: '从 Spendee 搬到 Futari — 双人记账替代方案',
+        description: '把 Spendee 的记账数据带来 Futari，继续和伴侣一起记账。上传 CSV，3 分钟完成搬迁。',
+        ogDescription: 'Spendee 用户的双人记账新选择：上传 CSV，3 分钟搬完。',
+      },
+      cwmoney: {
+        title: '从 CWMoney 搬到 Futari — 记账数据搬迁教程',
+        description: '用我们提供的 Excel 转换模板，把 CWMoney 数据整理成 CSV，再上传到 Futari 完成搬迁。',
+        ogDescription: 'CWMoney 用户搬家指南：用转换模板把 Excel 变成 CSV，搬进 Futari。',
+      },
     },
   },
 }

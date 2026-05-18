@@ -11,6 +11,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 const PATHS = [
   { path: '/', changeFrequency: 'weekly' as const, priority: 1.0 },
   { path: '/sign-in', changeFrequency: 'monthly' as const, priority: 0.7 },
+  { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.7 },
+  { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.6 },
+  { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.6 },
   { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3 },
   { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3 },
 ]

@@ -2017,6 +2017,41 @@ export type Translations = {
       /** Fallback shown when header sniffer + page hint both fail. */
       unknown: string
     }
+    /** Per-source landing page copy — hero + 3-step walkthrough + optional
+     *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
+     *  Hero h1 / steps live here; SEO `<title>`/`<meta>` live in seo.migrate.*. */
+    pages: {
+      honeydue: {
+        heroTitle: string
+        heroSubtitle: string
+        /** Objective background about Honeydue — never攻擊性 framing. */
+        intro: string
+        stepsHeading: string
+        step1: string
+        step2: string
+        step3: string
+      }
+      spendee: {
+        heroTitle: string
+        heroSubtitle: string
+        stepsHeading: string
+        step1: string
+        step2: string
+        step3: string
+      }
+      cwmoney: {
+        heroTitle: string
+        heroSubtitle: string
+        stepsHeading: string
+        step1: string
+        step2: string
+        step3: string
+        /** Download button for the Excel → CSV conversion template. */
+        templateDownloadLabel: string
+        /** Caption under the download button explaining what the template does. */
+        templateNote: string
+      }
+    }
   }
 
   /** Per-page SEO strings — title / description / ogDescription used by
@@ -2039,6 +2074,24 @@ export type Translations = {
     privacy: {
       title: string
       description: string
+    }
+    /** SEO copy for the per-source /migrate landing pages. */
+    migrate: {
+      honeydue: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      spendee: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      cwmoney: {
+        title: string
+        description: string
+        ogDescription: string
+      }
     }
   }
 }
@@ -3726,6 +3779,35 @@ export const zhTW: Translations = {
       cwmoney: 'CWMoney',
       unknown: '其他',
     },
+    pages: {
+      honeydue: {
+        heroTitle: '你的 Honeydue 資料，可以帶走',
+        heroSubtitle: '上傳 CSV，三分鐘把這幾年的記帳搬到 Futari。',
+        intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、資料加密。',
+        stepsHeading: '搬遷三步',
+        step1: '在 Honeydue App → 設定 → 匯出資料，下載 CSV。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+      },
+      spendee: {
+        heroTitle: '你的 Spendee 資料，可以帶走',
+        heroSubtitle: '上傳 Spendee 匯出的 CSV，預覽完整紀錄再決定要不要搬。',
+        stepsHeading: '搬遷三步',
+        step1: '在 Spendee → More → Export Data，下載 CSV。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+      },
+      cwmoney: {
+        heroTitle: '你的 CWMoney 資料，可以帶走',
+        heroSubtitle: '用轉換模板把 CWMoney 的 Excel 整理成 CSV，再上傳到 Futari。',
+        stepsHeading: '搬遷三步',
+        step1: '在 CWMoney 匯出 Excel 格式的記帳資料（需 VIP）。',
+        step2: '下載下方的轉換模板，把資料貼進去。',
+        step3: '上傳轉換後的 CSV，預覽並建立帳號匯入。',
+        templateDownloadLabel: '下載轉換模板',
+        templateNote: '模板會把 CWMoney 的欄位對應到 Futari 支援的格式。',
+      },
+    },
   },
 
   seo: {
@@ -3746,6 +3828,23 @@ export const zhTW: Translations = {
     privacy: {
       title: '隱私權政策 · Futari',
       description: 'Futari alpha 測試版本的資料蒐集與隱私權處理方式。',
+    },
+    migrate: {
+      honeydue: {
+        title: '從 Honeydue 搬到 Futari — 免費雙人記帳替代方案',
+        description: 'Honeydue 逐漸停止維護，Futari 讓你 3 分鐘完成資料搬遷，繼續和伴侶一起記帳。免費、無廣告、資料加密。',
+        ogDescription: 'Honeydue 用戶的下一站：Futari 雙人記帳，把資料一起帶走。',
+      },
+      spendee: {
+        title: '從 Spendee 搬到 Futari — 雙人記帳替代方案',
+        description: '把 Spendee 的記帳資料帶來 Futari，繼續和伴侶一起記帳。上傳 CSV，3 分鐘完成搬遷。',
+        ogDescription: 'Spendee 用戶的雙人記帳新選擇：上傳 CSV，3 分鐘搬完。',
+      },
+      cwmoney: {
+        title: '從 CWMoney 搬到 Futari — 記帳資料搬遷教學',
+        description: '用我們提供的 Excel 轉換模板，把 CWMoney 資料整理成 CSV，再上傳到 Futari 完成搬遷。',
+        ogDescription: 'CWMoney 用戶搬家指南：用轉換模板把 Excel 變成 CSV，搬進 Futari。',
+      },
     },
   },
 }
