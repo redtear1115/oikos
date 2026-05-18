@@ -4,6 +4,13 @@ import { SUPPORTED_LOCALES, DEFAULT_LOCALE, isLocale, type Locale } from './loca
 /** Phase 1 範圍內、有 [locale] segment 對應的 public path。 */
 export const PUBLIC_LOCALIZED_PATHS = ['/', '/sign-in', '/terms', '/privacy'] as const
 
+/**
+ * Public localized path prefixes. Sub-paths added dynamically over time
+ * (e.g. /migrate/<source>) — listed here so proxy + LanguageSwitcher treat
+ * the whole subtree as anonymous-public without re-listing every page.
+ */
+export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate'] as const
+
 /** URL 第一段若是 supported locale 則回傳之，否則 null。 */
 export function parseLocaleFromPath(pathname: string): Locale | null {
   const segments = pathname.split('/').filter(Boolean)
@@ -35,7 +42,10 @@ export function localizedHref(path: string, locale: Locale): string {
  */
 export function isPublicLocalizedPath(pathname: string): boolean {
   const stripped = stripLocaleFromPath(pathname)
-  return (PUBLIC_LOCALIZED_PATHS as readonly string[]).includes(stripped)
+  if ((PUBLIC_LOCALIZED_PATHS as readonly string[]).includes(stripped)) return true
+  return (PUBLIC_LOCALIZED_PREFIXES as readonly string[]).some(
+    p => stripped === p || stripped.startsWith(`${p}/`),
+  )
 }
 
 export { SUPPORTED_LOCALES, DEFAULT_LOCALE, isLocale }

@@ -1963,6 +1963,62 @@ export type Translations = {
     fallbackHtml: string
   }
 
+  /** Shared shell + tool strings for the /migrate/<source> SEO landing pages.
+   *  Per-source SEO copy (title / h1 / body) lives in seo.migrate.* below;
+   *  this block is the upload / preview / CTA scaffolding reused across all
+   *  three pages. Anonymous + client-side — no bytes leave the browser. */
+  migrate: {
+    /** Top-bar back link to the main Futari landing. */
+    backToHome: string
+    upload: {
+      /** Drag-drop zone prompt (mobile shows just the button). */
+      prompt: string
+      /** File-picker button. */
+      button: string
+      /** Footnote under the picker — emphasizes privacy. */
+      constraint: string
+      /** Status shown while parsing. */
+      parsing: string
+      /** Generic parse failure message. */
+      error: string
+      /** Reset link after error or successful preview. */
+      retry: string
+    }
+    preview: {
+      /** Section heading above the stats. */
+      title: string
+      /** Label for the detected source row. Replace `{source}` with sources.*. */
+      sourceLabel: string
+      /** Label for detected encoding row. Replace `{encoding}` literally. */
+      encodingLabel: string
+      /** Total parsed rows. Replace `{count}`. */
+      totalRowsLabel: string
+      /** Estimated expense rows (negative-amount heuristic). Replace `{count}`. */
+      expenseRowsLabel: string
+      /** Date span. Replace `{first}` / `{last}` with raw date strings. */
+      dateRangeLabel: string
+      /** Heading for the top-categories list. */
+      topCategoriesLabel: string
+      /** Empty state — file parsed but has zero rows. */
+      empty: string
+    }
+    cta: {
+      /** Primary button → sign-in with `?from=<source>` query. */
+      button: string
+      /** Sub-copy under the CTA — what happens after sign-up. */
+      hint: string
+      /** Reassurance line shown below upload + CTA. */
+      privacyNote: string
+    }
+    sources: {
+      honeydue: string
+      spendee: string
+      cwmoney: string
+      /** Fallback shown when header sniffer + page hint both fail. */
+      unknown: string
+    }
+  }
+
   /** Per-page SEO strings — title / description / ogDescription used by
    *  generateMetadata in each app/[locale]/*\/page.tsx. Not rendered in UI. */
   seo: {
@@ -3637,6 +3693,39 @@ export const zhTW: Translations = {
       step3: 'Futari 會像一個獨立的 app 開啟',
     },
     fallbackHtml: '在你的瀏覽器選單裡找「<strong>加到主畫面</strong>」或「<strong>安裝應用程式</strong>」。不同瀏覽器位置不太一樣，但通常都在右上的選單裡。',
+  },
+
+  migrate: {
+    backToHome: '← 回 Futari 首頁',
+    upload: {
+      prompt: '把 CSV 拖到這裡，或選擇檔案',
+      button: '選擇 CSV',
+      constraint: '檔案只會在你的瀏覽器解析，不會上傳。',
+      parsing: '解析中⋯',
+      error: '讀不懂這個檔案。確認是 CSV 後再試一次。',
+      retry: '換一個檔案',
+    },
+    preview: {
+      title: '看一下你的資料長什麼樣',
+      sourceLabel: '來源 · {source}',
+      encodingLabel: '編碼 · {encoding}',
+      totalRowsLabel: '{count} 筆紀錄',
+      expenseRowsLabel: '約 {count} 筆支出',
+      dateRangeLabel: '{first} ~ {last}',
+      topCategoriesLabel: '常出現的分類',
+      empty: '這個檔案沒有可預覽的內容。',
+    },
+    cta: {
+      button: '建立帳號，把這些搬進來',
+      hint: '建立完帳號再把這份 CSV 匯入，原本記過的不用再記一次。',
+      privacyNote: '預覽只在你的瀏覽器跑，沒有東西被傳出去。',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: '其他',
+    },
   },
 
   seo: {

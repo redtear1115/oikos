@@ -1652,6 +1652,39 @@ export const zhCN: Translations = {
     fallbackHtml: '在你的浏览器菜单里找「<strong>添加到主屏幕</strong>」或「<strong>安装应用</strong>」。不同浏览器位置不太一样，但通常都在右上角的菜单里。',
   },
 
+  migrate: {
+    backToHome: '← 回 Futari 首页',
+    upload: {
+      prompt: '把 CSV 拖到这里，或选择文件',
+      button: '选择 CSV',
+      constraint: '文件只会在你的浏览器解析，不会上传。',
+      parsing: '解析中⋯',
+      error: '读不懂这个文件。确认是 CSV 后再试一次。',
+      retry: '换一个文件',
+    },
+    preview: {
+      title: '看一下你的数据长什么样',
+      sourceLabel: '来源 · {source}',
+      encodingLabel: '编码 · {encoding}',
+      totalRowsLabel: '{count} 条记录',
+      expenseRowsLabel: '约 {count} 条支出',
+      dateRangeLabel: '{first} ~ {last}',
+      topCategoriesLabel: '常出现的分类',
+      empty: '这个文件没有可预览的内容。',
+    },
+    cta: {
+      button: '建账号，把这些搬过来',
+      hint: '建完账号再把这份 CSV 导入，原本记过的不用再记一次。',
+      privacyNote: '预览只在你的浏览器跑，没有东西被传出去。',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: '其他',
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · 两个人，一本账｜情侣共享记账 PWA',

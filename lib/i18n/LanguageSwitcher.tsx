@@ -3,7 +3,7 @@
 import { Fragment } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { type Locale } from './locales-meta'
-import { localizedHref, stripLocaleFromPath } from './path'
+import { isPublicLocalizedPath, localizedHref, stripLocaleFromPath } from './path'
 
 const LOCALES = [
   { value: 'zh-TW', label: '繁中' },
@@ -31,12 +31,9 @@ interface Props {
   mode?: Mode
 }
 
-// Phase 1 內的 public path（解過 locale prefix 後的形狀）
-const PHASE_ONE_PUBLIC_PATHS = ['/', '/sign-in', '/terms', '/privacy'] as const
-
 function inferMode(pathname: string): Mode {
-  const stripped = stripLocaleFromPath(pathname)
-  return (PHASE_ONE_PUBLIC_PATHS as readonly string[]).includes(stripped) ? 'url' : 'cookie'
+  // 與 proxy 同一份來源（PUBLIC_LOCALIZED_PATHS + PREFIXES）— 改一個地方就好。
+  return isPublicLocalizedPath(pathname) ? 'url' : 'cookie'
 }
 
 export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {

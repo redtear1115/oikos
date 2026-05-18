@@ -1653,6 +1653,39 @@ export const en: Translations = {
     fallbackHtml: 'Look inside your browser menu for "<strong>Add to Home Screen</strong>" or "<strong>Install app</strong>". The exact location differs between browsers, but it\'s usually in the top-right menu.',
   },
 
+  migrate: {
+    backToHome: '← Back to Futari',
+    upload: {
+      prompt: 'Drop your CSV here, or pick a file',
+      button: 'Choose CSV',
+      constraint: 'Parsed in your browser. Nothing is uploaded.',
+      parsing: 'Reading the file…',
+      error: "Couldn't read that file. Make sure it's a CSV and try again.",
+      retry: 'Try another file',
+    },
+    preview: {
+      title: 'Here is what we found',
+      sourceLabel: 'Source · {source}',
+      encodingLabel: 'Encoding · {encoding}',
+      totalRowsLabel: '{count} records',
+      expenseRowsLabel: '~{count} look like expenses',
+      dateRangeLabel: '{first} → {last}',
+      topCategoriesLabel: 'Categories that show up most',
+      empty: 'No rows to preview in this file.',
+    },
+    cta: {
+      button: 'Create an account and bring it in',
+      hint: "Sign up, then import this CSV — you won't have to log it again.",
+      privacyNote: 'Preview runs in your browser. Nothing leaves your device.',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: 'Other',
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
