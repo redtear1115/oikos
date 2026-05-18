@@ -15,6 +15,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.0] - 2026-05-18
+
+主題：**CSV 匯入歷史紀錄 + /migrate 站台（#51）**——換 app 最大的摩擦是「過去三年的紀錄怎麼辦」。Futari 提供通用 CSV 匯入（schema + parser + dedup + 預覽 wizard）和 CWMoney → Futari Excel 轉換模板（#557），讓 Honeydue / Spendee / CWMoney 出走者把歷史資料帶進來不用重打。順手做 /migrate/{honeydue,spendee,cwmoney} 三條 SEO landing 頁，把「Futari 是替代品」這件事說清楚。順帶 perf 優化把 landing 從 render-blocking 字型 chunk 解放（#572），LCP 7076ms → 2345ms、Lighthouse 61 → 98；修 dashboard 右上角小飛機按鈕點了沒反應的 bug（#587）。
+完整 diff：[v1.0.5...v1.1.0](https://github.com/redtear1115/oikos/compare/v1.0.5...v1.1.0)
+
+### 使用者可見變化
+
+- **CSV 匯入歷史紀錄（#51, #552–556）**：上傳通用格式 CSV，系統做欄位驗證、hash-based dedup，跑完進入 preview wizard 確認 category / 預設付款人 / 跳過個別 row，最後一鍵寫入帳本。匯入 row 標記 imported_at + source 留 audit；不會自動還原 GroupBalance（來源 app 的金錢歸屬規則不同）。
+- **CWMoney → Futari Excel 轉換模板（#557）**：提供 .xlsx 模板（公式驅動），用戶在 Sheet/Excel 把 CWMoney CSV 對映成通用格式再上傳。模板放在 /cwmoney-template.xlsx，從 /migrate/cwmoney step 2 直接下載；修了一個 auth redirect 把模板擋在登入後的 bug（#575）。
+- **/migrate landing 頁（Honeydue / Spendee / CWMoney）**：三條 SEO landing 頁，每條都有 hero（italic Fraunces kicker + brand mark）、「為什麼 Futari」differentiator 區塊、3 步驟匯入 guide（italic Fraunces 01/02/03 numerals）、trust 區塊 + footer。Honeydue 附「自 2024 年起已由原團隊轉手」客觀背景說明（hairline-bordered italic callout，不攻擊性）。CWMoney 把模板下載折進 step 2，避免兩顆 CTA 競爭。設計細節見 #577–#583。
+- **Landing 載入更快（#572）**：Noto Sans TC 從 root layout 移到 dashboard layout，landing 不再下載 ~190KB @font-face CSS chunk。Mobile-simulate Lighthouse：LCP 7076ms → 2345ms、perf 61 → 98。
+- **Dashboard 右上角飛機按鈕修好了（#587）**：沒有 active trip 時右上的小飛機按鈕點下去現在會跳出新增旅行 sheet（先前是 no-op placeholder）。順便把圖示換成 Lucide `Plane` 真實客機輪廓。
+
+### 技術變更
+
+- **CSV 匯入 stack（#552–556）**：新增 `ImportBatches` / `ImportErrors` table；client-side 通用 CSV parser + 欄位 validator（`lib/csv/`）；hash-based dedup（同檔重傳 short-circuit、跨檔交叉檢核同 row）；server action 落地 batch + transaction 寫入；preview wizard 做類別 mapping + 預設 payer 選擇。
+- **/migrate shared layout + components（#561, #584）**：`app/[locale]/migrate/_components/` 收 `MigrateHero` / `MigrateTool` / `MigratePreviewCard` / `MigrateSteps` / `MigrateDifferentiators` / `MigrateIntroCallout` / `MigrateTrustFooter`。三條頁面從 shared layout 組裝；i18n 4 語同步（zh-TW 主稿；ja 依 ja-i18n skill 漢字白名單檢核）。
+- **Noto Sans TC scope 收斂（#572）**：`Noto_Sans_TC({ preload: false, display: 'swap' })` 從 root layout 移到 `app/(dashboard)/layout.tsx`，landing path 不再 fetch 那 ~11 個 unicode-range woff2 chunks。Onboarding (`app/onboarding/`) 改 system-ui fallback（接受小幅 first-visit 視覺 regression 換 perf）。
+- **Dashboard 飛機按鈕 wire（#587）**：`Dashboard.tsx` 加 `tripSheetOpen` state，mount sibling `<TripSheet>`；`PaperPlaneIcon` → `PlaneIcon`（Lucide `Plane` path）；`BrandHeader` + `ActiveTripBanner` 兩處同步 rename。
+- **docs cleanup**：CLAUDE.md 去重、README 重新整理；CHANGELOG 把 v0.x 收成 collapsible；breaking changes 區塊標明；csv-import-design.md frontmatter 改 shipped + first_shipped_in v1.1.0。
+
 ## [1.0.5] - 2026-05-18
 
 主題：**三大入口 header / filter 統一（#545）**——Dashboard / Records / Assets 三頁 L1Header 規格對齊；Records L2 三 tab 收成「支出 + 收入」雙 toggle 並把月份切換改成 month picker popover；Dashboard 拆掉多餘 FilterSheet，payer / 負擔兩維直接做成 L3 雙 toggle，順手把「分攤」語意修成正確的 viewer × payer 負擔 cross-product；定期收支入口從 feed 中間 card 移到 L1 右側；愛物頁類型篩選改成 icon-only chip + 篩到空 bucket 的智慧 CTA。
@@ -1163,7 +1184,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/redtear1115/oikos/compare/v1.0.5...v1.1.0
 [1.0.5]: https://github.com/redtear1115/oikos/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/redtear1115/oikos/compare/v1.0.2...v1.0.3
