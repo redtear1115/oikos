@@ -17,6 +17,7 @@ import {
   parseDateRangeFromRecord,
   parseFilterFromRecord,
   hidesSettlements,
+  splitFilterToTypes,
   type DateRange,
 } from '@/lib/filter'
 
@@ -95,12 +96,7 @@ export default async function RecordsPage({
   const resolved: ResolvedTxnFilter | undefined = filterIsActive
     ? {
         paidBy: resolvedPaidBy,
-        splitTypes:
-          filter.split === 'all'
-            ? []
-            : filter.split === 'shared'
-              ? ['half', 'weighted']
-              : [filter.split],
+        splitTypes: splitFilterToTypes(filter.split),
         categories: Array.from(filter.categories),
         incomeCategories: Array.from(filter.incomeCategories),
         assetIds: Array.from(filter.assetIds),

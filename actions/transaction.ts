@@ -9,7 +9,7 @@ import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type FeedRow, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
-import { cutsExpense, fromWire, hidesSettlements, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { cutsExpense, fromWire, hidesSettlements, splitFilterToTypes, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -339,12 +339,7 @@ function resolveTxnFilter(
   }
   return {
     paidBy,
-    splitTypes:
-      f.split === 'all'
-        ? []
-        : f.split === 'shared'
-          ? ['half', 'weighted']
-          : [f.split],
+    splitTypes: splitFilterToTypes(f.split),
     categories: Array.from(f.categories),
     incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),

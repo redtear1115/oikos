@@ -6,14 +6,28 @@ import type { RecordStatus } from '@/lib/validators'
 /** Single-select dimensions use 'all' to mean "no filter". Multi-select dimensions use empty Set. */
 export type PayerFilter = 'all' | 'mine' | 'theirs'
 /**
- * Split-type filter. `SplitType` values map to a single DB split_type each;
- * `'shared'` is a UI-level aggregate that matches `half` OR `weighted` — the
- * two ratio-based modes — so the Dashboard 平分 chip can collapse them under
- * one user-facing label without forcing the user to think about whether a
- * past record used the 50/50 or the ratio split. Translated downstream in
- * `actions/transaction.ts#toQueryFilter` and `matchesFilter` below.
+ * Split-type filter. Concrete `SplitType` values map to a single DB
+ * split_type each. The three UI-level aggregates collapse multiple
+ * split_types under one user-facing label:
+ *
+ *  - `'shared'`     — ratio-based modes: `half` + `weighted`
+ *  - `'mine_cost'`  — any record where the viewer bears cost:
+ *                     `all_mine` + `half` + `weighted`
+ *  - `'theirs_cost'`— any record where the partner bears cost:
+ *                     `all_theirs` + `half` + `weighted`
+ *
+ * `mine_cost` / `theirs_cost` power the Dashboard L3 「我負擔」/「對方負擔」
+ * dual toggle — single-selected on a side should still surface 50/50 and
+ * ratio splits because in both modes the picked side really is paying
+ * something. Translated downstream in `actions/transaction.ts#toQueryFilter`,
+ * `app/(dashboard)/records/page.tsx`, and `matchesFilter` below.
  */
-export type SplitFilter = 'all' | SplitType | 'shared'
+export type SplitFilter =
+  | 'all'
+  | SplitType
+  | 'shared'
+  | 'mine_cost'
+  | 'theirs_cost'
 /** Status filter — 'pending'/'settled' from RecordStatus, plus 'all' sentinel for no filter. */
 export type StatusFilter = 'all' | RecordStatus
 
@@ -157,6 +171,21 @@ export function toWire(f: TxnFilter): TxnFilterWire {
   }
 }
 
+/**
+ * Resolve a `SplitFilter` to the array of concrete DB split_types it
+ * covers. `'all'` → `[]` (the query layer treats empty as "no filter").
+ * Single concrete values → `[value]`. Aggregates expand to multiple.
+ * Single source of truth for the action / page.tsx / future Records L3
+ * to share — keeps the aggregate semantics from drifting between callsites.
+ */
+export function splitFilterToTypes(s: SplitFilter): SplitType[] {
+  if (s === 'all') return []
+  if (s === 'shared') return ['half', 'weighted']
+  if (s === 'mine_cost') return ['all_mine', 'half', 'weighted']
+  if (s === 'theirs_cost') return ['all_theirs', 'half', 'weighted']
+  return [s]
+}
+
 export function fromWire(w: TxnFilterWire): TxnFilter {
   return {
     payer: w.payer,
@@ -230,12 +259,17 @@ export function matchesFilter(
   // unrelated cash via realtime would surprise them.
   if (cutsExpense(filter)) return false
 
-  // 分攤 dimension — transactions only. 'shared' matches the two ratio-based
-  // modes (half / weighted); concrete values match by equality.
+  // 分攤 dimension — transactions only. Concrete values match by equality;
+  // aggregate values match any of the underlying split_types they cover.
   if (filter.split !== 'all') {
+    const st = row.splitType
     if (filter.split === 'shared') {
-      if (row.splitType !== 'half' && row.splitType !== 'weighted') return false
-    } else if (row.splitType !== filter.split) {
+      if (st !== 'half' && st !== 'weighted') return false
+    } else if (filter.split === 'mine_cost') {
+      if (st !== 'all_mine' && st !== 'half' && st !== 'weighted') return false
+    } else if (filter.split === 'theirs_cost') {
+      if (st !== 'all_theirs' && st !== 'half' && st !== 'weighted') return false
+    } else if (st !== filter.split) {
       return false
     }
   }
@@ -297,7 +331,9 @@ function isValidSplit(s: string | null): s is SplitFilter {
     s === 'all_theirs' ||
     s === 'half' ||
     s === 'weighted' ||
-    s === 'shared'
+    s === 'shared' ||
+    s === 'mine_cost' ||
+    s === 'theirs_cost'
   )
 }
 function isValidStatus(s: string | null): s is StatusFilter {

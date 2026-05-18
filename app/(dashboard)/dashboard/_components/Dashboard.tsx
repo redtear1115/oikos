@@ -181,14 +181,18 @@ export function Dashboard({
   // Compose L3 toggles into a TxnFilter for the feed. Both dims are
   // optional; when both are 'all' we pass null so TransactionFeed skips
   // its filter branch entirely (no realtime mismatch, no wire roundtrip).
-  // Split 'all' (both sides selected) means ALL four DB split types —
-  // including the ratio-based `half` + `weighted` that aren't pickable
-  // on their own from L3.
+  // Split toggles use the `mine_cost` / `theirs_cost` aggregates so a
+  // single-sided pick still includes records where that side bears cost
+  // through a ratio split (half / weighted) — see `SplitFilter` docs.
   const effectiveFilter = useMemo<TxnFilter | null>(() => {
     const payer: PayerFilter =
       payerFilter === 'me' ? 'mine' : payerFilter === 'partner' ? 'theirs' : 'all'
     const split: SplitFilter =
-      splitFilter === 'mine' ? 'all_mine' : splitFilter === 'theirs' ? 'all_theirs' : 'all'
+      splitFilter === 'mine'
+        ? 'mine_cost'
+        : splitFilter === 'theirs'
+          ? 'theirs_cost'
+          : 'all'
     if (payer === 'all' && split === 'all') return null
     return { ...defaultFilter(), payer, split }
   }, [payerFilter, splitFilter])

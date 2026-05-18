@@ -15,6 +15,7 @@ import {
   parseFilterFromRecord,
   parseFilterFromSearchParams,
   resolveDateRangeToDateBounds,
+  splitFilterToTypes,
   toWire,
   type DateRange,
   type FilterableRow,
@@ -173,6 +174,56 @@ describe('matchesFilter — split dimension', () => {
     expect(matchesFilter(txMine, f, 'me', 'them')).toBe(true)        // half
     expect(matchesFilter(txTheirs, f, 'me', 'them')).toBe(false)     // all_theirs
     expect(matchesFilter(settleMine, f, 'me', 'them')).toBe(false)   // settlements dropped
+  })
+  it('shared → ratio modes only (half + weighted); singles dropped', () => {
+    const f = { ...defaultFilter(), split: 'shared' as const }
+    const txHalf: FilterableRow = { paidBy: 'me', splitType: 'half', category: 'dining', kind: 'transaction' }
+    const txWeighted: FilterableRow = { paidBy: 'me', splitType: 'weighted', category: 'dining', kind: 'transaction' }
+    const txAllMine: FilterableRow = { paidBy: 'me', splitType: 'all_mine', category: 'dining', kind: 'transaction' }
+    expect(matchesFilter(txHalf, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txWeighted, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txAllMine, f, 'me', 'them')).toBe(false)
+  })
+  it('mine_cost → all_mine + half + weighted; all_theirs dropped', () => {
+    const f = { ...defaultFilter(), split: 'mine_cost' as const }
+    const txAllMine: FilterableRow = { paidBy: 'me', splitType: 'all_mine', category: 'dining', kind: 'transaction' }
+    const txHalf: FilterableRow = { paidBy: 'me', splitType: 'half', category: 'dining', kind: 'transaction' }
+    const txWeighted: FilterableRow = { paidBy: 'them', splitType: 'weighted', category: 'dining', kind: 'transaction' }
+    const txAllTheirs: FilterableRow = { paidBy: 'me', splitType: 'all_theirs', category: 'dining', kind: 'transaction' }
+    expect(matchesFilter(txAllMine, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txHalf, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txWeighted, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txAllTheirs, f, 'me', 'them')).toBe(false)
+  })
+  it('theirs_cost → all_theirs + half + weighted; all_mine dropped', () => {
+    const f = { ...defaultFilter(), split: 'theirs_cost' as const }
+    const txAllTheirs: FilterableRow = { paidBy: 'me', splitType: 'all_theirs', category: 'dining', kind: 'transaction' }
+    const txHalf: FilterableRow = { paidBy: 'me', splitType: 'half', category: 'dining', kind: 'transaction' }
+    const txWeighted: FilterableRow = { paidBy: 'them', splitType: 'weighted', category: 'dining', kind: 'transaction' }
+    const txAllMine: FilterableRow = { paidBy: 'me', splitType: 'all_mine', category: 'dining', kind: 'transaction' }
+    expect(matchesFilter(txAllTheirs, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txHalf, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txWeighted, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txAllMine, f, 'me', 'them')).toBe(false)
+  })
+})
+
+describe('splitFilterToTypes', () => {
+  it('all → empty (no filter)', () => {
+    expect(splitFilterToTypes('all')).toEqual([])
+  })
+  it('concrete split_type → single-element array', () => {
+    expect(splitFilterToTypes('all_mine')).toEqual(['all_mine'])
+    expect(splitFilterToTypes('half')).toEqual(['half'])
+  })
+  it('shared → ratio-based pair', () => {
+    expect(splitFilterToTypes('shared')).toEqual(['half', 'weighted'])
+  })
+  it('mine_cost → all_mine + ratio pair', () => {
+    expect(splitFilterToTypes('mine_cost')).toEqual(['all_mine', 'half', 'weighted'])
+  })
+  it('theirs_cost → all_theirs + ratio pair', () => {
+    expect(splitFilterToTypes('theirs_cost')).toEqual(['all_theirs', 'half', 'weighted'])
   })
 })
 
