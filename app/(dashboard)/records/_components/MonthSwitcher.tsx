@@ -158,7 +158,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
             if (!yearPrevDisabled) setPickerYear((y) => y - 1)
           }}
           disabled={yearPrevDisabled}
-          className="w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="relative w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed before:absolute before:-inset-y-[6px] before:-inset-x-[6px] before:content-['']"
           style={{ color: 'var(--ink-2)' }}
           aria-label={t.records.monthPicker.prevYear}
         >
@@ -176,7 +176,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
             if (!yearNextDisabled) setPickerYear((y) => y + 1)
           }}
           disabled={yearNextDisabled}
-          className="w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="relative w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed before:absolute before:-inset-y-[6px] before:-inset-x-[6px] before:content-['']"
           style={{ color: 'var(--ink-2)' }}
           aria-label={t.records.monthPicker.nextYear}
         >

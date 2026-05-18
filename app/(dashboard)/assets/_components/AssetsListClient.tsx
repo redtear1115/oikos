@@ -315,19 +315,37 @@ export function AssetsListClient({ items }: Props) {
   const TypeFilterStrip = (
     <div className="px-4 pb-3 overflow-x-auto">
       <div className="flex gap-2">
+        {/* 「全部」chip — active uses a bordered light fill instead of the
+            solid-ink fill the L2 TabBar already owns. Per-type chips below
+            still use saturated --asset-color-* fills, so the colour vocabulary
+            stays:  L2 = solid ink;  L3 all = bordered ink;  L3 per-type = asset hue. */}
         <button
           key="all"
           type="button"
           aria-label={t.assets.typeFilterAll}
           aria-pressed={typeFilter === 'all'}
           onClick={() => setTypeFilter('all')}
-          style={chipBaseStyle(typeFilter === 'all', 'var(--ink)', 'var(--surface)', '1px solid var(--hairline)')}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: 'var(--surface)',
+            border: typeFilter === 'all'
+              ? '1.5px solid var(--ink)'
+              : '1px solid var(--hairline)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            cursor: 'pointer',
+            padding: 0,
+          }}
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
-            <circle cx="17" cy="7" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
-            <circle cx="7" cy="17" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
-            <circle cx="17" cy="17" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
+            <circle cx="7" cy="7" r="2" fill="var(--ink)" />
+            <circle cx="17" cy="7" r="2" fill="var(--ink)" />
+            <circle cx="7" cy="17" r="2" fill="var(--ink)" />
+            <circle cx="17" cy="17" r="2" fill="var(--ink)" />
           </svg>
         </button>
         {TYPE_CHIPS.map(({ key, color, tint, label }) => {
@@ -441,12 +459,12 @@ export function AssetsListClient({ items }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="h-8 inline-flex items-center cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
+              className="h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm transition-colors duration-150"
               style={{
-                padding: '0 14px',
                 borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
                 color: active ? '#fff' : 'var(--ink-3)',
+                fontWeight: active ? 600 : 500,
               }}
             >
               {id === 'aibutsu' ? t.assets.tabs.aibutsu : t.assets.tabs.guardian}
@@ -635,7 +653,7 @@ export function AssetsListClient({ items }: Props) {
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4 flex items-center justify-between">
+      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-3 flex items-center justify-between">
         <div
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}

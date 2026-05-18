@@ -365,9 +365,9 @@ export function RecordsList({
         style={{ background: 'var(--bg)' }}
       >
         {/* L1Header — unified across Dashboard / Records / Assets (#545 §1).
-            pb-4 matches Assets L1 — gives the title room to breathe before
-            the L2 toggle row below. */}
-        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4 flex items-center justify-between">
+            pb-3 matches Assets L1 — keeps the title's breathing room while
+            tightening the row a notch vs the earlier pb-4. */}
+        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-3 flex items-center justify-between">
           <div
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
@@ -411,12 +411,13 @@ export function RecordsList({
                   key={kind}
                   type="button"
                   onClick={() => toggleKind(kind)}
-                  className="h-8 inline-flex items-center gap-[5px] cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
+                  className="h-8 inline-flex items-center gap-[5px] cursor-pointer border-0 text-sm transition-colors duration-150"
                   style={{
                     padding: '0 14px',
                     borderRadius: 999,
                     background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
                     color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-3)',
+                    fontWeight: sel ? 600 : 500,
                   }}
                   aria-pressed={sel}
                 >
