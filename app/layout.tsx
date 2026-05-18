@@ -23,7 +23,7 @@ const SUPABASE_ORIGIN = (() => {
 // LCP critical path (~1.9s on mobile, flagged by Lighthouse). `display: swap`
 // already prevents FOIT, so the trade-off is a brief FOUT swap on the hero
 // headline in exchange for removing the font chain from the critical path.
-// Same reasoning as Noto Sans TC below. (issue #454)
+// Same reasoning applies to Noto Sans TC in the dashboard layout. (issues #454 / #572)
 const fraunces = Fraunces({
   subsets: ['latin'],
   weight: ['400', '500'],
@@ -31,7 +31,6 @@ const fraunces = Fraunces({
   display: 'swap',
   preload: false,
 })
-
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
