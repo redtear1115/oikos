@@ -51,7 +51,8 @@ Realtime：Client subscribes → React state mutation
 
 ### Balance 計算規則
 
-- 金額單位：base 幣別整數（integer，無小數）；base currency 預設 TWD，group 建立後可改
+- 金額單位依 base currency 而異：TWD / CNY / JPY 為整數（無小數）；USD 以 *100 儲存為整數（即 1.50 USD 存為 150）。Balance 計算永遠看 base 幣別的 raw integer 值。
+- Base currency 預設 TWD（可選 TWD / CNY / USD / JPY），當前 epoch 無 record 時可改
 - 每次寫入後全量重算，cache 在 `GroupBalance`
 - 計算實作：`lib/balance.ts` + `lib/db/queries/balance.ts`
 - GroupBalance 欄位 `balance`：`> 0` = member_b 欠 member_a；`< 0` = member_a 欠 member_b
