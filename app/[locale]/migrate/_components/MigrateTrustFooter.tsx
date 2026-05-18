@@ -1,0 +1,86 @@
+import { ShieldOutlineGlyph } from '../../_landing/FutariMark'
+
+type TrustItem = { title: string; body: string }
+
+/**
+ * Closing trust block — narrative-free three-card row, mounted between
+ * steps and the slim footer on every /migrate/<source> page (#578).
+ * Companions, not duplicates, of `cta.privacyNote` inline above the upload.
+ */
+export function MigrateTrustBlock({
+  heading,
+  items,
+}: {
+  heading: string
+  items: readonly TrustItem[]
+}) {
+  return (
+    <section
+      className="rounded-[20px] px-5 md:px-8 py-7 md:py-9 space-y-5"
+      style={{ background: 'var(--surface-alt)' }}
+    >
+      <h2
+        className="text-[13px] m-0 text-center md:text-left"
+        style={{
+          fontFamily: 'var(--font-fraunces)',
+          color: 'var(--accent)',
+          letterSpacing: '3.5px',
+          textTransform: 'uppercase',
+        }}
+      >
+        {heading}
+      </h2>
+      <ul className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 m-0 p-0 list-none">
+        {items.map(({ title, body }) => (
+          <li
+            key={title}
+            className="p-4 md:p-5 rounded-[14px]"
+            style={{ background: 'var(--surface)' }}
+          >
+            <p
+              className="m-0 text-[14px] md:text-[15px] font-semibold"
+              style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
+            >
+              {title}
+            </p>
+            <p
+              className="m-0 mt-1.5 text-[12.5px] md:text-[13px] leading-[1.65]"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              {body}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * Slim closing footer matching the landing pattern — shield glyph + trust
+ * line + © / MADE IN TAIWAN. No language switcher (already in top bar).
+ */
+export function MigrateFooter({ trustNote }: { trustNote: string }) {
+  return (
+    <footer
+      className="mt-6 md:mt-10 pt-5 md:pt-6 flex flex-col md:flex-row items-center md:justify-between gap-3"
+      style={{ borderTop: '1px solid var(--hairline)' }}
+    >
+      <div
+        className="flex items-center gap-2 text-center md:text-left"
+        style={{ color: 'var(--ink-2)' }}
+      >
+        <ShieldOutlineGlyph />
+        <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+          {trustNote}
+        </span>
+      </div>
+      <span
+        className="text-[11px]"
+        style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
+      >
+        © 2026 · MADE IN TAIWAN
+      </span>
+    </footer>
+  )
+}

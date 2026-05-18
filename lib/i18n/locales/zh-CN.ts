@@ -1683,27 +1683,91 @@ export const zhCN: Translations = {
       cwmoney: 'CWMoney',
       unknown: '其他',
     },
+    differentiatorsHeading: '为什么选 Futari',
+    trust: {
+      heading: '为什么可以放心搬过来',
+      items: [
+        {
+          title: '端到端加密',
+          body: '你们之外，没有人能看见这本账的内容。',
+        },
+        {
+          title: '随时可以带走',
+          body: '不喜欢的话，整本账随时导出 CSV，搬家不是绑约的起点。',
+        },
+        {
+          title: '免费长期使用',
+          body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+        },
+      ],
+    },
+    footerTrust: '端到端加密 · 数据只属于你们两个',
     pages: {
       honeydue: {
+        heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 数据，可以带走',
         heroSubtitle: '上传 CSV，三分钟把这几年的记账搬到 Futari。',
         intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、数据加密。',
+        differentiators: [
+          {
+            title: '仍在持续迭代',
+            body: '每两周都有新版本，bug 看得到、反馈有人读。',
+          },
+          {
+            title: '两个人都看得到所有记录',
+            body: '没有「分开账户」的不对称能见度，从一开始就为共同的家设计。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或数据变现。',
+          },
+        ],
         stepsHeading: '搬迁三步',
         step1: '在 Honeydue App → 设置 → 导出数据，下载 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '创建 Futari 账号，一键完成搬迁。',
       },
       spendee: {
+        heroKicker: 'SPENDEE → FUTARI',
         heroTitle: '你的 Spendee 数据，可以带走',
         heroSubtitle: '上传 Spendee 导出的 CSV，预览完整记录再决定要不要搬。',
+        differentiators: [
+          {
+            title: '双人是核心，不是付费才解锁',
+            body: '共享账本不在订阅墙后面，从第一天就免费共用。',
+          },
+          {
+            title: '即时同步',
+            body: '一个人记下，另一个人马上看见，不用等对方刷新。',
+          },
+          {
+            title: '免费、无广告',
+            body: '不靠广告或拍卖数据生活，记账就是记账。',
+          },
+        ],
         stepsHeading: '搬迁三步',
         step1: '在 Spendee → More → Export Data，下载 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '创建 Futari 账号，一键完成搬迁。',
       },
       cwmoney: {
+        heroKicker: 'CWMONEY → FUTARI',
         heroTitle: '你的 CWMoney 数据，可以带走',
         heroSubtitle: '用转换模板把 CWMoney 的 Excel 整理成 CSV，再上传到 Futari。',
+        differentiators: [
+          {
+            title: '双人账本是默认',
+            body: '不必再靠折衷的工作流拼合两本各自的账。',
+          },
+          {
+            title: '人民币整数金额',
+            body: '数字直接就是元，不用再换算分位。',
+          },
+          {
+            title: '记录不评判',
+            body: '没有评分、不打分数、不暗示谁花得太多。',
+          },
+        ],
         stepsHeading: '搬迁三步',
         step1: '在 CWMoney 导出 Excel 格式的记账数据（需 VIP）。',
         step2: '下载下方的转换模板，把数据粘进去。',
