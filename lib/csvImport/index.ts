@@ -35,6 +35,8 @@ export {
   parseDate,
 } from './mapper'
 export { validateRow } from './validator'
+export { computeHash, deduplicateRows } from './dedup'
+export type { DedupResult, DedupStatus } from './dedup'
 
 import { parseCsvBuffer } from './parser'
 import { detectSource, type DetectedSource } from './detector'
@@ -45,6 +47,7 @@ import {
   mapSpendee,
 } from './mapper'
 import { validateRow } from './validator'
+import { computeHash } from './dedup'
 import type {
   HeaderMap,
   ImportRow,
@@ -73,6 +76,12 @@ export interface ProcessResult {
   errors: RowError[]
   warnings: RowError[]
   stats: ProcessStats
+  /**
+   * Dedup hash per row, parallel-indexed to `rows`. Lets the UI fetch the
+   * group's existing hashes (via `getExistingTransactionHashes`) and flag
+   * duplicates before the user commits to the import. See `dedup.ts`.
+   */
+  hashes: string[]
 }
 
 function pickMapper(source: DetectedSource, headerMap?: HeaderMap) {
@@ -124,11 +133,13 @@ export function processBuffer(
       errors: [],
       warnings: [],
       stats: { total: 0, valid: 0, invalid: 0, dateRange: null, topCategories: [] },
+      hashes: [],
     }
   }
   const mapper = pickMapper(source, options.headerMap)
 
   const rows: ImportRow[] = []
+  const hashes: string[] = []
   const errors: RowError[] = []
   const warnings: RowError[] = []
   const catCounts = new Map<string, number>()
@@ -146,6 +157,7 @@ export function processBuffer(
       continue
     }
     rows.push(partial)
+    hashes.push(computeHash(partial))
     const key = partial.category
     catCounts.set(key, (catCounts.get(key) ?? 0) + 1)
     if (dateMin === null || partial.date < dateMin) dateMin = partial.date
@@ -169,5 +181,6 @@ export function processBuffer(
       dateRange: dateMin && dateMax ? { from: dateMin, to: dateMax } : null,
       topCategories,
     },
+    hashes,
   }
 }
