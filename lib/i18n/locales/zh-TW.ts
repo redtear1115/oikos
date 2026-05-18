@@ -55,6 +55,17 @@ export type Translations = {
     srTagline: string
     /** sr-only paragraph below the visible tagline describing the app (#467). */
     srDescription: string
+    /** Quiet secondary entry below the OAuth button on /sign-in that lets
+     *  unauthenticated visitors add Futari to their home screen (#540).
+     *  Android taps `cta` → fires the captured beforeinstallprompt; iOS
+     *  expands `iosStep1` + `iosStep2` inline (no programmatic API). */
+    installHint: {
+      cta: string
+      /** Step 1 text — paired with the share icon by the component. */
+      iosStep1: string
+      /** Step 2 text — paired with the home icon by the component. */
+      iosStep2: string
+    }
   }
 
   landing: {
@@ -73,10 +84,20 @@ export type Translations = {
     ctaHint: string
     /** Secondary desktop CTA — sign-in link for returning users. */
     alreadyHaveAccount: string
-    /** Trust pills next to the desktop CTA. */
+    /** Trust pills next to the desktop CTA (compact variant of `<TrustSection>`). */
     trustEncrypted: string
     trustFree: string
     trustPwa: string
+    /** Full trust section (#538) — shown between Features and footer. The
+     *  compact variant above stays available via `<TrustSection variant="compact">`
+     *  for reuse elsewhere; landing renders the `full` variant which uses these. */
+    trust: {
+      /** One-line narrative above the three trust cards. */
+      narrative: string
+      encryption: { title: string; body: string }
+      portability: { title: string; body: string }
+      forever: { title: string; body: string }
+    }
     /** Features section. */
     featuresKicker: string
     featuresTitle: string
@@ -219,6 +240,15 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
+    /** Payer dual-toggle — viewer side. */
+    payerMe: string
+    /** Payer dual-toggle — partner side. */
+    payerPartner: string
+    /** Split-type dual-toggle on Dashboard L3. */
+    splitFilter: {
+      mine: string
+      theirs: string
+    }
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
@@ -720,12 +750,18 @@ export type Translations = {
 
   records: {
     title: string
-    tabAll: string
     tabExpense: string
     tabIncome: string
     manageRecurringIncome: string
     manageRecurringExpense: string
+    recurringShortcut: string
     offlineMoreNeedsNetwork: string
+    monthPicker: {
+      triggerLabel: string
+      dialogLabel: string
+      prevYear: string
+      nextYear: string
+    }
     stats: {
       title: string         // expense-tab title (kept for back-compat)
       titleAll: string      // 全部 tab
@@ -805,6 +841,7 @@ export type Translations = {
 
   settings: {
     title: string
+    subtitle: string
     sectionGroup: string
     sectionGroupSplit: string
     groupName: string
@@ -968,6 +1005,10 @@ export type Translations = {
     }
   }
 
+  contextStrip: {
+    partnerLeftLine: string
+  }
+
   assets: {
     title: string
     empty: {
@@ -999,6 +1040,13 @@ export type Translations = {
     }
     addCar: string
     addSecondCar: string
+    addHouse: string
+    addChild: string
+    addPet: string
+    addPlant: string
+    addItem: string
+    /** #545 §5 — aria-label for the “全部 / all types” chip in the icon-only filter strip. */
+    typeFilterAll: string
     /** v0.15.0 #127 — strings used only by InsuranceListItem in the coverage section. */
     insuranceList: {
       /** Template with `{name}` placeholder. */
@@ -1357,6 +1405,11 @@ export type Translations = {
     backAriaLabel: string
     editAriaLabel: string
     switcherAriaLabel: string
+    siblingRailAriaLabel: string
+    switcher: {
+      emptyGroup: string
+      currentLabel: string
+    }
     notesSection: string
     recentExpenses: string
     /** Template with `{count}` placeholder. */
@@ -2005,6 +2058,11 @@ export const zhTW: Translations = {
     srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
     srDescription:
       '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
+    installHint: {
+      cta: '也可以先加到主畫面',
+      iosStep1: '點底部正中間的分享按鈕',
+      iosStep2: '往下捲動，選「加入主畫面」',
+    },
   },
 
   landing: {
@@ -2017,6 +2075,21 @@ export const zhTW: Translations = {
     trustEncrypted: '端對端加密',
     trustFree: '免費使用',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
+      encryption: {
+        title: '端對端加密',
+        body: '資料傳輸與儲存全程加密，連我們自己也讀不到內容。',
+      },
+      portability: {
+        title: '隨時帶走',
+        body: 'CSV 匯出，資料永遠是你的。想離開時不會被綁在這裡。',
+      },
+      forever: {
+        title: '永久免費',
+        body: '核心功能不收費，沒有隱藏條款。',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: '一本帳，承接生活的四種光',
     featuresSubtitleHtml: '從第一筆共同支出，到一起照顧的房子、車與每年保單，<br />都收進同一本帳裡。',
@@ -2146,6 +2219,12 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
+    payerMe: '我',
+    payerPartner: '對方',
+    splitFilter: {
+      mine: '我負擔',
+      theirs: '對方負擔',
+    },
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',
@@ -2461,12 +2540,18 @@ export const zhTW: Translations = {
 
   records: {
     title: '紀錄',
-    tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
+    monthPicker: {
+      triggerLabel: '選擇月份',
+      dialogLabel: '月份選擇器',
+      prevYear: '前一年',
+      nextYear: '下一年',
+    },
     stats: {
       title: '支出統計',
       titleAll: '收支統計',
@@ -2537,6 +2622,7 @@ export const zhTW: Translations = {
 
   settings: {
     title: '設定',
+    subtitle: '帳號 · 應用 · 資料',
     sectionGroup: '帳本',
     sectionGroupSplit: '預設分攤方式 & 比例',
     groupName: '帳本名稱',
@@ -2696,6 +2782,10 @@ export const zhTW: Translations = {
     },
   },
 
+  contextStrip: {
+    partnerLeftLine: '夥伴已離開帳本。之前的紀錄都還在。',
+  },
+
   assets: {
     title: '愛物',
     empty: {
@@ -2723,6 +2813,12 @@ export const zhTW: Translations = {
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',
+    addHouse: '新增房屋',
+    addChild: '新增孩子',
+    addPet: '新增寵物',
+    addPlant: '新增植物',
+    addItem: '新增物品',
+    typeFilterAll: '全部',
     insuranceList: {
       insuredPrefix: '被保人 {name}',
       annualPremium: '年繳 NT$ {amount}',
@@ -3047,6 +3143,11 @@ export const zhTW: Translations = {
     backAriaLabel: '返回',
     editAriaLabel: '編輯',
     switcherAriaLabel: '切換愛物',
+    siblingRailAriaLabel: '其他愛物',
+    switcher: {
+      emptyGroup: '（無）',
+      currentLabel: '目前',
+    },
     notesSection: '備註',
     recentExpenses: '近期支出',
     timelineEntries: '時間軸 · {count} 筆',

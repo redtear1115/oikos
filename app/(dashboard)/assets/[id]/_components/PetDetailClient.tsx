@@ -6,7 +6,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
-import { AibutsuHeader, useTint } from './AibutsuHeader'
+import { AibutsuHeader, useTint, type SiblingChip } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aibutsu-ui'
 import type { PetDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -29,9 +29,10 @@ interface Props {
   assetSheetInitial: AssetSheetInitial
   initialTxns: PagedTxnRow[]
   pageSize: number
+  siblings?: SiblingChip[]
 }
 
-export function PetDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize }: Props) {
+export function PetDetailClient({ assetId, name, notes, details, summary, assetSheetInitial, initialTxns, pageSize, siblings }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.pet
@@ -89,6 +90,8 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         name={name}
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
+        siblings={siblings}
+        currentAssetId={assetId}
       />
 
       {details?.birthDate && (

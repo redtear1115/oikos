@@ -7,6 +7,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint } from './AibutsuHeader'
+import { AssetSwitcher, type SwitcherGroup } from './AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from './aibutsu-ui'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import { useTranslations } from '@/lib/i18n/client'
@@ -32,9 +33,10 @@ interface Props {
   details: InsuranceDetailsRow | null
   linkedVehicle?: { id: string; name: string } | null
   assetSheetInitial: AssetSheetInitial
+  allInsuranceGroups?: SwitcherGroup[]
 }
 
-export function InsuranceDetailClientLegacy({ assetId, name, notes, details, linkedVehicle, assetSheetInitial }: Props) {
+export function InsuranceDetailClientLegacy({ assetId, name, notes, details, linkedVehicle, assetSheetInitial, allInsuranceGroups }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const td = t.assetDetail.insurance
@@ -68,7 +70,17 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="insurance"
-        name={name}
+        name={
+          allInsuranceGroups && allInsuranceGroups.length > 0 ? (
+            <AssetSwitcher
+              currentAssetId={assetId}
+              groups={allInsuranceGroups}
+              triggerBg="rgba(255,255,255,0.55)"
+            >
+              <span>{name}</span>
+            </AssetSwitcher>
+          ) : name
+        }
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
       />

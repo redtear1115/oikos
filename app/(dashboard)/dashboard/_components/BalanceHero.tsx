@@ -6,7 +6,6 @@ import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/Member
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { viewerBalance } from '@/lib/balance'
 import { SettlementForm } from './SettlementForm'
-import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
@@ -29,15 +28,13 @@ interface Props {
    *  Optional `info.savedAmount` carries the settlement amount so the parent
    *  can surface a success toast. */
   onSettleMutated?: (info?: { savedAmount?: number; edit?: boolean; deleted?: boolean }) => void
-  // Mode toggle:
+  // Mode toggle (owned by Dashboard L2 row, not BalanceHero):
   mode: 'expense' | 'income'
   onModeChange: (m: 'expense' | 'income') => void
   // Income hero data (pre-fetched at page level):
   incomeMonthTotal: number
   incomeMonthCount: number
   recentIncomeLabel: string | null  // e.g. "5/1 · 五月薪水" or null if no incomes
-  incomePendingCount?: number
-  expensePendingCount?: number
 }
 
 export function BalanceHero({
@@ -49,8 +46,6 @@ export function BalanceHero({
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,
-  incomePendingCount = 0,
-  expensePendingCount = 0,
 }: Props) {
   const { viewer, partner, viewerIsA, isPast } = useMember()
   const t = useTranslations()
@@ -158,13 +153,6 @@ export function BalanceHero({
 
   return (
     <div className={`px-5 pt-6 ${heroCollapsed ? 'pb-3' : 'pb-5'}`}>
-      <ModeTogglePlaceholder
-        mode={mode}
-        onChange={onModeChange}
-        incomePendingCount={incomePendingCount}
-        expensePendingCount={expensePendingCount}
-      />
-
       {mode === 'income' ? (
         // Income: always render the card; ToggleButton stays in the header row.
         <div style={{

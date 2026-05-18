@@ -75,32 +75,8 @@ export function ActiveTripBanner({ trips, baseCurrency }: Props) {
     />
   )
 
-  // === Empty state — single-line CTA, no collapse toggle ===
-  if (trips.length === 0) {
-    return (
-      <>
-        <div className="px-4 pt-2">
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            aria-label={tr.emptyCta}
-            className="w-full flex items-center gap-2.5 rounded-[20px] cursor-pointer"
-            style={{
-              padding: '12px 14px 12px 16px',
-              background: 'var(--surface)',
-              border: '1px dashed var(--hairline)',
-              textAlign: 'left',
-            }}
-          >
-            <PaperPlaneIcon size={15} color="var(--accent)" />
-            <span className="flex-1 text-sm" style={{ color: 'var(--ink-2)' }}>{tr.emptyCta}</span>
-            <span aria-hidden style={{ color: 'var(--ink-3)', fontSize: 16, lineHeight: 1, fontWeight: 400 }}>›</span>
-          </button>
-        </div>
-        {sheet}
-      </>
-    )
-  }
+  // === Empty state — no longer rendered (CTA moved to BrandHeader plane button) ===
+  if (trips.length === 0) return null
 
   // === Active states ===
   const single = trips.length === 1 ? trips[0] : null

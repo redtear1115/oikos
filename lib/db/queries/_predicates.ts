@@ -194,6 +194,56 @@ export function splitTypeClause(
   return sql`${col(column)} IN (${sql.join(splitTypes.map((s) => sql`${s}::split_type`), sql`, `)})`
 }
 
+/**
+ * "Who actually bears the cost" predicate. Resolves the payer × split_type
+ * cross-product that the standalone split / payer dims can't express:
+ *
+ *   side='mine'  → (paid_by = viewer  AND split = 'all_mine')
+ *                  OR (paid_by = partner AND split = 'all_theirs')
+ *                  OR split IN ('half', 'weighted')
+ *   side='theirs'→ (paid_by = partner AND split = 'all_mine')
+ *                  OR (paid_by = viewer  AND split = 'all_theirs')
+ *                  OR split IN ('half', 'weighted')
+ *
+ * Pass `null` (or omit) for no filter. `partnerId === null` (solo group)
+ * with a side filter degenerates — the all_* OR-leg that touches partner
+ * matches nothing, which is the correct semantic.
+ */
+export interface BurdenResolution {
+  side: 'mine' | 'theirs'
+  viewerId: string
+  partnerId: string | null
+}
+export function burdenClause(
+  burden: BurdenResolution | null | undefined,
+  paidByColumn: ColRef = 'paid_by',
+  splitColumn: ColRef = 'split_type',
+): SQL | undefined {
+  if (!burden) return undefined
+  const paid = col(paidByColumn)
+  const split = col(splitColumn)
+  const ratio = sql`${split} IN ('half'::split_type, 'weighted'::split_type)`
+  // The two all_* legs reference both viewer and partner. When partnerId is
+  // null we drop the leg that uses it — Drizzle won't accept null inside an
+  // equality clause and a degenerate "= NULL" would silently match nothing
+  // (which IS the right answer, but expressed via leg-omission for clarity).
+  if (burden.side === 'mine') {
+    const viewerLeg = sql`(${paid} = ${burden.viewerId} AND ${split} = 'all_mine'::split_type)`
+    if (burden.partnerId === null) {
+      return sql`(${viewerLeg} OR ${ratio})`
+    }
+    const partnerLeg = sql`(${paid} = ${burden.partnerId} AND ${split} = 'all_theirs'::split_type)`
+    return sql`(${viewerLeg} OR ${partnerLeg} OR ${ratio})`
+  }
+  // side === 'theirs'
+  const viewerLeg = sql`(${paid} = ${burden.viewerId} AND ${split} = 'all_theirs'::split_type)`
+  if (burden.partnerId === null) {
+    return sql`(${viewerLeg} OR ${ratio})`
+  }
+  const partnerLeg = sql`(${paid} = ${burden.partnerId} AND ${split} = 'all_mine'::split_type)`
+  return sql`(${viewerLeg} OR ${partnerLeg} OR ${ratio})`
+}
+
 /** Generic `col IN (...)` for category-like string vocabularies. */
 export function categoryInClause(
   categories: readonly string[],

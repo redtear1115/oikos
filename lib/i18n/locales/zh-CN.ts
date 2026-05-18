@@ -71,6 +71,11 @@ export const zhCN: Translations = {
     srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
     srDescription:
       '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
+    installHint: {
+      cta: '也可以先添加到主屏幕',
+      iosStep1: '点底部正中间的分享按钮',
+      iosStep2: '向下滑动，选「添加到主屏幕」',
+    },
   },
 
   landing: {
@@ -83,6 +88,21 @@ export const zhCN: Translations = {
     trustEncrypted: '端到端加密',
     trustFree: '免费使用',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
+      encryption: {
+        title: '端到端加密',
+        body: '数据传输与存储全程加密，连我们自己也读不到内容。',
+      },
+      portability: {
+        title: '随时带走',
+        body: 'CSV 导出，数据永远是你的。想离开时不会被绑在这里。',
+      },
+      forever: {
+        title: '永久免费',
+        body: '核心功能不收费，没有隐藏条款。',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: '一本账，承接生活的四种光',
     featuresSubtitleHtml: '从第一笔共同支出，到一起照顾的房子、车与每年保单，<br />都收进同一本账里。',
@@ -212,6 +232,12 @@ export const zhCN: Translations = {
     addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
+    payerMe: '我',
+    payerPartner: '对方',
+    splitFilter: {
+      mine: '我负担',
+      theirs: '对方负担',
+    },
     activeTripBanner: {
       kicker: '旅行进行中',
       singleStartedAt: '{date} 起 · 点开看这趟',
@@ -527,12 +553,18 @@ export const zhCN: Translations = {
 
   records: {
     title: '记录',
-    tabAll: '全部',
     tabExpense: '支出',
     tabIncome: '收入',
     manageRecurringIncome: '定期收入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
+    monthPicker: {
+      triggerLabel: '选择月份',
+      dialogLabel: '月份选择器',
+      prevYear: '前一年',
+      nextYear: '下一年',
+    },
     stats: {
       title: '支出统计',
       titleAll: '收支统计',
@@ -603,6 +635,7 @@ export const zhCN: Translations = {
 
   settings: {
     title: '设置',
+    subtitle: '账号 · 应用 · 数据',
     sectionGroup: '账本',
     sectionGroupSplit: '预设分摊方式 & 比例',
     groupName: '账本名称',
@@ -762,6 +795,10 @@ export const zhCN: Translations = {
     },
   },
 
+  contextStrip: {
+    partnerLeftLine: '伙伴已离开账本。之前的记录都还在。',
+  },
+
   assets: {
     title: '爱物',
     empty: {
@@ -789,6 +826,12 @@ export const zhCN: Translations = {
     },
     addCar: '新增车辆',
     addSecondCar: '加入第二辆车',
+    addHouse: '新增房屋',
+    addChild: '新增孩子',
+    addPet: '新增宠物',
+    addPlant: '新增植物',
+    addItem: '新增物品',
+    typeFilterAll: '全部',
     insuranceList: {
       insuredPrefix: '被保人 {name}',
       annualPremium: '年缴 NT$ {amount}',
@@ -1113,6 +1156,11 @@ export const zhCN: Translations = {
     backAriaLabel: '返回',
     editAriaLabel: '编辑',
     switcherAriaLabel: '切换爱物',
+    siblingRailAriaLabel: '其他爱物',
+    switcher: {
+      emptyGroup: '（无）',
+      currentLabel: '当前',
+    },
     notesSection: '备注',
     recentExpenses: '近期支出',
     timelineEntries: '时间轴 · {count} 笔',

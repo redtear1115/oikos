@@ -12,6 +12,7 @@ import { RecurringRuleSheet } from '@/app/(dashboard)/settings/recurring-income/
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
+import { AssetSwitcher, type SwitcherGroup } from '../AssetSwitcher'
 import { SectionHeader, InfoCard, InfoRow } from '../aibutsu-ui'
 import { SavingsHero } from './SavingsHero'
 import { MaturingSoonPrompt } from './MaturingSoonPrompt'
@@ -62,6 +63,7 @@ interface Props {
   /** #166 — recurring income rules already tied to this savings policy.
    *  Surfaced inline so users can see / create rules without leaving the page. */
   recurringRules: RecurringRuleRow[]
+  allInsuranceGroups?: SwitcherGroup[]
 }
 
 const RETURN_CATEGORIES: string[] = [...SAVINGS_RETURN_CATEGORIES]
@@ -80,6 +82,7 @@ export function SavingsView({
   assetSheetInitial,
   linkedVehicle,
   recurringRules,
+  allInsuranceGroups,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -175,7 +178,17 @@ export function SavingsView({
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="insurance"
-        name={name}
+        name={
+          allInsuranceGroups && allInsuranceGroups.length > 0 ? (
+            <AssetSwitcher
+              currentAssetId={assetId}
+              groups={allInsuranceGroups}
+              triggerBg="rgba(255,255,255,0.55)"
+            >
+              <span>{name}</span>
+            </AssetSwitcher>
+          ) : name
+        }
         subtitle={subtitle}
         onEditClick={() => setEditAssetOpen(true)}
       />

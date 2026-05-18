@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
-import { assets, carDetails, insuranceDetails, profiles } from '@/lib/db/schema'
+import { assets, carDetails, childDetails, houseDetails, insuranceDetails, profiles } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { type FeedRow, type FeedKind, type TxnCursor, rowToFeedRow } from './transactions'
 import type { EpochWindow } from './epoch'
@@ -55,6 +55,14 @@ export interface AssetWithCar {
   insuranceTermYears: number | null
   insurancePayCycle: string | null
   insuranceReminderDaysBefore: number | null
+  insuranceVehicleId: string | null
+  insuranceInsurer: string | null
+  // Child-only fields (null for non-child assets)
+  childBirthday: string | null
+  childHeightCm: number | null
+  childWeightG: number | null
+  // House-only fields (null for non-house assets)
+  houseAddress: string | null
 }
 
 /**
@@ -100,9 +108,17 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceTermYears: insuranceDetails.termYears,
       insurancePayCycle: insuranceDetails.payCycle,
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
+      insuranceVehicleId: insuranceDetails.vehicleId,
+      insuranceInsurer: insuranceDetails.insurer,
+      childBirthday: childDetails.birthday,
+      childHeightCm: childDetails.heightCm,
+      childWeightG: childDetails.weightG,
+      houseAddress: houseDetails.address,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .leftJoin(childDetails, eq(childDetails.assetId, assets.id))
+    .leftJoin(houseDetails, eq(houseDetails.assetId, assets.id))
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
@@ -159,9 +175,17 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceTermYears: insuranceDetails.termYears,
       insurancePayCycle: insuranceDetails.payCycle,
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
+      insuranceVehicleId: insuranceDetails.vehicleId,
+      insuranceInsurer: insuranceDetails.insurer,
+      childBirthday: childDetails.birthday,
+      childHeightCm: childDetails.heightCm,
+      childWeightG: childDetails.weightG,
+      houseAddress: houseDetails.address,
     })
     .from(assets)
     .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .leftJoin(childDetails, eq(childDetails.assetId, assets.id))
+    .leftJoin(houseDetails, eq(houseDetails.assetId, assets.id))
     .leftJoin(insuranceDetails, eq(insuranceDetails.assetId, assets.id))
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))

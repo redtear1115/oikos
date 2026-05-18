@@ -41,13 +41,12 @@ beforeEach(() => {
 })
 
 describe('ActiveTripBanner', () => {
-  it('renders an empty-state CTA when there are no active trips', () => {
-    wrap(<ActiveTripBanner trips={[]} baseCurrency="twd" />)
-    // The CTA is a button (opens TripSheet directly, no navigation).
-    const cta = screen.getByRole('button', { name: '開始一段旅行' })
-    expect(cta).toBeTruthy()
-    // No link in empty state.
-    expect(screen.queryByRole('link')).toBeNull()
+  it('renders nothing when no trips', () => {
+    const { container } = render(
+      <ActiveTripBanner trips={[]} baseCurrency="twd" />,
+      { wrapper: I18nWrapper }
+    )
+    expect(container).toBeEmptyDOMElement()
   })
 
   it('shows the single trip name + start date and links to the trip detail', () => {

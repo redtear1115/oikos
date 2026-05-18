@@ -19,7 +19,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow,
-        // Auth-walled and internal paths. Even though middleware 307s these to
+        // Auth-walled and internal paths. Even though proxy 307s these to
         // /sign-in for unauthed crawlers, declaring them keeps signals clean.
         disallow: ['/dashboard', '/setup', '/onboarding', '/invite/', '/auth/', '/api/', '/offline'],
       },

@@ -13,15 +13,10 @@ import { renewInsurance, lapseInsurance } from '@/actions/asset'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
- *
- * Three rendering modes, picked by getFramingGroup() + termYears:
- *   - savings:                累積投入 (years × annual premium), 繳費期滿 badge, USD note
- *   - multi-year protection:  progress bar (yearsPassed / termYears), 剩 N 年, sum insured
- *   - single-year protection: countdown badge (warning at 60d, red at reminderDaysBefore),
- *                             post-expiry 已續保 / 已停止 action buttons
- *
- * The whole card is a Link to /assets/[id] except the single-year action row,
- * which lives outside the Link so the buttons don't navigate.
+ * Redesigned in feat/list-card-redesign:
+ *   - Standalone card (each card is its own rounded box, no container grouping)
+ *   - Timeline visualization (single-year progress bar, multi-year/savings bars)
+ *   - Section grouping is now done at the list level, not here
  */
 
 interface InsuranceData {
@@ -34,6 +29,7 @@ interface InsuranceData {
   policyHolderUserId: string | null
   policyHolderDisplayName: string | null
   policyHolderAvatarUrl: string | null
+  insurer: string | null
   annualPremium: number | null
   sumInsured: number | null
   startsAt: string | null
@@ -48,10 +44,13 @@ interface Props {
   id: string
   name: string
   data: InsuranceData
-  isLast: boolean
 }
 
-export function InsuranceListItem({ id, name, data, isLast }: Props) {
+function fmtNT(n: number) {
+  return n.toLocaleString('en-US')
+}
+
+export function InsuranceListItem({ id, name, data }: Props) {
   const t = useTranslations()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -59,7 +58,6 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const [lapseOpen, setLapseOpen] = useState(false)
   const [renewPolicyNo, setRenewPolicyNo] = useState('')
 
-  const tint = 'var(--asset-tint-insurance)'
   const framing = getFramingGroup(data.insuranceType)
   const today = todayLocalDate()
   const startsAt = parseLocalDate(data.startsAt)
@@ -79,12 +77,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const yearsRemaining = termYears > 0 ? Math.max(0, termYears - yearsPassed) : 0
 
   const cumulativePaid = isSavings ? yearsPassed * annualPremium : 0
-  const isForeignSavings = isSavings && /USD/i.test(data.notes ?? '')
 
-  // #159 — next payment urgency for multi-period policies. Anchored on
-  // startsAt + payCycle. Suppressed for single-year (its own expiry badge
-  // already covers urgency) and once the policy term has ended. Capped at
-  // half-cycle so monthly/quarterly policies don't show a permanent badge.
   const nextPaymentDate = !isSingleYear
     ? computeNextPaymentDate(startsAt, data.payCycle, termYears, today)
     : null
@@ -96,10 +89,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
   const handleRenew = () => {
     startTransition(async () => {
       try {
-        await renewInsurance({
-          id,
-          newPolicyNumber: renewPolicyNo.trim() || null,
-        })
+        await renewInsurance({ id, newPolicyNumber: renewPolicyNo.trim() || null })
         setRenewOpen(false)
         setRenewPolicyNo('')
         router.refresh()
@@ -123,17 +113,9 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
 
   const i = t.assets.insuranceList
 
-  // #142 — 要保人 (policy holder) avatar replaces the generic insurance icon
-  // in the icon box. Falls back to first-letter initial if no avatar_url, and
-  // to the original AssetIcon when no policy holder is set yet (legacy data).
   const policyHolderInitial = data.policyHolderDisplayName?.trim().charAt(0).toUpperCase() ?? null
 
-  // #260 — every card renders exactly one badge so visual weight stays
-  // consistent across the list. Precedence preserved from the prior version;
-  // the only new state is the `active` fallback so cards that used to render
-  // nothing now show 繳費中.
-  // Lapsed policies aren't a badge state — lapseInsurance() soft-deletes,
-  // so they don't appear in the list at all.
+  // Badge derivation (same logic as before)
   const renderBadge = () => {
     type Tone = 'destructive' | 'warning' | 'saving' | 'active'
     const TONES: Record<Tone, { bg: string; fg: string }> = {
@@ -146,9 +128,6 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
     let tone: Tone = 'active'
     let label = i.activeBadge
 
-    // Multi-period policies (savings + multi-year protection) reach a
-    // "term complete" state when past expiry or yearsPassed >= termYears.
-    // Subtitle already says 已到期 in those cases; mirror with the saving chip.
     const multiPeriodTermComplete =
       (isSavings || isMultiYearProtection) &&
       (expired || (termYears > 0 && yearsRemaining === 0))
@@ -183,134 +162,209 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
     )
   }
 
-  // Subtitle line content — varies by framing.
-  // TODO(v0.17 currency): i18n templates (annualPremium, savingsCumulative,
-  // sumInsuredShort) have "NT$ {amount}" baked in — defer migration until
-  // formatAmount gains digits-only mode or i18n strings drop the symbol.
-  const renderSubtitle = () => {
-    const premiumStr = annualPremium > 0 ? i.annualPremium.replace('{amount}', annualPremium.toLocaleString('en-US')) : null
+  // Stripe color: savings → saving-soft, protection → asset-color-insurance
+  const stripeColor = isSavings ? 'var(--saving-soft)' : 'var(--asset-color-insurance)'
 
-    if (isSavings) {
-      const cumulativeStr = i.savingsCumulative.replace('{amount}', cumulativePaid.toLocaleString('en-US'))
-      return (
-        <span className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
-          {premiumStr ? `${premiumStr} · ` : ''}{cumulativeStr}
-          {isForeignSavings ? ` · ${i.savingsForeignNote}` : ''}
-        </span>
-      )
-    }
+  // Single-year progress
+  const singleYearPct = (() => {
+    if (!isSingleYear || !startsAt || !expiryDate) return 0
+    const total = daysBetween(startsAt, expiryDate)
+    if (total <= 0) return 100
+    const passed = daysBetween(startsAt, today)
+    return Math.max(0, Math.min(100, Math.round((passed / total) * 100)))
+  })()
 
-    if (isMultiYearProtection) {
-      const sumStr = data.sumInsured ? i.sumInsuredShort.replace('{amount}', data.sumInsured.toLocaleString('en-US')) : null
-      const remainingStr = termYears > 0
-        ? (expired || yearsRemaining === 0
-            ? i.expired
-            : i.yearsLeft.replace('{n}', String(yearsRemaining)))
-        : null
-      return (
-        <span className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
-          {[premiumStr, remainingStr, sumStr].filter(Boolean).join(' · ')}
-        </span>
-      )
-    }
+  const singleYearBarColor = expired
+    ? 'var(--destructive)'
+    : daysToExpiry != null && daysToExpiry <= 60
+      ? 'var(--warning)'
+      : 'var(--saving)'
 
-    // single-year (or unknown term)
-    return (
-      <span className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>
-        {premiumStr ?? i.singleYearLabel}
-      </span>
-    )
-  }
+  // Target amount for savings = termYears * annualPremium
+  const targetAmount = termYears > 0 && annualPremium > 0 ? termYears * annualPremium : 0
+
+  const insuredName = data.insuredChildName ?? data.insuredUserDisplayName ?? data.insured
 
   const showActionRow = isSingleYear && expired
-
-  const card = (
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2 min-w-0">
-        <div className="text-body font-semibold truncate">{name}</div>
-        {/* #167 + #237 — display precedence mirrors the action layer's mutex:
-            Child 愛物 name > group member displayName > freeform text. */}
-        {(data.insuredChildName || data.insuredUserDisplayName || data.insured) && (
-          <div className="text-xs truncate ml-auto" style={{ color: 'var(--ink-3)' }}>
-            {i.insuredPrefix.replace('{name}', data.insuredChildName ?? data.insuredUserDisplayName ?? data.insured ?? '')}
-          </div>
-        )}
-      </div>
-      <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-        {renderBadge()}
-        {renderSubtitle()}
-      </div>
-      {isMultiYearProtection && termYears > 0 && (
-        <div
-          className="mt-2 h-1 rounded-full overflow-hidden"
-          style={{ background: 'var(--hairline)' }}
-        >
-          <div
-            className="h-full"
-            style={{
-              width: `${Math.min(100, Math.round((yearsPassed / termYears) * 100))}%`,
-              background: 'var(--asset-tint-insurance)',
-            }}
-          />
-        </div>
-      )}
-    </div>
-  )
 
   return (
     <>
       <div
         style={{
-          borderLeft: `3px solid ${tint}`,
-          borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
+          background: 'var(--surface)',
+          borderRadius: 16,
+          border: '1px solid var(--hairline)',
+          overflow: 'hidden',
+          position: 'relative',
         }}
       >
+        {/* Left stripe */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', left: 0, top: 0, bottom: 0,
+            width: 3, background: stripeColor,
+          }}
+        />
+
+        {/* Header — Link wraps only the header area (not the action row) */}
         <Link
           href={`/assets/${id}`}
-          className="flex items-start gap-3 px-[14px] py-3 no-underline"
-          style={{ color: 'var(--ink)' }}
+          className="no-underline"
+          style={{ color: 'var(--ink)', display: 'block' }}
         >
-          {/* Match AssetListItem's 32×32 tint square — keeps insurance rows
-              at the same density as regular asset rows / records rows. */}
+          {/* Header row */}
           <div
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5 overflow-hidden"
-            style={{ background: tint, color: 'var(--ink-2)' }}
+            style={{
+              padding: '12px 16px 12px 18px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+            }}
           >
-            {data.policyHolderAvatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- next/image rejects external URLs without configured domains.
-              <img
-                src={data.policyHolderAvatarUrl}
-                alt=""
-                width={32}
-                height={32}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-            ) : policyHolderInitial ? (
-              <span
-                className="text-sm font-semibold"
-                style={{ color: 'var(--ink)', fontFamily: 'var(--font-serif)' }}
+            {/* Policy holder icon */}
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: 'var(--asset-tint-insurance)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, overflow: 'hidden',
+              }}
+            >
+              {data.policyHolderAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={data.policyHolderAvatarUrl}
+                  alt=""
+                  width={36}
+                  height={36}
+                  referrerPolicy="no-referrer"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : policyHolderInitial ? (
+                <span
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: 'var(--ink)',
+                    fontFamily: 'var(--font-serif)',
+                  }}
+                >
+                  {policyHolderInitial}
+                </span>
+              ) : (
+                <AssetIcon type="insurance" size={18} />
+              )}
+            </div>
+
+            {/* Name + insured */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}
               >
-                {policyHolderInitial}
-              </span>
-            ) : (
-              <AssetIcon type="insurance" size={18} />
+                {name}
+              </div>
+              <div
+                style={{
+                  marginTop: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 11,
+                  color: 'var(--ink-3)',
+                }}
+              >
+                {data.insurer && (
+                  <span style={{ color: 'var(--ink-2)' }}>{data.insurer}</span>
+                )}
+                {insuredName && (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 3, height: 3, borderRadius: 2,
+                        background: 'var(--ink-3)', flexShrink: 0,
+                      }}
+                    />
+                    <span>保 {insuredName}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Badge + annual premium */}
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              {renderBadge()}
+              <div style={{ marginTop: 6 }}>
+                <div
+                  className="font-mono"
+                  style={{ fontSize: 9, letterSpacing: 1, color: 'var(--ink-3)' }}
+                >
+                  年繳
+                </div>
+                <div
+                  className="tnum"
+                  style={{ marginTop: 1, fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}
+                >
+                  {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline visualization */}
+          <div style={{ padding: '0 18px 14px 18px' }}>
+            {isSingleYear && (
+              <TimelineBar
+                pct={singleYearPct}
+                fillColor={singleYearBarColor}
+                leftLabel="生效"
+                leftValue={data.startsAt ?? '—'}
+                rightLabel="到期"
+                rightValue={data.expiryDate ?? '—'}
+              />
+            )}
+            {isMultiYearProtection && termYears > 0 && (
+              <TimelineBar
+                pct={Math.min(100, Math.round((yearsPassed / termYears) * 100))}
+                fillColor="var(--asset-color-insurance)"
+                leftLabel="已繳"
+                leftValue={`${yearsPassed} / ${termYears} 年`}
+                rightLabel="保額"
+                rightValue={data.sumInsured ? `NT$ ${fmtNT(data.sumInsured)}` : '—'}
+              />
+            )}
+            {isSavings && targetAmount > 0 && (
+              <TimelineBar
+                pct={Math.min(100, Math.round((cumulativePaid / targetAmount) * 100))}
+                fillColor="var(--saving)"
+                leftLabel="已投入"
+                leftValue={`NT$ ${fmtNT(cumulativePaid)}`}
+                rightLabel="目標"
+                rightValue={`NT$ ${fmtNT(targetAmount)}`}
+              />
             )}
           </div>
-          {card}
         </Link>
+
+        {/* Action row for expired single-year — outside Link so buttons don't navigate */}
         {showActionRow && (
-          <div className="flex gap-2 px-[14px] pb-3 -mt-1">
+          <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px 18px' }}>
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
               disabled={pending}
-              className="flex-1 h-9 rounded-[10px] text-xs font-medium cursor-pointer disabled:opacity-50"
               style={{
-                background: 'var(--accent-soft)',
-                color: 'var(--ink)',
+                flex: 1, height: 36, borderRadius: 10,
+                background: 'var(--accent-soft)', color: 'var(--ink)',
                 border: '1px solid var(--hairline)',
+                fontSize: 12, fontWeight: 600,
+                fontFamily: 'inherit', cursor: 'pointer',
               }}
+              className="disabled:opacity-50"
             >
               {i.renewAction}
             </button>
@@ -318,12 +372,14 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
               type="button"
               onClick={() => setLapseOpen(true)}
               disabled={pending}
-              className="flex-1 h-9 rounded-[10px] text-xs font-medium cursor-pointer disabled:opacity-50"
               style={{
-                background: 'transparent',
-                color: 'var(--ink-2)',
+                flex: 1, height: 36, borderRadius: 10,
+                background: 'transparent', color: 'var(--ink-2)',
                 border: '1px solid var(--hairline)',
+                fontSize: 12,
+                fontFamily: 'inherit', cursor: 'pointer',
               }}
+              className="disabled:opacity-50"
             >
               {i.lapseAction}
             </button>
@@ -331,7 +387,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
         )}
       </div>
 
-      {/* Renew sheet — small inline form with optional new policy number */}
+      {/* Renew sheet */}
       <SheetBackdrop open={renewOpen} onClick={() => !pending && setRenewOpen(false)} />
       <div
         className="fixed left-1/2 top-1/2 z-[110] w-[calc(100%-48px)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6"
@@ -353,10 +409,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
         <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>
           {i.renewDescription}
         </p>
-        <label
-          className="block text-xs mb-1.5"
-          style={{ color: 'var(--ink-3)' }}
-        >
+        <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-3)' }}>
           {i.renewPolicyNoLabel}
         </label>
         <input
@@ -367,10 +420,8 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
           disabled={pending}
           className="w-full h-11 px-3 rounded-[10px] text-sm mb-5 disabled:opacity-50"
           style={{
-            background: 'var(--surface)',
-            color: 'var(--ink)',
-            border: '1px solid var(--hairline)',
-            outline: 'none',
+            background: 'var(--surface)', color: 'var(--ink)',
+            border: '1px solid var(--hairline)', outline: 'none',
           }}
         />
         <div className="flex gap-2">
@@ -379,11 +430,7 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
             onClick={() => setRenewOpen(false)}
             disabled={pending}
             className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-medium disabled:opacity-50"
-            style={{
-              background: 'transparent',
-              color: 'var(--ink-2)',
-              border: '1px solid var(--hairline)',
-            }}
+            style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
           >
             {t.common.cancel}
           </button>
@@ -411,5 +458,79 @@ export function InsuranceListItem({ id, name, data, isLast }: Props) {
         onConfirm={handleLapse}
       />
     </>
+  )
+}
+
+// ─── Timeline bar primitive ───────────────────────────────────────────────────
+
+function TimelineBar({
+  pct,
+  fillColor,
+  leftLabel,
+  leftValue,
+  rightLabel,
+  rightValue,
+}: {
+  pct: number
+  fillColor: string
+  leftLabel: string
+  leftValue: string
+  rightLabel: string
+  rightValue: string
+}) {
+  return (
+    <div>
+      <div
+        style={{
+          height: 6, borderRadius: 3,
+          background: 'rgba(58,36,25,0.08)',
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute', left: 0, top: 0, bottom: 0,
+            width: `${Math.max(0, Math.min(100, pct))}%`,
+            background: fillColor, borderRadius: 3,
+          }}
+        />
+      </div>
+      <div
+        style={{
+          marginTop: 6, display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline', gap: 8,
+        }}
+      >
+        <div>
+          <div
+            className="font-mono"
+            style={{ fontSize: 9, letterSpacing: 1, color: 'var(--ink-3)' }}
+          >
+            {leftLabel}
+          </div>
+          <div
+            className="font-mono tnum"
+            style={{ marginTop: 1, fontSize: 11, color: 'var(--ink-2)' }}
+          >
+            {leftValue}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div
+            className="font-mono"
+            style={{ fontSize: 9, letterSpacing: 1, color: 'var(--ink-3)' }}
+          >
+            {rightLabel}
+          </div>
+          <div
+            className="font-mono tnum"
+            style={{ marginTop: 1, fontSize: 11, color: 'var(--ink-2)' }}
+          >
+            {rightValue}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

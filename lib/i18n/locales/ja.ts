@@ -70,6 +70,11 @@ export const ja: Translations = {
     srTagline: ' · ふたりの家計簿｜カップル・夫婦のための共有家計 PWA',
     srDescription:
       'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
+    installHint: {
+      cta: 'ホーム画面に追加することもできます',
+      iosStep1: '画面下中央の共有ボタンをタップ',
+      iosStep2: '下にスクロールして「ホーム画面に追加」をタップ',
+    },
   },
 
   landing: {
@@ -82,6 +87,21 @@ export const ja: Translations = {
     trustEncrypted: 'エンドツーエンド暗号化',
     trustFree: '無料で使える',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
+      encryption: {
+        title: 'エンドツーエンド暗号化',
+        body: 'データは送信時も保存時も常に暗号化。私たちにも中身は読めません。',
+      },
+      portability: {
+        title: 'いつでも持ち出せる',
+        body: 'CSVでエクスポート可能。データはずっとあなたのもの、囲い込みません。',
+      },
+      forever: {
+        title: 'ずっと無料',
+        body: 'コア機能は無料。隠れた条件はありません。',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: 'ひとつの家計簿、ふたりの暮らしの四つの光',
     featuresSubtitleHtml: '初めての共同支出から、ふたりで守る家・車・保険まで、<br />すべてここに。',
@@ -211,6 +231,12 @@ export const ja: Translations = {
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
     filterAriaLabel: '絞り込みを開く',
+    payerMe: '自分',
+    payerPartner: '相手',
+    splitFilter: {
+      mine: '自分が負担',
+      theirs: '相手が負担',
+    },
     activeTripBanner: {
       kicker: '旅行中',
       singleStartedAt: '{date} から · この旅を開く',
@@ -526,12 +552,18 @@ export const ja: Translations = {
 
   records: {
     title: '記録',
-    tabAll: 'すべて',
     tabExpense: '支出',
     tabIncome: '収入',
     manageRecurringIncome: '定期収入',
     manageRecurringExpense: '定期支出',
+    recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
+    monthPicker: {
+      triggerLabel: '月を選ぶ',
+      dialogLabel: '月選択',
+      prevYear: '前の年',
+      nextYear: '次の年',
+    },
     stats: {
       title: '支出統計',
       titleAll: '収支統計',
@@ -602,6 +634,7 @@ export const ja: Translations = {
 
   settings: {
     title: '設定',
+    subtitle: 'アカウント・アプリ・データ',
     sectionGroup: '家計簿',
     sectionGroupSplit: 'デフォルト分担方式 & 比率',
     groupName: '家計簿名',
@@ -761,6 +794,10 @@ export const ja: Translations = {
     },
   },
 
+  contextStrip: {
+    partnerLeftLine: 'パートナーがアカウントを離れました。これまでの記録はすべて残っています。',
+  },
+
   assets: {
     title: '愛物',
     empty: {
@@ -788,6 +825,12 @@ export const ja: Translations = {
     },
     addCar: '車を追加',
     addSecondCar: '2 台目の車を追加',
+    addHouse: '家を追加',
+    addChild: '子どもを追加',
+    addPet: 'ペットを追加',
+    addPlant: '植物を追加',
+    addItem: 'モノを追加',
+    typeFilterAll: 'すべて',
     insuranceList: {
       insuredPrefix: '被保険者 · {name}',
       annualPremium: '年払 NT$ {amount}',
@@ -1112,6 +1155,11 @@ export const ja: Translations = {
     backAriaLabel: '戻る',
     editAriaLabel: '編集',
     switcherAriaLabel: '愛物を切り替え',
+    siblingRailAriaLabel: '他の愛物',
+    switcher: {
+      emptyGroup: '（なし）',
+      currentLabel: '現在',
+    },
     notesSection: 'メモ',
     recentExpenses: '最近の支出',
     timelineEntries: 'タイムライン · {count} 件',

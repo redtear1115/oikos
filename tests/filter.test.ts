@@ -15,6 +15,7 @@ import {
   parseFilterFromRecord,
   parseFilterFromSearchParams,
   resolveDateRangeToDateBounds,
+  splitFilterToTypes,
   toWire,
   type DateRange,
   type FilterableRow,
@@ -107,6 +108,7 @@ describe('wire round-trip', () => {
     const f: TxnFilter = {
       payer: 'theirs',
       split: 'half',
+      burden: 'theirs',
       categories: new Set(['dining', 'transit']),
       incomeCategories: new Set(['salary', 'bonus']),
       assetIds: new Set(['11111111-1111-1111-1111-111111111111', ASSET_FILTER_NONE]),
@@ -173,6 +175,73 @@ describe('matchesFilter — split dimension', () => {
     expect(matchesFilter(txMine, f, 'me', 'them')).toBe(true)        // half
     expect(matchesFilter(txTheirs, f, 'me', 'them')).toBe(false)     // all_theirs
     expect(matchesFilter(settleMine, f, 'me', 'them')).toBe(false)   // settlements dropped
+  })
+  it('shared → ratio modes only (half + weighted); singles dropped', () => {
+    const f = { ...defaultFilter(), split: 'shared' as const }
+    const txHalf: FilterableRow = { paidBy: 'me', splitType: 'half', category: 'dining', kind: 'transaction' }
+    const txWeighted: FilterableRow = { paidBy: 'me', splitType: 'weighted', category: 'dining', kind: 'transaction' }
+    const txAllMine: FilterableRow = { paidBy: 'me', splitType: 'all_mine', category: 'dining', kind: 'transaction' }
+    expect(matchesFilter(txHalf, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txWeighted, f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(txAllMine, f, 'me', 'them')).toBe(false)
+  })
+})
+
+describe('matchesFilter — burden dimension', () => {
+  // Burden is payer × split_type cross product. Build the 8 cases up front
+  // so each test reads as a pattern table rather than 4 inline literals.
+  const cases = {
+    meAllMine:     { paidBy: 'me',  splitType: 'all_mine'   as const, category: 'dining', kind: 'transaction' as const },
+    themAllMine:   { paidBy: 'them', splitType: 'all_mine'  as const, category: 'dining', kind: 'transaction' as const },
+    meAllTheirs:   { paidBy: 'me',  splitType: 'all_theirs' as const, category: 'dining', kind: 'transaction' as const },
+    themAllTheirs: { paidBy: 'them', splitType: 'all_theirs' as const, category: 'dining', kind: 'transaction' as const },
+    meHalf:        { paidBy: 'me',  splitType: 'half'       as const, category: 'dining', kind: 'transaction' as const },
+    themHalf:      { paidBy: 'them', splitType: 'half'      as const, category: 'dining', kind: 'transaction' as const },
+    meWeighted:    { paidBy: 'me',  splitType: 'weighted'   as const, category: 'dining', kind: 'transaction' as const },
+    themWeighted:  { paidBy: 'them', splitType: 'weighted'  as const, category: 'dining', kind: 'transaction' as const },
+  }
+  it('burden=mine → viewer bears: (me, all_mine) + (them, all_theirs) + any half/weighted', () => {
+    const f = { ...defaultFilter(), burden: 'mine' as const }
+    expect(matchesFilter(cases.meAllMine,     f, 'me', 'them')).toBe(true)   // I paid + I bore
+    expect(matchesFilter(cases.themAllTheirs, f, 'me', 'them')).toBe(true)   // they paid + I owe 100%
+    expect(matchesFilter(cases.meHalf,        f, 'me', 'them')).toBe(true)   // 50/50 — I share cost
+    expect(matchesFilter(cases.themWeighted,  f, 'me', 'them')).toBe(true)   // ratio — I share cost
+    // Negatives
+    expect(matchesFilter(cases.themAllMine,   f, 'me', 'them')).toBe(false)  // they paid + they bore
+    expect(matchesFilter(cases.meAllTheirs,   f, 'me', 'them')).toBe(false)  // I paid + they owe 100%
+  })
+  it('burden=theirs → partner bears: (them, all_mine) + (me, all_theirs) + any half/weighted', () => {
+    const f = { ...defaultFilter(), burden: 'theirs' as const }
+    expect(matchesFilter(cases.themAllMine,   f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(cases.meAllTheirs,   f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(cases.themHalf,      f, 'me', 'them')).toBe(true)
+    expect(matchesFilter(cases.meWeighted,    f, 'me', 'them')).toBe(true)
+    // Negatives
+    expect(matchesFilter(cases.meAllMine,     f, 'me', 'them')).toBe(false)
+    expect(matchesFilter(cases.themAllTheirs, f, 'me', 'them')).toBe(false)
+  })
+  it('burden active → settlements + income-cut behaviour same as split dim', () => {
+    const f = { ...defaultFilter(), burden: 'mine' as const }
+    expect(matchesFilter(settleMine, f, 'me', 'them')).toBe(false)
+  })
+  it('partner=null (solo) → all_* legs that reference partner match nothing', () => {
+    const f = { ...defaultFilter(), burden: 'mine' as const }
+    expect(matchesFilter(cases.meAllMine,    f, 'me', null)).toBe(true)   // viewer leg still works
+    expect(matchesFilter(cases.meHalf,       f, 'me', null)).toBe(true)   // ratio always works
+    expect(matchesFilter(cases.themAllTheirs, f, 'me', null)).toBe(false) // partner leg dropped
+  })
+})
+
+describe('splitFilterToTypes', () => {
+  it('all → empty (no filter)', () => {
+    expect(splitFilterToTypes('all')).toEqual([])
+  })
+  it('concrete split_type → single-element array', () => {
+    expect(splitFilterToTypes('all_mine')).toEqual(['all_mine'])
+    expect(splitFilterToTypes('half')).toEqual(['half'])
+  })
+  it('shared → ratio-based pair', () => {
+    expect(splitFilterToTypes('shared')).toEqual(['half', 'weighted'])
   })
 })
 
@@ -277,6 +346,7 @@ describe('applyFilterToParams', () => {
     const original: TxnFilter = {
       payer: 'mine',
       split: 'all_theirs',
+      burden: 'mine',
       categories: new Set(['transit', 'dining']),
       incomeCategories: new Set(['bonus', 'salary']),
       assetIds: new Set([ASSET_FILTER_NONE, '11111111-1111-1111-1111-111111111111']),
@@ -424,6 +494,7 @@ describe('end-to-end URL round-trip', () => {
     const filter: TxnFilter = {
       payer: 'theirs',
       split: 'half',
+      burden: 'theirs',
       categories: new Set(['dining']),
       incomeCategories: new Set(['salary']),
       assetIds: new Set([ASSET_FILTER_NONE, '11111111-1111-1111-1111-111111111111']),

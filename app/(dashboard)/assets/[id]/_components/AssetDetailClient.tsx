@@ -10,14 +10,14 @@ import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_co
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AssetHero } from './AssetHero'
-import { AssetSwitcher } from './AssetSwitcher'
+import type { SwitcherGroup } from './AssetSwitcher'
+import { AibutsuHeader, type SiblingChip } from './AibutsuHeader'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import { SectionHeader, InfoCard } from './aibutsu-ui'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { useTranslations } from '@/lib/i18n/client'
-import type { AssetType } from '@/lib/assets'
 import type { FuelType } from '@/lib/fuel'
 
 interface SerializedFuelLog {
@@ -48,16 +48,18 @@ interface Props {
   initialTxns: PagedTxnRow[]
   initialFuelLogs: SerializedFuelLog[]
   pageSize: number
-  allAssets: Array<{ id: string; name: string; type: AssetType }>
+  /** Grouped switcher items for the car name dropdown. */
+  groups: SwitcherGroup[]
   linkedInsurances?: { id: string; name: string }[]
+  siblings?: SiblingChip[]
 }
 
 export function AssetDetailClient({
   assetId, notes, assetSheetInitial, fuelType, primaryUserId,
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
-  initialTxns, initialFuelLogs, pageSize, allAssets,
-  linkedInsurances,
+  initialTxns, initialFuelLogs, pageSize, groups,
+  linkedInsurances, siblings,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -145,38 +147,24 @@ export function AssetDetailClient({
     primaryUserId,
   }
 
+  const carSubtitle = [
+    assetSheetInitial.plate,
+    [brand, model].filter(Boolean).join(' ') || null,
+    year != null ? String(year) : null,
+  ].filter(Boolean).join(' · ') || null
+
   return (
-    <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
-      {/* #250 — sticky back bar so navigation stays available while scrolling.
-          Mirrors AibutsuHeader's pattern (back arrow + label); name + edit live
-          inside the AssetHero frame below to preserve the car-color identity. */}
-      <div
-        className="sticky top-0 z-20 px-4 pt-12 pb-2"
-        style={{ background: 'var(--bg)' }}
-      >
-        <Link
-          href="/assets"
-          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit"
-          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
-          aria-label={t.assetDetail.backAriaLabel}
-        >
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-            <path d="M6.5 1.5L1.5 6.5L6.5 11.5" stroke="currentColor" strokeWidth="1.6"
-              strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span>{t.assetDetail.backAriaLabel}</span>
-        </Link>
-      </div>
+    <div className="min-h-screen pb-[var(--bottom-nav-offset)]">
+      <AibutsuHeader
+        kind="car"
+        name={assetSheetInitial.name}
+        subtitle={carSubtitle}
+        onEditClick={() => setEditAssetOpen(true)}
+        siblings={siblings}
+        currentAssetId={assetId}
+      />
 
       <AssetHero
-        name={
-          <AssetSwitcher
-            currentAssetId={assetId}
-            allAssets={allAssets}
-          >
-            <span>{assetSheetInitial.name}</span>
-          </AssetSwitcher>
-        }
         plate={assetSheetInitial.plate ?? null}
         brand={brand}
         model={model}
@@ -187,7 +175,6 @@ export function AssetDetailClient({
         totalAmount={totalAmount}
         avgEcon={avgEcon}
         fuelLogCount={initialFuelLogs.length}
-        onEdit={() => setEditAssetOpen(true)}
       />
 
       {notes && (

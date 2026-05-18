@@ -71,6 +71,11 @@ export const en: Translations = {
     srTagline: " · A shared ledger for couples · Two-person finance PWA",
     srDescription:
       'A shared finance app built for couples. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs side by side.',
+    installHint: {
+      cta: 'Or add to your home screen first',
+      iosStep1: 'Tap the Share button at the bottom centre',
+      iosStep2: 'Scroll down and tap "Add to Home Screen"',
+    },
   },
 
   landing: {
@@ -83,6 +88,21 @@ export const en: Translations = {
     trustEncrypted: 'End-to-end encrypted',
     trustFree: 'Free to use',
     trustPwa: 'iOS / Android / Web PWA',
+    trust: {
+      narrative: 'Your records belong only to the two of you. No ads, no data selling.',
+      encryption: {
+        title: 'End-to-end encrypted',
+        body: 'Your data is encrypted in transit and at rest. Not even we can read it.',
+      },
+      portability: {
+        title: 'Take it with you',
+        body: 'Export to CSV anytime. Your data is always yours — never locked in.',
+      },
+      forever: {
+        title: 'Free forever',
+        body: 'Core features are free. No hidden terms.',
+      },
+    },
     featuresKicker: 'INSIDE ──',
     featuresTitle: 'One ledger, four kinds of light',
     featuresSubtitleHtml: 'From the first shared receipt to the house, car, and yearly policies you look after together,<br />all in one place.',
@@ -212,6 +232,12 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
+    payerMe: 'Me',
+    payerPartner: 'Them',
+    splitFilter: {
+      mine: 'My cost',
+      theirs: 'Their cost',
+    },
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',
@@ -528,12 +554,18 @@ export const en: Translations = {
 
   records: {
     title: 'Records',
-    tabAll: 'All',
     tabExpense: 'Expense',
     tabIncome: 'Income',
     manageRecurringIncome: 'Recurring income',
     manageRecurringExpense: 'Recurring expense',
+    recurringShortcut: 'Recurring',
     offlineMoreNeedsNetwork: 'More records need a connection',
+    monthPicker: {
+      triggerLabel: 'Select month',
+      dialogLabel: 'Month picker',
+      prevYear: 'Previous year',
+      nextYear: 'Next year',
+    },
     stats: {
       title: 'Expense',
       titleAll: 'Overview',
@@ -604,6 +636,7 @@ export const en: Translations = {
 
   settings: {
     title: 'Settings',
+    subtitle: 'Account · App · Data',
     sectionGroup: 'Ledger',
     sectionGroupSplit: 'Default Split & Ratio',
     groupName: 'Ledger name',
@@ -763,6 +796,10 @@ export const en: Translations = {
     },
   },
 
+  contextStrip: {
+    partnerLeftLine: 'Your partner has left the account. All previous records are still here.',
+  },
+
   assets: {
     title: 'Treasures',
     empty: {
@@ -790,6 +827,12 @@ export const en: Translations = {
     },
     addCar: 'Add a car',
     addSecondCar: 'Add another car',
+    addHouse: 'Add a home',
+    addChild: 'Add a child',
+    addPet: 'Add a pet',
+    addPlant: 'Add a plant',
+    addItem: 'Add an item',
+    typeFilterAll: 'All',
     insuranceList: {
       insuredPrefix: 'Insured · {name}',
       annualPremium: 'Annual NT$ {amount}',
@@ -1114,6 +1157,11 @@ export const en: Translations = {
     backAriaLabel: 'Back',
     editAriaLabel: 'Edit',
     switcherAriaLabel: 'Switch treasure',
+    siblingRailAriaLabel: 'Other treasures',
+    switcher: {
+      emptyGroup: '(none)',
+      currentLabel: 'Current',
+    },
     notesSection: 'Notes',
     recentExpenses: 'Recent expenses',
     timelineEntries: 'Timeline · {count} entries',

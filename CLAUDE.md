@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.0.4**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.0.5**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -28,19 +28,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ---
 
-## 市場觀察 / 戰略背景
-
-兩份外部分析（2026-05-09 snapshot）解釋了 backlog 多個 issue 的優先序與設計立場。將來實作時翻回去能理解「為什麼這個時間點做、為什麼這樣做」。
-
-| 觀察 | 影響的決策 |
-|---|---|
-| **Honeydue 衰退是時間窗口** — 2024 已剝離成 Moneydue Inc.、剩 1–10 人、客服失聯 | #51（競品 CSV 匯入）的 short-term 急迫性 |
-| **台灣反訂閱文化** — PTT/Dcard 反覆出現「可接受買斷、不接受訂閱」訊號；CWMoney/MOZE 訂閱被批 | #46 定價 RFC 必須認真評估買斷選項 |
-| **「資料會不會消失」是底層焦慮** — Spendee 曾刪用戶資料 + Honeydue 衰退用戶焦慮 | #48 信任宣示頁列為 short-term；CSV 匯出（#37）信任配套 |
-| **「信任作為設計前提」vs「能見度管理」是根本立場** — Honeydue 的帳戶能見度分級是防禦性假設 | **Futari 不會做**帳戶能見度分級 — 不記的東西不要記，進到 Futari 的就是兩人共同的 |
-| **Futari positioning：雙人優先 × 陪伴 × 愛物** — 競品象限分析顯示這是目前空白象限 | 整體產品的核心賭注，影響功能取捨優先序 |
-
-→ 完整分析：[oikos-competitive-analysis.md](docs/superpowers/oikos-competitive-analysis.md) · [user-feedback-analysis.md](docs/superpowers/user-feedback-analysis.md)
+> 策略背景與市場分析見 [oikos-competitive-analysis.md](docs/superpowers/oikos-competitive-analysis.md) · [user-feedback-analysis.md](docs/superpowers/user-feedback-analysis.md)
 
 ---
 
@@ -63,10 +51,11 @@ Realtime：Client subscribes → React state mutation
 
 ### Balance 計算規則
 
-- 金額單位：台幣整數（integer，無小數）
+- 金額單位依 base currency 而異：TWD / CNY / JPY 為整數（無小數）；USD 以 *100 儲存為整數（即 1.50 USD 存為 150）。Balance 計算永遠看 base 幣別的 raw integer 值。
+- Base currency 預設 TWD（可選 TWD / CNY / USD / JPY），當前 epoch 無 record 時可改
 - 每次寫入後全量重算，cache 在 `GroupBalance`
 - 計算實作：`lib/balance.ts` + `lib/db/queries/balance.ts`
-- GroupBalance 欄位 `balance` = member_a 欠 member_b 的金額（正數 = A 欠 B，負數 = B 欠 A）
+- GroupBalance 欄位 `balance`：`> 0` = member_b 欠 member_a；`< 0` = member_a 欠 member_b
 
 ### 編輯模式
 
@@ -84,11 +73,12 @@ Realtime：Client subscribes → React state mutation
 - **`Profiles`（OikosUser）** — mirror `auth.users.id` 的使用者 profile（displayName / avatar / `default_split_type`）。
 - **`GroupEpochs`** — 關係章節歷史。每個 group 同時間恰好一筆 `endedAt IS NULL`（current epoch）；swap 不開新 epoch、leave 才會關舊開新。`/records` / stats / dashboard 預設只看當前 chapter，`/past-times` 翻歷史。
 - **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount`（base 幣別整數）+ `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id` / `trip_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。多幣別 record 另存 `original_currency` / `original_amount` / `rate_snapshot`（NULL = base native）；balance 計算永遠看 base 幣別 `amount`。
-- **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。Schema 已有 `original_currency` / `original_amount` / `rate_snapshot` 欄位但 v0.17.0 UI 不接。
+- **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
 - **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。強制 base 幣別。
-- **`GroupBalance`** — balance cache（per-group 單列）。`balance` 正數 = A 欠 B、負數 = B 欠 A；每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。
+- **`GroupBalance`** — balance cache（per-group 單列）。`balance` `> 0` = member_b 欠 member_a，`< 0` = member_a 欠 member_b；每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。
 - **`CurrencyRates`** — per-group 心理匯率表（PK `group_id` × `from_currency` × `to_currency`）。只存當前匯率、不存歷史；變更不影響歷史 record（snapshot 語意鎖在 record 的 `rate_snapshot`）。
 - **`Trips`** — 旅行子帳本。`epoch_id` notNull（**強制單一 epoch**：trip 不可跨章節）、`start_date >= currentEpochStartedAt`；`default_currency` 為 records 表單 currency selector 預設值；`status: 'active' | 'ended' | 'archived'`。`leaveGroup` 若有 active trip 則 reject「請先結束旅行」。
+- **`TripExpenses`** — 旅行隔離帳本（issue #42）。`trip_id` + `paid_by` + `amount`（base 幣別整數）+ optional `original_currency` / `original_amount`（free-text trip code，須對應 parent `Trips.rate_snapshot`）+ `category` + `split_type` + optional `split_ratio`（**payer's share %**，注意與 `CashTransactions.split_ratio_a`「member A 的 %」語意不同）。Trip UI 讀這張表；主帳本（/records、stats、balance）讀 `CashTransactions` 看不到這些 row。Trip end 時會寫一筆 summary `CashTransaction` 把 trip 折回主帳本。
 - **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance` / `item`），舊 6 種用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`；`item` 走 template path (`template_key` + `template_fields` jsonb)，不開子表。
 - **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
 - **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
@@ -102,7 +92,7 @@ Profiles ─┬─< OikosGroups.member_a, member_b
           ├─< IncomeTransactions.recipient_id
           └─< InsuranceDetails.policy_holder_user_id / insured_user_id
 
-OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound)
+OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound) ─< TripExpenses
              ├─< CashTransactions / IncomeTransactions / Settlements
              ├─< Assets ─┬─< CarDetails ─< FuelLogs
              │           ├─< HouseDetails / ChildDetails / PetDetails / PlantDetails
@@ -117,7 +107,7 @@ OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound)
 
 ### 分類色 token
 
-> v0.15.1 之後收斂為「每個分類只宣告一個 primary `color`，chip 用的 `tint` 由 `lightenHex()` 推得」（issue #149），確保同一分類在 feed icon 與 donut slice 之間共用同一 hue family。
+> 每個分類只宣告一個 primary `color`，chip 用的 `tint` 由 `lightenHex()` 推得，確保同一分類在 feed icon 與 donut slice 之間共用同一 hue family。
 
 - 支出分類：`lib/categories.ts` — 每個 `Category` 自帶 primary `color` + derived `tint` + `ink` + `mono`；`chart` 為 `color` 的 alias，舊 callsite 不動。
 - 收入分類：`lib/incomeCategories.ts` — 同結構；另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。

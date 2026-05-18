@@ -26,7 +26,7 @@ export function DateRangeChip({ dateRange, onClear }: Props) {
 
   return (
     <div
-      className="flex items-center justify-between rounded-[14px] px-3 py-2"
+      className="inline-flex items-center justify-between h-8 px-2 gap-2 rounded-full shrink-0"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--accent)',
@@ -47,7 +47,7 @@ export function DateRangeChip({ dateRange, onClear }: Props) {
         type="button"
         onClick={onClear}
         aria-label={t.filterSheet.dateRangeClear}
-        className="h-6 w-6 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer text-base leading-none"
+        className="h-5 w-5 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer text-base leading-none"
         style={{ color: 'var(--ink-3)' }}
       >
         ×
