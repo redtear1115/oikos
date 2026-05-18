@@ -5,6 +5,9 @@ import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
+import { MigrateIntroCallout } from '../_components/MigrateIntroCallout'
+import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
+import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
 
 type Params = Promise<{ locale: string }>
 
@@ -45,12 +48,15 @@ export default async function MigrateHoneydue({ params }: { params: Params }) {
   const signInHref = localizedHref('/sign-in', locale)
 
   return (
-    <div className="space-y-10">
-      <MigrateHero title={page.heroTitle} subtitle={page.heroSubtitle} />
+    <div className="space-y-10 md:space-y-14">
+      <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
-      <p className="text-[14px] leading-[1.85] m-0" style={{ color: 'var(--ink-2)' }}>
-        {page.intro}
-      </p>
+      <MigrateIntroCallout text={page.intro} />
+
+      <MigrateDifferentiators
+        heading={t.differentiatorsHeading}
+        items={page.differentiators}
+      />
 
       <MigrateTool t={t} signInHref={signInHref} hint="honeydue" />
 
@@ -58,6 +64,10 @@ export default async function MigrateHoneydue({ params }: { params: Params }) {
         heading={page.stepsHeading}
         steps={[page.step1, page.step2, page.step3]}
       />
+
+      <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
+
+      <MigrateFooter trustNote={t.footerTrust} />
     </div>
   )
 }

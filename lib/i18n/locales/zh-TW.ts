@@ -2017,36 +2017,70 @@ export type Translations = {
       /** Fallback shown when header sniffer + page hint both fail. */
       unknown: string
     }
+    /** Section kicker above the "Why Futari" differentiators block. */
+    differentiatorsHeading: string
+    /** Closing trust block — narrative + 3 items, mounted between
+     *  steps and footer on every /migrate/<source> page (#578). */
+    trust: {
+      heading: string
+      items: readonly [
+        { title: string; body: string },
+        { title: string; body: string },
+        { title: string; body: string },
+      ]
+    }
+    /** Slim footer trust copy (mirrors landing footer). */
+    footerTrust: string
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
      *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
      *  Hero h1 / steps live here; SEO `<title>`/`<meta>` live in seo.migrate.*. */
     pages: {
       honeydue: {
+        /** Italic Fraunces kicker above the hero h1. */
+        heroKicker: string
         heroTitle: string
         heroSubtitle: string
         /** Objective background about Honeydue — never攻擊性 framing. */
         intro: string
+        /** Per-source "Why Futari" differentiators (3 cards). */
+        differentiators: readonly [
+          { title: string; body: string },
+          { title: string; body: string },
+          { title: string; body: string },
+        ]
         stepsHeading: string
         step1: string
         step2: string
         step3: string
       }
       spendee: {
+        heroKicker: string
         heroTitle: string
         heroSubtitle: string
+        differentiators: readonly [
+          { title: string; body: string },
+          { title: string; body: string },
+          { title: string; body: string },
+        ]
         stepsHeading: string
         step1: string
         step2: string
         step3: string
       }
       cwmoney: {
+        heroKicker: string
         heroTitle: string
         heroSubtitle: string
+        differentiators: readonly [
+          { title: string; body: string },
+          { title: string; body: string },
+          { title: string; body: string },
+        ]
         stepsHeading: string
         step1: string
         step2: string
         step3: string
-        /** Download button for the Excel → CSV conversion template. */
+        /** Download CTA label embedded inside step 2 (#579, IA option A). */
         templateDownloadLabel: string
         /** Caption under the download button explaining what the template does. */
         templateNote: string
@@ -3779,27 +3813,91 @@ export const zhTW: Translations = {
       cwmoney: 'CWMoney',
       unknown: '其他',
     },
+    differentiatorsHeading: '為什麼選 Futari',
+    trust: {
+      heading: '為什麼可以放心搬過來',
+      items: [
+        {
+          title: '端對端加密',
+          body: '你們之外，沒有人能看見這本帳的內容。',
+        },
+        {
+          title: '隨時可以帶走',
+          body: '不喜歡的話，整本帳隨時匯出 CSV，搬家不是綁約的起點。',
+        },
+        {
+          title: '免費長期使用',
+          body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+        },
+      ],
+    },
+    footerTrust: '端對端加密 · 資料只屬於你們兩個',
     pages: {
       honeydue: {
+        heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 資料，可以帶走',
         heroSubtitle: '上傳 CSV，三分鐘把這幾年的記帳搬到 Futari。',
         intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、資料加密。',
+        differentiators: [
+          {
+            title: '仍在持續迭代',
+            body: '每兩週都有新版本，bug 看得到、回饋有人讀。',
+          },
+          {
+            title: '兩個人都看得到所有紀錄',
+            body: '沒有「分開帳戶」的不對稱能見度，從一開始就為共同的家設計。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或資料變現。',
+          },
+        ],
         stepsHeading: '搬遷三步',
         step1: '在 Honeydue App → 設定 → 匯出資料，下載 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
       },
       spendee: {
+        heroKicker: 'SPENDEE → FUTARI',
         heroTitle: '你的 Spendee 資料，可以帶走',
         heroSubtitle: '上傳 Spendee 匯出的 CSV，預覽完整紀錄再決定要不要搬。',
+        differentiators: [
+          {
+            title: '雙人是核心，不是付費才解鎖',
+            body: '共享帳本不在訂閱牆後面，從第一天就免費共用。',
+          },
+          {
+            title: '即時同步',
+            body: '一個人記下，另一個人馬上看見，不用等對方刷新。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '不靠廣告或拍賣資料生活，記帳就是記帳。',
+          },
+        ],
         stepsHeading: '搬遷三步',
         step1: '在 Spendee → More → Export Data，下載 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
       },
       cwmoney: {
+        heroKicker: 'CWMONEY → FUTARI',
         heroTitle: '你的 CWMoney 資料，可以帶走',
         heroSubtitle: '用轉換模板把 CWMoney 的 Excel 整理成 CSV，再上傳到 Futari。',
+        differentiators: [
+          {
+            title: '雙人帳本是預設',
+            body: '不必再靠折衷的工作流接合兩本各自的帳。',
+          },
+          {
+            title: '台幣整數金額',
+            body: '數字直接就是新台幣，不用再換算分位。',
+          },
+          {
+            title: '紀錄不評判',
+            body: '沒有評分、不打分數、不暗示誰花得太多。',
+          },
+        ],
         stepsHeading: '搬遷三步',
         step1: '在 CWMoney 匯出 Excel 格式的記帳資料（需 VIP）。',
         step2: '下載下方的轉換模板，把資料貼進去。',

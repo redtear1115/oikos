@@ -39,6 +39,15 @@ export default async function MigrateLayout({
         paddingTop: 'env(safe-area-inset-top)',
       }}
     >
+      {/* Decorative faint mark — desktop only (#577), same pattern as Landing. */}
+      <div
+        aria-hidden
+        className="hidden md:block absolute pointer-events-none"
+        style={{ right: -140, top: 60, opacity: 0.05 }}
+      >
+        <FutariMark size={420} />
+      </div>
+
       <header className="relative z-10 flex items-center justify-between gap-3 px-6 md:px-12 pt-3 md:pt-6 pb-1">
         <Link
           href={homeHref}
@@ -66,8 +75,8 @@ export default async function MigrateLayout({
         </div>
       </header>
 
-      <div className="relative z-10 px-5 md:px-12 pt-6 md:pt-10 pb-16 md:pb-24">
-        <div className="mx-auto w-full max-w-[640px]">{children}</div>
+      <div className="relative z-10 px-5 md:px-12 pt-6 md:pt-10 pb-12 md:pb-16">
+        <div className="mx-auto w-full max-w-[720px] md:max-w-[860px]">{children}</div>
       </div>
     </main>
   )

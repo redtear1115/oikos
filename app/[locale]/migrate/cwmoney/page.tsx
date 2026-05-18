@@ -5,6 +5,8 @@ import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
+import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
+import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
 
 type Params = Promise<{ locale: string }>
 
@@ -47,36 +49,51 @@ export default async function MigrateCwmoney({ params }: { params: Params }) {
   const page = t.pages.cwmoney
   const signInHref = localizedHref('/sign-in', locale)
 
+  // #579: embed the template download inside step 2 — keeps the upload card
+  // as the only button-styled CTA above the fold, makes the step list the
+  // actual flow rather than a static recap.
+  const step2WithDownload = (
+    <>
+      <div>{page.step2}</div>
+      <a
+        href={TEMPLATE_HREF}
+        download
+        className="inline-flex items-center gap-2 mt-2 text-[13.5px]"
+        style={{
+          color: 'var(--ink)',
+          textDecoration: 'underline',
+          textDecorationColor: 'var(--accent)',
+          textUnderlineOffset: '4px',
+        }}
+      >
+        <span aria-hidden>↓</span>
+        <span>{page.templateDownloadLabel}</span>
+      </a>
+      <p className="text-[12px] mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
+        {page.templateNote}
+      </p>
+    </>
+  )
+
   return (
-    <div className="space-y-10">
-      <MigrateHero title={page.heroTitle} subtitle={page.heroSubtitle} />
+    <div className="space-y-10 md:space-y-14">
+      <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
-      <div className="space-y-3 text-center">
-        <a
-          href={TEMPLATE_HREF}
-          download
-          className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-[14px] font-medium cursor-pointer"
-          style={{
-            background: 'var(--surface)',
-            color: 'var(--ink)',
-            border: '1px solid var(--hairline)',
-            letterSpacing: '0.6px',
-            textDecoration: 'none',
-          }}
-        >
-          {page.templateDownloadLabel}
-        </a>
-        <p className="text-[13px] m-0" style={{ color: 'var(--ink-3)' }}>
-          {page.templateNote}
-        </p>
-      </div>
-
-      <MigrateTool t={t} signInHref={signInHref} hint="cwmoney" />
+      <MigrateDifferentiators
+        heading={t.differentiatorsHeading}
+        items={page.differentiators}
+      />
 
       <MigrateSteps
         heading={page.stepsHeading}
-        steps={[page.step1, page.step2, page.step3]}
+        steps={[page.step1, step2WithDownload, page.step3]}
       />
+
+      <MigrateTool t={t} signInHref={signInHref} hint="cwmoney" />
+
+      <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
+
+      <MigrateFooter trustNote={t.footerTrust} />
     </div>
   )
 }

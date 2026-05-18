@@ -5,6 +5,8 @@ import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
+import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
+import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
 
 type Params = Promise<{ locale: string }>
 
@@ -45,8 +47,13 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
   const signInHref = localizedHref('/sign-in', locale)
 
   return (
-    <div className="space-y-10">
-      <MigrateHero title={page.heroTitle} subtitle={page.heroSubtitle} />
+    <div className="space-y-10 md:space-y-14">
+      <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
+
+      <MigrateDifferentiators
+        heading={t.differentiatorsHeading}
+        items={page.differentiators}
+      />
 
       <MigrateTool t={t} signInHref={signInHref} hint="spendee" />
 
@@ -54,6 +61,10 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
         heading={page.stepsHeading}
         steps={[page.step1, page.step2, page.step3]}
       />
+
+      <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
+
+      <MigrateFooter trustNote={t.footerTrust} />
     </div>
   )
 }

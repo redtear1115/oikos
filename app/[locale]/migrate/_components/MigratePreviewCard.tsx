@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { CsvStats, DetectedEncoding, MigrateSource } from '@/lib/migrate/csv'
 
@@ -29,7 +30,8 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
     )
   }
 
-  const sourceLabel = t.preview.sourceLabel.replace('{source}', t.sources[source])
+  const sourceName = t.sources[source]
+  const sourceLabelPrefix = t.preview.sourceLabel.replace('{source}', '').replace(/[·\s]+$/u, '')
   const encodingLabel = encoding
     ? t.preview.encodingLabel.replace('{encoding}', encoding.toUpperCase())
     : null
@@ -54,7 +56,19 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
           className="flex items-center gap-2 text-[12px]"
           style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}
         >
-          <span>{sourceLabel}</span>
+          <span>
+            {sourceLabelPrefix}
+            {' · '}
+            <span
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontStyle: 'italic',
+                color: 'var(--ink-2)',
+              }}
+            >
+              {sourceName}
+            </span>
+          </span>
           {encodingLabel && (
             <>
               <span aria-hidden>·</span>
@@ -64,10 +78,10 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
         </div>
       </header>
 
-      <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Stat label={totalRows} />
-        <Stat label={expenseRows} />
-        {dateRange && <Stat label={dateRange} />}
+      <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Stat label={totalRows} tint="var(--asset-tint-house)" />
+        <Stat label={expenseRows} tint="var(--asset-tint-insurance)" />
+        {dateRange && <Stat label={dateRange} tint="var(--accent-soft)" />}
       </dl>
 
       {stats.topCategories.length > 0 && (
@@ -78,12 +92,16 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
           >
             {t.preview.topCategoriesLabel}
           </div>
-          <ul className="flex flex-wrap gap-2">
+          <ul className="flex flex-wrap gap-2 m-0 p-0 list-none">
             {stats.topCategories.map(({ name, count }) => (
               <li
                 key={name}
                 className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px]"
-                style={{ background: 'var(--surface-alt)', color: 'var(--ink)' }}
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--ink)',
+                }}
               >
                 <span>{name}</span>
                 <span style={{ color: 'var(--ink-3)' }}>× {count}</span>
@@ -96,11 +114,11 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
   )
 }
 
-function Stat({ label }: { label: string }) {
+function Stat({ label, tint }: { label: string; tint: CSSProperties['background'] }) {
   return (
     <div
-      className="rounded-xl px-4 py-3 text-[15px]"
-      style={{ background: 'var(--surface-alt)', color: 'var(--ink)' }}
+      className="rounded-xl px-4 py-3 text-[14.5px]"
+      style={{ background: tint, color: 'var(--ink)' }}
     >
       {label}
     </div>
