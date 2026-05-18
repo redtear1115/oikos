@@ -364,8 +364,10 @@ export function RecordsList({
         className="sticky top-0 z-20"
         style={{ background: 'var(--bg)' }}
       >
-        {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
-        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-center justify-between">
+        {/* L1Header — unified across Dashboard / Records / Assets (#545 §1).
+            pb-4 matches Assets L1 — gives the title room to breathe before
+            the L2 toggle row below. */}
+        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4 flex items-center justify-between">
           <div
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
@@ -387,7 +389,7 @@ export function RecordsList({
         {/* L2: dual toggle pill — 支出 + 收入 wrapped in one pill (#545 §3).
             Both selected = 全部 (no separate "all" pill). Disallow zero-
             selected — see toggleKind for why. */}
-        <div className="px-5 pb-2">
+        <div className="px-5 pb-3">
           <div
             className="inline-flex items-center"
             style={{
@@ -409,9 +411,8 @@ export function RecordsList({
                   key={kind}
                   type="button"
                   onClick={() => toggleKind(kind)}
-                  className="inline-flex items-center gap-[5px] cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
+                  className="h-8 inline-flex items-center gap-[5px] cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
                   style={{
-                    height: 28,
                     padding: '0 14px',
                     borderRadius: 999,
                     background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',

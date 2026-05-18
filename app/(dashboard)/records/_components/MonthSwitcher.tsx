@@ -212,12 +212,16 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
 
   return (
     <div ref={containerRef} className="relative shrink-0">
+      {/* Visible chip is h-8 to match the rest of the L3 chip row; tap area
+          is extended to ≥44px (WCAG / iOS HIG) via a ::before pseudo that
+          adds 7px vertically + 6px horizontally without affecting layout.
+          Same trick used by SettleButton in BalanceHero — see #147. */}
       <button
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         disabled={isPending}
-        className="h-8 px-3 rounded-full text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-60"
+        className="relative h-8 px-3 rounded-full text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors disabled:opacity-60 before:absolute before:-inset-y-[6px] before:-inset-x-1 before:content-['']"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',

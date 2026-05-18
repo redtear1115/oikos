@@ -441,9 +441,8 @@ export function AssetsListClient({ items }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="inline-flex items-center cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
+              className="h-8 inline-flex items-center cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
               style={{
-                height: 28,
                 padding: '0 14px',
                 borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
@@ -636,7 +635,7 @@ export function AssetsListClient({ items }: Props) {
   return (
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-2 flex items-center justify-between">
+      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4 flex items-center justify-between">
         <div
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}

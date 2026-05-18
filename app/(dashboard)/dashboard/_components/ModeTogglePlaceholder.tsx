@@ -22,7 +22,7 @@ export function ModeTogglePlaceholder({
   const t = useTranslations()
   return (
     <div
-      className="flex items-center rounded-full p-1 mb-5"
+      className="flex items-center rounded-full p-1"
       style={{
         background: '#fff',
         border: '1px solid var(--hairline)',
@@ -48,14 +48,14 @@ export function ModeTogglePlaceholder({
             key={o.id}
             type="button"
             onClick={() => onChange?.(o.id)}
-            className="flex items-center gap-[5px] font-semibold cursor-pointer border-0"
+            className="h-8 flex items-center gap-[5px] font-medium cursor-pointer border-0"
             style={{
-              height: 30,
               padding: '0 14px',
               borderRadius: 999,
               background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
               color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-2)',
               fontSize: 'var(--fs-label)',
+              fontWeight: sel ? 600 : 500,
               letterSpacing: 0.3,
               transition: 'all 0.2s ease',
             }}
