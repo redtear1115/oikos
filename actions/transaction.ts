@@ -339,7 +339,12 @@ function resolveTxnFilter(
   }
   return {
     paidBy,
-    splitTypes: f.split === 'all' ? [] : [f.split],
+    splitTypes:
+      f.split === 'all'
+        ? []
+        : f.split === 'shared'
+          ? ['half', 'weighted']
+          : [f.split],
     categories: Array.from(f.categories),
     incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),

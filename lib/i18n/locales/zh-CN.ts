@@ -232,9 +232,13 @@ export const zhCN: Translations = {
     addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
-    payerAll: '全部',
-    payerMe: '我付',
-    payerPartner: '对方付',
+    payerMe: '我',
+    payerPartner: '对方',
+    splitFilter: {
+      mine: '我负担',
+      theirs: '对方负担',
+      shared: '平分',
+    },
     activeTripBanner: {
       kicker: '旅行进行中',
       singleStartedAt: '{date} 起 · 点开看这趟',

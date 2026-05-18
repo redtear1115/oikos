@@ -232,9 +232,13 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
-    payerAll: 'All',
-    payerMe: 'I paid',
-    payerPartner: 'They paid',
+    payerMe: 'Me',
+    payerPartner: 'Them',
+    splitFilter: {
+      mine: 'My cost',
+      theirs: 'Their cost',
+      shared: 'Shared',
+    },
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',

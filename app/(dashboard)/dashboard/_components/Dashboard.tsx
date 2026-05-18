@@ -13,12 +13,11 @@ import { BalanceHero } from './BalanceHero'
 import { AddSheet, type AddSheetInitial } from './AddSheet'
 import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
 import { IncomeSheet, type IncomeSheetInitial } from './IncomeSheet'
-import { FilterSheet } from '@/app/(dashboard)/records/_components/FilterSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
 import { IncomeEmptyState } from './IncomeEmptyState'
-import { defaultFilter, isFilterActive, toWire, type TxnFilter, type PayerFilter } from '@/lib/filter'
+import { defaultFilter, toWire, type TxnFilter, type PayerFilter, type SplitFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
@@ -59,7 +58,6 @@ type ModalState =
   | { kind: 'edit-pending-expense'; pendingId: string; data: AddSheetInitial }
   | { kind: 'edit-tx'; data: AddSheetInitial }
   | { kind: 'edit-settlement'; data: SettlementSheetInitial }
-  | { kind: 'filter' }
 
 export interface DashboardFeedData {
   recent: PagedTxnRow[]
@@ -102,7 +100,7 @@ export function Dashboard({
   rates = [],
 }: DashboardProps) {
   const router = useRouter()
-  const { isSolo, isPast, partner } = useMember()
+  const { isSolo, isPast, viewerIsA, partner } = useMember()
   const t = useTranslations()
 
   useRealtimeEvents((event) => {
@@ -126,11 +124,13 @@ export function Dashboard({
 
   const [mode, setMode] = useState<'expense' | 'income'>('expense')
   const [modal, dispatch] = useReducer((_prev: ModalState, next: ModalState) => next, { kind: 'closed' })
-  const [filter, setFilter] = useState<TxnFilter | null>(null)
 
-  // L3 payer filter state — driven by 3 inline chips on the L3 row (#545 §2).
+  // L3 filter state — two independent dimensions, both Dashboard-local
+  // (no FilterSheet on this page; full filter is over on /records).
   type DashboardPayer = 'all' | 'me' | 'partner'
+  type DashboardSplit = 'all' | 'mine' | 'theirs' | 'shared'
   const [payerFilter, setPayerFilter] = useState<DashboardPayer>('all')
+  const [splitFilter, setSplitFilter] = useState<DashboardSplit>('all')
 
   // Fuel log edit sheet state
   const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
@@ -173,14 +173,23 @@ export function Dashboard({
 
   const sheetOpen = modal.kind !== 'closed'
 
-  // Merge L3 payer chip into the FilterSheet filter. 'me' → 'mine', 'partner' → 'theirs'.
+  // Compose L3 chips into a TxnFilter for the feed. Both dims are optional;
+  // when both are 'all' we pass null so TransactionFeed skips its filter
+  // branch entirely (no realtime mismatch, no wire roundtrip).
   const effectiveFilter = useMemo<TxnFilter | null>(() => {
-    const payer: PayerFilter = payerFilter === 'me' ? 'mine' : payerFilter === 'partner' ? 'theirs' : 'all'
-    if (payer === 'all') return filter
-    return { ...(filter ?? defaultFilter()), payer }
-  }, [filter, payerFilter])
-
-  const filterActive = effectiveFilter !== null && isFilterActive(effectiveFilter)
+    const payer: PayerFilter =
+      payerFilter === 'me' ? 'mine' : payerFilter === 'partner' ? 'theirs' : 'all'
+    const split: SplitFilter =
+      splitFilter === 'mine'
+        ? 'all_mine'
+        : splitFilter === 'theirs'
+          ? 'all_theirs'
+          : splitFilter === 'shared'
+            ? 'shared'
+            : 'all'
+    if (payer === 'all' && split === 'all') return null
+    return { ...defaultFilter(), payer, split }
+  }, [payerFilter, splitFilter])
 
   const handleItemClick = useCallback((tx: PagedTxnRow) => {
     // Past-epoch view is read-only — never open an edit sheet, even if a
@@ -295,14 +304,23 @@ export function Dashboard({
           expensePendingCount={expensePendings.length}
         />
       </div>
-      {/* L3 payer dual-toggle — mirrors Records L2 visual but one step
-          smaller (L3 is auxiliary filter, not primary content control).
-          Solo mode has nothing to filter by, so hide the whole row. */}
-      {!isSolo && partner && (
-        <div className="px-5 pb-3">
-          <PayerDualToggle value={payerFilter} onChange={setPayerFilter} t={t} />
-        </div>
-      )}
+      {/* L3 filter row — payer dual-toggle (avatar-coloured) + 3 split chips.
+          Solo mode has no payer dimension, but split (我負擔 / 對方負擔 /
+          平分) is still meaningful since solo records carry split types. */}
+      <div
+        className="flex items-center gap-2 px-5 pb-2 overflow-x-auto"
+        style={{ scrollbarWidth: 'none' } as React.CSSProperties}
+      >
+        {!isSolo && partner && (
+          <PayerDualToggle
+            value={payerFilter}
+            onChange={setPayerFilter}
+            viewerIsA={viewerIsA}
+            t={t}
+          />
+        )}
+        <SplitFilterChips value={splitFilter} onChange={setSplitFilter} t={t} />
+      </div>
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-3 pb-5">
@@ -385,9 +403,7 @@ export function Dashboard({
           mode={mode}
           pageSize={pageSize}
           filter={effectiveFilter}
-          filterActive={filterActive}
           onItemClick={handleItemClick}
-          onFilterClick={() => dispatch({ kind: 'filter' })}
           onAddIncome={() => dispatch({ kind: 'income' })}
           onAddTx={() => dispatch({ kind: 'add' })}
         />
@@ -428,16 +444,6 @@ export function Dashboard({
         onMutated={handleMutated}
         onRaceResolved={showToast}
       />
-      <FilterSheet
-        open={modal.kind === 'filter'}
-        currentFilter={filter ?? defaultFilter()}
-        onClose={() => dispatch({ kind: 'closed' })}
-        onApply={(next) => {
-          setFilter(isFilterActive(next) ? next : null)
-          dispatch({ kind: 'closed' })
-        }}
-      />
-
       {fuelCar && (
         <NewFuelLog
           open={fuelSheetOpen}
@@ -473,9 +479,7 @@ interface DashboardFeedProps {
   mode: 'expense' | 'income'
   pageSize: number
   filter: TxnFilter | null
-  filterActive: boolean
   onItemClick: (tx: PagedTxnRow) => void
-  onFilterClick: () => void
   onAddIncome: () => void
   onAddTx: () => void
 }
@@ -485,9 +489,7 @@ function DashboardFeed({
   mode,
   pageSize,
   filter,
-  filterActive,
   onItemClick,
-  onFilterClick,
   onAddIncome,
   onAddTx,
 }: DashboardFeedProps) {
@@ -505,9 +507,9 @@ function DashboardFeed({
   }, [onItemClick, P.glow])
 
   // Income loader closes over the active filter so the income feed responds
-  // to FilterSheet changes the same way the cash feed does — TransactionFeed
+  // to L3 chip changes the same way the cash feed does — TransactionFeed
   // calls loader(null) on filter-prop change. Recreated each filter ref
-  // change; stable while filter is null/inactive.
+  // change; stable while filter is null.
   const incomeLoader = useMemo(
     () => makeIncomeLoader(20, undefined, undefined, filter ? toWire(filter) : undefined),
     [filter],
@@ -527,16 +529,6 @@ function DashboardFeed({
           <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
             {t.feed.header}
           </span>
-          <button
-            onClick={onFilterClick}
-            // Demoted visual weight (#150): lighter color + font-normal so the
-            // section title ("最近紀錄") leads the row instead of competing.
-            className="text-xs font-normal pb-px cursor-pointer bg-transparent border-0 flex items-center gap-1"
-            style={{ color: 'var(--ink-3)' }}
-            aria-label={t.dashboard.filterAriaLabel}
-          >
-            {t.dashboard.filterLabel}{filterActive && <span style={{ color: 'var(--accent)' }}>•</span>} ›
-          </button>
         </div>
       }
       emptyState={
@@ -585,16 +577,20 @@ type PayerKind = 'me' | 'partner'
 interface PayerDualToggleProps {
   value: 'all' | 'me' | 'partner'
   onChange: (next: 'all' | 'me' | 'partner') => void
+  /** Drives which toggle gets `var(--ink)` (role 'a') vs `var(--accent)`
+   *  (role 'b') — same source of truth as `<Avatar memberRole=…/>`. */
+  viewerIsA: boolean
   t: ReturnType<typeof useTranslations>
 }
 
 /**
- * Payer dual-toggle for Dashboard L3 — mirrors Records L2's expense/income
- * pill but one step smaller (height 24, padding 0 10, text-xs) since L3 is
- * an auxiliary filter, not primary content control. Both toggles selected
- * collapses to `'all'` (no filter). Disallows zero-selected.
+ * Payer dual-toggle for Dashboard L3. Two pills inside one rounded frame:
+ * 我的 / 對方. Both selected = `'all'` (no filter); single-selected =
+ * 'me' | 'partner'. Disallow zero-selected. Selected fill matches the
+ * member's avatar background colour so the chip and the avatar above the
+ * page header read as the same person at a glance.
  */
-function PayerDualToggle({ value, onChange, t }: PayerDualToggleProps) {
+function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps) {
   const selected: Set<PayerKind> =
     value === 'all'
       ? new Set<PayerKind>(['me', 'partner'])
@@ -611,9 +607,14 @@ function PayerDualToggle({ value, onChange, t }: PayerDualToggleProps) {
     onChange(next.size === 2 ? 'all' : next.has('me') ? 'me' : 'partner')
   }
 
+  // Avatar colour map — viewer takes their own role's colour; partner takes
+  // the other. Keeps colour ↔ person stable across login swaps.
+  const viewerColor = viewerIsA ? 'var(--ink)' : 'var(--accent)'
+  const partnerColor = viewerIsA ? 'var(--accent)' : 'var(--ink)'
+
   return (
     <div
-      className="inline-flex items-center"
+      className="inline-flex items-center shrink-0"
       style={{
         background: 'var(--surface)',
         border: '0.5px solid var(--hairline)',
@@ -623,37 +624,71 @@ function PayerDualToggle({ value, onChange, t }: PayerDualToggleProps) {
       }}
     >
       {([
-        { kind: 'me' as PayerKind, label: t.dashboard.payerMe },
-        { kind: 'partner' as PayerKind, label: t.dashboard.payerPartner },
-      ]).map(({ kind, label }) => {
+        { kind: 'me' as PayerKind, label: t.dashboard.payerMe, color: viewerColor },
+        { kind: 'partner' as PayerKind, label: t.dashboard.payerPartner, color: partnerColor },
+      ]).map(({ kind, label, color }) => {
         const sel = selected.has(kind)
         return (
           <button
             key={kind}
             type="button"
             onClick={() => toggle(kind)}
-            className="inline-flex items-center gap-[4px] cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
+            className="inline-flex items-center cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
             style={{
-              height: 24,
+              height: 22,
               padding: '0 10px',
               borderRadius: 999,
-              background: sel ? 'var(--ink)' : 'transparent',
+              background: sel ? color : 'transparent',
               color: sel ? '#fff' : 'var(--ink-3)',
             }}
             aria-pressed={sel}
           >
-            {sel && (
-              <span
-                aria-hidden
-                style={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.55)',
-                  flexShrink: 0,
-                }}
-              />
-            )}
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+interface SplitFilterChipsProps {
+  value: 'all' | 'mine' | 'theirs' | 'shared'
+  onChange: (next: 'all' | 'mine' | 'theirs' | 'shared') => void
+  t: ReturnType<typeof useTranslations>
+}
+
+/**
+ * Split-type chip group for Dashboard L3. Three single-select chips:
+ * 我負擔 / 對方負擔 / 平分. Tap a chip to apply, tap the active chip to
+ * clear back to `'all'`. 「平分」aggregates the two ratio-based DB modes
+ * (`half` + `weighted`) — see `SplitFilter` in lib/filter.ts.
+ */
+function SplitFilterChips({ value, onChange, t }: SplitFilterChipsProps) {
+  const opts: Array<{ key: 'mine' | 'theirs' | 'shared'; label: string }> = [
+    { key: 'mine', label: t.dashboard.splitFilter.mine },
+    { key: 'theirs', label: t.dashboard.splitFilter.theirs },
+    { key: 'shared', label: t.dashboard.splitFilter.shared },
+  ]
+  return (
+    <div className="inline-flex items-center gap-1 shrink-0">
+      {opts.map(({ key, label }) => {
+        const sel = value === key
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onChange(sel ? 'all' : key)}
+            className="inline-flex items-center cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
+            style={{
+              height: 26,
+              padding: '0 10px',
+              borderRadius: 999,
+              background: sel ? 'var(--ink)' : 'var(--surface)',
+              color: sel ? '#fff' : 'var(--ink-3)',
+              border: sel ? 'none' : '0.5px solid var(--hairline)',
+            }}
+            aria-pressed={sel}
+          >
             {label}
           </button>
         )

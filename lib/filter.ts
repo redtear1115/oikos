@@ -5,7 +5,15 @@ import type { RecordStatus } from '@/lib/validators'
 
 /** Single-select dimensions use 'all' to mean "no filter". Multi-select dimensions use empty Set. */
 export type PayerFilter = 'all' | 'mine' | 'theirs'
-export type SplitFilter = 'all' | SplitType  // 'all' | 'all_mine' | 'all_theirs' | 'half'
+/**
+ * Split-type filter. `SplitType` values map to a single DB split_type each;
+ * `'shared'` is a UI-level aggregate that matches `half` OR `weighted` — the
+ * two ratio-based modes — so the Dashboard 平分 chip can collapse them under
+ * one user-facing label without forcing the user to think about whether a
+ * past record used the 50/50 or the ratio split. Translated downstream in
+ * `actions/transaction.ts#toQueryFilter` and `matchesFilter` below.
+ */
+export type SplitFilter = 'all' | SplitType | 'shared'
 /** Status filter — 'pending'/'settled' from RecordStatus, plus 'all' sentinel for no filter. */
 export type StatusFilter = 'all' | RecordStatus
 
@@ -222,8 +230,15 @@ export function matchesFilter(
   // unrelated cash via realtime would surprise them.
   if (cutsExpense(filter)) return false
 
-  // 分攤 dimension — transactions only
-  if (filter.split !== 'all' && row.splitType !== filter.split) return false
+  // 分攤 dimension — transactions only. 'shared' matches the two ratio-based
+  // modes (half / weighted); concrete values match by equality.
+  if (filter.split !== 'all') {
+    if (filter.split === 'shared') {
+      if (row.splitType !== 'half' && row.splitType !== 'weighted') return false
+    } else if (row.splitType !== filter.split) {
+      return false
+    }
+  }
 
   // 分類 dimension — transactions only
   if (filter.categories.size > 0 && !filter.categories.has(row.category as CategoryId)) {
@@ -276,7 +291,14 @@ function isValidPayer(s: string | null): s is PayerFilter {
   return s === 'mine' || s === 'theirs' || s === 'all'
 }
 function isValidSplit(s: string | null): s is SplitFilter {
-  return s === 'all' || s === 'all_mine' || s === 'all_theirs' || s === 'half' || s === 'weighted'
+  return (
+    s === 'all' ||
+    s === 'all_mine' ||
+    s === 'all_theirs' ||
+    s === 'half' ||
+    s === 'weighted' ||
+    s === 'shared'
+  )
 }
 function isValidStatus(s: string | null): s is StatusFilter {
   return s === 'all' || s === 'pending' || s === 'settled'

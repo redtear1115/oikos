@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { monthLabel } from '@/lib/groupByMonth'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 
@@ -31,6 +32,39 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
   const [open, setOpen] = useState(false)
   const [pickerYear, setPickerYear] = useState(() => parseInt(monthKey.split('-')[0]!, 10))
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
+  // Anchor for the portalled popover — recomputed every time it opens and on
+  // scroll/resize so the dropdown tracks the trigger even when the sticky
+  // header moves. `null` = no anchor yet (popover invisible on first paint).
+  const [anchor, setAnchor] = useState<{ left: number; top: number; width: number } | null>(null)
+
+  // Defer portal creation until after hydration — createPortal during SSR
+  // would mismatch since `document` doesn't exist on the server.
+  useEffect(() => setMounted(true), [])
+
+  const updateAnchor = () => {
+    const el = triggerRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    setAnchor({ left: r.left, top: r.bottom + 4, width: r.width })
+  }
+
+  // Recompute anchor whenever the popover opens, and keep it in sync with
+  // page scroll / window resize while open. Without this, scrolling the
+  // page would leave the popover floating in its initial position.
+  useLayoutEffect(() => {
+    if (!open) return
+    updateAnchor()
+    const onScrollOrResize = () => updateAnchor()
+    window.addEventListener('scroll', onScrollOrResize, true)
+    window.addEventListener('resize', onScrollOrResize)
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize, true)
+      window.removeEventListener('resize', onScrollOrResize)
+    }
+  }, [open])
 
   // When the popover opens, snap back to the current month's year so the
   // user always lands on the year they're viewing — not whichever year
@@ -39,15 +73,18 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
     if (open) setPickerYear(parseInt(monthKey.split('-')[0]!, 10))
   }, [open, monthKey])
 
-  // Click outside closes — mousedown so the trigger button's onClick still
-  // fires before we collapse (avoids the "click to toggle never reopens" bug
-  // on touch devices where mousedown→close→click hits a now-detached node).
+  // Click outside closes. Both the trigger AND the portalled popover are
+  // "inside" — the popover lives under document.body, so checking only the
+  // trigger container would close it on its own clicks. pointerdown (not
+  // click) avoids the touch-device "tap to toggle never reopens" pattern
+  // where mousedown→close→click would hit a now-detached node.
   useEffect(() => {
     if (!open) return
     const onPointerDown = (e: PointerEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
+      const target = e.target as Node
+      const inTrigger = containerRef.current?.contains(target)
+      const inPopover = popoverRef.current?.contains(target)
+      if (!inTrigger && !inPopover) setOpen(false)
     }
     window.addEventListener('pointerdown', onPointerDown)
     return () => window.removeEventListener('pointerdown', onPointerDown)
@@ -91,9 +128,92 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
   const isSelected = (m: number) =>
     monthKey === `${pickerYear}-${String(m).padStart(2, '0')}`
 
+  // Popover is portalled to document.body so it escapes the sticky header's
+  // `overflow-x-auto` (which also clips overflow-y) on the L3 chip row. With
+  // a regular `position: absolute` child, the dropdown would get cut off the
+  // moment it crossed the row's bottom edge.
+  const popover = open && anchor ? (
+    <div
+      ref={popoverRef}
+      role="dialog"
+      aria-label={t.records.monthPicker.dialogLabel}
+      className="rounded-2xl"
+      style={{
+        position: 'fixed',
+        left: anchor.left,
+        top: anchor.top,
+        zIndex: 100,
+        background: '#fff',
+        border: '1px solid var(--hairline)',
+        padding: 12,
+        width: 280,
+        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+      }}
+    >
+      {/* Year navigation row */}
+      <div className="flex items-center justify-between mb-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (!yearPrevDisabled) setPickerYear((y) => y - 1)
+          }}
+          disabled={yearPrevDisabled}
+          className="w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ color: 'var(--ink-2)' }}
+          aria-label={t.records.monthPicker.prevYear}
+        >
+          ‹
+        </button>
+        <div
+          className="text-sm font-medium"
+          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
+        >
+          {pickerYear}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (!yearNextDisabled) setPickerYear((y) => y + 1)
+          }}
+          disabled={yearNextDisabled}
+          className="w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ color: 'var(--ink-2)' }}
+          aria-label={t.records.monthPicker.nextYear}
+        >
+          ›
+        </button>
+      </div>
+      {/* 3×4 month grid */}
+      <div className="grid grid-cols-3 gap-1">
+        {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
+          const disabled = isMonthDisabled(m)
+          const sel = isSelected(m)
+          return (
+            <button
+              key={m}
+              type="button"
+              onClick={() => go(`${pickerYear}-${String(m).padStart(2, '0')}`)}
+              disabled={disabled}
+              className="h-9 rounded-lg text-sm cursor-pointer border-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              style={{
+                background: sel ? 'var(--ink)' : 'transparent',
+                color: sel ? '#fff' : 'var(--ink-2)',
+                fontWeight: sel ? 600 : 400,
+              }}
+              aria-pressed={sel}
+            >
+              {new Date(2000, m - 1, 1).toLocaleDateString(locale, { month: 'short' })}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  ) : null
+
   return (
     <div ref={containerRef} className="relative shrink-0">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         disabled={isPending}
@@ -123,78 +243,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
           ▾
         </span>
       </button>
-      {open && (
-        <div
-          role="dialog"
-          aria-label={t.records.monthPicker.dialogLabel}
-          className="absolute left-0 top-full z-30 mt-2 rounded-2xl"
-          style={{
-            background: '#fff',
-            border: '1px solid var(--hairline)',
-            padding: 12,
-            width: 280,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-          }}
-        >
-          {/* Year navigation row */}
-          <div className="flex items-center justify-between mb-2">
-            <button
-              type="button"
-              onClick={() => {
-                if (!yearPrevDisabled) setPickerYear((y) => y - 1)
-              }}
-              disabled={yearPrevDisabled}
-              className="w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ color: 'var(--ink-2)' }}
-              aria-label={t.records.monthPicker.prevYear}
-            >
-              ‹
-            </button>
-            <div
-              className="text-sm font-medium"
-              style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
-            >
-              {pickerYear}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (!yearNextDisabled) setPickerYear((y) => y + 1)
-              }}
-              disabled={yearNextDisabled}
-              className="w-8 h-8 grid place-items-center rounded-lg cursor-pointer bg-transparent border-0 disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ color: 'var(--ink-2)' }}
-              aria-label={t.records.monthPicker.nextYear}
-            >
-              ›
-            </button>
-          </div>
-          {/* 3×4 month grid */}
-          <div className="grid grid-cols-3 gap-1">
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-              const disabled = isMonthDisabled(m)
-              const sel = isSelected(m)
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => go(`${pickerYear}-${String(m).padStart(2, '0')}`)}
-                  disabled={disabled}
-                  className="h-9 rounded-lg text-sm cursor-pointer border-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  style={{
-                    background: sel ? 'var(--ink)' : 'transparent',
-                    color: sel ? '#fff' : 'var(--ink-2)',
-                    fontWeight: sel ? 600 : 400,
-                  }}
-                  aria-pressed={sel}
-                >
-                  {new Date(2000, m - 1, 1).toLocaleDateString(locale, { month: 'short' })}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {mounted && popover ? createPortal(popover, document.body) : null}
     </div>
   )
 }
