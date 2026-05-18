@@ -555,6 +555,12 @@ export const ja: Translations = {
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '続きの記録は接続が必要です',
+    monthPicker: {
+      triggerLabel: '月を選ぶ',
+      dialogLabel: '月選択',
+      prevYear: '前の年',
+      nextYear: '次の年',
+    },
     stats: {
       title: '支出統計',
       titleAll: '収支統計',

@@ -31,7 +31,7 @@ import { PendingExpenseStack } from './PendingExpenseStack'
 import { FirstRecordCard } from './FirstRecordCard'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
 import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
-import { useTranslations, useLocale } from '@/lib/i18n/client'
+import { useTranslations } from '@/lib/i18n/client'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
 import type { RateEntry } from './AddSheet'
@@ -104,7 +104,6 @@ export function Dashboard({
   const router = useRouter()
   const { isSolo, isPast, partner } = useMember()
   const t = useTranslations()
-  const locale = useLocale()
 
   useRealtimeEvents((event) => {
     if (
@@ -296,43 +295,14 @@ export function Dashboard({
           expensePendingCount={expensePendings.length}
         />
       </div>
-      {/* L3: month chip + 3 inline payer chips (#545 §2).
-          Previously a single 篩選 chip opened a sheet — replaced with direct
-          chips so payer selection is one tap, not two. */}
-      <div className="flex items-center gap-2 px-5 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
-        {/* Month chip — read-only, shows current Taipei month */}
-        <div
-          className="h-8 px-3 rounded-full text-sm flex items-center shrink-0"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
-        >
-          {new Date().toLocaleDateString(locale, { month: 'long' })}
+      {/* L3 payer dual-toggle — mirrors Records L2 visual but one step
+          smaller (L3 is auxiliary filter, not primary content control).
+          Solo mode has nothing to filter by, so hide the whole row. */}
+      {!isSolo && partner && (
+        <div className="px-5 pb-3">
+          <PayerDualToggle value={payerFilter} onChange={setPayerFilter} t={t} />
         </div>
-        {(
-          [
-            { key: 'all' as DashboardPayer, label: t.dashboard.payerAll },
-            { key: 'me' as DashboardPayer, label: t.dashboard.payerMe },
-            ...(!isSolo && partner ? [{ key: 'partner' as DashboardPayer, label: t.dashboard.payerPartner }] : []),
-          ] as Array<{ key: DashboardPayer; label: string }>
-        ).map(({ key, label }) => {
-          const sel = payerFilter === key
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setPayerFilter(key)}
-              className="h-8 px-3 rounded-full text-sm flex items-center shrink-0 cursor-pointer transition-colors duration-150"
-              style={{
-                background: sel ? 'var(--ink)' : 'var(--surface)',
-                color: sel ? '#fff' : 'var(--ink-2)',
-                border: sel ? 'none' : '1px solid var(--hairline)',
-              }}
-              aria-pressed={sel}
-            >
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      )}
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-3 pb-5">
@@ -607,5 +577,87 @@ function DashboardFeedSkeleton() {
         ))}
       </div>
     </>
+  )
+}
+
+type PayerKind = 'me' | 'partner'
+
+interface PayerDualToggleProps {
+  value: 'all' | 'me' | 'partner'
+  onChange: (next: 'all' | 'me' | 'partner') => void
+  t: ReturnType<typeof useTranslations>
+}
+
+/**
+ * Payer dual-toggle for Dashboard L3 — mirrors Records L2's expense/income
+ * pill but one step smaller (height 24, padding 0 10, text-xs) since L3 is
+ * an auxiliary filter, not primary content control. Both toggles selected
+ * collapses to `'all'` (no filter). Disallows zero-selected.
+ */
+function PayerDualToggle({ value, onChange, t }: PayerDualToggleProps) {
+  const selected: Set<PayerKind> =
+    value === 'all'
+      ? new Set<PayerKind>(['me', 'partner'])
+      : new Set<PayerKind>([value])
+
+  const toggle = (kind: PayerKind) => {
+    const next = new Set(selected)
+    if (next.has(kind)) {
+      if (next.size === 1) return
+      next.delete(kind)
+    } else {
+      next.add(kind)
+    }
+    onChange(next.size === 2 ? 'all' : next.has('me') ? 'me' : 'partner')
+  }
+
+  return (
+    <div
+      className="inline-flex items-center"
+      style={{
+        background: 'var(--surface)',
+        border: '0.5px solid var(--hairline)',
+        borderRadius: 999,
+        padding: 2,
+        gap: 2,
+      }}
+    >
+      {([
+        { kind: 'me' as PayerKind, label: t.dashboard.payerMe },
+        { kind: 'partner' as PayerKind, label: t.dashboard.payerPartner },
+      ]).map(({ kind, label }) => {
+        const sel = selected.has(kind)
+        return (
+          <button
+            key={kind}
+            type="button"
+            onClick={() => toggle(kind)}
+            className="inline-flex items-center gap-[4px] cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
+            style={{
+              height: 24,
+              padding: '0 10px',
+              borderRadius: 999,
+              background: sel ? 'var(--ink)' : 'transparent',
+              color: sel ? '#fff' : 'var(--ink-3)',
+            }}
+            aria-pressed={sel}
+          >
+            {sel && (
+              <span
+                aria-hidden
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.55)',
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            {label}
+          </button>
+        )
+      })}
+    </div>
   )
 }

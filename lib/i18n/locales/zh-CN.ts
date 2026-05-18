@@ -556,6 +556,12 @@ export const zhCN: Translations = {
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '更多记录需联网获取',
+    monthPicker: {
+      triggerLabel: '选择月份',
+      dialogLabel: '月份选择器',
+      prevYear: '前一年',
+      nextYear: '下一年',
+    },
     stats: {
       title: '支出统计',
       titleAll: '收支统计',

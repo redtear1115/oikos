@@ -557,6 +557,12 @@ export const en: Translations = {
     manageRecurringExpense: 'Recurring expense',
     recurringShortcut: 'Recurring',
     offlineMoreNeedsNetwork: 'More records need a connection',
+    monthPicker: {
+      triggerLabel: 'Select month',
+      dialogLabel: 'Month picker',
+      prevYear: 'Previous year',
+      nextYear: 'Next year',
+    },
     stats: {
       title: 'Expense',
       titleAll: 'Overview',

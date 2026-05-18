@@ -417,15 +417,19 @@ export function AssetsListClient({ items }: Props) {
 
   const TabBar = (
     <div
-      className="px-4 pb-3"
+      className="px-5 pb-2"
       role="tablist"
       aria-label={t.assets.title}
     >
+      {/* L2 — same spec as Records dual-toggle pill (#548 review #4). */}
       <div
-        className="inline-flex rounded-full p-1"
+        className="inline-flex items-center"
         style={{
           background: 'var(--surface)',
-          border: '1px solid var(--hairline)',
+          border: '0.5px solid var(--hairline)',
+          borderRadius: 999,
+          padding: 3,
+          gap: 2,
         }}
       >
         {(['aibutsu', 'guardian'] as const).map((id) => {
@@ -437,17 +441,13 @@ export function AssetsListClient({ items }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="rounded-full transition-colors"
+              className="inline-flex items-center cursor-pointer border-0 text-sm font-medium transition-colors duration-150"
               style={{
-                padding: '8px 12px',
+                height: 28,
+                padding: '0 14px',
+                borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
-                color: active ? '#fff' : 'var(--ink-2)',
-                fontFamily: 'inherit',
-                fontSize: 'var(--fs-button)',
-                fontWeight: active ? 600 : 500,
-                border: 'none',
-                cursor: 'pointer',
-                letterSpacing: '0.2px',
+                color: active ? '#fff' : 'var(--ink-3)',
               }}
             >
               {id === 'aibutsu' ? t.assets.tabs.aibutsu : t.assets.tabs.guardian}

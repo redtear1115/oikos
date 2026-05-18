@@ -753,6 +753,12 @@ export type Translations = {
     manageRecurringExpense: string
     recurringShortcut: string
     offlineMoreNeedsNetwork: string
+    monthPicker: {
+      triggerLabel: string
+      dialogLabel: string
+      prevYear: string
+      nextYear: string
+    }
     stats: {
       title: string         // expense-tab title (kept for back-compat)
       titleAll: string      // 全部 tab
@@ -2534,6 +2540,12 @@ export const zhTW: Translations = {
     manageRecurringExpense: '定期支出',
     recurringShortcut: '定期',
     offlineMoreNeedsNetwork: '再多紀錄需連線取得',
+    monthPicker: {
+      triggerLabel: '選擇月份',
+      dialogLabel: '月份選擇器',
+      prevYear: '前一年',
+      nextYear: '下一年',
+    },
     stats: {
       title: '支出統計',
       titleAll: '收支統計',
