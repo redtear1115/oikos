@@ -1682,6 +1682,35 @@ export const ja: Translations = {
       cwmoney: 'CWMoney',
       unknown: 'そのほか',
     },
+    pages: {
+      honeydue: {
+        heroTitle: 'Honeydue のデータは、そのまま連れていけます',
+        heroSubtitle: 'CSV をアップロードして、これまでの記録を 3 分で Futari に引っ越し。',
+        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります — 無料、広告なし、エンドツーエンド暗号化。',
+        stepsHeading: '3 ステップ',
+        step1: 'Honeydue アプリ → 設定 → データを書き出す、で CSV をダウンロード。',
+        step2: 'CSV をここにアップロードして、家計の履歴を確認。',
+        step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+      },
+      spendee: {
+        heroTitle: 'Spendee のデータは、そのまま連れていけます',
+        heroSubtitle: 'Spendee の CSV をアップロードして、なかみを確かめてから引っ越すか決められます。',
+        stepsHeading: '3 ステップ',
+        step1: 'Spendee → More → Export Data で CSV をダウンロード。',
+        step2: 'CSV をここにアップロードして、家計の履歴を確認。',
+        step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+      },
+      cwmoney: {
+        heroTitle: 'CWMoney のデータは、そのまま連れていけます',
+        heroSubtitle: '変換テンプレートで CWMoney の Excel を CSV にしてから、Futari にアップロード。',
+        stepsHeading: '3 ステップ',
+        step1: 'CWMoney で Excel 形式の家計データを書き出す（VIP が必要）。',
+        step2: '下の変換テンプレートをダウンロードして、データを貼り付ける。',
+        step3: '変換した CSV をアップロードして、なかみを見てからアカウントを作って取り込む。',
+        templateDownloadLabel: '変換テンプレートをダウンロード',
+        templateNote: 'テンプレートが CWMoney の列を Futari の形式に揃えてくれます。',
+      },
+    },
   },
 
   seo: {
@@ -1702,6 +1731,23 @@ export const ja: Translations = {
     privacy: {
       title: 'プライバシーポリシー · Futari',
       description: 'Futari アルファ版でのデータ収集と取り扱いについて。',
+    },
+    migrate: {
+      honeydue: {
+        title: 'Honeydue から Futari へ — 無料のふたり家計簿',
+        description: 'Honeydue の更新が落ち着いてきた今、Futari なら 3 分でデータを引っ越して、パートナーとの家計記録をそのまま続けられます。無料、広告なし、暗号化。',
+        ogDescription: 'Honeydue ユーザーの次の住みか — Futari でふたりの家計をそのまま続ける。',
+      },
+      spendee: {
+        title: 'Spendee から Futari へ — ふたり向け家計簿の引っ越し',
+        description: 'Spendee の家計データを Futari に持ってきて、パートナーとの記録を続けましょう。CSV をアップロードして 3 分で完了。',
+        ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
+      },
+      cwmoney: {
+        title: 'CWMoney から Futari へ — データ引っ越しガイド',
+        description: '配布している Excel 変換テンプレートで CWMoney のデータを CSV に整え、Futari にアップロードするだけ。',
+        ogDescription: 'CWMoney の引っ越し手順 — 変換テンプレートで Excel を CSV にして Futari へ。',
+      },
     },
   },
 }
