@@ -818,6 +818,12 @@ export const en: Translations = {
     },
     addCar: 'Add a car',
     addSecondCar: 'Add another car',
+    addHouse: 'Add a home',
+    addChild: 'Add a child',
+    addPet: 'Add a pet',
+    addPlant: 'Add a plant',
+    addItem: 'Add an item',
+    typeFilterAll: 'All',
     insuranceList: {
       insuredPrefix: 'Insured · {name}',
       annualPremium: 'Annual NT$ {amount}',

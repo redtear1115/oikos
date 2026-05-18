@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
+import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { AssetSheet } from './AssetSheet'
 import { InsuranceListItem } from './InsuranceListItem'
 import { AssetEmptyState } from './AssetEmptyState'
@@ -277,7 +278,96 @@ export function AssetsListClient({ items }: Props) {
     return getFramingGroup(a.insurance?.insuranceType) === 'savings'
   })
 
-  const dashedButton = (label: string) => (
+  const typeVisible = (type: AssetType) => typeFilter === 'all' || typeFilter === type
+
+  // #545 §5 — icon-only chip strip. Each chip mirrors the card's left icon mark
+  // (TintIconBox in AibutsuCard): 40×40 rounded-10 square, soft tint background,
+  // ink-stroked AssetIcon. Active state swaps to the saturated --asset-color-*
+  // fill with a white icon so the selection reads cleanly against the strip.
+  const TYPE_CHIPS: { key: AssetType; color: string; tint: string; label: string }[] = [
+    { key: 'house', color: 'var(--asset-color-house)', tint: 'var(--asset-tint-house)', label: t.assetSheet.type.house },
+    { key: 'car', color: 'var(--asset-color-car)', tint: 'var(--asset-tint-car)', label: t.assetSheet.type.car },
+    { key: 'child', color: 'var(--asset-color-child)', tint: 'var(--asset-tint-child)', label: t.assetSheet.type.child },
+    { key: 'pet', color: 'var(--asset-color-pet)', tint: 'var(--asset-tint-pet)', label: t.assetSheet.type.pet },
+    { key: 'plant', color: 'var(--asset-color-plant)', tint: 'var(--asset-tint-plant)', label: t.assetSheet.type.plant },
+    { key: 'item', color: 'var(--asset-color-item, var(--ink-3))', tint: 'var(--asset-tint-item)', label: t.assetSheet.type.item },
+  ]
+
+  const chipBaseStyle = (
+    active: boolean,
+    activeBg: string,
+    inactiveBg: string,
+    inactiveBorder: string | null,
+  ): React.CSSProperties => ({
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    background: active ? activeBg : inactiveBg,
+    border: active || !inactiveBorder ? 'none' : inactiveBorder,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    cursor: 'pointer',
+    padding: 0,
+  })
+
+  const TypeFilterStrip = (
+    <div className="px-4 pb-3 overflow-x-auto">
+      <div className="flex gap-2">
+        <button
+          key="all"
+          type="button"
+          aria-label={t.assets.typeFilterAll}
+          aria-pressed={typeFilter === 'all'}
+          onClick={() => setTypeFilter('all')}
+          style={chipBaseStyle(typeFilter === 'all', 'var(--ink)', 'var(--surface)', '1px solid var(--hairline)')}
+        >
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
+            <circle cx="17" cy="7" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
+            <circle cx="7" cy="17" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
+            <circle cx="17" cy="17" r="2" fill={typeFilter === 'all' ? '#fff' : 'var(--ink)'} />
+          </svg>
+        </button>
+        {TYPE_CHIPS.map(({ key, color, tint, label }) => {
+          const active = typeFilter === key
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-label={label}
+              aria-pressed={active}
+              onClick={() => setTypeFilter(key)}
+              style={{
+                ...chipBaseStyle(active, color, tint, null),
+                color: active ? '#fff' : 'var(--ink)',
+              }}
+            >
+              <AssetIcon type={key} size={18} />
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  // #545 §6 — filtered empty state: 「新增 OO」 dashed button surfaces the
+  // create-flow CTA pre-targeted at the active type. Only shown when a
+  // specific type is filtered and that bucket is empty.
+  const EMPTY_STATE_LABEL: Record<AssetType, string> = {
+    car: t.assets.addCar,
+    house: t.assets.addHouse,
+    child: t.assets.addChild,
+    pet: t.assets.addPet,
+    plant: t.assets.addPlant,
+    item: t.assets.addItem,
+    // insurance lives under Guardian; the filter strip never offers it, but
+    // the map still needs to be total for the AssetType union.
+    insurance: '',
+  }
+
+  const renderFilteredEmptyButton = (type: AssetType) => (
     <button
       type="button"
       onClick={() => setSheetOpen(true)}
@@ -297,52 +387,8 @@ export function AssetsListClient({ items }: Props) {
         cursor: 'pointer',
       }}
     >
-      <PlusIcon size={12} color="var(--ink-2)" /> {label}
+      <PlusIcon size={12} color="var(--ink-2)" /> {EMPTY_STATE_LABEL[type]}
     </button>
-  )
-
-  const typeVisible = (type: AssetType) => typeFilter === 'all' || typeFilter === type
-
-  const TYPE_CHIPS: { key: AssetType | 'all'; label: string; color: string }[] = [
-    { key: 'all', label: '全部', color: 'var(--ink-3)' },
-    { key: 'house', label: '房', color: 'var(--asset-color-house)' },
-    { key: 'car', label: '車', color: 'var(--asset-color-car)' },
-    { key: 'child', label: '孩', color: 'var(--asset-color-child)' },
-    { key: 'pet', label: '寵', color: 'var(--asset-color-pet)' },
-    { key: 'plant', label: '植', color: 'var(--asset-color-plant)' },
-    { key: 'item', label: '物', color: 'var(--asset-color-item, var(--ink-3))' },
-  ]
-
-  const TypeFilterStrip = (
-    <div className="px-4 pb-3 overflow-x-auto">
-      <div className="flex gap-2">
-        {TYPE_CHIPS.map(({ key, label, color }) => {
-          const active = typeFilter === key
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTypeFilter(key)}
-              style={{
-                background: active ? color : 'var(--surface)',
-                color: active ? '#fff' : 'var(--ink-2)',
-                border: active ? 'none' : '1px solid var(--hairline)',
-              }}
-              className="h-8 px-3 rounded-full text-sm flex items-center gap-1.5 shrink-0 cursor-pointer"
-            >
-              {key !== 'all' && (
-                <span
-                  aria-hidden
-                  className="inline-block rounded-full shrink-0"
-                  style={{ width: 6, height: 6, background: active ? 'rgba(255,255,255,0.7)' : color }}
-                />
-              )}
-              {label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
   )
 
   const hasProperty = (typeVisible('car') && cars.length > 0) || (typeVisible('house') && houses.length > 0)
@@ -434,7 +480,6 @@ export function AssetsListClient({ items }: Props) {
               lastFuelDate={c.lastFuelDate ?? null}
             />
           ))}
-          {typeVisible('car') && cars.length > 0 && dashedButton(multiCar ? t.assets.addCar : t.assets.addSecondCar)}
           {typeVisible('house') && houses.map((h) => (
             <HouseCard
               key={h.id}
@@ -509,12 +554,16 @@ export function AssetsListClient({ items }: Props) {
       )}
 
       {!hasProperty && !hasLiving && (!typeVisible('item') || itemsTemplated.length === 0) && (
-        <div
-          className="text-sm leading-relaxed py-10 text-center"
-          style={{ color: 'var(--ink-3)' }}
-        >
-          {t.assets.tabEmpty.aibutsuHint}
-        </div>
+        typeFilter !== 'all' && typeFilter !== 'insurance' ? (
+          renderFilteredEmptyButton(typeFilter)
+        ) : (
+          <div
+            className="text-sm leading-relaxed py-10 text-center"
+            style={{ color: 'var(--ink-3)' }}
+          >
+            {t.assets.tabEmpty.aibutsuHint}
+          </div>
+        )
       )}
     </div>
   )
@@ -621,7 +670,13 @@ export function AssetsListClient({ items }: Props) {
       <AssetSheet
         open={sheetOpen}
         onClose={handleClose}
-        initialType={activeTab === 'guardian' ? 'insurance' : undefined}
+        initialType={
+          activeTab === 'guardian'
+            ? 'insurance'
+            : typeFilter !== 'all'
+              ? typeFilter
+              : undefined
+        }
         onMutated={handleMutated}
       />
     </div>

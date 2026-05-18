@@ -817,6 +817,12 @@ export const zhCN: Translations = {
     },
     addCar: '新增车辆',
     addSecondCar: '加入第二辆车',
+    addHouse: '新增房屋',
+    addChild: '新增孩子',
+    addPet: '新增宠物',
+    addPlant: '新增植物',
+    addItem: '新增物品',
+    typeFilterAll: '全部',
     insuranceList: {
       insuredPrefix: '被保人 {name}',
       annualPremium: '年缴 NT$ {amount}',

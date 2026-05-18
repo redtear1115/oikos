@@ -816,6 +816,12 @@ export const ja: Translations = {
     },
     addCar: '車を追加',
     addSecondCar: '2 台目の車を追加',
+    addHouse: '家を追加',
+    addChild: '子どもを追加',
+    addPet: 'ペットを追加',
+    addPlant: '植物を追加',
+    addItem: 'モノを追加',
+    typeFilterAll: 'すべて',
     insuranceList: {
       insuredPrefix: '被保険者 · {name}',
       annualPremium: '年払 NT$ {amount}',
