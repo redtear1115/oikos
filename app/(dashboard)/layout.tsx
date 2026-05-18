@@ -1,3 +1,4 @@
+import { Noto_Sans_TC } from 'next/font/google'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
@@ -13,6 +14,31 @@ import { TranslationsProvider } from '@/lib/i18n/client'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
+
+// CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
+// but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
+// per weight (render-blocking CSS grew ~100KB per extra weight). Each weight
+// added back here is a perf cost — verify build output (`grep '@font-face'
+// .next/static/css/*.css | wc -l`) before adding more. (issue #289)
+//
+// `preload: false` keeps the @font-face definitions but skips the <link
+// rel="preload"> storm for ~11 unicode-range woff2 chunks. Initial CJK glyphs
+// render instantly via the PingFang TC / Microsoft JhengHei / Noto Sans CJK TC
+// fallback chain (see globals.css `--font-sans`); Noto Sans TC loads async and
+// swaps in via `display: swap`. Trades a tiny FOUT for ~700ms off the critical
+// path on mobile. (issues #318 / #319)
+//
+// Scoped to dashboard layout (not root) so the landing page is freed from the
+// ~190KB @font-face CSS chunk. Onboarding (`app/onboarding/`) still falls back
+// to system-ui via inline styles — accepted minor regression for first-visit
+// perf. (issue #572)
+const notoTC = Noto_Sans_TC({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-noto-tc',
+  display: 'swap',
+  preload: false,
+})
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
@@ -80,7 +106,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <OfflineLifecycle />
           <ReconnectRefresh />
           <AvatarMenuProvider data={avatarMenuData}>
-            <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
+            <div className={`relative max-w-md mx-auto min-h-dvh ${notoTC.variable}`} style={{ background: 'var(--bg)' }}>
               {children}
             </div>
           </AvatarMenuProvider>
