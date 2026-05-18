@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Noto_Sans_TC } from 'next/font/google'
+import { Fraunces } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
@@ -32,25 +32,6 @@ const fraunces = Fraunces({
   preload: false,
 })
 
-// CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
-// but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
-// per weight (render-blocking CSS grew ~100KB per extra weight). Each weight
-// added back here is a perf cost — verify build output (`grep '@font-face'
-// .next/static/css/*.css | wc -l`) before adding more. (issue #289)
-//
-// `preload: false` keeps the @font-face definitions but skips the <link
-// rel="preload"> storm for ~11 unicode-range woff2 chunks. Initial CJK glyphs
-// render instantly via the PingFang TC / Microsoft JhengHei / Noto Sans CJK TC
-// fallback chain (see globals.css `--font-sans`); Noto Sans TC loads async and
-// swaps in via `display: swap`. Trades a tiny FOUT for ~700ms off the critical
-// path on mobile. (issues #318 / #319)
-const notoTC = Noto_Sans_TC({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-noto-tc',
-  display: 'swap',
-  preload: false,
-})
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -99,7 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
   const t = await getTranslations()
   return (
-    <html lang={locale} className={`${fraunces.variable} ${notoTC.variable}`}>
+    <html lang={locale} className={fraunces.variable}>
       <head>
         {/* Preconnect to Supabase so the TLS handshake is already done by the
             time the user clicks Sign-In (OAuth) or hits the dashboard. React
