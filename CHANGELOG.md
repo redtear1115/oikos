@@ -15,6 +15,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.0.5] - 2026-05-18
+
+主題：**三大入口 header / filter 統一（#545）**——Dashboard / Records / Assets 三頁 L1Header 規格對齊；Records L2 三 tab 收成「支出 + 收入」雙 toggle 並把月份切換改成 month picker popover；Dashboard 拆掉多餘 FilterSheet，payer / 負擔兩維直接做成 L3 雙 toggle，順手把「分攤」語意修成正確的 viewer × payer 負擔 cross-product；定期收支入口從 feed 中間 card 移到 L1 右側；愛物頁類型篩選改成 icon-only chip + 篩到空 bucket 的智慧 CTA。
+完整 diff：[v1.0.4...v1.0.5](https://github.com/redtear1115/oikos/compare/v1.0.4...v1.0.5)
+
+### 使用者可見變化
+
+- **Records 篩選改雙 toggle（#548, #545 §3）**：「全部 / 支出 / 收入」三顆獨立 tab 改為「支出 + 收入」兩顆 toggle，包在同一外框 pill 內。兩顆都選中 = 全部、只選一顆 = 單一篩選；不允許兩顆都取消。
+- **Records 月份切換改 month picker（#548）**：原本的「‹ 月 ›」左右箭頭改成 month picker — 點月份展開 popover（含年份左右切換 + 3×4 月份 grid），可直接跳到任意月份。
+- **Dashboard 簡化篩選（#548, #545 §2）**：移除 L3 上多餘的「篩選 ›」chip 與 FilterSheet lite-mode 入口；payer 與「誰負擔」兩維直接做成 L3 雙 toggle（「我付 + 對方付」/「我負擔 + 對方負擔」），solo 模式整個 L3 row 隱藏。
+- **「負擔」語意修正（#548）**：單獨選「我負擔」現在會包含 half / weighted 兩種 ratio-based 模式中 viewer 也確實負擔的記錄（不是只篩 `all_mine`）；正確語意 = viewer 最終承擔的記錄（cross-product of paid_by × split_type）。
+- **定期收支入口上移（#548, #545 §4）**：原 Records feed 中間的 `RecurringSectionCard` 移除，改成 L1 右側「定期 ›」連結，點擊直接導 `/settings/recurring`，不再插隊在 feed 中間。
+- **愛物類型篩選改 icon chip（#547, #545 §5）**：7 顆篩選 chip（全部 / 房 / 車 / 孩 / 寵 / 植 / 物）改成 40×40 icon-only chip，active 時填對應愛物主色、inactive 顯該類型主色，視覺對齊 list rail / cards 同一 hue family。
+- **愛物空狀態 CTA（#547, #545 §6）**：移除 car-specific 永久顯示的虛按鈕；改為「篩到單一類型且 bucket 為空」時才顯示對應「新增 OO」虛按鈕，點擊直接開到對應類型 sheet body。
+- **觸控目標 ≥44px（#548 polish）**：MonthSwitcher 年份箭頭與 trigger 雖然視覺維持 32–34px，但用 ::before pseudo 把 hit area 撐到 ≥44px，對齊 WCAG / iOS HIG（同 SettleButton 既有作法）。
+
+### 技術變更
+
+- **L1Header 規格統一（#548, #545 §1）**：Dashboard `BrandHeader`、`RecordsList`、`AssetsListClient` 三處 L1 統一為 `pt-[max(env(safe-area-inset-top),24px)] px-5 pb-3` + `flex items-center justify-between`，title 維持 serif `text-2xl font-medium tracking-tight`。L2 pill 三頁統一 `h-8` + `font-medium`，active 字重 600；視覺語彙 L2 = solid ink、L3 全部 = bordered ink、L3 per-type = asset hue 三層分明。
+- **`tab` state 重構（#548, #545 §3）**：Records 頁內部 state 從 `'all' | 'expense' | 'income'` 改成 `Set<'expense' | 'income'>`；downstream 的 `TabContext`（FilterSheet / MonthlyStatsView / feed loader / drill 邏輯）仍是原本三選一 enum，由 `selectedKinds` 推導，零 downstream 改動。
+- **新增 `burden` filter dim（#548 6th review）**：`TxnFilter` 加 `burden: 'all' | 'mine' | 'theirs'` 表達 payer × split cross-product；`ResolvedTxnFilter.burden` 含 viewerId + partnerId，SQL `_predicates.ts#burdenClause` 處理 4 個 callsite（listTxnsPaged / listFeedAllPaged cash / statsScopeClauses / income branch），income + settlement 在 burden 啟用時 short-circuit；`matchesFilter` in-memory matcher 同步；URL 序列化加 `fBurden`。Dashboard L3 split state 改寫 `burden` 不再動 `split` 維。
+- **`MemberDualToggle` 抽出（#548 4th review）**：`PayerDualToggle` 與 `SplitDualToggle` 共用底層 pill UI，吃 left/right Side token + viewer/partner 色，兩個 wrapper 各自負責 value ↔ Side 對映。
+- **MonthSwitcher popover portal 化（#548 2nd review）**：透過 `createPortal` 到 `document.body` 跳出 sticky header 的 `overflow-x-auto` clip 範圍；用 fixed position + `getBoundingClientRect` 追 trigger，open 時掛 scroll / resize listener；pointerdown 同時看 trigger 與 portalled popover 兩邊避免 portal 化後誤判點外部。
+- **`RecurringSectionCard.tsx` 刪除（#548, #545 §4）**：整支檔案刪掉，無其他引用。
+- **TYPE_CHIPS icon 化（#547, #545 §5）**：愛物 chip 改用 `AssetIcon` component，沿用 `--asset-color-{type}` token；「全部」chip 用 2×2 dots SVG；每顆 chip 加 `aria-label` + `aria-pressed`，鍵盤 / 螢幕閱讀器可辨識。
+- **i18n 4 語同步**：新增 `assets.addHouse` / `addChild` / `addPet` / `addPlant` / `addItem`（智慧空狀態 CTA）、`assets.typeFilterAll`（chip aria-label）、`records.recurringShortcut`（L1 連結）、`records.monthPicker.*`（month picker UI）、`dashboard.splitFilter.{mine,theirs}`、`dashboard.payerMe` / `payerPartner` 改為短版「我 / 對方」；移除 `dashboard.payerAll` / `records.tabAll` / `splitFilter.shared`（不再有對應 UI）。
+
 ## [1.0.4] - 2026-05-17
 
 主題：**前端 refactor 大掃除 + 效能優化**——清掉 `actions/` + `app/(dashboard)/` 累積的重複 / 巨大 component / 散落 helpers（#512 八個 PR），同時把首次載入跟靜態資源體積順手優化（#511 三個 PR + #517 一個 RLS 補洞）。零 schema 改動、零使用者 flow 變化，但啟動更快、icon 更小。
@@ -1130,7 +1157,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/redtear1115/oikos/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/redtear1115/oikos/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/redtear1115/oikos/compare/v1.0.1...v1.0.2
