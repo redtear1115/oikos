@@ -237,7 +237,6 @@ export const zhCN: Translations = {
     splitFilter: {
       mine: '我负担',
       theirs: '对方负担',
-      shared: '平分',
     },
     activeTripBanner: {
       kicker: '旅行进行中',

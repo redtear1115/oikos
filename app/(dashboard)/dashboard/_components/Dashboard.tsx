@@ -126,9 +126,14 @@ export function Dashboard({
   const [modal, dispatch] = useReducer((_prev: ModalState, next: ModalState) => next, { kind: 'closed' })
 
   // L3 filter state — two independent dimensions, both Dashboard-local
-  // (no FilterSheet on this page; full filter is over on /records).
+  // (no FilterSheet on this page; full filter is over on /records). Both
+  // dimensions share the same dual-toggle UX: both sides selected = no
+  // filter; only one side = narrow to that side. The split dim covers
+  // `all_mine` / `all_theirs`; ratio-based modes (`half` + `weighted`)
+  // are intentionally only visible when both sides are selected — the
+  // user said this matches how they read those records.
   type DashboardPayer = 'all' | 'me' | 'partner'
-  type DashboardSplit = 'all' | 'mine' | 'theirs' | 'shared'
+  type DashboardSplit = 'all' | 'mine' | 'theirs'
   const [payerFilter, setPayerFilter] = useState<DashboardPayer>('all')
   const [splitFilter, setSplitFilter] = useState<DashboardSplit>('all')
 
@@ -173,20 +178,17 @@ export function Dashboard({
 
   const sheetOpen = modal.kind !== 'closed'
 
-  // Compose L3 chips into a TxnFilter for the feed. Both dims are optional;
-  // when both are 'all' we pass null so TransactionFeed skips its filter
-  // branch entirely (no realtime mismatch, no wire roundtrip).
+  // Compose L3 toggles into a TxnFilter for the feed. Both dims are
+  // optional; when both are 'all' we pass null so TransactionFeed skips
+  // its filter branch entirely (no realtime mismatch, no wire roundtrip).
+  // Split 'all' (both sides selected) means ALL four DB split types —
+  // including the ratio-based `half` + `weighted` that aren't pickable
+  // on their own from L3.
   const effectiveFilter = useMemo<TxnFilter | null>(() => {
     const payer: PayerFilter =
       payerFilter === 'me' ? 'mine' : payerFilter === 'partner' ? 'theirs' : 'all'
     const split: SplitFilter =
-      splitFilter === 'mine'
-        ? 'all_mine'
-        : splitFilter === 'theirs'
-          ? 'all_theirs'
-          : splitFilter === 'shared'
-            ? 'shared'
-            : 'all'
+      splitFilter === 'mine' ? 'all_mine' : splitFilter === 'theirs' ? 'all_theirs' : 'all'
     if (payer === 'all' && split === 'all') return null
     return { ...defaultFilter(), payer, split }
   }, [payerFilter, splitFilter])
@@ -304,23 +306,30 @@ export function Dashboard({
           expensePendingCount={expensePendings.length}
         />
       </div>
-      {/* L3 filter row — payer dual-toggle (avatar-coloured) + 3 split chips.
-          Solo mode has no payer dimension, but split (我負擔 / 對方負擔 /
-          平分) is still meaningful since solo records carry split types. */}
-      <div
-        className="flex items-center gap-2 px-5 pb-2 overflow-x-auto"
-        style={{ scrollbarWidth: 'none' } as React.CSSProperties}
-      >
-        {!isSolo && partner && (
+      {/* L3 filter row — two avatar-coloured dual-toggle pills:
+          payer (誰付) + split (誰負擔). Both share the same visual /
+          interaction. Solo mode has nothing useful in either dim
+          (only one person, no real split decisions), so the whole row
+          collapses. */}
+      {!isSolo && partner && (
+        <div
+          className="flex items-center gap-2 px-5 pb-2 overflow-x-auto"
+          style={{ scrollbarWidth: 'none' } as React.CSSProperties}
+        >
           <PayerDualToggle
             value={payerFilter}
             onChange={setPayerFilter}
             viewerIsA={viewerIsA}
             t={t}
           />
-        )}
-        <SplitFilterChips value={splitFilter} onChange={setSplitFilter} t={t} />
-      </div>
+          <SplitDualToggle
+            value={splitFilter}
+            onChange={setSplitFilter}
+            viewerIsA={viewerIsA}
+            t={t}
+          />
+        </div>
+      )}
       {isSolo ? (
         bannerDismissed ? (
           <div className="px-5 pt-3 pb-5">
@@ -572,46 +581,48 @@ function DashboardFeedSkeleton() {
   )
 }
 
-type PayerKind = 'me' | 'partner'
+type Side = 'left' | 'right'
 
-interface PayerDualToggleProps {
-  value: 'all' | 'me' | 'partner'
-  onChange: (next: 'all' | 'me' | 'partner') => void
-  /** Drives which toggle gets `var(--ink)` (role 'a') vs `var(--accent)`
-   *  (role 'b') — same source of truth as `<Avatar memberRole=…/>`. */
+interface MemberDualToggleProps {
+  /** Selection state. Must be non-empty — component enforces ≥1. `left`
+   *  = viewer's side (avatar-coloured by viewer role), `right` = partner's
+   *  side (the opposite role's avatar colour). */
+  selected: Set<Side>
+  onChange: (next: Set<Side>) => void
+  /** Same source of truth as `<Avatar memberRole=…/>` — drives which side
+   *  gets `var(--ink)` (role 'a') vs `var(--accent)` (role 'b'). */
   viewerIsA: boolean
-  t: ReturnType<typeof useTranslations>
+  leftLabel: string
+  rightLabel: string
 }
 
 /**
- * Payer dual-toggle for Dashboard L3. Two pills inside one rounded frame:
- * 我的 / 對方. Both selected = `'all'` (no filter); single-selected =
- * 'me' | 'partner'. Disallow zero-selected. Selected fill matches the
- * member's avatar background colour so the chip and the avatar above the
- * page header read as the same person at a glance.
+ * Two-pill toggle keyed by member side. Used by both the payer (誰付)
+ * and split (誰負擔) L3 dimensions — they have the same shape: two
+ * member-coloured pills, both-selected = no filter, single-selected
+ * narrows to that member, zero-selected is disallowed. Selected fill
+ * matches the avatar colour so the chip and the avatar above the page
+ * header read as the same person at a glance.
  */
-function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps) {
-  const selected: Set<PayerKind> =
-    value === 'all'
-      ? new Set<PayerKind>(['me', 'partner'])
-      : new Set<PayerKind>([value])
-
-  const toggle = (kind: PayerKind) => {
+function MemberDualToggle({
+  selected,
+  onChange,
+  viewerIsA,
+  leftLabel,
+  rightLabel,
+}: MemberDualToggleProps) {
+  const toggle = (side: Side) => {
     const next = new Set(selected)
-    if (next.has(kind)) {
+    if (next.has(side)) {
       if (next.size === 1) return
-      next.delete(kind)
+      next.delete(side)
     } else {
-      next.add(kind)
+      next.add(side)
     }
-    onChange(next.size === 2 ? 'all' : next.has('me') ? 'me' : 'partner')
+    onChange(next)
   }
-
-  // Avatar colour map — viewer takes their own role's colour; partner takes
-  // the other. Keeps colour ↔ person stable across login swaps.
   const viewerColor = viewerIsA ? 'var(--ink)' : 'var(--accent)'
   const partnerColor = viewerIsA ? 'var(--accent)' : 'var(--ink)'
-
   return (
     <div
       className="inline-flex items-center shrink-0"
@@ -624,15 +635,15 @@ function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps
       }}
     >
       {([
-        { kind: 'me' as PayerKind, label: t.dashboard.payerMe, color: viewerColor },
-        { kind: 'partner' as PayerKind, label: t.dashboard.payerPartner, color: partnerColor },
-      ]).map(({ kind, label, color }) => {
-        const sel = selected.has(kind)
+        { side: 'left' as Side, label: leftLabel, color: viewerColor },
+        { side: 'right' as Side, label: rightLabel, color: partnerColor },
+      ]).map(({ side, label, color }) => {
+        const sel = selected.has(side)
         return (
           <button
-            key={kind}
+            key={side}
             type="button"
-            onClick={() => toggle(kind)}
+            onClick={() => toggle(side)}
             className="inline-flex items-center cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
             style={{
               height: 22,
@@ -651,48 +662,64 @@ function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps
   )
 }
 
-interface SplitFilterChipsProps {
-  value: 'all' | 'mine' | 'theirs' | 'shared'
-  onChange: (next: 'all' | 'mine' | 'theirs' | 'shared') => void
+interface PayerDualToggleProps {
+  value: 'all' | 'me' | 'partner'
+  onChange: (next: 'all' | 'me' | 'partner') => void
+  viewerIsA: boolean
+  t: ReturnType<typeof useTranslations>
+}
+
+function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps) {
+  const selected: Set<Side> =
+    value === 'all'
+      ? new Set<Side>(['left', 'right'])
+      : new Set<Side>([value === 'me' ? 'left' : 'right'])
+  const handleChange = (next: Set<Side>) => {
+    onChange(
+      next.size === 2 ? 'all' : next.has('left') ? 'me' : 'partner',
+    )
+  }
+  return (
+    <MemberDualToggle
+      selected={selected}
+      onChange={handleChange}
+      viewerIsA={viewerIsA}
+      leftLabel={t.dashboard.payerMe}
+      rightLabel={t.dashboard.payerPartner}
+    />
+  )
+}
+
+interface SplitDualToggleProps {
+  value: 'all' | 'mine' | 'theirs'
+  onChange: (next: 'all' | 'mine' | 'theirs') => void
+  viewerIsA: boolean
   t: ReturnType<typeof useTranslations>
 }
 
 /**
- * Split-type chip group for Dashboard L3. Three single-select chips:
- * 我負擔 / 對方負擔 / 平分. Tap a chip to apply, tap the active chip to
- * clear back to `'all'`. 「平分」aggregates the two ratio-based DB modes
- * (`half` + `weighted`) — see `SplitFilter` in lib/filter.ts.
+ * Split-type dual-toggle. 「我負擔」+「對方負擔」collapse to `'all'`
+ * when both selected (the feed then shows ratio-based half / weighted
+ * records too — those modes are intentionally NOT pickable on their
+ * own from L3; only visible when the dim is unfiltered).
  */
-function SplitFilterChips({ value, onChange, t }: SplitFilterChipsProps) {
-  const opts: Array<{ key: 'mine' | 'theirs' | 'shared'; label: string }> = [
-    { key: 'mine', label: t.dashboard.splitFilter.mine },
-    { key: 'theirs', label: t.dashboard.splitFilter.theirs },
-    { key: 'shared', label: t.dashboard.splitFilter.shared },
-  ]
+function SplitDualToggle({ value, onChange, viewerIsA, t }: SplitDualToggleProps) {
+  const selected: Set<Side> =
+    value === 'all'
+      ? new Set<Side>(['left', 'right'])
+      : new Set<Side>([value === 'mine' ? 'left' : 'right'])
+  const handleChange = (next: Set<Side>) => {
+    onChange(
+      next.size === 2 ? 'all' : next.has('left') ? 'mine' : 'theirs',
+    )
+  }
   return (
-    <div className="inline-flex items-center gap-1 shrink-0">
-      {opts.map(({ key, label }) => {
-        const sel = value === key
-        return (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onChange(sel ? 'all' : key)}
-            className="inline-flex items-center cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
-            style={{
-              height: 26,
-              padding: '0 10px',
-              borderRadius: 999,
-              background: sel ? 'var(--ink)' : 'var(--surface)',
-              color: sel ? '#fff' : 'var(--ink-3)',
-              border: sel ? 'none' : '0.5px solid var(--hairline)',
-            }}
-            aria-pressed={sel}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
+    <MemberDualToggle
+      selected={selected}
+      onChange={handleChange}
+      viewerIsA={viewerIsA}
+      leftLabel={t.dashboard.splitFilter.mine}
+      rightLabel={t.dashboard.splitFilter.theirs}
+    />
   )
 }

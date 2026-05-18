@@ -236,7 +236,6 @@ export const ja: Translations = {
     splitFilter: {
       mine: '自分が負担',
       theirs: '相手が負担',
-      shared: '折半',
     },
     activeTripBanner: {
       kicker: '旅行中',

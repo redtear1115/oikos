@@ -237,7 +237,6 @@ export const en: Translations = {
     splitFilter: {
       mine: 'My cost',
       theirs: 'Their cost',
-      shared: 'Shared',
     },
     activeTripBanner: {
       kicker: 'Trip in progress',

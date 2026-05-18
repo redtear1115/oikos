@@ -244,11 +244,10 @@ export type Translations = {
     payerMe: string
     /** Payer dual-toggle — partner side. */
     payerPartner: string
-    /** Split-type chip group on Dashboard L3. */
+    /** Split-type dual-toggle on Dashboard L3. */
     splitFilter: {
       mine: string
       theirs: string
-      shared: string
     }
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
@@ -2225,7 +2224,6 @@ export const zhTW: Translations = {
     splitFilter: {
       mine: '我負擔',
       theirs: '對方負擔',
-      shared: '平分',
     },
     activeTripBanner: {
       kicker: '旅行進行中',
