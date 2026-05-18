@@ -331,15 +331,19 @@ function resolveTxnFilter(
 ): ResolvedTxnFilter | undefined {
   if (!filterWire) return undefined
   const f = fromWire(filterWire)
+  const partnerId = group.memberA === viewerId ? group.memberB : group.memberA
   let paidBy: string | null = null
   if (f.payer === 'mine') paidBy = viewerId
   else if (f.payer === 'theirs') {
-    const partner = group.memberA === viewerId ? group.memberB : group.memberA
-    paidBy = partner ?? '00000000-0000-0000-0000-000000000000'
+    paidBy = partnerId ?? '00000000-0000-0000-0000-000000000000'
   }
   return {
     paidBy,
     splitTypes: splitFilterToTypes(f.split),
+    burden:
+      f.burden === 'all'
+        ? null
+        : { side: f.burden, viewerId, partnerId },
     categories: Array.from(f.categories),
     incomeCategories: Array.from(f.incomeCategories),
     assetIds: Array.from(f.assetIds),

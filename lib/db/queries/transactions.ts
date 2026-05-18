@@ -19,6 +19,8 @@ import {
   epochClause,
   splitTypeClause,
   statusClause,
+  burdenClause,
+  type BurdenResolution,
 } from './_predicates'
 
 export type FeedKind = 'transaction' | 'settlement' | 'income'
@@ -55,6 +57,14 @@ export interface FeedRow {
 export interface ResolvedTxnFilter {
   paidBy: string | null
   splitTypes: SplitType[]   // empty = all
+  /**
+   * Burden ("who actually bears the cost") predicate. `null` = no filter.
+   * When non-null, requires viewer + (optional) partner id so the SQL
+   * layer can resolve the payer × split_type cross-product. Income +
+   * settlement branches drop entirely when burden is active (those
+   * rows have no split_type to resolve).
+   */
+  burden: BurdenResolution | null
   categories: CategoryId[]  // empty = all (expense categories)
   /**
    * Income categories. Used by `listFeedAllPaged` for the income branch of
@@ -190,6 +200,7 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
   // Per-branch filter clauses
   const txPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
   const txSplit = andClause(filter ? splitTypeClause(filter.splitTypes) : undefined)
+  const txBurden = andClause(filter ? burdenClause(filter.burden) : undefined)
   const txCategory = andClause(filter ? categoryInClause(filter.categories) : undefined)
   const txAssetIds = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
   const txAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
@@ -287,6 +298,7 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
       ${txCursor}
       ${txPayer}
       ${txSplit}
+      ${txBurden}
       ${txCategory}
       ${txAssetIds}
       ${txAmount}
@@ -353,12 +365,15 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
   // cutsIncome for the cross-kind-cut rules.
   const txFilterPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
   const txFilterSplit = andClause(filter ? splitTypeClause(filter.splitTypes) : undefined)
+  const txFilterBurden = andClause(filter ? burdenClause(filter.burden) : undefined)
   const txFilterCategory = andClause(filter ? categoryInClause(filter.categories) : undefined)
   const txFilterAssets = andClause(filter ? assetIdsClause('asset_id', filter.assetIds) : undefined)
   const txFilterAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
   const txFilterStatus = andClause(filter ? statusClause(filter.status) : undefined)
   // Income-only filter active → no cash rows.
   const txFilterCutByIncomeOnly = filter?.cutAll ? sql`AND FALSE` : sql``
+  // Burden filter is cash-only; if active, drop income.
+  const incFilterBurdenCut = filter?.burden ? sql`AND FALSE` : sql``
 
   const setFilterPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
   // Settlements carry amount but no status. status='pending' already drops the
@@ -437,6 +452,7 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
       ${txDrill}
       ${txFilterPayer}
       ${txFilterSplit}
+      ${txFilterBurden}
       ${txFilterCategory}
       ${txFilterAssets}
       ${txFilterAmount}
@@ -468,6 +484,7 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
       ${incFilterIncomeCats}
       ${incFilterCategoryCut}
       ${incFilterSplitCut}
+      ${incFilterBurdenCut}
       ${incFilterStatusCut}
       ${epoch}
     ) AS feed
@@ -570,6 +587,7 @@ function statsScopeClauses(
     ${andClause(dateRangeClause(`${prefix}transacted_at`, monthKey, dateRange))}
     ${andClause(eqValueClause(`${prefix}paid_by`, filter?.paidBy))}
     ${andClause(filter ? splitTypeClause(filter.splitTypes, `${prefix}split_type`) : undefined)}
+    ${andClause(filter ? burdenClause(filter.burden, `${prefix}paid_by`, `${prefix}split_type`) : undefined)}
     ${andClause(filter ? categoryInClause(filter.categories, `${prefix}category`) : undefined)}
     ${andClause(filter ? assetIdsClause(`${prefix}asset_id`, filter.assetIds) : undefined)}
     ${andClause(filter ? amountClause(filter.amountMin, filter.amountMax, `${prefix}amount`) : undefined)}

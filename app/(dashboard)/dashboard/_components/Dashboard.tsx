@@ -17,7 +17,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
 import { IncomeEmptyState } from './IncomeEmptyState'
-import { defaultFilter, toWire, type TxnFilter, type PayerFilter, type SplitFilter } from '@/lib/filter'
+import { defaultFilter, toWire, type TxnFilter, type PayerFilter, type BurdenFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
@@ -181,20 +181,16 @@ export function Dashboard({
   // Compose L3 toggles into a TxnFilter for the feed. Both dims are
   // optional; when both are 'all' we pass null so TransactionFeed skips
   // its filter branch entirely (no realtime mismatch, no wire roundtrip).
-  // Split toggles use the `mine_cost` / `theirs_cost` aggregates so a
-  // single-sided pick still includes records where that side bears cost
-  // through a ratio split (half / weighted) — see `SplitFilter` docs.
+  // The split toggle drives the `burden` dim (who actually bears cost,
+  // resolved by combining paid_by × split_type) — NOT the `split` dim
+  // (raw DB split_type). See `BurdenFilter` in lib/filter.ts for why.
   const effectiveFilter = useMemo<TxnFilter | null>(() => {
     const payer: PayerFilter =
       payerFilter === 'me' ? 'mine' : payerFilter === 'partner' ? 'theirs' : 'all'
-    const split: SplitFilter =
-      splitFilter === 'mine'
-        ? 'mine_cost'
-        : splitFilter === 'theirs'
-          ? 'theirs_cost'
-          : 'all'
-    if (payer === 'all' && split === 'all') return null
-    return { ...defaultFilter(), payer, split }
+    const burden: BurdenFilter =
+      splitFilter === 'mine' ? 'mine' : splitFilter === 'theirs' ? 'theirs' : 'all'
+    if (payer === 'all' && burden === 'all') return null
+    return { ...defaultFilter(), payer, burden }
   }, [payerFilter, splitFilter])
 
   const handleItemClick = useCallback((tx: PagedTxnRow) => {

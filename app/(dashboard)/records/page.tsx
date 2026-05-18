@@ -80,6 +80,7 @@ export default async function RecordsPage({
   const filter = parseFilterFromRecord(resolvedParams)
   const filterIsActive = filter.payer !== 'all'
     || filter.split !== 'all'
+    || filter.burden !== 'all'
     || filter.categories.size > 0
     || filter.incomeCategories.size > 0
     || filter.assetIds.size > 0
@@ -97,6 +98,10 @@ export default async function RecordsPage({
     ? {
         paidBy: resolvedPaidBy,
         splitTypes: splitFilterToTypes(filter.split),
+        burden:
+          filter.burden === 'all'
+            ? null
+            : { side: filter.burden, viewerId: user.id, partnerId },
         categories: Array.from(filter.categories),
         incomeCategories: Array.from(filter.incomeCategories),
         assetIds: Array.from(filter.assetIds),
