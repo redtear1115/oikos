@@ -1651,6 +1651,39 @@ export const ja: Translations = {
     fallbackHtml: 'ブラウザのメニューから「<strong>ホーム画面に追加</strong>」または「<strong>アプリをインストール</strong>」を探してください。ブラウザによって場所は違いますが、たいてい右上のメニュー内にあります。',
   },
 
+  migrate: {
+    backToHome: '← Futari へ戻る',
+    upload: {
+      prompt: 'CSV をここにドロップ、またはファイルを選ぶ',
+      button: 'CSV を選ぶ',
+      constraint: 'ファイルはブラウザ内で読むだけ。どこにもアップロードしません。',
+      parsing: '読み込み中⋯',
+      error: 'このファイルは読めませんでした。CSV か確認してもう一度試してください。',
+      retry: '別のファイルを選ぶ',
+    },
+    preview: {
+      title: 'なかみをちらっと確認',
+      sourceLabel: '出どころ · {source}',
+      encodingLabel: 'エンコーディング · {encoding}',
+      totalRowsLabel: '{count} 件のレコード',
+      expenseRowsLabel: '支出らしきもの {count} 件',
+      dateRangeLabel: '{first} 〜 {last}',
+      topCategoriesLabel: 'よく出てくるカテゴリ',
+      empty: 'このファイルには表示できる中身がありませんでした。',
+    },
+    cta: {
+      button: 'アカウントを作って取り込む',
+      hint: 'アカウントを作ってから CSV を取り込めば、もう一度入力し直す必要はありません。',
+      privacyNote: 'プレビューはブラウザ内だけで動きます。データは外に出ません。',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      unknown: 'そのほか',
+    },
+  },
+
   seo: {
     landing: {
       title: 'Futari · ふたりの家計簿｜カップル向け共有家計アプリ',
