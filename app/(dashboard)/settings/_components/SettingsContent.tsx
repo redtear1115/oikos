@@ -116,6 +116,11 @@ export function SettingsContent({
           label={t.settings.trust}
           onClick={() => router.push('/settings/trust')}
         />
+        <div className="mt-3" />
+        <Row
+          label={t.settings.importData}
+          onClick={() => router.push('/settings/import')}
+        />
       </Section>
 
       {partner && (

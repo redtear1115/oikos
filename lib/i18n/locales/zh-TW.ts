@@ -872,6 +872,8 @@ export type Translations = {
     sectionData: string
     trust: string
     exportData: string
+    /** Row label in the 資料 section linking to /settings/import. */
+    importData: string
     pastTimes: string
     trips: string
     /** Secondary text under the 旅行 row — counts of active / past trips. */
@@ -2019,6 +2021,107 @@ export type Translations = {
     }
   }
 
+  /** /settings/import — authenticated CSV import wizard (issue #554). */
+  importPage: {
+    /** SubpageHeader title + back label. */
+    title: string
+    back: string
+    pageHeading: string
+    pageSubtitle: string
+    /** Compact step indicator. `{current}` / `{total}` substituted. */
+    stepLabel: string
+    nav: {
+      back: string
+      next: string
+      cancel: string
+      startImport: string
+      importing: string
+      done: string
+    }
+    upload: {
+      prompt: string
+      button: string
+      constraint: string
+      parsing: string
+      parseError: string
+      tooLarge: string
+      tooManyRows: string
+      detectedHeading: string
+      /** `{source}` replaced with one of `sources.*`. */
+      detectedSource: string
+      /** Row counts summary shown after parse. Replace `{total}` / `{valid}` / `{invalid}`. */
+      rowCounts: string
+      previewHeading: string
+      previewCaption: string
+      /** Column headers for the preview table. */
+      col: {
+        date: string
+        type: string
+        amount: string
+        category: string
+        description: string
+      }
+      noRowsValid: string
+    }
+    categoryMap: {
+      heading: string
+      body: string
+      empty: string
+      columnFrom: string
+      columnTo: string
+      /** Shown when a competitor label couldn't be auto-matched. */
+      unmappedHint: string
+    }
+    payerSplit: {
+      heading: string
+      body: string
+      payerLabel: string
+      payerViewer: string
+      payerPartner: string
+      splitLabel: string
+      splitHalf: string
+      splitAllMine: string
+      splitAllTheirs: string
+      soloLockHint: string
+      sourceLabel: string
+      sourcePlaceholder: string
+    }
+    confirm: {
+      heading: string
+      body: string
+      /** Replace `{n}`. */
+      expenseCount: string
+      incomeCount: string
+      skipCount: string
+      /** Subhead above the duplicate list. */
+      duplicatesHeading: string
+      duplicatesEmpty: string
+      duplicatesShow: string
+      duplicatesHide: string
+      skipDuplicatesToggle: string
+      skipDuplicatesHint: string
+      checkingDuplicates: string
+      duplicateCheckError: string
+    }
+    result: {
+      successHeading: string
+      successBody: string
+      /** Replace `{imported}` / `{skipped}`. */
+      counts: string
+      goToRecords: string
+      importAnother: string
+      errorHeading: string
+      errorBody: string
+      tryAgain: string
+    }
+    sources: {
+      honeydue: string
+      spendee: string
+      cwmoney: string
+      generic: string
+    }
+  }
+
   /** Per-page SEO strings — title / description / ogDescription used by
    *  generateMetadata in each app/[locale]/*\/page.tsx. Not rendered in UI. */
   seo: {
@@ -2707,6 +2810,7 @@ export const zhTW: Translations = {
     sectionData: '資料',
     trust: '資料安全',
     exportData: '匯出資料（CSV）',
+    importData: '從其他 app 匯入',
     pastTimes: '過去的時光',
     trips: '旅行',
     tripsRow: {
@@ -3725,6 +3829,97 @@ export const zhTW: Translations = {
       spendee: 'Spendee',
       cwmoney: 'CWMoney',
       unknown: '其他',
+    },
+  },
+
+  importPage: {
+    title: '匯入歷史紀錄',
+    back: '返回',
+    pageHeading: '把過去的記錄搬進來',
+    pageSubtitle: '支援從 Honeydue、Spendee、CWMoney 匯出的 CSV。檔案會在你的瀏覽器解析，只有按下匯入時才會寫入。',
+    stepLabel: '第 {current} / {total} 步',
+    nav: {
+      back: '上一步',
+      next: '下一步',
+      cancel: '取消',
+      startImport: '開始匯入',
+      importing: '匯入中…',
+      done: '完成',
+    },
+    upload: {
+      prompt: '把 CSV 拖到這裡，或選擇檔案',
+      button: '選擇 CSV',
+      constraint: '上限 2 MB / 5000 列。檔案會在這台裝置解析。',
+      parsing: '解析中…',
+      parseError: '讀不懂這個檔案，確認是 CSV 後再試一次。',
+      tooLarge: '檔案超過 2 MB，請拆成多份匯入。',
+      tooManyRows: '檔案超過 5000 列，請拆成多份匯入。',
+      detectedHeading: '已偵測到',
+      detectedSource: '來源 · {source}',
+      rowCounts: '共 {total} 列 · 可匯入 {valid} 列 · 有問題 {invalid} 列',
+      previewHeading: '前 5 列預覽',
+      previewCaption: '只是看一眼。實際內容會在後續步驟調整。',
+      col: {
+        date: '日期',
+        type: '類型',
+        amount: '金額',
+        category: '分類',
+        description: '備註',
+      },
+      noRowsValid: '這個檔案沒有可匯入的資料。確認格式後再試一次。',
+    },
+    categoryMap: {
+      heading: '對應分類',
+      body: '把 CSV 裡的分類對到 Futari 的分類。預設用相近字猜，可以手動改。',
+      empty: '這份檔案沒有額外的分類要對應。',
+      columnFrom: 'CSV 分類',
+      columnTo: 'Futari 分類',
+      unmappedHint: '沒選就會落到「其他」',
+    },
+    payerSplit: {
+      heading: '預設付款人與分攤',
+      body: '檔案裡沒有付款人資訊時，會套用這裡的預設。',
+      payerLabel: '預設付款人',
+      payerViewer: '我',
+      payerPartner: '對方',
+      splitLabel: '預設分攤',
+      splitHalf: '平分',
+      splitAllMine: '全部我的',
+      splitAllTheirs: '全部對方的',
+      soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+      sourceLabel: '來源備註（選填）',
+      sourcePlaceholder: '例：honeydue-2026-q1',
+    },
+    confirm: {
+      heading: '確認後開始匯入',
+      body: '匯入會建立一筆「批次」紀錄，方便日後檢視來源。',
+      expenseCount: '支出 {n} 筆',
+      incomeCount: '收入 {n} 筆',
+      skipCount: '跳過 {n} 筆',
+      duplicatesHeading: '與既有紀錄重複的列',
+      duplicatesEmpty: '沒有與既有紀錄相同的列。',
+      duplicatesShow: '展開',
+      duplicatesHide: '收合',
+      skipDuplicatesToggle: '自動跳過重複的列',
+      skipDuplicatesHint: '同一天、同人、同金額、同分類、備註前 10 字相同的列會被視為重複。',
+      checkingDuplicates: '比對重複中…',
+      duplicateCheckError: '重複比對失敗，仍可繼續匯入。',
+    },
+    result: {
+      successHeading: '匯入完成',
+      successBody: '紀錄已經進入這本帳本。可以到記錄頁看看。',
+      counts: '寫入 {imported} 筆 · 跳過 {skipped} 筆',
+      goToRecords: '去看記錄',
+      importAnother: '再匯入一份',
+      errorHeading: '匯入沒有完成',
+      errorBody: '這次的資料整批回退了，沒有任何紀錄被寫入。',
+      tryAgain: '再試一次',
+    },
+    sources: {
+      honeydue: 'Honeydue',
+      spendee: 'Spendee',
+      cwmoney: 'CWMoney',
+      generic: '通用 CSV',
     },
   },
 
