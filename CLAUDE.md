@@ -136,14 +136,7 @@ OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound) 
 
 ## 部署流程
 
-Vercel 連兩條 branch：
-
-| Branch | Vercel target | 觸發來源 |
-|---|---|---|
-| `main` | Preview | feature PR merge |
-| `release` | **Production** | `main` → `release` PR merge |
-
-`main` 與 `release` 都有 branch protection — 都只能透過 PR merge，不能直接 push。
+Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 要 release 時：
 
@@ -151,19 +144,11 @@ Vercel 連兩條 branch：
 2. 開 PR `chore/release-vX.Y.Z → main`，merge 後 push tag
 3. 開 PR `main → release`，merge 後 Vercel 自動部 prod
 
-Feature PR 進 `main` 只會起 Preview，不會碰 prod。
-
 ---
 
 ## 常用指令
 
-```bash
-npm run dev          # 開發 server
-npm run test:run     # vitest 一次性
-npm run db:migrate   # apply migrations
-npm run db:generate  # 從 schema 生 migration
-npm run db:studio    # Drizzle Studio
-```
+常用指令見 [README.md](README.md)。
 
 ## AI 開發協作規則
 
