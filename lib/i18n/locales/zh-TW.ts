@@ -1031,6 +1031,13 @@ export type Translations = {
     }
     addCar: string
     addSecondCar: string
+    addHouse: string
+    addChild: string
+    addPet: string
+    addPlant: string
+    addItem: string
+    /** #545 §5 — aria-label for the “全部 / all types” chip in the icon-only filter strip. */
+    typeFilterAll: string
     /** v0.15.0 #127 — strings used only by InsuranceListItem in the coverage section. */
     insuranceList: {
       /** Template with `{name}` placeholder. */
@@ -2788,6 +2795,12 @@ export const zhTW: Translations = {
     },
     addCar: '新增車輛',
     addSecondCar: '加入第二輛車',
+    addHouse: '新增房屋',
+    addChild: '新增孩子',
+    addPet: '新增寵物',
+    addPlant: '新增植物',
+    addItem: '新增物品',
+    typeFilterAll: '全部',
     insuranceList: {
       insuredPrefix: '被保人 {name}',
       annualPremium: '年繳 NT$ {amount}',
