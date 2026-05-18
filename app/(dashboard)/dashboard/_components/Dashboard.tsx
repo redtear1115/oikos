@@ -23,6 +23,7 @@ import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
+import { TripSheet } from '@/app/(dashboard)/trips/_components/TripSheet'
 import { getFuelLogById } from '@/actions/fuelLog'
 import type { FuelType } from '@/lib/fuel'
 import { PendingIncomeStack } from './PendingIncomeStack'
@@ -136,6 +137,11 @@ export function Dashboard({
   type DashboardSplit = 'all' | 'mine' | 'theirs'
   const [payerFilter, setPayerFilter] = useState<DashboardPayer>('all')
   const [splitFilter, setSplitFilter] = useState<DashboardSplit>('all')
+
+  // New-trip sheet (opened by the BrandHeader ✈ button when there are no
+  // active trips — ActiveTripBanner's own TripSheet doesn't mount in that
+  // state because the banner returns null for trips.length === 0). (#587)
+  const [tripSheetOpen, setTripSheetOpen] = useState(false)
 
   // Fuel log edit sheet state
   const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
@@ -294,7 +300,7 @@ export function Dashboard({
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* L1: Brand identity */}
-      <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => { /* no-op for now */ }} />
+      <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => setTripSheetOpen(true)} />
       {/* L3: Contextual strip (offline / past-epoch / partner-left / active-trip) */}
       <ContextStrip activeTrips={activeTrips} baseCurrency={baseCurrency} />
       {/* L2: Mode toggle — left-aligned */}
@@ -463,6 +469,16 @@ export function Dashboard({
           initial={fuelSheetInitial}
         />
       )}
+
+      <TripSheet
+        open={tripSheetOpen}
+        baseCurrency={baseCurrency}
+        onClose={() => setTripSheetOpen(false)}
+        onSaved={() => {
+          setTripSheetOpen(false)
+          router.refresh()
+        }}
+      />
 
       {toast && (
         <div
