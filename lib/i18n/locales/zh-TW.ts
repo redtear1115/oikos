@@ -1,3 +1,40 @@
+/** Comparison-table copy for /migrate/<source> pages (#599).
+ *  Each cell carries a localized `label` and a structural `tone` that
+ *  drives the visual treatment in `<MigrateComparison />`. */
+export type MigrateCellTone = 'yes' | 'partial' | 'no'
+export type MigrateComparisonCopy = {
+  /** Brand name of the source app (e.g. "Honeydue"). Used as column header
+   *  and to fill the `{other}` slot in `migrate.comparisonHeading`. */
+  otherLabel: string
+  rows: readonly [
+    {
+      feature: string
+      futari: { label: string; tone: MigrateCellTone }
+      other: { label: string; tone: MigrateCellTone }
+    },
+    {
+      feature: string
+      futari: { label: string; tone: MigrateCellTone }
+      other: { label: string; tone: MigrateCellTone }
+    },
+    {
+      feature: string
+      futari: { label: string; tone: MigrateCellTone }
+      other: { label: string; tone: MigrateCellTone }
+    },
+    {
+      feature: string
+      futari: { label: string; tone: MigrateCellTone }
+      other: { label: string; tone: MigrateCellTone }
+    },
+    {
+      feature: string
+      futari: { label: string; tone: MigrateCellTone }
+      other: { label: string; tone: MigrateCellTone }
+    },
+  ]
+}
+
 export type Translations = {
   signIn: {
     tagline: string
@@ -2019,6 +2056,11 @@ export type Translations = {
     }
     /** Section kicker above the "Why Futari" differentiators block. */
     differentiatorsHeading: string
+    /** Heading above the FAQ block on every /migrate/<source> page (#599). */
+    faqHeading: string
+    /** Heading template for the comparison table. Contains `{other}` —
+     *  replaced with the source brand name per page. e.g. "Futari vs {other}". */
+    comparisonHeading: string
     /** Closing trust block — narrative + 3 items, mounted between
      *  steps and footer on every /migrate/<source> page (#578). */
     trust: {
@@ -2052,6 +2094,17 @@ export type Translations = {
         step1: string
         step2: string
         step3: string
+        /** 4-question FAQ block (#599) — 3 shared + 1 source-specific.
+         *  Also feeds the FAQPage JSON-LD on the same page. */
+        faq: readonly [
+          { question: string; answer: string },
+          { question: string; answer: string },
+          { question: string; answer: string },
+          { question: string; answer: string },
+        ]
+        /** Side-by-side feature table vs the source app (#599).
+         *  `tone` drives cell color: yes = accent, partial/no = muted. */
+        comparison: MigrateComparisonCopy
       }
       spendee: {
         heroKicker: string
@@ -2066,6 +2119,13 @@ export type Translations = {
         step1: string
         step2: string
         step3: string
+        faq: readonly [
+          { question: string; answer: string },
+          { question: string; answer: string },
+          { question: string; answer: string },
+          { question: string; answer: string },
+        ]
+        comparison: MigrateComparisonCopy
       }
       cwmoney: {
         heroKicker: string
@@ -2084,6 +2144,13 @@ export type Translations = {
         templateDownloadLabel: string
         /** Caption under the download button explaining what the template does. */
         templateNote: string
+        faq: readonly [
+          { question: string; answer: string },
+          { question: string; answer: string },
+          { question: string; answer: string },
+          { question: string; answer: string },
+        ]
+        comparison: MigrateComparisonCopy
       }
     }
   }
@@ -3814,6 +3881,8 @@ export const zhTW: Translations = {
       unknown: '其他',
     },
     differentiatorsHeading: '為什麼選 Futari',
+    faqHeading: '常見問題',
+    comparisonHeading: 'Futari vs {other}',
     trust: {
       heading: '為什麼可以放心搬過來',
       items: [
@@ -3836,7 +3905,7 @@ export const zhTW: Translations = {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 資料，可以帶走',
-        heroSubtitle: '上傳 CSV，三分鐘把這幾年的記帳搬到 Futari。',
+        heroSubtitle: '從 Honeydue 搬遷到 Futari 只要三分鐘——上傳 CSV，這幾年的記帳完整保留。',
         intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、資料加密。',
         differentiators: [
           {
@@ -3856,11 +3925,59 @@ export const zhTW: Translations = {
         step1: '在 Honeydue App → 設定 → 匯出資料，下載 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: '匯入後資料需要再整理嗎？',
+            answer: '類別可在匯入流程中對照調整，一次完成，不需要事後手動修改。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。特殊類型（如轉帳）會標記供你確認。',
+          },
+          {
+            question: 'Honeydue 的共同帳本功能，Futari 有嗎？',
+            answer: '有。Futari 就是為兩個人設計的，所有記錄都在同一個帳本，可以各自查看與新增。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Honeydue',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '✓ 支援', tone: 'yes' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '△ 基本對半', tone: 'partial' },
+            },
+            {
+              feature: '持續維護更新',
+              futari: { label: '✓ 每兩週發版', tone: 'yes' },
+              other: { label: '△ 節奏放緩', tone: 'partial' },
+            },
+            {
+              feature: '多幣別記帳',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '✕ 無', tone: 'no' },
+            },
+            {
+              feature: '端對端資料加密',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '— 未說明', tone: 'no' },
+            },
+          ],
+        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
         heroTitle: '你的 Spendee 資料，可以帶走',
-        heroSubtitle: '上傳 Spendee 匯出的 CSV，預覽完整紀錄再決定要不要搬。',
+        heroSubtitle: '從 Spendee 匯入記帳記錄到 Futari，上傳 CSV 預覽完整紀錄再決定要不要搬。',
         differentiators: [
           {
             title: '雙人是核心，不是付費才解鎖',
@@ -3879,11 +3996,59 @@ export const zhTW: Translations = {
         step1: '在 Spendee → More → Export Data，下載 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: '匯入後資料需要再整理嗎？',
+            answer: '類別可在匯入流程中對照調整，一次完成，不需要事後手動修改。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。特殊類型（如轉帳）會標記供你確認。',
+          },
+          {
+            question: 'Spendee 的分攤功能，Futari 支援嗎？',
+            answer: '支援。Futari 內建多種分攤方式：各付各、全由一方負擔、對半分、自訂比例。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Spendee',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 免費內建', tone: 'yes' },
+              other: { label: '△ 需付費解鎖', tone: 'partial' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '✕ 無原生支援', tone: 'no' },
+            },
+            {
+              feature: '即時同步',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '△ 限付費版', tone: 'partial' },
+            },
+            {
+              feature: '完全免費',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 基本版有限制', tone: 'partial' },
+            },
+            {
+              feature: 'CSV 資料匯入',
+              futari: { label: '✓ 直接上傳', tone: 'yes' },
+              other: { label: '— 需自行整理', tone: 'partial' },
+            },
+          ],
+        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
         heroTitle: '你的 CWMoney 資料，可以帶走',
-        heroSubtitle: '用轉換模板把 CWMoney 的 Excel 整理成 CSV，再上傳到 Futari。',
+        heroSubtitle: 'CWMoney 資料匯出匯入指南：用轉換模板把 Excel 整理成 CSV，再上傳到 Futari。',
         differentiators: [
           {
             title: '雙人帳本是預設',
@@ -3904,6 +4069,54 @@ export const zhTW: Translations = {
         step3: '上傳轉換後的 CSV，預覽並建立帳號匯入。',
         templateDownloadLabel: '下載轉換模板',
         templateNote: '模板會把 CWMoney 的欄位對應到 Futari 支援的格式。',
+        faq: [
+          {
+            question: '匯入後資料需要再整理嗎？',
+            answer: '類別可在匯入流程中對照調整，一次完成，不需要事後手動修改。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。特殊類型（如轉帳）會標記供你確認。',
+          },
+          {
+            question: 'CWMoney 的資產功能，Futari 有對應嗎？',
+            answer: 'Futari 有「愛物」功能，可以記錄車、房子、保險等共同資產的相關支出。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'CWMoney',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 預設模式', tone: 'yes' },
+              other: { label: '✕ 單人設計', tone: 'no' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '✕ 無', tone: 'no' },
+            },
+            {
+              feature: '多幣別記帳',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '✓ 支援', tone: 'yes' },
+            },
+            {
+              feature: '完全免費',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ VIP 解鎖', tone: 'partial' },
+            },
+            {
+              feature: '即時雲端同步',
+              futari: { label: '✓ 即時', tone: 'yes' },
+              other: { label: '△ 需 VIP', tone: 'partial' },
+            },
+          ],
+        },
       },
     },
   },
@@ -3929,19 +4142,19 @@ export const zhTW: Translations = {
     },
     migrate: {
       honeydue: {
-        title: '從 Honeydue 搬到 Futari — 免費雙人記帳替代方案',
-        description: 'Honeydue 逐漸停止維護，Futari 是專為夫妻、伴侶設計的共同帳本，讓你 3 分鐘完成資料搬遷，繼續一起記帳。免費、無廣告、資料加密。',
-        ogDescription: 'Honeydue 用戶的下一站：Futari 雙人記帳，把資料一起帶走。',
+        title: '從 Honeydue 搬遷到 Futari — Honeydue 替代方案｜免費雙人記帳',
+        description: 'Honeydue 更新放緩，Futari 是專為夫妻、伴侶設計的共同帳本，讓你 3 分鐘完成資料搬遷，繼續一起記帳。Honeydue 替代方案首選：免費、無廣告、端對端加密。',
+        ogDescription: 'Honeydue 用戶的下一站：3 分鐘搬遷到 Futari，雙人記帳繼續。',
       },
       spendee: {
-        title: '從 Spendee 搬到 Futari — 雙人記帳替代方案',
-        description: '把 Spendee 的記帳資料帶來 Futari——專為夫妻、伴侶設計的共同帳本，繼續和另一半一起記帳。上傳 CSV，3 分鐘完成搬遷。',
+        title: '從 Spendee 匯入記帳記錄 — Spendee 伴侶記帳替代方案｜Futari',
+        description: 'Spendee 伴侶記帳替代方案——把 Spendee 的 CSV 匯入 Futari，這個專為夫妻、伴侶設計的共同帳本，雙人共享免費內建，不必再為解鎖付費。',
         ogDescription: 'Spendee 用戶的雙人記帳新選擇：上傳 CSV，3 分鐘搬完。',
       },
       cwmoney: {
-        title: '從 CWMoney 搬到 Futari — 記帳資料搬遷教學',
-        description: '用我們提供的 Excel 轉換模板把 CWMoney 資料整理成 CSV，再上傳到 Futari——專為夫妻、伴侶設計的共同記帳帳本，3 分鐘完成搬遷。',
-        ogDescription: 'CWMoney 用戶搬家指南：用轉換模板把 Excel 變成 CSV，搬進 Futari。',
+        title: '從 CWMoney 搬家到 Futari — CWMoney 資料匯出匯入教學',
+        description: 'CWMoney 資料匯出後怎麼匯入新工具？用我們提供的 Excel 轉換模板整理成 CSV，再上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，完成搬家。',
+        ogDescription: 'CWMoney 用戶搬家指南：Excel 轉 CSV，搬進 Futari 雙人記帳。',
       },
     },
   },
