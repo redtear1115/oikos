@@ -2,13 +2,25 @@
 
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
-import { AddSheet, type AddSheetInitial, type RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import type { AddSheetInitial, RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { TripSheet, type TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
+import type { TripSheetInitial } from '@/app/(dashboard)/trips/_components/TripSheet'
 import { EndTripSheet } from './EndTripSheet'
+
+// Sheets only mount on user action — lazy-load to trim the trip-detail
+// page's initial JS bundle (#670 audit 6.1).
+const AddSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/AddSheet').then(m => m.AddSheet),
+  { ssr: false },
+)
+const TripSheet = dynamic(
+  () => import('@/app/(dashboard)/trips/_components/TripSheet').then(m => m.TripSheet),
+  { ssr: false },
+)
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
 import type { SplitType } from '@/lib/balance'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
