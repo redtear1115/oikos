@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useReducer, useRef } from 'react'
 import Link from 'next/link'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
@@ -15,6 +15,61 @@ import { formatAmount } from '@/lib/currency'
 const HERO_COLLAPSED_KEY = 'hero-collapsed'
 // localStorage key for the settled / include-pending balance view toggle (#164).
 const BALANCE_VIEW_KEY = 'balance-view'  // 'settled' | 'pending'
+
+type BalanceFadeState = {
+  displayed: number
+  fading: boolean
+  // Tracks the last rawBalance prop we synced to. Used for render-time prop
+  // sync — see the `if (rawBalance !== syncedTo)` check below — so we don't
+  // need a useEffect just to mirror the prop into state.
+  syncedTo: number
+}
+
+type BalanceFadeAction =
+  // Prop sync: snap the underlying value to rawBalance but preserve `fading`
+  // so a realtime fadeOut in flight still animates over the new value.
+  | { type: 'sync'; raw: number }
+  | { type: 'fadeOut' }
+  // fadeIn optionally swaps the displayed value at fade completion — used by
+  // the realtime balance-change handler to delay the visual swap until the
+  // opacity has dropped.
+  | { type: 'fadeIn'; raw?: number }
+
+function balanceFadeReducer(s: BalanceFadeState, a: BalanceFadeAction): BalanceFadeState {
+  switch (a.type) {
+    case 'sync':
+      return { ...s, displayed: a.raw, syncedTo: a.raw }
+    case 'fadeOut':
+      return { ...s, fading: true }
+    case 'fadeIn':
+      return { ...s, displayed: a.raw ?? s.displayed, fading: false }
+  }
+}
+
+/**
+ * Boolean persisted in localStorage with a configurable on/off serialization
+ * (so we can keep human-readable values like 'pending'/'settled' on disk). The
+ * initial value is the default; the stored value (if any) is read on mount and
+ * overrides it. Returns a setter that writes through on every change.
+ */
+function useLocalStorageBoolean(
+  key: string,
+  defaultValue: boolean,
+  onValue: string,
+  offValue: string,
+): [boolean, (next: boolean) => void] {
+  const [value, setValue] = useState(defaultValue)
+  useEffect(() => {
+    const stored = localStorage.getItem(key)
+    if (stored === onValue) setValue(true)
+    else if (stored === offValue) setValue(false)
+  }, [key, onValue, offValue])
+  const set = (next: boolean) => {
+    setValue(next)
+    localStorage.setItem(key, next ? onValue : offValue)
+  }
+  return [value, set]
+}
 
 interface Props {
   rawBalance: number  // member_a perspective (positive = b owes a)
@@ -49,21 +104,30 @@ export function BalanceHero({
 }: Props) {
   const { viewer, partner, viewerIsA, isPast } = useMember()
   const t = useTranslations()
-  const [displayedRaw, setDisplayedRaw] = useState(rawBalance)
-  const [fading, setFading] = useState(false)
-  const [heroCollapsed, setHeroCollapsed] = useState(false)
-  // Settled-only vs include-pending balance view (issue #164). Persisted in
-  // localStorage so the user's preference survives reloads.
-  const [includePendingView, setIncludePendingView] = useState(false)
+  // Animation state — displayed value + fade flag + synced-prop tracker — all
+  // in one reducer so the realtime fadeOut/fadeIn pair and the render-time
+  // prop sync stay coherent. (Previously three useStates + a prop-sync effect.)
+  const [{ displayed: displayedRaw, fading, syncedTo }, dispatchFade] = useReducer(
+    balanceFadeReducer,
+    rawBalance,
+    (initial): BalanceFadeState => ({ displayed: initial, fading: false, syncedTo: initial }),
+  )
+  // Render-time prop sync (replaces a useEffect that only existed to mirror
+  // the prop). When a fade is in flight from realtime, we still update the
+  // underlying value but preserve `fading` so the animation completes.
+  if (rawBalance !== syncedTo) {
+    dispatchFade({ type: 'sync', raw: rawBalance })
+  }
+
+  const [heroCollapsed, setHeroCollapsed] = useLocalStorageBoolean(
+    HERO_COLLAPSED_KEY, false, 'true', 'false',
+  )
+  // Settled-only vs include-pending balance view (issue #164).
+  const [includePendingView, setIncludePendingView] = useLocalStorageBoolean(
+    BALANCE_VIEW_KEY, false, 'pending', 'settled',
+  )
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const P = DEFAULT_INCOME_PALETTE
-
-  useEffect(() => {
-    const stored = localStorage.getItem(HERO_COLLAPSED_KEY)
-    if (stored === 'true') setHeroCollapsed(true)
-    const viewStored = localStorage.getItem(BALANCE_VIEW_KEY)
-    if (viewStored === 'pending') setIncludePendingView(true)
-  }, [])
 
   useEffect(() => {
     return () => {
@@ -71,15 +135,11 @@ export function BalanceHero({
     }
   }, [])
 
-  // Sync if parent prop changes (e.g. after our own mutation router.refresh).
-  useEffect(() => { setDisplayedRaw(rawBalance) }, [rawBalance])
-
   useRealtimeEvents((event) => {
     if (event.kind === 'balance-change') {
-      setFading(true)
+      dispatchFade({ type: 'fadeOut' })
       fadeTimerRef.current = setTimeout(() => {
-        setDisplayedRaw(event.balance)
-        setFading(false)
+        dispatchFade({ type: 'fadeIn', raw: event.balance })
       }, 150)
     }
   })
@@ -99,14 +159,10 @@ export function BalanceHero({
   const [settleOpen, setSettleOpen] = useState(false)
 
   const toggleBalanceView = () => {
-    setFading(true)
-    setIncludePendingView(prev => {
-      const next = !prev
-      localStorage.setItem(BALANCE_VIEW_KEY, next ? 'pending' : 'settled')
-      return next
-    })
+    dispatchFade({ type: 'fadeOut' })
+    setIncludePendingView(!includePendingView)
     // Match the realtime balance-change fade duration for visual consistency.
-    fadeTimerRef.current = setTimeout(() => setFading(false), 150)
+    fadeTimerRef.current = setTimeout(() => dispatchFade({ type: 'fadeIn' }), 150)
   }
 
   let owedByWho: 'M' | 'T'
@@ -143,12 +199,9 @@ export function BalanceHero({
   const balanceColor = balance > 0 ? 'var(--credit)' : balance < 0 ? 'var(--debit)' : 'var(--ink)'
 
   const toggleCollapsed = () => {
-    setHeroCollapsed(prev => {
-      const next = !prev
-      localStorage.setItem(HERO_COLLAPSED_KEY, String(next))
-      if (next) setSettleOpen(false)
-      return next
-    })
+    const next = !heroCollapsed
+    setHeroCollapsed(next)
+    if (next) setSettleOpen(false)
   }
 
   return (
