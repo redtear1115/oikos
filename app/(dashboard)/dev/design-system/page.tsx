@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
+import { SheetHeader, SheetBody, SheetFooter } from '@/components/ui/Sheet'
 
 export default function DesignSystemPage() {
   return (
@@ -29,6 +30,24 @@ export default function DesignSystemPage() {
         <TextInput error placeholder="Error state" />
         <TextInput disabled placeholder="Disabled" />
       </section>
+
+      <h2 className="text-title font-medium text-ink mt-8">Sheet Inner Wrappers</h2>
+      <div className="border border-[var(--hairline)] rounded-card overflow-hidden max-w-sm bg-bg">
+        <SheetHeader
+          title="新增支出"
+          trailing={<button type="button" className="text-label text-ink-2">關閉</button>}
+        />
+        <SheetBody>
+          <div className="flex flex-col gap-3 py-3">
+            <TextInput placeholder="金額" inputMode="decimal" />
+            <TextInput placeholder="備註" />
+          </div>
+        </SheetBody>
+        <SheetFooter>
+          <Button variant="secondary" fullWidth>取消</Button>
+          <Button variant="primary" fullWidth>儲存</Button>
+        </SheetFooter>
+      </div>
     </div>
   )
 }
