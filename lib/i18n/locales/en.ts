@@ -1782,8 +1782,8 @@ export const en: Translations = {
   seo: {
     landing: {
       title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
-      description: 'A shared household ledger built for couples and partners. Auto-split expenses, settle balances, track family assets, insurance, and fuel logs. Mobile-first PWA, crafted in Taiwan.',
-      ogDescription: 'Two people, one ledger. Log together, split automatically, settle effortlessly.',
+      description: 'Futari is a shared budgeting app built for couples — a partner-first ledger to log expenses together, auto-split, settle balances, and see your life as a pair.',
+      ogDescription: 'Futari is a couple-first shared budgeting app — log together, auto-split, settle, and see your life as a pair.',
     },
     signIn: {
       title: 'Sign in to Futari · Start budgeting together',
@@ -1801,17 +1801,17 @@ export const en: Translations = {
     migrate: {
       honeydue: {
         title: 'Move from Honeydue to Futari — a free shared-budgeting alternative',
-        description: 'Honeydue is winding down. Move your data to Futari in about 3 minutes and keep budgeting together with your partner. Free, ad-free, end-to-end encrypted.',
+        description: 'Honeydue is winding down. Futari is a shared ledger built for couples — move your data over in about 3 minutes and keep budgeting together. Free, ad-free, encrypted.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
         title: 'Move from Spendee to Futari — a shared-budgeting alternative',
-        description: 'Bring your Spendee history into Futari and keep budgeting with your partner. Upload your CSV — three minutes, done.',
+        description: 'Bring your Spendee history into Futari, a couple-first shared ledger built for partners. Upload your CSV — three minutes to move in and pick up where you left off.',
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
         title: 'Move from CWMoney to Futari — how to bring your records over',
-        description: 'Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari can import.',
+        description: 'Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari can import — a shared ledger built for couples, ready in about 3 minutes.',
         ogDescription: "Moving from CWMoney: convert your Excel with our template, then import into Futari.",
       },
     },
