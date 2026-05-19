@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
-import { SheetBody } from '@/components/ui/Sheet'
+import { SheetBody, SheetHeader } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { getPlatform, type Platform } from '@/lib/install-guide'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
@@ -28,21 +28,16 @@ export function InstallGuide({ open, onClose, t }: Props) {
 
   return (
     <SheetFrame open={open} onClose={onClose} ariaLabel={t.installGuide.title} topRadius={28}>
-      {/* Header — 3-column layout (close | centred title | spacer); non-standard for SheetHeader primitive */}
-      <div className="flex items-center justify-between px-5 pt-3 pb-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="p-1"
-        >
-          {t.installGuide.close}
-        </Button>
-        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          {t.installGuide.title}
-        </div>
-        <div className="w-10" />
-      </div>
+      <SheetHeader
+        title={t.installGuide.title}
+        centered
+        leading={
+          <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
+            {t.installGuide.close}
+          </Button>
+        }
+        hideTrailing
+      />
 
       <SheetBody>
         <div className="pb-8">
