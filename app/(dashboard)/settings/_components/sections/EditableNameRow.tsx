@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { EditTextSheet } from '@/app/(dashboard)/_components/EditTextSheet'
+import dynamic from 'next/dynamic'
+
+// Sheet only mounts when the user taps the row to edit — lazy-load to keep
+// the settings page initial bundle small (#670 audit 6.1).
+const EditTextSheet = dynamic(
+  () => import('@/app/(dashboard)/_components/EditTextSheet').then(m => m.EditTextSheet),
+  { ssr: false },
+)
 
 interface Props {
   /** Section row label (e.g. "帳本名稱"). */

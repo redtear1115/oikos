@@ -3,9 +3,16 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useTranslations } from '@/lib/i18n/client'
 import { currencySymbol, type CurrencyCode } from '@/lib/currency'
-import { TripSheet } from '@/app/(dashboard)/trips/_components/TripSheet'
+
+// TripSheet only mounts when the user taps a trip row — lazy-load to keep the
+// dashboard initial bundle lean (#670 audit 6.1).
+const TripSheet = dynamic(
+  () => import('@/app/(dashboard)/trips/_components/TripSheet').then(m => m.TripSheet),
+  { ssr: false },
+)
 
 export interface ActiveTripBannerTrip {
   id: string

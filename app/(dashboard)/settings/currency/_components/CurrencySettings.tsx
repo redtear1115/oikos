@@ -3,13 +3,21 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useTranslations } from '@/lib/i18n/client'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { setBaseCurrency } from '@/actions/currency'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
-import { AddSheet, type RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import type { RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
+
+// AddSheet only mounts when the user taps to add a rate — lazy-load to keep
+// the currency settings initial bundle small (#670 audit 6.1).
+const AddSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/AddSheet').then(m => m.AddSheet),
+  { ssr: false },
+)
 
 export function CurrencySettings(props: {
   baseCurrency: CurrencyCode
