@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, use, useCallback, useEffect, useMemo, useReducer, useRef, useState, useTransition } from 'react'
+import { Suspense, use, useCallback, useEffect, useMemo, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -11,9 +11,7 @@ import { SoloBanner } from './SoloBanner'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { BalanceHero } from './BalanceHero'
-import type { AddSheetInitial, RateEntry } from './AddSheet'
-import type { SettlementSheetInitial } from './SettlementSheet'
-import type { IncomeSheetInitial } from './IncomeSheet'
+import type { RateEntry } from './AddSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
@@ -23,9 +21,8 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
-import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
+import { NewFuelLog } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
-import type { FuelType } from '@/lib/fuel'
 import { PendingIncomeStack } from './PendingIncomeStack'
 import { PendingExpenseStack } from './PendingExpenseStack'
 import { FirstRecordCard } from './FirstRecordCard'
@@ -34,6 +31,7 @@ import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
+import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from './useDashboardReducer'
 
 // Sheets are heavy and only meaningful on user interaction (FAB tap, edit-row
 // tap, ✈ button). Split into separate chunks and skip SSR so they don't bloat
@@ -56,16 +54,6 @@ export type MutatedInfo = {
   edit?: boolean
   deleted?: boolean
 }
-
-type ModalState =
-  | { kind: 'closed' }
-  | { kind: 'add' }
-  | { kind: 'income' }
-  | { kind: 'edit-income'; data: IncomeSheetInitial }
-  | { kind: 'edit-pending'; pendingId: string; data: IncomeSheetInitial }
-  | { kind: 'edit-pending-expense'; pendingId: string; data: AddSheetInitial }
-  | { kind: 'edit-tx'; data: AddSheetInitial }
-  | { kind: 'edit-settlement'; data: SettlementSheetInitial }
 
 export interface DashboardFeedData {
   recent: PagedTxnRow[]
@@ -130,64 +118,46 @@ export function Dashboard({
     }
   })
 
-  const [mode, setMode] = useState<'expense' | 'income'>('expense')
-  const [modal, dispatch] = useReducer((_prev: ModalState, next: ModalState) => next, { kind: 'closed' })
+  // L3 filter dims — two independent dual-toggle pills (payer / split),
+  // both Dashboard-local (no FilterSheet on this page; full filter lives
+  // on /records). Both sides selected = no filter; only one side =
+  // narrow to that side. The split dim covers `all_mine` / `all_theirs`;
+  // ratio-based modes (`half` + `weighted`) are intentionally only
+  // visible when both sides are selected — matches how the user reads
+  // those records. See `useDashboardReducer.ts` for the full state shape.
+  const [state, dispatch] = useDashboardReducer()
+  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard, toast, bannerDismissed } = state
 
-  // L3 filter state — two independent dimensions, both Dashboard-local
-  // (no FilterSheet on this page; full filter is over on /records). Both
-  // dimensions share the same dual-toggle UX: both sides selected = no
-  // filter; only one side = narrow to that side. The split dim covers
-  // `all_mine` / `all_theirs`; ratio-based modes (`half` + `weighted`)
-  // are intentionally only visible when both sides are selected — the
-  // user said this matches how they read those records.
-  type DashboardPayer = 'all' | 'me' | 'partner'
-  type DashboardSplit = 'all' | 'mine' | 'theirs'
-  const [payerFilter, setPayerFilter] = useState<DashboardPayer>('all')
-  const [splitFilter, setSplitFilter] = useState<DashboardSplit>('all')
-
-  // New-trip sheet (opened by the BrandHeader ✈ button when there are no
-  // active trips — ActiveTripBanner's own TripSheet doesn't mount in that
-  // state because the banner returns null for trips.length === 0). (#587)
-  const [tripSheetOpen, setTripSheetOpen] = useState(false)
-
-  // Fuel log edit sheet state
-  const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
-  const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
-  const [fuelCar, setFuelCar] = useState<{
-    id: string; name: string; plate: string
-    fuelType: FuelType | null
-    primaryUserId: string | null
-  } | null>(null)
   const [, startFuelLoad] = useTransition()
 
-  // First-record theory card visibility (#43 phase C). Lit by AddSheet's
-  // onMutated when createTransaction reports isFirstTransaction=true; persists
-  // across the router.refresh() that the same callback triggers because
-  // refresh re-runs the server tree without unmounting client state.
-  const [showFirstCard, setShowFirstCard] = useState(false)
-
-  // Lightweight transient toast — surfaced both for partner-race notices and
-  // for every successful create / edit / delete via handleMutated.
-  const [toast, setToast] = useState<string | null>(null)
+  // Toast timer ref lives outside the reducer — clearing is a side effect,
+  // and we need a stable ref across renders. The reducer only owns the
+  // visible toast string; this ref owns the cleanup handle.
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const showToast = (msg: string, durationMs = 2500) => {
-    setToast(msg)
+  const showToast = useCallback((msg: string, durationMs = 2500) => {
+    dispatch({ type: 'setToast', toast: msg })
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = setTimeout(() => setToast(null), durationMs)
-  }
+    toastTimerRef.current = setTimeout(() => dispatch({ type: 'setToast', toast: null }), durationMs)
+  }, [dispatch])
   useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current) }, [])
 
   // SoloBanner dismissal — persisted in localStorage, hydrated on mount.
   // SSR renders the banner; on first client paint we may swap to the fallback hero.
-  const [bannerDismissed, setBannerDismissed] = useState(false)
   useEffect(() => {
     if (typeof window === 'undefined') return
-    setBannerDismissed(window.localStorage.getItem(SOLO_BANNER_DISMISS_KEY) === 'true')
-  }, [])
+    dispatch({
+      type: 'setBannerDismissed',
+      dismissed: window.localStorage.getItem(SOLO_BANNER_DISMISS_KEY) === 'true',
+    })
+  }, [dispatch])
   const handleDismissBanner = () => {
     window.localStorage.setItem(SOLO_BANNER_DISMISS_KEY, 'true')
-    setBannerDismissed(true)
+    dispatch({ type: 'setBannerDismissed', dismissed: true })
   }
+
+  const setMode = useCallback((next: 'expense' | 'income') => dispatch({ type: 'setMode', mode: next }), [dispatch])
+  const setPayerFilter = useCallback((next: DashboardPayer) => dispatch({ type: 'setPayerFilter', value: next }), [dispatch])
+  const setSplitFilter = useCallback((next: DashboardSplit) => dispatch({ type: 'setSplitFilter', value: next }), [dispatch])
 
   const sheetOpen = modal.kind !== 'closed'
 
@@ -213,15 +183,18 @@ export function Dashboard({
     if (isPast) return
     if (tx.kind === 'income') {
       dispatch({
-        kind: 'edit-income',
-        data: {
-          id: tx.id,
-          amount: tx.amount,
-          category: tx.category,
-          source: tx.description || null,
-          recipientId: tx.paidBy,
-          assetId: tx.assetId,
-          occurredAt: tx.transactedAt.substring(0, 10),
+        type: 'openModal',
+        modal: {
+          kind: 'edit-income',
+          data: {
+            id: tx.id,
+            amount: tx.amount,
+            category: tx.category,
+            source: tx.description || null,
+            recipientId: tx.paidBy,
+            assetId: tx.assetId,
+            occurredAt: tx.transactedAt.substring(0, 10),
+          },
         },
       })
       return
@@ -229,12 +202,15 @@ export function Dashboard({
 
     if (tx.kind === 'settlement') {
       dispatch({
-        kind: 'edit-settlement',
-        data: {
-          id: tx.id,
-          amount: tx.amount,
-          payerId: tx.paidBy,
-          settledAt: tx.transactedAt,
+        type: 'openModal',
+        modal: {
+          kind: 'edit-settlement',
+          data: {
+            id: tx.id,
+            amount: tx.amount,
+            payerId: tx.paidBy,
+            settledAt: tx.transactedAt,
+          },
         },
       })
       return
@@ -244,53 +220,58 @@ export function Dashboard({
       startFuelLoad(async () => {
         const detail = await getFuelLogById(tx.fuelLogId!)
         if (!detail) return
-        setFuelSheetInitial({
-          fuelLogId: detail.id,
-          transactionId: tx.id,
-          liters: detail.liters,
-          odometer: detail.odometer,
-          station: detail.station,
-          fuelType: detail.fuelType === '98' ? '98' : detail.fuelType === 'diesel' ? 'diesel' : '95',
-          loggedAt: detail.loggedAt,
-          cost: tx.amount,
-          paidBy: tx.paidBy,
-          splitType: tx.splitType ?? 'all_mine',
+        dispatch({
+          type: 'openFuelSheet',
+          initial: {
+            fuelLogId: detail.id,
+            transactionId: tx.id,
+            liters: detail.liters,
+            odometer: detail.odometer,
+            station: detail.station,
+            fuelType: detail.fuelType === '98' ? '98' : detail.fuelType === 'diesel' ? 'diesel' : '95',
+            loggedAt: detail.loggedAt,
+            cost: tx.amount,
+            paidBy: tx.paidBy,
+            splitType: tx.splitType ?? 'all_mine',
+          },
+          car: {
+            id: detail.assetId,
+            name: detail.carName,
+            plate: detail.carPlate ?? '',
+            fuelType: detail.carFuelType,
+            primaryUserId: detail.carPrimaryUserId,
+          },
         })
-        setFuelCar({
-          id: detail.assetId,
-          name: detail.carName,
-          plate: detail.carPlate ?? '',
-          fuelType: detail.carFuelType,
-          primaryUserId: detail.carPrimaryUserId,
-        })
-        setFuelSheetOpen(true)
       })
       return
     }
 
     dispatch({
-      kind: 'edit-tx',
-      data: {
-        id: tx.id,
-        amount: tx.amount,
-        description: tx.description,
-        category: tx.category,
-        splitType: tx.splitType!,
-        splitRatioA: tx.splitRatioA ?? null,
-        payerId: tx.paidBy,
-        transactedAt: tx.transactedAt,
-        assetId: tx.assetId,
-        notes: tx.notes,
-        status: tx.status,
+      type: 'openModal',
+      modal: {
+        kind: 'edit-tx',
+        data: {
+          id: tx.id,
+          amount: tx.amount,
+          description: tx.description,
+          category: tx.category,
+          splitType: tx.splitType!,
+          splitRatioA: tx.splitRatioA ?? null,
+          payerId: tx.paidBy,
+          transactedAt: tx.transactedAt,
+          assetId: tx.assetId,
+          notes: tx.notes,
+          status: tx.status,
+        },
       },
     })
-  }, [startFuelLoad, isPast])
+  }, [startFuelLoad, isPast, dispatch])
 
-  const handleClose = () => dispatch({ kind: 'closed' })
+  const handleClose = () => dispatch({ type: 'closeModal' })
   const settlementData = modal.kind === 'edit-settlement' ? modal.data : null
 
   const handleMutated = (info?: MutatedInfo) => {
-    if (info?.isFirstTransaction) setShowFirstCard(true)
+    if (info?.isFirstTransaction) dispatch({ type: 'setShowFirstCard', show: true })
     if (info?.deleted) {
       showToast(t.common.toast.deleted, 1500)
     } else if (info?.savedAmount != null) {
@@ -307,7 +288,7 @@ export function Dashboard({
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* L1: Brand identity */}
-      <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => setTripSheetOpen(true)} />
+      <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => dispatch({ type: 'openTripSheet' })} />
       {/* L3: Contextual strip (offline / past-epoch / partner-left / active-trip) */}
       <ContextStrip activeTrips={activeTrips} baseCurrency={baseCurrency} />
       {/* L2: Mode toggle — left-aligned */}
@@ -379,21 +360,24 @@ export function Dashboard({
           <PendingExpenseStack
             pendings={expensePendings}
             onEdit={(p) => dispatch({
-              kind: 'edit-pending-expense',
-              pendingId: p.id,
-              data: {
-                id: p.id,
-                amount: p.proposedAmount,
-                description: p.proposedDescription,
-                category: p.category,
-                splitType: p.proposedSplitType,
-                splitRatioA: (p as { proposedSplitRatioA?: number | null }).proposedSplitRatioA ?? null,
-                payerId: p.proposedPaidBy,
-                // Construct as local midnight so AddSheet's getFullYear/Month/Date
-                // round-trip yields the original YYYY-MM-DD regardless of timezone.
-                transactedAt: `${p.proposedDate}T00:00:00`,
-                assetId: p.assetId,
-                notes: null,
+              type: 'openModal',
+              modal: {
+                kind: 'edit-pending-expense',
+                pendingId: p.id,
+                data: {
+                  id: p.id,
+                  amount: p.proposedAmount,
+                  description: p.proposedDescription,
+                  category: p.category,
+                  splitType: p.proposedSplitType,
+                  splitRatioA: (p as { proposedSplitRatioA?: number | null }).proposedSplitRatioA ?? null,
+                  payerId: p.proposedPaidBy,
+                  // Construct as local midnight so AddSheet's getFullYear/Month/Date
+                  // round-trip yields the original YYYY-MM-DD regardless of timezone.
+                  transactedAt: `${p.proposedDate}T00:00:00`,
+                  assetId: p.assetId,
+                  notes: null,
+                },
               },
             })}
           />
@@ -404,16 +388,19 @@ export function Dashboard({
           <PendingIncomeStack
             pendings={pendings}
             onEdit={(p) => dispatch({
-              kind: 'edit-pending',
-              pendingId: p.id,
-              data: {
-                id: p.id,
-                amount: p.proposedAmount,
-                category: p.category,
-                source: p.source,
-                recipientId: p.recipientId,
-                assetId: p.assetId,
-                occurredAt: p.proposedDate,
+              type: 'openModal',
+              modal: {
+                kind: 'edit-pending',
+                pendingId: p.id,
+                data: {
+                  id: p.id,
+                  amount: p.proposedAmount,
+                  category: p.category,
+                  source: p.source,
+                  recipientId: p.recipientId,
+                  assetId: p.assetId,
+                  occurredAt: p.proposedDate,
+                },
               },
             })}
           />
@@ -426,11 +413,11 @@ export function Dashboard({
           pageSize={pageSize}
           filter={effectiveFilter}
           onItemClick={handleItemClick}
-          onAddIncome={() => dispatch({ kind: 'income' })}
-          onAddTx={() => dispatch({ kind: 'add' })}
+          onAddIncome={() => dispatch({ type: 'openModal', modal: { kind: 'income' } })}
+          onAddTx={() => dispatch({ type: 'openModal', modal: { kind: 'add' } })}
         />
       </Suspense>
-      <BottomNav onAddClick={() => dispatch({ kind: addOrIncome })} hideFab={sheetOpen || isPast} />
+      <BottomNav onAddClick={() => dispatch({ type: 'openModal', modal: { kind: addOrIncome } })} hideFab={sheetOpen || isPast} />
       <AddSheet
         open={modal.kind === 'add' || modal.kind === 'edit-tx' || modal.kind === 'edit-pending-expense'}
         onClose={handleClose}
@@ -466,23 +453,23 @@ export function Dashboard({
         onMutated={handleMutated}
         onRaceResolved={showToast}
       />
-      {fuelCar && (
+      {fuelSheet.car && (
         <NewFuelLog
-          open={fuelSheetOpen}
-          onClose={() => setFuelSheetOpen(false)}
-          car={fuelCar}
+          open={fuelSheet.open}
+          onClose={() => dispatch({ type: 'closeFuelSheet' })}
+          car={fuelSheet.car}
           lastOdometer={null}
           mode="edit"
-          initial={fuelSheetInitial}
+          initial={fuelSheet.initial}
         />
       )}
 
       <TripSheet
         open={tripSheetOpen}
         baseCurrency={baseCurrency}
-        onClose={() => setTripSheetOpen(false)}
+        onClose={() => dispatch({ type: 'closeTripSheet' })}
         onSaved={() => {
-          setTripSheetOpen(false)
+          dispatch({ type: 'closeTripSheet' })
           router.refresh()
         }}
       />
@@ -500,7 +487,7 @@ export function Dashboard({
 
       <FirstRecordCard
         show={showFirstCard}
-        onDismiss={() => setShowFirstCard(false)}
+        onDismiss={() => dispatch({ type: 'setShowFirstCard', show: false })}
       />
     </div>
   )
