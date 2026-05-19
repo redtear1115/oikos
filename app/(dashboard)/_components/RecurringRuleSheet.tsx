@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
+import { SheetBody } from '@/components/ui/Sheet'
+import { Button } from '@/components/ui/Button'
+import { TextInput } from '@/components/ui/TextInput'
 import { AmountInput } from './AmountInput'
 import { ScrollFadeRow } from './ScrollFadeRow'
 import { ConfirmModal } from './ConfirmModal'
@@ -242,28 +245,29 @@ export function RecurringRuleSheet(props: Props) {
           />
         )}
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-3 pb-2 relative">
-          <button
-            type="button" onClick={onClose}
-            className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)', fontFamily: 'inherit' }}
-          >
+        {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive */}
+        <div className="shrink-0 flex items-center justify-between px-5 pt-3 pb-2 relative">
+          <Button variant="ghost" size="sm" onClick={onClose}>
             {t.common.cancel}
-          </button>
+          </Button>
           <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
             {isEdit ? tNs.sheet.titleEdit : tNs.sheet.titleNew}
           </div>
-          <button
-            type="button" onClick={handleSave} disabled={saveDisabled}
-            className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:cursor-default transition-colors duration-150"
-            style={{ color: amount && !pending ? saveColor : 'var(--ink-3)', fontFamily: 'inherit' }}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSave}
+            disabled={saveDisabled}
+            style={{
+              color: amount && !pending ? saveColor : 'var(--ink-3)',
+              fontWeight: 600,
+            }}
           >
             {pending ? t.common.saving : t.common.save}
-          </button>
+          </Button>
         </div>
 
-        <div className="overflow-auto flex-1">
+        <SheetBody noPadding>
           {error && (
             <div
               role="alert"
@@ -353,19 +357,10 @@ export function RecurringRuleSheet(props: Props) {
                 >
                   {t.recurringExpense.sheet.descriptionLabel}
                 </div>
-                <input
+                <TextInput
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder={t.recurringExpense.sheet.descriptionPlaceholder}
-                  className="w-full bg-transparent outline-none"
-                  style={{
-                    border: 'none',
-                    borderBottom: '1px solid var(--hairline)',
-                    padding: '4px 0 8px',
-                    fontSize: 'var(--fs-body)',
-                    color: 'var(--ink)',
-                    fontFamily: 'inherit',
-                  }}
                 />
               </div>
               <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
@@ -518,19 +513,10 @@ export function RecurringRuleSheet(props: Props) {
               >
                 {t.recurringIncome.sheet.sourceLabel}
               </div>
-              <input
+              <TextInput
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
                 placeholder={t.recurringIncome.sheet.sourcePlaceholder}
-                className="w-full bg-transparent outline-none"
-                style={{
-                  border: 'none',
-                  borderBottom: '1px solid var(--hairline)',
-                  padding: '4px 0 8px',
-                  fontSize: 'var(--fs-body)',
-                  color: 'var(--ink)',
-                  fontFamily: 'inherit',
-                }}
               />
             </div>
           )}
@@ -644,42 +630,28 @@ export function RecurringRuleSheet(props: Props) {
             <>
               <div style={{ height: 1, margin: '8px 20px 0', background: 'var(--hairline)' }} />
               <div style={{ padding: '16px 20px 8px', display: 'flex', gap: 10 }}>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={handlePauseResume}
                   disabled={pending}
-                  className="flex-1 py-3 rounded-full text-sm font-medium disabled:opacity-50"
-                  style={{
-                    border: '1px solid var(--hairline)',
-                    color: 'var(--ink-2)',
-                    background: 'transparent',
-                    fontFamily: 'inherit',
-                    cursor: 'pointer',
-                  }}
+                  fullWidth
                 >
                   {isPaused ? tNs.sheet.resumeAction : tNs.sheet.pauseAction}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="danger"
                   onClick={() => setConfirmingDelete(true)}
                   disabled={pending}
-                  className="flex-1 py-3 rounded-full text-sm font-medium disabled:opacity-50"
-                  style={{
-                    border: '1px solid var(--destructive)',
-                    color: 'var(--destructive)',
-                    background: 'transparent',
-                    fontFamily: 'inherit',
-                    cursor: 'pointer',
-                  }}
+                  fullWidth
                 >
                   {tNs.sheet.deleteRuleAction}
-                </button>
+                </Button>
               </div>
             </>
           )}
 
           <div className="h-8" />
-        </div>
+        </SheetBody>
       </SheetFrame>
 
       <ConfirmModal
@@ -694,4 +666,3 @@ export function RecurringRuleSheet(props: Props) {
     </>
   )
 }
-
