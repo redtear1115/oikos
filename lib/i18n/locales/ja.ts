@@ -127,6 +127,23 @@ export const ja: Translations = {
       '定期収入',
       'オフライン対応 PWA',
     ],
+    jsonLdFaq: [
+      {
+        question: 'Futariとは？',
+        answer:
+          'Futariは夫婦・カップル向けに設計された共有家計簿PWAです。自動割り勘、月次精算、家計の資産管理、愛車の給油記録までひとつで管理できます。',
+      },
+      {
+        question: '始め方は？',
+        answer:
+          'Googleアカウントでログインしてふたりの家計簿を作成し、パートナーを招待すれば一緒に記録できます。ホーム画面に追加してPWAとして使え、完全無料です。',
+      },
+      {
+        question: 'データは安全ですか？',
+        answer:
+          'すべてのデータはSupabaseの暗号化データベースに保存され、あなたとパートナーだけがアクセスできます。家計の内容を共有・販売することはありません。',
+      },
+    ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: '今月 · 5月',
     phoneMockFeed1Title: '夕食 · 火鍋',

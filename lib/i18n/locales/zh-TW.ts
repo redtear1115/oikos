@@ -158,6 +158,10 @@ export type Translations = {
     jsonLdAppDescription: string
     /** schema.org SoftwareApplication `featureList` (#467). */
     jsonLdFeatureList: readonly string[]
+    /** schema.org FAQPage entries — answers held to ~40–60 字 to fit AI
+     *  Overview's Answer Capsule extraction window (#611). Per-locale so each
+     *  rendered page emits FAQ schema matching its visible audience language. */
+    jsonLdFaq: readonly { question: string; answer: string }[]
     /** Decorative PhonePreview mock (desktop hero) — not real data (#467). */
     phoneMockBalanceCaption: string
     phoneMockBalancePeriod: string
@@ -2432,6 +2436,23 @@ export const zhTW: Translations = {
       '汽車與油耗紀錄',
       '定期收入',
       '離線瀏覽 PWA',
+    ],
+    jsonLdFaq: [
+      {
+        question: 'Futari 是什麼？',
+        answer:
+          'Futari 是專為夫妻、伴侶設計的雙人共享記帳 PWA，支援自動分攤、AA 結算、家庭資產盤點與愛車油耗紀錄。',
+      },
+      {
+        question: '如何開始使用？',
+        answer:
+          '用 Google 帳號登入後建立兩人帳本，邀請伴侶加入即可一起記帳。可加到手機主畫面當 PWA 使用，完全免費。',
+      },
+      {
+        question: '資料安全嗎？',
+        answer:
+          '所有資料儲存於 Supabase 加密資料庫，僅你和伴侶兩人能存取。我們不會分享或販售你的記帳內容。',
+      },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: '本月 · 5 月',
