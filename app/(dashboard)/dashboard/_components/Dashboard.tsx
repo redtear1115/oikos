@@ -2,6 +2,7 @@
 
 import { Suspense, use, useCallback, useEffect, useMemo, useReducer, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
 import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
@@ -10,9 +11,9 @@ import { SoloBanner } from './SoloBanner'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { BalanceHero } from './BalanceHero'
-import { AddSheet, type AddSheetInitial } from './AddSheet'
-import { SettlementSheet, type SettlementSheetInitial } from './SettlementSheet'
-import { IncomeSheet, type IncomeSheetInitial } from './IncomeSheet'
+import type { AddSheetInitial, RateEntry } from './AddSheet'
+import type { SettlementSheetInitial } from './SettlementSheet'
+import type { IncomeSheetInitial } from './IncomeSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { EmptyState } from './EmptyState'
@@ -23,7 +24,6 @@ import { makeIncomeLoader } from '@/lib/incomeFeedRow'
 import { CompactRow } from './CompactRow'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
-import { TripSheet } from '@/app/(dashboard)/trips/_components/TripSheet'
 import { getFuelLogById } from '@/actions/fuelLog'
 import type { FuelType } from '@/lib/fuel'
 import { PendingIncomeStack } from './PendingIncomeStack'
@@ -34,7 +34,14 @@ import type { PendingExpenseRow } from '@/lib/db/queries/recurringExpense'
 import { useTranslations } from '@/lib/i18n/client'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
-import type { RateEntry } from './AddSheet'
+
+// Sheets are heavy and only meaningful on user interaction (FAB tap, edit-row
+// tap, ✈ button). Split into separate chunks and skip SSR so they don't bloat
+// the initial Dashboard bundle. (#616)
+const AddSheet = dynamic(() => import('./AddSheet').then((m) => m.AddSheet), { ssr: false })
+const SettlementSheet = dynamic(() => import('./SettlementSheet').then((m) => m.SettlementSheet), { ssr: false })
+const IncomeSheet = dynamic(() => import('./IncomeSheet').then((m) => m.IncomeSheet), { ssr: false })
+const TripSheet = dynamic(() => import('@/app/(dashboard)/trips/_components/TripSheet').then((m) => m.TripSheet), { ssr: false })
 
 const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
 
