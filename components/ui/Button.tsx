@@ -42,6 +42,7 @@ export function Button({
     <button
       type="button"
       disabled={isDisabled}
+      aria-busy={loading}
       className={[
         'inline-flex items-center justify-center gap-2',
         'rounded-bubble font-medium cursor-pointer',
@@ -51,13 +52,16 @@ export function Button({
         'min-w-0 truncate',
         variantBase[variant],
         sizeBase[size],
-        fullWidth ? 'w-full' : '',
+        fullWidth && 'w-full',
         className,
       ].filter(Boolean).join(' ')}
       {...rest}
     >
       {loading ? (
-        <span aria-hidden="true" className="opacity-60">···</span>
+        <>
+          <span aria-hidden="true" className="opacity-60">···</span>
+          <span className="sr-only">Loading</span>
+        </>
       ) : children}
     </button>
   )
