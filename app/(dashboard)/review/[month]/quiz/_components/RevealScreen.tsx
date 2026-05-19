@@ -10,17 +10,11 @@ import {
 } from '@/lib/partnerQuiz'
 import type { QuizAnswerRow, QuizMember } from './QuizClient'
 
-const C = {
-  bg: '#FBEDE0',
-  ink: '#3A2419',
-  ink2: '#7A5848',
-  ink3: '#B89C8B',
-  accent: '#E08856',
-  accentSoft: '#F8D9C2',
-  sage: '#7A9F7E',
-  sageSoft: '#DDEAD8',
-  hairline: 'rgba(58,36,25,0.12)',
-}
+/** Soft variants used in this screen that don't have a global token yet.
+ *  Kept as literals to avoid expanding the global palette for a single
+ *  surface. If review/quiz adds more chrome, promote these to globals.css. */
+const SAGE_SOFT = '#DDEAD8'
+const PARTNER_TONE_BG = '#F4EBE3'
 
 export interface RevealScreenProps {
   reviewHref: string
@@ -44,8 +38,8 @@ export function RevealScreen({
     <div
       className="relative min-h-dvh"
       style={{
-        background: C.bg,
-        color: C.ink,
+        background: 'var(--bg)',
+        color: 'var(--ink)',
         fontFamily: 'var(--font-noto-tc), system-ui, sans-serif',
       }}
     >
@@ -57,7 +51,7 @@ export function RevealScreen({
           href={reviewHref}
           aria-label={tq.answerBack}
           className="flex items-center gap-1.5 min-h-11 px-2 -ml-2"
-          style={{ color: C.ink2, fontSize: 'var(--fs-sm)' }}
+          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
         >
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
             <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -76,7 +70,7 @@ export function RevealScreen({
             {tq.revealHeading}
           </h1>
           {revealedAt && (
-            <div className="mt-3 text-xs" style={{ color: C.ink3 }}>
+            <div className="mt-3 text-xs" style={{ color: 'var(--ink-3)' }}>
               {tq.revealedAtLine.replace('{date}', formattedDate)}
             </div>
           )}
@@ -116,14 +110,14 @@ export function RevealScreen({
                 className="rounded-2xl px-4 py-4"
                 style={{
                   background: 'var(--surface)',
-                  border: `1px solid ${C.hairline}`,
+                  border: `1px solid var(--hairline)`,
                 }}
               >
                 <p
                   className="mb-3 text-sm"
                   style={{
                     fontFamily: 'var(--font-fraunces), Georgia, serif',
-                    color: C.ink,
+                    color: 'var(--ink)',
                     fontWeight: 500,
                     lineHeight: 1.5,
                   }}
@@ -135,16 +129,16 @@ export function RevealScreen({
                     <div
                       className="rounded-xl px-3 py-3 text-sm leading-relaxed"
                       style={{
-                        background: C.sageSoft,
-                        border: `1px solid ${C.sage}`,
-                        color: C.ink,
+                        background: SAGE_SOFT,
+                        border: `1px solid var(--credit)`,
+                        color: 'var(--ink)',
                       }}
                     >
                       {myChoice}
                     </div>
                     <div
                       className="text-xs"
-                      style={{ color: C.sage, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.08em' }}
+                      style={{ color: 'var(--credit)', fontFamily: 'ui-monospace, monospace', letterSpacing: '0.08em' }}
                     >
                       ✦ {tq.revealSameAnswer}
                     </div>
@@ -172,9 +166,9 @@ export function RevealScreen({
         <div
           className="mt-10 rounded-2xl px-5 py-6 text-sm leading-relaxed"
           style={{
-            background: C.accentSoft,
-            border: `1px solid ${C.accent}`,
-            color: C.ink,
+            background: 'var(--accent-soft)',
+            border: `1px solid var(--accent)`,
+            color: 'var(--ink)',
           }}
         >
           {tq.revealFraming}
@@ -184,7 +178,7 @@ export function RevealScreen({
           <Link
             href={reviewHref}
             className="inline-flex items-center justify-center h-12 px-6 rounded-full text-sm font-medium"
-            style={{ background: C.ink, color: '#fff' }}
+            style={{ background: 'var(--ink)', color: 'var(--btn-primary-text)' }}
           >
             {tq.waitingBackToReview}
           </Link>
@@ -199,7 +193,7 @@ function HeaderChip({ name, side }: { name: string; side: 'left' | 'right' }) {
     <div
       className="text-xs uppercase tracking-[0.1em]"
       style={{
-        color: side === 'left' ? C.accent : C.ink,
+        color: side === 'left' ? 'var(--accent)' : 'var(--ink)',
         fontFamily: 'ui-monospace, monospace',
         opacity: 0.75,
         textAlign: 'center',
@@ -213,20 +207,20 @@ function HeaderChip({ name, side }: { name: string; side: 'left' | 'right' }) {
 function AnswerChip({
   authorLetter, text, tone,
 }: { authorLetter: string; text: string | null; tone: 'self' | 'partner' }) {
-  const bg = tone === 'self' ? C.accentSoft : '#F4EBE3'
-  const border = tone === 'self' ? C.accent : C.hairline
+  const bg = tone === 'self' ? 'var(--accent-soft)' : PARTNER_TONE_BG
+  const border = tone === 'self' ? 'var(--accent)' : 'var(--hairline)'
   return (
     <div
       className="rounded-xl px-3 py-3 text-sm leading-relaxed relative"
-      style={{ background: bg, border: `1px solid ${border}`, color: C.ink }}
+      style={{ background: bg, border: `1px solid ${border}`, color: 'var(--ink)' }}
     >
       <span
         aria-hidden="true"
         className="absolute -top-2 -left-2 inline-flex items-center justify-center text-[10px] font-semibold"
         style={{
           width: 22, height: 22, borderRadius: 11,
-          background: tone === 'self' ? C.accent : C.ink,
-          color: '#fff',
+          background: tone === 'self' ? 'var(--accent)' : 'var(--ink)',
+          color: 'var(--btn-primary-text)',
         }}
       >
         {authorLetter}

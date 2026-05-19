@@ -135,7 +135,7 @@ export const en: Translations = {
       'Shared expense tracking for two',
       'Auto-split and monthly settlement',
       'Household asset inventory',
-      'Insurance management (protection / savings)',
+      'Insurance records (protection / savings)',
       'Vehicle and fuel logs',
       'Recurring income',
       'Offline-capable PWA',

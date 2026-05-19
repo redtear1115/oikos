@@ -11,16 +11,6 @@ import {
 } from '@/lib/partnerQuiz'
 import { submitPartnerQuizAnswers } from '@/actions/partnerQuiz'
 
-const C = {
-  bg: '#FBEDE0',
-  ink: '#3A2419',
-  ink2: '#7A5848',
-  ink3: '#B89C8B',
-  accent: '#E08856',
-  accentSoft: '#F8D9C2',
-  hairline: 'rgba(58,36,25,0.12)',
-}
-
 export interface QuestionCardProps {
   sessionId: string
   questionKeys: string[]
@@ -106,8 +96,8 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
     <div
       className="relative min-h-dvh flex flex-col"
       style={{
-        background: C.bg,
-        color: C.ink,
+        background: 'var(--bg)',
+        color: 'var(--ink)',
         fontFamily: 'var(--font-noto-tc), system-ui, sans-serif',
       }}
     >
@@ -120,7 +110,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           href={reviewHref}
           aria-label={tq.answerBack}
           className="flex items-center gap-1.5 min-h-11 px-2 -ml-2"
-          style={{ color: C.ink2, fontSize: 'var(--fs-sm)' }}
+          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
         >
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
             <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -129,7 +119,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
         </Link>
         <div
           className="text-xs uppercase tracking-[0.18em]"
-          style={{ color: C.ink2, fontFamily: 'ui-monospace, monospace' }}
+          style={{ color: 'var(--ink-2)', fontFamily: 'ui-monospace, monospace' }}
         >
           {tq.answerEyebrow}
         </div>
@@ -147,11 +137,11 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
                 width: i === index ? 22 : 6,
                 height: 6,
                 borderRadius: 3,
-                background: i <= index ? C.accent : 'rgba(58,36,25,0.18)',
+                background: i <= index ? 'var(--accent)' : 'var(--grabber)',
               }}
             />
           ))}
-          <span className="ml-3 text-xs" style={{ color: C.ink2 }}>
+          <span className="ml-3 text-xs" style={{ color: 'var(--ink-2)' }}>
             {tq.answerProgress
               .replace('{current}', String(index + 1))
               .replace('{total}', String(total))}
@@ -164,7 +154,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           className="text-2xl leading-snug mb-6 animate-[cardIn_0.28s_ease]"
           style={{
             fontFamily: 'var(--font-fraunces), Georgia, serif',
-            color: C.ink,
+            color: 'var(--ink)',
             fontWeight: 500,
           }}
         >
@@ -182,9 +172,9 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
                   onClick={() => selectChoice(choice)}
                   className="w-full text-left px-5 py-4 rounded-2xl transition-all"
                   style={{
-                    background: isSelected ? C.accentSoft : 'var(--surface)',
-                    border: `1px solid ${isSelected ? C.accent : C.hairline}`,
-                    color: C.ink,
+                    background: isSelected ? 'var(--accent-soft)' : 'var(--surface)',
+                    border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--hairline)'}`,
+                    color: 'var(--ink)',
                     fontSize: 'var(--fs-md, 15px)',
                     lineHeight: 1.5,
                   }}
@@ -194,7 +184,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
                     aria-hidden="true"
                     className="inline-block mr-3 uppercase tracking-[0.12em]"
                     style={{
-                      color: isSelected ? C.accent : C.ink3,
+                      color: isSelected ? 'var(--accent)' : 'var(--ink-3)',
                       fontFamily: 'ui-monospace, monospace',
                       fontSize: 12,
                     }}
@@ -212,7 +202,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           <div
             className="mt-5 text-sm"
             role="alert"
-            style={{ color: '#A04A2A' }}
+            style={{ color: 'var(--destructive)' }}
           >
             {error}
           </div>
@@ -225,7 +215,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
             disabled={index === 0 || pending}
             className="text-sm py-3 px-2"
             style={{
-              color: index === 0 ? 'transparent' : C.ink2,
+              color: index === 0 ? 'transparent' : 'var(--ink-2)',
               pointerEvents: index === 0 ? 'none' : 'auto',
             }}
           >
@@ -237,8 +227,8 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
             disabled={pending}
             className="inline-flex items-center gap-2 h-12 px-7 rounded-full text-sm font-semibold"
             style={{
-              background: C.ink,
-              color: '#fff',
+              background: 'var(--ink)',
+              color: 'var(--btn-primary-text)',
               opacity: pending ? 0.6 : 1,
             }}
           >
@@ -268,12 +258,12 @@ function FallbackError({
   reviewHref, message, backLabel,
 }: { reviewHref: string; message: string; backLabel: string }) {
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-6 text-center" style={{ background: C.bg, color: C.ink }}>
-      <p style={{ color: C.ink2 }}>{message}</p>
+    <div className="min-h-dvh flex flex-col items-center justify-center px-6 text-center" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
+      <p style={{ color: 'var(--ink-2)' }}>{message}</p>
       <Link
         href={reviewHref}
         className="mt-8 inline-flex items-center justify-center h-12 px-6 rounded-full"
-        style={{ background: C.ink, color: '#fff' }}
+        style={{ background: 'var(--ink)', color: 'var(--btn-primary-text)' }}
       >
         {backLabel}
       </Link>
