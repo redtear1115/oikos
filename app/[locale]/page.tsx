@@ -129,6 +129,12 @@ export default async function RootPage({ params }: { params: Params }) {
           spendee: localizedHref('/migrate/spendee', locale),
           cwmoney: localizedHref('/migrate/cwmoney', locale),
         }}
+        legalLinks={{
+          termsHref: localizedHref('/terms', locale),
+          termsLabel: t.signIn.termsLink,
+          privacyHref: localizedHref('/privacy', locale),
+          privacyLabel: t.signIn.privacyLink,
+        }}
         languageSwitcher={<LanguageSwitcher current={locale} variant="footer" />}
       />
     </>

@@ -27,6 +27,15 @@ type Props = {
     spendee: string
     cwmoney: string
   }
+  /** Legal page links — kept in the landing footer so /terms and /privacy
+   *  have inbound link equity from a high-authority crawlable page. /sign-in
+   *  also links them but is robots-disallowed, so its links don't count. (#669 M-6) */
+  legalLinks: {
+    termsHref: string
+    termsLabel: string
+    privacyHref: string
+    privacyLabel: string
+  }
   languageSwitcher?: ReactNode
 }
 
@@ -34,7 +43,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher }: Props) {
+export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -312,14 +321,24 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher
             {t.footerTrust}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          {languageSwitcher}
-          <span
-            className="text-micro"
-            style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
+        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+          <div
+            className="flex items-center gap-3 text-[12px]"
+            style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
-            © 2026 · MADE IN TAIWAN
-          </span>
+            <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
+            <span style={{ color: 'var(--hairline)' }}>·</span>
+            <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
+          </div>
+          <div className="flex items-center gap-3">
+            {languageSwitcher}
+            <span
+              className="text-micro"
+              style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
+            >
+              © 2026 · MADE IN TAIWAN
+            </span>
+          </div>
         </div>
       </footer>
     </main>

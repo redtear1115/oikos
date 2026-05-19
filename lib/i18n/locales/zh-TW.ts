@@ -4438,7 +4438,7 @@ export const zhTW: Translations = {
     migrate: {
       honeydue: {
         title: '從 Honeydue 搬家到 Futari｜資料匯入',
-        description: 'Honeydue 更新放緩，Futari 是專為夫妻、伴侶設計的共同帳本，讓你 3 分鐘完成資料搬遷，繼續一起記帳。Honeydue 替代方案首選：免費、無廣告、端對端加密。',
+        description: 'Honeydue 替代方案首選。Futari 是專為夫妻、伴侶設計的共同帳本，3 分鐘完成搬家、繼續一起記帳。免費、無廣告、端對端加密。',
         ogDescription: 'Honeydue 用戶的下一站：3 分鐘搬遷到 Futari，雙人記帳繼續。',
       },
       spendee: {
