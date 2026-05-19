@@ -94,7 +94,7 @@ export function SettingsContent({
         </div>
       </Section>
 
-      {/* 資料 — recurring rules → past chapters → trips → export → trust info */}
+      {/* 資料 — recurring rules → past chapters → trips → import → trust info */}
       <Section title={t.settings.sectionData}>
         <Row
           label={t.settings.recurringSettings}
@@ -110,6 +110,12 @@ export function SettingsContent({
           label={t.settings.trips}
           secondary={formatTripSummary(tripSummary, t.settings.tripsRow)}
           onClick={() => router.push('/trips')}
+        />
+        <div className="mt-3" />
+        <Row
+          label={t.settings.import.navLabel}
+          secondary={t.settings.import.navSecondary}
+          onClick={() => router.push('/settings/import')}
         />
         <div className="mt-3" />
         <Row

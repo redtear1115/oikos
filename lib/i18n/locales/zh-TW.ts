@@ -994,6 +994,103 @@ export type Translations = {
         fallback: string
       }
     }
+    /** #607 — Settings nav entry + /settings/import wizard copy. */
+    import: {
+      navLabel: string
+      navSecondary: string
+      pageTitle: string
+      pageSubtitle: string
+      back: string
+      stepLabel: string
+      step1: {
+        title: string
+        subtitle: string
+        sourceLabel: string
+        sources: {
+          honeydue: string
+          spendee: string
+          cwmoney: string
+          generic: string
+        }
+        uploadPrompt: string
+        uploadButton: string
+        parsing: string
+        fileSelected: string
+        summary: string
+        sourceDetected: string
+        invalidNote: string
+        nextCta: string
+        retryCta: string
+        parseError: string
+      }
+      step2: {
+        title: string
+        subtitle: string
+        sourceColumn: string
+        targetColumn: string
+        rowCount: string
+        keepOriginal: string
+        autoSuggested: string
+        nextCta: string
+        backCta: string
+      }
+      step3: {
+        title: string
+        subtitle: string
+        payerLabel: string
+        payerHint: string
+        splitLabel: string
+        splitOptions: {
+          all_mine: string
+          all_theirs: string
+          half: string
+        }
+        soloHint: string
+        nextCta: string
+        backCta: string
+      }
+      step4: {
+        title: string
+        subtitle: string
+        tableHeader: {
+          date: string
+          description: string
+          category: string
+          amount: string
+          type: string
+        }
+        typeExpense: string
+        typeIncome: string
+        moreRows: string
+        confirmCta: string
+        confirming: string
+        backCta: string
+        summary: string
+      }
+      result: {
+        successHeading: string
+        successBody: string
+        rollbackHint: string
+        rollbackCta: string
+        rollbackConfirm: string
+        rollbacking: string
+        doneCta: string
+      }
+      history: {
+        title: string
+        empty: string
+        rolledBack: string
+        completed: string
+        rollbackableTag: string
+        expiredTag: string
+      }
+      errors: {
+        parseFailed: string
+        submitFailed: string
+        rollbackFailed: string
+        noValidRows: string
+      }
+    }
   }
 
   postLeave: {
@@ -2957,6 +3054,102 @@ export const zhTW: Translations = {
         balanceNotZero: '還有差額沒結清，無法離開',
         soloGroup: '已經是單人帳本',
         fallback: '操作失敗，請稍後再試',
+      },
+    },
+    import: {
+      navLabel: '從其他 app 匯入',
+      navSecondary: '把過去的紀錄帶過來',
+      pageTitle: '從其他 app 匯入',
+      pageSubtitle: '把過往的記錄一起帶進來',
+      back: '返回設定',
+      stepLabel: '第 {current} / {total} 步',
+      step1: {
+        title: '選擇來源並上傳檔案',
+        subtitle: '檔案會在這台裝置上解析，原始資料不會上傳',
+        sourceLabel: '匯出來源',
+        sources: {
+          honeydue: 'Honeydue',
+          spendee: 'Spendee',
+          cwmoney: 'CWMoney',
+          generic: '通用 CSV',
+        },
+        uploadPrompt: '拖檔案到這裡，或點選下方按鈕',
+        uploadButton: '選擇 CSV 檔案',
+        parsing: '解析中…',
+        fileSelected: '已選：{name}',
+        summary: '共 {total} 筆 · 有效 {valid} 筆 · 失敗 {invalid} 筆',
+        sourceDetected: '偵測到來源：{source}',
+        invalidNote: '失敗的列會略過匯入，並保留在錯誤紀錄供日後修正',
+        nextCta: '下一步',
+        retryCta: '換一個檔案',
+        parseError: '解析失敗，請確認檔案格式或換一個檔案重試',
+      },
+      step2: {
+        title: '類別對照',
+        subtitle: '把來源的類別，對應到家計簿裡的類別',
+        sourceColumn: '來源類別',
+        targetColumn: '對應到',
+        rowCount: '{count} 筆',
+        keepOriginal: '其他',
+        autoSuggested: '自動建議',
+        nextCta: '下一步',
+        backCta: '上一步',
+      },
+      step3: {
+        title: '付款人與分攤方式',
+        subtitle: '為這次匯入的紀錄統一指定預設值',
+        payerLabel: '預設付款人',
+        payerHint: '可在匯入完成後逐筆修改',
+        splitLabel: '預設分攤方式',
+        splitOptions: {
+          all_mine: '全部我的',
+          all_theirs: '全部對方的',
+          half: '一人一半',
+        },
+        soloHint: '單人狀態下固定為「全部我的」',
+        nextCta: '下一步',
+        backCta: '上一步',
+      },
+      step4: {
+        title: '預覽並確認',
+        subtitle: '先看一下前幾筆，沒問題就把它們留下來',
+        tableHeader: {
+          date: '日期',
+          description: '說明',
+          category: '類別',
+          amount: '金額',
+          type: '類型',
+        },
+        typeExpense: '支出',
+        typeIncome: '收入',
+        moreRows: '還有 {count} 筆未顯示',
+        confirmCta: '確認匯入 {count} 筆',
+        confirming: '匯入中…',
+        backCta: '上一步',
+        summary: '預計寫入 {count} 筆 · 失敗 {invalid} 筆會保留紀錄',
+      },
+      result: {
+        successHeading: '匯入完成',
+        successBody: '已寫入 {count} 筆紀錄',
+        rollbackHint: '24 小時內可一鍵復原這次匯入',
+        rollbackCta: '復原這次匯入',
+        rollbackConfirm: '確定要復原嗎？所有這次匯入的紀錄會一起撤回',
+        rollbacking: '復原中…',
+        doneCta: '回到設定',
+      },
+      history: {
+        title: '最近的匯入',
+        empty: '還沒有匯入過任何資料',
+        rolledBack: '已復原',
+        completed: '已完成',
+        rollbackableTag: '24 小時內可復原',
+        expiredTag: '已超過復原時效',
+      },
+      errors: {
+        parseFailed: '解析檔案時遇到問題',
+        submitFailed: '寫入時遇到問題，請稍後再試',
+        rollbackFailed: '復原失敗，請稍後再試',
+        noValidRows: '這個檔案沒有可匯入的紀錄',
       },
     },
   },
