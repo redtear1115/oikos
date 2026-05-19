@@ -162,6 +162,13 @@ export const ja: Translations = {
       updated: '更新しました NT${amount}',
       deleted: '削除しました',
     },
+    navigation: {
+      next: '次へ',
+      back: '戻る',
+      confirm: '確認',
+      cancel: 'キャンセル',
+      retry: '再試行',
+    },
   },
 
   splitType: {
@@ -778,7 +785,6 @@ export const ja: Translations = {
         summary: '合計 {total} 件 · 有効 {valid} 件 · 失敗 {invalid} 件',
         sourceDetected: '検出された取り込み元：{source}',
         invalidNote: '失敗した行はスキップされ、エラーログに残ります',
-        nextCta: '次へ',
         retryCta: '別のファイルを選ぶ',
         parseError: '解析できませんでした。ファイル形式を確認してください。',
       },
@@ -789,9 +795,6 @@ export const ja: Translations = {
         targetColumn: '対応するカテゴリ',
         rowCount: '{count} 件',
         keepOriginal: 'その他',
-        autoSuggested: '自動候補',
-        nextCta: '次へ',
-        backCta: '戻る',
       },
       step3: {
         title: '支払者と分担',
@@ -805,8 +808,6 @@ export const ja: Translations = {
           half: '半々',
         },
         soloHint: 'ソロ中は「すべて自分」に固定されます',
-        nextCta: '次へ',
-        backCta: '戻る',
       },
       step4: {
         title: 'プレビューと確認',
@@ -823,7 +824,6 @@ export const ja: Translations = {
         moreRows: '他 {count} 件は表示されていません',
         confirmCta: '{count} 件を取り込む',
         confirming: '取り込み中…',
-        backCta: '戻る',
         summary: '{count} 件を保存します · 失敗 {invalid} 件はログに残ります',
       },
       result: {

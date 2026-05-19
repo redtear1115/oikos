@@ -157,7 +157,7 @@ export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Prop
               className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer"
               style={{ background: 'var(--btn-primary-bg)' }}
             >
-              {tImport.nextCta}
+              {t.common.navigation.next}
             </button>
           </div>
         </SectionCard>

@@ -163,6 +163,13 @@ export const zhCN: Translations = {
       updated: '已更新 NT${amount}',
       deleted: '已删除这笔',
     },
+    navigation: {
+      next: '下一步',
+      back: '上一步',
+      confirm: '确认',
+      cancel: '取消',
+      retry: '重试',
+    },
   },
 
   splitType: {
@@ -779,7 +786,6 @@ export const zhCN: Translations = {
         summary: '共 {total} 笔 · 有效 {valid} 笔 · 失败 {invalid} 笔',
         sourceDetected: '检测到来源：{source}',
         invalidNote: '失败的行会跳过导入，并保留在错误记录供日后修正',
-        nextCta: '下一步',
         retryCta: '换一个文件',
         parseError: '解析失败，请确认文件格式或换一个文件重试',
       },
@@ -790,9 +796,6 @@ export const zhCN: Translations = {
         targetColumn: '对应到',
         rowCount: '{count} 笔',
         keepOriginal: '其他',
-        autoSuggested: '自动建议',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step3: {
         title: '付款人与分摊方式',
@@ -806,8 +809,6 @@ export const zhCN: Translations = {
           half: '一人一半',
         },
         soloHint: '单人状态下固定为「全部我的」',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step4: {
         title: '预览并确认',
@@ -824,7 +825,6 @@ export const zhCN: Translations = {
         moreRows: '还有 {count} 笔未显示',
         confirmCta: '确认导入 {count} 笔',
         confirming: '导入中…',
-        backCta: '上一步',
         summary: '预计写入 {count} 笔 · 失败 {invalid} 笔会保留记录',
       },
       result: {
