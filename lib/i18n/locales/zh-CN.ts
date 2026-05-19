@@ -2092,7 +2092,7 @@ export const zhCN: Translations = {
     migrate: {
       honeydue: {
         title: '从 Honeydue 搬家到 Futari｜数据导入',
-        description: 'Honeydue 更新放缓，Futari 是专为夫妻、情侣设计的共同账本，让你 3 分钟完成数据搬迁，继续一起记账。Honeydue 替代方案首选：免费、无广告、端到端加密。',
+        description: 'Honeydue 替代方案首选。Futari 是专为夫妻、情侣设计的共同账本，3 分钟完成搬家、继续一起记账。免费、无广告、端到端加密。',
         ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {

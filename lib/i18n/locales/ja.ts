@@ -2076,7 +2076,7 @@ export const ja: Translations = {
 
   seo: {
     landing: {
-      title: 'Futari · ふたりの家計簿｜カップル向け共有家計アプリ',
+      title: 'Futari · ふたりの家計簿｜カップルの共有アプリ',
       description: 'Futari（ふたり）は、カップル・夫婦のための共同家計簿アプリ。一緒に記録、自動按分、精算、愛車の燃費まで、ふたりの暮らしをまるごと見える化。',
       ogDescription: 'Futari（ふたり）は、カップル・夫婦のための共同家計簿アプリ。一緒に記録して、ふたりの暮らしを見える化。',
     },
@@ -2095,18 +2095,18 @@ export const ja: Translations = {
     },
     migrate: {
       honeydue: {
-        title: 'Honeydue から Futari へ引っ越し｜データ移行',
-        description: 'Honeydue の更新が落ち着いてきた今、Futari なら 3 分でデータを引っ越して、カップル・夫婦の共同家計簿としてそのまま続けられます。Honeydue の代替として — 無料、広告なし、エンドツーエンド暗号化。',
+        title: 'Honeydue から Futari へ｜移行ガイド',
+        description: 'Honeydue の代替に。カップル・夫婦の共同家計簿 Futari なら、3 分でデータを引っ越して、無料・広告なし・エンドツーエンド暗号化で続けられます。',
         ogDescription: 'Honeydue ユーザーの次の住みか — Futari でふたりの家計をそのまま続ける。',
       },
       spendee: {
         title: 'Spendee から Futari へ｜CSV 取り込み',
-        description: 'Spendee の代わりになるカップル・夫婦のための共同家計簿。Spendee の CSV を Futari に取り込んで、パートナーとの記録を続けましょう。共有はもともと無料で標準、課金で解放するものではありません。',
+        description: 'Spendee の代替を探すカップルへ。Spendee の CSV を Futari に取り込んで、二人の記録を続けよう。共有は無料で標準、課金で解放するものではありません。',
         ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
       },
       cwmoney: {
-        title: 'CWMoney から Futari へ｜Excel 変換ガイド',
-        description: 'CWMoney から書き出したデータを別のツールに取り込むには？Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦のための共同家計簿）にアップロードするだけ。',
+        title: 'CWMoney から Futari へ｜Excel 変換',
+        description: 'CWMoney からの引っ越し手順。Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦の共同家計簿）にアップロードするだけ。',
         ogDescription: 'CWMoney の引っ越し手順 — 変換テンプレートで Excel を CSV にして Futari へ。',
       },
     },
