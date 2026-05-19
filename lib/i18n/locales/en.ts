@@ -135,7 +135,7 @@ export const en: Translations = {
       'Shared expense tracking for two',
       'Auto-split and monthly settlement',
       'Household asset inventory',
-      'Insurance records (protection / savings)',
+      'Insurance plans (protection / savings)',
       'Vehicle and fuel logs',
       'Recurring income',
       'Offline-capable PWA',
@@ -372,6 +372,7 @@ export const en: Translations = {
     assets: 'Things',
     settings: 'Settings',
     addAriaLabel: 'Add record',
+    navAriaLabel: 'Primary navigation',
   },
 
   miniCalendar: {
@@ -444,6 +445,7 @@ export const en: Translations = {
     trips: 'Failed to load trips',
     assets: 'Failed to load things',
     review: 'Failed to load monthly review',
+    refLabel: 'Error ref',
   },
 
   assetListItem: {
@@ -2084,7 +2086,7 @@ export const en: Translations = {
     },
     signIn: {
       title: 'Sign in to Futari · Start budgeting together',
-      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, manage insurance and assets, all in a mobile-first PWA.',
+      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, look after insurance and shared things, all in a mobile-first PWA.',
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
     },
     terms: {

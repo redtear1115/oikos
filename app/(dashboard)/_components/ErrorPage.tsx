@@ -6,13 +6,15 @@ interface ErrorPageProps {
   /** i18n key from t.errorPage — e.g. 'dashboard', 'records'. */
   page: 'dashboard' | 'records' | 'settings' | 'trips' | 'assets' | 'review'
   reset: () => void
+  /** Next.js error.digest — surfaced so users can quote a ref when reporting. */
+  digest?: string
 }
 
 /**
  * Shared error boundary UI for all dashboard route segments.
  * Each route's error.tsx renders this with its page-specific key.
  */
-export function ErrorPage({ page, reset }: ErrorPageProps) {
+export function ErrorPage({ page, reset, digest }: ErrorPageProps) {
   const t = useTranslations()
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
@@ -30,6 +32,11 @@ export function ErrorPage({ page, reset }: ErrorPageProps) {
       >
         {t.errorPage.retry}
       </button>
+      {digest && (
+        <div className="mt-6 text-micro tracking-[0.4px] select-all" style={{ color: 'var(--ink-3)' }}>
+          {t.errorPage.refLabel}: {digest}
+        </div>
+      )}
     </div>
   )
 }

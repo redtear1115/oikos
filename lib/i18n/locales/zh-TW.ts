@@ -461,6 +461,8 @@ export type Translations = {
     settings: string
     /** Aria-label for the floating add button. */
     addAriaLabel: string
+    /** Aria-label for the nav landmark itself (screen-reader-only). */
+    navAriaLabel: string
   }
 
   miniCalendar: {
@@ -584,6 +586,8 @@ export type Translations = {
     assets: string
     /** Title for the monthly review error page. */
     review: string
+    /** Label preceding the error digest, e.g. "錯誤代碼: abc123". */
+    refLabel: string
   }
 
   assetListItem: {
@@ -1558,7 +1562,7 @@ export type Translations = {
     }
   }
 
-  /** v0.16.0 #222 — 愛物模板系統 v1：只有「物品 (general)」一個模板，純文字追蹤，不接 FuelLog / 守護 等任何自動化。 */
+  /** v0.16.0 #222 — 愛物模板系統 v1：只有「物品 (general)」一個模板，純文字紀錄，不接 FuelLog / 守護 等任何自動化。 */
   assetTemplate: {
     namePlaceholder: string
     detailSection: string
@@ -2348,7 +2352,7 @@ export type Translations = {
 
 export const zhTW: Translations = {
   signIn: {
-    tagline: '帳本準備好了，等你們一起。',
+    tagline: '帳本準備好了，邀請對方一起。',
     continueWithGoogle: '以 Google 帳號繼續',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
@@ -2481,7 +2485,7 @@ export const zhTW: Translations = {
       '雙人共享記帳',
       '費用自動分攤與 AA 結算',
       '家庭資產盤點',
-      '保險紀錄（保護型／儲蓄型）',
+      '保險方案（保護型／儲蓄型）',
       '汽車與油耗紀錄',
       '定期收入',
       '離線瀏覽 PWA',
@@ -2654,7 +2658,7 @@ export const zhTW: Translations = {
   },
 
   soloBanner: {
-    waiting: '帳本準備好了，等你們一起',
+    waiting: '帳本準備好了，邀請對方一起',
     sendInviteHint: '把連結傳給對方',
     dismissAriaLabel: '關閉提示',
     generating: '產生中…',
@@ -2717,6 +2721,7 @@ export const zhTW: Translations = {
     assets: '愛物',
     settings: '設定',
     addAriaLabel: '新增一筆',
+    navAriaLabel: '主要導覽',
   },
 
   miniCalendar: {
@@ -2789,6 +2794,7 @@ export const zhTW: Translations = {
     trips: '載入旅行失敗',
     assets: '載入愛物失敗',
     review: '載入月度回顧失敗',
+    refLabel: '錯誤代碼',
   },
 
   assetListItem: {
@@ -4424,7 +4430,7 @@ export const zhTW: Translations = {
     },
     signIn: {
       title: '登入 Futari · 開始兩個人的記帳生活',
-      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、管理保險與資產的雙人記帳 PWA。',
+      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
       ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
     },
     terms: {

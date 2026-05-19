@@ -134,7 +134,7 @@ export const ja: Translations = {
       'ふたりで共有する家計簿',
       '自動割り勘と月次精算',
       '家計の資産インベントリ',
-      '保険記録（保障型／貯蓄型）',
+      '保険プラン（保障型／貯蓄型）',
       '愛車と給油の記録',
       '定期収入',
       'オフライン対応 PWA',
@@ -370,6 +370,7 @@ export const ja: Translations = {
     assets: 'もの',
     settings: '設定',
     addAriaLabel: '記録を追加',
+    navAriaLabel: 'メインナビゲーション',
   },
 
   miniCalendar: {
@@ -442,6 +443,7 @@ export const ja: Translations = {
     trips: '旅の読み込みに失敗しました',
     assets: 'ものの読み込みに失敗しました',
     review: '月次レビューの読み込みに失敗しました',
+    refLabel: 'エラー番号',
   },
 
   assetListItem: {
@@ -2082,7 +2084,7 @@ export const ja: Translations = {
     },
     signIn: {
       title: 'Futari にサインイン · ふたりの家計簿をはじめよう',
-      description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までまとめて管理できる PWA。',
+      description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までふたりで一緒に整える PWA。',
       ogDescription: 'Google でワンタップサインイン、ふたりの家計簿をはじめよう。',
     },
     terms: {
