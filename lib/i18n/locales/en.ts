@@ -140,6 +140,23 @@ export const en: Translations = {
       'Recurring income',
       'Offline-capable PWA',
     ],
+    jsonLdFaq: [
+      {
+        question: 'What is Futari?',
+        answer:
+          "Futari is a shared-ledger PWA for couples and partners. It handles auto-split expenses, monthly settlement, household assets, and fuel logs in one place.",
+      },
+      {
+        question: 'How do I get started?',
+        answer:
+          'Sign in with Google, create a two-person ledger, and invite your partner. Add it to your home screen as a PWA and start recording together — completely free.',
+      },
+      {
+        question: 'Is my data safe?',
+        answer:
+          "All data is stored in an encrypted Supabase database, accessible only to you and your partner. We don't share or sell your ledger content.",
+      },
+    ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: 'This month · May',
     phoneMockFeed1Title: 'Dinner · Hot pot',

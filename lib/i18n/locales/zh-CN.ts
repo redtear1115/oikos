@@ -140,6 +140,23 @@ export const zhCN: Translations = {
       '定期收入',
       '离线浏览 PWA',
     ],
+    jsonLdFaq: [
+      {
+        question: 'Futari 是什么？',
+        answer:
+          'Futari 是专为夫妻、伴侣设计的双人共享记账 PWA，支持自动分摊、AA 结算、家庭资产盘点与爱车油耗记录。',
+      },
+      {
+        question: '如何开始使用？',
+        answer:
+          '用 Google 账号登录后建立两人账本，邀请伴侣加入即可一起记账。可加到手机主屏幕当 PWA 使用，完全免费。',
+      },
+      {
+        question: '数据安全吗？',
+        answer:
+          '所有数据存储于 Supabase 加密数据库，仅你和伴侣两人能访问。我们不会分享或出售你的记账内容。',
+      },
+    ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: '本月 · 5 月',
     phoneMockFeed1Title: '晚餐 · 麻辣锅',

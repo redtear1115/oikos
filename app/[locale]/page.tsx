@@ -39,41 +39,6 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-// FAQPage JSON-LD (#344) — zh-TW only to match the dominant audience and avoid
-// per-locale schema duplication. Answers held to ~40–60 字 to fit AI Overview's
-// Answer Capsule extraction window.
-const faqJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  inLanguage: 'zh-TW',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Futari 是什麼？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Futari 是專為夫妻、伴侶設計的雙人共享記帳 PWA，支援自動分攤、AA 結算、家庭資產盤點與愛車油耗紀錄。',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '如何開始使用？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: '用 Google 帳號登入後建立兩人帳本，邀請伴侶加入即可一起記帳。可加到手機主畫面當 PWA 使用，完全免費。',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '資料安全嗎？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: '所有資料儲存於 Supabase 加密資料庫，僅你和伴侶兩人能存取。我們不會分享或販售你的記帳內容。',
-      },
-    },
-  ],
-} as const
-
 export default async function RootPage({ params }: { params: Params }) {
   const { locale: raw } = await params
   if (!isLocale(raw)) return null
@@ -105,6 +70,20 @@ export default async function RootPage({ params }: { params: Params }) {
     name: 'Futari',
     url: APP_URL,
     logo: `${APP_URL}/icons/apple-touch-icon.png`,
+  }
+
+  // FAQPage JSON-LD (#344, #611) — emitted per-locale so each rendered URL's
+  // rich-result language matches its visible content. Answers held to ~40–60 字
+  // to fit AI Overview's Answer Capsule extraction window.
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    inLanguage: locale,
+    mainEntity: t.landing.jsonLdFaq.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
   }
 
   const softwareAppJsonLd = {
