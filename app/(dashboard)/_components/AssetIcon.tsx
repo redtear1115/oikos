@@ -1,5 +1,3 @@
-'use client'
-
 import type { AssetType } from '@/lib/assets'
 
 interface Props {
