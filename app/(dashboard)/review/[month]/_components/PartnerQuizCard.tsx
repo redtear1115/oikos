@@ -5,7 +5,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import type { PartnerQuizStatus } from '@/lib/partnerQuiz'
 
 const C = {
-  bg: '#FFFFFF',
+  bg: 'var(--surface)',
   bgWaiting: 'rgba(122,88,72,0.06)',
   bgRevealed: '#FBEDE0',
   ink: '#3A2419',

@@ -129,7 +129,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       </div>
 
       {details?.startsAt && details?.endsAt && (
-        <div className="mx-4 mt-[14px] p-4 rounded-2xl" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-[14px] p-4 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="flex justify-between items-baseline">
             <span className="text-micro" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
             <span className="text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
@@ -167,7 +167,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       </InfoCard>
 
       {linkedVehicle && (
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="px-5 py-4">
             <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
               {t.assetDetail.linkedVehicleSection}
