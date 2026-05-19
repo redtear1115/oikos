@@ -83,7 +83,15 @@ export default async function MigrateHoneydue({ params }: { params: Params }) {
 
       <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
 
-      <MigrateFooter trustNote={t.footerTrust} />
+      <MigrateFooter
+        trustNote={t.footerTrust}
+        legalLinks={{
+          termsHref: localizedHref('/terms', locale),
+          termsLabel: dictionaries[locale].signIn.termsLink,
+          privacyHref: localizedHref('/privacy', locale),
+          privacyLabel: dictionaries[locale].signIn.privacyLink,
+        }}
+      />
     </div>
   )
 }
