@@ -7,6 +7,8 @@ import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { SheetBody } from '@/components/ui/Sheet'
+import { Button } from '@/components/ui/Button'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DescriptionAutocomplete } from './DescriptionAutocomplete'
 import {
@@ -400,35 +402,30 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   return (
     <>
       <SheetFrame open={open} onClose={onClose} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
-        {/* Header */}
+        {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button
-            onClick={onClose}
-            className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)' }}
-          >
+          <Button variant="ghost" size="sm" onClick={onClose}>
             {t.common.cancel}
-          </button>
+          </Button>
           <div
             className="text-base font-semibold tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
             {isEdit ? t.addSheet.titleEdit : t.addSheet.title}
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
-            style={{
-              color:
-                amount && !pending ? 'var(--accent)' : 'var(--ink-3)',
-            }}
+            className="font-semibold"
+            style={{ color: 'var(--accent)' }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
-          </button>
+          </Button>
         </div>
 
-        <div ref={scrollableRef} className="overflow-auto flex-1">
+        <SheetBody noPadding ref={scrollableRef}>
           {/* Amount + payer toggle */}
           <div
             className="px-6 pt-6 pb-7 text-center"
@@ -645,7 +642,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Bottom spacer: extends past the iOS home indicator (env safe-area-inset-bottom)
               so the last input/button isn't visually clipped on devices with a gesture bar. */}
           <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
-        </div>
+        </SheetBody>
       </SheetFrame>
 
       {error && open && (
