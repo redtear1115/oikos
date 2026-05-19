@@ -7,6 +7,7 @@ import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
+import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
 
 type Params = Promise<{ locale: string }>
 
@@ -77,6 +78,7 @@ export default async function MigrateCwmoney({ params }: { params: Params }) {
 
   return (
     <div className="space-y-10 md:space-y-14">
+      <MigrateBreadcrumbJsonLd locale={locale} source="cwmoney" />
       <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
       <MigrateDifferentiators
