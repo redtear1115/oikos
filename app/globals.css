@@ -211,6 +211,12 @@ body {
   box-shadow: var(--toggle-focus-ring);
 }
 
+/* Button focus ring — matches toggle ring, uses --focus-ring-color (issue #629). */
+.oik-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
 /* Switch track + thumb backgrounds — moved out of inline style so Tailwind
  * preflight's `button { background-color: transparent }` reset can't override.
  * Class-based rules beat element-selector preflight, and `data-state` swaps
