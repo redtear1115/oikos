@@ -217,6 +217,12 @@ body {
   box-shadow: 0 0 0 2px var(--focus-ring-color);
 }
 
+/* TextInput wrapper focus ring — keyboard-visible when any child input is focused (issue #629). */
+.oik-input-wrapper:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
 /* Switch track + thumb backgrounds — moved out of inline style so Tailwind
  * preflight's `button { background-color: transparent }` reset can't override.
  * Class-based rules beat element-selector preflight, and `data-state` swaps
