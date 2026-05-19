@@ -1,5 +1,3 @@
-'use client'
-
 // Shared car-color visual helpers — used by both the assets list CarHeroCard
 // and the asset detail AssetHero so the two surfaces stay visually consistent.
 
