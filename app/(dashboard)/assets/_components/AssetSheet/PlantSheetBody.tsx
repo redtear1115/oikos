@@ -147,7 +147,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               className="flex-1 h-10 rounded-[10px] text-label font-semibold"
               style={{
                 border: waterEvery === d ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
-                background: waterEvery === d ? 'rgba(58,36,25,0.04)' : '#fff',
+                background: waterEvery === d ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: waterEvery === d ? 'var(--ink)' : 'var(--ink-2)',
                 fontFamily: 'var(--font-numeric)',
               }}>{d}</button>

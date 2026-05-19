@@ -17,7 +17,7 @@ export function InfoCard({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="mx-4 rounded-2xl overflow-hidden"
-      style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >{children}</div>
   )
 }
@@ -50,7 +50,7 @@ export function MoneyTwoCol({ month, total, accent }: { month: number; total: nu
   return (
     <div
       className="mx-4 mt-3 flex rounded-2xl px-[14px] py-3 gap-2"
-      style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       {[{ label: t.assetDetail.money.thisMonth, value: month }, { label: t.assetDetail.money.cumulative, value: total }].map((s, i) => (
         <div key={s.label} className="flex-1 flex items-stretch gap-2">

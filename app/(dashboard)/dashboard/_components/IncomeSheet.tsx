@@ -403,7 +403,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 <div
                   className="mt-2 overflow-hidden"
                   style={{
-                    background: '#fff',
+                    background: 'var(--surface)',
                     borderRadius: 14,
                     border: '1px solid var(--hairline)',
                   }}

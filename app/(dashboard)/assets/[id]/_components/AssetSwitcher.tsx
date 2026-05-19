@@ -107,7 +107,7 @@ export function AssetSwitcher({
         zIndex: 9999,
         width: 320,
         maxHeight: 'min(60vh, 400px)',
-        background: '#fff',
+        background: 'var(--surface)',
         border: '1px solid var(--hairline)',
         boxShadow: '0 16px 40px rgba(58,36,25,0.18)',
       }}

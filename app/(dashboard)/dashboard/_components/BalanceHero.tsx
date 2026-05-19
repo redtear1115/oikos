@@ -156,7 +156,7 @@ export function BalanceHero({
       {mode === 'income' ? (
         // Income: always render the card; ToggleButton stays in the header row.
         <div style={{
-          background: '#fff',
+          background: 'var(--surface)',
           borderRadius: 20,
           border: '1px solid var(--hairline)',
           padding: '16px 22px',

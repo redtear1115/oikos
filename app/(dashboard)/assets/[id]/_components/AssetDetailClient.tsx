@@ -202,7 +202,7 @@ export function AssetDetailClient({
                 type="button"
                 onClick={() => setAddOpen(true)}
                 className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-micro font-medium"
-                style={{ background: '#fff', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+                style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
               >
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                   <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -241,7 +241,7 @@ export function AssetDetailClient({
       />
 
       {linkedInsurances && linkedInsurances.length > 0 && (
-        <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="px-5 py-4">
             <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
               {t.assetDetail.relatedInsurance}
