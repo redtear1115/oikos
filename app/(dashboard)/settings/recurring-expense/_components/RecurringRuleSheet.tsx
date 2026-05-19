@@ -86,7 +86,7 @@ export function RecurringRuleSheet({
     if (!open) return
     if (initial) {
       setCategory(
-        (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'other',
+        PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id ?? 'other',
       )
       setPayerWho(initial.paidBy === viewer.id ? 'M' : 'T')
       setSplitType(initial.splitType)

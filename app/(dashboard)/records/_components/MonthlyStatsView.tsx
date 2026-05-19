@@ -9,7 +9,7 @@ import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transaction
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { MonthlyStatsPieChart } from './MonthlyStatsPieChart'
-import { AssetBar, CategoryBar, IncomeCategoryBar, colorForRow } from './MonthlyStatsBars'
+import { AssetBar, CategoryBar, IncomeCategoryBar, assetColor, categoryColor } from './MonthlyStatsBars'
 import { useRecordsTab } from './TabContext'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
 import {
@@ -24,8 +24,10 @@ interface Props {
   /** Per-user scope — multiple users on the same device keep independent state. */
   userId: string
   view: BreakdownView
-  /** Expense breakdown rows. Used on 全部 / 支出 tabs (and shape varies by view). */
-  rows: ReadonlyArray<CategoryStatRow | AssetStatRow>
+  /** Expense breakdown by category — populated when `view === 'category'`; empty otherwise. */
+  categoryRows: ReadonlyArray<CategoryStatRow>
+  /** Expense breakdown by asset — populated when `view === 'asset'`; empty otherwise. */
+  assetRows: ReadonlyArray<AssetStatRow>
   /** Income breakdown rows (always by category). Used on 收入 tab. */
   incomeRows: ReadonlyArray<IncomeCategoryStatRow>
   expenseTotal: number
@@ -46,7 +48,8 @@ interface Props {
 export function MonthlyStatsView({
   userId,
   view,
-  rows,
+  categoryRows,
+  assetRows,
   incomeRows,
   expenseTotal,
   incomeTotal,
@@ -128,11 +131,11 @@ export function MonthlyStatsView({
     }
     if (view === 'category') {
       if (activeDrill.kind !== 'category') return -1
-      return (rows as CategoryStatRow[]).findIndex((r) => r.key === activeDrill.categoryId)
+      return categoryRows.findIndex((r) => r.key === activeDrill.categoryId)
     }
     if (activeDrill.kind !== 'asset') return -1
-    return (rows as AssetStatRow[]).findIndex((r) => r.key === activeDrill.assetId)
-  }, [activeDrill, hasBreakdown, isIncomeTab, view, rows, incomeRows])
+    return assetRows.findIndex((r) => r.key === activeDrill.assetId)
+  }, [activeDrill, hasBreakdown, isIncomeTab, view, categoryRows, assetRows, incomeRows])
 
   const center = useMemo(() => {
     if (activeRowIndex < 0) {
@@ -147,14 +150,14 @@ export function MonthlyStatsView({
       return { amount: r.total, label: t.incomeCategory[cat.id] ?? cat.label }
     }
     if (view === 'category') {
-      const r = (rows as CategoryStatRow[])[activeRowIndex]
+      const r = categoryRows[activeRowIndex]
       const cat = getCategory(r.key)
       return { amount: r.total, label: t.category[cat.id] ?? cat.label }
     }
-    const r = (rows as AssetStatRow[])[activeRowIndex]
+    const r = assetRows[activeRowIndex]
     const label = r.key === null ? t.records.stats.otherSpend : r.name ?? t.records.stats.otherSpend
     return { amount: r.total, label }
-  }, [activeRowIndex, breakdownTotal, isIncomeTab, view, rows, incomeRows, t])
+  }, [activeRowIndex, breakdownTotal, isIncomeTab, view, categoryRows, assetRows, incomeRows, t])
 
   return (
     <section className="px-5 pt-4 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
@@ -211,8 +214,8 @@ export function MonthlyStatsView({
                 <MonthlyStatsPieChart
                   rows={incomeRows}
                   total={breakdownTotal}
-                  getSliceColor={(row) => getIncomeCategory((row as IncomeCategoryStatRow).key).chart}
-                  getSliceKey={(row) => (row as IncomeCategoryStatRow).key}
+                  getSliceColor={(row) => getIncomeCategory(row.key).chart}
+                  getSliceKey={(row) => row.key}
                   activeIndex={activeRowIndex}
                   onSliceClick={(_row, i) => {
                     const r = incomeRows[i]
@@ -224,27 +227,32 @@ export function MonthlyStatsView({
                   centerAmount={center.amount}
                   centerLabel={center.label}
                 />
-              ) : (
+              ) : view === 'category' ? (
                 <MonthlyStatsPieChart
-                  rows={rows}
+                  rows={categoryRows}
                   total={breakdownTotal}
-                  getSliceColor={(row) => colorForRow(row, view).chart}
-                  getSliceKey={(row, i) =>
-                    view === 'category'
-                      ? (row as CategoryStatRow).key
-                      : (row as AssetStatRow).key ?? `__none_${i}`
-                  }
+                  getSliceColor={(row) => categoryColor(row).chart}
+                  getSliceKey={(row) => row.key}
                   activeIndex={activeRowIndex}
                   onSliceClick={(_row, i) => {
-                    if (view === 'category') {
-                      const r = (rows as CategoryStatRow[])[i]
-                      if (!r) return
-                      const same =
-                        activeDrill?.kind === 'category' && activeDrill.categoryId === r.key
-                      setDrill(same ? null : { kind: 'category', categoryId: r.key as CategoryId })
-                      return
-                    }
-                    const r = (rows as AssetStatRow[])[i]
+                    const r = categoryRows[i]
+                    if (!r) return
+                    const same =
+                      activeDrill?.kind === 'category' && activeDrill.categoryId === r.key
+                    setDrill(same ? null : { kind: 'category', categoryId: r.key as CategoryId })
+                  }}
+                  centerAmount={center.amount}
+                  centerLabel={center.label}
+                />
+              ) : (
+                <MonthlyStatsPieChart
+                  rows={assetRows}
+                  total={breakdownTotal}
+                  getSliceColor={(row) => assetColor(row).chart}
+                  getSliceKey={(row, i) => row.key ?? `__none_${i}`}
+                  activeIndex={activeRowIndex}
+                  onSliceClick={(_row, i) => {
+                    const r = assetRows[i]
                     if (!r) return
                     const same =
                       activeDrill?.kind === 'asset' && activeDrill.assetId === r.key
@@ -276,7 +284,7 @@ export function MonthlyStatsView({
                     )
                   })
                 : view === 'category'
-                  ? (rows as CategoryStatRow[]).map((r) => {
+                  ? categoryRows.map((r) => {
                       const active =
                         activeDrill?.kind === 'category' && activeDrill.categoryId === r.key
                       return (
@@ -292,7 +300,7 @@ export function MonthlyStatsView({
                         />
                       )
                     })
-                  : (rows as AssetStatRow[]).map((r) => {
+                  : assetRows.map((r) => {
                       const active =
                         activeDrill?.kind === 'asset' && activeDrill.assetId === r.key
                       return (

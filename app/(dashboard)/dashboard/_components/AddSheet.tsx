@@ -178,7 +178,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
       setAmount(String(initial.amount))
       setDesc(initial.description)
       setCategory(
-        (PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id as CategoryId) ?? 'dining',
+        PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id ?? 'dining',
       )
       setSplit(initial.splitType === 'half' ? 'weighted' : initial.splitType)
       setSplitRatioA(initial.splitRatioA ?? groupDefaultRatioA ?? 50)
@@ -282,13 +282,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               assetId,
             },
           })
-        } else if (editingTripExpense) {
+        } else if (initial && editingTripExpense) {
           // Edit stays inside TripExpenses (no migration between tables).
           // TripExpense action still accepts Date/string and does its own
           // conversion (out of scope for #453).
           await editTripExpense({
-            id: initial!.id,
-            tripId: initial!.tripId!,
+            id: initial.id,
+            tripId: initial.tripId!,
             paidBy: payerId,
             amount: n,
             currency,
@@ -298,13 +298,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             description: desc,
             transactedAt: ymdToUTCNoon(date),
           })
-        } else if (isEdit) {
+        } else if (initial && isEdit) {
           // CashTransaction edits drop `tripId` — new trip-tagging is only
           // available on create (and routes to TripExpenses, not here).
           // Main ledger is single-currency by design; force baseCurrency so
           // the row never carries an originalCurrency snapshot.
           await editTransaction({
-            oldId: initial!.id,
+            oldId: initial.id,
             amount: n,
             description: desc,
             category,
@@ -377,13 +377,13 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   }
 
   const performDelete = () => {
-    if (!isEdit) return
+    if (!isEdit || !initial) return
     dispatchDelete(
       async () => {
         if (editingTripExpense) {
-          await softDeleteTripExpense({ id: initial!.id, tripId: initial!.tripId! })
+          await softDeleteTripExpense({ id: initial.id, tripId: initial.tripId! })
         } else {
-          await softDeleteTransaction(initial!.id)
+          await softDeleteTransaction(initial.id)
         }
       },
       {

@@ -1,6 +1,8 @@
 import {
   monthlyStatsByCategory,
   monthlyStatsByAsset,
+  type CategoryStatRow,
+  type AssetStatRow,
   type ResolvedTxnFilter,
 } from '@/lib/db/queries/transactions'
 import { monthlyIncomeStatsByCategory, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
@@ -62,20 +64,33 @@ export async function MonthlyStatsSection({
   const assetFilterActive = (filter?.assetIds.length ?? 0) > 0
   const effectiveView: BreakdownView = assetFilterActive ? 'category' : view
 
-  const [rows, incomeRows] = await Promise.all([
-    effectiveView === 'asset'
-      ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
-      : monthlyStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow),
+  // Pre-typed promises preserve parallel fetch while letting each branch keep
+  // its own row type (no union → no `as` at the boundary). The inactive view
+  // gets an empty array of the right shape.
+  const expensePromise: Promise<
+    | { kind: 'category'; rows: CategoryStatRow[] }
+    | { kind: 'asset'; rows: AssetStatRow[] }
+  > = effectiveView === 'asset'
+    ? monthlyStatsByAsset(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
+        .then((rows) => ({ kind: 'asset' as const, rows }))
+    : monthlyStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
+        .then((rows) => ({ kind: 'category' as const, rows }))
+
+  const [expense, incomeRows] = await Promise.all([
+    expensePromise,
     monthlyIncomeStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, incomeFilter, epochWindow),
   ])
-  const expenseTotal = rows.reduce((acc, r) => acc + r.total, 0)
+  const categoryRows: ReadonlyArray<CategoryStatRow> = expense.kind === 'category' ? expense.rows : []
+  const assetRows: ReadonlyArray<AssetStatRow> = expense.kind === 'asset' ? expense.rows : []
+  const expenseTotal = expense.rows.reduce((acc, r) => acc + r.total, 0)
   const incomeTotal = incomeRows.reduce((acc, r) => acc + r.total, 0)
 
   return (
     <MonthlyStatsView
       userId={userId}
       view={effectiveView}
-      rows={rows}
+      categoryRows={categoryRows}
+      assetRows={assetRows}
       incomeRows={incomeRows}
       expenseTotal={expenseTotal}
       incomeTotal={incomeTotal}
