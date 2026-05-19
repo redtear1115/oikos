@@ -82,6 +82,17 @@ export function revalidateSettings() {
 }
 
 /**
+ * CSV import write or rollback (#607). A batch touches both CashTransactions
+ * and IncomeTransactions, so the dashboard summary, records feed, and the
+ * import history surface all need to refresh.
+ */
+export function revalidateAfterImportMutation() {
+  revalidatePath('/dashboard')
+  revalidatePath('/records')
+  revalidatePath('/settings/import')
+}
+
+/**
  * Profile changes that bleed across the whole app (display name, avatar,
  * default split). Records + dashboard render names; settings shows the row.
  */
