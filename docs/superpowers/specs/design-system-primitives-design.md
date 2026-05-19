@@ -13,7 +13,7 @@ that standardise spacing, radius, height, and focus treatment across the app.
 Components:
 - `components/ui/Button.tsx` — 4 variants (primary/secondary/ghost/danger) × 3 sizes (sm/md/lg)
 - `components/ui/TextInput.tsx` — wrapper with leftAddon/rightAddon slots and error state
-- `components/ui/Sheet/SheetHeader.tsx` — title row with trailing slot
+- `components/ui/Sheet/SheetHeader.tsx` — title row with leading + trailing slots and optional `centered` 3-column variant
 - `components/ui/Sheet/SheetBody.tsx` — scrollable content area
 - `components/ui/Sheet/SheetFooter.tsx` — sticky footer with iOS safe-area handling
 
