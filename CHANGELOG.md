@@ -15,6 +15,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.1] - 2026-05-19
+
+主題：**CSV 匯入續做（Spendee / 銀行對帳單 / OFX / QIF）+ /migrate SEO 強化**——把 v1.1.0 的 CSV import + /migrate landing pages 再推一輪。CSV mapper 修了 Spendee Transfer row 被誤分類成收入的 bug，並補銀行對帳單 → Futari 通用格式的 .xlsx 轉換模板（#585）；新增 OFX + QIF parser，把 `.ofx` / `.qif` 也走同一條 import pipeline（#586，Moze 樣本待補）。SEO 面把 /migrate 三條 landing 加 BreadcrumbList + FAQPage JSON-LD（#593, #599）、長尾關鍵字（Honeydue/Spendee/CWMoney 替代方案）+ Futari vs source app 比較表（#599）、sitemap/robots 對齊（#595, #596）、hreflang 行為鎖 regression test（#594）、meta description + og:description 4 語對齊（#597）、H1 下方 body 自然帶入「伴侶／夫妻記帳」關鍵字（#598）。
+完整 diff：[v1.1.0...v1.1.1](https://github.com/redtear1115/oikos/compare/v1.1.0...v1.1.1)
+
+### 使用者可見變化
+
+- **Spendee Transfer row 不再被誤分類成收入（#585）**：Spendee 的 amount 永遠是正數，先前的 amount-sign fallback 會把所有 Transfer row 標成收入；改成 `type` 保持 undefined 讓 validator 直接 surface 給用戶在 preview wizard 確認。順手補 Spendee 標準分類同義詞（Food & Drinks / Life & Entertainment / Vehicle / Financial expenses / Communication / Others）。
+- **銀行對帳單 → Futari Excel 轉換模板（#585）**：3-sheet `.xlsx`（轉換表 / 常見銀行欄位對照：台新・中信・國泰・玉山・富邦 / 類別建議 ~24 常見字串）。從 /migrate 入口下載，用戶在 Sheet/Excel 把銀行 CSV 對映成 Futari 通用格式再上傳。模板位置 `/bank-statement-template.xlsx`。
+- **OFX + QIF 格式支援（#586）**：可直接拖 `.ofx`（OFX 1.x SGML + 2.x XML）或 `.qif`（line-oriented、`^` 分隔 record）進 import wizard；content-sniff + 副檔名 fallback。每 row 走原本的 `validateRow` pipeline，錯誤訊息形式與 CSV 匯入一致。Moze 樣本待補。
+- **Spendee /migrate 頁多了 CSV header 預覽（#585）**：step 1 直接看到 Spendee CSV 欄位範例 + Transfer caveat（不必先匯出才知道格式長什麼樣），IA 對齊 cwmoney step-2 的寫法。
+- **/migrate landing 多了 FAQ + 比較表（#599）**：每條 /migrate 頁底新增「常見問題」block（4 題：3 共通 + 1 source-specific）和 5 列 Futari vs source app 比較表（tone-driven cell colors）；同時吐 per-locale `FAQPage` JSON-LD（`inLanguage` 對應 page locale）讓 Google rich result 抓得到。
+- **/migrate landing 多了 breadcrumb（#593）**：兩層 BreadcrumbList JSON-LD（Home → 來源頁），每條 /migrate 頁都有；首頁原本已有 WebSite/Organization/SoftwareApplication/FAQPage，本版補齊 migrate 那塊（避開 /migrate index 因該頁不存在會 fail Google validation）。
+- **搜尋找到 Futari 更容易（#597, #598, #599）**：landing description 改寫到 70–80 chars（zh）/ ~155 chars（en）/ ~70 chars（ja），自然帶入「伴侶記帳 / 夫妻記帳 / 共同帳本」；H1 下方 body 加「為伴侶與夫妻設計的共同記帳」（zh-TW 主稿，4 語同步：en `shared ledger for partners and couples`、ja `夫婦・カップルのための共有家計簿`）；/migrate 三條頁 title/description 補長尾關鍵字（Honeydue 替代方案 / Spendee 伴侶記帳替代 / CWMoney 資料匯出匯入）。Tone 維持「有溫度的清醒」，零 conversion 語言、零「追蹤」/「管理」。
+
+### 技術變更
+
+- **CSV mapper Spendee polish（#585）**：`mapSpendee` 讓 Transfer row 的 `type` 保持 undefined（不再走 amount-sign 推測）；補 Spendee canonical category 同義詞表。`mapper.test.ts` 加 case lock 行為。
+- **OFX + QIF parser（#586）**：新增 `lib/csvImport/ofxParser.ts`（OFX 1.x SGML leaf-tag-without-close + 2.x XML，抽 STMTTRN 的 TRNAMT / DTPOSTED / MEMO|NAME，負 TRNAMT → expense）+ `qifParser.ts`（`^` 分 record，D/T/M/P/L 單字母欄位，日期 US M/D/YYYY、M/D/YY pivot 50、apostrophe M/D'YY、ISO YYYY-MM-DD，transfer notation `L[Account]` 忽略避免污染同義詞）。`detector.ts#detectFormat(text)` content sniff `DetectedSource` 加入 `'ofx'` / `'qif'`；`processFile` 也認 `.ofx` / `.qif` 副檔名 fallback。新增 `ofx.test.ts`（188 LOC）+ `qif.test.ts`（212 LOC）+ 更新 `detector.test.ts`。
+- **銀行對帳單 .xlsx 模板（#585）**：`scripts/build-bank-statement-template.py`（354 LOC）產生 3-sheet `.xlsx` 放 `public/bank-statement-template.xlsx`。
+- **`MigrateFaq` + `MigrateComparison` + `MigrateBreadcrumbJsonLd` server components（#593, #599）**：三個 server component 收在 `app/[locale]/migrate/_components/`，FAQ 吐 per-locale `FAQPage` JSON-LD + visible Q/A list；Comparison 5×N table 用 tone-driven cell color；Breadcrumb 吐兩層 `BreadcrumbList`。3 個 /migrate page 各掛一份。
+- **sitemap + robots align（#595, #596）**：`robots.ts` 每個 locale variant 加 `/sign-in` disallow + `/migrate/` explicit allow，給未來 /migrate/* 成長保留清楚 crawl signal；`sitemap.ts` 移除 /sign-in 條目（與 robots disallow 衝突）、三條 /migrate landing 升 priority 0.8。新增 `tests/seo-sitemap-robots.test.ts`（80 LOC）鎖 invariants：migrate 在 sitemap、/sign-in 不在 sitemap、robots disallow /sign-in 與 /api/、explicit allow /migrate/、Sitemap directive 存在。
+- **hreflang regression test（#594）**：實作已隨 #567 在 v1.1.0 上線（live 驗證過 4 語 + x-default 在 / / /sign-in / /migrate/* / /terms / /privacy 全部 present），本版補 `tests/i18n-seo.test.ts`（104 LOC）鎖 `lib/i18n/seo.ts#buildAlternates(path, locale)` 行為，避免未來 regression。
+- **meta description + og:description（#597）**：4 語 landing + /migrate 三頁同步；長度依語言調整，brand tone 鎖死（無 conversion 語言、無禁用詞）。
+- **landing H1 body keyword 帶入（#598）**：H1 主標題保留「兩個人，一本帳。」，把 SEO 關鍵字塞 H1 下方 body copy；ja「夫婦・共有・家計簿」確認為日本家計簿 app 標準漢字用法（無誤觸 ja-i18n 白名單）。
+- **i18n 4 語同步**：zh-TW 主稿；en / ja 多處 marked `TODO(#599): pending native review` per project rule。
+
 ## [1.1.0] - 2026-05-18
 
 主題：**CSV 匯入歷史紀錄 + /migrate 站台（#51）**——換 app 最大的摩擦是「過去三年的紀錄怎麼辦」。Futari 提供通用 CSV 匯入（schema + parser + dedup + 預覽 wizard）和 CWMoney → Futari Excel 轉換模板（#557），讓 Honeydue / Spendee / CWMoney 出走者把歷史資料帶進來不用重打。順手做 /migrate/{honeydue,spendee,cwmoney} 三條 SEO landing 頁，把「Futari 是替代品」這件事說清楚。順帶 perf 優化把 landing 從 render-blocking 字型 chunk 解放（#572），LCP 7076ms → 2345ms、Lighthouse 61 → 98；修 dashboard 右上角小飛機按鈕點了沒反應的 bug（#587）。
@@ -1184,7 +1211,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/redtear1115/oikos/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/redtear1115/oikos/compare/v1.0.5...v1.1.0
 [1.0.5]: https://github.com/redtear1115/oikos/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/redtear1115/oikos/compare/v1.0.3...v1.0.4
