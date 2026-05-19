@@ -192,7 +192,7 @@ function TripsEmptyState() {
         aria-hidden="true"
       >
         {/* Simple "compass / path" illustration — a circle with a dotted route. */}
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="8.5" stroke="var(--ink-3)" strokeWidth="1.4" opacity="0.6" />
           <path
             d="M8 14 L11 9 L14 13 L16 8"

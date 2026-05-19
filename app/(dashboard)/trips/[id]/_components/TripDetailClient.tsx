@@ -178,7 +178,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 style={{ background: 'rgba(31,27,22,0.06)' }}
                 aria-hidden="true"
               >
-                <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                   <path
                     d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
                     stroke="var(--ink)"

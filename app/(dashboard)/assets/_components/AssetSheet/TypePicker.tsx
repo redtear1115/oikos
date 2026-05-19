@@ -60,6 +60,7 @@ export function TypePicker({ value, onChange }: Props) {
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setMoreOpen(false) }}
+              aria-pressed={sel}
               className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
               style={{
                 background: sel ? 'var(--accent)' : 'var(--surface)',
@@ -102,6 +103,7 @@ export function TypePicker({ value, onChange }: Props) {
                 key={opt.value}
                 type="button"
                 onClick={() => onChange(opt.value)}
+                aria-pressed={sel}
                 className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
                 style={{
                   background: sel ? 'var(--accent)' : 'var(--surface)',

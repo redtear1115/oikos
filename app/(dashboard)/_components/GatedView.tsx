@@ -22,7 +22,7 @@ export function GatedView() {
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         aria-hidden="true"
       >
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           {/* shield silhouette — Guardian motif, muted to read as "not yet active" */}
           <path
             d="M12 3.2 L4.5 6 V12.5 C4.5 16.6 7.7 19.8 12 21 C16.3 19.8 19.5 16.6 19.5 12.5 V6 Z"
