@@ -1,9 +1,10 @@
 'use client'
 
-import { useId, useRef, useState, type DragEvent } from 'react'
+import { useRef } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { MigrateSource } from '@/lib/migrate/csv'
 import { useCsvPreview } from '@/lib/migrate/useCsvPreview'
+import { CsvFileUploadWidget } from '@/components/CsvFileUploadWidget'
 import { MigrateCta } from './MigrateCta'
 import { MigratePreviewCard } from './MigratePreviewCard'
 
@@ -25,18 +26,9 @@ interface Props {
 export function MigrateTool({ t, signInHref, hint }: Props) {
   const preview = useCsvPreview({ hint })
   const inputRef = useRef<HTMLInputElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const inputId = useId()
 
-  function pickFile(file: File | undefined | null) {
-    if (!file) return
+  function handleFile(file: File) {
     void preview.load(file)
-  }
-
-  function onDrop(e: DragEvent<HTMLLabelElement>) {
-    e.preventDefault()
-    setIsDragging(false)
-    pickFile(e.dataTransfer.files?.[0])
   }
 
   function reset() {
@@ -50,83 +42,53 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
 
   return (
     <div className="space-y-6">
-      <label
-        htmlFor={inputId}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={onDrop}
-        className="block cursor-pointer rounded-2xl px-6 py-10 md:py-12 text-center transition-colors"
-        style={{
-          background: isDragging ? 'var(--surface-alt)' : 'var(--surface)',
-          border: `1px dashed ${isDragging ? 'var(--ink-2)' : 'var(--ink-3)'}`,
-          color: 'var(--ink-2)',
-        }}
-      >
-        <input
-          ref={inputRef}
-          id={inputId}
-          type="file"
-          accept=".csv,text/csv"
-          className="sr-only"
-          onChange={(e) => pickFile(e.target.files?.[0])}
-        />
-        <div
-          aria-hidden
-          className="mx-auto mb-4 flex items-center justify-center"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 14,
-            background: 'var(--accent-soft)',
-            color: 'var(--accent)',
-          }}
-        >
-          <UploadGlyph />
-        </div>
-        <div className="text-[15px] mb-3">{t.upload.prompt}</div>
-        <span
-          className="inline-flex items-center justify-center h-11 px-6 rounded-xl text-white text-[14px] font-medium"
-          style={{
-            background: 'var(--btn-primary-bg)',
-            letterSpacing: '0.6px',
-            boxShadow: '0 10px 24px -10px rgba(58, 36, 25, 0.4)',
-          }}
-        >
-          {isBusy ? t.upload.parsing : t.upload.button}
-        </span>
-        <div className="text-[12px] mt-4 flex items-center justify-center gap-2 flex-wrap" style={{ color: 'var(--ink-3)' }}>
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px]"
+      <CsvFileUploadWidget
+        inputRef={inputRef}
+        onFile={handleFile}
+        loading={isBusy}
+        error={showError ? t.upload.error : undefined}
+        onRetry={reset}
+        promptText={t.upload.prompt}
+        buttonText={t.upload.button}
+        loadingText={t.upload.parsing}
+        retryText={t.upload.retry}
+        size="md"
+        icon={
+          <div
+            aria-hidden
+            className="mx-auto mb-4 flex items-center justify-center"
             style={{
-              background: 'var(--surface-alt)',
-              color: 'var(--ink-2)',
-              letterSpacing: '0.8px',
-              fontFamily: 'var(--font-fraunces)',
-              fontStyle: 'italic',
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              background: 'var(--accent-soft)',
+              color: 'var(--accent)',
             }}
           >
-            .CSV
-          </span>
-          <span>{t.upload.constraint}</span>
-        </div>
-      </label>
-
-      {showError && (
-        <div
-          className="rounded-2xl px-5 py-4 text-[14px] text-center"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink)' }}
-        >
-          <p className="mb-3">{t.upload.error}</p>
-          <button
-            type="button"
-            onClick={reset}
-            className="underline cursor-pointer"
-            style={{ color: 'var(--ink-2)' }}
+            <UploadGlyph />
+          </div>
+        }
+        hint={
+          <div
+            className="text-[12px] mt-4 flex items-center justify-center gap-2 flex-wrap"
+            style={{ color: 'var(--ink-3)' }}
           >
-            {t.upload.retry}
-          </button>
-        </div>
-      )}
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px]"
+              style={{
+                background: 'var(--surface-alt)',
+                color: 'var(--ink-2)',
+                letterSpacing: '0.8px',
+                fontFamily: 'var(--font-fraunces)',
+                fontStyle: 'italic',
+              }}
+            >
+              .CSV
+            </span>
+            <span>{t.upload.constraint}</span>
+          </div>
+        }
+      />
 
       {showPreview && (
         <>

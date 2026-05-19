@@ -1,7 +1,8 @@
 'use client'
 
-import { useId, useRef, useState, type DragEvent } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
+import { CsvFileUploadWidget } from '@/components/CsvFileUploadWidget'
 import type { ImportSource } from '@/actions/import'
 import type { ParsedFileState } from './ImportContent'
 
@@ -18,26 +19,17 @@ const SOURCE_OPTIONS: ImportSource[] = ['honeydue', 'spendee', 'cwmoney', 'gener
 export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Props) {
   const t = useTranslations()
   const tImport = t.settings.import.step1
-  const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [source, setSource] = useState<ImportSource>('honeydue')
-  const [isDragging, setIsDragging] = useState(false)
   const [parsing, setParsing] = useState(false)
 
-  async function pickFile(file: File | undefined | null) {
-    if (!file) return
+  async function handleFile(file: File) {
     setParsing(true)
     try {
       await onFile(file, source)
     } finally {
       setParsing(false)
     }
-  }
-
-  function onDrop(e: DragEvent<HTMLLabelElement>) {
-    e.preventDefault()
-    setIsDragging(false)
-    void pickFile(e.dataTransfer.files?.[0])
   }
 
   function clear() {
@@ -74,54 +66,18 @@ export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Prop
         </div>
       </SectionCard>
 
-      <label
-        htmlFor={inputId}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={onDrop}
-        className="block cursor-pointer rounded-2xl px-6 py-9 text-center transition-colors"
-        style={{
-          background: isDragging ? 'var(--surface-alt)' : 'var(--surface)',
-          border: `1px dashed ${isDragging ? 'var(--ink-2)' : 'var(--ink-3)'}`,
-          color: 'var(--ink-2)',
-        }}
-      >
-        <input
-          ref={inputRef}
-          id={inputId}
-          type="file"
-          accept=".csv,text/csv"
-          className="sr-only"
-          onChange={(e) => pickFile(e.target.files?.[0])}
-        />
-        <div className="text-[14px] mb-3">{tImport.uploadPrompt}</div>
-        <span
-          className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium"
-          style={{
-            background: 'var(--btn-primary-bg)',
-            letterSpacing: '0.4px',
-          }}
-        >
-          {parsing ? tImport.parsing : tImport.uploadButton}
-        </span>
-      </label>
-
-      {parseError && (
-        <div
-          className="rounded-xl px-4 py-3 text-sm text-center"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--debit)' }}
-        >
-          <p>{parseError}</p>
-          <button
-            type="button"
-            onClick={clear}
-            className="mt-2 underline cursor-pointer text-xs"
-            style={{ color: 'var(--ink-2)' }}
-          >
-            {tImport.retryCta}
-          </button>
-        </div>
-      )}
+      <CsvFileUploadWidget
+        inputRef={inputRef}
+        onFile={handleFile}
+        loading={parsing}
+        error={parseError ?? undefined}
+        onRetry={clear}
+        promptText={tImport.uploadPrompt}
+        buttonText={tImport.uploadButton}
+        loadingText={tImport.parsing}
+        retryText={tImport.retryCta}
+        size="sm"
+      />
 
       {parsed && (
         <SectionCard>
