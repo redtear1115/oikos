@@ -1683,6 +1683,9 @@ export const ja: Translations = {
       unknown: 'そのほか',
     },
     differentiatorsHeading: 'Futari を選ぶ理由',
+    // TODO(#599): ja copy below pending native review
+    faqHeading: 'よくある質問',
+    comparisonHeading: 'Futari と {other} の比較',
     trust: {
       heading: '安心して引っ越せる理由',
       items: [
@@ -1705,7 +1708,7 @@ export const ja: Translations = {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Honeydue のデータは、そのまま連れていけます',
-        heroSubtitle: 'CSV をアップロードして、これまでの記録を 3 分で Futari に引っ越し。',
+        heroSubtitle: 'Honeydue から Futari への引っ越しは約 3 分 — CSV をアップロードして、これまでの記録をそのまま残せます。',
         intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります — 無料、広告なし、エンドツーエンド暗号化。',
         differentiators: [
           {
@@ -1725,11 +1728,60 @@ export const ja: Translations = {
         step1: 'Honeydue アプリ → 設定 → データを書き出す、で CSV をダウンロード。',
         step2: 'CSV をここにアップロードして、家計の履歴を確認。',
         step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+        // TODO(#599): ja faq + comparison copy pending native review
+        faq: [
+          {
+            question: '取り込んだあとにデータの整理が必要ですか？',
+            answer: '取り込みの流れの中でカテゴリを対応づけられます。あとから手で直す必要はありません。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全に無料です。隠れた費用もありません。',
+          },
+          {
+            question: '今までの記録をぜんぶ持ってこられますか？',
+            answer: 'CSV 形式での取り込みに対応しています。振替などの特殊な記録は確認用にマークが付きます。',
+          },
+          {
+            question: 'Honeydue の共有家計簿の機能は Futari にもありますか？',
+            answer: 'あります。Futari はふたりのために設計されていて、すべての記録がひとつの家計簿にまとまり、お互いに確認・追加できます。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Honeydue',
+          rows: [
+            {
+              feature: 'ふたりの共有家計簿',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '✓ 対応', tone: 'yes' },
+            },
+            {
+              feature: '費用の精算モード',
+              futari: { label: '✓ 複数モード', tone: 'yes' },
+              other: { label: '△ 折半のみ', tone: 'partial' },
+            },
+            {
+              feature: '継続的なアップデート',
+              futari: { label: '✓ 2 週ごと', tone: 'yes' },
+              other: { label: '△ 鈍化', tone: 'partial' },
+            },
+            {
+              feature: '多通貨記録',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '✕ なし', tone: 'no' },
+            },
+            {
+              feature: 'エンドツーエンド暗号化',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '— 不明', tone: 'no' },
+            },
+          ],
+        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
         heroTitle: 'Spendee のデータは、そのまま連れていけます',
-        heroSubtitle: 'Spendee の CSV をアップロードして、なかみを確かめてから引っ越すか決められます。',
+        heroSubtitle: 'Spendee の記録を Futari へ取り込み — CSV をアップロードして、なかみを確かめてから決められます。',
         differentiators: [
           {
             title: '共有は標準。課金で解放するものじゃない',
@@ -1748,11 +1800,60 @@ export const ja: Translations = {
         step1: 'Spendee → More → Export Data で CSV をダウンロード。',
         step2: 'CSV をここにアップロードして、家計の履歴を確認。',
         step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+        // TODO(#599): ja faq + comparison copy pending native review
+        faq: [
+          {
+            question: '取り込んだあとにデータの整理が必要ですか？',
+            answer: '取り込みの流れの中でカテゴリを対応づけられます。あとから手で直す必要はありません。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全に無料です。隠れた費用もありません。',
+          },
+          {
+            question: '今までの記録をぜんぶ持ってこられますか？',
+            answer: 'CSV 形式での取り込みに対応しています。振替などの特殊な記録は確認用にマークが付きます。',
+          },
+          {
+            question: 'Spendee の精算機能は Futari にもありますか？',
+            answer: 'あります。Futari には複数の精算モードが内蔵されています — 各自払い、片方持ち、折半、比率指定。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Spendee',
+          rows: [
+            {
+              feature: 'ふたりの共有家計簿',
+              futari: { label: '✓ 無料で標準', tone: 'yes' },
+              other: { label: '△ 有料解放', tone: 'partial' },
+            },
+            {
+              feature: '費用の精算モード',
+              futari: { label: '✓ 複数モード', tone: 'yes' },
+              other: { label: '✕ 標準では非対応', tone: 'no' },
+            },
+            {
+              feature: 'リアルタイム同期',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '△ 有料プランのみ', tone: 'partial' },
+            },
+            {
+              feature: '完全無料',
+              futari: { label: '✓ ずっと', tone: 'yes' },
+              other: { label: '△ 無料版は制限あり', tone: 'partial' },
+            },
+            {
+              feature: 'CSV 取り込み',
+              futari: { label: '✓ 直接アップロード', tone: 'yes' },
+              other: { label: '— 自分で整える', tone: 'partial' },
+            },
+          ],
+        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
         heroTitle: 'CWMoney のデータは、そのまま連れていけます',
-        heroSubtitle: '変換テンプレートで CWMoney の Excel を CSV にしてから、Futari にアップロード。',
+        heroSubtitle: 'CWMoney のデータ書き出し → 取り込みガイド：変換テンプレートで Excel を CSV にしてから Futari にアップロード。',
         differentiators: [
           {
             title: 'ふたりの家計簿が標準',
@@ -1773,6 +1874,55 @@ export const ja: Translations = {
         step3: '変換した CSV をアップロードして、なかみを見てからアカウントを作って取り込む。',
         templateDownloadLabel: '変換テンプレートをダウンロード',
         templateNote: 'テンプレートが CWMoney の列を Futari の形式に揃えてくれます。',
+        // TODO(#599): ja faq + comparison copy pending native review
+        faq: [
+          {
+            question: '取り込んだあとにデータの整理が必要ですか？',
+            answer: '取り込みの流れの中でカテゴリを対応づけられます。あとから手で直す必要はありません。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全に無料です。隠れた費用もありません。',
+          },
+          {
+            question: '今までの記録をぜんぶ持ってこられますか？',
+            answer: 'CSV 形式での取り込みに対応しています。振替などの特殊な記録は確認用にマークが付きます。',
+          },
+          {
+            question: 'CWMoney の資産機能は Futari にもありますか？',
+            answer: 'Futari には「愛物（アイブツ）」という機能があり、車・住まい・保険などの共有資産に関わる支出を記録できます。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'CWMoney',
+          rows: [
+            {
+              feature: 'ふたりの共有家計簿',
+              futari: { label: '✓ 標準モード', tone: 'yes' },
+              other: { label: '✕ ひとり向け設計', tone: 'no' },
+            },
+            {
+              feature: '費用の精算モード',
+              futari: { label: '✓ 複数モード', tone: 'yes' },
+              other: { label: '✕ なし', tone: 'no' },
+            },
+            {
+              feature: '多通貨記録',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '✓ 対応', tone: 'yes' },
+            },
+            {
+              feature: '完全無料',
+              futari: { label: '✓ ずっと', tone: 'yes' },
+              other: { label: '△ VIP で解放', tone: 'partial' },
+            },
+            {
+              feature: 'リアルタイム同期',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '△ VIP が必要', tone: 'partial' },
+            },
+          ],
+        },
       },
     },
   },
@@ -1798,18 +1948,18 @@ export const ja: Translations = {
     },
     migrate: {
       honeydue: {
-        title: 'Honeydue から Futari へ — 無料のふたり家計簿',
-        description: 'Honeydue の更新が落ち着いてきた今、Futari なら 3 分でデータを引っ越して、カップル・夫婦の共同家計簿としてそのまま続けられます。無料、広告なし、暗号化。',
+        title: 'Honeydue から Futari へ引っ越し — Honeydue の代替｜無料のふたり家計簿',
+        description: 'Honeydue の更新が落ち着いてきた今、Futari なら 3 分でデータを引っ越して、カップル・夫婦の共同家計簿としてそのまま続けられます。Honeydue の代替として — 無料、広告なし、エンドツーエンド暗号化。',
         ogDescription: 'Honeydue ユーザーの次の住みか — Futari でふたりの家計をそのまま続ける。',
       },
       spendee: {
-        title: 'Spendee から Futari へ — ふたり向け家計簿の引っ越し',
-        description: 'Spendee の家計データを Futari に持ってきて、カップル・夫婦のための共同家計簿としてそのまま続けましょう。CSV をアップして 3 分で完了。',
+        title: 'Spendee の記録を Futari に取り込み — Spendee の代わりになるカップル家計簿',
+        description: 'Spendee の代わりになるカップル・夫婦のための共同家計簿。Spendee の CSV を Futari に取り込んで、パートナーとの記録を続けましょう。共有はもともと無料で標準、課金で解放するものではありません。',
         ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
       },
       cwmoney: {
-        title: 'CWMoney から Futari へ — データ引っ越しガイド',
-        description: '配布している Excel 変換テンプレートで CWMoney のデータを CSV に整え、Futari（カップル・夫婦のための共同家計簿）にアップロードするだけ。',
+        title: 'CWMoney から Futari へ — CWMoney データの書き出し・取り込みガイド',
+        description: 'CWMoney から書き出したデータを別のツールに取り込むには？Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦のための共同家計簿）にアップロードするだけ。',
         ogDescription: 'CWMoney の引っ越し手順 — 変換テンプレートで Excel を CSV にして Futari へ。',
       },
     },

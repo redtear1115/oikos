@@ -1685,6 +1685,9 @@ export const en: Translations = {
       unknown: 'Other',
     },
     differentiatorsHeading: 'Why Futari',
+    // TODO(#599): en copy below pending native review
+    faqHeading: 'Frequently asked',
+    comparisonHeading: 'Futari vs {other}',
     trust: {
       heading: 'Why this is safe to do',
       items: [
@@ -1707,7 +1710,7 @@ export const en: Translations = {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Your Honeydue history can come with you',
-        heroSubtitle: 'Upload your CSV and bring years of shared budgeting into Futari in about three minutes.',
+        heroSubtitle: 'Move from Honeydue to Futari in about three minutes — upload your CSV and keep years of shared budgeting intact.',
         intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home — free, ad-free, and end-to-end encrypted.",
         differentiators: [
           {
@@ -1727,11 +1730,60 @@ export const en: Translations = {
         step1: 'In Honeydue → Settings → Export Data, download the CSV.',
         step2: 'Upload the CSV here and preview your records.',
         step3: 'Create a Futari account and finish the move in one tap.',
+        // TODO(#599): en faq + comparison copy pending native review
+        faq: [
+          {
+            question: 'Do I need to clean the data after importing?',
+            answer: 'Categories are mapped during the import flow in one pass — no manual cleanup after.',
+          },
+          {
+            question: 'Is the import free?',
+            answer: 'Futari is completely free. No hidden costs.',
+          },
+          {
+            question: 'Can all my records come over?',
+            answer: 'CSV import supports most records. Special types (like transfers) are flagged for you to confirm.',
+          },
+          {
+            question: "Does Futari have Honeydue's shared ledger?",
+            answer: "Yes. Futari is built for two — everything sits in one shared ledger you can both view and add to.",
+          },
+        ],
+        comparison: {
+          otherLabel: 'Honeydue',
+          rows: [
+            {
+              feature: 'Shared two-person ledger',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '✓ Yes', tone: 'yes' },
+            },
+            {
+              feature: 'Split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '△ Basic 50/50', tone: 'partial' },
+            },
+            {
+              feature: 'Active maintenance',
+              futari: { label: '✓ Biweekly releases', tone: 'yes' },
+              other: { label: '△ Slowed down', tone: 'partial' },
+            },
+            {
+              feature: 'Multi-currency',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '✕ No', tone: 'no' },
+            },
+            {
+              feature: 'End-to-end encryption',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '— Unspecified', tone: 'no' },
+            },
+          ],
+        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
         heroTitle: 'Your Spendee history can come with you',
-        heroSubtitle: 'Upload your Spendee CSV, preview everything, and decide if Futari feels right.',
+        heroSubtitle: 'Import your Spendee records into Futari — upload your CSV, preview everything, then decide.',
         differentiators: [
           {
             title: 'Sharing is the default, not a paid unlock',
@@ -1750,11 +1802,60 @@ export const en: Translations = {
         step1: 'In Spendee → More → Export Data, download the CSV.',
         step2: 'Upload the CSV here and preview your records.',
         step3: 'Create a Futari account and finish the move in one tap.',
+        // TODO(#599): en faq + comparison copy pending native review
+        faq: [
+          {
+            question: 'Do I need to clean the data after importing?',
+            answer: 'Categories are mapped during the import flow in one pass — no manual cleanup after.',
+          },
+          {
+            question: 'Is the import free?',
+            answer: 'Futari is completely free. No hidden costs.',
+          },
+          {
+            question: 'Can all my records come over?',
+            answer: 'CSV import supports most records. Special types (like transfers) are flagged for you to confirm.',
+          },
+          {
+            question: "Does Futari support Spendee's split feature?",
+            answer: 'Yes. Futari has multiple split modes built in: each pays their own, one covers it, 50/50, or custom ratio.',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Spendee',
+          rows: [
+            {
+              feature: 'Shared two-person ledger',
+              futari: { label: '✓ Free, built-in', tone: 'yes' },
+              other: { label: '△ Paid unlock', tone: 'partial' },
+            },
+            {
+              feature: 'Split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '✕ Not native', tone: 'no' },
+            },
+            {
+              feature: 'Realtime sync',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '△ Paid tier', tone: 'partial' },
+            },
+            {
+              feature: 'Completely free',
+              futari: { label: '✓ Forever', tone: 'yes' },
+              other: { label: '△ Basic tier limited', tone: 'partial' },
+            },
+            {
+              feature: 'CSV import',
+              futari: { label: '✓ Direct upload', tone: 'yes' },
+              other: { label: '— Manual mapping', tone: 'partial' },
+            },
+          ],
+        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
         heroTitle: 'Your CWMoney history can come with you',
-        heroSubtitle: 'Use our conversion template to turn CWMoney Excel exports into a CSV Futari can read.',
+        heroSubtitle: 'CWMoney export → CSV import guide: use our template to turn the Excel export into a file Futari can read.',
         differentiators: [
           {
             title: 'A two-person ledger by default',
@@ -1775,6 +1876,55 @@ export const en: Translations = {
         step3: 'Upload the converted CSV, preview it, then create an account to import.',
         templateDownloadLabel: 'Download the template',
         templateNote: "The template maps CWMoney's columns to a layout Futari supports.",
+        // TODO(#599): en faq + comparison copy pending native review
+        faq: [
+          {
+            question: 'Do I need to clean the data after importing?',
+            answer: 'Categories are mapped during the import flow in one pass — no manual cleanup after.',
+          },
+          {
+            question: 'Is the import free?',
+            answer: 'Futari is completely free. No hidden costs.',
+          },
+          {
+            question: 'Can all my records come over?',
+            answer: 'CSV import supports most records. Special types (like transfers) are flagged for you to confirm.',
+          },
+          {
+            question: "Does Futari match CWMoney's assets feature?",
+            answer: 'Futari has "treasured items" — cars, homes, insurance and other shared assets can each carry their related expenses.',
+          },
+        ],
+        comparison: {
+          otherLabel: 'CWMoney',
+          rows: [
+            {
+              feature: 'Shared two-person ledger',
+              futari: { label: '✓ Default', tone: 'yes' },
+              other: { label: '✕ Single-user', tone: 'no' },
+            },
+            {
+              feature: 'Split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '✕ No', tone: 'no' },
+            },
+            {
+              feature: 'Multi-currency',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '✓ Yes', tone: 'yes' },
+            },
+            {
+              feature: 'Completely free',
+              futari: { label: '✓ Forever', tone: 'yes' },
+              other: { label: '△ VIP unlock', tone: 'partial' },
+            },
+            {
+              feature: 'Realtime cloud sync',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '△ Requires VIP', tone: 'partial' },
+            },
+          ],
+        },
       },
     },
   },
@@ -1800,19 +1950,19 @@ export const en: Translations = {
     },
     migrate: {
       honeydue: {
-        title: 'Move from Honeydue to Futari — a free shared-budgeting alternative',
-        description: 'Honeydue is winding down. Futari is a shared ledger built for couples — move your data over in about 3 minutes and keep budgeting together. Free, ad-free, encrypted.',
+        title: 'Move from Honeydue to Futari — the free Honeydue alternative for couples',
+        description: 'Honeydue updates have slowed. Futari is a shared ledger built for couples — move your data over in about 3 minutes and keep budgeting together. The free Honeydue alternative: ad-free, end-to-end encrypted.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
-        title: 'Move from Spendee to Futari — a shared-budgeting alternative',
-        description: 'Bring your Spendee history into Futari, a couple-first shared ledger built for partners. Upload your CSV — three minutes to move in and pick up where you left off.',
+        title: 'Import Spendee records into Futari — the couples budgeting alternative to Spendee',
+        description: 'A couples-first alternative to Spendee. Import your Spendee CSV into Futari, a shared ledger built for partners — sharing is free and built in, no paid unlock required.',
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
-        title: 'Move from CWMoney to Futari — how to bring your records over',
-        description: 'Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari can import — a shared ledger built for couples, ready in about 3 minutes.',
-        ogDescription: "Moving from CWMoney: convert your Excel with our template, then import into Futari.",
+        title: 'Move from CWMoney to Futari — CWMoney export & import guide',
+        description: 'How to move CWMoney records into a new tool? Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari — a shared ledger built for couples — can import.',
+        ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
       },
     },
   },
