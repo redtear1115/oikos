@@ -3,6 +3,8 @@
 import { useTranslations } from '@/lib/i18n/client'
 import type { ImportPayerMember } from '@/actions/import'
 import type { RuleState } from './ImportContent'
+import { SectionCard } from './SectionCard'
+import { WizardNavButtons } from './WizardNavButtons'
 
 interface Member {
   id: string
@@ -38,17 +40,7 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
 
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-2xl px-5 py-4"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      >
-        <div className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>
-          {tImport.title}
-        </div>
-        <div className="text-xs mb-4" style={{ color: 'var(--ink-3)' }}>
-          {tImport.subtitle}
-        </div>
-
+      <SectionCard title={tImport.title} subtitle={tImport.subtitle}>
         <div className="text-xs font-medium px-1 mb-2" style={{ color: 'var(--ink-3)' }}>
           {tImport.payerLabel}
         </div>
@@ -68,12 +60,9 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
         <div className="text-xs px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
           {tImport.payerHint}
         </div>
-      </div>
+      </SectionCard>
 
-      <div
-        className="rounded-2xl px-5 py-4"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      >
+      <SectionCard>
         <div className="text-xs font-medium px-1 mb-2" style={{ color: 'var(--ink-3)' }}>
           {tImport.splitLabel}
         </div>
@@ -93,26 +82,14 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
             {tImport.soloHint}
           </div>
         )}
-      </div>
+      </SectionCard>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-1 h-11 rounded-xl text-sm cursor-pointer"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
-        >
-          {tImport.backCta}
-        </button>
-        <button
-          type="button"
-          onClick={onNext}
-          className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer"
-          style={{ background: 'var(--btn-primary-bg)' }}
-        >
-          {tImport.nextCta}
-        </button>
-      </div>
+      <WizardNavButtons
+        onBack={onBack}
+        backLabel={tImport.backCta}
+        onNext={onNext}
+        nextLabel={tImport.nextCta}
+      />
     </div>
   )
 }

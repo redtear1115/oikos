@@ -4,6 +4,8 @@ import { useId, useRef, useState, type DragEvent } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import type { ImportSource } from '@/actions/import'
 import type { ParsedFileState } from './ImportContent'
+import { SectionCard } from './SectionCard'
+import { WizardNavButtons } from './WizardNavButtons'
 
 interface Props {
   onFile: (file: File, source: ImportSource) => Promise<void>
@@ -142,55 +144,16 @@ export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Prop
               {tImport.invalidNote}
             </div>
           )}
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={clear}
-              className="flex-1 h-11 rounded-xl text-sm cursor-pointer"
-              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
-            >
-              {tImport.retryCta}
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer"
-              style={{ background: 'var(--btn-primary-bg)' }}
-            >
-              {tImport.nextCta}
-            </button>
+          <div className="mt-4">
+            <WizardNavButtons
+              onBack={clear}
+              backLabel={tImport.retryCta}
+              onNext={onNext}
+              nextLabel={tImport.nextCta}
+            />
           </div>
         </SectionCard>
       )}
-    </div>
-  )
-}
-
-function SectionCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title?: string
-  subtitle?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div
-      className="rounded-2xl px-5 py-4"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-    >
-      {title && (
-        <div className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>
-          {title}
-        </div>
-      )}
-      {subtitle && (
-        <div className="text-xs mb-3" style={{ color: 'var(--ink-3)' }}>
-          {subtitle}
-        </div>
-      )}
-      {children}
     </div>
   )
 }
