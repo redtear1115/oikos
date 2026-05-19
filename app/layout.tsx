@@ -42,6 +42,9 @@ export const metadata: Metadata = {
   // against the canonical domain. Without it, Next.js logs warnings + falls back to
   // a guessed origin which is wrong on Vercel preview deployments.
   metadataBase: new URL(APP_URL),
+  verification: {
+    google: 'bSuzBmlx1niAh9x_ziDQdaOQe3c7aNVgL9C7iIxaGN8',
+  },
   robots: {
     index: true,
     follow: true,
