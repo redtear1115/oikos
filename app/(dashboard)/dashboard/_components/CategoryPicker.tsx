@@ -18,13 +18,16 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
         const sel = value === c.id
         return (
           <button key={c.id} onClick={() => onChange(c.id)}
+            type="button"
+            aria-pressed={sel}
+            aria-label={t.category[c.id]}
             className="h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
             style={{
               background: sel ? 'var(--ink)' : 'var(--surface)',
               color: sel ? '#fff' : 'var(--ink)',
               border: sel ? '1px solid var(--ink)' : '1px solid var(--hairline)',
             }}>
-            <span className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-label font-medium" style={{ background: c.tint, color: c.ink }}>
+            <span aria-hidden="true" className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-label font-medium" style={{ background: c.tint, color: c.ink }}>
               {c.mono}
             </span>
             {t.category[c.id]}

@@ -14,5 +14,5 @@ export default function Error({
     console.error(error)
   }, [error])
 
-  return <ErrorPage page="settings" reset={reset} />
+  return <ErrorPage page="settings" reset={reset} digest={error.digest} />
 }

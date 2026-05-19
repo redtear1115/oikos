@@ -2,7 +2,7 @@ import type { Translations } from './zh-TW'
 
 export const zhCN: Translations = {
   signIn: {
-    tagline: '账本准备好了，等你们一起。',
+    tagline: '账本准备好了，邀请对方一起。',
     continueWithGoogle: '以 Google 账号继续',
     termsPrefix: '继续即表示您同意我们的',
     termsLink: '服务条款',
@@ -135,7 +135,7 @@ export const zhCN: Translations = {
       '双人共享记账',
       '费用自动分摊与 AA 结算',
       '家庭资产盘点',
-      '保险记录（保护型／储蓄型）',
+      '保险方案（保护型／储蓄型）',
       '汽车与油耗记录',
       '定期收入',
       '离线浏览 PWA',
@@ -308,7 +308,7 @@ export const zhCN: Translations = {
   },
 
   soloBanner: {
-    waiting: '账本准备好了，等你们一起',
+    waiting: '账本准备好了，邀请对方一起',
     sendInviteHint: '把链接发给对方',
     dismissAriaLabel: '关闭提示',
     generating: '生成中…',
@@ -371,6 +371,7 @@ export const zhCN: Translations = {
     assets: '爱物',
     settings: '设置',
     addAriaLabel: '新增一笔',
+    navAriaLabel: '主导航',
   },
 
   miniCalendar: {
@@ -443,6 +444,7 @@ export const zhCN: Translations = {
     trips: '加载旅行失败',
     assets: '加载爱物失败',
     review: '加载月度回顾失败',
+    refLabel: '错误代码',
   },
 
   assetListItem: {
@@ -2078,7 +2080,7 @@ export const zhCN: Translations = {
     },
     signIn: {
       title: '登录 Futari · 开始两个人的记账生活',
-      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、管理保险与资产的双人记账 PWA。',
+      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、照看保险与爱物的双人记账 PWA。',
       ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
     },
     terms: {
