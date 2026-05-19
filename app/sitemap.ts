@@ -10,20 +10,27 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 // without hreflang; that's now superseded.
 // /sign-in intentionally excluded — robots.ts disallows it (auth funnel,
 // no SEO value). Keeping sitemap + robots consistent avoids mixed signals.
+//
+// `lastModified` is a per-path manual constant rather than `new Date()` — Google
+// treats a moving lastmod as "everything just changed" and drops the crawl-
+// prioritisation signal entirely. Bump the date by hand when the page's content
+// actually changes; the comment next to each entry tracks the trigger. (#669)
 const PATHS = [
-  { path: '/', changeFrequency: 'weekly' as const, priority: 1.0 },
-  { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.8 },
-  { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.8 },
-  { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.8 },
-  { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3 },
-  { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3 },
+  // Landing copy / hero / migrate cross-link section
+  { path: '/', changeFrequency: 'weekly' as const, priority: 1.0, lastModified: '2026-05-20' },
+  // /migrate/* copy + comparison + FAQ
+  { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
+  { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
+  { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
+  // Legal pages
+  { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },
+  { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date()
   const entries: MetadataRoute.Sitemap = []
 
-  for (const { path, changeFrequency, priority } of PATHS) {
+  for (const { path, changeFrequency, priority, lastModified } of PATHS) {
     const languages: Record<string, string> = {}
     for (const locale of SUPPORTED_LOCALES) {
       languages[locale] = `${APP_URL}${localizedHref(path, locale)}`
