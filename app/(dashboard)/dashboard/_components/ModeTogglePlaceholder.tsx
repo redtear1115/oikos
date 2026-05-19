@@ -48,6 +48,7 @@ export function ModeTogglePlaceholder({
             key={o.id}
             type="button"
             onClick={() => onChange?.(o.id)}
+            aria-pressed={sel}
             className="h-8 flex items-center gap-[5px] font-medium cursor-pointer border-0"
             style={{
               padding: '0 14px',
