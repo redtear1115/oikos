@@ -20,6 +20,13 @@ type Props = {
   ctaHref: string
   /** 「已有帳號」次要 link — 永遠指 sign-in（locale-aware）。 */
   signInHref: string
+  /** Locale-aware /migrate/* hrefs (#613). Three internal links to strengthen
+   *  the link graph for SEO and offer cross-tool migrants a direct path. */
+  migrateHrefs: {
+    honeydue: string
+    spendee: string
+    cwmoney: string
+  }
   languageSwitcher?: ReactNode
 }
 
@@ -27,7 +34,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
+export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -282,6 +289,11 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
           and Footer so it lands in the user's decision moment. */}
       <TrustSection t={t} variant="full" />
 
+      {/* MIGRATE — three locale-aware /migrate/* links (#613). Strengthens the
+          internal link graph for SEO and gives visitors arriving from another
+          tool a direct next step. */}
+      <MigrateLinksSection t={t} migrateHrefs={migrateHrefs} />
+
       {/* FOOTER */}
       <footer
         className="relative z-10 px-6 md:px-16 py-8 md:py-6 flex flex-col md:flex-row items-center md:justify-between gap-4"
@@ -311,6 +323,106 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
         </div>
       </footer>
     </main>
+  )
+}
+
+function MigrateLinksSection({
+  t,
+  migrateHrefs,
+}: {
+  t: LandingStrings
+  migrateHrefs: Props['migrateHrefs']
+}) {
+  const items = [
+    {
+      href: migrateHrefs.honeydue,
+      source: 'Honeydue',
+      title: t.migrateSection.honeydueTitle,
+      body: t.migrateSection.honeydueBody,
+    },
+    {
+      href: migrateHrefs.spendee,
+      source: 'Spendee',
+      title: t.migrateSection.spendeeTitle,
+      body: t.migrateSection.spendeeBody,
+    },
+    {
+      href: migrateHrefs.cwmoney,
+      source: 'CWMoney',
+      title: t.migrateSection.cwmoneyTitle,
+      body: t.migrateSection.cwmoneyBody,
+    },
+  ]
+
+  return (
+    <section
+      className="relative z-10 px-5 md:px-16 py-12 md:py-16"
+      style={{ background: 'var(--surface-alt)' }}
+    >
+      <div className="max-w-md md:max-w-[1080px] mx-auto">
+        <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
+          <div>
+            <p
+              className="m-0"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontSize: 12,
+                letterSpacing: '3.5px',
+                color: 'var(--accent)',
+              }}
+            >
+              {t.migrateSection.kicker}
+            </p>
+            <h2
+              className="m-0 mt-1.5 text-[20px] md:text-[28px]"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontWeight: 500,
+                letterSpacing: '-0.3px',
+              }}
+            >
+              {t.migrateSection.title}
+            </h2>
+          </div>
+          <p
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-[14px]"
+            style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
+          >
+            {t.migrateSection.subtitle}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          {items.map((item) => (
+            <Link
+              key={item.source}
+              href={item.href}
+              aria-label={t.migrateSection.cardAriaLabel.replace('{source}', item.source)}
+              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--hairline)',
+                color: 'var(--ink)',
+                textDecoration: 'none',
+              }}
+            >
+              <p
+                className="m-0 text-body md:text-[16px] font-semibold"
+                style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
+              >
+                {item.title}
+              </p>
+              <p
+                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {item.body}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 

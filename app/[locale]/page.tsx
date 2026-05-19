@@ -145,6 +145,11 @@ export default async function RootPage({ params }: { params: Params }) {
         t={t.landing}
         ctaHref={ctaHref}
         signInHref={localizedHref('/sign-in', locale)}
+        migrateHrefs={{
+          honeydue: localizedHref('/migrate/honeydue', locale),
+          spendee: localizedHref('/migrate/spendee', locale),
+          cwmoney: localizedHref('/migrate/cwmoney', locale),
+        }}
         languageSwitcher={<LanguageSwitcher current={locale} variant="footer" />}
       />
     </>

@@ -148,6 +148,27 @@ export type Translations = {
     f3Body: string
     f4Title: string
     f4Body: string
+    /** Migrate section (#613) — three locale-aware links to /migrate/* between
+     *  the full trust section and the footer. Strengthens internal link graph
+     *  for SEO and gives visitors arriving from another tool a clear next step.
+     *  Tone: 溫和見證者 — "搬過來 / 帶過來" verbs, no exclamation marks. */
+    migrateSection: {
+      /** ALL CAPS kicker shown above the section title. */
+      kicker: string
+      /** Section heading. */
+      title: string
+      /** One-line subtitle. */
+      subtitle: string
+      /** Per-source card title + body. */
+      honeydueTitle: string
+      honeydueBody: string
+      spendeeTitle: string
+      spendeeBody: string
+      cwmoneyTitle: string
+      cwmoneyBody: string
+      /** Aria label template — `{source}` is the tool name. */
+      cardAriaLabel: string
+    }
     /** Footer trust note. */
     footerTrust: string
     /** schema.org `name` for WebSite + SoftwareApplication JSON-LD (#467). */
@@ -2435,6 +2456,18 @@ export const zhTW: Translations = {
     f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
     f4Title: '記帳統計',
     f4Body: '月度回顧、分類分佈、章節歷史。讓花過的錢自己說故事，一起回頭看走過的日子。',
+    migrateSection: {
+      kicker: 'FROM ELSEWHERE ──',
+      title: '本來在用別的記帳工具？',
+      subtitle: '原本記過的不用再記一次，把資料帶過來繼續寫。',
+      honeydueTitle: '從 Honeydue 搬過來',
+      honeydueBody: '更新節奏放緩了？把這幾年的記錄整批帶過來。',
+      spendeeTitle: '從 Spendee 搬過來',
+      spendeeBody: '雙人共享是內建免費的，不必再解鎖付費方案。',
+      cwmoneyTitle: '從 CWMoney 搬過來',
+      cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
+      cardAriaLabel: '從 {source} 搬到 Futari',
+    },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
