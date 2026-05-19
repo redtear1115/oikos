@@ -2211,7 +2211,7 @@ export const zhTW: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '兩個人，<br />一本帳。',
-    bodyHtml: '專為兩個人設計的帳本。<br />日子一天天記下來，回頭看會很暖。',
+    bodyHtml: '為伴侶與夫妻設計的共同記帳。<br />日子一天天記下來，回頭看會很暖。',
     cta: '一起記錄',
     ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
     alreadyHaveAccount: '已經有帳號 · 登入',

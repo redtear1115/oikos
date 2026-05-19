@@ -81,7 +81,7 @@ export const en: Translations = {
   landing: {
     heroKicker: "A COUPLE'S LEDGER",
     taglineHtml: 'Two of you,<br />one ledger.',
-    bodyHtml: 'A ledger built for two.<br />Day by day, looking back will feel warm.',
+    bodyHtml: 'A shared ledger for partners and couples.<br />Day by day, looking back will feel warm.',
     cta: 'Begin together',
     ctaHint: 'Free · Try without signing up · For two',
     alreadyHaveAccount: 'I already have an account',
