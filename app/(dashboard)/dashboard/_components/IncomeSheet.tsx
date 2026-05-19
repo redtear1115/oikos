@@ -116,7 +116,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
     if (initial) {
       setAmount(String(initial.amount))
       setCategory(
-        (PICKABLE_INCOME_CATEGORIES.find(c => c.id === initial.category)?.id as IncomeCategoryId) ?? 'salary'
+        PICKABLE_INCOME_CATEGORIES.find(c => c.id === initial.category)?.id ?? 'salary'
       )
       setRecipientWho(initial.recipientId === viewer.id ? 'M' : 'T')
       const dt = new Date(initial.occurredAt + 'T00:00:00')
@@ -180,9 +180,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             source: note.trim() || null,
             assetId,
           })
-        } else if (isEdit) {
+        } else if (initial && isEdit) {
           await editIncome({
-            oldId: initial!.id,
+            oldId: initial.id,
             amount: n,
             category,
             recipientId,
@@ -225,9 +225,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   }
 
   const performDelete = () => {
-    if (!isEdit) return
+    if (!isEdit || !initial) return
     dispatchDelete(
-      async () => { await softDeleteIncome(initial!.id) },
+      async () => { await softDeleteIncome(initial.id) },
       {
         fallbackMsg: t.common.error,
         offlineMsg: t.common.offlineError,
