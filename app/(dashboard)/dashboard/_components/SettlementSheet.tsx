@@ -7,6 +7,8 @@ import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { PayerToggle } from './PayerToggle'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { SheetBody, SheetFooter } from '@/components/ui/Sheet'
+import { Button } from '@/components/ui/Button'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { MiniCalendar } from './MiniCalendar'
 import { editSettlement, softDeleteSettlement } from '@/actions/settlement'
@@ -95,27 +97,38 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   return (
     <>
       <SheetFrame open={open} onClose={onClose} ariaLabel={t.settlement.editTitle}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button onClick={onClose}
-            className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)' }}>{t.common.cancel}</button>
+        {/* 3-column header (cancel | title | save) — SheetHeader primitive is
+            2-column (title + single trailing), so we keep a custom wrapper
+            and use Button primitives for the actions. Mirrors the pilot
+            InstallGuide pattern. */}
+        <div className="shrink-0 flex items-center justify-between px-5 pt-3 pb-2">
+          <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
+            {t.common.cancel}
+          </Button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
             {t.settlement.editTitle}
           </div>
           {/* Past-epoch view is read-only — hide save. The sheet itself shouldn't
               open in past view (parent gates onItemClick), but keep this as a
               belt-and-braces guard. */}
-          {!isPast && (
-            <button onClick={handleSave} disabled={!amount || pending}
-              className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
-              style={{ color: amount && !pending ? 'var(--accent)' : 'var(--ink-3)' }}>
+          {isPast ? (
+            <div className="w-10" aria-hidden="true" />
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSave}
+              disabled={!amount || pending}
+              aria-busy={pending}
+              className="px-2 font-semibold"
+              style={{ color: amount && !pending ? 'var(--accent)' : undefined }}
+            >
               {pending ? t.common.saving : t.common.save}
-            </button>
+            </Button>
           )}
         </div>
 
-        <div className="overflow-auto flex-1">
+        <SheetBody noPadding>
           {/* Amount + payer */}
           <div className="px-6 pt-6 pb-7 text-center"
             style={{ borderBottom: '1px solid var(--hairline)' }}>
@@ -155,28 +168,26 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
             {showCal && <MiniCalendar value={date} onChange={d => { setDate(d); setShowCal(false) }} />}
           </div>
 
-          {/* Delete — hidden in past-epoch view */}
-          {!isPast && (
-            <div className="px-5 pb-2">
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(true)}
-                disabled={pending}
-                className="w-full h-12 rounded-bubble border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
-                style={{
-                  background: 'transparent',
-                  color: 'var(--destructive)',
-                  border: '1px solid var(--destructive-soft)',
-                }}
-              >
-                {t.settlement.deleteOne}
-              </button>
-            </div>
+          {/* In past-epoch (read-only) view there is no footer — preserve
+              bottom breathing room past the iOS home indicator. */}
+          {isPast && (
+            <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
           )}
+        </SheetBody>
 
-          {/* Extend past the iOS home indicator (env safe-area-inset-bottom). */}
-          <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
-        </div>
+        {/* Delete lives in the footer — SheetFooter handles safe-area-inset-bottom. */}
+        {!isPast && (
+          <SheetFooter>
+            <Button
+              variant="danger"
+              fullWidth
+              onClick={() => setConfirmingDelete(true)}
+              disabled={pending}
+            >
+              {t.settlement.deleteOne}
+            </Button>
+          </SheetFooter>
+        )}
       </SheetFrame>
 
       {error && open && (
