@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import type { MigrateSource } from '@/lib/migrate/csv'
+import type { MigrateSource } from '@/lib/csvImport'
 
 type MigrateStrings = Translations['migrate']
 

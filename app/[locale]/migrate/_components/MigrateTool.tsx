@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import type { MigrateSource } from '@/lib/migrate/csv'
+import type { MigrateSource } from '@/lib/csvImport'
 import { useCsvPreview } from '@/lib/migrate/useCsvPreview'
 import { CsvFileUploadWidget } from '@/components/CsvFileUploadWidget'
 import { MigrateCta } from './MigrateCta'

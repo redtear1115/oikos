@@ -1,11 +1,18 @@
+/**
+ * Migrate-side coverage for the unified CSV layer (issue #623). The marketing
+ * preview consumes `lib/csvImport`'s primitives directly — these tests pin
+ * down the behaviour the anonymous /migrate pages depend on (Big5 decoding,
+ * RFC 4180 parsing, the raw header sniffer, and the column-name heuristic
+ * stats card).
+ */
 import { describe, it, expect } from 'vitest'
 import {
-  decodeBytes,
-  parseCsv,
-  detectSource,
   computeStats,
+  decodeBytes,
+  detectCsvSource,
+  parseCsvText,
   type CsvRow,
-} from '@/lib/migrate/csv'
+} from '@/lib/csvImport'
 
 const UTF8_BOM = '﻿'
 const enc = new TextEncoder()
@@ -41,9 +48,9 @@ describe('decodeBytes', () => {
   })
 })
 
-describe('parseCsv', () => {
+describe('parseCsvText (migrate preview)', () => {
   it('parses headers + rows', () => {
-    const out = parseCsv('date,amount\n2026-01-01,100\n2026-01-02,200\n')
+    const out = parseCsvText('date,amount\n2026-01-01,100\n2026-01-02,200\n')
     expect(out.headers).toEqual(['date', 'amount'])
     expect(out.rows).toEqual([
       { date: '2026-01-01', amount: '100' },
@@ -52,51 +59,51 @@ describe('parseCsv', () => {
   })
 
   it('handles CRLF line endings', () => {
-    const out = parseCsv('a,b\r\n1,2\r\n')
+    const out = parseCsvText('a,b\r\n1,2\r\n')
     expect(out.headers).toEqual(['a', 'b'])
     expect(out.rows).toEqual([{ a: '1', b: '2' }])
   })
 
   it('handles quoted fields with commas and escaped quotes', () => {
-    const out = parseCsv('a,b\n"hello, world","she said ""hi"""\n')
+    const out = parseCsvText('a,b\n"hello, world","she said ""hi"""\n')
     expect(out.rows).toEqual([{ a: 'hello, world', b: 'she said "hi"' }])
   })
 
   it('handles quoted fields with embedded newlines', () => {
-    const out = parseCsv('a,b\n"line1\nline2",2\n')
+    const out = parseCsvText('a,b\n"line1\nline2",2\n')
     expect(out.rows).toEqual([{ a: 'line1\nline2', b: '2' }])
   })
 
   it('skips trailing blank lines', () => {
-    const out = parseCsv('a,b\n1,2\n\n\n')
+    const out = parseCsvText('a,b\n1,2\n\n\n')
     expect(out.rows).toHaveLength(1)
   })
 
   it('pads short rows with empty strings', () => {
-    const out = parseCsv('a,b,c\n1,2\n')
+    const out = parseCsvText('a,b,c\n1,2\n')
     expect(out.rows).toEqual([{ a: '1', b: '2', c: '' }])
   })
 })
 
-describe('detectSource', () => {
+describe('detectCsvSource', () => {
   it('detects Honeydue by typical header signature', () => {
-    expect(detectSource(['Date', 'Name', 'Category', 'Amount', 'Account'])).toBe('honeydue')
+    expect(detectCsvSource(['Date', 'Name', 'Category', 'Amount', 'Account'])).toBe('honeydue')
   })
 
   it('detects Spendee by typical header signature', () => {
-    expect(detectSource(['Date', 'Wallet', 'Type', 'Category name', 'Amount', 'Currency', 'Note'])).toBe('spendee')
+    expect(detectCsvSource(['Date', 'Wallet', 'Type', 'Category name', 'Amount', 'Currency', 'Note'])).toBe('spendee')
   })
 
   it('detects CWMoney by Chinese column headers', () => {
-    expect(detectSource(['日期', '類別', '項目', '金額', '帳戶'])).toBe('cwmoney')
+    expect(detectCsvSource(['日期', '類別', '項目', '金額', '帳戶'])).toBe('cwmoney')
   })
 
-  it('falls back to unknown for unfamiliar headers', () => {
-    expect(detectSource(['foo', 'bar'])).toBe('unknown')
+  it('returns null for unfamiliar headers (callers map to their own fallback)', () => {
+    expect(detectCsvSource(['foo', 'bar'])).toBeNull()
   })
 
   it('is case-insensitive on English headers', () => {
-    expect(detectSource(['date', 'name', 'category', 'amount', 'account'])).toBe('honeydue')
+    expect(detectCsvSource(['date', 'name', 'category', 'amount', 'account'])).toBe('honeydue')
   })
 })
 
