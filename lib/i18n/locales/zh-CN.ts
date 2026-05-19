@@ -1799,6 +1799,9 @@ export const zhCN: Translations = {
         step1: '在 Spendee → More → Export Data，下载 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '创建 Futari 账号，一键完成搬迁。',
+        formatHintLabel: 'Spendee CSV 的字段长这样',
+        formatHintHeaders: 'Date,Wallet,Type,Category name,Amount,Currency,Note',
+        formatHintNote: 'Type 字段是「Expense / Income / Transfer」。Transfer（账户间转账）导入时会被标为错误——Futari 不存转账，请在预览阶段删除这几行。',
         faq: [
           {
             question: '导入后数据需要再整理吗？',

@@ -49,6 +49,34 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
   const page = t.pages.spendee
   const signInHref = localizedHref('/sign-in', locale)
 
+  // Embed the format preview inside step 1 — mirrors the cwmoney/step-2
+  // template-download pattern (#579) so the step list is the actual flow
+  // rather than a static recap. Spendee users see the column layout before
+  // they go pull the export, which heads off the most common "this didn't
+  // work" support ticket (Transfer rows misclassified as income).
+  const step1WithFormatHint = (
+    <>
+      <div>{page.step1}</div>
+      <div
+        className="mt-2.5 text-[12.5px]"
+        style={{ color: 'var(--ink-3)' }}
+      >
+        <div className="mb-1">{page.formatHintLabel}</div>
+        <code
+          className="block px-3 py-2 rounded-[8px] text-[11.5px] leading-[1.6] break-all"
+          style={{
+            background: 'var(--surface)',
+            color: 'var(--ink-2)',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          }}
+        >
+          {page.formatHintHeaders}
+        </code>
+        <p className="text-[12px] mt-1.5 m-0">{page.formatHintNote}</p>
+      </div>
+    </>
+  )
+
   return (
     <div className="space-y-10 md:space-y-14">
       <MigrateBreadcrumbJsonLd locale={locale} source="spendee" />
@@ -63,7 +91,7 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
 
       <MigrateSteps
         heading={page.stepsHeading}
-        steps={[page.step1, page.step2, page.step3]}
+        steps={[step1WithFormatHint, page.step2, page.step3]}
       />
 
       <MigrateComparison

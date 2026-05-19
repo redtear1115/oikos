@@ -85,38 +85,51 @@ export function parseAmount(raw: string): AmountParse | null {
  */
 const CATEGORY_SYNONYMS: Record<string, string> = {
   // Honeydue / Spendee English
-  'food & dining':   'dining',
-  'food and drink':  'dining',
-  'restaurants':     'dining',
-  'groceries':       'dining',
-  'dining':          'dining',
-  'shopping':        'clothing',
-  'clothing':        'clothing',
-  'apparel':         'clothing',
-  'home':            'housing',
-  'rent':            'housing',
-  'mortgage':        'housing',
-  'utilities':       'housing',
-  'housing':         'housing',
-  'transportation':  'transit',
-  'transport':       'transit',
-  'auto':            'transit',
-  'gas':             'transit',
-  'fuel':            'transit',
-  'transit':         'transit',
-  'entertainment':   'entertainment',
-  'travel':          'entertainment',
-  'recreation':      'entertainment',
-  'health':          'health',
-  'medical':         'health',
-  'healthcare':      'health',
-  'education':       'education',
-  'school':          'education',
-  'tuition':         'education',
-  'fees':            'financial',
-  'bank':            'financial',
-  'financial':       'financial',
-  'insurance':       'financial',
+  'food & dining':           'dining',
+  'food & drinks':           'dining',
+  'food and drink':          'dining',
+  'food and drinks':         'dining',
+  'restaurants':             'dining',
+  'groceries':               'dining',
+  'dining':                  'dining',
+  'shopping':                'clothing',
+  'clothing':                'clothing',
+  'apparel':                 'clothing',
+  'home':                    'housing',
+  'rent':                    'housing',
+  'mortgage':                'housing',
+  'utilities':               'housing',
+  'housing':                 'housing',
+  // Spendee canonical: "Transportation" / "Vehicle"
+  'transportation':          'transit',
+  'transport':               'transit',
+  'vehicle':                 'transit',
+  'auto':                    'transit',
+  'gas':                     'transit',
+  'fuel':                    'transit',
+  'transit':                 'transit',
+  'entertainment':           'entertainment',
+  // Spendee canonical: "Life & Entertainment"
+  'life & entertainment':    'entertainment',
+  'life and entertainment':  'entertainment',
+  'travel':                  'entertainment',
+  'recreation':              'entertainment',
+  'health':                  'health',
+  'medical':                 'health',
+  'healthcare':              'health',
+  'education':               'education',
+  'school':                  'education',
+  'tuition':                 'education',
+  'fees':                    'financial',
+  'bank':                    'financial',
+  'financial':               'financial',
+  // Spendee canonical: "Financial expenses" / "Communication"
+  'financial expenses':      'financial',
+  'insurance':               'financial',
+  'investments':             'financial',
+  'communication':           'financial',
+  'others':                  'other',
+  'other':                   'other',
   // CWMoney 繁中
   '飲食':            'dining',
   '餐飲':            'dining',
@@ -187,11 +200,15 @@ export function mapHoneydue(row: Record<string, string>): PartialImportRow {
 }
 
 /** Spendee exports: `Date, Wallet, Type, Category name, Amount, Currency, Note`.
- *  `Type` column is authoritative for expense/income (amounts are positive). */
+ *  `Type` column is authoritative for expense/income (amounts are always positive
+ *  in Spendee). Spendee also emits a third type — `Transfer` — for inter-wallet
+ *  transfers; we leave those rows with `type === undefined` so the validator
+ *  flags them and the preview UI lets the user drop them (Futari has no
+ *  transfer concept; see csv-import-design.md "Out of scope"). */
 export function mapSpendee(row: Record<string, string>): PartialImportRow {
   const date = parseDate(pick(row, 'Date', 'date'))
   const amt = parseAmount(pick(row, 'Amount', 'amount'))
-  const typeStr = pick(row, 'Type', 'type')
+  const typeStr = pick(row, 'Type', 'type').trim()
   const explicitType = typeFromString(typeStr)
   const currency = pick(row, 'Currency', 'currency').trim()
   const out: PartialImportRow = {
@@ -203,7 +220,15 @@ export function mapSpendee(row: Record<string, string>): PartialImportRow {
   if (date) out.date = date
   if (amt) {
     out.amount = amt.value
-    out.type = explicitType ?? (amt.isNegative ? 'expense' : 'income')
+    // Type column wins when present; fall back to amount sign only when Type
+    // is missing entirely. If Type is present but unrecognised (e.g.
+    // "Transfer"), leave `type` undefined so the validator surfaces the row
+    // as an error rather than silently mis-classifying it.
+    if (explicitType) {
+      out.type = explicitType
+    } else if (!typeStr) {
+      out.type = amt.isNegative ? 'expense' : 'income'
+    }
   }
   if (currency) {
     out.originalCurrency = currency.toUpperCase()

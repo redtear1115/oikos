@@ -162,6 +162,47 @@ describe('mapSpendee', () => {
     expect(out.type).toBe('income')
     expect(out.originalCurrency).toBeUndefined()
   })
+
+  // Spendee's third type — Futari has no transfer concept. Leave type
+  // undefined so the validator flags it; the preview UI lets the user drop
+  // these rows or re-classify manually.
+  it('leaves Type undefined for "Transfer" rows so validator flags them', () => {
+    const out = mapSpendee({
+      Date: '2026-03-01', Wallet: 'Cash', Type: 'Transfer', 'Category name': '',
+      Amount: '500', Currency: 'TWD', Note: 'Cash → Bank',
+    })
+    expect(out.type).toBeUndefined()
+    expect(out.amount).toBe(500)
+  })
+
+  it('falls back to amount sign only when Type column is missing entirely', () => {
+    const out = mapSpendee({
+      Date: '2026-03-02', Wallet: 'Cash', 'Category name': 'Misc',
+      Amount: '-250', Currency: '', Note: '',
+    })
+    expect(out.type).toBe('expense')
+  })
+
+  it('captures non-base currency for later normalisation', () => {
+    const out = mapSpendee({
+      Date: '2026-03-03', Wallet: 'Travel', Type: 'Expense', 'Category name': 'Food & Drinks',
+      Amount: '12', Currency: 'usd', Note: 'lunch',
+    })
+    expect(out.originalCurrency).toBe('USD')
+    expect(out.originalAmount).toBe(12)
+    expect(out.category).toBe('dining')
+  })
+
+  it('maps Spendee canonical categories (Life & Entertainment, Vehicle)', () => {
+    expect(mapSpendee({
+      Date: '2026-04-01', Type: 'Expense', 'Category name': 'Life & Entertainment',
+      Amount: '300', Currency: '', Note: '', Wallet: '',
+    }).category).toBe('entertainment')
+    expect(mapSpendee({
+      Date: '2026-04-02', Type: 'Expense', 'Category name': 'Vehicle',
+      Amount: '500', Currency: '', Note: '', Wallet: '',
+    }).category).toBe('transit')
+  })
 })
 
 describe('mapCwmoney', () => {
