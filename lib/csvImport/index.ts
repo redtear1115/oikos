@@ -1,15 +1,20 @@
 /**
  * `lib/csvImport/` — the validator + mapper layer that closes issue #553.
  *
- * Composes the four sub-modules into one entrypoint: a `File` goes in,
- * structured `ImportRow[]` + stats + per-row errors come out. Pure async —
- * no DB, no React, no UI. The import action and the preview UI both consume
- * this output.
+ * Composes the sub-modules into one entrypoint: a `File` goes in, structured
+ * `ImportRow[]` + stats + per-row errors come out. Pure async — no DB, no
+ * React, no UI. The import action and the preview UI both consume this output.
  *
  * Auto-detect honours #561's marketing-side sniffer; when the file doesn't
  * match a known source it falls through to `'generic'` and the caller is
  * expected to supply a `HeaderMap` via the mapping wizard.
+ *
+ * OFX / QIF take a separate codepath: `detectFormat` sniffs the decoded text
+ * for `OFXHEADER:` / `<OFX>` / `!Type:`, and the file skips the CSV parser
+ * to go straight to `ofxParser` / `qifParser` (issue #586).
  */
+
+import { decodeBytes } from '@/lib/migrate/csv'
 
 export type { DetectedSource } from './detector'
 export type {
@@ -24,7 +29,7 @@ export type {
 } from './types'
 
 export { detectEncoding, detectSeparator, parseCsvBuffer, parseCsvText } from './parser'
-export { detectSource } from './detector'
+export { detectFormat, detectSource } from './detector'
 export {
   mapCategory,
   mapCwmoney,
@@ -34,16 +39,20 @@ export {
   parseAmount,
   parseDate,
 } from './mapper'
+export { parseOfx } from './ofxParser'
+export { parseQif } from './qifParser'
 export { validateRow } from './validator'
 
-import { parseCsvBuffer } from './parser'
-import { detectSource, type DetectedSource } from './detector'
+import { parseCsvText } from './parser'
+import { detectFormat, detectSource, type DetectedSource } from './detector'
 import {
   mapCwmoney,
   mapGeneric,
   mapHoneydue,
   mapSpendee,
 } from './mapper'
+import { parseOfx } from './ofxParser'
+import { parseQif } from './qifParser'
 import { validateRow } from './validator'
 import type {
   HeaderMap,
@@ -85,6 +94,9 @@ function pickMapper(source: DetectedSource, headerMap?: HeaderMap) {
         throw new Error('headerMap is required when source is "generic"')
       }
       return (r: Record<string, string>) => mapGeneric(r, headerMap)
+    case 'ofx':
+    case 'qif':
+      throw new Error(`${source} does not use the CSV mapper path`)
   }
 }
 
@@ -105,6 +117,14 @@ export async function processFile(
   options: ProcessOptions = {},
 ): Promise<ProcessResult> {
   const buffer = await file.arrayBuffer()
+  // Filename hint: .ofx / .qif extensions force the format even if the
+  // content sniff misses (e.g. unusual encoding stripped the header line).
+  // Content sniff still runs and wins for the CSV vs CSV-with-weird-name case.
+  if (!options.source) {
+    const name = file.name.toLowerCase()
+    if (name.endsWith('.ofx')) options = { ...options, source: 'ofx' }
+    else if (name.endsWith('.qif')) options = { ...options, source: 'qif' }
+  }
   return processBuffer(buffer, options)
 }
 
@@ -113,7 +133,19 @@ export function processBuffer(
   buffer: ArrayBuffer,
   options: ProcessOptions = {},
 ): ProcessResult {
-  const { headers, rows: rawRows } = parseCsvBuffer(buffer)
+  const { text } = decodeBytes(buffer)
+  // Format dispatch: explicit option wins, then content sniff.
+  const format =
+    options.source === 'ofx' || options.source === 'qif'
+      ? options.source
+      : detectFormat(text)
+  if (format === 'ofx') return runNonCsv(parseOfx(text), 'ofx')
+  if (format === 'qif') return runNonCsv(parseQif(text), 'qif')
+  return runCsv(text, options)
+}
+
+function runCsv(text: string, options: ProcessOptions): ProcessResult {
+  const { headers, rows: rawRows } = parseCsvText(text)
   const source = options.source ?? detectSource(headers)
   // Empty file: nothing to map. Bail before requiring a headerMap so callers
   // can probe the file shape without committing to a mapper choice.
@@ -127,7 +159,18 @@ export function processBuffer(
     }
   }
   const mapper = pickMapper(source, options.headerMap)
+  const partials = rawRows.map(r => mapper(r))
+  return validatePartials(partials, source)
+}
 
+function runNonCsv(partials: PartialImportRow[], source: DetectedSource): ProcessResult {
+  return validatePartials(partials, source)
+}
+
+function validatePartials(
+  partials: PartialImportRow[],
+  source: DetectedSource,
+): ProcessResult {
   const rows: ImportRow[] = []
   const errors: RowError[] = []
   const warnings: RowError[] = []
@@ -135,8 +178,8 @@ export function processBuffer(
   let dateMin: Date | null = null
   let dateMax: Date | null = null
 
-  for (let i = 0; i < rawRows.length; i++) {
-    const partial = mapper(rawRows[i]!)
+  for (let i = 0; i < partials.length; i++) {
+    const partial = partials[i]!
     const result = validateRow(partial, i)
     if (result.warnings.length > 0) {
       warnings.push({ rowIndex: i, errors: result.warnings })
@@ -163,7 +206,7 @@ export function processBuffer(
     errors,
     warnings,
     stats: {
-      total: rawRows.length,
+      total: partials.length,
       valid: rows.length,
       invalid: errors.length,
       dateRange: dateMin && dateMax ? { from: dateMin, to: dateMax } : null,
