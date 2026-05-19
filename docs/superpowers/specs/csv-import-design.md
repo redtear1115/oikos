@@ -1,6 +1,8 @@
 ---
 status: shipped
 first_shipped_in: v1.1.0
+updates:
+  - v1.1.1: 新增 Spendee / Honeydue / CWMoney 原生格式自動 parse（mapper + detector）；銀行對帳單 .xlsx 轉換模板；OFX 1.x/2.x + QIF parser（#585 #586）
 related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency]
 related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586"]
 ---
@@ -8,7 +10,7 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 # CSV 匯入歷史紀錄
 
 > 換 app 最大的摩擦是「多年的資料怎麼辦」。Futari 提供一份**通用 CSV 格式**，讓使用者把過去在其他 app（Honeydue / Spendee / CWMoney / 自製 Sheet）的紀錄帶進來。
-> Phase 1 MVP 只支援這份通用格式；競品原生 CSV 的轉換走 Phase 2 Excel 模板，不在 app 內做。
+> v1.1.0 MVP 只支援通用格式；v1.1.1 新增競品原生格式 mapper（Spendee / Honeydue / CWMoney）+ OFX/QIF parser + 銀行對帳單 Excel 轉換模板。
 
 ---
 
@@ -38,13 +40,18 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 - Dedup：依 `(transacted_at, amount, paid_by, category, note[:10])` hash 比對既有 CashTransaction
 - Import metadata：每筆匯入的 row 都標 `import_batch_id` + `source` + `imported_at`，給未來 audit / 回滾用
 
-### Out（給後續 phase）
+### v1.1.1 追加（shipped）
 
-- 競品原生 CSV 自動 parse（→ Phase 2 提供 Excel 轉換模板，#557 起）
-- 多帳戶 / 銀行對帳單 / OFX / QIF
-- 自動偵測來源 app（樣本不齊、覆蓋率低，CWMoney 等需 VIP 才能匯出，MVP 階段不投資）
+- **競品原生格式 mapper**：Spendee / Honeydue / CWMoney CSV 自動偵測來源（`lib/csvImport/detector.ts`）+ 各自 mapper，無需用戶先手動轉格式
+- **OFX + QIF parser**：`.ofx`（1.x SGML / 2.x XML）+ `.qif`（line-oriented）直接拖入匯入 wizard（#586）
+- **銀行對帳單 Excel 轉換模板**：3-sheet .xlsx（轉換表 / 常見銀行欄位對照 / 類別建議），放 `public/bank-statement-template.xlsx`（#585）
+
+### Out（後續 phase）
+
 - Settlement 重建：匯入 record 視為歷史快照，**不重算 GroupBalance 之外的雙人結算狀態**（來源 app 的金錢歸屬規則不同）
 - 還原原 app 的轉帳 row（轉帳概念不對應 Futari schema，一律 drop）
+- 多幣別匯入（匯入 row 一律 base 幣別整數）
+- Settlement / Asset / Trip / Recurring rule 匯入
 
 ### 競品研究 ref
 
@@ -120,7 +127,7 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 
 ### Step 1 — 上傳檔案
 
-- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）
+- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）
 - 客戶端檔案大小上限：2 MB
 - 上傳後立即在 client 端 parse + 跑 schema validation；不過 schema 直接跳錯誤頁，無 server round-trip
 
@@ -207,36 +214,17 @@ sha256(
 
 ---
 
-## Import metadata + DB schema 需求
+## Import metadata
 
-> 本節是給 #556（schema 子 issue）的需求清單；實際欄位定義以 `lib/db/schema.ts` 為準。
+每次匯入產生一筆 `ImportBatches`；`CashTransactions.importBatchId` + `IncomeTransactions.importBatchId` FK 讓整批可 rollback（軟刪除）。`ImportErrors` 存失敗行原始資料供用戶下載修正後再傳。
 
-### 新 entity: `ImportBatches`
-
-每次匯入產生一筆 `ImportBatches` row，記錄：
-
-- `id` (uuid PK)
-- `group_id` (FK → OikosGroups)
-- `imported_by` (FK → Profiles，誰按下「開始匯入」)
-- `source` (text；free string，user 在預覽階段填，例：`honeydue-2026-q1`、`cwmoney-export`、`manual`)
-- `row_count` (integer，實際落地的 row 數)
-- `skipped_count` (integer，dedup 跳過數)
-- `imported_at` (timestamptz)
-- `undone_at` (timestamptz，nullable；按下「整批還原」時設值)
-
-### `CashTransactions` / `IncomeTransactions` 新欄位
-
-- `import_batch_id` (uuid FK → ImportBatches，nullable)：手動建立的 row 為 NULL；匯入 row 帶 batch id
+欄位語意見 `lib/db/schema.ts`（`importBatches` / `importErrors` 表）。
 
 ### Undo 規則
 
 - 「整批還原」= soft delete 該 `import_batch_id` 底下所有 row
-- 限制：`imported_at` < 24 小時 且 batch 內無 row 被後續編輯過（soft delete + insert 鏈會打斷 batch 連結，此情況不允許 undo）
-- 24 小時後 undo 按鈕消失（但 `import_batch_id` metadata 永久保留，給未來 audit）
-
-### Audit 用途（未來）
-
-未來若做「資料來源檢視」/「按來源分群統計」/「客服除錯」，全部靠 `import_batch_id` + `ImportBatches.source` 兩個欄位就能組出 query。MVP 不做 UI，但 schema 先 seed。
+- 限制：`imported_at` < 24 小時，且 batch 內無 row 被後續編輯過（soft delete + insert 鏈會打斷 batch 連結）
+- 24 小時後 undo 按鈕消失；`import_batch_id` metadata 永久保留供未來 audit
 
 ---
 
@@ -262,28 +250,16 @@ sha256(
 
 ---
 
-## Acceptance criteria
+## Acceptance criteria（已 ship）
 
-匯入 feature 視為 done 的條件：
-
-- [ ] User 從 `/settings` 點「從其他 app 匯入」可上傳通用 CSV
-- [ ] 預覽顯示前 10 列 + 錯誤 / 警告 / 重複標記
-- [ ] 類別 mapping wizard 能將 CSV 類別字串對映到 Futari `Category.id`
-- [ ] 整檔指定預設付款人 + split rule，row-level 可覆寫
-- [ ] Dedup 比對既有 DB row，碰撞時 user 可選跳過 / 雙寫 / 取代
-- [ ] 確認後 atomic 寫入 DB；中途失敗整批 rollback
-- [ ] 每筆匯入 row 帶 `import_batch_id`；`ImportBatches` 表記錄 source / count / imported_at
-- [ ] 完成頁 24 小時內可整批還原（soft delete）
-- [ ] 過去 epoch 的 row 落入正確 chapter；落地後不可編輯（受 epoch-readonly 保護）
-- [ ] Solo group 強制 all_mine
-
-非 acceptance criteria（明確不在 v1.1.0 範圍）：
-
-- ❌ 競品原生 CSV 自動 parse
-- ❌ 多幣別匯入
-- ❌ Settlement / Asset / Trip / Recurring rule 匯入
-- ❌ 24 小時後的還原 / 跨 batch 復原
-- ❌ Mapping 偏好跨次保存
+- `/settings` 有「從其他 app 匯入」入口，支援通用 CSV / .ofx / .qif 上傳
+- 預覽顯示前 10 列 + 錯誤 / 警告 / 重複標記
+- 類別 mapping wizard 將 CSV 類別字串對映到 Futari `Category.id`
+- 整檔指定預設付款人 + split rule，row-level 可覆寫；solo group 強制 all_mine
+- Dedup 比對既有 DB row，碰撞時 user 可選跳過 / 雙寫 / 取代
+- 確認後 atomic 寫入 DB；中途失敗整批 rollback
+- 每筆匯入 row 帶 `import_batch_id`；完成頁 24 小時內可整批還原
+- 過去 epoch 的 row 落入正確 chapter；落地後受 epoch-readonly 保護不可編輯
 
 ---
 
