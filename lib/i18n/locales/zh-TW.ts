@@ -2174,6 +2174,22 @@ export type Translations = {
     }
     /** Slim footer trust copy (mirrors landing footer). */
     footerTrust: string
+    /** Cross-link block shown above the trust block on every /migrate/<source>
+     *  page (#612). Each source page renders the *other two* as cards so users
+     *  who landed on the wrong page can pivot without going back through search. */
+    otherSources: {
+      /** Section kicker above the two cards. */
+      heading: string
+      /** Per-source CTA label (same string reused on all cards). */
+      cta: string
+      /** Per-source short blurb used in both the card body and the
+       *  ItemList JSON-LD description. */
+      items: {
+        honeydue: { name: string; description: string }
+        spendee: { name: string; description: string }
+        cwmoney: { name: string; description: string }
+      }
+    }
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
      *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
      *  Hero h1 / steps live here; SEO `<title>`/`<meta>` live in seo.migrate.*. */
@@ -4105,6 +4121,24 @@ export const zhTW: Translations = {
       ],
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    otherSources: {
+      heading: '從其他工具搬過來',
+      cta: '看搬遷指南',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: '伴侶記帳 App，2024 年後更新放緩。',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: '共享帳本要解鎖才用得到，匯出 CSV 帶過來。',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: '台灣常見的單人記帳工具，用模板轉成 CSV 即可。',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
