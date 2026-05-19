@@ -115,7 +115,7 @@ export function RevealScreen({
                 key={key}
                 className="rounded-2xl px-4 py-4"
                 style={{
-                  background: '#fff',
+                  background: 'var(--surface)',
                   border: `1px solid ${C.hairline}`,
                 }}
               >

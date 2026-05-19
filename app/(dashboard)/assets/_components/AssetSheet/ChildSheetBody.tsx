@@ -278,7 +278,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               className="flex-1 h-9 rounded-[10px] text-label font-semibold"
               style={{
                 border: bloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
-                background: bloodType === b ? 'rgba(58,36,25,0.04)' : '#fff',
+                background: bloodType === b ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: bloodType === b ? 'var(--ink)' : 'var(--ink-2)',
                 fontFamily: 'var(--font-numeric)',
               }}>{b}</button>

@@ -266,7 +266,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               inputMode="decimal"
               step="0.01"
               placeholder="0.00"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body outline-none"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-body outline-none"
               style={{ color: 'var(--ink)' }}
             />
           </FormRow>
@@ -282,7 +282,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               type="number"
               inputMode="numeric"
               placeholder="0"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body outline-none"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-body outline-none"
               style={{ color: 'var(--ink)' }}
             />
           </FormRow>
@@ -294,7 +294,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               type="number"
               inputMode="numeric"
               placeholder="0"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body outline-none"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-body outline-none"
               style={{ color: 'var(--ink)' }}
             />
           </FormRow>
@@ -303,7 +303,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             <button
               type="button"
               onClick={() => setShowCal(v => !v)}
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-white text-body text-left flex items-center"
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-body text-left flex items-center"
               style={{ color: 'var(--ink)' }}
             >
               {date ? formatDateAbsolute(date, locale) : '選擇日期'}

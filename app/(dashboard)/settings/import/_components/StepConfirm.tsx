@@ -86,7 +86,7 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
 
       <WizardNavButtons
         onBack={onBack}
-        backLabel={tImport.backCta}
+        backLabel={t.common.navigation.back}
         onNext={onConfirm}
         nextLabel={
           submitting

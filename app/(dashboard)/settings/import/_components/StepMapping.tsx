@@ -87,9 +87,9 @@ export function StepMapping({ rows, categoryMap, onChange, onBack, onNext }: Pro
 
       <WizardNavButtons
         onBack={onBack}
-        backLabel={tImport.backCta}
+        backLabel={t.common.navigation.back}
         onNext={onNext}
-        nextLabel={tImport.nextCta}
+        nextLabel={t.common.navigation.next}
       />
     </div>
   )

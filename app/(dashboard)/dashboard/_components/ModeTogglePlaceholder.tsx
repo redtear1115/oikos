@@ -24,7 +24,7 @@ export function ModeTogglePlaceholder({
     <div
       className="flex items-center rounded-full p-1"
       style={{
-        background: '#fff',
+        background: 'var(--surface)',
         border: '1px solid var(--hairline)',
         boxShadow: mode === 'income' ? `0 0 0 3px ${P.glow}80` : 'none',
         transition: 'box-shadow 0.3s ease',

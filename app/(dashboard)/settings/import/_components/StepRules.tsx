@@ -86,9 +86,9 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
 
       <WizardNavButtons
         onBack={onBack}
-        backLabel={tImport.backCta}
+        backLabel={t.common.navigation.back}
         onNext={onNext}
-        nextLabel={tImport.nextCta}
+        nextLabel={t.common.navigation.next}
       />
     </div>
   )

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RuleListItem } from './RuleListItem'
-import { RecurringRuleSheet } from './RecurringRuleSheet'
+import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
 import { useTranslations } from '@/lib/i18n/client'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
@@ -49,6 +49,7 @@ export function RecurringExpenseContent({ rules, groupDefaultRatioA }: Props) {
       </div>
 
       <RecurringRuleSheet
+        type="expense"
         open={isOpen}
         onClose={() => setSheetState(null)}
         onMutated={handleMutated}

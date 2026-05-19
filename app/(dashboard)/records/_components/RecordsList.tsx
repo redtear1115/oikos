@@ -2,14 +2,15 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
-import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
+import dynamic from 'next/dynamic'
+import type { AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import type { SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import Link from 'next/link'
-import { FilterSheet, type AssetOption } from './FilterSheet'
+import type { AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
 import { DateRangeChip } from './DateRangeChip'
 import { TabProvider, type RecordsTab } from './TabContext'
@@ -40,10 +41,27 @@ import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id
 import { getFuelLogById } from '@/actions/fuelLog'
 import type { FuelType } from '@/lib/fuel'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
-import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
+import type { IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { DrillFilterChip } from './DrillFilterChip'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+
+// Sheets are heavy and only meaningful on user interaction. Split into
+// separate chunks and skip SSR so they don't bloat the initial Records
+// bundle. (#616)
+const AddSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/AddSheet').then((m) => m.AddSheet),
+  { ssr: false },
+)
+const SettlementSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/SettlementSheet').then((m) => m.SettlementSheet),
+  { ssr: false },
+)
+const IncomeSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/IncomeSheet').then((m) => m.IncomeSheet),
+  { ssr: false },
+)
+const FilterSheet = dynamic(() => import('./FilterSheet').then((m) => m.FilterSheet), { ssr: false })
 
 interface Props {
   initial: PagedTxnRow[]
