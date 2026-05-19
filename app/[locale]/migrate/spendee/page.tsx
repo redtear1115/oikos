@@ -10,6 +10,7 @@ import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFoo
 import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
 import { MigrateFaq } from '../_components/MigrateFaq'
 import { MigrateComparison } from '../_components/MigrateComparison'
+import { MigrateOtherSources } from '../_components/MigrateOtherSources'
 
 type Params = Promise<{ locale: string }>
 
@@ -102,6 +103,8 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
       />
 
       <MigrateFaq locale={locale} heading={t.faqHeading} items={page.faq} />
+
+      <MigrateOtherSources locale={locale} currentSource="spendee" copy={t.otherSources} />
 
       <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
 

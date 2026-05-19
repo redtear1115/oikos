@@ -1802,6 +1802,25 @@ export const en: Translations = {
       ],
     },
     footerTrust: 'End-to-end encrypted · this ledger belongs to the two of you',
+    // TODO(#612): en copy below pending native review
+    otherSources: {
+      heading: 'Coming from another app?',
+      cta: 'See the guide',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: 'A couples budgeting app whose updates slowed after a 2024 hand-off.',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: 'Shared wallets are paywalled — export your CSV and bring it over.',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: 'A long-running single-person ledger from Taiwan — convert via template to CSV.',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',

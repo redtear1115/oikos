@@ -1800,6 +1800,24 @@ export const zhCN: Translations = {
       ],
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
+    otherSources: {
+      heading: '从其他工具搬过来',
+      cta: '看搬迁指南',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: '伴侣记账 App，2024 年后更新放缓。',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: '共享账本需解锁才能用，导出 CSV 带过来。',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: '常见的单人记账工具，用模板转成 CSV 即可。',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',

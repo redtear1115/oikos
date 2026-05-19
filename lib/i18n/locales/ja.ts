@@ -1800,6 +1800,25 @@ export const ja: Translations = {
       ],
     },
     footerTrust: 'エンドツーエンド暗号化 · この家計簿はふたりだけのもの',
+    // TODO(#612): ja copy below pending native review
+    otherSources: {
+      heading: 'ほかのアプリから引っ越す',
+      cta: '引っ越しガイドを見る',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: 'カップル向け家計簿アプリ。2024 年の運営交代以降、更新が落ち着いています。',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: '共有ウォレットは有料機能。CSV を書き出して持ち込めます。',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: '台湾で長く使われているひとり向け家計簿。テンプレートで CSV に変換します。',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
