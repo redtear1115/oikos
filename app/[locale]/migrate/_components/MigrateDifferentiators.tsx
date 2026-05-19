@@ -13,7 +13,7 @@ export function MigrateDifferentiators({
   return (
     <section className="space-y-5">
       <h2
-        className="text-[13px] m-0"
+        className="text-label m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--accent)',
@@ -27,14 +27,14 @@ export function MigrateDifferentiators({
         {items.map(({ title, body }, i) => (
           <li
             key={i}
-            className="p-5 md:p-6 rounded-[18px] flex flex-col gap-2"
+            className="p-5 md:p-6 rounded-tile flex flex-col gap-2"
             style={{
               background: 'var(--surface)',
               border: '1px solid var(--hairline)',
             }}
           >
             <span
-              className="text-[13px] md:text-[15px]"
+              className="text-label md:text-body"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
@@ -46,13 +46,13 @@ export function MigrateDifferentiators({
               {String(i + 1).padStart(2, '0')}
             </span>
             <p
-              className="m-0 text-[15px] md:text-[16px] font-semibold"
+              className="m-0 text-body md:text-button font-semibold"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}
             </p>
             <p
-              className="m-0 text-[13px] md:text-[13.5px] leading-[1.65]"
+              className="m-0 text-label md:text-[13.5px] leading-[1.65]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}

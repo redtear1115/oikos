@@ -57,7 +57,7 @@ export function TrustContent() {
           type="button"
           onClick={handleExport}
           disabled={exportPending}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-60"
+          className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-60"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
           <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>

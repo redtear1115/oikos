@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
+import { useWizardSteps } from '@/lib/hooks/useWizardSteps'
 import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import { processFile, type DetectedSource, type ImportRow, type ProcessResult } from '@/lib/csvImport'
 import {
@@ -32,7 +33,8 @@ interface Props {
   history: ImportBatchSummary[]
 }
 
-export type WizardStep = 1 | 2 | 3 | 4
+const WIZARD_STEPS = ['source', 'mapping', 'rules', 'confirm'] as const
+type WizardStep = (typeof WIZARD_STEPS)[number]
 
 export interface ParsedFileState {
   file: File
@@ -58,7 +60,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
   const router = useRouter()
   const hasPartner = partner !== null
 
-  const [step, setStep] = useState<WizardStep>(1)
+  const wizard = useWizardSteps<WizardStep>(WIZARD_STEPS)
   const [parsed, setParsed] = useState<ParsedFileState | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({})
@@ -100,7 +102,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
       }
       setCategoryMap(seedMap)
 
-      setStep(2)
+      wizard.goTo('mapping')
     } catch (err) {
       console.error('CSV parse error', err)
       setParseError(t.settings.import.errors.parseFailed)
@@ -181,7 +183,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
         )
         if (result?.batchId === batchId) {
           setResult(null)
-          setStep(1)
+          wizard.reset()
           setParsed(null)
           setCategoryMap({})
         }
@@ -194,7 +196,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
   }
 
   function reset() {
-    setStep(1)
+    wizard.reset()
     setParsed(null)
     setCategoryMap({})
     setResult(null)
@@ -232,7 +234,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
         />
       ) : (
         <div className="px-4 pt-4 pb-6">
-          <StepIndicator step={step} />
+          <StepIndicator current={wizard.progress} total={wizard.totalSteps} />
 
           {submitError && (
             <div
@@ -247,43 +249,43 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
             </div>
           )}
 
-          {step === 1 && (
+          {wizard.currentStep === 'source' && (
             <StepSource
               onFile={handleFile}
               parseError={parseError}
               parsed={parsed}
-              onNext={() => setStep(2)}
+              onNext={wizard.goNext}
               onReset={reset}
             />
           )}
 
-          {step === 2 && parsed && (
+          {wizard.currentStep === 'mapping' && parsed && (
             <StepMapping
               rows={parsed.result.rows}
               categoryMap={categoryMap}
               onChange={setCategoryMap}
-              onBack={() => setStep(1)}
-              onNext={() => setStep(3)}
+              onBack={wizard.goBack}
+              onNext={wizard.goNext}
             />
           )}
 
-          {step === 3 && parsed && (
+          {wizard.currentStep === 'rules' && parsed && (
             <StepRules
               viewer={viewer}
               partner={partner}
               viewerIsMemberA={viewerIsMemberA}
               rules={rules}
               onChange={setRules}
-              onBack={() => setStep(2)}
-              onNext={() => setStep(4)}
+              onBack={wizard.goBack}
+              onNext={wizard.goNext}
             />
           )}
 
-          {step === 4 && parsed && (
+          {wizard.currentStep === 'confirm' && parsed && (
             <StepConfirm
               rows={parsed.result.rows.map(applyCategoryMap)}
               invalidCount={parsed.result.errors.length}
-              onBack={() => setStep(3)}
+              onBack={wizard.goBack}
               onConfirm={handleSubmit}
               submitting={submitting}
             />
@@ -298,13 +300,13 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
   )
 }
 
-function StepIndicator({ step }: { step: WizardStep }) {
+function StepIndicator({ current, total }: { current: number; total: number }) {
   const t = useTranslations()
   return (
     <div className="text-xs mb-4 px-1" style={{ color: 'var(--ink-3)' }}>
       {t.settings.import.stepLabel
-        .replace('{current}', String(step))
-        .replace('{total}', '4')}
+        .replace('{current}', String(current))
+        .replace('{total}', String(total))}
     </div>
   )
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
+import { SheetBody, SheetHeader } from '@/components/ui/Sheet'
+import { Button } from '@/components/ui/Button'
 import { getPlatform, type Platform } from '@/lib/install-guide'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
@@ -26,33 +28,30 @@ export function InstallGuide({ open, onClose, t }: Props) {
 
   return (
     <SheetFrame open={open} onClose={onClose} ariaLabel={t.installGuide.title} topRadius={28}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-3 pb-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="bg-transparent border-0 text-body cursor-pointer p-1"
-          style={{ color: 'var(--ink-2)' }}
-        >
-          {t.installGuide.close}
-        </button>
-        <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
-          {t.installGuide.title}
+      <SheetHeader
+        title={t.installGuide.title}
+        centered
+        leading={
+          <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
+            {t.installGuide.close}
+          </Button>
+        }
+        hideTrailing
+      />
+
+      <SheetBody>
+        <div className="pb-8">
+          <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+            {t.installGuide.intro}
+          </p>
+
+          {platform === 'ios-safari' && <IosSafariSteps t={t} />}
+          {platform === 'ios-other' && <IosOtherSteps t={t} />}
+          {platform === 'android' && <AndroidSteps t={t} />}
+          {platform === 'desktop' && <DesktopSteps t={t} />}
+          {platform === 'unknown' && <FallbackSteps t={t} />}
         </div>
-        <div className="w-10" />
-      </div>
-
-      <div className="overflow-auto flex-1 px-6 pb-8">
-        <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-          {t.installGuide.intro}
-        </p>
-
-        {platform === 'ios-safari' && <IosSafariSteps t={t} />}
-        {platform === 'ios-other' && <IosOtherSteps t={t} />}
-        {platform === 'android' && <AndroidSteps t={t} />}
-        {platform === 'desktop' && <DesktopSteps t={t} />}
-        {platform === 'unknown' && <FallbackSteps t={t} />}
-      </div>
+      </SheetBody>
     </SheetFrame>
   )
 }
@@ -96,20 +95,20 @@ function IosOtherSteps({ t }: { t: Translations }) {
         dangerouslySetInnerHTML={{ __html: t.installGuide.iosOther.bodyHtml }}
       />
       <div
-        className="rounded-[14px] p-3 flex items-center gap-3 mb-4"
+        className="rounded-bubble p-3 flex items-center gap-3 mb-4"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex-1 text-xs break-all" style={{ color: 'var(--ink-2)' }}>
           {url}
         </div>
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={handleCopy}
-          className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
-          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
+          className="shrink-0"
         >
           {copied ? t.installGuide.iosOther.copied : t.installGuide.iosOther.copy}
-        </button>
+        </Button>
       </div>
     </>
   )

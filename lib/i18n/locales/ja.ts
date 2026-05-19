@@ -113,6 +113,18 @@ export const ja: Translations = {
     f3Body: '保障型と貯蓄型を並べて、被保険者・受取人・更新日を一画面で。',
     f4Title: '振り返り',
     f4Body: '月次レビュー、カテゴリ分布、章の履歴。使ったお金にストーリーを語らせる。',
+    migrateSection: {
+      kicker: 'FROM ELSEWHERE ──',
+      title: 'ほかの家計簿アプリを使っていますか？',
+      subtitle: 'これまでの記録はそのまま。データを持ってきて、続きから書けます。',
+      honeydueTitle: 'Honeydue から引っ越し',
+      honeydueBody: '更新ペースが落ちてきた？ここ数年の記録をまとめて持ち込めます。',
+      spendeeTitle: 'Spendee から引っ越し',
+      spendeeBody: 'ふたり共有は最初から無料。有料プランの解除は不要です。',
+      cwmoneyTitle: 'CWMoney から引っ越し',
+      cwmoneyBody: 'Excel → CSV テンプレート付き。数分で移し替えられます。',
+      cardAriaLabel: '{source} から Futari へ引っ越し',
+    },
     footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ['ふたり 家計簿', 'Futari 家計簿', '二人の家計簿', "Futari · couple's ledger"],
@@ -126,6 +138,23 @@ export const ja: Translations = {
       '愛車と給油の記録',
       '定期収入',
       'オフライン対応 PWA',
+    ],
+    jsonLdFaq: [
+      {
+        question: 'Futariとは？',
+        answer:
+          'Futariは夫婦・カップル向けに設計された共有家計簿PWAです。自動割り勘、月次精算、家計の資産管理、愛車の給油記録までひとつで管理できます。',
+      },
+      {
+        question: '始め方は？',
+        answer:
+          'Googleアカウントでログインしてふたりの家計簿を作成し、パートナーを招待すれば一緒に記録できます。ホーム画面に追加してPWAとして使え、完全無料です。',
+      },
+      {
+        question: 'データは安全ですか？',
+        answer:
+          'すべてのデータはSupabaseの暗号化データベースに保存され、あなたとパートナーだけがアクセスできます。家計の内容を共有・販売することはありません。',
+      },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: '今月 · 5月',
@@ -161,6 +190,13 @@ export const ja: Translations = {
       recorded: '記録しました NT${amount}',
       updated: '更新しました NT${amount}',
       deleted: '削除しました',
+    },
+    navigation: {
+      next: '次へ',
+      back: '戻る',
+      confirm: '確認',
+      cancel: 'キャンセル',
+      retry: '再試行',
     },
   },
 
@@ -778,7 +814,6 @@ export const ja: Translations = {
         summary: '合計 {total} 件 · 有効 {valid} 件 · 失敗 {invalid} 件',
         sourceDetected: '検出された取り込み元：{source}',
         invalidNote: '失敗した行はスキップされ、エラーログに残ります',
-        nextCta: '次へ',
         retryCta: '別のファイルを選ぶ',
         parseError: '解析できませんでした。ファイル形式を確認してください。',
       },
@@ -789,9 +824,6 @@ export const ja: Translations = {
         targetColumn: '対応するカテゴリ',
         rowCount: '{count} 件',
         keepOriginal: 'その他',
-        autoSuggested: '自動候補',
-        nextCta: '次へ',
-        backCta: '戻る',
       },
       step3: {
         title: '支払者と分担',
@@ -805,8 +837,6 @@ export const ja: Translations = {
           half: '半々',
         },
         soloHint: 'ソロ中は「すべて自分」に固定されます',
-        nextCta: '次へ',
-        backCta: '戻る',
       },
       step4: {
         title: 'プレビューと確認',
@@ -823,7 +853,6 @@ export const ja: Translations = {
         moreRows: '他 {count} 件は表示されていません',
         confirmCta: '{count} 件を取り込む',
         confirming: '取り込み中…',
-        backCta: '戻る',
         summary: '{count} 件を保存します · 失敗 {invalid} 件はログに残ります',
       },
       result: {
@@ -1800,6 +1829,25 @@ export const ja: Translations = {
       ],
     },
     footerTrust: 'エンドツーエンド暗号化 · この家計簿はふたりだけのもの',
+    // TODO(#612): ja copy below pending native review
+    otherSources: {
+      heading: 'ほかのアプリから引っ越す',
+      cta: '引っ越しガイドを見る',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: 'カップル向け家計簿アプリ。2024 年の運営交代以降、更新が落ち着いています。',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: '共有ウォレットは有料機能。CSV を書き出して持ち込めます。',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: '台湾で長く使われているひとり向け家計簿。テンプレートで CSV に変換します。',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
@@ -2047,17 +2095,17 @@ export const ja: Translations = {
     },
     migrate: {
       honeydue: {
-        title: 'Honeydue から Futari へ引っ越し — Honeydue の代替｜無料のふたり家計簿',
+        title: 'Honeydue から Futari へ引っ越し｜データ移行',
         description: 'Honeydue の更新が落ち着いてきた今、Futari なら 3 分でデータを引っ越して、カップル・夫婦の共同家計簿としてそのまま続けられます。Honeydue の代替として — 無料、広告なし、エンドツーエンド暗号化。',
         ogDescription: 'Honeydue ユーザーの次の住みか — Futari でふたりの家計をそのまま続ける。',
       },
       spendee: {
-        title: 'Spendee の記録を Futari に取り込み — Spendee の代わりになるカップル家計簿',
+        title: 'Spendee から Futari へ｜CSV 取り込み',
         description: 'Spendee の代わりになるカップル・夫婦のための共同家計簿。Spendee の CSV を Futari に取り込んで、パートナーとの記録を続けましょう。共有はもともと無料で標準、課金で解放するものではありません。',
         ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
       },
       cwmoney: {
-        title: 'CWMoney から Futari へ — CWMoney データの書き出し・取り込みガイド',
+        title: 'CWMoney から Futari へ｜Excel 変換ガイド',
         description: 'CWMoney から書き出したデータを別のツールに取り込むには？Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦のための共同家計簿）にアップロードするだけ。',
         ogDescription: 'CWMoney の引っ越し手順 — 変換テンプレートで Excel を CSV にして Futari へ。',
       },

@@ -50,7 +50,7 @@ function FullTrustSection({ t }: { t: LandingStrings }) {
     >
       <div className="max-w-md md:max-w-[860px] mx-auto">
         <p
-          className="m-0 text-center text-[15px] md:text-[18px] leading-[1.7]"
+          className="m-0 text-center text-body md:text-[18px] leading-[1.7]"
           style={{
             color: 'var(--ink-2)',
             letterSpacing: '0.2px',
@@ -92,14 +92,14 @@ function TrustCard({
 }) {
   return (
     <div
-      className="flex items-start gap-4 p-5 md:p-6 rounded-[18px] md:rounded-[22px]"
+      className="flex items-start gap-4 p-5 md:p-6 rounded-tile md:rounded-[22px]"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--hairline)',
       }}
     >
       <div
-        className="flex items-center justify-center shrink-0 w-[40px] h-[40px] md:w-[44px] md:h-[44px] rounded-[12px]"
+        className="flex items-center justify-center shrink-0 w-[40px] h-[40px] md:w-[44px] md:h-[44px] rounded-xl"
         style={{
           background: 'var(--accent-soft)',
           color: 'var(--accent)',
@@ -109,13 +109,13 @@ function TrustCard({
       </div>
       <div className="min-w-0">
         <p
-          className="m-0 text-[15px] md:text-[17px] font-semibold"
+          className="m-0 text-body md:text-[17px] font-semibold"
           style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
         >
           {title}
         </p>
         <p
-          className="m-0 mt-1 text-[13px] md:text-[14px] leading-[1.6]"
+          className="m-0 mt-1 text-label md:text-[14px] leading-[1.6]"
           style={{ color: 'var(--ink-2)' }}
         >
           {body}

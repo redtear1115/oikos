@@ -39,7 +39,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
   return (
     <div>
       <div
-        className="rounded-[20px] overflow-hidden flex flex-col"
+        className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         {([

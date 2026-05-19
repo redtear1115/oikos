@@ -104,7 +104,7 @@ function Blocker({ strings, mode, url }: { strings: Strings; mode: Mode; url: st
           }}
         >
           <div
-            className="text-[11px] uppercase tracking-wide font-medium text-left"
+            className="text-micro uppercase tracking-wide font-medium text-left"
             style={{ color: 'var(--ink-3, #B89C8B)' }}
           >
             {strings.urlLabel}

@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
-import { SettlementSheet, type SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
+import dynamic from 'next/dynamic'
+import type { AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
+import type { SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
 import Link from 'next/link'
-import { FilterSheet, type AssetOption } from './FilterSheet'
+import type { AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
 import { DateRangeChip } from './DateRangeChip'
 import { TabProvider, type RecordsTab } from './TabContext'
@@ -36,14 +37,30 @@ import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
-import { NewFuelLog, type NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
-import { getFuelLogById } from '@/actions/fuelLog'
-import type { FuelType } from '@/lib/fuel'
+import { NewFuelLog } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
+import { useFuelSheet } from './useFuelSheet'
 import { IncomeEmptyState } from '@/app/(dashboard)/dashboard/_components/IncomeEmptyState'
-import { IncomeSheet, type IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
+import type { IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { DrillFilterChip } from './DrillFilterChip'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+
+// Sheets are heavy and only meaningful on user interaction. Split into
+// separate chunks and skip SSR so they don't bloat the initial Records
+// bundle. (#616)
+const AddSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/AddSheet').then((m) => m.AddSheet),
+  { ssr: false },
+)
+const SettlementSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/SettlementSheet').then((m) => m.SettlementSheet),
+  { ssr: false },
+)
+const IncomeSheet = dynamic(
+  () => import('@/app/(dashboard)/dashboard/_components/IncomeSheet').then((m) => m.IncomeSheet),
+  { ssr: false },
+)
+const FilterSheet = dynamic(() => import('./FilterSheet').then((m) => m.FilterSheet), { ssr: false })
 
 interface Props {
   initial: PagedTxnRow[]
@@ -177,20 +194,13 @@ export function RecordsList({
   const [addingIncomeNew, setAddingIncomeNew] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
 
-  // Fuel log edit sheet state
-  const [fuelSheetOpen, setFuelSheetOpen] = useState(false)
-  const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
-  const [fuelCar, setFuelCar] = useState<{
-    id: string; name: string; plate: string
-    fuelType: FuelType | null
-    primaryUserId: string | null
-  } | null>(null)
-  const [, startFuelLoad] = useTransition()
+  // Fuel log edit sheet — open/initial/car/load-transition bundled in one hook.
+  const fuel = useFuelSheet()
 
   // Income edit sheet state
   const [editingIncome, setEditingIncome] = useState<IncomeSheetInitial | null>(null)
 
-  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || addingIncomeNew || filterOpen || fuelSheetOpen || editingIncome !== null
+  const sheetOpen = editingTx !== null || editingSettlement !== null || adding || addingIncomeNew || filterOpen || fuel.open || editingIncome !== null
 
   useRealtimeEvents((event) => {
     if (event.kind === 'income-insert' || event.kind === 'income-update') {
@@ -225,31 +235,8 @@ export function RecordsList({
     }
 
     if (tx.fuelLogId !== null) {
-      // Fuel transaction → load fuel log detail and open NewFuelLog in edit mode
-      startFuelLoad(async () => {
-        const detail = await getFuelLogById(tx.fuelLogId!)
-        if (!detail) return  // stale or unauthorized — silently skip
-        setFuelSheetInitial({
-          fuelLogId: detail.id,
-          transactionId: tx.id,
-          liters: detail.liters,
-          odometer: detail.odometer,
-          station: detail.station,
-          fuelType: detail.fuelType === '98' ? '98' : detail.fuelType === 'diesel' ? 'diesel' : '95',
-          loggedAt: detail.loggedAt,
-          cost: tx.amount,
-          paidBy: tx.paidBy,
-          splitType: tx.splitType ?? 'all_mine',
-        })
-        setFuelCar({
-          id: detail.assetId,
-          name: detail.carName,
-          plate: detail.carPlate ?? '',
-          fuelType: detail.carFuelType,
-          primaryUserId: detail.carPrimaryUserId,
-        })
-        setFuelSheetOpen(true)
-      })
+      // Fuel transaction → load fuel log detail and open NewFuelLog in edit mode.
+      fuel.openFromTx(tx)
       return
     }
 
@@ -559,14 +546,14 @@ export function RecordsList({
       {/* NewFuelLog is mounted lazily because its `car` prop is required and
           only known after the user taps a fuel-log row. Keep this conditional
           last so the slot order above (sheets) stays stable. */}
-      {fuelCar !== null ? (
+      {fuel.car !== null ? (
         <NewFuelLog
-          open={fuelSheetOpen}
-          onClose={() => setFuelSheetOpen(false)}
-          car={fuelCar}
+          open={fuel.open}
+          onClose={fuel.close}
+          car={fuel.car}
           lastOdometer={null}  // not available from records list context
           mode="edit"
-          initial={fuelSheetInitial}
+          initial={fuel.initial}
         />
       ) : null}
     </div>

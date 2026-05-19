@@ -98,7 +98,7 @@ export function ActiveTripBanner({ trips, baseCurrency }: Props) {
       <>
         <div className="px-4 pt-2">
           <div
-            className="flex items-center gap-2.5 rounded-[20px]"
+            className="flex items-center gap-2.5 rounded-card"
             style={{ ...cardStyle, padding: '12px 14px 12px 16px' }}
           >
             <Link
@@ -141,7 +141,7 @@ export function ActiveTripBanner({ trips, baseCurrency }: Props) {
   return (
     <>
       <div className="px-4 pt-2">
-        <div className="relative rounded-[20px]" style={cardStyle}>
+        <div className="relative rounded-card" style={cardStyle}>
           <Link
             href={href}
             className="flex items-stretch no-underline"

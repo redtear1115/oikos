@@ -54,7 +54,7 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
       aria-live="polite"
     >
       <div
-        className="relative rounded-[20px] px-5 pt-5 pb-4"
+        className="relative rounded-card px-5 pt-5 pb-4"
         style={{
           background: 'var(--bg)',
           border: '1px solid var(--hairline)',

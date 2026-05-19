@@ -162,7 +162,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
               style={{ border: 'none' }}
             >
               <span
-                className="w-[30px] h-[30px] rounded-[10px] flex items-center justify-center"
+                className="w-[30px] h-[30px] rounded-chip flex items-center justify-center"
                 style={{ background: 'rgba(31,27,22,0.06)' }}
                 aria-hidden="true"
               >
@@ -202,7 +202,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           </div>
           {isEnded && (
             <span
-              className="shrink-0 px-2 py-0.5 rounded-full text-[11px] tracking-[0.5px]"
+              className="shrink-0 px-2 py-0.5 rounded-full text-micro tracking-[0.5px]"
               style={{
                 background: 'var(--hairline)',
                 color: 'var(--ink-2)',
@@ -219,7 +219,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           will see in the main ledger once they end the trip. */}
       <section className="mt-4 px-4">
         <div
-          className="rounded-[20px] p-5"
+          className="rounded-card p-5"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         >
           <div className="flex items-start justify-between gap-3">
@@ -235,7 +235,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
               </p>
             </div>
             <span
-              className="shrink-0 mt-1 px-2 py-0.5 rounded-full text-[11px] tracking-[0.5px]"
+              className="shrink-0 mt-1 px-2 py-0.5 rounded-full text-micro tracking-[0.5px]"
               style={{
                 background: 'var(--hairline)',
                 color: 'var(--ink-2)',
@@ -323,14 +323,14 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
 
         {records.length === 0 ? (
           <div
-            className="rounded-[18px] py-10 px-6 text-center text-sm leading-relaxed"
+            className="rounded-tile py-10 px-6 text-center text-sm leading-relaxed"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-3)' }}
           >
             {isEnded ? t.tripDetail.emptyEnded : t.tripDetail.emptyActive}
           </div>
         ) : (
           <div
-            className="rounded-[18px] overflow-hidden"
+            className="rounded-tile overflow-hidden"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
           >
             {records.map((r, i) => {
@@ -382,7 +382,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           <button
             type="button"
             onClick={() => setEndOpen(true)}
-            className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+            className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
             style={{
               background: 'var(--surface)',
               border: '1px solid var(--destructive-soft)',
@@ -456,7 +456,7 @@ function PerSideMemberCard(props: {
 }) {
   return (
     <div
-      className="flex-1 rounded-[14px] p-3 flex gap-2.5 items-start"
+      className="flex-1 rounded-bubble p-3 flex gap-2.5 items-start"
       style={{ background: 'var(--bg)', border: '1px solid var(--hairline)' }}
     >
       <Avatar
@@ -517,7 +517,7 @@ function CurrencyBreakdownCard(props: {
   const round = (n: number) => Math.round(n)
   return (
     <div
-      className="rounded-[18px]"
+      className="rounded-tile"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="flex items-baseline justify-between px-4 pt-3 pb-2">

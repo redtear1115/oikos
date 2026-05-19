@@ -17,7 +17,7 @@ export function InfoCard({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="mx-4 rounded-2xl overflow-hidden"
-      style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >{children}</div>
   )
 }
@@ -27,7 +27,7 @@ export function InfoRow({ label, value, mono = false, last = false }: {
 }) {
   return (
     <div
-      className="px-[14px] py-[11px] flex items-center gap-2.5"
+      className="px-3.5 py-[11px] flex items-center gap-2.5"
       style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
     >
       <div
@@ -49,8 +49,8 @@ export function MoneyTwoCol({ month, total, accent }: { month: number; total: nu
   const t = useTranslations()
   return (
     <div
-      className="mx-4 mt-3 flex rounded-2xl px-[14px] py-3 gap-2"
-      style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+      className="mx-4 mt-3 flex rounded-2xl px-3.5 py-3 gap-2"
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       {[{ label: t.assetDetail.money.thisMonth, value: month }, { label: t.assetDetail.money.cumulative, value: total }].map((s, i) => (
         <div key={s.label} className="flex-1 flex items-stretch gap-2">

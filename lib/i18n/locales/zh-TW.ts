@@ -148,6 +148,27 @@ export type Translations = {
     f3Body: string
     f4Title: string
     f4Body: string
+    /** Migrate section (#613) — three locale-aware links to /migrate/* between
+     *  the full trust section and the footer. Strengthens internal link graph
+     *  for SEO and gives visitors arriving from another tool a clear next step.
+     *  Tone: 溫和見證者 — "搬過來 / 帶過來" verbs, no exclamation marks. */
+    migrateSection: {
+      /** ALL CAPS kicker shown above the section title. */
+      kicker: string
+      /** Section heading. */
+      title: string
+      /** One-line subtitle. */
+      subtitle: string
+      /** Per-source card title + body. */
+      honeydueTitle: string
+      honeydueBody: string
+      spendeeTitle: string
+      spendeeBody: string
+      cwmoneyTitle: string
+      cwmoneyBody: string
+      /** Aria label template — `{source}` is the tool name. */
+      cardAriaLabel: string
+    }
     /** Footer trust note. */
     footerTrust: string
     /** schema.org `name` for WebSite + SoftwareApplication JSON-LD (#467). */
@@ -158,6 +179,10 @@ export type Translations = {
     jsonLdAppDescription: string
     /** schema.org SoftwareApplication `featureList` (#467). */
     jsonLdFeatureList: readonly string[]
+    /** schema.org FAQPage entries — answers held to ~40–60 字 to fit AI
+     *  Overview's Answer Capsule extraction window (#611). Per-locale so each
+     *  rendered page emits FAQ schema matching its visible audience language. */
+    jsonLdFaq: readonly { question: string; answer: string }[]
     /** Decorative PhonePreview mock (desktop hero) — not real data (#467). */
     phoneMockBalanceCaption: string
     phoneMockBalancePeriod: string
@@ -207,6 +232,17 @@ export type Translations = {
       recorded: string
       updated: string
       deleted: string
+    }
+    /** Generic wizard-step navigation labels (#632). Reused across the CSV
+     *  import wizard and any future multi-step flows. Distinct from
+     *  `common.back` ("返回" / header back) — these carry step-sequence
+     *  semantics ("上一步" / "next step"). */
+    navigation: {
+      next: string
+      back: string
+      confirm: string
+      cancel: string
+      retry: string
     }
   }
 
@@ -1019,7 +1055,6 @@ export type Translations = {
         summary: string
         sourceDetected: string
         invalidNote: string
-        nextCta: string
         retryCta: string
         parseError: string
       }
@@ -1030,9 +1065,6 @@ export type Translations = {
         targetColumn: string
         rowCount: string
         keepOriginal: string
-        autoSuggested: string
-        nextCta: string
-        backCta: string
       }
       step3: {
         title: string
@@ -1046,8 +1078,6 @@ export type Translations = {
           half: string
         }
         soloHint: string
-        nextCta: string
-        backCta: string
       }
       step4: {
         title: string
@@ -1064,7 +1094,6 @@ export type Translations = {
         moreRows: string
         confirmCta: string
         confirming: string
-        backCta: string
         summary: string
       }
       result: {
@@ -2170,6 +2199,22 @@ export type Translations = {
     }
     /** Slim footer trust copy (mirrors landing footer). */
     footerTrust: string
+    /** Cross-link block shown above the trust block on every /migrate/<source>
+     *  page (#612). Each source page renders the *other two* as cards so users
+     *  who landed on the wrong page can pivot without going back through search. */
+    otherSources: {
+      /** Section kicker above the two cards. */
+      heading: string
+      /** Per-source CTA label (same string reused on all cards). */
+      cta: string
+      /** Per-source short blurb used in both the card body and the
+       *  ItemList JSON-LD description. */
+      items: {
+        honeydue: { name: string; description: string }
+        spendee: { name: string; description: string }
+        cwmoney: { name: string; description: string }
+      }
+    }
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
      *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
      *  Hero h1 / steps live here; SEO `<title>`/`<meta>` live in seo.migrate.*. */
@@ -2415,6 +2460,18 @@ export const zhTW: Translations = {
     f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
     f4Title: '記帳統計',
     f4Body: '月度回顧、分類分佈、章節歷史。讓花過的錢自己說故事，一起回頭看走過的日子。',
+    migrateSection: {
+      kicker: 'FROM ELSEWHERE ──',
+      title: '本來在用別的記帳工具？',
+      subtitle: '原本記過的不用再記一次，把資料帶過來繼續寫。',
+      honeydueTitle: '從 Honeydue 搬過來',
+      honeydueBody: '更新節奏放緩了？把這幾年的記錄整批帶過來。',
+      spendeeTitle: '從 Spendee 搬過來',
+      spendeeBody: '雙人共享是內建免費的，不必再解鎖付費方案。',
+      cwmoneyTitle: '從 CWMoney 搬過來',
+      cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
+      cardAriaLabel: '從 {source} 搬到 Futari',
+    },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
@@ -2428,6 +2485,23 @@ export const zhTW: Translations = {
       '汽車與油耗紀錄',
       '定期收入',
       '離線瀏覽 PWA',
+    ],
+    jsonLdFaq: [
+      {
+        question: 'Futari 是什麼？',
+        answer:
+          'Futari 是專為夫妻、伴侶設計的雙人共享記帳 PWA，支援自動分攤、AA 結算、家庭資產盤點與愛車油耗紀錄。',
+      },
+      {
+        question: '如何開始使用？',
+        answer:
+          '用 Google 帳號登入後建立兩人帳本，邀請伴侶加入即可一起記帳。可加到手機主畫面當 PWA 使用，完全免費。',
+      },
+      {
+        question: '資料安全嗎？',
+        answer:
+          '所有資料儲存於 Supabase 加密資料庫，僅你和伴侶兩人能存取。我們不會分享或販售你的記帳內容。',
+      },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: '本月 · 5 月',
@@ -2463,6 +2537,13 @@ export const zhTW: Translations = {
       recorded: '已記錄 NT${amount}',
       updated: '已更新 NT${amount}',
       deleted: '已刪除這筆',
+    },
+    navigation: {
+      next: '下一步',
+      back: '上一步',
+      confirm: '確認',
+      cancel: '取消',
+      retry: '重試',
     },
   },
 
@@ -3080,7 +3161,6 @@ export const zhTW: Translations = {
         summary: '共 {total} 筆 · 有效 {valid} 筆 · 失敗 {invalid} 筆',
         sourceDetected: '偵測到來源：{source}',
         invalidNote: '失敗的列會略過匯入，並保留在錯誤紀錄供日後修正',
-        nextCta: '下一步',
         retryCta: '換一個檔案',
         parseError: '解析失敗，請確認檔案格式或換一個檔案重試',
       },
@@ -3091,9 +3171,6 @@ export const zhTW: Translations = {
         targetColumn: '對應到',
         rowCount: '{count} 筆',
         keepOriginal: '其他',
-        autoSuggested: '自動建議',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step3: {
         title: '付款人與分攤方式',
@@ -3107,8 +3184,6 @@ export const zhTW: Translations = {
           half: '一人一半',
         },
         soloHint: '單人狀態下固定為「全部我的」',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step4: {
         title: '預覽並確認',
@@ -3125,7 +3200,6 @@ export const zhTW: Translations = {
         moreRows: '還有 {count} 筆未顯示',
         confirmCta: '確認匯入 {count} 筆',
         confirming: '匯入中…',
-        backCta: '上一步',
         summary: '預計寫入 {count} 筆 · 失敗 {invalid} 筆會保留紀錄',
       },
       result: {
@@ -4101,6 +4175,24 @@ export const zhTW: Translations = {
       ],
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    otherSources: {
+      heading: '從其他工具搬過來',
+      cta: '看搬遷指南',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: '伴侶記帳 App，2024 年後更新放緩。',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: '共享帳本要解鎖才用得到，匯出 CSV 帶過來。',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: '台灣常見的單人記帳工具，用模板轉成 CSV 即可。',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
@@ -4345,17 +4437,17 @@ export const zhTW: Translations = {
     },
     migrate: {
       honeydue: {
-        title: '從 Honeydue 搬遷到 Futari — Honeydue 替代方案｜免費雙人記帳',
+        title: '從 Honeydue 搬家到 Futari｜資料匯入',
         description: 'Honeydue 更新放緩，Futari 是專為夫妻、伴侶設計的共同帳本，讓你 3 分鐘完成資料搬遷，繼續一起記帳。Honeydue 替代方案首選：免費、無廣告、端對端加密。',
         ogDescription: 'Honeydue 用戶的下一站：3 分鐘搬遷到 Futari，雙人記帳繼續。',
       },
       spendee: {
-        title: '從 Spendee 匯入記帳記錄 — Spendee 伴侶記帳替代方案｜Futari',
+        title: '從 Spendee 搬家到 Futari｜CSV 匯入',
         description: 'Spendee 伴侶記帳替代方案——把 Spendee 的 CSV 匯入 Futari，這個專為夫妻、伴侶設計的共同帳本，雙人共享免費內建，不必再為解鎖付費。',
         ogDescription: 'Spendee 用戶的雙人記帳新選擇：上傳 CSV，3 分鐘搬完。',
       },
       cwmoney: {
-        title: '從 CWMoney 搬家到 Futari — CWMoney 資料匯出匯入教學',
+        title: '從 CWMoney 搬家到 Futari｜Excel 匯入',
         description: 'CWMoney 資料匯出後怎麼匯入新工具？用我們提供的 Excel 轉換模板整理成 CSV，再上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，完成搬家。',
         ogDescription: 'CWMoney 用戶搬家指南：Excel 轉 CSV，搬進 Futari 雙人記帳。',
       },

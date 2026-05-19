@@ -106,10 +106,10 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         <div className="flex flex-wrap gap-1.5">
           {[{v: 'cat', label: ts.pet.speciesCat},{v: 'dog', label: ts.pet.speciesDog},{v: 'rabbit', label: ts.pet.speciesRabbit},{v: 'bird', label: ts.pet.speciesBird},{v: 'fish', label: ts.pet.speciesFish},{v: 'other', label: ts.pet.speciesOther}].map(o => (
             <button key={o.v} type="button" onClick={() => setSpecies(o.v)}
-              className="h-[34px] px-[14px] rounded-[10px] text-label"
+              className="h-chip px-3.5 rounded-chip text-label"
               style={{
                 border: species === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
-                background: species === o.v ? 'rgba(58,36,25,0.04)' : '#fff',
+                background: species === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: species === o.v ? 'var(--ink)' : 'var(--ink-2)',
                 fontWeight: species === o.v ? 600 : 500,
               }}>{o.label}</button>

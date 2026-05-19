@@ -143,7 +143,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         left: anchor.left,
         top: anchor.top,
         zIndex: 100,
-        background: '#fff',
+        background: 'var(--surface)',
         border: '1px solid var(--hairline)',
         padding: 12,
         width: 280,

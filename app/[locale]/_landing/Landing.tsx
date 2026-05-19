@@ -20,6 +20,13 @@ type Props = {
   ctaHref: string
   /** 「已有帳號」次要 link — 永遠指 sign-in（locale-aware）。 */
   signInHref: string
+  /** Locale-aware /migrate/* hrefs (#613). Three internal links to strengthen
+   *  the link graph for SEO and offer cross-tool migrants a direct path. */
+  migrateHrefs: {
+    honeydue: string
+    spendee: string
+    cwmoney: string
+  }
   languageSwitcher?: ReactNode
 }
 
@@ -27,7 +34,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
+export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -51,7 +58,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
         <div className="flex items-center gap-2">
           <FutariMark size={22} />
           <span
-            className="text-[17px] md:text-[22px] font-medium"
+            className="text-[17px] md:text-title font-medium"
             style={{
               fontFamily: 'var(--font-fraunces)',
               letterSpacing: '-0.2px',
@@ -60,7 +67,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
             Futari
           </span>
           <span
-            className="hidden md:inline text-[11px] ml-2"
+            className="hidden md:inline text-micro ml-2"
             style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
             ふたり
@@ -146,7 +153,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
 
             {/* body — both layouts */}
             <p
-              className="m-0 mt-5 md:mt-7 text-[15px] md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
+              className="m-0 mt-5 md:mt-7 text-body md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
               style={{
                 color: 'var(--ink-2)',
                 maxWidth: 320,
@@ -158,7 +165,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mt-10">
               <Link
                 href={ctaHref}
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-[14px] text-white text-[16px] font-semibold cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-semibold cursor-pointer"
                 style={{
                   background: 'var(--ink)',
                   letterSpacing: '1.8px',
@@ -170,7 +177,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
               </Link>
               <Link
                 href={signInHref}
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-[14px] text-[14px] cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-[14px] cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -282,6 +289,11 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
           and Footer so it lands in the user's decision moment. */}
       <TrustSection t={t} variant="full" />
 
+      {/* MIGRATE — three locale-aware /migrate/* links (#613). Strengthens the
+          internal link graph for SEO and gives visitors arriving from another
+          tool a direct next step. */}
+      <MigrateLinksSection t={t} migrateHrefs={migrateHrefs} />
+
       {/* FOOTER */}
       <footer
         className="relative z-10 px-6 md:px-16 py-8 md:py-6 flex flex-col md:flex-row items-center md:justify-between gap-4"
@@ -303,7 +315,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
         <div className="flex items-center gap-3">
           {languageSwitcher}
           <span
-            className="text-[11px]"
+            className="text-micro"
             style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
           >
             © 2026 · MADE IN TAIWAN
@@ -311,6 +323,106 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
         </div>
       </footer>
     </main>
+  )
+}
+
+function MigrateLinksSection({
+  t,
+  migrateHrefs,
+}: {
+  t: LandingStrings
+  migrateHrefs: Props['migrateHrefs']
+}) {
+  const items = [
+    {
+      href: migrateHrefs.honeydue,
+      source: 'Honeydue',
+      title: t.migrateSection.honeydueTitle,
+      body: t.migrateSection.honeydueBody,
+    },
+    {
+      href: migrateHrefs.spendee,
+      source: 'Spendee',
+      title: t.migrateSection.spendeeTitle,
+      body: t.migrateSection.spendeeBody,
+    },
+    {
+      href: migrateHrefs.cwmoney,
+      source: 'CWMoney',
+      title: t.migrateSection.cwmoneyTitle,
+      body: t.migrateSection.cwmoneyBody,
+    },
+  ]
+
+  return (
+    <section
+      className="relative z-10 px-5 md:px-16 py-12 md:py-16"
+      style={{ background: 'var(--surface-alt)' }}
+    >
+      <div className="max-w-md md:max-w-[1080px] mx-auto">
+        <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
+          <div>
+            <p
+              className="m-0"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontSize: 12,
+                letterSpacing: '3.5px',
+                color: 'var(--accent)',
+              }}
+            >
+              {t.migrateSection.kicker}
+            </p>
+            <h2
+              className="m-0 mt-1.5 text-[20px] md:text-[28px]"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontWeight: 500,
+                letterSpacing: '-0.3px',
+              }}
+            >
+              {t.migrateSection.title}
+            </h2>
+          </div>
+          <p
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-[14px]"
+            style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
+          >
+            {t.migrateSection.subtitle}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          {items.map((item) => (
+            <Link
+              key={item.source}
+              href={item.href}
+              aria-label={t.migrateSection.cardAriaLabel.replace('{source}', item.source)}
+              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--hairline)',
+                color: 'var(--ink)',
+                textDecoration: 'none',
+              }}
+            >
+              <p
+                className="m-0 text-body md:text-[16px] font-semibold"
+                style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
+              >
+                {item.title}
+              </p>
+              <p
+                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {item.body}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -331,18 +443,18 @@ function FeatureCard({
 }) {
   return (
     <div
-      className="p-4 md:p-6 flex flex-col rounded-[18px] md:rounded-[22px]"
+      className="p-4 md:p-6 flex flex-col rounded-tile md:rounded-[22px]"
       style={{ background: 'var(--surface)', minHeight: 168 }}
     >
       <div className="flex items-center justify-between mb-3 md:mb-[22px]">
         <div
-          className="flex items-center justify-center w-[38px] h-[38px] md:w-12 md:h-12 rounded-[12px] md:rounded-[14px]"
+          className="flex items-center justify-center w-[38px] h-[38px] md:w-12 md:h-12 rounded-xl md:rounded-bubble"
           style={{ background: chipBg, color: chipColor }}
         >
           {glyph}
         </div>
         <span
-          className="text-[13px] md:text-[16px]"
+          className="text-label md:text-button"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontStyle: 'italic',
@@ -354,7 +466,7 @@ function FeatureCard({
         </span>
       </div>
       <p
-        className="m-0 mb-1.5 md:mb-2 text-[15px] md:text-[19px] font-semibold"
+        className="m-0 mb-1.5 md:mb-2 text-body md:text-[19px] font-semibold"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {title}

@@ -33,7 +33,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
   }
 
   return (
-    <section className="flex flex-col gap-3 px-4 py-5 rounded-[20px]" style={{ background: 'var(--surface)' }}>
+    <section className="flex flex-col gap-3 px-4 py-5 rounded-card" style={{ background: 'var(--surface)' }}>
       <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
         <span>{viewerName}{t.splitRatioSection.meSuffix}{ratioA}%</span>
         <span>{partnerName}{t.splitRatioSection.partnerSuffix}{100 - ratioA}%</span>

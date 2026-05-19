@@ -114,6 +114,18 @@ export const zhCN: Translations = {
     f3Body: '保护型、储蓄型保单分页，被保人、受益人、续期日，一页看完每一份为对方留下的安排。',
     f4Title: '记账统计',
     f4Body: '月度回顾、分类分布、章节历史。让花过的钱自己说故事，一起回头看走过的日子。',
+    migrateSection: {
+      kicker: 'FROM ELSEWHERE ──',
+      title: '原本在用别的记账工具？',
+      subtitle: '之前记过的不用再记一次，把数据带过来继续写。',
+      honeydueTitle: '从 Honeydue 搬过来',
+      honeydueBody: '更新节奏慢了？把这几年的记录整批带过来。',
+      spendeeTitle: '从 Spendee 搬过来',
+      spendeeBody: '双人共享是内建免费的，不必再解锁付费方案。',
+      cwmoneyTitle: '从 CWMoney 搬过来',
+      cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
+      cardAriaLabel: '从 {source} 搬到 Futari',
+    },
     footerTrust: '端到端加密 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ['Futari 家计簿', '两个人的家计簿', 'ふたり 家計簿', "Futari · couple's ledger"],
@@ -127,6 +139,23 @@ export const zhCN: Translations = {
       '汽车与油耗记录',
       '定期收入',
       '离线浏览 PWA',
+    ],
+    jsonLdFaq: [
+      {
+        question: 'Futari 是什么？',
+        answer:
+          'Futari 是专为夫妻、伴侣设计的双人共享记账 PWA，支持自动分摊、AA 结算、家庭资产盘点与爱车油耗记录。',
+      },
+      {
+        question: '如何开始使用？',
+        answer:
+          '用 Google 账号登录后建立两人账本，邀请伴侣加入即可一起记账。可加到手机主屏幕当 PWA 使用，完全免费。',
+      },
+      {
+        question: '数据安全吗？',
+        answer:
+          '所有数据存储于 Supabase 加密数据库，仅你和伴侣两人能访问。我们不会分享或出售你的记账内容。',
+      },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: '本月 · 5 月',
@@ -162,6 +191,13 @@ export const zhCN: Translations = {
       recorded: '已记录 NT${amount}',
       updated: '已更新 NT${amount}',
       deleted: '已删除这笔',
+    },
+    navigation: {
+      next: '下一步',
+      back: '上一步',
+      confirm: '确认',
+      cancel: '取消',
+      retry: '重试',
     },
   },
 
@@ -779,7 +815,6 @@ export const zhCN: Translations = {
         summary: '共 {total} 笔 · 有效 {valid} 笔 · 失败 {invalid} 笔',
         sourceDetected: '检测到来源：{source}',
         invalidNote: '失败的行会跳过导入，并保留在错误记录供日后修正',
-        nextCta: '下一步',
         retryCta: '换一个文件',
         parseError: '解析失败，请确认文件格式或换一个文件重试',
       },
@@ -790,9 +825,6 @@ export const zhCN: Translations = {
         targetColumn: '对应到',
         rowCount: '{count} 笔',
         keepOriginal: '其他',
-        autoSuggested: '自动建议',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step3: {
         title: '付款人与分摊方式',
@@ -806,8 +838,6 @@ export const zhCN: Translations = {
           half: '一人一半',
         },
         soloHint: '单人状态下固定为「全部我的」',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step4: {
         title: '预览并确认',
@@ -824,7 +854,6 @@ export const zhCN: Translations = {
         moreRows: '还有 {count} 笔未显示',
         confirmCta: '确认导入 {count} 笔',
         confirming: '导入中…',
-        backCta: '上一步',
         summary: '预计写入 {count} 笔 · 失败 {invalid} 笔会保留记录',
       },
       result: {
@@ -1800,6 +1829,24 @@ export const zhCN: Translations = {
       ],
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
+    otherSources: {
+      heading: '从其他工具搬过来',
+      cta: '看搬迁指南',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: '伴侣记账 App，2024 年后更新放缓。',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: '共享账本需解锁才能用，导出 CSV 带过来。',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: '常见的单人记账工具，用模板转成 CSV 即可。',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
@@ -2044,17 +2091,17 @@ export const zhCN: Translations = {
     },
     migrate: {
       honeydue: {
-        title: '从 Honeydue 搬迁到 Futari — Honeydue 替代方案｜免费双人记账',
+        title: '从 Honeydue 搬家到 Futari｜数据导入',
         description: 'Honeydue 更新放缓，Futari 是专为夫妻、情侣设计的共同账本，让你 3 分钟完成数据搬迁，继续一起记账。Honeydue 替代方案首选：免费、无广告、端到端加密。',
         ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {
-        title: '从 Spendee 导入记账记录 — Spendee 伴侣记账替代方案｜Futari',
+        title: '从 Spendee 搬家到 Futari｜CSV 导入',
         description: 'Spendee 伴侣记账替代方案——把 Spendee 的 CSV 导入 Futari，这个专为夫妻、情侣设计的共同账本，双人共享免费内建，不必再为解锁付费。',
         ogDescription: 'Spendee 用户的双人记账新选择：上传 CSV，3 分钟搬完。',
       },
       cwmoney: {
-        title: '从 CWMoney 搬家到 Futari — CWMoney 数据导出导入教程',
+        title: '从 CWMoney 搬家到 Futari｜Excel 导入',
         description: 'CWMoney 数据导出后怎么导入新工具？用我们提供的 Excel 转换模板整理成 CSV，再上传到 Futari 这个专为夫妻、情侣设计的共同账本，完成搬家。',
         ogDescription: 'CWMoney 用户搬家指南：Excel 转 CSV，搬进 Futari 双人记账。',
       },

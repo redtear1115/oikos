@@ -4,13 +4,13 @@ import { useCallback, useState } from 'react'
 import {
   computeStats,
   decodeBytes,
-  detectSource,
-  parseCsv,
+  detectCsvSource,
+  parseCsvText,
   type CsvRow,
   type CsvStats,
   type DetectedEncoding,
   type MigrateSource,
-} from './csv'
+} from '@/lib/csvImport'
 
 export type CsvPreviewStatus = 'idle' | 'parsing' | 'ready' | 'error'
 
@@ -51,9 +51,8 @@ export function useCsvPreview({ hint = 'unknown' }: { hint?: MigrateSource } = {
     try {
       const buffer = await file.arrayBuffer()
       const { text, encoding } = decodeBytes(buffer)
-      const { headers, rows } = parseCsv(text)
-      const sniffed = detectSource(headers)
-      const detectedSource = sniffed !== 'unknown' ? sniffed : hint
+      const { headers, rows } = parseCsvText(text)
+      const detectedSource = detectCsvSource(headers) ?? hint
       const stats = computeStats(rows)
       setState({
         status: 'ready',

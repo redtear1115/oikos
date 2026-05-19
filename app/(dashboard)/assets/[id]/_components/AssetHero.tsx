@@ -25,7 +25,7 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
     <button
       type="button"
       onClick={onClick}
-      className="w-[30px] h-[30px] rounded-[10px] shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
+      className="w-[30px] h-[30px] rounded-chip shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
       style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
       aria-label={ariaLabel}
     >

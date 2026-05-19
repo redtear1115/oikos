@@ -15,7 +15,7 @@ export function MigrateSteps({
   return (
     <section className="space-y-4">
       <h2
-        className="text-[13px] m-0"
+        className="text-label m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--accent)',
@@ -29,11 +29,11 @@ export function MigrateSteps({
         {steps.map((node, i) => (
           <li
             key={i}
-            className="flex gap-5 items-start text-[14px] md:text-[15px] leading-[1.75] py-4 first:pt-2"
+            className="flex gap-5 items-start text-[14px] md:text-body leading-[1.75] py-4 first:pt-2"
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >
             <span
-              className="shrink-0 inline-block text-[16px] md:text-[18px]"
+              className="shrink-0 inline-block text-button md:text-[18px]"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
@@ -93,7 +93,7 @@ export function MigrateHero({
         {title}
       </h1>
       <p
-        className="text-[15px] md:text-[17px] leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
+        className="text-body md:text-[17px] leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
         style={{ color: 'var(--ink-2)', maxWidth: 520 }}
       >
         {subtitle}

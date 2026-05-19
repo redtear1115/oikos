@@ -74,13 +74,13 @@ export function PhonePreview({ t }: Props) {
             </div>
             <div className="flex items-center gap-1.5">
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-semibold"
                 style={{ background: 'var(--accent)' }}
               >
                 M
               </div>
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-semibold"
                 style={{ background: 'var(--asset-color-house)' }}
               >
                 T
@@ -109,7 +109,7 @@ export function PhonePreview({ t }: Props) {
               NT$ 1,240
             </p>
             <p
-              className="m-0 mt-1 text-[11px]"
+              className="m-0 mt-1 text-micro"
               style={{ color: 'var(--ink-2)' }}
             >
               {t.phoneMockBalancePeriod}
@@ -133,7 +133,7 @@ export function PhonePreview({ t }: Props) {
                 }}
               >
                 <div
-                  className="w-7 h-7 rounded-[9px] flex items-center justify-center text-[11px] font-semibold"
+                  className="w-7 h-7 rounded-[9px] flex items-center justify-center text-micro font-semibold"
                   style={{
                     background: `color-mix(in srgb, ${r.c} 35%, white)`,
                     color: r.c,
@@ -165,7 +165,7 @@ export function PhonePreview({ t }: Props) {
             {assetChips.map((a, i) => (
               <div
                 key={i}
-                className="flex-1 h-9 rounded-[11px] flex items-center justify-center text-[15px]"
+                className="flex-1 h-9 rounded-[11px] flex items-center justify-center text-body"
                 style={{
                   background: `color-mix(in srgb, ${a.c} 35%, white)`,
                   color: a.c,

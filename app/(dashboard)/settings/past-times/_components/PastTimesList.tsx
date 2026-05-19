@@ -95,7 +95,7 @@ export function PastTimesList({
             return (
               <li
                 key={e.id}
-                className="rounded-[20px] px-5 py-4 flex flex-col gap-3"
+                className="rounded-card px-5 py-4 flex flex-col gap-3"
                 style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
               >
                 <div>
@@ -123,7 +123,7 @@ export function PastTimesList({
                     type="button"
                     onClick={() => handleEnter(e.id)}
                     disabled={pending || isPinned}
-                    className="self-start h-10 px-4 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
+                    className="self-start h-10 px-4 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
                     style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
                   >
                     {isPinned ? t.bannerHeading

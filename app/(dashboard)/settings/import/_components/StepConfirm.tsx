@@ -4,6 +4,8 @@ import { useTranslations } from '@/lib/i18n/client'
 import { getCategory } from '@/lib/categories'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import type { ImportRow } from '@/lib/csvImport'
+import { SectionCard } from './SectionCard'
+import { WizardNavButtons } from './WizardNavButtons'
 
 interface Props {
   rows: ImportRow[]
@@ -24,16 +26,7 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
 
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-2xl px-5 py-4"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      >
-        <div className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>
-          {tImport.title}
-        </div>
-        <div className="text-xs mb-3" style={{ color: 'var(--ink-3)' }}>
-          {tImport.subtitle}
-        </div>
+      <SectionCard title={tImport.title} subtitle={tImport.subtitle}>
         <div className="text-xs mb-3" style={{ color: 'var(--ink-2)' }}>
           {tImport.summary
             .replace('{count}', String(rows.length))
@@ -65,7 +58,7 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
                     <td className="py-2 px-2 max-w-[140px] truncate">{row.description || '—'}</td>
                     <td className="py-2 px-2 whitespace-nowrap">
                       <span
-                        className="px-2 py-0.5 rounded-md text-[11px]"
+                        className="px-2 py-0.5 rounded-md text-micro"
                         style={{ background: cat.tint, color: cat.ink }}
                       >
                         {cat.label}
@@ -89,30 +82,20 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
             {tImport.moreRows.replace('{count}', String(remaining))}
           </div>
         )}
-      </div>
+      </SectionCard>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={submitting}
-          className="flex-1 h-11 rounded-xl text-sm cursor-pointer disabled:cursor-default disabled:opacity-50"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
-        >
-          {tImport.backCta}
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={submitting || rows.length === 0}
-          className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer disabled:cursor-default disabled:opacity-50"
-          style={{ background: 'var(--btn-primary-bg)' }}
-        >
-          {submitting
+      <WizardNavButtons
+        onBack={onBack}
+        backLabel={t.common.navigation.back}
+        onNext={onConfirm}
+        nextLabel={
+          submitting
             ? tImport.confirming
-            : tImport.confirmCta.replace('{count}', String(rows.length))}
-        </button>
-      </div>
+            : tImport.confirmCta.replace('{count}', String(rows.length))
+        }
+        loading={submitting}
+        disabled={rows.length === 0}
+      />
     </div>
   )
 }

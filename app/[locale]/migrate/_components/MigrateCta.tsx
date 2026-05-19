@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import type { MigrateSource } from '@/lib/migrate/csv'
+import type { MigrateSource } from '@/lib/csvImport'
 
 type MigrateStrings = Translations['migrate']
 
@@ -25,12 +25,12 @@ export function MigrateCta({ t, signInHref, source }: Props) {
     <div className="space-y-3 text-center">
       <Link
         href={href}
-        className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-[15px] font-semibold cursor-pointer"
+        className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-body font-semibold cursor-pointer"
         style={{ background: 'var(--btn-primary-bg)', letterSpacing: '1.2px', textDecoration: 'none' }}
       >
         {t.cta.button}
       </Link>
-      <p className="text-[13px]" style={{ color: 'var(--ink-2)' }}>
+      <p className="text-label" style={{ color: 'var(--ink-2)' }}>
         {t.cta.hint}
       </p>
     </div>

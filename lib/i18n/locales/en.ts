@@ -114,6 +114,18 @@ export const en: Translations = {
     f3Body: 'Protection and savings policies side by side. Insured, beneficiary, renewal dates — all on one page.',
     f4Title: 'Reflection',
     f4Body: 'Monthly reviews, category breakdowns, chapter history. Let what you spent tell its own story.',
+    migrateSection: {
+      kicker: 'FROM ELSEWHERE ──',
+      title: 'Already using another tool?',
+      subtitle: "You don't have to start over. Bring what you've recorded with you.",
+      honeydueTitle: 'Move from Honeydue',
+      honeydueBody: 'Updates have slowed. Bring your years of records over in one go.',
+      spendeeTitle: 'Move from Spendee',
+      spendeeBody: 'Two-person sharing is free and built in — no paid unlock.',
+      cwmoneyTitle: 'Move from CWMoney',
+      cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
+      cardAriaLabel: 'Move from {source} to Futari',
+    },
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ["Futari · couple's ledger", 'Futari shared finance app', '兩個人的家計簿', 'ふたり 家計簿'],
@@ -127,6 +139,23 @@ export const en: Translations = {
       'Vehicle and fuel logs',
       'Recurring income',
       'Offline-capable PWA',
+    ],
+    jsonLdFaq: [
+      {
+        question: 'What is Futari?',
+        answer:
+          "Futari is a shared-ledger PWA for couples and partners. It handles auto-split expenses, monthly settlement, household assets, and fuel logs in one place.",
+      },
+      {
+        question: 'How do I get started?',
+        answer:
+          'Sign in with Google, create a two-person ledger, and invite your partner. Add it to your home screen as a PWA and start recording together — completely free.',
+      },
+      {
+        question: 'Is my data safe?',
+        answer:
+          "All data is stored in an encrypted Supabase database, accessible only to you and your partner. We don't share or sell your ledger content.",
+      },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
     phoneMockBalancePeriod: 'This month · May',
@@ -162,6 +191,13 @@ export const en: Translations = {
       recorded: 'Recorded NT${amount}',
       updated: 'Updated NT${amount}',
       deleted: 'Deleted',
+    },
+    navigation: {
+      next: 'Next',
+      back: 'Back',
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      retry: 'Retry',
     },
   },
 
@@ -780,7 +816,6 @@ export const en: Translations = {
         summary: '{total} rows · {valid} valid · {invalid} failed',
         sourceDetected: 'Detected source: {source}',
         invalidNote: 'Failed rows are skipped — the error log keeps them for later fixing',
-        nextCta: 'Next',
         retryCta: 'Choose another file',
         parseError: "Couldn't parse that file. Check the format or try another one.",
       },
@@ -791,9 +826,6 @@ export const en: Translations = {
         targetColumn: 'Maps to',
         rowCount: '{count} rows',
         keepOriginal: 'Other',
-        autoSuggested: 'Auto-suggested',
-        nextCta: 'Next',
-        backCta: 'Back',
       },
       step3: {
         title: 'Payer and split',
@@ -807,8 +839,6 @@ export const en: Translations = {
           half: 'Half each',
         },
         soloHint: 'Solo mode — locked to "All mine"',
-        nextCta: 'Next',
-        backCta: 'Back',
       },
       step4: {
         title: 'Preview and confirm',
@@ -825,7 +855,6 @@ export const en: Translations = {
         moreRows: '{count} more rows not shown',
         confirmCta: 'Import {count} rows',
         confirming: 'Importing…',
-        backCta: 'Back',
         summary: '{count} rows will be written · {invalid} failed rows are kept in the log',
       },
       result: {
@@ -1802,6 +1831,25 @@ export const en: Translations = {
       ],
     },
     footerTrust: 'End-to-end encrypted · this ledger belongs to the two of you',
+    // TODO(#612): en copy below pending native review
+    otherSources: {
+      heading: 'Coming from another app?',
+      cta: 'See the guide',
+      items: {
+        honeydue: {
+          name: 'Honeydue',
+          description: 'A couples budgeting app whose updates slowed after a 2024 hand-off.',
+        },
+        spendee: {
+          name: 'Spendee',
+          description: 'Shared wallets are paywalled — export your CSV and bring it over.',
+        },
+        cwmoney: {
+          name: 'CWMoney',
+          description: 'A long-running single-person ledger from Taiwan — convert via template to CSV.',
+        },
+      },
+    },
     pages: {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
@@ -2049,17 +2097,17 @@ export const en: Translations = {
     },
     migrate: {
       honeydue: {
-        title: 'Move from Honeydue to Futari — the free Honeydue alternative for couples',
+        title: 'Import from Honeydue to Futari',
         description: 'Honeydue updates have slowed. Futari is a shared ledger built for couples — move your data over in about 3 minutes and keep budgeting together. The free Honeydue alternative: ad-free, end-to-end encrypted.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
-        title: 'Import Spendee records into Futari — the couples budgeting alternative to Spendee',
+        title: 'Import Spendee CSV into Futari',
         description: 'A couples-first alternative to Spendee. Import your Spendee CSV into Futari, a shared ledger built for partners — sharing is free and built in, no paid unlock required.',
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
-        title: 'Move from CWMoney to Futari — CWMoney export & import guide',
+        title: 'Import from CWMoney to Futari · Excel guide',
         description: 'How to move CWMoney records into a new tool? Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari — a shared ledger built for couples — can import.',
         ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
       },

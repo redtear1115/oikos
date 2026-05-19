@@ -11,6 +11,7 @@ import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
+import { Button } from '@/components/ui/Button'
 import { IncomeChip } from './IncomeChip'
 import { createIncome, editIncome, softDeleteIncome, getInsuranceAssets } from '@/actions/income'
 import { editAndConfirmPending } from '@/actions/recurringIncome'
@@ -116,7 +117,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
     if (initial) {
       setAmount(String(initial.amount))
       setCategory(
-        (PICKABLE_INCOME_CATEGORIES.find(c => c.id === initial.category)?.id as IncomeCategoryId) ?? 'salary'
+        PICKABLE_INCOME_CATEGORIES.find(c => c.id === initial.category)?.id ?? 'salary'
       )
       setRecipientWho(initial.recipientId === viewer.id ? 'M' : 'T')
       const dt = new Date(initial.occurredAt + 'T00:00:00')
@@ -180,9 +181,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             source: note.trim() || null,
             assetId,
           })
-        } else if (isEdit) {
+        } else if (initial && isEdit) {
           await editIncome({
-            oldId: initial!.id,
+            oldId: initial.id,
             amount: n,
             category,
             recipientId,
@@ -225,9 +226,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   }
 
   const performDelete = () => {
-    if (!isEdit) return
+    if (!isEdit || !initial) return
     dispatchDelete(
-      async () => { await softDeleteIncome(initial!.id) },
+      async () => { await softDeleteIncome(initial.id) },
       {
         fallbackMsg: t.common.error,
         offlineMsg: t.common.offlineError,
@@ -248,31 +249,33 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         background={P.sheetBg}
         boxShadow="0 -10px 40px rgba(58,36,25,0.18)"
       >
-        {/* Header */}
+        {/* Header — custom 3-column layout (cancel | centred title | save);
+            SheetHeader primitive only supports a single trailing slot. */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="bg-transparent border-0 text-body cursor-pointer p-1"
-            style={{ color: 'var(--ink-2)' }}
+            className="p-1"
           >
             {t.common.cancel}
-          </button>
+          </Button>
           <div
             className="text-base font-semibold tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
             {isEdit ? t.incomeSheet.titleEdit : t.incomeSheet.title}
           </div>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default transition-colors duration-150"
-            style={{ color: amount && !pending ? P.ink : 'var(--ink-3)' }}
+            className="p-1 font-semibold"
+            style={{ color: P.ink }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
-          </button>
+          </Button>
         </div>
 
         <div ref={scrollableRef} className="overflow-auto flex-1">
@@ -403,7 +406,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 <div
                   className="mt-2 overflow-hidden"
                   style={{
-                    background: '#fff',
+                    background: 'var(--surface)',
                     borderRadius: 14,
                     border: '1px solid var(--hairline)',
                   }}
@@ -501,7 +504,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
                 disabled={pending}
-                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+                className="w-full h-12 rounded-bubble border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
                 style={{
                   background: 'transparent',
                   color: 'var(--destructive)',

@@ -1,22 +1,23 @@
 /**
- * `lib/csvImport/` — the validator + mapper layer that closes issue #553.
+ * `lib/csvImport/` — the unified CSV layer (issue #623) that backs both the
+ * authenticated import wizard and the anonymous /migrate preview pages.
  *
  * Composes the sub-modules into one entrypoint: a `File` goes in, structured
  * `ImportRow[]` + stats + per-row errors come out. Pure async — no DB, no
  * React, no UI. The import action and the preview UI both consume this output.
  *
- * Auto-detect honours #561's marketing-side sniffer; when the file doesn't
- * match a known source it falls through to `'generic'` and the caller is
- * expected to supply a `HeaderMap` via the mapping wizard.
+ * Auto-detect uses the shared header sniffer in `detector.ts`; when the file
+ * doesn't match a known source it falls through to `'generic'` and the caller
+ * is expected to supply a `HeaderMap` via the mapping wizard.
  *
  * OFX / QIF take a separate codepath: `detectFormat` sniffs the decoded text
  * for `OFXHEADER:` / `<OFX>` / `!Type:`, and the file skips the CSV parser
  * to go straight to `ofxParser` / `qifParser` (issue #586).
  */
 
-import { decodeBytes } from '@/lib/migrate/csv'
-
-export type { DetectedSource } from './detector'
+export type { DetectedSource, KnownCsvSource, MigrateSource } from './detector'
+export type { DecodeResult, DetectedEncoding, ParsedCsv, Separator } from './parser'
+export type { CsvRow, CsvStats } from './stats'
 export type {
   HeaderMap,
   ImportPaidBy,
@@ -28,8 +29,15 @@ export type {
   ValidationResult,
 } from './types'
 
-export { detectEncoding, detectSeparator, parseCsvBuffer, parseCsvText } from './parser'
-export { detectFormat, detectSource } from './detector'
+export {
+  decodeBytes,
+  detectEncoding,
+  detectSeparator,
+  parseCsvBuffer,
+  parseCsvText,
+} from './parser'
+export { detectCsvSource, detectFormat, detectSource } from './detector'
+export { computeStats } from './stats'
 export {
   mapCategory,
   mapCwmoney,
@@ -43,7 +51,7 @@ export { parseOfx } from './ofxParser'
 export { parseQif } from './qifParser'
 export { validateRow } from './validator'
 
-import { parseCsvText } from './parser'
+import { decodeBytes, parseCsvText } from './parser'
 import { detectFormat, detectSource, type DetectedSource } from './detector'
 import {
   mapCwmoney,

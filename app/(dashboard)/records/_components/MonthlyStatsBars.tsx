@@ -12,15 +12,14 @@
  *   - IncomeCategoryBar (income category, tinted by lib/incomeCategories)
  *   - AssetBar (per-asset color hashed from id; 未歸屬 → muted)
  *
- * `colorForRow` is exported for callers that need the chart palette to drive
- * pie slices alongside these bars.
+ * `categoryColor` / `assetColor` are exported for callers that need the chart
+ * palette to drive pie slices alongside these bars.
  */
 
 import { getCategory, type CategoryId } from '@/lib/categories'
 import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
 import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transactions'
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
-import type { BreakdownView } from './StatsBreakdownToggle'
 
 // Stable per-asset color for asset breakdown view. Picked from the same hue
 // family as category.chart values so the chart and detail bars feel coherent
@@ -31,19 +30,16 @@ const ASSET_PALETTE = [
 ]
 const ASSET_NULL_COLOR = '#B5B5C0'
 
-export function colorForRow(
-  row: CategoryStatRow | AssetStatRow,
-  view: BreakdownView,
-): { tint: string; chart: string } {
-  if (view === 'category') {
-    const cat = getCategory((row as CategoryStatRow).key)
-    return { tint: cat.tint, chart: cat.chart }
-  }
-  const assetRow = row as AssetStatRow
-  if (assetRow.key === null) {
+export function categoryColor(row: CategoryStatRow): { tint: string; chart: string } {
+  const cat = getCategory(row.key)
+  return { tint: cat.tint, chart: cat.chart }
+}
+
+export function assetColor(row: AssetStatRow): { tint: string; chart: string } {
+  if (row.key === null) {
     return { tint: 'var(--surface)', chart: ASSET_NULL_COLOR }
   }
-  const idx = hashStr(assetRow.key) % ASSET_PALETTE.length
+  const idx = hashStr(row.key) % ASSET_PALETTE.length
   return { tint: 'var(--surface)', chart: ASSET_PALETTE[idx] }
 }
 
@@ -139,7 +135,7 @@ export function AssetBar({
 }) {
   const label = row.key === null ? otherLabel : row.name ?? otherLabel
   const pct = total > 0 ? (row.total / total) * 100 : 0
-  const { tint, chart } = colorForRow(row, 'asset')
+  const { tint, chart } = assetColor(row)
   return (
     <Bar
       label={label}
@@ -189,7 +185,7 @@ function Bar({
         onClick={onSelect}
         aria-pressed={active}
         aria-label={a11yLabel}
-        className="w-full text-left flex flex-col gap-1 cursor-pointer rounded-[10px] -mx-2 px-2 py-1 transition-colors duration-150"
+        className="w-full text-left flex flex-col gap-1 cursor-pointer rounded-chip -mx-2 px-2 py-1 transition-colors duration-150"
         style={{
           background: active ? tint : 'transparent',
           border: 'none',

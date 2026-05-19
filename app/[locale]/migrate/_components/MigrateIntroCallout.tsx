@@ -6,7 +6,7 @@
 export function MigrateIntroCallout({ text }: { text: string }) {
   return (
     <aside
-      className="px-5 md:px-6 py-4 md:py-5 rounded-[14px]"
+      className="px-5 md:px-6 py-4 md:py-5 rounded-bubble"
       style={{
         background: 'var(--surface)',
         borderLeft: '2px solid var(--accent-soft)',

@@ -8,7 +8,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
-import { RecurringRuleSheet } from '@/app/(dashboard)/settings/recurring-income/_components/RecurringRuleSheet'
+import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
@@ -228,7 +228,7 @@ export function SavingsView({
       )}
 
       {details.startsAt && details.endsAt && !progress.awaitingMaturity && (
-        <div className="mx-4 mt-3 p-4 rounded-2xl" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 p-4 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="flex justify-between items-baseline">
             <span className="text-micro" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
             <span className="text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
@@ -285,7 +285,7 @@ export function SavingsView({
             type="button"
             onClick={() => openRecordReturn()}
             className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-micro font-medium"
-            style={{ background: '#fff', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
           >
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -319,7 +319,7 @@ export function SavingsView({
           <SectionHeader>{ts.accountValueLabel}</SectionHeader>
           <div
             className="mx-4 rounded-2xl"
-            style={{ background: '#fff', border: '1px solid var(--hairline)' }}
+            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
           >
             <div className="px-4 py-3 flex items-baseline justify-between">
               <span
@@ -384,7 +384,7 @@ export function SavingsView({
       </InfoCard>
 
       {linkedVehicle && (
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="px-5 py-4">
             <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
               {t.assetDetail.linkedVehicleSection}
@@ -441,11 +441,12 @@ export function SavingsView({
         onMutated={handleAssetMutated}
       />
 
-      {/* #166 — RecurringRuleSheet reused from settings/recurring-income.
-          We pass this single asset in insuranceAssets so the asset link
-          stays prefilled; prefill seeds category=dividend so users land on
-          the most common savings-policy recurrence (still editable). */}
+      {/* #166 — RecurringRuleSheet (income variant) reused for savings-policy
+          recurrences. We pass this single asset in insuranceAssets so the
+          asset link stays prefilled; prefill seeds category=dividend so
+          users land on the most common case (still editable). */}
       <RecurringRuleSheet
+        type="income"
         open={recurringSheetState !== null}
         onClose={() => setRecurringSheetState(null)}
         onMutated={() => { setRecurringSheetState(null); router.refresh() }}
@@ -522,7 +523,7 @@ function RecurringRulesSection({
                 <button
                   type="button"
                   onClick={() => onEdit(rule)}
-                  className="w-full text-left rounded-2xl px-4 py-3 bg-white cursor-pointer"
+                  className="w-full text-left rounded-2xl px-4 py-3 bg-surface cursor-pointer"
                   style={{ border: '1px solid var(--hairline)' }}
                 >
                   <div className="flex items-baseline justify-between gap-3">

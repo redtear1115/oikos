@@ -49,7 +49,7 @@ export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFiel
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
+        className="w-full flex items-center gap-3 px-3.5 py-3 rounded-bubble cursor-pointer text-left"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex-1">

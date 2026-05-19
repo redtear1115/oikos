@@ -1,13 +1,9 @@
-'use client'
-
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
+import Link from 'next/link'
+import { getTranslations } from '@/lib/i18n/t'
 import { DangerZone, type PendingSwap } from './DangerZone'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
-import { useAvatarMenu } from '@/app/(dashboard)/_components/AvatarMenuProvider'
-import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import { useTranslations } from '@/lib/i18n/client'
+import { QuickAccessRow } from './QuickAccessRow'
+import { InstallGuideRow } from './InstallGuideRow'
 
 export interface ViewerInfo {
   id: string
@@ -32,15 +28,11 @@ interface Props {
   tripSummary: { active: number; past: number }
 }
 
-export function SettingsContent({
+export async function SettingsContent({
   viewer, partner, appVersion, currentLocale,
   viewerIsMemberA, groupBalance, pendingSwap, tripSummary,
 }: Props) {
-  const router = useRouter()
-  const t = useTranslations()
-  const { open: openAvatarMenu } = useAvatarMenu()
-
-  const [installGuideOpen, setInstallGuideOpen] = useState(false)
+  const t = await getTranslations()
 
   return (
     <>
@@ -56,39 +48,16 @@ export function SettingsContent({
         </div>
       </div>
 
-      {/* Entry row to the avatar quick-settings sheet — Settings page has no
-          avatar to tap, so this row is its inline equivalent. */}
-      <div className="px-4 mt-2 mb-5">
-        <button
-          type="button"
-          onClick={openAvatarMenu}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-        >
-          <div className="flex items-center gap-3">
-            {/* mini avatar pair as visual hint — matches the dashboard avatar cluster */}
-            <div className="flex">
-              <Avatar memberRole={viewerIsMemberA ? 'a' : 'b'} initial={viewer.displayName[0]?.toUpperCase() ?? '?'} src={viewer.avatarUrl} size={22} />
-              {partner && (
-                <div className="-ml-[6px]">
-                  <Avatar memberRole={viewerIsMemberA ? 'b' : 'a'} initial={partner.displayName[0]?.toUpperCase() ?? '?'} src={partner.avatarUrl} size={22} ring />
-                </div>
-              )}
-            </div>
-            <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-              {t.settings.quickAccessRow}
-            </div>
-          </div>
-          <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
-        </button>
-      </div>
+      <QuickAccessRow
+        viewerIsMemberA={viewerIsMemberA}
+        viewerDisplayName={viewer.displayName}
+        viewerAvatarUrl={viewer.avatarUrl}
+        partner={partner ? { displayName: partner.displayName, avatarUrl: partner.avatarUrl } : null}
+      />
 
       {/* 應用 — install + offline (device/app-level prefs) */}
       <Section title={t.settings.sectionApp}>
-        <Row
-          label={t.settings.addToHomeScreen}
-          onClick={() => setInstallGuideOpen(true)}
-        />
+        <InstallGuideRow />
         <div className="mt-3">
           <OfflineBrowsingToggle />
         </div>
@@ -96,32 +65,23 @@ export function SettingsContent({
 
       {/* 資料 — recurring rules → past chapters → trips → import → trust info */}
       <Section title={t.settings.sectionData}>
-        <Row
-          label={t.settings.recurringSettings}
-          onClick={() => router.push('/settings/recurring')}
-        />
+        <LinkRow href="/settings/recurring" label={t.settings.recurringSettings} />
         <div className="mt-3" />
-        <Row
-          label={t.settings.pastTimes}
-          onClick={() => router.push('/settings/past-times')}
-        />
+        <LinkRow href="/settings/past-times" label={t.settings.pastTimes} />
         <div className="mt-3" />
-        <Row
+        <LinkRow
+          href="/trips"
           label={t.settings.trips}
           secondary={formatTripSummary(tripSummary, t.settings.tripsRow)}
-          onClick={() => router.push('/trips')}
         />
         <div className="mt-3" />
-        <Row
+        <LinkRow
+          href="/settings/import"
           label={t.settings.import.navLabel}
           secondary={t.settings.import.navSecondary}
-          onClick={() => router.push('/settings/import')}
         />
         <div className="mt-3" />
-        <Row
-          label={t.settings.trust}
-          onClick={() => router.push('/settings/trust')}
-        />
+        <LinkRow href="/settings/trust" label={t.settings.trust} />
       </Section>
 
       {partner && (
@@ -145,13 +105,6 @@ export function SettingsContent({
         {' · '}
         <a href="/privacy" className="underline" style={{ color: 'var(--ink-3)' }}>{t.signIn.privacyLink}</a>
       </div>
-
-      <InstallGuide
-        open={installGuideOpen}
-        onClose={() => setInstallGuideOpen(false)}
-        t={t}
-      />
-
     </>
   )
 }
@@ -165,22 +118,19 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Row({
-  label, value, secondary, onClick, disabled,
+function LinkRow({
+  href, label, value, secondary,
 }: {
+  href: string
   label: string
   value?: string
   /** Optional second line under the label, e.g. "1 段進行中 · 過去 3 段". */
   secondary?: string | null
-  onClick: () => void
-  disabled?: boolean
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer disabled:cursor-default disabled:opacity-60"
+    <Link
+      href={href}
+      className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer no-underline"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="flex flex-col min-w-0">
@@ -193,7 +143,7 @@ function Row({
         {value && <span style={{ color: 'var(--ink-2)' }}>「{value}」</span>}
         <span>›</span>
       </div>
-    </button>
+    </Link>
   )
 }
 

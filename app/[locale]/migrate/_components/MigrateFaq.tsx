@@ -41,7 +41,7 @@ export function MigrateFaq({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <h2
-        className="text-[13px] m-0"
+        className="text-label m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--accent)',
@@ -68,7 +68,7 @@ export function MigrateFaq({
               {question}
             </dt>
             <dd
-              className="m-0 mt-2 text-[13px] md:text-[13.5px] leading-[1.7]"
+              className="m-0 mt-2 text-label md:text-[13.5px] leading-[1.7]"
               style={{ color: 'var(--ink-2)' }}
             >
               {answer}

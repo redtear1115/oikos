@@ -16,11 +16,11 @@ export function MigrateTrustBlock({
 }) {
   return (
     <section
-      className="rounded-[20px] px-5 md:px-8 py-7 md:py-9 space-y-5"
+      className="rounded-card px-5 md:px-8 py-7 md:py-9 space-y-5"
       style={{ background: 'var(--surface-alt)' }}
     >
       <h2
-        className="text-[13px] m-0 text-center md:text-left"
+        className="text-label m-0 text-center md:text-left"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--accent)',
@@ -34,17 +34,17 @@ export function MigrateTrustBlock({
         {items.map(({ title, body }) => (
           <li
             key={title}
-            className="p-4 md:p-5 rounded-[14px]"
+            className="p-4 md:p-5 rounded-bubble"
             style={{ background: 'var(--surface)' }}
           >
             <p
-              className="m-0 text-[14px] md:text-[15px] font-semibold"
+              className="m-0 text-[14px] md:text-body font-semibold"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}
             </p>
             <p
-              className="m-0 mt-1.5 text-[12.5px] md:text-[13px] leading-[1.65]"
+              className="m-0 mt-1.5 text-[12.5px] md:text-label leading-[1.65]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}
@@ -76,7 +76,7 @@ export function MigrateFooter({ trustNote }: { trustNote: string }) {
         </span>
       </div>
       <span
-        className="text-[11px]"
+        className="text-micro"
         style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
       >
         © 2026 · MADE IN TAIWAN

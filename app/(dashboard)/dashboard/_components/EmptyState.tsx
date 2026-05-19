@@ -8,7 +8,7 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
   const t = useTranslations()
   return (
     <div className="px-4 pt-2">
-      <div className="rounded-[20px] p-8 text-center"
+      <div className="rounded-card p-8 text-center"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
         <div className="flex justify-center mb-5">
           <FutariMark size={64} />

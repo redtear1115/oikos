@@ -106,7 +106,7 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
 function TripGroup({ trips, variant }: { trips: Trip[]; variant: 'active' | 'past' }) {
   return (
     <div
-      className="rounded-[20px] overflow-hidden"
+      className="rounded-card overflow-hidden"
       style={{
         background: variant === 'past' ? 'transparent' : 'var(--surface)',
         border: '1px solid var(--hairline)',
@@ -135,7 +135,7 @@ function TripRow({ trip, variant, isLast }: { trip: Trip; variant: 'active' | 'p
   return (
     <Link
       href={`/trips/${trip.id}`}
-      className="flex items-center justify-between gap-3 px-[14px] py-3.5 no-underline"
+      className="flex items-center justify-between gap-3 px-3.5 py-3.5 no-underline"
       style={{
         borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
         color: 'var(--ink)',

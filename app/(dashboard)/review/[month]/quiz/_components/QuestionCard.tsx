@@ -182,7 +182,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
                   onClick={() => selectChoice(choice)}
                   className="w-full text-left px-5 py-4 rounded-2xl transition-all"
                   style={{
-                    background: isSelected ? C.accentSoft : '#fff',
+                    background: isSelected ? C.accentSoft : 'var(--surface)',
                     border: `1px solid ${isSelected ? C.accent : C.hairline}`,
                     color: C.ink,
                     fontSize: 'var(--fs-md, 15px)',

@@ -13,7 +13,7 @@ export default function Loading() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-[14px] h-[68px] animate-pulse"
+            className="rounded-bubble h-[68px] animate-pulse"
             style={{ background: 'var(--surface)', opacity: 0.6 }}
           />
         ))}
