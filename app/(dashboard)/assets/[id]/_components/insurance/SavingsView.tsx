@@ -8,7 +8,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
-import { RecurringRuleSheet } from '@/app/(dashboard)/settings/recurring-income/_components/RecurringRuleSheet'
+import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AibutsuHeader, useTint } from '../AibutsuHeader'
@@ -441,11 +441,12 @@ export function SavingsView({
         onMutated={handleAssetMutated}
       />
 
-      {/* #166 — RecurringRuleSheet reused from settings/recurring-income.
-          We pass this single asset in insuranceAssets so the asset link
-          stays prefilled; prefill seeds category=dividend so users land on
-          the most common savings-policy recurrence (still editable). */}
+      {/* #166 — RecurringRuleSheet (income variant) reused for savings-policy
+          recurrences. We pass this single asset in insuranceAssets so the
+          asset link stays prefilled; prefill seeds category=dividend so
+          users land on the most common case (still editable). */}
       <RecurringRuleSheet
+        type="income"
         open={recurringSheetState !== null}
         onClose={() => setRecurringSheetState(null)}
         onMutated={() => { setRecurringSheetState(null); router.refresh() }}
