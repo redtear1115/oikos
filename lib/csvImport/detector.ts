@@ -1,29 +1,48 @@
 /**
- * Source detection for the authenticated import flow.
+ * Source detection for the CSV import pipeline (issue #623 unified layer).
  *
- * Thin wrapper around `lib/migrate/csv.ts`'s sniffer — the marketing preview
- * pages return 'unknown' so they can fall back to the URL hint, but the
- * authenticated importer routes 'unknown' through the generic header-map UI
- * so we surface it as 'generic'.
+ * `detectCsvSource` is the raw header sniffer — returns `null` when the file
+ * doesn't match a known source. The two callers wrap it differently:
+ *   - the authenticated importer maps `null` → `'generic'` so the mapping
+ *     wizard can take over;
+ *   - the anonymous /migrate preview maps `null` → `'unknown'` and falls back
+ *     to the page-level URL hint.
  *
  * `detectFormat` is the upstream sibling: it sniffs the file as a whole
- * (OFX / QIF / CSV) before we even know there are CSV headers. OFX and QIF
- * skip the CSV parser entirely and route to `ofxParser` / `qifParser`.
+ * (OFX / QIF / CSV) before we know there are CSV headers. OFX and QIF skip the
+ * CSV parser entirely and route to `ofxParser` / `qifParser`.
  */
 
-import { detectSource as detectMigrateSource } from '@/lib/migrate/csv'
+export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
+export type MigrateSource = KnownCsvSource | 'unknown'
+export type DetectedSource = KnownCsvSource | 'generic' | 'ofx' | 'qif'
 
-export type DetectedSource =
-  | 'honeydue'
-  | 'spendee'
-  | 'cwmoney'
-  | 'generic'
-  | 'ofx'
-  | 'qif'
+/**
+ * Best-effort source detection by header signature. Returns `null` rather
+ * than guessing — callers decide how to label unknown files.
+ */
+export function detectCsvSource(headers: readonly string[]): KnownCsvSource | null {
+  const lowered = headers.map(h => h.trim().toLowerCase())
+  const has = (name: string) => lowered.includes(name)
+  const hasAll = (...names: string[]) => names.every(has)
+
+  // CWMoney: 中文欄位（日期 + 金額 + 類別）
+  if (headers.some(h => h.includes('日期')) && headers.some(h => h.includes('金額'))) {
+    return 'cwmoney'
+  }
+  // Spendee: distinctive "Category name" + "Wallet" pair
+  if (hasAll('date', 'amount') && (has('category name') || has('wallet'))) {
+    return 'spendee'
+  }
+  // Honeydue: Date + Name + Category + Amount + Account
+  if (hasAll('date', 'amount') && has('account') && (has('name') || has('description'))) {
+    return 'honeydue'
+  }
+  return null
+}
 
 export function detectSource(headers: readonly string[]): DetectedSource {
-  const sniffed = detectMigrateSource(headers)
-  return sniffed === 'unknown' ? 'generic' : sniffed
+  return detectCsvSource(headers) ?? 'generic'
 }
 
 /**

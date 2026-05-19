@@ -1,15 +1,24 @@
 /**
- * Buffer → parsed CSV for the authenticated import flow (issue #553).
+ * Buffer → parsed CSV — the canonical CSV reader for both the authenticated
+ * import wizard and the anonymous /migrate preview pages (issue #623).
  *
- * Reuses `lib/migrate/csv.ts` for encoding detection; adds tab-vs-comma
- * separator auto-detection that the anonymous /migrate preview doesn't need
- * (TSV exports are common from Numbers / Google Sheets copy-paste).
+ * Encoding detection covers UTF-8 (with/without BOM) and Big5 — the Big5
+ * fallback exists for CWMoney and other Taiwan-era exports that still ship in
+ * legacy encoding; we try UTF-8 first with `fatal: true` so invalid sequences
+ * trigger the fallback rather than silently producing mojibake.
+ *
+ * The tokenizer is parameterised by separator so the wizard can accept TSV
+ * paste-ins from Numbers / Google Sheets; the marketing preview always sees
+ * comma CSVs and ignores the detected separator.
  */
 
-import { decodeBytes, type DetectedEncoding } from '@/lib/migrate/csv'
-
-export type { DetectedEncoding }
+export type DetectedEncoding = 'utf-8' | 'utf-8-bom' | 'big5'
 export type Separator = ',' | '\t'
+
+export interface DecodeResult {
+  text: string
+  encoding: DetectedEncoding
+}
 
 export interface ParsedCsv {
   headers: string[]
@@ -17,9 +26,28 @@ export interface ParsedCsv {
   separator: Separator
 }
 
+// ──────────────────────────── Decoding ────────────────────────────
+
+export function decodeBytes(buffer: ArrayBuffer): DecodeResult {
+  const bytes = new Uint8Array(buffer)
+  if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    const text = new TextDecoder('utf-8').decode(bytes.subarray(3))
+    return { text, encoding: 'utf-8-bom' }
+  }
+  try {
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+    return { text, encoding: 'utf-8' }
+  } catch {
+    const text = new TextDecoder('big5').decode(bytes)
+    return { text, encoding: 'big5' }
+  }
+}
+
 export function detectEncoding(buffer: ArrayBuffer): DetectedEncoding {
   return decodeBytes(buffer).encoding
 }
+
+// ──────────────────────────── Parsing ────────────────────────────
 
 /** Pick whichever delimiter appears more often on the header line; ties go to comma. */
 export function detectSeparator(firstLine: string): Separator {

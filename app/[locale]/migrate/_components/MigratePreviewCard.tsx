@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import type { CsvStats, DetectedEncoding, MigrateSource } from '@/lib/migrate/csv'
+import type { CsvStats, DetectedEncoding, MigrateSource } from '@/lib/csvImport'
 
 type MigrateStrings = Translations['migrate']
 
