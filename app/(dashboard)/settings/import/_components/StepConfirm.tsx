@@ -99,7 +99,7 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
           className="flex-1 h-11 rounded-xl text-sm cursor-pointer disabled:cursor-default disabled:opacity-50"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
         >
-          {tImport.backCta}
+          {t.common.navigation.back}
         </button>
         <button
           type="button"

@@ -208,6 +208,17 @@ export type Translations = {
       updated: string
       deleted: string
     }
+    /** Generic wizard-step navigation labels (#632). Reused across the CSV
+     *  import wizard and any future multi-step flows. Distinct from
+     *  `common.back` ("返回" / header back) — these carry step-sequence
+     *  semantics ("上一步" / "next step"). */
+    navigation: {
+      next: string
+      back: string
+      confirm: string
+      cancel: string
+      retry: string
+    }
   }
 
   splitType: {
@@ -1019,7 +1030,6 @@ export type Translations = {
         summary: string
         sourceDetected: string
         invalidNote: string
-        nextCta: string
         retryCta: string
         parseError: string
       }
@@ -1030,9 +1040,6 @@ export type Translations = {
         targetColumn: string
         rowCount: string
         keepOriginal: string
-        autoSuggested: string
-        nextCta: string
-        backCta: string
       }
       step3: {
         title: string
@@ -1046,8 +1053,6 @@ export type Translations = {
           half: string
         }
         soloHint: string
-        nextCta: string
-        backCta: string
       }
       step4: {
         title: string
@@ -1064,7 +1069,6 @@ export type Translations = {
         moreRows: string
         confirmCta: string
         confirming: string
-        backCta: string
         summary: string
       }
       result: {
@@ -2464,6 +2468,13 @@ export const zhTW: Translations = {
       updated: '已更新 NT${amount}',
       deleted: '已刪除這筆',
     },
+    navigation: {
+      next: '下一步',
+      back: '上一步',
+      confirm: '確認',
+      cancel: '取消',
+      retry: '重試',
+    },
   },
 
   splitType: {
@@ -3080,7 +3091,6 @@ export const zhTW: Translations = {
         summary: '共 {total} 筆 · 有效 {valid} 筆 · 失敗 {invalid} 筆',
         sourceDetected: '偵測到來源：{source}',
         invalidNote: '失敗的列會略過匯入，並保留在錯誤紀錄供日後修正',
-        nextCta: '下一步',
         retryCta: '換一個檔案',
         parseError: '解析失敗，請確認檔案格式或換一個檔案重試',
       },
@@ -3091,9 +3101,6 @@ export const zhTW: Translations = {
         targetColumn: '對應到',
         rowCount: '{count} 筆',
         keepOriginal: '其他',
-        autoSuggested: '自動建議',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step3: {
         title: '付款人與分攤方式',
@@ -3107,8 +3114,6 @@ export const zhTW: Translations = {
           half: '一人一半',
         },
         soloHint: '單人狀態下固定為「全部我的」',
-        nextCta: '下一步',
-        backCta: '上一步',
       },
       step4: {
         title: '預覽並確認',
@@ -3125,7 +3130,6 @@ export const zhTW: Translations = {
         moreRows: '還有 {count} 筆未顯示',
         confirmCta: '確認匯入 {count} 筆',
         confirming: '匯入中…',
-        backCta: '上一步',
         summary: '預計寫入 {count} 筆 · 失敗 {invalid} 筆會保留紀錄',
       },
       result: {

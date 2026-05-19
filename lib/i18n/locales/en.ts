@@ -163,6 +163,13 @@ export const en: Translations = {
       updated: 'Updated NT${amount}',
       deleted: 'Deleted',
     },
+    navigation: {
+      next: 'Next',
+      back: 'Back',
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      retry: 'Retry',
+    },
   },
 
   splitType: {
@@ -780,7 +787,6 @@ export const en: Translations = {
         summary: '{total} rows · {valid} valid · {invalid} failed',
         sourceDetected: 'Detected source: {source}',
         invalidNote: 'Failed rows are skipped — the error log keeps them for later fixing',
-        nextCta: 'Next',
         retryCta: 'Choose another file',
         parseError: "Couldn't parse that file. Check the format or try another one.",
       },
@@ -791,9 +797,6 @@ export const en: Translations = {
         targetColumn: 'Maps to',
         rowCount: '{count} rows',
         keepOriginal: 'Other',
-        autoSuggested: 'Auto-suggested',
-        nextCta: 'Next',
-        backCta: 'Back',
       },
       step3: {
         title: 'Payer and split',
@@ -807,8 +810,6 @@ export const en: Translations = {
           half: 'Half each',
         },
         soloHint: 'Solo mode — locked to "All mine"',
-        nextCta: 'Next',
-        backCta: 'Back',
       },
       step4: {
         title: 'Preview and confirm',
@@ -825,7 +826,6 @@ export const en: Translations = {
         moreRows: '{count} more rows not shown',
         confirmCta: 'Import {count} rows',
         confirming: 'Importing…',
-        backCta: 'Back',
         summary: '{count} rows will be written · {invalid} failed rows are kept in the log',
       },
       result: {

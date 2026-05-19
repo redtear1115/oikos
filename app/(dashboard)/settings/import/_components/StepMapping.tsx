@@ -99,7 +99,7 @@ export function StepMapping({ rows, categoryMap, onChange, onBack, onNext }: Pro
 }
 
 function NavButtons({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
-  const t = useTranslations().settings.import.step2
+  const t = useTranslations().common.navigation
   return (
     <div className="flex gap-2">
       <button
@@ -108,7 +108,7 @@ function NavButtons({ onBack, onNext }: { onBack: () => void; onNext: () => void
         className="flex-1 h-11 rounded-xl text-sm cursor-pointer"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
       >
-        {t.backCta}
+        {t.back}
       </button>
       <button
         type="button"
@@ -116,7 +116,7 @@ function NavButtons({ onBack, onNext }: { onBack: () => void; onNext: () => void
         className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer"
         style={{ background: 'var(--btn-primary-bg)' }}
       >
-        {t.nextCta}
+        {t.next}
       </button>
     </div>
   )

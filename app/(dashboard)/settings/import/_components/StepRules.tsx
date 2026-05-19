@@ -102,7 +102,7 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
           className="flex-1 h-11 rounded-xl text-sm cursor-pointer"
           style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
         >
-          {tImport.backCta}
+          {t.common.navigation.back}
         </button>
         <button
           type="button"
@@ -110,7 +110,7 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
           className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer"
           style={{ background: 'var(--btn-primary-bg)' }}
         >
-          {tImport.nextCta}
+          {t.common.navigation.next}
         </button>
       </div>
     </div>
