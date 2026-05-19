@@ -75,7 +75,7 @@ function SceneCard({
     <article
       className="
         flex gap-4 items-start
-        rounded-[18px] p-5
+        rounded-tile p-5
         opacity-0
         [animation:scene-card-in_520ms_cubic-bezier(0.22,0.61,0.36,1)_forwards]
         motion-reduce:opacity-100 motion-reduce:[animation:none]
@@ -87,7 +87,7 @@ function SceneCard({
       }}
     >
       <div
-        className="flex items-center justify-center w-11 h-11 rounded-[14px] shrink-0"
+        className="flex items-center justify-center w-11 h-11 rounded-bubble shrink-0"
         style={{ background: chipBg, color: chipColor }}
         aria-hidden="true"
       >
@@ -96,13 +96,13 @@ function SceneCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-3 mb-1.5">
           <h3
-            className="m-0 text-[15px] font-semibold leading-snug"
+            className="m-0 text-body font-semibold leading-snug"
             style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
           >
             {title}
           </h3>
           <span
-            className="shrink-0 text-[13px]"
+            className="shrink-0 text-label"
             style={{
               fontFamily: 'var(--font-fraunces)',
               fontStyle: 'italic',
@@ -114,7 +114,7 @@ function SceneCard({
           </span>
         </div>
         <p
-          className="m-0 text-[13px] leading-[1.65]"
+          className="m-0 text-label leading-[1.65]"
           style={{ color: 'var(--ink-2)' }}
         >
           {body}

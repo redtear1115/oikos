@@ -62,7 +62,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
           optional sibling slider — keeps the same visual but flattens the
           previously nested button > range into siblings (issue #385). */}
       <div
-        className="flex flex-col gap-2 px-3.5 py-3 rounded-[14px]"
+        className="flex flex-col gap-2 px-3.5 py-3 rounded-bubble"
         style={{
           background: 'var(--surface)',
           border: isWeighted ? '1.5px solid var(--ink)' : '1px solid var(--hairline)',
@@ -121,7 +121,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
             role="radio"
             aria-checked={sel}
             onClick={() => onChange(s.id)}
-            className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left transition-all duration-150"
+            className="flex items-center gap-3 px-3.5 py-3 rounded-bubble cursor-pointer text-left transition-all duration-150"
             style={{
               background: 'var(--surface)',
               border: sel ? '1.5px solid var(--ink)' : '1px solid var(--hairline)',

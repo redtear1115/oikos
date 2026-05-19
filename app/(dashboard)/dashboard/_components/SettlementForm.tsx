@@ -79,7 +79,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
   return (
     <div className="px-5 pt-2 pb-5">
       <div
-        className="rounded-[18px] p-5"
+        className="rounded-tile p-5"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex items-center gap-2 text-xs mb-3" style={{ color: 'var(--ink-3)' }}>
@@ -153,7 +153,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         <div className="mt-4">
           <button
             onClick={() => setShowCal(v => !v)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer text-left"
             style={{ background: 'var(--bg)', border: '1px solid var(--hairline)' }}
           >
             <CalIcon size={20} />

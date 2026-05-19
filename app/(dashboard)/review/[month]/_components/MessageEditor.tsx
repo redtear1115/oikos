@@ -112,7 +112,7 @@ export function MessageEditor({
 
       {/* Self editor */}
       <div
-        className="rounded-[20px] px-4 py-3"
+        className="rounded-card px-4 py-3"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex items-center gap-2 mb-2">
@@ -141,7 +141,7 @@ export function MessageEditor({
           aria-label={isSolo ? tr.editorTitleSolo : tr.editorTitle}
         />
         <div
-          className="mt-2 flex items-center justify-between text-[11px]"
+          className="mt-2 flex items-center justify-between text-micro"
           style={{ color: 'var(--ink-3)' }}
         >
           <span aria-live="polite">
@@ -163,7 +163,7 @@ export function MessageEditor({
       {partner && (
         <div className="mt-3">
           <div
-            className="rounded-[20px] px-4 py-3"
+            className="rounded-card px-4 py-3"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
           >
             <div className="flex items-center gap-2 mb-2">

@@ -630,7 +630,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
                 disabled={pending}
-                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+                className="w-full h-12 rounded-bubble border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
                 style={{
                   background: 'transparent',
                   color: 'var(--destructive)',

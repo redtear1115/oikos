@@ -129,7 +129,7 @@ export function ReviewClient({
       ) : (
         <div className="px-5 py-6">
           <div
-            className="rounded-[20px] px-5 py-6 text-sm"
+            className="rounded-card px-5 py-6 text-sm"
             style={{
               background: 'var(--surface)',
               border: '1px solid var(--hairline)',

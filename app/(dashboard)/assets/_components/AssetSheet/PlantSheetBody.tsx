@@ -144,7 +144,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex gap-1.5">
           {[2, 3, 7, 14, 30].map(d => (
             <button key={d} type="button" onClick={() => setWaterEvery(d)}
-              className="flex-1 h-10 rounded-[10px] text-label font-semibold"
+              className="flex-1 h-10 rounded-chip text-label font-semibold"
               style={{
                 border: waterEvery === d ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: waterEvery === d ? 'rgba(58,36,25,0.04)' : 'var(--surface)',

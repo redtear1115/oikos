@@ -56,7 +56,7 @@ export function DangerZone({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+        className="mt-3 w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--destructive-soft)',
@@ -116,7 +116,7 @@ function SwapPendingBanner({
 
   return (
     <div
-      className="rounded-[20px] px-5 py-4 flex flex-col gap-3"
+      className="rounded-card px-5 py-4 flex flex-col gap-3"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--hairline)',
@@ -134,7 +134,7 @@ function SwapPendingBanner({
             type="button"
             onClick={run(cancelSwap)}
             disabled={busy}
-            className="flex-1 h-10 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
+            className="flex-1 h-10 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{
               background: 'var(--btn-secondary-bg)',
               color: 'var(--btn-secondary-text)',
@@ -149,7 +149,7 @@ function SwapPendingBanner({
               type="button"
               onClick={run(cancelSwap)}
               disabled={busy}
-              className="flex-1 h-10 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
+              className="flex-1 h-10 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{
                 background: 'var(--btn-secondary-bg)',
                 color: 'var(--btn-secondary-text)',
@@ -162,7 +162,7 @@ function SwapPendingBanner({
               type="button"
               onClick={run(confirmSwap)}
               disabled={busy}
-              className="flex-1 h-10 rounded-[12px] text-sm font-semibold cursor-pointer disabled:opacity-50"
+              className="flex-1 h-10 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {busy ? banner.processing : banner.acceptCta}

@@ -201,7 +201,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center"
+            className="w-8 h-8 rounded-chip flex items-center justify-center"
             style={{ background: 'rgba(58,36,25,0.06)' }}
             aria-label="關閉"
           >
@@ -220,7 +220,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="w-8 h-8 rounded-[10px] flex items-center justify-center"
+              className="w-8 h-8 rounded-chip flex items-center justify-center"
               style={{ background: 'rgba(58,36,25,0.06)' }}
               aria-label="刪除"
             >
@@ -231,7 +231,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
 
         {/* Hero — live km/L */}
         <div
-          className="mx-4 mt-1 p-5 rounded-[18px] text-center shrink-0"
+          className="mx-4 mt-1 p-5 rounded-tile text-center shrink-0"
           style={{ background: 'linear-gradient(180deg, #F1ECE0 0%, #E8E4D8 100%)' }}
         >
           <div className="text-micro text-[#8A7B5A] tracking-[1.4px] font-mono uppercase">本次油耗</div>

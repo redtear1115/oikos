@@ -34,7 +34,7 @@ function TrustSection({
 }) {
   return (
     <div
-      className="rounded-[20px] px-5 py-5"
+      className="rounded-card px-5 py-5"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>

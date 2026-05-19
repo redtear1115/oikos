@@ -51,7 +51,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
         <div className="flex items-center gap-2">
           <FutariMark size={22} />
           <span
-            className="text-[17px] md:text-[22px] font-medium"
+            className="text-[17px] md:text-title font-medium"
             style={{
               fontFamily: 'var(--font-fraunces)',
               letterSpacing: '-0.2px',
@@ -60,7 +60,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
             Futari
           </span>
           <span
-            className="hidden md:inline text-[11px] ml-2"
+            className="hidden md:inline text-micro ml-2"
             style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
             ふたり
@@ -146,7 +146,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
 
             {/* body — both layouts */}
             <p
-              className="m-0 mt-5 md:mt-7 text-[15px] md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
+              className="m-0 mt-5 md:mt-7 text-body md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
               style={{
                 color: 'var(--ink-2)',
                 maxWidth: 320,
@@ -158,7 +158,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mt-10">
               <Link
                 href={ctaHref}
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-[14px] text-white text-[16px] font-semibold cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-semibold cursor-pointer"
                 style={{
                   background: 'var(--ink)',
                   letterSpacing: '1.8px',
@@ -170,7 +170,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
               </Link>
               <Link
                 href={signInHref}
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-[14px] text-[14px] cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-[14px] cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -303,7 +303,7 @@ export function Landing({ t, ctaHref, signInHref, languageSwitcher }: Props) {
         <div className="flex items-center gap-3">
           {languageSwitcher}
           <span
-            className="text-[11px]"
+            className="text-micro"
             style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
           >
             © 2026 · MADE IN TAIWAN
@@ -331,18 +331,18 @@ function FeatureCard({
 }) {
   return (
     <div
-      className="p-4 md:p-6 flex flex-col rounded-[18px] md:rounded-[22px]"
+      className="p-4 md:p-6 flex flex-col rounded-tile md:rounded-[22px]"
       style={{ background: 'var(--surface)', minHeight: 168 }}
     >
       <div className="flex items-center justify-between mb-3 md:mb-[22px]">
         <div
-          className="flex items-center justify-center w-[38px] h-[38px] md:w-12 md:h-12 rounded-[12px] md:rounded-[14px]"
+          className="flex items-center justify-center w-[38px] h-[38px] md:w-12 md:h-12 rounded-xl md:rounded-bubble"
           style={{ background: chipBg, color: chipColor }}
         >
           {glyph}
         </div>
         <span
-          className="text-[13px] md:text-[16px]"
+          className="text-label md:text-button"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontStyle: 'italic',
@@ -354,7 +354,7 @@ function FeatureCard({
         </span>
       </div>
       <p
-        className="m-0 mb-1.5 md:mb-2 text-[15px] md:text-[19px] font-semibold"
+        className="m-0 mb-1.5 md:mb-2 text-body md:text-[19px] font-semibold"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {title}

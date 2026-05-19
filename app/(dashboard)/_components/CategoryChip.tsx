@@ -17,7 +17,7 @@ export function CategoryChip({ categoryId, size = 36 }: Props) {
         color: c.ink,
         fontSize: size * 0.46,
       }}
-      className="rounded-[10px] flex items-center justify-center font-medium shrink-0"
+      className="rounded-chip flex items-center justify-center font-medium shrink-0"
     >
       {c.mono}
     </div>

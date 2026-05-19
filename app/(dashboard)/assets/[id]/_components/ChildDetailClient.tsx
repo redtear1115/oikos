@@ -69,7 +69,7 @@ function RevealableRow({
   const displayValue = revealed ?? PII_MASK
   return (
     <div
-      className="px-[14px] py-[11px] flex items-center gap-2.5"
+      className="px-3.5 py-[11px] flex items-center gap-2.5"
       style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
     >
       <div

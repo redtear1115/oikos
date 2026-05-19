@@ -15,7 +15,7 @@ export function InstallGuideRow() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+        className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex flex-col min-w-0">

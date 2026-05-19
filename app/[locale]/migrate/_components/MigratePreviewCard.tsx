@@ -96,7 +96,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
             {stats.topCategories.map(({ name, count }) => (
               <li
                 key={name}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px]"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-label"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--hairline)',

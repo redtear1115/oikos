@@ -142,6 +142,20 @@
   --text-page:      26px;
   --text-amount-md: 44px;
   --text-amount-lg: 56px;
+
+  /* Recurring radii (issue #621). Tailwind defaults still apply (rounded-xl=12px,
+   * rounded-2xl=16px, rounded-full); these cover sizes that fell between defaults
+   * and were duplicated 13+ times each as `rounded-[Npx]` arbitrary values. */
+  --radius-chip:   10px;  /* small chips, segment buttons (was rounded-[10px]) */
+  --radius-bubble: 14px;  /* sheet bubbles, inputs (was rounded-[14px]) */
+  --radius-tile:   18px;  /* tile / preview surfaces (was rounded-[18px]) */
+  --radius-card:   20px;  /* primary card surface (was rounded-[20px]) */
+}
+
+/* h-chip: 34px-tall chip / pill control (issue #621). Used together with
+ * `px-3.5 rounded-chip` for filter chips, sheet pickers, segmented toggles. */
+@utility h-chip {
+  height: 34px;
 }
 
 html, body { margin: 0; padding: 0; background: var(--bg-page); }

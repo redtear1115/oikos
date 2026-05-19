@@ -65,7 +65,7 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
                     <td className="py-2 px-2 max-w-[140px] truncate">{row.description || '—'}</td>
                     <td className="py-2 px-2 whitespace-nowrap">
                       <span
-                        className="px-2 py-0.5 rounded-md text-[11px]"
+                        className="px-2 py-0.5 rounded-md text-micro"
                         style={{ background: cat.tint, color: cat.ink }}
                       >
                         {cat.label}

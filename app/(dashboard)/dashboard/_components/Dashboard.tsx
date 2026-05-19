@@ -585,7 +585,7 @@ function DashboardFeedSkeleton() {
         <div className="h-4 w-24 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
       </div>
       <div
-        className="mx-4 rounded-[18px] overflow-hidden"
+        className="mx-4 rounded-tile overflow-hidden"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         {Array.from({ length: 5 }).map((_, i) => (

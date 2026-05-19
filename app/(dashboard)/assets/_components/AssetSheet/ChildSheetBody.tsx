@@ -275,7 +275,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex gap-1.5">
           {(['A', 'B', 'O', 'AB'] as const).map(b => (
             <button key={b} type="button" onClick={() => setBloodType(b)}
-              className="flex-1 h-9 rounded-[10px] text-label font-semibold"
+              className="flex-1 h-9 rounded-chip text-label font-semibold"
               style={{
                 border: bloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: bloodType === b ? 'rgba(58,36,25,0.04)' : 'var(--surface)',

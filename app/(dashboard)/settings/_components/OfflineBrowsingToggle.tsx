@@ -71,7 +71,7 @@ export function OfflineBrowsingToggle() {
   if (!supported) {
     return (
       <div
-        className="rounded-[20px] flex items-center px-5 py-4"
+        className="rounded-card flex items-center px-5 py-4"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex-1 min-w-0 pr-4">
@@ -89,7 +89,7 @@ export function OfflineBrowsingToggle() {
   return (
     <div>
       <div
-        className="rounded-[20px] flex items-center justify-between px-5 py-4"
+        className="rounded-card flex items-center justify-between px-5 py-4"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex-1 min-w-0 pr-4">

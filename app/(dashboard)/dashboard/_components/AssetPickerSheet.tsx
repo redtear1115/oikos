@@ -184,7 +184,7 @@ function PickerRow({
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-[14px] cursor-pointer text-left bg-transparent border-0"
+      className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-bubble cursor-pointer text-left bg-transparent border-0"
       style={{
         background: selected ? 'var(--surface)' : 'transparent',
         border: selected ? '1.5px solid var(--ink)' : '1px solid transparent',
