@@ -2049,17 +2049,17 @@ export const en: Translations = {
     },
     migrate: {
       honeydue: {
-        title: 'Move from Honeydue to Futari — the free Honeydue alternative for couples',
+        title: 'Import from Honeydue to Futari',
         description: 'Honeydue updates have slowed. Futari is a shared ledger built for couples — move your data over in about 3 minutes and keep budgeting together. The free Honeydue alternative: ad-free, end-to-end encrypted.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
-        title: 'Import Spendee records into Futari — the couples budgeting alternative to Spendee',
+        title: 'Import Spendee CSV into Futari',
         description: 'A couples-first alternative to Spendee. Import your Spendee CSV into Futari, a shared ledger built for partners — sharing is free and built in, no paid unlock required.',
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
-        title: 'Move from CWMoney to Futari — CWMoney export & import guide',
+        title: 'Import from CWMoney to Futari · Excel guide',
         description: 'How to move CWMoney records into a new tool? Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari — a shared ledger built for couples — can import.',
         ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
       },

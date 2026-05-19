@@ -2044,17 +2044,17 @@ export const zhCN: Translations = {
     },
     migrate: {
       honeydue: {
-        title: '从 Honeydue 搬迁到 Futari — Honeydue 替代方案｜免费双人记账',
+        title: '从 Honeydue 搬家到 Futari｜数据导入',
         description: 'Honeydue 更新放缓，Futari 是专为夫妻、情侣设计的共同账本，让你 3 分钟完成数据搬迁，继续一起记账。Honeydue 替代方案首选：免费、无广告、端到端加密。',
         ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {
-        title: '从 Spendee 导入记账记录 — Spendee 伴侣记账替代方案｜Futari',
+        title: '从 Spendee 搬家到 Futari｜CSV 导入',
         description: 'Spendee 伴侣记账替代方案——把 Spendee 的 CSV 导入 Futari，这个专为夫妻、情侣设计的共同账本，双人共享免费内建，不必再为解锁付费。',
         ogDescription: 'Spendee 用户的双人记账新选择：上传 CSV，3 分钟搬完。',
       },
       cwmoney: {
-        title: '从 CWMoney 搬家到 Futari — CWMoney 数据导出导入教程',
+        title: '从 CWMoney 搬家到 Futari｜Excel 导入',
         description: 'CWMoney 数据导出后怎么导入新工具？用我们提供的 Excel 转换模板整理成 CSV，再上传到 Futari 这个专为夫妻、情侣设计的共同账本，完成搬家。',
         ogDescription: 'CWMoney 用户搬家指南：Excel 转 CSV，搬进 Futari 双人记账。',
       },
