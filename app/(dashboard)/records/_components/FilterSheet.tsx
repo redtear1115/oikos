@@ -77,6 +77,23 @@ interface Props {
 
 type DateRangeMode = 'thisMonth' | 'lastMonth' | 'all' | 'custom'
 
+/**
+ * All editable sheet state in one object so callers update via a single
+ * setForm/updateForm rather than juggling 6 separate useStates. `filter` is
+ * the TxnFilter draft (Sets included); the four scalar fields are inputs
+ * that don't fit inside TxnFilter (date editor + raw text for the amount
+ * range inputs, kept as strings so the user can hold an intermediate empty
+ * state without losing focus).
+ */
+type FilterForm = {
+  filter: TxnFilter
+  dateMode: DateRangeMode
+  customStart: string
+  customEnd: string
+  amountMinText: string
+  amountMaxText: string
+}
+
 function dateRangeToMode(r: DateRange, defaultMonthKey: string): DateRangeMode {
   if (r.kind === 'all') return 'all'
   if (r.kind === 'range') return 'custom'
@@ -94,6 +111,21 @@ function todayIso(): string {
   const m = parts.find(p => p.type === 'month')?.value ?? '01'
   const d = parts.find(p => p.type === 'day')?.value ?? '01'
   return `${y}-${m}-${d}`
+}
+
+function initialForm(
+  currentFilter: TxnFilter,
+  currentDateRange: DateRange | undefined,
+  defaultMonthKey: string,
+): FilterForm {
+  return {
+    filter: currentFilter,
+    dateMode: currentDateRange ? dateRangeToMode(currentDateRange, defaultMonthKey) : 'thisMonth',
+    customStart: currentDateRange?.kind === 'range' ? currentDateRange.start : todayIso(),
+    customEnd: currentDateRange?.kind === 'range' ? currentDateRange.end : todayIso(),
+    amountMinText: currentFilter.amountMin === null ? '' : String(currentFilter.amountMin),
+    amountMaxText: currentFilter.amountMax === null ? '' : String(currentFilter.amountMax),
+  }
 }
 
 export function FilterSheet({
@@ -117,28 +149,14 @@ export function FilterSheet({
   const effectiveDefaultMonthKey = defaultMonthKey ?? currentMonthKey()
   const effectiveAssets = assets ?? []
 
-  const [draft, setDraft] = useState<TxnFilter>(currentFilter)
-  const [draftMode, setDraftMode] = useState<DateRangeMode>(
-    currentDateRange ? dateRangeToMode(currentDateRange, effectiveDefaultMonthKey) : 'thisMonth',
+  const [form, setForm] = useState<FilterForm>(
+    () => initialForm(currentFilter, currentDateRange, effectiveDefaultMonthKey),
   )
-  const [customStart, setCustomStart] = useState<string>(
-    currentDateRange?.kind === 'range' ? currentDateRange.start : todayIso(),
-  )
-  const [customEnd, setCustomEnd] = useState<string>(
-    currentDateRange?.kind === 'range' ? currentDateRange.end : todayIso(),
-  )
-  /**
-   * Amount-range inputs are kept as text strings so the user can hold an
-   * intermediate empty state without losing focus. Parsing happens at apply
-   * time: '' → null (open), valid non-negative int → number, anything else
-   * → null (silently dropped, matches the URL parser's behavior).
-   */
-  const [amountMinText, setAmountMinText] = useState<string>(
-    currentFilter.amountMin === null ? '' : String(currentFilter.amountMin),
-  )
-  const [amountMaxText, setAmountMaxText] = useState<string>(
-    currentFilter.amountMax === null ? '' : String(currentFilter.amountMax),
-  )
+  const updateForm = (patch: Partial<FilterForm>) =>
+    setForm((f) => ({ ...f, ...patch }))
+  const updateFilter = (patch: Partial<TxnFilter>) =>
+    setForm((f) => ({ ...f, filter: { ...f.filter, ...patch } }))
+
   const [shareToast, setShareToast] = useState('')
   const shareToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -168,50 +186,57 @@ export function FilterSheet({
     { value: 'settled', label: t.filterSheet.statusSettled },
   ]
 
-  // Re-seed the draft whenever the sheet (re-)opens — without this, dismissing without
+  // Re-seed the form whenever the sheet (re-)opens — without this, dismissing without
   // applying and reopening would show the stale draft instead of the live state.
+  // Custom date inputs are preserved across re-opens unless the live range is in
+  // custom mode, matching the pre-refactor behavior.
   useEffect(() => {
-    if (open) {
-      setDraft({
+    if (!open) return
+    setForm((f) => ({
+      ...f,
+      filter: {
         ...currentFilter,
         categories: new Set(currentFilter.categories),
         incomeCategories: new Set(currentFilter.incomeCategories),
         assetIds: new Set(currentFilter.assetIds),
-      })
-      setAmountMinText(currentFilter.amountMin === null ? '' : String(currentFilter.amountMin))
-      setAmountMaxText(currentFilter.amountMax === null ? '' : String(currentFilter.amountMax))
-      if (currentDateRange) {
-        setDraftMode(dateRangeToMode(currentDateRange, effectiveDefaultMonthKey))
-        if (currentDateRange.kind === 'range') {
-          setCustomStart(currentDateRange.start)
-          setCustomEnd(currentDateRange.end)
-        }
-      }
-      setShareToast('')
-    }
+      },
+      amountMinText: currentFilter.amountMin === null ? '' : String(currentFilter.amountMin),
+      amountMaxText: currentFilter.amountMax === null ? '' : String(currentFilter.amountMax),
+      ...(currentDateRange
+        ? {
+            dateMode: dateRangeToMode(currentDateRange, effectiveDefaultMonthKey),
+            ...(currentDateRange.kind === 'range'
+              ? { customStart: currentDateRange.start, customEnd: currentDateRange.end }
+              : {}),
+          }
+        : {}),
+    }))
+    setShareToast('')
   }, [open, currentFilter, currentDateRange, effectiveDefaultMonthKey])
 
   if (!open) return null
+
+  const { filter: draft, dateMode, customStart, customEnd, amountMinText, amountMaxText } = form
 
   const toggleCategory = (id: CategoryId) => {
     const next = new Set(draft.categories)
     if (next.has(id)) next.delete(id)
     else next.add(id)
-    setDraft({ ...draft, categories: next })
+    updateFilter({ categories: next })
   }
 
   const toggleIncomeCategory = (id: IncomeCategoryId) => {
     const next = new Set(draft.incomeCategories)
     if (next.has(id)) next.delete(id)
     else next.add(id)
-    setDraft({ ...draft, incomeCategories: next })
+    updateFilter({ incomeCategories: next })
   }
 
   const toggleAsset = (id: string) => {
     const next = new Set(draft.assetIds)
     if (next.has(id)) next.delete(id)
     else next.add(id)
-    setDraft({ ...draft, assetIds: next })
+    updateFilter({ assetIds: next })
   }
 
   /**
@@ -228,7 +253,7 @@ export function FilterSheet({
     } else {
       for (const a of groupAssets) next.add(a.id)
     }
-    setDraft({ ...draft, assetIds: next })
+    updateFilter({ assetIds: next })
   }
 
   /**
@@ -240,12 +265,12 @@ export function FilterSheet({
    */
   const toggleAllCategories = (allSelected: boolean) => {
     const next = allSelected ? new Set<CategoryId>() : new Set(PICKABLE_CATEGORIES.map(c => c.id))
-    setDraft({ ...draft, categories: next })
+    updateFilter({ categories: next })
   }
 
   const toggleAllIncomeCategories = (allSelected: boolean) => {
     const next = allSelected ? new Set<IncomeCategoryId>() : new Set(PICKABLE_INCOME_CATEGORIES.map(c => c.id))
-    setDraft({ ...draft, incomeCategories: next })
+    updateFilter({ incomeCategories: next })
   }
 
   /**
@@ -254,9 +279,9 @@ export function FilterSheet({
    * the bounds — easier to recover from a stray tap than blocking the apply.
    */
   const resolveDraftRange = (): DateRange => {
-    if (draftMode === 'thisMonth') return { kind: 'month', monthKey: currentMonthKey() }
-    if (draftMode === 'lastMonth') return { kind: 'month', monthKey: addMonths(currentMonthKey(), -1) }
-    if (draftMode === 'all') return { kind: 'all' }
+    if (dateMode === 'thisMonth') return { kind: 'month', monthKey: currentMonthKey() }
+    if (dateMode === 'lastMonth') return { kind: 'month', monthKey: addMonths(currentMonthKey(), -1) }
+    if (dateMode === 'all') return { kind: 'all' }
     const start = customStart <= customEnd ? customStart : customEnd
     const end = customStart <= customEnd ? customEnd : customStart
     return { kind: 'range', start, end }
@@ -282,20 +307,23 @@ export function FilterSheet({
   }
 
   const handleReset = () => {
-    setDraft({
-      payer: 'all',
-      split: 'all',
-      burden: 'all',
-      categories: new Set(),
-      incomeCategories: new Set(),
-      assetIds: new Set(),
-      amountMin: null,
-      amountMax: null,
-      status: 'all',
-    })
-    setAmountMinText('')
-    setAmountMaxText('')
-    setDraftMode('thisMonth')
+    setForm((f) => ({
+      ...f,
+      filter: {
+        payer: 'all',
+        split: 'all',
+        burden: 'all',
+        categories: new Set(),
+        incomeCategories: new Set(),
+        assetIds: new Set(),
+        amountMin: null,
+        amountMax: null,
+        status: 'all',
+      },
+      amountMinText: '',
+      amountMaxText: '',
+      dateMode: 'thisMonth',
+    }))
     onReset?.()
   }
 
@@ -372,18 +400,18 @@ export function FilterSheet({
                 <Chip
                   key={o.value}
                   label={o.label}
-                  active={draftMode === o.value}
-                  onClick={() => setDraftMode(o.value)}
+                  active={dateMode === o.value}
+                  onClick={() => updateForm({ dateMode: o.value })}
                 />
               ))}
             </Section>
           )}
-          {!liteMode && draftMode === 'custom' && (
+          {!liteMode && dateMode === 'custom' && (
             <div className="flex items-center gap-2 -mt-2">
               <input
                 type="date"
                 value={customStart}
-                onChange={(e) => setCustomStart(e.target.value)}
+                onChange={(e) => updateForm({ customStart: e.target.value })}
                 aria-label={t.filterSheet.dateCustomStart}
                 className="h-9 px-2 rounded-lg text-sm flex-1"
                 style={{
@@ -396,7 +424,7 @@ export function FilterSheet({
               <input
                 type="date"
                 value={customEnd}
-                onChange={(e) => setCustomEnd(e.target.value)}
+                onChange={(e) => updateForm({ customEnd: e.target.value })}
                 aria-label={t.filterSheet.dateCustomEnd}
                 className="h-9 px-2 rounded-lg text-sm flex-1"
                 style={{
@@ -417,7 +445,7 @@ export function FilterSheet({
                   key={o.value}
                   label={o.label}
                   active={draft.payer === o.value}
-                  onClick={() => setDraft({ ...draft, payer: o.value })}
+                  onClick={() => updateFilter({ payer: o.value })}
                 />
               ))}
             </Section>
@@ -430,7 +458,7 @@ export function FilterSheet({
                   key={o.value}
                   label={o.label}
                   active={draft.split === o.value}
-                  onClick={() => setDraft({ ...draft, split: o.value })}
+                  onClick={() => updateFilter({ split: o.value })}
                 />
               ))}
             </Section>
@@ -493,7 +521,7 @@ export function FilterSheet({
                 key={o.value}
                 label={o.label}
                 active={draft.status === o.value}
-                onClick={() => setDraft({ ...draft, status: o.value })}
+                onClick={() => updateFilter({ status: o.value })}
               />
             ))}
           </Section>
@@ -508,7 +536,7 @@ export function FilterSheet({
                 inputMode="numeric"
                 pattern="[0-9]*"
                 value={amountMinText}
-                onChange={(e) => setAmountMinText(e.target.value)}
+                onChange={(e) => updateForm({ amountMinText: e.target.value })}
                 placeholder={t.filterSheet.amountMinPlaceholder}
                 aria-label={t.filterSheet.amountMinLabel}
                 className="h-9 px-2 rounded-lg text-sm flex-1 min-w-0"
@@ -524,7 +552,7 @@ export function FilterSheet({
                 inputMode="numeric"
                 pattern="[0-9]*"
                 value={amountMaxText}
-                onChange={(e) => setAmountMaxText(e.target.value)}
+                onChange={(e) => updateForm({ amountMaxText: e.target.value })}
                 placeholder={t.filterSheet.amountMaxPlaceholder}
                 aria-label={t.filterSheet.amountMaxLabel}
                 className="h-9 px-2 rounded-lg text-sm flex-1 min-w-0"
