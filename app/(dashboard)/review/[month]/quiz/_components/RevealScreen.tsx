@@ -178,7 +178,7 @@ export function RevealScreen({
           <Link
             href={reviewHref}
             className="inline-flex items-center justify-center h-12 px-6 rounded-full text-sm font-medium"
-            style={{ background: 'var(--ink)', color: 'var(--btn-primary-text)' }}
+            style={{ background: 'var(--ink)', color: 'var(--on-fill)' }}
           >
             {tq.waitingBackToReview}
           </Link>
@@ -216,11 +216,11 @@ function AnswerChip({
     >
       <span
         aria-hidden="true"
-        className="absolute -top-2 -left-2 inline-flex items-center justify-center text-[10px] font-semibold"
+        className="absolute -top-2 -left-2 inline-flex items-center justify-center text-mini font-semibold"
         style={{
           width: 22, height: 22, borderRadius: 11,
           background: tone === 'self' ? 'var(--accent)' : 'var(--ink)',
-          color: 'var(--btn-primary-text)',
+          color: 'var(--on-fill)',
         }}
       >
         {authorLetter}

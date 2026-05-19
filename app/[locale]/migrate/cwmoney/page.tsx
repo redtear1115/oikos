@@ -74,7 +74,7 @@ export default async function MigrateCwmoney({ params }: { params: Params }) {
         <span aria-hidden>↓</span>
         <span>{page.templateDownloadLabel}</span>
       </a>
-      <p className="text-[12px] mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
+      <p className="text-caption mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
         {page.templateNote}
       </p>
     </>

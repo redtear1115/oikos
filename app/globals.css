@@ -55,20 +55,26 @@
    * the last feed row isn't visually pinched by the FAB. (issue #253) */
   --bottom-nav-offset: 112px;
 
+  /* Foreground on filled controls — single token shared by any "white text on
+   * ink/accent/destructive fill" pattern (#670 audit 1.1). Lets future
+   * theming (dark mode, high-contrast) shift the foreground for all filled
+   * controls at once instead of touching 25+ callsites. */
+  --on-fill: #fff;
+
   /* Button color tokens — foundation for issues #258 / #261 / #262.
    * Map to existing brand colors so the warm-brown system stays put; later
    * issues build on these (#262 destructive treatment, #261 Settings split). */
   --btn-primary-bg:       var(--ink);          /* 主要 commit: 記下 / 儲存 / 繼續 / 確認 */
-  --btn-primary-text:     #fff;
+  --btn-primary-text:     var(--on-fill);
   --btn-accent-bg:        var(--accent);       /* 重點 CTA: FAB / 邀請 / 月結 entry */
-  --btn-accent-text:      #fff;
+  --btn-accent-text:      var(--on-fill);
   --btn-secondary-bg:     var(--surface);      /* 次要: 取消 / 輔助 */
   --btn-secondary-text:   var(--ink);
   --btn-secondary-border: var(--ink-3);
   --btn-destructive-bg:   var(--destructive);  /* 離開帳本 / 刪除 */
-  --btn-destructive-text: #fff;
+  --btn-destructive-text: var(--on-fill);
   --btn-disabled-bg:      var(--ink-3);
-  --btn-disabled-text:    #fff;
+  --btn-disabled-text:    var(--on-fill);
 
   /* Control height tokens — Button + TextInput sizing (issue #629) */
   --control-sm:   36px;
@@ -94,7 +100,7 @@
    * Heights kept compact (chip h-8 / segment h-7-9) for dense filter UIs;
    * touch comfort comes from focus rings + 150ms transition + opacity-50 disabled. */
   --toggle-active-bg:        var(--ink);                          /* selected chip / segment fill */
-  --toggle-active-text:      #fff;
+  --toggle-active-text:      var(--on-fill);
   --toggle-inactive-bg:      var(--surface);                      /* unselected chip surface */
   --toggle-inactive-text:    var(--ink-2);
   --toggle-border:           var(--hairline);                     /* hairline outline on chips */
@@ -150,8 +156,11 @@
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
   /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()) */
+  --text-mini:      10px;  /* badge superscript, tiny tracking labels (#670 audit 1.5) */
   --text-micro:     11px;
+  --text-caption:   12px;  /* secondary captions, footer notes (#670 audit 1.5) */
   --text-label:     13px;
+  --text-meta:      14px;  /* metadata lines, between label (13) and body (15) (#670 audit 1.5) */
   --text-body:      15px;
   --text-button:    16px;
   --text-title:     22px;
@@ -178,6 +187,24 @@
 @utility h-chip {
   height: 34px;
 }
+
+/* Z-index layer scale (#670 audit 1.4) — replaces ad-hoc `z-[N]` arbitrary
+ * values across the dashboard. Layers from bottom to top: nav (BottomNav,
+ * FAB, HomeIndicator share this band 80-89) → sheet-backdrop (90) →
+ * floating (95, cards over backdrop) → sheet (100) → modal/toast (110) →
+ * nested sheet stack (112 backdrop + 115 body, for sheets opened from
+ * within another sheet) → top toast (120). HomeIndicator (+1) and FAB (+5)
+ * stay as inline z-[81]/z-[85] within the nav band — they're spatial
+ * tweaks, not separate layers. */
+@utility z-relative        { z-index: 1; }
+@utility z-nav             { z-index: 80; }
+@utility z-sheet-backdrop  { z-index: 90; }
+@utility z-floating        { z-index: 95; }
+@utility z-sheet           { z-index: 100; }
+@utility z-modal           { z-index: 110; }
+@utility z-nested-backdrop { z-index: 112; }
+@utility z-nested-sheet    { z-index: 115; }
+@utility z-top-toast       { z-index: 120; }
 
 /* oik-focus-ring: standard keyboard focus treatment for interactive primitives.
  * Matches --toggle-focus-ring but expressed as a Tailwind utility for use in

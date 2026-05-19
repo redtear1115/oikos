@@ -33,7 +33,7 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
     <>
       <SheetBackdrop open={open} onClick={onClose} />
       <div
-        className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-md z-[100] flex flex-col overflow-hidden"
+        className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-md z-sheet flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
           borderTopLeftRadius: 24,

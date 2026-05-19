@@ -458,7 +458,7 @@ function SegmentPill({
       style={{
         padding: '4px 12px',
         background: active ? 'var(--ink)' : 'transparent',
-        color: active ? '#fff' : 'var(--ink-2)',
+        color: active ? 'var(--on-fill)' : 'var(--ink-2)',
         fontSize: 12,
         fontWeight: 500,
         border: 'none',
@@ -491,7 +491,7 @@ function SettleButton({ settleOpen, onToggle, ariaLabel, label }: {
         border: '1px solid',
         borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
         background: settleOpen ? 'var(--ink)' : 'transparent',
-        color: settleOpen ? '#fff' : 'var(--ink-2)',
+        color: settleOpen ? 'var(--on-fill)' : 'var(--ink-2)',
         fontSize: 12,
         fontWeight: 500,
         transition: 'background 150ms, color 150ms, border-color 150ms',

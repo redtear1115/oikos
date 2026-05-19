@@ -70,7 +70,7 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
         }
         hint={
           <div
-            className="text-[12px] mt-4 flex items-center justify-center gap-2 flex-wrap"
+            className="text-caption mt-4 flex items-center justify-center gap-2 flex-wrap"
             style={{ color: 'var(--ink-3)' }}
           >
             <span
@@ -99,7 +99,7 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
             stats={preview.stats}
           />
           <MigrateCta t={t} signInHref={signInHref} source={preview.detectedSource} />
-          <p className="text-center text-[12px]" style={{ color: 'var(--ink-3)' }}>
+          <p className="text-center text-caption" style={{ color: 'var(--ink-3)' }}>
             <button
               type="button"
               onClick={reset}
@@ -113,7 +113,7 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
       )}
 
       {!showPreview && !showError && (
-        <p className="text-center text-[12px]" style={{ color: 'var(--ink-3)' }}>
+        <p className="text-center text-caption" style={{ color: 'var(--ink-3)' }}>
           {t.cta.privacyNote}
         </p>
       )}

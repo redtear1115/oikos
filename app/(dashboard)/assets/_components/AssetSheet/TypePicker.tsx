@@ -63,10 +63,10 @@ export function TypePicker({ value, onChange }: Props) {
               className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
               style={{
                 background: sel ? 'var(--accent)' : 'var(--surface)',
-                color: sel ? '#fff' : 'var(--ink-2)',
+                color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
               }}
             >
-              <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
+              <AssetIcon type={opt.value} size={20} color={sel ? 'var(--on-fill)' : 'var(--ink-2)'} />
               <span className="text-micro font-medium">{opt.label}</span>
             </button>
           )
@@ -105,10 +105,10 @@ export function TypePicker({ value, onChange }: Props) {
                 className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
                 style={{
                   background: sel ? 'var(--accent)' : 'var(--surface)',
-                  color: sel ? '#fff' : 'var(--ink-2)',
+                  color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
                 }}
               >
-                <AssetIcon type={opt.value} size={20} color={sel ? '#fff' : 'var(--ink-2)'} />
+                <AssetIcon type={opt.value} size={20} color={sel ? 'var(--on-fill)' : 'var(--ink-2)'} />
                 <span className="text-micro font-medium">{opt.label}</span>
               </button>
             )

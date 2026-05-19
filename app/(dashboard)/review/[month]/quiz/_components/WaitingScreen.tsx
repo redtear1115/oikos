@@ -49,7 +49,7 @@ export function WaitingScreen({
         <Link
           href={reviewHref}
           className="inline-flex items-center justify-center h-12 px-6 rounded-full text-sm font-medium"
-          style={{ background: 'var(--ink)', color: 'var(--btn-primary-text)' }}
+          style={{ background: 'var(--ink)', color: 'var(--on-fill)' }}
         >
           {tq.waitingBackToReview}
         </Link>

@@ -228,7 +228,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
             className="inline-flex items-center gap-2 h-12 px-7 rounded-full text-sm font-semibold"
             style={{
               background: 'var(--ink)',
-              color: 'var(--btn-primary-text)',
+              color: 'var(--on-fill)',
               opacity: pending ? 0.6 : 1,
             }}
           >
@@ -263,7 +263,7 @@ function FallbackError({
       <Link
         href={reviewHref}
         className="mt-8 inline-flex items-center justify-center h-12 px-6 rounded-full"
-        style={{ background: 'var(--ink)', color: 'var(--btn-primary-text)' }}
+        style={{ background: 'var(--ink)', color: 'var(--on-fill)' }}
       >
         {backLabel}
       </Link>

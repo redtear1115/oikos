@@ -29,7 +29,7 @@ export function MigrateSteps({
         {steps.map((node, i) => (
           <li
             key={i}
-            className="flex gap-5 items-start text-[14px] md:text-body leading-[1.75] py-4 first:pt-2"
+            className="flex gap-5 items-start text-meta md:text-body leading-[1.75] py-4 first:pt-2"
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >
             <span

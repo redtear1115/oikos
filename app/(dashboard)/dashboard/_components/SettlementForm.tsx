@@ -138,7 +138,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
                   className="h-8 px-3 rounded-full text-xs font-medium cursor-pointer transition-colors"
                   style={{
                     background: isActive ? 'var(--ink)' : 'var(--bg)',
-                    color: isActive ? '#fff' : 'var(--ink-2)',
+                    color: isActive ? 'var(--on-fill)' : 'var(--ink-2)',
                     border: '1px solid var(--hairline)',
                   }}
                 >

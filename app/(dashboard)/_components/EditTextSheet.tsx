@@ -75,7 +75,7 @@ export function EditTextSheet({
     <>
       <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
       <div
-        className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-[100] flex flex-col overflow-hidden"
+        className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-sheet flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
           borderTopLeftRadius: 24,

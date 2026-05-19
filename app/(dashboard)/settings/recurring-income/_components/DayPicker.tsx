@@ -29,7 +29,7 @@ export function DayPicker({ value, onChange }: Props) {
               borderRadius: 8,
               border: selected ? 'none' : '1px solid var(--hairline)',
               background: selected ? 'var(--ink)' : 'transparent',
-              color: selected ? '#fff' : 'var(--ink)',
+              color: selected ? 'var(--on-fill)' : 'var(--ink)',
               fontSize: 'var(--fs-sm)',
               cursor: 'pointer',
               fontVariantNumeric: 'tabular-nums',

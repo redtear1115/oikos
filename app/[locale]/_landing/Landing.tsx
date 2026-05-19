@@ -86,7 +86,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
         {/* Desktop CTA in top-right; mobile relies on hero CTA only */}
         <Link
           href={ctaHref}
-          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-[14px] font-semibold cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-semibold cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -186,7 +186,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
               </Link>
               <Link
                 href={signInHref}
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-[14px] cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-meta cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -199,7 +199,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
 
             {/* Mobile sub-CTA hint */}
             <p
-              className="md:hidden m-0 mt-3 text-center text-[12px]"
+              className="md:hidden m-0 mt-3 text-center text-caption"
               style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
             >
               {t.ctaHint}
@@ -251,7 +251,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
               </h2>
             </div>
             <p
-              className="hidden md:block m-0 text-[14px]"
+              className="hidden md:block m-0 text-meta"
               style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 320 }}
               dangerouslySetInnerHTML={{ __html: t.featuresSubtitleHtml }}
             />
@@ -317,7 +317,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
           style={{ color: 'var(--ink-2)' }}
         >
           <ShieldOutlineGlyph />
-          <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+          <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
             {t.footerTrust}
           </span>
         </div>
@@ -404,7 +404,7 @@ function MigrateLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-[14px]"
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.migrateSection.subtitle}
@@ -491,7 +491,7 @@ function FeatureCard({
         {title}
       </p>
       <p
-        className="m-0 text-[12px] md:text-[13.5px] leading-[1.55] md:leading-[1.7]"
+        className="m-0 text-caption md:text-[13.5px] leading-[1.55] md:leading-[1.7]"
         style={{ color: 'var(--ink-2)' }}
       >
         {body}

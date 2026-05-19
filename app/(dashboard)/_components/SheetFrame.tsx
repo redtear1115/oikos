@@ -118,10 +118,10 @@ export function SheetFrame({
         style={panelStyle}
       >
         {!hideGrabber && (
-          // `relative z-[1]` keeps the grabber visible above any decorative
+          // `relative z-relative` keeps the grabber visible above any decorative
           // absolutely-positioned content callers render at the top of the
           // panel (e.g. the income RecurringRuleSheet's radial halo).
-          <div className="pt-2 flex justify-center shrink-0 relative z-[1]">
+          <div className="pt-2 flex justify-center shrink-0 relative z-relative">
             <div
               className="w-9 h-[5px] rounded-full"
               style={{ background: grabberColor }}

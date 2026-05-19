@@ -74,7 +74,7 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
         >
           {page.formatHintHeaders}
         </code>
-        <p className="text-[12px] mt-1.5 m-0">{page.formatHintNote}</p>
+        <p className="text-caption mt-1.5 m-0">{page.formatHintNote}</p>
       </div>
     </>
   )

@@ -71,7 +71,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
         where safe-area is 34px and the indicator zone is taller. FAB positions follow.
       */}
       <nav aria-label={t.bottomNav.navAriaLabel}
-        className="fixed left-1/2 bottom-0 z-[80] w-full max-w-md -translate-x-1/2 flex"
+        className="fixed left-1/2 bottom-0 z-nav w-full max-w-md -translate-x-1/2 flex"
         style={{
           background: 'var(--surface)',
           borderTop: '1px solid var(--hairline)',
@@ -93,7 +93,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
           style={{
             bottom: 'calc(8px + env(safe-area-inset-bottom))',
             background: fabBg(fabVariant),
-            color: '#fff',
+            color: 'var(--on-fill)',
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
           <PlusIcon size={26} />
