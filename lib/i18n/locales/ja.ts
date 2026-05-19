@@ -1800,6 +1800,9 @@ export const ja: Translations = {
         step1: 'Spendee → More → Export Data で CSV をダウンロード。',
         step2: 'CSV をここにアップロードして、家計の履歴を確認。',
         step3: 'Futari のアカウントを作って、ワンタップで引っ越し完了。',
+        formatHintLabel: 'Spendee の CSV はこんなフォーマット',
+        formatHintHeaders: 'Date,Wallet,Type,Category name,Amount,Currency,Note',
+        formatHintNote: 'Type 列は Expense / Income / Transfer の 3 種類。Transfer（口座間の振替）はインポート時にエラーとして表示されます——Futari は振替の概念を持たないため、プレビューで該当行を削除してください。',
         // TODO(#599): ja faq + comparison copy pending native review
         faq: [
           {

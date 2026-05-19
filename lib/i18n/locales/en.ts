@@ -1802,6 +1802,9 @@ export const en: Translations = {
         step1: 'In Spendee → More → Export Data, download the CSV.',
         step2: 'Upload the CSV here and preview your records.',
         step3: 'Create a Futari account and finish the move in one tap.',
+        formatHintLabel: "What Spendee's CSV looks like",
+        formatHintHeaders: 'Date,Wallet,Type,Category name,Amount,Currency,Note',
+        formatHintNote: 'The Type column is Expense / Income / Transfer. Transfer rows (inter-wallet moves) are flagged as errors on import — Futari has no transfer concept, so drop them in the preview.',
         // TODO(#599): en faq + comparison copy pending native review
         faq: [
           {

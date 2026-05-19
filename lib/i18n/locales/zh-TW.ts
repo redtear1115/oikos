@@ -2119,6 +2119,13 @@ export type Translations = {
         step1: string
         step2: string
         step3: string
+        /** Plain-language hint for the Spendee CSV column layout, embedded
+         *  inside step 1 so users know what to expect before they hit Export. */
+        formatHintLabel: string
+        /** Literal Spendee CSV header line, rendered as <code> beneath the label. */
+        formatHintHeaders: string
+        /** Caption under the header preview explaining `Type` column semantics. */
+        formatHintNote: string
         faq: readonly [
           { question: string; answer: string },
           { question: string; answer: string },
@@ -3996,6 +4003,9 @@ export const zhTW: Translations = {
         step1: '在 Spendee → More → Export Data，下載 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        formatHintLabel: 'Spendee CSV 的欄位長這樣',
+        formatHintHeaders: 'Date,Wallet,Type,Category name,Amount,Currency,Note',
+        formatHintNote: 'Type 欄位是「Expense / Income / Transfer」。Transfer（帳戶間轉帳）匯入時會被標記為錯誤——Futari 不存轉帳，請在預覽階段刪除這幾列。',
         faq: [
           {
             question: '匯入後資料需要再整理嗎？',
