@@ -523,7 +523,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
       {error && open && (
         <div
-          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
+          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
           style={{ background: 'var(--debit)' }}
         >
           {error}

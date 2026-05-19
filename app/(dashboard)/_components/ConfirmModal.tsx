@@ -43,7 +43,7 @@ export function ConfirmModal({
     <>
       <SheetBackdrop open={open} onClick={onCancel} />
       <div
-        className="fixed left-1/2 top-1/2 z-[110] w-[calc(100%-48px)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6"
+        className="fixed left-1/2 top-1/2 z-modal w-[calc(100%-48px)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',

@@ -197,7 +197,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
               className="h-9 rounded-lg text-sm cursor-pointer border-0 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               style={{
                 background: sel ? 'var(--ink)' : 'transparent',
-                color: sel ? '#fff' : 'var(--ink-2)',
+                color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
                 fontWeight: sel ? 600 : 400,
               }}
               aria-pressed={sel}

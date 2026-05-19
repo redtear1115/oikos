@@ -13,7 +13,7 @@ export function MigrateIntroCallout({ text }: { text: string }) {
       }}
     >
       <p
-        className="m-0 text-[14px] md:text-[14.5px] leading-[1.85]"
+        className="m-0 text-meta md:text-[14.5px] leading-[1.85]"
         style={{
           fontFamily: 'var(--font-fraunces)',
           fontStyle: 'italic',

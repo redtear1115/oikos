@@ -57,7 +57,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     <>
       <div
         onClick={onClose}
-        className="fixed inset-0 z-[112] transition-opacity duration-[250ms]"
+        className="fixed inset-0 z-nested-backdrop transition-opacity duration-[250ms]"
         style={{
           background: 'rgba(31,27,22,0.45)',
           opacity: open ? 1 : 0,
@@ -67,7 +67,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
       {/* Sheet sits at z-115 — must be ABOVE AddSheet's error toast (z-110) so a
           mid-picker error doesn't render in front of the asset list. */}
       <div
-        className="fixed left-1/2 bottom-0 z-[115] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
+        className="fixed left-1/2 bottom-0 z-nested-sheet w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
           borderTopLeftRadius: 24,
@@ -115,7 +115,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
                     style={{
                       padding: '8px 12px',
                       background: active ? 'var(--ink)' : 'transparent',
-                      color: active ? '#fff' : 'var(--ink-2)',
+                      color: active ? 'var(--on-fill)' : 'var(--ink-2)',
                       fontFamily: 'inherit',
                       fontSize: 'var(--fs-button)',
                       fontWeight: active ? 600 : 500,

@@ -400,7 +400,7 @@ export function RecurringRuleSheet(props: Props) {
                       className="h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
                       style={{
                         background: sel ? 'var(--ink)' : 'var(--surface)',
-                        color: sel ? '#fff' : 'var(--ink)',
+                        color: sel ? 'var(--on-fill)' : 'var(--ink)',
                         border: sel ? '1px solid var(--ink)' : '1px solid var(--hairline)',
                         fontFamily: 'inherit',
                       }}
@@ -466,7 +466,7 @@ export function RecurringRuleSheet(props: Props) {
                   style={{
                     border: `1px solid ${intervalMonths === v ? 'var(--ink)' : 'var(--hairline)'}`,
                     background: intervalMonths === v ? 'var(--ink)' : 'transparent',
-                    color: intervalMonths === v ? '#fff' : 'var(--ink)',
+                    color: intervalMonths === v ? 'var(--on-fill)' : 'var(--ink)',
                     fontFamily: 'inherit',
                     cursor: 'pointer',
                   }}

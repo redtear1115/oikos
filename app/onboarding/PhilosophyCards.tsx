@@ -151,7 +151,7 @@ function CardShell({ index, bg, accent = c.ink, eyebrow, quote, subtitle, ctaLab
           style={{
             height: 50, padding: '0 26px', borderRadius: 25,
             border: 'none', cursor: 'pointer',
-            background: c.ink, color: '#fff',
+            background: c.ink, color: 'var(--on-fill)',
             fontFamily: 'inherit', fontSize: 14, fontWeight: 600,
             letterSpacing: 0.6,
             display: 'inline-flex', alignItems: 'center', gap: 8,

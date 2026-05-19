@@ -102,7 +102,7 @@ function FullScreenSurface({
         <Link
           href={backHref}
           className="inline-flex items-center justify-center mt-10 h-12 rounded-full px-6 text-sm font-medium"
-          style={{ background: 'var(--ink)', color: 'var(--btn-primary-text)' }}
+          style={{ background: 'var(--ink)', color: 'var(--on-fill)' }}
         >
           {backLabel}
         </Link>

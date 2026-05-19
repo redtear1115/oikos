@@ -24,17 +24,17 @@ function CompactTrustRow({ t }: { t: LandingStrings }) {
       className="flex items-center gap-6"
       style={{ color: 'var(--ink-2)' }}
     >
-      <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+      <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
         {t.trustFree}
       </span>
       <span style={{ color: 'var(--hairline)' }}>·</span>
-      <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+      <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
         {t.trustPwa}
       </span>
       <span style={{ color: 'var(--hairline)' }}>·</span>
       <div className="flex items-center gap-1.5">
         <ShieldOutlineGlyph />
-        <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+        <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
           {t.trustEncrypted}
         </span>
       </div>
@@ -115,7 +115,7 @@ function TrustCard({
           {title}
         </p>
         <p
-          className="m-0 mt-1 text-label md:text-[14px] leading-[1.6]"
+          className="m-0 mt-1 text-label md:text-meta leading-[1.6]"
           style={{ color: 'var(--ink-2)' }}
         >
           {body}

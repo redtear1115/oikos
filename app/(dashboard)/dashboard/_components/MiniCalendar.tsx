@@ -67,7 +67,7 @@ export function MiniCalendar({ value, onChange }: Props) {
                 className="h-9 border-0 rounded-chip cursor-pointer relative transition-[background] duration-100 text-sm"
                 style={{
                   background: sel ? 'var(--ink)' : 'transparent',
-                  color: sel ? '#fff' : 'var(--ink)',
+                  color: sel ? 'var(--on-fill)' : 'var(--ink)',
                   fontFamily: 'var(--font-numeric)',
                   fontWeight: isToday ? 600 : 400,
                 }}>
@@ -108,7 +108,7 @@ export function MiniCalendar({ value, onChange }: Props) {
                 className="h-11 border-0 rounded-chip cursor-pointer text-sm"
                 style={{
                   background: sel ? 'var(--ink)' : 'transparent',
-                  color: sel ? '#fff' : 'var(--ink)',
+                  color: sel ? 'var(--on-fill)' : 'var(--ink)',
                   fontFamily: 'var(--font-numeric)',
                 }}>
                 {mc.monthLabel.replace('{month}', String(m))}
@@ -144,7 +144,7 @@ export function MiniCalendar({ value, onChange }: Props) {
               className="h-11 border-0 rounded-chip cursor-pointer text-sm"
               style={{
                 background: sel ? 'var(--ink)' : 'transparent',
-                color: sel ? '#fff' : 'var(--ink)',
+                color: sel ? 'var(--on-fill)' : 'var(--ink)',
                 fontFamily: 'var(--font-numeric)',
                 opacity: overflow && !sel ? 0.4 : 1,
               }}>

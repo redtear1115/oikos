@@ -235,7 +235,7 @@ export default function SetupForm({ t }: { t: Translations }) {
             type="button"
             onClick={handleShare}
             className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer"
-            style={{ background: 'var(--accent)', color: '#fff' }}
+            style={{ background: 'var(--accent)', color: 'var(--on-fill)' }}
           >
             分享連結
           </button>

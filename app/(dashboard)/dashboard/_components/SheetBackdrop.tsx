@@ -36,7 +36,7 @@ export function SheetBackdrop({ open, onClick }: Props) {
       // While closing the backdrop swallows pointer events but must not
       // re-invoke the close handler — the host already called it.
       onClick={open ? onClick : undefined}
-      className="fixed inset-0 z-[90] transition-opacity duration-[250ms]"
+      className="fixed inset-0 z-sheet-backdrop transition-opacity duration-[250ms]"
       style={{
         background: 'rgba(31,27,22,0.35)',
         backdropFilter: 'blur(2px)',

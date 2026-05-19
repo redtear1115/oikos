@@ -403,7 +403,7 @@ export function RecordsList({
                     padding: '0 14px',
                     borderRadius: 999,
                     background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
-                    color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-3)',
+                    color: sel ? (isIncome ? P.ink : 'var(--on-fill)') : 'var(--ink-3)',
                     fontWeight: sel ? 600 : 500,
                   }}
                   aria-pressed={sel}
@@ -449,7 +449,7 @@ export function RecordsList({
             className="h-8 px-3 rounded-full text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer"
             style={{
               background: filterActive ? 'var(--ink)' : 'var(--surface)',
-              color: filterActive ? '#fff' : 'var(--ink-2)',
+              color: filterActive ? 'var(--on-fill)' : 'var(--ink-2)',
               border: filterActive ? 'none' : '1px solid var(--hairline)',
             }}
             aria-label={t.dashboard.filterAriaLabel}
