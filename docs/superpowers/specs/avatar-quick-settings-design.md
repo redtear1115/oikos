@@ -1,5 +1,6 @@
 ---
-status: planned
+status: shipped
+first_shipped_in: v0.17.5
 related_specs: [onboarding, solo-mode, locale-currency, guardian]
 related_issues: ["#427"]
 ---

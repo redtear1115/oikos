@@ -1,13 +1,8 @@
 ---
-status: approved
-first_shipped_in: ~v1.0.4
-updates: []
-related_specs:
-  - structured-filter-design.md
-  - trip-multi-currency-design.md
-  - offline-browsing-design.md
+status: shipped
+first_shipped_in: v1.0.5
+related_specs: [structured-filter, trip-multi-currency, offline-browsing]
 related_issues: []
-blocked_on: []
 ---
 
 # IA · 四大入口層級統一
