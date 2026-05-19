@@ -343,6 +343,10 @@ export const incomeTransactions = pgTable('IncomeTransactions', {
   originalCurrency: currencyEnum('original_currency'),
   originalAmount: integer('original_amount'),
   rateSnapshot: numeric('rate_snapshot', { precision: 10, scale: 3 }),
+  // #607 — Parallel FK to ImportBatches; mirrors CashTransactions.importBatchId.
+  // NULL = not from an import. Lets batch rollback delete income + expense rows
+  // atomically by shared batch id.
+  importBatchId: uuid('import_batch_id').references(() => importBatches.id),
 })
 
 export const recurringIncomeRules = pgTable('RecurringIncomeRules', {

@@ -7,6 +7,9 @@ import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
+import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
+import { MigrateFaq } from '../_components/MigrateFaq'
+import { MigrateComparison } from '../_components/MigrateComparison'
 
 type Params = Promise<{ locale: string }>
 
@@ -46,8 +49,37 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
   const page = t.pages.spendee
   const signInHref = localizedHref('/sign-in', locale)
 
+  // Embed the format preview inside step 1 — mirrors the cwmoney/step-2
+  // template-download pattern (#579) so the step list is the actual flow
+  // rather than a static recap. Spendee users see the column layout before
+  // they go pull the export, which heads off the most common "this didn't
+  // work" support ticket (Transfer rows misclassified as income).
+  const step1WithFormatHint = (
+    <>
+      <div>{page.step1}</div>
+      <div
+        className="mt-2.5 text-[12.5px]"
+        style={{ color: 'var(--ink-3)' }}
+      >
+        <div className="mb-1">{page.formatHintLabel}</div>
+        <code
+          className="block px-3 py-2 rounded-[8px] text-[11.5px] leading-[1.6] break-all"
+          style={{
+            background: 'var(--surface)',
+            color: 'var(--ink-2)',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          }}
+        >
+          {page.formatHintHeaders}
+        </code>
+        <p className="text-[12px] mt-1.5 m-0">{page.formatHintNote}</p>
+      </div>
+    </>
+  )
+
   return (
     <div className="space-y-10 md:space-y-14">
+      <MigrateBreadcrumbJsonLd locale={locale} source="spendee" />
       <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
       <MigrateDifferentiators
@@ -59,8 +91,17 @@ export default async function MigrateSpendee({ params }: { params: Params }) {
 
       <MigrateSteps
         heading={page.stepsHeading}
-        steps={[page.step1, page.step2, page.step3]}
+        steps={[step1WithFormatHint, page.step2, page.step3]}
       />
+
+      <MigrateComparison
+        heading={t.comparisonHeading.replace('{other}', page.comparison.otherLabel)}
+        futariLabel="Futari"
+        otherLabel={page.comparison.otherLabel}
+        rows={page.comparison.rows}
+      />
+
+      <MigrateFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 
       <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
 

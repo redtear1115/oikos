@@ -8,12 +8,13 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 // routing makes each /<locale>/<path> a crawlable, distinct content variant.
 // Previous cookie-based locale forced #392 short-term collapse to 4 URLs
 // without hreflang; that's now superseded.
+// /sign-in intentionally excluded — robots.ts disallows it (auth funnel,
+// no SEO value). Keeping sitemap + robots consistent avoids mixed signals.
 const PATHS = [
   { path: '/', changeFrequency: 'weekly' as const, priority: 1.0 },
-  { path: '/sign-in', changeFrequency: 'monthly' as const, priority: 0.7 },
-  { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.7 },
-  { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.6 },
-  { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.6 },
+  { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.8 },
+  { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.8 },
+  { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.8 },
   { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3 },
   { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3 },
 ]

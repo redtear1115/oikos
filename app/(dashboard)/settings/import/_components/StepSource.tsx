@@ -1,0 +1,196 @@
+'use client'
+
+import { useId, useRef, useState, type DragEvent } from 'react'
+import { useTranslations } from '@/lib/i18n/client'
+import type { ImportSource } from '@/actions/import'
+import type { ParsedFileState } from './ImportContent'
+
+interface Props {
+  onFile: (file: File, source: ImportSource) => Promise<void>
+  parseError: string | null
+  parsed: ParsedFileState | null
+  onNext: () => void
+  onReset: () => void
+}
+
+const SOURCE_OPTIONS: ImportSource[] = ['honeydue', 'spendee', 'cwmoney', 'generic']
+
+export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Props) {
+  const t = useTranslations()
+  const tImport = t.settings.import.step1
+  const inputId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [source, setSource] = useState<ImportSource>('honeydue')
+  const [isDragging, setIsDragging] = useState(false)
+  const [parsing, setParsing] = useState(false)
+
+  async function pickFile(file: File | undefined | null) {
+    if (!file) return
+    setParsing(true)
+    try {
+      await onFile(file, source)
+    } finally {
+      setParsing(false)
+    }
+  }
+
+  function onDrop(e: DragEvent<HTMLLabelElement>) {
+    e.preventDefault()
+    setIsDragging(false)
+    void pickFile(e.dataTransfer.files?.[0])
+  }
+
+  function clear() {
+    if (inputRef.current) inputRef.current.value = ''
+    onReset()
+  }
+
+  return (
+    <div className="space-y-5">
+      <SectionCard title={tImport.title} subtitle={tImport.subtitle}>
+        <div className="text-xs font-medium px-1 mb-2" style={{ color: 'var(--ink-3)' }}>
+          {tImport.sourceLabel}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {SOURCE_OPTIONS.map((s) => {
+            const isActive = source === s
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSource(s)}
+                disabled={parsing}
+                className="px-4 py-3 rounded-xl text-sm text-left cursor-pointer disabled:cursor-default"
+                style={{
+                  background: isActive ? 'var(--surface-alt)' : 'var(--surface)',
+                  border: `1px solid ${isActive ? 'var(--ink-2)' : 'var(--hairline)'}`,
+                  color: 'var(--ink)',
+                }}
+              >
+                {tImport.sources[s]}
+              </button>
+            )
+          })}
+        </div>
+      </SectionCard>
+
+      <label
+        htmlFor={inputId}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={onDrop}
+        className="block cursor-pointer rounded-2xl px-6 py-9 text-center transition-colors"
+        style={{
+          background: isDragging ? 'var(--surface-alt)' : 'var(--surface)',
+          border: `1px dashed ${isDragging ? 'var(--ink-2)' : 'var(--ink-3)'}`,
+          color: 'var(--ink-2)',
+        }}
+      >
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="file"
+          accept=".csv,text/csv"
+          className="sr-only"
+          onChange={(e) => pickFile(e.target.files?.[0])}
+        />
+        <div className="text-[14px] mb-3">{tImport.uploadPrompt}</div>
+        <span
+          className="inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium"
+          style={{
+            background: 'var(--btn-primary-bg)',
+            letterSpacing: '0.4px',
+          }}
+        >
+          {parsing ? tImport.parsing : tImport.uploadButton}
+        </span>
+      </label>
+
+      {parseError && (
+        <div
+          className="rounded-xl px-4 py-3 text-sm text-center"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--debit)' }}
+        >
+          <p>{parseError}</p>
+          <button
+            type="button"
+            onClick={clear}
+            className="mt-2 underline cursor-pointer text-xs"
+            style={{ color: 'var(--ink-2)' }}
+          >
+            {tImport.retryCta}
+          </button>
+        </div>
+      )}
+
+      {parsed && (
+        <SectionCard>
+          <div className="text-sm mb-1" style={{ color: 'var(--ink)' }}>
+            {tImport.fileSelected.replace('{name}', parsed.file.name)}
+          </div>
+          <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
+            {tImport.sourceDetected.replace('{source}', t.settings.import.step1.sources[parsed.source as ImportSource])}
+          </div>
+          <div className="text-xs mt-1" style={{ color: 'var(--ink-3)' }}>
+            {tImport.summary
+              .replace('{total}', String(parsed.result.stats.total))
+              .replace('{valid}', String(parsed.result.stats.valid))
+              .replace('{invalid}', String(parsed.result.stats.invalid))}
+          </div>
+          {parsed.result.stats.invalid > 0 && (
+            <div className="text-xs mt-2" style={{ color: 'var(--ink-3)' }}>
+              {tImport.invalidNote}
+            </div>
+          )}
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={clear}
+              className="flex-1 h-11 rounded-xl text-sm cursor-pointer"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+            >
+              {tImport.retryCta}
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer"
+              style={{ background: 'var(--btn-primary-bg)' }}
+            >
+              {tImport.nextCta}
+            </button>
+          </div>
+        </SectionCard>
+      )}
+    </div>
+  )
+}
+
+function SectionCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title?: string
+  subtitle?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="rounded-2xl px-5 py-4"
+      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+    >
+      {title && (
+        <div className="text-sm font-medium mb-1" style={{ color: 'var(--ink)' }}>
+          {title}
+        </div>
+      )}
+      {subtitle && (
+        <div className="text-xs mb-3" style={{ color: 'var(--ink-3)' }}>
+          {subtitle}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}

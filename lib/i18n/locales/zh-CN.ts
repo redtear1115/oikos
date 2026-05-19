@@ -81,7 +81,7 @@ export const zhCN: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '两个人，<br />一本账。',
-    bodyHtml: '专为两个人设计的账本。<br />日子一天天记下来，回头看会很暖。',
+    bodyHtml: '为伴侣与夫妻设计的共同记账。<br />日子一天天记下来，回头看会很暖。',
     cta: '一起记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
@@ -753,6 +753,102 @@ export const zhCN: Translations = {
         balanceNotZero: '还有差额没结清，无法离开',
         soloGroup: '已经是单人账本',
         fallback: '操作失败，请稍后再试',
+      },
+    },
+    import: {
+      navLabel: '从其他 app 导入',
+      navSecondary: '把过去的记录带过来',
+      pageTitle: '从其他 app 导入',
+      pageSubtitle: '把过往的记录一起带进来',
+      back: '返回设置',
+      stepLabel: '第 {current} / {total} 步',
+      step1: {
+        title: '选择来源并上传文件',
+        subtitle: '文件会在这台设备上解析，原始数据不会上传',
+        sourceLabel: '导出来源',
+        sources: {
+          honeydue: 'Honeydue',
+          spendee: 'Spendee',
+          cwmoney: 'CWMoney',
+          generic: '通用 CSV',
+        },
+        uploadPrompt: '拖文件到这里，或点选下方按钮',
+        uploadButton: '选择 CSV 文件',
+        parsing: '解析中…',
+        fileSelected: '已选：{name}',
+        summary: '共 {total} 笔 · 有效 {valid} 笔 · 失败 {invalid} 笔',
+        sourceDetected: '检测到来源：{source}',
+        invalidNote: '失败的行会跳过导入，并保留在错误记录供日后修正',
+        nextCta: '下一步',
+        retryCta: '换一个文件',
+        parseError: '解析失败，请确认文件格式或换一个文件重试',
+      },
+      step2: {
+        title: '类别对照',
+        subtitle: '把来源的类别，对应到账本里的类别',
+        sourceColumn: '来源类别',
+        targetColumn: '对应到',
+        rowCount: '{count} 笔',
+        keepOriginal: '其他',
+        autoSuggested: '自动建议',
+        nextCta: '下一步',
+        backCta: '上一步',
+      },
+      step3: {
+        title: '付款人与分摊方式',
+        subtitle: '为这次导入的记录统一指定默认值',
+        payerLabel: '默认付款人',
+        payerHint: '可在导入完成后逐笔修改',
+        splitLabel: '默认分摊方式',
+        splitOptions: {
+          all_mine: '全部我的',
+          all_theirs: '全部对方的',
+          half: '一人一半',
+        },
+        soloHint: '单人状态下固定为「全部我的」',
+        nextCta: '下一步',
+        backCta: '上一步',
+      },
+      step4: {
+        title: '预览并确认',
+        subtitle: '先看一下前几笔，没问题就把它们留下来',
+        tableHeader: {
+          date: '日期',
+          description: '说明',
+          category: '类别',
+          amount: '金额',
+          type: '类型',
+        },
+        typeExpense: '支出',
+        typeIncome: '收入',
+        moreRows: '还有 {count} 笔未显示',
+        confirmCta: '确认导入 {count} 笔',
+        confirming: '导入中…',
+        backCta: '上一步',
+        summary: '预计写入 {count} 笔 · 失败 {invalid} 笔会保留记录',
+      },
+      result: {
+        successHeading: '导入完成',
+        successBody: '已写入 {count} 笔记录',
+        rollbackHint: '24 小时内可一键还原这次导入',
+        rollbackCta: '还原这次导入',
+        rollbackConfirm: '确定要还原吗？所有这次导入的记录会一起撤回',
+        rollbacking: '还原中…',
+        doneCta: '回到设置',
+      },
+      history: {
+        title: '最近的导入',
+        empty: '还没有导入过任何数据',
+        rolledBack: '已还原',
+        completed: '已完成',
+        rollbackableTag: '24 小时内可还原',
+        expiredTag: '已超过还原时效',
+      },
+      errors: {
+        parseFailed: '解析文件时遇到问题',
+        submitFailed: '写入时遇到问题，请稍后再试',
+        rollbackFailed: '还原失败，请稍后再试',
+        noValidRows: '这个文件没有可导入的记录',
       },
     },
   },
@@ -1684,6 +1780,8 @@ export const zhCN: Translations = {
       unknown: '其他',
     },
     differentiatorsHeading: '为什么选 Futari',
+    faqHeading: '常见问题',
+    comparisonHeading: 'Futari vs {other}',
     trust: {
       heading: '为什么可以放心搬过来',
       items: [
@@ -1706,7 +1804,7 @@ export const zhCN: Translations = {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 数据，可以带走',
-        heroSubtitle: '上传 CSV，三分钟把这几年的记账搬到 Futari。',
+        heroSubtitle: '从 Honeydue 搬迁到 Futari 只要三分钟——上传 CSV，这几年的记账完整保留。',
         intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、数据加密。',
         differentiators: [
           {
@@ -1726,11 +1824,59 @@ export const zhCN: Translations = {
         step1: '在 Honeydue App → 设置 → 导出数据，下载 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '创建 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: '导入后数据需要再整理吗？',
+            answer: '类别可在导入流程中对照调整，一次完成，不需要事后手动修改。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。特殊类型（如转账）会标记供你确认。',
+          },
+          {
+            question: 'Honeydue 的共同账本功能，Futari 有吗？',
+            answer: '有。Futari 就是为两个人设计的，所有记录都在同一个账本，可以各自查看与新增。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Honeydue',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '✓ 支持', tone: 'yes' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '△ 基本对半', tone: 'partial' },
+            },
+            {
+              feature: '持续维护更新',
+              futari: { label: '✓ 每两周发版', tone: 'yes' },
+              other: { label: '△ 节奏放缓', tone: 'partial' },
+            },
+            {
+              feature: '多币别记账',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: '端到端数据加密',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '— 未说明', tone: 'no' },
+            },
+          ],
+        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
         heroTitle: '你的 Spendee 数据，可以带走',
-        heroSubtitle: '上传 Spendee 导出的 CSV，预览完整记录再决定要不要搬。',
+        heroSubtitle: '从 Spendee 导入记账记录到 Futari，上传 CSV 预览完整记录再决定要不要搬。',
         differentiators: [
           {
             title: '双人是核心，不是付费才解锁',
@@ -1749,11 +1895,62 @@ export const zhCN: Translations = {
         step1: '在 Spendee → More → Export Data，下载 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '创建 Futari 账号，一键完成搬迁。',
+        formatHintLabel: 'Spendee CSV 的字段长这样',
+        formatHintHeaders: 'Date,Wallet,Type,Category name,Amount,Currency,Note',
+        formatHintNote: 'Type 字段是「Expense / Income / Transfer」。Transfer（账户间转账）导入时会被标为错误——Futari 不存转账，请在预览阶段删除这几行。',
+        faq: [
+          {
+            question: '导入后数据需要再整理吗？',
+            answer: '类别可在导入流程中对照调整，一次完成，不需要事后手动修改。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。特殊类型（如转账）会标记供你确认。',
+          },
+          {
+            question: 'Spendee 的分摊功能，Futari 支持吗？',
+            answer: '支持。Futari 内建多种分摊方式：各付各、全由一方负担、对半分、自定义比例。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Spendee',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 免费内建', tone: 'yes' },
+              other: { label: '△ 需付费解锁', tone: 'partial' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无原生支持', tone: 'no' },
+            },
+            {
+              feature: '即时同步',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '△ 限付费版', tone: 'partial' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 基本版有限制', tone: 'partial' },
+            },
+            {
+              feature: 'CSV 数据导入',
+              futari: { label: '✓ 直接上传', tone: 'yes' },
+              other: { label: '— 需自行整理', tone: 'partial' },
+            },
+          ],
+        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
         heroTitle: '你的 CWMoney 数据，可以带走',
-        heroSubtitle: '用转换模板把 CWMoney 的 Excel 整理成 CSV，再上传到 Futari。',
+        heroSubtitle: 'CWMoney 数据导出导入指南：用转换模板把 Excel 整理成 CSV，再上传到 Futari。',
         differentiators: [
           {
             title: '双人账本是默认',
@@ -1774,6 +1971,54 @@ export const zhCN: Translations = {
         step3: '上传转换后的 CSV，预览并创建账号导入。',
         templateDownloadLabel: '下载转换模板',
         templateNote: '模板会把 CWMoney 的字段对应到 Futari 支持的格式。',
+        faq: [
+          {
+            question: '导入后数据需要再整理吗？',
+            answer: '类别可在导入流程中对照调整，一次完成，不需要事后手动修改。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。特殊类型（如转账）会标记供你确认。',
+          },
+          {
+            question: 'CWMoney 的资产功能，Futari 有对应吗？',
+            answer: 'Futari 有「爱物」功能，可以记录车、房子、保险等共同资产的相关支出。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'CWMoney',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 默认模式', tone: 'yes' },
+              other: { label: '✕ 单人设计', tone: 'no' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: '多币别记账',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '✓ 支持', tone: 'yes' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ VIP 解锁', tone: 'partial' },
+            },
+            {
+              feature: '即时云端同步',
+              futari: { label: '✓ 即时', tone: 'yes' },
+              other: { label: '△ 需 VIP', tone: 'partial' },
+            },
+          ],
+        },
       },
     },
   },
@@ -1781,8 +2026,8 @@ export const zhCN: Translations = {
   seo: {
     landing: {
       title: 'Futari · 两个人，一本账｜情侣共享记账 PWA',
-      description: '专为夫妻、情侣设计的双人共享账本。自动分摊、AA 结算、家庭资产盘点、保险与爱车油耗记录，台湾团队制作的 Mobile-first PWA 家计簿。',
-      ogDescription: '两个人，一本账。一起记录、自动分摊、轻松结算。',
+      description: 'Futari 是为夫妻、情侣设计的共同账本，两个人一起记账、自动分摊花费、AA 结算，从日常开销到旅行、爱车与资产，轻松看见两个人的生活全貌。',
+      ogDescription: 'Futari 是为夫妻、情侣设计的共同账本——一起记账、自动分摊、AA 结算，看见两个人的生活全貌。',
     },
     signIn: {
       title: '登录 Futari · 开始两个人的记账生活',
@@ -1799,19 +2044,19 @@ export const zhCN: Translations = {
     },
     migrate: {
       honeydue: {
-        title: '从 Honeydue 搬到 Futari — 免费双人记账替代方案',
-        description: 'Honeydue 逐渐停止维护，Futari 让你 3 分钟完成数据搬迁，继续和伴侣一起记账。免费、无广告、数据加密。',
-        ogDescription: 'Honeydue 用户的下一站：Futari 双人记账，把数据一起带走。',
+        title: '从 Honeydue 搬迁到 Futari — Honeydue 替代方案｜免费双人记账',
+        description: 'Honeydue 更新放缓，Futari 是专为夫妻、情侣设计的共同账本，让你 3 分钟完成数据搬迁，继续一起记账。Honeydue 替代方案首选：免费、无广告、端到端加密。',
+        ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {
-        title: '从 Spendee 搬到 Futari — 双人记账替代方案',
-        description: '把 Spendee 的记账数据带来 Futari，继续和伴侣一起记账。上传 CSV，3 分钟完成搬迁。',
+        title: '从 Spendee 导入记账记录 — Spendee 伴侣记账替代方案｜Futari',
+        description: 'Spendee 伴侣记账替代方案——把 Spendee 的 CSV 导入 Futari，这个专为夫妻、情侣设计的共同账本，双人共享免费内建，不必再为解锁付费。',
         ogDescription: 'Spendee 用户的双人记账新选择：上传 CSV，3 分钟搬完。',
       },
       cwmoney: {
-        title: '从 CWMoney 搬到 Futari — 记账数据搬迁教程',
-        description: '用我们提供的 Excel 转换模板，把 CWMoney 数据整理成 CSV，再上传到 Futari 完成搬迁。',
-        ogDescription: 'CWMoney 用户搬家指南：用转换模板把 Excel 变成 CSV，搬进 Futari。',
+        title: '从 CWMoney 搬家到 Futari — CWMoney 数据导出导入教程',
+        description: 'CWMoney 数据导出后怎么导入新工具？用我们提供的 Excel 转换模板整理成 CSV，再上传到 Futari 这个专为夫妻、情侣设计的共同账本，完成搬家。',
+        ogDescription: 'CWMoney 用户搬家指南：Excel 转 CSV，搬进 Futari 双人记账。',
       },
     },
   },

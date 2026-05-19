@@ -8,6 +8,9 @@ import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateIntroCallout } from '../_components/MigrateIntroCallout'
 import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
+import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
+import { MigrateFaq } from '../_components/MigrateFaq'
+import { MigrateComparison } from '../_components/MigrateComparison'
 
 type Params = Promise<{ locale: string }>
 
@@ -49,6 +52,7 @@ export default async function MigrateHoneydue({ params }: { params: Params }) {
 
   return (
     <div className="space-y-10 md:space-y-14">
+      <MigrateBreadcrumbJsonLd locale={locale} source="honeydue" />
       <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
       <MigrateIntroCallout text={page.intro} />
@@ -64,6 +68,15 @@ export default async function MigrateHoneydue({ params }: { params: Params }) {
         heading={page.stepsHeading}
         steps={[page.step1, page.step2, page.step3]}
       />
+
+      <MigrateComparison
+        heading={t.comparisonHeading.replace('{other}', page.comparison.otherLabel)}
+        futariLabel="Futari"
+        otherLabel={page.comparison.otherLabel}
+        rows={page.comparison.rows}
+      />
+
+      <MigrateFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 
       <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
 

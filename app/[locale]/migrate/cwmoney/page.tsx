@@ -7,6 +7,9 @@ import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
+import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
+import { MigrateFaq } from '../_components/MigrateFaq'
+import { MigrateComparison } from '../_components/MigrateComparison'
 
 type Params = Promise<{ locale: string }>
 
@@ -77,6 +80,7 @@ export default async function MigrateCwmoney({ params }: { params: Params }) {
 
   return (
     <div className="space-y-10 md:space-y-14">
+      <MigrateBreadcrumbJsonLd locale={locale} source="cwmoney" />
       <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
       <MigrateDifferentiators
@@ -90,6 +94,15 @@ export default async function MigrateCwmoney({ params }: { params: Params }) {
       />
 
       <MigrateTool t={t} signInHref={signInHref} hint="cwmoney" />
+
+      <MigrateComparison
+        heading={t.comparisonHeading.replace('{other}', page.comparison.otherLabel)}
+        futariLabel="Futari"
+        otherLabel={page.comparison.otherLabel}
+        rows={page.comparison.rows}
+      />
+
+      <MigrateFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 
       <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
 
