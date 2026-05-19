@@ -15,6 +15,42 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.2] - 2026-05-19
+
+主題：**Design system primitives + 前端品質重構 + SEO 收尾**——issue #629 的 design system phase 0：token layer（control-height / sheet-spacing / focus-ring）+ Button / TextInput / Sheet 三組 primitive 一次到位，pilot 用 `InstallGuide` 驗 API，接著把 SettlementSheet / IncomeSheet / RecurringRuleSheet / AddSheet 4 個重點 sheet 收進來。issue #610 的前端品質重構同步推一輪（lazy-load sheets / SVG 改 server / CSS token 取代 hardcoded `#fff` / Dashboard state → useReducer / wizard 共用 hook 與 widget 抽取 / 統一 CSV parser 層 / 刪除 dead banner），把先前累積的 ad-hoc 樣式與 client boundary 清乾淨。SEO 收尾把 /migrate cross-link / 標題長度 / FAQ JSON-LD per-locale / GSC verification 補齊，承接 v1.1.0~v1.1.1 的 /migrate 站台。
+完整 diff：[v1.1.1...v1.1.2](https://github.com/redtear1115/oikos/compare/v1.1.1...v1.1.2)
+
+### 使用者可見變化
+
+- **Sheet header / button / input 視覺一致化（#629, #649, #650, #651, #652, #653）**：先前 SettlementSheet / IncomeSheet / RecurringRuleSheet / AddSheet 各自的 padding、radius、按鈕 hover、focus ring 各做各的（11 種 button radius、3 種 input padding、`px-4`/`px-5`/`px-6` 與 `pb-6`/`pb-8`/`pb-12` 混用）；本版收進共用 Button + TextInput + Sheet primitive，視覺對齊；SheetHeader 也加上 leading slot 與 3-column centered variant 處理「左 icon + 中 title + 右 close」格式。
+- **/migrate landing 多了「來自其他來源？」cross-link 區塊（#612）**：每條 /migrate 頁底新增 cross-link 卡片，把另外兩條 /migrate 頁列出來，方便 Honeydue / Spendee / CWMoney 三條 landing 之間互通。
+- **Landing 補了 /migrate/* 內部連結（#613）**：landing 頁多了一段 trust copy 連到三條 /migrate 頁，給「正在找替代品但還不知道 Futari 是什麼」的訪客一條順路。
+- **/migrate 頁標題不再被 SERP 截斷（#614）**：三條 /migrate 頁 title 長度縮到 ~50 chars 內，避開 Google SERP 60 char 截斷。
+- **FAQ JSON-LD 每個 locale 各吐一份（#611）**：landing FAQPage JSON-LD 拆成 per-locale 注入（`inLanguage` 對應頁面 locale），讓 4 語 Google rich result 都抓得到，而不是只有 zh-TW 那份。
+
+### 技術變更
+
+- **Design system phase 0：token layer + primitives（#629）**：
+  - Tokens (`app/globals.css`)：`--control-sm/md/lg`（36/44/52px）+ `--sheet-x/y-top/y-bottom`（20/16/24px）+ `--input-bg` + `--focus-ring-color` + `@utility oik-focus-ring` + `.oik-btn` / `.oik-input-wrapper`。
+  - `components/ui/Button.tsx` — 4 variant（primary/secondary/ghost/danger）× 3 size（sm/md/lg）+ loading state（`aria-busy` 鎖 accessible name）。
+  - `components/ui/TextInput.tsx` — 包 `leftAddon` / `rightAddon` slot + error state + 共用 focus ring。
+  - `components/ui/Sheet/SheetHeader.tsx` / `SheetBody.tsx` / `SheetFooter.tsx` — header 標準（title row + 可選 centered 3-column variant）、body（scrollable）、footer（sticky + iOS safe-area handling）。
+  - Pilot migration（`InstallGuide.tsx`）驗 API，接著 SettlementSheet（#650）/ IncomeSheet（#649）/ RecurringRuleSheet（#652）/ AddSheet（#651）四個重點 sheet 全部收進來。
+  - Spec：`docs/superpowers/specs/design-system-primitives-design.md`（first_shipped_in v1.1.2）。
+- **前端品質重構 (#610 umbrella) — code quality 一輪**：
+  - **Bundle / boundary**：lazy-load sheet components via `next/dynamic`（#616）；SVG icon components 拿掉 `"use client"`（#630）；`SettingsContent` client boundary 收窄（#631）。
+  - **Token / style**：hardcoded `#fff` / `bg-white` 改 CSS token（#620，承接 token layer 工作）；recurring sheet 的 Tailwind arbitrary value 移進 `@theme inline`（#621）。
+  - **Hook / widget 抽取**：`useWizardSteps` 共用 hook（#624）；`WizardNavButtons` + `SectionCard` 統一（#618）；`CsvFileUploadWidget` 抽出（#619）；wizard CTA i18n key 統一 + 刪掉 orphan `autoSuggested`（#632）。
+  - **State 結構**：`Dashboard.tsx` 多個 useState → `useReducer`（#626）；FilterSheet / RecordsList / BalanceHero state cleanup（#627）。
+  - **共用 component / lib**：income vs expense `RecurringRuleSheet` merge 成同一個（#625）；CSV parser / detector 收進 `lib/csvImport/`（#623）。
+  - **Dead code / 防呆**：刪除 `OfflineBanner` / `PastEpochBanner`（#617）；stats view + sheets 拿掉冗餘 type assertion（#628）；`useTranslations()` stable-reference contract 補 test 鎖死（#622）。
+- **SEO 收尾**：
+  - `MigrateOtherSources` server component（#612）— 每條 /migrate 頁底吐 cross-link card。
+  - Landing → /migrate/* 內部連結（#613）。
+  - /migrate page title 縮短（#614）— 平均 ~48 chars，避開 SERP 截斷。
+  - FAQPage JSON-LD per-locale 注入（#611）— `inLanguage` 對應頁面 locale。
+  - Google Search Console verification meta tag（#615）— `app/layout.tsx` 加 `<meta name="google-site-verification">`，前面 SEO 工作才有量測基礎。
+
 ## [1.1.1] - 2026-05-19
 
 主題：**CSV 匯入續做（Spendee / 銀行對帳單 / OFX / QIF）+ /migrate SEO 強化**——把 v1.1.0 的 CSV import + /migrate landing pages 再推一輪。CSV mapper 修了 Spendee Transfer row 被誤分類成收入的 bug，並補銀行對帳單 → Futari 通用格式的 .xlsx 轉換模板（#585）；新增 OFX + QIF parser，把 `.ofx` / `.qif` 也走同一條 import pipeline（#586，Moze 樣本待補）。SEO 面把 /migrate 三條 landing 加 BreadcrumbList + FAQPage JSON-LD（#593, #599）、長尾關鍵字（Honeydue/Spendee/CWMoney 替代方案）+ Futari vs source app 比較表（#599）、sitemap/robots 對齊（#595, #596）、hreflang 行為鎖 regression test（#594）、meta description + og:description 4 語對齊（#597）、H1 下方 body 自然帶入「伴侶／夫妻記帳」關鍵字（#598）。
@@ -1211,7 +1247,8 @@ v0.16.3 在 middleware 加 `/`、`/sign-in`、`/terms`、`/privacy` 四條 publi
 
 ---
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/redtear1115/oikos/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/redtear1115/oikos/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/redtear1115/oikos/compare/v1.0.5...v1.1.0
 [1.0.5]: https://github.com/redtear1115/oikos/compare/v1.0.4...v1.0.5
