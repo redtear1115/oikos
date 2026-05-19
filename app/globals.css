@@ -70,6 +70,22 @@
   --btn-disabled-bg:      var(--ink-3);
   --btn-disabled-text:    #fff;
 
+  /* Control height tokens — Button + TextInput sizing (issue #629) */
+  --control-sm:   36px;
+  --control-md:   44px;  /* = h-11, primary button + input default */
+  --control-lg:   52px;  /* hero CTA */
+
+  /* Sheet inner spacing tokens — eliminates px-4/px-5/px-6 mix (issue #629) */
+  --sheet-x:        20px;
+  --sheet-y-top:    16px;
+  --sheet-y-bottom: 24px;
+
+  /* Input surface — separate from --surface so future theming can target inputs */
+  --input-bg: var(--surface);
+
+  /* Focus ring color — reuses accent hue from --toggle-focus-ring (issue #629) */
+  --focus-ring-color: color-mix(in srgb, var(--accent) 55%, transparent);
+
   /* Toggle / chip / switch tokens — unification for issue #263.
    * Three toggle families share these so the design language stays coherent:
    *   1. Switch (settings on/off, iOS-style)         — uses --switch-* + shared transition/focus
@@ -143,6 +159,11 @@
   --text-amount-md: 44px;
   --text-amount-lg: 56px;
 
+  /* Control-height → Tailwind h-control-sm / h-control-md / h-control-lg */
+  --height-control-sm: var(--control-sm);
+  --height-control-md: var(--control-md);
+  --height-control-lg: var(--control-lg);
+
   /* Recurring radii (issue #621). Tailwind defaults still apply (rounded-xl=12px,
    * rounded-2xl=16px, rounded-full); these cover sizes that fell between defaults
    * and were duplicated 13+ times each as `rounded-[Npx]` arbitrary values. */
@@ -156,6 +177,14 @@
  * `px-3.5 rounded-chip` for filter chips, sheet pickers, segmented toggles. */
 @utility h-chip {
   height: 34px;
+}
+
+/* oik-focus-ring: standard keyboard focus treatment for interactive primitives.
+ * Matches --toggle-focus-ring but expressed as a Tailwind utility for use in
+ * className instead of inline style / box-shadow. */
+@utility oik-focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
 }
 
 html, body { margin: 0; padding: 0; background: var(--bg-page); }
@@ -180,6 +209,18 @@ body {
 .oik-segment:focus-visible {
   outline: none;
   box-shadow: var(--toggle-focus-ring);
+}
+
+/* Button focus ring — matches toggle ring, uses --focus-ring-color (issue #629). */
+.oik-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
+}
+
+/* TextInput wrapper focus ring — keyboard-visible when any child input is focused (issue #629). */
+.oik-input-wrapper:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-ring-color);
 }
 
 /* Switch track + thumb backgrounds — moved out of inline style so Tailwind
