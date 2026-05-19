@@ -66,7 +66,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
     >
       <div className="flex flex-col gap-3">
         <div
-          className="rounded-[12px] px-3 py-2.5 text-sm leading-relaxed"
+          className="rounded-xl px-3 py-2.5 text-sm leading-relaxed"
           style={{
             background: 'var(--debit-soft)',
             color: 'var(--destructive)',

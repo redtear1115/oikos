@@ -51,7 +51,7 @@ export function WelcomeSoloCard({ groupId }: Props) {
   return (
     <div className="px-5 pt-4">
       <div
-        className="rounded-[20px] px-5 py-4 flex items-start gap-3"
+        className="rounded-card px-5 py-4 flex items-start gap-3"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',

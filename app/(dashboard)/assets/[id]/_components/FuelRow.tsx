@@ -40,7 +40,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
       style={{ background: 'linear-gradient(90deg, rgba(138,123,90,0.07), transparent 50%)' }}
     >
       {/* fuel pump icon */}
-      <div className="w-9 h-9 rounded-[10px] bg-[#E8E4D8] text-[#8A7B5A] flex items-center justify-center shrink-0">
+      <div className="w-9 h-9 rounded-chip bg-[#E8E4D8] text-[#8A7B5A] flex items-center justify-center shrink-0">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <rect x="3" y="4" width="9" height="13" rx="1" stroke="currentColor" strokeWidth="1.5"/>
           <path d="M12 9h2a2 2 0 012 2v3a1 1 0 002 0V8l-2-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

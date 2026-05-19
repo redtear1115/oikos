@@ -199,7 +199,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
         {onEditClick ? (
           <button
             onClick={onEditClick}
-            className="w-[30px] h-[30px] rounded-[10px] shrink-0 flex items-center justify-center"
+            className="w-[30px] h-[30px] rounded-chip shrink-0 flex items-center justify-center"
             style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
             aria-label={t.assetDetail.editAriaLabel}
           >

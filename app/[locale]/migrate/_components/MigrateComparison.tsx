@@ -27,7 +27,7 @@ export function MigrateComparison({
   return (
     <section className="space-y-5">
       <h2
-        className="text-[13px] m-0"
+        className="text-label m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--accent)',
@@ -38,13 +38,13 @@ export function MigrateComparison({
         {heading}
       </h2>
       <div
-        className="rounded-[18px] overflow-hidden"
+        className="rounded-tile overflow-hidden"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
         }}
       >
-        <table className="w-full border-collapse text-[13px] md:text-[14px]">
+        <table className="w-full border-collapse text-label md:text-[14px]">
           <thead>
             <tr style={{ background: 'var(--surface-alt)' }}>
               <th

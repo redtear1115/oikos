@@ -176,7 +176,7 @@ function AboutNarrative({
     <div className="flex flex-col gap-10 lg:gap-12">
       <article className="about-article flex flex-col gap-4">
         <h2
-          className="m-0 text-[19px] lg:text-[22px] leading-snug"
+          className="m-0 text-[19px] lg:text-title leading-snug"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontWeight: 500,
@@ -207,7 +207,7 @@ function AboutNarrative({
           return (
             <p
               key={j}
-              className="m-0 text-[14.5px] lg:text-[15px] leading-[1.85]"
+              className="m-0 text-[14.5px] lg:text-body leading-[1.85]"
               style={{ color: 'var(--ink-2)' }}
             >
               {p}
@@ -215,7 +215,7 @@ function AboutNarrative({
           )
         })}
         <p
-          className="m-0 mt-4 text-[13px] lg:text-[14px] leading-relaxed italic"
+          className="m-0 mt-4 text-label lg:text-[14px] leading-relaxed italic"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontWeight: 400,

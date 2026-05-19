@@ -145,7 +145,7 @@ export function LeaveGroupFlow({
     <>
       <SheetBackdrop open={open} onClick={handleClose} />
       <div
-        className="fixed left-1/2 top-1/2 z-[110] w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[20px] flex flex-col"
+        className="fixed left-1/2 top-1/2 z-[110] w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card flex flex-col"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
@@ -222,7 +222,7 @@ export function LeaveGroupFlow({
           )}
           {errorMsg && (
             <div
-              className="mt-4 rounded-[12px] px-3 py-2 text-xs"
+              className="mt-4 rounded-xl px-3 py-2 text-xs"
               style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
               role="alert"
             >
@@ -238,7 +238,7 @@ export function LeaveGroupFlow({
               type="button"
               onClick={goBack}
               disabled={pending}
-              className="h-11 px-4 rounded-[12px] text-sm font-medium cursor-pointer disabled:opacity-50"
+              className="h-11 px-4 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{
                 background: 'var(--btn-secondary-bg)',
                 color: 'var(--btn-secondary-text)',
@@ -251,7 +251,7 @@ export function LeaveGroupFlow({
               type="button"
               onClick={goNext}
               disabled={pending}
-              className="h-11 px-5 rounded-[12px] text-sm font-semibold cursor-pointer disabled:opacity-50"
+              className="h-11 px-5 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {flow.next}
@@ -361,7 +361,7 @@ function Card4({
           type="button"
           onClick={onYes}
           disabled={pending}
-          className="w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer disabled:opacity-50"
+          className="w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer disabled:opacity-50"
           style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
         >
           {yesLabel}
@@ -370,7 +370,7 @@ function Card4({
           type="button"
           onClick={onNo}
           disabled={pending}
-          className="w-full h-12 rounded-[14px] text-sm font-medium cursor-pointer disabled:opacity-50"
+          className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-50"
           style={{
             background: 'var(--btn-secondary-bg)',
             color: 'var(--btn-secondary-text)',
@@ -428,7 +428,7 @@ function FinalConfirm({
           <button
             type="button"
             onClick={onSettle}
-            className="w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer"
+            className="w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer"
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {t.settleCta}
@@ -447,7 +447,7 @@ function FinalConfirm({
             value={confirmInput}
             onChange={(e) => onChangeInput(e.target.value)}
             placeholder={t.typePlaceholder}
-            className="w-full h-12 rounded-[12px] px-3 text-sm mb-4 outline-none"
+            className="w-full h-12 rounded-xl px-3 text-sm mb-4 outline-none"
             style={{
               background: 'var(--surface)',
               color: 'var(--ink)',
@@ -458,7 +458,7 @@ function FinalConfirm({
             type="button"
             onClick={onLeave}
             disabled={!matched || pending}
-            className="w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer disabled:opacity-40"
+            className="w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer disabled:opacity-40"
             style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
           >
             {pending ? t.leaving : t.leaveButton}
@@ -485,7 +485,7 @@ function SwapSent({
       <button
         type="button"
         onClick={onClose}
-        className="mt-6 w-full h-12 rounded-[14px] text-sm font-semibold cursor-pointer"
+        className="mt-6 w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer"
         style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
       >
         {t.ok}

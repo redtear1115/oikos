@@ -60,7 +60,7 @@ export function TypePicker({ value, onChange }: Props) {
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setMoreOpen(false) }}
-              className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+              className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
               style={{
                 background: sel ? 'var(--accent)' : 'var(--surface)',
                 color: sel ? '#fff' : 'var(--ink-2)',
@@ -76,7 +76,7 @@ export function TypePicker({ value, onChange }: Props) {
           type="button"
           onClick={() => setMoreOpen(v => !v)}
           aria-expanded={showSecondaryRow}
-          className="flex flex-col items-center gap-1 py-3 rounded-[14px] cursor-pointer"
+          className="flex flex-col items-center gap-1 py-3 rounded-bubble cursor-pointer"
           style={{
             background: 'var(--surface)',
             color: 'var(--ink-2)',
@@ -102,7 +102,7 @@ export function TypePicker({ value, onChange }: Props) {
                 key={opt.value}
                 type="button"
                 onClick={() => onChange(opt.value)}
-                className="flex flex-col items-center gap-1 py-3 rounded-[14px] border-0 cursor-pointer"
+                className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
                 style={{
                   background: sel ? 'var(--accent)' : 'var(--surface)',
                   color: sel ? '#fff' : 'var(--ink-2)',

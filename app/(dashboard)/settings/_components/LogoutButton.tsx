@@ -17,7 +17,7 @@ export function LogoutButton() {
         type="button"
         onClick={() => setConfirming(true)}
         disabled={pending}
-        className="w-full h-12 rounded-[14px] border-0 bg-transparent text-sm font-medium cursor-pointer disabled:opacity-50"
+        className="w-full h-12 rounded-bubble border-0 bg-transparent text-sm font-medium cursor-pointer disabled:opacity-50"
         style={{ color: 'var(--destructive)' }}
       >
         {pending ? t.logoutButton.pending : t.logoutButton.label}

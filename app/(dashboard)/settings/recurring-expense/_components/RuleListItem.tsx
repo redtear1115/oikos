@@ -85,7 +85,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
               </div>
               {isPaused && (
                 <span
-                  className="shrink-0 inline-flex items-center px-2 py-[1px] rounded-full text-[11px] font-medium leading-none"
+                  className="shrink-0 inline-flex items-center px-2 py-[1px] rounded-full text-micro font-medium leading-none"
                   style={{ background: 'var(--warning-soft)', color: 'var(--warning)' }}
                 >
                   {t.recurringExpense.rule.pausedHint}

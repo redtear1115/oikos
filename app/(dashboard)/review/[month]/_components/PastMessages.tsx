@@ -35,7 +35,7 @@ export function PastMessages({
           return (
             <div
               key={m.id}
-              className="rounded-[18px] px-4 py-3 flex gap-3"
+              className="rounded-tile px-4 py-3 flex gap-3"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
             >
               <Avatar

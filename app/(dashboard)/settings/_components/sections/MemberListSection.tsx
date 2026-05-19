@@ -54,7 +54,7 @@ export function MemberListSection({ viewer, partner, groupId }: Props) {
   return (
     <>
       <div
-        className="rounded-[20px] overflow-hidden"
+        className="rounded-card overflow-hidden"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <MemberRow {...viewer} youSuffix />
@@ -71,7 +71,7 @@ export function MemberListSection({ viewer, partner, groupId }: Props) {
             type="button"
             onClick={handleInvite}
             disabled={invitePending}
-            className="w-full h-12 rounded-[14px] border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+            className="w-full h-12 rounded-bubble border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--btn-accent-bg)', color: 'var(--btn-accent-text)' }}
           >
             {invitePending ? t.soloBanner.generating : t.settings.inviteCta}

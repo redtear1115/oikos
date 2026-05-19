@@ -58,7 +58,7 @@ export function MonthlyReviewBanner({
   return (
     <div className="px-4 pt-2">
       <div
-        className="relative rounded-[20px] px-5 py-4"
+        className="relative rounded-card px-5 py-4"
         style={{
           background: 'linear-gradient(135deg, var(--surface) 0%, rgba(247, 216, 221, 0.4) 100%)',
           border: '1px solid var(--hairline)',

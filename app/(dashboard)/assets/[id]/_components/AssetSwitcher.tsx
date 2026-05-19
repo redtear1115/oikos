@@ -98,7 +98,7 @@ export function AssetSwitcher({
   const popover = open ? (
     <div
       ref={popoverRef}
-      className="overflow-auto rounded-[12px] py-2"
+      className="overflow-auto rounded-xl py-2"
       role="listbox"
       style={{
         position: 'fixed',
@@ -157,7 +157,7 @@ export function AssetSwitcher({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-[10px] pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
+        className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-chip pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
         style={{ background: open ? 'rgba(255,255,255,0.75)' : triggerBg }}
         aria-label={t.assetDetail.switcherAriaLabel}
         aria-haspopup="listbox"

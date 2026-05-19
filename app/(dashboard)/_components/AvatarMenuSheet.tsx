@@ -154,7 +154,7 @@ function Row({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+      className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>

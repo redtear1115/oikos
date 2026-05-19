@@ -595,7 +595,7 @@ export function FilterSheet({
               <button
                 type="button"
                 onClick={handleShare}
-                className="w-full h-10 rounded-[12px] text-sm font-medium cursor-pointer flex items-center justify-center gap-2"
+                className="w-full h-10 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-center gap-2"
                 style={{
                   background: 'var(--surface)',
                   color: 'var(--ink-2)',

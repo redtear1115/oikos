@@ -167,7 +167,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         <div className="flex flex-wrap gap-1.5">
           {[{v:'medical',label:ts.insurance.kindMedical},{v:'life',label:ts.insurance.kindLife},{v:'accident',label:ts.insurance.kindAccident},{v:'cancer',label:ts.insurance.kindCancer},{v:'illness',label:ts.insurance.kindIllness},{v:'car',label:ts.insurance.kindCar},{v:'savings',label:ts.insurance.kindSavings}].map(o => (
             <button key={o.v} type="button" onClick={() => setKind(o.v)}
-              className="h-[34px] px-[14px] rounded-[10px] text-label"
+              className="h-chip px-3.5 rounded-chip text-label"
               style={{
                 border: kind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: kind === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -227,7 +227,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredChildId(null)
                 setInsured('')
               }}
-              className="h-[34px] px-[14px] rounded-[10px] text-label"
+              className="h-chip px-3.5 rounded-chip text-label"
               style={{
                 border: insuredUserId === viewer.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === viewer.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -245,7 +245,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredChildId(null)
                   setInsured('')
                 }}
-                className="h-[34px] px-[14px] rounded-[10px] text-label"
+                className="h-chip px-3.5 rounded-chip text-label"
                 style={{
                   border: insuredUserId === partner.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredUserId === partner.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -265,7 +265,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredUserId(null)
                   setInsured('')
                 }}
-                className="h-[34px] px-[14px] rounded-[10px] text-label"
+                className="h-chip px-3.5 rounded-chip text-label"
                 style={{
                   border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -282,7 +282,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredUserId(null)
                 setInsuredChildId(null)
               }}
-              className="h-[34px] px-[14px] rounded-[10px] text-label"
+              className="h-chip px-3.5 rounded-chip text-label"
               style={{
                 border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -449,7 +449,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               <button
                 type="button"
                 onClick={() => setVehicleId(null)}
-                className="h-[34px] px-[14px] rounded-[10px] text-label"
+                className="h-chip px-3.5 rounded-chip text-label"
                 style={{
                   border: vehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: vehicleId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -464,7 +464,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={car.id}
                   type="button"
                   onClick={() => setVehicleId(car.id)}
-                  className="h-[34px] px-[14px] rounded-[10px] text-label"
+                  className="h-chip px-3.5 rounded-chip text-label"
                   style={{
                     border: vehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                     background: vehicleId === car.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',

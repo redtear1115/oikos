@@ -164,7 +164,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
     </>
   )
 
-  const cls = "w-full flex items-center gap-3 px-[14px] py-3 text-left bg-transparent border-0"
+  const cls = "w-full flex items-center gap-3 px-3.5 py-3 text-left bg-transparent border-0"
   // Pending records read as "still in motion" — drop opacity so they recede
   // visually next to settled rows. Badge label still reads at full contrast.
   const style = {

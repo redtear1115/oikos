@@ -30,7 +30,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
   return (
     <Link
       href={`/assets/${id}`}
-      className="flex items-center gap-3 px-[14px] py-3 no-underline"
+      className="flex items-center gap-3 px-3.5 py-3 no-underline"
       style={{
         color: 'var(--ink)',
         borderLeft: `3px solid ${tint}`,
@@ -41,7 +41,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
           asset rows read at the same density as transaction rows. The earlier
           40×40 made /assets feel ~16px taller than every other list. */}
       <div
-        className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
+        className="w-8 h-8 rounded-chip flex items-center justify-center shrink-0"
         style={{ background: tint, color: 'var(--ink-2)' }}
       >
         <AssetIcon type={type} size={18} />

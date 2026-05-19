@@ -96,7 +96,7 @@ function IosOtherSteps({ t }: { t: Translations }) {
         dangerouslySetInnerHTML={{ __html: t.installGuide.iosOther.bodyHtml }}
       />
       <div
-        className="rounded-[14px] p-3 flex items-center gap-3 mb-4"
+        className="rounded-bubble p-3 flex items-center gap-3 mb-4"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex-1 text-xs break-all" style={{ color: 'var(--ink-2)' }}>

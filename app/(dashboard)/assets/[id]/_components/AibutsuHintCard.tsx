@@ -31,7 +31,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
     : t.assetDetail.hint.itemsHouse
   return (
     <div
-      className="mx-4 rounded-[14px] p-[14px]"
+      className="mx-4 rounded-bubble p-[14px]"
       style={{
         background: 'var(--surface)',
         border: `1.5px dashed ${style.borderColor}`,
@@ -52,7 +52,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
       <button
         type="button"
         onClick={onCtaPress}
-        className="w-full h-9 rounded-[10px] text-label font-semibold text-white cursor-pointer"
+        className="w-full h-9 rounded-chip text-label font-semibold text-white cursor-pointer"
         style={{
           background: 'var(--accent)',
           boxShadow: '0 2px 6px rgba(224,136,86,0.3)',

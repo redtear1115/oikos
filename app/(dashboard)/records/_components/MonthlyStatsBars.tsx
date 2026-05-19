@@ -185,7 +185,7 @@ function Bar({
         onClick={onSelect}
         aria-pressed={active}
         aria-label={a11yLabel}
-        className="w-full text-left flex flex-col gap-1 cursor-pointer rounded-[10px] -mx-2 px-2 py-1 transition-colors duration-150"
+        className="w-full text-left flex flex-col gap-1 cursor-pointer rounded-chip -mx-2 px-2 py-1 transition-colors duration-150"
         style={{
           background: active ? tint : 'transparent',
           border: 'none',

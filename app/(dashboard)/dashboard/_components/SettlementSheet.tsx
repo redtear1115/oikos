@@ -139,7 +139,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               {t.settlement.dateLabel}
             </div>
             <button onClick={() => setShowCal(v => !v)}
-              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-[14px] cursor-pointer text-left"
+              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-bubble cursor-pointer text-left"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
               <CalIcon />
               <div className="flex-1 text-left">
@@ -162,7 +162,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
                 disabled={pending}
-                className="w-full h-12 rounded-[14px] border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+                className="w-full h-12 rounded-bubble border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
                 style={{
                   background: 'transparent',
                   color: 'var(--destructive)',

@@ -27,7 +27,7 @@ export function QuickAccessRow({
       <button
         type="button"
         onClick={openAvatarMenu}
-        className="w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-left bg-transparent cursor-pointer"
+        className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
         <div className="flex items-center gap-3">

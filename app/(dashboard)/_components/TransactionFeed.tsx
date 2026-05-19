@@ -263,7 +263,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
           <div key={g.monthKey}>
             <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} />
             <div
-              className="mx-4 rounded-[18px] overflow-hidden"
+              className="mx-4 rounded-tile overflow-hidden"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
             >
               {g.items.map((tx, i) => {
@@ -294,7 +294,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
             <button
               onClick={handleLoadMore}
               disabled={loading}
-              className="w-full h-11 rounded-[14px] text-sm font-medium cursor-pointer disabled:opacity-50"
+              className="w-full h-11 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{
                 background: 'var(--surface)',
                 color: 'var(--ink-2)',

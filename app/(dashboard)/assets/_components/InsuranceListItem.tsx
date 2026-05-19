@@ -418,7 +418,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
           onChange={(e) => setRenewPolicyNo(e.target.value)}
           placeholder={i.renewPolicyNoPlaceholder}
           disabled={pending}
-          className="w-full h-11 px-3 rounded-[10px] text-sm mb-5 disabled:opacity-50"
+          className="w-full h-11 px-3 rounded-chip text-sm mb-5 disabled:opacity-50"
           style={{
             background: 'var(--surface)', color: 'var(--ink)',
             border: '1px solid var(--hairline)', outline: 'none',
@@ -429,7 +429,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
             type="button"
             onClick={() => setRenewOpen(false)}
             disabled={pending}
-            className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-medium disabled:opacity-50"
+            className="flex-1 h-11 rounded-xl cursor-pointer text-sm font-medium disabled:opacity-50"
             style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
           >
             {t.common.cancel}
@@ -438,7 +438,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
             type="button"
             onClick={handleRenew}
             disabled={pending}
-            className="flex-1 h-11 rounded-[12px] cursor-pointer text-sm font-semibold disabled:opacity-50"
+            className="flex-1 h-11 rounded-xl cursor-pointer text-sm font-semibold disabled:opacity-50"
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {i.renewConfirm}
