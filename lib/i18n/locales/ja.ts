@@ -80,7 +80,7 @@ export const ja: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
-    bodyHtml: 'ふたりのための家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
+    bodyHtml: '夫婦・カップルのための共有家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
     cta: 'ふたりではじめる',
     ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
     alreadyHaveAccount: 'アカウントをお持ちの方',

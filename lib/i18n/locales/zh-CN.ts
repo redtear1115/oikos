@@ -81,7 +81,7 @@ export const zhCN: Translations = {
   landing: {
     heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: '两个人，<br />一本账。',
-    bodyHtml: '专为两个人设计的账本。<br />日子一天天记下来，回头看会很暖。',
+    bodyHtml: '为伴侣与夫妻设计的共同记账。<br />日子一天天记下来，回头看会很暖。',
     cta: '一起记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
