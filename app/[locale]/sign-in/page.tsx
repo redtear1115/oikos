@@ -207,7 +207,7 @@ function AboutNarrative({
           return (
             <p
               key={j}
-              className="m-0 text-[14.5px] lg:text-body leading-[1.85]"
+              className="m-0 text-meta lg:text-body leading-[1.85]"
               style={{ color: 'var(--ink-2)' }}
             >
               {p}
