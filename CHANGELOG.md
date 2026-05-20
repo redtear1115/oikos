@@ -15,6 +15,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.3] - 2026-05-20
+
+主題：**品質打磨 — UX / 前端 / SEO 三輪 audit + design system 續推 + bug 修正**——承接 v1.1.2 的 design system primitives，把 TextInput / Button / FilterSheet 正式收進共用 primitive（#670），同時跑了三輪 audit：前端設計 audit #2（a11y / token / perf / RSC quick wins）、UX round 1（copy / ARIA / safe-area / error 頁）、SEO audit #2（JSON-LD 去重、HowTo schema、SERP 文案長度、footer 法務連結）。另修兩個使用者可見 bug：dashboard L3 篩選器文案語意不一致（#679）與旅行列表載入失敗（#685）。
+完整 diff：[v1.1.2...v1.1.3](https://github.com/redtear1115/oikos/compare/v1.1.2...v1.1.3)
+
+### 使用者可見變化
+
+- **旅行列表不再「載入旅行失敗」（#685）**：`listAllTrips` / `listActiveTrips` / `listTripRecords` 三個 query 漏了 `await`，回傳 query builder 而非資料、讓旅行頁直接報錯；補上 await 後恢復正常。
+- **Dashboard 篩選器文案語意修正（#679）**：付款人 toggle 文案對齊 records 篩選（「我 / 對方」）；負擔 toggle 改用「算我的 / 算對方的」，反映它篩的是「誰實際負擔」而非分攤類型，避免與「全付」語意混淆。多選全開＝不篩選的互動維持不變。
+- **對方記帳即時提示 + 金額輸入游標修正（#671）**：對方新增一筆時跳 realtime toast；金額輸入框游標位置 bug 修掉。
+- **SEO 收尾（#669）**：/migrate 頁補 HowTo JSON-LD；landing 與 /migrate footer 連到 /terms 與 /privacy；標題／描述長度修到 SERP 不截斷；sitemap lastmod / favicon / OG 形狀對齊。
+- **介面細節打磨（UX audit round 1）**：copy 用詞、ARIA 標註、iOS safe-area、error 頁 digest 一輪修正。
+
+### 技術變更
+
+- **Design system adoption（#670）**：TextInput / Button / FilterSheet 收進 v1.1.2 建立的共用 primitive。
+- **前端設計 audit #2（#670）**：a11y（toggle 補 `aria-pressed`、裝飾性 SVG 補 `aria-hidden`）、token（`on-fill` / z-layer / text scale 對齊）、perf（剩餘 sheet lazy-load）、quick wins（tokens / RSC / copy）。
+- **JSON-LD schema 去重（#669）**：移除重複注入的結構化資料。
+- **文件 audit（#667）**：research docs 更新、Domain Model 同步現況 schema、spec frontmatter 修正、v0.x 歷史精簡（doc-keeper sweep #668）。
+
 ## [1.1.2] - 2026-05-19
 
 主題：**Design system primitives + 前端品質重構 + SEO 收尾**——issue #629 的 design system phase 0：token layer（control-height / sheet-spacing / focus-ring）+ Button / TextInput / Sheet 三組 primitive 一次到位，pilot 用 `InstallGuide` 驗 API，接著把 SettlementSheet / IncomeSheet / RecurringRuleSheet / AddSheet 4 個重點 sheet 收進來。issue #610 的前端品質重構同步推一輪（lazy-load sheets / SVG 改 server / CSS token 取代 hardcoded `#fff` / Dashboard state → useReducer / wizard 共用 hook 與 widget 抽取 / 統一 CSV parser 層 / 刪除 dead banner），把先前累積的 ad-hoc 樣式與 client boundary 清乾淨。SEO 收尾把 /migrate cross-link / 標題長度 / FAQ JSON-LD per-locale / GSC verification 補齊，承接 v1.1.0~v1.1.1 的 /migrate 站台。
@@ -227,7 +247,8 @@ _Nothing unreleased yet._
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/redtear1115/oikos/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/redtear1115/oikos/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/redtear1115/oikos/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/redtear1115/oikos/compare/v1.0.5...v1.1.0
