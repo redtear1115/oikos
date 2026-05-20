@@ -5,6 +5,7 @@ import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -84,9 +85,9 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
             {t.common.cancel}
-          </button>
+          </Button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
             {t.assetPickerSheet.title}
           </div>
