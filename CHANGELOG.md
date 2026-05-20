@@ -15,6 +15,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.6] - 2026-05-21
+
+主題：**Android PWA 體驗修正**——集中修正 Android edge-to-edge PWA 的多項體驗問題：safe-area inset 失效（#714）、系統返回鍵直接離開 App 而非收起開啟中的 Sheet（#716 / #683），以及 overscroll 回彈、tap highlight 灰閃、軟鍵盤遮擋輸入框、ja / zh-CN CJK 字型 fallback 缺字等一輪細節（#715 / #713）。
+完整 diff：[v1.1.5...v1.1.6](https://github.com/redtear1115/oikos/compare/v1.1.5...v1.1.6)
+
+### 使用者可見變化
+
+- **Android 返回鍵先收起 Sheet（#716）**：在 Android 上開啟記帳 / 篩選等 Sheet 時，按系統返回鍵會先收起最上層的 Sheet，而不是直接離開 App；多層 Sheet 一次收一層，與點背景 / 按 X / Esc 的關閉行為一致。
+- **Android 安全區與鍵盤貼合（#714 / #715）**：底部導覽列 / 浮動按鈕 / Sheet 正確避開 Android 螢幕邊緣的 safe-area；叫出軟鍵盤時版面跟著縮，輸入框不再被鍵盤蓋住。
+- **Android 滑動與點按細節（#715）**：關掉頁面邊緣的下拉重整與回彈，點按控制項時不再出現灰色閃光；ja / zh-CN 介面在缺字時改用系統 CJK 字型，不再出現方塊（tofu）。
+
+### 技術變更
+
+- **系統返回鍵 / popstate 收起 Sheet（#716, #683）**：`useEscapeToClose` 在 Sheet 開啟時 push 一筆 same-URL synthetic history entry，Back 觸發 `popstate` 時收起 stack 最上層而非導航離開；以 module-level stack + self-pop 計數處理巢狀 Sheet 與「非 Back 關閉」時的 history 回收，避免多吃一次 Back。補上 vitest 覆蓋 push / 巢狀解疊 / self-pop 等情境。
+- **viewport-fit + interactiveWidget（#714 / #713）**：`app/layout.tsx` viewport 加 `viewportFit: 'cover'` 讓 `env(safe-area-inset-*)` 在 Android edge-to-edge 解析到實際值（否則塌成 0、靜默關掉 safe-area offset）；加 `interactiveWidget: 'resizes-content'` 讓軟鍵盤開啟時縮 layout viewport，`dvh` Sheet 跟著鍵盤走。
+- **overscroll / tap-highlight / CJK fallback（#715, #713）**：`html, body` 加 `overscroll-behavior: none` 擋下拉重整與回彈、`SheetBody` 加 `[overscroll-behavior:contain]` 擋 scroll chaining；全域 `-webkit-tap-highlight-color: transparent`；`--font-sans` fallback chain 補 JP / SC 系統字型，ja / zh-CN 缺字時改用原生 CJK face 而非 tofu。
+
 ## [1.1.5] - 2026-05-21
 
 主題：**分頁載入改用 skeleton 骨架畫面**——承接 v1.1.4 (#690) 的載入過場工作，把四個主分頁原本共用的全螢幕 dim/blur 遮罩換成各自對應版面的 skeleton 骨架載入畫面（#710），讓載入過程更貼近實際內容、不再有黑屏閃爍。
@@ -278,7 +295,8 @@ _Nothing unreleased yet._
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.6...HEAD
+[1.1.6]: https://github.com/redtear1115/oikos/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/redtear1115/oikos/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/redtear1115/oikos/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/redtear1115/oikos/compare/v1.1.2...v1.1.3

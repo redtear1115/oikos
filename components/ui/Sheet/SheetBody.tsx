@@ -13,7 +13,7 @@ export function SheetBody({ children, noPadding = false, ref }: SheetBodyProps) 
   return (
     <div
       ref={ref}
-      className="flex-1 overflow-y-auto"
+      className="flex-1 overflow-y-auto [overscroll-behavior:contain]"
       style={noPadding ? undefined : {
         paddingLeft: 'var(--sheet-x)',
         paddingRight: 'var(--sheet-x)',

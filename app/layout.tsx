@@ -74,8 +74,15 @@ export const viewport: Viewport = {
   themeColor: '#FBEDE0',
   width: 'device-width',
   initialScale: 1,
+  // viewport-fit=cover lets env(safe-area-inset-*) resolve to real values on
+  // Android edge-to-edge PWA — without it they collapse to 0 and silently
+  // disable BottomNav/FAB/Sheet safe-area offsets. (#713)
+  viewportFit: 'cover',
   // No maximumScale: WCAG 1.4.4 (Resize Text) requires letting users zoom.
   // Inputs are sized at >= 16px to avoid iOS auto-zoom on focus.
+  // Android Chrome: shrink the layout viewport when the soft keyboard opens so
+  // `dvh`-sized sheets follow the keyboard and inputs stay visible. (#713)
+  interactiveWidget: 'resizes-content',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
