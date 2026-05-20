@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { SheetBody } from '@/components/ui/Sheet'
+import { Button } from '@/components/ui/Button'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AssetGroupSection, Chip, Section } from './FilterSheetChrome'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
@@ -214,8 +216,6 @@ export function FilterSheet({
     setShareToast('')
   }, [open, currentFilter, currentDateRange, effectiveDefaultMonthKey])
 
-  if (!open) return null
-
   const { filter: draft, dateMode, customStart, customEnd, amountMinText, amountMaxText } = form
 
   const toggleCategory = (id: CategoryId) => {
@@ -358,34 +358,28 @@ export function FilterSheet({
   }
 
   return (
-    <>
-      <SheetBackdrop open={open} onClick={onClose} />
-      <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-sheet rounded-t-[24px] pb-6"
-        style={{ background: 'var(--bg)', boxShadow: '0 -8px 32px rgba(0,0,0,0.12)' }}
+    <SheetFrame open={open} onClose={onClose} ariaLabel={t.filterSheet.title}>
+      {/* Header — 3-column layout (重設 | 篩選 | 套用); non-standard for SheetHeader primitive */}
+      <div className="flex items-center justify-between px-5 pt-3 pb-3"
+        style={{ borderBottom: '1px solid var(--hairline)' }}
       >
-        {/* Header: 重設 / 篩選 / 套用 */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3"
-          style={{ borderBottom: '1px solid var(--hairline)' }}
+        <Button variant="ghost" size="sm" onClick={handleReset} className="px-2">
+          {t.filterSheet.reset}
+        </Button>
+        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{t.filterSheet.title}</div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleApply}
+          className="px-2 font-semibold"
+          style={{ color: 'var(--accent)' }}
         >
-          <button
-            onClick={handleReset}
-            className="text-sm font-medium bg-transparent border-0 cursor-pointer"
-            style={{ color: 'var(--ink-2)' }}
-          >
-            {t.filterSheet.reset}
-          </button>
-          <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{t.filterSheet.title}</div>
-          <button
-            onClick={handleApply}
-            className="text-sm font-semibold bg-transparent border-0 cursor-pointer"
-            style={{ color: 'var(--accent)' }}
-          >
-            {t.filterSheet.apply}
-          </button>
-        </div>
+          {t.filterSheet.apply}
+        </Button>
+      </div>
 
-        <div className="px-5 pt-4 space-y-5 max-h-[70vh] overflow-y-auto">
+      <SheetBody noPadding>
+        <div className="px-5 pt-4 space-y-5">
           {/* 日期範圍 — presets + custom. Hidden in lite mode (Dashboard).
               Custom inputs only render when the custom preset is selected so
               the section stays compact in the common case (本月 / 上月). */}
@@ -645,8 +639,12 @@ export function FilterSheet({
               )}
             </div>
           )}
+
+          {/* Bottom spacer: extends past the iOS home indicator so the last
+              control isn't clipped on devices with a gesture bar. */}
+          <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </div>
-      </div>
-    </>
+      </SheetBody>
+    </SheetFrame>
   )
 }

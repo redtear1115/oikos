@@ -1,6 +1,7 @@
 'use client'
 
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
 
 interface Props {
@@ -55,20 +56,22 @@ export function SheetShell({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-3 pb-2">
-        <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
+        <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
           {t.common.cancel}
-        </button>
+        </Button>
         <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
           {title}
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onSave}
           disabled={!canSave}
-          className="bg-transparent border-0 text-body font-semibold p-1 cursor-pointer disabled:cursor-default"
+          className="px-2 font-semibold"
           style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
         >
           {pending ? t.common.saving : t.common.save}
-        </button>
+        </Button>
       </div>
 
       <div className="overflow-auto flex-1 px-5 pt-2 pb-6">

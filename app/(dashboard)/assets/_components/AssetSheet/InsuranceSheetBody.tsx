@@ -9,6 +9,7 @@ import {
   getChildAssets,
 } from '@/actions/asset'
 import type { CarAsset, ChildAsset } from '@/actions/asset'
+import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
@@ -294,26 +295,23 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
             </button>
           </div>
           {insuredUserId === null && insuredChildId === null && (
-            <input value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
-              placeholder={ts.insurance.insuredPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
+            <TextInput value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
+              placeholder={ts.insurance.insuredPlaceholder} />
           )}
         </div>
       </Field>
 
       <Field label={ts.insurance.insurer}>
         {id => (
-          <input id={id} value={insurer} onChange={e => setInsurer(e.target.value.slice(0, 32))}
-            placeholder={ts.insurance.insurerPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={insurer} onChange={e => setInsurer(e.target.value.slice(0, 32))}
+            placeholder={ts.insurance.insurerPlaceholder} />
         )}
       </Field>
 
       <Field label={ts.insurance.policyNo}>
         {id => (
-          <input id={id} value={policyNo} onChange={e => setPolicyNo(e.target.value.slice(0, 32))}
-            placeholder={ts.insurance.policyNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+          <TextInput id={id} value={policyNo} onChange={e => setPolicyNo(e.target.value.slice(0, 32))}
+            placeholder={ts.insurance.policyNoPlaceholder} style={{ fontFamily: 'var(--font-numeric)' }} />
         )}
       </Field>
 
@@ -324,44 +322,32 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
 
       <Field label={ts.insurance.annualPremium}>
         {id => (
-          <>
-            <input id={id} value={premium} onChange={e => setPremium(e.target.value)}
-              type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
-          </>
+          <TextInput id={id} value={premium} onChange={e => setPremium(e.target.value)}
+            type="number" inputMode="numeric" placeholder={ts.insurance.annualPremiumPlaceholder}
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>} />
         )}
       </Field>
 
       <Field label={ts.insurance.sumInsured}>
         {id => (
-          <>
-            <input id={id} value={sumInsured} onChange={e => setSumInsured(e.target.value)}
-              type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
-          </>
+          <TextInput id={id} value={sumInsured} onChange={e => setSumInsured(e.target.value)}
+            type="number" inputMode="numeric" placeholder={ts.insurance.sumInsuredPlaceholder}
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>} />
         )}
       </Field>
 
       {kind === 'savings' && (
         <Field label={ts.insurance.expectedMaturityAmount}>
           {id => (
-            <>
-              <input
-                id={id}
-                value={expectedMaturityAmount}
-                onChange={e => setExpectedMaturityAmount(e.target.value)}
-                type="number"
-                inputMode="numeric"
-                placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
-                className="w-full bg-transparent border-0 outline-none text-base"
-                style={{ color: 'var(--ink)' }}
-              />
-              <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
-            </>
+            <TextInput
+              id={id}
+              value={expectedMaturityAmount}
+              onChange={e => setExpectedMaturityAmount(e.target.value)}
+              type="number"
+              inputMode="numeric"
+              placeholder={ts.insurance.expectedMaturityAmountPlaceholder}
+              rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>}
+            />
           )}
         </Field>
       )}
@@ -369,19 +355,15 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       {kind === 'savings' && (
         <Field label={ts.insurance.accountValue}>
           {id => (
-            <>
-              <input
-                id={id}
-                value={accountValue}
-                onChange={e => setAccountValue(e.target.value)}
-                type="number"
-                inputMode="numeric"
-                placeholder={ts.insurance.accountValuePlaceholder}
-                className="w-full bg-transparent border-0 outline-none text-base"
-                style={{ color: 'var(--ink)' }}
-              />
-              <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
-            </>
+            <TextInput
+              id={id}
+              value={accountValue}
+              onChange={e => setAccountValue(e.target.value)}
+              type="number"
+              inputMode="numeric"
+              placeholder={ts.insurance.accountValuePlaceholder}
+              rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>}
+            />
           )}
         </Field>
       )}
@@ -428,13 +410,9 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
 
       <Field label={ts.insurance.termYears}>
         {id => (
-          <>
-            <input id={id} value={termYears} onChange={e => setTermYears(e.target.value)}
-              type="number" inputMode="numeric" placeholder={ts.insurance.termYearsPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{ts.insurance.termYearsSuffix}</span>
-          </>
+          <TextInput id={id} value={termYears} onChange={e => setTermYears(e.target.value)}
+            type="number" inputMode="numeric" placeholder={ts.insurance.termYearsPlaceholder}
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>{ts.insurance.termYearsSuffix}</span>} />
         )}
       </Field>
 
