@@ -168,9 +168,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
       <Field label={ts.child.birthday}>
         {id => (
-          <input id={id} value={birthday} onChange={e => setBirthday(e.target.value)}
-            type="date" className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={birthday} onChange={e => setBirthday(e.target.value)} type="date" />
         )}
       </Field>
 
@@ -182,7 +180,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       <Field label={ts.child.nationalId}>
         {id => (
         <div className="flex items-center gap-2">
-          <input
+          <TextInput
             id={id}
             value={nationalId}
             onChange={e => {
@@ -198,8 +196,8 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
                     ? ts.child.encryptedHint
                     : ts.child.nationalIdPlaceholder)
             }
-            className="flex-1 bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+            className="flex-1"
+            style={{ fontFamily: 'var(--font-numeric)' }}
           />
           {isEdit && hasNationalId && !wantClearNationalId && nationalId.trim() === '' && (
             <button
@@ -228,7 +226,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       <Field label={ts.child.nhiNo}>
         {id => (
         <div className="flex items-center gap-2">
-          <input
+          <TextInput
             id={id}
             value={nhiNo}
             onChange={e => {
@@ -244,8 +242,8 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
                     ? ts.child.encryptedHint
                     : ts.child.nhiNoPlaceholder)
             }
-            className="flex-1 bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+            className="flex-1"
+            style={{ fontFamily: 'var(--font-numeric)' }}
           />
           {isEdit && hasNhiNo && !wantClearNhiNo && nhiNo.trim() === '' && (
             <button
