@@ -5,7 +5,7 @@
   <title>Futari · OG render</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" />
   <style>
     /* All sizes scale via --s (CSS scale factor). The render script sets
      * --w / --h / --s and chooses layout via the body class. */
@@ -61,12 +61,17 @@
       justify-content: center;
     }
     body.wide .headline {
-      font-family: 'Fraunces', serif;
+      font-family: 'Fraunces', 'Noto Sans JP', 'Noto Sans TC', serif;
       font-size: calc(180px * var(--s));
       font-weight: 500;
       line-height: 0.95;
       letter-spacing: calc(-6px * var(--s));
       margin: 0;
+    }
+    body.wide[data-lang="ja"] .headline {
+      font-size: calc(130px * var(--s));
+      letter-spacing: calc(-2px * var(--s));
+      line-height: 1.0;
     }
     body.wide .headline .accent { color: #E08856; font-style: italic; }
     body.wide .sub {
@@ -165,11 +170,33 @@
     const h = parseInt(params.get('h') || '630', 10);
     const scale = parseFloat(params.get('s') || '1');
     const layout = params.get('layout') || 'wide';
+    const lang = params.get('lang') || 'zh';
 
     document.body.style.setProperty('--w', w + 'px');
     document.body.style.setProperty('--h', h + 'px');
     document.body.style.setProperty('--s', String(scale));
     document.body.className = layout;
+    document.body.dataset.lang = lang;
+
+    const copy = {
+      zh: {
+        headline: '兩個人，<br /><span class="accent">一本帳。</span>',
+        headlineSquare: '兩個人，<br /><span class="accent">一本帳</span>。',
+        sub: "A couple's ledger · 雙人記帳 PWA",
+      },
+      en: {
+        headline: 'Two people,<br /><span class="accent fr">one ledger.</span>',
+        headlineSquare: 'Two people,<br /><span class="accent fr">one ledger.</span>',
+        sub: "A couple's ledger · Shared budgeting PWA",
+      },
+      ja: {
+        headline: 'ふたり、<br /><span class="accent">ひとつの家計。</span>',
+        headlineSquare: 'ふたり、<br /><span class="accent">ひとつの家計。</span>',
+        sub: "A couple's ledger · カップル向け家計簿 PWA",
+      },
+    };
+
+    const t = copy[lang] || copy.zh;
 
     if (layout === 'wide') {
       document.body.innerHTML = `
@@ -182,21 +209,21 @@
           <span class="url">futari.southern-light.dev</span>
         </div>
         <div class="mid">
-          <h1 class="headline">兩個人，<br /><span class="accent">一本帳。</span></h1>
+          <h1 class="headline">${t.headline}</h1>
         </div>
         <div class="sub">
           <span class="sub-line"></span>
-          <span class="sub-text">A couple's ledger · 雙人記帳 PWA</span>
+          <span class="sub-text">${t.sub}</span>
         </div>
       `;
     } else if (layout === 'square') {
       document.body.innerHTML = `
         <div class="mark-big"><span class="mark">${markSvg(Math.round(108 * scale))}</span></div>
         <p class="kana-top">ふ　た　り</p>
-        <h1 class="headline">兩個人，<br /><span class="accent">一本帳</span>。</h1>
+        <h1 class="headline">${t.headlineSquare}</h1>
         <div class="sub">
           <span class="sub-line"></span>
-          <span class="sub-text">A couple's ledger · 雙人記帳 PWA</span>
+          <span class="sub-text">${t.sub}</span>
         </div>
         <div class="ftr">
           <span class="name">Futari · ふたり</span>
