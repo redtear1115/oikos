@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.1.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.1.4**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -121,6 +121,7 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 - 收入分類：`lib/incomeCategories.ts` — 同結構；另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。
 - 收入模式整體色票：`lib/incomePalettes.ts`（mint / gold / cream）— `ink` / `tint` / `glow` / `whisper` / `sheetBg` 五階。
 - 愛物 type token：`app/globals.css` 的 `--asset-color-{car,house,child,pet,plant,insurance}` 為主色；`--asset-tint-*` 透過 `color-mix(in srgb, var(--asset-color-*) 35%, white)` 推導，list rail 與未來愛物 donut 共用同一 hue family。
+- 圖表專用色票：`lib/chartPalette.ts` — chart 自己挑的色（per-asset hash palette `ASSET_PALETTE`、未歸屬 fallback `ASSET_NULL_COLOR`、active bar track `ACTIVE_BAR_TRACK`）；donut 與 detail bars 共用同一 source of truth。分類／收入分類 slice 色不在此，仍在各自 domain 檔。
 - 派生 helper：`lib/colors.ts#lightenHex(hex, amount = 0.35)` — chip `tint` 從每個 `Category.color` deterministic 推得；新增分類只需給 `color` + `ink`，不必再挑 tint。
 
 ### Worktree 工作流

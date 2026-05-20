@@ -15,6 +15,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.4] - 2026-05-21
+
+主題：**設計系統收尾 + 前端品質續推 + 兩處 UX 微調**——承接 v1.1.2~v1.1.3 的 design system 工作，把 asset-sheet 最後 8 個殘留 raw `<input>` 收進 TextInput primitive（#695），完成 primitive 遷移；同時把 MonthlyStatsBars 的 chart 專用色抽成 `lib/chartPalette.ts` 單一 source of truth（#693）、arbitrary decimal font size 對齊 text scale token（#694）、~735 行的 Dashboard.tsx 拆成多個 sub-component（#696）。UX 面把 BottomNav 內容列高度從 56px 提到 64px 改善觸控目標（#689），並在四個主分頁切換時加上 dim+blur 載入遮罩讓過場更明確（#690）。
+完整 diff：[v1.1.3...v1.1.4](https://github.com/redtear1115/oikos/compare/v1.1.3...v1.1.4)
+
+### 使用者可見變化
+
+- **底部導覽列更好按（#689）**：BottomNav 內容列高度從 56px 提到 64px，每顆分頁按鈕 min-height 64px，更貼合觸控目標標準；底部 safe-area home-indicator 區維持不變。
+- **分頁切換載入遮罩（#690）**：切換儀表板 / 紀錄 / 愛物 / 設定四個主分頁時，新分頁載入期間蓋一層淡淡的 dim + blur 遮罩，過場更明確（紀錄頁原本的 skeleton 改用同一套遮罩）。
+
+### 技術變更
+
+- **Design system primitive 遷移收尾（#695）**：asset-sheet body（Child / Pet / Plant / Insurance）殘留的 8 個 raw `<input>`（6 個日期選擇 + 2 個 Child PII 欄位）改用 TextInput primitive，補上共用 focus ring / border / error state，對齊已遷移的 sibling 欄位（#670 §3.3）。
+- **Chart 專用色票抽出（#693）**：MonthlyStatsBars 的 chart-only 色（per-asset hash palette / 未歸屬 fallback / active bar track）抽成 `lib/chartPalette.ts`，donut 與 detail bars 共用單一 source of truth；分類／收入分類 slice 色仍留在各自 domain 檔。
+- **Text scale token 對齊（#694）**：arbitrary `text-[13.5px]` / `text-[14.5px]` snap 到 design system scale（13.5 → `text-meta` 14、14.5 → `text-body` 15）；sign-in 的 responsive base 維持 `text-meta` 讓 `lg:text-body` bump 保留。
+- **Dashboard.tsx 拆檔（#696）**：~735 行的 Dashboard.tsx 把 L3 filter row、member dual-toggle helpers、transaction feed + skeleton 抽到 sibling 檔（`MemberDualToggle.tsx` / `DashboardFilterRow.tsx` / `DashboardFeed.tsx`）；純結構搬移，零 UI / props / 邏輯變更。
+- **文件**：CLAUDE.md 色票章節補 `lib/chartPalette.ts` 參照（doc-keeper sweep）。
+
 ## [1.1.3] - 2026-05-20
 
 主題：**品質打磨 — UX / 前端 / SEO 三輪 audit + design system 續推 + bug 修正**——承接 v1.1.2 的 design system primitives，把 TextInput / Button / FilterSheet 正式收進共用 primitive（#670），同時跑了三輪 audit：前端設計 audit #2（a11y / token / perf / RSC quick wins）、UX round 1（copy / ARIA / safe-area / error 頁）、SEO audit #2（JSON-LD 去重、HowTo schema、SERP 文案長度、footer 法務連結）。另修兩個使用者可見 bug：dashboard L3 篩選器文案語意不一致（#679）與旅行列表載入失敗（#685）。
@@ -247,7 +265,8 @@ _Nothing unreleased yet._
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/redtear1115/oikos/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/redtear1115/oikos/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/redtear1115/oikos/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/redtear1115/oikos/compare/v1.1.0...v1.1.1
