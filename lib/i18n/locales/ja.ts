@@ -364,6 +364,11 @@ export const ja: Translations = {
     settlementFallback: '精算',
   },
 
+  partnerToast: {
+    recordedExpense: '{name}さんが記録を追加しました',
+    recordedIncome: '{name}さんが収入を追加しました',
+  },
+
   bottomNav: {
     home: 'ホーム',
     records: '記録',

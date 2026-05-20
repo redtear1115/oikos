@@ -8,6 +8,7 @@ import { ViewerProvider } from './_components/ViewerProvider'
 import { RealtimeProvider } from './_components/RealtimeProvider'
 import { OfflineLifecycle } from './_components/OfflineLifecycle'
 import { ReconnectRefresh } from './_components/ReconnectRefresh'
+import { PartnerActivityToast } from './_components/PartnerActivityToast'
 import type { MemberContextValue } from './_components/MemberContext'
 import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { TranslationsProvider } from '@/lib/i18n/client'
@@ -105,6 +106,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <RealtimeProvider groupId={group.id}>
           <OfflineLifecycle />
           <ReconnectRefresh />
+          <PartnerActivityToast />
           <AvatarMenuProvider data={avatarMenuData}>
             <div className={`relative max-w-md mx-auto min-h-dvh ${notoTC.variable}`} style={{ background: 'var(--bg)' }}>
               {children}

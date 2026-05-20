@@ -287,6 +287,25 @@ body {
   overflow: hidden;
 }
 
+/* Partner-activity toast — quiet fade+slide in, hold, then fade out across its
+ * full ~3s lifetime (JS unmounts at the same time). translateX(-50%) is baked
+ * into each frame so it doesn't fight a Tailwind centering utility. */
+@keyframes partner-toast {
+  0%   { opacity: 0; transform: translate(-50%, -8px); }
+  8%   { opacity: 1; transform: translate(-50%, 0); }
+  88%  { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -8px); }
+}
+.partner-toast {
+  transform: translateX(-50%);
+  animation: partner-toast 3s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .partner-toast {
+    animation: none;
+  }
+}
+
 /* Sign-in /about — featured-article fade-up on page load.
  *
  * The about narrative shows ONE article per request (the other 6 are
