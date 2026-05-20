@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createPlant, editPlant } from '@/actions/asset'
+import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
@@ -93,18 +94,16 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex-1">
           <Field label={ts.plant.species}>
             {id => (
-              <input id={id} value={species} onChange={e => setSpecies(e.target.value.slice(0, 32))}
-                placeholder={ts.plant.speciesPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-                style={{ color: 'var(--ink)' }} />
+              <TextInput id={id} value={species} onChange={e => setSpecies(e.target.value.slice(0, 32))}
+                placeholder={ts.plant.speciesPlaceholder} />
             )}
           </Field>
         </div>
         <div className="flex-1">
           <Field label={ts.plant.location}>
             {id => (
-              <input id={id} value={location} onChange={e => setLocation(e.target.value.slice(0, 32))}
-                placeholder={ts.plant.locationPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-                style={{ color: 'var(--ink)' }} />
+              <TextInput id={id} value={location} onChange={e => setLocation(e.target.value.slice(0, 32))}
+                placeholder={ts.plant.locationPlaceholder} />
             )}
           </Field>
         </div>
@@ -123,13 +122,9 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex-1">
           <Field label={ts.plant.cost}>
             {id => (
-              <>
-                <input id={id} value={cost} onChange={e => setCost(e.target.value)}
-                  type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
-                  className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)' }} />
-                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
-              </>
+              <TextInput id={id} value={cost} onChange={e => setCost(e.target.value)}
+                type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
+                rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>} />
             )}
           </Field>
         </div>

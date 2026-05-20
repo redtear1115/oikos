@@ -66,7 +66,7 @@ export default async function MigrateLayout({
         <div className="flex items-center gap-4">
           <Link
             href={homeHref}
-            className="hidden md:inline-flex text-[12px]"
+            className="hidden md:inline-flex text-caption"
             style={{ color: 'var(--ink-2)', letterSpacing: '0.4px' }}
           >
             {t.backToHome}

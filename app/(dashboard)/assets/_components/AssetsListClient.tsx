@@ -359,7 +359,7 @@ export function AssetsListClient({ items }: Props) {
               onClick={() => setTypeFilter(key)}
               style={{
                 ...chipBaseStyle(active, color, tint, null),
-                color: active ? '#fff' : 'var(--ink)',
+                color: active ? 'var(--on-fill)' : 'var(--ink)',
               }}
             >
               <AssetIcon type={key} size={18} />
@@ -463,7 +463,7 @@ export function AssetsListClient({ items }: Props) {
               style={{
                 borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
-                color: active ? '#fff' : 'var(--ink-3)',
+                color: active ? 'var(--on-fill)' : 'var(--ink-3)',
                 fontWeight: active ? 600 : 500,
               }}
             >

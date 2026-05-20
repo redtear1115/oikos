@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatNhi, NHI_MAX_LENGTH } from '@/lib/format-nhi'
 import { createChild, editChild } from '@/actions/asset'
+import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
@@ -141,9 +142,8 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
       <Field label={ts.child.nickname}>
         {id => (
-          <input id={id} value={nickname} onChange={e => setNickname(e.target.value.slice(0, 20))}
-            placeholder={ts.child.nicknamePlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={nickname} onChange={e => setNickname(e.target.value.slice(0, 20))}
+            placeholder={ts.child.nicknamePlaceholder} />
         )}
       </Field>
 
@@ -288,9 +288,8 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
       <Field label={ts.child.hospital}>
         {id => (
-          <input id={id} value={hospital} onChange={e => setHospital(e.target.value.slice(0, 32))}
-            placeholder={ts.child.hospitalPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={hospital} onChange={e => setHospital(e.target.value.slice(0, 32))}
+            placeholder={ts.child.hospitalPlaceholder} />
         )}
       </Field>
 
@@ -303,26 +302,18 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex-1">
           <Field label={ts.child.height}>
             {id => (
-              <>
-                <input id={id} value={heightCm} onChange={e => setHeightCm(e.target.value)}
-                  type="number" inputMode="numeric" placeholder={ts.child.heightPlaceholder}
-                  className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)' }} />
-                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>
-              </>
+              <TextInput id={id} value={heightCm} onChange={e => setHeightCm(e.target.value)}
+                type="number" inputMode="numeric" placeholder={ts.child.heightPlaceholder}
+                rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>} />
             )}
           </Field>
         </div>
         <div className="flex-1">
           <Field label={ts.child.weight}>
             {id => (
-              <>
-                <input id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
-                  type="number" inputMode="decimal" placeholder={ts.child.weightPlaceholder}
-                  className="w-full bg-transparent border-0 outline-none text-base"
-                  style={{ color: 'var(--ink)' }} />
-                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
-              </>
+              <TextInput id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
+                type="number" inputMode="decimal" placeholder={ts.child.weightPlaceholder}
+                rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>} />
             )}
           </Field>
         </div>

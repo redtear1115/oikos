@@ -11,7 +11,7 @@ export function AssetEmptyState() {
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
         aria-hidden="true"
       >
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <ellipse cx="12" cy="15" rx="4" ry="3.5" fill="var(--ink-3)" opacity="0.6" />
           <circle cx="7.5" cy="10.5" r="1.6" fill="var(--ink-3)" opacity="0.6" />
           <circle cx="11" cy="8.5" r="1.6" fill="var(--ink-3)" opacity="0.6" />

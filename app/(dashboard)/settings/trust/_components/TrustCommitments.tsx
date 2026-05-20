@@ -1,5 +1,3 @@
-'use client'
-
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 type TrustStrings = Translations['trust']

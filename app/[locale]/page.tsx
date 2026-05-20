@@ -50,27 +50,12 @@ export default async function RootPage({ params }: { params: Params }) {
   const user = await getCurrentUser()
   const ctaHref = user ? '/dashboard' : localizedHref('/sign-in', locale)
 
-  // JSON-LD bundle for the public landing — WebSite (sitelinks search box hint),
-  // Organization (brand identity), SoftwareApplication (rich card for the app
-  // itself, moved from /sign-in per #390 so the canonical lives on the entry page).
-  // Built per-request so alternateName / description / featureList follow the
-  // active locale (#467).
-  const webSiteJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: t.landing.jsonLdAppName,
-    alternateName: t.landing.jsonLdAlternateNames,
-    url: APP_URL,
-    inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
-  }
-
-  const organizationJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Futari',
-    url: APP_URL,
-    logo: `${APP_URL}/icons/apple-touch-icon.png`,
-  }
+  // JSON-LD bundle for the public landing — SoftwareApplication (rich card for
+  // the app itself, moved from /sign-in per #390 so the canonical lives on the
+  // entry page) + FAQPage. Site-wide WebSite / Organization identity schemas
+  // live in app/[locale]/layout.tsx (#669 M-11) so they render once across every
+  // public page instead of being duplicated here. Built per-request so
+  // alternateName / description / featureList follow the active locale (#467).
 
   // FAQPage JSON-LD (#344, #611) — emitted per-locale so each rendered URL's
   // rich-result language matches its visible content. Answers held to ~40–60 字
@@ -106,14 +91,6 @@ export default async function RootPage({ params }: { params: Params }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
       />
       <script
@@ -128,6 +105,12 @@ export default async function RootPage({ params }: { params: Params }) {
           honeydue: localizedHref('/migrate/honeydue', locale),
           spendee: localizedHref('/migrate/spendee', locale),
           cwmoney: localizedHref('/migrate/cwmoney', locale),
+        }}
+        legalLinks={{
+          termsHref: localizedHref('/terms', locale),
+          termsLabel: t.signIn.termsLink,
+          privacyHref: localizedHref('/privacy', locale),
+          privacyLabel: t.signIn.privacyLink,
         }}
         languageSwitcher={<LanguageSwitcher current={locale} variant="footer" />}
       />

@@ -3,7 +3,7 @@ import { trips, cashTransactions, groupEpochs } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 
 export async function listActiveTrips(groupId: string, epochId: string) {
-  return db
+  return await db
     .select()
     .from(trips)
     .where(and(
@@ -16,7 +16,7 @@ export async function listActiveTrips(groupId: string, epochId: string) {
 }
 
 export async function listAllTrips(groupId: string, epochId: string) {
-  return db
+  return await db
     .select()
     .from(trips)
     .where(and(
@@ -80,7 +80,7 @@ export async function getTripSummary(groupId: string): Promise<{ active: number;
 }
 
 export async function listTripRecords(tripId: string) {
-  return db
+  return await db
     .select()
     .from(cashTransactions)
     .where(and(

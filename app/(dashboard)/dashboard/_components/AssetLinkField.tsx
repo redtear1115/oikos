@@ -1,9 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { loadAsset } from '@/actions/asset'
 import { Chevron } from '@/app/(dashboard)/_components/sheet-icons'
-import { AssetPickerSheet } from './AssetPickerSheet'
+
+// AssetPickerSheet is a nested sheet that only opens on user tap — lazy-load
+// to keep AddSheet's initial bundle lean (#670 audit 6.1).
+const AssetPickerSheet = dynamic(
+  () => import('./AssetPickerSheet').then(m => m.AssetPickerSheet),
+  { ssr: false },
+)
 
 interface AssetLinkFieldProps {
   value: string | null   // assetId

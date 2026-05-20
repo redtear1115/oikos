@@ -67,7 +67,7 @@ function IosStep({ n, text, icon }: { n: number; text: string; icon: React.React
   return (
     <div className="flex items-center gap-2.5 text-xs leading-snug" style={{ color: 'var(--ink-2)' }}>
       <span
-        className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-semibold tnum"
+        className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center text-mini font-semibold tnum"
         style={{ background: 'var(--accent-soft)', color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
       >
         {n}

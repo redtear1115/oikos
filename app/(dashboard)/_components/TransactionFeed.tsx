@@ -317,7 +317,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
 
       {error && (
         <div
-          className="fixed left-1/2 top-4 z-[110] -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white flex items-center gap-3"
+          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white flex items-center gap-3"
           style={{ background: 'var(--debit)' }}
         >
           <span className="flex-1">{error}</span>

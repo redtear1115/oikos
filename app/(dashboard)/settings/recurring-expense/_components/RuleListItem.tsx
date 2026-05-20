@@ -105,7 +105,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
                 <Avatar memberRole={payerRole} initial={payerInitial} src={payerAvatar} size={16} />
                 <span className="truncate">{payerName}</span>
                 <span
-                  className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-[10px] font-medium leading-none"
+                  className="shrink-0 inline-flex items-center px-1.5 py-[1px] rounded-full text-mini font-medium leading-none"
                   style={{ background: 'var(--hairline)', color: 'var(--ink-2)' }}
                 >
                   {splitText}

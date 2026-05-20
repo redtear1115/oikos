@@ -27,6 +27,15 @@ type Props = {
     spendee: string
     cwmoney: string
   }
+  /** Legal page links — kept in the landing footer so /terms and /privacy
+   *  have inbound link equity from a high-authority crawlable page. /sign-in
+   *  also links them but is robots-disallowed, so its links don't count. (#669 M-6) */
+  legalLinks: {
+    termsHref: string
+    termsLabel: string
+    privacyHref: string
+    privacyLabel: string
+  }
   languageSwitcher?: ReactNode
 }
 
@@ -34,7 +43,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher }: Props) {
+export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -77,7 +86,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher
         {/* Desktop CTA in top-right; mobile relies on hero CTA only */}
         <Link
           href={ctaHref}
-          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-[14px] font-semibold cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-semibold cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -177,7 +186,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher
               </Link>
               <Link
                 href={signInHref}
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-[14px] cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-meta cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -190,7 +199,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher
 
             {/* Mobile sub-CTA hint */}
             <p
-              className="md:hidden m-0 mt-3 text-center text-[12px]"
+              className="md:hidden m-0 mt-3 text-center text-caption"
               style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
             >
               {t.ctaHint}
@@ -242,7 +251,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher
               </h2>
             </div>
             <p
-              className="hidden md:block m-0 text-[14px]"
+              className="hidden md:block m-0 text-meta"
               style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 320 }}
               dangerouslySetInnerHTML={{ __html: t.featuresSubtitleHtml }}
             />
@@ -308,18 +317,28 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, languageSwitcher
           style={{ color: 'var(--ink-2)' }}
         >
           <ShieldOutlineGlyph />
-          <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+          <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
             {t.footerTrust}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          {languageSwitcher}
-          <span
-            className="text-micro"
-            style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
+        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+          <div
+            className="flex items-center gap-3 text-[12px]"
+            style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
-            © 2026 · MADE IN TAIWAN
-          </span>
+            <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
+            <span style={{ color: 'var(--hairline)' }}>·</span>
+            <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
+          </div>
+          <div className="flex items-center gap-3">
+            {languageSwitcher}
+            <span
+              className="text-micro"
+              style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
+            >
+              © 2026 · MADE IN TAIWAN
+            </span>
+          </div>
         </div>
       </footer>
     </main>
@@ -385,7 +404,7 @@ function MigrateLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-[14px]"
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.migrateSection.subtitle}
@@ -472,7 +491,7 @@ function FeatureCard({
         {title}
       </p>
       <p
-        className="m-0 text-[12px] md:text-[13.5px] leading-[1.55] md:leading-[1.7]"
+        className="m-0 text-caption md:text-[13.5px] leading-[1.55] md:leading-[1.7]"
         style={{ color: 'var(--ink-2)' }}
       >
         {body}

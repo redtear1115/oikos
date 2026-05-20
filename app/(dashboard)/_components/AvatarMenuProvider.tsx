@@ -1,7 +1,14 @@
 'use client'
 
 import { createContext, useCallback, useContext, useState } from 'react'
-import { AvatarMenuSheet } from './AvatarMenuSheet'
+import dynamic from 'next/dynamic'
+
+// AvatarMenuSheet only mounts when the user taps their avatar — lazy-load
+// to keep dashboard layout initial bundle small (#670 audit 6.1).
+const AvatarMenuSheet = dynamic(
+  () => import('./AvatarMenuSheet').then(m => m.AvatarMenuSheet),
+  { ssr: false },
+)
 
 export interface AvatarMenuData {
   viewerEmail: string

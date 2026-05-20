@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.1.2**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.1.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -76,13 +76,16 @@ Realtime：Client subscribes → React state mutation
 - **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
 - **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。強制 base 幣別。
 - **`GroupBalance`** — balance cache（per-group 單列）。`balance` `> 0` = member_b 欠 member_a，`< 0` = member_a 欠 member_b；每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。
-- **`CurrencyRates`** — per-group 心理匯率表（PK `group_id` × `from_currency` × `to_currency`）。只存當前匯率、不存歷史；變更不影響歷史 record（snapshot 語意鎖在 record 的 `rate_snapshot`）。
+- **`CurrencyRates`** — ⚠️ **Deprecated since v0.17.4 (#410)**。Trip-scoped 匯率已移入 `Trips.rate_snapshot`（free-text code + rate entries）；此表僅為相容舊 trip 資料保留，新 trip 不再寫入。見 `lib/db/schema.ts`。
 - **`Trips`** — 旅行子帳本。`epoch_id` notNull（**強制單一 epoch**：trip 不可跨章節）、`start_date >= currentEpochStartedAt`；`default_currency` 為 records 表單 currency selector 預設值；`status: 'active' | 'ended' | 'archived'`。`leaveGroup` 若有 active trip 則 reject「請先結束旅行」。
 - **`TripExpenses`** — 旅行隔離帳本（issue #42）。`trip_id` + `paid_by` + `amount`（base 幣別整數）+ optional `original_currency` / `original_amount`（free-text trip code，須對應 parent `Trips.rate_snapshot`）+ `category` + `split_type` + optional `split_ratio`（**payer's share %**，注意與 `CashTransactions.split_ratio_a`「member A 的 %」語意不同）。Trip UI 讀這張表；主帳本（/records、stats、balance）讀 `CashTransactions` 看不到這些 row。Trip end 時會寫一筆 summary `CashTransaction` 把 trip 折回主帳本。
 - **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance` / `item`），舊 6 種用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`；`item` 走 template path (`template_key` + `template_fields` jsonb)，不開子表。
 - **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
 - **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
 - **`MonthlyReviewSnapshots` / `MonthlyReviewMessages`** — 月初 cron 凍結的雙人月度回顧資料。
+- **`PartnerQuizSessions` / `PartnerQuizAnswers`** — 伴侶問答（v0.15.2）。問題池抽 3 題，雙方獨立作答，全部到齊後 reveal。每個 group 目前只有一份 session（MVP 鎖定）。見 `lib/db/schema.ts`。
+- **`ImportBatches` / `ImportErrors`** — CSV import 批次紀錄（v1.1.0）。每次匯入一筆 `ImportBatches`；`CashTransactions.importBatchId` + `IncomeTransactions.importBatchId` FK 讓整批可 rollback。`ImportErrors` 存失敗行原始資料供用戶下載修正後再傳。見 `lib/db/schema.ts`。
+- **`InvoiceCredentials` / `InvoiceImportSnapshots` / `InvoiceImportRuns`** — 雲端發票匯入（spec: [cloud-invoice](docs/superpowers/specs/cloud-invoice-design.md)，`status: blocked`）。Schema 已建立，功能卡在財政部 APP_ID 申請。見 `lib/db/schema.ts`。
 
 ### Entity 關係
 
@@ -97,8 +100,13 @@ OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound) 
              ├─< Assets ─┬─< CarDetails ─< FuelLogs
              │           ├─< HouseDetails / ChildDetails / PetDetails / PlantDetails
              │           └─< InsuranceDetails (可 FK 回 Asset: vehicle_id / insured_child_id)
-             ├─< CurrencyRates (per-group 心理匯率表)
+             ├─< ImportBatches ─< ImportErrors
+             ├─< PartnerQuizSessions ─< PartnerQuizAnswers
+             ├─< InvoiceCredentials / InvoiceImportRuns (blocked feature)
+             ├─< CurrencyRates (⚠️ deprecated since v0.17.4)
              └─── GroupBalance (1:1)
+
+CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatches (rollback FK)
 ```
 
 - Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type 自己定義（`CarDetails.primary_user_id` / `HouseDetails.owner` / `InsuranceDetails.policy_holder_user_id`）。

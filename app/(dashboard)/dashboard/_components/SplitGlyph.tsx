@@ -1,5 +1,3 @@
-'use client'
-
 interface Props {
   kind: 'all_mine' | 'all_theirs' | 'half' | 'weighted'
   active: boolean

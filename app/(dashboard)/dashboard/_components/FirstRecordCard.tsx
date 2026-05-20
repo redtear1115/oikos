@@ -48,7 +48,7 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
 
   return (
     <div
-      className="fixed left-1/2 z-[95] w-full max-w-md -translate-x-1/2 px-4"
+      className="fixed left-1/2 z-floating w-full max-w-md -translate-x-1/2 px-4"
       style={{ bottom: 96 }}
       role="status"
       aria-live="polite"

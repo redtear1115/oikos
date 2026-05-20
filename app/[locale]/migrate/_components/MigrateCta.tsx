@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { MigrateSource } from '@/lib/csvImport'

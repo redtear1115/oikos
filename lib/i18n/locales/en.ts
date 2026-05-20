@@ -135,7 +135,7 @@ export const en: Translations = {
       'Shared expense tracking for two',
       'Auto-split and monthly settlement',
       'Household asset inventory',
-      'Insurance management (protection / savings)',
+      'Insurance plans (protection / savings)',
       'Vehicle and fuel logs',
       'Recurring income',
       'Offline-capable PWA',
@@ -268,12 +268,8 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
-    payerMe: 'Me',
-    payerPartner: 'Them',
-    splitFilter: {
-      mine: 'My cost',
-      theirs: 'Their cost',
-    },
+    burdenMe: 'Mine',
+    burdenPartner: "Partner's",
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',
@@ -366,12 +362,18 @@ export const en: Translations = {
     settlementFallback: 'Settlement',
   },
 
+  partnerToast: {
+    recordedExpense: '{name} just added a record',
+    recordedIncome: '{name} just added income',
+  },
+
   bottomNav: {
     home: 'Home',
     records: 'Records',
     assets: 'Things',
     settings: 'Settings',
     addAriaLabel: 'Add record',
+    navAriaLabel: 'Primary navigation',
   },
 
   miniCalendar: {
@@ -444,6 +446,7 @@ export const en: Translations = {
     trips: 'Failed to load trips',
     assets: 'Failed to load things',
     review: 'Failed to load monthly review',
+    refLabel: 'Error ref',
   },
 
   assetListItem: {
@@ -2078,37 +2081,37 @@ export const en: Translations = {
 
   seo: {
     landing: {
-      title: 'Futari · A shared ledger for two | Couple-first budgeting PWA',
+      title: "Futari · A shared ledger for two · Couples' budgeting PWA",
       description: 'Futari is a shared budgeting app built for couples — a partner-first ledger to log expenses together, auto-split, settle balances, and see your life as a pair.',
       ogDescription: 'Futari is a couple-first shared budgeting app — log together, auto-split, settle, and see your life as a pair.',
     },
     signIn: {
       title: 'Sign in to Futari · Start budgeting together',
-      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, manage insurance and assets, all in a mobile-first PWA.',
+      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, look after insurance and shared things, all in a mobile-first PWA.',
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
     },
     terms: {
       title: 'Terms of Service · Futari',
-      description: 'Terms of service and user notes for the Futari alpha test build.',
+      description: "Terms of service for the Futari alpha test build — what you're agreeing to when you use the couples-first shared ledger PWA during the public beta.",
     },
     privacy: {
       title: 'Privacy Policy · Futari',
-      description: 'How the Futari alpha test build collects and handles your data.',
+      description: 'How the Futari alpha test build collects and handles your data — what we store, where it lives, and the third parties involved in the couples ledger.',
     },
     migrate: {
       honeydue: {
         title: 'Import from Honeydue to Futari',
-        description: 'Honeydue updates have slowed. Futari is a shared ledger built for couples — move your data over in about 3 minutes and keep budgeting together. The free Honeydue alternative: ad-free, end-to-end encrypted.',
+        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples — Futari is an ad-free, end-to-end encrypted shared ledger. Move your data in 3 minutes.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
         title: 'Import Spendee CSV into Futari',
-        description: 'A couples-first alternative to Spendee. Import your Spendee CSV into Futari, a shared ledger built for partners — sharing is free and built in, no paid unlock required.',
+        description: 'A couples-first Spendee alternative. Import your CSV into Futari, the shared ledger built for partners — sharing is free and built in, no paid unlock.',
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
         title: 'Import from CWMoney to Futari · Excel guide',
-        description: 'How to move CWMoney records into a new tool? Use our Excel-to-CSV conversion template to turn CWMoney exports into a file Futari — a shared ledger built for couples — can import.',
+        description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari — the shared ledger built for couples. Free, ad-free.',
         ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
       },
     },

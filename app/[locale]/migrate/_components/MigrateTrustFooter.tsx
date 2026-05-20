@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { ShieldOutlineGlyph } from '../../_landing/FutariMark'
 
 type TrustItem = { title: string; body: string }
@@ -38,7 +39,7 @@ export function MigrateTrustBlock({
             style={{ background: 'var(--surface)' }}
           >
             <p
-              className="m-0 text-[14px] md:text-body font-semibold"
+              className="m-0 text-meta md:text-body font-semibold"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}
@@ -59,8 +60,22 @@ export function MigrateTrustBlock({
 /**
  * Slim closing footer matching the landing pattern — shield glyph + trust
  * line + © / MADE IN TAIWAN. No language switcher (already in top bar).
+ *
+ * `legalLinks` adds inline Terms · Privacy links so /terms and /privacy
+ * have inbound link equity from the indexed /migrate/* pages (#669 M-6).
  */
-export function MigrateFooter({ trustNote }: { trustNote: string }) {
+export function MigrateFooter({
+  trustNote,
+  legalLinks,
+}: {
+  trustNote: string
+  legalLinks: {
+    termsHref: string
+    termsLabel: string
+    privacyHref: string
+    privacyLabel: string
+  }
+}) {
   return (
     <footer
       className="mt-6 md:mt-10 pt-5 md:pt-6 flex flex-col md:flex-row items-center md:justify-between gap-3"
@@ -71,16 +86,26 @@ export function MigrateFooter({ trustNote }: { trustNote: string }) {
         style={{ color: 'var(--ink-2)' }}
       >
         <ShieldOutlineGlyph />
-        <span className="text-[12px]" style={{ letterSpacing: '0.3px' }}>
+        <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
           {trustNote}
         </span>
       </div>
-      <span
-        className="text-micro"
-        style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
-      >
-        © 2026 · MADE IN TAIWAN
-      </span>
+      <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
+        <div
+          className="flex items-center gap-3 text-[12px]"
+          style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
+        >
+          <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
+          <span style={{ color: 'var(--hairline)' }}>·</span>
+          <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
+        </div>
+        <span
+          className="text-micro"
+          style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
+        >
+          © 2026 · MADE IN TAIWAN
+        </span>
+      </div>
     </footer>
   )
 }

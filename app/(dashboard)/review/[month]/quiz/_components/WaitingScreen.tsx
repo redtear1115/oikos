@@ -3,14 +3,9 @@
 import Link from 'next/link'
 import { useTranslations } from '@/lib/i18n/client'
 
-const C = {
-  bg: '#FBEDE0',
-  ink: '#3A2419',
-  ink2: '#7A5848',
-  accent: '#E08856',
-  sage: '#7A9F7E',
-  sageSoft: '#DDEAD8',
-}
+/** Soft halo background — no global token yet; see RevealScreen.tsx for the
+ *  matching surface variant. */
+const SAGE_SOFT = '#DDEAD8'
 
 export function WaitingScreen({
   partnerName,
@@ -22,7 +17,7 @@ export function WaitingScreen({
   return (
     <div
       className="relative min-h-dvh flex flex-col"
-      style={{ background: C.bg, color: C.ink, fontFamily: 'var(--font-noto-tc), system-ui, sans-serif' }}
+      style={{ background: 'var(--bg)', color: 'var(--ink)', fontFamily: 'var(--font-noto-tc), system-ui, sans-serif' }}
     >
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 max-w-[448px] w-full mx-auto">
         {/* Soft halo motif */}
@@ -31,13 +26,13 @@ export function WaitingScreen({
             className="absolute inset-0 rounded-full"
             style={{
               width: 220, height: 220, left: -110, top: -110,
-              background: `radial-gradient(circle, ${C.sageSoft} 0%, transparent 70%)`,
+              background: `radial-gradient(circle, ${SAGE_SOFT} 0%, transparent 70%)`,
             }}
           />
           <svg width="200" height="200" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="90" stroke={C.sage} strokeWidth="0.8" fill="none" strokeOpacity="0.35" strokeDasharray="1.2 3" />
-            <circle cx="100" cy="100" r="64" stroke={C.sage} strokeWidth="0.8" fill="none" strokeOpacity="0.45" strokeDasharray="1.2 3" />
-            <circle cx="100" cy="100" r="18" fill={C.accent} opacity="0.85" />
+            <circle cx="100" cy="100" r="90" stroke="var(--credit)" strokeWidth="0.8" fill="none" strokeOpacity="0.35" strokeDasharray="1.2 3" />
+            <circle cx="100" cy="100" r="64" stroke="var(--credit)" strokeWidth="0.8" fill="none" strokeOpacity="0.45" strokeDasharray="1.2 3" />
+            <circle cx="100" cy="100" r="18" fill="var(--accent)" opacity="0.85" />
           </svg>
         </div>
 
@@ -47,14 +42,14 @@ export function WaitingScreen({
         >
           {tq.waitingHeading}
         </h1>
-        <p className="mb-10 text-sm" style={{ color: C.ink2, lineHeight: 1.7, maxWidth: 320 }}>
+        <p className="mb-10 text-sm" style={{ color: 'var(--ink-2)', lineHeight: 1.7, maxWidth: 320 }}>
           {partnerName ? tq.waitingBody : tq.waitingBody}
         </p>
 
         <Link
           href={reviewHref}
           className="inline-flex items-center justify-center h-12 px-6 rounded-full text-sm font-medium"
-          style={{ background: C.ink, color: '#fff' }}
+          style={{ background: 'var(--ink)', color: 'var(--on-fill)' }}
         >
           {tq.waitingBackToReview}
         </Link>

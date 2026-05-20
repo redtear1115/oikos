@@ -102,7 +102,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
           <span className="truncate">{displayLabel}</span>
           {isPending && (
             <span
-              className="text-[10px] tracking-[0.4px] px-1.5 py-px rounded-full shrink-0"
+              className="text-mini tracking-[0.4px] px-1.5 py-px rounded-full shrink-0"
               style={{
                 background: 'var(--hairline)',
                 color: 'var(--ink-2)',

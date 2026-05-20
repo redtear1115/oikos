@@ -215,7 +215,7 @@ function AboutNarrative({
           )
         })}
         <p
-          className="m-0 mt-4 text-label lg:text-[14px] leading-relaxed italic"
+          className="m-0 mt-4 text-label lg:text-meta leading-relaxed italic"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontWeight: 400,

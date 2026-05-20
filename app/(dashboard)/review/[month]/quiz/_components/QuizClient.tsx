@@ -87,7 +87,7 @@ function FullScreenSurface({
   title: string; body: string; backHref: string; backLabel: string
 }) {
   return (
-    <div className="relative min-h-dvh" style={{ background: '#FBEDE0', color: '#3A2419' }}>
+    <div className="relative min-h-dvh" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
       <div
         className="max-w-[448px] mx-auto px-6 flex flex-col items-center justify-center min-h-dvh text-center"
         style={{ fontFamily: 'var(--font-noto-tc), system-ui, sans-serif' }}
@@ -98,11 +98,11 @@ function FullScreenSurface({
         >
           {title}
         </h1>
-        <p style={{ color: '#7A5848', lineHeight: 1.7 }}>{body}</p>
+        <p style={{ color: 'var(--ink-2)', lineHeight: 1.7 }}>{body}</p>
         <Link
           href={backHref}
           className="inline-flex items-center justify-center mt-10 h-12 rounded-full px-6 text-sm font-medium"
-          style={{ background: '#3A2419', color: '#fff' }}
+          style={{ background: 'var(--ink)', color: 'var(--on-fill)' }}
         >
           {backLabel}
         </Link>

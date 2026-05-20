@@ -145,7 +145,7 @@ export function LeaveGroupFlow({
     <>
       <SheetBackdrop open={open} onClick={handleClose} />
       <div
-        className="fixed left-1/2 top-1/2 z-[110] w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card flex flex-col"
+        className="fixed left-1/2 top-1/2 z-modal w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card flex flex-col"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',

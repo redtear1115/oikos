@@ -30,7 +30,7 @@ export function CardRecurring({ snapshot }: { snapshot: MonthlyReviewSnapshotRow
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded"
+                    className="inline-block text-mini font-medium px-1.5 py-0.5 rounded"
                     style={{
                       background: ev.direction === 'income' ? '#D7E5DC' : '#F7D8DD',
                       color: ev.direction === 'income' ? '#3F6A56' : '#8A3F50',

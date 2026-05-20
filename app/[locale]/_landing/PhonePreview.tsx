@@ -66,7 +66,7 @@ export function PhonePreview({ t }: Props) {
             <div className="flex items-center gap-1.5">
               <FutariMark size={18} />
               <span
-                className="text-[14px] font-medium"
+                className="text-meta font-medium"
                 style={{ fontFamily: 'var(--font-fraunces)' }}
               >
                 Futari
@@ -91,7 +91,7 @@ export function PhonePreview({ t }: Props) {
           {/* balance hero */}
           <div className="text-center mb-[18px]">
             <p
-              className="m-0 text-[10px]"
+              className="m-0 text-mini"
               style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
               {t.phoneMockBalanceCaption}
@@ -142,13 +142,13 @@ export function PhonePreview({ t }: Props) {
                   ·
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="m-0 text-[12px] font-medium">{r.title}</p>
-                  <p className="m-0 text-[10px]" style={{ color: 'var(--ink-2)' }}>
+                  <p className="m-0 text-caption font-medium">{r.title}</p>
+                  <p className="m-0 text-mini" style={{ color: 'var(--ink-2)' }}>
                     {r.sub}
                   </p>
                 </div>
                 <span
-                  className="text-[12px] tnum"
+                  className="text-caption tnum"
                   style={{
                     fontFamily: '-apple-system, "SF Pro Display", system-ui',
                     color: 'var(--ink)',

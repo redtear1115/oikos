@@ -203,7 +203,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
             style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
             aria-label={t.assetDetail.editAriaLabel}
           >
-            <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
                 stroke="#3A2419" strokeWidth="1.2"
                 strokeLinecap="round" strokeLinejoin="round" fill="none"/>

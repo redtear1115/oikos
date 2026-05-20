@@ -48,12 +48,13 @@ export function ModeTogglePlaceholder({
             key={o.id}
             type="button"
             onClick={() => onChange?.(o.id)}
+            aria-pressed={sel}
             className="h-8 flex items-center gap-[5px] font-medium cursor-pointer border-0"
             style={{
               padding: '0 14px',
               borderRadius: 999,
               background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
-              color: sel ? (isIncome ? P.ink : '#fff') : 'var(--ink-2)',
+              color: sel ? (isIncome ? P.ink : 'var(--on-fill)') : 'var(--ink-2)',
               fontSize: 'var(--fs-label)',
               fontWeight: sel ? 600 : 500,
               letterSpacing: 0.3,

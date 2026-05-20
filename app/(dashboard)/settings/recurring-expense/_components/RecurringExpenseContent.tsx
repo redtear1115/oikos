@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { RuleListItem } from './RuleListItem'
-import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
 import { useTranslations } from '@/lib/i18n/client'
+
+// Sheet only mounts when the user taps to add / edit a rule — lazy-load to
+// keep the settings page initial bundle small (#670 audit 6.1).
+const RecurringRuleSheet = dynamic(
+  () => import('@/app/(dashboard)/_components/RecurringRuleSheet').then(m => m.RecurringRuleSheet),
+  { ssr: false },
+)
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
 

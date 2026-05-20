@@ -65,23 +65,35 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
 
   return (
     <>
-      <div className="fixed left-1/2 bottom-0 z-[80] h-[78px] w-full max-w-md -translate-x-1/2 flex pb-[22px]"
-        style={{ background: 'var(--surface)', borderTop: '1px solid var(--hairline)' }}>
+      {/*
+        Nav structure: 56px nav-content row + env(safe-area-inset-bottom) home-indicator zone.
+        Old fixed 78px total assumed a 22px indicator zone — wrong on iPhone 14+ / Pro Max
+        where safe-area is 34px and the indicator zone is taller. FAB positions follow.
+      */}
+      <nav aria-label={t.bottomNav.navAriaLabel}
+        className="fixed left-1/2 bottom-0 z-nav w-full max-w-md -translate-x-1/2 flex"
+        style={{
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--hairline)',
+          height: 'calc(56px + env(safe-area-inset-bottom))',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}>
         <NavTab tab={TABS[0]} label={t.bottomNav.home}     active={activeId === TABS[0].id} allowPrefetch={allowPrefetch} />
         <NavTab tab={TABS[1]} label={t.bottomNav.records}  active={activeId === TABS[1].id} allowPrefetch={allowPrefetch} />
         <div className="w-[76px] shrink-0" />
         <NavTab tab={TABS[2]} label={t.bottomNav.assets}   active={activeId === TABS[2].id} allowPrefetch={allowPrefetch} />
         <NavTab tab={TABS[3]} label={t.bottomNav.settings} active={activeId === TABS[3].id} allowPrefetch={allowPrefetch} />
-      </div>
+      </nav>
 
       {!hideFab && !fabContent && (
         <button
           onClick={onAddClick}
           aria-label={t.bottomNav.addAriaLabel}
-          className="fixed left-1/2 bottom-[30px] z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
+          className="fixed left-1/2 z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
           style={{
+            bottom: 'calc(8px + env(safe-area-inset-bottom))',
             background: fabBg(fabVariant),
-            color: '#fff',
+            color: 'var(--on-fill)',
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
           <PlusIcon size={26} />
@@ -91,8 +103,9 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
       {!hideFab && fabContent && (
         <button
           onClick={onAddClick}
-          className="fixed left-1/2 bottom-[34px] z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-white text-sm font-semibold tracking-[0.5px]"
+          className="fixed left-1/2 z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-white text-sm font-semibold tracking-[0.5px]"
           style={{
+            bottom: 'calc(12px + env(safe-area-inset-bottom))',
             background: fabBg(fabVariant),
             boxShadow: '0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)',
           }}>
@@ -112,6 +125,8 @@ function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number
     <Link
       href={tab.href}
       prefetch={allowPrefetch ? true : false}
+      aria-current={active ? 'page' : undefined}
+      aria-label={label}
       className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />

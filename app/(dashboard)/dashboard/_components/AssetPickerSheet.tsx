@@ -5,6 +5,7 @@ import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -57,7 +58,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     <>
       <div
         onClick={onClose}
-        className="fixed inset-0 z-[112] transition-opacity duration-[250ms]"
+        className="fixed inset-0 z-nested-backdrop transition-opacity duration-[250ms]"
         style={{
           background: 'rgba(31,27,22,0.45)',
           opacity: open ? 1 : 0,
@@ -67,7 +68,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
       {/* Sheet sits at z-115 — must be ABOVE AddSheet's error toast (z-110) so a
           mid-picker error doesn't render in front of the asset list. */}
       <div
-        className="fixed left-1/2 bottom-0 z-[115] w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
+        className="fixed left-1/2 bottom-0 z-nested-sheet w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
           borderTopLeftRadius: 24,
@@ -84,9 +85,9 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <button onClick={onClose} className="bg-transparent border-0 text-body cursor-pointer p-1" style={{ color: 'var(--ink-2)' }}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
             {t.common.cancel}
-          </button>
+          </Button>
           <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
             {t.assetPickerSheet.title}
           </div>
@@ -115,7 +116,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
                     style={{
                       padding: '8px 12px',
                       background: active ? 'var(--ink)' : 'transparent',
-                      color: active ? '#fff' : 'var(--ink-2)',
+                      color: active ? 'var(--on-fill)' : 'var(--ink-2)',
                       fontFamily: 'inherit',
                       fontSize: 'var(--fs-button)',
                       fontWeight: active ? 600 : 500,

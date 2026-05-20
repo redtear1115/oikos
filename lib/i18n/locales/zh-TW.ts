@@ -313,15 +313,10 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
-    /** Payer dual-toggle — viewer side. */
-    payerMe: string
-    /** Payer dual-toggle — partner side. */
-    payerPartner: string
-    /** Split-type dual-toggle on Dashboard L3. */
-    splitFilter: {
-      mine: string
-      theirs: string
-    }
+    /** Split dual-toggle on Dashboard L3 — drives the `burden` dim (who
+     *  actually bears the cost), NOT raw split_type. */
+    burdenMe: string
+    burdenPartner: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
@@ -454,6 +449,13 @@ export type Translations = {
     settlementFallback: string
   }
 
+  partnerToast: {
+    /** Realtime toast — partner added an expense record. `{name}` = partner displayName. */
+    recordedExpense: string
+    /** Realtime toast — partner added an income record. `{name}` = partner displayName. */
+    recordedIncome: string
+  }
+
   bottomNav: {
     home: string
     records: string
@@ -461,6 +463,8 @@ export type Translations = {
     settings: string
     /** Aria-label for the floating add button. */
     addAriaLabel: string
+    /** Aria-label for the nav landmark itself (screen-reader-only). */
+    navAriaLabel: string
   }
 
   miniCalendar: {
@@ -584,6 +588,8 @@ export type Translations = {
     assets: string
     /** Title for the monthly review error page. */
     review: string
+    /** Label preceding the error digest, e.g. "錯誤代碼: abc123". */
+    refLabel: string
   }
 
   assetListItem: {
@@ -1558,7 +1564,7 @@ export type Translations = {
     }
   }
 
-  /** v0.16.0 #222 — 愛物模板系統 v1：只有「物品 (general)」一個模板，純文字追蹤，不接 FuelLog / 守護 等任何自動化。 */
+  /** v0.16.0 #222 — 愛物模板系統 v1：只有「物品 (general)」一個模板，純文字紀錄，不接 FuelLog / 守護 等任何自動化。 */
   assetTemplate: {
     namePlaceholder: string
     detailSection: string
@@ -2348,7 +2354,7 @@ export type Translations = {
 
 export const zhTW: Translations = {
   signIn: {
-    tagline: '帳本準備好了，等你們一起。',
+    tagline: '帳本準備好了，邀請對方一起。',
     continueWithGoogle: '以 Google 帳號繼續',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
@@ -2481,7 +2487,7 @@ export const zhTW: Translations = {
       '雙人共享記帳',
       '費用自動分攤與 AA 結算',
       '家庭資產盤點',
-      '保險管理（保護型／儲蓄型）',
+      '保險方案（保護型／儲蓄型）',
       '汽車與油耗紀錄',
       '定期收入',
       '離線瀏覽 PWA',
@@ -2614,12 +2620,8 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
-    payerMe: '我',
-    payerPartner: '對方',
-    splitFilter: {
-      mine: '我負擔',
-      theirs: '對方負擔',
-    },
+    burdenMe: '算我的',
+    burdenPartner: '算對方的',
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',
@@ -2654,7 +2656,7 @@ export const zhTW: Translations = {
   },
 
   soloBanner: {
-    waiting: '帳本準備好了，等你們一起',
+    waiting: '帳本準備好了，邀請對方一起',
     sendInviteHint: '把連結傳給對方',
     dismissAriaLabel: '關閉提示',
     generating: '產生中…',
@@ -2711,12 +2713,18 @@ export const zhTW: Translations = {
     settlementFallback: '還款',
   },
 
+  partnerToast: {
+    recordedExpense: '{name} 剛剛記了一筆',
+    recordedIncome: '{name} 剛剛記了一筆進帳',
+  },
+
   bottomNav: {
     home: '首頁',
     records: '紀錄',
     assets: '愛物',
     settings: '設定',
     addAriaLabel: '新增一筆',
+    navAriaLabel: '主要導覽',
   },
 
   miniCalendar: {
@@ -2789,6 +2797,7 @@ export const zhTW: Translations = {
     trips: '載入旅行失敗',
     assets: '載入愛物失敗',
     review: '載入月度回顧失敗',
+    refLabel: '錯誤代碼',
   },
 
   assetListItem: {
@@ -4424,7 +4433,7 @@ export const zhTW: Translations = {
     },
     signIn: {
       title: '登入 Futari · 開始兩個人的記帳生活',
-      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、管理保險與資產的雙人記帳 PWA。',
+      description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
       ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
     },
     terms: {
@@ -4438,7 +4447,7 @@ export const zhTW: Translations = {
     migrate: {
       honeydue: {
         title: '從 Honeydue 搬家到 Futari｜資料匯入',
-        description: 'Honeydue 更新放緩，Futari 是專為夫妻、伴侶設計的共同帳本，讓你 3 分鐘完成資料搬遷，繼續一起記帳。Honeydue 替代方案首選：免費、無廣告、端對端加密。',
+        description: 'Honeydue 替代方案首選。Futari 是專為夫妻、伴侶設計的共同帳本，3 分鐘完成搬家、繼續一起記帳。免費、無廣告、端對端加密。',
         ogDescription: 'Honeydue 用戶的下一站：3 分鐘搬遷到 Futari，雙人記帳繼續。',
       },
       spendee: {

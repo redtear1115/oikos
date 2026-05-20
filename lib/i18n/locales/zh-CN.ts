@@ -2,7 +2,7 @@ import type { Translations } from './zh-TW'
 
 export const zhCN: Translations = {
   signIn: {
-    tagline: '账本准备好了，等你们一起。',
+    tagline: '账本准备好了，邀请对方一起。',
     continueWithGoogle: '以 Google 账号继续',
     termsPrefix: '继续即表示您同意我们的',
     termsLink: '服务条款',
@@ -135,7 +135,7 @@ export const zhCN: Translations = {
       '双人共享记账',
       '费用自动分摊与 AA 结算',
       '家庭资产盘点',
-      '保险管理（保护型／储蓄型）',
+      '保险方案（保护型／储蓄型）',
       '汽车与油耗记录',
       '定期收入',
       '离线浏览 PWA',
@@ -268,12 +268,8 @@ export const zhCN: Translations = {
     addIncome: '记一笔收入',
     filterLabel: '筛选',
     filterAriaLabel: '打开筛选',
-    payerMe: '我',
-    payerPartner: '对方',
-    splitFilter: {
-      mine: '我负担',
-      theirs: '对方负担',
-    },
+    burdenMe: '算我的',
+    burdenPartner: '算对方的',
     activeTripBanner: {
       kicker: '旅行进行中',
       singleStartedAt: '{date} 起 · 点开看这趟',
@@ -308,7 +304,7 @@ export const zhCN: Translations = {
   },
 
   soloBanner: {
-    waiting: '账本准备好了，等你们一起',
+    waiting: '账本准备好了，邀请对方一起',
     sendInviteHint: '把链接发给对方',
     dismissAriaLabel: '关闭提示',
     generating: '生成中…',
@@ -365,12 +361,18 @@ export const zhCN: Translations = {
     settlementFallback: '还款',
   },
 
+  partnerToast: {
+    recordedExpense: '{name} 刚刚记了一笔',
+    recordedIncome: '{name} 刚刚记了一笔进账',
+  },
+
   bottomNav: {
     home: '首页',
     records: '记录',
     assets: '爱物',
     settings: '设置',
     addAriaLabel: '新增一笔',
+    navAriaLabel: '主导航',
   },
 
   miniCalendar: {
@@ -443,6 +445,7 @@ export const zhCN: Translations = {
     trips: '加载旅行失败',
     assets: '加载爱物失败',
     review: '加载月度回顾失败',
+    refLabel: '错误代码',
   },
 
   assetListItem: {
@@ -2078,7 +2081,7 @@ export const zhCN: Translations = {
     },
     signIn: {
       title: '登录 Futari · 开始两个人的记账生活',
-      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、管理保险与资产的双人记账 PWA。',
+      description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、照看保险与爱物的双人记账 PWA。',
       ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
     },
     terms: {
@@ -2092,7 +2095,7 @@ export const zhCN: Translations = {
     migrate: {
       honeydue: {
         title: '从 Honeydue 搬家到 Futari｜数据导入',
-        description: 'Honeydue 更新放缓，Futari 是专为夫妻、情侣设计的共同账本，让你 3 分钟完成数据搬迁，继续一起记账。Honeydue 替代方案首选：免费、无广告、端到端加密。',
+        description: 'Honeydue 替代方案首选。Futari 是专为夫妻、情侣设计的共同账本，3 分钟完成搬家、继续一起记账。免费、无广告、端到端加密。',
         ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {

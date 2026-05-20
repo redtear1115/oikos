@@ -121,7 +121,7 @@ function Blocker({ strings, mode, url }: { strings: Strings; mode: Mode; url: st
             className="h-11 rounded-xl border-0 text-sm font-medium cursor-pointer w-full"
             style={{
               background: 'var(--ink, #3A2419)',
-              color: '#fff',
+              color: 'var(--on-fill)',
             }}
           >
             {copied ? strings.copied : strings.copy}

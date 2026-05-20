@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createPet, editPet } from '@/actions/asset'
+import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
@@ -119,9 +120,8 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
       <Field label={ts.pet.breed}>
         {id => (
-          <input id={id} value={breed} onChange={e => setBreed(e.target.value.slice(0, 32))}
-            placeholder={ts.pet.breedPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={breed} onChange={e => setBreed(e.target.value.slice(0, 32))}
+            placeholder={ts.pet.breedPlaceholder} />
         )}
       </Field>
 
@@ -162,25 +162,17 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
       <Field label={ts.pet.purchaseCost}>
         {id => (
-          <>
-            <input id={id} value={cost} onChange={e => setCost(e.target.value)}
-              type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>
-          </>
+          <TextInput id={id} value={cost} onChange={e => setCost(e.target.value)}
+            type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>} />
         )}
       </Field>
 
       <Field label={ts.pet.weight}>
         {id => (
-          <>
-            <input id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
-              type="number" inputMode="decimal" placeholder={ts.pet.weightPlaceholder}
-              className="w-full bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }} />
-            <span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>
-          </>
+          <TextInput id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
+            type="number" inputMode="decimal" placeholder={ts.pet.weightPlaceholder}
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>} />
         )}
       </Field>
 
@@ -191,17 +183,15 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
       <Field label={ts.pet.chipNo}>
         {id => (
-          <input id={id} value={chipNo} onChange={e => setChipNo(e.target.value.slice(0, 20))}
-            placeholder={ts.pet.chipNoPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }} />
+          <TextInput id={id} value={chipNo} onChange={e => setChipNo(e.target.value.slice(0, 20))}
+            placeholder={ts.pet.chipNoPlaceholder} style={{ fontFamily: 'var(--font-numeric)' }} />
         )}
       </Field>
 
       <Field label={ts.pet.vet}>
         {id => (
-          <input id={id} value={vet} onChange={e => setVet(e.target.value.slice(0, 32))}
-            placeholder={ts.pet.vetPlaceholder} className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={vet} onChange={e => setVet(e.target.value.slice(0, 32))}
+            placeholder={ts.pet.vetPlaceholder} />
         )}
       </Field>
 

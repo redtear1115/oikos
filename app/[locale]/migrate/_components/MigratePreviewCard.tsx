@@ -1,5 +1,3 @@
-'use client'
-
 import type { CSSProperties } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { CsvStats, DetectedEncoding, MigrateSource } from '@/lib/csvImport'
@@ -53,7 +51,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
           {t.preview.title}
         </h2>
         <div
-          className="flex items-center gap-2 text-[12px]"
+          className="flex items-center gap-2 text-caption"
           style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}
         >
           <span>
@@ -87,7 +85,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
       {stats.topCategories.length > 0 && (
         <div>
           <div
-            className="text-[12px] mb-2"
+            className="text-caption mb-2"
             style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}
           >
             {t.preview.topCategoriesLabel}

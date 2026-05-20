@@ -84,7 +84,7 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
         </div>
       )}
 
-      <div className="mt-4 text-[14px]" style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>
+      <div className="mt-4 text-meta" style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>
         {subCopy}
       </div>
     </div>
