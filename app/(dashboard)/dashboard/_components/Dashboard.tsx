@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, use, useCallback, useEffect, useMemo, useRef, useTransition } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -13,14 +13,8 @@ import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvide
 import { BalanceHero } from './BalanceHero'
 import type { RateEntry } from './AddSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
-import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
-import { EmptyState } from './EmptyState'
-import { IncomeEmptyState } from './IncomeEmptyState'
-import { defaultFilter, toWire, type TxnFilter, type PayerFilter, type BurdenFilter } from '@/lib/filter'
+import { defaultFilter, type TxnFilter, type PayerFilter, type BurdenFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
-import { makeIncomeLoader } from '@/lib/incomeFeedRow'
-import { CompactRow } from './CompactRow'
-import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { NewFuelLog } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import { getFuelLogById } from '@/actions/fuelLog'
 import { PendingIncomeStack } from './PendingIncomeStack'
@@ -32,6 +26,8 @@ import { useTranslations } from '@/lib/i18n/client'
 import type { CurrencyCode } from '@/lib/currency'
 import type { TripOption } from './TripSelector'
 import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from './useDashboardReducer'
+import { DashboardFilterRow } from './DashboardFilterRow'
+import { DashboardFeed, DashboardFeedSkeleton } from './DashboardFeed'
 
 // Sheets are heavy and only meaningful on user interaction (FAB tap, edit-row
 // tap, ✈ button). Split into separate chunks and skip SSR so they don't bloat
@@ -300,29 +296,17 @@ export function Dashboard({
           expensePendingCount={expensePendings.length}
         />
       </div>
-      {/* L3 filter row — two avatar-coloured dual-toggle pills:
-          payer (誰付) + split (誰負擔). Both share the same visual /
-          interaction. Solo mode has nothing useful in either dim
-          (only one person, no real split decisions), so the whole row
-          collapses. */}
+      {/* L3 filter row — collapses in solo mode (only one person, no real
+          split decisions). See DashboardFilterRow for the toggle details. */}
       {!isSolo && partner && (
-        <div
-          className="flex items-center gap-2 px-5 pb-2 overflow-x-auto"
-          style={{ scrollbarWidth: 'none' } as React.CSSProperties}
-        >
-          <PayerDualToggle
-            value={payerFilter}
-            onChange={setPayerFilter}
-            viewerIsA={viewerIsA}
-            t={t}
-          />
-          <SplitDualToggle
-            value={splitFilter}
-            onChange={setSplitFilter}
-            viewerIsA={viewerIsA}
-            t={t}
-          />
-        </div>
+        <DashboardFilterRow
+          payerFilter={payerFilter}
+          splitFilter={splitFilter}
+          onPayerChange={setPayerFilter}
+          onSplitChange={setSplitFilter}
+          viewerIsA={viewerIsA}
+          t={t}
+        />
       )}
       {isSolo ? (
         bannerDismissed ? (
@@ -490,246 +474,5 @@ export function Dashboard({
         onDismiss={() => dispatch({ type: 'setShowFirstCard', show: false })}
       />
     </div>
-  )
-}
-
-interface DashboardFeedProps {
-  feedDataPromise: Promise<DashboardFeedData>
-  mode: 'expense' | 'income'
-  pageSize: number
-  filter: TxnFilter | null
-  onItemClick: (tx: PagedTxnRow) => void
-  onAddIncome: () => void
-  onAddTx: () => void
-}
-
-function DashboardFeed({
-  feedDataPromise,
-  mode,
-  pageSize,
-  filter,
-  onItemClick,
-  onAddIncome,
-  onAddTx,
-}: DashboardFeedProps) {
-  const { recent, recentIncomeFeed } = use(feedDataPromise)
-  const P = DEFAULT_INCOME_PALETTE
-  const t = useTranslations()
-
-  const incomeRenderRow = useCallback((tx: PagedTxnRow): React.ReactNode | undefined => {
-    if (tx.kind !== 'income') return undefined
-    return (
-      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
-        <CompactRow tx={tx} isLast={false} onClick={() => onItemClick(tx)} />
-      </div>
-    )
-  }, [onItemClick, P.glow])
-
-  // Income loader closes over the active filter so the income feed responds
-  // to L3 chip changes the same way the cash feed does — TransactionFeed
-  // calls loader(null) on filter-prop change. Recreated each filter ref
-  // change; stable while filter is null.
-  const incomeLoader = useMemo(
-    () => makeIncomeLoader(20, undefined, undefined, filter ? toWire(filter) : undefined),
-    [filter],
-  )
-
-  return (
-    <TransactionFeed
-      key={mode}
-      initial={mode === 'income' ? recentIncomeFeed : recent}
-      pageSize={pageSize}
-      onItemClick={onItemClick}
-      filter={filter ?? undefined}
-      loader={mode === 'income' ? incomeLoader : undefined}
-      renderRow={mode === 'income' ? incomeRenderRow : undefined}
-      label={
-        <div className="flex items-end justify-between">
-          <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
-            {t.feed.header}
-          </span>
-        </div>
-      }
-      emptyState={
-        mode === 'income'
-          ? <IncomeEmptyState onAdd={onAddIncome} />
-          : <EmptyState onAdd={onAddTx} />
-      }
-    />
-  )
-}
-
-function DashboardFeedSkeleton() {
-  const t = useTranslations()
-  return (
-    <>
-      <div className="px-6 pt-2 pb-1">
-        <span className="text-xs font-medium tracking-[0.5px]" style={{ color: 'var(--ink-2)' }}>
-          {t.feed.header}
-        </span>
-      </div>
-      <div className="px-6 pt-4 pb-2">
-        <div className="h-4 w-24 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
-      </div>
-      <div
-        className="mx-4 rounded-tile overflow-hidden"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-      >
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[68px] animate-pulse"
-            style={{
-              background: 'var(--surface)',
-              opacity: 0.6,
-              borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
-            }}
-          />
-        ))}
-      </div>
-    </>
-  )
-}
-
-type Side = 'left' | 'right'
-
-interface MemberDualToggleProps {
-  /** Selection state. Must be non-empty — component enforces ≥1. `left`
-   *  = viewer's side (avatar-coloured by viewer role), `right` = partner's
-   *  side (the opposite role's avatar colour). */
-  selected: Set<Side>
-  onChange: (next: Set<Side>) => void
-  /** Same source of truth as `<Avatar memberRole=…/>` — drives which side
-   *  gets `var(--ink)` (role 'a') vs `var(--accent)` (role 'b'). */
-  viewerIsA: boolean
-  leftLabel: string
-  rightLabel: string
-}
-
-/**
- * Two-pill toggle keyed by member side. Used by both the payer (誰付)
- * and split (誰負擔) L3 dimensions — they have the same shape: two
- * member-coloured pills, both-selected = no filter, single-selected
- * narrows to that member, zero-selected is disallowed. Selected fill
- * matches the avatar colour so the chip and the avatar above the page
- * header read as the same person at a glance.
- */
-function MemberDualToggle({
-  selected,
-  onChange,
-  viewerIsA,
-  leftLabel,
-  rightLabel,
-}: MemberDualToggleProps) {
-  const toggle = (side: Side) => {
-    const next = new Set(selected)
-    if (next.has(side)) {
-      if (next.size === 1) return
-      next.delete(side)
-    } else {
-      next.add(side)
-    }
-    onChange(next)
-  }
-  const viewerColor = viewerIsA ? 'var(--ink)' : 'var(--accent)'
-  const partnerColor = viewerIsA ? 'var(--accent)' : 'var(--ink)'
-  return (
-    <div
-      className="inline-flex items-center shrink-0"
-      style={{
-        background: 'var(--surface)',
-        border: '0.5px solid var(--hairline)',
-        borderRadius: 999,
-        padding: 2,
-        gap: 2,
-      }}
-    >
-      {([
-        { side: 'left' as Side, label: leftLabel, color: viewerColor },
-        { side: 'right' as Side, label: rightLabel, color: partnerColor },
-      ]).map(({ side, label, color }) => {
-        const sel = selected.has(side)
-        return (
-          <button
-            key={side}
-            type="button"
-            onClick={() => toggle(side)}
-            className="inline-flex items-center cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
-            style={{
-              height: 22,
-              padding: '0 10px',
-              borderRadius: 999,
-              background: sel ? color : 'transparent',
-              color: sel ? 'var(--on-fill)' : 'var(--ink-3)',
-            }}
-            aria-pressed={sel}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-interface PayerDualToggleProps {
-  value: 'all' | 'me' | 'partner'
-  onChange: (next: 'all' | 'me' | 'partner') => void
-  viewerIsA: boolean
-  t: ReturnType<typeof useTranslations>
-}
-
-function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps) {
-  const selected: Set<Side> =
-    value === 'all'
-      ? new Set<Side>(['left', 'right'])
-      : new Set<Side>([value === 'me' ? 'left' : 'right'])
-  const handleChange = (next: Set<Side>) => {
-    onChange(
-      next.size === 2 ? 'all' : next.has('left') ? 'me' : 'partner',
-    )
-  }
-  return (
-    <MemberDualToggle
-      selected={selected}
-      onChange={handleChange}
-      viewerIsA={viewerIsA}
-      leftLabel={t.common.me}
-      rightLabel={t.common.partner}
-    />
-  )
-}
-
-interface SplitDualToggleProps {
-  value: 'all' | 'mine' | 'theirs'
-  onChange: (next: 'all' | 'mine' | 'theirs') => void
-  viewerIsA: boolean
-  t: ReturnType<typeof useTranslations>
-}
-
-/**
- * Split-type dual-toggle. 「我負擔」+「對方負擔」collapse to `'all'`
- * when both selected (the feed then shows ratio-based half / weighted
- * records too — those modes are intentionally NOT pickable on their
- * own from L3; only visible when the dim is unfiltered).
- */
-function SplitDualToggle({ value, onChange, viewerIsA, t }: SplitDualToggleProps) {
-  const selected: Set<Side> =
-    value === 'all'
-      ? new Set<Side>(['left', 'right'])
-      : new Set<Side>([value === 'mine' ? 'left' : 'right'])
-  const handleChange = (next: Set<Side>) => {
-    onChange(
-      next.size === 2 ? 'all' : next.has('left') ? 'mine' : 'theirs',
-    )
-  }
-  return (
-    <MemberDualToggle
-      selected={selected}
-      onChange={handleChange}
-      viewerIsA={viewerIsA}
-      leftLabel={t.dashboard.burdenMe}
-      rightLabel={t.dashboard.burdenPartner}
-    />
   )
 }
