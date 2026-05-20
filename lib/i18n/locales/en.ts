@@ -366,6 +366,11 @@ export const en: Translations = {
     settlementFallback: 'Settlement',
   },
 
+  partnerToast: {
+    recordedExpense: '{name} just added a record',
+    recordedIncome: '{name} just added income',
+  },
+
   bottomNav: {
     home: 'Home',
     records: 'Records',

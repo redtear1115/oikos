@@ -454,6 +454,13 @@ export type Translations = {
     settlementFallback: string
   }
 
+  partnerToast: {
+    /** Realtime toast — partner added an expense record. `{name}` = partner displayName. */
+    recordedExpense: string
+    /** Realtime toast — partner added an income record. `{name}` = partner displayName. */
+    recordedIncome: string
+  }
+
   bottomNav: {
     home: string
     records: string
@@ -2713,6 +2720,11 @@ export const zhTW: Translations = {
     endOfFeed: '已是最早的紀錄',
     closeAriaLabel: '關閉',
     settlementFallback: '還款',
+  },
+
+  partnerToast: {
+    recordedExpense: '{name} 剛剛記了一筆',
+    recordedIncome: '{name} 剛剛記了一筆進帳',
   },
 
   bottomNav: {

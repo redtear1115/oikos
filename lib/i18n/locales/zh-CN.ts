@@ -365,6 +365,11 @@ export const zhCN: Translations = {
     settlementFallback: '还款',
   },
 
+  partnerToast: {
+    recordedExpense: '{name} 刚刚记了一笔',
+    recordedIncome: '{name} 刚刚记了一笔进账',
+  },
+
   bottomNav: {
     home: '首页',
     records: '记录',

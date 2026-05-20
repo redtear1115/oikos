@@ -1,6 +1,29 @@
 'use client'
 
-import { useRef, type RefObject } from 'react'
+import { useLayoutEffect, useRef, type RefObject } from 'react'
+
+/** Count digit characters in `s` up to (not including) index `end`. */
+function countDigits(s: string, end: number): number {
+  let n = 0
+  for (let i = 0; i < end && i < s.length; i++) {
+    if (s[i] >= '0' && s[i] <= '9') n++
+  }
+  return n
+}
+
+/** Index in `formatted` (comma-grouped) right after the `target`-th digit.
+ *  Lets us restore the caret to the same logical digit after re-formatting. */
+function caretForDigitCount(formatted: string, target: number): number {
+  if (target <= 0) return 0
+  let seen = 0
+  for (let i = 0; i < formatted.length; i++) {
+    if (formatted[i] >= '0' && formatted[i] <= '9') {
+      seen++
+      if (seen === target) return i + 1
+    }
+  }
+  return formatted.length
+}
 
 interface AmountInputProps {
   /** Digit-only string ('', '0' to '9999999'). The component never sees
@@ -45,6 +68,20 @@ export function AmountInput({
   const ref = inputRef ?? fallbackRef
 
   const display = value ? parseInt(value, 10).toLocaleString('en-US') : ''
+
+  // Inserting thousand separators shifts every character after the caret, so a
+  // naive controlled input drops the caret at the end after each keystroke.
+  // On each edit we remember how many digits sat left of the caret; after React
+  // commits the re-formatted value we put the caret back after that same digit.
+  // null = change came from outside (reset / select-on-open) — leave caret alone.
+  const caretDigitsRef = useRef<number | null>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || caretDigitsRef.current === null) return
+    const pos = caretForDigitCount(display, caretDigitsRef.current)
+    el.setSelectionRange(pos, pos)
+    caretDigitsRef.current = null
+  }, [display, ref])
   // Min 2ch so empty/single-digit values still have a comfortable hit area;
   // grows with formatted (comma-separated) length (up to 9ch for 7 digits).
   const width = `${Math.max(display.length || 1, 2)}ch`
@@ -73,10 +110,15 @@ export function AmountInput({
         enterKeyHint="done"
         value={display}
         onChange={(e) => {
-          const next = e.target.value
+          const raw = e.target.value
+          const caret = e.target.selectionStart ?? raw.length
+          const digitsBeforeCaret = countDigits(raw, caret)
+          const next = raw
             .replace(/[^0-9]/g, '')
             .slice(0, maxDigits)
             .replace(/^0+(\d)/, '$1')
+          // Clamp to the surviving digit count (handles truncation / leading-zero strip).
+          caretDigitsRef.current = Math.min(digitsBeforeCaret, next.length)
           onChange(next)
         }}
         placeholder="0"
