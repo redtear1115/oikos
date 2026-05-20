@@ -34,3 +34,12 @@ export function ogLocale(locale: Locale): string {
 export function alternateOgLocales(currentLocale: Locale): string[] {
   return SUPPORTED_LOCALES.filter(l => l !== currentLocale).map(ogLocale)
 }
+
+const LOCALE_OG_IMAGES: Partial<Record<Locale, string>> = {
+  en: '/og-image-en.png',
+  ja: '/og-image-ja.png',
+}
+
+export function ogImage(locale: Locale): string {
+  return LOCALE_OG_IMAGES[locale] ?? '/og-image.png'
+}
