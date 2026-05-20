@@ -66,7 +66,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
   return (
     <>
       {/*
-        Nav structure: 56px nav-content row + env(safe-area-inset-bottom) home-indicator zone.
+        Nav structure: 64px nav-content row + env(safe-area-inset-bottom) home-indicator zone.
         Old fixed 78px total assumed a 22px indicator zone — wrong on iPhone 14+ / Pro Max
         where safe-area is 34px and the indicator zone is taller. FAB positions follow.
       */}
@@ -75,7 +75,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
         style={{
           background: 'var(--surface)',
           borderTop: '1px solid var(--hairline)',
-          height: 'calc(56px + env(safe-area-inset-bottom))',
+          height: 'calc(64px + env(safe-area-inset-bottom))',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}>
         <NavTab tab={TABS[0]} label={t.bottomNav.home}     active={activeId === TABS[0].id} allowPrefetch={allowPrefetch} />
@@ -127,7 +127,7 @@ function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number
       prefetch={allowPrefetch ? true : false}
       aria-current={active ? 'page' : undefined}
       aria-label={label}
-      className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 no-underline"
+      className="flex-1 flex flex-col items-center justify-center gap-0.5 pt-2 min-h-[64px] no-underline"
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
       <span className="text-micro tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
