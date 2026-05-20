@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
 import { dictionaries } from '@/lib/i18n/t'
-import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
+import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { Landing } from './_landing/Landing'
@@ -28,13 +28,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       type: 'website',
       locale: ogLocale(locale),
       alternateLocale: alternateOgLocales(locale),
-      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: t.title }],
+      images: [{ url: ogImage(locale), width: 1200, height: 630, alt: t.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: t.title,
       description: t.ogDescription,
-      images: ['/og-image.png'],
+      images: [ogImage(locale)],
     },
   }
 }
@@ -74,6 +74,7 @@ export default async function RootPage({ params }: { params: Params }) {
   const softwareAppJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
+    '@id': `${APP_URL}/#software`,
     name: t.landing.jsonLdAppName,
     alternateName: t.landing.jsonLdAlternateNames,
     applicationCategory: 'FinanceApplication',
@@ -81,6 +82,10 @@ export default async function RootPage({ params }: { params: Params }) {
     description: t.landing.jsonLdAppDescription,
     url: APP_URL,
     inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
+    // @id cross-refs (#702) tie this node to the WebSite / Organization schemas
+    // emitted in app/[locale]/layout.tsx so crawlers see one connected graph.
+    isPartOf: { '@id': `${APP_URL}/#website` },
+    publisher: { '@id': `${APP_URL}/#organization` },
     author: { '@type': 'Person', name: 'Ray Lee' },
     datePublished: '2026-05-03',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },

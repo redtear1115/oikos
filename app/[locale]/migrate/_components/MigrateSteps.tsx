@@ -29,6 +29,9 @@ export function MigrateSteps({
         {steps.map((node, i) => (
           <li
             key={i}
+            // Anchor target for the HowToStep JSON-LD url (`...#step-N`, 1-based)
+            // emitted by MigrateHowToJsonLd (#702) — keeps those anchors live.
+            id={`step-${i + 1}`}
             className="flex gap-5 items-start text-meta md:text-body leading-[1.75] py-4 first:pt-2"
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >

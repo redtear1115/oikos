@@ -491,7 +491,7 @@ function FeatureCard({
         {title}
       </p>
       <p
-        className="m-0 text-caption md:text-[13.5px] leading-[1.55] md:leading-[1.7]"
+        className="m-0 text-caption md:text-meta leading-[1.55] md:leading-[1.7]"
         style={{ color: 'var(--ink-2)' }}
       >
         {body}

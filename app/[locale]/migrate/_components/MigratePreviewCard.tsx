@@ -115,7 +115,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
 function Stat({ label, tint }: { label: string; tint: CSSProperties['background'] }) {
   return (
     <div
-      className="rounded-xl px-4 py-3 text-[14.5px]"
+      className="rounded-xl px-4 py-3 text-body"
       style={{ background: tint, color: 'var(--ink)' }}
     >
       {label}

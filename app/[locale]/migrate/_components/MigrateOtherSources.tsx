@@ -80,7 +80,7 @@ export function MigrateOtherSources({
                   {item.name}
                 </p>
                 <p
-                  className="m-0 mt-1.5 text-label md:text-[13.5px] leading-[1.65]"
+                  className="m-0 mt-1.5 text-label md:text-meta leading-[1.65]"
                   style={{ color: 'var(--ink-2)' }}
                 >
                   {item.description}

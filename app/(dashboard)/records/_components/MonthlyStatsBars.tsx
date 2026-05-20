@@ -18,17 +18,9 @@
 
 import { getCategory, type CategoryId } from '@/lib/categories'
 import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
+import { ASSET_PALETTE, ASSET_NULL_COLOR, ACTIVE_BAR_TRACK } from '@/lib/chartPalette'
 import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transactions'
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
-
-// Stable per-asset color for asset breakdown view. Picked from the same hue
-// family as category.chart values so the chart and detail bars feel coherent
-// regardless of which view is active.
-const ASSET_PALETTE = [
-  '#D4955F', '#7AA48E', '#C97A8E', '#7A7AB8',
-  '#C8A840', '#A89274', '#607090', '#A8998A',
-]
-const ASSET_NULL_COLOR = '#B5B5C0'
 
 export function categoryColor(row: CategoryStatRow): { tint: string; chart: string } {
   const cat = getCategory(row.key)
@@ -217,7 +209,7 @@ function Bar({
         </div>
         <div
           className="relative h-2 rounded-full overflow-hidden"
-          style={{ background: active ? '#ffffff80' : tint }}
+          style={{ background: active ? ACTIVE_BAR_TRACK : tint }}
         >
           <div
             className="absolute inset-y-0 left-0 rounded-full"

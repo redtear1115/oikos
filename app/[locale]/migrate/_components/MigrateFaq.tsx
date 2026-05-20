@@ -62,13 +62,13 @@ export function MigrateFaq({
             }}
           >
             <dt
-              className="m-0 text-[14.5px] md:text-[15.5px] font-semibold"
+              className="m-0 text-body md:text-[15.5px] font-semibold"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {question}
             </dt>
             <dd
-              className="m-0 mt-2 text-label md:text-[13.5px] leading-[1.7]"
+              className="m-0 mt-2 text-label md:text-meta leading-[1.7]"
               style={{ color: 'var(--ink-2)' }}
             >
               {answer}

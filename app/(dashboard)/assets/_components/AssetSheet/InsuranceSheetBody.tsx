@@ -394,17 +394,13 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
 
       <Field label={ts.insurance.startsAt}>
         {id => (
-          <input id={id} value={startsAt} onChange={e => setStartsAt(e.target.value)}
-            type="date" className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={startsAt} onChange={e => setStartsAt(e.target.value)} type="date" />
         )}
       </Field>
 
       <Field label={ts.insurance.endsAt}>
         {id => (
-          <input id={id} value={endsAt} onChange={e => setEndsAt(e.target.value)}
-            type="date" className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={endsAt} onChange={e => setEndsAt(e.target.value)} type="date" />
         )}
       </Field>
 

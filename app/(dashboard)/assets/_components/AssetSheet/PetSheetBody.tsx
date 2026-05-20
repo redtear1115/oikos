@@ -146,17 +146,13 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
       <Field label={ts.pet.birthDate}>
         {id => (
-          <input id={id} value={birthDate} onChange={e => setBirthDate(e.target.value)}
-            type="date" className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={birthDate} onChange={e => setBirthDate(e.target.value)} type="date" />
         )}
       </Field>
 
       <Field label={ts.pet.adoptedDate}>
         {id => (
-          <input id={id} value={adoptedDate} onChange={e => setAdoptedDate(e.target.value)}
-            type="date" className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }} />
+          <TextInput id={id} value={adoptedDate} onChange={e => setAdoptedDate(e.target.value)} type="date" />
         )}
       </Field>
 

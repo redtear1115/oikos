@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
 import { dictionaries } from '@/lib/i18n/t'
-import { buildAlternates, ogLocale, alternateOgLocales } from '@/lib/i18n/seo'
+import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
@@ -39,13 +39,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       type: 'website',
       locale: ogLocale(locale),
       alternateLocale: alternateOgLocales(locale),
-      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: t.title }],
+      images: [{ url: ogImage(locale), width: 1200, height: 630, alt: t.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: t.title,
       description: t.ogDescription,
-      images: ['/og-image.png'],
+      images: [ogImage(locale)],
     },
   }
 }
@@ -207,7 +207,7 @@ function AboutNarrative({
           return (
             <p
               key={j}
-              className="m-0 text-[14.5px] lg:text-body leading-[1.85]"
+              className="m-0 text-meta lg:text-body leading-[1.85]"
               style={{ color: 'var(--ink-2)' }}
             >
               {p}
