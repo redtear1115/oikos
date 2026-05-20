@@ -267,12 +267,8 @@ export const ja: Translations = {
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
     filterAriaLabel: '絞り込みを開く',
-    payerMe: '自分',
-    payerPartner: '相手',
-    splitFilter: {
-      mine: '自分が負担',
-      theirs: '相手が負担',
-    },
+    burdenMe: '自分の分',
+    burdenPartner: '相手の分',
     activeTripBanner: {
       kicker: '旅行中',
       singleStartedAt: '{date} から · この旅を開く',

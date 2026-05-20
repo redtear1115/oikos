@@ -268,12 +268,8 @@ export const en: Translations = {
     addIncome: 'Add income',
     filterLabel: 'Filter',
     filterAriaLabel: 'Open filter',
-    payerMe: 'Me',
-    payerPartner: 'Them',
-    splitFilter: {
-      mine: 'My cost',
-      theirs: 'Their cost',
-    },
+    burdenMe: 'Mine',
+    burdenPartner: "Partner's",
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',
