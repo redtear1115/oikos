@@ -15,6 +15,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.5] - 2026-05-21
+
+主題：**分頁載入改用 skeleton 骨架畫面**——承接 v1.1.4 (#690) 的載入過場工作，把四個主分頁原本共用的全螢幕 dim/blur 遮罩換成各自對應版面的 skeleton 骨架載入畫面（#710），讓載入過程更貼近實際內容、不再有黑屏閃爍。
+完整 diff：[v1.1.4...v1.1.5](https://github.com/redtear1115/oikos/compare/v1.1.4...v1.1.5)
+
+### 使用者可見變化
+
+- **分頁載入骨架畫面（#710）**：切換儀表板 / 紀錄 / 愛物 / 設定四個主分頁時，載入期間改顯示對應分頁版面的 skeleton 骨架（儀表板：BrandHeader → BalanceHero → 篩選列 → feed；紀錄：月份切換 → 統計列 → 紀錄列；愛物：標題 → 愛物卡片；設定：頭像名稱 → 設定列），取代先前的全螢幕 dim/blur 遮罩，過場更貼近實際內容、不再黑屏閃爍。
+
+### 技術變更
+
+- **四分頁 loading.tsx 改 per-page skeleton（#710）**：dashboard / records / assets / settings 的 `loading.tsx` 從共用的全螢幕 overlay 改成各自的 skeleton，皆為純 Server Component（無 `'use client'`），用 Tailwind + CSS variable token（`--bg` / `--surface` / `--hairline`）+ `animate-pulse`，對齊既有 `DashboardFeedSkeleton` pattern；移除 v1.1.4 #690 的 overlay（PR #708 一併關閉）。
+
 ## [1.1.4] - 2026-05-21
 
 主題：**設計系統收尾 + 前端品質續推 + 兩處 UX 微調**——承接 v1.1.2~v1.1.3 的 design system 工作，把 asset-sheet 最後 8 個殘留 raw `<input>` 收進 TextInput primitive（#695），完成 primitive 遷移；同時把 MonthlyStatsBars 的 chart 專用色抽成 `lib/chartPalette.ts` 單一 source of truth（#693）、arbitrary decimal font size 對齊 text scale token（#694）、~735 行的 Dashboard.tsx 拆成多個 sub-component（#696）。UX 面把 BottomNav 內容列高度從 56px 提到 64px 改善觸控目標（#689），並在四個主分頁切換時加上 dim+blur 載入遮罩讓過場更明確（#690）。
@@ -265,7 +278,8 @@ _Nothing unreleased yet._
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.5...HEAD
+[1.1.5]: https://github.com/redtear1115/oikos/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/redtear1115/oikos/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/redtear1115/oikos/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/redtear1115/oikos/compare/v1.1.1...v1.1.2
