@@ -24,18 +24,26 @@ export default async function LocaleLayout({
   // once here for every public locale page rather than being duplicated per
   // page. name / alternateName follow the URL locale so each canonical URL's
   // schema language matches its rendered content.
+  //
+  // Stable @id + cross-references (#702): WebSite/Organization here and
+  // SoftwareApplication on the landing (app/[locale]/page.tsx) each carry an
+  // @id, and reference each other by @id, so crawlers merge the separate
+  // <script> blocks into one connected entity graph instead of three orphans.
   const t = dictionaries[locale]
   const webSiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${APP_URL}/#website`,
     name: t.landing.jsonLdAppName,
     alternateName: t.landing.jsonLdAlternateNames,
     url: APP_URL,
     inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
+    publisher: { '@id': `${APP_URL}/#organization` },
   }
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${APP_URL}/#organization`,
     name: 'Futari',
     url: APP_URL,
     logo: `${APP_URL}/icons/apple-touch-icon.png`,

@@ -5,6 +5,7 @@ import {
   alternateOgLocales,
 } from '@/lib/i18n/seo'
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from '@/lib/i18n/locales-meta'
+import { en } from '@/lib/i18n/locales/en'
 
 // APP_URL comes from vitest.config.ts (NEXT_PUBLIC_APP_URL=http://localhost:3000)
 const APP_URL = 'http://localhost:3000'
@@ -100,5 +101,33 @@ describe('alternateOgLocales', () => {
     expect(alternateOgLocales('en')).toEqual(
       expect.arrayContaining(['zh_TW', 'zh_CN', 'ja_JP'])
     )
+  })
+})
+
+describe('English meta description length (#702)', () => {
+  // SERPs truncate <meta name="description"> around 155–160 chars. English
+  // descriptions are held to ≤155 so they render without trimming. CJK locales
+  // (zh-TW/zh-CN/ja) truncate at a different threshold and are not covered here.
+  const MAX = 155
+
+  function collectDescriptions(node: unknown, path: string): [string, string][] {
+    if (typeof node !== 'object' || node === null) return []
+    const out: [string, string][] = []
+    for (const [key, value] of Object.entries(node)) {
+      const p = `${path}.${key}`
+      if (key === 'description' && typeof value === 'string') out.push([p, value])
+      else if (typeof value === 'object') out.push(...collectDescriptions(value, p))
+    }
+    return out
+  }
+
+  const descriptions = collectDescriptions(en.seo, 'seo')
+
+  it('finds the known seo descriptions', () => {
+    expect(descriptions.length).toBeGreaterThanOrEqual(7)
+  })
+
+  it.each(descriptions)('%s is ≤155 chars', (_path, value) => {
+    expect(value.length).toBeLessThanOrEqual(MAX)
   })
 })
