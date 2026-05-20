@@ -74,6 +74,7 @@ export default async function RootPage({ params }: { params: Params }) {
   const softwareAppJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
+    '@id': `${APP_URL}/#software`,
     name: t.landing.jsonLdAppName,
     alternateName: t.landing.jsonLdAlternateNames,
     applicationCategory: 'FinanceApplication',
@@ -81,6 +82,10 @@ export default async function RootPage({ params }: { params: Params }) {
     description: t.landing.jsonLdAppDescription,
     url: APP_URL,
     inLanguage: ['zh-TW', 'zh-CN', 'en', 'ja'],
+    // @id cross-refs (#702) tie this node to the WebSite / Organization schemas
+    // emitted in app/[locale]/layout.tsx so crawlers see one connected graph.
+    isPartOf: { '@id': `${APP_URL}/#website` },
+    publisher: { '@id': `${APP_URL}/#organization` },
     author: { '@type': 'Person', name: 'Ray Lee' },
     datePublished: '2026-05-03',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'TWD' },

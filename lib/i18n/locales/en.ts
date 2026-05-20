@@ -2082,12 +2082,12 @@ export const en: Translations = {
   seo: {
     landing: {
       title: "Futari · A shared ledger for two · Couples' budgeting PWA",
-      description: 'Futari is a shared budgeting app built for couples — a partner-first ledger to log expenses together, auto-split, settle balances, and see your life as a pair.',
+      description: 'Futari is a shared budgeting app built for couples — a partner-first ledger to log expenses together, auto-split, settle up, and see your life as a pair.',
       ogDescription: 'Futari is a couple-first shared budgeting app — log together, auto-split, settle, and see your life as a pair.',
     },
     signIn: {
       title: 'Sign in to Futari · Start budgeting together',
-      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, look after insurance and shared things, all in a mobile-first PWA.',
+      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, look after insurance and shared things, in a mobile-first PWA.',
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
     },
     terms: {
@@ -2101,7 +2101,7 @@ export const en: Translations = {
     migrate: {
       honeydue: {
         title: 'Import from Honeydue to Futari',
-        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples — Futari is an ad-free, end-to-end encrypted shared ledger. Move your data in 3 minutes.',
+        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples — Futari is an ad-free, end-to-end encrypted ledger. Move your data in 3 minutes.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
