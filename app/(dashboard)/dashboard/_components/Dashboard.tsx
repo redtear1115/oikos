@@ -694,8 +694,8 @@ function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualToggleProps
       selected={selected}
       onChange={handleChange}
       viewerIsA={viewerIsA}
-      leftLabel={t.dashboard.payerMe}
-      rightLabel={t.dashboard.payerPartner}
+      leftLabel={t.common.me}
+      rightLabel={t.common.partner}
     />
   )
 }
@@ -728,8 +728,8 @@ function SplitDualToggle({ value, onChange, viewerIsA, t }: SplitDualToggleProps
       selected={selected}
       onChange={handleChange}
       viewerIsA={viewerIsA}
-      leftLabel={t.dashboard.splitFilter.mine}
-      rightLabel={t.dashboard.splitFilter.theirs}
+      leftLabel={t.dashboard.burdenMe}
+      rightLabel={t.dashboard.burdenPartner}
     />
   )
 }

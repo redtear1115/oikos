@@ -313,15 +313,10 @@ export type Translations = {
     addIncome: string
     filterLabel: string
     filterAriaLabel: string
-    /** Payer dual-toggle — viewer side. */
-    payerMe: string
-    /** Payer dual-toggle — partner side. */
-    payerPartner: string
-    /** Split-type dual-toggle on Dashboard L3. */
-    splitFilter: {
-      mine: string
-      theirs: string
-    }
+    /** Split dual-toggle on Dashboard L3 — drives the `burden` dim (who
+     *  actually bears the cost), NOT raw split_type. */
+    burdenMe: string
+    burdenPartner: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
@@ -2618,12 +2613,8 @@ export const zhTW: Translations = {
     addIncome: '記一筆收入',
     filterLabel: '篩選',
     filterAriaLabel: '開啟篩選',
-    payerMe: '我',
-    payerPartner: '對方',
-    splitFilter: {
-      mine: '我負擔',
-      theirs: '對方負擔',
-    },
+    burdenMe: '算我的',
+    burdenPartner: '算對方的',
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',
