@@ -76,6 +76,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   // No maximumScale: WCAG 1.4.4 (Resize Text) requires letting users zoom.
   // Inputs are sized at >= 16px to avoid iOS auto-zoom on focus.
+  // Android Chrome: shrink the layout viewport when the soft keyboard opens so
+  // `dvh`-sized sheets follow the keyboard and inputs stay visible. (#713)
+  interactiveWidget: 'resizes-content',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
