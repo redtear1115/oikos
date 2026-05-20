@@ -113,9 +113,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex-1">
           <Field label={ts.plant.sproutedAt}>
             {id => (
-              <input id={id} value={sproutedAt} onChange={e => setSproutedAt(e.target.value)}
-                type="date" className="w-full bg-transparent border-0 outline-none text-base"
-                style={{ color: 'var(--ink)' }} />
+              <TextInput id={id} value={sproutedAt} onChange={e => setSproutedAt(e.target.value)} type="date" />
             )}
           </Field>
         </div>
