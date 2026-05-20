@@ -6,6 +6,7 @@ export default function Loading() {
         background: 'rgba(0,0,0,0.25)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
+        animation: 'overlay-in 160ms ease-out both',
       }}
     />
   )

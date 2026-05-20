@@ -226,6 +226,11 @@ body {
 @keyframes blink { 50% { opacity: 0; } }
 .animate-blink { animation: blink 1s step-end infinite; }
 
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* Shared focus-visible treatment for unified toggles (issue #263).
  * Switch / Chip / Segment all opt-in by adding the `oik-toggle` class
  * (or one of `oik-switch` / `oik-chip` / `oik-segment` which inherit it).
