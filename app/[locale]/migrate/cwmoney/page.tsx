@@ -63,7 +63,7 @@ export default async function MigrateCwmoney({ params }: { params: Params }) {
       <a
         href={TEMPLATE_HREF}
         download
-        className="inline-flex items-center gap-2 mt-2 text-[13.5px]"
+        className="inline-flex items-center gap-2 mt-2 text-meta"
         style={{
           color: 'var(--ink)',
           textDecoration: 'underline',
