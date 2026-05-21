@@ -4,6 +4,8 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
+import { PostHogProvider } from './providers'
+import { PostHogPageView } from './posthog-pageview'
 import './globals.css'
 
 // Preconnect target derived once at module load — used to warm TLS to Supabase
@@ -110,7 +112,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="antialiased">
         <InAppBrowserGuardLazy strings={t.inAppBrowser} />
-        {children}
+        <PostHogProvider>
+          <PostHogPageView />
+          {children}
+        </PostHogProvider>
         <Analytics />
         <SpeedInsights />
       </body>
