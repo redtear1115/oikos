@@ -15,6 +15,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.8] - 2026-05-21
+
+主題：**修正收合狀態 hydration 閃退 + PostHog 收斂到 production**——修掉 v1.1.7 (#726) 引入的 hydration mismatch：餘額卡與月度統計改用 `useState` lazy-init 直接讀 localStorage，讓「曾收合過」的使用者一載入就觸發 React #418（收合任一區塊後重新整理即重現）；改以 cookie 持久化，讓 server 端就 render 正確的收合狀態，根治 mismatch 又保留無閃爍。同時把 PostHog 收斂成只在 production 初始化，避免本機開發把事件送進正式專案。
+完整 diff：[v1.1.7...v1.1.8](https://github.com/redtear1115/oikos/compare/v1.1.7...v1.1.8)
+
+### 使用者可見變化
+
+- **收合區塊載入不再閃退（#418 / #726）**：曾收合過儀表板餘額卡或紀錄頁月度統計的使用者，重新載入頁面不再出現畫面閃爍或錯誤，直接以正確的收合狀態呈現。
+
+### 技術變更
+
+- **收合 / 關閉偏好改 cookie 持久化（#731）**：`MonthlyStatsView`（collapsed）、`BalanceHero`（hero collapse + include-pending）、`ContextStrip`（partner-left dismissed + trip collapsed）由 `useState(() => localStorage…)` lazy-init 改為 server component 讀 cookie → 以 prop 傳入初始值，SSR 與 client 首次 render 一致，根治 React #418。新增 `lib/uiPrefsCookie.ts` 收斂 cookie 名稱與 server 讀 / client 寫 helper。既有使用者的這些 localStorage 偏好會 reset 一次後改由 cookie 持久化。
+- **PostHog production gate（#731）**：`app/providers.tsx` / `app/posthog-pageview.tsx` 以 build-time `POSTHOG_ENABLED`（`NODE_ENV === 'production'` 且有 key）gate 住 init 與 pageview——本機 dev 不再送事件到正式專案，並消除缺 key 時的 "initialized without a token" warning。
+
 ## [1.1.7] - 2026-05-21
 
 主題：**可觀測性接入 + 兩處體驗修正**——接入 Sentry 錯誤追蹤（#719）與 PostHog 產品分析（#720）兩套觀測工具，兩者皆只在 production 送出、本機開發不外送；Sentry 在送出前移除 cookie / header 做 PII scrubbing，PostHog 採 cookieless（memory persistence）模式免同意橫幅。另修兩個體驗 bug：在愛物 Sheet 內切換類型後 Android 返回鍵會誤離開 App 而非收起 Sheet（#723），以及儀表板餘額與月度統計的收合狀態在載入時會先閃一下（#726）。
@@ -313,7 +327,8 @@ _Nothing unreleased yet._
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.7...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.8...HEAD
+[1.1.8]: https://github.com/redtear1115/oikos/compare/v1.1.7...v1.1.8
 [1.1.7]: https://github.com/redtear1115/oikos/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/redtear1115/oikos/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/redtear1115/oikos/compare/v1.1.4...v1.1.5
