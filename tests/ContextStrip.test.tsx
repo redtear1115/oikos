@@ -80,12 +80,29 @@ function Wrapper({
 }
 
 function renderStrip(
-  props: { activeTrips?: ActiveTripBannerTrip[]; baseCurrency?: string } = {},
+  props: {
+    activeTrips?: ActiveTripBannerTrip[]
+    baseCurrency?: string
+    initialPartnerDismissed?: boolean
+    initialTripCollapsed?: boolean
+  } = {},
   member: MemberContextValue = baseMember,
 ) {
-  return render(<ContextStrip {...props} />, {
-    wrapper: ({ children }) => <Wrapper member={member}>{children}</Wrapper>,
-  })
+  const {
+    initialPartnerDismissed = false,
+    initialTripCollapsed = true,
+    ...rest
+  } = props
+  return render(
+    <ContextStrip
+      {...rest}
+      initialPartnerDismissed={initialPartnerDismissed}
+      initialTripCollapsed={initialTripCollapsed}
+    />,
+    {
+      wrapper: ({ children }) => <Wrapper member={member}>{children}</Wrapper>,
+    },
+  )
 }
 
 // ── tests ──────────────────────────────────────────────────────────────────
@@ -167,7 +184,7 @@ describe('ContextStrip', () => {
     fireEvent.click(dismissBtn)
 
     expect(container.firstChild).toBeNull()
-    expect(localStorage.getItem('context-strip-partner-left-dismissed')).toBe('1')
+    expect(document.cookie).toContain('oikos_partner_left_dismissed=1')
   })
 
   it('renders trip name when activeTrips provided (collapsed default)', () => {

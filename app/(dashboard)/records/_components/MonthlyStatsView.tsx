@@ -17,12 +17,13 @@ import {
   parseDrillFromSearchParams,
   type DrillFilter,
 } from '@/lib/drill'
-
-const KEY_PREFIX = 'oikos_stats_collapsed_'
+import { statsCollapsedCookieName, writeBoolCookie } from '@/lib/uiPrefsCookie'
 
 interface Props {
   /** Per-user scope — multiple users on the same device keep independent state. */
   userId: string
+  /** Collapse state read from the cookie server-side so SSR matches the client. */
+  initialCollapsed: boolean
   view: BreakdownView
   /** Expense breakdown by category — populated when `view === 'category'`; empty otherwise. */
   categoryRows: ReadonlyArray<CategoryStatRow>
@@ -47,6 +48,7 @@ interface Props {
 
 export function MonthlyStatsView({
   userId,
+  initialCollapsed,
   view,
   categoryRows,
   assetRows,
@@ -60,14 +62,7 @@ export function MonthlyStatsView({
   const tab = useRecordsTab()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    try {
-      return window.localStorage.getItem(`${KEY_PREFIX}${userId}`) === 'true'
-    } catch {
-      return false
-    }
-  })
+  const [collapsed, setCollapsed] = useState(initialCollapsed)
 
   // Active drill (URL-driven). Used to highlight the matching bar — clicking
   // it again clears the drill (toggle), clicking another bar swaps to it.
@@ -89,11 +84,7 @@ export function MonthlyStatsView({
   const toggle = () => {
     const next = !collapsed
     setCollapsed(next)
-    try {
-      window.localStorage.setItem(`${KEY_PREFIX}${userId}`, String(next))
-    } catch {
-      // Best-effort persistence; ignore failures.
-    }
+    writeBoolCookie(statsCollapsedCookieName(userId), next)
   }
 
   // Forced compact only for pre-creation months (no data worth visualising).
