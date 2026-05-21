@@ -48,6 +48,7 @@ Realtime：Client subscribes → React state mutation
 - Schema：`lib/db/schema.ts`
 - Migrations：`drizzle/`
 - Specs：`docs/superpowers/specs/`
+- 觀測：Sentry 錯誤追蹤（client `instrumentation-client.ts`／server `sentry.server.config.ts`＋edge `sentry.edge.config.ts`，由 `instrumentation.ts` 的 `register()` + `onRequestError` 載入；`next.config.ts` 以 `withSentryConfig` 包裹）＋ PostHog 分析（`app/providers.tsx`）。皆只在 `NODE_ENV === 'production'` 送出。
 
 ### Balance 計算規則
 
