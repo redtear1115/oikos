@@ -9,13 +9,14 @@ import { exitPastEpoch } from '@/actions/epoch-view'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { formatDateShort } from '@/lib/format-date'
 import type { ActiveTripBannerTrip } from '@/app/(dashboard)/dashboard/_components/ActiveTripBanner'
-
-const PARTNER_LEFT_DISMISSED_KEY = 'context-strip-partner-left-dismissed'
-const TRIP_COLLAPSED_KEY = 'trip-banner-collapsed'
+import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
 
 interface Props {
   activeTrips?: ActiveTripBannerTrip[]
   baseCurrency?: string
+  /** Read from cookies server-side so SSR matches the client (avoids hydration mismatch). */
+  initialPartnerDismissed: boolean
+  initialTripCollapsed: boolean
 }
 
 /**
@@ -27,7 +28,12 @@ interface Props {
  *
  * Renders nothing when none of the conditions apply.
  */
-export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
+export function ContextStrip({
+  activeTrips = [],
+  baseCurrency,
+  initialPartnerDismissed,
+  initialTripCollapsed,
+}: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const router = useRouter()
@@ -38,17 +44,8 @@ export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
   // client component; we wrap in useState to avoid SSR mismatch.
   const [offlinePrefOn] = useState(() => getOfflinePref())
 
-  const [partnerDismissed, setPartnerDismissed] = useState(() =>
-    typeof window !== 'undefined'
-      ? localStorage.getItem(PARTNER_LEFT_DISMISSED_KEY) === '1'
-      : false,
-  )
-
-  const [tripCollapsed, setTripCollapsed] = useState(() =>
-    typeof window !== 'undefined'
-      ? localStorage.getItem(TRIP_COLLAPSED_KEY) !== 'false'
-      : true,
-  )
+  const [partnerDismissed, setPartnerDismissed] = useState(initialPartnerDismissed)
+  const [tripCollapsed, setTripCollapsed] = useState(initialTripCollapsed)
 
   const [pending, startTransition] = useTransition()
 
@@ -64,21 +61,13 @@ export function ContextStrip({ activeTrips = [], baseCurrency }: Props) {
   }
 
   const handleDismissPartner = () => {
-    try {
-      localStorage.setItem(PARTNER_LEFT_DISMISSED_KEY, '1')
-    } catch {
-      // localStorage can throw in private mode
-    }
+    writeBoolCookie(UI_PREF_COOKIE.partnerLeftDismissed, true)
     setPartnerDismissed(true)
   }
 
   const handleTripToggle = () => {
     const next = !tripCollapsed
-    try {
-      localStorage.setItem(TRIP_COLLAPSED_KEY, String(next))
-    } catch {
-      // ignore
-    }
+    writeBoolCookie(UI_PREF_COOKIE.tripCollapsed, next)
     setTripCollapsed(next)
   }
 

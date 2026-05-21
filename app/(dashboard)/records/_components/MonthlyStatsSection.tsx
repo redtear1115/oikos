@@ -8,8 +8,10 @@ import {
 import { monthlyIncomeStatsByCategory, type ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
 import type { EpochWindow } from '@/lib/db/queries/epoch'
 import type { DateRange } from '@/lib/filter'
+import { cookies } from 'next/headers'
 import { MonthlyStatsView } from './MonthlyStatsView'
 import type { BreakdownView } from './StatsBreakdownToggle'
+import { statsCollapsedCookieName, parseBoolCookie } from '@/lib/uiPrefsCookie'
 
 interface Props {
   userId: string
@@ -85,9 +87,16 @@ export async function MonthlyStatsSection({
   const expenseTotal = expense.rows.reduce((acc, r) => acc + r.total, 0)
   const incomeTotal = incomeRows.reduce((acc, r) => acc + r.total, 0)
 
+  const cookieStore = await cookies()
+  const initialCollapsed = parseBoolCookie(
+    cookieStore.get(statsCollapsedCookieName(userId))?.value,
+    false,
+  )
+
   return (
     <MonthlyStatsView
       userId={userId}
+      initialCollapsed={initialCollapsed}
       view={effectiveView}
       categoryRows={categoryRows}
       assetRows={assetRows}
