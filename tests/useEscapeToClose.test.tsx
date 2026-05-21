@@ -65,6 +65,27 @@ describe('useEscapeToClose — Android Back / popstate (#683)', () => {
     unmount()
   })
 
+  it('does not unwind history on a key-change remount while still open (#723)', () => {
+    function Body() {
+      useEscapeToClose(true, () => {})
+      return null
+    }
+    // Mounted under key "pet" — pushes one synthetic entry.
+    const { rerender, unmount } = render(<Body key="pet" />)
+    expect(pushSpy).toHaveBeenCalledTimes(1)
+
+    // TypePicker switches type → the keyed body unmounts and a fresh instance
+    // mounts, both while open. The unmount must NOT call history.back(): doing
+    // so races the new mount's pushState and drops a history entry, which is
+    // what let a later Back navigate away instead of closing the sheet.
+    rerender(<Body key="house" />)
+    expect(backSpy).not.toHaveBeenCalled()
+    // The new instance pushed its own fresh synthetic entry.
+    expect(pushSpy).toHaveBeenCalledTimes(2)
+
+    unmount()
+  })
+
   it('unwinds exactly one layer per Back when sheets are stacked', () => {
     const onCloseA = vi.fn()
     const onCloseB = vi.fn()
