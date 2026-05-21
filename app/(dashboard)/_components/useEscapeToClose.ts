@@ -87,6 +87,16 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
     onCloseRef.current = onClose
   }, [onClose])
 
+  // Track the latest `open` synchronously during render (NOT via an effect) so
+  // the cleanup below can tell *why* it's unmounting. A separate effect would
+  // update too late: React runs every effect's cleanup before any new setup, so
+  // the ref would still hold the previous value when the main effect's cleanup
+  // reads it. The ref is never read during render — only in the cleanup — so the
+  // render-phase write is safe (hence the lint suppression).
+  const openRef = useRef(open)
+  // eslint-disable-next-line react-hooks/refs -- write-in-render is required; see note above
+  openRef.current = open
+
   useEffect(() => {
     if (!open) return
     const entry: SheetEntry = { close: () => onCloseRef.current(), poppedByBack: false }
@@ -121,7 +131,15 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
       // a press undoing a phantom entry. The resulting `popstate` is absorbed
       // by `pendingSelfPops`. If Back already closed this sheet, the entry was
       // consumed by the browser, so we skip.
-      if (!entry.poppedByBack) {
+      //
+      // Only unwind when the sheet is truly closing (`open` is now false). If
+      // this cleanup is a key-change remount with the sheet still open — e.g.
+      // AssetSheet's keyed body swaps when TypePicker changes type — calling
+      // `history.back()` here races the freshly-mounted instance's own
+      // `pushState`, dropping a history entry and letting a later Back navigate
+      // away instead of closing the sheet (#723). Skip it: the new instance
+      // pushes its own synthetic entry.
+      if (!entry.poppedByBack && !openRef.current) {
         pendingSelfPops++
         window.history.back()
       }
