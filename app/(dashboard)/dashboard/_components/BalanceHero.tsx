@@ -49,8 +49,9 @@ function balanceFadeReducer(s: BalanceFadeState, a: BalanceFadeAction): BalanceF
 /**
  * Boolean persisted in localStorage with a configurable on/off serialization
  * (so we can keep human-readable values like 'pending'/'settled' on disk). The
- * initial value is the default; the stored value (if any) is read on mount and
- * overrides it. Returns a setter that writes through on every change.
+ * stored value is read in a lazy initializer so the first client render already
+ * reflects it (no post-hydration flash); SSR falls back to the default. Returns
+ * a setter that writes through on every change.
  */
 function useLocalStorageBoolean(
   key: string,
@@ -58,15 +59,24 @@ function useLocalStorageBoolean(
   onValue: string,
   offValue: string,
 ): [boolean, (next: boolean) => void] {
-  const [value, setValue] = useState(defaultValue)
-  useEffect(() => {
-    const stored = localStorage.getItem(key)
-    if (stored === onValue) setValue(true)
-    else if (stored === offValue) setValue(false)
-  }, [key, onValue, offValue])
+  const [value, setValue] = useState(() => {
+    if (typeof window === 'undefined') return defaultValue
+    try {
+      const stored = localStorage.getItem(key)
+      if (stored === onValue) return true
+      if (stored === offValue) return false
+    } catch {
+      // localStorage may throw in private mode / disabled storage.
+    }
+    return defaultValue
+  })
   const set = (next: boolean) => {
     setValue(next)
-    localStorage.setItem(key, next ? onValue : offValue)
+    try {
+      localStorage.setItem(key, next ? onValue : offValue)
+    } catch {
+      // Best-effort persistence.
+    }
   }
   return [value, set]
 }
