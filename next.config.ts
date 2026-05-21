@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -79,4 +80,22 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+export default withSentryConfig(withSerwist(nextConfig), {
+  // TODO(Ray): fill in the real Sentry org slug (Sentry → Settings → Organization).
+  org: "TODO-sentry-org-slug",
+  // TODO(Ray): verify this matches the actual Sentry project slug.
+  project: "javascript-nextjs",
+  // Suppress Sentry build logs.
+  silent: true,
+  // Upload a wider set of client bundles so stack traces resolve cleanly.
+  widenClientFileUpload: true,
+  // NOTE: `hideSourceMaps` was removed in @sentry/nextjs v8+. Source maps are
+  // deleted after upload by default (sourcemaps.deleteSourcemapsAfterUpload),
+  // so they are never served publicly — no explicit option needed.
+  webpack: {
+    // Don't auto-create Vercel cron monitors.
+    automaticVercelMonitors: false,
+    // Tree-shake the Sentry SDK's internal logger statements (was `disableLogger`).
+    treeshake: { removeDebugLogging: true },
+  },
+});
