@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory, type CategoryId } from '@/lib/categories'
@@ -60,8 +60,14 @@ export function MonthlyStatsView({
   const tab = useRecordsTab()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [collapsed, setCollapsed] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return window.localStorage.getItem(`${KEY_PREFIX}${userId}`) === 'true'
+    } catch {
+      return false
+    }
+  })
 
   // Active drill (URL-driven). Used to highlight the matching bar — clicking
   // it again clears the drill (toggle), clicking another bar swaps to it.
@@ -80,19 +86,6 @@ export function MonthlyStatsView({
     [router, searchParams],
   )
 
-  // Read persisted state on mount. SSR / first paint always renders expanded;
-  // if localStorage says collapsed we flip after hydration (slight flash for
-  // collapsed users — acceptable for a per-device preference).
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(`${KEY_PREFIX}${userId}`)
-      if (stored === 'true') setCollapsed(true)
-    } catch {
-      // localStorage may throw in private mode / disabled storage. Stay expanded.
-    }
-    setMounted(true)
-  }, [userId])
-
   const toggle = () => {
     const next = !collapsed
     setCollapsed(next)
@@ -104,7 +97,7 @@ export function MonthlyStatsView({
   }
 
   // Forced compact only for pre-creation months (no data worth visualising).
-  const showCollapsed = forceCompact || (mounted && collapsed)
+  const showCollapsed = forceCompact || collapsed
   const allowToggle = !forceCompact
   const isEmpty = expenseTotal === 0 && incomeTotal === 0
   const isIncomeTab = tab === 'income'
