@@ -1,5 +1,7 @@
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
+import { UI_PREF_COOKIE, parseBoolCookie } from '@/lib/uiPrefsCookie'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -227,6 +229,12 @@ export default async function DashboardPage() {
     return { recent, recentIncomeFeed }
   })
 
+  const cookieStore = await cookies()
+  const initialHeroCollapsed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.heroCollapsed)?.value, false)
+  const initialIncludePending = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.balanceIncludePending)?.value, false)
+  const initialPartnerDismissed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.partnerLeftDismissed)?.value, false)
+  const initialTripCollapsed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.tripCollapsed)?.value, true)
+
   return (
     <>
       {partnerLeftProps && (
@@ -260,6 +268,10 @@ export default async function DashboardPage() {
         baseCurrency={parseCurrencyCode(group.baseCurrency) ?? 'twd'}
         activeTrips={activeTrips}
         rates={rates}
+        initialHeroCollapsed={initialHeroCollapsed}
+        initialIncludePending={initialIncludePending}
+        initialPartnerDismissed={initialPartnerDismissed}
+        initialTripCollapsed={initialTripCollapsed}
       />
     </>
   )

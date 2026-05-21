@@ -11,10 +11,7 @@ import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
 import { formatAmount } from '@/lib/currency'
-
-const HERO_COLLAPSED_KEY = 'hero-collapsed'
-// localStorage key for the settled / include-pending balance view toggle (#164).
-const BALANCE_VIEW_KEY = 'balance-view'  // 'settled' | 'pending'
+import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
 
 type BalanceFadeState = {
   displayed: number
@@ -46,43 +43,12 @@ function balanceFadeReducer(s: BalanceFadeState, a: BalanceFadeAction): BalanceF
   }
 }
 
-/**
- * Boolean persisted in localStorage with a configurable on/off serialization
- * (so we can keep human-readable values like 'pending'/'settled' on disk). The
- * stored value is read in a lazy initializer so the first client render already
- * reflects it (no post-hydration flash); SSR falls back to the default. Returns
- * a setter that writes through on every change.
- */
-function useLocalStorageBoolean(
-  key: string,
-  defaultValue: boolean,
-  onValue: string,
-  offValue: string,
-): [boolean, (next: boolean) => void] {
-  const [value, setValue] = useState(() => {
-    if (typeof window === 'undefined') return defaultValue
-    try {
-      const stored = localStorage.getItem(key)
-      if (stored === onValue) return true
-      if (stored === offValue) return false
-    } catch {
-      // localStorage may throw in private mode / disabled storage.
-    }
-    return defaultValue
-  })
-  const set = (next: boolean) => {
-    setValue(next)
-    try {
-      localStorage.setItem(key, next ? onValue : offValue)
-    } catch {
-      // Best-effort persistence.
-    }
-  }
-  return [value, set]
-}
-
 interface Props {
   rawBalance: number  // member_a perspective (positive = b owes a)
+  /** Hero collapse + balance-view prefs, read from cookies server-side so SSR
+   *  renders the same initial state as the client (avoids hydration mismatch). */
+  initialHeroCollapsed: boolean
+  initialIncludePending: boolean
   /**
    * Delta to add to `rawBalance` for the include-pending ("after settlement")
    * view. 0 when no pending CashTransactions exist; in that case the toggle
@@ -104,6 +70,8 @@ interface Props {
 
 export function BalanceHero({
   rawBalance,
+  initialHeroCollapsed,
+  initialIncludePending,
   pendingBalanceDelta = 0,
   onSettleMutated,
   mode,
@@ -129,13 +97,17 @@ export function BalanceHero({
     dispatchFade({ type: 'sync', raw: rawBalance })
   }
 
-  const [heroCollapsed, setHeroCollapsed] = useLocalStorageBoolean(
-    HERO_COLLAPSED_KEY, false, 'true', 'false',
-  )
+  const [heroCollapsed, setHeroCollapsedState] = useState(initialHeroCollapsed)
+  const setHeroCollapsed = (next: boolean) => {
+    setHeroCollapsedState(next)
+    writeBoolCookie(UI_PREF_COOKIE.heroCollapsed, next)
+  }
   // Settled-only vs include-pending balance view (issue #164).
-  const [includePendingView, setIncludePendingView] = useLocalStorageBoolean(
-    BALANCE_VIEW_KEY, false, 'pending', 'settled',
-  )
+  const [includePendingView, setIncludePendingViewState] = useState(initialIncludePending)
+  const setIncludePendingView = (next: boolean) => {
+    setIncludePendingViewState(next)
+    writeBoolCookie(UI_PREF_COOKIE.balanceIncludePending, next)
+  }
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const P = DEFAULT_INCOME_PALETTE
 

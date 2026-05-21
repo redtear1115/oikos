@@ -74,6 +74,12 @@ export interface DashboardProps {
   activeTrips?: TripOption[]
   /** Exchange rates for this group. */
   rates?: RateEntry[]
+  /** UI-preference initial states, read from cookies in the page so SSR matches
+   *  the client and the collapse toggles don't cause a hydration mismatch. */
+  initialHeroCollapsed: boolean
+  initialIncludePending: boolean
+  initialPartnerDismissed: boolean
+  initialTripCollapsed: boolean
 }
 
 export function Dashboard({
@@ -90,6 +96,10 @@ export function Dashboard({
   baseCurrency = 'twd',
   activeTrips = [],
   rates = [],
+  initialHeroCollapsed,
+  initialIncludePending,
+  initialPartnerDismissed,
+  initialTripCollapsed,
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo, isPast, viewerIsA, partner } = useMember()
@@ -286,7 +296,12 @@ export function Dashboard({
       {/* L1: Brand identity */}
       <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => dispatch({ type: 'openTripSheet' })} />
       {/* L3: Contextual strip (offline / past-epoch / partner-left / active-trip) */}
-      <ContextStrip activeTrips={activeTrips} baseCurrency={baseCurrency} />
+      <ContextStrip
+        activeTrips={activeTrips}
+        baseCurrency={baseCurrency}
+        initialPartnerDismissed={initialPartnerDismissed}
+        initialTripCollapsed={initialTripCollapsed}
+      />
       {/* L2: Mode toggle — left-aligned */}
       <div className="px-5 pb-3">
         <ModeTogglePlaceholder
@@ -330,6 +345,8 @@ export function Dashboard({
       ) : (
         <BalanceHero
           rawBalance={balance}
+          initialHeroCollapsed={initialHeroCollapsed}
+          initialIncludePending={initialIncludePending}
           pendingBalanceDelta={pendingBalanceDelta}
           onSettleMutated={handleMutated}
           mode={mode}
