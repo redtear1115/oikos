@@ -15,6 +15,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.1.7] - 2026-05-21
+
+主題：**可觀測性接入 + 兩處體驗修正**——接入 Sentry 錯誤追蹤（#719）與 PostHog 產品分析（#720）兩套觀測工具，兩者皆只在 production 送出、本機開發不外送；Sentry 在送出前移除 cookie / header 做 PII scrubbing，PostHog 採 cookieless（memory persistence）模式免同意橫幅。另修兩個體驗 bug：在愛物 Sheet 內切換類型後 Android 返回鍵會誤離開 App 而非收起 Sheet（#723），以及儀表板餘額與月度統計的收合狀態在載入時會先閃一下（#726）。
+完整 diff：[v1.1.6...v1.1.7](https://github.com/redtear1115/oikos/compare/v1.1.6...v1.1.7)
+
+### 使用者可見變化
+
+- **切換愛物類型後返回鍵正確收起 Sheet（#723）**：在新增 / 編輯愛物的 Sheet 內切換類型（如 Child → Pet）後，按 Android 系統返回鍵會正確收起 Sheet，而不是直接離開 App。
+- **載入不再閃動收合狀態（#726）**：儀表板餘額卡片與紀錄頁月度統計的展開 / 收合偏好在頁面載入時直接以正確狀態呈現，不再先展開再跳收合。
+
+### 技術變更
+
+- **Sentry 錯誤追蹤（#719）**：以 `@sentry/nextjs` v10 手動接入 Next.js 16 App Router（不走 wizard）——client 用 `instrumentation-client.ts`（Turbopack 下取代已棄用的 `sentry.client.config.ts`），server / edge config 由 `instrumentation.ts` 的 `register()` 載入並 export `onRequestError` 涵蓋 Server Component / Route Handler / middleware，`app/global-error.tsx` 接 top-level render error，`next.config.ts` 以 `withSentryConfig` 包裹（保留既有 Serwist wrapper）。`enabled: NODE_ENV === 'production'` 故本機不送；`beforeSend` 移除 request cookie / header。Vercel 環境變數與 Sentry org slug 待填。
+- **PostHog 產品分析（#720）**：`app/providers.tsx` 初始化 PostHog，cookieless（`persistence: 'memory'`）免同意橫幅、`person_profiles: 'identified_only'`；`app/posthog-pageview.tsx` 以 Suspense 包 `useSearchParams` 手動送 `$pageview`。
+- **useEscapeToClose key-change remount（#723）**：以 render-phase `openRef` 讓 cleanup 能分辨「真正關閉」與「keyed body 換 key 重掛」，後者不呼叫 `history.back()`，避免與新實例的 `pushState` 競爭而吃掉一筆 history。補上 vitest 覆蓋。
+- **localStorage 收合狀態改 lazy initializer（#726）**：`useLocalStorageBoolean` 與 MonthlyStatsView 的 collapsed 改在 `useState` lazy initializer 讀 localStorage（SSR fallback 預設值、try/catch 防 private mode），移除 mount 後再 `setState` 造成的 flash；寫入亦包 try/catch。
+- **文件（doc-keeper sweep）**：`.env.local.example` 補 Sentry 環境變數、CLAUDE.md 架構速查補觀測段。
+
 ## [1.1.6] - 2026-05-21
 
 主題：**Android PWA 體驗修正**——集中修正 Android edge-to-edge PWA 的多項體驗問題：safe-area inset 失效（#714）、系統返回鍵直接離開 App 而非收起開啟中的 Sheet（#716 / #683），以及 overscroll 回彈、tap highlight 灰閃、軟鍵盤遮擋輸入框、ja / zh-CN CJK 字型 fallback 缺字等一輪細節（#715 / #713）。
@@ -295,7 +313,8 @@ _Nothing unreleased yet._
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.6...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.7...HEAD
+[1.1.7]: https://github.com/redtear1115/oikos/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/redtear1115/oikos/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/redtear1115/oikos/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/redtear1115/oikos/compare/v1.1.3...v1.1.4
