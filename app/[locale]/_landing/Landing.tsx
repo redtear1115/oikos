@@ -9,6 +9,7 @@ import {
   StatsGlyph,
   ShieldOutlineGlyph,
 } from './FutariMark'
+import { LandingCtaLink } from './LandingCtaLink'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
 
@@ -84,8 +85,10 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
         </div>
 
         {/* Desktop CTA in top-right; mobile relies on hero CTA only */}
-        <Link
+        <LandingCtaLink
           href={ctaHref}
+          ctaLocation="desktop_header"
+          target="sign_in"
           className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-semibold cursor-pointer"
           style={{
             background: 'var(--ink)',
@@ -94,7 +97,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
           }}
         >
           {t.cta}
-        </Link>
+        </LandingCtaLink>
       </header>
 
       {/* HERO — single column on mobile, two columns on md+ */}
@@ -172,8 +175,10 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
 
             {/* CTA row */}
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mt-10">
-              <Link
+              <LandingCtaLink
                 href={ctaHref}
+                ctaLocation="hero"
+                target="sign_in"
                 className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-semibold cursor-pointer"
                 style={{
                   background: 'var(--ink)',
@@ -183,9 +188,11 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                 }}
               >
                 {t.cta}
-              </Link>
-              <Link
+              </LandingCtaLink>
+              <LandingCtaLink
                 href={signInHref}
+                ctaLocation="secondary"
+                target="sign_in"
                 className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-meta cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
@@ -194,7 +201,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                 }}
               >
                 {t.alreadyHaveAccount}
-              </Link>
+              </LandingCtaLink>
             </div>
 
             {/* Mobile sub-CTA hint */}
@@ -356,18 +363,21 @@ function MigrateLinksSection({
     {
       href: migrateHrefs.honeydue,
       source: 'Honeydue',
+      target: 'migrate_honeydue' as const,
       title: t.migrateSection.honeydueTitle,
       body: t.migrateSection.honeydueBody,
     },
     {
       href: migrateHrefs.spendee,
       source: 'Spendee',
+      target: 'migrate_spendee' as const,
       title: t.migrateSection.spendeeTitle,
       body: t.migrateSection.spendeeBody,
     },
     {
       href: migrateHrefs.cwmoney,
       source: 'CWMoney',
+      target: 'migrate_cwmoney' as const,
       title: t.migrateSection.cwmoneyTitle,
       body: t.migrateSection.cwmoneyBody,
     },
@@ -413,10 +423,12 @@ function MigrateLinksSection({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
           {items.map((item) => (
-            <Link
+            <LandingCtaLink
               key={item.source}
               href={item.href}
-              aria-label={t.migrateSection.cardAriaLabel.replace('{source}', item.source)}
+              ctaLocation="footer_migrate"
+              target={item.target}
+              ariaLabel={t.migrateSection.cardAriaLabel.replace('{source}', item.source)}
               className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
               style={{
                 background: 'var(--surface)',
@@ -437,7 +449,7 @@ function MigrateLinksSection({
               >
                 {item.body}
               </p>
-            </Link>
+            </LandingCtaLink>
           ))}
         </div>
       </div>
