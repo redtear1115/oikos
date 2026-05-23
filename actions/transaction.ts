@@ -20,6 +20,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { convertAmount, type CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
+import { captureServer } from '@/lib/analytics/server'
 
 export interface CreateTransactionInput {
   amount: number              // integer NTD, > 0
@@ -136,6 +137,12 @@ export async function createTransaction(
   })
 
   revalidateAfterTransactionMutation({ assetId: validated.assetId })
+
+  // Activation signal (#734): the user's first manual record.
+  if (result.isFirstTransaction) {
+    await captureServer(user.id, 'first_record_created', { via: 'manual' })
+  }
+
   return result
 }
 

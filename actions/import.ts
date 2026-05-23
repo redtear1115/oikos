@@ -13,6 +13,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterImportMutation } from '@/lib/revalidate'
 import { isValidCategoryId } from '@/lib/categories'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
+import { captureServer } from '@/lib/analytics/server'
 
 /**
  * #607 — Server-side CSV import.
@@ -269,6 +270,13 @@ export async function importCsvBatch(
   })
 
   revalidateAfterImportMutation()
+
+  // Migrate-path activation signal (#734).
+  await captureServer(user.id, 'import_completed', {
+    migrate_source: input.source,
+    imported_rows: input.rows.length,
+    error_count: input.errors.length,
+  })
 
   return {
     batchId: result.batchId,

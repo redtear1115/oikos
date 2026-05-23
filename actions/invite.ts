@@ -9,6 +9,7 @@ import {
   type InviteAcceptError,
 } from '@/lib/invite'
 import { requireViewer } from '@/lib/auth/viewer'
+import { captureServer } from '@/lib/analytics/server'
 import { and, eq, isNull, ne } from 'drizzle-orm'
 
 export type InvitePreview =
@@ -27,6 +28,10 @@ export async function createInvite(groupId: string): Promise<string> {
     token,
     expiresAt,
   })
+
+  // Invite-funnel denominator (#734): an invite was sent. The matching
+  // numerator is `partner_joined` when the invitee accepts.
+  await captureServer(user.id, 'invite_created', { group_id: groupId })
 
   return getInviteUrl(token)
 }
@@ -133,6 +138,13 @@ export async function acceptInvite(token: string): Promise<string> {
       memberAId: updatedGroup.memberA,
       memberBId: user.id,
     })
+  })
+
+  // Invite-funnel conversion (#734): the invitee (member_b) joined. Keyed on
+  // the joiner; `inviter_id` lets the two sides be correlated in analysis.
+  await captureServer(user.id, 'partner_joined', {
+    group_id: invite.groupId,
+    inviter_id: invite.invitedBy,
   })
 
   return invite.groupId

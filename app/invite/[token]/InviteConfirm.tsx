@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { acceptInvite } from '@/actions/invite'
+import { track } from '@/lib/analytics/track'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
 import type { InviteAcceptError } from '@/lib/invite'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
@@ -26,6 +27,13 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  // Invite-funnel step (#734): the invitee reached the accept screen. Fires
+  // once per mount (the page server-redirects anonymous invitees to sign-in
+  // first, so reaching here means they are authenticated).
+  useEffect(() => {
+    track('invite_link_opened')
+  }, [])
 
   const heading = trust.bilateral.invitee.heading.replace(
     '{name}',
