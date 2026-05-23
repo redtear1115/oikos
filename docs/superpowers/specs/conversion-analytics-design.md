@@ -1,7 +1,7 @@
 ---
 status: planned
 related_specs: [csv-import, solo-mode]
-related_issues: []
+related_issues: ["#734"]
 ---
 
 # 轉換分析 — 從入口頁到註冊的事件追蹤
