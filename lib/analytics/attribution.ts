@@ -6,6 +6,7 @@ export type EntrySource =
   | 'migrate_honeydue'
   | 'migrate_spendee'
   | 'migrate_cwmoney'
+  | 'invite'
   | 'direct'
 
 export type MigrateFromSource = 'honeydue' | 'spendee' | 'cwmoney'
@@ -21,6 +22,8 @@ export function entrySourceFromParam(from: string | null | undefined): EntrySour
       return 'migrate_spendee'
     case 'cwmoney':
       return 'migrate_cwmoney'
+    case 'invite':
+      return 'invite'
     default:
       return 'direct'
   }

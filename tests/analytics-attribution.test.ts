@@ -14,6 +14,7 @@ describe('entrySourceFromParam', () => {
     expect(entrySourceFromParam('spendee')).toBe('migrate_spendee')
     expect(entrySourceFromParam('cwmoney')).toBe('migrate_cwmoney')
   })
+  it('maps invite', () => expect(entrySourceFromParam('invite')).toBe('invite'))
   it('falls back to direct for null/unknown', () => {
     expect(entrySourceFromParam(null)).toBe('direct')
     expect(entrySourceFromParam(undefined)).toBe('direct')
