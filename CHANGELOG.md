@@ -15,6 +15,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.2.0] - 2026-05-24
+
+主題：**看見光從哪裡來——入口轉換追蹤**——為三個入口面（首頁 `/`、migrate 著陸頁 `/migrate/*`、伴侶邀請）接入 PostHog 轉換漏斗事件，量測「來訪 → 註冊 / 加入」的轉換率並歸因到來源。維持既有 cookieless（`persistence: 'memory'`、免同意橫幅）立場：OAuth 邊界以 server-side alias 串接匿名與註冊後事件，不新增 cookie / localStorage。本版對使用者無可見變化。
+完整 diff：[v1.1.8...v1.2.0](https://github.com/redtear1115/oikos/compare/v1.1.8...v1.2.0)
+
+### 使用者可見變化
+
+_本版無使用者可見變化（純後端分析事件接入）。_
+
+### 技術變更
+
+- **轉換分析事件層（#734）**：新增 `lib/analytics/`——client `track()` 與 server `posthog-node`（`captureServer` / `aliasServer`）兩個 gated seam，事件僅在 `NODE_ENV === 'production'` 且有 key 時送出。涵蓋 pre-auth client 事件（`landing_cta_clicked`、`migrate_file_selected`、`migrate_preview_shown`、`migrate_preview_failed`、`migrate_cta_clicked`、`sign_in_started`）、auth boundary server 事件（`signed_up` / `signed_in`）、啟用事件（`setup_completed`、`first_record_created`、`import_completed`）與邀請漏斗（`invite_created`、`invite_link_opened`、`partner_joined`）。
+- **跨 OAuth 邊界歸因**：`SignInButton` 把匿名 `distinct_id` + `from` 夾帶進 OAuth `redirectTo`，`/auth/callback` 以 `posthog-node` `alias()` 把 pre-auth 匿名事件串到註冊後的 user，`persistence: 'memory'` 維持不變。歸因軸 `entry_source`（`landing` / `migrate_*` / `invite` / `direct`）寫為 `$set_once` person property。
+- **新依賴 `posthog-node`**（server-side capture / alias）。
+- 設計見 `docs/superpowers/specs/conversion-analytics-design.md`。
+
 ## [1.1.8] - 2026-05-21
 
 主題：**修正收合狀態 hydration 閃退 + PostHog 收斂到 production**——修掉 v1.1.7 (#726) 引入的 hydration mismatch：餘額卡與月度統計改用 `useState` lazy-init 直接讀 localStorage，讓「曾收合過」的使用者一載入就觸發 React #418（收合任一區塊後重新整理即重現）；改以 cookie 持久化，讓 server 端就 render 正確的收合狀態，根治 mismatch 又保留無閃爍。同時把 PostHog 收斂成只在 production 初始化，避免本機開發把事件送進正式專案。
