@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { MigrateSource } from '@/lib/csvImport'
+import { appendQueryParam } from '@/lib/analytics/attribution'
 
 type MigrateStrings = Translations['migrate']
 
@@ -9,6 +10,8 @@ interface Props {
   /** Locale-aware /sign-in href; we append `?from=<source>` here. */
   signInHref: string
   source: MigrateSource
+  /** Fired on click for the conversion funnel (migrate_cta_clicked). */
+  onClick?: () => void
 }
 
 /**
@@ -16,13 +19,14 @@ interface Props {
  * `?from=<source>` so the post-auth onboarding can resume the import in the
  * right importer flow (per-source CSV mapping lives behind auth).
  */
-export function MigrateCta({ t, signInHref, source }: Props) {
-  const href = appendQuery(signInHref, 'from', source)
+export function MigrateCta({ t, signInHref, source, onClick }: Props) {
+  const href = appendQueryParam(signInHref, 'from', source)
 
   return (
     <div className="space-y-3 text-center">
       <Link
         href={href}
+        onClick={onClick}
         className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-body font-semibold cursor-pointer"
         style={{ background: 'var(--btn-primary-bg)', letterSpacing: '1.2px', textDecoration: 'none' }}
       >
@@ -33,9 +37,4 @@ export function MigrateCta({ t, signInHref, source }: Props) {
       </p>
     </div>
   )
-}
-
-function appendQuery(href: string, key: string, value: string): string {
-  const sep = href.includes('?') ? '&' : '?'
-  return `${href}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`
 }
