@@ -9,6 +9,7 @@ import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateSettings } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
 import { validateName } from '@/lib/validators'
+import { captureServer } from '@/lib/analytics/server'
 
 export async function getMyGroup() {
   // Read-only "is the viewer in a group?" probe used by client RTV bootstrap.
@@ -43,6 +44,13 @@ export async function createGroup(name: string) {
     })
 
     return [g]
+  })
+
+  // Activation signal (#734): the group is the user's setup milestone. Always
+  // solo at creation (partner joins later via invite).
+  await captureServer(user.id, 'setup_completed', {
+    base_currency: group.baseCurrency,
+    solo: group.memberB === null,
   })
 
   return group

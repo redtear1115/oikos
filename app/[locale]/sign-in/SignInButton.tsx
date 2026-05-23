@@ -1,16 +1,29 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { track, getAnonId } from '@/lib/analytics/track'
+import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attribution'
 
 export function SignInButton({ label }: { label: string }) {
   const handleSignIn = async () => {
-    const next = new URLSearchParams(window.location.search).get('next') ?? '/dashboard'
+    const search = new URLSearchParams(window.location.search)
+    const next = search.get('next') ?? '/dashboard'
+    const from = search.get('from')
+
+    // Last anonymous client event before the OAuth round-trip; same distinct_id
+    // as the pre-auth landing/migrate events in this SPA session.
+    track('sign_in_started', { entry_source: entrySourceFromParam(from) })
+
+    const redirectTo = buildAuthCallbackUrl(window.location.origin, {
+      next,
+      from,
+      anonId: getAnonId(),
+    })
+
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
+      options: { redirectTo },
     })
   }
 

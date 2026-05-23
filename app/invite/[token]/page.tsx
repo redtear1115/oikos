@@ -14,7 +14,9 @@ export default async function InvitePage({ params }: Props) {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect(await localizedSignInPath(`?next=/invite/${token}`))
+    // `from=invite` attributes an invitee's eventual sign-up to the invite
+    // funnel (entry_source=invite); `next` returns them to accept the invite.
+    redirect(await localizedSignInPath(`?next=/invite/${token}&from=invite`))
   }
 
   const preview = await previewInvite(token)
