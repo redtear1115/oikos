@@ -81,9 +81,9 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(withSerwist(nextConfig), {
-  // TODO(Ray): fill in the real Sentry org slug (Sentry → Settings → Organization).
-  org: "TODO-sentry-org-slug",
-  // TODO(Ray): verify this matches the actual Sentry project slug.
+  org: "southern-light-dev",
+  // Project slug from the Next.js onboarding. If source-map upload 404s at
+  // build time, confirm the exact slug in Sentry → Settings → Projects.
   project: "javascript-nextjs",
   // Suppress Sentry build logs.
   silent: true,

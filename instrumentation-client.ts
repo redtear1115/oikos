@@ -6,6 +6,10 @@ Sentry.init({
   // Only send errors in production to keep free-tier quota
   enabled: process.env.NODE_ENV === 'production',
   tracesSampleRate: 0.1,
+  // Send structured logs to Sentry → Logs. consoleLoggingIntegration forwards
+  // console.error/warn so existing logging shows up without Sentry.logger calls.
+  enableLogs: true,
+  integrations: [Sentry.consoleLoggingIntegration({ levels: ['error', 'warn'] })],
   // Privacy: scrub PII before sending
   beforeSend(event) {
     // Remove user IP and sensitive request data
