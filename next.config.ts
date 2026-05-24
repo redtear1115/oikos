@@ -81,10 +81,8 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(withSerwist(nextConfig), {
-  // TODO(Ray): fill in the real Sentry org slug (Sentry → Settings → Organization).
-  org: "TODO-sentry-org-slug",
-  // TODO(Ray): verify this matches the actual Sentry project slug.
-  project: "javascript-nextjs",
+  org: "southern-light-dev",
+  project: "prj-futari",
   // Suppress Sentry build logs.
   silent: true,
   // Upload a wider set of client bundles so stack traces resolve cleanly.

@@ -18,7 +18,13 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!POSTHOG_ENABLED) return
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com',
+      // Route ingestion through our managed reverse proxy so ad/tracker
+      // blockers don't drop events. Falls back to the proxy domain if the env
+      // var is unset, so prod is correct-by-default even before Vercel is set.
+      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://e.southern-light.dev',
+      // Required whenever api_host is a proxy: tells PostHog where the real app
+      // lives so dashboard deep-links (toolbar, replay) point back correctly.
+      ui_host: 'https://us.posthog.com',
       person_profiles: 'identified_only',
       // Cookieless mode — no consent banner needed
       persistence: 'memory',
