@@ -82,9 +82,7 @@ const nextConfig: NextConfig = {
 
 export default withSentryConfig(withSerwist(nextConfig), {
   org: "southern-light-dev",
-  // Project slug from the Next.js onboarding. If source-map upload 404s at
-  // build time, confirm the exact slug in Sentry → Settings → Projects.
-  project: "javascript-nextjs",
+  project: "prj-futari",
   // Suppress Sentry build logs.
   silent: true,
   // Upload a wider set of client bundles so stack traces resolve cleanly.
