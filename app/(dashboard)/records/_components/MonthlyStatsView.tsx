@@ -195,10 +195,16 @@ export function MonthlyStatsView({
         // (固定位置) so the user's eye doesn't have to chase it.
         <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
       ) : tab === 'all' ? (
-        // 收支 tab: the daily income/expense trend (bars + cumulative-net line)
-        // replaces the donut entirely (#747). The 收入 / 支出 tabs keep their
-        // donut + detail-bar breakdown below, unchanged.
-        <DailyTrendChart data={dailyTrend} />
+        // 收支 tab: summary line on top (支出/收入/淨收入 — the at-a-glance totals
+        // the trend chart doesn't spell out), then the daily income/expense trend
+        // (bars + cumulative-net line) that replaces the donut here (#747). Mirrors
+        // the 收入/支出 tabs, which also keep the summary visible while expanded (#746).
+        <>
+          <div className="mb-3">
+            <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
+          </div>
+          <DailyTrendChart data={dailyTrend} />
+        </>
       ) : (
         // Expanded: month summary line on top, then the donut chart (with the
         // breakdown total / active-slice amount in its center) and the detail-

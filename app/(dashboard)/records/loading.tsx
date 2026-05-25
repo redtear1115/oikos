@@ -1,11 +1,23 @@
 export default function Loading() {
   return (
     <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
-      {/* MonthSwitcher row */}
+      {/* L1: title + 定期 shortcut — mirrors RecordsList's L1Header so the real
+          page paints over the skeleton with no vertical shift. */}
       <div
-        className="flex items-center gap-2 px-5 pb-3"
+        className="px-5 pb-3 flex items-center justify-between"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
       >
+        <div className="h-7 w-20 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
+        <div className="h-4 w-12 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.5 }} />
+      </div>
+
+      {/* L2: 支出 / 收入 dual-toggle pill */}
+      <div className="px-5 pb-3">
+        <div className="h-[38px] w-40 rounded-full animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
+      </div>
+
+      {/* L3: month/date chip + filter chip row */}
+      <div className="flex items-center gap-2 px-5 pb-3">
         <div className="h-8 w-28 rounded-full animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
         <div className="h-8 w-20 rounded-full animate-pulse" style={{ background: 'var(--surface)', opacity: 0.5 }} />
       </div>

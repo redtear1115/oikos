@@ -10,6 +10,7 @@ import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
 import { PICKABLE_INCOME_CATEGORIES, type IncomeCategoryId } from '@/lib/incomeCategories'
 import {
   ASSET_FILTER_NONE,
+  normalizeAmountRange,
   type DateRange,
   type PayerFilter,
   type SplitFilter,
@@ -301,8 +302,10 @@ export function FilterSheet({
   }
 
   const handleApply = () => {
-    const amountMin = parseAmountInput(amountMinText)
-    const amountMax = parseAmountInput(amountMaxText)
+    const { min: amountMin, max: amountMax } = normalizeAmountRange(
+      parseAmountInput(amountMinText),
+      parseAmountInput(amountMaxText),
+    )
     onApply({ ...draft, amountMin, amountMax }, liteMode ? undefined : resolveDraftRange())
   }
 
@@ -341,8 +344,10 @@ export function FilterSheet({
     if (!onShare) return
     // Share the same draft the user would Apply — including the live
     // amount-range input, not the pre-edit Set state.
-    const amountMin = parseAmountInput(amountMinText)
-    const amountMax = parseAmountInput(amountMaxText)
+    const { min: amountMin, max: amountMax } = normalizeAmountRange(
+      parseAmountInput(amountMinText),
+      parseAmountInput(amountMaxText),
+    )
     const url = onShare({ ...draft, amountMin, amountMax }, resolveDraftRange())
     try {
       // navigator.clipboard requires a secure context (https or localhost).

@@ -8,6 +8,7 @@ import {
   validateHouseInput,
   validateIncomeInput,
   validateInsuranceInput,
+  MAX_AMOUNT,
 } from '@/lib/validators'
 
 describe('validateAmount', () => {
@@ -17,6 +18,42 @@ describe('validateAmount', () => {
   it('rejects float', () => expect(() => validateAmount(10.5)).toThrow(/金額必須是正整數/))
   it('respects custom field label', () => {
     expect(() => validateAmount(0, '欠款')).toThrow(/欠款必須是正整數/)
+  })
+  it('has no upper bound by default (asset prices can exceed MAX_AMOUNT)', () =>
+    expect(validateAmount(MAX_AMOUNT + 1)).toBe(MAX_AMOUNT + 1))
+  it('accepts the max amount when a cap is given', () =>
+    expect(validateAmount(MAX_AMOUNT, '金額', MAX_AMOUNT)).toBe(MAX_AMOUNT))
+  it('rejects amount above the cap when one is given', () => {
+    expect(() => validateAmount(MAX_AMOUNT + 1, '金額', MAX_AMOUNT)).toThrow(/金額不能超過/)
+  })
+  it('uses the custom field label in the over-cap message', () => {
+    expect(() => validateAmount(MAX_AMOUNT + 1, '欠款', MAX_AMOUNT)).toThrow(/欠款不能超過/)
+  })
+})
+
+describe('validateTransactionInput — amount ceiling', () => {
+  const base = {
+    description: '晚餐',
+    category: 'food',
+    splitType: 'half' as const,
+    payerId: 'u1',
+    transactedAt: '2026-05-25',
+  }
+  it('rejects an amount above MAX_AMOUNT', () => {
+    expect(() => validateTransactionInput({ ...base, amount: MAX_AMOUNT + 1 })).toThrow(/不能超過/)
+  })
+  it('accepts an amount at MAX_AMOUNT', () => {
+    expect(validateTransactionInput({ ...base, amount: MAX_AMOUNT }).amount).toBe(MAX_AMOUNT)
+  })
+})
+
+describe('validateIncomeInput — amount ceiling', () => {
+  const base = { category: 'salary', recipientId: 'u1', occurredAt: '2026-05-25' }
+  it('rejects an amount above MAX_AMOUNT', () => {
+    expect(() => validateIncomeInput({ ...base, amount: MAX_AMOUNT + 1 })).toThrow(/不能超過/)
+  })
+  it('accepts an amount at MAX_AMOUNT', () => {
+    expect(validateIncomeInput({ ...base, amount: MAX_AMOUNT }).amount).toBe(MAX_AMOUNT)
   })
 })
 

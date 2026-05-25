@@ -1,16 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
 import { MemberProvider, type MemberContextValue } from '@/app/(dashboard)/_components/MemberContext'
 import type { AvatarMenuData } from '@/app/(dashboard)/_components/AvatarMenuProvider'
 import { AvatarMenuSheet } from '@/app/(dashboard)/_components/AvatarMenuSheet'
+import { runAfterSheetCloseBack } from '@/lib/sheetNavigation'
 
+const { pushSpy } = vi.hoisted(() => ({ pushSpy: vi.fn() }))
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), push: pushSpy }),
   // LanguageSwitcher uses usePathname to decide between URL-navigate (public)
   // and cookie+refresh (dashboard). Dashboard tests fix it to a dashboard path.
   usePathname: () => '/dashboard',
 }))
+// The currency row navigates; it must route through runAfterSheetCloseBack so the
+// sheet-close synthetic history.back() doesn't revert the push (#745/#752 race).
+vi.mock('@/lib/sheetNavigation', () => ({ runAfterSheetCloseBack: vi.fn() }))
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
@@ -73,6 +78,31 @@ const wrap = (ctx: MemberContextValue) => render(
 )
 
 beforeEach(() => { vi.clearAllMocks() })
+
+describe('AvatarMenuSheet — currency navigation', () => {
+  it('defers the currency push past the sheet-close history unwind', () => {
+    wrap(makeCtx({ solo: false }))
+    fireEvent.click(screen.getByRole('button', { name: /幣別/ }))
+    // Navigating in the same tick as close lets the backdrop's synthetic
+    // history.back() revert the push (#745/#752). The push must be deferred.
+    expect(pushSpy).not.toHaveBeenCalled()
+    expect(runAfterSheetCloseBack).toHaveBeenCalledTimes(1)
+    // The deferred callback performs the actual navigation.
+    const deferred = vi.mocked(runAfterSheetCloseBack).mock.calls[0][0]
+    deferred()
+    expect(pushSpy).toHaveBeenCalledWith('/settings/currency')
+  })
+})
+
+describe('AvatarMenuSheet — accessibility', () => {
+  it('exposes the panel as a labelled modal dialog', () => {
+    wrap(makeCtx({ solo: false }))
+    // SheetFrame gives every sheet role="dialog" + aria-modal; the hand-rolled
+    // panel this replaced had none. Labelled by t.settings.title ('設定').
+    const dialog = screen.getByRole('dialog', { name: '設定' })
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+  })
+})
 
 describe('AvatarMenuSheet — paired mode', () => {
   it('renders viewer + partner names + group name in header', () => {

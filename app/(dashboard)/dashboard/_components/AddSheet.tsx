@@ -26,7 +26,7 @@ import { editAndConfirmPending } from '@/actions/recurringExpense'
 import { PICKABLE_CATEGORIES } from '@/lib/categories'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
-import type { RecordStatus } from '@/lib/validators'
+import { MAX_AMOUNT, type RecordStatus } from '@/lib/validators'
 import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
 import { CategoryPicker } from './CategoryPicker'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
@@ -259,6 +259,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const handleSave = () => {
     const n = parseInt(amount, 10)
     if (!n || n <= 0) { setError(t.addSheet.errors.amountRequired); return }
+    if (n > MAX_AMOUNT) {
+      setError(t.addSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US')))
+      return
+    }
     if (!desc.trim()) { setError(t.addSheet.errors.descriptionRequired); return }
     if (payerWho === 'T' && !partner) { setError(t.addSheet.errors.noPartner); return }
     const payerId = isSolo ? viewer.id : (payerWho === 'M' ? viewer.id : partner!.id)

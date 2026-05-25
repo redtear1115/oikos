@@ -3,8 +3,8 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { assets } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
-import { listFeedAllPaged, getGroupCreationMonthKey, type ResolvedTxnFilter } from '@/lib/db/queries/transactions'
-import type { ResolvedIncomeFilter } from '@/lib/db/queries/incomes'
+import { listFeedAllPaged, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
+import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { RecordsList } from './_components/RecordsList'
 import { MonthlyStatsSection } from './_components/MonthlyStatsSection'
@@ -12,12 +12,8 @@ import { currentMonthKey, monthKeyOf } from '@/lib/monthKey'
 import type { BreakdownView } from './_components/StatsBreakdownToggle'
 import { parseDrillFromRecord } from '@/lib/drill'
 import {
-  cutsExpense,
-  cutsIncome,
   parseDateRangeFromRecord,
   parseFilterFromRecord,
-  hidesSettlements,
-  splitFilterToTypes,
   type DateRange,
 } from '@/lib/filter'
 
@@ -87,41 +83,11 @@ export default async function RecordsPage({
     || filter.amountMin !== null
     || filter.amountMax !== null
     || filter.status !== 'all'
-  const partnerId = group.memberA === user.id ? group.memberB : group.memberA
-  const resolvedPaidBy =
-    filter.payer === 'mine'
-      ? user.id
-      : filter.payer === 'theirs'
-        ? partnerId ?? '00000000-0000-0000-0000-000000000000'
-        : null
-  const resolved: ResolvedTxnFilter | undefined = filterIsActive
-    ? {
-        paidBy: resolvedPaidBy,
-        splitTypes: splitFilterToTypes(filter.split),
-        burden:
-          filter.burden === 'all'
-            ? null
-            : { side: filter.burden, viewerId: user.id, partnerId },
-        categories: Array.from(filter.categories),
-        incomeCategories: Array.from(filter.incomeCategories),
-        assetIds: Array.from(filter.assetIds),
-        amountMin: filter.amountMin,
-        amountMax: filter.amountMax,
-        status: filter.status === 'all' ? null : filter.status,
-        excludeSettlements: hidesSettlements(filter),
-        cutAll: cutsExpense(filter),
-      }
-    : undefined
-  const resolvedIncome: ResolvedIncomeFilter | undefined = filterIsActive
-    ? {
-        recipientId: resolvedPaidBy,
-        assetIds: Array.from(filter.assetIds),
-        incomeCategories: Array.from(filter.incomeCategories),
-        amountMin: filter.amountMin,
-        amountMax: filter.amountMax,
-        cutAll: cutsIncome(filter),
-      }
-    : undefined
+  // 誰付→uuid collapse + cross-kind cut rules live in one shared resolver so the
+  // SSR feed/stats here and the client pagination loaders (actions/transaction)
+  // can't drift. Only resolve when a dim is active (else the queries skip the filter).
+  const resolved = filterIsActive ? resolveTxnFilter(filter, user.id, group) : undefined
+  const resolvedIncome = filterIsActive ? resolveIncomeFilter(filter, user.id, group) : undefined
 
   const creationMonthFromDb = await getGroupCreationMonthKey(group.id)
   const creationMonthKey = creationMonthFromDb ?? monthKeyOf(group.createdAt)

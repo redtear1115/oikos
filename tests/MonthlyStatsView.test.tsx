@@ -16,10 +16,10 @@ import { MonthlyStatsView } from '@/app/(dashboard)/records/_components/MonthlyS
 import { TabProvider } from '@/app/(dashboard)/records/_components/TabContext'
 
 // These #746 tests assert the summary line (支出/收入/淨收入) stays visible when
-// expanded. After #747 the expanded 收支 (`all`) tab renders the daily-trend
-// chart *instead of* the summary, so that guarantee now lives on the 支出/收入
-// tabs. useRecordsTab defaults to 'all' outside a provider, so pin the tab to
-// 'expense' to exercise the branch the summary actually renders in.
+// expanded. The summary now renders on every expanded tab — including the 收支
+// (`all`) tab, above its daily-trend chart (covered by the 收支-tab test below).
+// useRecordsTab defaults to 'all' outside a provider; these donut-tab cases pin
+// to 'expense' to exercise the breakdown branch.
 const wrap = (ui: React.ReactElement) =>
   render(<I18nWrapper><TabProvider value="expense">{ui}</TabProvider></I18nWrapper>)
 
@@ -69,5 +69,30 @@ describe('MonthlyStatsView — total stays visible when expanded (#746)', () => 
     view({ initialCollapsed: true })
     expect(screen.getByText('支出 3,000')).toBeInTheDocument()
     expect(screen.getByText('收入 5,000')).toBeInTheDocument()
+  })
+})
+
+describe('MonthlyStatsView — 收支 (all) tab keeps the summary when expanded', () => {
+  it('shows the summary line above the daily trend on the expanded 收支 tab', () => {
+    render(
+      <I18nWrapper>
+        <TabProvider value="all">
+          <MonthlyStatsView
+            userId="u-a"
+            initialCollapsed={false}
+            view="category"
+            categoryRows={categoryRows}
+            assetRows={[]}
+            incomeRows={noIncomeRows}
+            expenseTotal={3000}
+            incomeTotal={5000}
+            dailyTrend={noDailyTrend}
+          />
+        </TabProvider>
+      </I18nWrapper>,
+    )
+    expect(screen.getByText('支出 3,000')).toBeInTheDocument()
+    expect(screen.getByText('收入 5,000')).toBeInTheDocument()
+    expect(screen.getByText('淨收入 +2,000')).toBeInTheDocument()
   })
 })
