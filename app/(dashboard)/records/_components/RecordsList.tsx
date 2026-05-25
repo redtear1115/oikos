@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, startTransition } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import type { AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -45,6 +45,7 @@ import type { IncomeSheetInitial } from '@/app/(dashboard)/dashboard/_components
 import { DrillFilterChip } from './DrillFilterChip'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { runAfterSheetCloseBack } from '@/lib/sheetNavigation'
 
 // Sheets are heavy and only meaningful on user interaction. Split into
 // separate chunks and skip SSR so they don't bloat the initial Records
@@ -333,12 +334,15 @@ export function RecordsList({
     // only because FilterSheet supports a lite mode for /dashboard.
     if (nextRange) applyDateRangeToParams(params, nextRange)
     const qs = params.toString()
-    // Wrap the navigation in startTransition so the urgent setFilterOpen(false)
-    // below doesn't preempt the App Router transition — without this the new
-    // ?fPayer never lands in useSearchParams and the list stays stale (#745).
-    startTransition(() => {
-      router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
-    })
+    const target = `/records${qs ? `?${qs}` : ''}`
+
+    // Closing the FilterSheet runs the backdrop's synthetic-history unwind
+    // (window.history.back(), see useEscapeToClose). Done in the same tick as
+    // router.replace, that back lands *after* the replace and reverts it — the
+    // new ?fPayer never sticks and the filter silently fails to apply (#745 /
+    // #752 were both misdiagnoses of this). Defer the navigation until the
+    // synthetic-back's popstate has landed so the replace survives.
+    runAfterSheetCloseBack(() => router.replace(target, { scroll: false }))
     setFilterOpen(false)
   }
 
