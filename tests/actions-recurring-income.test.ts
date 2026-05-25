@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmPending, editAndConfirmPending, skipPending } from '@/actions/recurringIncome'
@@ -6,9 +6,23 @@ import { createRule, updateRule, pauseRule, resumeRule, softDeleteRule, confirmP
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
 
+// Pin "today" so date-relative logic stays deterministic regardless of the real
+// calendar day. resumeRule/updateRule derive `today` from `new Date()` and snap
+// past occurrences to the *next future* date (lib/recurring#snapToFuture); with
+// the real clock the "snaps to future" assertion flaked on/after the 25th
+// (2026-05-25 is no longer "future", so it snapped to 2026-06-25). Fake only
+// Date so async db mocks keep their real microtask timing.
+const FIXED_NOW = new Date('2026-05-07T12:00:00Z') // → today = 2026-05-07
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(FIXED_NOW)
   resetDbMocks()
   setMockUser(VIEWER)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('createRule', () => {
