@@ -627,6 +627,10 @@ export const ja: Translations = {
       drillChipClear: '絞り込み解除',
       drillAssetUnknown: '未設定',
       donutCenterTotal: '合計',
+      trendExpense: '支出',
+      trendIncome: '収入',
+      trendNet: '累計収支',
+      trendChartLabel: '日次の収支推移',
     },
   },
 

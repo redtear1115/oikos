@@ -6,6 +6,7 @@ import type { SplitType } from '@/lib/balance'
 import type { DrillFilter } from '@/lib/drill'
 import type { RecordStatus } from '@/lib/validators'
 import { type DateRange } from '@/lib/filter'
+import { daysInMonth } from '@/lib/monthKey'
 import type { EpochWindow } from './epoch'
 import {
   amountClause,
@@ -680,6 +681,77 @@ export async function monthlyStatsByAsset(
     total: r.total,
     count: r.count,
   }))
+}
+
+export interface DailyTrendRow {
+  /** Day of month, 1-based (Asia/Taipei local day). */
+  day: number
+  /** Total expense that day (base-currency integer). */
+  totalExpense: number
+  /** Total income that day (base-currency integer). */
+  totalIncome: number
+}
+
+/**
+ * Per-day expense vs income for a single calendar month (Asia/Taipei), scoped
+ * to the viewer's epoch. Drives the 收支-tab daily trend chart (#747).
+ *
+ * Expense reads CashTransactions (`transacted_at`, tz-converted to local day);
+ * income reads IncomeTransactions (`occurred_at`, already day-level). Both are
+ * grouped by day-of-month, then merged and zero-filled across every day
+ * 1..N so the chart x-axis is a complete month regardless of data gaps.
+ *
+ * No structured filter is applied — this is the month-overview view, not the
+ * filtered breakdown the donut shows. Settlements are excluded (they have no
+ * expense/income semantics here), matching the stats donut.
+ */
+export async function dailyTrendByMonth(
+  groupId: string,
+  monthKey: string,
+  epochWindow: EpochWindow,
+): Promise<DailyTrendRow[]> {
+  const monthScope = andClause(dateRangeClause('transacted_at', monthKey, null))
+  const incomeScope = andClause(dateColumnClause(monthKey, null))
+  const epoch = andClause(epochClause('created_at', epochWindow))
+
+  const [expenseRows, incomeRows] = await Promise.all([
+    db.execute<{ day: number; total: number }>(sql`
+      SELECT
+        EXTRACT(DAY FROM (transacted_at AT TIME ZONE 'Asia/Taipei'))::int AS day,
+        SUM(amount)::int AS total
+      FROM "CashTransactions"
+      WHERE group_id = ${groupId}
+        AND deleted_at IS NULL
+        ${monthScope}
+        ${epoch}
+      GROUP BY day
+    `),
+    db.execute<{ day: number; total: number }>(sql`
+      SELECT
+        EXTRACT(DAY FROM occurred_at)::int AS day,
+        SUM(amount)::int AS total
+      FROM "IncomeTransactions"
+      WHERE group_id = ${groupId}
+        AND deleted_at IS NULL
+        ${incomeScope}
+        ${epoch}
+      GROUP BY day
+    `),
+  ])
+
+  const expenseByDay = new Map(expenseRows.map((r) => [r.day, r.total]))
+  const incomeByDay = new Map(incomeRows.map((r) => [r.day, r.total]))
+
+  const total = daysInMonth(monthKey)
+  const out: DailyTrendRow[] = []
+  for (let day = 1; day <= total; day++) {
+    out.push({
+      day,
+      totalExpense: expenseByDay.get(day) ?? 0,
+      totalIncome: incomeByDay.get(day) ?? 0,
+    })
+  }
+  return out
 }
 
 /**

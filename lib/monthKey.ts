@@ -43,6 +43,16 @@ export function monthRangeIso(monthKey: string): { startIso: string; endIso: str
   }
 }
 
+/**
+ * Number of calendar days in a 'YYYY-MM' month (handles leap Februarys).
+ * Day 0 of the *next* month rolls back to the last day of this one. UTC
+ * arithmetic — we only care about the day count, not any instant.
+ */
+export function daysInMonth(monthKey: string): number {
+  const [y, m] = monthKey.split('-').map(Number)
+  return new Date(Date.UTC(y, m, 0)).getUTCDate()
+}
+
 /** Validate 'YYYY-MM' shape. */
 export function isMonthKey(s: unknown): s is string {
   return typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s)

@@ -868,6 +868,11 @@ export type Translations = {
       drillAssetUnknown: string // fallback when an asset has no resolvable name
       /** Donut chart center label when no slice is selected. */
       donutCenterTotal: string
+      /** 收支-tab daily trend chart (#747): legend labels + chart a11y. */
+      trendExpense: string
+      trendIncome: string
+      trendNet: string
+      trendChartLabel: string
     }
   }
 
@@ -2980,6 +2985,10 @@ export const zhTW: Translations = {
       drillChipClear: '取消篩選',
       drillAssetUnknown: '未命名',
       donutCenterTotal: '總計',
+      trendExpense: '支出',
+      trendIncome: '收入',
+      trendNet: '累計結餘',
+      trendChartLabel: '每日收支趨勢',
     },
   },
 
