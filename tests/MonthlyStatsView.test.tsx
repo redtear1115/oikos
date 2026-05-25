@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
-import type { CategoryStatRow } from '@/lib/db/queries/transactions'
+import type { CategoryStatRow, DailyTrendRow } from '@/lib/db/queries/transactions'
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
 
 // MonthlyStatsView + its expanded children (StatsBreakdownToggle) read the URL
@@ -13,12 +13,23 @@ vi.mock('next/navigation', () => ({
 }))
 
 import { MonthlyStatsView } from '@/app/(dashboard)/records/_components/MonthlyStatsView'
+import { TabProvider } from '@/app/(dashboard)/records/_components/TabContext'
 
-const wrap = (ui: React.ReactElement) => render(<I18nWrapper>{ui}</I18nWrapper>)
+// These #746 tests assert the summary line (支出/收入/淨收入) stays visible when
+// expanded. After #747 the expanded 收支 (`all`) tab renders the daily-trend
+// chart *instead of* the summary, so that guarantee now lives on the 支出/收入
+// tabs. useRecordsTab defaults to 'all' outside a provider, so pin the tab to
+// 'expense' to exercise the branch the summary actually renders in.
+const wrap = (ui: React.ReactElement) =>
+  render(<I18nWrapper><TabProvider value="expense">{ui}</TabProvider></I18nWrapper>)
 
 const categoryRows: CategoryStatRow[] = [{ key: 'food', total: 3000, count: 1 }]
 const noRows: CategoryStatRow[] = []
 const noIncomeRows: IncomeCategoryStatRow[] = []
+// `dailyTrend` is a required prop; these tests assert on the summary line, not
+// the trend chart, so an empty trend keeps DailyTrendChart out of the render
+// (it returns null when data.length === 0). Override per-test if needed.
+const noDailyTrend: DailyTrendRow[] = []
 
 function view(overrides: Partial<React.ComponentProps<typeof MonthlyStatsView>> = {}) {
   return wrap(
@@ -31,6 +42,7 @@ function view(overrides: Partial<React.ComponentProps<typeof MonthlyStatsView>> 
       incomeRows={noIncomeRows}
       expenseTotal={3000}
       incomeTotal={5000}
+      dailyTrend={noDailyTrend}
       {...overrides}
     />,
   )
