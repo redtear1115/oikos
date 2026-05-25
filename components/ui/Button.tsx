@@ -2,7 +2,7 @@
 
 import { type ButtonHTMLAttributes, type ReactNode } from 'react'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,6 +18,7 @@ const variantBase: Record<ButtonVariant, string> = {
   secondary: 'bg-[var(--btn-secondary-bg)] text-[var(--btn-secondary-text)] border border-[var(--btn-secondary-border)]',
   ghost:     'bg-transparent text-[var(--ink-2)] border-0',
   danger:    'bg-[var(--btn-destructive-bg)] text-[var(--btn-destructive-text)] border-0',
+  accent:    'bg-[var(--btn-accent-bg)] text-[var(--btn-accent-text)] border-0',
 }
 
 const sizeBase: Record<ButtonSize, string> = {

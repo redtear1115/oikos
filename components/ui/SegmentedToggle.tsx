@@ -1,6 +1,6 @@
 'use client'
 
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 /**
  * One segment of a {@link SegmentedToggle}. Presentational only: the segment
@@ -34,9 +34,6 @@ export interface SegmentedToggleProps {
   /** `role="group"` accessible name for the whole control. */
   ariaLabel?: string
   className?: string
-  /** Escape hatch for track-level emphasis (e.g. income-mode glow ring).
-   *  Prefer tokens; this exists so callers don't fork the whole component. */
-  trackStyle?: CSSProperties
 }
 
 // Heights + horizontal padding per size. Text steps with the size so the dense
@@ -56,7 +53,6 @@ export function SegmentedToggle({
   size = 'md',
   ariaLabel,
   className = '',
-  trackStyle,
 }: SegmentedToggleProps) {
   return (
     <div
@@ -66,7 +62,6 @@ export function SegmentedToggle({
       style={{
         background: 'var(--toggle-inactive-bg)',
         border: '1px solid var(--hairline)',
-        ...trackStyle,
       }}
     >
       {options.map((o) => (

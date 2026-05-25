@@ -479,7 +479,7 @@ export function Dashboard({
         <div
           role="status"
           aria-live="polite"
-          className="fixed left-1/2 top-4 z-top-toast -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white text-center"
+          className="fixed left-1/2 top-4 z-top-toast -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-bubble text-sm text-white text-center"
           style={{ background: 'var(--ink)' }}
         >
           {toast}

@@ -164,7 +164,7 @@ A warm domestic palette lit from one ember source, kept low-chroma so nothing sh
 
 ### Tertiary
 - **Sage** (#7A9F7E): Credit / income / money-coming-in. Also the savings family (#5A7A66 deep, #DDE5DC soft).
-- **Clay** (#D17561): Debit / money-going-out, and soft error tints (#D17561 at 10%).
+- **Clay** (#D17561): Debit / money-going-out, and soft error tints (#D17561 at 10%). The balance-hero "you owe" amount uses a muted clay (`--debit-quiet`, clay mixed toward cocoa-ink) so the debtor figure reads as calm earth, not alarm (witnessing tone).
 
 ### Neutral
 - **Lamplit Cream** (#FBEDE0): The app ground; the warm room the content sits in.
@@ -225,6 +225,7 @@ This system is **flat by default**. Depth comes from tonal layering (cream groun
 - **Secondary:** Surface White with Cocoa Ink text and a Cocoa Ink 3 (#B89C8B) hairline border. The calm alternative (取消 / 輔助).
 - **Ghost:** Transparent with Cocoa Ink 2 (#7A5848) text, no border.
 - **Danger:** Destructive fill (#B85A48) with white text (離開帳本 / 刪除). Distinct from Clay debit so "leaving" never reads as "an expense."
+- **Accent:** Ember fill (`--btn-accent-bg`) with white text. The rare ember commit (empty-state "add first record", invite, monthly-review entry). Subject to the One Ember Rule. Flat: no drop-shadow; the fill carries it.
 - **States:** `transition-opacity 150ms`; disabled drops to opacity 0.40. Focus shows the 2px ember ring.
 
 ### Chips / Toggles

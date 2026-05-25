@@ -61,13 +61,7 @@ export function ModeTogglePlaceholder({
     }
   })
 
-  return (
-    <SegmentedToggle
-      options={options}
-      size="md"
-      // Income-mode glow ring on the whole control (parity with prior design;
-      // flagged for review in the polish pass).
-      trackStyle={mode === 'income' ? { boxShadow: `0 0 0 3px ${P.glow}80`, transition: 'box-shadow 0.3s ease' } : undefined}
-    />
-  )
+  // Income mode is signalled by the selected segment's mint fill + dot; no
+  // glow ring (Flat-By-Default — the polish pass dropped the decorative shadow).
+  return <SegmentedToggle options={options} size="md" />
 }
