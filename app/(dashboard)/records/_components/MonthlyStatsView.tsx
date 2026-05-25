@@ -5,10 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { getCategory, type CategoryId } from '@/lib/categories'
 import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
-import type { CategoryStatRow, AssetStatRow } from '@/lib/db/queries/transactions'
+import type { CategoryStatRow, AssetStatRow, DailyTrendRow } from '@/lib/db/queries/transactions'
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { MonthlyStatsPieChart } from './MonthlyStatsPieChart'
+import { DailyTrendChart } from './DailyTrendChart'
 import { AssetBar, CategoryBar, IncomeCategoryBar, assetColor, categoryColor } from './MonthlyStatsBars'
 import { useRecordsTab } from './TabContext'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
@@ -33,6 +34,9 @@ interface Props {
   incomeRows: ReadonlyArray<IncomeCategoryStatRow>
   expenseTotal: number
   incomeTotal: number
+  /** Per-day expense/income for the navigated month — drives the 收支-tab trend
+   *  chart. Always supplied; only rendered when `tab === 'all'`. */
+  dailyTrend: ReadonlyArray<DailyTrendRow>
   /** When true (e.g. user scrolled to a month before group creation), the card
    *  is forced into compact mode and the toggle / expand button disappear. */
   forceCompact?: boolean
@@ -55,6 +59,7 @@ export function MonthlyStatsView({
   incomeRows,
   expenseTotal,
   incomeTotal,
+  dailyTrend,
   forceCompact = false,
   assetToggleHidden = false,
 }: Props) {
@@ -159,7 +164,10 @@ export function MonthlyStatsView({
             (no asset breakdown query yet). */}
         {!isEmpty && allowToggle && (
           <div className="flex items-center gap-2">
-            {!showCollapsed && hasBreakdown && !isIncomeTab && (
+            {/* 分類／愛物 toggle only earns its place on the 支出 tab — the 收支
+                tab now shows a daily trend (no category breakdown) and 收入 has
+                no asset breakdown. */}
+            {!showCollapsed && hasBreakdown && tab === 'expense' && (
               <StatsBreakdownToggle value={view} hideAsset={assetToggleHidden} />
             )}
             <ToggleButton
@@ -186,6 +194,11 @@ export function MonthlyStatsView({
         // Collapsed: summary line only. Expand button lives in the title row
         // (固定位置) so the user's eye doesn't have to chase it.
         <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
+      ) : tab === 'all' ? (
+        // 收支 tab: the daily income/expense trend (bars + cumulative-net line)
+        // replaces the donut entirely (#747). The 收入 / 支出 tabs keep their
+        // donut + detail-bar breakdown below, unchanged.
+        <DailyTrendChart data={dailyTrend} />
       ) : (
         // Expanded: donut chart on top (with total / active-slice amount in
         // the center), then the detail-bar legend below — each bar's coloured

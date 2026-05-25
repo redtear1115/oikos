@@ -4,6 +4,7 @@ import {
   monthlyStatsByCategory,
   monthlyStatsByAsset,
   getGroupCreationMonthKey,
+  dailyTrendByMonth,
 } from '@/lib/db/queries/transactions'
 import { monthlyIncomeStatsByCategory, listIncomeMonthSummary } from '@/lib/db/queries/incomes'
 
@@ -144,6 +145,62 @@ describe('listIncomeMonthSummary', () => {
     const sqlString = JSON.stringify(sqlArg)
     expect(sqlString).toContain('created_at >= ')
     expect(sqlString).not.toContain('created_at < ')
+  })
+})
+
+describe('dailyTrendByMonth', () => {
+  const epochWindow = {
+    startedAt: new Date('2026-01-01T00:00:00Z'),
+    endedAt: null,
+    epochId: 'epoch-1',
+    isPast: false,
+  }
+
+  it('merges expense + income by day and zero-fills the full month', async () => {
+    // First execute() = expense rows; second = income rows (Promise.all order).
+    queueDbResult([
+      { day: 1, total: 300 },
+      { day: 15, total: 1200 },
+    ])
+    queueDbResult([
+      { day: 15, total: 5000 },
+      { day: 31, total: 800 },
+    ])
+    const rows = await dailyTrendByMonth('grp-1', '2026-05', epochWindow)
+
+    // May has 31 days — every day present, ascending.
+    expect(rows).toHaveLength(31)
+    expect(rows.map((r) => r.day)).toEqual(Array.from({ length: 31 }, (_, i) => i + 1))
+    expect(rows[0]).toEqual({ day: 1, totalExpense: 300, totalIncome: 0 })
+    expect(rows[13]).toEqual({ day: 14, totalExpense: 0, totalIncome: 0 })
+    expect(rows[14]).toEqual({ day: 15, totalExpense: 1200, totalIncome: 5000 })
+    expect(rows[30]).toEqual({ day: 31, totalExpense: 0, totalIncome: 800 })
+    expect(mockDb.execute).toHaveBeenCalledTimes(2)
+  })
+
+  it('returns all-zero rows with the correct length for a 28-day month', async () => {
+    queueDbResult([])
+    queueDbResult([])
+    const rows = await dailyTrendByMonth('grp-1', '2026-02', epochWindow)
+    expect(rows).toHaveLength(28)
+    expect(rows.every((r) => r.totalExpense === 0 && r.totalIncome === 0)).toBe(true)
+  })
+
+  it('scopes expense by transacted_at (Taipei) and income by occurred_at, both epoch-bound', async () => {
+    queueDbResult([])
+    queueDbResult([])
+    await dailyTrendByMonth('grp-1', '2026-05', epochWindow)
+    const calls = (mockDb.execute as unknown as { mock: { calls: unknown[][] } }).mock.calls
+    const expenseSql = JSON.stringify(calls[0][0])
+    const incomeSql = JSON.stringify(calls[1][0])
+    // Expense reads CashTransactions with a Taipei-local day, epoch-scoped on created_at.
+    expect(expenseSql).toContain('CashTransactions')
+    expect(expenseSql).toContain('Asia/Taipei')
+    expect(expenseSql).toContain('created_at')
+    // Income reads IncomeTransactions by its date column occurred_at, epoch-scoped too.
+    expect(incomeSql).toContain('IncomeTransactions')
+    expect(incomeSql).toContain('occurred_at')
+    expect(incomeSql).toContain('created_at')
   })
 })
 

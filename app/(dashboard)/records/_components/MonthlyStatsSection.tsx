@@ -1,6 +1,7 @@
 import {
   monthlyStatsByCategory,
   monthlyStatsByAsset,
+  dailyTrendByMonth,
   type CategoryStatRow,
   type AssetStatRow,
   type ResolvedTxnFilter,
@@ -78,9 +79,14 @@ export async function MonthlyStatsSection({
     : monthlyStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, filter, epochWindow)
         .then((rows) => ({ kind: 'category' as const, rows }))
 
-  const [expense, incomeRows] = await Promise.all([
+  // Daily trend always scopes to the navigated calendar month (the day axis is
+  // inherently a single month), unfiltered — it's the 收支 month-overview, not
+  // the filtered breakdown the donut shows. Fetched unconditionally; the view
+  // only renders it on the 收支 tab.
+  const [expense, incomeRows, dailyTrend] = await Promise.all([
     expensePromise,
     monthlyIncomeStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, incomeFilter, epochWindow),
+    dailyTrendByMonth(groupId, monthKey, epochWindow),
   ])
   const categoryRows: ReadonlyArray<CategoryStatRow> = expense.kind === 'category' ? expense.rows : []
   const assetRows: ReadonlyArray<AssetStatRow> = expense.kind === 'asset' ? expense.rows : []
@@ -103,6 +109,7 @@ export async function MonthlyStatsSection({
       incomeRows={incomeRows}
       expenseTotal={expenseTotal}
       incomeTotal={incomeTotal}
+      dailyTrend={dailyTrend}
       forceCompact={forceCompact}
       assetToggleHidden={assetFilterActive}
     />
