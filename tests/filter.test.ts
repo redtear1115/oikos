@@ -6,6 +6,7 @@ import {
   cutsExpense,
   cutsIncome,
   defaultFilter,
+  filterKey,
   fromWire,
   hidesSettlements,
   isFilterActive,
@@ -46,6 +47,32 @@ describe('isFilterActive', () => {
   })
   it('incomeCategories alone activates', () => {
     expect(isFilterActive({ ...defaultFilter(), incomeCategories: new Set(['salary']) })).toBe(true)
+  })
+})
+
+describe('filterKey — feed remount signature (#745)', () => {
+  it('inactive filter → "none"', () => {
+    expect(filterKey(defaultFilter())).toBe('none')
+  })
+  it('changes when payer changes', () => {
+    const mine = filterKey({ ...defaultFilter(), payer: 'mine' })
+    const theirs = filterKey({ ...defaultFilter(), payer: 'theirs' })
+    expect(mine).not.toBe('none')
+    expect(mine).not.toBe(theirs)
+  })
+  it('changes when payer turns off (back to none)', () => {
+    expect(filterKey({ ...defaultFilter(), payer: 'mine' })).not.toBe(filterKey(defaultFilter()))
+  })
+  it('is order-independent for multi-select members', () => {
+    const a = filterKey({ ...defaultFilter(), categories: new Set(['dining', 'transit'] as const) })
+    const b = filterKey({ ...defaultFilter(), categories: new Set(['transit', 'dining'] as const) })
+    expect(a).toBe(b)
+  })
+  it('distinguishes each dimension', () => {
+    const base = filterKey({ ...defaultFilter(), payer: 'mine' })
+    expect(filterKey({ ...defaultFilter(), payer: 'mine', split: 'half' })).not.toBe(base)
+    expect(filterKey({ ...defaultFilter(), payer: 'mine', status: 'pending' })).not.toBe(base)
+    expect(filterKey({ ...defaultFilter(), payer: 'mine', amountMin: 100 })).not.toBe(base)
   })
 })
 
