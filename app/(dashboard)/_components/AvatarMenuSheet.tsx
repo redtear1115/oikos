@@ -15,6 +15,7 @@ import { GuardianBetaToggle } from '@/app/(dashboard)/settings/_components/Guard
 import { LogoutButton } from '@/app/(dashboard)/settings/_components/LogoutButton'
 import { updateGroupName } from '@/actions/group'
 import { updateDisplayName } from '@/actions/profile'
+import { runAfterSheetCloseBack } from '@/lib/sheetNavigation'
 
 interface Props {
   open: boolean
@@ -103,7 +104,13 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
             <div className="mt-3">
               <Row
                 label={t.settings.currency}
-                onClick={() => { router.push('/settings/currency'); onClose() }}
+                // Defer the navigation until after the sheet-close synthetic
+                // history.back() has unwound — pushing in the same tick as
+                // onClose lets that back() revert it (the #745/#752 race).
+                onClick={() => {
+                  runAfterSheetCloseBack(() => router.push('/settings/currency'))
+                  onClose()
+                }}
               />
             </div>
             <div className="mt-3">
