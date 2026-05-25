@@ -628,6 +628,10 @@ export const zhCN: Translations = {
       drillChipClear: '取消筛选',
       drillAssetUnknown: '未命名',
       donutCenterTotal: '总计',
+      trendExpense: '支出',
+      trendIncome: '收入',
+      trendNet: '累计结余',
+      trendChartLabel: '每日收支趋势',
     },
   },
 

@@ -15,6 +15,43 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.2.2] - 2026-05-25
+
+主題：**收支 tab 看見當月節奏 + records 篩選體驗修正**——records 同時看支出與收入時，把該 tab 的分類圓環換成一張當月日趨勢圖（每日收入／支出長條 + 累計淨額折線），讓人一眼讀出「這個月的節奏長怎樣、月底落在淨流入還是淨流出」；同時修一批 records 篩選體驗 bug：付款人篩選沒同步過濾下方列表、月度統計展開時當月總額消失、按「套用」後網址被關面板的返回動作還原、每日趨勢圖與支出圓餅圖沒套到全部篩選維度。
+完整 diff：[v1.2.1...v1.2.2](https://github.com/redtear1115/oikos/compare/v1.2.1...v1.2.2)
+
+### 使用者可見變化
+
+- **收支 tab 當月日趨勢圖（#747）**：在 records 同時選「支出 + 收入」時，原本的分類圓環改成一張當月日趨勢圖——每日支出長條朝下、收入朝上共用中央零線，外加一條累計淨額折線，末點依當月落在淨流入／淨流出染綠或橘。月內每一天都在軸上，沒有紀錄的日子留白、不壓縮時間軸。
+- **篩選「我付的／對方付的」同步過濾列表（#745）**：在 records 頁用付款人篩選時，下方紀錄列表現在會跟著篩選，不再仍顯示全部紀錄。
+- **月度統計展開時保留當月總額（#746）**：展開月度統計面板時，最上方保留一行當月收支總結，總額不再因為數字只放在圓環中心而消失（圓環中心會在點某分類時切換成該分類金額，且進帳模式 / 純收入月份不一定畫圓環）。
+- **按「套用」後篩選確實生效（#752 / #753）**：在 records 頁按「套用」後，網址會帶上篩選且實際生效，不再被關閉篩選面板的返回動作立即還原。
+- **每日趨勢圖跟著篩選（#747 後續 / #753）**：收支 tab 的每日趨勢圖現在和上方收入／支出圓餅圖一樣，套用所有篩選維度（誰付、分攤、分類、愛物、金額、狀態、負擔方）。
+- **只篩收入分類時支出圓餅圖留空（#753）**：只篩「收入分類」時，支出圓餅圖會正確留空，與紀錄列表、收入圓餅圖一致。
+
+### 技術變更
+
+- **收支 tab 日趨勢圖（#747 / PR #750）**：新增 `DailyTrendChart`（dep-free inline SVG，沿用 donut「不引 chart lib」的決策、Recharts 仍排除）；資料源 `lib/db/queries/transactions.ts#dailyTrendByMonth`（zero-fill 月內每一天）；色票 `lib/chartPalette.ts` 加 `TREND_EXPENSE_COLOR` / `TREND_INCOME_COLOR`。bars 依當月單日最大值、累計折線依累計最大擺幅，各自 scale 共用中央零線，避免月末累計值壓扁單日 bar。spec 見 `docs/superpowers/specs/stats-design.md`。
+- **付款人篩選 clean remount（#745 / PR #749）**：records feed 的 React `key` 加入結構化篩選簽名（`filterKey`），讓篩選變更與 drill / date-range 一致地觸發 clean remount，直接採用已在 SSR 過濾好的 `initial`，不再單靠 client refetch effect 同步。
+- **統計展開保留總結（#746 / PR #748）**：`MonthlyStatsView` 展開狀態在 donut 上方加一行 `SummaryText`（收入 / 支出 / 淨額），把月總結從只靠 donut 中心（會被 drill 取代、進帳模式 / 純收入月份不畫 donut）獨立出來。
+- **每日趨勢圖套完整 filter（#753）**：`dailyTrendByMonth` 改套完整 filter：expense branch 重用 `statsScopeClauses`（與 `monthlyStatsByCategory` 同一組 WHERE）、income branch 比照 `monthlyIncomeStatsByCategory`，`MonthlyStatsSection` 把 `filter` / `incomeFilter` 一併傳入；`cutAll` 時直接略過該 branch 的查詢回傳空，對齊圓餅圖的 cross-kind cut 行為。
+- **純收入篩選下支出 donut 留空（#753）**：`monthlyStatsByCategory` / `monthlyStatsByAsset` 補上 `if (filter?.cutAll) return []` 早退（對齊 income donut `incomes.ts` 的做法），修正支出圓餅圖在純收入篩選下未留空的問題。
+- **套用導航延後到面板返回落地（#752 / #753）**：`handleApplyFilter` 不再與面板關閉同一個 tick 內 `router.replace`：面板 backdrop 為了「Back 關面板」會在開啟時 push 一筆合成 history、關閉時 `window.history.back()`（`useEscapeToClose`），與導航同 tick 時這個 back 會在 `router.replace` 之後落地、把篩選網址 revert 回去。新增 `lib/sheetNavigation.ts#runAfterSheetCloseBack`，把導航延到該合成返回的 `popstate` 落地後再執行；`history.back()` 是非同步的，`requestAnimationFrame` / `setTimeout(0)` 都會搶在 popstate 前面，只有監聽 popstate 才可靠。同時移除 #752 加上的 `startTransition`（`router.replace` 內部本身就是 transition，該包裝對此問題無效）。
+
+## [1.2.1] - 2026-05-25
+
+主題：**觀測性收尾——PostHog reverse proxy + Sentry 設定補齊**——把 v1.1.7~v1.2.0 接上的分析 / 錯誤追蹤實際接通：PostHog 改走 managed reverse proxy（#738），降低被瀏覽器隱私 / 廣告攔截外掛擋下的比例；Sentry 補上確認的 org / project slug 並啟用 logs（#739）。純後端設定，對使用者無可見變化。
+完整 diff：[v1.2.0...v1.2.1](https://github.com/redtear1115/oikos/compare/v1.2.0...v1.2.1)
+
+### 使用者可見變化
+
+_本版無使用者可見變化（觀測性設定補齊）。_
+
+### 技術變更
+
+- **PostHog managed reverse proxy（#738 / PR #740）**：分析事件改走 managed reverse proxy，提升事件抵達率（減少被攔截外掛擋下）。
+- **Sentry org / project slug + logs（#739 / PR #741, #742）**：填上確認的 Sentry slug、啟用 logs，讓 v1.1.7 接上的錯誤追蹤實際送達。
+
 ## [1.2.0] - 2026-05-24
 
 主題：**看見光從哪裡來——入口轉換追蹤**——為三個入口面（首頁 `/`、migrate 著陸頁 `/migrate/*`、伴侶邀請）接入 PostHog 轉換漏斗事件，量測「來訪 → 註冊 / 加入」的轉換率並歸因到來源。維持既有 cookieless（`persistence: 'memory'`、免同意橫幅）立場：OAuth 邊界以 server-side alias 串接匿名與註冊後事件，不新增 cookie / localStorage。本版對使用者無可見變化。
@@ -343,7 +380,10 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.1.8...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/redtear1115/oikos/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/redtear1115/oikos/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/redtear1115/oikos/compare/v1.1.8...v1.2.0
 [1.1.8]: https://github.com/redtear1115/oikos/compare/v1.1.7...v1.1.8
 [1.1.7]: https://github.com/redtear1115/oikos/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/redtear1115/oikos/compare/v1.1.5...v1.1.6

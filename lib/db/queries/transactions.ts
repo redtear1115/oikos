@@ -6,7 +6,9 @@ import type { SplitType } from '@/lib/balance'
 import type { DrillFilter } from '@/lib/drill'
 import type { RecordStatus } from '@/lib/validators'
 import { type DateRange } from '@/lib/filter'
+import { daysInMonth } from '@/lib/monthKey'
 import type { EpochWindow } from './epoch'
+import type { ResolvedIncomeFilter } from './incomes'
 import {
   amountClause,
   andClause,
@@ -614,6 +616,10 @@ export async function monthlyStatsByCategory(
   filter: ResolvedTxnFilter | undefined,
   epochWindow: EpochWindow,
 ): Promise<CategoryStatRow[]> {
+  // Income-only filter (an income-side dim active with no expense-side dim) cuts
+  // every expense row — mirror the income donut's contract (incomes.ts) and the
+  // feed/list so the 支出 donut goes empty instead of showing the full month.
+  if (filter?.cutAll) return []
   const scope = statsScopeClauses(monthKey, dateRange, filter)
   const epoch = andClause(epochClause('created_at', epochWindow))
   const rows = await db.execute<{ category: string; total: number; count: number }>(sql`
@@ -650,6 +656,9 @@ export async function monthlyStatsByAsset(
   filter: ResolvedTxnFilter | undefined,
   epochWindow: EpochWindow,
 ): Promise<AssetStatRow[]> {
+  // Same income-only cut as monthlyStatsByCategory — an income-only filter
+  // leaves no expense rows, so the by-asset 支出 donut must go empty too.
+  if (filter?.cutAll) return []
   const scope = statsScopeClauses(monthKey, dateRange, filter, 'ct')
   // Asset stats query aliases the cash-tx table as `ct`, so the epoch column
   // ref needs the same alias to disambiguate from the joined Assets table.
@@ -680,6 +689,103 @@ export async function monthlyStatsByAsset(
     total: r.total,
     count: r.count,
   }))
+}
+
+export interface DailyTrendRow {
+  /** Day of month, 1-based (Asia/Taipei local day). */
+  day: number
+  /** Total expense that day (base-currency integer). */
+  totalExpense: number
+  /** Total income that day (base-currency integer). */
+  totalIncome: number
+}
+
+/**
+ * Per-day expense vs income for a single calendar month (Asia/Taipei), scoped
+ * to the viewer's epoch. Drives the 收支-tab daily trend chart (#747).
+ *
+ * Expense reads CashTransactions (`transacted_at`, tz-converted to local day);
+ * income reads IncomeTransactions (`occurred_at`, already day-level). Both are
+ * grouped by day-of-month, then merged and zero-filled across every day
+ * 1..N so the chart x-axis is a complete month regardless of data gaps.
+ *
+ * The same structured filter as the donut is applied so the chart stays in lock
+ * step with the list / donut: the expense branch honours the full
+ * `ResolvedTxnFilter` (payer / split / burden / categories / assetIds / amount /
+ * status — same clauses as `monthlyStatsByCategory`), and the income branch the
+ * full `ResolvedIncomeFilter` (recipient / income categories / assetIds / amount
+ * — same clauses as `monthlyIncomeStatsByCategory`). A cross-kind cut empties the
+ * affected branch: `filter.cutAll` (income-only filter) zeroes expense,
+ * `incomeFilter.cutAll` (expense-only filter) zeroes income. The day axis is
+ * always the single navigated month, so date scope stays `monthKey` regardless
+ * of any custom date-range filter. Settlements are excluded (no expense/income
+ * semantics here), matching the donut.
+ */
+export async function dailyTrendByMonth(
+  groupId: string,
+  monthKey: string,
+  epochWindow: EpochWindow,
+  filter?: ResolvedTxnFilter,
+  incomeFilter?: ResolvedIncomeFilter,
+): Promise<DailyTrendRow[]> {
+  // Expense honours the full structured filter (same clauses as the 支出 donut),
+  // pinned to this single calendar month.
+  const expenseScope = statsScopeClauses(monthKey, null, filter)
+  // Income honours the full income filter (mirrors monthlyIncomeStatsByCategory).
+  const incomeScope = sql`
+    ${andClause(dateColumnClause(monthKey, null))}
+    ${andClause(eqValueClause('recipient_id', incomeFilter?.recipientId))}
+    ${andClause(incomeFilter ? categoryInClause(incomeFilter.incomeCategories) : undefined)}
+    ${andClause(incomeFilter ? assetIdsClause('asset_id', incomeFilter.assetIds) : undefined)}
+    ${andClause(incomeFilter ? amountClause(incomeFilter.amountMin, incomeFilter.amountMax) : undefined)}
+  `
+  const epoch = andClause(epochClause('created_at', epochWindow))
+
+  // A cross-kind cut empties the affected branch without hitting the DB, matching
+  // the donut queries' contract (monthly*StatsByCategory return [] on cutAll):
+  // `filter.cutAll` (income-only filter) zeroes expense; `incomeFilter.cutAll`
+  // (expense-only filter) zeroes income.
+  const expensePromise = filter?.cutAll
+    ? Promise.resolve<{ day: number; total: number }[]>([])
+    : db.execute<{ day: number; total: number }>(sql`
+        SELECT
+          EXTRACT(DAY FROM (transacted_at AT TIME ZONE 'Asia/Taipei'))::int AS day,
+          SUM(amount)::int AS total
+        FROM "CashTransactions"
+        WHERE group_id = ${groupId}
+          AND deleted_at IS NULL
+          ${expenseScope}
+          ${epoch}
+        GROUP BY day
+      `)
+  const incomePromise = incomeFilter?.cutAll
+    ? Promise.resolve<{ day: number; total: number }[]>([])
+    : db.execute<{ day: number; total: number }>(sql`
+        SELECT
+          EXTRACT(DAY FROM occurred_at)::int AS day,
+          SUM(amount)::int AS total
+        FROM "IncomeTransactions"
+        WHERE group_id = ${groupId}
+          AND deleted_at IS NULL
+          ${incomeScope}
+          ${epoch}
+        GROUP BY day
+      `)
+  const [expenseRows, incomeRows] = await Promise.all([expensePromise, incomePromise])
+
+  const expenseByDay = new Map(expenseRows.map((r) => [r.day, r.total]))
+  const incomeByDay = new Map(incomeRows.map((r) => [r.day, r.total]))
+
+  const total = daysInMonth(monthKey)
+  const out: DailyTrendRow[] = []
+  for (let day = 1; day <= total; day++) {
+    out.push({
+      day,
+      totalExpense: expenseByDay.get(day) ?? 0,
+      totalIncome: incomeByDay.get(day) ?? 0,
+    })
+  }
+  return out
 }
 
 /**

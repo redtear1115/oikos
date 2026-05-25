@@ -629,6 +629,10 @@ export const en: Translations = {
       drillChipClear: 'Clear filter',
       drillAssetUnknown: 'Unnamed',
       donutCenterTotal: 'Total',
+      trendExpense: 'Spending',
+      trendIncome: 'Income',
+      trendNet: 'Cumulative net',
+      trendChartLabel: 'Daily income and spending trend',
     },
   },
 

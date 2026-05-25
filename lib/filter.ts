@@ -119,6 +119,32 @@ export function isFilterActive(f: TxnFilter): boolean {
 }
 
 /**
+ * Stable, order-independent signature of a filter — used as part of the
+ * Records feed's React `key` so a filter change forces a clean remount that
+ * re-seeds from the (already SSR-scoped) `initial`, the same way drill +
+ * date-range changes do. Without this, switching e.g.「我付的」relies solely on
+ * TransactionFeed's client refetch effect, which leaves the SSR-filtered
+ * `initial` unused and the list out of sync (#745).
+ *
+ * Returns `'none'` when no dimension is active. Multi-select members are sorted
+ * so equivalent filters collapse to the same key (no spurious remounts).
+ */
+export function filterKey(f: TxnFilter): string {
+  if (!isFilterActive(f)) return 'none'
+  return [
+    f.payer,
+    f.split,
+    f.burden,
+    Array.from(f.categories).sort().join('.'),
+    Array.from(f.incomeCategories).sort().join('.'),
+    Array.from(f.assetIds).sort().join('.'),
+    f.amountMin ?? '',
+    f.amountMax ?? '',
+    f.status,
+  ].join('|')
+}
+
+/**
  * True when an expense-only dim is active without a compensating income-side
  * dim — meaning the user is asking for a view that, by construction, contains
  * no income rows. The income query / branch short-circuits to empty in that

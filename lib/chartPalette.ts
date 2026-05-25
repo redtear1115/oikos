@@ -24,3 +24,16 @@ export const ASSET_NULL_COLOR = '#B5B5C0'
 // Translucent white track behind an active detail bar, so the bar reads as
 // "lit" against its own tint backdrop.
 export const ACTIVE_BAR_TRACK = '#ffffff80'
+
+// ─── Daily trend chart (#747, 收支 tab) ────────────────────────────────────
+// Dual-direction bars + a cumulative-net fold line. Expense points down (warm
+// orange, the system's spending hue), income points up (the income-green from
+// the mint palette). Deliberately a single colour per direction — the daily
+// trend is a month rhythm, not a per-category breakdown, so these don't read
+// off any category record.
+
+/** Expense bar (points down). Warm orange — same hue family as the 飲食 slice. */
+export const TREND_EXPENSE_COLOR = '#D4955F'
+
+/** Income bar (points up). Income-green, matching INCOME_PALETTES.mint ink. */
+export const TREND_INCOME_COLOR = '#7AA48E'
