@@ -74,6 +74,16 @@ const wrap = (ctx: MemberContextValue) => render(
 
 beforeEach(() => { vi.clearAllMocks() })
 
+describe('AvatarMenuSheet — accessibility', () => {
+  it('exposes the panel as a labelled modal dialog', () => {
+    wrap(makeCtx({ solo: false }))
+    // SheetFrame gives every sheet role="dialog" + aria-modal; the hand-rolled
+    // panel this replaced had none. Labelled by t.settings.title ('設定').
+    const dialog = screen.getByRole('dialog', { name: '設定' })
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+  })
+})
+
 describe('AvatarMenuSheet — paired mode', () => {
   it('renders viewer + partner names + group name in header', () => {
     wrap(makeCtx({ solo: false }))
