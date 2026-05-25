@@ -209,6 +209,7 @@ export default async function RecordsPage({
           dateRange={dateRange}
           filter={resolved}
           incomeFilter={resolvedIncome}
+          paidBy={resolvedPaidBy}
         />
       }
     />

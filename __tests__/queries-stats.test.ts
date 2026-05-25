@@ -202,6 +202,31 @@ describe('dailyTrendByMonth', () => {
     expect(incomeSql).toContain('occurred_at')
     expect(incomeSql).toContain('created_at')
   })
+
+  it('narrows expense to paid_by and income to recipient_id when paidBy is given (#747 follow-up)', async () => {
+    queueDbResult([])
+    queueDbResult([])
+    await dailyTrendByMonth('grp-1', '2026-05', epochWindow, 'user-viewer')
+    const calls = (mockDb.execute as unknown as { mock: { calls: unknown[][] } }).mock.calls
+    const expenseSql = JSON.stringify(calls[0][0])
+    const incomeSql = JSON.stringify(calls[1][0])
+    // The 誰付 lens collapses to a single user id: expense filters paid_by,
+    // income filters recipient_id (both = the resolved payer).
+    expect(expenseSql).toContain('paid_by')
+    expect(incomeSql).toContain('recipient_id')
+  })
+
+  it('omits the payer predicate when paidBy is absent (unfiltered month overview)', async () => {
+    queueDbResult([])
+    queueDbResult([])
+    await dailyTrendByMonth('grp-1', '2026-05', epochWindow)
+    const calls = (mockDb.execute as unknown as { mock: { calls: unknown[][] } }).mock.calls
+    const expenseSql = JSON.stringify(calls[0][0])
+    const incomeSql = JSON.stringify(calls[1][0])
+    // 收支 overview default: no 誰付 narrowing on either side.
+    expect(expenseSql).not.toContain('paid_by')
+    expect(incomeSql).not.toContain('recipient_id')
+  })
 })
 
 describe('getGroupCreationMonthKey', () => {

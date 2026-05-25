@@ -36,6 +36,13 @@ interface Props {
   filter?: ResolvedTxnFilter
   /** Resolved structured filter for income transactions (income view). */
   incomeFilter?: ResolvedIncomeFilter
+  /**
+   * Resolved 誰付 payer id from the URL (`?fPayer=mine|theirs` → viewer /
+   * partner id; `null` = 全部). The daily trend honours only this dimension
+   * so the 收支 overview tracks the same「我付的／他付的」lens as the feed (#747
+   * follow-up); the donut keeps applying the full structured filter.
+   */
+  paidBy?: string | null
 }
 
 /**
@@ -60,6 +67,7 @@ export async function MonthlyStatsSection({
   dateRange,
   filter,
   incomeFilter,
+  paidBy,
 }: Props) {
   const dateRangeForQuery = dateRange.kind === 'month' ? null : dateRange
   const monthKeyForQuery = dateRange.kind === 'month' ? monthKey : undefined
@@ -80,13 +88,13 @@ export async function MonthlyStatsSection({
         .then((rows) => ({ kind: 'category' as const, rows }))
 
   // Daily trend always scopes to the navigated calendar month (the day axis is
-  // inherently a single month), unfiltered — it's the 收支 month-overview, not
-  // the filtered breakdown the donut shows. Fetched unconditionally; the view
-  // only renders it on the 收支 tab.
+  // inherently a single month). Only the 誰付 dimension narrows it — it stays
+  // the 收支 month-overview, not the filtered breakdown the donut shows.
+  // Fetched unconditionally; the view only renders it on the 收支 tab.
   const [expense, incomeRows, dailyTrend] = await Promise.all([
     expensePromise,
     monthlyIncomeStatsByCategory(groupId, monthKeyForQuery, dateRangeForQuery, incomeFilter, epochWindow),
-    dailyTrendByMonth(groupId, monthKey, epochWindow),
+    dailyTrendByMonth(groupId, monthKey, epochWindow, paidBy),
   ])
   const categoryRows: ReadonlyArray<CategoryStatRow> = expense.kind === 'category' ? expense.rows : []
   const assetRows: ReadonlyArray<AssetStatRow> = expense.kind === 'asset' ? expense.rows : []

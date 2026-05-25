@@ -701,18 +701,28 @@ export interface DailyTrendRow {
  * grouped by day-of-month, then merged and zero-filled across every day
  * 1..N so the chart x-axis is a complete month regardless of data gaps.
  *
- * No structured filter is applied — this is the month-overview view, not the
- * filtered breakdown the donut shows. Settlements are excluded (they have no
- * expense/income semantics here), matching the stats donut.
+ * Only the 誰付 (payer) dimension is honoured: when `paidBy` is given, expense
+ * is narrowed to `paid_by = paidBy` and income to `recipient_id = paidBy`, so
+ * the 收支 overview tracks the same「我付的／他付的」lens as the feed (#747
+ * follow-up). The caller resolves 'mine'/'theirs' → a single user id up front,
+ * matching the list query's `ResolvedTxnFilter.paidBy`. Other structured-filter
+ * dims (category / split / asset …) are intentionally NOT applied — this stays
+ * the month overview, not the filtered breakdown the donut shows. Settlements
+ * are excluded (they have no expense/income semantics here), matching the donut.
  */
 export async function dailyTrendByMonth(
   groupId: string,
   monthKey: string,
   epochWindow: EpochWindow,
+  paidBy?: string | null,
 ): Promise<DailyTrendRow[]> {
   const monthScope = andClause(dateRangeClause('transacted_at', monthKey, null))
   const incomeScope = andClause(dateColumnClause(monthKey, null))
   const epoch = andClause(epochClause('created_at', epochWindow))
+  // 誰付 narrowing: expense keys on paid_by, income on recipient_id; both
+  // collapse to the same resolved user id (or no-op when paidBy is absent).
+  const payerExpense = andClause(eqValueClause('paid_by', paidBy))
+  const payerIncome = andClause(eqValueClause('recipient_id', paidBy))
 
   const [expenseRows, incomeRows] = await Promise.all([
     db.execute<{ day: number; total: number }>(sql`
@@ -724,6 +734,7 @@ export async function dailyTrendByMonth(
         AND deleted_at IS NULL
         ${monthScope}
         ${epoch}
+        ${payerExpense}
       GROUP BY day
     `),
     db.execute<{ day: number; total: number }>(sql`
@@ -735,6 +746,7 @@ export async function dailyTrendByMonth(
         AND deleted_at IS NULL
         ${incomeScope}
         ${epoch}
+        ${payerIncome}
       GROUP BY day
     `),
   ])
