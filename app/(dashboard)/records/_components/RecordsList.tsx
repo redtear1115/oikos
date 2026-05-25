@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, startTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import type { AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -333,7 +333,12 @@ export function RecordsList({
     // only because FilterSheet supports a lite mode for /dashboard.
     if (nextRange) applyDateRangeToParams(params, nextRange)
     const qs = params.toString()
-    router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
+    // Wrap the navigation in startTransition so the urgent setFilterOpen(false)
+    // below doesn't preempt the App Router transition — without this the new
+    // ?fPayer never lands in useSearchParams and the list stays stale (#745).
+    startTransition(() => {
+      router.replace(`/records${qs ? `?${qs}` : ''}`, { scroll: false })
+    })
     setFilterOpen(false)
   }
 
