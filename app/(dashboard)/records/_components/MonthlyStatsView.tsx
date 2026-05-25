@@ -187,11 +187,18 @@ export function MonthlyStatsView({
         // (固定位置) so the user's eye doesn't have to chase it.
         <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
       ) : (
-        // Expanded: donut chart on top (with total / active-slice amount in
-        // the center), then the detail-bar legend below — each bar's coloured
-        // chip matches its pie slice. The bottom-of-chart total line was
-        // removed when we moved the number into the donut center (#153).
+        // Expanded: month summary line on top, then the donut chart (with the
+        // breakdown total / active-slice amount in its center) and the detail-
+        // bar legend below — each bar's coloured chip matches its pie slice.
         <>
+          {/* Keep the summary visible while expanded (#746): the donut center
+              only carries the breakdown total — and swaps to a slice amount on
+              drill — so it can't be relied on for the month total. This line
+              also covers income/net (absent from the expense donut) and an
+              income-only month where no donut renders at all. */}
+          <div className="mb-3">
+            <SummaryText expenseTotal={expenseTotal} incomeTotal={incomeTotal} t={t} />
+          </div>
           {hasBreakdown && (
             <div className="flex justify-center mt-2 mb-4">
               {isIncomeTab ? (
