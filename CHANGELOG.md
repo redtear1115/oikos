@@ -13,7 +13,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- 修正 records 頁篩選「我付的／對方付的」時，下方紀錄列表未同步過濾、仍顯示全部紀錄的問題（#745）。
+
+### 技術變更
+
+- records feed 的 React `key` 加入結構化篩選簽名（`filterKey`），讓篩選變更與 drill / date-range 一致地觸發 clean remount，直接採用已在 SSR 過濾好的 `initial`，不再單靠 client refetch effect 同步。
 
 ## [1.2.0] - 2026-05-24
 

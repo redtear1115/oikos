@@ -18,6 +18,7 @@ import {
   applyDateRangeToParams,
   applyFilterToParams,
   defaultFilter,
+  filterKey,
   isFilterActive,
   parseFilterFromSearchParams,
   toWire,
@@ -485,11 +486,14 @@ export function RecordsList({
           position, not as a list. We deliberately render `null` (rather than
           mounting a hidden TransactionFeed per tab) so only one feed exists
           in the DOM at a time; switching tabs unmounts the old one and the
-          new one fetches its own page-1 cleanly via `key={tab}`. The drill
-          and date-range keys participate so a change to either also
-          triggers a clean remount (initial data is already SSR-scoped). */}
+          new one fetches its own page-1 cleanly via `key={tab}`. The drill,
+          date-range AND structured-filter keys participate so a change to any
+          of them triggers a clean remount onto the already-SSR-scoped
+          `initial` — without the filter key, switching e.g.「我付的」would leave
+          the stale instance, whose items only update via the client refetch,
+          out of sync with the filtered SSR rows (#745). */}
       <TransactionFeed
-        key={`${tab}:${dateRangeKey}:${effectiveDrillKey}`}
+        key={`${tab}:${dateRangeKey}:${effectiveDrillKey}:${filterKey(filter)}`}
         initial={tabInitial}
         pageSize={pageSize}
         monthKey={monthKeyForLoader}
