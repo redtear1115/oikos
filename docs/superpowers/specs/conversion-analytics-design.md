@@ -1,5 +1,6 @@
 ---
-status: planned
+status: shipped
+first_shipped_in: v1.2.0
 related_specs: [csv-import, solo-mode]
 related_issues: ["#734"]
 ---
