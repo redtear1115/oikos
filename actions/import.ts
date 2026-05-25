@@ -13,6 +13,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterImportMutation } from '@/lib/revalidate'
 import { isValidCategoryId } from '@/lib/categories'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
+import { MAX_AMOUNT } from '@/lib/validators'
 import { captureServer } from '@/lib/analytics/server'
 
 /**
@@ -44,8 +45,6 @@ type ImportSplitType = (typeof VALID_SPLIT_TYPES)[number]
 
 const VALID_ROW_TYPES = ['expense', 'income'] as const
 type ImportRowType = (typeof VALID_ROW_TYPES)[number]
-
-const MAX_AMOUNT = 9_999_999
 
 export interface ImportBatchInputRow {
   type: ImportRowType

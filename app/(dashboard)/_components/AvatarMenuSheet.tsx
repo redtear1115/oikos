@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useMember } from './MemberContext'
 import { Avatar } from './Avatar'
-import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { SheetFrame } from './SheetFrame'
 import type { AvatarMenuData } from './AvatarMenuProvider'
 import { useTranslations } from '@/lib/i18n/client'
 import { EditableNameRow } from '@/app/(dashboard)/settings/_components/sections/EditableNameRow'
@@ -15,6 +15,7 @@ import { GuardianBetaToggle } from '@/app/(dashboard)/settings/_components/Guard
 import { LogoutButton } from '@/app/(dashboard)/settings/_components/LogoutButton'
 import { updateGroupName } from '@/actions/group'
 import { updateDisplayName } from '@/actions/profile'
+import { runAfterSheetCloseBack } from '@/lib/sheetNavigation'
 
 interface Props {
   open: boolean
@@ -30,28 +31,9 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
   const partnerRole = viewerIsA ? 'b' : 'a'
 
   return (
-    <>
-      <SheetBackdrop open={open} onClick={onClose} />
-      <div
-        className="fixed left-1/2 -translate-x-1/2 bottom-0 w-full max-w-md z-sheet flex flex-col overflow-hidden"
-        style={{
-          background: 'var(--bg)',
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          boxShadow: '0 -10px 40px rgba(0,0,0,0.18)',
-          maxHeight: 'calc(100dvh - max(env(safe-area-inset-top), 24px))',
-          transform: open ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-      >
-        {/* Grabber */}
-        <div className="pt-2 flex justify-center">
-          <div className="w-9 h-[5px] rounded-full" style={{ background: 'rgba(31,27,22,0.18)' }} />
-        </div>
-
-        {/* Header: group name + avatar mini-cluster */}
-        <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
+    <SheetFrame open={open} onClose={onClose} ariaLabel={t.settings.title}>
+      {/* Header: group name + avatar mini-cluster */}
+      <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 shrink-0">
           <div className="text-body font-semibold truncate" style={{ color: 'var(--ink)' }}>
             {group.name}
           </div>
@@ -66,7 +48,7 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
         </div>
 
         {/* Scrollable body — content sections */}
-        <div className="overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),16px)]">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom),16px)]">
           {/* 成員 */}
           <Section title={t.settings.sectionMember}>
             <MemberListSection
@@ -122,7 +104,13 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
             <div className="mt-3">
               <Row
                 label={t.settings.currency}
-                onClick={() => { router.push('/settings/currency'); onClose() }}
+                // Defer the navigation until after the sheet-close synthetic
+                // history.back() has unwound — pushing in the same tick as
+                // onClose lets that back() revert it (the #745/#752 race).
+                onClick={() => {
+                  runAfterSheetCloseBack(() => router.push('/settings/currency'))
+                  onClose()
+                }}
               />
             </div>
             <div className="mt-3">
@@ -135,8 +123,7 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
             <LogoutButton />
           </div>
         </div>
-      </div>
-    </>
+    </SheetFrame>
   )
 }
 
@@ -154,7 +141,7 @@ function Row({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
+      className="w-full flex items-center justify-between px-5 py-4 rounded-card text-left cursor-pointer"
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>

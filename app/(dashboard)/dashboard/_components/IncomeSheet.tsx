@@ -17,6 +17,7 @@ import { createIncome, editIncome, softDeleteIncome, getInsuranceAssets } from '
 import { editAndConfirmPending } from '@/actions/recurringIncome'
 import { PICKABLE_INCOME_CATEGORIES } from '@/lib/incomeCategories'
 import type { IncomeCategoryId } from '@/lib/incomeCategories'
+import { MAX_AMOUNT } from '@/lib/validators'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
@@ -167,6 +168,10 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   const handleSave = () => {
     const n = parseInt(amount, 10)
     if (!n || n <= 0) { setError(t.incomeSheet.errors.amountRequired); return }
+    if (n > MAX_AMOUNT) {
+      setError(t.incomeSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US')))
+      return
+    }
 
     runMutation(
       async () => {

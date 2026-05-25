@@ -335,6 +335,7 @@ export const ja: Translations = {
     noTrip: 'なし',
     errors: {
       amountRequired: '金額を入力してください',
+      amountTooLarge: '金額は {max} 以下にしてください',
       descriptionRequired: '内容を入力してください',
       noPartner: 'パートナーがまだ参加していません',
     },
@@ -550,6 +551,7 @@ export const ja: Translations = {
     deleteConfirmTitle: 'この収入を削除しますか？',
     errors: {
       amountRequired: '金額を入力してください',
+      amountTooLarge: '金額は {max} 以下にしてください',
       saveFailed: '保存に失敗しました',
       missingPendingId: '確認待ち収入の id が見つかりません',
     },
@@ -687,6 +689,7 @@ export const ja: Translations = {
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
+    defaultSplitLabel: 'デフォルトの分担方法',
     saveDefaultRatio: 'デフォルト比率を保存',
     inviteCta: '相手を招待',
     quickAccessRow: '個人と家計の設定',

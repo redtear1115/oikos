@@ -410,6 +410,8 @@ export type Translations = {
     noTrip: string
     errors: {
       amountRequired: string
+      /** {max} = formatted MAX_AMOUNT ceiling. */
+      amountTooLarge: string
       descriptionRequired: string
       noPartner: string
     }
@@ -767,6 +769,8 @@ export type Translations = {
     deleteConfirmTitle: string
     errors: {
       amountRequired: string
+      /** {max} = formatted MAX_AMOUNT ceiling. */
+      amountTooLarge: string
       saveFailed: string
       missingPendingId: string
     }
@@ -935,6 +939,8 @@ export type Translations = {
     addToHomeScreen: string
     displayName: string
     soloLockHint: string
+    /** Accessible label for the default split-type radiogroup (assistive only). */
+    defaultSplitLabel: string
     /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
     saveDefaultRatio: string
     inviteCta: string
@@ -2693,6 +2699,7 @@ export const zhTW: Translations = {
     noTrip: '無旅行',
     errors: {
       amountRequired: '請輸入金額',
+      amountTooLarge: '金額不能超過 {max}',
       descriptionRequired: '請輸入描述',
       noPartner: '伴侶尚未加入',
     },
@@ -2908,6 +2915,7 @@ export const zhTW: Translations = {
     deleteConfirmTitle: '刪除這筆收入？',
     errors: {
       amountRequired: '請輸入金額',
+      amountTooLarge: '金額不能超過 {max}',
       saveFailed: '儲存失敗',
       missingPendingId: '缺少待確認收入 id',
     },
@@ -3045,6 +3053,7 @@ export const zhTW: Translations = {
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+    defaultSplitLabel: '預設分攤方式',
     saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',

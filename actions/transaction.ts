@@ -9,7 +9,8 @@ import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
 import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type FeedRow, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
-import { cutsExpense, fromWire, hidesSettlements, splitFilterToTypes, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
+import { resolveTxnFilter } from '@/lib/resolveTxnFilter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, and, isNull, sql } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -324,42 +325,19 @@ export interface PagedTxnRow {
 }
 
 /**
- * Wire → ResolvedTxnFilter conversion. The 誰付 dimension is collapsed to a
- * concrete user id ('mine' → viewer, 'theirs' → partner or an impossible UUID
- * when no partner so the SQL just returns 0 rows). Used by the Records feed
- * actions; the in-memory `matchesFilter` (used for realtime echo / SSR-row
- * filtering) takes the unresolved TxnFilter and does the same resolution
- * client-side against viewer/partner ids.
+ * Wire → ResolvedTxnFilter for the Records feed pagination loaders. Decodes the
+ * wire shape and defers the 誰付→uuid collapse + cross-kind cut rules to the
+ * shared `resolveTxnFilter` so the page-through stays identical to the SSR feed
+ * resolved in `app/(dashboard)/records/page.tsx`. Returns `undefined` for an
+ * absent filter (the queries then skip the filter entirely).
  */
-function resolveTxnFilter(
+function resolveWireFilter(
   filterWire: TxnFilterWire | undefined,
   viewerId: string,
   group: { memberA: string; memberB: string | null },
 ): ResolvedTxnFilter | undefined {
   if (!filterWire) return undefined
-  const f = fromWire(filterWire)
-  const partnerId = group.memberA === viewerId ? group.memberB : group.memberA
-  let paidBy: string | null = null
-  if (f.payer === 'mine') paidBy = viewerId
-  else if (f.payer === 'theirs') {
-    paidBy = partnerId ?? '00000000-0000-0000-0000-000000000000'
-  }
-  return {
-    paidBy,
-    splitTypes: splitFilterToTypes(f.split),
-    burden:
-      f.burden === 'all'
-        ? null
-        : { side: f.burden, viewerId, partnerId },
-    categories: Array.from(f.categories),
-    incomeCategories: Array.from(f.incomeCategories),
-    assetIds: Array.from(f.assetIds),
-    amountMin: f.amountMin,
-    amountMax: f.amountMax,
-    status: f.status === 'all' ? null : f.status,
-    excludeSettlements: hidesSettlements(f),
-    cutAll: cutsExpense(f),
-  }
+  return resolveTxnFilter(fromWire(filterWire), viewerId, group)
 }
 
 export async function loadMoreTransactions(
@@ -376,7 +354,7 @@ export async function loadMoreTransactions(
   if (!context) throw new Error('找不到家計簿')
   const { group, window: epochWindow } = context
 
-  const resolved = resolveTxnFilter(filterWire, user.id, group)
+  const resolved = resolveWireFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const rows = await listTransactionsPaged({
     groupId: group.id,
@@ -409,7 +387,7 @@ export async function loadMoreFeedAll(
   if (!context) throw new Error('找不到家計簿')
   const { group, window: epochWindow } = context
 
-  const resolved = resolveTxnFilter(filterWire, user.id, group)
+  const resolved = resolveWireFilter(filterWire, user.id, group)
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const rows = await listFeedAllPaged({
     groupId: group.id,

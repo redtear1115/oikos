@@ -39,6 +39,8 @@ export function SplitTypeSection({ current, isSolo }: Props) {
   return (
     <div>
       <div
+        role="radiogroup"
+        aria-label={t.settings.defaultSplitLabel}
         className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
@@ -52,6 +54,8 @@ export function SplitTypeSection({ current, isSolo }: Props) {
             <button
               type="button"
               key={opt.id}
+              role="radio"
+              aria-checked={sel}
               onClick={() => handleChange(opt.id)}
               disabled={saving || isSolo}
               className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"

@@ -18,10 +18,32 @@ import {
   resolveDateRangeToDateBounds,
   splitFilterToTypes,
   toWire,
+  normalizeAmountRange,
   type DateRange,
   type FilterableRow,
   type TxnFilter,
 } from '@/lib/filter'
+
+describe('normalizeAmountRange', () => {
+  it('swaps an inverted min/max', () => {
+    expect(normalizeAmountRange(500, 100)).toEqual({ min: 100, max: 500 })
+  })
+  it('leaves an ordered range untouched', () => {
+    expect(normalizeAmountRange(100, 500)).toEqual({ min: 100, max: 500 })
+  })
+  it('leaves equal bounds untouched', () => {
+    expect(normalizeAmountRange(100, 100)).toEqual({ min: 100, max: 100 })
+  })
+  it('does not swap when only min is set (open upper bound)', () => {
+    expect(normalizeAmountRange(500, null)).toEqual({ min: 500, max: null })
+  })
+  it('does not swap when only max is set (open lower bound)', () => {
+    expect(normalizeAmountRange(null, 100)).toEqual({ min: null, max: 100 })
+  })
+  it('passes through a fully-open range', () => {
+    expect(normalizeAmountRange(null, null)).toEqual({ min: null, max: null })
+  })
+})
 
 describe('defaultFilter', () => {
   it('is inactive', () => {

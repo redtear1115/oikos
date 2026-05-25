@@ -336,6 +336,7 @@ export const zhCN: Translations = {
     noTrip: '无旅行',
     errors: {
       amountRequired: '请输入金额',
+      amountTooLarge: '金额不能超过 {max}',
       descriptionRequired: '请输入描述',
       noPartner: '伴侣尚未加入',
     },
@@ -551,6 +552,7 @@ export const zhCN: Translations = {
     deleteConfirmTitle: '删除这笔收入？',
     errors: {
       amountRequired: '请输入金额',
+      amountTooLarge: '金额不能超过 {max}',
       saveFailed: '保存失败',
       missingPendingId: '缺少待确认收入 id',
     },
@@ -688,6 +690,7 @@ export const zhCN: Translations = {
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
+    defaultSplitLabel: '默认分摊方式',
     saveDefaultRatio: '保存默认比例',
     inviteCta: '邀请对方加入',
     quickAccessRow: '个人与账本设置',

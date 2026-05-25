@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useId, useRef, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
 import { useTranslations } from '@/lib/i18n/client'
@@ -33,6 +33,7 @@ export function EditTextSheet({
   const [pending, startTransition] = useTransition()
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const titleId = useId()
 
   useEffect(() => {
     if (!open) return
@@ -75,6 +76,9 @@ export function EditTextSheet({
     <>
       <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-sheet flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
@@ -102,7 +106,7 @@ export function EditTextSheet({
           >
             {t.common.cancel}
           </button>
-          <span className="text-body font-semibold" style={{ color: 'var(--ink)' }}>
+          <span id={titleId} className="text-body font-semibold" style={{ color: 'var(--ink)' }}>
             {title}
           </span>
           <button
