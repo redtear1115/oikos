@@ -16,10 +16,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### 使用者可見變化
 
 - 修正 records 頁篩選「我付的／對方付的」時，下方紀錄列表未同步過濾、仍顯示全部紀錄的問題（#745）。
+- 修正 records 頁按「套用」後網址不變、篩選實際完全沒生效的問題——關閉篩選面板的返回動作會把剛套用的網址改動立即還原（接續 #745 / #752）。
+- 修正 records 收支 tab 每日趨勢圖不跟著篩選變化的問題——現在和上方的收入／支出圓餅圖一樣，套用所有篩選維度（誰付、分攤、分類、愛物、金額、狀態、負擔方）。
+- 修正只篩「收入分類」時，支出圓餅圖仍顯示全部支出的問題——此情況下支出圓餅圖會正確留空，與紀錄列表、收入圓餅圖一致。
 
 ### 技術變更
 
 - records feed 的 React `key` 加入結構化篩選簽名（`filterKey`），讓篩選變更與 drill / date-range 一致地觸發 clean remount，直接採用已在 SSR 過濾好的 `initial`，不再單靠 client refetch effect 同步。
+- `dailyTrendByMonth` 改套完整 filter：expense branch 重用 `statsScopeClauses`（與 `monthlyStatsByCategory` 同一組 WHERE）、income branch 比照 `monthlyIncomeStatsByCategory`，`MonthlyStatsSection` 把 `filter` / `incomeFilter` 一併傳入；`cutAll` 時直接略過該 branch 的查詢回傳空，對齊圓餅圖的 cross-kind cut 行為。
+- `monthlyStatsByCategory` / `monthlyStatsByAsset` 補上 `if (filter?.cutAll) return []` 早退（對齊 income donut `incomes.ts` 的做法），修正支出圓餅圖在純收入篩選下未留空的問題。
+- `handleApplyFilter` 不再與面板關閉同一個 tick 內 `router.replace`：面板 backdrop 為了「Back 關面板」會在開啟時 push 一筆合成 history、關閉時 `window.history.back()`（`useEscapeToClose`），與導航同 tick 時這個 back 會在 `router.replace` 之後落地、把篩選網址 revert 回去。新增 `lib/sheetNavigation.ts#runAfterSheetCloseBack`，把導航延到該合成返回的 `popstate` 落地後再執行；`history.back()` 是非同步的，`requestAnimationFrame` / `setTimeout(0)` 都會搶在 popstate 前面，只有監聽 popstate 才可靠。同時移除 #752 加上的 `startTransition`（`router.replace` 內部本身就是 transition，該包裝對此問題無效）。
 
 ## [1.2.0] - 2026-05-24
 

@@ -5,10 +5,47 @@ import {
   monthlyStatsByAsset,
   getGroupCreationMonthKey,
   dailyTrendByMonth,
+  type ResolvedTxnFilter,
 } from '@/lib/db/queries/transactions'
-import { monthlyIncomeStatsByCategory, listIncomeMonthSummary } from '@/lib/db/queries/incomes'
+import {
+  monthlyIncomeStatsByCategory,
+  listIncomeMonthSummary,
+  type ResolvedIncomeFilter,
+} from '@/lib/db/queries/incomes'
 
 beforeEach(() => resetDbMocks())
+
+// A filter exercising every expense dimension (payer / split / category / asset
+// / amount / status) — used to assert the daily trend applies the full filter,
+// not just one dimension.
+const fullExpenseFilter: ResolvedTxnFilter = {
+  paidBy: 'user-a',
+  splitTypes: ['half'],
+  burden: null,
+  categories: ['dining'],
+  incomeCategories: [],
+  assetIds: ['asset-1'],
+  amountMin: 100,
+  amountMax: 9000,
+  status: 'settled',
+  excludeSettlements: true,
+  cutAll: false,
+}
+// Income-only filter → cuts every expense row (cutsExpense).
+const cutExpenseFilter: ResolvedTxnFilter = {
+  paidBy: null, splitTypes: [], burden: null, categories: [],
+  incomeCategories: ['salary'], assetIds: [], amountMin: null, amountMax: null,
+  status: null, excludeSettlements: false, cutAll: true,
+}
+const fullIncomeFilter: ResolvedIncomeFilter = {
+  recipientId: 'user-a', assetIds: ['asset-2'], incomeCategories: ['salary'],
+  amountMin: 50, amountMax: 8000, cutAll: false,
+}
+// Expense-only filter → cuts every income row (cutsIncome).
+const cutIncomeFilter: ResolvedIncomeFilter = {
+  recipientId: null, assetIds: [], incomeCategories: [],
+  amountMin: null, amountMax: null, cutAll: true,
+}
 
 describe('monthlyStatsByCategory', () => {
   const epochWindow = {
@@ -35,6 +72,14 @@ describe('monthlyStatsByCategory', () => {
     queueDbResult([])
     const rows = await monthlyStatsByCategory('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows).toEqual([])
+  })
+
+  it('returns [] without querying when the filter cuts all expense (income-only filter)', async () => {
+    // cutAll mirrors the income donut (incomes.ts) — an income-only filter leaves
+    // no expense rows, so the 支出 donut must go empty instead of showing the month.
+    const rows = await monthlyStatsByCategory('grp-1', '2026-05', null, cutExpenseFilter, epochWindow)
+    expect(rows).toEqual([])
+    expect(mockDb.execute).not.toHaveBeenCalled()
   })
 })
 
@@ -66,6 +111,12 @@ describe('monthlyStatsByAsset', () => {
     ])
     const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, undefined, epochWindow)
     expect(rows[0].name).toBe('舊車（已刪）')
+  })
+
+  it('returns [] without querying when the filter cuts all expense (income-only filter)', async () => {
+    const rows = await monthlyStatsByAsset('grp-1', '2026-05', null, cutExpenseFilter, epochWindow)
+    expect(rows).toEqual([])
+    expect(mockDb.execute).not.toHaveBeenCalled()
   })
 })
 
@@ -201,6 +252,43 @@ describe('dailyTrendByMonth', () => {
     expect(incomeSql).toContain('IncomeTransactions')
     expect(incomeSql).toContain('occurred_at')
     expect(incomeSql).toContain('created_at')
+  })
+
+  it('applies the FULL structured filter to both branches (not just the payer)', async () => {
+    queueDbResult([])
+    queueDbResult([])
+    await dailyTrendByMonth('grp-1', '2026-05', epochWindow, fullExpenseFilter, fullIncomeFilter)
+    const calls = (mockDb.execute as unknown as { mock: { calls: unknown[][] } }).mock.calls
+    const expenseSql = JSON.stringify(calls[0][0])
+    const incomeSql = JSON.stringify(calls[1][0])
+    // Expense honours every dimension the donut does: payer / split / category /
+    // asset / status (amount is in the SELECT regardless, so it's not asserted).
+    expect(expenseSql).toContain('paid_by')
+    expect(expenseSql).toContain('split_type')
+    expect(expenseSql).toContain('category')
+    expect(expenseSql).toContain('asset_id')
+    expect(expenseSql).toContain('status')
+    // Income honours recipient / income category / asset.
+    expect(incomeSql).toContain('recipient_id')
+    expect(incomeSql).toContain('category')
+    expect(incomeSql).toContain('asset_id')
+  })
+
+  it('empties the expense branch WITHOUT querying when filter.cutAll (income-only filter)', async () => {
+    // Only the income query should hit the DB; expense is skipped (→ all zeros).
+    queueDbResult([{ day: 10, total: 5000 }])
+    const rows = await dailyTrendByMonth('grp-1', '2026-05', epochWindow, cutExpenseFilter, fullIncomeFilter)
+    expect(mockDb.execute).toHaveBeenCalledTimes(1)
+    expect(rows.every((r) => r.totalExpense === 0)).toBe(true)
+    expect(rows.find((r) => r.day === 10)?.totalIncome).toBe(5000)
+  })
+
+  it('empties the income branch WITHOUT querying when incomeFilter.cutAll (expense-only filter)', async () => {
+    queueDbResult([{ day: 3, total: 1200 }])
+    const rows = await dailyTrendByMonth('grp-1', '2026-05', epochWindow, fullExpenseFilter, cutIncomeFilter)
+    expect(mockDb.execute).toHaveBeenCalledTimes(1)
+    expect(rows.every((r) => r.totalIncome === 0)).toBe(true)
+    expect(rows.find((r) => r.day === 3)?.totalExpense).toBe(1200)
   })
 })
 
