@@ -56,10 +56,10 @@ next-env.d.ts
 .worktrees/
 
 # impeccable design skill — third-party install artifacts (the skill code is not
-# versioned here; the generated PRODUCT.md / DESIGN.md / .impeccable/design.json ARE)
+# versioned here; the generated PRODUCT.md / DESIGN.md / .impeccable/design.json ARE,
+# and skills-lock.json IS versioned to pin the installed skill version)
 /.agents/
 /.claude/skills/impeccable
-/skills-lock.json
 
 # implementation plans are working docs, kept locally only.
 # specs (docs/superpowers/specs/) ARE tracked — those are the design intent.
