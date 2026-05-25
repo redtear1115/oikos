@@ -12,6 +12,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { ToggleButton } from '@/app/(dashboard)/_components/ToggleButton'
 import { formatAmount } from '@/lib/currency'
 import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
+import { SegmentedToggle } from '@/components/ui/SegmentedToggle'
 
 type BalanceFadeState = {
   displayed: number
@@ -402,53 +403,14 @@ function BalanceViewToggle({
   ariaLabel: string
 }) {
   return (
-    <div
-      role="group"
-      aria-label={ariaLabel}
-      className="inline-flex rounded-full"
-      style={{
-        border: '1px solid var(--hairline)',
-        padding: 2,
-        background: 'transparent',
-      }}
-    >
-      <SegmentPill active={!includePending} onClick={() => { if (includePending) onToggle() }}>
-        {settledLabel}
-      </SegmentPill>
-      <SegmentPill active={includePending} onClick={() => { if (!includePending) onToggle() }}>
-        {pendingLabel}
-      </SegmentPill>
-    </div>
-  )
-}
-
-function SegmentPill({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className="rounded-full cursor-pointer"
-      style={{
-        padding: '4px 12px',
-        background: active ? 'var(--ink)' : 'transparent',
-        color: active ? 'var(--on-fill)' : 'var(--ink-2)',
-        fontSize: 12,
-        fontWeight: 500,
-        border: 'none',
-        transition: 'background 150ms, color 150ms',
-      }}
-    >
-      {children}
-    </button>
+    <SegmentedToggle
+      ariaLabel={ariaLabel}
+      size="sm"
+      options={[
+        { id: 'settled', label: settledLabel, active: !includePending, onClick: () => { if (includePending) onToggle() } },
+        { id: 'pending', label: pendingLabel, active: includePending, onClick: () => { if (!includePending) onToggle() } },
+      ]}
+    />
   )
 }
 

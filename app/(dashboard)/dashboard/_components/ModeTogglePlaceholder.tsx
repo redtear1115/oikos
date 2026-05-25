@@ -2,6 +2,7 @@
 
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
+import { SegmentedToggle, type SegmentedOption } from '@/components/ui/SegmentedToggle'
 
 interface Props {
   mode?: 'expense' | 'income'
@@ -20,68 +21,53 @@ export function ModeTogglePlaceholder({
 }: Props) {
   const P = DEFAULT_INCOME_PALETTE  // mint
   const t = useTranslations()
+
+  const options: SegmentedOption[] = ([
+    { id: 'expense' as const, label: t.modeToggle.expense },
+    { id: 'income' as const,  label: t.modeToggle.income },
+  ]).map((o) => {
+    const sel = mode === o.id
+    const isIncome = o.id === 'income'
+    const showDot = !sel && (isIncome ? incomePendingCount > 0 : expensePendingCount > 0)
+    return {
+      id: o.id,
+      active: sel,
+      onClick: () => onChange?.(o.id),
+      // Income owns the mint family; expense uses the standard ink fill.
+      fillColor: isIncome ? P.tint : undefined,
+      activeTextColor: isIncome ? P.ink : undefined,
+      label: (
+        <>
+          {isIncome && sel && (
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: P.ink,
+              boxShadow: `0 0 6px ${P.ink}aa`,
+              flexShrink: 0,
+            }} />
+          )}
+          {o.label}
+          {showDot && (
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%',
+              background: isIncome ? P.ink : 'var(--ink)',
+              boxShadow: isIncome ? `0 0 4px ${P.glow}` : '0 0 4px rgba(31,27,22,0.3)',
+              flexShrink: 0,
+              opacity: 0.8,
+            }} />
+          )}
+        </>
+      ),
+    }
+  })
+
   return (
-    <div
-      className="flex items-center rounded-full p-1"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
-        boxShadow: mode === 'income' ? `0 0 0 3px ${P.glow}80` : 'none',
-        transition: 'box-shadow 0.3s ease',
-        display: 'inline-flex',
-        alignSelf: 'flex-start',
-      }}
-    >
-      {([
-        { id: 'expense' as const, label: t.modeToggle.expense },
-        { id: 'income' as const,  label: t.modeToggle.income },
-      ]).map((o) => {
-        const sel = mode === o.id
-        const isIncome = o.id === 'income'
-        const showDot = !sel && (
-          isIncome
-            ? incomePendingCount > 0
-            : expensePendingCount > 0
-        )
-        return (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => onChange?.(o.id)}
-            aria-pressed={sel}
-            className="h-8 flex items-center gap-[5px] font-medium cursor-pointer border-0"
-            style={{
-              padding: '0 14px',
-              borderRadius: 999,
-              background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
-              color: sel ? (isIncome ? P.ink : 'var(--on-fill)') : 'var(--ink-2)',
-              fontSize: 'var(--fs-label)',
-              fontWeight: sel ? 600 : 500,
-              letterSpacing: 0.3,
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {isIncome && sel && (
-              <span style={{
-                width: 6, height: 6, borderRadius: '50%',
-                background: P.ink,
-                boxShadow: `0 0 6px ${P.ink}aa`,
-                flexShrink: 0,
-              }} />
-            )}
-            {o.label}
-            {showDot && (
-              <span style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: isIncome ? P.ink : 'var(--ink)',
-                boxShadow: isIncome ? `0 0 4px ${P.glow}` : '0 0 4px rgba(31,27,22,0.3)',
-                flexShrink: 0,
-                opacity: 0.8,
-              }} />
-            )}
-          </button>
-        )
-      })}
-    </div>
+    <SegmentedToggle
+      options={options}
+      size="md"
+      // Income-mode glow ring on the whole control (parity with prior design;
+      // flagged for review in the polish pass).
+      trackStyle={mode === 'income' ? { boxShadow: `0 0 0 3px ${P.glow}80`, transition: 'box-shadow 0.3s ease' } : undefined}
+    />
   )
 }

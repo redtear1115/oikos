@@ -105,6 +105,14 @@
       "css": ".ds-chip-unselected { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: var(--radius-chip, 10px); font-size: 13px; font-weight: 500; background: var(--surface, #fff); color: var(--ink-2, #7A5848); border: 1px solid var(--hairline, rgba(58,36,25,0.10)); cursor: pointer; transition: 150ms ease; } .ds-chip-unselected:hover { color: var(--ink, #3A2419); }"
     },
     {
+      "name": "Segmented Toggle",
+      "kind": "custom",
+      "refersTo": "segmented-toggle",
+      "description": "Shared pill-toggle primitive (components/ui/SegmentedToggle.tsx): one ink-filled segment, one transparent, on a surface track. Presentational; selection model stays with the caller.",
+      "html": "<div class=\"ds-seg\" role=\"group\" aria-label=\"view\"><button class=\"ds-seg-item ds-seg-on\" aria-pressed=\"true\">已結清</button><button class=\"ds-seg-item\" aria-pressed=\"false\">含待定</button></div>",
+      "css": ".ds-seg { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 9999px; background: var(--toggle-inactive-bg, #fff); border: 1px solid var(--hairline, rgba(58,36,25,0.10)); } .ds-seg-item { display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 10px; border: none; border-radius: 9999px; font-size: 12px; font-weight: 500; background: transparent; color: var(--toggle-inactive-text, #7A5848); cursor: pointer; transition: background 150ms ease, color 150ms ease; } .ds-seg-on { background: var(--toggle-active-bg, #3A2419); color: var(--toggle-active-text, #fff); } .ds-seg-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
       "name": "Text Input",
       "kind": "input",
       "refersTo": "input",

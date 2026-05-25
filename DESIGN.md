@@ -228,6 +228,7 @@ This system is **flat by default**. Depth comes from tonal layering (cream groun
 - **States:** `transition-opacity 150ms`; disabled drops to opacity 0.40. Focus shows the 2px ember ring.
 
 ### Chips / Toggles
+- **`SegmentedToggle`** (`components/ui/SegmentedToggle.tsx`): the shared primitive for every pill toggle (mode toggle, balance-view, payer/split L3 filters). Presentational and selection-agnostic, so single-select and the dual-select (≥1) member toggles share one surface without sharing one selection rule. `size` `sm` (28px, dense rows) / `md` (32px, mode toggle); per-segment `fillColor` override (member `--ink`/`--accent`, income mint); `.oik-segment` focus ring; `--toggle-*` tokens throughout. Action toggles (`SettleButton`) and the +/− collapse (`ToggleButton`) stay separate by intent.
 - **Selected:** Cocoa Ink fill, white text. **Unselected:** Surface White, Cocoa Ink 2 text, hairline border. Compact at 34px tall, `--radius-chip` (10px).
 - **Segmented selector:** A track at `rgba(58,36,25,0.05)` with a Surface White thumb (the only place a tiny shadow lifts the selected segment).
 - **Switch (settings):** iOS-style; Ember "on", hairline "off", white thumb with the thumb-lift shadow.
