@@ -939,6 +939,8 @@ export type Translations = {
     addToHomeScreen: string
     displayName: string
     soloLockHint: string
+    /** Accessible label for the default split-type radiogroup (assistive only). */
+    defaultSplitLabel: string
     /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
     saveDefaultRatio: string
     inviteCta: string
@@ -3051,6 +3053,7 @@ export const zhTW: Translations = {
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+    defaultSplitLabel: '預設分攤方式',
     saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',

@@ -691,6 +691,7 @@ export const en: Translations = {
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
     soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
+    defaultSplitLabel: 'Default split',
     saveDefaultRatio: 'Save default ratio',
     inviteCta: 'Invite partner',
     quickAccessRow: 'Personal & group settings',
