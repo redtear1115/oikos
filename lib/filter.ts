@@ -119,6 +119,23 @@ export function isFilterActive(f: TxnFilter): boolean {
 }
 
 /**
+ * Normalize an amount range so an inverted pair (min > max) is swapped into a
+ * valid `[min, max]` instead of producing a `BETWEEN 500 AND 100` SQL clause
+ * that silently matches nothing. Mirrors the FilterSheet date range's
+ * forgive-and-swap behavior — a stray tap shouldn't quietly empty the feed.
+ * A `null` on either side is an open bound and is never swapped.
+ */
+export function normalizeAmountRange(
+  min: number | null,
+  max: number | null,
+): { min: number | null; max: number | null } {
+  if (min !== null && max !== null && min > max) {
+    return { min: max, max: min }
+  }
+  return { min, max }
+}
+
+/**
  * Stable, order-independent signature of a filter — used as part of the
  * Records feed's React `key` so a filter change forces a clean remount that
  * re-seeds from the (already SSR-scoped) `initial`, the same way drill +
