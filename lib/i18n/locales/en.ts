@@ -337,6 +337,7 @@ export const en: Translations = {
     noTrip: 'No trip',
     errors: {
       amountRequired: 'Enter an amount',
+      amountTooLarge: "Amount can't exceed {max}",
       descriptionRequired: 'Enter a description',
       noPartner: "Partner hasn't joined yet",
     },
@@ -552,6 +553,7 @@ export const en: Translations = {
     deleteConfirmTitle: 'Delete this income?',
     errors: {
       amountRequired: 'Enter an amount',
+      amountTooLarge: "Amount can't exceed {max}",
       saveFailed: 'Save failed',
       missingPendingId: 'Missing pending income id',
     },

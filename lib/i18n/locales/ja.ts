@@ -335,6 +335,7 @@ export const ja: Translations = {
     noTrip: 'なし',
     errors: {
       amountRequired: '金額を入力してください',
+      amountTooLarge: '金額は {max} 以下にしてください',
       descriptionRequired: '内容を入力してください',
       noPartner: 'パートナーがまだ参加していません',
     },
@@ -550,6 +551,7 @@ export const ja: Translations = {
     deleteConfirmTitle: 'この収入を削除しますか？',
     errors: {
       amountRequired: '金額を入力してください',
+      amountTooLarge: '金額は {max} 以下にしてください',
       saveFailed: '保存に失敗しました',
       missingPendingId: '確認待ち収入の id が見つかりません',
     },

@@ -12,9 +12,9 @@
  */
 
 import { isValidCategoryId } from '@/lib/categories'
+import { MAX_AMOUNT } from '@/lib/validators'
 import type { PartialImportRow, ValidationResult } from './types'
 
-const MAX_AMOUNT = 9_999_999
 const FUTURE_DAYS_GRACE = 7
 
 function daysFromNow(d: Date): number {

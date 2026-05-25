@@ -410,6 +410,8 @@ export type Translations = {
     noTrip: string
     errors: {
       amountRequired: string
+      /** {max} = formatted MAX_AMOUNT ceiling. */
+      amountTooLarge: string
       descriptionRequired: string
       noPartner: string
     }
@@ -767,6 +769,8 @@ export type Translations = {
     deleteConfirmTitle: string
     errors: {
       amountRequired: string
+      /** {max} = formatted MAX_AMOUNT ceiling. */
+      amountTooLarge: string
       saveFailed: string
       missingPendingId: string
     }
@@ -2693,6 +2697,7 @@ export const zhTW: Translations = {
     noTrip: '無旅行',
     errors: {
       amountRequired: '請輸入金額',
+      amountTooLarge: '金額不能超過 {max}',
       descriptionRequired: '請輸入描述',
       noPartner: '伴侶尚未加入',
     },
@@ -2908,6 +2913,7 @@ export const zhTW: Translations = {
     deleteConfirmTitle: '刪除這筆收入？',
     errors: {
       amountRequired: '請輸入金額',
+      amountTooLarge: '金額不能超過 {max}',
       saveFailed: '儲存失敗',
       missingPendingId: '缺少待確認收入 id',
     },

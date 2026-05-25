@@ -336,6 +336,7 @@ export const zhCN: Translations = {
     noTrip: '无旅行',
     errors: {
       amountRequired: '请输入金额',
+      amountTooLarge: '金额不能超过 {max}',
       descriptionRequired: '请输入描述',
       noPartner: '伴侣尚未加入',
     },
@@ -551,6 +552,7 @@ export const zhCN: Translations = {
     deleteConfirmTitle: '删除这笔收入？',
     errors: {
       amountRequired: '请输入金额',
+      amountTooLarge: '金额不能超过 {max}',
       saveFailed: '保存失败',
       missingPendingId: '缺少待确认收入 id',
     },

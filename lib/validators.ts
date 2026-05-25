@@ -5,11 +5,30 @@ import { GAS_FUEL_TYPES, type GasFuelType } from '@/lib/fuel'
 import { ymdToUTCNoon } from '@/lib/local-date'
 
 /**
- * Validates a positive integer NTD amount. Returns the value or throws.
+ * Upper bound for a single transaction / income amount (base-currency integer).
+ * Shared between the manual-entry path (`validateTransactionInput` /
+ * `validateIncomeInput`) and the CSV import path so both reject the same
+ * ceiling — previously only import enforced it, letting a manual entry sail
+ * through to the `integer` column and surface a raw "out of range" Postgres
+ * error. ~10M base units; for USD (*100 storage) this stays well under int4.
+ *
+ * NOTE: this is deliberately NOT the default for `validateAmount` — asset
+ * prices (house, insurance coverage…) legitimately exceed it, so those callers
+ * keep the uncapped form. Pass `MAX_AMOUNT` explicitly to opt in.
  */
-export function validateAmount(amount: number, fieldLabel = '金額'): number {
+export const MAX_AMOUNT = 9_999_999
+
+/**
+ * Validates a positive integer amount. Returns the value or throws. Pass `max`
+ * to additionally reject values above a ceiling (transaction / income paths use
+ * `MAX_AMOUNT`); omit it for amounts with no meaningful upper bound.
+ */
+export function validateAmount(amount: number, fieldLabel = '金額', max?: number): number {
   if (!Number.isInteger(amount) || amount <= 0) {
     throw new Error(`${fieldLabel}必須是正整數`)
+  }
+  if (max !== undefined && amount > max) {
+    throw new Error(`${fieldLabel}不能超過 ${max.toLocaleString('en-US')}`)
   }
   return amount
 }
@@ -117,7 +136,7 @@ export interface ValidatedTransactionInput {
  * to a UTC-noon TIMESTAMPTZ value — callers must not pre-convert.
  */
 export function validateTransactionInput(input: TransactionInput): ValidatedTransactionInput {
-  const amount = validateAmount(input.amount)
+  const amount = validateAmount(input.amount, '金額', MAX_AMOUNT)
   const description = input.description.trim()
   if (!description) throw new Error('描述不能為空')
   const category: CategoryId = isValidCategoryId(input.category) ? input.category as CategoryId : 'other'
@@ -848,9 +867,7 @@ export interface ValidatedIncomeInput {
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 export function validateIncomeInput(input: IncomeInput): ValidatedIncomeInput {
-  if (!Number.isInteger(input.amount) || input.amount <= 0) {
-    throw new Error('金額必須是正整數')
-  }
+  validateAmount(input.amount, '金額', MAX_AMOUNT)
 
   const category = isValidIncomeCategoryId(input.category) ? input.category : 'other'
 
