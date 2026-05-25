@@ -15,6 +15,28 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.2.3] - 2026-05-25
+
+主題：**records 邊角修正 + profile 無障礙整備**——補一批 records 正確性／體驗缺口（手動輸入金額沒上限、篩選金額範圍顛倒會靜默清空列表、收支 tab 展開時當月總計消失），並把「個人資料」面板（avatar 選單）做一輪無障礙整備（共用 SheetFrame 的 dialog 語意 + focus trap、分攤方式改 radiogroup），順手修掉點「幣別」沒反應的導航 bug。
+完整 diff：[v1.2.2...v1.2.3](https://github.com/redtear1115/oikos/compare/v1.2.2...v1.2.3)
+
+### 使用者可見變化
+
+- **點「幣別」沒反應修正（#757）**：在「個人資料」面板點「幣別」現在會正確開啟幣別設定，不再沒反應。
+- **收支 tab 展開保留當月總計（#757）**：展開收支統計時，最上方補回「支出·收入·淨收入」總結行（#747 換成日趨勢圖後，該行只在此 tab 遺漏）。
+- **手動輸入金額上限（#757）**：交易／收入金額超過上限會被擋下並友善提示，與 CSV 匯入一致，不再因超出整數範圍跳出原始資料庫錯誤。
+- **篩選金額範圍自動對調（#757）**：篩選金額下限大於上限時自動對調，不再靜默清空整個列表（與日期範圍一致）。
+- **個人資料面板無障礙改善（#757）**：avatar 選單面板補上正確的 dialog 語意與焦點管理；預設分攤方式選擇器，螢幕報讀器可辨識目前選取的選項。
+
+### 技術變更
+
+- **金額上限單一來源（#757）**：`MAX_AMOUNT` 收斂到 `lib/validators`，交易／收入驗證器以 opt-in 上限套用、CSV 匯入沿用同一常數；資產價格（房子等）維持不設上限。前端 `AddSheet` / `IncomeSheet` 同步擋下並顯示 `amountTooLarge`。
+- **`resolveTxnFilter` 抽共用（#757）**：誰付→uuid 收斂與 cross-kind cut 規則抽成 `lib/resolveTxnFilter.ts`，SSR（`records/page.tsx`）與分頁 loader（`actions/transaction.ts`）共用同一份，避免兩處漂移。
+- **AvatarMenuSheet 改用 SheetFrame（#757）**：移除手刻 sheet chrome，改用共用 `SheetFrame`（`role="dialog"` / `aria-modal` / focus trap）；`EditTextSheet` 補 dialog 語意；分攤方式選擇器改 `radiogroup` + `aria-checked`。
+- **幣別導航延後到面板返回落地（#757）**：幣別列改走 `runAfterSheetCloseBack`，避免與關面板同 tick 導航被合成 `history.back()` revert（#745／#752 同類 race，這次落在導航而非篩選）。
+- **loading skeleton 對齊版面（#757）**：records `loading.tsx` 補上 L1 標題 + L2 收支切換 placeholder，消除載入時版面位移（CLS）。
+- **i18n（#757）**：新增 `addSheet`/`incomeSheet.errors.amountTooLarge`、`settings.defaultSplitLabel`（4 語；ja／en 待 native 複查）。
+
 ## [1.2.2] - 2026-05-25
 
 主題：**收支 tab 看見當月節奏 + records 篩選體驗修正**——records 同時看支出與收入時，把該 tab 的分類圓環換成一張當月日趨勢圖（每日收入／支出長條 + 累計淨額折線），讓人一眼讀出「這個月的節奏長怎樣、月底落在淨流入還是淨流出」；同時修一批 records 篩選體驗 bug：付款人篩選沒同步過濾下方列表、月度統計展開時當月總額消失、按「套用」後網址被關面板的返回動作還原、每日趨勢圖與支出圓餅圖沒套到全部篩選維度。
@@ -380,7 +402,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/redtear1115/oikos/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/redtear1115/oikos/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/redtear1115/oikos/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/redtear1115/oikos/compare/v1.1.8...v1.2.0
