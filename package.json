@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
+    "analyze": "ANALYZE=true next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
@@ -32,6 +33,7 @@
     "valibot": "^1.4.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.6",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

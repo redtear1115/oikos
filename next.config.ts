@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const isDev = process.env.NODE_ENV === "development";
+
+// Bundle analyzer — outermost wrapper so the report covers everything
+// Sentry's webpack plugin and Serwist inject. Gated by ANALYZE=true so it's a
+// no-op in normal builds. Run with `npm run analyze` to open the HTML report.
+const analyzer = withBundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
 // Serwist generates `public/sw.js` at build time. The runtime registration is
 // gated by the user's Settings toggle; we don't auto-register here.
@@ -80,7 +86,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(withSerwist(nextConfig), {
+export default analyzer(withSentryConfig(withSerwist(nextConfig), {
   org: "southern-light-dev",
   project: "prj-futari",
   // Suppress Sentry build logs.
@@ -96,4 +102,4 @@ export default withSentryConfig(withSerwist(nextConfig), {
     // Tree-shake the Sentry SDK's internal logger statements (was `disableLogger`).
     treeshake: { removeDebugLogging: true },
   },
-});
+}));
