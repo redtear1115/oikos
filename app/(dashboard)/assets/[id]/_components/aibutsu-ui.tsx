@@ -59,7 +59,7 @@ export function MoneyTwoCol({ month, total, accent }: { month: number; total: nu
             <div className="text-micro tracking-[1px]" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{s.label}</div>
             {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design
                  before migrating to formatAmount. */}
-            <div className="text-base font-semibold mt-0.5 tabular-nums" style={{ color: 'var(--ink)' }}>
+            <div className="text-base font-medium mt-0.5 tabular-nums" style={{ color: 'var(--ink)' }}>
               NT$ {s.value.toLocaleString()}
             </div>
           </div>

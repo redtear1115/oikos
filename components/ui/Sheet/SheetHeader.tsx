@@ -36,7 +36,7 @@ export function SheetHeader({
         style={{ ...paddingStyle, gridTemplateColumns: '1fr auto 1fr' }}
       >
         <div className="justify-self-start">{leading ?? <SlotSpacer />}</div>
-        <h2 className="text-title font-semibold text-ink truncate min-w-0 px-3">
+        <h2 className="text-title font-medium text-ink truncate min-w-0 px-3">
           {title}
         </h2>
         <div className="justify-self-end">
@@ -50,7 +50,7 @@ export function SheetHeader({
     <div className="shrink-0 flex items-center justify-between" style={paddingStyle}>
       <div className="flex items-center gap-2 min-w-0">
         {leading && <div className="shrink-0">{leading}</div>}
-        <h2 className="text-title font-semibold text-ink truncate min-w-0">{title}</h2>
+        <h2 className="text-title font-medium text-ink truncate min-w-0">{title}</h2>
       </div>
       {!hideTrailing && (
         <div className="shrink-0 ml-3">{trailing ?? <SlotSpacer />}</div>

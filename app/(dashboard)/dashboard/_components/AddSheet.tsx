@@ -431,7 +431,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             {t.common.cancel}
           </Button>
           <div
-            className="text-base font-semibold tracking-wide"
+            className="text-base font-medium tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
             {isEdit ? t.addSheet.titleEdit : t.addSheet.title}
@@ -441,7 +441,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             size="sm"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="font-semibold"
+            className="font-medium"
             style={{ color: 'var(--accent)' }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}

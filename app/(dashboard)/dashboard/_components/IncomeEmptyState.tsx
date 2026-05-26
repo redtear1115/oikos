@@ -73,7 +73,7 @@ export function IncomeEmptyState({ onAdd }: Props) {
         <button
           type="button"
           onClick={onAdd}
-          className="h-10 px-6 rounded-full text-sm font-semibold cursor-pointer border-0"
+          className="h-10 px-6 rounded-full text-sm font-medium cursor-pointer border-0"
           style={{
             background: P.tint,
             color: P.ink,

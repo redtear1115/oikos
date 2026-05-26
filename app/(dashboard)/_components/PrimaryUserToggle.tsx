@@ -37,7 +37,7 @@ export function PrimaryUserToggle({ value, onChange }: PrimaryUserToggleProps) {
             type="button"
             onClick={() => onChange(opt.v)}
             className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
-              sel ? 'font-semibold' : ''
+              sel ? 'font-medium' : ''
             }`}
             style={{
               background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',

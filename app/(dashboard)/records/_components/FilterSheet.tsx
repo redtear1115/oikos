@@ -371,12 +371,12 @@ export function FilterSheet({
         <Button variant="ghost" size="sm" onClick={handleReset} className="px-2">
           {t.filterSheet.reset}
         </Button>
-        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{t.filterSheet.title}</div>
+        <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{t.filterSheet.title}</div>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleApply}
-          className="px-2 font-semibold"
+          className="px-2 font-medium"
           style={{ color: 'var(--accent)' }}
         >
           {t.filterSheet.apply}

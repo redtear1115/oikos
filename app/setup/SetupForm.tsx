@@ -158,7 +158,7 @@ export default function SetupForm({ t }: { t: Translations }) {
             type="button"
             onClick={handleTrustConfirm}
             disabled={pending}
-            className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+            className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {pending ? '建立中…' : trust.bilateral.inviter.cta}
@@ -234,7 +234,7 @@ export default function SetupForm({ t }: { t: Translations }) {
           <button
             type="button"
             onClick={handleShare}
-            className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer"
+            className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer"
             style={{ background: 'var(--accent)', color: 'var(--on-fill)' }}
           >
             分享連結
@@ -345,7 +345,7 @@ export default function SetupForm({ t }: { t: Translations }) {
         <button
           type="submit"
           disabled={!name.trim()}
-          className="h-12 rounded-xl border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+          className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
           style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           下一步

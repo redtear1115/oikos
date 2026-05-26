@@ -5,6 +5,7 @@ import { useAvatarMenu } from '@/app/(dashboard)/_components/AvatarMenuProvider'
 import { FutariMark } from '@/app/(dashboard)/_components/FutariMark'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useTranslations } from '@/lib/i18n/client'
+import { BrandHeaderHint } from './BrandHeaderHint'
 
 interface BrandHeaderProps {
   showTripButton?: boolean
@@ -45,7 +46,8 @@ export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = 
           {group.name}
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      {/* relative: anchor for BrandHeaderHint absolute callouts */}
+      <div className="relative flex items-center gap-2 shrink-0">
         {showTripButton && (
           <button
             type="button"
@@ -73,6 +75,7 @@ export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = 
             </div>
           )}
         </button>
+        <BrandHeaderHint showTripButton={!!showTripButton} />
       </div>
     </div>
   )

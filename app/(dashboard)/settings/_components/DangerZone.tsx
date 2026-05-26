@@ -162,7 +162,7 @@ function SwapPendingBanner({
               type="button"
               onClick={run(confirmSwap)}
               disabled={busy}
-              className="flex-1 h-10 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-50"
+              className="flex-1 h-10 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {busy ? banner.processing : banner.acceptCta}

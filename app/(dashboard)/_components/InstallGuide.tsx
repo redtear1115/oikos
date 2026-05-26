@@ -166,7 +166,7 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-3">
       <div
-        className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold tnum"
+        className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium tnum"
         style={{
           background: 'var(--accent-soft)',
           color: 'var(--ink)',

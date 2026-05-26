@@ -323,7 +323,7 @@ export function SavingsView({
           >
             <div className="px-4 py-3 flex items-baseline justify-between">
               <span
-                className="text-xl font-semibold tabular-nums"
+                className="text-xl font-medium tabular-nums"
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
               >
                 {/* TODO(v0.17 currency): "NT$ {amount}" with space */}NT$ {details.accountValue.toLocaleString()}
@@ -510,7 +510,7 @@ function RecurringRulesSection({
             <button
               type="button"
               onClick={onAdd}
-              className="h-9 px-4 rounded-full text-sm font-semibold border-0 cursor-pointer"
+              className="h-9 px-4 rounded-full text-sm font-medium border-0 cursor-pointer"
               style={{ background: P.ink, color: 'var(--on-fill)' }}
             >
               {translations.recurringAddCta}
@@ -527,7 +527,7 @@ function RecurringRulesSection({
                   style={{ border: '1px solid var(--hairline)' }}
                 >
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-base font-semibold tabular-nums" style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}>
+                    <span className="text-base font-medium tabular-nums" style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}>
                       {/* TODO(v0.17 currency): "NT$ {amount}" with space */}
                       NT$ {rule.amount.toLocaleString()}
                     </span>

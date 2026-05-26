@@ -270,6 +270,10 @@ export const zhCN: Translations = {
     filterAriaLabel: '打开筛选',
     burdenMe: '算我的',
     burdenPartner: '算对方的',
+    headerHint: {
+      trip: '旅行',
+      settings: '设置',
+    },
     activeTripBanner: {
       kicker: '旅行进行中',
       singleStartedAt: '{date} 起 · 点开看这趟',

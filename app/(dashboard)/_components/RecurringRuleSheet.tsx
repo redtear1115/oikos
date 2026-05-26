@@ -256,7 +256,7 @@ export function RecurringRuleSheet(props: Props) {
           <Button variant="ghost" size="sm" onClick={onClose}>
             {t.common.cancel}
           </Button>
-          <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
+          <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
             {isEdit ? tNs.sheet.titleEdit : tNs.sheet.titleNew}
           </div>
           <Button

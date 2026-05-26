@@ -251,7 +251,7 @@ export function LeaveGroupFlow({
               type="button"
               onClick={goNext}
               disabled={pending}
-              className="h-11 px-5 rounded-xl text-sm font-semibold cursor-pointer disabled:opacity-50"
+              className="h-11 px-5 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {flow.next}
@@ -361,7 +361,7 @@ function Card4({
           type="button"
           onClick={onYes}
           disabled={pending}
-          className="w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer disabled:opacity-50"
+          className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-50"
           style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
         >
           {yesLabel}
@@ -428,7 +428,7 @@ function FinalConfirm({
           <button
             type="button"
             onClick={onSettle}
-            className="w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer"
+            className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer"
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {t.settleCta}
@@ -439,7 +439,7 @@ function FinalConfirm({
           <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>{t.balanceOk}</p>
           <label className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
             <span>{t.typePromptPrefix}</span>
-            <span className="font-semibold" style={{ color: 'var(--ink)' }}>{t.confirmText}</span>
+            <span className="font-medium" style={{ color: 'var(--ink)' }}>{t.confirmText}</span>
             <span>{t.typePromptSuffix}</span>
           </label>
           <input
@@ -458,7 +458,7 @@ function FinalConfirm({
             type="button"
             onClick={onLeave}
             disabled={!matched || pending}
-            className="w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer disabled:opacity-40"
+            className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-40"
             style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
           >
             {pending ? t.leaving : t.leaveButton}
@@ -485,7 +485,7 @@ function SwapSent({
       <button
         type="button"
         onClick={onClose}
-        className="mt-6 w-full h-12 rounded-bubble text-sm font-semibold cursor-pointer"
+        className="mt-6 w-full h-12 rounded-bubble text-sm font-medium cursor-pointer"
         style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
       >
         {t.ok}
