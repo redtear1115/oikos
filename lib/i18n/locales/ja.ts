@@ -719,7 +719,7 @@ export const ja: Translations = {
     sectionGuardian: '守護（ベータ）',
     guardianBeta: {
       title: '守護をオンにする',
-      description: '守護は保険や保障をひとまとめに置いておく場所です。まだベータで、将来は有料機能になります。オフにしても保険データは消えず、DB に残ります。',
+      description: '守護は保険や保障をひとまとめに置いておく場所です。まだベータで、将来は有料機能になります。いつでもオフにできて、記録した保険はそのまま残ります。',
     },
     dangerZone: {
       sectionTitle: 'この家計簿から離れる',

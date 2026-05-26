@@ -720,7 +720,7 @@ export const zhCN: Translations = {
     sectionGuardian: '守护（Beta）',
     guardianBeta: {
       title: '开启守护',
-      description: '守护是把保单与保障好好收下的地方，还在 Beta 中。未来会成为订阅功能，现在先体验。关闭后既有数据还留在 DB，不会消失。',
+      description: '守护是把保单与保障好好收下的地方，还在 Beta 中。未来会成为订阅功能，现在先体验。随时可以关掉，已经记下的保单会留着。',
     },
     dangerZone: {
       sectionTitle: '离开账本',
