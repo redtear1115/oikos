@@ -1,13 +1,7 @@
 import type { Locale } from '@/lib/i18n/locales-meta'
+import { SCHEMA_LANG } from '@/lib/i18n/seo'
 
 type FaqItem = { question: string; answer: string }
-
-const SCHEMA_LANG: Record<Locale, string> = {
-  'zh-TW': 'zh-TW',
-  'zh-CN': 'zh-CN',
-  en: 'en',
-  ja: 'ja',
-}
 
 /**
  * FAQ section + matching FAQPage JSON-LD for the /migrate/<source> landing

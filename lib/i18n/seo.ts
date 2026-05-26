@@ -20,6 +20,14 @@ export function buildAlternates(path: string, currentLocale: Locale): Metadata['
   }
 }
 
+/** BCP-47 language tags for use in JSON-LD `inLanguage`. */
+export const SCHEMA_LANG: Record<Locale, string> = {
+  'zh-TW': 'zh-TW',
+  'zh-CN': 'zh-CN',
+  en: 'en',
+  ja: 'ja',
+}
+
 const OG_LOCALES: Record<Locale, string> = {
   'zh-TW': 'zh_TW',
   'zh-CN': 'zh_CN',
