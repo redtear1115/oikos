@@ -24,7 +24,7 @@ export function InstallGuideRow() {
           </div>
         </div>
         <div className="text-sm flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-3)' }}>
-          <span>›</span>
+          <span aria-hidden="true">›</span>
         </div>
       </button>
 

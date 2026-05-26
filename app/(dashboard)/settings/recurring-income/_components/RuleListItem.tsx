@@ -93,7 +93,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
               </div>
             )}
           </div>
-          <span className="text-sm flex-shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
+          <span className="text-sm flex-shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</span>
         </div>
       </button>
     </li>

@@ -63,7 +63,7 @@ export function TrustContent() {
           <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
             {exportPending ? t.csvExport.preparing : t.settings.exportData}
           </div>
-          <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
+          <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</span>
         </button>
         {exportError && (
           <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>

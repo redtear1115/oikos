@@ -64,7 +64,7 @@ export function DangerZone({
         }}
       >
         <div className="text-sm font-medium">{dz.leaveCta}</div>
-        <div className="text-sm">›</div>
+        <div className="text-sm" aria-hidden="true">›</div>
       </button>
 
       <LeaveGroupFlow

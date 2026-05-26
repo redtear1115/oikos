@@ -54,7 +54,7 @@ export function QuickAccessRow({
             {t.settings.quickAccessRow}
           </div>
         </div>
-        <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
+        <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</span>
       </button>
     </div>
   )
