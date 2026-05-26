@@ -38,6 +38,7 @@ import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
 import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
+import { loadedSplitRatioToViewerShare } from '@/lib/splitRatio'
 
 export interface AddSheetInitial {
   id: string
@@ -183,7 +184,17 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id ?? 'dining',
       )
       setSplit(initial.splitType === 'half' ? 'weighted' : initial.splitType)
-      setSplitRatioA(initial.splitRatioA ?? groupDefaultRatioA ?? 50)
+      // DB stores split_ratio_a as member A's share; form state tracks the
+      // **viewer's** share (slider + labels say "我 X% / 對方 Y%"). For
+      // viewer = member B the two angles flip — without this conversion an
+      // existing weighted record opens with the partner's % labelled as the
+      // viewer's, which then drives a wrong preview + wrong post-save row.
+      // The groupDefaultRatioA fallback is passed through raw — it's only
+      // used when the record itself carries no override, and is governed by
+      // SplitRatioSection's own viewer-aware save path.
+      setSplitRatioA(
+        loadedSplitRatioToViewerShare(initial.splitRatioA, viewerIsA, groupDefaultRatioA ?? 50),
+      )
       setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
       // Use LOCAL date components, not the UTC ISO prefix — otherwise a row stored at
       // local midnight (e.g. 2026-05-02 00:00 in UTC+8 = 2026-05-01T16:00:00Z) would
