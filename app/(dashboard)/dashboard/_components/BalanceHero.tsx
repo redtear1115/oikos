@@ -313,7 +313,7 @@ export function BalanceHero({
               <div className="flex items-center gap-[14px]">
                 <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={44} />
                 <div className="flex-1 min-w-0 text-sm" style={{ color: 'var(--ink-2)' }}>
-                  <span className="font-semibold" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
+                  <span className="font-medium" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
                   <span>{verb}</span>
                 </div>
                 <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>

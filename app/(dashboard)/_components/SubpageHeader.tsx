@@ -43,7 +43,7 @@ export function SubpageHeader({ title, backLabel, onBack }: Props) {
         {backLabel}
       </button>
 
-      <div className="text-base font-semibold" style={{ color: 'var(--ink)' }}>
+      <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
         {title}
       </div>
 

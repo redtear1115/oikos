@@ -266,7 +266,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             {t.common.cancel}
           </Button>
           <div
-            className="text-base font-semibold tracking-wide"
+            className="text-base font-medium tracking-wide"
             style={{ color: 'var(--ink)' }}
           >
             {isEdit ? t.incomeSheet.titleEdit : t.incomeSheet.title}
@@ -276,7 +276,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             size="sm"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="p-1 font-semibold"
+            className="p-1 font-medium"
             style={{ color: P.ink }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}

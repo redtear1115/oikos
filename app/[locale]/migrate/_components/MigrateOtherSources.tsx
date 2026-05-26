@@ -74,7 +74,7 @@ export function MigrateOtherSources({
                 }}
               >
                 <p
-                  className="m-0 text-body md:text-button font-semibold"
+                  className="m-0 text-body md:text-button font-medium"
                   style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
                 >
                   {item.name}

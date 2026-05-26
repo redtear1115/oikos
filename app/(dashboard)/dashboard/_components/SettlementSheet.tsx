@@ -105,7 +105,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
           <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
             {t.common.cancel}
           </Button>
-          <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
+          <div className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
             {t.settlement.editTitle}
           </div>
           {/* Past-epoch view is read-only — hide save. The sheet itself shouldn't
@@ -120,7 +120,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               onClick={handleSave}
               disabled={!amount || pending}
               aria-busy={pending}
-              className="px-2 font-semibold"
+              className="px-2 font-medium"
               style={{ color: amount && !pending ? 'var(--accent)' : undefined }}
             >
               {pending ? t.common.saving : t.common.save}

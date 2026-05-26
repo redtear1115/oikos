@@ -48,7 +48,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 min-w-0">
-          <div className="text-sm font-semibold truncate">{display.primary}</div>
+          <div className="text-sm font-medium truncate">{display.primary}</div>
           {display.secondary && (
             <div
               className="text-xs truncate"

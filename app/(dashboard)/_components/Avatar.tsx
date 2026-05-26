@@ -40,7 +40,7 @@ export function Avatar({ memberRole, initial, src, size = 28, ring = false }: Pr
         boxShadow: ring ? '0 0 0 2px var(--bg)' : 'none',
         padding: showImage ? ringPx : 0,
       }}
-      className="rounded-full flex items-center justify-center font-semibold tracking-tight shrink-0 overflow-hidden"
+      className="rounded-full flex items-center justify-center font-medium tracking-tight shrink-0 overflow-hidden"
     >
       {showImage ? (
         // next/image proxies through Supabase remotePatterns (next.config.ts) and

@@ -59,7 +59,7 @@ export function SheetShell({
         <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
           {t.common.cancel}
         </Button>
-        <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
+        <div className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
           {title}
         </div>
         <Button
@@ -67,7 +67,7 @@ export function SheetShell({
           size="sm"
           onClick={onSave}
           disabled={!canSave}
-          className="px-2 font-semibold"
+          className="px-2 font-medium"
           style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
         >
           {pending ? t.common.saving : t.common.save}
@@ -94,7 +94,7 @@ export function SheetShell({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className="mt-6 w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
+          className="mt-6 w-full h-[46px] rounded-xl border-0 text-white font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
           style={{
             background: canSave ? bottomBg : 'var(--ink-3)',
             opacity: canSave ? 1 : 0.55,

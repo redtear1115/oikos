@@ -79,7 +79,7 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
         <button
           type="button"
           onClick={handleDismiss}
-          className="w-full h-[42px] rounded-xl border-0 font-semibold text-sm tracking-[0.3px] cursor-pointer"
+          className="w-full h-[42px] rounded-xl border-0 font-medium text-sm tracking-[0.3px] cursor-pointer"
           style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           {t.firstRecordCard.dismiss}

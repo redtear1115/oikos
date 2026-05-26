@@ -225,7 +225,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
             type="button"
             onClick={advance}
             disabled={pending}
-            className="inline-flex items-center gap-2 h-12 px-7 rounded-full text-sm font-semibold"
+            className="inline-flex items-center gap-2 h-12 px-7 rounded-full text-sm font-medium"
             style={{
               background: 'var(--ink)',
               color: 'var(--on-fill)',

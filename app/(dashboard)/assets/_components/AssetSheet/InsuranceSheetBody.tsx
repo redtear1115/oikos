@@ -196,7 +196,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   type="button"
                   onClick={() => setPolicyHolderUserId(opt.id)}
                   className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
-                    active ? 'font-semibold' : ''
+                    active ? 'font-medium' : ''
                   }`}
                   style={{
                     background: active ? 'var(--toggle-segment-thumb)' : 'transparent',

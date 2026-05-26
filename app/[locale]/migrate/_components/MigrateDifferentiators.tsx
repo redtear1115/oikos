@@ -46,7 +46,7 @@ export function MigrateDifferentiators({
               {String(i + 1).padStart(2, '0')}
             </span>
             <p
-              className="m-0 text-body md:text-button font-semibold"
+              className="m-0 text-body md:text-button font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}

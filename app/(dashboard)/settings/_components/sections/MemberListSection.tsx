@@ -71,7 +71,7 @@ export function MemberListSection({ viewer, partner, groupId }: Props) {
             type="button"
             onClick={handleInvite}
             disabled={invitePending}
-            className="w-full h-12 rounded-bubble border-0 text-sm font-semibold cursor-pointer disabled:opacity-50"
+            className="w-full h-12 rounded-bubble border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--btn-accent-bg)', color: 'var(--btn-accent-text)' }}
           >
             {invitePending ? t.soloBanner.generating : t.settings.inviteCta}
@@ -100,7 +100,7 @@ function MemberRow({
     <div className="flex items-center gap-3.5 px-5 py-4">
       <Avatar memberRole={memberRole} initial={initial} src={avatarUrl} size={40} />
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+        <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
           {displayName}{youSuffix && <span className="ml-1" style={{ color: 'var(--ink-3)' }}>{t.settings.youSuffix}</span>}
         </div>
         {email && (

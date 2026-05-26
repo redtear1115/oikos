@@ -102,7 +102,7 @@ function EmptyState({ hint, cta, onAdd }: { hint: string; cta: string; onAdd: ()
       <button
         type="button"
         onClick={onAdd}
-        className="h-10 px-6 rounded-full text-sm font-semibold inline-flex items-center border-0 cursor-pointer"
+        className="h-10 px-6 rounded-full text-sm font-medium inline-flex items-center border-0 cursor-pointer"
         style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--ink-3)' }}
       >
         {cta}

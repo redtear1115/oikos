@@ -83,7 +83,7 @@ function Blocker({ strings, mode, url }: { strings: Strings; mode: Mode; url: st
 
         <h1
           id="in-app-guard-title"
-          className="mt-6 text-xl font-semibold leading-tight"
+          className="mt-6 text-xl font-medium leading-tight"
           style={{ color: 'var(--ink, #3A2419)' }}
         >
           {strings.title}

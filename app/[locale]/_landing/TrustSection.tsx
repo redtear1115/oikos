@@ -109,7 +109,7 @@ function TrustCard({
       </div>
       <div className="min-w-0">
         <p
-          className="m-0 text-body md:text-[17px] font-semibold"
+          className="m-0 text-body md:text-[17px] font-medium"
           style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
         >
           {title}

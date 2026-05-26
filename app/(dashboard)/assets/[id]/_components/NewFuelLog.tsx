@@ -237,7 +237,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           <div className="text-micro text-[#8A7B5A] tracking-[1.4px] font-mono uppercase">本次油耗</div>
           <div className="mt-1.5 inline-flex items-baseline gap-1.5">
             <span
-              className="text-amount-lg font-semibold text-[#3A2419] leading-none tabular-nums"
+              className="text-amount-lg font-medium text-[#3A2419] leading-none tabular-nums"
               style={{ letterSpacing: '-1.5px' }}
             >{econ}</span>
             <span className="text-label text-[#8A7B5A] font-medium">km/L</span>
@@ -353,7 +353,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="w-full h-12 rounded-2xl font-semibold text-body tracking-wide transition-opacity"
+              className="w-full h-12 rounded-2xl font-medium text-body tracking-wide transition-opacity"
               style={{
                 background: 'var(--btn-primary-bg)',
                 color: 'var(--btn-primary-text)',
