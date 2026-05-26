@@ -7,6 +7,7 @@ import { getIncomeCategory } from '@/lib/incomeCategories'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { formatDateRelative } from '@/lib/format-date'
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
+import { toViewerShare } from '@/lib/splitRatio'
 
 // Beyond 1億 the full number overflows the row on mobile widths.
 // Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
@@ -71,11 +72,14 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
     } else if (tx.splitType === 'half') {
       delta = payerIsViewer ? +Math.ceil(tx.amount / 2) : -Math.ceil(tx.amount / 2)
     } else if (tx.splitType === 'weighted' && tx.splitRatioA != null) {
-      const ratioA = tx.splitRatioA
-      const otherShare = 100 - ratioA
+      // tx.splitRatioA is member A's share (DB schema); flip to the viewer's
+      // perspective so the formula below reads it as "my share %" / "other's
+      // share %" consistently for both members.
+      const myShare = toViewerShare(tx.splitRatioA, viewerIsA)
+      const otherShare = 100 - myShare
       delta = payerIsViewer
         ? +Math.ceil(tx.amount * otherShare / 100)
-        : -Math.ceil(tx.amount * ratioA / 100)
+        : -Math.ceil(tx.amount * myShare / 100)
     }
   }
   const myShare = tx.kind === 'transaction'

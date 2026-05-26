@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { updateGroupSplitRatio } from '@/actions/group'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { toViewerShare, toMemberAShare } from '@/lib/splitRatio'
 
 interface Props {
   viewerName: string
@@ -15,7 +17,10 @@ interface Props {
 export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const [ratioA, setRatioA] = useState<number>(initialRatioA ?? 50)
+  const { viewerIsA } = useMember()
+  // DB column is member A's share; the slider tracks the viewer's share so
+  // the label below it always reads "{viewerName} … X%" truthfully.
+  const [meShare, setMeShare] = useState<number>(toViewerShare(initialRatioA ?? 50, viewerIsA))
   const [saving, startTransition] = useTransition()
   const ticksId = useId()
   const [error, setError] = useState<string | null>(null)
@@ -24,7 +29,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
     setError(null)
     startTransition(async () => {
       try {
-        await updateGroupSplitRatio(ratioA)
+        await updateGroupSplitRatio(toMemberAShare(meShare, viewerIsA))
         router.refresh()
       } catch (e) {
         setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
@@ -35,8 +40,8 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
   return (
     <section className="flex flex-col gap-3 px-4 py-5 rounded-card" style={{ background: 'var(--surface)' }}>
       <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
-        <span>{viewerName}{t.splitRatioSection.meSuffix}{ratioA}%</span>
-        <span>{partnerName}{t.splitRatioSection.partnerSuffix}{100 - ratioA}%</span>
+        <span>{viewerName}{t.splitRatioSection.meSuffix}{meShare}%</span>
+        <span>{partnerName}{t.splitRatioSection.partnerSuffix}{100 - meShare}%</span>
       </div>
       <input
         type="range"
@@ -44,8 +49,8 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
         max={90}
         step={10}
         list={ticksId}
-        value={ratioA}
-        onChange={e => setRatioA(Number(e.target.value))}
+        value={meShare}
+        onChange={e => setMeShare(Number(e.target.value))}
         className="w-full accent-[var(--ink)]"
       />
       <datalist id={ticksId}>

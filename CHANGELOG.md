@@ -13,7 +13,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **依比例分（weighted split）對 member B 視角顯示／計算錯誤修正**：之前若由 member B 建立或檢視「依比例分」記錄，表單滑桿、「我 X% / 對方 Y%」標籤、預覽文字（「對方欠你 / 你欠對方 NT$…」）、列表單筆顯示的「我這筆攤多少」金額，以及 balance 試算都會把 member A 的份額誤當成「我的份額」呈現。修正後不論是 A 還是 B 視角，都會以使用者自己的角度顯示比例與金額。
+
+### 技術變更
+
+- **`splitRatioA` 邊界統一視角**：DB 欄位 `split_ratio_a`（cashTransactions / recurringExpenseRules / oikosGroups.default_split_ratio_a）固定為 **member A 的份額 %**，但表單 / UI 一律以「viewer 的份額 %」為內部語意。新增 `lib/splitRatio.ts` 的 `toViewerShare` / `toMemberAShare`，在每個 DB ↔ UI 邊界（`AddSheet`、`RecurringRuleSheet`、`SplitRatioSection`、`CompactRow`）做翻轉；`deriveTripSplitRatio` 一併簡化為 `payerWho` 判斷。**注意：既有 prod 資料中由 member B 建立的 weighted 紀錄，DB 值是反的（B 的意圖被存成 A 的份額），需要使用者自行檢視 / 重新編輯——本 PR 只修程式，不做自動 migration。**
 
 ## [1.2.3] - 2026-05-25
 
