@@ -293,7 +293,7 @@ export const ja: Translations = {
     manage: '見る ›',
     settleAriaLabel: '返済 / 受領を記録',
     settleLabel: '精算',
-    partnerOwesYou: 'があなたに貸し中',
+    partnerOwesYou: 'があなたから借り中',
     youOwePartner: 'が相手に借り中',
     currentlyEven: '差額なし',
     currentlyLabel: '現在',
