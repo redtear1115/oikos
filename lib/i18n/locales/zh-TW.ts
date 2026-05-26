@@ -3075,7 +3075,7 @@ export const zhTW: Translations = {
     },
     guardianBeta: {
       title: '開啟守護',
-      description: '守護是把保單與保障好好收下的地方，還在 Beta 中。未來會成為訂閱功能，現在先體驗。關閉後既有資料還留在 DB，不會消失。',
+      description: '守護是把保單與保障好好收下的地方，還在 Beta 中。未來會成為訂閱功能，現在先體驗。隨時可以關掉，已經記下的保單會留著。',
     },
     dangerZone: {
       sectionTitle: '離開帳本',
