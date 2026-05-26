@@ -25,6 +25,7 @@ import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { SplitType } from '@/lib/balance'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
+import { loadedSplitRatioToViewerShare, toMemberAShare } from '@/lib/splitRatio'
 
 const INTERVAL_VALUES: (1 | 3 | 6 | 12)[] = [1, 3, 6, 12]
 const P = DEFAULT_INCOME_PALETTE
@@ -148,7 +149,11 @@ export function RecurringRuleSheet(props: Props) {
       )
       setPayerWho(expenseInitial.paidBy === viewer.id ? 'M' : 'T')
       setSplitType(expenseInitial.splitType)
-      setSplitRatioA(expenseInitial.splitRatioA ?? groupDefaultRatioA ?? 50)
+      // DB stores member A's share; slider tracks viewer's share. Flip for
+      // viewer = B so the labels read truthfully (#783 / PR #784).
+      setSplitRatioA(
+        loadedSplitRatioToViewerShare(expenseInitial.splitRatioA, viewerIsA, groupDefaultRatioA ?? 50),
+      )
       setDescription(expenseInitial.description)
       setExpenseAssetId(expenseInitial.assetId)
     } else {
@@ -159,7 +164,7 @@ export function RecurringRuleSheet(props: Props) {
       setDescription('')
       setExpenseAssetId(null)
     }
-  }, [open, isIncome, expenseInitial, viewer.id, viewer.defaultSplitType, isSolo, groupDefaultRatioA])
+  }, [open, isIncome, expenseInitial, viewer.id, viewer.defaultSplitType, isSolo, groupDefaultRatioA, viewerIsA])
 
   const handleSave = () => {
     if (!amount || amount <= 0) { setError(tNs.errors.amountRequired); return }
@@ -204,7 +209,8 @@ export function RecurringRuleSheet(props: Props) {
       category: expenseCategory,
       paidBy,
       splitType: effectiveSplit,
-      splitRatioA: effectiveSplit === 'weighted' ? splitRatioA : null,
+      // Form state is the viewer's share; DB column stores member A's share.
+      splitRatioA: effectiveSplit === 'weighted' ? toMemberAShare(splitRatioA, viewerIsA) : null,
       description: description.trim(),
       intervalMonths,
       dayOfMonth,

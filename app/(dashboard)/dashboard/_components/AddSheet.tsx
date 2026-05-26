@@ -38,6 +38,7 @@ import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
 import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
+import { loadedSplitRatioToViewerShare, toMemberAShare } from '@/lib/splitRatio'
 
 export interface AddSheetInitial {
   id: string
@@ -183,7 +184,17 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         PICKABLE_CATEGORIES.find((c) => c.id === initial.category)?.id ?? 'dining',
       )
       setSplit(initial.splitType === 'half' ? 'weighted' : initial.splitType)
-      setSplitRatioA(initial.splitRatioA ?? groupDefaultRatioA ?? 50)
+      // DB stores split_ratio_a as member A's share; form state tracks the
+      // **viewer's** share (slider + labels say "我 X% / 對方 Y%"). For
+      // viewer = member B the two angles flip — without this conversion an
+      // existing weighted record opens with the partner's % labelled as the
+      // viewer's, which then drives a wrong preview + wrong post-save row.
+      // The groupDefaultRatioA fallback is passed through raw — it's only
+      // used when the record itself carries no override, and is governed by
+      // SplitRatioSection's own viewer-aware save path.
+      setSplitRatioA(
+        loadedSplitRatioToViewerShare(initial.splitRatioA, viewerIsA, groupDefaultRatioA ?? 50),
+      )
       setPayerWho(initial.payerId === viewer.id ? 'M' : 'T')
       // Use LOCAL date components, not the UTC ISO prefix — otherwise a row stored at
       // local midnight (e.g. 2026-05-02 00:00 in UTC+8 = 2026-05-01T16:00:00Z) would
@@ -247,13 +258,21 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const isEdit = !!initial && !isPending
   const editingTripExpense = isEdit && initial?.kind === 'trip-expense'
 
-  // splitRatio on TripExpenses is the payer's share %. AddSheet tracks
-  // splitRatioA (member A's share %). Convert at the boundary using viewerIsA
-  // + the current payerWho selection. Returns null if not a weighted split.
+  // splitRatio on TripExpenses is the payer's share %. AddSheet's
+  // splitRatioA state is the **viewer's** share %, so: if the viewer is
+  // the payer it's already the payer's share; otherwise the partner is
+  // the payer and their share is the complement.
   function deriveTripSplitRatio(): number | null {
     if (split !== 'weighted') return null
-    const payerIsA = payerWho === 'M' ? viewerIsA : !viewerIsA
-    return payerIsA ? splitRatioA : 100 - splitRatioA
+    return payerWho === 'M' ? splitRatioA : 100 - splitRatioA
+  }
+
+  // CashTransactions.split_ratio_a is member A's share. The form state is
+  // the viewer's share; flip at the wire boundary so DB / balance calc see
+  // the schema-correct value regardless of which member the viewer is.
+  function deriveCashSplitRatioA(): number | null {
+    if (split !== 'weighted') return null
+    return toMemberAShare(splitRatioA, viewerIsA)
   }
 
   const handleSave = () => {
@@ -282,7 +301,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               description: desc,
               category,
               splitType,
-              splitRatioA: split === 'weighted' ? splitRatioA : null,
+              splitRatioA: deriveCashSplitRatioA(),
               paidBy: payerId,
               transactedAt: date,
               assetId,
@@ -315,7 +334,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             description: desc,
             category,
             splitType,
-            splitRatioA: split === 'weighted' ? splitRatioA : null,
+            splitRatioA: deriveCashSplitRatioA(),
             payerId,
             transactedAt: date,
             assetId,
@@ -348,7 +367,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             description: desc,
             category,
             splitType,
-            splitRatioA: split === 'weighted' ? splitRatioA : null,
+            splitRatioA: deriveCashSplitRatioA(),
             payerId,
             transactedAt: date,
             assetId,
