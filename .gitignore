@@ -60,6 +60,8 @@ next-env.d.ts
 # and skills-lock.json IS versioned to pin the installed skill version)
 /.agents/
 /.claude/skills/impeccable
+# critique snapshots are regenerated working artifacts, kept locally only
+/.impeccable/critique/
 
 # implementation plans are working docs, kept locally only.
 # specs (docs/superpowers/specs/) ARE tracked — those are the design intent.

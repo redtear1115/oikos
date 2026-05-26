@@ -15,6 +15,10 @@
   --credit: #7A9F7E;
   --debit: #D17561;
   --debit-soft: rgba(209, 117, 97, 0.10);  /* error message bg tint */
+  /* Muted clay for the balance-hero "you owe" amount: clay shifted toward
+     cocoa-ink so the debtor figure reads as calm earth, not alarm-red.
+     Witnessing tone (hero debtor framing); pairs with --credit for direction. */
+  --debit-quiet: color-mix(in srgb, var(--debit) 72%, var(--ink));
   --destructive: #B85A48;        /* deeper red for destructive actions (logout, delete) */
   --destructive-soft: rgba(184, 90, 72, 0.25);  /* outline / hairline variant */
   --warning: #B45309;            /* amber for paused / warning states */

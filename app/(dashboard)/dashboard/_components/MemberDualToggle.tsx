@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from '@/lib/i18n/client'
+import { SegmentedToggle, type SegmentedOption } from '@/components/ui/SegmentedToggle'
 
 type Side = 'left' | 'right'
 
@@ -44,43 +45,13 @@ function MemberDualToggle({
   }
   const viewerColor = viewerIsA ? 'var(--ink)' : 'var(--accent)'
   const partnerColor = viewerIsA ? 'var(--accent)' : 'var(--ink)'
-  return (
-    <div
-      className="inline-flex items-center shrink-0"
-      style={{
-        background: 'var(--surface)',
-        border: '0.5px solid var(--hairline)',
-        borderRadius: 999,
-        padding: 2,
-        gap: 2,
-      }}
-    >
-      {([
-        { side: 'left' as Side, label: leftLabel, color: viewerColor },
-        { side: 'right' as Side, label: rightLabel, color: partnerColor },
-      ]).map(({ side, label, color }) => {
-        const sel = selected.has(side)
-        return (
-          <button
-            key={side}
-            type="button"
-            onClick={() => toggle(side)}
-            className="inline-flex items-center cursor-pointer border-0 text-xs font-medium transition-colors duration-150"
-            style={{
-              height: 22,
-              padding: '0 10px',
-              borderRadius: 999,
-              background: sel ? color : 'transparent',
-              color: sel ? 'var(--on-fill)' : 'var(--ink-3)',
-            }}
-            aria-pressed={sel}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
-  )
+  // Selected fill matches the avatar colour so the chip and the avatar above
+  // the page header read as the same person at a glance.
+  const options: SegmentedOption[] = [
+    { id: 'left', label: leftLabel, active: selected.has('left'), onClick: () => toggle('left'), fillColor: viewerColor },
+    { id: 'right', label: rightLabel, active: selected.has('right'), onClick: () => toggle('right'), fillColor: partnerColor },
+  ]
+  return <SegmentedToggle options={options} size="sm" />
 }
 
 interface PayerDualToggleProps {
