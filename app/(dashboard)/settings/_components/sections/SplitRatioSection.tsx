@@ -12,28 +12,45 @@ interface Props {
   initialRatioA: number | null
 }
 
+/** Per-group default split-ratio slider — optimistic instant-save on
+ *  slider release (#769). Drag/keyboard moves only update the visible
+ *  position; commit fires once on `pointerup` / `touchend` / `keyup`. On
+ *  failure we roll the slider back to the last confirmed value and surface
+ *  the error inline. Mirrors `GuardianBetaToggle` / `SplitTypeSection` so
+ *  all three sheet controls feel the same. */
 export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const [ratioA, setRatioA] = useState<number>(initialRatioA ?? 50)
-  const [saving, startTransition] = useTransition()
-  const ticksId = useId()
+  const initial = initialRatioA ?? 50
+  const [ratioA, setRatioA] = useState<number>(initial)
+  const [confirmed, setConfirmed] = useState<number>(initial)
+  const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const ticksId = useId()
 
-  const handleSave = () => {
+  const commit = (next: number) => {
+    if (next === confirmed) return
+    const prev = confirmed
     setError(null)
+    setConfirmed(next) // optimistic
     startTransition(async () => {
       try {
-        await updateGroupSplitRatio(ratioA)
+        await updateGroupSplitRatio(next)
         router.refresh()
       } catch (e) {
+        // Snap the slider back to where it actually persisted.
+        setConfirmed(prev)
+        setRatioA(prev)
         setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
       }
     })
   }
 
   return (
-    <section className="flex flex-col gap-3 px-4 py-5 rounded-card" style={{ background: 'var(--surface)' }}>
+    <section
+      className="flex flex-col gap-3 px-4 py-5 rounded-card transition-opacity duration-150"
+      style={{ background: 'var(--surface)', opacity: pending ? 0.7 : 1 }}
+    >
       <div className="flex justify-between text-sm" style={{ color: 'var(--ink-3)' }}>
         <span>{viewerName}{t.splitRatioSection.meSuffix}{ratioA}%</span>
         <span>{partnerName}{t.splitRatioSection.partnerSuffix}{100 - ratioA}%</span>
@@ -46,6 +63,10 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
         list={ticksId}
         value={ratioA}
         onChange={e => setRatioA(Number(e.target.value))}
+        onPointerUp={() => commit(ratioA)}
+        onTouchEnd={() => commit(ratioA)}
+        onKeyUp={() => commit(ratioA)}
+        aria-busy={pending}
         className="w-full accent-[var(--ink)]"
       />
       <datalist id={ticksId}>
@@ -53,15 +74,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
           <option key={v} value={v} label={`${v}`} />
         ))}
       </datalist>
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="mt-1 px-4 py-2 rounded-xl text-sm font-medium"
-        style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-      >
-        {saving ? t.common.saving : t.settings.saveDefaultRatio}
-      </button>
-      {error && <p className="text-xs" style={{ color: 'var(--debit)' }}>{error}</p>}
+      {error && <p className="text-xs" style={{ color: 'var(--debit)' }} role="alert">{error}</p>}
     </section>
   )
 }
