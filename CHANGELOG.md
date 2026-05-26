@@ -15,6 +15,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.2.5] - 2026-05-27
+
+主題：**效能基礎建設 + 細節打磨**——DB 複合索引補齊（CashTransactions / Settlements）、Avatar 遷移到 next/image（AVIF/WebP + srcset）、bundle analyzer 接入、BrandHeader icon-only 按鈕 first-use hint、ja i18n 修正、font-semibold 全站清理。
+完整 diff：[v1.2.4...v1.2.5](https://github.com/redtear1115/oikos/compare/v1.2.4...v1.2.5)
+
+### 使用者可見變化
+
+- **BrandHeader icon 按鈕首次使用提示（#765）**：✈ 旅行按鈕與頭像堆疊在第一次進入 dashboard 時出現小標籤說明用途，3.5 秒後自動消失，之後永不再顯示。
+- **日文 balance 描述修正（#764）**：`があなたに貸し中`（語意反置）→ `があなたから借り中`（對方欠你，語意正確）。
+
+### 技術變更
+
+- **DB 複合索引（#800）**：`CashTransactions` 和 `Settlements` 補上 `(group_id, transacted_at DESC, created_at DESC) WHERE deleted_at IS NULL`，對齊 `IncomeTransactions` 既有 index，消除 records feed / dashboard / balance recalc 的 sequential scan。
+- **Avatar 遷移 next/image（#799）**：從 raw `<img>` 改為 `next/image`，輸出 AVIF/WebP + responsive srcset，Supabase remotePatterns 已配置。
+- **Bundle analyzer 接入（#801）**：安裝 `@next/bundle-analyzer`，`npm run analyze` 可開 HTML 報告，建立 JS bundle baseline。
+- **font-semibold 全站清理（#766）**：weight 600 已回退為 500（render-blocking CSS 精簡），將所有 `font-semibold` callsite 誠實改為 `font-medium`，共 62 個檔案，無視覺變化。
+- **SCHEMA_LANG 集中化（#346）**：`lib/i18n/seo.ts` 統一輸出 BCP-47 locale map，移除 `MigrateFaq` / `MigrateHowToJsonLd` 重複定義。
+
 ## [1.2.4] - 2026-05-26
 
 主題：**settings 一輪精煉 + split ratio viewer 邊界補完 + dashboard 接上 Impeccable**——settings 頁面從清理開始（dead i18n keys / props、chevron a11y、token 對齊、query 收斂 #778）、補直接登出入口（#780）、重畫 loading skeleton 對齊真實版面（#779）、把預設分攤比例改成 optimistic 即時存（#782）；同步修掉分攤比例在 member B 視角顯示反邊的 bug（#785）、把 guardian 描述殘留的「DB」技術詞拿掉（#781）；dashboard 接上 Impeccable 設計脈絡（PRODUCT.md / DESIGN.md / 設計系統 token，#760 / #761）；README 版本歷史回填 v1.1.3–v1.2.3（#767）。
@@ -425,7 +443,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.5...HEAD
+[1.2.5]: https://github.com/redtear1115/oikos/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/redtear1115/oikos/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/redtear1115/oikos/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/redtear1115/oikos/compare/v1.2.1...v1.2.2
