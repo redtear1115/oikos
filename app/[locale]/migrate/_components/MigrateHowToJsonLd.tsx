@@ -1,16 +1,10 @@
 import type { Locale } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
+import { SCHEMA_LANG } from '@/lib/i18n/seo'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
 type Source = 'honeydue' | 'spendee' | 'cwmoney'
-
-const SCHEMA_LANG: Record<Locale, string> = {
-  'zh-TW': 'zh-TW',
-  'zh-CN': 'zh-CN',
-  en: 'en',
-  ja: 'ja',
-}
 
 /**
  * HowTo + HowToStep JSON-LD for the /migrate/<source> walkthrough (#669 M-3).
