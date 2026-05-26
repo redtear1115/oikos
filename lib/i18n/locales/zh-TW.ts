@@ -318,6 +318,12 @@ export type Translations = {
     burdenMe: string
     burdenPartner: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
+    /** First-use floating label hints below the BrandHeader icon buttons (#765).
+     *  Shown once per device (localStorage), auto-dismiss after 3.5 s. */
+    headerHint: {
+      trip: string
+      settings: string
+    }
     activeTripBanner: {
       /** Small kicker above the trip name, e.g. "旅行進行中". */
       kicker: string
@@ -2627,6 +2633,10 @@ export const zhTW: Translations = {
     filterAriaLabel: '開啟篩選',
     burdenMe: '算我的',
     burdenPartner: '算對方的',
+    headerHint: {
+      trip: '旅行',
+      settings: '設定',
+    },
     activeTripBanner: {
       kicker: '旅行進行中',
       singleStartedAt: '{date} 起 · 點開看這趟',
