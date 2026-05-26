@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-25T00:00:00.000Z",
+  "title": "Design System: Futari",
+  "extensions": {
+    "colorMeta": {
+      "ember": {
+        "role": "primary",
+        "displayName": "Ember",
+        "canonical": "#E08856",
+        "tonalRamp": ["#5C2E14", "#7E3F1C", "#A85428", "#C66B38", "#E08856", "#EBA277", "#F3C2A3", "#FBE3D2"]
+      },
+      "cocoa-ink": {
+        "role": "secondary",
+        "displayName": "Cocoa Ink",
+        "canonical": "#3A2419",
+        "tonalRamp": ["#1F130C", "#2C1B11", "#3A2419", "#553828", "#74503B", "#9A7560", "#C2A491", "#E7D6C9"]
+      },
+      "lamplit-cream": {
+        "role": "neutral",
+        "displayName": "Lamplit Cream",
+        "canonical": "#FBEDE0",
+        "tonalRamp": ["#6E5E4C", "#93826C", "#B8A78E", "#D8C9B2", "#EBDDC8", "#F4E9D9", "#FBEDE0", "#FFF7EE"]
+      },
+      "sage": {
+        "role": "tertiary",
+        "displayName": "Sage",
+        "canonical": "#7A9F7E",
+        "tonalRamp": ["#2F4633", "#3F5C44", "#527456", "#66896A", "#7A9F7E", "#99B79C", "#BCD0BE", "#DFEAE0"]
+      },
+      "clay": {
+        "role": "tertiary",
+        "displayName": "Clay",
+        "canonical": "#D17561",
+        "tonalRamp": ["#5A271D", "#7A3727", "#9D4A36", "#BB5C47", "#D17561", "#DD9384", "#E9B6AC", "#F4DAD3"]
+      },
+      "destructive": {
+        "role": "support",
+        "displayName": "Destructive",
+        "canonical": "#B85A48",
+        "tonalRamp": ["#4E2018", "#682B20", "#8A3A2C", "#A24839", "#B85A48", "#CB7C6D", "#DCA499", "#EECCC4"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Fraunces)", "purpose": "Brand voice: headings on landing, sign-in, migrate, legal, and the about narrative. Never for the working ledger." },
+      "title": { "displayName": "Title", "purpose": "Sheet titles and section heroes." },
+      "body": { "displayName": "Body", "purpose": "List items, inputs, prose. Humanist CJK working face." },
+      "label": { "displayName": "Label", "purpose": "Section labels, chips, captions." },
+      "amount": { "displayName": "Amount", "purpose": "Hero balances and entry amounts; tabular numerics, the one place numbers are big." }
+    },
+    "shadows": [
+      { "name": "thumb-lift", "value": "0 1px 3px rgba(58,36,25,0.20)", "purpose": "The moving thumb of a switch reads as physical. The only lift on an interactive control." },
+      { "name": "segment-thumb", "value": "0 1px 3px rgba(31,27,22,0.10)", "purpose": "Quiet lift under the selected segment of a segmented toggle." },
+      { "name": "focus-ring", "value": "0 0 0 2px color-mix(in srgb, #E08856 55%, transparent)", "purpose": "Keyboard focus on buttons, inputs, toggles. Soft ember; pointer clicks stay clean." }
+    ],
+    "motion": [
+      { "name": "control-transition", "value": "150ms ease", "purpose": "Shared timing for buttons, chips, switches, segments." },
+      { "name": "ease-out-soft", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The about-article fade-up; a quiet opening beat, reduced-motion-aware." },
+      { "name": "partner-toast", "value": "3s ease-out both", "purpose": "Partner-activity toast: fade+slide in, hold, fade out across its full lifetime." }
+    ],
+    "breakpoints": [
+      { "name": "app-shell", "value": "448px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The firm commit anchor (記下 / 儲存 / 確認). Dark cocoa-ink fill in a soft, cream-lit room.",
+      "html": "<button class=\"ds-btn-primary\">記下</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: var(--control-md, 44px); padding: 0 20px; background: var(--btn-primary-bg, #3A2419); color: var(--btn-primary-text, #fff); border: none; border-radius: var(--radius-bubble, 14px); font-weight: 500; font-size: 16px; cursor: pointer; transition: opacity 150ms ease; } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); } .ds-btn-primary:disabled { opacity: 0.4; cursor: default; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The calm alternative (取消 / 輔助): white surface with a cocoa hairline border.",
+      "html": "<button class=\"ds-btn-secondary\">取消</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: var(--control-md, 44px); padding: 0 20px; background: var(--surface, #fff); color: var(--ink, #3A2419); border: 1px solid var(--ink-3, #B89C8B); border-radius: var(--radius-bubble, 14px); font-weight: 500; font-size: 16px; cursor: pointer; transition: opacity 150ms ease; } .ds-btn-secondary:hover { opacity: 0.85; } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive actions (離開帳本 / 刪除). Deeper red than Clay debit so leaving never reads as an expense.",
+      "html": "<button class=\"ds-btn-danger\">離開帳本</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; height: var(--control-md, 44px); padding: 0 20px; background: var(--btn-destructive-bg, #B85A48); color: #fff; border: none; border-radius: var(--radius-bubble, 14px); font-weight: 500; font-size: 16px; cursor: pointer; transition: opacity 150ms ease; } .ds-btn-danger:hover { opacity: 0.9; } .ds-btn-danger:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
+      "name": "Filter Chip (selected)",
+      "kind": "chip",
+      "refersTo": "chip-selected",
+      "description": "Selected filter pill: cocoa-ink fill, white text, compact 34px.",
+      "html": "<button class=\"ds-chip ds-chip-selected\">只看我付的</button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: var(--radius-chip, 10px); font-size: 13px; font-weight: 500; cursor: pointer; transition: 150ms ease; } .ds-chip-selected { background: var(--toggle-active-bg, #3A2419); color: var(--on-fill, #fff); border: 1px solid transparent; } .ds-chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
+      "name": "Filter Chip (unselected)",
+      "kind": "chip",
+      "refersTo": "chip-unselected",
+      "description": "Unselected filter pill: white surface, cocoa-2 text, hairline border.",
+      "html": "<button class=\"ds-chip ds-chip-unselected\">全部</button>",
+      "css": ".ds-chip-unselected { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: var(--radius-chip, 10px); font-size: 13px; font-weight: 500; background: var(--surface, #fff); color: var(--ink-2, #7A5848); border: 1px solid var(--hairline, rgba(58,36,25,0.10)); cursor: pointer; transition: 150ms ease; } .ds-chip-unselected:hover { color: var(--ink, #3A2419); }"
+    },
+    {
+      "name": "Segmented Toggle",
+      "kind": "custom",
+      "refersTo": "segmented-toggle",
+      "description": "Shared pill-toggle primitive (components/ui/SegmentedToggle.tsx): one ink-filled segment, one transparent, on a surface track. Presentational; selection model stays with the caller.",
+      "html": "<div class=\"ds-seg\" role=\"group\" aria-label=\"view\"><button class=\"ds-seg-item ds-seg-on\" aria-pressed=\"true\">已結清</button><button class=\"ds-seg-item\" aria-pressed=\"false\">含待定</button></div>",
+      "css": ".ds-seg { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 9999px; background: var(--toggle-inactive-bg, #fff); border: 1px solid var(--hairline, rgba(58,36,25,0.10)); } .ds-seg-item { display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 10px; border: none; border-radius: 9999px; font-size: 12px; font-weight: 500; background: transparent; color: var(--toggle-inactive-text, #7A5848); cursor: pointer; transition: background 150ms ease, color 150ms ease; } .ds-seg-on { background: var(--toggle-active-bg, #3A2419); color: var(--toggle-active-text, #fff); } .ds-seg-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Warm white field, friendly 14px radius, ember focus ring on the wrapper.",
+      "html": "<span class=\"ds-input-wrap\"><input class=\"ds-input\" placeholder=\"金額\" /></span>",
+      "css": ".ds-input-wrap { display: inline-flex; width: 100%; border-radius: var(--radius-bubble, 14px); } .ds-input-wrap:focus-within { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); } .ds-input { width: 100%; height: var(--control-md, 44px); padding: 0 14px; background: var(--input-bg, #fff); color: var(--ink, #3A2419); border: 1px solid var(--hairline, rgba(58,36,25,0.10)); border-radius: var(--radius-bubble, 14px); font-size: 15px; outline: none; } .ds-input::placeholder { color: var(--ink-3, #B89C8B); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Primary surface: white on cream, 20px radius, hairline instead of shadow. Flat by default.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-label\">本月結餘</div><div class=\"ds-card-amount\">12,480</div></div>",
+      "css": ".ds-card { background: var(--surface, #fff); color: var(--ink, #3A2419); border: 1px solid var(--hairline, rgba(58,36,25,0.10)); border-radius: var(--radius-card, 20px); padding: 20px; } .ds-card-label { font-size: 13px; font-weight: 500; color: var(--ink-2, #7A5848); } .ds-card-amount { margin-top: 6px; font-family: -apple-system, 'SF Pro Display', system-ui; font-size: 44px; font-weight: 500; line-height: 1; font-feature-settings: 'tnum'; }"
+    },
+    {
+      "name": "Switch",
+      "kind": "custom",
+      "refersTo": "switch",
+      "description": "iOS-style settings toggle: ember on, hairline off, white thumb with the only physical lift in the system.",
+      "html": "<button class=\"ds-switch\" data-state=\"on\" aria-pressed=\"true\"><span class=\"ds-switch-thumb\"></span></button>",
+      "css": ".ds-switch { position: relative; width: 48px; height: 28px; border-radius: 9999px; border: none; padding: 0; cursor: pointer; background: var(--switch-off-bg, rgba(58,36,25,0.10)); transition: background 150ms ease; } .ds-switch[data-state=\"on\"] { background: var(--switch-on-bg, #E08856); } .ds-switch-thumb { position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 9999px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(58,36,25,0.20); transition: transform 150ms ease; } .ds-switch[data-state=\"on\"] .ds-switch-thumb { transform: translateX(20px); } .ds-switch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
+      "name": "FAB (record)",
+      "kind": "button",
+      "refersTo": "fab",
+      "description": "The single ember moment in the shell: the round invitation to record. The One Ember Rule lives here.",
+      "html": "<button class=\"ds-fab\" aria-label=\"記一筆\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"/><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"/></svg></button>",
+      "css": ".ds-fab { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 9999px; border: none; background: var(--accent, #E08856); color: var(--on-fill, #fff); box-shadow: 0 0 0 5px rgba(224,136,86,0.18); cursor: pointer; transition: transform 150ms ease; } .ds-fab:hover { transform: translateY(-2px); } .ds-fab:focus-visible { outline: none; box-shadow: 0 0 0 5px rgba(224,136,86,0.18), 0 0 0 7px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Warm Lamp",
+    "overview": "Futari is a ledger that behaves like a lamp left on for two people. The light is present and warm; it witnesses the day without glaring at it. The register is product, but the task is emotional, so restraint is the discipline, not coldness: flat surfaces, hairline separation, a single ember accent, and an editorial serif voice over a humanist CJK working face. The dark cocoa-ink fill is the firm commit anchor in a soft, cream-lit room. The system exists to escape what a money app reflexively becomes: cold fintech, hype-SaaS costume, surveillance framing, gamified guilt, and the teal-and-white budgeting cliché.",
+    "keyCharacteristics": [
+      "Hearth-toned warm palette: lamplit cream ground, cocoa-ink text, a single ember accent.",
+      "Flat by default: hairlines and tonal layers convey depth, not shadows.",
+      "Editorial serif (Fraunces) for voice; humanist CJK sans (Noto Sans TC) for the work.",
+      "Generous, friendly radii (14-20px) on a tight, calm type scale.",
+      "Gentle, reduced-motion-aware motion; nothing bounces.",
+      "Two equals: no UI ever favors or shames one partner."
+    ],
+    "rules": [
+      { "name": "The One Ember Rule", "body": "Ember (#E08856) is the only accent, and it stays rare: the FAB, a primary CTA, an on-state. If two embers compete on one screen, one of them is wrong. Its scarcity is what makes it feel warm.", "section": "colors" },
+      { "name": "The Pure-Black-and-White Ban", "body": "Never #000 or #fff as a brand surface. Text is Cocoa Ink (#3A2419); grounds are warm cream. Surface White is permitted only for cards and sheets that need to lift off the cream.", "section": "colors" },
+      { "name": "The Quiet-Money Rule", "body": "Sage means in, Clay means out. They never escalate to alarm-red or success-green. Money here is reported, not judged.", "section": "colors" },
+      { "name": "The Serif-Speaks Rule", "body": "Fraunces is reserved for the brand's voice (headings and narrative). Never set body lists, inputs, or amounts in the serif.", "section": "typography" },
+      { "name": "The No-Weight-600 Rule", "body": "Weight 600 was dropped to cut render-blocking CSS; font-semibold falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. The only box-shadows are the toggle thumb lift and the focus ring; both functional, never decorative. To separate two surfaces, use a hairline or a tonal step.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Ember (#E08856) rare: one accent moment per screen.",
+      "Do separate surfaces with hairlines and tonal steps, not shadows.",
+      "Do set headings and brand voice in Fraunces 500; set the working ledger in Noto Sans TC.",
+      "Do use the dark Cocoa Ink fill for the primary commit, so the one firm action is unmistakable.",
+      "Do give amounts room to be big with tnum, paired with a quiet label.",
+      "Do respect prefers-reduced-motion; keep transitions near 150ms and ease-out.",
+      "Do pair the Sage/Clay credit-debit distinction with a non-color cue for color-blind legibility.",
+      "Do treat both partners as equals; never style solo mode as a deficient state."
+    ],
+    "donts": [
+      "Don't use #000 or #fff as a brand surface; text is Cocoa Ink, grounds are warm cream.",
+      "Don't ship cold fintech (navy-and-gold, dense data grids, wealth-management gravitas).",
+      "Don't ship hype-SaaS costume: purple gradients, decorative glassmorphism, gradient text, or the big-number hero-metric dashboard.",
+      "Don't use exclamation marks in UI copy, or the words 管理 / 追蹤 / 監控.",
+      "Don't add gamified guilt: streaks, budget-exceeded red alarms, you-overspent verdicts, or anxiety to drive engagement.",
+      "Don't use a border-left or border-right greater than 1px as a colored accent stripe; use a full hairline, a tonal tint, or a leading icon.",
+      "Don't reach for a drop shadow to separate surfaces; the system is flat by default.",
+      "Don't default to a modal; exhaust inline and sheet-based progressive alternatives first.",
+      "Don't fall into the teal-and-white budgeting-app aesthetic; the warm lamp exists to escape it."
+    ]
+  }
+}

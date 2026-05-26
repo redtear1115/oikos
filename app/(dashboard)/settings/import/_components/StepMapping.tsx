@@ -62,7 +62,7 @@ export function StepMapping({ rows, categoryMap, onChange, onBack, onNext }: Pro
                     {tImport.rowCount.replace('{count}', String(count))}
                   </div>
                 </div>
-                <div className="text-sm" style={{ color: 'var(--ink-3)' }}>›</div>
+                <div className="text-sm" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</div>
                 <select
                   value={categoryMap[key] ?? key}
                   onChange={(e) => setMap(key, e.target.value)}

@@ -931,7 +931,6 @@ export type Translations = {
     title: string
     subtitle: string
     sectionGroup: string
-    sectionGroupSplit: string
     groupName: string
     sectionMember: string
     youSuffix: string
@@ -941,13 +940,9 @@ export type Translations = {
     soloLockHint: string
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
-    /** CTA on the per-group split-ratio slider (sectionGroupSplit). */
-    saveDefaultRatio: string
     inviteCta: string
     /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
     quickAccessRow: string
-    sectionDisplay: string
-    language: string
     currency: string
     sectionApp: string
     offlineBrowsing: string
@@ -970,7 +965,6 @@ export type Translations = {
       past: string
       both: string
     }
-    sectionGuardian: string
     guardianBeta: {
       title: string
       description: string
@@ -2657,8 +2651,8 @@ export const zhTW: Translations = {
     manage: '查看 ›',
     settleAriaLabel: '記錄還款 / 收款',
     settleLabel: '結算',
-    partnerOwesYou: '欠你',
-    youOwePartner: '欠對方',
+    partnerOwesYou: '待還你',
+    youOwePartner: '待還對方',
     currentlyEven: '打平',
     currentlyLabel: '目前',
     modeSettledLabel: '現在',
@@ -2759,8 +2753,8 @@ export const zhTW: Translations = {
     groupAriaLabel: '分擔方式',
     ratioAriaLabel: '分擔比例',
     evenSub: '各付一半',
-    partnerOwesYouAmount: '對方欠你 {amount}',
-    youOwePartnerAmount: '你欠對方 {amount}',
+    partnerOwesYouAmount: '對方待還你 {amount}',
+    youOwePartnerAmount: '你待還對方 {amount}',
     ratioNoAmount: '我 {me}%・對方 {other}%',
     allMineSelfPaid: '你自己花的，不會欠款',
     allMinePartnerPaid: '對方自己花的，不會欠款',
@@ -3045,7 +3039,6 @@ export const zhTW: Translations = {
     title: '設定',
     subtitle: '帳號 · 應用 · 資料',
     sectionGroup: '帳本',
-    sectionGroupSplit: '預設分攤方式 & 比例',
     groupName: '帳本名稱',
     sectionMember: '成員',
     youSuffix: '（你）',
@@ -3054,11 +3047,8 @@ export const zhTW: Translations = {
     displayName: '顯示名稱',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     defaultSplitLabel: '預設分攤方式',
-    saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',
-    sectionDisplay: '語言 & 幣別',
-    language: '語言',
     currency: '幣別',
     sectionApp: '應用',
     offlineBrowsing: '離線瀏覽',
@@ -3080,10 +3070,9 @@ export const zhTW: Translations = {
       past: '過去 {past} 段',
       both: '{active} 段進行中 · 過去 {past} 段',
     },
-    sectionGuardian: '守護（Beta）',
     guardianBeta: {
       title: '開啟守護',
-      description: '守護是把保單與保障好好收下的地方，還在 Beta 中。未來會成為訂閱功能，現在先體驗。關閉後既有資料還留在 DB，不會消失。',
+      description: '守護是把保單與保障好好收下的地方，還在 Beta 中。未來會成為訂閱功能，現在先體驗。隨時可以關掉，已經記下的保單會留著。',
     },
     dangerZone: {
       sectionTitle: '離開帳本',

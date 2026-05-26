@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.2.3**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.2.4**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -214,6 +214,16 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - 任何 copy 改動一律 4 語同步（zh-TW / zh-CN / en / ja）
 - zh-TW 是主稿；zh-CN 跟進但保留繁簡差異，不要機翻
 - en / ja 如無 native reviewer，PR description 列出建議譯文，標記「待確認」
+
+---
+
+## 設計脈絡（Impeccable）
+
+任何 UI／視覺工作開始前，先讀 [`PRODUCT.md`](PRODUCT.md)（策略層：who／what／why、register、anti-references、5 條設計原則）與 [`DESIGN.md`](DESIGN.md)（視覺系統：色票、字體、elevation、元件、Do's/Don'ts，採 Stitch 六段格式）。兩檔由 Impeccable design skill 每個指令載入；`.impeccable/design.json` 是延伸層（色階 ramp、陰影、動態、可渲染的元件 snippet）。
+
+- 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
+- Register＝`product`；Creative North Star＝「The Warm Lamp」。
+- DESIGN.md 是掃描現有 `app/globals.css` tokens 產生的；token 變動後可重跑 `/impeccable document` 同步。
 
 ---
 

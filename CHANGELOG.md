@@ -15,6 +15,29 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.2.4] - 2026-05-26
+
+主題：**settings 一輪精煉 + split ratio viewer 邊界補完 + dashboard 接上 Impeccable**——settings 頁面從清理開始（dead i18n keys / props、chevron a11y、token 對齊、query 收斂 #778）、補直接登出入口（#780）、重畫 loading skeleton 對齊真實版面（#779）、把預設分攤比例改成 optimistic 即時存（#782）；同步修掉分攤比例在 member B 視角顯示反邊的 bug（#785）、把 guardian 描述殘留的「DB」技術詞拿掉（#781）；dashboard 接上 Impeccable 設計脈絡（PRODUCT.md / DESIGN.md / 設計系統 token，#760 / #761）；README 版本歷史回填 v1.1.3–v1.2.3（#767）。
+完整 diff：[v1.2.3...v1.2.4](https://github.com/redtear1115/oikos/compare/v1.2.3...v1.2.4)
+
+### 使用者可見變化
+
+- **分攤比例即時存（#782）**：在 settings 改預設分攤比例不再需要按「儲存」，拖完就生效；server 失敗自動 rollback 並提示。
+- **/settings 加直接登出入口（#780）**：登出從 avatar 選單裡撈出來，settings 頁面就有按鈕。
+- **settings loading skeleton 對齊真實版面（#779）**：載入時顯示的骨架對齊真實內容區塊，不再閃爍跳動。
+- **member B 看分攤比例視角修正（#785）**：分攤比例（如 60/40）以 viewer 為主視角，member B 不再看到反過來的數字。
+- **守護描述去掉技術詞（#781）**：原本含「DB」的字樣改成自然語言描述，避免只有工程師看得懂的縮寫（zh-TW / zh-CN / ja）。
+- **dashboard 一輪語言／色彩／結構微調（#761）**：balance 描述「欠」→「待還」（witnessing tone）、L3 filter 收成「篩選」chip、tokens flat-by-default、witnessing color。
+
+### 技術變更
+
+- **settings 清理（#778）**：移除 dead i18n keys、dead prop、補 `aria-hidden` 在 chevron icon、合併重複的 query、tokens 對齊。
+- **SplitRatioSection optimistic save + rollback（#782）**：拖完即送 server action，本地即時更新；server 失敗 rollback 並 surface error，消除「按了沒生效」與「沒按就丟失」兩種失誤狀態。
+- **Split ratio viewer/perspective 邊界補完（#785）**：`lib/splitRatio.ts` 抽出 viewer-aware perspective helper，AddSheet / CompactRow / RecurringRuleSheet 三處 UI ↔ DB 邊界統一走同一份；新增 `tests/splitRatio.test.ts` + `tests/balance-weighted.test.ts` 全面覆蓋兩個 member 視角的所有 split type。
+- **`SegmentedToggle` 抽共用 primitive（#761）**：BalanceHero / MemberDualToggle / ModeTogglePlaceholder 三處重複的 segmented control 抽到 `components/ui/SegmentedToggle.tsx`，視覺與行為由 design token 統一控制；新增 `tests/SegmentedToggle.test.tsx` / `tests/DashboardFilterRow.test.tsx`。
+- **Impeccable 設計脈絡進專案（#760）**：新增 `PRODUCT.md`（策略：who / what / why、register、anti-references、5 條設計原則）+ `DESIGN.md`（視覺系統：色票、字體、elevation、元件、Do's/Don'ts，Stitch 六段格式）+ `.impeccable/design.json`（延伸層）；CLAUDE.md 加段「設計脈絡」指引；`skills-lock.json` pin 住 Impeccable skill 版本。
+- **README 版本歷史回填 v1.1.3–v1.2.3（#767）**：README `## 版本歷史` 表之前漂移 ~10 版（#757 才發現），這次回填補齊；release skill 加 step 7「每次發版必須更新該表」防再次漂移。
+
 ## [1.2.3] - 2026-05-25
 
 主題：**records 邊角修正 + profile 無障礙整備**——補一批 records 正確性／體驗缺口（手動輸入金額沒上限、篩選金額範圍顛倒會靜默清空列表、收支 tab 展開時當月總計消失），並把「個人資料」面板（avatar 選單）做一輪無障礙整備（共用 SheetFrame 的 dialog 語意 + focus trap、分攤方式改 radiogroup），順手修掉點「幣別」沒反應的導航 bug。
@@ -402,7 +425,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.4...HEAD
+[1.2.4]: https://github.com/redtear1115/oikos/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/redtear1115/oikos/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/redtear1115/oikos/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/redtear1115/oikos/compare/v1.2.0...v1.2.1

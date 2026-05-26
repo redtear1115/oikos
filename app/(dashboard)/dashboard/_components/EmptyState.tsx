@@ -2,6 +2,7 @@
 
 import { FutariMark } from '@/app/(dashboard)/_components/FutariMark'
 import { PlusIcon } from '@/app/(dashboard)/_components/PlusIcon'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
 
 export function EmptyState({ onAdd }: { onAdd: () => void }) {
@@ -13,7 +14,7 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
         <div className="flex justify-center mb-5">
           <FutariMark size={64} />
         </div>
-        <div className="text-button font-semibold mb-2"
+        <div className="text-button font-medium mb-2"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {t.feed.noRecordsTitle}
         </div>
@@ -21,11 +22,11 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
           style={{ color: 'var(--ink-2)' }}>
           {t.feed.noRecordsHint}
         </div>
-        <button onClick={onAdd}
-          className="inline-flex items-center gap-1.5 px-5 h-11 rounded-xl text-white text-sm font-semibold cursor-pointer"
-          style={{ background: 'var(--accent)', boxShadow: '0 2px 6px rgba(224,136,86,0.3)' }}>
+        {/* The one ember moment in the empty state: the accent commit. Flat by
+            default, so no drop-shadow; the ember fill + hairline card carry it. */}
+        <Button variant="accent" onClick={onAdd}>
           <PlusIcon size={16} />{t.feed.addFirst}
-        </button>
+        </Button>
       </div>
     </div>
   )
