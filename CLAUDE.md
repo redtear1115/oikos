@@ -217,6 +217,16 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ---
 
+## 設計脈絡（Impeccable）
+
+任何 UI／視覺工作開始前，先讀 [`PRODUCT.md`](PRODUCT.md)（策略層：who／what／why、register、anti-references、5 條設計原則）與 [`DESIGN.md`](DESIGN.md)（視覺系統：色票、字體、elevation、元件、Do's/Don'ts，採 Stitch 六段格式）。兩檔由 Impeccable design skill 每個指令載入；`.impeccable/design.json` 是延伸層（色階 ramp、陰影、動態、可渲染的元件 snippet）。
+
+- 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
+- Register＝`product`；Creative North Star＝「The Warm Lamp」。
+- DESIGN.md 是掃描現有 `app/globals.css` tokens 產生的；token 變動後可重跑 `/impeccable document` 同步。
+
+---
+
 ## 規格文件位置
 
 所有 feature 設計 spec 都在 `docs/superpowers/specs/`。入口是 [`docs/superpowers/specs/INDEX.md`](docs/superpowers/specs/INDEX.md)，含：
