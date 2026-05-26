@@ -107,7 +107,7 @@ export function AssetHero({
           <div className="text-micro font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>{t.assetDetail.car.avgEcon}</div>
           <div className="inline-flex items-baseline gap-1.5 mt-1.5">
             <span
-              className="text-amount-lg font-semibold tabular-nums leading-none"
+              className="text-amount-lg font-medium tabular-nums leading-none"
               style={{ letterSpacing: '-2px', color: 'var(--ink)' }}
             >
               {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
@@ -165,7 +165,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1">
       <div className="text-micro font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
-      <div className="text-button font-semibold tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
+      <div className="text-button font-medium tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
     </div>
   )
 }

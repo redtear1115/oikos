@@ -54,7 +54,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
         <div className="space-y-5 text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>
           <p>{t.privacyPage.intro}</p>
 
-          <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
+          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionCollectTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">
@@ -63,7 +63,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
             ))}
           </ul>
 
-          <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
+          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionPurposeTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">
@@ -72,12 +72,12 @@ export default async function PrivacyPage({ params }: { params: Params }) {
             ))}
           </ul>
 
-          <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
+          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionStorageTitle}
           </h2>
           <p>{t.privacyPage.sectionStorageBody}</p>
 
-          <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
+          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionThirdPartyTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">
@@ -86,7 +86,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
             ))}
           </ul>
 
-          <h2 className="text-base font-semibold pt-2" style={{ color: 'var(--ink)' }}>
+          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionRightsTitle}
           </h2>
           <p>{t.privacyPage.sectionRightsBody}</p>

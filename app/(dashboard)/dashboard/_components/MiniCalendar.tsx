@@ -184,12 +184,12 @@ function Header({ prevLabel, nextLabel, onPrev, onNext, title, titleAriaLabel, o
         style={{ color: 'var(--ink-2)' }}>‹</button>
       {onTitle ? (
         <button type="button" onClick={onTitle} aria-label={titleAriaLabel}
-          className="text-sm font-semibold bg-transparent border-0 cursor-pointer px-2 py-1 rounded"
+          className="text-sm font-medium bg-transparent border-0 cursor-pointer px-2 py-1 rounded"
           style={{ color: 'var(--ink)' }}>
           {title}
         </button>
       ) : (
-        <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{title}</div>
+        <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{title}</div>
       )}
       <button type="button" onClick={onNext} aria-label={nextLabel}
         className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-button leading-none"

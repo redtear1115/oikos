@@ -88,7 +88,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
           <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
             {t.common.cancel}
           </Button>
-          <div className="text-base font-semibold tracking-wide" style={{ color: 'var(--ink)' }}>
+          <div className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
             {t.assetPickerSheet.title}
           </div>
           <div className="w-10" />  {/* spacer for symmetry */}

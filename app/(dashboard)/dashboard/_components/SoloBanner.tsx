@@ -79,7 +79,7 @@ export function SoloBanner({
         <Avatar memberRole="b" initial="?" src={null} size={44} />
         <div className="flex-1 min-w-0 pt-[2px]">
           <div className="text-sm mb-1" style={{ color: 'var(--ink-2)' }}>
-            <span className="font-semibold" style={{ color: 'var(--ink)' }}>{t.soloBanner.waiting}</span>
+            <span className="font-medium" style={{ color: 'var(--ink)' }}>{t.soloBanner.waiting}</span>
           </div>
           <div className="text-xs" style={{ color: 'var(--ink-2)' }}>
             {t.soloBanner.sendInviteHint}
@@ -102,7 +102,7 @@ export function SoloBanner({
         type="button"
         onClick={handleInvite}
         disabled={pending}
-        className="mt-[18px] w-full h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center disabled:opacity-50"
+        className="mt-[18px] w-full h-[46px] rounded-xl border-0 text-white font-medium text-sm tracking-[0.3px] cursor-pointer flex items-center justify-center disabled:opacity-50"
         style={{ background: 'var(--accent)' }}
       >
         {pending ? t.soloBanner.generating : t.soloBanner.sendInvite}

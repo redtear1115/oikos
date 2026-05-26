@@ -180,7 +180,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             <button
               onClick={handleConfirm}
               disabled={!parsed || pending}
-              className="flex-1 h-[46px] rounded-xl border-0 text-white font-semibold text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
+              className="flex-1 h-[46px] rounded-xl border-0 text-white font-medium text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--accent)' }}
             >
               {pending ? t.common.processing : `${primaryText} ${formatAmount(parsed, 'twd')}`}

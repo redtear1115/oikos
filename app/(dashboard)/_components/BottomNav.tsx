@@ -103,7 +103,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
       {!hideFab && fabContent && (
         <button
           onClick={onAddClick}
-          className="fixed left-1/2 z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-white text-sm font-semibold tracking-[0.5px]"
+          className="fixed left-1/2 z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-white text-sm font-medium tracking-[0.5px]"
           style={{
             bottom: 'calc(12px + env(safe-area-inset-bottom))',
             background: fabBg(fabVariant),

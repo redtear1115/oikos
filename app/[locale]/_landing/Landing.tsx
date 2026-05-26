@@ -89,7 +89,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
           href={ctaHref}
           ctaLocation="desktop_header"
           target="sign_in"
-          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-semibold cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -179,7 +179,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                 href={ctaHref}
                 ctaLocation="hero"
                 target="sign_in"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-semibold cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-medium cursor-pointer"
                 style={{
                   background: 'var(--ink)',
                   letterSpacing: '1.8px',
@@ -438,7 +438,7 @@ function MigrateLinksSection({
               }}
             >
               <p
-                className="m-0 text-body md:text-[16px] font-semibold"
+                className="m-0 text-body md:text-[16px] font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}
@@ -497,7 +497,7 @@ function FeatureCard({
         </span>
       </div>
       <p
-        className="m-0 mb-1.5 md:mb-2 text-body md:text-[19px] font-semibold"
+        className="m-0 mb-1.5 md:mb-2 text-body md:text-[19px] font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {title}

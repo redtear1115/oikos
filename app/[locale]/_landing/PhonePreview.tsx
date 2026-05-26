@@ -74,13 +74,13 @@ export function PhonePreview({ t }: Props) {
             </div>
             <div className="flex items-center gap-1.5">
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-semibold"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-medium"
                 style={{ background: 'var(--accent)' }}
               >
                 M
               </div>
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-semibold"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-medium"
                 style={{ background: 'var(--asset-color-house)' }}
               >
                 T
@@ -133,7 +133,7 @@ export function PhonePreview({ t }: Props) {
                 }}
               >
                 <div
-                  className="w-7 h-7 rounded-[9px] flex items-center justify-center text-micro font-semibold"
+                  className="w-7 h-7 rounded-[9px] flex items-center justify-center text-micro font-medium"
                   style={{
                     background: `color-mix(in srgb, ${r.c} 35%, white)`,
                     color: r.c,

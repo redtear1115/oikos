@@ -106,13 +106,13 @@ export function EditTextSheet({
           >
             {t.common.cancel}
           </button>
-          <span id={titleId} className="text-body font-semibold" style={{ color: 'var(--ink)' }}>
+          <span id={titleId} className="text-body font-medium" style={{ color: 'var(--ink)' }}>
             {title}
           </span>
           <button
             onClick={handleConfirm}
             disabled={pending || !value.trim()}
-            className="bg-transparent border-0 text-body font-semibold cursor-pointer p-1 disabled:opacity-50"
+            className="bg-transparent border-0 text-body font-medium cursor-pointer p-1 disabled:opacity-50"
             style={{ color: 'var(--accent)' }}
           >
             {pending ? t.common.saving : t.common.done}

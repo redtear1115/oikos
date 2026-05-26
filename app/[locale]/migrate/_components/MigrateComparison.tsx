@@ -54,14 +54,14 @@ export function MigrateComparison({
               />
               <th
                 scope="col"
-                className="text-center px-3 md:px-4 py-3 font-semibold"
+                className="text-center px-3 md:px-4 py-3 font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
               >
                 {futariLabel}
               </th>
               <th
                 scope="col"
-                className="text-center px-3 md:px-4 py-3 font-semibold"
+                className="text-center px-3 md:px-4 py-3 font-medium"
                 style={{ color: 'var(--ink-2)', letterSpacing: '-0.2px' }}
               >
                 {otherLabel}

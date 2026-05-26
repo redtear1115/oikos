@@ -113,7 +113,7 @@ function ProgressBar({
     <div>
       <div className="flex items-center gap-3">
         <span
-          className="text-base font-semibold shrink-0"
+          className="text-base font-medium shrink-0"
           style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)', width: 18 }}
         >
           {label}
@@ -164,7 +164,7 @@ function NoExpectedMaturityRow({
     <div>
       <div className="flex items-center gap-3">
         <span
-          className="text-base font-semibold shrink-0"
+          className="text-base font-medium shrink-0"
           style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)', width: 18 }}
         >
           {labelOut}

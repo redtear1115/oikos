@@ -39,7 +39,7 @@ export function MigrateTrustBlock({
             style={{ background: 'var(--surface)' }}
           >
             <p
-              className="m-0 text-meta md:text-body font-semibold"
+              className="m-0 text-meta md:text-body font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}

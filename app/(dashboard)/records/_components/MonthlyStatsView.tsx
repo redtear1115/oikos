@@ -152,7 +152,7 @@ export function MonthlyStatsView({
     <section className="px-5 pt-4 pb-4" style={{ borderBottom: '1px solid var(--hairline)' }}>
       <div className="flex items-center justify-between mb-3">
         <h2
-          className="text-base font-semibold tracking-tight"
+          className="text-base font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {title}

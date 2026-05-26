@@ -216,7 +216,7 @@ function AnswerChip({
     >
       <span
         aria-hidden="true"
-        className="absolute -top-2 -left-2 inline-flex items-center justify-center text-mini font-semibold"
+        className="absolute -top-2 -left-2 inline-flex items-center justify-center text-mini font-medium"
         style={{
           width: 22, height: 22, borderRadius: 11,
           background: tone === 'self' ? 'var(--accent)' : 'var(--ink)',
