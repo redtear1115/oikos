@@ -145,7 +145,7 @@ function Row({ label, onClick }: { label: string; onClick: () => void }) {
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>
-      <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }}>›</span>
+      <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</span>
     </button>
   )
 }

@@ -1,7 +1,7 @@
 import pkg from '@/package.json'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { inArray } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { getLocale } from '@/lib/i18n/t'
 import { getGroupBalance } from '@/lib/db/queries/balance'
@@ -20,18 +20,22 @@ export default async function SettingsPage() {
     getLocale(),
   ])
 
-  const [viewerProfile] = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.id, user.id))
-    .limit(1)
-
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
-  let partnerProfile: typeof viewerProfile | null = null
-  if (partnerId) {
-    const [p] = await db.select().from(profiles).where(eq(profiles.id, partnerId)).limit(1)
-    partnerProfile = p ?? null
-  }
+  const viewerIsMemberA = group.memberA === user.id
+  const profileIds: string[] = partnerId ? [user.id, partnerId] : [user.id]
+
+  // Fetch viewer + partner profiles in one round-trip, in parallel with the
+  // balance + trip-summary queries (which only need group.id).
+  const [fetchedProfiles, groupBalance, tripSummary] = await Promise.all([
+    db.select().from(profiles).where(inArray(profiles.id, profileIds)),
+    getGroupBalance(group.id),
+    getTripSummary(group.id),
+  ])
+
+  const viewerProfile = fetchedProfiles.find(p => p.id === user.id)
+  const partnerProfile = partnerId
+    ? (fetchedProfiles.find(p => p.id === partnerId) ?? null)
+    : null
 
   const viewer: ViewerInfo = {
     id: user.id,
@@ -47,12 +51,6 @@ export default async function SettingsPage() {
         avatarUrl: partnerProfile.avatarUrl ?? null,
       }
     : null
-
-  const viewerIsMemberA = group.memberA === user.id
-  const [groupBalance, tripSummary] = await Promise.all([
-    getGroupBalance(group.id),
-    getTripSummary(group.id),
-  ])
 
   const pendingSwap: PendingSwap | null = group.pendingSwapProposedBy && group.pendingSwapExpiresAt
     ? {

@@ -101,8 +101,8 @@ export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
             aria-current={active ? 'true' : undefined}
             className="flex-1 px-4 py-3 text-sm font-medium cursor-pointer transition-colors"
             style={{
-              background: active ? 'var(--ink)' : 'transparent',
-              color: active ? '#fff' : 'var(--ink-2)',
+              background: active ? 'var(--toggle-active-bg)' : 'transparent',
+              color: active ? 'var(--toggle-active-text)' : 'var(--ink-2)',
               borderLeft: i === 0 ? 'none' : '1px solid var(--hairline)',
             }}
           >

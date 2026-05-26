@@ -35,7 +35,7 @@ export function EditableNameRow({ label, value, onSave }: Props) {
         <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{label}</div>
         <div className="text-sm flex items-center gap-2 shrink-0" style={{ color: 'var(--ink-3)' }}>
           <span style={{ color: 'var(--ink-2)' }}>「{value}」</span>
-          <span>›</span>
+          <span aria-hidden="true">›</span>
         </div>
       </button>
       <EditTextSheet
