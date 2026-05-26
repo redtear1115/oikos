@@ -269,6 +269,10 @@ export const ja: Translations = {
     filterAriaLabel: '絞り込みを開く',
     burdenMe: '自分の分',
     burdenPartner: '相手の分',
+    headerHint: {
+      trip: '旅行',
+      settings: '設定',
+    },
     activeTripBanner: {
       kicker: '旅行中',
       singleStartedAt: '{date} から · この旅を開く',

@@ -270,6 +270,10 @@ export const en: Translations = {
     filterAriaLabel: 'Open filter',
     burdenMe: 'Mine',
     burdenPartner: "Partner's",
+    headerHint: {
+      trip: 'Trip',
+      settings: 'Settings',
+    },
     activeTripBanner: {
       kicker: 'Trip in progress',
       singleStartedAt: 'Since {date} · open this trip',
