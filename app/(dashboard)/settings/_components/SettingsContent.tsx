@@ -4,6 +4,7 @@ import { DangerZone, type PendingSwap } from './DangerZone'
 import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { QuickAccessRow } from './QuickAccessRow'
 import { InstallGuideRow } from './InstallGuideRow'
+import { LogoutButton } from './LogoutButton'
 
 export interface ViewerInfo {
   id: string
@@ -94,6 +95,13 @@ export async function SettingsContent({
           locale={currentLocale}
         />
       )}
+
+      {/* Direct logout entry — sheet-buried before #768, but登出 is a clear
+        * intent that deserves a top-level row on the settings page itself.
+        * LogoutButton owns its own ConfirmModal + clearDynamicCache flow. */}
+      <div className="px-4 mt-4 mb-5">
+        <LogoutButton />
+      </div>
 
       <div
         className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
