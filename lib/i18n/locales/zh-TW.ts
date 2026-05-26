@@ -940,8 +940,6 @@ export type Translations = {
     soloLockHint: string
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
-    /** CTA on the per-group split-ratio slider (AvatarMenuSheet). */
-    saveDefaultRatio: string
     inviteCta: string
     /** Settings 主頁頂部 row — 個人與帳本快捷入口 (#427). */
     quickAccessRow: string
@@ -3049,7 +3047,6 @@ export const zhTW: Translations = {
     displayName: '顯示名稱',
     soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
     defaultSplitLabel: '預設分攤方式',
-    saveDefaultRatio: '儲存預設比例',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',
     currency: '幣別',

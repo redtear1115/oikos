@@ -689,7 +689,6 @@ export const ja: Translations = {
     displayName: '表示名',
     soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
     defaultSplitLabel: 'デフォルトの分担方法',
-    saveDefaultRatio: 'デフォルト比率を保存',
     inviteCta: '相手を招待',
     quickAccessRow: '個人と家計の設定',
     currency: '通貨',

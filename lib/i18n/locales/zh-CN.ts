@@ -690,7 +690,6 @@ export const zhCN: Translations = {
     displayName: '显示名称',
     soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
     defaultSplitLabel: '默认分摊方式',
-    saveDefaultRatio: '保存默认比例',
     inviteCta: '邀请对方加入',
     quickAccessRow: '个人与账本设置',
     currency: '货币',
