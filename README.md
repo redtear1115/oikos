@@ -155,6 +155,16 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.2.3](CHANGELOG.md#123---2026-05-25) | records 邊角修正 + 個人資料面板無障礙整備 |
+| [v1.2.2](CHANGELOG.md#122---2026-05-25) | 收支 tab 當月日趨勢圖 + records 篩選體驗修正 |
+| [v1.2.1](CHANGELOG.md#121---2026-05-25) | 觀測性收尾．PostHog reverse proxy + Sentry 設定補齊 |
+| [v1.2.0](CHANGELOG.md#120---2026-05-24) | 入口轉換追蹤．PostHog 漏斗事件（首頁 / migrate / 邀請） |
+| [v1.1.8](CHANGELOG.md#118---2026-05-21) | 收合狀態 hydration 閃退修正 + PostHog 收斂到 production |
+| [v1.1.7](CHANGELOG.md#117---2026-05-21) | 可觀測性接入（Sentry + PostHog）+ 兩處體驗修正 |
+| [v1.1.6](CHANGELOG.md#116---2026-05-21) | Android PWA 體驗修正（safe-area / 返回鍵 / overscroll） |
+| [v1.1.5](CHANGELOG.md#115---2026-05-21) | 分頁載入改用 skeleton 骨架畫面 |
+| [v1.1.4](CHANGELOG.md#114---2026-05-21) | 設計系統收尾 + 前端品質續推 + 兩處 UX 微調 |
+| [v1.1.3](CHANGELOG.md#113---2026-05-20) | 品質打磨．UX / 前端 / SEO 三輪 audit + design system 續推 |
 | [v1.1.2](CHANGELOG.md#112---2026-05-19) | Design system primitives + 前端品質重構 + SEO 收尾 |
 | [v1.1.1](CHANGELOG.md#111---2026-05-19) | CSV 匯入續做（Spendee / OFX / QIF）+ /migrate SEO 強化 |
 | [v1.1.0](CHANGELOG.md#110---2026-05-18) | /migrate landing + CSV 匯入歷史紀錄 |
