@@ -155,6 +155,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.2.4](CHANGELOG.md#124---2026-05-26) | settings 一輪精煉 + split ratio viewer 邊界補完 + dashboard 接上 Impeccable |
 | [v1.2.3](CHANGELOG.md#123---2026-05-25) | records 邊角修正 + 個人資料面板無障礙整備 |
 | [v1.2.2](CHANGELOG.md#122---2026-05-25) | 收支 tab 當月日趨勢圖 + records 篩選體驗修正 |
 | [v1.2.1](CHANGELOG.md#121---2026-05-25) | 觀測性收尾．PostHog reverse proxy + Sentry 設定補齊 |
