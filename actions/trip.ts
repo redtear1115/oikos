@@ -11,6 +11,7 @@ import {
   type TripCurrencySnapshot,
 } from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
+import { captureServer } from '@/lib/analytics/server'
 
 /**
  * Build the rate_snapshot for a fresh trip. The default currency is always the
@@ -43,7 +44,7 @@ export interface CreateTripInput {
 }
 
 export async function createTrip(input: CreateTripInput) {
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const name = input.name.trim()
   if (!name) throw new Error('旅行名稱為空')
@@ -83,13 +84,19 @@ export async function createTrip(input: CreateTripInput) {
     .returning()
 
   revalidatePath('/trips')
+
+  // Feature-adoption signal (#814).
+  await captureServer(user.id, 'trip_created', {
+    default_currency: inserted.defaultCurrency,
+  })
+
   return inserted
 }
 
 export async function endTrip(input: { tripId: string; endDate: string }) {
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
-  const updated = await db.transaction(async (tx) => {
+  const txResult = await db.transaction(async (tx) => {
     // Conditional update on status='active' makes this idempotent: a second
     // endTrip on an already-ended trip yields no rows and no summary writes,
     // even if the caller races with itself.
@@ -152,13 +159,25 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
       await recalcGroupBalance(group.id, tx)
     }
 
-    return row
+    return { row, expenseCount: expenses.length }
   })
 
   revalidatePath('/trips')
   revalidatePath(`/trips/${input.tripId}`)
   revalidatePath('/dashboard')
   revalidatePath('/records')
+
+  // Feature-adoption signal (#814): trip duration and scale.
+  const { row: updated, expenseCount } = txResult
+  const startMs = new Date(updated.startDate).getTime()
+  const endMs = new Date(input.endDate).getTime()
+  const durationDays = Math.max(0, Math.round((endMs - startMs) / 86_400_000))
+  await captureServer(user.id, 'trip_ended', {
+    default_currency: updated.defaultCurrency,
+    expense_count: expenseCount,
+    duration_days: durationDays,
+  })
+
   return updated
 }
 

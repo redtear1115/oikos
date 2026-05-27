@@ -36,6 +36,7 @@ import {
 } from '@/lib/revalidate'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { captureServer } from '@/lib/analytics/server'
 
 function assertPaidByInGroup(
   paidById: string,
@@ -46,7 +47,7 @@ function assertPaidByInGroup(
 
 export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id: string }> {
   const v = validateRecurringExpenseRuleInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
@@ -72,6 +73,13 @@ export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id
     .returning({ id: recurringExpenseRules.id })
 
   revalidateAfterRecurringExpenseRuleMutation()
+
+  // Feature-adoption signal (#816).
+  await captureServer(user.id, 'recurring_rule_created', {
+    kind: 'expense',
+    frequency: v.intervalMonths,
+  })
+
   return { id: created.id }
 }
 
