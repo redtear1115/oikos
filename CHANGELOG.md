@@ -15,6 +15,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.3.0] - 2026-05-27
+
+主題：**觀測補強 · 行為事件埋點**——補齊記帳之後的 PostHog 行為事件（P0 核心黏著：`record_created` / `settlement_created` / `income_created`；P1 功能採用：旅行、愛物、定期規則；P2 關係：`group_left` / 伴侶問答 / 角色互換 / 幣別切換）；修正 Google OAuth 頭像在 next/image 的 remotePattern 缺漏。
+
+### 使用者可見變化
+
+- **Google 頭像正確顯示（#820）**：以 Google 帳號登入的使用者，頭像不再顯示為名字縮寫。
+
+### 技術變更
+
+- **PostHog 行為事件補齊（#811–#819）**：在 9 個 server action 埋入 11 個事件，涵蓋 P0 核心黏著（`record_created` 帶 split_type / category / currency 等屬性、`settlement_created` 帶 amount_bucket / direction、`income_created`）、P1 功能採用率（`trip_created` / `trip_ended` 帶 expense_count + duration_days、7 種愛物的 `asset_created`、`recurring_rule_created`）、P2 關係 / churn（`group_left`、`partner_quiz_started` / `partner_quiz_completed`、`swap_confirmed`、`base_currency_changed`）。全部走既有 `captureServer()` seam，不含原始金額或 PII。`createSettlement` / `createIncome` 補上遺漏的 `user` destructuring。`endTrip` transaction 改回傳 `{ row, expenseCount }` 供 `trip_ended` 記錄規模。
+- **Google 頭像 remotePattern（#820）**：`next.config.ts` 補上 `lh3.googleusercontent.com`，修正 Google OAuth 頭像被 next/image 回 400 的問題。
+
 ## [1.2.5] - 2026-05-27
 
 主題：**效能基礎建設 + 細節打磨**——DB 複合索引補齊（CashTransactions / Settlements）、Avatar 遷移到 next/image（AVIF/WebP + srcset）、bundle analyzer 接入、BrandHeader icon-only 按鈕 first-use hint、ja i18n 修正、font-semibold 全站清理。
@@ -443,7 +456,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.2.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/redtear1115/oikos/compare/v1.2.5...v1.3.0
 [1.2.5]: https://github.com/redtear1115/oikos/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/redtear1115/oikos/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/redtear1115/oikos/compare/v1.2.2...v1.2.3
