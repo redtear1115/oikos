@@ -24,6 +24,7 @@ import {
   revalidateAfterMembershipChange,
 } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
+import { captureServer } from '@/lib/analytics/server'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -164,6 +165,10 @@ export async function confirmSwap(): Promise<{ ok: true }> {
 
   revalidateSettings()
   revalidatePath('/dashboard')
+
+  // Segment signal (#819): role swap is rare but meaningful for cross-border pairs.
+  await captureServer(user.id, 'swap_confirmed')
+
   return { ok: true }
 }
 
@@ -443,5 +448,10 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
   })
 
   revalidateAfterMembershipChange()
+
+  // Churn signal (#817). Capture on the leaver's id (user.id = member_b at
+  // this point) before the group split completes on the client side.
+  await captureServer(user.id, 'group_left', { had_partner: true })
+
   return { groupId: newGroupId }
 }

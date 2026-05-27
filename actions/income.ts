@@ -14,6 +14,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterIncomeMutation } from '@/lib/revalidate'
+import { captureServer } from '@/lib/analytics/server'
 
 export type CreateIncomeInput = IncomeInput
 
@@ -33,7 +34,7 @@ async function getViewerReadContext() {
 }
 
 export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
-  const { group } = await getViewerWriteContext()
+  const { user, group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
   assertMemberInGroup(validated.recipientId, group, '收入歸屬不在家計簿內')
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
@@ -52,6 +53,13 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
     .returning({ id: incomeTransactions.id })
 
   revalidateAfterIncomeMutation()
+
+  // Income tracking (#813).
+  await captureServer(user.id, 'income_created', {
+    category: validated.category,
+    has_asset: !!validated.assetId,
+  })
+
   return { id: created.id }
 }
 

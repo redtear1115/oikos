@@ -7,9 +7,10 @@ import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { upsertRate } from '@/lib/db/queries/currencyRates'
 import { revalidatePath } from 'next/cache'
+import { captureServer } from '@/lib/analytics/server'
 
 export async function setBaseCurrency(input: { currency: CurrencyCode }) {
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
   if (!CURRENCIES.includes(input.currency)) {
     throw new Error('不支援的幣別')
   }
@@ -49,12 +50,20 @@ export async function setBaseCurrency(input: { currency: CurrencyCode }) {
     throw new Error('當前章節已有紀錄、不可修改主體幣別')
   }
 
+  const fromCurrency = group.baseCurrency
+
   await db
     .update(oikosGroups)
     .set({ baseCurrency: input.currency })
     .where(eq(oikosGroups.id, group.id))
 
   revalidatePath('/settings/currency')
+
+  // Segment signal (#819): cross-border indicator.
+  await captureServer(user.id, 'base_currency_changed', {
+    from_currency: fromCurrency,
+    to_currency: input.currency,
+  })
 }
 
 export async function setRate(input: {

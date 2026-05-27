@@ -12,6 +12,7 @@ import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
 import { canAccessGuardian } from '@/lib/guardian'
+import { captureServer } from '@/lib/analytics/server'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
 
@@ -127,6 +128,10 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
   // Auto-tx affects /dashboard + /records too; revalidate unconditionally —
   // cheap, and keeps the call site simple.
   revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
+
+  // Feature-adoption signal (#815).
+  await captureServer(viewer.id, 'asset_created', { asset_type: 'car' })
+
   return { id: created.id }
 }
 
@@ -220,7 +225,7 @@ export interface CreateLifeEntityInput {
 
 export async function createLifeEntity(input: CreateLifeEntityInput): Promise<{ id: string }> {
   const validated = validateLifeEntityInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [created] = await db
     .insert(assets)
@@ -228,6 +233,7 @@ export async function createLifeEntity(input: CreateLifeEntityInput): Promise<{ 
     .returning({ id: assets.id })
 
   revalidateAfterAssetMutation()
+  await captureServer(user.id, 'asset_created', { asset_type: validated.type })
   return { id: created.id }
 }
 
@@ -383,7 +389,7 @@ function encryptForInsert(value: string | null | undefined): string | null {
 export async function createChild(input: CreateChildInput): Promise<{ id: string }> {
   'use server'
   const validated = validateChildInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -406,6 +412,7 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
   })
 
   revalidateAfterAssetMutation()
+  await captureServer(user.id, 'asset_created', { asset_type: 'child' })
   return { id: created.id }
 }
 
@@ -540,7 +547,7 @@ export interface EditPetInput extends CreatePetInput {
 export async function createPet(input: CreatePetInput): Promise<{ id: string }> {
   'use server'
   const validated = validatePetInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -563,6 +570,7 @@ export async function createPet(input: CreatePetInput): Promise<{ id: string }> 
   })
 
   revalidateAfterAssetMutation()
+  await captureServer(user.id, 'asset_created', { asset_type: 'pet' })
   return { id: created.id }
 }
 
@@ -636,7 +644,7 @@ export interface EditPlantInput extends CreatePlantInput {
 export async function createPlant(input: CreatePlantInput): Promise<{ id: string }> {
   'use server'
   const validated = validatePlantInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
@@ -655,6 +663,7 @@ export async function createPlant(input: CreatePlantInput): Promise<{ id: string
   })
 
   revalidateAfterAssetMutation()
+  await captureServer(user.id, 'asset_created', { asset_type: 'plant' })
   return { id: created.id }
 }
 
@@ -772,7 +781,7 @@ function resolveInsuredFields(v: {
 export async function createInsurance(input: CreateInsuranceInput): Promise<{ id: string }> {
   'use server'
   const validated = validateInsuranceInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   // #221 — server-side safety net: never let an insurance asset be created
   // when the Guardian beta is off, even if the client surface somehow bypasses
@@ -839,6 +848,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
   })
 
   revalidateAfterAssetMutation()
+  await captureServer(user.id, 'asset_created', { asset_type: 'insurance' })
   return { id: created.id }
 }
 
@@ -1077,6 +1087,7 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
   })
 
   revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
+  await captureServer(viewer.id, 'asset_created', { asset_type: 'house' })
   return { id: created.id }
 }
 
@@ -1148,7 +1159,7 @@ export async function createTemplateAsset(input: CreateTemplateAssetInput): Prom
   const name = validateName(input.name, '名稱')
   const notes = validateNotes(input.notes)
   const fields = validateTemplateFields(input.templateKey, input.fields)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [created] = await db
     .insert(assets)
@@ -1163,6 +1174,7 @@ export async function createTemplateAsset(input: CreateTemplateAssetInput): Prom
     .returning({ id: assets.id })
 
   revalidateAfterAssetMutation()
+  await captureServer(user.id, 'asset_created', { asset_type: 'item' })
   return { id: created.id }
 }
 

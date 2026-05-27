@@ -144,6 +144,17 @@ export async function createTransaction(
     await captureServer(user.id, 'first_record_created', { via: 'manual' })
   }
 
+  // Daily-active signal (#811): every new record, regardless of whether it's
+  // the first. This is the true DAU denominator for a ledger PWA.
+  await captureServer(user.id, 'record_created', {
+    split_type: validated.splitType,
+    category: validated.category,
+    has_asset: !!validated.assetId,
+    has_trip: !!(input.tripId),
+    currency: inputCurrency,
+    via: 'manual',
+  })
+
   return result
 }
 
