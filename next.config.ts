@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
     // under *.supabase.co/storage/v1/object/... so one wildcard covers them.
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
+      // Google OAuth profile photos (lh3.googleusercontent.com/...).
+      // Without this, next/image returns 400 and the avatar falls back to initials.
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
   },
   async headers() {
