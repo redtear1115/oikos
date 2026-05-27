@@ -10,6 +10,7 @@ import {
 } from '@/lib/partnerQuiz'
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { captureServer } from '@/lib/analytics/server'
 
 export interface StartPartnerQuizSessionResult {
   sessionId: string
@@ -23,7 +24,7 @@ export interface StartPartnerQuizSessionResult {
  * start a session for a solo group — quiz is a two-person ritual.
  */
 export async function startPartnerQuizSession(): Promise<StartPartnerQuizSessionResult> {
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
   if (!group.memberB) {
     throw new Error('一個人的時候還沒辦法開始這題問答')
   }
@@ -53,6 +54,9 @@ export async function startPartnerQuizSession(): Promise<StartPartnerQuizSession
       questionKeys: picked,
     })
     .returning({ id: partnerQuizSessions.id, questionKeys: partnerQuizSessions.questionKeys })
+
+  // Engagement signal (#818): only fire on the first start, not on idempotent loads.
+  await captureServer(user.id, 'partner_quiz_started', { question_count: picked.length })
 
   return {
     sessionId: created.id,
@@ -152,5 +156,11 @@ export async function submitPartnerQuizAnswers(
   // status). We don't know which month the viewer entered from, so blanket-
   // revalidate the dashboard + bust client cache on next nav.
   revalidatePath('/dashboard')
+
+  // Engagement signal (#818): fires only on the second answerer who triggers reveal.
+  if (revealed) {
+    await captureServer(user.id, 'partner_quiz_completed', { question_count: session.questionKeys.length })
+  }
+
   return { revealed }
 }

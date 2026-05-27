@@ -34,6 +34,7 @@ import {
 } from '@/lib/revalidate'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { captureServer } from '@/lib/analytics/server'
 
 function assertRecipientInGroup(
   recipientId: string,
@@ -44,7 +45,7 @@ function assertRecipientInGroup(
 
 export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id: string }> {
   const v = validateRecurringIncomeRuleInput(input)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
@@ -68,6 +69,13 @@ export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id:
     .returning({ id: recurringIncomeRules.id })
 
   revalidateAfterRecurringIncomeRuleMutation()
+
+  // Feature-adoption signal (#816).
+  await captureServer(user.id, 'recurring_rule_created', {
+    kind: 'income',
+    frequency: v.intervalMonths,
+  })
+
   return { id: created.id }
 }
 

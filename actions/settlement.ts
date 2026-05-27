@@ -8,6 +8,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { validateSettlementInput } from '@/lib/validators'
+import { captureServer } from '@/lib/analytics/server'
 
 export interface EditSettlementInput {
   oldId: string
@@ -27,7 +28,7 @@ export interface CreateSettlementInput {
 }
 
 export async function createSettlement(input: CreateSettlementInput): Promise<{ id: string }> {
-  const { group } = await getViewerWriteContext()
+  const { user, group } = await getViewerWriteContext()
 
   const validated = validateSettlementInput({
     amount: input.amount,
@@ -54,6 +55,13 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
   })
 
   revalidateAfterTransactionMutation()
+
+  // Balance-correction signal (#812). Direction from the viewer's perspective.
+  const direction = validated.payerId === user.id ? 'self_paid' : 'partner_paid'
+  const amt = validated.amount
+  const amountBucket = amt < 500 ? '<500' : amt <= 2000 ? '500-2000' : '>2000'
+  await captureServer(user.id, 'settlement_created', { amount_bucket: amountBucket, direction })
+
   return { id: created.id }
 }
 
