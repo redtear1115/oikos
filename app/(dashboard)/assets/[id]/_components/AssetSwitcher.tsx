@@ -197,7 +197,6 @@ function SwitcherRow({
       style={{
         padding: '10px 14px',
         background: isCurrent ? 'rgba(58,36,25,0.05)' : 'transparent',
-        borderLeft: isCurrent ? `3px solid var(--asset-color-${item.type})` : '3px solid transparent',
       }}
       onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(58,36,25,0.04)' }}
       onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
