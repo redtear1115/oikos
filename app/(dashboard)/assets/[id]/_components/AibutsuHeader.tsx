@@ -8,14 +8,13 @@ import type { AssetType } from '@/lib/assets'
 import type { BadgeTone } from '@/lib/insuranceBadge'
 
 const TINTS = {
-  car:       { bg: '#E5E2DC', accent: '#5A5045' },
-  child:     { bg: '#F1DEE0', accent: '#A85B6A' },
-  pet:       { bg: '#F0E2D0', accent: '#9A6B3F' },
-  plant:     { bg: '#DCE7D6', accent: '#5A7A4A' },
-  insurance: { bg: '#DDE5DC', accent: '#5A7A66' },
-  house:     { bg: '#EFE3D0', accent: '#7A5A38' },
-  // #222 — template-based assets
-  item:      { bg: '#E9E4DF', accent: '#6E5F52' },
+  car:       { bg: 'var(--asset-tint-car)',       accent: 'var(--asset-color-car)' },
+  child:     { bg: 'var(--asset-tint-child)',     accent: 'var(--asset-color-child)' },
+  pet:       { bg: 'var(--asset-tint-pet)',       accent: 'var(--asset-color-pet)' },
+  plant:     { bg: 'var(--asset-tint-plant)',     accent: 'var(--asset-color-plant)' },
+  insurance: { bg: 'var(--asset-tint-insurance)', accent: 'var(--asset-color-insurance)' },
+  house:     { bg: 'var(--asset-tint-house)',     accent: 'var(--asset-color-house)' },
+  item:      { bg: 'var(--asset-tint-item)',      accent: 'var(--asset-color-item)' },
 } as const
 
 type TintKind = keyof typeof TINTS
@@ -114,7 +113,7 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             <span
               style={{
                 fontSize: 12,
-                fontWeight: isCurrent ? 600 : 500,
+                fontWeight: isCurrent ? 500 : 400,
                 color: isCurrent ? '#FBEDE0' : 'var(--ink)',
                 maxWidth: 120,
                 overflow: 'hidden',

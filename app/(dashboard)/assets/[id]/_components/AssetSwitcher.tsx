@@ -223,7 +223,7 @@ function SwitcherRow({
           className="truncate"
           style={{
             fontSize: 13,
-            fontWeight: isCurrent ? 600 : 500,
+            fontWeight: isCurrent ? 500 : 400,
             color: 'var(--ink)',
             lineHeight: 1.3,
           }}

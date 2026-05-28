@@ -15,6 +15,7 @@ import { AibutsuHeader, type SiblingChip } from './AibutsuHeader'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import { SectionHeader, InfoCard } from './aibutsu-ui'
+import { AibutsuHintCard } from './AibutsuHintCard'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { useTranslations } from '@/lib/i18n/client'
@@ -213,14 +214,7 @@ export function AssetDetailClient({
           </div>
         )}
         onItemClick={handleTxItemClick}
-        emptyState={
-          <div className="text-center py-10 px-6 text-sm leading-relaxed" style={{ color: 'var(--ink-3)' }}>
-            {assetSheetInitial.type === 'car'
-              ? <>{t.assetDetail.emptyCarLine1}<br />{t.assetDetail.emptyCarLine2}</>
-              : <>{t.assetDetail.emptyDefaultLine1}<br />{t.assetDetail.emptyDefaultLine2}</>
-            }
-          </div>
-        }
+        emptyState={<AibutsuHintCard type="car" onCtaPress={() => setAddOpen(true)} />}
         loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
         acceptInsert={(row) => row.assetId === assetId}
         renderRow={(tx: PagedTxnRow) => {

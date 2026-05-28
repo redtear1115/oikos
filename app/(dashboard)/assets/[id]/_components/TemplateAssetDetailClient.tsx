@@ -8,6 +8,7 @@ import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_com
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, type SiblingChip } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
+import { AibutsuHintCard } from './AibutsuHintCard'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { useTranslations } from '@/lib/i18n/client'
@@ -147,12 +148,7 @@ export function TemplateAssetDetailClient({
         loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
-        emptyState={
-          <div className="mx-4 px-4 py-6 rounded-2xl text-sm text-center"
-            style={{ color: 'var(--ink-3)', background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
-            {t.assetDetail.emptyDefaultLine1}<br />{t.assetDetail.emptyDefaultLine2}
-          </div>
-        }
+        emptyState={<AibutsuHintCard type="item" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}

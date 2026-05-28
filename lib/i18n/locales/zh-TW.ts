@@ -605,6 +605,12 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** Section / switcher group labels for insurance assets by kind. */
+    insuranceGroups: {
+      shortTermProtection: string
+      longTermProtection: string
+      savings: string
+    }
   }
 
   /** Trip list page (#42). */
@@ -1627,6 +1633,8 @@ export type Translations = {
       itemsChild: string
       itemsPlant: string
       itemsHouse: string
+      itemsCar: string
+      itemsItem: string
     }
     car: {
       avgEcon: string
@@ -2819,6 +2827,11 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    insuranceGroups: {
+      shortTermProtection: '保護型 · 一年期',
+      longTermProtection: '保護型 · 多年期',
+      savings: '儲蓄型',
+    },
   },
 
   tripList: {
@@ -3694,6 +3707,8 @@ export const zhTW: Translations = {
       itemsChild: '尿布奶粉 · 看診 · 課後安親 · 玩具 · 學費',
       itemsPlant: '介質 · 盆器 · 肥料 · 買新苗 · 防蟲',
       itemsHouse: '房貸 · 水電 · 管理費 · 維修 · 裝潢 · 清潔',
+      itemsCar: '加油 · 停車 · 定期保養 · 保險 · 過路費',
+      itemsItem: '保養 · 耗材 · 維修 · 配件',
     },
     car: {
       avgEcon: '平均油耗',

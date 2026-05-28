@@ -235,7 +235,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 <span
                   style={{
                     fontSize: 15,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: 'var(--ink)',
                     fontFamily: 'var(--font-serif)',
                   }}
@@ -251,7 +251,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                  fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}
               >
@@ -297,7 +297,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 </div>
                 <div
                   className="tnum"
-                  style={{ marginTop: 1, fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}
+                  style={{ marginTop: 1, fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}
                 >
                   {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
                 </div>
@@ -351,7 +351,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 flex: 1, height: 36, borderRadius: 10,
                 background: 'var(--accent-soft)', color: 'var(--ink)',
                 border: '1px solid var(--hairline)',
-                fontSize: 12, fontWeight: 600,
+                fontSize: 12, fontWeight: 500,
                 fontFamily: 'inherit', cursor: 'pointer',
               }}
               className="disabled:opacity-50"

@@ -80,13 +80,13 @@ export function AgeDisplay({ birth, accent }: { birth: string; accent: string })
     <div className="text-center">
       <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{t.assetDetail.age.label}</div>
       <div className="inline-flex items-baseline gap-1 mt-1">
-        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-md)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -1 }}>
+        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-md)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -1 }}>
           {yrs}
         </span>
         <span className="text-xs font-medium" style={{ color: accent }}>{t.assetDetail.age.yearsSuffix}</span>
         {mos > 0 && (
           <>
-            <span className="tabular-nums leading-none ml-1" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--ink)' }}>
+            <span className="tabular-nums leading-none ml-1" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-title)', fontWeight: 500, color: 'var(--ink)' }}>
               {mos}
             </span>
             <span className="text-micro font-medium" style={{ color: accent }}>{t.assetDetail.age.monthsSuffix}</span>

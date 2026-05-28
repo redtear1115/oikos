@@ -457,6 +457,11 @@ export const en: Translations = {
   assetListItem: {
     savingsBadge: 'Savings',
     thisMonth: 'This month',
+    insuranceGroups: {
+      shortTermProtection: 'Term Protection',
+      longTermProtection: 'Whole / Long-term Protection',
+      savings: 'Savings Insurance',
+    },
   },
 
   tripList: {
@@ -1332,6 +1337,8 @@ export const en: Translations = {
       itemsChild: 'Diapers & formula · Doctor · After-school care · Toys · Tuition',
       itemsPlant: 'Soil · Pots · Fertilizer · New seedlings · Pest control',
       itemsHouse: 'Mortgage · Utilities · HOA · Repairs · Renovation · Cleaning',
+      itemsCar: 'Fuel · Parking · Servicing · Insurance · Tolls',
+      itemsItem: 'Maintenance · Consumables · Repairs · Accessories',
     },
     car: {
       avgEcon: 'Avg fuel economy',

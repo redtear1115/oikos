@@ -39,7 +39,7 @@ function MonthAmount({ amount }: { amount: number }) {
       </div>
       <div
         className="tnum"
-        style={{ marginTop: 2, fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}
+        style={{ marginTop: 2, fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}
       >
         {formatAmount(amount, 'twd')}
       </div>
@@ -162,7 +162,7 @@ export function ChildCard({
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                  fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}
               >
@@ -190,7 +190,7 @@ export function ChildCard({
               }}
             >
               {age && (
-                <span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>
+                <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>
                   {age.years} 歲 {age.months} 個月
                 </span>
               )}
@@ -270,7 +270,7 @@ export function PetCard({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
             >
@@ -349,7 +349,7 @@ export function PlantCard({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
             >
@@ -368,7 +368,7 @@ export function PlantCard({
               {days != null && (
                 <span>
                   陪伴{' '}
-                  <span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{days}</span>
+                  <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{days}</span>
                   {' '}天
                 </span>
               )}
@@ -427,7 +427,7 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
             >
               <div
                 style={{
-                  fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                  fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}
               >
@@ -506,7 +506,7 @@ export function HouseCard({ id, name, monthAmount, houseAddress }: HouseCardProp
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
             >
