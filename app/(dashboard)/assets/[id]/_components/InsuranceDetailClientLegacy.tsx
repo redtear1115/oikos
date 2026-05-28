@@ -92,7 +92,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
               {pct >= 1 ? td.expired : td.coverageRemaining}
             </div>
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-              <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: pct >= 1 ? 'var(--ink-3)' : 'var(--ink)', letterSpacing: -1.5 }}>
+              <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: pct >= 1 ? 'var(--ink-3)' : 'var(--ink)', letterSpacing: -1.5 }}>
                 {pct >= 1 ? '0' : daysLeft !== null ? daysLeft.toString() : yearsLeft.toFixed(1)}
               </span>
               {pct < 1 && (
@@ -115,7 +115,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
                  migration until formatAmount supports digits-only mode. */}
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
               <span className="text-lg font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
-              <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -1.5 }}>
+              <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -1.5 }}>
                 {details?.annualPremium?.toLocaleString() ?? '—'}
               </span>
             </div>

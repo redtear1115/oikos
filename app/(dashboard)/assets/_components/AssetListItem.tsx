@@ -33,7 +33,6 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
       className="flex items-center gap-3 px-3.5 py-3 no-underline"
       style={{
         color: 'var(--ink)',
-        borderLeft: `3px solid ${tint}`,
         borderBottom: isLast ? 'none' : '1px solid var(--hairline)',
       }}
     >

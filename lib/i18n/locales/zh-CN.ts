@@ -456,6 +456,11 @@ export const zhCN: Translations = {
   assetListItem: {
     savingsBadge: '储蓄',
     thisMonth: '本月',
+    insuranceGroups: {
+      shortTermProtection: '保护型 · 一年期',
+      longTermProtection: '保护型 · 多年期',
+      savings: '储蓄型',
+    },
   },
 
   tripList: {
@@ -1331,6 +1336,8 @@ export const zhCN: Translations = {
       itemsChild: '尿布奶粉 · 看诊 · 课后安亲 · 玩具 · 学费',
       itemsPlant: '介质 · 盆器 · 肥料 · 买新苗 · 防虫',
       itemsHouse: '房贷 · 水电 · 管理费 · 维修 · 装潢 · 清洁',
+      itemsCar: '加油 · 停车 · 定期保养 · 保险 · 过路费',
+      itemsItem: '保养 · 耗材 · 维修 · 配件',
     },
     car: {
       avgEcon: '平均油耗',

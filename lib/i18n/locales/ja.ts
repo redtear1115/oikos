@@ -455,6 +455,11 @@ export const ja: Translations = {
   assetListItem: {
     savingsBadge: '貯蓄',
     thisMonth: '今月',
+    insuranceGroups: {
+      shortTermProtection: '保障型（定期）',
+      longTermProtection: '保障型（長期）',
+      savings: '貯蓄型',
+    },
   },
 
   tripList: {
@@ -1330,6 +1335,8 @@ export const ja: Translations = {
       itemsChild: 'おむつ・ミルク · 通院 · 学童保育 · おもちゃ · 学費',
       itemsPlant: '用土 · 鉢 · 肥料 · 苗 · 防虫',
       itemsHouse: '住宅ローン · 光熱費 · 管理費 · 修繕 · リフォーム · 清掃',
+      itemsCar: '給油 · 駐車 · 定期点検 · 保険 · 通行料',
+      itemsItem: 'メンテナンス · 消耗品 · 修理 · アクセサリー',
     },
     car: {
       avgEcon: '平均燃費',

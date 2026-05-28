@@ -40,7 +40,7 @@ export function MaturedAwaitingPrompt({
           style={{
             fontFamily: 'var(--font-numeric)',
             fontSize: 'var(--fs-amount-lg)',
-            fontWeight: 600,
+            fontWeight: 500,
             color: 'var(--ink)',
             letterSpacing: -1.5,
           }}
