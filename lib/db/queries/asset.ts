@@ -58,6 +58,7 @@ export interface AssetWithCar {
   insuranceVehicleId: string | null
   insuranceInsurer: string | null
   // Child-only fields (null for non-child assets)
+  childNickname: string | null
   childBirthday: string | null
   childHeightCm: number | null
   childWeightG: number | null
@@ -110,6 +111,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
+      childNickname: childDetails.nickname,
       childBirthday: childDetails.birthday,
       childHeightCm: childDetails.heightCm,
       childWeightG: childDetails.weightG,
@@ -177,6 +179,7 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
+      childNickname: childDetails.nickname,
       childBirthday: childDetails.birthday,
       childHeightCm: childDetails.heightCm,
       childWeightG: childDetails.weightG,

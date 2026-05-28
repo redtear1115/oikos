@@ -75,7 +75,8 @@ function buildSiblings(
           badge = { tone: 'accent', label: '🎂' }
         }
       }
-      return { id: a.id, type: a.type as SiblingChip['type'], name: a.name, badge }
+      const displayName = a.type === 'child' ? (a.childNickname ?? a.name) : a.name
+      return { id: a.id, type: a.type as SiblingChip['type'], name: displayName, badge }
     })
 }
 

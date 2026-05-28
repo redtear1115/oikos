@@ -157,19 +157,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
     <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
       <AibutsuHeader
         kind="child"
-        name={
-          <span className="inline-flex items-baseline gap-2 min-w-0 justify-center">
-            <span className="truncate">{display.primary}</span>
-            {display.secondary && (
-              <span
-                className="text-micro tracking-[0.5px] truncate"
-                style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
-              >
-                {display.secondary}
-              </span>
-            )}
-          </span>
-        }
+        name={display.primary}
         subtitle={subtitle || null}
         onEditClick={() => setEditOpen(true)}
         siblings={siblings}
