@@ -8,20 +8,6 @@ import { todayLocalDate } from '@/lib/local-date'
 
 // ─── Shared chassis helpers ───────────────────────────────────────────────────
 
-function CardStripe({ colorVar }: { colorVar: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        left: 0, top: 0, bottom: 0,
-        width: 3,
-        background: colorVar,
-      }}
-    />
-  )
-}
-
 function TintIconBox({ type, tintVar }: { type: string; tintVar: string }) {
   return (
     <div
@@ -158,15 +144,13 @@ export function ChildCard({
         style={{
           background: 'var(--surface)',
           borderRadius: 16,
-          border: '1px solid var(--hairline)',
+          border: '1px solid color-mix(in srgb, var(--asset-color-child) 25%, transparent)',
           overflow: 'hidden',
-          position: 'relative',
         }}
       >
-        <CardStripe colorVar="var(--asset-color-child)" />
         <div
           style={{
-            padding: '12px 16px 12px 18px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -270,15 +254,13 @@ export function PetCard({
         style={{
           background: 'var(--surface)',
           borderRadius: 16,
-          border: '1px solid var(--hairline)',
-          position: 'relative',
+          border: '1px solid color-mix(in srgb, var(--asset-color-pet) 25%, transparent)',
           overflow: 'hidden',
         }}
       >
-        <CardStripe colorVar="var(--asset-color-pet)" />
         <div
           style={{
-            padding: '12px 16px 12px 18px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -351,15 +333,13 @@ export function PlantCard({
         style={{
           background: 'var(--surface)',
           borderRadius: 16,
-          border: '1px solid var(--hairline)',
-          position: 'relative',
+          border: '1px solid color-mix(in srgb, var(--asset-color-plant) 25%, transparent)',
           overflow: 'hidden',
         }}
       >
-        <CardStripe colorVar="var(--asset-color-plant)" />
         <div
           style={{
-            padding: '12px 16px 12px 18px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -424,15 +404,13 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
         style={{
           background: 'var(--surface)',
           borderRadius: 16,
-          border: '1px solid var(--hairline)',
-          position: 'relative',
+          border: '1px solid color-mix(in srgb, var(--asset-color-item) 25%, transparent)',
           overflow: 'hidden',
         }}
       >
-        <CardStripe colorVar="var(--asset-color-item)" />
         <div
           style={{
-            padding: '12px 16px 12px 18px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -512,15 +490,13 @@ export function HouseCard({ id, name, monthAmount, houseAddress }: HouseCardProp
         style={{
           background: 'var(--surface)',
           borderRadius: 16,
-          border: '1px solid var(--hairline)',
-          position: 'relative',
+          border: '1px solid color-mix(in srgb, var(--asset-color-house) 25%, transparent)',
           overflow: 'hidden',
         }}
       >
-        <CardStripe colorVar="var(--asset-color-house)" />
         <div
           style={{
-            padding: '12px 16px 12px 18px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,

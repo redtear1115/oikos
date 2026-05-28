@@ -109,41 +109,16 @@ export function CarHeroCard({
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline relative"
+      className="block no-underline"
       style={{
         background: 'var(--surface)',
         borderRadius: 16,
-        border: '1px solid var(--hairline)',
+        border: `1px solid color-mix(in srgb, ${swatch} 25%, transparent)`,
         overflow: 'hidden',
         color: 'var(--ink)',
       }}
     >
-      {/* Left accent — solid stripe + dashed echo, in the car color */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 0, top: 0, bottom: 0,
-          width: 5,
-          background: swatch,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: 9, top: 8, bottom: 8,
-          width: 0,
-          borderLeft: `1.5px dashed ${swatch}`,
-          opacity: 0.55,
-        }}
-      />
-
-      {/* #259 — density aligned with AssetListItem: drop the bottom 本月/累計
-       *  money panel and surface only the 本月 amount at the title row's right
-       *  edge, mirroring how house/child/pet/plant/insurance/item cards render.
-       *  累計 stays available on the car detail page. */}
-      <div className="flex items-center gap-3 py-4 pr-5 pl-[22px]">
+      <div className="flex items-center gap-3 py-4 px-5">
         <div className="shrink-0" aria-hidden="true">
           <CarListMark swatch={swatch} size={compact ? 36 : 44} />
         </div>
