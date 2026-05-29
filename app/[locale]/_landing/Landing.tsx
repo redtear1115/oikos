@@ -276,41 +276,38 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
             />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-            <FeatureCard
+          {/* Editorial column: hanging Fraunces numeral + glyph-accented title
+              + body. No card chrome; rhythm comes from hairline dividers and
+              vertical spacing. 2 columns on desktop, single column on mobile. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-0 md:gap-y-0 md:gap-x-12 lg:gap-x-20">
+            <FeatureEntry
               kicker="01"
-              chipColor="var(--accent)"
-              chipBg="var(--accent-soft)"
+              glyphColor="var(--accent)"
               title={t.f1Title}
               body={t.f1Body}
               glyph={<DuoGlyph />}
             />
-            <FeatureCard
+            <FeatureEntry
               kicker="02"
-              chipColor="var(--asset-color-house)"
-              chipBg="var(--asset-tint-house)"
+              glyphColor="var(--asset-color-house)"
               title={t.f2Title}
               body={t.f2Body}
               glyph={<AssetGlyph />}
             />
-            <FeatureCard
+            <FeatureEntry
               kicker="03"
-              chipColor="var(--saving)"
-              chipBg="var(--asset-tint-insurance)"
+              glyphColor="var(--saving)"
               title={t.f3Title}
               body={t.f3Body}
               glyph={<ShieldGlyph />}
             />
-            <FeatureCard
+            <FeatureEntry
               kicker="04"
-              chipColor="var(--ink)"
-              // Decorative chrome: warm cream-pink tint chosen to pair with the
-              // cocoa-ink stats glyph. One-off (no other surface uses it), so
-              // kept inline rather than promoted to a token until reused.
-              chipBg="#EFE2D2"
+              glyphColor="var(--ink)"
               title={t.f4Title}
               body={t.f4Body}
               glyph={<StatsGlyph />}
+              isLast
             />
           </div>
         </div>
@@ -472,57 +469,67 @@ function MigrateLinksSection({
   )
 }
 
-function FeatureCard({
+function FeatureEntry({
   kicker,
-  chipColor,
-  chipBg,
+  glyphColor,
   title,
   body,
   glyph,
+  isLast,
 }: {
   kicker: string
-  chipColor: string
-  chipBg: string
+  glyphColor: string
   title: string
   body: string
   glyph: ReactNode
+  /** Suppress the bottom hairline on the last entry per column (avoids a
+   *  trailing rule before the next section). On desktop the right column's
+   *  entry #4 still tracks #3's height; the missing divider reads as the end. */
+  isLast?: boolean
 }) {
   return (
     <div
-      className="p-4 md:p-6 flex flex-col rounded-tile md:rounded-[22px]"
-      style={{ background: 'var(--surface)', minHeight: 168 }}
+      className="flex gap-5 md:gap-6 py-6 md:py-8"
+      style={{
+        borderBottom: isLast ? undefined : '1px solid var(--hairline)',
+      }}
     >
-      <div className="flex items-center justify-between mb-3 md:mb-[22px]">
-        <div
-          className="flex items-center justify-center w-[38px] h-[38px] md:w-12 md:h-12 rounded-xl md:rounded-bubble"
-          style={{ background: chipBg, color: chipColor }}
-        >
-          {glyph}
+      {/* Hanging italic numeral — the signature gesture. Reserves a narrow
+          column on the left so titles align across entries. */}
+      <span
+        aria-hidden="true"
+        className="shrink-0 text-[28px] md:text-[36px] leading-none pt-1"
+        style={{
+          fontFamily: 'var(--font-fraunces)',
+          fontStyle: 'italic',
+          fontWeight: 400,
+          color: 'var(--ink-3)',
+          letterSpacing: '-0.5px',
+          minWidth: 44,
+        }}
+      >
+        {kicker}
+      </span>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 mb-2 md:mb-2.5">
+          <span aria-hidden="true" style={{ color: glyphColor }}>
+            {glyph}
+          </span>
+          <h3
+            className="m-0 text-[18px] md:text-[20px] font-medium"
+            style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
+          >
+            {title}
+          </h3>
         </div>
-        <span
-          className="text-label md:text-button"
-          style={{
-            fontFamily: 'var(--font-fraunces)',
-            fontStyle: 'italic',
-            color: 'var(--ink-2)',
-            letterSpacing: '0.5px',
-          }}
+        <p
+          className="m-0 text-meta md:text-body leading-[1.65] md:leading-[1.7]"
+          style={{ color: 'var(--ink-2)' }}
         >
-          {kicker}
-        </span>
+          {body}
+        </p>
       </div>
-      <p
-        className="m-0 mb-1.5 md:mb-2 text-body md:text-[19px] font-medium"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
-        {title}
-      </p>
-      <p
-        className="m-0 text-caption md:text-meta leading-[1.55] md:leading-[1.7]"
-        style={{ color: 'var(--ink-2)' }}
-      >
-        {body}
-      </p>
     </div>
   )
 }

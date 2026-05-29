@@ -2955,8 +2955,8 @@ export const zhTW: Translations = {
     noneSubtitle: '這筆與任何愛物無關',
     loading: '載入中…',
     loadFailed: '載入失敗',
-    emptyAibutsu: '還沒有愛物 — 先到「愛物」分頁新增。',
-    emptyGuardian: '還沒有保單 — 先到「愛物 > 守護」分頁新增。',
+    emptyAibutsu: '還沒有愛物，先到「愛物」分頁新增。',
+    emptyGuardian: '還沒有保單，先到「愛物 > 守護」分頁新增。',
   },
 
   records: {
@@ -3665,9 +3665,9 @@ export const zhTW: Translations = {
     refuel: '加油',
     relatedInsurance: '相關保險',
     linkedVehicleSection: '關聯車輛',
-    emptyCarLine1: '還沒有為這台車記下任何支出 —',
+    emptyCarLine1: '還沒有為這台車記下任何支出。',
     emptyCarLine2: '戳右下角 + 開始',
-    emptyDefaultLine1: '還沒有記下任何支出 —',
+    emptyDefaultLine1: '還沒有記下任何支出。',
     emptyDefaultLine2: '戳右下角 + 開始',
     typeLabels: {
       car: '車',
@@ -3825,7 +3825,7 @@ export const zhTW: Translations = {
       accountValueLabel: '目前帳戶價值',
       accountValueEditCta: '更新',
       recurringSectionTitle: '定期進帳',
-      recurringEmptyHint: '分紅或生存金每年都會回來 — 設成定期進帳就不必再記',
+      recurringEmptyHint: '分紅或生存金每年都會回來，設成定期進帳就不必再記',
       recurringAddCta: '建立定期進帳',
       recurringRuleSummary: '每月 {day} 號 · {interval}',
       recurringRuleNextDate: '下次 {date}',
@@ -4007,7 +4007,7 @@ export const zhTW: Translations = {
     card1Body: '這個月你們最常一起花在 {category}，共 NT$ {amount}',
     card1BodySolo: '這個月你最常花在 {category}，共 NT$ {amount}',
     card2Title: '本月最大筆',
-    card2Body: '最大一筆 — {name} 付的「{description}」，NT$ {amount}',
+    card2Body: '最大一筆：{name} 付的「{description}」，NT$ {amount}',
     card3Title: '定期入帳事件',
     card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
     card3IncomeTotal: '本月定期進帳共 NT$ {amount}',
@@ -4029,7 +4029,7 @@ export const zhTW: Translations = {
   },
 
   quiz: {
-    cardHeadingInvitation: '我們還不太認識彼此 — 來回答 3 題',
+    cardHeadingInvitation: '我們還不太認識彼此，來回答 3 題',
     cardHeadingSelfPendingPartnerDone: '對方答完了，輪你了',
     cardHeadingSelfPendingPartnerPending: '來回答 3 題，看看你們對錢的想像',
     cardHeadingSelfDonePartnerPending: '答完了，等 {partnerName} 一起揭曉',
@@ -4048,7 +4048,7 @@ export const zhTW: Translations = {
     revealHeading: '你們的理財組合',
     revealedAtLine: '揭曉於 {date}',
     revealSameAnswer: '在這件事上你們同方向',
-    revealFraming: '你們一個是日出、一個是月光 — 不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
+    revealFraming: '你們一個是日出、一個是月光。不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '對方',
     soloFallback: '兩個人才能一起回答這 3 題。等對方加入家計簿，再回來吧。',
@@ -4287,7 +4287,7 @@ export const zhTW: Translations = {
             {
               feature: '端對端資料加密',
               futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '— 未說明', tone: 'no' },
+              other: { label: '未說明', tone: 'no' },
             },
           ],
         },
@@ -4361,7 +4361,7 @@ export const zhTW: Translations = {
             {
               feature: 'CSV 資料匯入',
               futari: { label: '✓ 直接上傳', tone: 'yes' },
-              other: { label: '— 需自行整理', tone: 'partial' },
+              other: { label: '需自行整理', tone: 'partial' },
             },
           ],
         },

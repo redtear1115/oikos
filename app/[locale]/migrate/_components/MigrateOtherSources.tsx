@@ -48,13 +48,8 @@ export function MigrateOtherSources({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
       />
       <h2
-        className="text-label m-0"
-        style={{
-          fontFamily: 'var(--font-fraunces)',
-          color: 'var(--ink-2)',
-          letterSpacing: '3.5px',
-          textTransform: 'uppercase',
-        }}
+        className="m-0 text-[20px] md:text-[22px] font-medium"
+        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {copy.heading}
       </h2>
