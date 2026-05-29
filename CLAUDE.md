@@ -13,7 +13,9 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.3.0**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.3.1**（tag on origin）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+
+> v1.3.1 ship 後待跑：dev / prod 都要套 `0052_encrypt_asset_pii_columns.sql` + 跑一輪 `scripts/encrypt-existing-pii.mjs`（先 `DRY_RUN=1` 確認筆數再實跑）。Backfill 驗證完成是 [#837](https://github.com/redtear1115/oikos/issues/837)（drop legacy columns）的前置條件。
 
 ## Backlog / 未釋出版本
 
