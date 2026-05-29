@@ -153,14 +153,18 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                 letterSpacing: '-1.5px',
               }}
             >
-              {/* mobile: tagline at 26px serif */}
+              {/* mobile: tagline scaled up to carry the fold as the sole
+                  visual main character (brief #832 phase 1). The 2-line
+                  block at this size visually outweighs the wordmark above
+                  even though per-character it's smaller; lh 1.15 keeps
+                  the block tight, letter-spacing -1px tightens CJK rhythm. */}
               <span
                 className="md:hidden block"
                 style={{
-                  fontSize: 26,
+                  fontSize: 'clamp(34px, 9vw, 56px)',
                   fontWeight: 400,
-                  lineHeight: 1.45,
-                  letterSpacing: '-0.3px',
+                  lineHeight: 1.15,
+                  letterSpacing: '-1px',
                 }}
                 dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
               />
