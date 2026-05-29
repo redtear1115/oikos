@@ -16,8 +16,12 @@
  *   DRY_RUN=1 node --env-file=.env.local scripts/encrypt-existing-pii.mjs
  *
  * Required env (.env.local):
- *   POSTGRES_URL=...               (Supabase pooler connection string)
- *   ENCRYPTION_KEY=<64 hex chars>  (32-byte key; same one prod uses)
+ *   DATABASE_URL=...               (project convention; pooler URL is fine)
+ *   ENCRYPTION_KEY=<64 hex chars>  (32-byte key; same one the app uses)
+ *
+ * `POSTGRES_URL` is accepted as a fallback name for symmetry with other
+ * Supabase tooling, but the project standard is `DATABASE_URL` (matches
+ * `lib/db/client.ts` and `.env.local.example`).
  *
  * Per CLAUDE.md the dev and prod Supabase projects are independent; run
  * once against dev, then again against prod with that project's
@@ -28,11 +32,11 @@ import { createCipheriv, randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 
 const DRY_RUN = process.env.DRY_RUN === '1'
-const POSTGRES_URL = process.env.POSTGRES_URL
+const POSTGRES_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY
 
 if (!POSTGRES_URL) {
-  console.error('POSTGRES_URL missing — load .env.local with --env-file or export it')
+  console.error('DATABASE_URL missing — load .env.local with --env-file=.env.local (or export it). POSTGRES_URL also accepted as a fallback name.')
   process.exit(1)
 }
 if (!ENCRYPTION_KEY || !/^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)) {
