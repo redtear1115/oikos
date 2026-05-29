@@ -109,7 +109,7 @@ export const zhCN: Translations = {
     f1Title: '双人记账',
     f1Body: '一笔一笔共同记下，自动分摊，可以对半也可以按比例。每月清楚结算，不必再对账。',
     f2Title: '我们的爱物',
-    f2Body: '家、车、孩子、宠物、植物 — 一起照顾的，都收进同一本账，每笔相关支出自动归户。',
+    f2Body: '家、车、孩子、宠物、植物，一起照顾的，都收进同一本账，每笔相关支出自动归户。',
     f3Title: '守护保险',
     f3Body: '保护型、储蓄型保单分页，被保人、受益人、续期日，一页看完每一份为对方留下的安排。',
     f4Title: '记账统计',
@@ -456,6 +456,11 @@ export const zhCN: Translations = {
   assetListItem: {
     savingsBadge: '储蓄',
     thisMonth: '本月',
+    insuranceGroups: {
+      shortTermProtection: '保护型 · 一年期',
+      longTermProtection: '保护型 · 多年期',
+      savings: '储蓄型',
+    },
   },
 
   tripList: {
@@ -592,8 +597,8 @@ export const zhCN: Translations = {
     noneSubtitle: '这笔与任何爱物无关',
     loading: '加载中…',
     loadFailed: '加载失败',
-    emptyAibutsu: '还没有爱物 — 先到「爱物」分页新增。',
-    emptyGuardian: '还没有保单 — 先到「爱物 > 守护」分页新增。',
+    emptyAibutsu: '还没有爱物，先到「爱物」分页新增。',
+    emptyGuardian: '还没有保单，先到「爱物 > 守护」分页新增。',
   },
 
   records: {
@@ -1170,6 +1175,8 @@ export const zhCN: Translations = {
     child: {
       nickname: '小名',
       nicknamePlaceholder: '元宝',
+      fullName: '全名',
+      fullNamePlaceholder: '陈小白',
       gender: '性别',
       genderMale: '男孩',
       genderFemale: '女孩',
@@ -1302,9 +1309,9 @@ export const zhCN: Translations = {
     refuel: '加油',
     relatedInsurance: '相关保险',
     linkedVehicleSection: '关联车辆',
-    emptyCarLine1: '还没为这台车记下任何支出 —',
+    emptyCarLine1: '还没为这台车记下任何支出。',
     emptyCarLine2: '戳右下角 + 开始',
-    emptyDefaultLine1: '还没记下任何支出 —',
+    emptyDefaultLine1: '还没记下任何支出。',
     emptyDefaultLine2: '戳右下角 + 开始',
     typeLabels: {
       car: '车',
@@ -1331,12 +1338,21 @@ export const zhCN: Translations = {
       itemsChild: '尿布奶粉 · 看诊 · 课后安亲 · 玩具 · 学费',
       itemsPlant: '介质 · 盆器 · 肥料 · 买新苗 · 防虫',
       itemsHouse: '房贷 · 水电 · 管理费 · 维修 · 装潢 · 清洁',
+      itemsCar: '加油 · 停车 · 定期保养 · 保险 · 过路费',
+      itemsItem: '保养 · 耗材 · 维修 · 配件',
+    },
+    reveal: {
+      show: '显示',
+      hide: '隐藏',
+      loading: '…',
+      error: '无法显示',
     },
     car: {
       avgEcon: '平均油耗',
       avgEconNoLog: '加第一笔油看油耗',
       avgEconNeedMore: '需要至少 2 次加油记录',
       avgEconRecent: '近 6 个月',
+      plate: '车牌',
     },
     child: {
       sectionId: '身份证件',
@@ -1349,6 +1365,7 @@ export const zhCN: Translations = {
       bloodTypeValue: '{type} 型',
       height: '身高',
       weight: '体重',
+      fullName: '全名',
       revealShow: '显示',
       revealHide: '隐藏',
       revealLoading: '…',
@@ -1462,7 +1479,7 @@ export const zhCN: Translations = {
       accountValueLabel: '当前账户价值',
       accountValueEditCta: '更新',
       recurringSectionTitle: '定期进账',
-      recurringEmptyHint: '分红或生存金每年都会回来 — 设成定期进账就不必再记',
+      recurringEmptyHint: '分红或生存金每年都会回来，设成定期进账就不必再记',
       recurringAddCta: '建立定期进账',
       recurringRuleSummary: '每月 {day} 号 · {interval}',
       recurringRuleNextDate: '下次 {date}',
@@ -1644,7 +1661,7 @@ export const zhCN: Translations = {
     card1Body: '这个月你们最常一起花在 {category}，共 NT$ {amount}',
     card1BodySolo: '这个月你最常花在 {category}，共 NT$ {amount}',
     card2Title: '本月最大笔',
-    card2Body: '最大一笔 — {name} 付的「{description}」，NT$ {amount}',
+    card2Body: '最大一笔：{name} 付的「{description}」，NT$ {amount}',
     card3Title: '定期入账事件',
     card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
     card3IncomeTotal: '本月定期入账共 NT$ {amount}',
@@ -1666,7 +1683,7 @@ export const zhCN: Translations = {
   },
 
   quiz: {
-    cardHeadingInvitation: '我们还不太了解彼此 — 来回答 3 题',
+    cardHeadingInvitation: '我们还不太了解彼此，来回答 3 题',
     cardHeadingSelfPendingPartnerDone: '对方答完了，轮你了',
     cardHeadingSelfPendingPartnerPending: '来回答 3 题，看看你们对钱的想象',
     cardHeadingSelfDonePartnerPending: '答完了，等 {partnerName} 一起揭晓',
@@ -1685,7 +1702,7 @@ export const zhCN: Translations = {
     revealHeading: '你们的理财组合',
     revealedAtLine: '揭晓于 {date}',
     revealSameAnswer: '在这件事上你们同方向',
-    revealFraming: '你们一个是日出、一个是月光 — 不同的时刻，照同一个家。没有谁的答案比较对，记住对方在意的就好。',
+    revealFraming: '你们一个是日出、一个是月光。不同的时刻，照同一个家。没有谁的答案比较对，记住对方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '对方',
     soloFallback: '两个人才能一起回答这 3 题。等对方加入家计簿，再回来吧。',
@@ -1924,7 +1941,7 @@ export const zhCN: Translations = {
             {
               feature: '端到端数据加密',
               futari: { label: '✓ 支持', tone: 'yes' },
-              other: { label: '— 未说明', tone: 'no' },
+              other: { label: '未说明', tone: 'no' },
             },
           ],
         },
@@ -1998,7 +2015,7 @@ export const zhCN: Translations = {
             {
               feature: 'CSV 数据导入',
               futari: { label: '✓ 直接上传', tone: 'yes' },
-              other: { label: '— 需自行整理', tone: 'partial' },
+              other: { label: '需自行整理', tone: 'partial' },
             },
           ],
         },

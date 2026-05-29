@@ -75,7 +75,11 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
       .returning({ id: assets.id })
     await tx.insert(carDetails).values({
       assetId: asset.id,
+      // #826 — dual write during the encryption rollout: legacy `plate` stays
+      // populated so existing reads keep working; `plate_encrypted` is what
+      // the reveal action returns going forward. Follow-up PR drops `plate`.
       plate: validated.plate,
+      plateEncrypted: encrypt(validated.plate),
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
       primaryUserId: validated.primaryUserId,
@@ -172,7 +176,9 @@ export async function editCar(input: EditCarInput): Promise<void> {
     await tx
       .update(carDetails)
       .set({
+        // #826 — same dual-write contract as createCar.
         plate: validated.plate,
+        plateEncrypted: encrypt(validated.plate),
         purchasedAt: validated.purchasedAt,
         purchasePrice: validated.purchasePrice,
         primaryUserId: validated.primaryUserId,
@@ -357,12 +363,17 @@ export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
 // ── Child ──────────────────────────────────────────────────────────────────
 
 export interface CreateChildInput {
+  /** Display nickname (e.g. 「小白」). Stored plaintext on `Assets.name`. */
   name: string
   nickname?: string | null
   gender?: 'male' | 'female' | 'other' | null
   birthday?: string | null
   nationalId?: string | null
   nhiNo?: string | null
+  /** #826 — encrypted full name (e.g. 「陳小白」). Trinary semantics same
+   *  as nationalId / nhiNo. Optional; pre-rollout child rows have no
+   *  encrypted full name and the reveal row hides itself. */
+  fullName?: string | null
   bloodType?: string | null
   hospital?: string | null
   heightCm?: number | null
@@ -394,7 +405,16 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
-      .values({ groupId: group.id, type: 'child', name: validated.name, notes: validated.notes })
+      .values({
+        groupId: group.id,
+        type: 'child',
+        name: validated.name,
+        // #826 — encrypted full name on the Asset row. Display name stays on
+        // `name` (plaintext) so list / header / sibling-rail queries don't
+        // need to decrypt for casual reads.
+        nameEncrypted: encryptForInsert(validated.fullName),
+        notes: validated.notes,
+      })
       .returning({ id: assets.id })
     await tx.insert(childDetails).values({
       assetId: asset.id,
@@ -439,11 +459,21 @@ export async function editChild(input: EditChildInput): Promise<void> {
   if (validated.nhiNo !== undefined) {
     piiUpdates.insuranceIdEncrypted = validated.nhiNo === null ? null : encrypt(validated.nhiNo)
   }
+  // #826 — full name lives on the Assets row (not childDetails). Same trinary
+  // semantics: undefined leaves the column untouched, null clears it, string
+  // encrypts and sets.
+  const assetUpdates: { name: string; notes: string | null; nameEncrypted?: string | null } = {
+    name: validated.name,
+    notes: validated.notes,
+  }
+  if (validated.fullName !== undefined) {
+    assetUpdates.nameEncrypted = validated.fullName === null ? null : encrypt(validated.fullName)
+  }
 
   await db.transaction(async (tx) => {
     const updated = await tx
       .update(assets)
-      .set({ name: validated.name, notes: validated.notes })
+      .set(assetUpdates)
       .where(and(
         eq(assets.id, input.id),
         eq(assets.groupId, group.id),
@@ -522,6 +552,95 @@ export async function revealChildPii(
   if (!ciphertext) throw new Error('尚未填寫此欄位')
 
   return decrypt(ciphertext)
+}
+
+/**
+ * #826 — on-demand decryption for the child's encrypted full name. The
+ * display name (`Assets.name`) is the nickname rendered everywhere; this
+ * action returns the encrypted real full name on tap. Throws if no
+ * encrypted value is stored — pre-rollout child rows have only the
+ * legacy plaintext `name` column populated, and the detail page hides
+ * the reveal row in that case.
+ */
+export async function revealChildName(assetId: string): Promise<string> {
+  'use server'
+  const { group } = await requireViewerGroup()
+
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      nameEncrypted: assets.nameEncrypted,
+    })
+    .from(assets)
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'child') {
+    throw new Error('找不到該愛物')
+  }
+  if (!row.nameEncrypted) throw new Error('尚未填寫此欄位')
+  return decrypt(row.nameEncrypted)
+}
+
+/**
+ * #826 — on-demand decryption for the car licence plate. Same authorisation
+ * shape as `revealChildPii`: scoped to viewer's group, gated by asset.type,
+ * refuses soft-deleted rows. During the encryption rollout, falls back to
+ * the legacy `plate` plaintext column for rows that haven't been backfilled
+ * yet so existing assets keep revealing correctly before the migration runs.
+ */
+export async function revealCarPlate(assetId: string): Promise<string> {
+  'use server'
+  const { group } = await requireViewerGroup()
+
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      plate: carDetails.plate,
+      plateEncrypted: carDetails.plateEncrypted,
+    })
+    .from(assets)
+    .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'car') {
+    throw new Error('找不到該愛物')
+  }
+
+  if (row.plateEncrypted) return decrypt(row.plateEncrypted)
+  // Backfill-fallback: pre-#826 rows have only the legacy plaintext column.
+  if (row.plate) return row.plate
+  throw new Error('尚未填寫此欄位')
+}
+
+/**
+ * #826 — on-demand decryption for the house address. Address is nullable
+ * (some houses don't have one recorded), so both columns may be NULL.
+ * Same backfill-fallback contract as `revealCarPlate`.
+ */
+export async function revealHouseAddress(assetId: string): Promise<string> {
+  'use server'
+  const { group } = await requireViewerGroup()
+
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      address: houseDetails.address,
+      addressEncrypted: houseDetails.addressEncrypted,
+    })
+    .from(assets)
+    .leftJoin(houseDetails, eq(houseDetails.assetId, assets.id))
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'house') {
+    throw new Error('找不到該愛物')
+  }
+
+  if (row.addressEncrypted) return decrypt(row.addressEncrypted)
+  if (row.address) return row.address
+  throw new Error('尚未填寫此欄位')
 }
 
 // ── Pet ────────────────────────────────────────────────────────────────────
@@ -1047,7 +1166,10 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
     await tx.insert(houseDetails).values({
       assetId: asset.id,
       owner: viewer.id,
+      // #826 — dual write during the encryption rollout. Address is nullable
+      // so we map empty → NULL on both columns to preserve "no value" state.
       address: validated.address,
+      addressEncrypted: validated.address ? encrypt(validated.address) : null,
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
     })
@@ -1121,7 +1243,9 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
     await tx
       .update(houseDetails)
       .set({
+        // #826 — same dual-write contract as createHouse.
         address: validated.address,
+        addressEncrypted: validated.address ? encrypt(validated.address) : null,
         purchasedAt: validated.purchasedAt,
         purchasePrice: validated.purchasePrice,
       })

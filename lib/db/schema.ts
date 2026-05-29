@@ -127,7 +127,13 @@ export const assets = pgTable('Assets', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
   type: assetTypeEnum('type').notNull(),
+  // For child assets (#826), `name` is the display nickname (e.g. 「小白」);
+  // the real full name lives encrypted in `name_encrypted` and is only
+  // surfaced through a tap-to-reveal flow in the detail card. For every
+  // other asset type, `name` is the display name and `name_encrypted` stays
+  // NULL — same column reused so callers don't need a type discriminator.
   name: text('name').notNull(),
+  nameEncrypted: text('name_encrypted'),
   notes: text('notes'),
   // #222 — template path. NULL = legacy (uses *Details subtable + the matching
   // legacy *SheetBody). NOT NULL = template-based (free-text fields stored in
@@ -182,7 +188,14 @@ export const settlements = pgTable('Settlements', {
 
 export const carDetails = pgTable('CarDetails', {
   assetId: uuid('asset_id').primaryKey().references(() => assets.id),
+  // `plate` carries the legacy plain value during the encryption rollout (#826).
+  // New writes go to `plate_encrypted`; reads go through the reveal action.
+  // `plate` is kept notNull for the transition window — backfill script
+  // (`scripts/encrypt-existing-pii.mjs`) populates `plate_encrypted` from
+  // the existing `plate` value. A follow-up migration drops `plate` once all
+  // environments are confirmed migrated.
   plate: text('plate').notNull(),
+  plateEncrypted: text('plate_encrypted'),
   purchasedAt: date('purchased_at'),
   purchasePrice: integer('purchase_price'),
   primaryUserId: uuid('primary_user_id').references(() => profiles.id), // NULL = 共用
@@ -209,7 +222,11 @@ export const fuelLogs = pgTable('FuelLogs', {
 export const houseDetails = pgTable('HouseDetails', {
   assetId: uuid('asset_id').primaryKey().references(() => assets.id),
   owner: uuid('owner').notNull().references(() => profiles.id),
+  // `address` carries the legacy plain value during the encryption rollout
+  // (#826). New writes go to `address_encrypted`; reads go through the
+  // reveal action. Follow-up migration drops `address` once migrated.
   address: text('address'),
+  addressEncrypted: text('address_encrypted'),
   purchasedAt: date('purchased_at'),
   purchasePrice: integer('purchase_price'),
 })

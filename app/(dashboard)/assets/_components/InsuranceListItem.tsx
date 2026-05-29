@@ -193,20 +193,10 @@ export function InsuranceListItem({ id, name, data }: Props) {
         style={{
           background: 'var(--surface)',
           borderRadius: 16,
-          border: '1px solid var(--hairline)',
+          border: `1px solid color-mix(in srgb, ${stripeColor} 35%, transparent)`,
           overflow: 'hidden',
-          position: 'relative',
         }}
       >
-        {/* Left stripe */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', left: 0, top: 0, bottom: 0,
-            width: 3, background: stripeColor,
-          }}
-        />
-
         {/* Header — Link wraps only the header area (not the action row) */}
         <Link
           href={`/assets/${id}`}
@@ -216,7 +206,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
           {/* Header row */}
           <div
             style={{
-              padding: '12px 16px 12px 18px',
+              padding: '12px 16px',
               display: 'flex',
               alignItems: 'flex-start',
               gap: 12,
@@ -245,7 +235,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 <span
                   style={{
                     fontSize: 15,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: 'var(--ink)',
                     fontFamily: 'var(--font-serif)',
                   }}
@@ -261,7 +251,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: 14, fontWeight: 600, color: 'var(--ink)',
+                  fontSize: 14, fontWeight: 500, color: 'var(--ink)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}
               >
@@ -307,7 +297,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 </div>
                 <div
                   className="tnum"
-                  style={{ marginTop: 1, fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}
+                  style={{ marginTop: 1, fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}
                 >
                   {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
                 </div>
@@ -316,7 +306,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
           </div>
 
           {/* Timeline visualization */}
-          <div style={{ padding: '0 18px 14px 18px' }}>
+          <div style={{ padding: '0 16px 14px 16px' }}>
             {isSingleYear && (
               <TimelineBar
                 pct={singleYearPct}
@@ -352,7 +342,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
 
         {/* Action row for expired single-year — outside Link so buttons don't navigate */}
         {showActionRow && (
-          <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px 18px' }}>
+          <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px 16px' }}>
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
@@ -361,7 +351,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 flex: 1, height: 36, borderRadius: 10,
                 background: 'var(--accent-soft)', color: 'var(--ink)',
                 border: '1px solid var(--hairline)',
-                fontSize: 12, fontWeight: 600,
+                fontSize: 12, fontWeight: 500,
                 fontFamily: 'inherit', cursor: 'pointer',
               }}
               className="disabled:opacity-50"

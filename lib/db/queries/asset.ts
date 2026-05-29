@@ -17,6 +17,10 @@ export interface AssetWithCar {
   groupId: string
   type: AssetType
   name: string
+  /** #826 — non-null when an encrypted real full name is stored (for child
+   *  assets). Detail page reads this to decide whether to render the
+   *  RevealableRow; raw ciphertext is never used by general queries. */
+  nameEncrypted?: string | null
   notes: string | null
   deletedAt: Date | null
   createdAt: Date
@@ -58,6 +62,7 @@ export interface AssetWithCar {
   insuranceVehicleId: string | null
   insuranceInsurer: string | null
   // Child-only fields (null for non-child assets)
+  childNickname: string | null
   childBirthday: string | null
   childHeightCm: number | null
   childWeightG: number | null
@@ -110,6 +115,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
+      childNickname: childDetails.nickname,
       childBirthday: childDetails.birthday,
       childHeightCm: childDetails.heightCm,
       childWeightG: childDetails.weightG,
@@ -143,6 +149,11 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       groupId: assets.groupId,
       type: assets.type,
       name: assets.name,
+      // #826 — surface only the presence of an encrypted full name, so the
+      // detail page can decide whether to render the reveal row. The raw
+      // ciphertext goes through `revealChildName` (group-scoped server
+      // action), never returned by general-purpose asset queries.
+      nameEncrypted: assets.nameEncrypted,
       notes: assets.notes,
       templateKey: assets.templateKey,
       templateFields: assets.templateFields,
@@ -177,6 +188,7 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       insuranceReminderDaysBefore: insuranceDetails.reminderDaysBefore,
       insuranceVehicleId: insuranceDetails.vehicleId,
       insuranceInsurer: insuranceDetails.insurer,
+      childNickname: childDetails.nickname,
       childBirthday: childDetails.birthday,
       childHeightCm: childDetails.heightCm,
       childWeightG: childDetails.weightG,

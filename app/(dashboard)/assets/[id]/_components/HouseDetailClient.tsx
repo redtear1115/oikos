@@ -8,13 +8,21 @@ import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_com
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint, type SiblingChip } from './AibutsuHeader'
 import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
+import { RevealableRow } from '@/app/(dashboard)/_components/RevealableRow'
 import type { HouseDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
+import { revealHouseAddress } from '@/actions/asset'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+
+// #826 — address subtitle is masked at the header. The actual address text
+// only becomes visible when the user taps 「顯示」 on the address row in the
+// InfoCard below; the subtitle is decorative and stays opaque to anyone
+// glancing at the screen (a friend / a passer-by, etc.).
+const ADDRESS_SUBTITLE_MASK = '●●●●●●●●'
 
 function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: string; td: Translations['assetDetail']['house'] }) {
   // Snapshot "now" at mount so re-renders don't bump the day count unexpectedly
@@ -25,7 +33,7 @@ function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: st
     <div className="text-center py-2">
       <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 600, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
       <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
@@ -62,7 +70,10 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('house')
 
-  const subtitle = details?.address ?? null
+  // #826 — never include the raw address in subtitle; show the mask when
+  // there's a stored address, otherwise leave null so the header collapses.
+  const hasAddress = Boolean(details?.address)
+  const subtitle = hasAddress ? ADDRESS_SUBTITLE_MASK : null
 
   const handleAssetMutated = (kind: 'saved' | 'deleted') => {
     if (kind === 'deleted') { router.replace('/assets'); return }
@@ -108,7 +119,12 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
 
       <SectionHeader>{td.sectionInfo}</SectionHeader>
       <InfoCard>
-        <InfoRow label={td.address} value={details?.address ?? ''} />
+        {/* #826 — address is encrypted at rest; tap to decrypt via server action. */}
+        <RevealableRow
+          label={td.address}
+          hasValue={hasAddress}
+          revealAction={() => revealHouseAddress(assetId)}
+        />
         <InfoRow label={td.purchasedAt} value={details?.purchasedAt ?? ''} mono />
         {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
         <InfoRow label={td.purchasePrice} value={details?.purchasePrice ? `NT$ ${details.purchasePrice.toLocaleString()}` : ''} mono last />

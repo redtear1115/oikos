@@ -89,7 +89,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
           href={ctaHref}
           ctaLocation="desktop_header"
           target="sign_in"
-          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -105,10 +105,32 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
         <div className="flex flex-col md:flex-row md:items-center md:gap-10 md:max-w-[1280px] md:mx-auto">
           {/* Copy block */}
           <div className="text-center md:text-left md:w-[600px] md:shrink-0">
-            {/* mobile: large mark above title */}
+            {/* mobile: large mark above wordmark */}
             <div className="md:hidden flex justify-center mb-7">
               <FutariMark size={88} />
             </div>
+
+            {/* mobile only: Futari wordmark + kana, decorative — h1 below
+                carries the actual page heading (tagline) so screen-reader
+                navigation lands on page purpose, not the brand name. */}
+            <p
+              className="md:hidden m-0 text-center"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontWeight: 500,
+                letterSpacing: '-1.5px',
+                fontSize: 'clamp(56px, 14vw, 84px)',
+                lineHeight: 1,
+              }}
+            >
+              Futari
+            </p>
+            <p
+              className="md:hidden m-0 mt-3 mb-9 text-center"
+              style={{ color: 'var(--ink-2)', fontSize: 13, letterSpacing: '4px' }}
+            >
+              ふたり
+            </p>
 
             {/* desktop: small kicker above title */}
             <p
@@ -116,7 +138,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontSize: 13,
-                color: 'var(--accent)',
+                color: 'var(--ink-2)',
                 letterSpacing: '4px',
               }}
             >
@@ -129,39 +151,33 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                 fontFamily: 'var(--font-fraunces)',
                 fontWeight: 500,
                 letterSpacing: '-1.5px',
-                fontSize: 'clamp(56px, 8vw, 96px)',
               }}
             >
-              {/* mobile: "Futari" word as logotype */}
-              <span className="md:hidden">Futari</span>
+              {/* mobile: tagline scaled up to carry the fold as the sole
+                  visual main character (brief #832 phase 1). The 2-line
+                  block at this size visually outweighs the wordmark above
+                  even though per-character it's smaller; lh 1.15 keeps
+                  the block tight, letter-spacing -1px tightens CJK rhythm. */}
+              <span
+                className="md:hidden block"
+                style={{
+                  fontSize: 'clamp(34px, 9vw, 56px)',
+                  fontWeight: 400,
+                  lineHeight: 1.15,
+                  letterSpacing: '-1px',
+                }}
+                dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
+              />
               {/* desktop: tagline as the giant headline */}
               <span
                 className="hidden md:inline"
-                style={{ letterSpacing: '-3.5px' }}
+                style={{
+                  fontSize: 'clamp(56px, 8vw, 96px)',
+                  letterSpacing: '-3.5px',
+                }}
                 dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
               />
             </h1>
-
-            {/* mobile only: ふたり kana under Futari */}
-            <p
-              className="md:hidden mt-3 m-0"
-              style={{ color: 'var(--ink-2)', fontSize: 13, letterSpacing: '4px' }}
-            >
-              ふたり
-            </p>
-
-            {/* mobile only: tagline as secondary headline */}
-            <p
-              className="md:hidden mt-9 m-0"
-              style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontSize: 26,
-                fontWeight: 400,
-                lineHeight: 1.45,
-                letterSpacing: '-0.3px',
-              }}
-              dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
-            />
 
             {/* body — both layouts */}
             <p
@@ -241,7 +257,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                   fontFamily: 'var(--font-fraunces)',
                   fontSize: 12,
                   letterSpacing: '3.5px',
-                  color: 'var(--accent)',
+                  color: 'var(--ink-2)',
                 }}
               >
                 {t.featuresKicker}
@@ -264,38 +280,38 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
             />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-            <FeatureCard
+          {/* Editorial column: hanging Fraunces numeral + glyph-accented title
+              + body. No card chrome; rhythm comes from hairline dividers and
+              vertical spacing. 2 columns on desktop, single column on mobile. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-0 md:gap-y-0 md:gap-x-12 lg:gap-x-20">
+            <FeatureEntry
               kicker="01"
-              chipColor="var(--accent)"
-              chipBg="var(--accent-soft)"
+              glyphColor="var(--accent)"
               title={t.f1Title}
               body={t.f1Body}
               glyph={<DuoGlyph />}
             />
-            <FeatureCard
+            <FeatureEntry
               kicker="02"
-              chipColor="var(--asset-color-house)"
-              chipBg="var(--asset-tint-house)"
+              glyphColor="var(--asset-color-house)"
               title={t.f2Title}
               body={t.f2Body}
               glyph={<AssetGlyph />}
             />
-            <FeatureCard
+            <FeatureEntry
               kicker="03"
-              chipColor="var(--saving)"
-              chipBg="var(--asset-tint-insurance)"
+              glyphColor="var(--saving)"
               title={t.f3Title}
               body={t.f3Body}
               glyph={<ShieldGlyph />}
             />
-            <FeatureCard
+            <FeatureEntry
               kicker="04"
-              chipColor="var(--ink)"
-              chipBg="#EFE2D2"
+              glyphColor="var(--ink)"
               title={t.f4Title}
               body={t.f4Body}
               glyph={<StatsGlyph />}
+              isLast
             />
           </div>
         </div>
@@ -334,7 +350,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
             <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
-            <span style={{ color: 'var(--hairline)' }}>·</span>
+            <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
             <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
           </div>
           <div className="flex items-center gap-3">
@@ -397,7 +413,7 @@ function MigrateLinksSection({
                 fontFamily: 'var(--font-fraunces)',
                 fontSize: 12,
                 letterSpacing: '3.5px',
-                color: 'var(--accent)',
+                color: 'var(--ink-2)',
               }}
             >
               {t.migrateSection.kicker}
@@ -457,57 +473,67 @@ function MigrateLinksSection({
   )
 }
 
-function FeatureCard({
+function FeatureEntry({
   kicker,
-  chipColor,
-  chipBg,
+  glyphColor,
   title,
   body,
   glyph,
+  isLast,
 }: {
   kicker: string
-  chipColor: string
-  chipBg: string
+  glyphColor: string
   title: string
   body: string
   glyph: ReactNode
+  /** Suppress the bottom hairline on the last entry per column (avoids a
+   *  trailing rule before the next section). On desktop the right column's
+   *  entry #4 still tracks #3's height; the missing divider reads as the end. */
+  isLast?: boolean
 }) {
   return (
     <div
-      className="p-4 md:p-6 flex flex-col rounded-tile md:rounded-[22px]"
-      style={{ background: 'var(--surface)', minHeight: 168 }}
+      className="flex gap-5 md:gap-6 py-6 md:py-8"
+      style={{
+        borderBottom: isLast ? undefined : '1px solid var(--hairline)',
+      }}
     >
-      <div className="flex items-center justify-between mb-3 md:mb-[22px]">
-        <div
-          className="flex items-center justify-center w-[38px] h-[38px] md:w-12 md:h-12 rounded-xl md:rounded-bubble"
-          style={{ background: chipBg, color: chipColor }}
-        >
-          {glyph}
+      {/* Hanging italic numeral — the signature gesture. Reserves a narrow
+          column on the left so titles align across entries. */}
+      <span
+        aria-hidden="true"
+        className="shrink-0 text-[28px] md:text-[36px] leading-none pt-1"
+        style={{
+          fontFamily: 'var(--font-fraunces)',
+          fontStyle: 'italic',
+          fontWeight: 400,
+          color: 'var(--ink-3)',
+          letterSpacing: '-0.5px',
+          minWidth: 44,
+        }}
+      >
+        {kicker}
+      </span>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 mb-2 md:mb-2.5">
+          <span aria-hidden="true" style={{ color: glyphColor }}>
+            {glyph}
+          </span>
+          <h3
+            className="m-0 text-[18px] md:text-[20px] font-medium"
+            style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
+          >
+            {title}
+          </h3>
         </div>
-        <span
-          className="text-label md:text-button"
-          style={{
-            fontFamily: 'var(--font-fraunces)',
-            fontStyle: 'italic',
-            color: 'var(--ink-2)',
-            letterSpacing: '0.5px',
-          }}
+        <p
+          className="m-0 text-meta md:text-body leading-[1.65] md:leading-[1.7]"
+          style={{ color: 'var(--ink-2)' }}
         >
-          {kicker}
-        </span>
+          {body}
+        </p>
       </div>
-      <p
-        className="m-0 mb-1.5 md:mb-2 text-body md:text-[19px] font-medium"
-        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-      >
-        {title}
-      </p>
-      <p
-        className="m-0 text-caption md:text-meta leading-[1.55] md:leading-[1.7]"
-        style={{ color: 'var(--ink-2)' }}
-      >
-        {body}
-      </p>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useTranslations } from '@/lib/i18n/client'
 
-type HintType = 'child' | 'pet' | 'plant' | 'house'
+type HintType = 'child' | 'pet' | 'plant' | 'house' | 'car' | 'item'
 
 type HintStyle = {
   accentColor: string
@@ -10,10 +10,12 @@ type HintStyle = {
 }
 
 const STYLE: Record<HintType, HintStyle> = {
-  pet: { accentColor: '#9A6B3F', borderColor: 'rgba(154,107,63,0.35)' },
+  pet:   { accentColor: '#9A6B3F', borderColor: 'rgba(154,107,63,0.35)' },
   child: { accentColor: '#A85B6A', borderColor: 'rgba(168,91,106,0.35)' },
   plant: { accentColor: '#5A7A4A', borderColor: 'rgba(90,122,74,0.35)' },
   house: { accentColor: '#7A5A38', borderColor: 'rgba(122,90,56,0.35)' },
+  car:   { accentColor: 'var(--asset-color-car)',  borderColor: 'color-mix(in srgb, var(--asset-color-car) 35%, transparent)' },
+  item:  { accentColor: 'var(--asset-color-item)', borderColor: 'color-mix(in srgb, var(--asset-color-item) 35%, transparent)' },
 }
 
 interface AibutsuHintCardProps {
@@ -25,9 +27,11 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
   const t = useTranslations()
   const style = STYLE[type]
   const items =
-    type === 'pet' ? t.assetDetail.hint.itemsPet
+    type === 'pet'   ? t.assetDetail.hint.itemsPet
     : type === 'child' ? t.assetDetail.hint.itemsChild
     : type === 'plant' ? t.assetDetail.hint.itemsPlant
+    : type === 'car'   ? t.assetDetail.hint.itemsCar
+    : type === 'item'  ? t.assetDetail.hint.itemsItem
     : t.assetDetail.hint.itemsHouse
   return (
     <div

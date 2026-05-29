@@ -148,7 +148,7 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
         style={{
           fontFamily: 'var(--font-numeric)',
           fontSize: accent ? 44 : 32,
-          fontWeight: 600,
+          fontWeight: 500,
           color: dim ? 'var(--ink-3)' : 'var(--ink)',
         }}
       >

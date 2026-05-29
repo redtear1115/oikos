@@ -150,13 +150,13 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
         </div>
         <div
           className="tnum"
-          style={{ marginTop: 4, fontSize: 22, fontWeight: 600, color: 'var(--ink)' }}
+          style={{ marginTop: 4, fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}
         >
           NT$ {totalAnnual.toLocaleString('en-US')}
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-3)' }}>
           共{' '}
-          <span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{count}</span>
+          <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{count}</span>
           {' '}張保單
         </div>
       </div>
@@ -175,7 +175,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
           <>
             <div
               className="font-mono tnum"
-              style={{ marginTop: 4, fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}
+              style={{ marginTop: 4, fontSize: 16, fontWeight: 500, color: 'var(--ink)' }}
             >
               {upcoming.a.insurance?.expiryDate ?? '—'}
             </div>
@@ -593,7 +593,7 @@ export function AssetsListClient({ items }: Props) {
 
           {insuranceSingleYear.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label="保護型 · 一年期" dotColor="var(--asset-color-insurance)" />
+              <SectionLabel label={t.assetListItem.insuranceGroups.shortTermProtection} dotColor="var(--asset-color-insurance)" />
               <div className="flex flex-col gap-2.5">
                 {insuranceSingleYear.map((a) => (
                   <InsuranceListItem
@@ -609,7 +609,7 @@ export function AssetsListClient({ items }: Props) {
 
           {insuranceMultiYear.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label="保護型 · 多年期" dotColor="var(--asset-color-insurance)" />
+              <SectionLabel label={t.assetListItem.insuranceGroups.longTermProtection} dotColor="var(--asset-color-insurance)" />
               <div className="flex flex-col gap-2.5">
                 {insuranceMultiYear.map((a) => (
                   <InsuranceListItem
@@ -625,7 +625,7 @@ export function AssetsListClient({ items }: Props) {
 
           {insuranceSavings.length > 0 && (
             <div className="flex flex-col gap-3">
-              <SectionLabel label="儲蓄型" dotColor="var(--saving)" />
+              <SectionLabel label={t.assetListItem.insuranceGroups.savings} dotColor="var(--saving)" />
               <div className="flex flex-col gap-2.5">
                 {insuranceSavings.map((a) => (
                   <InsuranceListItem

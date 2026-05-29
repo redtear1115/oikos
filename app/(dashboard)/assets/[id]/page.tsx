@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import { getTranslations } from '@/lib/i18n/t'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import type { AssetWithCar } from '@/lib/db/queries/asset'
@@ -74,12 +75,17 @@ function buildSiblings(
           badge = { tone: 'accent', label: '🎂' }
         }
       }
-      return { id: a.id, type: a.type as SiblingChip['type'], name: a.name, badge }
+      const displayName = a.type === 'child' ? (a.childNickname ?? a.name) : a.name
+      return { id: a.id, type: a.type as SiblingChip['type'], name: displayName, badge }
     })
 }
 
 /** Build SwitcherGroup[] for the insurance dropdown switcher. */
-function buildInsuranceGroups(allAssetsData: AssetWithCar[], today: Date): SwitcherGroup[] {
+function buildInsuranceGroups(
+  allAssetsData: AssetWithCar[],
+  today: Date,
+  labels: { shortTermProtection: string; longTermProtection: string; savings: string },
+): SwitcherGroup[] {
   const allIns = allAssetsData.filter(a => a.type === 'insurance')
   const toItem = (ins: AssetWithCar) => ({
     id: ins.id,
@@ -90,19 +96,19 @@ function buildInsuranceGroups(allAssetsData: AssetWithCar[], today: Date): Switc
   })
   return [
     {
-      label: '保護型 · 一年期',
+      label: labels.shortTermProtection,
       items: allIns
         .filter(i => getFramingGroup(i.insuranceType) === 'protection' && (i.insuranceTermYears ?? 0) <= 1)
         .map(toItem),
     },
     {
-      label: '保護型 · 多年期',
+      label: labels.longTermProtection,
       items: allIns
         .filter(i => getFramingGroup(i.insuranceType) === 'protection' && (i.insuranceTermYears ?? 0) > 1)
         .map(toItem),
     },
     {
-      label: '儲蓄型',
+      label: labels.savings,
       items: allIns
         .filter(i => getFramingGroup(i.insuranceType) === 'savings')
         .map(toItem),
@@ -134,6 +140,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   const allAssetsData = await listAssetsForGroup(group.id)
   const today = new Date()
+  const t = await getTranslations()
 
   // #222 — Template-based asset path. Routed first so it shadows the legacy
   // type-based branches below (a template-based asset has type='item' anyway,
@@ -190,6 +197,9 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       // hasX flags drive 「清除」 affordance + 留空=不變更 placeholder.
       childHasNationalId: childDetailsData?.hasNationalId ?? false,
       childHasNhiNo: childDetailsData?.hasNhiNo ?? false,
+      // #826 — has-value bool only; the encrypted full name itself never
+      // reaches the client. Reveal goes through revealChildName.
+      childHasFullName: Boolean(asset.nameEncrypted),
       childBloodType: childDetailsData?.bloodType ?? null,
       childHospital: childDetailsData?.hospital ?? null,
       childHeightCm: childDetailsData?.heightCm ?? null,
@@ -413,7 +423,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           assetSheetInitial={assetSheetInitial}
           linkedVehicle={linkedVehicle}
           recurringRules={recurringRules}
-          allInsuranceGroups={buildInsuranceGroups(allAssetsData, today)}
+          allInsuranceGroups={buildInsuranceGroups(allAssetsData, today, t.assetListItem.insuranceGroups)}
         />
       )
     }
@@ -426,7 +436,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         details={insuranceDetailsData}
         linkedVehicle={linkedVehicle}
         assetSheetInitial={assetSheetInitial}
-        allInsuranceGroups={buildInsuranceGroups(allAssetsData, today)}
+        allInsuranceGroups={buildInsuranceGroups(allAssetsData, today, t.assetListItem.insuranceGroups)}
       />
     )
   }

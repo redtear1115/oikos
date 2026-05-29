@@ -605,6 +605,12 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** Section / switcher group labels for insurance assets by kind. */
+    insuranceGroups: {
+      shortTermProtection: string
+      longTermProtection: string
+      savings: string
+    }
   }
 
   /** Trip list page (#42). */
@@ -1463,6 +1469,9 @@ export type Translations = {
     child: {
       nickname: string
       nicknamePlaceholder: string
+      /** #826 — full real name input. Trinary semantics like nationalId. */
+      fullName: string
+      fullNamePlaceholder: string
       gender: string
       genderMale: string
       genderFemale: string
@@ -1627,12 +1636,26 @@ export type Translations = {
       itemsChild: string
       itemsPlant: string
       itemsHouse: string
+      itemsCar: string
+      itemsItem: string
+    }
+    /** Shared labels used by the `RevealableRow` shared component (#826).
+     *  Card-detail PII rows (plate, address, child full name, national ID, NHI)
+     *  all render through the same component and pull their toggle copy from
+     *  here so labels stay consistent across asset types. */
+    reveal: {
+      show: string
+      hide: string
+      loading: string
+      error: string
     }
     car: {
       avgEcon: string
       avgEconNoLog: string
       avgEconNeedMore: string
       avgEconRecent: string
+      /** #826 — label for the encrypted plate row. */
+      plate: string
     }
     child: {
       sectionId: string
@@ -1646,6 +1669,9 @@ export type Translations = {
       bloodTypeValue: string
       height: string
       weight: string
+      /** #826 — label for the encrypted full-name row (display name lives in
+       *  `Assets.name`; the real full name is revealed here on tap). */
+      fullName: string
       revealShow: string
       revealHide: string
       revealLoading: string
@@ -2472,7 +2498,7 @@ export const zhTW: Translations = {
     f1Title: '雙人記帳',
     f1Body: '一筆一筆共同記下，自動分攤，可以對半也可以依比例。每月清楚結算，不必再對帳。',
     f2Title: '我們的愛物',
-    f2Body: '家、車、孩子、寵物、植物 — 一起照顧的，都收進同一本帳，每筆相關支出自動歸戶。',
+    f2Body: '家、車、孩子、寵物、植物，一起照顧的，都收進同一本帳，每筆相關支出自動歸戶。',
     f3Title: '守護保險',
     f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
     f4Title: '記帳統計',
@@ -2819,6 +2845,11 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    insuranceGroups: {
+      shortTermProtection: '保護型 · 一年期',
+      longTermProtection: '保護型 · 多年期',
+      savings: '儲蓄型',
+    },
   },
 
   tripList: {
@@ -2955,8 +2986,8 @@ export const zhTW: Translations = {
     noneSubtitle: '這筆與任何愛物無關',
     loading: '載入中…',
     loadFailed: '載入失敗',
-    emptyAibutsu: '還沒有愛物 — 先到「愛物」分頁新增。',
-    emptyGuardian: '還沒有保單 — 先到「愛物 > 守護」分頁新增。',
+    emptyAibutsu: '還沒有愛物，先到「愛物」分頁新增。',
+    emptyGuardian: '還沒有保單，先到「愛物 > 守護」分頁新增。',
   },
 
   records: {
@@ -3533,6 +3564,8 @@ export const zhTW: Translations = {
     child: {
       nickname: '小名',
       nicknamePlaceholder: '元寶',
+      fullName: '全名',
+      fullNamePlaceholder: '陳小白',
       gender: '性別',
       genderMale: '男孩',
       genderFemale: '女孩',
@@ -3665,9 +3698,9 @@ export const zhTW: Translations = {
     refuel: '加油',
     relatedInsurance: '相關保險',
     linkedVehicleSection: '關聯車輛',
-    emptyCarLine1: '還沒有為這台車記下任何支出 —',
+    emptyCarLine1: '還沒有為這台車記下任何支出。',
     emptyCarLine2: '戳右下角 + 開始',
-    emptyDefaultLine1: '還沒有記下任何支出 —',
+    emptyDefaultLine1: '還沒有記下任何支出。',
     emptyDefaultLine2: '戳右下角 + 開始',
     typeLabels: {
       car: '車',
@@ -3694,12 +3727,21 @@ export const zhTW: Translations = {
       itemsChild: '尿布奶粉 · 看診 · 課後安親 · 玩具 · 學費',
       itemsPlant: '介質 · 盆器 · 肥料 · 買新苗 · 防蟲',
       itemsHouse: '房貸 · 水電 · 管理費 · 維修 · 裝潢 · 清潔',
+      itemsCar: '加油 · 停車 · 定期保養 · 保險 · 過路費',
+      itemsItem: '保養 · 耗材 · 維修 · 配件',
+    },
+    reveal: {
+      show: '顯示',
+      hide: '隱藏',
+      loading: '…',
+      error: '無法顯示',
     },
     car: {
       avgEcon: '平均油耗',
       avgEconNoLog: '加第一筆油看油耗',
       avgEconNeedMore: '需要至少 2 次加油記錄',
       avgEconRecent: '近 6 個月',
+      plate: '車牌',
     },
     child: {
       sectionId: '身分證件',
@@ -3712,6 +3754,7 @@ export const zhTW: Translations = {
       bloodTypeValue: '{type} 型',
       height: '身高',
       weight: '體重',
+      fullName: '全名',
       revealShow: '顯示',
       revealHide: '隱藏',
       revealLoading: '…',
@@ -3825,7 +3868,7 @@ export const zhTW: Translations = {
       accountValueLabel: '目前帳戶價值',
       accountValueEditCta: '更新',
       recurringSectionTitle: '定期進帳',
-      recurringEmptyHint: '分紅或生存金每年都會回來 — 設成定期進帳就不必再記',
+      recurringEmptyHint: '分紅或生存金每年都會回來，設成定期進帳就不必再記',
       recurringAddCta: '建立定期進帳',
       recurringRuleSummary: '每月 {day} 號 · {interval}',
       recurringRuleNextDate: '下次 {date}',
@@ -4007,7 +4050,7 @@ export const zhTW: Translations = {
     card1Body: '這個月你們最常一起花在 {category}，共 NT$ {amount}',
     card1BodySolo: '這個月你最常花在 {category}，共 NT$ {amount}',
     card2Title: '本月最大筆',
-    card2Body: '最大一筆 — {name} 付的「{description}」，NT$ {amount}',
+    card2Body: '最大一筆：{name} 付的「{description}」，NT$ {amount}',
     card3Title: '定期入帳事件',
     card3ExpenseTotal: '本月定期支出共 NT$ {amount}',
     card3IncomeTotal: '本月定期進帳共 NT$ {amount}',
@@ -4029,7 +4072,7 @@ export const zhTW: Translations = {
   },
 
   quiz: {
-    cardHeadingInvitation: '我們還不太認識彼此 — 來回答 3 題',
+    cardHeadingInvitation: '我們還不太認識彼此，來回答 3 題',
     cardHeadingSelfPendingPartnerDone: '對方答完了，輪你了',
     cardHeadingSelfPendingPartnerPending: '來回答 3 題，看看你們對錢的想像',
     cardHeadingSelfDonePartnerPending: '答完了，等 {partnerName} 一起揭曉',
@@ -4048,7 +4091,7 @@ export const zhTW: Translations = {
     revealHeading: '你們的理財組合',
     revealedAtLine: '揭曉於 {date}',
     revealSameAnswer: '在這件事上你們同方向',
-    revealFraming: '你們一個是日出、一個是月光 — 不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
+    revealFraming: '你們一個是日出、一個是月光。不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '對方',
     soloFallback: '兩個人才能一起回答這 3 題。等對方加入家計簿，再回來吧。',
@@ -4287,7 +4330,7 @@ export const zhTW: Translations = {
             {
               feature: '端對端資料加密',
               futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '— 未說明', tone: 'no' },
+              other: { label: '未說明', tone: 'no' },
             },
           ],
         },
@@ -4361,7 +4404,7 @@ export const zhTW: Translations = {
             {
               feature: 'CSV 資料匯入',
               futari: { label: '✓ 直接上傳', tone: 'yes' },
-              other: { label: '— 需自行整理', tone: 'partial' },
+              other: { label: '需自行整理', tone: 'partial' },
             },
           ],
         },

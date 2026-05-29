@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { ShieldOutlineGlyph } from './FutariMark'
 
@@ -45,83 +44,70 @@ function CompactTrustRow({ t }: { t: LandingStrings }) {
 function FullTrustSection({ t }: { t: LandingStrings }) {
   return (
     <section
-      className="relative z-10 px-5 md:px-16 py-12 md:py-20"
+      className="relative z-10 px-5 md:px-16 py-16 md:py-28"
       style={{ background: 'var(--bg)' }}
     >
-      <div className="max-w-md md:max-w-[860px] mx-auto">
+      <div className="max-w-md md:max-w-[720px] mx-auto text-center">
+        {/* The narrative line is the trust statement — serif standalone, no
+            card chrome around it. The three trust facts that used to sit in
+            three identical cards collapse to a single inline row underneath. */}
         <p
-          className="m-0 text-center text-body md:text-[18px] leading-[1.7]"
+          className="m-0 text-[24px] md:text-[34px] leading-[1.45] md:leading-[1.35]"
           style={{
-            color: 'var(--ink-2)',
-            letterSpacing: '0.2px',
+            fontFamily: 'var(--font-fraunces)',
+            fontWeight: 400,
+            color: 'var(--ink)',
+            letterSpacing: '-0.3px',
           }}
         >
           {t.trust.narrative}
         </p>
 
-        <div className="mt-8 md:mt-12 flex flex-col gap-3 md:gap-4">
-          <TrustCard
-            glyph={<LockGlyph />}
-            title={t.trust.encryption.title}
-            body={t.trust.encryption.body}
-          />
-          <TrustCard
-            glyph={<ExportGlyph />}
-            title={t.trust.portability.title}
-            body={t.trust.portability.body}
-          />
-          <TrustCard
-            glyph={<HeartGlyph />}
-            title={t.trust.forever.title}
-            body={t.trust.forever.body}
-          />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function TrustCard({
-  glyph,
-  title,
-  body,
-}: {
-  glyph: ReactNode
-  title: string
-  body: string
-}) {
-  return (
-    <div
-      className="flex items-start gap-4 p-5 md:p-6 rounded-tile md:rounded-[22px]"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
-      }}
-    >
-      <div
-        className="flex items-center justify-center shrink-0 w-[40px] h-[40px] md:w-[44px] md:h-[44px] rounded-xl"
-        style={{
-          background: 'var(--accent-soft)',
-          color: 'var(--accent)',
-        }}
-      >
-        {glyph}
-      </div>
-      <div className="min-w-0">
-        <p
-          className="m-0 text-body md:text-[17px] font-medium"
-          style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-        >
-          {title}
-        </p>
-        <p
-          className="m-0 mt-1 text-label md:text-meta leading-[1.6]"
+        <ul
+          className="m-0 mt-8 md:mt-10 p-0 list-none flex flex-col md:flex-row md:justify-center items-center gap-3 md:gap-x-6 md:gap-y-0 text-meta md:text-body"
           style={{ color: 'var(--ink-2)' }}
         >
-          {body}
-        </p>
+          <li className="inline-flex items-center gap-2">
+            <span aria-hidden="true" style={{ color: 'var(--ink-2)' }}>
+              <LockGlyph size={18} />
+            </span>
+            <span className="font-medium" style={{ color: 'var(--ink)' }}>
+              {t.trust.encryption.title}
+            </span>
+          </li>
+          <li
+            aria-hidden="true"
+            className="hidden md:block"
+            style={{ color: 'var(--hairline)' }}
+          >
+            ·
+          </li>
+          <li className="inline-flex items-center gap-2">
+            <span aria-hidden="true" style={{ color: 'var(--ink-2)' }}>
+              <ExportGlyph size={18} />
+            </span>
+            <span className="font-medium" style={{ color: 'var(--ink)' }}>
+              {t.trust.portability.title}
+            </span>
+          </li>
+          <li
+            aria-hidden="true"
+            className="hidden md:block"
+            style={{ color: 'var(--hairline)' }}
+          >
+            ·
+          </li>
+          <li className="inline-flex items-center gap-2">
+            <span aria-hidden="true" style={{ color: 'var(--ink-2)' }}>
+              <HeartGlyph size={18} />
+            </span>
+            <span className="font-medium" style={{ color: 'var(--ink)' }}>
+              {t.trust.forever.title}
+            </span>
+          </li>
+        </ul>
       </div>
-    </div>
+    </section>
   )
 }
 

@@ -40,7 +40,7 @@ export default async function TermsPage({ params }: { params: Params }) {
       className="min-h-screen px-6 py-12"
       style={{ background: 'var(--bg)' }}
     >
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md md:max-w-2xl mx-auto">
         <h1
           className="text-page leading-tight mb-2"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
@@ -61,11 +61,19 @@ export default async function TermsPage({ params }: { params: Params }) {
           <p>{t.termsPage.outro}</p>
         </div>
 
-        <div className="mt-12 flex gap-4 text-sm">
-          <Link href={localizedHref('/', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
+        <div className="mt-12 flex gap-2 text-sm">
+          <Link
+            href={localizedHref('/', locale)}
+            className="inline-flex items-center min-h-11 px-2 underline"
+            style={{ color: 'var(--ink-2)' }}
+          >
             {t.termsPage.backHome}
           </Link>
-          <Link href={localizedHref('/privacy', locale)} className="underline" style={{ color: 'var(--ink-2)' }}>
+          <Link
+            href={localizedHref('/privacy', locale)}
+            className="inline-flex items-center min-h-11 px-2 underline"
+            style={{ color: 'var(--ink-2)' }}
+          >
             {t.termsPage.privacyLink}
           </Link>
         </div>
