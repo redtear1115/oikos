@@ -131,11 +131,16 @@ export function CarHeroCard({
               {name}
             </div>
             {plate && (
+              // #826 — list context: the plate chip is rendered masked. The
+              // detail page is where the user reveals via tap. We keep the
+              // chip shape so the row's visual rhythm doesn't shift; only
+              // the characters become opaque.
               <span
                 className="shrink-0"
+                aria-label="●●●●●●"
                 style={{
                   fontSize: 'var(--fs-micro)',
-                  color: 'var(--ink-2)',
+                  color: 'var(--ink-3)',
                   fontFamily: '"JetBrains Mono", monospace',
                   letterSpacing: 0.8,
                   background: 'rgba(58,36,25,0.06)',
@@ -143,7 +148,7 @@ export function CarHeroCard({
                   borderRadius: 5,
                 }}
               >
-                {plate}
+                ●●●●●●
               </span>
             )}
           </div>
