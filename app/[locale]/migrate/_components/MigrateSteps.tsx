@@ -15,13 +15,8 @@ export function MigrateSteps({
   return (
     <section className="space-y-4">
       <h2
-        className="text-label m-0"
-        style={{
-          fontFamily: 'var(--font-fraunces)',
-          color: 'var(--accent)',
-          letterSpacing: '3.5px',
-          textTransform: 'uppercase',
-        }}
+        className="m-0 text-[20px] md:text-[22px] font-medium"
+        style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {heading}
       </h2>
@@ -77,7 +72,7 @@ export function MigrateHero({
           fontFamily: 'var(--font-fraunces)',
           fontStyle: 'italic',
           fontSize: 13,
-          color: 'var(--accent)',
+          color: 'var(--ink-2)',
           letterSpacing: '3.5px',
         }}
       >

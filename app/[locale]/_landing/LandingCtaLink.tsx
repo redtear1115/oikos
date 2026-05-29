@@ -30,10 +30,13 @@ interface Props {
  */
 export function LandingCtaLink({ href, ctaLocation, target, className, style, ariaLabel, children }: Props) {
   const finalHref = href.includes('/sign-in') ? appendQueryParam(href, 'from', 'landing') : href
+  // Reuse the shared `oik-focus-ring` utility (globals.css) so keyboard focus is
+  // visible against dark-fill CTAs; pointer clicks stay clean via :focus-visible.
+  const cls = ['outline-none focus-visible:oik-focus-ring', className].filter(Boolean).join(' ')
   return (
     <Link
       href={finalHref}
-      className={className}
+      className={cls}
       style={style}
       aria-label={ariaLabel}
       onClick={() => track('landing_cta_clicked', { cta_location: ctaLocation, target })}

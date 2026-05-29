@@ -108,7 +108,7 @@ export const ja: Translations = {
     f1Title: 'ふたりで記帳',
     f1Body: '一筆ずつ一緒に記録、自動で割り勘。半分ずつでも比率でもOK。毎月の精算は計算いらず。',
     f2Title: '愛しいもの',
-    f2Body: '家、車、子ども、ペット、植物 — ふたりで守るもの、すべて同じ家計簿に。',
+    f2Body: '家、車、子ども、ペット、植物。ふたりで守るもの、すべて同じ家計簿に。',
     f3Title: '守りの保険',
     f3Body: '保障型と貯蓄型を並べて、被保険者・受取人・更新日を一画面で。',
     f4Title: '振り返り',
@@ -535,7 +535,7 @@ export const ja: Translations = {
     endDateBeforeStart: '終了日は開始日（{date}）より前にできません',
     endFailure: '終了に失敗しました',
     editAriaLabel: 'この旅を編集',
-    endIrreversibleNote: '締めたあとは戻せません — 支出はすべて、まとめて主帳簿に戻ります。',
+    endIrreversibleNote: '締めたあとは戻せません。支出はすべて、まとめて主帳簿に戻ります。',
     totalLabel: 'この旅の合計',
     baseCurrencyTag: '基準 {code}',
     baseCurrencyTagTitle: 'この旅はこの通貨で精算します',
@@ -596,8 +596,8 @@ export const ja: Translations = {
     noneSubtitle: 'この記録はどの愛物にも関連しません',
     loading: '読み込み中…',
     loadFailed: '読み込みに失敗しました',
-    emptyAibutsu: 'まだ愛物がありません — まず「愛物」タブから追加してください。',
-    emptyGuardian: 'まだ保険がありません — まず「愛物 > 守護」から追加してください。',
+    emptyAibutsu: 'まだ愛物がありません。まず「愛物」タブから追加してください。',
+    emptyGuardian: 'まだ保険がありません。まず「愛物 > 守護」から追加してください。',
   },
 
   records: {
@@ -1306,9 +1306,9 @@ export const ja: Translations = {
     refuel: '給油',
     relatedInsurance: '関連する保険',
     linkedVehicleSection: 'リンク先の車',
-    emptyCarLine1: 'この車の支出はまだ記録されていません —',
+    emptyCarLine1: 'この車の支出はまだ記録されていません。',
     emptyCarLine2: '右下の + で記録を始めましょう',
-    emptyDefaultLine1: 'まだ支出は記録されていません —',
+    emptyDefaultLine1: 'まだ支出は記録されていません。',
     emptyDefaultLine2: '右下の + で記録を始めましょう',
     typeLabels: {
       car: '車',
@@ -1468,7 +1468,7 @@ export const ja: Translations = {
       accountValueLabel: '現在の口座価値',
       accountValueEditCta: '更新',
       recurringSectionTitle: '定期入金',
-      recurringEmptyHint: '配当金や生存給付金は毎期戻ってきます — 定期入金にすれば覚えなくて済みます',
+      recurringEmptyHint: '配当金や生存給付金は毎期戻ってきます。定期入金にすれば覚えなくて済みます',
       recurringAddCta: '定期入金を設定',
       recurringRuleSummary: '毎月 {day} 日 · {interval}',
       recurringRuleNextDate: '次回 {date}',
@@ -1650,7 +1650,7 @@ export const ja: Translations = {
     card1Body: '今月もっとも一緒に使ったのは {category}：NT$ {amount}',
     card1BodySolo: '今月もっとも使ったのは {category}：NT$ {amount}',
     card2Title: '今月のいちばん大きな一筆',
-    card2Body: 'いちばん — {name} さんが「{description}」、NT$ {amount}',
+    card2Body: 'いちばん：{name} さんが「{description}」、NT$ {amount}',
     card3Title: '定期の出来事',
     card3ExpenseTotal: '今月の定期支出：NT$ {amount}',
     card3IncomeTotal: '今月の定期収入：NT$ {amount}',
@@ -1672,9 +1672,9 @@ export const ja: Translations = {
   },
 
   quiz: {
-    cardHeadingInvitation: 'まだお互いを知り尽くしていない — 3 つだけ答えてみよう',
+    cardHeadingInvitation: 'まだお互いを知り尽くしていない。3 つだけ答えてみよう',
     cardHeadingSelfPendingPartnerDone: '相手は答え終わったよ。次は君の番',
-    cardHeadingSelfPendingPartnerPending: 'お金の考え方を 3 問だけ — 答えてみよう',
+    cardHeadingSelfPendingPartnerPending: 'お金の考え方を 3 問だけ。答えてみよう',
     cardHeadingSelfDonePartnerPending: '答え終わったよ。{partnerName} さんを待って一緒に開けよう',
     cardHeadingRevealed: '二人のお金の組み合わせを見てみよう',
     cardCtaStart: '→ はじめる',
@@ -1691,7 +1691,7 @@ export const ja: Translations = {
     revealHeading: '二人のお金の組み合わせ',
     revealedAtLine: '{date} に開いた',
     revealSameAnswer: 'これは同じ向きを向いているね',
-    revealFraming: '君は朝日、相手は月明かり — 違う時間に、同じ家を照らしている。どっちの答えが正しいわけじゃない。相手が気にしていることを、覚えていればそれでいい。',
+    revealFraming: '君は朝日、相手は月明かり。違う時間に、同じ家を照らしている。どっちの答えが正しいわけじゃない。相手が気にしていることを、覚えていればそれでいい。',
     revealHeaderA: 'あなた',
     revealHeaderB: '相手',
     soloFallback: 'これは二人で答える 3 問。相手が家計簿に加わったら、また来てね。',
@@ -1868,8 +1868,8 @@ export const ja: Translations = {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Honeydue のデータは、そのまま連れていけます',
-        heroSubtitle: 'Honeydue から Futari への引っ越しは約 3 分 — CSV をアップロードして、これまでの記録をそのまま残せます。',
-        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります — 無料、広告なし、エンドツーエンド暗号化。',
+        heroSubtitle: 'Honeydue から Futari への引っ越しは約 3 分。CSV をアップロードして、これまでの記録をそのまま残せます。',
+        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります。無料、広告なし、エンドツーエンド暗号化。',
         differentiators: [
           {
             title: '今もアップデートが続いています',
@@ -1933,7 +1933,7 @@ export const ja: Translations = {
             {
               feature: 'エンドツーエンド暗号化',
               futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '— 不明', tone: 'no' },
+              other: { label: '不明', tone: 'no' },
             },
           ],
         },
@@ -1941,7 +1941,7 @@ export const ja: Translations = {
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
         heroTitle: 'Spendee のデータは、そのまま連れていけます',
-        heroSubtitle: 'Spendee の記録を Futari へ取り込み — CSV をアップロードして、なかみを確かめてから決められます。',
+        heroSubtitle: 'Spendee の記録を Futari へ取り込み。CSV をアップロードして、なかみを確かめてから決められます。',
         differentiators: [
           {
             title: '共有は標準。課金で解放するものじゃない',
@@ -1979,7 +1979,7 @@ export const ja: Translations = {
           },
           {
             question: 'Spendee の精算機能は Futari にもありますか？',
-            answer: 'あります。Futari には複数の精算モードが内蔵されています — 各自払い、片方持ち、折半、比率指定。',
+            answer: 'あります。Futari には複数の精算モードが内蔵されています：各自払い、片方持ち、折半、比率指定。',
           },
         ],
         comparison: {
@@ -2008,7 +2008,7 @@ export const ja: Translations = {
             {
               feature: 'CSV 取り込み',
               futari: { label: '✓ 直接アップロード', tone: 'yes' },
-              other: { label: '— 自分で整える', tone: 'partial' },
+              other: { label: '自分で整える', tone: 'partial' },
             },
           ],
         },
@@ -2113,7 +2113,7 @@ export const ja: Translations = {
       honeydue: {
         title: 'Honeydue から Futari へ｜移行ガイド',
         description: 'Honeydue の代替に。カップル・夫婦の共同家計簿 Futari なら、3 分でデータを引っ越して、無料・広告なし・エンドツーエンド暗号化で続けられます。',
-        ogDescription: 'Honeydue ユーザーの次の住みか — Futari でふたりの家計をそのまま続ける。',
+        ogDescription: 'Honeydue ユーザーの次の住みか。Futari でふたりの家計をそのまま続ける。',
       },
       spendee: {
         title: 'Spendee から Futari へ｜CSV 取り込み',
@@ -2123,7 +2123,7 @@ export const ja: Translations = {
       cwmoney: {
         title: 'CWMoney から Futari へ｜Excel 変換',
         description: 'CWMoney からの引っ越し手順。Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦の共同家計簿）にアップロードするだけ。',
-        ogDescription: 'CWMoney の引っ越し手順 — 変換テンプレートで Excel を CSV にして Futari へ。',
+        ogDescription: 'CWMoney の引っ越し手順。変換テンプレートで Excel を CSV にして Futari へ。',
       },
     },
   },

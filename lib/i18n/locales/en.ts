@@ -2,7 +2,7 @@ import type { Translations } from './zh-TW'
 
 export const en: Translations = {
   signIn: {
-    tagline: 'Your ledger is ready — for the two of you.',
+    tagline: 'Your ledger is ready, for the two of you.',
     continueWithGoogle: 'Continue with Google',
     termsPrefix: 'By continuing, you agree to our',
     termsLink: 'Terms of Service',
@@ -13,57 +13,57 @@ export const en: Translations = {
     about: {
       s1Heading: 'Is there a better way to split expenses as a couple?',
       s1Body: [
-        'My wife and I started going Dutch before we got married. Over those years we tried plenty of apps — some looked beautiful, others were packed with features, but every one of them eventually felt off. It wasn\'t that they lacked features. It was that every time I opened one, it felt like an app built for a single person. You had to create a group yourself, set up the splits yourself, chase down who owed whom yourself — like prying a solo expense tracker open and forcing two people inside.',
+        'My wife and I started going Dutch before we got married. Over those years we tried plenty of apps. Some looked beautiful, others were packed with features, but every one of them eventually felt off. It wasn\'t that they lacked features. It was that every time I opened one, it felt like an app built for a single person. You had to create a group yourself, set up the splits yourself, chase down who owed whom yourself, like prying a solo expense tracker open and forcing two people inside.',
         'So at some point I thought: maybe I\'ll just build one. Nothing grand. I just wanted an expense tracker that assumed, from the very first screen, that the user is two people. That\'s where Futari started.',
       ],
       s2Heading: 'How do newlyweds split household costs without it getting weird?',
       s2Body: [
         'No two couples have the same income, and there isn\'t one right way to split.',
-        'Some people prefer 50/50, clean and simple. Others have a real income gap, and splitting by ratio feels fairer — you earned more this month, you put in a little more, it isn\'t a big deal, it\'s just life. Some take turns paying ("I got this one, you get the next one"), or each take on a category — one covers groceries, the other covers utilities.',
-        'My wife and I mix it up: fixed costs by ratio, dinners out sometimes 50/50, trips on a separate ledger. There\'s no best way, only the way that fits where the two of you are right now. Futari supports all four modes. It\'s not here to decide how you split — once you\'ve decided, it just makes sure the math is clean.',
+        'Some people prefer 50/50, clean and simple. Others have a real income gap, and splitting by ratio feels fairer: you earned more this month, you put in a little more, it isn\'t a big deal, it\'s just life. Some take turns paying ("I got this one, you get the next one"), or each take on a category (one covers groceries, the other covers utilities).',
+        'My wife and I mix it up: fixed costs by ratio, dinners out sometimes 50/50, trips on a separate ledger. There\'s no best way, only the way that fits where the two of you are right now. Futari supports all four modes. It\'s not here to decide how you split. Once you\'ve decided, it just makes sure the math is clean.',
       ],
       s3Heading: 'We used a spreadsheet for trips, until we had a trip ledger',
       s3Body: [
-        'Travel is where shared expenses fall apart fastest. Day-to-day splitting was fine, but the moment we landed somewhere — they booked the hotel, I covered the cab, both of us paid for a dozen tiny things in between — by the time we got home, neither of us knew who was up by how much. Reconciling meant scrolling back through everything, receipt by receipt.',
-        'Our old fix was a dedicated travel spreadsheet, cleaned up by hand after the trip. It worked, but it was tedious — and more than once we just gave up halfway and let it go.',
-        'The trip ledger was one of the most exciting things to build into Futari. Travel money lives apart from the everyday ledger. When you get home, you can see exactly who put in what and how much one side is owed — at a glance. Next time you plan a trip, you can flip back and see what the last one cost. That part is genuinely useful.',
+        'Travel is where shared expenses fall apart fastest. Day-to-day splitting was fine, but the moment we landed somewhere (they booked the hotel, I covered the cab, both of us paid for a dozen tiny things in between), by the time we got home, neither of us knew who was up by how much. Reconciling meant scrolling back through everything, receipt by receipt.',
+        'Our old fix was a dedicated travel spreadsheet, cleaned up by hand after the trip. It worked, but it was tedious, and more than once we just gave up halfway and let it go.',
+        'The trip ledger was one of the most exciting things to build into Futari. Travel money lives apart from the everyday ledger. When you get home, you can see exactly who put in what and how much one side is owed, at a glance. Next time you plan a trip, you can flip back and see what the last one cost. That part is genuinely useful.',
       ],
       s4Heading: 'How do you keep car costs separate from daily spending without losing track?',
       s4Body: [
-        'A question that comes up now and then in expense-tracking forums: how do you record car-related costs? Gas, parking, maintenance, insurance — the timing is irregular, the amounts are uneven, and they get lost the moment you mix them into the daily ledger. But nobody wants to juggle multiple ledgers either.',
-        'Futari lets each expense link to a vehicle, and you can jot down a fuel log in the same gesture. The daily ledger and the car ledger aren\'t two separate things — they\'re the same entry with one extra tag. Want to see how much the car cost this month? Filter, done. Don\'t feel like thinking about it? Just record normally and move on.',
+        'A question that comes up now and then in expense-tracking forums: how do you record car-related costs? Gas, parking, maintenance, insurance: the timing is irregular, the amounts are uneven, and they get lost the moment you mix them into the daily ledger. But nobody wants to juggle multiple ledgers either.',
+        'Futari lets each expense link to a vehicle, and you can jot down a fuel log in the same gesture. The daily ledger and the car ledger aren\'t two separate things, they\'re the same entry with one extra tag. Want to see how much the car cost this month? Filter, done. Don\'t feel like thinking about it? Just record normally and move on.',
         'If the two of you share a car, this is the kind of design that should let your shoulders drop a little.',
       ],
       s5Heading: 'Behind every expense, there\'s an "I remember"',
       s5Body: [
-        'That jar of face mask you picked up for them, the gas you topped off on the way home, the internet bill you paid this month — if these are just numbers, nothing of them is left a few days later.',
+        'That jar of face mask you picked up for them, the gas you topped off on the way home, the internet bill you paid this month: if these are just numbers, nothing of them is left a few days later.',
         'Every entry in Futari can hold one line. It doesn\'t have to be long. Just enough to give the entry a little weight. "The one you wanted to try." "Bought it in the rain." "The week you were away on the trip." The person who records it knows why it\'s there. The person who reads it later can see the moment too.',
         'For the monthly review, I\'ve been avoiding the word "reconciliation." Reconciliation sounds like finding problems and assigning blame. I\'d rather think of it as: what did the two of you do this month, where did you go, what did you spend on each other. Strung together, those numbers are a record of a life lived together.',
-        'The money I spent on you — I want you to see it.',
+        'The money I spent on you, I want you to see it.',
       ],
       s6Heading: 'What if the app disappears? What happens to our data?',
       s6Body: [
         'That worry is fair. Honeydue has been slowly fading. Spendee once made user data vanish. If those stories have made you cautious, your caution is the right instinct.',
-        'Futari is something I use every day myself. That\'s the most direct evidence that "someone is maintaining it." It doesn\'t mean nothing will ever break — it means there\'s a real person on the other end who cares whether it works.',
-        'On data: Futari supports CSV export. Whenever you want to take your data with you, you can. I\'m not going to convince you with "we\'ll never disappear" — but I can tell you this: your data won\'t be locked in.',
+        'Futari is something I use every day myself. That\'s the most direct evidence that "someone is maintaining it." It doesn\'t mean nothing will ever break; it means there\'s a real person on the other end who cares whether it works.',
+        'On data: Futari supports CSV export. Whenever you want to take your data with you, you can. I\'m not going to convince you with "we\'ll never disappear," but I can tell you this: your data won\'t be locked in.',
       ],
-      s7Heading: 'What Futari is — and isn\'t',
+      s7Heading: 'What Futari is (and isn\'t)',
       s7Body: [
-        'Futari is a couple-first expense tracker. Whatever comes in is shared between the two of you. There\'s no "my ledger" vs. "your ledger" visibility split, no role-based permissions design. That choice is deliberate — the money between partners should be shared.',
+        'Futari is a couple-first expense tracker. Whatever comes in is shared between the two of you. There\'s no "my ledger" vs. "your ledger" visibility split, no role-based permissions design. That choice is deliberate: the money between partners should be shared.',
         'Futari doesn\'t judge how you spend. It won\'t push "you\'re over budget this month." It won\'t score your spending. It won\'t suggest you skip a coffee. Your spending habits are your business.',
-        'It\'s also not a tool here to "optimize your finances." It just wants to sit beside the two of you and help you record everyday life — one entry at a time. Not more, not less.',
+        'It\'s also not a tool here to "optimize your finances." It just wants to sit beside the two of you and help you record everyday life, one entry at a time. Not more, not less.',
       ],
       moreStoriesHint: 'Futari has six more stories. Next time you stop by, it\'ll be a different one.',
     },
     features: {
       c1Title: 'Who paid today?',
-      c1Body: 'Day-to-day splitting without relying on memory. Every entry, balance auto-calculated — who owes whom is obvious at a glance.',
+      c1Body: 'Day-to-day splitting without relying on memory. Every entry, balance auto-calculated; who owes whom is obvious at a glance.',
       c2Title: 'Trips stay separate',
-      c2Body: 'A dedicated trip ledger. When you get home, see exactly who put in more — no more scrolling through chat logs.',
+      c2Body: 'A dedicated trip ledger. When you get home, see exactly who put in more, no more scrolling through chat logs.',
       c3Title: 'This one was for you',
-      c3Body: 'Every entry can hold one line. So the "picked it up for you" isn\'t just a number — it\'s an "I remember."',
+      c3Body: 'Every entry can hold one line. So the "picked it up for you" isn\'t just a number; it\'s an "I remember."',
       c4Title: 'Your ledger, just for the two of you',
-      c4Body: 'No "my entries" vs. "your entries." Whatever\'s recorded is shared — no visibility tiers, by design.',
+      c4Body: 'No "my entries" vs. "your entries." Whatever\'s recorded is shared, no visibility tiers, by design.',
     },
     blog: {
       heading: 'Dev log',
@@ -96,7 +96,7 @@ export const en: Translations = {
       },
       portability: {
         title: 'Take it with you',
-        body: 'Export to CSV anytime. Your data is always yours — never locked in.',
+        body: 'Export to CSV anytime. Your data is always yours, never locked in.',
       },
       forever: {
         title: 'Free forever',
@@ -109,9 +109,9 @@ export const en: Translations = {
     f1Title: 'Track together',
     f1Body: 'Log every expense together. Auto-split 50/50 or by ratio. Settle monthly without ever doing the math.',
     f2Title: 'Loved things',
-    f2Body: 'House, car, kids, pets, plants — anything you care for together belongs in the same ledger.',
+    f2Body: 'House, car, kids, pets, plants: anything you care for together belongs in the same ledger.',
     f3Title: 'Guardian policies',
-    f3Body: 'Protection and savings policies side by side. Insured, beneficiary, renewal dates — all on one page.',
+    f3Body: 'Protection and savings policies side by side. Insured, beneficiary, renewal dates: all on one page.',
     f4Title: 'Reflection',
     f4Body: 'Monthly reviews, category breakdowns, chapter history. Let what you spent tell its own story.',
     migrateSection: {
@@ -121,7 +121,7 @@ export const en: Translations = {
       honeydueTitle: 'Move from Honeydue',
       honeydueBody: 'Updates have slowed. Bring your years of records over in one go.',
       spendeeTitle: 'Move from Spendee',
-      spendeeBody: 'Two-person sharing is free and built in — no paid unlock.',
+      spendeeBody: 'Two-person sharing is free and built in, no paid unlock.',
       cwmoneyTitle: 'Move from CWMoney',
       cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
       cardAriaLabel: 'Move from {source} to Futari',
@@ -149,7 +149,7 @@ export const en: Translations = {
       {
         question: 'How do I get started?',
         answer:
-          'Sign in with Google, create a two-person ledger, and invite your partner. Add it to your home screen as a PWA and start recording together — completely free.',
+          'Sign in with Google, create a two-person ledger, and invite your partner. Add it to your home screen as a PWA and start recording together, completely free.',
       },
       {
         question: 'Is my data safe?',
@@ -181,7 +181,7 @@ export const en: Translations = {
     you: 'You',
     all: 'All',
     error: 'Something went wrong',
-    offlineError: "You're offline — try again once you reconnect",
+    offlineError: "You're offline. Try again once you reconnect.",
     back: 'Back',
     edit: 'Edit',
     shared: 'Shared',
@@ -240,10 +240,10 @@ export const en: Translations = {
     header: 'Recent',
     noFiltered: 'No records match these filters',
     noRecordsTitle: 'No records yet',
-    noRecordsHint: "Start with one — a coffee, a dinner. Day by day, looking back will feel warm.",
+    noRecordsHint: "Start with one: a coffee, a dinner. Day by day, looking back will feel warm.",
     addFirst: 'Add the first',
     noIncome: 'No household income recorded yet',
-    noFilteredAddHint: 'No records here yet — tap + below to begin.',
+    noFilteredAddHint: 'No records here yet. Tap + below to begin.',
   },
 
   firstRecordCard: {
@@ -309,7 +309,7 @@ export const en: Translations = {
   },
 
   soloBanner: {
-    waiting: 'Your ledger is ready — for the two of you',
+    waiting: 'Your ledger is ready, for the two of you',
     sendInviteHint: 'Send the link to your partner',
     dismissAriaLabel: 'Dismiss',
     generating: 'Generating…',
@@ -404,8 +404,8 @@ export const en: Translations = {
     partnerOwesYouAmount: 'Partner owes you {amount}',
     youOwePartnerAmount: 'You owe partner {amount}',
     ratioNoAmount: 'Me {me}% · Partner {other}%',
-    allMineSelfPaid: 'You paid for yourself — no debt',
-    allMinePartnerPaid: 'Partner paid for themselves — no debt',
+    allMineSelfPaid: 'You paid for yourself, no debt',
+    allMinePartnerPaid: 'Partner paid for themselves, no debt',
     allTheirsNoAmount: 'Partner owes you the full amount',
     allTheirsPartnerNoAmount: 'You owe partner the full amount',
     allTheirsYouPaid: 'Partner owes you {amount}',
@@ -466,7 +466,7 @@ export const en: Translations = {
 
   tripList: {
     title: 'Trips',
-    subtitle: 'A trip at a time — each becomes its own chapter.',
+    subtitle: 'A trip at a time. Each becomes its own chapter.',
     sectionActive: 'In progress',
     sectionPast: 'Past trips',
     endedTag: 'Ended',
@@ -474,7 +474,7 @@ export const en: Translations = {
     backAriaLabel: 'Back to trips',
     empty: {
       heading: 'No trips yet',
-      body: 'Start a trip — every expense during those days gets collected here, ready to flip through later.',
+      body: 'Start a trip. Every expense during those days gets collected here, ready to flip through later.',
     },
   },
 
@@ -537,7 +537,7 @@ export const en: Translations = {
     endDateBeforeStart: 'End date cannot be before the start date ({date})',
     endFailure: 'Failed to end the trip',
     editAriaLabel: 'Edit this trip',
-    endIrreversibleNote: 'This cannot be undone — all expenses will roll back to the main ledger as a summary.',
+    endIrreversibleNote: 'This cannot be undone. All expenses will roll back to the main ledger as a summary.',
     totalLabel: 'This trip cost',
     baseCurrencyTag: 'Base {code}',
     baseCurrencyTagTitle: 'This trip settles in this currency',
@@ -598,8 +598,8 @@ export const en: Translations = {
     noneSubtitle: 'This entry is not tied to any loved-one',
     loading: 'Loading…',
     loadFailed: 'Failed to load',
-    emptyAibutsu: 'No loved-ones yet — add one from the 愛物 tab first.',
-    emptyGuardian: 'No policies yet — add one from 愛物 > 守護 first.',
+    emptyAibutsu: 'No loved-ones yet. Add one from the 愛物 tab first.',
+    emptyGuardian: 'No policies yet. Add one from 愛物 > 守護 first.',
   },
 
   records: {
@@ -708,7 +708,7 @@ export const en: Translations = {
     offlineHintOff: "When offline, history isn't available. Turn this on to keep recently-viewed pages on this device.",
     offlineHintOn: 'When offline, you can view records from your last connection. Data lives on this device only and is cleared on sign-out.',
     offlineToggling: 'Working…',
-    offlineToggleError: "Couldn't switch — try again in a moment.",
+    offlineToggleError: "Couldn't switch. Try again in a moment.",
     offlineUnsupported: 'This browser does not support offline browsing.',
     recurringIncome: 'Recurring income',
     recurringExpense: 'Recurring expense',
@@ -725,7 +725,7 @@ export const en: Translations = {
     },
     guardianBeta: {
       title: 'Enable Guardian',
-      description: 'Guardian is where policies and protection are kept together. Still in Beta — it will become a paid feature later. Turn it off any time; existing data stays in place.',
+      description: 'Guardian is where policies and protection are kept together. Still in Beta; it will become a paid feature later. Turn it off any time; existing data stays in place.',
     },
     dangerZone: {
       sectionTitle: 'Leave this ledger',
@@ -750,8 +750,8 @@ export const en: Translations = {
         card1: {
           titleA: 'You are the primary holder of this ledger',
           titleB: 'You are the secondary holder of this ledger',
-          bodyA: 'The primary holder is the person who created this ledger. To preserve the shared history, the primary holder cannot leave directly — you need to swap roles with {partner} first, and then leave as the secondary holder.',
-          bodyB: 'The secondary holder is the person who joined later. If you decide to leave, you can leave directly — {partner} will keep this ledger.',
+          bodyA: 'The primary holder is the person who created this ledger. To preserve the shared history, the primary holder cannot leave directly: you need to swap roles with {partner} first, and then leave as the secondary holder.',
+          bodyB: 'The secondary holder is the person who joined later. If you decide to leave, you can leave directly; {partner} will keep this ledger.',
         },
         card2: {
           title: 'What happens if {memberA} (primary) leaves',
@@ -763,7 +763,7 @@ export const en: Translations = {
           bullets: [
             'The balance must be settled to zero before you can leave',
             'Cars, insurance, and houses owned by {memberB} go with them',
-            'Children, pets, and plants have no owner field — they stay in the original ledger',
+            'Children, pets, and plants have no owner field, so they stay in the original ledger',
             'Income and expenses split by "who paid / who received"',
             'Any pending invite links to this ledger become invalid',
             'The original ledger reverts to solo mode, kept by {memberA}',
@@ -771,7 +771,7 @@ export const en: Translations = {
         },
         card4: {
           title: 'Are you sure this is what both of you want?',
-          body: "Leaving a ledger is a two-person decision. It's fine to talk about it more — this button will still be here.",
+          body: "Leaving a ledger is a two-person decision. It's fine to talk about it more. This button will still be here.",
           yesB: 'Yes, I want to leave',
           yesASwap: 'Yes, propose a role swap first',
           no: 'Not yet, take me back',
@@ -801,7 +801,7 @@ export const en: Translations = {
         cannotConfirmOwnProposal: "You can't accept your own proposal",
         notAMember: "You're not a member of this ledger",
         onlyMemberBCanLeave: 'Only the secondary holder can leave. Propose a role swap first.',
-        balanceNotZero: 'The balance is not settled — you cannot leave yet',
+        balanceNotZero: 'The balance is not settled; you cannot leave yet',
         soloGroup: 'This is already a solo ledger',
         fallback: 'Something went wrong. Please try again.',
       },
@@ -815,7 +815,7 @@ export const en: Translations = {
       stepLabel: 'Step {current} of {total}',
       step1: {
         title: 'Pick a source and upload your file',
-        subtitle: 'Your file is parsed on this device — the contents stay with you',
+        subtitle: 'Your file is parsed on this device; the contents stay with you',
         sourceLabel: 'Export source',
         sources: {
           honeydue: 'Honeydue',
@@ -829,7 +829,7 @@ export const en: Translations = {
         fileSelected: 'Selected: {name}',
         summary: '{total} rows · {valid} valid · {invalid} failed',
         sourceDetected: 'Detected source: {source}',
-        invalidNote: 'Failed rows are skipped — the error log keeps them for later fixing',
+        invalidNote: 'Failed rows are skipped; the error log keeps them for later fixing',
         retryCta: 'Choose another file',
         parseError: "Couldn't parse that file. Check the format or try another one.",
       },
@@ -843,7 +843,7 @@ export const en: Translations = {
       },
       step3: {
         title: 'Payer and split',
-        subtitle: 'Set a default for this batch — you can adjust rows later',
+        subtitle: 'Set a default for this batch; you can adjust rows later',
         payerLabel: 'Default payer',
         payerHint: 'You can edit each row after the import',
         splitLabel: 'Default split',
@@ -852,7 +852,7 @@ export const en: Translations = {
           all_theirs: 'All theirs',
           half: 'Half each',
         },
-        soloHint: 'Solo mode — locked to "All mine"',
+        soloHint: 'Solo mode; locked to "All mine"',
       },
       step4: {
         title: 'Preview and confirm',
@@ -1105,13 +1105,13 @@ export const en: Translations = {
       sectionHint: 'The mother tongue of this ledger. Every settlement and display rests on it.',
       locked: {
         heading: 'This chapter has already begun',
-        body: 'There are records in the current chapter, so the base currency stays fixed — that way every amount written before still holds its ground.',
+        body: 'There are records in the current chapter, so the base currency stays fixed; that way every amount written before still holds its ground.',
         bodyNext: 'If you want a different base currency, you can choose again when the next chapter begins.',
       },
     },
     tripsHint: {
       heading: 'Felt rates moved',
-      body: 'Foreign currencies and rates now live inside each trip — every trip has its own ruler, and they don\'t affect each other.',
+      body: 'Foreign currencies and rates now live inside each trip. Every trip has its own ruler, and they don\'t affect each other.',
       linkLabel: 'See your trips',
     },
     errors: {
@@ -1151,7 +1151,7 @@ export const en: Translations = {
     },
     notes: {
       label: 'Notes',
-      placeholder: 'Free text — e.g., last checkup heart rate was high; policy discount valid until 2027',
+      placeholder: 'Free text, e.g., last checkup heart rate was high; policy discount valid until 2027',
     },
     car: {
       color: 'Color',
@@ -1308,9 +1308,9 @@ export const en: Translations = {
     refuel: 'Refuel',
     relatedInsurance: 'Related insurance',
     linkedVehicleSection: 'Linked vehicle',
-    emptyCarLine1: 'No expenses recorded for this car yet —',
+    emptyCarLine1: 'No expenses recorded for this car yet.',
     emptyCarLine2: 'Tap + at the bottom right to start',
-    emptyDefaultLine1: 'No expenses recorded yet —',
+    emptyDefaultLine1: 'No expenses recorded yet.',
     emptyDefaultLine2: 'Tap + at the bottom right to start',
     typeLabels: {
       car: 'Car',
@@ -1470,7 +1470,7 @@ export const en: Translations = {
       accountValueLabel: 'Current account value',
       accountValueEditCta: 'Update',
       recurringSectionTitle: 'Recurring income',
-      recurringEmptyHint: 'Dividends and survival annuities come back each cycle — set as recurring so you don’t have to remember',
+      recurringEmptyHint: 'Dividends and survival annuities come back each cycle, so set as recurring and you don’t have to remember',
       recurringAddCta: 'Set up recurring income',
       recurringRuleSummary: 'Day {day} · {interval}',
       recurringRuleNextDate: 'Next {date}',
@@ -1649,10 +1649,10 @@ export const en: Translations = {
     savedFooter: 'Saved',
     errorFooter: 'Save failed: {message}',
     card1Title: 'Most-shared category',
-    card1Body: 'You spent most together on {category} — NT$ {amount}',
-    card1BodySolo: 'You spent most on {category} — NT$ {amount}',
+    card1Body: 'You spent most together on {category}: NT$ {amount}',
+    card1BodySolo: 'You spent most on {category}: NT$ {amount}',
     card2Title: 'Largest expense',
-    card2Body: 'Largest — {name} paid for "{description}", NT$ {amount}',
+    card2Body: 'Largest: {name} paid for "{description}", NT$ {amount}',
     card3Title: 'Recurring events',
     card3ExpenseTotal: 'Recurring expenses this month: NT$ {amount}',
     card3IncomeTotal: 'Recurring income this month: NT$ {amount}',
@@ -1674,10 +1674,10 @@ export const en: Translations = {
   },
 
   quiz: {
-    cardHeadingInvitation: "We don't quite know each other yet — 3 quick questions",
-    cardHeadingSelfPendingPartnerDone: 'They finished — your turn',
+    cardHeadingInvitation: "We don't quite know each other yet. 3 quick questions.",
+    cardHeadingSelfPendingPartnerDone: 'They finished. Your turn.',
     cardHeadingSelfPendingPartnerPending: 'Answer 3 questions, see how you each picture money',
-    cardHeadingSelfDonePartnerPending: "Done — waiting on {partnerName} so we can open them together",
+    cardHeadingSelfDonePartnerPending: "Done. Waiting on {partnerName} so we can open them together.",
     cardHeadingRevealed: 'See how your money styles fit together',
     cardCtaStart: '→ Start',
     cardCtaReveal: '→ See the reveal',
@@ -1687,19 +1687,19 @@ export const en: Translations = {
     answerCtaFinal: 'Send all 3',
     answerErrorChooseOne: 'Pick one, then continue',
     answerBack: 'Back to review',
-    waitingHeading: 'Done — waiting on your partner to open them together',
-    waitingBody: "Your answers are tucked away until they finish too — then we'll open them together.",
+    waitingHeading: 'Done. Waiting on your partner to open them together.',
+    waitingBody: "Your answers are tucked away until they finish too; then we'll open them together.",
     waitingBackToReview: 'Back to the review page',
     revealHeading: 'How your money styles fit together',
     revealedAtLine: 'Revealed on {date}',
     revealSameAnswer: "You're pointing the same way on this one",
-    revealFraming: "One of you is sunrise, the other is moonlight — different hours, same home. No answer is more right; it's enough to remember what the other one cares about.",
+    revealFraming: "One of you is sunrise, the other is moonlight. Different hours, same home. No answer is more right; it's enough to remember what the other one cares about.",
     revealHeaderA: 'You',
     revealHeaderB: 'Partner',
-    soloFallback: "This one takes two — come back once your partner has joined the ledger.",
+    soloFallback: "This one takes two. Come back once your partner has joined the ledger.",
     errorNotFound: "Couldn't find this quiz",
     errors: {
-      submitFailed: 'Submission failed — please try again',
+      submitFailed: 'Submission failed. Please try again.',
       alreadyAnswered: "You've already finished",
       solo: "Can't run this quiz on your own yet",
     },
@@ -1708,14 +1708,14 @@ export const en: Translations = {
         prompt: 'When I see something I really want but might not need, I usually…',
         choices: {
           a: 'Sit on it for two days and see if the urge cools',
-          b: 'Buy it — that kind of feeling is rare',
+          b: 'Buy it; that kind of feeling is rare',
           c: 'Wait until I need it, then pick it up',
         },
       },
       risk: {
         prompt: 'When I imagine suddenly needing a big chunk of cash, my first feeling is…',
         choices: {
-          a: "I'm okay — I keep a buffer for this",
+          a: "I'm okay; I keep a buffer for this",
           b: "Tense, but I'll figure it out",
           c: "Better not to think about it right now",
         },
@@ -1723,7 +1723,7 @@ export const en: Translations = {
       transparency: {
         prompt: "For each other's money, I'd rather…",
         choices: {
-          a: 'Know everything, big and small — it feels safer',
+          a: 'Know everything, big and small; it feels safer',
           b: 'Know the big stuff, skip the small purchases',
           c: 'Keep our own space, and check in when we need to',
         },
@@ -1757,7 +1757,7 @@ export const en: Translations = {
 
   inAppBrowser: {
     title: 'Please open in your browser',
-    description: "You're inside a chat app's built-in browser. Google sign-in and offline mode don't work here — please open this link in Safari or Chrome instead.",
+    description: "You're inside a chat app's built-in browser. Google sign-in and offline mode don't work here. Please open this link in Safari or Chrome instead.",
     urlLabel: 'Link',
     copy: 'Copy link',
     copied: 'Copied',
@@ -1770,11 +1770,11 @@ export const en: Translations = {
   installGuide: {
     title: 'Add to Home Screen',
     close: 'Close',
-    intro: 'Once Futari is on your Home Screen, it opens full-screen like an app — no more address bar.',
+    intro: 'Once Futari is on your Home Screen, it opens full-screen like an app, no more address bar.',
     iosSafari: {
       step1: 'Tap the Share button at the bottom centre',
       step2Html: 'Scroll down and find "<strong>Add to Home Screen</strong>"',
-      step3Html: 'Tap "<strong>Add</strong>" in the top-right corner — done',
+      step3Html: 'Tap "<strong>Add</strong>" in the top-right corner. Done.',
     },
     iosOther: {
       bodyHtml: 'On iOS, only <strong>Safari</strong> can add a webpage to the Home Screen. Copy the link below, open it in Safari, then come back to this guide.',
@@ -1816,7 +1816,7 @@ export const en: Translations = {
     },
     cta: {
       button: 'Create an account and bring it in',
-      hint: "Sign up, then import this CSV — you won't have to log it again.",
+      hint: "Sign up, then import this CSV; you won't have to log it again.",
       privacyNote: 'Preview runs in your browser. Nothing leaves your device.',
     },
     sources: {
@@ -1858,11 +1858,11 @@ export const en: Translations = {
         },
         spendee: {
           name: 'Spendee',
-          description: 'Shared wallets are paywalled — export your CSV and bring it over.',
+          description: 'Shared wallets are paywalled. Export your CSV and bring it over.',
         },
         cwmoney: {
           name: 'CWMoney',
-          description: 'A long-running single-person ledger from Taiwan — convert via template to CSV.',
+          description: 'A long-running single-person ledger from Taiwan; convert via template to CSV.',
         },
       },
     },
@@ -1870,8 +1870,8 @@ export const en: Translations = {
       honeydue: {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Your Honeydue history can come with you',
-        heroSubtitle: 'Move from Honeydue to Futari in about three minutes — upload your CSV and keep years of shared budgeting intact.',
-        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home — free, ad-free, and end-to-end encrypted.",
+        heroSubtitle: 'Move from Honeydue to Futari in about three minutes: upload your CSV and keep years of shared budgeting intact.',
+        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home: free, ad-free, and end-to-end encrypted.",
         differentiators: [
           {
             title: 'Still actively shipping',
@@ -1879,7 +1879,7 @@ export const en: Translations = {
           },
           {
             title: 'Both of you see everything',
-            body: 'No asymmetric visibility split by separate accounts — built for one shared home from day one.',
+            body: 'No asymmetric visibility split by separate accounts; built for one shared home from day one.',
           },
           {
             title: 'Free, no ads',
@@ -1894,7 +1894,7 @@ export const en: Translations = {
         faq: [
           {
             question: 'Do I need to clean the data after importing?',
-            answer: 'Categories are mapped during the import flow in one pass — no manual cleanup after.',
+            answer: 'Categories are mapped during the import flow in one pass, no manual cleanup after.',
           },
           {
             question: 'Is the import free?',
@@ -1906,7 +1906,7 @@ export const en: Translations = {
           },
           {
             question: "Does Futari have Honeydue's shared ledger?",
-            answer: "Yes. Futari is built for two — everything sits in one shared ledger you can both view and add to.",
+            answer: "Yes. Futari is built for two; everything sits in one shared ledger you can both view and add to.",
           },
         ],
         comparison: {
@@ -1935,7 +1935,7 @@ export const en: Translations = {
             {
               feature: 'End-to-end encryption',
               futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '— Unspecified', tone: 'no' },
+              other: { label: 'Unspecified', tone: 'no' },
             },
           ],
         },
@@ -1943,7 +1943,7 @@ export const en: Translations = {
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
         heroTitle: 'Your Spendee history can come with you',
-        heroSubtitle: 'Import your Spendee records into Futari — upload your CSV, preview everything, then decide.',
+        heroSubtitle: 'Import your Spendee records into Futari: upload your CSV, preview everything, then decide.',
         differentiators: [
           {
             title: 'Sharing is the default, not a paid unlock',
@@ -1951,7 +1951,7 @@ export const en: Translations = {
           },
           {
             title: 'Realtime sync',
-            body: 'One person logs, the other sees it immediately — no refresh dance.',
+            body: 'One person logs, the other sees it immediately; no refresh dance.',
           },
           {
             title: 'Free, no ads',
@@ -1964,12 +1964,12 @@ export const en: Translations = {
         step3: 'Create a Futari account and finish the move in one tap.',
         formatHintLabel: "What Spendee's CSV looks like",
         formatHintHeaders: 'Date,Wallet,Type,Category name,Amount,Currency,Note',
-        formatHintNote: 'The Type column is Expense / Income / Transfer. Transfer rows (inter-wallet moves) are flagged as errors on import — Futari has no transfer concept, so drop them in the preview.',
+        formatHintNote: 'The Type column is Expense / Income / Transfer. Transfer rows (inter-wallet moves) are flagged as errors on import, because Futari has no transfer concept; drop them in the preview.',
         // TODO(#599): en faq + comparison copy pending native review
         faq: [
           {
             question: 'Do I need to clean the data after importing?',
-            answer: 'Categories are mapped during the import flow in one pass — no manual cleanup after.',
+            answer: 'Categories are mapped during the import flow in one pass, no manual cleanup after.',
           },
           {
             question: 'Is the import free?',
@@ -2010,7 +2010,7 @@ export const en: Translations = {
             {
               feature: 'CSV import',
               futari: { label: '✓ Direct upload', tone: 'yes' },
-              other: { label: '— Manual mapping', tone: 'partial' },
+              other: { label: 'Manual mapping', tone: 'partial' },
             },
           ],
         },
@@ -2026,7 +2026,7 @@ export const en: Translations = {
           },
           {
             title: 'Whole-number TWD amounts',
-            body: 'Numbers are exactly the local currency — no decimal-place math.',
+            body: 'Numbers are exactly the local currency; no decimal-place math.',
           },
           {
             title: 'No grading, no judgement',
@@ -2043,7 +2043,7 @@ export const en: Translations = {
         faq: [
           {
             question: 'Do I need to clean the data after importing?',
-            answer: 'Categories are mapped during the import flow in one pass — no manual cleanup after.',
+            answer: 'Categories are mapped during the import flow in one pass, no manual cleanup after.',
           },
           {
             question: 'Is the import free?',
@@ -2055,7 +2055,7 @@ export const en: Translations = {
           },
           {
             question: "Does Futari match CWMoney's assets feature?",
-            answer: 'Futari has "treasured items" — cars, homes, insurance and other shared assets can each carry their related expenses.',
+            answer: 'Futari has "treasured items": cars, homes, insurance and other shared assets can each carry their related expenses.',
           },
         ],
         comparison: {
@@ -2095,36 +2095,36 @@ export const en: Translations = {
   seo: {
     landing: {
       title: "Futari · A shared ledger for two · Couples' budgeting PWA",
-      description: 'Futari is a shared budgeting app built for couples — a partner-first ledger to log expenses together, auto-split, settle up, and see your life as a pair.',
-      ogDescription: 'Futari is a couple-first shared budgeting app — log together, auto-split, settle, and see your life as a pair.',
+      description: 'Futari is a shared budgeting app built for couples: a partner-first ledger to log expenses together, auto-split, settle up, and see your life as a pair.',
+      ogDescription: 'Futari is a couple-first shared budgeting app: log together, auto-split, settle, and see your life as a pair.',
     },
     signIn: {
       title: 'Sign in to Futari · Start budgeting together',
-      description: 'Sign in with Google to start your couple-shared ledger — log daily spending and fuel costs, look after insurance and shared things, in a mobile-first PWA.',
+      description: 'Sign in with Google to start your couple-shared ledger: log daily spending and fuel costs, look after insurance and shared things, in a mobile-first PWA.',
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
     },
     terms: {
       title: 'Terms of Service · Futari',
-      description: "Terms of service for the Futari alpha test build — what you're agreeing to when you use the couples-first shared ledger PWA during the public beta.",
+      description: "Terms of service for the Futari alpha test build: what you're agreeing to when you use the couples-first shared ledger PWA during the public beta.",
     },
     privacy: {
       title: 'Privacy Policy · Futari',
-      description: 'How the Futari alpha test build collects and handles your data — what we store, where it lives, and the third parties involved in the couples ledger.',
+      description: 'How the Futari alpha test build collects and handles your data: what we store, where it lives, and the third parties involved in the couples ledger.',
     },
     migrate: {
       honeydue: {
         title: 'Import from Honeydue to Futari',
-        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples — Futari is an ad-free, end-to-end encrypted ledger. Move your data in 3 minutes.',
+        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples: Futari is an ad-free, end-to-end encrypted ledger. Move your data in 3 minutes.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
         title: 'Import Spendee CSV into Futari',
-        description: 'A couples-first Spendee alternative. Import your CSV into Futari, the shared ledger built for partners — sharing is free and built in, no paid unlock.',
+        description: 'A couples-first Spendee alternative. Import your CSV into Futari, the shared ledger built for partners: sharing is free and built in, no paid unlock.',
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
         title: 'Import from CWMoney to Futari · Excel guide',
-        description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari — the shared ledger built for couples. Free, ad-free.',
+        description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari, the shared ledger built for couples. Free, ad-free.',
         ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
       },
     },
