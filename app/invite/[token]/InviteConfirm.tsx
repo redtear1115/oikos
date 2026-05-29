@@ -88,15 +88,10 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
         {error && (
           <div
             role="alert"
-            className="rounded-lg p-3 text-sm flex items-start gap-2"
-            style={{
-              background: 'var(--debit-soft)',
-              borderLeft: '2px solid var(--debit)',
-              color: 'var(--debit)',
-            }}
+            className="rounded-xl px-3 py-2 text-sm"
+            style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
           >
-            <span aria-hidden="true">⚠</span>
-            <span className="flex-1">{error}</span>
+            {error}
           </div>
         )}
 

@@ -1,16 +1,13 @@
 /**
  * Quiet callout for source-specific background prose — Honeydue is the only
- * page using it today (#580). Hairline left border + italic Fraunces keep
- * the "objective, never aggressive" framing called out in the i18n schema.
+ * page using it today (#580). Warm tonal step + italic Fraunces keep the
+ * "objective, never aggressive" framing called out in the i18n schema.
  */
 export function MigrateIntroCallout({ text }: { text: string }) {
   return (
     <aside
       className="px-5 md:px-6 py-4 md:py-5 rounded-bubble"
-      style={{
-        background: 'var(--surface)',
-        borderLeft: '2px solid var(--accent-soft)',
-      }}
+      style={{ background: 'var(--surface-alt)' }}
     >
       <p
         className="m-0 text-meta md:text-body leading-[1.85]"
