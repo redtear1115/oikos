@@ -358,6 +358,13 @@
       "when": 1780800000000,
       "tag": "0050_income_import_batch_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1781000000000,
+      "tag": "0052_encrypt_asset_pii_columns",
+      "breakpoints": true
     }
   ]
 }

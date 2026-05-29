@@ -1636,11 +1636,23 @@ export type Translations = {
       itemsCar: string
       itemsItem: string
     }
+    /** Shared labels used by the `RevealableRow` shared component (#826).
+     *  Card-detail PII rows (plate, address, child full name, national ID, NHI)
+     *  all render through the same component and pull their toggle copy from
+     *  here so labels stay consistent across asset types. */
+    reveal: {
+      show: string
+      hide: string
+      loading: string
+      error: string
+    }
     car: {
       avgEcon: string
       avgEconNoLog: string
       avgEconNeedMore: string
       avgEconRecent: string
+      /** #826 — label for the encrypted plate row. */
+      plate: string
     }
     child: {
       sectionId: string
@@ -1654,6 +1666,9 @@ export type Translations = {
       bloodTypeValue: string
       height: string
       weight: string
+      /** #826 — label for the encrypted full-name row (display name lives in
+       *  `Assets.name`; the real full name is revealed here on tap). */
+      fullName: string
       revealShow: string
       revealHide: string
       revealLoading: string
@@ -3710,11 +3725,18 @@ export const zhTW: Translations = {
       itemsCar: '加油 · 停車 · 定期保養 · 保險 · 過路費',
       itemsItem: '保養 · 耗材 · 維修 · 配件',
     },
+    reveal: {
+      show: '顯示',
+      hide: '隱藏',
+      loading: '…',
+      error: '無法顯示',
+    },
     car: {
       avgEcon: '平均油耗',
       avgEconNoLog: '加第一筆油看油耗',
       avgEconNeedMore: '需要至少 2 次加油記錄',
       avgEconRecent: '近 6 個月',
+      plate: '車牌',
     },
     child: {
       sectionId: '身分證件',
@@ -3727,6 +3749,7 @@ export const zhTW: Translations = {
       bloodTypeValue: '{type} 型',
       height: '身高',
       weight: '體重',
+      fullName: '全名',
       revealShow: '顯示',
       revealHide: '隱藏',
       revealLoading: '…',

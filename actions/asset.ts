@@ -75,7 +75,11 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
       .returning({ id: assets.id })
     await tx.insert(carDetails).values({
       assetId: asset.id,
+      // #826 — dual write during the encryption rollout: legacy `plate` stays
+      // populated so existing reads keep working; `plate_encrypted` is what
+      // the reveal action returns going forward. Follow-up PR drops `plate`.
       plate: validated.plate,
+      plateEncrypted: encrypt(validated.plate),
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
       primaryUserId: validated.primaryUserId,
@@ -172,7 +176,9 @@ export async function editCar(input: EditCarInput): Promise<void> {
     await tx
       .update(carDetails)
       .set({
+        // #826 — same dual-write contract as createCar.
         plate: validated.plate,
+        plateEncrypted: encrypt(validated.plate),
         purchasedAt: validated.purchasedAt,
         purchasePrice: validated.purchasePrice,
         primaryUserId: validated.primaryUserId,
@@ -522,6 +528,67 @@ export async function revealChildPii(
   if (!ciphertext) throw new Error('尚未填寫此欄位')
 
   return decrypt(ciphertext)
+}
+
+/**
+ * #826 — on-demand decryption for the car licence plate. Same authorisation
+ * shape as `revealChildPii`: scoped to viewer's group, gated by asset.type,
+ * refuses soft-deleted rows. During the encryption rollout, falls back to
+ * the legacy `plate` plaintext column for rows that haven't been backfilled
+ * yet so existing assets keep revealing correctly before the migration runs.
+ */
+export async function revealCarPlate(assetId: string): Promise<string> {
+  'use server'
+  const { group } = await requireViewerGroup()
+
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      plate: carDetails.plate,
+      plateEncrypted: carDetails.plateEncrypted,
+    })
+    .from(assets)
+    .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'car') {
+    throw new Error('找不到該愛物')
+  }
+
+  if (row.plateEncrypted) return decrypt(row.plateEncrypted)
+  // Backfill-fallback: pre-#826 rows have only the legacy plaintext column.
+  if (row.plate) return row.plate
+  throw new Error('尚未填寫此欄位')
+}
+
+/**
+ * #826 — on-demand decryption for the house address. Address is nullable
+ * (some houses don't have one recorded), so both columns may be NULL.
+ * Same backfill-fallback contract as `revealCarPlate`.
+ */
+export async function revealHouseAddress(assetId: string): Promise<string> {
+  'use server'
+  const { group } = await requireViewerGroup()
+
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      address: houseDetails.address,
+      addressEncrypted: houseDetails.addressEncrypted,
+    })
+    .from(assets)
+    .leftJoin(houseDetails, eq(houseDetails.assetId, assets.id))
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'house') {
+    throw new Error('找不到該愛物')
+  }
+
+  if (row.addressEncrypted) return decrypt(row.addressEncrypted)
+  if (row.address) return row.address
+  throw new Error('尚未填寫此欄位')
 }
 
 // ── Pet ────────────────────────────────────────────────────────────────────
@@ -1047,7 +1114,10 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
     await tx.insert(houseDetails).values({
       assetId: asset.id,
       owner: viewer.id,
+      // #826 — dual write during the encryption rollout. Address is nullable
+      // so we map empty → NULL on both columns to preserve "no value" state.
       address: validated.address,
+      addressEncrypted: validated.address ? encrypt(validated.address) : null,
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
     })
@@ -1121,7 +1191,9 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
     await tx
       .update(houseDetails)
       .set({
+        // #826 — same dual-write contract as createHouse.
         address: validated.address,
+        addressEncrypted: validated.address ? encrypt(validated.address) : null,
         purchasedAt: validated.purchasedAt,
         purchasePrice: validated.purchasePrice,
       })
