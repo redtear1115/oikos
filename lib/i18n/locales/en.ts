@@ -1340,11 +1340,18 @@ export const en: Translations = {
       itemsCar: 'Fuel · Parking · Servicing · Insurance · Tolls',
       itemsItem: 'Maintenance · Consumables · Repairs · Accessories',
     },
+    reveal: {
+      show: 'Show',
+      hide: 'Hide',
+      loading: '…',
+      error: 'Reveal failed',
+    },
     car: {
       avgEcon: 'Avg fuel economy',
       avgEconNoLog: 'Add the first refuel to see economy',
       avgEconNeedMore: 'Need at least 2 refuel logs',
       avgEconRecent: 'Last 6 months',
+      plate: 'Plate',
     },
     child: {
       sectionId: 'ID documents',
@@ -1357,6 +1364,7 @@ export const en: Translations = {
       bloodTypeValue: 'Type {type}',
       height: 'Height',
       weight: 'Weight',
+      fullName: 'Full name',
       revealShow: 'Show',
       revealHide: 'Hide',
       revealLoading: '…',

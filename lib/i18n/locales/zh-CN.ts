@@ -1339,11 +1339,18 @@ export const zhCN: Translations = {
       itemsCar: '加油 · 停车 · 定期保养 · 保险 · 过路费',
       itemsItem: '保养 · 耗材 · 维修 · 配件',
     },
+    reveal: {
+      show: '显示',
+      hide: '隐藏',
+      loading: '…',
+      error: '无法显示',
+    },
     car: {
       avgEcon: '平均油耗',
       avgEconNoLog: '加第一笔油看油耗',
       avgEconNeedMore: '需要至少 2 次加油记录',
       avgEconRecent: '近 6 个月',
+      plate: '车牌',
     },
     child: {
       sectionId: '身份证件',
@@ -1356,6 +1363,7 @@ export const zhCN: Translations = {
       bloodTypeValue: '{type} 型',
       height: '身高',
       weight: '体重',
+      fullName: '全名',
       revealShow: '显示',
       revealHide: '隐藏',
       revealLoading: '…',

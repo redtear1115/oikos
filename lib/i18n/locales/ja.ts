@@ -1338,11 +1338,18 @@ export const ja: Translations = {
       itemsCar: '給油 · 駐車 · 定期点検 · 保険 · 通行料',
       itemsItem: 'メンテナンス · 消耗品 · 修理 · アクセサリー',
     },
+    reveal: {
+      show: '表示',
+      hide: '非表示',
+      loading: '…',
+      error: '表示できません',
+    },
     car: {
       avgEcon: '平均燃費',
       avgEconNoLog: '最初の給油で燃費が見られます',
       avgEconNeedMore: '少なくとも 2 回の給油記録が必要',
       avgEconRecent: '直近 6 ヶ月',
+      plate: 'ナンバー',
     },
     child: {
       sectionId: '身分証明',
@@ -1355,6 +1362,7 @@ export const ja: Translations = {
       bloodTypeValue: '{type} 型',
       height: '身長',
       weight: '体重',
+      fullName: '本名',
       revealShow: '表示',
       revealHide: '非表示',
       revealLoading: '…',
