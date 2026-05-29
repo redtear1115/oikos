@@ -1469,6 +1469,9 @@ export type Translations = {
     child: {
       nickname: string
       nicknamePlaceholder: string
+      /** #826 — full real name input. Trinary semantics like nationalId. */
+      fullName: string
+      fullNamePlaceholder: string
       gender: string
       genderMale: string
       genderFemale: string
@@ -3561,6 +3564,8 @@ export const zhTW: Translations = {
     child: {
       nickname: '小名',
       nicknamePlaceholder: '元寶',
+      fullName: '全名',
+      fullNamePlaceholder: '陳小白',
       gender: '性別',
       genderMale: '男孩',
       genderFemale: '女孩',

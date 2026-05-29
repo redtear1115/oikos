@@ -455,7 +455,7 @@ export interface ChildInput {
   nickname?: string | null
   gender?: 'male' | 'female' | 'other' | null
   birthday?: string | null
-  // Trinary semantics for the two encrypted PII fields:
+  // Trinary semantics for the encrypted PII fields:
   //   undefined → "keep existing" (action ignores column)
   //   null      → "explicitly clear" (action sets column to NULL)
   //   string    → "set to this value" (action encrypts before insert)
@@ -463,6 +463,9 @@ export interface ChildInput {
   // also accepts null to clear an existing encrypted value without revealing it.
   nationalId?: string | null
   nhiNo?: string | null
+  /** #826 — encrypted full name (the real one); the visible `name` above is
+   *  the display nickname. Same trinary as nationalId / nhiNo. */
+  fullName?: string | null
   bloodType?: string | null
   hospital?: string | null
   heightCm?: number | null
@@ -478,6 +481,7 @@ export interface ValidatedChildInput {
   // Trinary preserved (see ChildInput): undefined = keep, null = clear, string = set.
   nationalId: string | null | undefined
   nhiNo: string | null | undefined
+  fullName: string | null | undefined
   bloodType: string | null
   hospital: string | null
   heightCm: number | null
@@ -519,6 +523,8 @@ export function validateChildInput(input: ChildInput): ValidatedChildInput {
   // we treat both as "no change", but the explicit branch makes intent obvious.
   const nationalId = 'nationalId' in input ? normalisePiiTrinary(input.nationalId) : undefined
   const nhiNo = 'nhiNo' in input ? normalisePiiTrinary(input.nhiNo) : undefined
+  // #826 — encrypted full name. Same trinary contract as nationalId / nhiNo.
+  const fullName = 'fullName' in input ? normalisePiiTrinary(input.fullName) : undefined
   const bloodType = input.bloodType?.trim() || null
   const hospital = input.hospital?.trim() || null
 
@@ -537,7 +543,7 @@ export function validateChildInput(input: ChildInput): ValidatedChildInput {
   }
 
   return {
-    name, nickname, gender, birthday, nationalId, nhiNo, bloodType, hospital, heightCm, weightG,
+    name, nickname, gender, birthday, nationalId, nhiNo, fullName, bloodType, hospital, heightCm, weightG,
     notes: validateNotes(input.notes),
   }
 }

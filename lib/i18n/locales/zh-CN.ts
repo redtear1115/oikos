@@ -1175,6 +1175,8 @@ export const zhCN: Translations = {
     child: {
       nickname: '小名',
       nicknamePlaceholder: '元宝',
+      fullName: '全名',
+      fullNamePlaceholder: '陈小白',
       gender: '性别',
       genderMale: '男孩',
       genderFemale: '女孩',
