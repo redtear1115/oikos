@@ -38,7 +38,7 @@ export function MigrateFaq({
         className="text-label m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
-          color: 'var(--accent)',
+          color: 'var(--ink-2)',
           letterSpacing: '3.5px',
           textTransform: 'uppercase',
         }}

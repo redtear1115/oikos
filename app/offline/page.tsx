@@ -41,14 +41,14 @@ export default async function OfflinePage() {
             <Link
               key={row.href}
               href={row.href}
-              className="flex items-center justify-between px-5 py-4 text-sm cursor-pointer"
+              className="flex items-center justify-between px-5 py-4 text-sm cursor-pointer transition-colors hover:bg-[color:var(--surface-alt)] focus-visible:oik-focus-ring outline-none"
               style={{
                 color: 'var(--ink)',
                 borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
               }}
             >
               <span className="font-medium">{row.label}</span>
-              <span style={{ color: 'var(--ink-3)' }}>›</span>
+              <span aria-hidden="true" style={{ color: 'var(--ink-3)' }}>›</span>
             </Link>
           ))}
         </div>

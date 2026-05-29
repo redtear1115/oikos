@@ -24,7 +24,7 @@ export function MigrateTrustBlock({
         className="text-label m-0 text-center md:text-left"
         style={{
           fontFamily: 'var(--font-fraunces)',
-          color: 'var(--accent)',
+          color: 'var(--ink-2)',
           letterSpacing: '3.5px',
           textTransform: 'uppercase',
         }}
@@ -96,7 +96,7 @@ export function MigrateFooter({
           style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
         >
           <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
-          <span style={{ color: 'var(--hairline)' }}>·</span>
+          <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
           <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
         </div>
         <span

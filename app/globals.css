@@ -7,7 +7,9 @@
   --surface-alt: #FFF6EC;
   --ink: #3A2419;
   --ink-2: #7A5848;
-  --ink-3: #B89C8B;
+  /* Darkened for WCAG AA: was #B89C8B (2.24:1 on cream), now 4.66:1.
+     Used for tertiary text, captions, metadata; AA-compliant body text. */
+  --ink-3: #82654F;
   --hairline: rgba(58, 36, 25, 0.10);
   --grabber: rgba(58, 36, 25, 0.18);  /* sheet drag-handle bar */
   --accent: #E08856;
@@ -19,6 +21,10 @@
      cocoa-ink so the debtor figure reads as calm earth, not alarm-red.
      Witnessing tone (hero debtor framing); pairs with --credit for direction. */
   --debit-quiet: color-mix(in srgb, var(--debit) 72%, var(--ink));
+  /* Alert-text companion to --debit-soft: clay shifted toward cocoa-ink to
+     reach WCAG AA on the 10% tint over cream (~4.87:1). Use for any alert
+     body that sits on --debit-soft; plain --debit fails AA at ~2.7:1. */
+  --debit-text: color-mix(in srgb, var(--debit) 60%, var(--ink));
   --destructive: #B85A48;        /* deeper red for destructive actions (logout, delete) */
   --destructive-soft: rgba(184, 90, 72, 0.25);  /* outline / hairline variant */
   --warning: #B45309;            /* amber for paused / warning states */

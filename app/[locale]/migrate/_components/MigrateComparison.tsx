@@ -1,10 +1,13 @@
 type Cell = { label: string; tone: 'yes' | 'partial' | 'no' }
 type Row = { feature: string; futari: Cell; other: Cell }
 
-const TONE_COLOR: Record<Cell['tone'], string> = {
-  yes: 'var(--accent)',
-  partial: 'var(--ink-3)',
-  no: 'var(--ink-3)',
+// Non-color cue per tone (PRODUCT.md commits to non-color cues for the
+// sage/clay distinction; same care applies here). Cell text stays in --ink
+// for AA contrast; the leading glyph carries the visual signal redundantly.
+const TONE_GLYPH: Record<Cell['tone'], { mark: string; color: string }> = {
+  yes:     { mark: '✓', color: 'var(--saving)' },
+  partial: { mark: '◐', color: 'var(--ink-2)' },
+  no:      { mark: '—', color: 'var(--ink-3)' },
 }
 
 /**
@@ -30,7 +33,7 @@ export function MigrateComparison({
         className="text-label m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
-          color: 'var(--accent)',
+          color: 'var(--ink-2)',
           letterSpacing: '3.5px',
           textTransform: 'uppercase',
         }}
@@ -83,16 +86,24 @@ export function MigrateComparison({
                 >
                   {row.feature}
                 </th>
-                <td
-                  className="text-center px-3 md:px-4 py-3"
-                  style={{ color: TONE_COLOR[row.futari.tone] }}
-                >
+                <td className="text-center px-3 md:px-4 py-3" style={{ color: 'var(--ink)' }}>
+                  <span
+                    aria-hidden="true"
+                    className="inline-block mr-1.5"
+                    style={{ color: TONE_GLYPH[row.futari.tone].color }}
+                  >
+                    {TONE_GLYPH[row.futari.tone].mark}
+                  </span>
                   {row.futari.label}
                 </td>
-                <td
-                  className="text-center px-3 md:px-4 py-3"
-                  style={{ color: TONE_COLOR[row.other.tone] }}
-                >
+                <td className="text-center px-3 md:px-4 py-3" style={{ color: 'var(--ink)' }}>
+                  <span
+                    aria-hidden="true"
+                    className="inline-block mr-1.5"
+                    style={{ color: TONE_GLYPH[row.other.tone].color }}
+                  >
+                    {TONE_GLYPH[row.other.tone].mark}
+                  </span>
                   {row.other.label}
                 </td>
               </tr>

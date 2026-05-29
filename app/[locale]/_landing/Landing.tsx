@@ -89,7 +89,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
           href={ctaHref}
           ctaLocation="desktop_header"
           target="sign_in"
-          className="hidden md:inline-flex items-center justify-center h-10 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -105,10 +105,32 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
         <div className="flex flex-col md:flex-row md:items-center md:gap-10 md:max-w-[1280px] md:mx-auto">
           {/* Copy block */}
           <div className="text-center md:text-left md:w-[600px] md:shrink-0">
-            {/* mobile: large mark above title */}
+            {/* mobile: large mark above wordmark */}
             <div className="md:hidden flex justify-center mb-7">
               <FutariMark size={88} />
             </div>
+
+            {/* mobile only: Futari wordmark + kana, decorative — h1 below
+                carries the actual page heading (tagline) so screen-reader
+                navigation lands on page purpose, not the brand name. */}
+            <p
+              className="md:hidden m-0 text-center"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontWeight: 500,
+                letterSpacing: '-1.5px',
+                fontSize: 'clamp(56px, 14vw, 84px)',
+                lineHeight: 1,
+              }}
+            >
+              Futari
+            </p>
+            <p
+              className="md:hidden m-0 mt-3 mb-9 text-center"
+              style={{ color: 'var(--ink-2)', fontSize: 13, letterSpacing: '4px' }}
+            >
+              ふたり
+            </p>
 
             {/* desktop: small kicker above title */}
             <p
@@ -116,7 +138,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontSize: 13,
-                color: 'var(--accent)',
+                color: 'var(--ink-2)',
                 letterSpacing: '4px',
               }}
             >
@@ -129,39 +151,29 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                 fontFamily: 'var(--font-fraunces)',
                 fontWeight: 500,
                 letterSpacing: '-1.5px',
-                fontSize: 'clamp(56px, 8vw, 96px)',
               }}
             >
-              {/* mobile: "Futari" word as logotype */}
-              <span className="md:hidden">Futari</span>
+              {/* mobile: tagline at 26px serif */}
+              <span
+                className="md:hidden block"
+                style={{
+                  fontSize: 26,
+                  fontWeight: 400,
+                  lineHeight: 1.45,
+                  letterSpacing: '-0.3px',
+                }}
+                dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
+              />
               {/* desktop: tagline as the giant headline */}
               <span
                 className="hidden md:inline"
-                style={{ letterSpacing: '-3.5px' }}
+                style={{
+                  fontSize: 'clamp(56px, 8vw, 96px)',
+                  letterSpacing: '-3.5px',
+                }}
                 dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
               />
             </h1>
-
-            {/* mobile only: ふたり kana under Futari */}
-            <p
-              className="md:hidden mt-3 m-0"
-              style={{ color: 'var(--ink-2)', fontSize: 13, letterSpacing: '4px' }}
-            >
-              ふたり
-            </p>
-
-            {/* mobile only: tagline as secondary headline */}
-            <p
-              className="md:hidden mt-9 m-0"
-              style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontSize: 26,
-                fontWeight: 400,
-                lineHeight: 1.45,
-                letterSpacing: '-0.3px',
-              }}
-              dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
-            />
 
             {/* body — both layouts */}
             <p
@@ -241,7 +253,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
                   fontFamily: 'var(--font-fraunces)',
                   fontSize: 12,
                   letterSpacing: '3.5px',
-                  color: 'var(--accent)',
+                  color: 'var(--ink-2)',
                 }}
               >
                 {t.featuresKicker}
@@ -292,6 +304,9 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
             <FeatureCard
               kicker="04"
               chipColor="var(--ink)"
+              // Decorative chrome: warm cream-pink tint chosen to pair with the
+              // cocoa-ink stats glyph. One-off (no other surface uses it), so
+              // kept inline rather than promoted to a token until reused.
               chipBg="#EFE2D2"
               title={t.f4Title}
               body={t.f4Body}
@@ -334,7 +349,7 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
             <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
-            <span style={{ color: 'var(--hairline)' }}>·</span>
+            <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
             <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
           </div>
           <div className="flex items-center gap-3">
@@ -397,7 +412,7 @@ function MigrateLinksSection({
                 fontFamily: 'var(--font-fraunces)',
                 fontSize: 12,
                 letterSpacing: '3.5px',
-                color: 'var(--accent)',
+                color: 'var(--ink-2)',
               }}
             >
               {t.migrateSection.kicker}

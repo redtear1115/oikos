@@ -109,7 +109,7 @@ export const en: Translations = {
     f1Title: 'Track together',
     f1Body: 'Log every expense together. Auto-split 50/50 or by ratio. Settle monthly without ever doing the math.',
     f2Title: 'Loved things',
-    f2Body: 'House, car, kids, pets, plants — anything you care for together belongs in the same ledger.',
+    f2Body: 'House, car, kids, pets, plants: anything you care for together belongs in the same ledger.',
     f3Title: 'Guardian policies',
     f3Body: 'Protection and savings policies side by side. Insured, beneficiary, renewal dates — all on one page.',
     f4Title: 'Reflection',

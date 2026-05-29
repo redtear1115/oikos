@@ -89,7 +89,7 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
           <div
             role="alert"
             className="rounded-xl px-3 py-2 text-sm"
-            style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
+            style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
           >
             {error}
           </div>
