@@ -32,3 +32,16 @@ export async function localizedSignInPath(suffix = ''): Promise<string> {
   const locale: Locale = isLocale(value) ? value : DEFAULT_LOCALE
   return `${localizedHref('/sign-in', locale)}${suffix}`
 }
+
+/**
+ * Return a locale-aware landing path (`/` for DEFAULT_LOCALE, `/<locale>`
+ * otherwise). Used by sign-out so the post-logout destination is the warm
+ * landing surface rather than `/sign-in`; honours the user's last locale
+ * the same way `localizedSignInPath` does.
+ */
+export async function localizedHomePath(): Promise<string> {
+  const cookieStore = await cookies()
+  const value = cookieStore.get(LOCALE_COOKIE)?.value
+  const locale: Locale = isLocale(value) ? value : DEFAULT_LOCALE
+  return localizedHref('/', locale)
+}

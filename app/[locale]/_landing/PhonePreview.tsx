@@ -1,30 +1,47 @@
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import type { CategoryId } from '@/lib/categories'
+import type { AssetType } from '@/lib/assets'
+import { CategoryChip } from '@/app/(dashboard)/_components/CategoryChip'
+import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { FutariMark } from './FutariMark'
 
 // PhonePreview — decorative product mock shown in the desktop hero. Static
 // markup; not the real dashboard. Mirrors the real product's visual rhythm
-// (BalanceHero / feed / asset chips / FAB) so visitors see what the app
-// actually looks like, not a generic illustration. Copy is locale-aware
-// (via `phoneMock*` keys in landing) so the mock doesn't sit in Chinese
-// when the page itself is rendering in EN/JA. Asset chips stay as emoji —
-// universally readable, no translation needed.
+// (BalanceHero / feed / asset chips / FAB) and now borrows the real
+// CategoryChip + AssetIcon components so the chips look identical to what
+// the live app ships (#832 phase 1). Copy stays locale-aware via the
+// `phoneMock*` keys in landing.
 
 type Props = {
   t: Translations['landing']
 }
 
+type FeedRow = {
+  categoryId: CategoryId
+  title: string
+  sub: string
+  amount: string
+}
+
+type AssetChip = {
+  type: AssetType
+  /** Hue token used for the chip's tinted background + icon stroke color.
+   *  Mirrors the per-type --asset-color-* family used in the live app. */
+  c: string
+}
+
 export function PhonePreview({ t }: Props) {
-  const feedRows = [
-    { c: 'var(--accent)', title: t.phoneMockFeed1Title, sub: t.phoneMockFeed1Sub, amount: '−840' },
-    { c: 'var(--asset-color-house)', title: t.phoneMockFeed2Title, sub: t.phoneMockFeed2Sub, amount: '−1,520' },
-    { c: 'var(--asset-color-pet)', title: t.phoneMockFeed3Title, sub: t.phoneMockFeed3Sub, amount: '−2,800' },
+  const feedRows: FeedRow[] = [
+    { categoryId: 'dining',  title: t.phoneMockFeed1Title, sub: t.phoneMockFeed1Sub, amount: '−840' },
+    { categoryId: 'housing', title: t.phoneMockFeed2Title, sub: t.phoneMockFeed2Sub, amount: '−1,520' },
+    { categoryId: 'health',  title: t.phoneMockFeed3Title, sub: t.phoneMockFeed3Sub, amount: '−2,800' },
   ]
-  const assetChips = [
-    { c: 'var(--asset-color-house)', emoji: '🏠' },
-    { c: 'var(--asset-color-car)', emoji: '🚗' },
-    { c: 'var(--asset-color-child)', emoji: '👶' },
-    { c: 'var(--asset-color-pet)', emoji: '🐾' },
-    { c: 'var(--asset-color-plant)', emoji: '🌿' },
+  const assetChips: AssetChip[] = [
+    { type: 'house', c: 'var(--asset-color-house)' },
+    { type: 'car',   c: 'var(--asset-color-car)' },
+    { type: 'child', c: 'var(--asset-color-child)' },
+    { type: 'pet',   c: 'var(--asset-color-pet)' },
+    { type: 'plant', c: 'var(--asset-color-plant)' },
   ]
 
   return (
@@ -132,15 +149,7 @@ export function PhonePreview({ t }: Props) {
                       : 'none',
                 }}
               >
-                <div
-                  className="w-7 h-7 rounded-[9px] flex items-center justify-center text-micro font-medium"
-                  style={{
-                    background: `color-mix(in srgb, ${r.c} 35%, white)`,
-                    color: r.c,
-                  }}
-                >
-                  ·
-                </div>
+                <CategoryChip categoryId={r.categoryId} size={28} />
                 <div className="flex-1 min-w-0">
                   <p className="m-0 text-caption font-medium">{r.title}</p>
                   <p className="m-0 text-mini" style={{ color: 'var(--ink-2)' }}>
@@ -160,18 +169,19 @@ export function PhonePreview({ t }: Props) {
             ))}
           </div>
 
-          {/* asset chips */}
+          {/* asset chips — same tinted-hue family the real dashboard uses
+              for asset rails, with the real AssetIcon glyph centered inside. */}
           <div className="flex gap-1.5 mt-2.5">
-            {assetChips.map((a, i) => (
+            {assetChips.map((a) => (
               <div
-                key={i}
-                className="flex-1 h-9 rounded-[11px] flex items-center justify-center text-body"
+                key={a.type}
+                className="flex-1 h-9 rounded-[11px] flex items-center justify-center"
                 style={{
                   background: `color-mix(in srgb, ${a.c} 35%, white)`,
                   color: a.c,
                 }}
               >
-                {a.emoji}
+                <AssetIcon type={a.type} size={20} />
               </div>
             ))}
           </div>
