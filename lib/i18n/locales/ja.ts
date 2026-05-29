@@ -1174,6 +1174,8 @@ export const ja: Translations = {
     child: {
       nickname: 'ニックネーム',
       nicknamePlaceholder: 'たろちゃん',
+      fullName: '本名',
+      fullNamePlaceholder: '法律上の名前',
       gender: '性別',
       genderMale: '男の子',
       genderFemale: '女の子',

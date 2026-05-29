@@ -11,7 +11,8 @@ import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aib
 import type { ChildDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
-import { revealChildPii } from '@/actions/asset'
+import { revealChildPii, revealChildName } from '@/actions/asset'
+import { RevealableRow as SharedRevealableRow } from '@/app/(dashboard)/_components/RevealableRow'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { resolveDisplayName } from '@/lib/display-name'
 import { useTranslations } from '@/lib/i18n/client'
@@ -174,6 +175,16 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
 
       <SectionHeader>{td.sectionId}</SectionHeader>
       <InfoCard>
+        {/* #826 — full real name row. Header above shows the nickname
+            (Assets.name). This row decrypts the legal full name on tap.
+            Uses the shared RevealableRow because the binding is a generic
+            callback; the older inline RevealableRow stays for nationalId
+            and nhiNo until those are migrated in cleanup. */}
+        <SharedRevealableRow
+          label={td.fullName}
+          hasValue={assetSheetInitial.childHasFullName ?? false}
+          revealAction={() => revealChildName(assetId)}
+        />
         <InfoRow label={td.bornDate} value={details?.birthday ?? ''} mono />
         <RevealableRow
           label={td.nationalId}

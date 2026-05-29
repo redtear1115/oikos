@@ -197,6 +197,9 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       // hasX flags drive 「清除」 affordance + 留空=不變更 placeholder.
       childHasNationalId: childDetailsData?.hasNationalId ?? false,
       childHasNhiNo: childDetailsData?.hasNhiNo ?? false,
+      // #826 — has-value bool only; the encrypted full name itself never
+      // reaches the client. Reveal goes through revealChildName.
+      childHasFullName: Boolean(asset.nameEncrypted),
       childBloodType: childDetailsData?.bloodType ?? null,
       childHospital: childDetailsData?.hospital ?? null,
       childHeightCm: childDetailsData?.heightCm ?? null,
