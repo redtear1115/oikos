@@ -15,6 +15,41 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.3.1] - 2026-05-30
+
+主題：**公開 surface 清掃 · 愛物 PII 加密第一階段**——對 `/` 跟所有 non-login surface 跑了一輪 `/impeccable critique → polish → audit` 循環，把絕對 ban 的 side-stripe border 拆掉、補齊 WCAG AA 對比、把 landing 拉出 editorial-typographic reflex lane、四語 em dash 一次掃除（#828）；landing hero 字級升級＋PhonePreview 換上真實 `CategoryChip` / `AssetIcon`，順手修掉 logout 卡在 `/settings` 的 server-action redirect bug（#833）；把 dev server 啟動流程固定成 `run-oikos` project skill（#834）；愛物 PII 加密第一階段——車牌、房屋地址、孩子全名加密落庫、tap-to-reveal UI、backfill 腳本（#826 / #835 / #838）。
+完整 diff：[v1.3.0...v1.3.1](https://github.com/redtear1115/oikos/compare/v1.3.0...v1.3.1)
+
+### 使用者可見變化
+
+- **邀請失敗的紅框不再像警報（#828, #829）**：拿掉 side-stripe + ⚠️ icon，改成溫和的 clay tint，伴侶第一次點壞掉的邀請連結不再被嚇到。
+- **小字終於看得清楚（#828, #830）**：legal page 的「最後更新日期」、MADE IN TAIWAN 微標、migrate FAQ 答案等灰字全面加深到 WCAG AA 4.5:1 對比。
+- **手機 landing tagline 變主角（#833, #832）**：「兩個人，一本帳。」字級加大、行高收緊、tracking 收進去，現在是首屏視覺中心。
+- **首頁手機卡裡的 chip 和 dashboard 看起來一致（#833）**：PhonePreview 不再用 emoji 跟 placeholder dot，feed chip 顯示真實的「食 / 住 / 醫」、asset chip 顯示真實的 SVG glyph。
+- **登出後乾淨跳到 `/`（#833）**：原本登出有時候卡在 `/settings`，現在會正確落回暖色 landing 頁。
+- **桌面看 Privacy / Terms 不再像小紙條（#828）**：寬度從 mobile shell 拉到 max-w-2xl。
+- **MigrateComparison 表格非顏色 cue（#828）**：「✓ / ◐ / —」加在每個 cell 前面，色弱使用者不再只能靠顏色判斷狀態。
+- **車牌可加密儲存（#826, #835）**：愛車 detail 頁，車牌預設遮罩 `●●●●●●`、點「顯示」才解密；assets 列表的車牌 chip 一律遮罩。
+- **房屋地址可加密儲存（#826, #835）**：house detail 頁 header subtitle 跟 InfoCard 都套上遮罩 + tap-to-reveal。
+- **小孩可加上加密的「全名」（#826, #838）**：小孩編輯表單新增「全名」optional 欄位，detail 頁多一個「全名」row，遮罩預設、tap 解密。`name` 維持顯示用的「小名」不變，現有資料不被動到。
+
+### 技術變更
+
+- **Side-stripe border 拆除（#828 / #829）**：`InviteConfirm` 對齊 `LeaveGroupFlow` 的 alert 形狀（無 border、無 icon、`--debit-soft` 暖底）；`MigrateIntroCallout` 改用 `--surface-alt` tonal step。Absolute ban 違規清零。
+- **WCAG AA token-level 修正（#828 / #830）**：`--ink-3` 從 `#B89C8B`（2.24:1）加深到 `#82654F`（4.66:1）；新增 `--debit-text` token（clay shifted 60% toward cocoa-ink，4.87:1 on `--debit-soft`）；section kickers 從 `--accent`（2.34:1）降階到 `--ink-2`（5.51:1）。`LandingCtaLink` 補 `focus-visible:oik-focus-ring`。Landing 手機 `<h1>` 從 wordmark 換成 tagline（screen-reader 導航落地點變正確）。
+- **Editorial reflex 結構重整（#828 / #831）**：Landing Features 從 4-card grid → editorial column（hanging italic-Fraunces 數字 + glyph-accented title + body）；Trust 全段 narrative 升格成 24-34px serif 獨白；MigrateSteps / MigrateDifferentiators / MigrateTrustBlock / MigrateFaq / MigrateComparison / MigrateOtherSources 的 h2 從 italic-Fraunces ALL-CAPS tracked 降階成 plain Noto Sans TC 20-22px medium。
+- **Em dash 全 locale 掃除（#828 / #831）**：依語境逐句改寫，zh-TW 10 條 / zh-CN 9 條 / ja 16 條 / en ~60 條 user-visible 字串清理；JSDoc 註解內的 em dash 保留（非 user-visible）。
+- **手機 hero tagline 字級升級（#833 / #832）**：從 `fontSize: 26 / lh 1.45 / -0.3px` 改為 `clamp(34px, 9vw, 56px) / lh 1.15 / -1px`。
+- **PhonePreview 套真實元件（#833 / #832）**：feed icon 從 `·` placeholder 換成 `<CategoryChip categoryId="dining|housing|health" size={28}>`；asset chip 從 emoji 換成 `<AssetIcon type="house|car|child|pet|plant" size={20}>`，跟 `/dashboard` 共用同一 source of truth。
+- **Logout server-action redirect fix（#833）**：`LogoutButton` 拿掉 `useTransition` 包裝（React transition 會吞掉 `NEXT_REDIRECT` 的 throw），改用 plain `useState` 管 pending state。加 `window.location.replace('/')` safety net。`signOut()` 重新導向目標從 `localizedSignInPath` 改成新的 `localizedHomePath`。
+- **`run-oikos` project skill（#834）**：`.claude/skills/run-oikos/{SKILL.md,smoke.sh,.gitignore}`。idempotent driver：偵測 `@next/bundle-analyzer` 缺裝就自動 `npm install`、檢查 Node ≥20、檢查 `.env.local`、`nohup npm run dev` background 啟動、poll `Ready in` signal、smoke `/` `/zh-TW` `/dashboard`，留著跑、`--stop` 一鍵收。
+- **愛物 PII 加密 schema（#826 / #835）**：migration `0052_encrypt_asset_pii_columns.sql` 在 `Assets` / `CarDetails` / `HouseDetails` 加三個 nullable encrypted 欄（`name_encrypted` / `plate_encrypted` / `address_encrypted`），舊欄位保留作 dual-write 過渡。Drop legacy columns 留 #837（v1.3.2）。
+- **加密 / 解密路徑（#826 / #835 / #838）**：`createCar` / `editCar` / `createHouse` / `editHouse` 加 dual-write；`createChild` / `editChild` 把 `fullName` 加密寫到 `Assets.name_encrypted`（trinary semantics 跟 nationalId 一致：undefined = keep、null = clear、string = encrypt set）。新 server actions `revealCarPlate` / `revealHouseAddress` / `revealChildName`，認證契約對齊既有的 `revealChildPii`（group ownership + asset.type + 非 soft-delete），plate / address 在 backfill 完成前 fallback 讀 legacy plaintext。`childHasFullName: boolean` 走 `AssetSheetInitial`，sheet 表單對齊 nationalId 的「先前已加密」placeholder + 「清除」按鈕 pattern。
+- **共用 `RevealableRow` 元件（#826 / #835）**：從 `ChildDetailClient` 的 inline 元件抽到 `app/(dashboard)/_components/RevealableRow.tsx`。Caller bind 自己的 server action callback，元件處理 mask / pending / error translation / aria。`ChildDetailClient` 用共用版本渲染「全名」row，nationalId / nhiNo 仍走原 inline 版（cleanup 留 follow-up）。新增四語 `assetDetail.reveal.{show,hide,loading,error}` 共用 i18n key。
+- **Backfill 腳本（#826 / #835）**：`scripts/encrypt-existing-pii.mjs` Node script，AES-256-GCM (`iv:authTag:ciphertext` hex)，idempotent、`DRY_RUN=1` 支援、讀 `DATABASE_URL`（後續 fix）／fallback `POSTGRES_URL`。
+- **Drizzle journal 補回（#826 / #835）**：journal 之前漂移到 idx 50，這次補了 idx 52（idx 51 來自其他來源，留原狀）。
+- **package-lock.json 版本 stamp 對齊（#833）**：lockfile 之前停在 1.2.4，這次跟 package.json 一起補進 1.3.0。
+
 ## [1.3.0] - 2026-05-27
 
 主題：**觀測補強 · 行為事件埋點**——補齊記帳之後的 PostHog 行為事件（P0 核心黏著：`record_created` / `settlement_created` / `income_created`；P1 功能採用：旅行、愛物、定期規則；P2 關係：`group_left` / 伴侶問答 / 角色互換 / 幣別切換）；修正 Google OAuth 頭像在 next/image 的 remotePattern 缺漏。
@@ -456,7 +491,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/redtear1115/oikos/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/redtear1115/oikos/compare/v1.2.5...v1.3.0
 [1.2.5]: https://github.com/redtear1115/oikos/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/redtear1115/oikos/compare/v1.2.3...v1.2.4
