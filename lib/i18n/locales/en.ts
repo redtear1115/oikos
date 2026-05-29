@@ -1176,6 +1176,8 @@ export const en: Translations = {
     child: {
       nickname: 'Nickname',
       nicknamePlaceholder: 'Bunny',
+      fullName: 'Full name',
+      fullNamePlaceholder: 'Their legal name',
       gender: 'Gender',
       genderMale: 'Boy',
       genderFemale: 'Girl',

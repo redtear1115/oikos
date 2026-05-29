@@ -31,6 +31,10 @@ export interface AssetSheetInitial {
   childBirthday?: string | null
   childHasNationalId?: boolean
   childHasNhiNo?: boolean
+  /** #826 — Assets.name_encrypted IS NOT NULL on the server. The form never
+   *  receives the decrypted full name; this bool just lets the input show
+   *  「先前已加密」 placeholder + 「清除」 button, same UX as nationalId. */
+  childHasFullName?: boolean
   childBloodType?: string | null
   childHospital?: string | null
   childHeightCm?: number | null
