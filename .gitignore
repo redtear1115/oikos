@@ -66,3 +66,10 @@ next-env.d.ts
 # implementation plans are working docs, kept locally only.
 # specs (docs/superpowers/specs/) ARE tracked — those are the design intent.
 docs/superpowers/plans/
+
+# Capacitor / Android
+android/.gradle/
+android/app/build/
+android/build/
+*.keystore
+*.jks
