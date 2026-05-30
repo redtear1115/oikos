@@ -48,6 +48,7 @@ Realtime：Client subscribes → React state mutation
 - Validators：`lib/validators.ts`
 - Realtime：`app/(dashboard)/_components/RealtimeProvider.tsx`
 - i18n：`lib/i18n/`（server `getTranslations()` → dashboard layout `<TranslationsProvider>` → client `useTranslations()`；cookie-based locale，4 語）
+- Migrate（競品搬遷 SEO 頁）：`lib/migrate/sources.ts`（source registry：competitor facts + comparison + `screenshotWorkflow` flag）→ 單一動態路由 `app/[locale]/migrate/[source]/page.tsx`；sitemap / cross-link / JSON-LD 全部自動衍生。非匯出 App 走截圖→ChatGPT→CSV（`futari_generic` parser，見 `lib/csvImport/`）。spec: [migrate-pages-design.md](docs/superpowers/specs/migrate-pages-design.md)
 - Schema：`lib/db/schema.ts`
 - Migrations：`drizzle/`
 - Specs：`docs/superpowers/specs/`

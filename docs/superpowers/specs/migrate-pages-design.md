@@ -1,8 +1,11 @@
 ---
 status: approved
-first_shipped_in: ~v1.4.0
+first_shipped_in: v1.3.0
+updates:
+  - v1.3.2 — CMS/data-driven refactor (sources.ts + [source]/page.tsx); Taiwan pages + screenshot→ChatGPT→CSV (#839 #852)
 related_issues:
   - https://github.com/redtear1115/oikos/issues/852
+  - https://github.com/redtear1115/oikos/issues/839
 related_specs:
   - csv-import-design.md
 ---
