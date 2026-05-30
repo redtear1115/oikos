@@ -2245,7 +2245,7 @@ export const en: Translations = {
       // TODO(#839): en copy below pending native review
       moneybook: {
         title: 'Import from Moneybook to Futari · CSV guide',
-        description: 'Moving Moneybook data to a two-person ledger? Export your transactions as CSV and import into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Moneybook data to a shared ledger? Export CSV and import into Futari, built for couples. Free, ad-free, end-to-end encrypted.',
         ogDescription: 'Where Moneybook users go next: export CSV and import into Futari.',
       },
       andromoney: {
@@ -2260,7 +2260,7 @@ export const en: Translations = {
       },
       manebo: {
         title: 'Import from Manebo to Futari · Couple budgeting',
-        description: 'Moving Manebo data to a couples ledger? Import your CSV into Futari — the shared budgeting app built for couples and partners. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, end-to-end encrypted.',
         ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
       },
     },
