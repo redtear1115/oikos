@@ -1833,6 +1833,9 @@ export const en: Translations = {
       honeydue: 'Honeydue',
       spendee: 'Spendee',
       cwmoney: 'CWMoney',
+      moneybook: 'Moneybook',
+      andromoney: 'AndroMoney',
+      mobills: 'Mobills',
       unknown: 'Other',
     },
     differentiatorsHeading: 'Why Futari',
@@ -1873,6 +1876,19 @@ export const en: Translations = {
         cwmoney: {
           name: 'CWMoney',
           description: 'A long-running single-person ledger from Taiwan; convert via template to CSV.',
+        },
+        // TODO(#839): en copy below pending native review
+        moneybook: {
+          name: 'Moneybook',
+          description: 'A Taiwanese auto-syncing budgeting app; export CSV and bring it over.',
+        },
+        andromoney: {
+          name: 'AndroMoney',
+          description: 'A long-running single-person ledger; export CSV and bring it over.',
+        },
+        mobills: {
+          name: 'Mobills',
+          description: 'An international personal-finance app; export CSV and bring it over.',
         },
       },
     },
@@ -2099,6 +2115,232 @@ export const en: Translations = {
           ],
         },
       },
+      // TODO(#839): en copy below pending native review
+      moneybook: {
+        heroKicker: 'MONEYBOOK → FUTARI',
+        heroTitle: 'Your Moneybook data can come with you',
+        heroSubtitle:
+          'Moving from Moneybook to Futari: export your transactions as CSV, preview them here, and keep writing the story together.',
+        differentiators: [
+          {
+            title: 'A ledger for two, not a tool for one',
+            body: 'Moneybook is built for one person reconciling alone; Futari assumes two people from day one — one shared ledger you both keep and both see.',
+          },
+          {
+            title: 'Splits, done for you',
+            body: 'Who paid, how it splits, who owes whom right now — the balance is worked out for you, not held in your head.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Moneybook, export your transactions and download the CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: "Are Moneybook's columns the same as Futari's?",
+            answer:
+              'Not exactly. After uploading you preview the parsed result first; you can map categories and columns during the actual import, so nothing is written to your ledger blindly.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Rows in an unusual or unreadable format are flagged for you to confirm.',
+          },
+          {
+            question: 'Moneybook syncs banks automatically — does Futari?',
+            answer:
+              'Futari is manual-first for now, focused on the two of you logging each shared expense together; automatic bank sync is out of scope at this stage.',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Moneybook',
+          rows: [
+            {
+              feature: 'Shared ledger for two',
+              futari: { label: '✓ Default', tone: 'yes' },
+              other: { label: '✕ Single-user', tone: 'no' },
+            },
+            {
+              feature: 'Expense split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '✕ None', tone: 'no' },
+            },
+            {
+              feature: 'CSV import',
+              futari: { label: '✓ Direct upload', tone: 'yes' },
+              other: { label: '✓ Export available', tone: 'yes' },
+            },
+            {
+              feature: 'Completely free',
+              futari: { label: '✓ Forever', tone: 'yes' },
+              other: { label: '△ Some features paid', tone: 'partial' },
+            },
+            {
+              feature: 'End-to-end encryption',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: 'Not stated', tone: 'no' },
+            },
+          ],
+        },
+      },
+      andromoney: {
+        heroKicker: 'ANDROMONEY → FUTARI',
+        heroTitle: 'Your AndroMoney data can come with you',
+        heroSubtitle:
+          'Moving from AndroMoney to Futari: export a CSV, preview it here, and keep years of records going together.',
+        differentiators: [
+          {
+            title: 'Two-person by default',
+            body: 'AndroMoney is a fine single-person ledger; Futari is built for two people sharing one ledger, where every record is visible to both.',
+          },
+          {
+            title: 'Realtime sync',
+            body: 'One of you logs it, the other sees it right away — no trading screenshots or files to reconcile.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In AndroMoney, go to Settings → Export and output your data as CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: 'Will I need to tidy up the data after importing?',
+            answer:
+              'Categories can be mapped during the import flow in one pass — no manual fixes afterward.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Special types (such as transfers) are flagged for you to confirm.',
+          },
+          {
+            question: 'AndroMoney has multiple accounts — does Futari?',
+            answer:
+              'Futari is one shared ledger focused on the two of you; instead of separate accounts, split modes record who paid and how each expense divides.',
+          },
+        ],
+        comparison: {
+          otherLabel: 'AndroMoney',
+          rows: [
+            {
+              feature: 'Shared ledger for two',
+              futari: { label: '✓ Default', tone: 'yes' },
+              other: { label: '✕ Single-user', tone: 'no' },
+            },
+            {
+              feature: 'Expense split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '✕ None', tone: 'no' },
+            },
+            {
+              feature: 'Realtime cloud sync',
+              futari: { label: '✓ Realtime', tone: 'yes' },
+              other: { label: '△ Manual backup', tone: 'partial' },
+            },
+            {
+              feature: 'Multi-currency',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: '✓ Yes', tone: 'yes' },
+            },
+            {
+              feature: 'Completely free',
+              futari: { label: '✓ Forever', tone: 'yes' },
+              other: { label: '△ Ads / paid tier', tone: 'partial' },
+            },
+          ],
+        },
+      },
+      mobills: {
+        heroKicker: 'MOBILLS → FUTARI',
+        heroTitle: 'Your Mobills data can come with you',
+        heroSubtitle:
+          'Moving from Mobills to Futari: export a CSV, preview it here, and keep writing the records together.',
+        differentiators: [
+          {
+            title: 'Shared, not each on their own',
+            body: 'Mobills centers on personal finance; Futari is one ledger two people share — a shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Mobills, export your transactions and download the CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: 'Will I need to tidy up the data after importing?',
+            answer:
+              'Categories can be mapped during the import flow in one pass — no manual fixes afterward.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Special types (such as transfers) are flagged for you to confirm.',
+          },
+          {
+            question: 'Mobills has budgets — does Futari?',
+            answer:
+              'Futari has no budget caps and will not warn you about overspending — it records what the two of you spent and shows the result, without scoring you.',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Mobills',
+          rows: [
+            {
+              feature: 'Shared ledger for two',
+              futari: { label: '✓ Default', tone: 'yes' },
+              other: { label: '✕ Single-user', tone: 'no' },
+            },
+            {
+              feature: 'Expense split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '✕ None', tone: 'no' },
+            },
+            {
+              feature: 'Interface language',
+              futari: { label: '✓ ZH / EN / JA', tone: 'yes' },
+              other: { label: '△ English-first', tone: 'partial' },
+            },
+            {
+              feature: 'Completely free',
+              futari: { label: '✓ Forever', tone: 'yes' },
+              other: { label: '△ Premium needed', tone: 'partial' },
+            },
+            {
+              feature: 'CSV import',
+              futari: { label: '✓ Direct upload', tone: 'yes' },
+              other: { label: '✓ Export available', tone: 'yes' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2136,6 +2378,22 @@ export const en: Translations = {
         title: 'Import from CWMoney to Futari · Excel guide',
         description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari, the shared ledger built for couples. Free, ad-free.',
         ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
+      },
+      // TODO(#839): en copy below pending native review
+      moneybook: {
+        title: 'Import from Moneybook to Futari · CSV guide',
+        description: 'Moving Moneybook data to a two-person ledger? Export your transactions as CSV and import into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Moneybook users go next: export CSV and import into Futari.',
+      },
+      andromoney: {
+        title: 'Import from AndroMoney to Futari · CSV guide',
+        description: 'Moving AndroMoney data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where AndroMoney users go next: export CSV and import into Futari.',
+      },
+      mobills: {
+        title: 'Import from Mobills to Futari · CSV guide',
+        description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Mobills users go next: export CSV and import into Futari.',
       },
     },
   },

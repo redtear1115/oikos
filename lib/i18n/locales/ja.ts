@@ -1831,6 +1831,9 @@ export const ja: Translations = {
       honeydue: 'Honeydue',
       spendee: 'Spendee',
       cwmoney: 'CWMoney',
+      moneybook: 'Moneybook',
+      andromoney: 'AndroMoney',
+      mobills: 'Mobills',
       unknown: 'そのほか',
     },
     differentiatorsHeading: 'Futari を選ぶ理由',
@@ -1871,6 +1874,19 @@ export const ja: Translations = {
         cwmoney: {
           name: 'CWMoney',
           description: '台湾で長く使われているひとり向け家計簿。テンプレートで CSV に変換します。',
+        },
+        // TODO(#839): ja copy below pending native review
+        moneybook: {
+          name: 'Moneybook',
+          description: '台湾の自動連携家計簿アプリ。CSV を書き出して持ち込めます。',
+        },
+        andromoney: {
+          name: 'AndroMoney',
+          description: '長く使われているひとり向け家計簿アプリ。CSV を書き出して持ち込めます。',
+        },
+        mobills: {
+          name: 'Mobills',
+          description: '海外発の個人向け家計簿アプリ。CSV を書き出して持ち込めます。',
         },
       },
     },
@@ -2097,6 +2113,232 @@ export const ja: Translations = {
           ],
         },
       },
+      // TODO(#839): ja copy below pending native review
+      moneybook: {
+        heroKicker: 'MONEYBOOK → FUTARI',
+        heroTitle: 'Moneybook のデータも、持っていけます',
+        heroSubtitle:
+          'Moneybook から Futari へ：取引明細を CSV で書き出し、ここでプレビューして、ふたりで記録を続けましょう。',
+        differentiators: [
+          {
+            title: 'ひとりの道具ではなく、ふたりの家計簿',
+            body: 'Moneybook はひとりで照合するための設計。Futari は最初から使う人が二人だと考え、共同の家計簿を一緒に記録し、一緒に見ます。',
+          },
+          {
+            title: '按分は自動で計算',
+            body: '誰が払って、どう分けて、今どちらがいくら貸しているか。残高は自動で計算され、頭の中で覚える必要はありません。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'Moneybook で取引明細を書き出し、CSV をダウンロードします。',
+        step2: 'CSV をここにアップロードして、記録をプレビューします。',
+        step3: 'Futari のアカウントを作成し、ワンタップで引っ越し完了。',
+        faq: [
+          {
+            question: 'Moneybook と Futari の項目は同じですか？',
+            answer:
+              '完全に同じではありません。アップロード後にまず解析結果をプレビューでき、実際の取り込み時にカテゴリや項目を対応づけられるので、いきなり家計簿に書き込まれることはありません。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '今までの記録はすべて持ってこられますか？',
+            answer:
+              'CSV 取り込みに対応し、ほとんどの記録が移せます。特殊な形式や読み取れない行は、確認用に印が付きます。',
+          },
+          {
+            question: 'Moneybook は銀行と自動連携しますが、Futari も？',
+            answer:
+              'Futari は今のところ手入力が中心で、ふたりが共同の支出を一緒に記録することに集中しています。銀行の自動連携は現段階では対象外です。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Moneybook',
+          rows: [
+            {
+              feature: 'ふたりの共同家計簿',
+              futari: { label: '✓ 標準', tone: 'yes' },
+              other: { label: '✕ ひとり向け', tone: 'no' },
+            },
+            {
+              feature: '費用の按分モード',
+              futari: { label: '✓ 複数', tone: 'yes' },
+              other: { label: '✕ なし', tone: 'no' },
+            },
+            {
+              feature: 'CSV 取り込み',
+              futari: { label: '✓ そのままアップロード', tone: 'yes' },
+              other: { label: '✓ 書き出し可', tone: 'yes' },
+            },
+            {
+              feature: '完全無料',
+              futari: { label: '✓ ずっと', tone: 'yes' },
+              other: { label: '△ 一部有料', tone: 'partial' },
+            },
+            {
+              feature: 'エンドツーエンド暗号化',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '記載なし', tone: 'no' },
+            },
+          ],
+        },
+      },
+      andromoney: {
+        heroKicker: 'ANDROMONEY → FUTARI',
+        heroTitle: 'AndroMoney のデータも、持っていけます',
+        heroSubtitle:
+          'AndroMoney から Futari へ：CSV を書き出し、ここでプレビューして、長年の記録をふたりで続けましょう。',
+        differentiators: [
+          {
+            title: 'ふたりの家計簿が標準',
+            body: 'AndroMoney は優れたひとり向け家計簿。Futari は二人で一つの家計簿を共有する設計で、記録はお互いに見えます。',
+          },
+          {
+            title: 'リアルタイム同期',
+            body: '片方が記録すると、もう片方にすぐ表示。スクリーンショットやファイルをやり取りして照合する必要はありません。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'AndroMoney の 設定 → エクスポート で、データを CSV として書き出します。',
+        step2: 'CSV をここにアップロードして、記録をプレビューします。',
+        step3: 'Futari のアカウントを作成し、ワンタップで引っ越し完了。',
+        faq: [
+          {
+            question: '取り込み後にデータを整理し直す必要はありますか？',
+            answer:
+              'カテゴリは取り込みの流れの中で一度に対応づけられ、あとから手作業で直す必要はありません。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '今までの記録はすべて持ってこられますか？',
+            answer:
+              'CSV 取り込みに対応し、ほとんどの記録が移せます。振替などの特殊な種類は、確認用に印が付きます。',
+          },
+          {
+            question: 'AndroMoney の複数口座は、Futari にもありますか？',
+            answer:
+              'Futari はふたりの共同収支に集中した一つの家計簿です。口座を分けるのではなく、按分モードで「誰が払って、どう分けるか」を記録します。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'AndroMoney',
+          rows: [
+            {
+              feature: 'ふたりの共同家計簿',
+              futari: { label: '✓ 標準', tone: 'yes' },
+              other: { label: '✕ ひとり向け', tone: 'no' },
+            },
+            {
+              feature: '費用の按分モード',
+              futari: { label: '✓ 複数', tone: 'yes' },
+              other: { label: '✕ なし', tone: 'no' },
+            },
+            {
+              feature: 'リアルタイム同期',
+              futari: { label: '✓ リアルタイム', tone: 'yes' },
+              other: { label: '△ 手動バックアップ', tone: 'partial' },
+            },
+            {
+              feature: '多通貨対応',
+              futari: { label: '✓ 対応', tone: 'yes' },
+              other: { label: '✓ 対応', tone: 'yes' },
+            },
+            {
+              feature: '完全無料',
+              futari: { label: '✓ ずっと', tone: 'yes' },
+              other: { label: '△ 広告／有料版', tone: 'partial' },
+            },
+          ],
+        },
+      },
+      mobills: {
+        heroKicker: 'MOBILLS → FUTARI',
+        heroTitle: 'Mobills のデータも、持っていけます',
+        heroSubtitle:
+          'Mobills から Futari へ：CSV を書き出し、ここでプレビューして、ふたりで記録を続けましょう。',
+        differentiators: [
+          {
+            title: 'それぞれ別々ではなく、ふたりで共有',
+            body: 'Mobills は個人の家計が中心。Futari は二人で共有する一つの家計簿で、共同の支出は一度記録すれば両方に見えます。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'Mobills で取引履歴を書き出し、CSV をダウンロードします。',
+        step2: 'CSV をここにアップロードして、記録をプレビューします。',
+        step3: 'Futari のアカウントを作成し、ワンタップで引っ越し完了。',
+        faq: [
+          {
+            question: '取り込み後にデータを整理し直す必要はありますか？',
+            answer:
+              'カテゴリは取り込みの流れの中で一度に対応づけられ、あとから手作業で直す必要はありません。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '今までの記録はすべて持ってこられますか？',
+            answer:
+              'CSV 取り込みに対応し、ほとんどの記録が移せます。振替などの特殊な種類は、確認用に印が付きます。',
+          },
+          {
+            question: 'Mobills には予算機能がありますが、Futari にも？',
+            answer:
+              'Futari は予算の上限を設けず、使いすぎを警告することもありません。ふたりが使ったお金を記録して結果を見せますが、点数はつけません。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Mobills',
+          rows: [
+            {
+              feature: 'ふたりの共同家計簿',
+              futari: { label: '✓ 標準', tone: 'yes' },
+              other: { label: '✕ ひとり向け', tone: 'no' },
+            },
+            {
+              feature: '費用の按分モード',
+              futari: { label: '✓ 複数', tone: 'yes' },
+              other: { label: '✕ なし', tone: 'no' },
+            },
+            {
+              feature: '表示言語',
+              futari: { label: '✓ 中・英・日', tone: 'yes' },
+              other: { label: '△ 英語中心', tone: 'partial' },
+            },
+            {
+              feature: '完全無料',
+              futari: { label: '✓ ずっと', tone: 'yes' },
+              other: { label: '△ 上位版が必要', tone: 'partial' },
+            },
+            {
+              feature: 'CSV 取り込み',
+              futari: { label: '✓ そのままアップロード', tone: 'yes' },
+              other: { label: '✓ 書き出し可', tone: 'yes' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2134,6 +2376,22 @@ export const ja: Translations = {
         title: 'CWMoney から Futari へ｜Excel 変換',
         description: 'CWMoney からの引っ越し手順。Excel 変換テンプレートで CSV に整え、Futari（カップル・夫婦の共同家計簿）にアップロードするだけ。',
         ogDescription: 'CWMoney の引っ越し手順。変換テンプレートで Excel を CSV にして Futari へ。',
+      },
+      // TODO(#839): ja copy below pending native review
+      moneybook: {
+        title: 'Moneybook から Futari へ｜CSV 取り込み',
+        description: 'Moneybook のデータをふたりの家計簿へ。取引明細を CSV で書き出し、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: 'Moneybook ユーザーの次の住みか。CSV を書き出して Futari へ。',
+      },
+      andromoney: {
+        title: 'AndroMoney から Futari へ｜CSV 取り込み',
+        description: 'AndroMoney のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: 'AndroMoney ユーザーの次の住みか。CSV を書き出して Futari へ。',
+      },
+      mobills: {
+        title: 'Mobills から Futari へ｜CSV 取り込み',
+        description: 'Mobills のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: 'Mobills ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
     },
   },
