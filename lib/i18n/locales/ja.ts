@@ -1886,7 +1886,42 @@ export const ja: Translations = {
           name: 'Manebo',
           description: '台湾で人気のカップル向け家計簿アプリ。CSV を書き出して持ち込めます。',
         },
+        'simple-daily-money': {
+          name: '簡単家計簿',
+          description: '台湾で人気の個人向け家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
+        },
       },
+    },
+    chatgptWorkflow: {
+      heading: 'CSV 書き出しがない？スクショで',
+      intro: '簡単家計簿には公式の CSV 書き出しがありませんが、スクリーンショットを ChatGPT に渡して CSV に整えてもらえば持ち込めます。無料版の ChatGPT でできます。',
+      substeps: [
+        '簡単家計簿で取引一覧をスクロールし、スマホでスクリーンショットを撮ります（移したい期間をカバーする 5〜10 枚が目安）。',
+        'ChatGPT を開き、すべてのスクショを一度にアップロードして、下のプロンプトを貼り付けます。',
+        'ChatGPT が返した csv コードブロックをまるごとコピーし、テキストエディタで xxx.csv として保存します。',
+        'ここに戻ってその csv をアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+      ],
+      promptLabel: 'ChatGPT に貼り付けるプロンプト',
+      prompt: `You are my bookkeeping data assistant. I will upload screenshots from a budgeting app. Please turn every transaction shown into CSV format.
+
+Requirements:
+- The first CSV row is the header: date,category,amount,description,currency,kind
+- Use YYYY-MM-DD for date; if a screenshot only shows month/day (e.g. 5/30), assume the current year
+- Use a positive integer for amount (no minus sign, no decimals); if it was shown as an expense or in red / with a minus sign, set kind to "expense"; if it was income or in green, set kind to "income"
+- Keep the original category text from the screenshot (Japanese, Chinese or English, as-is)
+- Keep the merchant name or note text in description; leave it blank if there is none
+- Use an ISO 4217 three-letter code for currency (TWD / USD / JPY / CNY…); default to TWD if the screenshot does not show one
+- If the same transaction (same date + amount + description) appears across multiple screenshots, keep only one
+- Output the CSV inside a single \`\`\`csv code block only, with no explanatory text before or after
+
+I will upload the screenshots once you confirm.`,
+      copy: 'プロンプトをコピー',
+      copied: 'コピーしました',
+      formatLabel: 'CSV はこのようになります',
+      formatExample: `date,category,amount,description,currency,kind
+2026-05-30,食費,150,スターバックス,TWD,expense
+2026-05-30,給与,50000,5月,TWD,income`,
+      note: 'TWD 以外の行はまず元の数字で取り込まれます。換算は取り込み後に行ごとに調整できます。同じ取引（同じ日付＋金額＋説明）の重複は自動で取り除かれます。',
     },
     pages: {
       honeydue: {
@@ -2202,6 +2237,51 @@ export const ja: Translations = {
           },
         ],
       },
+      'simple-daily-money': {
+        heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
+        heroTitle: '簡単家計簿のデータも、持っていけます',
+        heroSubtitle:
+          '簡単家計簿に CSV 書き出しはありませんが、スクショ＋ChatGPT で記録を CSV に整えれば、Futari に移してふたりで続けられます。',
+        differentiators: [
+          {
+            title: 'それぞれ別々ではなく、ふたりで記録',
+            body: '簡単家計簿はひとりでさっと記録するのに向いています。Futari は二人で共有する一つの家計簿で、共同の支出は一度記録すれば両方に見えます。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '同期され、いつでも持ち出せる',
+            body: '記録はクラウドにあるので機種変更でも消えません。離れるときは CSV で書き出し。データはふたりのものです。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: '簡単家計簿で移したい取引をスクリーンショット（下に詳しい手順）。',
+        step2: 'ChatGPT でスクショを CSV に整えます——下にコピーできるプロンプトがあります。',
+        step3: 'CSV をここにアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+        faq: [
+          {
+            question: '簡単家計簿に書き出し機能がなくても、本当に移せますか？',
+            answer:
+              'はい。スクショを ChatGPT で CSV に整えてアップロードします。下に手順とコピーできるプロンプトがあり、無料版の ChatGPT でできます。',
+          },
+          {
+            question: 'スクショは何枚必要ですか？',
+            answer:
+              '5〜10 枚が目安です。移したい期間をカバーするようスクロールしてください。同じ取引の重複は自動で取り除かれます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: 'ChatGPT が作るカテゴリはずれませんか？',
+            answer:
+              'カテゴリの文字はそのまま保たれます。アップロード後にプレビューでき、実際の取り込み時に Futari のカテゴリへ対応づけられます。',
+          },
+        ],
+      },
     },
   },
 
@@ -2260,6 +2340,11 @@ export const ja: Translations = {
         title: 'Manebo から Futari へ｜カップル共同家計簿',
         description: 'Manebo のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
         ogDescription: 'Manebo ユーザーの次の住みか。CSV を書き出して Futari へ。',
+      },
+      'simple-daily-money': {
+        title: '簡単家計簿から Futari へ｜スクショを CSV に',
+        description: '簡単家計簿に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: '簡単家計簿は書き出し非対応——スクショ→ChatGPT→CSV→Futari。',
       },
     },
   },

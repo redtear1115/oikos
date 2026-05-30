@@ -1888,7 +1888,42 @@ export const en: Translations = {
           name: 'Manebo',
           description: 'A popular couple-budgeting app in Taiwan; export CSV and bring it over.',
         },
+        'simple-daily-money': {
+          name: 'Simple Daily Money',
+          description: 'A popular personal-finance app in Taiwan; screenshot + ChatGPT → CSV and bring it over.',
+        },
       },
+    },
+    chatgptWorkflow: {
+      heading: 'No CSV export? Use screenshots',
+      intro: 'Simple Daily Money has no official CSV export, but you can screenshot your records and have ChatGPT turn them into a CSV to upload. The free ChatGPT plan works.',
+      substeps: [
+        'In Simple Daily Money, scroll your transaction list and take phone screenshots (5–10 is a good range to cover the period you want to move).',
+        'Open ChatGPT, upload all the screenshots at once, and paste the prompt below.',
+        'Copy the whole ```csv code block ChatGPT returns and save it as xxx.csv in any plain-text editor.',
+        'Come back here, upload that csv, preview it, and create an account to finish the import.',
+      ],
+      promptLabel: 'Prompt to paste into ChatGPT',
+      prompt: `You are my bookkeeping data assistant. I will upload screenshots from a budgeting app. Please turn every transaction shown into CSV format.
+
+Requirements:
+- The first CSV row is the header: date,category,amount,description,currency,kind
+- Use YYYY-MM-DD for date; if a screenshot only shows month/day (e.g. 5/30), assume the current year
+- Use a positive integer for amount (no minus sign, no decimals); if it was shown as an expense or in red / with a minus sign, set kind to "expense"; if it was income or in green, set kind to "income"
+- Keep the original category text from the screenshot (Chinese or English, as-is)
+- Keep the merchant name or note text in description; leave it blank if there is none
+- Use an ISO 4217 three-letter code for currency (TWD / USD / JPY / CNY…); default to TWD if the screenshot does not show one
+- If the same transaction (same date + amount + description) appears across multiple screenshots, keep only one
+- Output the CSV inside a single \`\`\`csv code block only, with no explanatory text before or after
+
+I will upload the screenshots once you confirm.`,
+      copy: 'Copy prompt',
+      copied: 'Copied',
+      formatLabel: 'The CSV will look like this',
+      formatExample: `date,category,amount,description,currency,kind
+2026-05-30,Food,150,Starbucks,TWD,expense
+2026-05-30,Salary,50000,May,TWD,income`,
+      note: 'Non-TWD rows import at their raw number first; you can adjust the conversion per row after import. Duplicates of the same entry (same date + amount + description) are dropped automatically.',
     },
     pages: {
       honeydue: {
@@ -2204,6 +2239,51 @@ export const en: Translations = {
           },
         ],
       },
+      'simple-daily-money': {
+        heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
+        heroTitle: 'Your Simple Daily Money data can come with you',
+        heroSubtitle:
+          'Simple Daily Money has no CSV export, but a screenshot + ChatGPT turns your records into a CSV — so they can still move to Futari and keep going, together.',
+        differentiators: [
+          {
+            title: 'Logged together, not each on their own',
+            body: 'Simple Daily Money is great for one person logging fast; Futari is one ledger two people share, where every shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Synced and yours to take',
+            body: 'Records live in the cloud, so a new phone loses nothing; export to CSV whenever you want to leave. The data is yours.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in Simple Daily Money (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: 'Simple Daily Money has no export — can my data really move?',
+            answer:
+              'Yes. Screenshot it and have ChatGPT turn it into a CSV, then upload — the full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer:
+              '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Will the categories ChatGPT produces be off?',
+            answer:
+              'The category text is kept as-is; you preview after uploading and can map it to Futari categories during the actual import.',
+          },
+        ],
+      },
     },
   },
 
@@ -2262,6 +2342,11 @@ export const en: Translations = {
         title: 'Import from Manebo to Futari · Couple budgeting',
         description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, end-to-end encrypted.',
         ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
+      },
+      'simple-daily-money': {
+        title: 'Move from Simple Daily Money to Futari · screenshot to CSV',
+        description: 'No CSV export? Screenshot Simple Daily Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        ogDescription: 'Simple Daily Money has no export — screenshot → ChatGPT → CSV → Futari.',
       },
     },
   },

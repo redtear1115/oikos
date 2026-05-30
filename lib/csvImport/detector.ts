@@ -26,7 +26,7 @@ export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
 // All MIGRATE_SOURCES slugs that are not KnownCsvSource (no dedicated CSV parser)
 export type MigratePageOnlySource = Exclude<MigrateSlug, KnownCsvSource>
 export type MigrateSource = MigrateSlug | 'unknown'
-export type DetectedSource = KnownCsvSource | 'generic' | 'ofx' | 'qif'
+export type DetectedSource = KnownCsvSource | 'generic' | 'futari_generic' | 'ofx' | 'qif'
 
 /**
  * Best-effort source detection by header signature. Returns `null` rather

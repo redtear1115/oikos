@@ -14,6 +14,21 @@ describe('detectSource', () => {
     expect(detectSource(['日期', '類別', '項目', '金額', '帳戶'])).toBe('cwmoney')
   })
 
+  it('detects the futari_generic (ChatGPT) CSV by its date/category/amount/kind columns', () => {
+    expect(
+      detectSource(['date', 'category', 'amount', 'description', 'currency', 'kind']),
+    ).toBe('futari_generic')
+  })
+
+  it('detects futari_generic case-insensitively and regardless of optional columns', () => {
+    expect(detectSource(['Date', 'Category', 'Amount', 'Kind'])).toBe('futari_generic')
+  })
+
+  it('does not treat a date/category/amount file WITHOUT a kind column as futari_generic', () => {
+    // `kind` is the distinctive signal; without it this falls through to generic.
+    expect(detectSource(['date', 'category', 'amount', 'description'])).toBe('generic')
+  })
+
   it('returns generic for unknown headers', () => {
     expect(detectSource(['foo', 'bar', 'baz'])).toBe('generic')
   })

@@ -41,6 +41,7 @@ export { computeStats } from './stats'
 export {
   mapCategory,
   mapCwmoney,
+  mapFutariGeneric,
   mapGeneric,
   mapHoneydue,
   mapSpendee,
@@ -55,6 +56,7 @@ import { decodeBytes, parseCsvText } from './parser'
 import { detectFormat, detectSource, type DetectedSource } from './detector'
 import {
   mapCwmoney,
+  mapFutariGeneric,
   mapGeneric,
   mapHoneydue,
   mapSpendee,
@@ -97,6 +99,7 @@ function pickMapper(source: DetectedSource, headerMap?: HeaderMap) {
     case 'honeydue': return (r: Record<string, string>) => mapHoneydue(r)
     case 'spendee':  return (r: Record<string, string>) => mapSpendee(r)
     case 'cwmoney':  return (r: Record<string, string>) => mapCwmoney(r)
+    case 'futari_generic': return (r: Record<string, string>) => mapFutariGeneric(r)
     case 'generic':
       if (!headerMap) {
         throw new Error('headerMap is required when source is "generic"')

@@ -2254,7 +2254,22 @@ export type Translations = {
         andromoney: { name: string; description: string }
         mobills: { name: string; description: string }
         manebo: { name: string; description: string }
+        'simple-daily-money': { name: string; description: string }
       }
+    }
+    /** Shared screenshot→ChatGPT→CSV walkthrough (#839 P2) — used by
+     *  /migrate/simple-daily-money and any future non-CSV-export source. */
+    chatgptWorkflow: {
+      heading: string
+      intro: string
+      substeps: readonly [string, string, string, string]
+      promptLabel: string
+      prompt: string
+      copy: string
+      copied: string
+      formatLabel: string
+      formatExample: string
+      note: string
     }
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
      *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
@@ -4176,7 +4191,42 @@ export const zhTW: Translations = {
           name: 'Manebo',
           description: '台灣熱門的情侶記帳 App，匯出 CSV 帶過來。',
         },
+        'simple-daily-money': {
+          name: '簡單記帳',
+          description: '台灣常用的個人記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
+        },
       },
+    },
+    chatgptWorkflow: {
+      heading: '沒有 CSV 匯出？用截圖換',
+      intro: '簡單記帳沒有官方的 CSV 匯出，但你可以用截圖請 ChatGPT 幫你整理成 CSV，再上傳。免費版的 ChatGPT 就能做。',
+      substeps: [
+        '打開簡單記帳，把你想搬遷的交易截圖——往下捲動蓋過所有你要帶走的記錄。',
+        '複製下方的提示詞，貼進 ChatGPT，再把截圖一張一張上傳。',
+        'ChatGPT 會輸出一個 CSV 程式碼區塊——把全部內容複製，貼進記事本，存成 .csv 檔。',
+        '把 .csv 上傳到下方的匯入工具，預覽無誤後建立帳號完成匯入。',
+      ],
+      promptLabel: '提示詞（點擊複製）',
+      prompt: `請幫我把這些截圖裡的記帳資料整理成 CSV 格式。
+
+要求：
+- CSV 第一列為 header：date,category,amount,description,currency,kind
+- date 用 YYYY-MM-DD；如果截圖只顯示月/日（例如 5/30），假設年份為當年
+- amount 用正整數（不要負號、不要小數）；如果原本顯示為支出或紅字／負號，kind 填 "expense"；如果是收入或綠字，kind 填 "income"
+- category 保留原始截圖上的分類文字（中文／英文都原樣）
+- description 保留商家名或備註欄文字；如果沒有，留空白
+- currency 用 ISO 4217 三位代碼（TWD／USD／JPY／CNY⋯）；如果截圖沒寫，預設 TWD
+- 同一筆交易（相同日期＋金額＋描述）若在多張截圖重複出現，只保留一筆
+- 輸出時，只在一個 \`\`\`csv 程式碼區塊內輸出 CSV 內容，前後不要加任何說明文字
+
+確認後我會上傳截圖。`,
+      copy: '複製提示詞',
+      copied: '已複製',
+      formatLabel: 'CSV 會長這樣',
+      formatExample: `date,category,amount,description,currency,kind
+2026-05-30,飲食,150,星巴克,TWD,expense
+2026-05-30,薪水,50000,五月,TWD,income`,
+      note: 'currency 不是 TWD 的會照原數字先匯入，換算可以在匯入後逐筆調整。重複出現的同一筆（相同日期＋金額＋描述）會自動去掉。',
     },
     pages: {
       honeydue: {
@@ -4472,6 +4522,47 @@ export const zhTW: Translations = {
           },
         ],
       },
+      'simple-daily-money': {
+        heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
+        heroTitle: '你的簡單記帳資料，可以帶走',
+        heroSubtitle: '簡單記帳沒有 CSV 匯出，但用截圖請 ChatGPT 整理成 CSV，一樣能把記錄搬到 Futari，和伴侶一起接著寫。',
+        differentiators: [
+          {
+            title: '兩個人一起記，不是各記各的',
+            body: '簡單記帳很適合一個人快速記；Futari 則是兩個人共用一本帳，每筆共同支出記一次，兩邊都看得到。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+          },
+          {
+            title: '雲端同步、隨時帶走',
+            body: '記錄存在雲端，換手機不怕不見；想離開時 CSV 匯出，資料是你們的。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在簡單記帳把要搬的交易截圖（下方有完整做法）。',
+        step2: '用 ChatGPT 把截圖整理成 CSV——下方有可直接複製的提示詞。',
+        step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
+        faq: [
+          {
+            question: '簡單記帳沒有匯出功能，資料真的搬得過來嗎？',
+            answer: '可以。用截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截幾張圖？',
+            answer: '建議 5–10 張，往下捲動蓋過你想搬的時間範圍即可。同一筆重複出現的會自動去掉。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: 'ChatGPT 整理的分類會不會跑掉？',
+            answer: '分類文字會原樣保留，上傳後先預覽，正式匯入時可以對照調整成 Futari 的分類。',
+          },
+        ],
+      },
     },
   },
 
@@ -4529,6 +4620,11 @@ export const zhTW: Translations = {
         title: '從 Manebo 搬家到 Futari｜情侶共同記帳',
         description: 'Manebo 用戶的雙人記帳新選擇。把 Manebo 的 CSV 匯入 Futari——這個專為情侶、夫妻設計的共同帳本，內建分攤結算、免費無廣告，和對方一起接著記。',
         ogDescription: 'Manebo 用戶的下一站：匯出 CSV，搬進 Futari 情侶共同記帳。',
+      },
+      'simple-daily-money': {
+        title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
+        description: '簡單記帳沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
     },
   },

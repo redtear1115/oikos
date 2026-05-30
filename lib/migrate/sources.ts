@@ -113,7 +113,20 @@ export const MIGRATE_SOURCES = {
       ],
     },
   },
+  'simple-daily-money': {
+    slug: 'simple-daily-money',
+    name: '簡單記帳',
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
+        { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',       tone: 'no'      } },
+        { feature: '雲端同步',     futari: { label: '✓ 即時',     tone: 'yes'     }, other: { label: '△ 視版本',   tone: 'partial' } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 含廣告',   tone: 'partial' } },
+        { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '✕ 無匯出',   tone: 'no'      } },
+      ],
+    },
+  },
 } satisfies Record<string, SourceDef>
 
 export type MigrateSlug = keyof typeof MIGRATE_SOURCES
-// → 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo'
+// → 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo' | 'simple-daily-money'
