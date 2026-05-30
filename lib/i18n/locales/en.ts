@@ -114,6 +114,18 @@ export const en: Translations = {
     f3Body: 'Protection and savings policies side by side. Insured, beneficiary, renewal dates: all on one page.',
     f4Title: 'Reflection',
     f4Body: 'Monthly reviews, category breakdowns, chapter history. Let what you spent tell its own story.',
+    useCaseSection: {
+      kicker: 'MADE FOR YOU ──',
+      title: 'Who is Futari for?',
+      subtitle: 'Not just a finance tool — a companion for your life together.',
+      cohabitationTitle: 'Cohabiting couples',
+      cohabitationBody: 'How do you split living costs without friction? 50/50, by income, your call.',
+      newlywedsTitle: 'Newlyweds',
+      newlywedsBody: 'From everyday expenses to shared assets, see your life together in one ledger.',
+      petOwnersTitle: 'Pet families',
+      petOwnersBody: 'Every cost for your pet is worth remembering — track it together.',
+      cardAriaLabel: 'See the {slug} use case',
+    },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
       title: 'Already using another tool?',
@@ -2615,6 +2627,160 @@ I will upload the screenshots once you confirm.`,
         title: 'Move from Sui Shou Ji to Futari · screenshot to CSV',
         description: 'Want a ledger built for two? Screenshot Sui Shou Ji, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free.',
         ogDescription: 'Sui Shou Ji to a two-person ledger — screenshot → ChatGPT → CSV → Futari.',
+      },
+    },
+    useCase: {
+      cohabitation: {
+        title: 'Cohabitation budgeting · splitting living costs as a couple | Futari',
+        description: 'How do you split living costs when you move in together? Futari is a shared ledger built for two — split 50/50, by income ratio, or any way that works for you. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'The shared ledger for cohabiting couples — split costs fairly, see the balance clearly.',
+      },
+      newlyweds: {
+        title: 'Newlywed household budgeting · managing finances as a married couple | Futari',
+        description: 'Managing money as newlyweds? Futari keeps your daily expenses, shared assets, and travel budgets in one place — so you both always know where you stand. Free, no ads.',
+        ogDescription: 'Futari: the shared ledger for newlyweds — daily expenses, assets, and travel in one place.',
+      },
+      'pet-owners': {
+        title: 'Pet expense tracking · vet bills, food, and daily costs | Futari',
+        description: 'Track vet bills, vaccines, food, and everyday pet costs together. Futari lets you link each expense to your pet so you always know what you\'ve spent — and who paid what. Free, no ads.',
+        ogDescription: 'Track pet expenses together in Futari — link every cost to your furry family member.',
+      },
+    },
+  },
+  useCase: {
+    backToHome: 'Back to home',
+    featuresHeading: 'How Futari helps',
+    faqHeading: 'Common questions',
+    ctaLabel: 'Start tracking for free',
+    features: {
+      split: {
+        title: 'Flexible split modes',
+        body: '50/50, by income ratio, or one person covers it all — pick a mode and Futari handles the math automatically.',
+      },
+      trip: {
+        title: 'Travel sub-ledger',
+        body: 'Keep travel spending separate from everyday expenses. When you\'re back, you\'ll see exactly who paid what — no group chat reconciliation needed.',
+      },
+      asset: {
+        title: 'Asset expense tracking',
+        body: 'Link expenses to your shared car, home, kids, pets, or plants. Costs automatically categorise themselves.',
+      },
+      realtime: {
+        title: 'Real-time sync',
+        body: 'One person records something and the other sees it instantly. The ledger is the conversation.',
+      },
+      encrypt: {
+        title: 'End-to-end encryption',
+        body: 'Your ledger is visible only to the two of you. The server never decrypts what you record.',
+      },
+      history: {
+        title: 'Chapter-based history',
+        body: 'Moving in, getting married, new job, new home — each life chapter becomes a new ledger chapter. The past is always there to look back on.',
+      },
+    },
+    otherCases: {
+      heading: 'Other situations',
+      cardAriaLabel: 'See the {slug} page',
+    },
+    pages: {
+      cohabitation: {
+        heroKicker: 'Living together, splitting costs',
+        heroTitle: 'You moved in together. Now how do you split everything?',
+        heroSubtitle: 'From the first month\'s rent onwards, your expenses should be tracked together. Futari is built for two from the start — not a personal finance app awkwardly repurposed.',
+        painPoints: [
+          {
+            heading: '"Who\'s put in more this month?"',
+            body: 'Rent, utilities, groceries — shared living costs are scattered. Memory and group messages don\'t keep up. Futari logs each expense with who paid and how it\'s split, so month-end is never a surprise.',
+          },
+          {
+            heading: '"Is 50/50 actually fair when our incomes are different?"',
+            body: 'There\'s no one right answer. Futari supports 50/50, income-ratio splits, and one-person-covers-it modes. Choose the model that fits your situation — the maths takes care of itself.',
+          },
+          {
+            heading: '"Moving in together made the finances harder, not easier."',
+            body: 'When you were single, you only tracked your own spending. Now your expenses overlap. Futari puts both of your records in one place, synced in real time.',
+          },
+        ],
+        faq: [
+          {
+            question: 'What\'s the best app for splitting costs when living together?',
+            answer: 'Futari is a shared ledger designed for two people from the ground up. It supports multiple split modes, real-time sync, and end-to-end encryption — without having to retrofit a personal finance app.',
+          },
+          {
+            question: 'How do we track who owes what when cohabiting?',
+            answer: 'Log each expense and mark how it\'s split. Futari accumulates the running balance automatically, so you always know where you stand without waiting until the end of the month.',
+          },
+          {
+            question: 'Is Futari free?',
+            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+          },
+        ],
+      },
+      newlyweds: {
+        heroKicker: 'Newlywed household finances',
+        heroTitle: 'Married. Now how do you manage money together?',
+        heroSubtitle: 'The first shared ledger of your marriage — daily expenses, shared assets, travel. Futari gives every expense a place to live.',
+        painPoints: [
+          {
+            heading: '"Do we keep separate accounts or combine everything?"',
+            body: 'There\'s no standard answer. Some couples fully merge, some split partially, some stay separate with a shared pot for joint costs. Futari supports all of these — it adapts to how you decide to manage things.',
+          },
+          {
+            heading: '"The car, insurance, savings for a house — how do we track all of it?"',
+            body: 'Post-wedding expenses go beyond groceries. Futari lets you link spending to shared assets — car costs, insurance premiums, home maintenance — so everything stays categorised.',
+          },
+          {
+            heading: '"Travel spending always gets mixed up with everyday costs."',
+            body: 'Futari\'s travel sub-ledger keeps trip spending separate. When you\'re back, you\'ll see exactly what the trip cost and who covered what — already recorded.',
+          },
+        ],
+        faq: [
+          {
+            question: 'How should newlyweds manage household finances?',
+            answer: 'There\'s no single best way — only what works for the two of you. What matters is tracking it so you both have clarity. Futari offers flexible split modes that can evolve as your life does.',
+          },
+          {
+            question: 'Should we combine our finances or keep them separate?',
+            answer: 'Futari is a shared ledger, not a merged account. Every expense is logged with who paid and how it\'s split — you don\'t have to merge your finances to see the full picture together.',
+          },
+          {
+            question: 'What kinds of assets can we track in Futari?',
+            answer: 'Cars (with fuel logs), homes, children, pets, plants, insurance, and general items. Each expense can be linked to the relevant asset.',
+          },
+        ],
+      },
+      'pet-owners': {
+        heroKicker: 'Pet family expenses',
+        heroTitle: 'Every cost for your pet is worth remembering.',
+        heroSubtitle: 'Vet visits, vaccines, food, toys — pet expenses are scattered and add up fast. Futari lets you link each expense to your pet, so you always know what you\'ve spent and who covered it.',
+        painPoints: [
+          {
+            heading: '"How much have we spent on the cat this month?"',
+            body: 'Vet bills, vaccines, treats, toys, grooming — costs spread across categories make it hard to see the total. Futari lets you link every expense to your pet, so you can filter and see the full picture.',
+          },
+          {
+            heading: '"I\'ve been covering most of it — does my partner even notice?"',
+            body: 'When two people share a pet, one often ends up paying more. Futari\'s split tracking logs each expense and auto-accumulates the balance, so neither person has to keep track in their head.',
+          },
+          {
+            heading: '"We have two cats. Can we track them separately?"',
+            body: 'Yes. Futari supports multiple pets as separate asset entries. Each animal\'s costs are tracked independently — no mixing.',
+          },
+        ],
+        faq: [
+          {
+            question: 'What\'s the best app for tracking pet expenses as a couple?',
+            answer: 'Futari is one of the few shared ledgers built with couples in mind from day one. You can link pet-related expenses to your specific animal, split costs automatically, and both see the same records in real time.',
+          },
+          {
+            question: 'How do I track vet bills in Futari?',
+            answer: 'Create your pet as an asset in Futari, then link each vet visit or purchase to that asset. Costs automatically categorise to that pet — filter by asset any time to see the total.',
+          },
+          {
+            question: 'Can we track more than one pet separately?',
+            answer: 'Yes. Each pet is its own asset entry, with its own expense history. No mixing between animals.',
+          },
+        ],
       },
     },
   },

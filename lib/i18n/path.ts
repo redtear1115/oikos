@@ -9,7 +9,7 @@ export const PUBLIC_LOCALIZED_PATHS = ['/', '/sign-in', '/terms', '/privacy'] as
  * (e.g. /migrate/<source>) — listed here so proxy + LanguageSwitcher treat
  * the whole subtree as anonymous-public without re-listing every page.
  */
-export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate'] as const
+export const PUBLIC_LOCALIZED_PREFIXES = ['/migrate', '/use-case'] as const
 
 /** URL 第一段若是 supported locale 則回傳之，否則 null。 */
 export function parseLocaleFromPath(pathname: string): Locale | null {

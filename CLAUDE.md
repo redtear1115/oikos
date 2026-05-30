@@ -13,9 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.3.2**（release PR 待 merge / tag）— prod migration 狀態獨立追蹤。完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
-
-> **v1.3.2 部署待跑**：[#837](https://github.com/redtear1115/oikos/issues/837) 的 `0053_drop_legacy_plate_address.sql`（drop legacy `plate` / `address`，**destructive**）dev / prod 都要套；套之前先重跑一次 backfill `scripts/encrypt-existing-pii.mjs DRY_RUN=1` 確認回報 `plate=0 address=0` 再 apply。`0052_encrypt_asset_pii_columns.sql` + backfill 已於 v1.3.1 在 dev / prod 驗證完成（[#826](https://github.com/redtear1115/oikos/issues/826)）。
+**Latest released: v1.4.0** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 

@@ -155,6 +155,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.4.0](CHANGELOG.md#140---2026-05-30) | Android 上架準備 · 情境 landing 頁 |
 | [v1.3.2](CHANGELOG.md#132---2026-05-30) | 競品搬遷頁鋪開．截圖換 CSV 接住非匯出 App |
 | [v1.3.1](CHANGELOG.md#131---2026-05-30) | 公開 surface 清掃．愛物 PII 加密第一階段 |
 | [v1.3.0](CHANGELOG.md#130---2026-05-27) | 觀測補強．PostHog 行為事件埋點 |
