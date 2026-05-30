@@ -30,6 +30,10 @@ export interface AssetWithCar {
   templateFields: Record<string, string | number | null> | null
   // Car-only fields (null for non-car assets)
   plate: string | null
+  /** #826 — presence signal for the encrypted licence plate. The detail page
+   *  derives `hasPlate` from this to drive the mask + reveal flow; raw
+   *  ciphertext never leaves the server (reveal goes through revealCarPlate). */
+  plateEncrypted: string | null
   purchasedAt: string | null
   purchasePrice: number | null
   // Slice 2 additions
@@ -87,6 +91,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
       plate: carDetails.plate,
+      plateEncrypted: carDetails.plateEncrypted,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,
       fuelType: carDetails.fuelType,
@@ -160,6 +165,7 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
       deletedAt: assets.deletedAt,
       createdAt: assets.createdAt,
       plate: carDetails.plate,
+      plateEncrypted: carDetails.plateEncrypted,
       purchasedAt: carDetails.purchasedAt,
       purchasePrice: carDetails.purchasePrice,
       fuelType: carDetails.fuelType,

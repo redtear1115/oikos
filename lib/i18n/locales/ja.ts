@@ -1352,6 +1352,7 @@ export const ja: Translations = {
       avgEconNeedMore: '少なくとも 2 回の給油記録が必要',
       avgEconRecent: '直近 6 ヶ月',
       plate: 'ナンバー',
+      plateSection: '車両情報',
     },
     child: {
       sectionId: '身分証明',
