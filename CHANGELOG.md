@@ -15,6 +15,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.4.0] - 2026-05-30
+
+主題：**Android 上架 · 情境 landing 頁**——用 Capacitor 把 PWA 包成 Android app，開始 Google Play 上架流程（#846）；新增情境 use-case landing 頁，覆蓋「兩人記帳」「夫妻記帳」等搜尋入口（#851）。
+
+### 使用者可見變化
+
+- **Android app 上架準備（#846）**：Capacitor wrapper 完成，app icon 換成 Futari 品牌圖示，Google Play 上架流程進行中；登入改用 in-app browser 避免被導出到系統瀏覽器。
+- **情境 use-case 頁（#851）**：新增「兩人記帳」「夫妻記帳」等情境入口頁，強化搜尋可見性。
+
+### 技術變更
+
+- **Capacitor Android wrapper（#846）**：`capacitor.config.ts` 設定 `server.url` 指向 prod，`android/` 為 Capacitor 生成的 Gradle 專案（appId `dev.southernlight.futari`）；`SignInButton.tsx` 偵測 `window.Capacitor` 並切換為 `@capacitor/browser` + deep link scheme OAuth 流程（`dev.southernlight.futari://login-callback`）；`AndroidManifest.xml` 加入 intent filter 處理 custom scheme；release signing 透過 env var 注入。
+- **use-case landing 頁（#851）**：`lib/use-case/cases.ts` 為資料層，單一動態路由 `app/[locale]/use-case/[slug]/page.tsx`；4 語 i18n、OG / Twitter card、sitemap 自動衍生。
+
 ## [1.3.2] - 2026-05-30
 
 主題：**競品搬遷頁全面鋪開 · futari = 記帳 品牌詞鞏固**——把 `/migrate/*` 從 Honeydue / Spendee / CWMoney 三頁擴成 10 個 Taiwan 競品搬遷頁，並把整個 migrate 子系統重構成 CMS / 資料驅動架構（#839 / #852 / #844）；沒有官方 CSV 匯出的 App 改走「截圖→ChatGPT→CSV」流程，新增 `futari_generic` parser 自動解析（#839）；用 structured data + site name 把 `futari = 記帳` 的品牌詞釘穩，跟同名社交 App 區隔（#843 / #845）；schema 面完成愛物 PII 加密遷移第二階段，移除車牌 / 地址 legacy 明文欄位（#837）。
@@ -510,7 +524,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/redtear1115/oikos/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/redtear1115/oikos/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/redtear1115/oikos/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/redtear1115/oikos/compare/v1.2.5...v1.3.0
