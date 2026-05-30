@@ -1889,13 +1889,33 @@ export const zhCN: Translations = {
           name: '简单记账',
           description: '台湾常用的个人记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
         },
+        'fortune-city': {
+          name: '记账城市',
+          description: '把记账变成盖城市的游戏，截图请 ChatGPT 整理成 CSV 带过来。',
+        },
+        cashman: {
+          name: 'CashMan',
+          description: '老牌的台湾个人记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
+        },
+        '1money': {
+          name: '1Money',
+          description: '界面简洁的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
+        },
+        icost: {
+          name: 'iCost',
+          description: 'iOS 上人气的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
+        },
+        suishouji: {
+          name: '随手记',
+          description: '两岸用户众多的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
+        },
       },
     },
     chatgptWorkflow: {
       heading: '没有 CSV 导出？用截图换',
-      intro: '简单记账没有官方的 CSV 导出，但你可以用截图请 ChatGPT 帮你整理成 CSV，再上传。免费版的 ChatGPT 就能做。',
+      intro: '如果原本的 App 没有 CSV 导出，可以用截图请 ChatGPT 帮你整理成 CSV，再上传。免费版的 ChatGPT 就能做。',
       substeps: [
-        '在简单记账把交易列表往下滚，用手机截图（建议 5–10 张，盖过你想搬的时间范围）。',
+        '在原本的记账 App 把交易列表往下滚，用手机截图（建议 5–10 张，盖过你想搬的时间范围）。',
         '打开 ChatGPT，把所有截图一次上传，贴上下面这段提示词。',
         '把 ChatGPT 返回的 csv 代码块整段复制，贴到纯文本编辑器存成 xxx.csv。',
         '回到这里上传那个 csv，预览后建立账号完成导入。',
@@ -2257,6 +2277,211 @@ export const zhCN: Translations = {
           },
         ],
       },
+      'fortune-city': {
+        heroKicker: 'FORTUNE CITY → FUTARI',
+        heroTitle: '你的记账城市数据，可以带走',
+        heroSubtitle: '记账城市把记账变成游戏；想把记录搬到 Futari 和伴侣一起记？用截图请 ChatGPT 整理成 CSV 就行。',
+        differentiators: [
+          {
+            title: '两个人一起记，不是各记各的',
+            body: '记账城市是一个人的城市；Futari 是两个人共用一本账，每笔共同支出记一次，两边都看得到。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+          },
+          {
+            title: '把记录带着走',
+            body: '想离开时 CSV 导出，数据是你们的，不会被锁在某一座城市里。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在记账城市把要搬的交易截图（下方有完整做法）。',
+        step2: '用 ChatGPT 把截图整理成 CSV——下方有可直接复制的提示词。',
+        step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
+        faq: [
+          {
+            question: '记账城市没有导出功能，数据真的搬得过来吗？',
+            answer: '可以。把交易画面截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截几张图？',
+            answer: '建议 5–10 张，往下滚动盖过你想搬的时间范围即可。重复出现的同一笔会自动去掉。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '记账城市的游戏进度会一起搬吗？',
+            answer: '不会，搬过来的是你的记账数据（日期、金额、分类）；游戏进度留在原 App，Futari 专注在两个人的账本本身。',
+          },
+        ],
+      },
+      cashman: {
+        heroKicker: 'CASHMAN → FUTARI',
+        heroTitle: '你的 CashMan 数据，可以带走',
+        heroSubtitle: '用了很久的 CashMan，想换成两个人一起记？用截图请 ChatGPT 整理成 CSV，就能把记录搬到 Futari。',
+        differentiators: [
+          {
+            title: '双人账本是默认',
+            body: 'CashMan 是单人记账的老帮手；Futari 一开始就为两个人共用一本账设计，记录彼此都看得到。',
+          },
+          {
+            title: '分摊算给你看',
+            body: '谁付的、怎么分、现在谁欠谁，余额自动算清楚，不用自己记。',
+          },
+          {
+            title: '云端同步、随时带走',
+            body: '记录存在云端，换手机不怕不见；想离开时 CSV 导出，数据是你们的。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 CashMan 把要搬的交易截图（下方有完整做法）。',
+        step2: '用 ChatGPT 把截图整理成 CSV——下方有可直接复制的提示词。',
+        step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
+        faq: [
+          {
+            question: 'CashMan 没有导出功能，数据真的搬得过来吗？',
+            answer: '可以。把交易画面截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截几张图？',
+            answer: '建议 5–10 张，往下滚动盖过你想搬的时间范围即可。重复出现的同一笔会自动去掉。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '用很久了，几年的记录都能搬吗？',
+            answer: '可以，只要截图盖到的范围都能整理成 CSV；笔数多的话分批截图、分批上传即可。',
+          },
+        ],
+      },
+      '1money': {
+        heroKicker: '1MONEY → FUTARI',
+        heroTitle: '你的 1Money 数据，可以带走',
+        heroSubtitle: '喜欢 1Money 的简洁，但想两个人一起记？用截图请 ChatGPT 整理成 CSV，就能搬到 Futari。',
+        differentiators: [
+          {
+            title: '两个人共用一本账',
+            body: '1Money 以个人记账为主；Futari 是两个人共用的一本账，共同支出记一次，两边都看得到。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+          },
+          {
+            title: '多币别也记得清楚',
+            body: '出国或跨币别的支出照样记，回头看账目一样清楚。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 1Money 把要搬的交易截图（下方有完整做法）。',
+        step2: '用 ChatGPT 把截图整理成 CSV——下方有可直接复制的提示词。',
+        step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
+        faq: [
+          {
+            question: '1Money 没有完整导出，数据真的搬得过来吗？',
+            answer: '即使没有完整导出，把交易截图请 ChatGPT 整理成 CSV 一样能搬——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截几张图？',
+            answer: '建议 5–10 张，往下滚动盖过你想搬的时间范围即可。重复出现的同一笔会自动去掉。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '多币别的记录会跑掉吗？',
+            answer: '币别会一起整理进 CSV；非台币的会照原数字先导入，换算可以在导入后逐笔调整。',
+          },
+        ],
+      },
+      icost: {
+        heroKicker: 'ICOST → FUTARI',
+        heroTitle: '你的 iCost 数据，可以带走',
+        heroSubtitle: 'iCost 只有 iOS，想两个人跨平台一起记？用截图请 ChatGPT 整理成 CSV，就能搬到 Futari。',
+        differentiators: [
+          {
+            title: '两个人、跨平台一起记',
+            body: 'iCost 限 iOS；Futari 是 iOS／Android／Web 都能用的双人账本，另一半用什么手机都行。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 iCost 把要搬的交易截图（下方有完整做法）。',
+        step2: '用 ChatGPT 把截图整理成 CSV——下方有可直接复制的提示词。',
+        step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
+        faq: [
+          {
+            question: 'iCost 没有导出功能，数据真的搬得过来吗？',
+            answer: '可以。把交易画面截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截几张图？',
+            answer: '建议 5–10 张，往下滚动盖过你想搬的时间范围即可。重复出现的同一笔会自动去掉。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '另一半用 Android，也能一起用吗？',
+            answer: '可以。Futari 是跨平台的 PWA，iOS、Android、浏览器都能开，两个人用不同手机也能共用同一本账。',
+          },
+        ],
+      },
+      suishouji: {
+        heroKicker: 'SUISHOUJI → FUTARI',
+        heroTitle: '你的随手记数据，可以带走',
+        heroSubtitle: '随手记用户很多；想要一个一开始就为两个人设计的账本？用截图请 ChatGPT 整理成 CSV，就能搬到 Futari。',
+        differentiators: [
+          {
+            title: '双人是默认，不用另设共享',
+            body: '随手记要另外开共享账本；Futari 进来就是两个人的账，不必额外设置。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在随手记把要搬的交易截图（下方有完整做法）。',
+        step2: '用 ChatGPT 把截图整理成 CSV——下方有可直接复制的提示词。',
+        step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
+        faq: [
+          {
+            question: '随手记的数据怎么搬到 Futari？',
+            answer: '把交易画面截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截几张图？',
+            answer: '建议 5–10 张，往下滚动盖过你想搬的时间范围即可。重复出现的同一笔会自动去掉。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '随手记有共享账本，跟 Futari 一样吗？',
+            answer: 'Futari 不需要另外开共享——进来就是两个人的共同账，还内建分摊与结算，这是它和单人 App 加共享功能最不一样的地方。',
+          },
+        ],
+      },
     },
   },
 
@@ -2319,6 +2544,31 @@ export const zhCN: Translations = {
         title: '从简单记账搬家到 Futari｜截图转 CSV',
         description: '简单记账没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
         ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+      },
+      'fortune-city': {
+        title: '从记账城市搬家到 Futari｜截图转 CSV',
+        description: '记账城市没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        ogDescription: '记账城市用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+      },
+      cashman: {
+        title: '从 CashMan 搬家到 Futari｜截图转 CSV',
+        description: 'CashMan 没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        ogDescription: 'CashMan 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+      },
+      '1money': {
+        title: '从 1Money 搬家到 Futari｜截图转 CSV',
+        description: '1Money 没有完整导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        ogDescription: '1Money 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+      },
+      icost: {
+        title: '从 iCost 搬家到 Futari｜截图转 CSV',
+        description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        ogDescription: 'iCost 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+      },
+      suishouji: {
+        title: '从随手记搬家到 Futari｜截图转 CSV',
+        description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        ogDescription: '随手记用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
     },
   },
