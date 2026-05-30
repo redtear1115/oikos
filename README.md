@@ -155,23 +155,24 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
-| [v1.3.1](CHANGELOG.md#131---2026-05-30) | 公開 surface 清掃（side-stripe / WCAG AA / editorial reflex / em dash）+ landing typography + 愛物 PII 加密第一階段（車牌 / 地址 / 孩子全名） |
-| [v1.3.0](CHANGELOG.md#130---2026-05-27) | 觀測補強 · 行為事件埋點（PostHog 9 事件 / Google 頭像修正）|
-| [v1.2.5](CHANGELOG.md#125---2026-05-27) | 效能基礎建設 + 細節打磨（DB 索引 / next/image / bundle analyzer / first-use hint）|
-| [v1.2.4](CHANGELOG.md#124---2026-05-26) | settings 一輪精煉 + split ratio viewer 邊界補完 + dashboard 接上 Impeccable |
-| [v1.2.3](CHANGELOG.md#123---2026-05-25) | records 邊角修正 + 個人資料面板無障礙整備 |
-| [v1.2.2](CHANGELOG.md#122---2026-05-25) | 收支 tab 當月日趨勢圖 + records 篩選體驗修正 |
-| [v1.2.1](CHANGELOG.md#121---2026-05-25) | 觀測性收尾．PostHog reverse proxy + Sentry 設定補齊 |
-| [v1.2.0](CHANGELOG.md#120---2026-05-24) | 入口轉換追蹤．PostHog 漏斗事件（首頁 / migrate / 邀請） |
-| [v1.1.8](CHANGELOG.md#118---2026-05-21) | 收合狀態 hydration 閃退修正 + PostHog 收斂到 production |
-| [v1.1.7](CHANGELOG.md#117---2026-05-21) | 可觀測性接入（Sentry + PostHog）+ 兩處體驗修正 |
-| [v1.1.6](CHANGELOG.md#116---2026-05-21) | Android PWA 體驗修正（safe-area / 返回鍵 / overscroll） |
+| [v1.3.2](CHANGELOG.md#132---2026-05-30) | 競品搬遷頁鋪開．截圖換 CSV 接住非匯出 App |
+| [v1.3.1](CHANGELOG.md#131---2026-05-30) | 公開 surface 清掃．愛物 PII 加密第一階段 |
+| [v1.3.0](CHANGELOG.md#130---2026-05-27) | 觀測補強．PostHog 行為事件埋點 |
+| [v1.2.5](CHANGELOG.md#125---2026-05-27) | 效能基礎建設．DB 索引 × 圖片優化 |
+| [v1.2.4](CHANGELOG.md#124---2026-05-26) | settings 精煉．dashboard 接上 Impeccable |
+| [v1.2.3](CHANGELOG.md#123---2026-05-25) | records 邊角修正．個人資料無障礙整備 |
+| [v1.2.2](CHANGELOG.md#122---2026-05-25) | 當月日趨勢圖．records 篩選修正 |
+| [v1.2.1](CHANGELOG.md#121---2026-05-25) | 觀測性收尾．PostHog proxy × Sentry 補齊 |
+| [v1.2.0](CHANGELOG.md#120---2026-05-24) | 入口轉換追蹤．PostHog 漏斗事件上線 |
+| [v1.1.8](CHANGELOG.md#118---2026-05-21) | hydration 閃退修正．PostHog 收斂到 production |
+| [v1.1.7](CHANGELOG.md#117---2026-05-21) | 可觀測性接入．Sentry × PostHog 上線 |
+| [v1.1.6](CHANGELOG.md#116---2026-05-21) | Android PWA 體驗修正．safe-area 與返回鍵 |
 | [v1.1.5](CHANGELOG.md#115---2026-05-21) | 分頁載入改用 skeleton 骨架畫面 |
-| [v1.1.4](CHANGELOG.md#114---2026-05-21) | 設計系統收尾 + 前端品質續推 + 兩處 UX 微調 |
-| [v1.1.3](CHANGELOG.md#113---2026-05-20) | 品質打磨．UX / 前端 / SEO 三輪 audit + design system 續推 |
-| [v1.1.2](CHANGELOG.md#112---2026-05-19) | Design system primitives + 前端品質重構 + SEO 收尾 |
-| [v1.1.1](CHANGELOG.md#111---2026-05-19) | CSV 匯入續做（Spendee / OFX / QIF）+ /migrate SEO 強化 |
-| [v1.1.0](CHANGELOG.md#110---2026-05-18) | /migrate landing + CSV 匯入歷史紀錄 |
+| [v1.1.4](CHANGELOG.md#114---2026-05-21) | 設計系統收尾．前端品質續推 |
+| [v1.1.3](CHANGELOG.md#113---2026-05-20) | 品質打磨．UX／前端／SEO 三輪 audit |
+| [v1.1.2](CHANGELOG.md#112---2026-05-19) | Design system primitives．前端品質重構 |
+| [v1.1.1](CHANGELOG.md#111---2026-05-19) | CSV 匯入續做．Spendee／OFX／QIF 接上 |
+| [v1.1.0](CHANGELOG.md#110---2026-05-18) | /migrate landing．接住歷史紀錄 |
 | [v1.0.5](CHANGELOG.md#105---2026-05-18) | 三大入口 header / filter 統一．Records 月份改 picker |
 | [v1.0.4](CHANGELOG.md#104---2026-05-17) | 前端 refactor 大掃除．首載 × icon 更輕 |
 | [v1.0.3](CHANGELOG.md#103---2026-05-17) | Supabase Advisor 清零．Realtime 補齊 |
