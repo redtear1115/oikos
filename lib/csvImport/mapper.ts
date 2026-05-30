@@ -264,6 +264,44 @@ export function mapCwmoney(row: Record<string, string>): PartialImportRow {
   return out
 }
 
+/**
+ * futari_generic: the canonical CSV produced by the screenshot→ChatGPT→CSV
+ * workflow (#839 P2). Fixed headers:
+ *   `date,category,amount,description,currency,kind`
+ * ChatGPT occasionally title-cases the headers, so each column is picked
+ * case-insensitively. `kind` (expense/income) is authoritative for the row
+ * type — never the amount sign — so a stray "-" the model emitted can't flip
+ * an income row. `currency` defaults to TWD; only a non-TWD value emits the
+ * multi-currency tuple (the import action drops it in MVP and treats the raw
+ * amount as base, mirroring the Spendee currency path).
+ */
+export function mapFutariGeneric(row: Record<string, string>): PartialImportRow {
+  const date = parseDate(pick(row, 'date', 'Date'))
+  const amt = parseAmount(pick(row, 'amount', 'Amount'))
+  const explicitType = typeFromString(pick(row, 'kind', 'Kind'))
+  const currency = pick(row, 'currency', 'Currency').trim().toUpperCase()
+  const out: PartialImportRow = {
+    category: mapCategory(pick(row, 'category', 'Category')),
+    description: pick(row, 'description', 'Description', 'note', 'Note').trim(),
+    paidBy: 'viewer',
+    splitType: 'half',
+  }
+  if (date) out.date = date
+  if (amt) {
+    out.amount = amt.value
+    // kind is authoritative; leave type undefined when it's blank or an
+    // unrecognized value (e.g. "transfer") so the validator surfaces the row.
+    if (explicitType) out.type = explicitType
+  }
+  // TWD (and blank) are treated as the base currency — no tuple. Anything else
+  // is captured so the preview/import can surface it.
+  if (currency && currency !== 'TWD') {
+    out.originalCurrency = currency
+    if (amt) out.originalAmount = amt.value
+  }
+  return out
+}
+
 /** User-provided `HeaderMap` for arbitrary CSV layouts. */
 export function mapGeneric(
   row: Record<string, string>,

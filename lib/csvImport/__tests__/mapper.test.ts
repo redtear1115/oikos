@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   mapCategory,
   mapCwmoney,
+  mapFutariGeneric,
   mapGeneric,
   mapHoneydue,
   mapSpendee,
@@ -259,5 +260,76 @@ describe('mapGeneric', () => {
     )
     expect(out.originalCurrency).toBe('USD')
     expect(out.originalAmount).toBe(500)
+  })
+})
+
+describe('mapFutariGeneric', () => {
+  // The fixed-header CSV produced by the screenshot→ChatGPT→CSV workflow (#839 P2):
+  // date,category,amount,description,currency,kind
+  const base = {
+    date: '2026-05-30',
+    category: '飲食',
+    amount: '150',
+    description: '星巴克',
+    currency: 'TWD',
+    kind: 'expense',
+  }
+
+  it('maps a TWD expense row, dropping the redundant base-currency tuple', () => {
+    const out = mapFutariGeneric(base)
+    expect(out.date?.getFullYear()).toBe(2026)
+    expect(out.amount).toBe(150)
+    expect(out.type).toBe('expense')
+    expect(out.category).toBe('dining') // '飲食' → Futari category id
+    expect(out.description).toBe('星巴克')
+    expect(out.paidBy).toBe('viewer')
+    expect(out.splitType).toBe('half')
+    // TWD is the default base — no multi-currency tuple emitted.
+    expect(out.originalCurrency).toBeUndefined()
+    expect(out.originalAmount).toBeUndefined()
+  })
+
+  it('drives type from the kind column, not the amount sign', () => {
+    expect(mapFutariGeneric({ ...base, kind: 'income' }).type).toBe('income')
+    // A stray minus sign must not override an explicit kind.
+    expect(mapFutariGeneric({ ...base, amount: '-150', kind: 'income' }).type).toBe('income')
+  })
+
+  it('leaves type undefined for an unrecognized/blank kind so the validator flags it', () => {
+    expect(mapFutariGeneric({ ...base, kind: '' }).type).toBeUndefined()
+    expect(mapFutariGeneric({ ...base, kind: 'transfer' }).type).toBeUndefined()
+  })
+
+  it('captures a non-TWD currency as a multi-currency tuple', () => {
+    const out = mapFutariGeneric({ ...base, currency: 'jpy', amount: '1200' })
+    expect(out.originalCurrency).toBe('JPY')
+    expect(out.originalAmount).toBe(1200)
+    expect(out.amount).toBe(1200)
+  })
+
+  it('defaults a blank currency to base (no tuple)', () => {
+    const out = mapFutariGeneric({ ...base, currency: '' })
+    expect(out.originalCurrency).toBeUndefined()
+  })
+
+  it('falls back to the "other" category for unknown category text', () => {
+    expect(mapFutariGeneric({ ...base, category: 'zzz-unknown' }).category).toBe('other')
+  })
+
+  it('tolerates a blank description', () => {
+    expect(mapFutariGeneric({ ...base, description: '' }).description).toBe('')
+  })
+
+  it('accepts capitalized headers (ChatGPT sometimes title-cases them)', () => {
+    const out = mapFutariGeneric({
+      Date: '2026-05-30',
+      Category: '薪水',
+      Amount: '50000',
+      Description: '五月',
+      Currency: 'TWD',
+      Kind: 'income',
+    })
+    expect(out.amount).toBe(50000)
+    expect(out.type).toBe('income')
   })
 })
