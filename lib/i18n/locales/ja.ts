@@ -1828,14 +1828,7 @@ export const ja: Translations = {
       privacyNote: 'プレビューはブラウザ内だけで動きます。データは外に出ません。',
     },
     sources: {
-      honeydue: 'Honeydue',
-      spendee: 'Spendee',
-      cwmoney: 'CWMoney',
-      moneybook: 'Moneybook',
-      andromoney: 'AndroMoney',
-      mobills: 'Mobills',
-      manebo: 'Manebo',
-      unknown: 'そのほか',
+      unknown: 'その他',
     },
     differentiatorsHeading: 'Futari を選ぶ理由',
     // TODO(#599): ja copy below pending native review
@@ -1938,36 +1931,6 @@ export const ja: Translations = {
             answer: 'あります。Futari はふたりのために設計されていて、すべての記録がひとつの家計簿にまとまり、お互いに確認・追加できます。',
           },
         ],
-        comparison: {
-          otherLabel: 'Honeydue',
-          rows: [
-            {
-              feature: 'ふたりの共有家計簿',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '✓ 対応', tone: 'yes' },
-            },
-            {
-              feature: '費用の精算モード',
-              futari: { label: '✓ 複数モード', tone: 'yes' },
-              other: { label: '△ 折半のみ', tone: 'partial' },
-            },
-            {
-              feature: '継続的なアップデート',
-              futari: { label: '✓ 2 週ごと', tone: 'yes' },
-              other: { label: '△ 鈍化', tone: 'partial' },
-            },
-            {
-              feature: '多通貨記録',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '✕ なし', tone: 'no' },
-            },
-            {
-              feature: 'エンドツーエンド暗号化',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '不明', tone: 'no' },
-            },
-          ],
-        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
@@ -2013,36 +1976,6 @@ export const ja: Translations = {
             answer: 'あります。Futari には複数の精算モードが内蔵されています：各自払い、片方持ち、折半、比率指定。',
           },
         ],
-        comparison: {
-          otherLabel: 'Spendee',
-          rows: [
-            {
-              feature: 'ふたりの共有家計簿',
-              futari: { label: '✓ 無料で標準', tone: 'yes' },
-              other: { label: '△ 有料解放', tone: 'partial' },
-            },
-            {
-              feature: '費用の精算モード',
-              futari: { label: '✓ 複数モード', tone: 'yes' },
-              other: { label: '✕ 標準では非対応', tone: 'no' },
-            },
-            {
-              feature: 'リアルタイム同期',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '△ 有料プランのみ', tone: 'partial' },
-            },
-            {
-              feature: '完全無料',
-              futari: { label: '✓ ずっと', tone: 'yes' },
-              other: { label: '△ 無料版は制限あり', tone: 'partial' },
-            },
-            {
-              feature: 'CSV 取り込み',
-              futari: { label: '✓ 直接アップロード', tone: 'yes' },
-              other: { label: '自分で整える', tone: 'partial' },
-            },
-          ],
-        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
@@ -2087,36 +2020,6 @@ export const ja: Translations = {
             answer: 'Futari には「愛物（アイブツ）」という機能があり、車・住まい・保険などの共有資産に関わる支出を記録できます。',
           },
         ],
-        comparison: {
-          otherLabel: 'CWMoney',
-          rows: [
-            {
-              feature: 'ふたりの共有家計簿',
-              futari: { label: '✓ 標準モード', tone: 'yes' },
-              other: { label: '✕ ひとり向け設計', tone: 'no' },
-            },
-            {
-              feature: '費用の精算モード',
-              futari: { label: '✓ 複数モード', tone: 'yes' },
-              other: { label: '✕ なし', tone: 'no' },
-            },
-            {
-              feature: '多通貨記録',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '✓ 対応', tone: 'yes' },
-            },
-            {
-              feature: '完全無料',
-              futari: { label: '✓ ずっと', tone: 'yes' },
-              other: { label: '△ VIP で解放', tone: 'partial' },
-            },
-            {
-              feature: 'リアルタイム同期',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '△ VIP が必要', tone: 'partial' },
-            },
-          ],
-        },
       },
       // TODO(#839): ja copy below pending native review
       moneybook: {
@@ -2163,36 +2066,6 @@ export const ja: Translations = {
               'Futari は今のところ手入力が中心で、ふたりが共同の支出を一緒に記録することに集中しています。銀行の自動連携は現段階では対象外です。',
           },
         ],
-        comparison: {
-          otherLabel: 'Moneybook',
-          rows: [
-            {
-              feature: 'ふたりの共同家計簿',
-              futari: { label: '✓ 標準', tone: 'yes' },
-              other: { label: '✕ ひとり向け', tone: 'no' },
-            },
-            {
-              feature: '費用の按分モード',
-              futari: { label: '✓ 複数', tone: 'yes' },
-              other: { label: '✕ なし', tone: 'no' },
-            },
-            {
-              feature: 'CSV 取り込み',
-              futari: { label: '✓ そのままアップロード', tone: 'yes' },
-              other: { label: '✓ 書き出し可', tone: 'yes' },
-            },
-            {
-              feature: '完全無料',
-              futari: { label: '✓ ずっと', tone: 'yes' },
-              other: { label: '△ 一部有料', tone: 'partial' },
-            },
-            {
-              feature: 'エンドツーエンド暗号化',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '記載なし', tone: 'no' },
-            },
-          ],
-        },
       },
       andromoney: {
         heroKicker: 'ANDROMONEY → FUTARI',
@@ -2238,36 +2111,6 @@ export const ja: Translations = {
               'Futari はふたりの共同収支に集中した一つの家計簿です。口座を分けるのではなく、按分モードで「誰が払って、どう分けるか」を記録します。',
           },
         ],
-        comparison: {
-          otherLabel: 'AndroMoney',
-          rows: [
-            {
-              feature: 'ふたりの共同家計簿',
-              futari: { label: '✓ 標準', tone: 'yes' },
-              other: { label: '✕ ひとり向け', tone: 'no' },
-            },
-            {
-              feature: '費用の按分モード',
-              futari: { label: '✓ 複数', tone: 'yes' },
-              other: { label: '✕ なし', tone: 'no' },
-            },
-            {
-              feature: 'リアルタイム同期',
-              futari: { label: '✓ リアルタイム', tone: 'yes' },
-              other: { label: '△ 手動バックアップ', tone: 'partial' },
-            },
-            {
-              feature: '多通貨対応',
-              futari: { label: '✓ 対応', tone: 'yes' },
-              other: { label: '✓ 対応', tone: 'yes' },
-            },
-            {
-              feature: '完全無料',
-              futari: { label: '✓ ずっと', tone: 'yes' },
-              other: { label: '△ 広告／有料版', tone: 'partial' },
-            },
-          ],
-        },
       },
       mobills: {
         heroKicker: 'MOBILLS → FUTARI',
@@ -2313,36 +2156,6 @@ export const ja: Translations = {
               'Futari は予算の上限を設けず、使いすぎを警告することもありません。ふたりが使ったお金を記録して結果を見せますが、点数はつけません。',
           },
         ],
-        comparison: {
-          otherLabel: 'Mobills',
-          rows: [
-            {
-              feature: 'ふたりの共同家計簿',
-              futari: { label: '✓ 標準', tone: 'yes' },
-              other: { label: '✕ ひとり向け', tone: 'no' },
-            },
-            {
-              feature: '費用の按分モード',
-              futari: { label: '✓ 複数', tone: 'yes' },
-              other: { label: '✕ なし', tone: 'no' },
-            },
-            {
-              feature: '表示言語',
-              futari: { label: '✓ 中・英・日', tone: 'yes' },
-              other: { label: '△ 英語中心', tone: 'partial' },
-            },
-            {
-              feature: '完全無料',
-              futari: { label: '✓ ずっと', tone: 'yes' },
-              other: { label: '△ 上位版が必要', tone: 'partial' },
-            },
-            {
-              feature: 'CSV 取り込み',
-              futari: { label: '✓ そのままアップロード', tone: 'yes' },
-              other: { label: '✓ 書き出し可', tone: 'yes' },
-            },
-          ],
-        },
       },
       manebo: {
         heroKicker: 'MANEBO → FUTARI',
@@ -2388,36 +2201,6 @@ export const ja: Translations = {
               'Futari はふたりが共有するひとつの家計簿です。複数の帳簿に分ける代わりに、各記録に按分モードを設定すると残高が自動で精算されます。',
           },
         ],
-        comparison: {
-          otherLabel: 'Manebo',
-          rows: [
-            {
-              feature: 'ふたりの共同家計簿',
-              futari: { label: '✓ 標準', tone: 'yes' },
-              other: { label: '△ 設定が必要', tone: 'partial' },
-            },
-            {
-              feature: '費用の按分モード',
-              futari: { label: '✓ 複数', tone: 'yes' },
-              other: { label: '✕ なし', tone: 'no' },
-            },
-            {
-              feature: 'CSV 取り込み',
-              futari: { label: '✓ そのままアップロード', tone: 'yes' },
-              other: { label: '✓ 書き出し可', tone: 'yes' },
-            },
-            {
-              feature: '完全無料',
-              futari: { label: '✓ ずっと', tone: 'yes' },
-              other: { label: '△ 一部有料', tone: 'partial' },
-            },
-            {
-              feature: 'エンドツーエンド暗号化',
-              futari: { label: '✓ あり', tone: 'yes' },
-              other: { label: '記載なし', tone: 'no' },
-            },
-          ],
-        },
       },
     },
   },

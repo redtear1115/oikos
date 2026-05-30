@@ -4121,13 +4121,6 @@ export const zhTW: Translations = {
       privacyNote: '預覽只在你的瀏覽器跑，沒有東西被傳出去。',
     },
     sources: {
-      honeydue: 'Honeydue',
-      spendee: 'Spendee',
-      cwmoney: 'CWMoney',
-      moneybook: 'Moneybook',
-      andromoney: 'AndroMoney',
-      mobills: 'Mobills',
-      manebo: 'Manebo',
       unknown: '其他',
     },
     differentiatorsHeading: '為什麼選 Futari',
@@ -4227,36 +4220,6 @@ export const zhTW: Translations = {
             answer: '有。Futari 就是為兩個人設計的，所有記錄都在同一個帳本，可以各自查看與新增。',
           },
         ],
-        comparison: {
-          otherLabel: 'Honeydue',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '✓ 支援', tone: 'yes' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '△ 基本對半', tone: 'partial' },
-            },
-            {
-              feature: '持續維護更新',
-              futari: { label: '✓ 每兩週發版', tone: 'yes' },
-              other: { label: '△ 節奏放緩', tone: 'partial' },
-            },
-            {
-              feature: '多幣別記帳',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '✕ 無', tone: 'no' },
-            },
-            {
-              feature: '端對端資料加密',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '未說明', tone: 'no' },
-            },
-          ],
-        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
@@ -4301,36 +4264,6 @@ export const zhTW: Translations = {
             answer: '支援。Futari 內建多種分攤方式：各付各、全由一方負擔、對半分、自訂比例。',
           },
         ],
-        comparison: {
-          otherLabel: 'Spendee',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 免費內建', tone: 'yes' },
-              other: { label: '△ 需付費解鎖', tone: 'partial' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '✕ 無原生支援', tone: 'no' },
-            },
-            {
-              feature: '即時同步',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '△ 限付費版', tone: 'partial' },
-            },
-            {
-              feature: '完全免費',
-              futari: { label: '✓ 永久', tone: 'yes' },
-              other: { label: '△ 基本版有限制', tone: 'partial' },
-            },
-            {
-              feature: 'CSV 資料匯入',
-              futari: { label: '✓ 直接上傳', tone: 'yes' },
-              other: { label: '需自行整理', tone: 'partial' },
-            },
-          ],
-        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
@@ -4374,36 +4307,6 @@ export const zhTW: Translations = {
             answer: 'Futari 有「愛物」功能，可以記錄車、房子、保險等共同資產的相關支出。',
           },
         ],
-        comparison: {
-          otherLabel: 'CWMoney',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 預設模式', tone: 'yes' },
-              other: { label: '✕ 單人設計', tone: 'no' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '✕ 無', tone: 'no' },
-            },
-            {
-              feature: '多幣別記帳',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '✓ 支援', tone: 'yes' },
-            },
-            {
-              feature: '完全免費',
-              futari: { label: '✓ 永久', tone: 'yes' },
-              other: { label: '△ VIP 解鎖', tone: 'partial' },
-            },
-            {
-              feature: '即時雲端同步',
-              futari: { label: '✓ 即時', tone: 'yes' },
-              other: { label: '△ 需 VIP', tone: 'partial' },
-            },
-          ],
-        },
       },
       moneybook: {
         heroKicker: 'MONEYBOOK → FUTARI',
@@ -4445,36 +4348,6 @@ export const zhTW: Translations = {
             answer: 'Futari 目前以手動記帳為主，專注在兩個人一起記下每筆共同支出；自動同步銀行不在現階段範圍。',
           },
         ],
-        comparison: {
-          otherLabel: '麻布記帳',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 預設模式', tone: 'yes' },
-              other: { label: '✕ 單人設計', tone: 'no' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '✕ 無', tone: 'no' },
-            },
-            {
-              feature: 'CSV 資料匯入',
-              futari: { label: '✓ 直接上傳', tone: 'yes' },
-              other: { label: '✓ 可匯出', tone: 'yes' },
-            },
-            {
-              feature: '完全免費',
-              futari: { label: '✓ 永久', tone: 'yes' },
-              other: { label: '△ 部分功能付費', tone: 'partial' },
-            },
-            {
-              feature: '端對端資料加密',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '未說明', tone: 'no' },
-            },
-          ],
-        },
       },
       andromoney: {
         heroKicker: 'ANDROMONEY → FUTARI',
@@ -4516,36 +4389,6 @@ export const zhTW: Translations = {
             answer: 'Futari 是一本共同帳本，專注在兩個人的共同收支；不分多帳戶，而是用分攤模式記下每筆是誰付、怎麼分。',
           },
         ],
-        comparison: {
-          otherLabel: 'AndroMoney',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 預設模式', tone: 'yes' },
-              other: { label: '✕ 單人設計', tone: 'no' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '✕ 無', tone: 'no' },
-            },
-            {
-              feature: '即時雲端同步',
-              futari: { label: '✓ 即時', tone: 'yes' },
-              other: { label: '△ 需手動備份', tone: 'partial' },
-            },
-            {
-              feature: '多幣別記帳',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '✓ 支援', tone: 'yes' },
-            },
-            {
-              feature: '完全免費',
-              futari: { label: '✓ 永久', tone: 'yes' },
-              other: { label: '△ 含廣告／付費版', tone: 'partial' },
-            },
-          ],
-        },
       },
       mobills: {
         heroKicker: 'MOBILLS → FUTARI',
@@ -4587,36 +4430,6 @@ export const zhTW: Translations = {
             answer: 'Futari 不做預算上限，也不會提醒你超支——它記下你們花過的錢，呈現結果，但不替你們打分數。',
           },
         ],
-        comparison: {
-          otherLabel: 'Mobills',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 預設模式', tone: 'yes' },
-              other: { label: '✕ 單人設計', tone: 'no' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '✕ 無', tone: 'no' },
-            },
-            {
-              feature: '介面語言',
-              futari: { label: '✓ 中英日四語', tone: 'yes' },
-              other: { label: '△ 以英文為主', tone: 'partial' },
-            },
-            {
-              feature: '完全免費',
-              futari: { label: '✓ 永久', tone: 'yes' },
-              other: { label: '△ 進階需訂閱', tone: 'partial' },
-            },
-            {
-              feature: 'CSV 資料匯入',
-              futari: { label: '✓ 直接上傳', tone: 'yes' },
-              other: { label: '✓ 可匯出', tone: 'yes' },
-            },
-          ],
-        },
       },
       manebo: {
         heroKicker: 'MANEBO → FUTARI',
@@ -4658,36 +4471,6 @@ export const zhTW: Translations = {
             answer: 'Futari 是一本兩人共用的帳，不分多帳本；用分攤模式記下每筆是誰付、怎麼分，餘額自動算清。',
           },
         ],
-        comparison: {
-          otherLabel: 'Manebo',
-          rows: [
-            {
-              feature: '雙人共同帳本',
-              futari: { label: '✓ 預設模式', tone: 'yes' },
-              other: { label: '△ 需設定共享', tone: 'partial' },
-            },
-            {
-              feature: '費用分攤模式',
-              futari: { label: '✓ 多種模式', tone: 'yes' },
-              other: { label: '✕ 無', tone: 'no' },
-            },
-            {
-              feature: 'CSV 資料匯入',
-              futari: { label: '✓ 直接上傳', tone: 'yes' },
-              other: { label: '✓ 可匯出', tone: 'yes' },
-            },
-            {
-              feature: '完全免費',
-              futari: { label: '✓ 永久', tone: 'yes' },
-              other: { label: '△ 部分功能付費', tone: 'partial' },
-            },
-            {
-              feature: '端對端資料加密',
-              futari: { label: '✓ 支援', tone: 'yes' },
-              other: { label: '未說明', tone: 'no' },
-            },
-          ],
-        },
       },
     },
   },

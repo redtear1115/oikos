@@ -1830,13 +1830,6 @@ export const en: Translations = {
       privacyNote: 'Preview runs in your browser. Nothing leaves your device.',
     },
     sources: {
-      honeydue: 'Honeydue',
-      spendee: 'Spendee',
-      cwmoney: 'CWMoney',
-      moneybook: 'Moneybook',
-      andromoney: 'AndroMoney',
-      mobills: 'Mobills',
-      manebo: 'Manebo',
       unknown: 'Other',
     },
     differentiatorsHeading: 'Why Futari',
@@ -1940,36 +1933,6 @@ export const en: Translations = {
             answer: "Yes. Futari is built for two; everything sits in one shared ledger you can both view and add to.",
           },
         ],
-        comparison: {
-          otherLabel: 'Honeydue',
-          rows: [
-            {
-              feature: 'Shared two-person ledger',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✓ Yes', tone: 'yes' },
-            },
-            {
-              feature: 'Split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '△ Basic 50/50', tone: 'partial' },
-            },
-            {
-              feature: 'Active maintenance',
-              futari: { label: '✓ Biweekly releases', tone: 'yes' },
-              other: { label: '△ Slowed down', tone: 'partial' },
-            },
-            {
-              feature: 'Multi-currency',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✕ No', tone: 'no' },
-            },
-            {
-              feature: 'End-to-end encryption',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: 'Unspecified', tone: 'no' },
-            },
-          ],
-        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
@@ -2015,36 +1978,6 @@ export const en: Translations = {
             answer: 'Yes. Futari has multiple split modes built in: each pays their own, one covers it, 50/50, or custom ratio.',
           },
         ],
-        comparison: {
-          otherLabel: 'Spendee',
-          rows: [
-            {
-              feature: 'Shared two-person ledger',
-              futari: { label: '✓ Free, built-in', tone: 'yes' },
-              other: { label: '△ Paid unlock', tone: 'partial' },
-            },
-            {
-              feature: 'Split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ Not native', tone: 'no' },
-            },
-            {
-              feature: 'Realtime sync',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '△ Paid tier', tone: 'partial' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ Basic tier limited', tone: 'partial' },
-            },
-            {
-              feature: 'CSV import',
-              futari: { label: '✓ Direct upload', tone: 'yes' },
-              other: { label: 'Manual mapping', tone: 'partial' },
-            },
-          ],
-        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
@@ -2089,36 +2022,6 @@ export const en: Translations = {
             answer: 'Futari has "treasured items": cars, homes, insurance and other shared assets can each carry their related expenses.',
           },
         ],
-        comparison: {
-          otherLabel: 'CWMoney',
-          rows: [
-            {
-              feature: 'Shared two-person ledger',
-              futari: { label: '✓ Default', tone: 'yes' },
-              other: { label: '✕ Single-user', tone: 'no' },
-            },
-            {
-              feature: 'Split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ No', tone: 'no' },
-            },
-            {
-              feature: 'Multi-currency',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✓ Yes', tone: 'yes' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ VIP unlock', tone: 'partial' },
-            },
-            {
-              feature: 'Realtime cloud sync',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '△ Requires VIP', tone: 'partial' },
-            },
-          ],
-        },
       },
       // TODO(#839): en copy below pending native review
       moneybook: {
@@ -2165,36 +2068,6 @@ export const en: Translations = {
               'Futari is manual-first for now, focused on the two of you logging each shared expense together; automatic bank sync is out of scope at this stage.',
           },
         ],
-        comparison: {
-          otherLabel: 'Moneybook',
-          rows: [
-            {
-              feature: 'Shared ledger for two',
-              futari: { label: '✓ Default', tone: 'yes' },
-              other: { label: '✕ Single-user', tone: 'no' },
-            },
-            {
-              feature: 'Expense split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ None', tone: 'no' },
-            },
-            {
-              feature: 'CSV import',
-              futari: { label: '✓ Direct upload', tone: 'yes' },
-              other: { label: '✓ Export available', tone: 'yes' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ Some features paid', tone: 'partial' },
-            },
-            {
-              feature: 'End-to-end encryption',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: 'Not stated', tone: 'no' },
-            },
-          ],
-        },
       },
       andromoney: {
         heroKicker: 'ANDROMONEY → FUTARI',
@@ -2240,36 +2113,6 @@ export const en: Translations = {
               'Futari is one shared ledger focused on the two of you; instead of separate accounts, split modes record who paid and how each expense divides.',
           },
         ],
-        comparison: {
-          otherLabel: 'AndroMoney',
-          rows: [
-            {
-              feature: 'Shared ledger for two',
-              futari: { label: '✓ Default', tone: 'yes' },
-              other: { label: '✕ Single-user', tone: 'no' },
-            },
-            {
-              feature: 'Expense split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ None', tone: 'no' },
-            },
-            {
-              feature: 'Realtime cloud sync',
-              futari: { label: '✓ Realtime', tone: 'yes' },
-              other: { label: '△ Manual backup', tone: 'partial' },
-            },
-            {
-              feature: 'Multi-currency',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✓ Yes', tone: 'yes' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ Ads / paid tier', tone: 'partial' },
-            },
-          ],
-        },
       },
       mobills: {
         heroKicker: 'MOBILLS → FUTARI',
@@ -2315,36 +2158,6 @@ export const en: Translations = {
               'Futari has no budget caps and will not warn you about overspending — it records what the two of you spent and shows the result, without scoring you.',
           },
         ],
-        comparison: {
-          otherLabel: 'Mobills',
-          rows: [
-            {
-              feature: 'Shared ledger for two',
-              futari: { label: '✓ Default', tone: 'yes' },
-              other: { label: '✕ Single-user', tone: 'no' },
-            },
-            {
-              feature: 'Expense split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ None', tone: 'no' },
-            },
-            {
-              feature: 'Interface language',
-              futari: { label: '✓ ZH / EN / JA', tone: 'yes' },
-              other: { label: '△ English-first', tone: 'partial' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ Premium needed', tone: 'partial' },
-            },
-            {
-              feature: 'CSV import',
-              futari: { label: '✓ Direct upload', tone: 'yes' },
-              other: { label: '✓ Export available', tone: 'yes' },
-            },
-          ],
-        },
       },
       manebo: {
         heroKicker: 'MANEBO → FUTARI',
@@ -2390,36 +2203,6 @@ export const en: Translations = {
               'Futari is one shared ledger for two people. Instead of separate books, you choose a split mode per entry and the balance is calculated automatically.',
           },
         ],
-        comparison: {
-          otherLabel: 'Manebo',
-          rows: [
-            {
-              feature: 'Shared ledger for two',
-              futari: { label: '✓ Default', tone: 'yes' },
-              other: { label: '△ Requires setup', tone: 'partial' },
-            },
-            {
-              feature: 'Expense split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ None', tone: 'no' },
-            },
-            {
-              feature: 'CSV import',
-              futari: { label: '✓ Direct upload', tone: 'yes' },
-              other: { label: '✓ Export available', tone: 'yes' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ Some features paid', tone: 'partial' },
-            },
-            {
-              feature: 'End-to-end encryption',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: 'Not stated', tone: 'no' },
-            },
-          ],
-        },
       },
     },
   },
