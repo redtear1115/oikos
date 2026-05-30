@@ -1834,6 +1834,7 @@ export const ja: Translations = {
       moneybook: 'Moneybook',
       andromoney: 'AndroMoney',
       mobills: 'Mobills',
+      manebo: 'Manebo',
       unknown: 'そのほか',
     },
     differentiatorsHeading: 'Futari を選ぶ理由',
@@ -1887,6 +1888,10 @@ export const ja: Translations = {
         mobills: {
           name: 'Mobills',
           description: '海外発の個人向け家計簿アプリ。CSV を書き出して持ち込めます。',
+        },
+        manebo: {
+          name: 'Manebo',
+          description: '台湾で人気のカップル向け家計簿アプリ。CSV を書き出して持ち込めます。',
         },
       },
     },
@@ -2339,6 +2344,81 @@ export const ja: Translations = {
           ],
         },
       },
+      manebo: {
+        heroKicker: 'MANEBO → FUTARI',
+        heroTitle: 'Manebo のデータも、持っていけます',
+        heroSubtitle:
+          'Manebo から Futari へ：CSV を書き出し、ここでプレビューして、ふたりで記録を続けましょう。',
+        differentiators: [
+          {
+            title: 'それぞれ別々ではなく、ふたりで共有',
+            body: 'Manebo は個人の家計が中心。Futari は二人で共有する一つの家計簿で、共同の支出は一度記録すれば両方に見えます。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'Manebo で設定 → 書き出しから、家計データを CSV でダウンロードします。',
+        step2: 'CSV をここにアップロードして、記録をプレビューします。',
+        step3: 'Futari のアカウントを作成し、ワンタップで引っ越し完了。',
+        faq: [
+          {
+            question: 'Manebo の項目は Futari と同じですか？',
+            answer:
+              '完全には同じではありません。アップロード後に解析結果をプレビューし、正式に取り込む前にカテゴリや項目を調整できます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '今までの記録はすべて持ってこられますか？',
+            answer:
+              'CSV 取り込みに対応し、ほとんどの記録が移せます。認識できない行は確認用に印が付きます。',
+          },
+          {
+            question: 'Manebo は複数の家計簿に対応していますが、Futari は？',
+            answer:
+              'Futari はふたりが共有するひとつの家計簿です。複数の帳簿に分ける代わりに、各記録に按分モードを設定すると残高が自動で精算されます。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Manebo',
+          rows: [
+            {
+              feature: 'ふたりの共同家計簿',
+              futari: { label: '✓ 標準', tone: 'yes' },
+              other: { label: '△ 設定が必要', tone: 'partial' },
+            },
+            {
+              feature: '費用の按分モード',
+              futari: { label: '✓ 複数', tone: 'yes' },
+              other: { label: '✕ なし', tone: 'no' },
+            },
+            {
+              feature: 'CSV 取り込み',
+              futari: { label: '✓ そのままアップロード', tone: 'yes' },
+              other: { label: '✓ 書き出し可', tone: 'yes' },
+            },
+            {
+              feature: '完全無料',
+              futari: { label: '✓ ずっと', tone: 'yes' },
+              other: { label: '△ 一部有料', tone: 'partial' },
+            },
+            {
+              feature: 'エンドツーエンド暗号化',
+              futari: { label: '✓ あり', tone: 'yes' },
+              other: { label: '記載なし', tone: 'no' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2392,6 +2472,11 @@ export const ja: Translations = {
         title: 'Mobills から Futari へ｜CSV 取り込み',
         description: 'Mobills のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
         ogDescription: 'Mobills ユーザーの次の住みか。CSV を書き出して Futari へ。',
+      },
+      manebo: {
+        title: 'Manebo から Futari へ｜カップル共同家計簿',
+        description: 'Manebo のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: 'Manebo ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
     },
   },

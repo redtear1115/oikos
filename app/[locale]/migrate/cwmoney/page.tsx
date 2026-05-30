@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: t.title,
       description: t.ogDescription,
       url: localizedHref('/migrate/cwmoney', locale),
-      siteName: 'Futari',
+      siteName: 'Futari · 雙人記帳',
       type: 'website',
       locale: ogLocale(locale),
       alternateLocale: alternateOgLocales(locale),

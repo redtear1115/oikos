@@ -4,7 +4,7 @@ import { SCHEMA_LANG } from '@/lib/i18n/seo'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-type Source = 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills'
+type Source = 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo'
 
 /**
  * HowTo + HowToStep JSON-LD for the /migrate/<source> walkthrough (#669 M-3).

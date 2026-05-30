@@ -5,7 +5,7 @@ import { localizedHref } from '@/lib/i18n/path'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-type Source = 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills'
+type Source = 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo'
 
 const ALL_SOURCES: readonly Source[] = [
   'honeydue',
@@ -14,6 +14,7 @@ const ALL_SOURCES: readonly Source[] = [
   'moneybook',
   'andromoney',
   'mobills',
+  'manebo',
 ]
 
 type OtherSources = Translations['migrate']['otherSources']

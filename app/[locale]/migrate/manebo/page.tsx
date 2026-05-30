@@ -19,15 +19,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { locale: raw } = await params
   if (!isLocale(raw)) return {}
   const locale: Locale = raw
-  const t = dictionaries[locale].seo.migrate.mobills
+  const t = dictionaries[locale].seo.migrate.manebo
   return {
     title: t.title,
     description: t.description,
-    alternates: buildAlternates('/migrate/mobills', locale),
+    alternates: buildAlternates('/migrate/manebo', locale),
     openGraph: {
       title: t.title,
       description: t.ogDescription,
-      url: localizedHref('/migrate/mobills', locale),
+      url: localizedHref('/migrate/manebo', locale),
       siteName: 'Futari · 雙人記帳',
       type: 'website',
       locale: ogLocale(locale),
@@ -43,20 +43,20 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-export default async function MigrateMobills({ params }: { params: Params }) {
+export default async function MigrateManebo({ params }: { params: Params }) {
   const { locale: raw } = await params
   if (!isLocale(raw)) return null
   const locale: Locale = raw
   const t = dictionaries[locale].migrate
-  const page = t.pages.mobills
+  const page = t.pages.manebo
   const signInHref = localizedHref('/sign-in', locale)
 
   return (
     <div className="space-y-10 md:space-y-14">
-      <MigrateBreadcrumbJsonLd locale={locale} source="mobills" />
+      <MigrateBreadcrumbJsonLd locale={locale} source="manebo" />
       <MigrateHowToJsonLd
         locale={locale}
-        source="mobills"
+        source="manebo"
         name={page.heroTitle}
         description={page.heroSubtitle}
         steps={[page.step1, page.step2, page.step3]}
@@ -67,7 +67,7 @@ export default async function MigrateMobills({ params }: { params: Params }) {
 
       <MigrateSteps heading={page.stepsHeading} steps={[page.step1, page.step2, page.step3]} />
 
-      <MigrateTool t={t} signInHref={signInHref} hint="mobills" />
+      <MigrateTool t={t} signInHref={signInHref} hint="manebo" />
 
       <MigrateComparison
         heading={t.comparisonHeading.replace('{other}', page.comparison.otherLabel)}
@@ -78,7 +78,7 @@ export default async function MigrateMobills({ params }: { params: Params }) {
 
       <MigrateFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 
-      <MigrateOtherSources locale={locale} currentSource="mobills" copy={t.otherSources} />
+      <MigrateOtherSources locale={locale} currentSource="manebo" copy={t.otherSources} />
 
       <MigrateTrustBlock heading={t.trust.heading} items={t.trust.items} />
 

@@ -1835,6 +1835,7 @@ export const zhCN: Translations = {
       moneybook: 'Moneybook',
       andromoney: 'AndroMoney',
       mobills: 'Mobills',
+      manebo: 'Manebo',
       unknown: '其他',
     },
     differentiatorsHeading: '为什么选 Futari',
@@ -1885,6 +1886,10 @@ export const zhCN: Translations = {
         mobills: {
           name: 'Mobills',
           description: '国际个人理财 App，导出 CSV 带过来。',
+        },
+        manebo: {
+          name: 'Manebo',
+          description: '台湾热门的情侣记账 App，导出 CSV 带过来。',
         },
       },
     },
@@ -2321,6 +2326,77 @@ export const zhCN: Translations = {
           ],
         },
       },
+      manebo: {
+        heroKicker: 'MANEBO → FUTARI',
+        heroTitle: '你的 Manebo 数据，可以带走',
+        heroSubtitle: '从 Manebo 搬到 Futari：导出交易 CSV，上传预览后，和伴侣一起把记录接着写下去。',
+        differentiators: [
+          {
+            title: '双人共用，不是各记各的',
+            body: 'Manebo 以个人记账为核心；Futari 是两个人共用的一本账，共同支出记一次、两边都看得到。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清，不用再发消息对账。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 Manebo → 设置 → 导出，把记账数据输出成 CSV。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '建立 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: 'Manebo 的字段和 Futari 一样吗？',
+            answer: '不完全一样。上传后会先预览解析结果，正式导入时可以对照调整分类与字段，不会直接写进账本。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。格式特殊或无法识别的行会标记出来，供你确认。',
+          },
+          {
+            question: 'Manebo 支持多账本，Futari 怎么处理？',
+            answer: 'Futari 是一本两人共用的账，不分多账本；用分摊模式记下每笔是谁付、怎么分，余额自动算清。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Manebo',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 默认模式', tone: 'yes' },
+              other: { label: '△ 需设置共享', tone: 'partial' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: 'CSV 数据导入',
+              futari: { label: '✓ 直接上传', tone: 'yes' },
+              other: { label: '✓ 可导出', tone: 'yes' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 部分功能付费', tone: 'partial' },
+            },
+            {
+              feature: '端到端数据加密',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '未说明', tone: 'no' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2373,6 +2449,11 @@ export const zhCN: Translations = {
         title: '从 Mobills 搬家到 Futari｜CSV 导入',
         description: 'Mobills 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
         ogDescription: 'Mobills 用户的双人记账新选择：导出 CSV，搬进 Futari。',
+      },
+      manebo: {
+        title: '从 Manebo 搬家到 Futari｜情侣共同记账',
+        description: 'Manebo 用户的双人记账新选择。把 Manebo 的 CSV 导入 Futari——这个专为情侣、夫妻设计的共同账本，内建分摊结算、免费无广告，和对方一起接着记。',
+        ogDescription: 'Manebo 用户的下一站：导出 CSV，搬进 Futari 情侣共同记账。',
       },
     },
   },
