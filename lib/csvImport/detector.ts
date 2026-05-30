@@ -13,7 +13,9 @@
  * CSV parser entirely and route to `ofxParser` / `qifParser`.
  */
 
-export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney' | 'futari_generic'
+import { type MigrateSlug } from '@/lib/migrate/sources'
+
+export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
 /**
  * Slugs that exist as /migrate landing pages but have no header-sniff
  * signature or dedicated mapper yet (#839 P1). The anonymous preview falls
@@ -21,14 +23,10 @@ export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney' | 'futari_generi
  * their CSVs via the generic mapping wizard. Deliberately *not* part of
  * `KnownCsvSource` — that union is the detector + mapper contract.
  */
-export type MigratePageOnlySource =
-  | 'moneybook'
-  | 'andromoney'
-  | 'mobills'
-  | 'manebo'
-  | 'simple-daily-money'
-export type MigrateSource = KnownCsvSource | MigratePageOnlySource | 'unknown'
-export type DetectedSource = KnownCsvSource | 'generic' | 'ofx' | 'qif'
+// All MIGRATE_SOURCES slugs that are not KnownCsvSource (no dedicated CSV parser)
+export type MigratePageOnlySource = Exclude<MigrateSlug, KnownCsvSource>
+export type MigrateSource = MigrateSlug | 'unknown'
+export type DetectedSource = KnownCsvSource | 'generic' | 'futari_generic' | 'ofx' | 'qif'
 
 /**
  * Best-effort source detection by header signature. Returns `null` rather
@@ -39,12 +37,6 @@ export function detectCsvSource(headers: readonly string[]): KnownCsvSource | nu
   const has = (name: string) => lowered.includes(name)
   const hasAll = (...names: string[]) => names.every(has)
 
-  // futari_generic: the fixed-header CSV produced by the screenshot→ChatGPT→CSV
-  // workflow (#839 P2). `kind` is the distinctive signal — no other source
-  // ships an explicit expense/income column named `kind` — so check it first.
-  if (hasAll('date', 'category', 'amount', 'kind')) {
-    return 'futari_generic'
-  }
   // CWMoney: 中文欄位（日期 + 金額 + 類別）
   if (headers.some(h => h.includes('日期')) && headers.some(h => h.includes('金額'))) {
     return 'cwmoney'

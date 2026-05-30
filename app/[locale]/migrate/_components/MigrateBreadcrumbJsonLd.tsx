@@ -1,28 +1,10 @@
 import type { Locale } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
+import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-type Source =
-  | 'honeydue'
-  | 'spendee'
-  | 'cwmoney'
-  | 'moneybook'
-  | 'andromoney'
-  | 'mobills'
-  | 'manebo'
-  | 'simple-daily-money'
-
-const SOURCE_NAMES: Record<Source, string> = {
-  honeydue: 'Honeydue',
-  spendee: 'Spendee',
-  cwmoney: 'CWMoney',
-  moneybook: 'Moneybook',
-  andromoney: 'AndroMoney',
-  mobills: 'Mobills',
-  manebo: 'Manebo',
-  'simple-daily-money': 'Simple Daily Money',
-}
+type Source = MigrateSlug
 
 /**
  * BreadcrumbList JSON-LD for the per-source migrate landing pages (#593).
@@ -49,7 +31,7 @@ export function MigrateBreadcrumbJsonLd({
       {
         '@type': 'ListItem',
         position: 2,
-        name: SOURCE_NAMES[source],
+        name: MIGRATE_SOURCES[source].name,
         item: `${APP_URL}${localizedHref(`/migrate/${source}`, locale)}`,
       },
     ],
