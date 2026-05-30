@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
+import { MIGRATE_SOURCES } from '@/lib/migrate/sources'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -18,10 +19,13 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 const PATHS = [
   // Landing copy / hero / migrate cross-link section
   { path: '/', changeFrequency: 'weekly' as const, priority: 1.0, lastModified: '2026-05-20' },
-  // /migrate/* copy + comparison + FAQ
-  { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
-  { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
-  { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
+  // migrate pages — auto-derived from MIGRATE_SOURCES (#852)
+  ...Object.keys(MIGRATE_SOURCES).map((slug) => ({
+    path: `/migrate/${slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+    lastModified: '2026-05-30',
+  })),
   // Legal pages
   { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },
   { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },

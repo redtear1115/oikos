@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { CsvStats, DetectedEncoding, MigrateSource } from '@/lib/csvImport'
+import { MIGRATE_SOURCES } from '@/lib/migrate/sources'
 
 type MigrateStrings = Translations['migrate']
 
@@ -28,7 +29,9 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
     )
   }
 
-  const sourceName = t.sources[source]
+  const sourceName = source in MIGRATE_SOURCES
+    ? MIGRATE_SOURCES[source as keyof typeof MIGRATE_SOURCES].name
+    : t.sources.unknown
   const sourceLabelPrefix = t.preview.sourceLabel.replace('{source}', '').replace(/[·\s]+$/u, '')
   const encodingLabel = encoding
     ? t.preview.encodingLabel.replace('{encoding}', encoding.toUpperCase())

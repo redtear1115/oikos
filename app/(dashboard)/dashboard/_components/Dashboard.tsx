@@ -243,7 +243,6 @@ export function Dashboard({
           car: {
             id: detail.assetId,
             name: detail.carName,
-            plate: detail.carPlate ?? '',
             fuelType: detail.carFuelType,
             primaryUserId: detail.carPrimaryUserId,
           },

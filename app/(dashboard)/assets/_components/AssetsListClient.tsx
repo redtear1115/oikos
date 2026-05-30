@@ -27,7 +27,9 @@ export interface AssetsListItem {
   /** Optional nickname (currently only populated for child assets). When
    *  present, list items render nickname-first with legal name as secondary. */
   nickname?: string | null
-  plate: string | null
+  /** #837 — has-value signal for the encrypted plate (CarHeroCard renders a
+   *  mask when true). Plaintext plate never reaches the client. */
+  hasPlate: boolean
   monthAmount: number
   /** Insurance-only: true when InsuranceDetails.insurance_type === 'savings'.
    *  Drives the 「儲蓄」badge in AssetListItem. */
@@ -62,8 +64,6 @@ export interface AssetsListItem {
   latestOdometer?: number | null
   avgFuelEcon?: number | null
   lastFuelDate?: string | null
-  // House extras
-  houseAddress?: string | null
   // Child extras
   childBirthday?: string | null
   childHeightCm?: number | null
@@ -485,7 +485,7 @@ export function AssetsListClient({ items }: Props) {
               key={c.id}
               id={c.id}
               name={c.name}
-              plate={c.plate}
+              hasPlate={c.hasPlate}
               color={c.color ?? null}
               year={c.year ?? null}
               brand={c.brand ?? null}
@@ -503,7 +503,6 @@ export function AssetsListClient({ items }: Props) {
               id={h.id}
               name={h.name}
               monthAmount={h.monthAmount}
-              houseAddress={h.houseAddress ?? null}
             />
           ))}
         </div>

@@ -15,9 +15,11 @@ import { AibutsuHeader, type SiblingChip } from './AibutsuHeader'
 import { FuelRow } from './FuelRow'
 import { NewFuelLog, type NewFuelLogInitial } from './NewFuelLog'
 import { SectionHeader, InfoCard } from './aibutsu-ui'
+import { RevealableRow } from '@/app/(dashboard)/_components/RevealableRow'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
+import { revealCarPlate } from '@/actions/asset'
 import { useTranslations } from '@/lib/i18n/client'
 import type { FuelType } from '@/lib/fuel'
 
@@ -51,6 +53,9 @@ interface Props {
   pageSize: number
   /** Grouped switcher items for the car name dropdown. */
   groups: SwitcherGroup[]
+  /** #826 — true when an encrypted licence plate is stored; drives the
+   *  mask + reveal row. The plaintext plate never reaches the client. */
+  hasPlate: boolean
   linkedInsurances?: { id: string; name: string }[]
   siblings?: SiblingChip[]
 }
@@ -60,7 +65,7 @@ export function AssetDetailClient({
   brand, model, year, initialOdometer,
   monthAmount, totalAmount, avgEcon,
   initialTxns, initialFuelLogs, pageSize, groups,
-  linkedInsurances, siblings,
+  hasPlate, linkedInsurances, siblings,
 }: Props) {
   const router = useRouter()
   const t = useTranslations()
@@ -143,13 +148,13 @@ export function AssetDetailClient({
   const car = {
     id: assetId,
     name: assetSheetInitial.name,
-    plate: assetSheetInitial.plate ?? '',
     fuelType: fuelType ?? '95' as const,
     primaryUserId,
   }
 
+  // #826 — plate is PII; it never appears in the header subtitle. The masked
+  // 車牌 row below is the only place it can be revealed (via server action).
   const carSubtitle = [
-    assetSheetInitial.plate,
     [brand, model].filter(Boolean).join(' ') || null,
     year != null ? String(year) : null,
   ].filter(Boolean).join(' · ') || null
@@ -166,7 +171,6 @@ export function AssetDetailClient({
       />
 
       <AssetHero
-        plate={assetSheetInitial.plate ?? null}
         brand={brand}
         model={model}
         year={year}
@@ -177,6 +181,18 @@ export function AssetDetailClient({
         avgEcon={avgEcon}
         fuelLogCount={initialFuelLogs.length}
       />
+
+      {/* #826 — licence plate is encrypted at rest; tap 「顯示」 to decrypt via
+          server action (revealCarPlate), mirroring the house-address row. */}
+      <SectionHeader>{t.assetDetail.car.plateSection}</SectionHeader>
+      <InfoCard>
+        <RevealableRow
+          label={t.assetDetail.car.plate}
+          hasValue={hasPlate}
+          revealAction={() => revealCarPlate(assetId)}
+          last
+        />
+      </InfoCard>
 
       {notes && (
         <>

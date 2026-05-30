@@ -446,7 +446,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                     fontWeight: vehicleId === car.id ? 600 : 500,
                   }}
                 >
-                  {car.name}{car.plate ? ` · ${car.plate}` : ''}
+                  {car.name}
                 </button>
               ))}
             </div>

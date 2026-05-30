@@ -2,12 +2,13 @@ import Link from 'next/link'
 import type { Locale } from '@/lib/i18n/locales-meta'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { localizedHref } from '@/lib/i18n/path'
+import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-type Source = 'honeydue' | 'spendee' | 'cwmoney'
+type Source = MigrateSlug
 
-const ALL_SOURCES: readonly Source[] = ['honeydue', 'spendee', 'cwmoney']
+const ALL_SOURCES = Object.keys(MIGRATE_SOURCES) as MigrateSlug[]
 
 type OtherSources = Translations['migrate']['otherSources']
 

@@ -28,7 +28,7 @@ const CAR_COLORS = [
 export type CarInitial = Pick<
   AssetSheetInitial,
   | 'id' | 'name' | 'notes'
-  | 'plate' | 'purchasedAt' | 'purchasePrice' | 'fuelType' | 'primaryUserId'
+  | 'carHasPlate' | 'purchasedAt' | 'purchasePrice' | 'fuelType' | 'primaryUserId'
   | 'color' | 'year' | 'brand' | 'model' | 'initialOdometer'
 >
 
@@ -37,7 +37,13 @@ interface Props extends BodySharedProps {
 }
 
 export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
-  const [plate, setPlate] = useState(initial?.plate ?? '')
+  // #837 — plate is encrypted PII; the form always starts blank (we never
+  // receive plaintext). `hasPlate` tells us an encrypted value exists so we can
+  // show 「先前已加密」 + 「清除」; `wantClearPlate` is the cleared sentinel.
+  // Same trinary UX as ChildSheetBody's nationalId.
+  const [plate, setPlate] = useState('')
+  const [hasPlate, setHasPlate] = useState(initial?.carHasPlate ?? false)
+  const [wantClearPlate, setWantClearPlate] = useState(false)
   const [purchasedAt, setPurchasedAt] = useState<string | null>(initial?.purchasedAt ?? null)
   const [purchasePrice, setPurchasePrice] = useState(initial?.purchasePrice ? String(initial.purchasePrice) : '')
   const [fuelType, setFuelType] = useState<GasFuelType>(initial?.fuelType ?? '95')
@@ -54,7 +60,9 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
   } = useAssetSheetCommon({
     open, initial, onClose, onMutated,
     resetDomain: () => {
-      setPlate(initial?.plate ?? '')
+      setPlate('')
+      setHasPlate(initial?.carHasPlate ?? false)
+      setWantClearPlate(false)
       setPurchasedAt(initial?.purchasedAt ?? null)
       setPurchasePrice(initial?.purchasePrice ? String(initial.purchasePrice) : '')
       setFuelType(initial?.fuelType ?? '95')
@@ -67,18 +75,26 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
     },
   })
 
-  const canSave = name.trim() !== '' && plate.trim() !== '' && !pending
+  // #837 — plate required on create; on edit the field may stay blank (= keep
+  // the existing encrypted value), so only the name gates save in edit mode.
+  const canSave = name.trim() !== '' && (isEdit || plate.trim() !== '') && !pending
 
   const handleSave = () => {
     const notesPayload = notes.trim() || null
     const price = purchasePrice ? parseInt(purchasePrice, 10) : null
+    // #837 — plate trinary on edit: typed string = set, blank + 「清除」 = null
+    // (clear), blank alone = undefined (keep existing encrypted value).
+    const editPlate: string | null | undefined =
+      plate.trim().length > 0
+        ? plate.trim()
+        : (wantClearPlate ? null : undefined)
     runMutation(
       async () => {
         if (isEdit) {
           await editCar({
             id: initial!.id,
             name: name.trim(),
-            plate: plate.trim(),
+            plate: editPlate,
             purchasedAt,
             purchasePrice: price,
             fuelType,
@@ -171,16 +187,48 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         </div>
       </Field>
 
+      {/* #837 — plate is encrypted PII. Same trinary UX as child nationalId:
+          blank + 「清除」 clears, blank alone on edit keeps, a typed value sets.
+          The generic encryptedHint / clear strings are reused from `child`. */}
       <Field label={ts.car.plate}>
         {id => (
-          <input
-            id={id}
-            value={plate}
-            onChange={e => setPlate(e.target.value.slice(0, 16))}
-            placeholder={ts.car.platePlaceholder}
-            className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              id={id}
+              value={plate}
+              onChange={e => {
+                setPlate(e.target.value.slice(0, 16))
+                if (wantClearPlate) setWantClearPlate(false)
+              }}
+              placeholder={
+                wantClearPlate
+                  ? ts.child.pendingClearHint
+                  : (isEdit && hasPlate ? ts.child.encryptedHint : ts.car.platePlaceholder)
+              }
+              className="flex-1 bg-transparent border-0 outline-none text-base"
+              style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+            />
+            {isEdit && hasPlate && !wantClearPlate && plate.trim() === '' && (
+              <button
+                type="button"
+                onClick={() => setWantClearPlate(true)}
+                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+              >
+                {ts.child.clear}
+              </button>
+            )}
+            {isEdit && wantClearPlate && (
+              <button
+                type="button"
+                onClick={() => setWantClearPlate(false)}
+                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+              >
+                {ts.child.cancelClear}
+              </button>
+            )}
+          </div>
         )}
       </Field>
 

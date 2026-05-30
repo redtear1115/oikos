@@ -13,9 +13,20 @@
  * CSV parser entirely and route to `ofxParser` / `qifParser`.
  */
 
+import { type MigrateSlug } from '@/lib/migrate/sources'
+
 export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
-export type MigrateSource = KnownCsvSource | 'unknown'
-export type DetectedSource = KnownCsvSource | 'generic' | 'ofx' | 'qif'
+/**
+ * Slugs that exist as /migrate landing pages but have no header-sniff
+ * signature or dedicated mapper yet (#839 P1). The anonymous preview falls
+ * back to the page hint to label them; the authenticated importer handles
+ * their CSVs via the generic mapping wizard. Deliberately *not* part of
+ * `KnownCsvSource` — that union is the detector + mapper contract.
+ */
+// All MIGRATE_SOURCES slugs that are not KnownCsvSource (no dedicated CSV parser)
+export type MigratePageOnlySource = Exclude<MigrateSlug, KnownCsvSource>
+export type MigrateSource = MigrateSlug | 'unknown'
+export type DetectedSource = KnownCsvSource | 'generic' | 'futari_generic' | 'ofx' | 'qif'
 
 /**
  * Best-effort source detection by header signature. Returns `null` rather
@@ -42,7 +53,18 @@ export function detectCsvSource(headers: readonly string[]): KnownCsvSource | nu
 }
 
 export function detectSource(headers: readonly string[]): DetectedSource {
-  return detectCsvSource(headers) ?? 'generic'
+  const known = detectCsvSource(headers)
+  if (known) return known
+  // futari_generic: the canonical CSV produced by the screenshot→ChatGPT→CSV
+  // workflow (#839 P2). `kind` (expense/income) is the distinctive column no
+  // other source ships, so its presence alongside date/category/amount is the
+  // signature. Routes the authenticated importer to `mapFutariGeneric` instead
+  // of falling through to the generic mapping wizard.
+  const lowered = headers.map((h) => h.trim().toLowerCase())
+  if (['date', 'category', 'amount', 'kind'].every((n) => lowered.includes(n))) {
+    return 'futari_generic'
+  }
+  return 'generic'
 }
 
 /**

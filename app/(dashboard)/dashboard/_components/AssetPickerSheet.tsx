@@ -167,7 +167,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
               key={a.id}
               iconNode={<AssetIcon type={a.type} size={22} />}
               title={a.name}
-              subtitle={a.plate ?? ''}
+              subtitle=""
               selected={selectedAssetId === a.id}
               onClick={() => { onSelect(a.id); onClose() }}
             />

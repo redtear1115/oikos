@@ -35,8 +35,16 @@ describe('validateCarInput', () => {
     expect(() => validateCarInput({ name: '   ', plate: 'A1' })).toThrow(/名稱/)
   })
 
-  it('throws on empty plate', () => {
-    expect(() => validateCarInput({ name: '車', plate: '   ' })).toThrow(/車牌/)
+  // #837 — plate is now encrypted PII with trinary semantics: a blank value
+  // normalises to null rather than throwing. "Required on create" is enforced
+  // by createCar + the form's canSave, not the shared validator (editCar must
+  // accept blank = "keep existing encrypted value").
+  it('blank plate normalises to null (not a throw)', () => {
+    expect(validateCarInput({ name: '車', plate: '   ' }).plate).toBeNull()
+  })
+
+  it('absent plate is undefined (= keep existing, for edit)', () => {
+    expect(validateCarInput({ name: '車' }).plate).toBeUndefined()
   })
 
   it('throws on name > 32 chars', () => {

@@ -1354,6 +1354,7 @@ export const en: Translations = {
       avgEconNeedMore: 'Need at least 2 refuel logs',
       avgEconRecent: 'Last 6 months',
       plate: 'Plate',
+      plateSection: 'Vehicle',
     },
     child: {
       sectionId: 'ID documents',
@@ -1830,9 +1831,6 @@ export const en: Translations = {
       privacyNote: 'Preview runs in your browser. Nothing leaves your device.',
     },
     sources: {
-      honeydue: 'Honeydue',
-      spendee: 'Spendee',
-      cwmoney: 'CWMoney',
       unknown: 'Other',
     },
     differentiatorsHeading: 'Why Futari',
@@ -1874,7 +1872,79 @@ export const en: Translations = {
           name: 'CWMoney',
           description: 'A long-running single-person ledger from Taiwan; convert via template to CSV.',
         },
+        // TODO(#839): en copy below pending native review
+        moneybook: {
+          name: 'Moneybook',
+          description: 'A Taiwanese auto-syncing budgeting app; export CSV and bring it over.',
+        },
+        andromoney: {
+          name: 'AndroMoney',
+          description: 'A long-running single-person ledger; export CSV and bring it over.',
+        },
+        mobills: {
+          name: 'Mobills',
+          description: 'An international personal-finance app; export CSV and bring it over.',
+        },
+        manebo: {
+          name: 'Manebo',
+          description: 'A popular couple-budgeting app in Taiwan; export CSV and bring it over.',
+        },
+        'simple-daily-money': {
+          name: 'Simple Daily Money',
+          description: 'A popular personal-finance app in Taiwan; screenshot + ChatGPT → CSV and bring it over.',
+        },
+        'fortune-city': {
+          name: 'Fortune City',
+          description: 'A gamified budgeting app; screenshot + ChatGPT → CSV and bring it over.',
+        },
+        cashman: {
+          name: 'CashMan',
+          description: 'A long-running Taiwanese ledger; screenshot + ChatGPT → CSV and bring it over.',
+        },
+        '1money': {
+          name: '1Money',
+          description: 'A clean, minimal expense tracker; screenshot + ChatGPT → CSV and bring it over.',
+        },
+        icost: {
+          name: 'iCost',
+          description: 'A popular iOS-only ledger; screenshot + ChatGPT → CSV and bring it over.',
+        },
+        suishouji: {
+          name: 'Sui Shou Ji',
+          description: 'A widely used Chinese-language ledger; screenshot + ChatGPT → CSV and bring it over.',
+        },
       },
+    },
+    chatgptWorkflow: {
+      heading: 'No CSV export? Use screenshots',
+      intro: 'If your old app has no CSV export, you can screenshot your records and have ChatGPT turn them into a CSV to upload. The free ChatGPT plan works.',
+      substeps: [
+        'In your old app, scroll your transaction list and take phone screenshots (5–10 is a good range to cover the period you want to move).',
+        'Open ChatGPT, upload all the screenshots at once, and paste the prompt below.',
+        'Copy the whole ```csv code block ChatGPT returns and save it as xxx.csv in any plain-text editor.',
+        'Come back here, upload that csv, preview it, and create an account to finish the import.',
+      ],
+      promptLabel: 'Prompt to paste into ChatGPT',
+      prompt: `You are my bookkeeping data assistant. I will upload screenshots from a budgeting app. Please turn every transaction shown into CSV format.
+
+Requirements:
+- The first CSV row is the header: date,category,amount,description,currency,kind
+- Use YYYY-MM-DD for date; if a screenshot only shows month/day (e.g. 5/30), assume the current year
+- Use a positive integer for amount (no minus sign, no decimals); if it was shown as an expense or in red / with a minus sign, set kind to "expense"; if it was income or in green, set kind to "income"
+- Keep the original category text from the screenshot (Chinese or English, as-is)
+- Keep the merchant name or note text in description; leave it blank if there is none
+- Use an ISO 4217 three-letter code for currency (TWD / USD / JPY / CNY…); default to TWD if the screenshot does not show one
+- If the same transaction (same date + amount + description) appears across multiple screenshots, keep only one
+- Output the CSV inside a single \`\`\`csv code block only, with no explanatory text before or after
+
+I will upload the screenshots once you confirm.`,
+      copy: 'Copy prompt',
+      copied: 'Copied',
+      formatLabel: 'The CSV will look like this',
+      formatExample: `date,category,amount,description,currency,kind
+2026-05-30,Food,150,Starbucks,TWD,expense
+2026-05-30,Salary,50000,May,TWD,income`,
+      note: 'Non-TWD rows import at their raw number first; you can adjust the conversion per row after import. Duplicates of the same entry (same date + amount + description) are dropped automatically.',
     },
     pages: {
       honeydue: {
@@ -1919,36 +1989,6 @@ export const en: Translations = {
             answer: "Yes. Futari is built for two; everything sits in one shared ledger you can both view and add to.",
           },
         ],
-        comparison: {
-          otherLabel: 'Honeydue',
-          rows: [
-            {
-              feature: 'Shared two-person ledger',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✓ Yes', tone: 'yes' },
-            },
-            {
-              feature: 'Split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '△ Basic 50/50', tone: 'partial' },
-            },
-            {
-              feature: 'Active maintenance',
-              futari: { label: '✓ Biweekly releases', tone: 'yes' },
-              other: { label: '△ Slowed down', tone: 'partial' },
-            },
-            {
-              feature: 'Multi-currency',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✕ No', tone: 'no' },
-            },
-            {
-              feature: 'End-to-end encryption',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: 'Unspecified', tone: 'no' },
-            },
-          ],
-        },
       },
       spendee: {
         heroKicker: 'SPENDEE → FUTARI',
@@ -1994,36 +2034,6 @@ export const en: Translations = {
             answer: 'Yes. Futari has multiple split modes built in: each pays their own, one covers it, 50/50, or custom ratio.',
           },
         ],
-        comparison: {
-          otherLabel: 'Spendee',
-          rows: [
-            {
-              feature: 'Shared two-person ledger',
-              futari: { label: '✓ Free, built-in', tone: 'yes' },
-              other: { label: '△ Paid unlock', tone: 'partial' },
-            },
-            {
-              feature: 'Split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ Not native', tone: 'no' },
-            },
-            {
-              feature: 'Realtime sync',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '△ Paid tier', tone: 'partial' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ Basic tier limited', tone: 'partial' },
-            },
-            {
-              feature: 'CSV import',
-              futari: { label: '✓ Direct upload', tone: 'yes' },
-              other: { label: 'Manual mapping', tone: 'partial' },
-            },
-          ],
-        },
       },
       cwmoney: {
         heroKicker: 'CWMONEY → FUTARI',
@@ -2068,36 +2078,453 @@ export const en: Translations = {
             answer: 'Futari has "treasured items": cars, homes, insurance and other shared assets can each carry their related expenses.',
           },
         ],
-        comparison: {
-          otherLabel: 'CWMoney',
-          rows: [
-            {
-              feature: 'Shared two-person ledger',
-              futari: { label: '✓ Default', tone: 'yes' },
-              other: { label: '✕ Single-user', tone: 'no' },
-            },
-            {
-              feature: 'Split modes',
-              futari: { label: '✓ Multiple', tone: 'yes' },
-              other: { label: '✕ No', tone: 'no' },
-            },
-            {
-              feature: 'Multi-currency',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '✓ Yes', tone: 'yes' },
-            },
-            {
-              feature: 'Completely free',
-              futari: { label: '✓ Forever', tone: 'yes' },
-              other: { label: '△ VIP unlock', tone: 'partial' },
-            },
-            {
-              feature: 'Realtime cloud sync',
-              futari: { label: '✓ Yes', tone: 'yes' },
-              other: { label: '△ Requires VIP', tone: 'partial' },
-            },
-          ],
-        },
+      },
+      // TODO(#839): en copy below pending native review
+      moneybook: {
+        heroKicker: 'MONEYBOOK → FUTARI',
+        heroTitle: 'Your Moneybook data can come with you',
+        heroSubtitle:
+          'Moving from Moneybook to Futari: export your transactions as CSV, preview them here, and keep writing the story together.',
+        differentiators: [
+          {
+            title: 'A ledger for two, not a tool for one',
+            body: 'Moneybook is built for one person reconciling alone; Futari assumes two people from day one — one shared ledger you both keep and both see.',
+          },
+          {
+            title: 'Splits, done for you',
+            body: 'Who paid, how it splits, who owes whom right now — the balance is worked out for you, not held in your head.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Moneybook, export your transactions and download the CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: "Are Moneybook's columns the same as Futari's?",
+            answer:
+              'Not exactly. After uploading you preview the parsed result first; you can map categories and columns during the actual import, so nothing is written to your ledger blindly.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Rows in an unusual or unreadable format are flagged for you to confirm.',
+          },
+          {
+            question: 'Moneybook syncs banks automatically — does Futari?',
+            answer:
+              'Futari is manual-first for now, focused on the two of you logging each shared expense together; automatic bank sync is out of scope at this stage.',
+          },
+        ],
+      },
+      andromoney: {
+        heroKicker: 'ANDROMONEY → FUTARI',
+        heroTitle: 'Your AndroMoney data can come with you',
+        heroSubtitle:
+          'Moving from AndroMoney to Futari: export a CSV, preview it here, and keep years of records going together.',
+        differentiators: [
+          {
+            title: 'Two-person by default',
+            body: 'AndroMoney is a fine single-person ledger; Futari is built for two people sharing one ledger, where every record is visible to both.',
+          },
+          {
+            title: 'Realtime sync',
+            body: 'One of you logs it, the other sees it right away — no trading screenshots or files to reconcile.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In AndroMoney, go to Settings → Export and output your data as CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: 'Will I need to tidy up the data after importing?',
+            answer:
+              'Categories can be mapped during the import flow in one pass — no manual fixes afterward.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Special types (such as transfers) are flagged for you to confirm.',
+          },
+          {
+            question: 'AndroMoney has multiple accounts — does Futari?',
+            answer:
+              'Futari is one shared ledger focused on the two of you; instead of separate accounts, split modes record who paid and how each expense divides.',
+          },
+        ],
+      },
+      mobills: {
+        heroKicker: 'MOBILLS → FUTARI',
+        heroTitle: 'Your Mobills data can come with you',
+        heroSubtitle:
+          'Moving from Mobills to Futari: export a CSV, preview it here, and keep writing the records together.',
+        differentiators: [
+          {
+            title: 'Shared, not each on their own',
+            body: 'Mobills centers on personal finance; Futari is one ledger two people share — a shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Mobills, export your transactions and download the CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: 'Will I need to tidy up the data after importing?',
+            answer:
+              'Categories can be mapped during the import flow in one pass — no manual fixes afterward.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Special types (such as transfers) are flagged for you to confirm.',
+          },
+          {
+            question: 'Mobills has budgets — does Futari?',
+            answer:
+              'Futari has no budget caps and will not warn you about overspending — it records what the two of you spent and shows the result, without scoring you.',
+          },
+        ],
+      },
+      manebo: {
+        heroKicker: 'MANEBO → FUTARI',
+        heroTitle: 'Your Manebo data can come with you',
+        heroSubtitle:
+          'Moving from Manebo to Futari: export a CSV, preview it here, and keep writing the records together.',
+        differentiators: [
+          {
+            title: 'Shared, not each on their own',
+            body: 'Manebo centers on personal finance; Futari is one ledger two people share — a shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Manebo, go to Settings → Export and download your CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: "Are Manebo's columns compatible with Futari?",
+            answer:
+              'Not exactly. After uploading you will see a preview; during import you can map categories and fields before anything is written to your ledger.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Rows that cannot be recognised are flagged for you to confirm.',
+          },
+          {
+            question: 'Manebo supports multiple ledgers — how does Futari handle that?',
+            answer:
+              'Futari is one shared ledger for two people. Instead of separate books, you choose a split mode per entry and the balance is calculated automatically.',
+          },
+        ],
+      },
+      'simple-daily-money': {
+        heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
+        heroTitle: 'Your Simple Daily Money data can come with you',
+        heroSubtitle:
+          'Simple Daily Money has no CSV export, but a screenshot + ChatGPT turns your records into a CSV — so they can still move to Futari and keep going, together.',
+        differentiators: [
+          {
+            title: 'Logged together, not each on their own',
+            body: 'Simple Daily Money is great for one person logging fast; Futari is one ledger two people share, where every shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Synced and yours to take',
+            body: 'Records live in the cloud, so a new phone loses nothing; export to CSV whenever you want to leave. The data is yours.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in Simple Daily Money (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: 'Simple Daily Money has no export — can my data really move?',
+            answer:
+              'Yes. Screenshot it and have ChatGPT turn it into a CSV, then upload — the full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer:
+              '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Will the categories ChatGPT produces be off?',
+            answer:
+              'The category text is kept as-is; you preview after uploading and can map it to Futari categories during the actual import.',
+          },
+        ],
+      },
+      // TODO(#839): en copy below pending native review
+      'fortune-city': {
+        heroKicker: 'FORTUNE CITY → FUTARI',
+        heroTitle: 'Your Fortune City data can come with you',
+        heroSubtitle:
+          'Fortune City turns budgeting into a game; to move those records to Futari and log together, a screenshot + ChatGPT turns them into a CSV.',
+        differentiators: [
+          {
+            title: 'Build it together, not each alone',
+            body: 'Fortune City is one person’s city; Futari is one ledger two people share, where every shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Take your records with you',
+            body: 'Export to CSV whenever you want to leave; the data is yours, not locked inside one city.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in Fortune City (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: 'Fortune City has no export — can my data really move?',
+            answer:
+              'Yes. Screenshot the transaction view and have ChatGPT turn it into a CSV, then upload — full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer: '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Does my game progress come over too?',
+            answer:
+              'No — what moves is your bookkeeping data (date, amount, category); the game stays in the original app. Futari focuses on the shared ledger itself.',
+          },
+        ],
+      },
+      cashman: {
+        heroKicker: 'CASHMAN → FUTARI',
+        heroTitle: 'Your CashMan data can come with you',
+        heroSubtitle:
+          'Used CashMan for years and want to switch to logging as two? A screenshot + ChatGPT turns your records into a CSV to move into Futari.',
+        differentiators: [
+          {
+            title: 'Two-person by default',
+            body: 'CashMan is a trusty single-user ledger; Futari was built for two people sharing one ledger from day one, visible to both.',
+          },
+          {
+            title: 'Splits, done for you',
+            body: 'Who paid, how it splits, who owes whom right now — the balance is worked out for you, not held in your head.',
+          },
+          {
+            title: 'Synced and yours to take',
+            body: 'Records live in the cloud, so a new phone loses nothing; export to CSV whenever you want to leave.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in CashMan (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: 'CashMan has no export — can my data really move?',
+            answer:
+              'Yes. Screenshot the transaction view and have ChatGPT turn it into a CSV, then upload — full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer: '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Years of records — can they all move?',
+            answer:
+              'Yes; anything your screenshots cover can be turned into a CSV. For a lot of entries, screenshot and upload in batches.',
+          },
+        ],
+      },
+      '1money': {
+        heroKicker: '1MONEY → FUTARI',
+        heroTitle: 'Your 1Money data can come with you',
+        heroSubtitle:
+          'Love 1Money’s simplicity but want to log as two? A screenshot + ChatGPT turns your records into a CSV to move into Futari.',
+        differentiators: [
+          {
+            title: 'One ledger, shared by two',
+            body: '1Money centers on personal tracking; Futari is one ledger two people share — a shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Multi-currency stays clear',
+            body: 'Trips and foreign-currency spending still log cleanly, so looking back stays just as clear.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in 1Money (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: '1Money has no full export — can my data really move?',
+            answer:
+              'Even without a full export, screenshot it and have ChatGPT turn it into a CSV — full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer: '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Will multi-currency records be off?',
+            answer:
+              'Currency is captured in the CSV; non-base rows import at their raw number first, and you can adjust the conversion per row after import.',
+          },
+        ],
+      },
+      icost: {
+        heroKicker: 'ICOST → FUTARI',
+        heroTitle: 'Your iCost data can come with you',
+        heroSubtitle:
+          'iCost is iOS-only — want to log across phones as two? A screenshot + ChatGPT turns your records into a CSV to move into Futari.',
+        differentiators: [
+          {
+            title: 'Two people, across platforms',
+            body: 'iCost is iOS-only; Futari runs on iOS, Android and the web, so it doesn’t matter what phone your partner uses.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in iCost (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: 'iCost has no export — can my data really move?',
+            answer:
+              'Yes. Screenshot the transaction view and have ChatGPT turn it into a CSV, then upload — full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer: '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'My partner is on Android — can we still share it?',
+            answer:
+              'Yes. Futari is a cross-platform PWA — iOS, Android and the browser — so two people on different phones share one ledger.',
+          },
+        ],
+      },
+      suishouji: {
+        heroKicker: 'SUISHOUJI → FUTARI',
+        heroTitle: 'Your Sui Shou Ji data can come with you',
+        heroSubtitle:
+          'Want a ledger built for two from the start? A screenshot + ChatGPT turns your Sui Shou Ji records into a CSV to move into Futari.',
+        differentiators: [
+          {
+            title: 'Two-person by default — no shared-book setup',
+            body: 'Sui Shou Ji needs a separate shared book; in Futari the ledger is already shared by two — no extra setup.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Screenshot the transactions you want to move in Sui Shou Ji (full how-to below).',
+        step2: 'Turn the screenshots into a CSV with ChatGPT — a copy-ready prompt is below.',
+        step3: 'Upload the CSV here, preview it, and create an account to finish the import.',
+        faq: [
+          {
+            question: 'How do I move my Sui Shou Ji data to Futari?',
+            answer:
+              'Screenshot the transaction view and have ChatGPT turn it into a CSV, then upload — full steps and a copy-ready prompt are below, and the free ChatGPT plan works.',
+          },
+          {
+            question: 'How many screenshots?',
+            answer: '5–10 is a good range; scroll to cover the period you want to move. Duplicates of the same entry are dropped automatically.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Sui Shou Ji has shared books — is Futari the same?',
+            answer:
+              'Futari needs no separate shared book — it is the two of you from the start, with splitting and settling built in. That’s the core difference from a single-user app plus a sharing add-on.',
+          },
+        ],
       },
     },
   },
@@ -2136,6 +2563,58 @@ export const en: Translations = {
         title: 'Import from CWMoney to Futari · Excel guide',
         description: 'Moving from CWMoney? Use our Excel-to-CSV template to convert exports, then import into Futari, the shared ledger built for couples. Free, ad-free.',
         ogDescription: 'Moving from CWMoney: convert your Excel with our template, then import into Futari.',
+      },
+      // TODO(#839): en copy below pending native review
+      moneybook: {
+        title: 'Import from Moneybook to Futari · CSV guide',
+        description: 'Moving Moneybook data to a shared ledger? Export CSV and import into Futari, built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Moneybook users go next: export CSV and import into Futari.',
+      },
+      andromoney: {
+        title: 'Import from AndroMoney to Futari · CSV guide',
+        description: 'Moving AndroMoney data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where AndroMoney users go next: export CSV and import into Futari.',
+      },
+      mobills: {
+        title: 'Import from Mobills to Futari · CSV guide',
+        description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Mobills users go next: export CSV and import into Futari.',
+      },
+      manebo: {
+        title: 'Import from Manebo to Futari · Couple budgeting',
+        description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
+      },
+      'simple-daily-money': {
+        title: 'Move from Simple Daily Money to Futari · screenshot to CSV',
+        description: 'No CSV export? Screenshot Simple Daily Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        ogDescription: 'Simple Daily Money has no export — screenshot → ChatGPT → CSV → Futari.',
+      },
+      // TODO(#839): en seo copy below pending native review
+      'fortune-city': {
+        title: 'Move from Fortune City to Futari · screenshot to CSV',
+        description: 'No CSV export? Screenshot Fortune City, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        ogDescription: 'Fortune City has no export — screenshot → ChatGPT → CSV → Futari.',
+      },
+      cashman: {
+        title: 'Move from CashMan to Futari · screenshot to CSV',
+        description: 'No CSV export? Screenshot CashMan, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        ogDescription: 'CashMan has no export — screenshot → ChatGPT → CSV → Futari.',
+      },
+      '1money': {
+        title: 'Move from 1Money to Futari · screenshot to CSV',
+        description: 'No full export? Screenshot 1Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        ogDescription: '1Money to a two-person ledger — screenshot → ChatGPT → CSV → Futari.',
+      },
+      icost: {
+        title: 'Move from iCost to Futari · screenshot to CSV',
+        description: 'iOS-only, no CSV export? Screenshot iCost, have ChatGPT convert to CSV, and import into Futari, the cross-platform couples ledger. Free, ad-free.',
+        ogDescription: 'iCost is iOS-only — screenshot → ChatGPT → CSV → Futari, on any phone.',
+      },
+      suishouji: {
+        title: 'Move from Sui Shou Ji to Futari · screenshot to CSV',
+        description: 'Want a ledger built for two? Screenshot Sui Shou Ji, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free.',
+        ogDescription: 'Sui Shou Ji to a two-person ledger — screenshot → ChatGPT → CSV → Futari.',
       },
     },
   },

@@ -66,6 +66,14 @@ export interface CreateCarInput {
  */
 export async function createCar(input: CreateCarInput): Promise<{ id: string }> {
   const validated = validateCarInput(input)
+  // #837 — plate is required on create (the form enforces it too); the
+  // validator's trinary only yields a string when a value was supplied.
+  // Checked before auth so a blank plate fails fast, matching the old
+  // validate-then-reject ordering. Captured into a local so the narrowing
+  // survives into the transaction closure below.
+  if (typeof validated.plate !== 'string') throw new Error('車牌不能為空')
+  const plate = validated.plate
+
   const { user: viewer, group } = await requireViewerGroup()
 
   const [created] = await db.transaction(async (tx) => {
@@ -75,11 +83,8 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
       .returning({ id: assets.id })
     await tx.insert(carDetails).values({
       assetId: asset.id,
-      // #826 — dual write during the encryption rollout: legacy `plate` stays
-      // populated so existing reads keep working; `plate_encrypted` is what
-      // the reveal action returns going forward. Follow-up PR drops `plate`.
-      plate: validated.plate,
-      plateEncrypted: encrypt(validated.plate),
+      // #837 — encrypted column is the only store; legacy `plate` was dropped.
+      plateEncrypted: encrypt(plate),
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
       primaryUserId: validated.primaryUserId,
@@ -142,7 +147,9 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
 export interface EditCarInput {
   id: string
   name: string
-  plate: string
+  // #837 — plate trinary: undefined = keep existing encrypted value,
+  // null = clear, string = set. The form never receives plaintext.
+  plate?: string | null
   purchasedAt: string | null
   purchasePrice: number | null
   primaryUserId?: string | null      // NEW — Slice 2
@@ -173,22 +180,39 @@ export async function editCar(input: EditCarInput): Promise<void> {
       .returning({ id: assets.id })
     if (updated.length === 0) throw new Error('找不到該資產')
 
+    // #837 — plate trinary: only touch plate_encrypted when the form supplied a
+    // value (string = encrypt+set, null = clear). undefined leaves it intact —
+    // the form starts blank because we never hand plaintext to the client, so
+    // an unedited plate field must not wipe the stored value.
+    const carUpdates: {
+      purchasedAt: string | null
+      purchasePrice: number | null
+      primaryUserId: string | null
+      fuelType: typeof validated.fuelType
+      color: string | null
+      year: number | null
+      brand: string | null
+      model: string | null
+      initialOdometer: number | null
+      plateEncrypted?: string | null
+    } = {
+      purchasedAt: validated.purchasedAt,
+      purchasePrice: validated.purchasePrice,
+      primaryUserId: validated.primaryUserId,
+      fuelType: validated.fuelType,
+      color: validated.color,
+      year: validated.year,
+      brand: validated.brand,
+      model: validated.model,
+      initialOdometer: validated.initialOdometer,
+    }
+    if (validated.plate !== undefined) {
+      carUpdates.plateEncrypted = validated.plate === null ? null : encrypt(validated.plate)
+    }
+
     await tx
       .update(carDetails)
-      .set({
-        // #826 — same dual-write contract as createCar.
-        plate: validated.plate,
-        plateEncrypted: encrypt(validated.plate),
-        purchasedAt: validated.purchasedAt,
-        purchasePrice: validated.purchasePrice,
-        primaryUserId: validated.primaryUserId,
-        fuelType: validated.fuelType,
-        color: validated.color,
-        year: validated.year,
-        brand: validated.brand,
-        model: validated.model,
-        initialOdometer: validated.initialOdometer,
-      })
+      .set(carUpdates)
       .where(eq(carDetails.assetId, input.id))
   })
   // Per spec E2: do NOT touch the linked purchase transaction (drift allowed)
@@ -289,13 +313,11 @@ export interface PickerAsset {
   id: string
   type: AssetType
   name: string
-  plate: string | null
 }
 
 export interface CarAsset {
   id: string
   name: string
-  plate: string | null
 }
 
 /**
@@ -307,7 +329,7 @@ export async function getCarAssets(): Promise<CarAsset[]> {
   const rows = await listAssetsForGroup(group.id)
   return rows
     .filter(r => r.type === 'car')
-    .map(r => ({ id: r.id, name: r.name, plate: r.plate }))
+    .map(r => ({ id: r.id, name: r.name }))
 }
 
 export interface ChildAsset {
@@ -334,13 +356,12 @@ export async function getChildAssets(): Promise<ChildAsset[]> {
 export async function loadAssetsForPicker(): Promise<PickerAsset[]> {
   const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
-  return rows.map(r => ({ id: r.id, type: r.type, name: r.name, plate: r.plate }))
+  return rows.map(r => ({ id: r.id, type: r.type, name: r.name }))
 }
 
 export interface LoadedAsset {
   id: string
   name: string
-  plate: string | null
   deletedAt: string | null  // ISO
 }
 
@@ -355,7 +376,6 @@ export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
   return {
     id: row.id,
     name: row.name,
-    plate: row.plate,
     deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
   }
 }
@@ -585,9 +605,9 @@ export async function revealChildName(assetId: string): Promise<string> {
 /**
  * #826 — on-demand decryption for the car licence plate. Same authorisation
  * shape as `revealChildPii`: scoped to viewer's group, gated by asset.type,
- * refuses soft-deleted rows. During the encryption rollout, falls back to
- * the legacy `plate` plaintext column for rows that haven't been backfilled
- * yet so existing assets keep revealing correctly before the migration runs.
+ * refuses soft-deleted rows. The backfill (`scripts/encrypt-existing-pii.mjs`)
+ * has populated `plate_encrypted` on every environment, so the encrypted
+ * column is the single source of truth — no legacy-plaintext fallback.
  */
 export async function revealCarPlate(assetId: string): Promise<string> {
   'use server'
@@ -597,7 +617,6 @@ export async function revealCarPlate(assetId: string): Promise<string> {
     .select({
       assetType: assets.type,
       assetDeletedAt: assets.deletedAt,
-      plate: carDetails.plate,
       plateEncrypted: carDetails.plateEncrypted,
     })
     .from(assets)
@@ -608,16 +627,14 @@ export async function revealCarPlate(assetId: string): Promise<string> {
     throw new Error('找不到該愛物')
   }
 
-  if (row.plateEncrypted) return decrypt(row.plateEncrypted)
-  // Backfill-fallback: pre-#826 rows have only the legacy plaintext column.
-  if (row.plate) return row.plate
-  throw new Error('尚未填寫此欄位')
+  if (!row.plateEncrypted) throw new Error('尚未填寫此欄位')
+  return decrypt(row.plateEncrypted)
 }
 
 /**
  * #826 — on-demand decryption for the house address. Address is nullable
- * (some houses don't have one recorded), so both columns may be NULL.
- * Same backfill-fallback contract as `revealCarPlate`.
+ * (some houses don't have one recorded), so the encrypted column may be NULL.
+ * Like `revealCarPlate`, reads only the encrypted column post-backfill.
  */
 export async function revealHouseAddress(assetId: string): Promise<string> {
   'use server'
@@ -627,7 +644,6 @@ export async function revealHouseAddress(assetId: string): Promise<string> {
     .select({
       assetType: assets.type,
       assetDeletedAt: assets.deletedAt,
-      address: houseDetails.address,
       addressEncrypted: houseDetails.addressEncrypted,
     })
     .from(assets)
@@ -638,9 +654,8 @@ export async function revealHouseAddress(assetId: string): Promise<string> {
     throw new Error('找不到該愛物')
   }
 
-  if (row.addressEncrypted) return decrypt(row.addressEncrypted)
-  if (row.address) return row.address
-  throw new Error('尚未填寫此欄位')
+  if (!row.addressEncrypted) throw new Error('尚未填寫此欄位')
+  return decrypt(row.addressEncrypted)
 }
 
 // ── Pet ────────────────────────────────────────────────────────────────────
@@ -1166,10 +1181,9 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
     await tx.insert(houseDetails).values({
       assetId: asset.id,
       owner: viewer.id,
-      // #826 — dual write during the encryption rollout. Address is nullable
-      // so we map empty → NULL on both columns to preserve "no value" state.
-      address: validated.address,
-      addressEncrypted: validated.address ? encrypt(validated.address) : null,
+      // #837 — address stored encrypted only (legacy `address` dropped).
+      // Nullable: undefined/null/blank → NULL, a value → encrypted.
+      addressEncrypted: encryptForInsert(validated.address),
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
     })
@@ -1240,15 +1254,24 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
       .returning({ id: assets.id })
     if (updated.length === 0) throw new Error('找不到該愛物')
 
+    // #837 — address trinary: only touch address_encrypted when the form
+    // supplied a value (string = encrypt+set, null = clear). undefined leaves
+    // it intact (form starts blank; an unedited field must not wipe it).
+    const houseUpdates: {
+      purchasedAt: string | null
+      purchasePrice: number | null
+      addressEncrypted?: string | null
+    } = {
+      purchasedAt: validated.purchasedAt,
+      purchasePrice: validated.purchasePrice,
+    }
+    if (validated.address !== undefined) {
+      houseUpdates.addressEncrypted = validated.address === null ? null : encrypt(validated.address)
+    }
+
     await tx
       .update(houseDetails)
-      .set({
-        // #826 — same dual-write contract as createHouse.
-        address: validated.address,
-        addressEncrypted: validated.address ? encrypt(validated.address) : null,
-        purchasedAt: validated.purchasedAt,
-        purchasePrice: validated.purchasePrice,
-      })
+      .set(houseUpdates)
       .where(eq(houseDetails.assetId, input.id))
   })
 

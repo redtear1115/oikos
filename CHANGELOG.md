@@ -15,6 +15,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.3.2] - 2026-05-30
+
+主題：**競品搬遷頁全面鋪開 · futari = 記帳 品牌詞鞏固**——把 `/migrate/*` 從 Honeydue / Spendee / CWMoney 三頁擴成 10 個 Taiwan 競品搬遷頁，並把整個 migrate 子系統重構成 CMS / 資料驅動架構（#839 / #852 / #844）；沒有官方 CSV 匯出的 App 改走「截圖→ChatGPT→CSV」流程，新增 `futari_generic` parser 自動解析（#839）；用 structured data + site name 把 `futari = 記帳` 的品牌詞釘穩，跟同名社交 App 區隔（#843 / #845）；schema 面完成愛物 PII 加密遷移第二階段，移除車牌 / 地址 legacy 明文欄位（#837）。
+完整 diff：[v1.3.1...v1.3.2](https://github.com/redtear1115/oikos/compare/v1.3.1...v1.3.2)
+
+### 使用者可見變化
+
+- **多了 10 個「從 X 搬到 Futari」教學頁（#839 / #844）**：Moneybook、AndroMoney、Mobills、簡單記帳、記帳城市、CashMan、1Money、iCost、隨手記、Manebo——每頁都有搬遷步驟、競品比較表、FAQ，搜尋競品名稱時找得到。
+- **沒有 CSV 匯出的 App 也能搬（#839）**：在原本的 App 截圖、請 ChatGPT 整理成 CSV，再上傳即可；頁面附上可一鍵複製的提示詞，免費版 ChatGPT 就能做。
+- **搜尋「futari 記帳」更容易找到正確產品（#843 / #845）**：補強 structured data 與 site name，跟同名的社交 App 區隔開。
+
+### 技術變更
+
+- **migrate 頁改為 CMS / 資料驅動（#852）**：競品資料（名稱、比較表、`screenshotWorkflow` flag）集中在 `lib/migrate/sources.ts`，由單一動態路由 `app/[locale]/migrate/[source]/page.tsx` 渲染；刪除 7 個個別 page 檔；sitemap / cross-link / Breadcrumb / HowTo / FAQPage / ItemList JSON-LD 全部自動衍生。i18n `pages` / `seo.migrate` 改為 `Record<MigrateSlug>`，新增來源由 tsc 強制補齊 4 語。spec: `docs/superpowers/specs/migrate-pages-design.md`。
+- **新增 `futari_generic` CSV parser（#839）**：對應截圖→ChatGPT→CSV 的固定格式 `date,category,amount,description,currency,kind`；detector 以 `kind` 欄位辨識，`processBuffer` 自動 route 到 `mapFutariGeneric`（`kind` 決定收支、非 TWD 存 multi-currency tuple、import 時比照既有路徑丟回 base）。
+- **structured data 品牌強化（#843 / #845）**：landing `SoftwareApplication`（`applicationCategory: FinanceApplication`）+ `alternateName` 品牌詞；layout `WebSite` + `Organization` `@id` graph；`<meta name="application-name">`、全站 OG `site_name`「Futari · 雙人記帳」、PWA manifest `name`。
+- **schema — 愛物 PII 加密遷移第二階段（#837，destructive）**：移除愛車 legacy 明文 `plate` / `address` 欄位（`0053_drop_legacy_plate_address.sql`），readers 不再讀明文。**部署時** dev / prod 都要套此 migration，套之前先重跑一次 backfill `DRY_RUN=1` 確認 `plate=0 address=0`。
+- **i18n 待確認**：5 個 P2 頁與共用 workflow 的 en / ja 文案標記 `// TODO(#839) pending native review`；zh-TW 為主稿、zh-CN 已跟進。
+
 ## [1.3.1] - 2026-05-30
 
 主題：**公開 surface 清掃 · 愛物 PII 加密第一階段**——對 `/` 跟所有 non-login surface 跑了一輪 `/impeccable critique → polish → audit` 循環，把絕對 ban 的 side-stripe border 拆掉、補齊 WCAG AA 對比、把 landing 拉出 editorial-typographic reflex lane、四語 em dash 一次掃除（#828）；landing hero 字級升級＋PhonePreview 換上真實 `CategoryChip` / `AssetIcon`，順手修掉 logout 卡在 `/settings` 的 server-action redirect bug（#833）；把 dev server 啟動流程固定成 `run-oikos` project skill（#834）；愛物 PII 加密第一階段——車牌、房屋地址、孩子全名加密落庫、tap-to-reveal UI、backfill 腳本（#826 / #835 / #838）。
@@ -491,7 +510,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/redtear1115/oikos/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/redtear1115/oikos/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/redtear1115/oikos/compare/v1.2.5...v1.3.0
 [1.2.5]: https://github.com/redtear1115/oikos/compare/v1.2.4...v1.2.5

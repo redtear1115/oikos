@@ -12,7 +12,10 @@ export interface AssetSheetInitial {
   templateKey?: AssetTemplateKey | null
   templateFields?: Record<string, string | number | null> | null
   // car-only fields
-  plate?: string
+  /** #837 — plate is encrypted at rest; the form never receives plaintext.
+   *  This bool only drives the 「先前已加密」 placeholder + 「清除」 button,
+   *  same UX as childHasNationalId. */
+  carHasPlate?: boolean
   purchasedAt?: string | null
   purchasePrice?: number | null
   fuelType?: GasFuelType
@@ -75,7 +78,9 @@ export interface AssetSheetInitial {
   // Only persisted when kind === 'savings'.
   insAccountValue?: number | null
   // House-specific
-  houseAddress?: string | null
+  /** #837 — address is encrypted at rest; the form never receives plaintext.
+   *  Bool drives the 「先前已加密」 placeholder + 「清除」 button. */
+  houseHasAddress?: boolean
   housePurchasedAt?: string | null
   housePurchasePrice?: number | null
   // Shared across all six asset types — freeform user notes

@@ -93,6 +93,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className={fraunces.variable}>
       <head>
+        {/* application-name lets Google Search Console and OS install prompts
+            associate this PWA with the "雙人記帳" category rather than just
+            the brand name "Futari", disambiguating from same-named apps. (#845) */}
+        <meta name="application-name" content="Futari 雙人記帳" />
         {/* Preconnect to Supabase so the TLS handshake is already done by the
             time the user clicks Sign-In (OAuth) or hits the dashboard. React
             hoists these to <head> automatically; rendering them explicitly in

@@ -18,7 +18,6 @@ export type ModalState =
 export type FuelCar = {
   id: string
   name: string
-  plate: string
   fuelType: FuelType | null
   primaryUserId: string | null
 }

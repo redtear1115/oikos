@@ -188,13 +188,9 @@ export const settlements = pgTable('Settlements', {
 
 export const carDetails = pgTable('CarDetails', {
   assetId: uuid('asset_id').primaryKey().references(() => assets.id),
-  // `plate` carries the legacy plain value during the encryption rollout (#826).
-  // New writes go to `plate_encrypted`; reads go through the reveal action.
-  // `plate` is kept notNull for the transition window — backfill script
-  // (`scripts/encrypt-existing-pii.mjs`) populates `plate_encrypted` from
-  // the existing `plate` value. A follow-up migration drops `plate` once all
-  // environments are confirmed migrated.
-  plate: text('plate').notNull(),
+  // #826/#837 — licence plate is stored encrypted only. The legacy plaintext
+  // `plate` column was dropped in migration 0053 after the backfill populated
+  // `plate_encrypted` on every environment. Reads go through revealCarPlate.
   plateEncrypted: text('plate_encrypted'),
   purchasedAt: date('purchased_at'),
   purchasePrice: integer('purchase_price'),
@@ -222,10 +218,9 @@ export const fuelLogs = pgTable('FuelLogs', {
 export const houseDetails = pgTable('HouseDetails', {
   assetId: uuid('asset_id').primaryKey().references(() => assets.id),
   owner: uuid('owner').notNull().references(() => profiles.id),
-  // `address` carries the legacy plain value during the encryption rollout
-  // (#826). New writes go to `address_encrypted`; reads go through the
-  // reveal action. Follow-up migration drops `address` once migrated.
-  address: text('address'),
+  // #826/#837 — address is stored encrypted only. The legacy plaintext
+  // `address` column was dropped in migration 0053 after the backfill
+  // populated `address_encrypted`. Reads go through revealHouseAddress.
   addressEncrypted: text('address_encrypted'),
   purchasedAt: date('purchased_at'),
   purchasePrice: integer('purchase_price'),

@@ -18,7 +18,6 @@ import type { FuelType, GasFuelType } from '@/lib/fuel'
 interface CarLite {
   id: string
   name: string
-  plate: string
   fuelType: FuelType | null
   primaryUserId: string | null
 }
@@ -213,7 +212,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             <div className="text-title font-medium text-[var(--ink)]" style={{ fontFamily: 'var(--font-serif)' }}>
               {mode === 'edit' ? '編輯加油記錄' : '加油記錄'}
             </div>
-            <div className="text-micro text-[var(--ink-3)]">{car.name} · {car.plate}</div>
+            <div className="text-micro text-[var(--ink-3)]">{car.name}</div>
           </div>
           {/* Past-epoch view is read-only — hide delete affordance. */}
           {mode === 'edit' && !isPast && (
