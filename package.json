@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
-    "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
     "@sentry/nextjs": "^10.53.1",
     "@serwist/next": "^9.5.11",
@@ -39,6 +38,7 @@
     "valibot": "^1.4.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
     "@next/bundle-analyzer": "^16.2.6",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

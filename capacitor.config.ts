@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'dev.southern_light.futari',
+  appId: 'dev.southernlight.futari',
   appName: 'Futari',
   webDir: 'out', // required by Capacitor CLI but unused — we override with server.url
   server: {
