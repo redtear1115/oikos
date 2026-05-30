@@ -1836,6 +1836,7 @@ export const en: Translations = {
       moneybook: 'Moneybook',
       andromoney: 'AndroMoney',
       mobills: 'Mobills',
+      manebo: 'Manebo',
       unknown: 'Other',
     },
     differentiatorsHeading: 'Why Futari',
@@ -1889,6 +1890,10 @@ export const en: Translations = {
         mobills: {
           name: 'Mobills',
           description: 'An international personal-finance app; export CSV and bring it over.',
+        },
+        manebo: {
+          name: 'Manebo',
+          description: 'A popular couple-budgeting app in Taiwan; export CSV and bring it over.',
         },
       },
     },
@@ -2341,6 +2346,81 @@ export const en: Translations = {
           ],
         },
       },
+      manebo: {
+        heroKicker: 'MANEBO → FUTARI',
+        heroTitle: 'Your Manebo data can come with you',
+        heroSubtitle:
+          'Moving from Manebo to Futari: export a CSV, preview it here, and keep writing the records together.',
+        differentiators: [
+          {
+            title: 'Shared, not each on their own',
+            body: 'Manebo centers on personal finance; Futari is one ledger two people share — a shared expense is logged once and seen by both.',
+          },
+          {
+            title: 'Splitting and settling built in',
+            body: 'Half, by ratio, each their own, or one covers it — once you choose, who owes whom is settled automatically.',
+          },
+          {
+            title: 'Free, no ads',
+            body: 'The core ledger stays free. We do not run ads or sell data.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'In Manebo, go to Settings → Export and download your CSV.',
+        step2: 'Upload the CSV here to preview your history.',
+        step3: 'Create a Futari account and finish the move in one tap.',
+        faq: [
+          {
+            question: "Are Manebo's columns compatible with Futari?",
+            answer:
+              'Not exactly. After uploading you will see a preview; during import you can map categories and fields before anything is written to your ledger.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'Can all my records come across?',
+            answer:
+              'CSV import is supported and most records carry over. Rows that cannot be recognised are flagged for you to confirm.',
+          },
+          {
+            question: 'Manebo supports multiple ledgers — how does Futari handle that?',
+            answer:
+              'Futari is one shared ledger for two people. Instead of separate books, you choose a split mode per entry and the balance is calculated automatically.',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Manebo',
+          rows: [
+            {
+              feature: 'Shared ledger for two',
+              futari: { label: '✓ Default', tone: 'yes' },
+              other: { label: '△ Requires setup', tone: 'partial' },
+            },
+            {
+              feature: 'Expense split modes',
+              futari: { label: '✓ Multiple', tone: 'yes' },
+              other: { label: '✕ None', tone: 'no' },
+            },
+            {
+              feature: 'CSV import',
+              futari: { label: '✓ Direct upload', tone: 'yes' },
+              other: { label: '✓ Export available', tone: 'yes' },
+            },
+            {
+              feature: 'Completely free',
+              futari: { label: '✓ Forever', tone: 'yes' },
+              other: { label: '△ Some features paid', tone: 'partial' },
+            },
+            {
+              feature: 'End-to-end encryption',
+              futari: { label: '✓ Yes', tone: 'yes' },
+              other: { label: 'Not stated', tone: 'no' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2394,6 +2474,11 @@ export const en: Translations = {
         title: 'Import from Mobills to Futari · CSV guide',
         description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
         ogDescription: 'Where Mobills users go next: export CSV and import into Futari.',
+      },
+      manebo: {
+        title: 'Import from Manebo to Futari · Couple budgeting',
+        description: 'Moving Manebo data to a couples ledger? Import your CSV into Futari — the shared budgeting app built for couples and partners. Free, ad-free, end-to-end encrypted.',
+        ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
       },
     },
   },

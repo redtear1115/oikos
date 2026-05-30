@@ -2248,6 +2248,7 @@ export type Translations = {
       moneybook: string
       andromoney: string
       mobills: string
+      manebo: string
       /** Fallback shown when header sniffer + page hint both fail. */
       unknown: string
     }
@@ -2287,6 +2288,7 @@ export type Translations = {
         moneybook: { name: string; description: string }
         andromoney: { name: string; description: string }
         mobills: { name: string; description: string }
+        manebo: { name: string; description: string }
       }
     }
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
@@ -2378,6 +2380,7 @@ export type Translations = {
       moneybook: MigrateBasePageCopy
       andromoney: MigrateBasePageCopy
       mobills: MigrateBasePageCopy
+      manebo: MigrateBasePageCopy
     }
   }
 
@@ -2430,6 +2433,11 @@ export type Translations = {
         ogDescription: string
       }
       mobills: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      manebo: {
         title: string
         description: string
         ogDescription: string
@@ -2566,7 +2574,7 @@ export const zhTW: Translations = {
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · ふたり',
-    jsonLdAlternateNames: ['Futari 家計簿', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
+    jsonLdAlternateNames: ['Futari 家計簿', '情侶記帳 app', '夫妻記帳', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
       '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
     jsonLdFeatureList: [
@@ -4273,6 +4281,7 @@ export const zhTW: Translations = {
       moneybook: 'Moneybook',
       andromoney: 'AndroMoney',
       mobills: 'Mobills',
+      manebo: 'Manebo',
       unknown: '其他',
     },
     differentiatorsHeading: '為什麼選 Futari',
@@ -4323,6 +4332,10 @@ export const zhTW: Translations = {
         mobills: {
           name: 'Mobills',
           description: '國際個人理財 App，匯出 CSV 帶過來。',
+        },
+        manebo: {
+          name: 'Manebo',
+          description: '台灣熱門的情侶記帳 App，匯出 CSV 帶過來。',
         },
       },
     },
@@ -4759,13 +4772,84 @@ export const zhTW: Translations = {
           ],
         },
       },
+      manebo: {
+        heroKicker: 'MANEBO → FUTARI',
+        heroTitle: '你的 Manebo 資料，可以帶走',
+        heroSubtitle: '從 Manebo 搬到 Futari：匯出交易 CSV，上傳預覽後，和伴侶一起把記錄接著寫下去。',
+        differentiators: [
+          {
+            title: '兩個人共用，不是各記各的',
+            body: 'Manebo 以個人記帳為核心；Futari 從第一天就假設使用者是兩個人，共同支出記一次、兩邊都看得到。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清，不用再傳 LINE 對帳。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 Manebo → 設定 → 匯出，把記帳資料輸出成 CSV。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: 'Manebo 的欄位和 Futari 一樣嗎？',
+            answer: '不完全一樣。上傳後會先預覽解析結果，正式匯入時可以對照調整分類與欄位，不會直接寫進帳本。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。格式特殊或無法辨識的列會標記出來，供你確認。',
+          },
+          {
+            question: 'Manebo 支援多帳本，Futari 怎麼處理？',
+            answer: 'Futari 是一本兩人共用的帳，不分多帳本；用分攤模式記下每筆是誰付、怎麼分，餘額自動算清。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Manebo',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 預設模式', tone: 'yes' },
+              other: { label: '△ 需設定共享', tone: 'partial' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '✕ 無', tone: 'no' },
+            },
+            {
+              feature: 'CSV 資料匯入',
+              futari: { label: '✓ 直接上傳', tone: 'yes' },
+              other: { label: '✓ 可匯出', tone: 'yes' },
+            },
+            {
+              feature: '完全免費',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 部分功能付費', tone: 'partial' },
+            },
+            {
+              feature: '端對端資料加密',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '未說明', tone: 'no' },
+            },
+          ],
+        },
+      },
     },
   },
 
   seo: {
     landing: {
       title: 'Futari · 兩個人，一本帳｜伴侶共享記帳 PWA',
-      description: 'Futari 是為夫妻、伴侶設計的共同帳本，兩個人一起記帳、自動分攤花費、AA 結算，從日常開銷到旅行、愛車與資產，輕鬆看見兩個人的生活全貌。',
+      description: 'Futari 是為夫妻、情侶設計的共同記帳 PWA，兩個人一起記帳、自動分攤花費、AA 結算，從日常開銷到旅行、愛車與資產，輕鬆看見兩個人的生活全貌。',
       ogDescription: 'Futari 是為夫妻、伴侶設計的共同帳本——一起記帳、自動分攤、AA 結算，看見兩個人的生活全貌。',
     },
     signIn: {
@@ -4811,6 +4895,11 @@ export const zhTW: Translations = {
         title: '從 Mobills 搬家到 Futari｜CSV 匯入',
         description: 'Mobills 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
         ogDescription: 'Mobills 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
+      },
+      manebo: {
+        title: '從 Manebo 搬家到 Futari｜情侶共同記帳',
+        description: 'Manebo 用戶的雙人記帳新選擇。把 Manebo 的 CSV 匯入 Futari——這個專為情侶、夫妻設計的共同帳本，內建分攤結算、免費無廣告，和對方一起接著記。',
+        ogDescription: 'Manebo 用戶的下一站：匯出 CSV，搬進 Futari 情侶共同記帳。',
       },
     },
   },

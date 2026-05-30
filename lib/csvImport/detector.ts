@@ -21,7 +21,7 @@ export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
  * their CSVs via the generic mapping wizard. Deliberately *not* part of
  * `KnownCsvSource` — that union is the detector + mapper contract.
  */
-export type MigratePageOnlySource = 'moneybook' | 'andromoney' | 'mobills'
+export type MigratePageOnlySource = 'moneybook' | 'andromoney' | 'mobills' | 'manebo'
 export type MigrateSource = KnownCsvSource | MigratePageOnlySource | 'unknown'
 export type DetectedSource = KnownCsvSource | 'generic' | 'ofx' | 'qif'
 
