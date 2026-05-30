@@ -1,47 +1,13 @@
-/** Comparison-table copy for /migrate/<source> pages (#599).
- *  Each cell carries a localized `label` and a structural `tone` that
- *  drives the visual treatment in `<MigrateComparison />`. */
-export type MigrateCellTone = 'yes' | 'partial' | 'no'
-export type MigrateComparisonCopy = {
-  /** Brand name of the source app (e.g. "Honeydue"). Used as column header
-   *  and to fill the `{other}` slot in `migrate.comparisonHeading`. */
-  otherLabel: string
-  rows: readonly [
-    {
-      feature: string
-      futari: { label: string; tone: MigrateCellTone }
-      other: { label: string; tone: MigrateCellTone }
-    },
-    {
-      feature: string
-      futari: { label: string; tone: MigrateCellTone }
-      other: { label: string; tone: MigrateCellTone }
-    },
-    {
-      feature: string
-      futari: { label: string; tone: MigrateCellTone }
-      other: { label: string; tone: MigrateCellTone }
-    },
-    {
-      feature: string
-      futari: { label: string; tone: MigrateCellTone }
-      other: { label: string; tone: MigrateCellTone }
-    },
-    {
-      feature: string
-      futari: { label: string; tone: MigrateCellTone }
-      other: { label: string; tone: MigrateCellTone }
-    },
-  ]
-}
-
-/** Base copy shape for the Taiwan P1 migrate pages (#839): hero + 3-step
- *  walkthrough + 4-question FAQ + comparison, with no per-source extras
- *  (unlike honeydue.intro / spendee.formatHint* / cwmoney.template*). */
+/** Base copy shape for all /migrate/<source> pages.
+ *  `comparison` has moved to lib/migrate/sources.ts (#852).
+ *  Optional fields are source-specific extras — only honeydue has `intro`,
+ *  only spendee has `formatHint*`, only cwmoney has `templateDownload*`. */
 export type MigrateBasePageCopy = {
   heroKicker: string
   heroTitle: string
   heroSubtitle: string
+  /** honeydue only — objective background paragraph rendered above differentiators */
+  intro?: string
   differentiators: readonly [
     { title: string; body: string },
     { title: string; body: string },
@@ -51,13 +17,19 @@ export type MigrateBasePageCopy = {
   step1: string
   step2: string
   step3: string
+  /** spendee only — CSV column hint rendered inside step 1 */
+  formatHintLabel?: string
+  formatHintHeaders?: string
+  formatHintNote?: string
+  /** cwmoney only — Excel template download rendered inside step 2 */
+  templateDownloadLabel?: string
+  templateNote?: string
   faq: readonly [
     { question: string; answer: string },
     { question: string; answer: string },
     { question: string; answer: string },
     { question: string; answer: string },
   ]
-  comparison: MigrateComparisonCopy
 }
 
 export type Translations = {
@@ -2242,13 +2214,6 @@ export type Translations = {
       privacyNote: string
     }
     sources: {
-      honeydue: string
-      spendee: string
-      cwmoney: string
-      moneybook: string
-      andromoney: string
-      mobills: string
-      manebo: string
       /** Fallback shown when header sniffer + page hint both fail. */
       unknown: string
     }
@@ -2294,94 +2259,7 @@ export type Translations = {
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
      *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
      *  Hero h1 / steps live here; SEO `<title>`/`<meta>` live in seo.migrate.*. */
-    pages: {
-      honeydue: {
-        /** Italic Fraunces kicker above the hero h1. */
-        heroKicker: string
-        heroTitle: string
-        heroSubtitle: string
-        /** Objective background about Honeydue — never攻擊性 framing. */
-        intro: string
-        /** Per-source "Why Futari" differentiators (3 cards). */
-        differentiators: readonly [
-          { title: string; body: string },
-          { title: string; body: string },
-          { title: string; body: string },
-        ]
-        stepsHeading: string
-        step1: string
-        step2: string
-        step3: string
-        /** 4-question FAQ block (#599) — 3 shared + 1 source-specific.
-         *  Also feeds the FAQPage JSON-LD on the same page. */
-        faq: readonly [
-          { question: string; answer: string },
-          { question: string; answer: string },
-          { question: string; answer: string },
-          { question: string; answer: string },
-        ]
-        /** Side-by-side feature table vs the source app (#599).
-         *  `tone` drives cell color: yes = accent, partial/no = muted. */
-        comparison: MigrateComparisonCopy
-      }
-      spendee: {
-        heroKicker: string
-        heroTitle: string
-        heroSubtitle: string
-        differentiators: readonly [
-          { title: string; body: string },
-          { title: string; body: string },
-          { title: string; body: string },
-        ]
-        stepsHeading: string
-        step1: string
-        step2: string
-        step3: string
-        /** Plain-language hint for the Spendee CSV column layout, embedded
-         *  inside step 1 so users know what to expect before they hit Export. */
-        formatHintLabel: string
-        /** Literal Spendee CSV header line, rendered as <code> beneath the label. */
-        formatHintHeaders: string
-        /** Caption under the header preview explaining `Type` column semantics. */
-        formatHintNote: string
-        faq: readonly [
-          { question: string; answer: string },
-          { question: string; answer: string },
-          { question: string; answer: string },
-          { question: string; answer: string },
-        ]
-        comparison: MigrateComparisonCopy
-      }
-      cwmoney: {
-        heroKicker: string
-        heroTitle: string
-        heroSubtitle: string
-        differentiators: readonly [
-          { title: string; body: string },
-          { title: string; body: string },
-          { title: string; body: string },
-        ]
-        stepsHeading: string
-        step1: string
-        step2: string
-        step3: string
-        /** Download CTA label embedded inside step 2 (#579, IA option A). */
-        templateDownloadLabel: string
-        /** Caption under the download button explaining what the template does. */
-        templateNote: string
-        faq: readonly [
-          { question: string; answer: string },
-          { question: string; answer: string },
-          { question: string; answer: string },
-          { question: string; answer: string },
-        ]
-        comparison: MigrateComparisonCopy
-      }
-      moneybook: MigrateBasePageCopy
-      andromoney: MigrateBasePageCopy
-      mobills: MigrateBasePageCopy
-      manebo: MigrateBasePageCopy
-    }
+    pages: Record<import('@/lib/migrate/sources').MigrateSlug, MigrateBasePageCopy>
   }
 
   /** Per-page SEO strings — title / description / ogDescription used by
@@ -2406,43 +2284,11 @@ export type Translations = {
       description: string
     }
     /** SEO copy for the per-source /migrate landing pages. */
-    migrate: {
-      honeydue: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-      spendee: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-      cwmoney: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-      moneybook: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-      andromoney: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-      mobills: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-      manebo: {
-        title: string
-        description: string
-        ogDescription: string
-      }
-    }
+    migrate: Record<import('@/lib/migrate/sources').MigrateSlug, {
+      title: string
+      description: string
+      ogDescription: string
+    }>
   }
 }
 
