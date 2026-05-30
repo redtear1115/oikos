@@ -1,10 +1,11 @@
 import type { Locale } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
 import { SCHEMA_LANG } from '@/lib/i18n/seo'
+import { type MigrateSlug } from '@/lib/migrate/sources'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-type Source = 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo'
+type Source = MigrateSlug
 
 /**
  * HowTo + HowToStep JSON-LD for the /migrate/<source> walkthrough (#669 M-3).
