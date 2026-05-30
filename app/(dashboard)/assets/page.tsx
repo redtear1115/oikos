@@ -96,7 +96,7 @@ export default async function AssetsPage() {
       }
     }
     if (a.type === 'house') {
-      return { ...base, houseAddress: a.houseAddress }
+      return base
     }
     if (a.type !== 'car') return base
     const heroStats = carStats.get(a.id)!

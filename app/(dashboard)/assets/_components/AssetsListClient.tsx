@@ -62,8 +62,6 @@ export interface AssetsListItem {
   latestOdometer?: number | null
   avgFuelEcon?: number | null
   lastFuelDate?: string | null
-  // House extras
-  houseAddress?: string | null
   // Child extras
   childBirthday?: string | null
   childHeightCm?: number | null
@@ -503,7 +501,6 @@ export function AssetsListClient({ items }: Props) {
               id={h.id}
               name={h.name}
               monthAmount={h.monthAmount}
-              houseAddress={h.houseAddress ?? null}
             />
           ))}
         </div>

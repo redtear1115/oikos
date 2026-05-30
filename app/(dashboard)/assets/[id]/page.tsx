@@ -518,6 +518,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       initialFuelLogs={initialFuelLogs}
       pageSize={PAGE_SIZE}
       groups={carGroups}
+      hasPlate={Boolean(asset.plateEncrypted)}
     />
   )
 }

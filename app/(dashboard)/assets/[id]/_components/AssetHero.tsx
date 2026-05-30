@@ -7,7 +7,6 @@ import type { FuelType } from '@/lib/fuel'
 interface AssetHeroProps {
   /** When omitted the card renders without the name/subtitle header row (headless mode). */
   name?: React.ReactNode
-  plate: string | null
   brand: string | null
   model: string | null
   year: number | null
@@ -39,22 +38,22 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
 }
 
 export function AssetHero({
-  name, plate, brand, model, year, fuelType, color,
+  name, brand, model, year, fuelType, color,
   monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit,
 }: AssetHeroProps) {
   const t = useTranslations()
   const isElectric = fuelType === 'electric'
   const swatch = resolveCarColor(color)
 
-  // Shared subtitle — plate · brand model · year
+  // Shared subtitle — brand model · year. The plate is intentionally absent
+  // here (#826): it's PII, masked + revealed in the dedicated 車牌 row below,
+  // never rendered inline in the hero.
   const subtitle = (
     <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-      {plate && <span>{plate}</span>}
-      {(brand || model) && plate && <span>·</span>}
       {(brand || model) && (
         <span>{[brand, model].filter(Boolean).join(' ')}</span>
       )}
-      {year && (brand || model || plate) && <span>·</span>}
+      {year && (brand || model) && <span>·</span>}
       {year && <span>{year}</span>}
     </div>
   )

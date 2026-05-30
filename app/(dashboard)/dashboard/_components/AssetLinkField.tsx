@@ -19,7 +19,7 @@ interface AssetLinkFieldProps {
 }
 
 export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFieldProps) {
-  const [assetInfo, setAssetInfo] = useState<{ name: string; plate: string | null; deletedAt: string | null } | null>(null)
+  const [assetInfo, setAssetInfo] = useState<{ name: string; deletedAt: string | null } | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const loadedIdRef = useRef<string | null>(null)
 
@@ -36,7 +36,7 @@ export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFiel
     loadAsset(assetId).then((info) => {
       if (cancelled) return
       if (info) {
-        setAssetInfo({ name: info.name, plate: info.plate, deletedAt: info.deletedAt })
+        setAssetInfo({ name: info.name, deletedAt: info.deletedAt })
         loadedIdRef.current = assetId
       } else {
         setAssetInfo(null)
@@ -66,7 +66,6 @@ export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFiel
                 {assetInfo.name}
                 {assetInfo.deletedAt && <span className="ml-2 text-xs" style={{ color: 'var(--ink-3)' }}>（已刪除）</span>}
               </div>
-              {assetInfo.plate && <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{assetInfo.plate}</div>}
             </>
           ) : assetId && !assetInfo ? (
             <div className="text-body" style={{ color: 'var(--ink-3)' }}>載入中…</div>

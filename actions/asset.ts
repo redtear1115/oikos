@@ -289,13 +289,11 @@ export interface PickerAsset {
   id: string
   type: AssetType
   name: string
-  plate: string | null
 }
 
 export interface CarAsset {
   id: string
   name: string
-  plate: string | null
 }
 
 /**
@@ -307,7 +305,7 @@ export async function getCarAssets(): Promise<CarAsset[]> {
   const rows = await listAssetsForGroup(group.id)
   return rows
     .filter(r => r.type === 'car')
-    .map(r => ({ id: r.id, name: r.name, plate: r.plate }))
+    .map(r => ({ id: r.id, name: r.name }))
 }
 
 export interface ChildAsset {
@@ -334,13 +332,12 @@ export async function getChildAssets(): Promise<ChildAsset[]> {
 export async function loadAssetsForPicker(): Promise<PickerAsset[]> {
   const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
-  return rows.map(r => ({ id: r.id, type: r.type, name: r.name, plate: r.plate }))
+  return rows.map(r => ({ id: r.id, type: r.type, name: r.name }))
 }
 
 export interface LoadedAsset {
   id: string
   name: string
-  plate: string | null
   deletedAt: string | null  // ISO
 }
 
@@ -355,7 +352,6 @@ export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
   return {
     id: row.id,
     name: row.name,
-    plate: row.plate,
     deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
   }
 }
@@ -585,9 +581,9 @@ export async function revealChildName(assetId: string): Promise<string> {
 /**
  * #826 — on-demand decryption for the car licence plate. Same authorisation
  * shape as `revealChildPii`: scoped to viewer's group, gated by asset.type,
- * refuses soft-deleted rows. During the encryption rollout, falls back to
- * the legacy `plate` plaintext column for rows that haven't been backfilled
- * yet so existing assets keep revealing correctly before the migration runs.
+ * refuses soft-deleted rows. The backfill (`scripts/encrypt-existing-pii.mjs`)
+ * has populated `plate_encrypted` on every environment, so the encrypted
+ * column is the single source of truth — no legacy-plaintext fallback.
  */
 export async function revealCarPlate(assetId: string): Promise<string> {
   'use server'
@@ -597,7 +593,6 @@ export async function revealCarPlate(assetId: string): Promise<string> {
     .select({
       assetType: assets.type,
       assetDeletedAt: assets.deletedAt,
-      plate: carDetails.plate,
       plateEncrypted: carDetails.plateEncrypted,
     })
     .from(assets)
@@ -608,16 +603,14 @@ export async function revealCarPlate(assetId: string): Promise<string> {
     throw new Error('找不到該愛物')
   }
 
-  if (row.plateEncrypted) return decrypt(row.plateEncrypted)
-  // Backfill-fallback: pre-#826 rows have only the legacy plaintext column.
-  if (row.plate) return row.plate
-  throw new Error('尚未填寫此欄位')
+  if (!row.plateEncrypted) throw new Error('尚未填寫此欄位')
+  return decrypt(row.plateEncrypted)
 }
 
 /**
  * #826 — on-demand decryption for the house address. Address is nullable
- * (some houses don't have one recorded), so both columns may be NULL.
- * Same backfill-fallback contract as `revealCarPlate`.
+ * (some houses don't have one recorded), so the encrypted column may be NULL.
+ * Like `revealCarPlate`, reads only the encrypted column post-backfill.
  */
 export async function revealHouseAddress(assetId: string): Promise<string> {
   'use server'
@@ -627,7 +620,6 @@ export async function revealHouseAddress(assetId: string): Promise<string> {
     .select({
       assetType: assets.type,
       assetDeletedAt: assets.deletedAt,
-      address: houseDetails.address,
       addressEncrypted: houseDetails.addressEncrypted,
     })
     .from(assets)
@@ -638,9 +630,8 @@ export async function revealHouseAddress(assetId: string): Promise<string> {
     throw new Error('找不到該愛物')
   }
 
-  if (row.addressEncrypted) return decrypt(row.addressEncrypted)
-  if (row.address) return row.address
-  throw new Error('尚未填寫此欄位')
+  if (!row.addressEncrypted) throw new Error('尚未填寫此欄位')
+  return decrypt(row.addressEncrypted)
 }
 
 // ── Pet ────────────────────────────────────────────────────────────────────

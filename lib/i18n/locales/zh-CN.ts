@@ -1353,6 +1353,7 @@ export const zhCN: Translations = {
       avgEconNeedMore: '需要至少 2 次加油记录',
       avgEconRecent: '近 6 个月',
       plate: '车牌',
+      plateSection: '车辆信息',
     },
     child: {
       sectionId: '身份证件',

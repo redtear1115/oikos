@@ -278,7 +278,6 @@ export interface FuelLogDetail {
   fuelType: FuelType
   loggedAt: string    // ISO
   carName: string
-  carPlate: string | null
   carFuelType: FuelType | null
   carPrimaryUserId: string | null
 }
@@ -301,7 +300,6 @@ export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> 
       loggedAt: fuelLogs.loggedAt,
       assetName: assets.name,
       assetGroupId: assets.groupId,
-      carPlate: carDetails.plate,
       carFuelType: carDetails.fuelType,
       carPrimaryUserId: carDetails.primaryUserId,
     })
@@ -325,7 +323,6 @@ export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> 
     fuelType: row.fuelType,
     loggedAt: row.loggedAt instanceof Date ? row.loggedAt.toISOString() : String(row.loggedAt),
     carName: row.assetName,
-    carPlate: row.carPlate,
     carFuelType: row.carFuelType,
     carPrimaryUserId: row.carPrimaryUserId,
   }

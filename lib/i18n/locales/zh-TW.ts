@@ -1653,6 +1653,8 @@ export type Translations = {
       avgEconRecent: string
       /** #826 — label for the encrypted plate row. */
       plate: string
+      /** #826 — section header above the masked plate reveal row. */
+      plateSection: string
     }
     child: {
       sectionId: string
@@ -3660,6 +3662,7 @@ export const zhTW: Translations = {
       avgEconNeedMore: '需要至少 2 次加油記錄',
       avgEconRecent: '近 6 個月',
       plate: '車牌',
+      plateSection: '車輛資訊',
     },
     child: {
       sectionId: '身分證件',

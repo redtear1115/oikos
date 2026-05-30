@@ -9,7 +9,6 @@ import type { FuelType } from '@/lib/fuel'
 export type FuelCar = {
   id: string
   name: string
-  plate: string
   fuelType: FuelType | null
   primaryUserId: string | null
 }
@@ -47,7 +46,6 @@ export function useFuelSheet() {
       setCar({
         id: detail.assetId,
         name: detail.carName,
-        plate: detail.carPlate ?? '',
         fuelType: detail.carFuelType,
         primaryUserId: detail.carPrimaryUserId,
       })

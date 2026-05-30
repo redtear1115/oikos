@@ -1354,6 +1354,7 @@ export const en: Translations = {
       avgEconNeedMore: 'Need at least 2 refuel logs',
       avgEconRecent: 'Last 6 months',
       plate: 'Plate',
+      plateSection: 'Vehicle',
     },
     child: {
       sectionId: 'ID documents',
