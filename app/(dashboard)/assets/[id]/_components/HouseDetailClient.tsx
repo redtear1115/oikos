@@ -72,7 +72,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
 
   // #826 — never include the raw address in subtitle; show the mask when
   // there's a stored address, otherwise leave null so the header collapses.
-  const hasAddress = Boolean(details?.address)
+  const hasAddress = Boolean(details?.addressEncrypted)
   const subtitle = hasAddress ? ADDRESS_SUBTITLE_MASK : null
 
   const handleAssetMutated = (kind: 'saved' | 'deleted') => {

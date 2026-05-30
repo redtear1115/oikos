@@ -248,7 +248,9 @@ describe('validateFuelLogInput', () => {
 describe('validateHouseInput', () => {
   it('accepts name only', () => {
     const r = validateHouseInput({ name: '我們家' })
-    expect(r).toEqual({ name: '我們家', address: null, purchasedAt: null, purchasePrice: null, notes: null })
+    // #837 — address is trinary now: an absent address normalises to undefined
+    // ("keep existing"), not null. createHouse maps that to NULL on insert.
+    expect(r).toEqual({ name: '我們家', address: undefined, purchasedAt: null, purchasePrice: null, notes: null })
   })
 
   it('trims and accepts all fields', () => {

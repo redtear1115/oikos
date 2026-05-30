@@ -365,6 +365,13 @@
       "when": 1781000000000,
       "tag": "0052_encrypt_asset_pii_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1781100000000,
+      "tag": "0053_drop_legacy_plate_address",
+      "breakpoints": true
     }
   ]
 }

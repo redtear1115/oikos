@@ -206,7 +206,10 @@ export function validateSettlementInput(input: SettlementInput): ValidatedSettle
 
 export interface CarInput {
   name: string
-  plate: string
+  // #837 — plate is encrypted PII with trinary semantics (see ChildInput):
+  //   undefined → keep existing, null → clear, string → set (uppercased).
+  // createCar enforces "required on create"; editCar treats undefined as keep.
+  plate?: string | null
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
   primaryUserId?: string | null
@@ -221,7 +224,8 @@ export interface CarInput {
 
 export interface ValidatedCarInput {
   name: string
-  plate: string
+  // Trinary preserved (see CarInput): undefined = keep, null = clear, string = set.
+  plate: string | null | undefined
   purchasedAt: string | null
   purchasePrice: number | null
   primaryUserId: string | null
@@ -246,9 +250,15 @@ const CAR_FUEL_TYPES = GAS_FUEL_TYPES
  */
 export function validateCarInput(input: CarInput): ValidatedCarInput {
   const name = validateName(input.name, '名稱', 32)
-  const rawPlate = input.plate.trim().toUpperCase()
-  if (!rawPlate) throw new Error('車牌不能為空')
-  if (rawPlate.length > 16) throw new Error('車牌最長 16 字')
+  // #837 — plate trinary (see normalisePiiTrinary): undefined = keep, null =
+  // clear, string = set. Blank no longer throws here — required-on-create is
+  // enforced by createCar + the form's canSave. The string branch uppercases
+  // and bounds the length, matching the legacy plain-column rules.
+  let plate = normalisePiiTrinary(input.plate)
+  if (typeof plate === 'string') {
+    plate = plate.toUpperCase()
+    if (plate.length > 16) throw new Error('車牌最長 16 字')
+  }
 
   let purchasedAt: string | null = null
   if (input.purchasedAt) {
@@ -317,7 +327,7 @@ export function validateCarInput(input: CarInput): ValidatedCarInput {
 
   return {
     name,
-    plate: rawPlate,
+    plate,
     purchasedAt,
     purchasePrice,
     primaryUserId,
@@ -673,6 +683,8 @@ export function validatePlantInput(input: PlantInput): ValidatedPlantInput {
 // ── House ──────────────────────────────────────────────────────────
 export interface HouseInput {
   name: string
+  // #837 — address is encrypted PII with trinary semantics (see ChildInput):
+  //   undefined → keep existing, null → clear, string → set.
   address?: string | null
   purchasedAt?: string | null  // YYYY-MM-DD
   purchasePrice?: number | null
@@ -681,7 +693,8 @@ export interface HouseInput {
 
 export interface ValidatedHouseInput {
   name: string
-  address: string | null
+  // Trinary preserved (see HouseInput): undefined = keep, null = clear, string = set.
+  address: string | null | undefined
   purchasedAt: string | null
   purchasePrice: number | null
   notes: string | null
@@ -690,11 +703,11 @@ export interface ValidatedHouseInput {
 export function validateHouseInput(input: HouseInput): ValidatedHouseInput {
   const name = validateName(input.name, '名稱', 32)
 
-  let address: string | null = null
-  if (input.address) {
-    const a = input.address.trim()
-    if (a.length > 80) throw new Error('地址最長 80 字')
-    address = a || null
+  // #837 — address trinary (see normalisePiiTrinary): undefined = keep,
+  // null = clear, string = set. The string branch bounds the length.
+  const address = normalisePiiTrinary(input.address)
+  if (typeof address === 'string' && address.length > 80) {
+    throw new Error('地址最長 80 字')
   }
 
   let purchasedAt: string | null = null

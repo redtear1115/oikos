@@ -41,7 +41,7 @@ export default async function AssetsPage() {
       type: a.type,
       name: a.name,
       nickname: a.type === 'child' ? (childNicknames.get(a.id) ?? null) : null,
-      plate: a.plate,
+      hasPlate: Boolean(a.plateEncrypted),
       monthAmount: summary.monthAmount,
       isSavings: a.type === 'insurance' && a.insuranceType === 'savings',
     }
