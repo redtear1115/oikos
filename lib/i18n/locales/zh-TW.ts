@@ -166,6 +166,21 @@ export type Translations = {
       /** Aria label template — `{source}` is the tool name. */
       cardAriaLabel: string
     }
+    /** Use-case section (#851) — three locale-aware links to /use-case/* on the
+     *  landing page. Positioned after the migrate section to strengthen internal
+     *  link graph for situational-keyword SEO. Tone: 陪伴，not 管理. */
+    useCaseSection: {
+      kicker: string
+      title: string
+      subtitle: string
+      cohabitationTitle: string
+      cohabitationBody: string
+      newlywedsTitle: string
+      newlywedsBody: string
+      petOwnersTitle: string
+      petOwnersBody: string
+      cardAriaLabel: string
+    }
     /** Footer trust note. */
     footerTrust: string
     /** schema.org `name` for WebSite + SoftwareApplication JSON-LD (#467). */
@@ -2311,6 +2326,53 @@ export type Translations = {
       description: string
       ogDescription: string
     }>
+    /** SEO copy for /use-case/* situational landing pages (#851). */
+    useCase: Record<import('@/lib/use-case/cases').UseCaseSlug, {
+      title: string
+      description: string
+      ogDescription: string
+    }>
+  }
+
+  /** Shared shell + per-slug copy for /use-case/* situational SEO pages (#851).
+   *  80% shared structure; slug-specific fields are heroTitle, heroSubtitle,
+   *  painPoints, features copy, faq. */
+  useCase: {
+    /** Top-bar back link. */
+    backToHome: string
+    /** Feature highlight labels — shared across all slugs. */
+    features: {
+      split: { title: string; body: string }
+      trip: { title: string; body: string }
+      asset: { title: string; body: string }
+      realtime: { title: string; body: string }
+      encrypt: { title: string; body: string }
+      history: { title: string; body: string }
+    }
+    /** Shared section headings. */
+    featuresHeading: string
+    faqHeading: string
+    ctaLabel: string
+    otherCases: {
+      heading: string
+      cardAriaLabel: string
+    }
+    /** Per-slug copy. */
+    pages: Record<import('@/lib/use-case/cases').UseCaseSlug, {
+      heroKicker: string
+      heroTitle: string
+      heroSubtitle: string
+      painPoints: readonly [
+        { heading: string; body: string },
+        { heading: string; body: string },
+        { heading: string; body: string },
+      ]
+      faq: readonly [
+        { question: string; answer: string },
+        { question: string; answer: string },
+        { question: string; answer: string },
+      ]
+    }>
   }
 }
 
@@ -2428,6 +2490,18 @@ export const zhTW: Translations = {
     f3Body: '保護型、儲蓄型保單分頁，被保人、受益人、續期日，一頁看完每一份為對方留下的安排。',
     f4Title: '記帳統計',
     f4Body: '月度回顧、分類分佈、章節歷史。讓花過的錢自己說故事，一起回頭看走過的日子。',
+    useCaseSection: {
+      kicker: 'MADE FOR YOU ──',
+      title: 'Futari 是為哪些人做的？',
+      subtitle: '不只是記帳工具，而是你們生活情境的陪伴。',
+      cohabitationTitle: '同居情侶',
+      cohabitationBody: '同居生活費怎麼分最不傷感情？AA、按比例、任你選。',
+      newlywedsTitle: '新婚夫妻',
+      newlywedsBody: '結婚之後從日常帳本到愛物，一起看見兩個人的生活全貌。',
+      petOwnersTitle: '寵物家庭',
+      petOwnersBody: '毛孩的每一筆費用都值得被記住，清楚看見兩個人的心意。',
+      cardAriaLabel: '了解 {slug} 情境',
+    },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
       title: '本來在用別的記帳工具？',
@@ -4883,6 +4957,160 @@ export const zhTW: Translations = {
         title: '從隨手記搬家到 Futari｜截圖轉 CSV',
         description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
         ogDescription: '隨手記用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+    },
+    useCase: {
+      cohabitation: {
+        title: '同居 AA 制記帳｜同居生活費怎麼分？Futari',
+        description: '同居生活費怎麼分才不傷感情？Futari 是專為伴侶設計的雙人帳本，支援 AA 對半、按比例、全額等多種分攤模式，輕鬆記下每筆同居開銷，清楚看見兩個人的生活。',
+        ogDescription: '同居 AA 制最適合的記帳工具——Futari 雙人帳本，免費、無廣告、端對端加密。',
+      },
+      newlyweds: {
+        title: '新婚家計分攤｜夫妻記帳怎麼記？Futari',
+        description: '新婚生活費怎麼分攤？Futari 是為夫妻、伴侶設計的共同帳本，結婚後帳怎麼管一看就懂——日常開銷、愛物、旅行，兩個人的生活全都在一本帳裡。',
+        ogDescription: '新婚夫妻的家計管理首選——Futari 雙人帳本，從日常到愛物，一起記。',
+      },
+      'pet-owners': {
+        title: '寵物費用記帳｜貓咪醫療費、日常開銷怎麼記？Futari',
+        description: '寵物家庭開銷怎麼記帳？Futari 讓你把貓咪、狗狗關聯到每筆支出，醫療費、疫苗、日常用品一目瞭然，兩個人一起照顧、一起記帳，看見毛孩的每一筆心意。',
+        ogDescription: '寵物家庭的雙人記帳工具——Futari，把每筆費用關聯到毛孩，清楚看見愛的重量。',
+      },
+    },
+  },
+  useCase: {
+    backToHome: '回首頁',
+    featuresHeading: 'Futari 怎麼幫到你們',
+    faqHeading: '常見問題',
+    ctaLabel: '免費開始記帳',
+    features: {
+      split: {
+        title: '多種分攤模式',
+        body: 'AA 對半、按比例、全額由某一方負擔——選定之後，帳就幫你算好，不用每次手動換算。',
+      },
+      trip: {
+        title: '旅行子帳本',
+        body: '出遊的錢和日常帳分開記，回來之後清楚看見這趟誰出了多少，不需要在群組裡對帳。',
+      },
+      asset: {
+        title: '愛物費用追蹤',
+        body: '每筆支出可以關聯到你們共同照顧的對象——車、房、小孩、寵物、植物，費用自動歸類。',
+      },
+      realtime: {
+        title: '即時同步',
+        body: '其中一個人記下去，另一個人馬上看得到。不需要截圖傳 LINE，帳本就是對話本身。',
+      },
+      encrypt: {
+        title: '端對端加密',
+        body: '帳本只有你們兩個人看得到。伺服器不解密，也不讀你們記了什麼。',
+      },
+      history: {
+        title: '章節式記憶',
+        body: '同居、結婚、換工作、搬新家——每個人生階段都可以是一個新章節，過去的帳永遠在。',
+      },
+    },
+    otherCases: {
+      heading: '其他情境',
+      cardAriaLabel: '查看 {slug} 頁面',
+    },
+    pages: {
+      cohabitation: {
+        heroKicker: '同居生活費 AA 制',
+        heroTitle: '同居了，帳怎麼記才不傷感情？',
+        heroSubtitle: '從第一筆房租開始，兩個人的帳就應該一起記。Futari 是從一開始就假設「使用者是兩個人」的帳本——不是個人記帳工具硬拗成雙人用途。',
+        painPoints: [
+          {
+            heading: '「上個月到底誰多出了多少？」',
+            body: '房租、水電、生活用品——同居支出很零碎，靠記憶或群組訊息很快就亂掉。Futari 讓每筆支出都清楚標記是誰付的、怎麼分攤，月底不用再對帳。',
+          },
+          {
+            heading: '「AA 制還是按薪水比例比較公平？」',
+            body: '沒有一種分法適合所有人。Futari 支援對半、按比例、全額負擔，選定之後帳自動算，換算的事交給工具，你們只需要專注在一起生活。',
+          },
+          {
+            heading: '「搬在一起之後，才發現帳更難記了。」',
+            body: '單身的時候自己記自己的，同居之後費用交錯，反而更難看清楚。Futari 讓兩個人的帳放在同一個地方，即時同步，一方記下去另一方馬上看到。',
+          },
+        ],
+        faq: [
+          {
+            question: '同居記帳 app 有哪些選擇？',
+            answer: 'Futari 是專為伴侶設計的雙人帳本，從一開始就預設兩個人一起使用，支援多種分攤模式、即時同步、端對端加密。不需要把個人記帳工具改造成雙人版。',
+          },
+          {
+            question: '同居 AA 制要怎麼記帳比較清楚？',
+            answer: '建議把每筆支出記下來並標記分攤方式——對半、按比例、或全額由某人負擔。Futari 會自動累計餘額，讓你隨時看到目前誰多出了多少，不需要月底才對帳。',
+          },
+          {
+            question: 'Futari 要收費嗎？',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+          },
+        ],
+      },
+      newlyweds: {
+        heroKicker: '新婚夫妻家計管理',
+        heroTitle: '結婚之後，帳要怎麼一起管？',
+        heroSubtitle: '新婚生活的第一本帳，從日常開銷到愛物、旅行，Futari 讓兩個人的生活費用都有地方安放。',
+        painPoints: [
+          {
+            heading: '「結婚後各付各的，還是合在一起記？」',
+            body: '新婚家計沒有標準答案。有人全合、有人部分合、有人維持各自 AA。Futari 支援各種模式，不管你們怎麼決定，帳本都能配合。',
+          },
+          {
+            heading: '「車子、保險、未來買房——這些費用怎麼一起追蹤？」',
+            body: '婚後的費用不只是日常開銷，還有愛物、保險、大筆支出。Futari 讓每筆支出可以關聯到具體的愛物，車的費用、保險費——各自歸位，不混在一起。',
+          },
+          {
+            heading: '「出遊的錢和日常帳混在一起，回來之後根本算不清楚。」',
+            body: '旅行支出另立帳本，回來之後清楚看見這趟誰出了多少。Futari 的旅行子帳本讓你不用在群組裡對帳，一切都已經記好了。',
+          },
+        ],
+        faq: [
+          {
+            question: '新婚夫妻的家計怎麼管最好？',
+            answer: '沒有最好的方式，只有最適合你們的方式。重要的是把帳記下來，讓兩個人都清楚目前的狀況。Futari 提供多種分攤模式，可以隨生活狀態調整。',
+          },
+          {
+            question: '夫妻記帳要分開記還是合在一起？',
+            answer: 'Futari 的設計是兩個人共用一本帳本，每筆支出都清楚標記是誰付的、怎麼分攤，而不是把兩個人的帳強制合并。你們可以選擇全額 AA、按比例，或某類支出由某人負擔。',
+          },
+          {
+            question: 'Futari 支援什麼樣的愛物記錄？',
+            answer: '目前支援車輛（含油耗紀錄）、房子、小孩、寵物、植物、保險和物品，每筆支出都可以關聯到對應的愛物，讓費用歸類更清晰。',
+          },
+        ],
+      },
+      'pet-owners': {
+        heroKicker: '寵物家庭費用記帳',
+        heroTitle: '毛孩的每一筆費用，都值得被記住。',
+        heroSubtitle: '貓咪回診、狗狗疫苗、日常飼料——寵物費用很零碎，又很心疼。Futari 讓你把每筆支出關聯到你們的毛孩，清楚看見每一筆心意。',
+        painPoints: [
+          {
+            heading: '「這個月在貓咪身上花了多少？」',
+            body: '醫療費、疫苗、零食、玩具、美容——寵物費用分散在各種類別，很難知道整體花了多少。Futari 讓每筆支出都可以關聯到你們的毛孩，篩一下就看到全貌。',
+          },
+          {
+            heading: '「我付了大部分，對方記得嗎？」',
+            body: '兩個人一起養，費用卻可能都由某一方先墊。Futari 的分攤功能讓每筆支出都清楚標記，餘額自動累計，不需要特別去問「這次誰出比較多」。',
+          },
+          {
+            heading: '「多貓家庭的費用怎麼分開追蹤？」',
+            body: 'Futari 支援多個愛物——每隻貓、每隻狗都可以是一個獨立的記錄對象，醫療費直接關聯到對應的毛孩，不會混在一起。',
+          },
+        ],
+        faq: [
+          {
+            question: '寵物費用記帳用什麼 app 比較好？',
+            answer: 'Futari 是專為兩個人設計的帳本，支援把每筆支出關聯到你們共同照顧的寵物，讓醫療費、日常用品各自歸位。如果你們是兩個人一起養毛孩，Futari 是少數從設計上就考慮到這個情境的選擇。',
+          },
+          {
+            question: '貓咪、狗狗的醫療費要怎麼記才清楚？',
+            answer: '在 Futari 建立你們的毛孩作為「愛物」，每次回診或購買相關用品時關聯到這個愛物，費用就會自動歸類。想看這隻貓這個月花了多少，篩一下就出來了。',
+          },
+          {
+            question: '如果養了兩隻以上，可以分開記嗎？',
+            answer: '可以。Futari 支援多個愛物，每隻毛孩都可以獨立建立，各自的費用分開追蹤，不會混在一起。',
+          },
+        ],
       },
     },
   },
