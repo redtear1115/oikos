@@ -1891,13 +1891,33 @@ export const ja: Translations = {
           name: '簡単家計簿',
           description: '台湾で人気の個人向け家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
         },
+        'fortune-city': {
+          name: '記帳城市',
+          description: '家計簿をまちづくりゲームにしたアプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
+        },
+        cashman: {
+          name: 'CashMan',
+          description: '台湾の老舗の個人向け家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
+        },
+        '1money': {
+          name: '1Money',
+          description: 'シンプルな家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
+        },
+        icost: {
+          name: 'iCost',
+          description: 'iOS で人気の家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
+        },
+        suishouji: {
+          name: '隨手記',
+          description: '中国語圏で広く使われる家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
+        },
       },
     },
     chatgptWorkflow: {
       heading: 'CSV 書き出しがない？スクショで',
-      intro: '簡単家計簿には公式の CSV 書き出しがありませんが、スクリーンショットを ChatGPT に渡して CSV に整えてもらえば持ち込めます。無料版の ChatGPT でできます。',
+      intro: '元のアプリに CSV 書き出しがなくても、スクリーンショットを ChatGPT に渡して CSV に整えてもらえば持ち込めます。無料版の ChatGPT でできます。',
       substeps: [
-        '簡単家計簿で取引一覧をスクロールし、スマホでスクリーンショットを撮ります（移したい期間をカバーする 5〜10 枚が目安）。',
+        '元のアプリで取引一覧をスクロールし、スマホでスクリーンショットを撮ります（移したい期間をカバーする 5〜10 枚が目安）。',
         'ChatGPT を開き、すべてのスクショを一度にアップロードして、下のプロンプトを貼り付けます。',
         'ChatGPT が返した csv コードブロックをまるごとコピーし、テキストエディタで xxx.csv として保存します。',
         'ここに戻ってその csv をアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
@@ -2283,6 +2303,227 @@ I will upload the screenshots once you confirm.`,
           },
         ],
       },
+      // TODO(#839): ja copy below pending native review
+      'fortune-city': {
+        heroKicker: 'FORTUNE CITY → FUTARI',
+        heroTitle: '記帳城市のデータも、持っていけます',
+        heroSubtitle:
+          '記帳城市は家計簿をゲームにしたアプリ。その記録を Futari に移してふたりで記録するには、スクショ＋ChatGPT で CSV に整えればOK。',
+        differentiators: [
+          {
+            title: 'ふたりで一緒に、別々ではなく',
+            body: '記帳城市はひとりのまち。Futari は二人で共有する一つの家計簿で、共同の支出は一度記録すれば両方に見えます。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '記録を持ち出せる',
+            body: '離れるときは CSV で書き出し。データはふたりのもので、ひとつのまちに縛られません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: '記帳城市で移したい取引をスクリーンショット（下に詳しい手順）。',
+        step2: 'ChatGPT でスクショを CSV に整えます——下にコピーできるプロンプトがあります。',
+        step3: 'CSV をここにアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+        faq: [
+          {
+            question: '記帳城市に書き出し機能がなくても、本当に移せますか？',
+            answer:
+              'はい。取引画面をスクショして ChatGPT で CSV に整えてアップロードします。下に手順とコピーできるプロンプトがあり、無料版の ChatGPT でできます。',
+          },
+          {
+            question: 'スクショは何枚必要ですか？',
+            answer: '5〜10 枚が目安です。移したい期間をカバーするようスクロールしてください。同じ取引の重複は自動で取り除かれます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: 'ゲームの進行状況も一緒に移りますか？',
+            answer:
+              'いいえ。移るのは家計簿データ（日付・金額・カテゴリ）で、ゲームの進行は元のアプリに残ります。Futari は家計簿そのものに集中します。',
+          },
+        ],
+      },
+      cashman: {
+        heroKicker: 'CASHMAN → FUTARI',
+        heroTitle: 'CashMan のデータも、持っていけます',
+        heroSubtitle:
+          '長年使ってきた CashMan をふたりで記録するスタイルに変えたい？スクショ＋ChatGPT で記録を CSV に整えて Futari へ。',
+        differentiators: [
+          {
+            title: 'ふたり向けが標準',
+            body: 'CashMan は頼れるひとり向け家計簿。Futari は最初から二人で一つの家計簿を共有する設計で、両方に見えます。',
+          },
+          {
+            title: '按分は自動で計算',
+            body: '誰が払って、どう分けて、今どちらがいくら貸しているか。残高は自動で計算され、頭の中で覚える必要はありません。',
+          },
+          {
+            title: '同期され、いつでも持ち出せる',
+            body: '記録はクラウドにあるので機種変更でも消えません。離れるときは CSV で書き出し。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'CashMan で移したい取引をスクリーンショット（下に詳しい手順）。',
+        step2: 'ChatGPT でスクショを CSV に整えます——下にコピーできるプロンプトがあります。',
+        step3: 'CSV をここにアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+        faq: [
+          {
+            question: 'CashMan に書き出し機能がなくても、本当に移せますか？',
+            answer:
+              'はい。取引画面をスクショして ChatGPT で CSV に整えてアップロードします。下に手順とコピーできるプロンプトがあり、無料版の ChatGPT でできます。',
+          },
+          {
+            question: 'スクショは何枚必要ですか？',
+            answer: '5〜10 枚が目安です。移したい期間をカバーするようスクロールしてください。同じ取引の重複は自動で取り除かれます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '何年分もの記録もすべて移せますか？',
+            answer:
+              'はい。スクショがカバーする範囲はすべて CSV に整えられます。件数が多い場合は分けてスクショ・アップロードしてください。',
+          },
+        ],
+      },
+      '1money': {
+        heroKicker: '1MONEY → FUTARI',
+        heroTitle: '1Money のデータも、持っていけます',
+        heroSubtitle:
+          '1Money のシンプルさは好きだけど、ふたりで記録したい？スクショ＋ChatGPT で記録を CSV に整えて Futari へ。',
+        differentiators: [
+          {
+            title: 'ひとつの家計簿を、ふたりで',
+            body: '1Money は個人の記録が中心。Futari は二人で共有する一つの家計簿で、共同の支出は一度記録すれば両方に見えます。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '多通貨もすっきり',
+            body: '旅行や外貨の支出もきれいに記録でき、あとから見返しても分かりやすいままです。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: '1Money で移したい取引をスクリーンショット（下に詳しい手順）。',
+        step2: 'ChatGPT でスクショを CSV に整えます——下にコピーできるプロンプトがあります。',
+        step3: 'CSV をここにアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+        faq: [
+          {
+            question: '1Money に完全な書き出しがなくても、本当に移せますか？',
+            answer:
+              '完全な書き出しがなくても、取引をスクショして ChatGPT で CSV に整えれば移せます。下に手順とコピーできるプロンプトがあり、無料版の ChatGPT でできます。',
+          },
+          {
+            question: 'スクショは何枚必要ですか？',
+            answer: '5〜10 枚が目安です。移したい期間をカバーするようスクロールしてください。同じ取引の重複は自動で取り除かれます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '多通貨の記録はずれませんか？',
+            answer:
+              '通貨も一緒に CSV に整えられます。基軸通貨以外の行はまず元の数字で取り込まれ、換算は取り込み後に行ごとに調整できます。',
+          },
+        ],
+      },
+      icost: {
+        heroKicker: 'ICOST → FUTARI',
+        heroTitle: 'iCost のデータも、持っていけます',
+        heroSubtitle:
+          'iCost は iOS 限定。機種をまたいでふたりで記録したい？スクショ＋ChatGPT で記録を CSV に整えて Futari へ。',
+        differentiators: [
+          {
+            title: 'ふたりで、プラットフォームをまたいで',
+            body: 'iCost は iOS 限定。Futari は iOS／Android／Web で使えるので、相手がどの端末でも一緒に使えます。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: 'iCost で移したい取引をスクリーンショット（下に詳しい手順）。',
+        step2: 'ChatGPT でスクショを CSV に整えます——下にコピーできるプロンプトがあります。',
+        step3: 'CSV をここにアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+        faq: [
+          {
+            question: 'iCost に書き出し機能がなくても、本当に移せますか？',
+            answer:
+              'はい。取引画面をスクショして ChatGPT で CSV に整えてアップロードします。下に手順とコピーできるプロンプトがあり、無料版の ChatGPT でできます。',
+          },
+          {
+            question: 'スクショは何枚必要ですか？',
+            answer: '5〜10 枚が目安です。移したい期間をカバーするようスクロールしてください。同じ取引の重複は自動で取り除かれます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '相手が Android でも一緒に使えますか？',
+            answer:
+              'はい。Futari は iOS・Android・ブラウザで使えるクロスプラットフォームの PWA なので、別々の端末でも一つの家計簿を共有できます。',
+          },
+        ],
+      },
+      suishouji: {
+        heroKicker: 'SUISHOUJI → FUTARI',
+        heroTitle: '隨手記のデータも、持っていけます',
+        heroSubtitle:
+          '最初からふたり向けに設計された家計簿がほしい？スクショ＋ChatGPT で隨手記の記録を CSV に整えて Futari へ。',
+        differentiators: [
+          {
+            title: 'ふたりが標準——共有帳簿の設定不要',
+            body: '隨手記は別途の共有帳簿が必要。Futari は最初からふたりの家計簿なので、追加の設定はいりません。',
+          },
+          {
+            title: '按分と精算を内蔵',
+            body: '半分ずつ、比率で、それぞれ負担、片方がまとめて——選べば、どちらがいくら貸しているか自動で精算します。',
+          },
+          {
+            title: '無料・広告なし',
+            body: '基本の家計簿機能はずっと無料。広告もデータの売買もしません。',
+          },
+        ],
+        stepsHeading: '3 ステップ',
+        step1: '隨手記で移したい取引をスクリーンショット（下に詳しい手順）。',
+        step2: 'ChatGPT でスクショを CSV に整えます——下にコピーできるプロンプトがあります。',
+        step3: 'CSV をここにアップロードし、プレビューしてからアカウントを作成して取り込み完了。',
+        faq: [
+          {
+            question: '隨手記のデータはどう Futari に移しますか？',
+            answer:
+              '取引画面をスクショして ChatGPT で CSV に整えてアップロードします。下に手順とコピーできるプロンプトがあり、無料版の ChatGPT でできます。',
+          },
+          {
+            question: 'スクショは何枚必要ですか？',
+            answer: '5〜10 枚が目安です。移したい期間をカバーするようスクロールしてください。同じ取引の重複は自動で取り除かれます。',
+          },
+          {
+            question: '取り込みは有料ですか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '隨手記には共有帳簿がありますが、Futari も同じですか？',
+            answer:
+              'Futari は別の共有帳簿を作る必要がありません。最初からふたりの共同家計簿で、按分と精算も内蔵。ひとり向けアプリ＋共有機能との一番の違いです。',
+          },
+        ],
+      },
     },
   },
 
@@ -2346,6 +2587,31 @@ I will upload the screenshots once you confirm.`,
         title: '簡単家計簿から Futari へ｜スクショを CSV に',
         description: '簡単家計簿に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
         ogDescription: '簡単家計簿は書き出し非対応——スクショ→ChatGPT→CSV→Futari。',
+      },
+      'fortune-city': {
+        title: '記帳城市から Futari へ｜スクショを CSV に',
+        description: '記帳城市に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: '記帳城市は書き出し非対応——スクショ→ChatGPT→CSV→Futari。',
+      },
+      cashman: {
+        title: 'CashMan から Futari へ｜スクショを CSV に',
+        description: 'CashMan に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: 'CashMan は書き出し非対応——スクショ→ChatGPT→CSV→Futari。',
+      },
+      '1money': {
+        title: '1Money から Futari へ｜スクショを CSV に',
+        description: '1Money に完全な書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        ogDescription: '1Money からふたりの家計簿へ——スクショ→ChatGPT→CSV→Futari。',
+      },
+      icost: {
+        title: 'iCost から Futari へ｜スクショを CSV に',
+        description: 'iCost は iOS 限定で書き出しなし？スクショを ChatGPT で CSV に整え、クロスプラットフォームのふたり家計簿 Futari に取り込むだけ。無料・広告なし。',
+        ogDescription: 'iCost は iOS 限定——スクショ→ChatGPT→CSV→Futari、どの端末でも。',
+      },
+      suishouji: {
+        title: '隨手記から Futari へ｜スクショを CSV に',
+        description: '最初からふたり向けの家計簿がほしい？隨手記をスクショして ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし。',
+        ogDescription: '隨手記からふたりの家計簿へ——スクショ→ChatGPT→CSV→Futari。',
       },
     },
   },

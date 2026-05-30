@@ -9,6 +9,7 @@ import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateIntroCallout } from '../_components/MigrateIntroCallout'
 import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
+import { MigrateChatgptWorkflow } from '../_components/MigrateChatgptWorkflow'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
 import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
 import { MigrateHowToJsonLd } from '../_components/MigrateHowToJsonLd'
@@ -142,6 +143,10 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
         heading={page.stepsHeading}
         steps={[step1Content, step2Content, page.step3]}
       />
+
+      {def.screenshotWorkflow && (
+        <MigrateChatgptWorkflow copy={t.chatgptWorkflow} source={slug} />
+      )}
 
       <MigrateTool t={t} signInHref={signInHref} hint={slug} />
 

@@ -17,6 +17,10 @@ export type SourceDef = {
   name: string
   /** cwmoney only — renders a download link inside step 2 */
   templateDownload?: { href: string }
+  /** Non-CSV-export apps (#839 P2): renders the shared screenshot→ChatGPT→CSV
+   *  walkthrough (MigrateChatgptWorkflow) between the steps and the upload tool.
+   *  The uploaded file is the ChatGPT output, detected as `futari_generic`. */
+  screenshotWorkflow?: boolean
   comparison: { rows: ComparisonRow[] }
 }
 
@@ -116,6 +120,7 @@ export const MIGRATE_SOURCES = {
   'simple-daily-money': {
     slug: 'simple-daily-money',
     name: '簡單記帳',
+    screenshotWorkflow: true,
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
@@ -123,6 +128,76 @@ export const MIGRATE_SOURCES = {
         { feature: '雲端同步',     futari: { label: '✓ 即時',     tone: 'yes'     }, other: { label: '△ 視版本',   tone: 'partial' } },
         { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 含廣告',   tone: 'partial' } },
         { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '✕ 無匯出',   tone: 'no'      } },
+      ],
+    },
+  },
+  'fortune-city': {
+    slug: 'fortune-city',
+    name: '記帳城市',
+    screenshotWorkflow: true,
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
+        { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',       tone: 'no'      } },
+        { feature: '雲端同步',     futari: { label: '✓ 即時',     tone: 'yes'     }, other: { label: '△ 視帳號',   tone: 'partial' } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 含內購',   tone: 'partial' } },
+        { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '✕ 無匯出',   tone: 'no'      } },
+      ],
+    },
+  },
+  cashman: {
+    slug: 'cashman',
+    name: 'CashMan',
+    screenshotWorkflow: true,
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
+        { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',       tone: 'no'      } },
+        { feature: '雲端同步',     futari: { label: '✓ 即時',     tone: 'yes'     }, other: { label: '△ 本機為主', tone: 'partial' } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '✓ 免費',     tone: 'yes'     } },
+        { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '✕ 無匯出',   tone: 'no'      } },
+      ],
+    },
+  },
+  '1money': {
+    slug: '1money',
+    name: '1Money',
+    screenshotWorkflow: true,
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
+        { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',       tone: 'no'      } },
+        { feature: '多幣別記帳',   futari: { label: '✓ 支援',     tone: 'yes'     }, other: { label: '✓ 支援',     tone: 'yes'     } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 進階付費', tone: 'partial' } },
+        { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '△ 部分匯出', tone: 'partial' } },
+      ],
+    },
+  },
+  icost: {
+    slug: 'icost',
+    name: 'iCost',
+    screenshotWorkflow: true,
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式',        tone: 'yes'     }, other: { label: '✕ 單人設計',  tone: 'no'      } },
+        { feature: '費用分攤模式', futari: { label: '✓ 多種模式',        tone: 'yes'     }, other: { label: '✕ 無',        tone: 'no'      } },
+        { feature: '跨平台',       futari: { label: '✓ iOS／Android／Web', tone: 'yes'   }, other: { label: '△ iOS 限定',  tone: 'partial' } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',            tone: 'yes'     }, other: { label: '△ 含內購',    tone: 'partial' } },
+        { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出',        tone: 'yes'     }, other: { label: '✕ 無匯出',    tone: 'no'      } },
+      ],
+    },
+  },
+  suishouji: {
+    slug: 'suishouji',
+    name: '隨手記',
+    screenshotWorkflow: true,
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '△ 需設共享帳本', tone: 'partial' } },
+        { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',           tone: 'no'      } },
+        { feature: '多幣別記帳',   futari: { label: '✓ 支援',     tone: 'yes'     }, other: { label: '✓ 支援',         tone: 'yes'     } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 含廣告／會員', tone: 'partial' } },
+        { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '△ 需會員',       tone: 'partial' } },
       ],
     },
   },

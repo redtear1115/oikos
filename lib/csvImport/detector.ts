@@ -53,7 +53,18 @@ export function detectCsvSource(headers: readonly string[]): KnownCsvSource | nu
 }
 
 export function detectSource(headers: readonly string[]): DetectedSource {
-  return detectCsvSource(headers) ?? 'generic'
+  const known = detectCsvSource(headers)
+  if (known) return known
+  // futari_generic: the canonical CSV produced by the screenshot→ChatGPT→CSV
+  // workflow (#839 P2). `kind` (expense/income) is the distinctive column no
+  // other source ships, so its presence alongside date/category/amount is the
+  // signature. Routes the authenticated importer to `mapFutariGeneric` instead
+  // of falling through to the generic mapping wizard.
+  const lowered = headers.map((h) => h.trim().toLowerCase())
+  if (['date', 'category', 'amount', 'kind'].every((n) => lowered.includes(n))) {
+    return 'futari_generic'
+  }
+  return 'generic'
 }
 
 /**

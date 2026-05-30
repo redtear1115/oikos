@@ -2257,6 +2257,11 @@ export type Translations = {
         mobills: { name: string; description: string }
         manebo: { name: string; description: string }
         'simple-daily-money': { name: string; description: string }
+        'fortune-city': { name: string; description: string }
+        cashman: { name: string; description: string }
+        '1money': { name: string; description: string }
+        icost: { name: string; description: string }
+        suishouji: { name: string; description: string }
       }
     }
     /** Shared screenshot→ChatGPT→CSV walkthrough (#839 P2) — used by
@@ -4198,13 +4203,33 @@ export const zhTW: Translations = {
           name: '簡單記帳',
           description: '台灣常用的個人記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
         },
+        'fortune-city': {
+          name: '記帳城市',
+          description: '把記帳變成蓋城市的遊戲，截圖請 ChatGPT 整理成 CSV 帶過來。',
+        },
+        cashman: {
+          name: 'CashMan',
+          description: '老牌的台灣個人記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
+        },
+        '1money': {
+          name: '1Money',
+          description: '介面簡潔的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
+        },
+        icost: {
+          name: 'iCost',
+          description: 'iOS 上人氣的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
+        },
+        suishouji: {
+          name: '隨手記',
+          description: '兩岸用戶眾多的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
+        },
       },
     },
     chatgptWorkflow: {
       heading: '沒有 CSV 匯出？用截圖換',
-      intro: '簡單記帳沒有官方的 CSV 匯出，但你可以用截圖請 ChatGPT 幫你整理成 CSV，再上傳。免費版的 ChatGPT 就能做。',
+      intro: '如果原本的 App 沒有 CSV 匯出，可以用截圖請 ChatGPT 幫你整理成 CSV，再上傳。免費版的 ChatGPT 就能做。',
       substeps: [
-        '打開簡單記帳，把你想搬遷的交易截圖——往下捲動蓋過所有你要帶走的記錄。',
+        '打開原本的記帳 App，把你想搬遷的交易截圖——往下捲動蓋過所有你要帶走的記錄。',
         '複製下方的提示詞，貼進 ChatGPT，再把截圖一張一張上傳。',
         'ChatGPT 會輸出一個 CSV 程式碼區塊——把全部內容複製，貼進記事本，存成 .csv 檔。',
         '把 .csv 上傳到下方的匯入工具，預覽無誤後建立帳號完成匯入。',
@@ -4566,6 +4591,211 @@ export const zhTW: Translations = {
           },
         ],
       },
+      'fortune-city': {
+        heroKicker: 'FORTUNE CITY → FUTARI',
+        heroTitle: '你的記帳城市資料，可以帶走',
+        heroSubtitle: '記帳城市把記帳變成遊戲；想把記錄搬到 Futari 和伴侶一起記？用截圖請 ChatGPT 整理成 CSV 就行。',
+        differentiators: [
+          {
+            title: '兩個人一起記，不是各記各的',
+            body: '記帳城市是一個人的城市；Futari 是兩個人共用一本帳，每筆共同支出記一次，兩邊都看得到。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+          },
+          {
+            title: '把記錄帶著走',
+            body: '想離開時 CSV 匯出，資料是你們的，不會被鎖在某一座城市裡。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在記帳城市把要搬的交易截圖（下方有完整做法）。',
+        step2: '用 ChatGPT 把截圖整理成 CSV——下方有可直接複製的提示詞。',
+        step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
+        faq: [
+          {
+            question: '記帳城市沒有匯出功能，資料真的搬得過來嗎？',
+            answer: '可以。把交易畫面截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截幾張圖？',
+            answer: '建議 5–10 張，往下捲動蓋過你想搬的時間範圍即可。重複出現的同一筆會自動去掉。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '記帳城市的遊戲進度會一起搬嗎？',
+            answer: '不會，搬過來的是你的記帳資料（日期、金額、分類）；遊戲進度留在原 App，Futari 專注在兩個人的帳本本身。',
+          },
+        ],
+      },
+      cashman: {
+        heroKicker: 'CASHMAN → FUTARI',
+        heroTitle: '你的 CashMan 資料，可以帶走',
+        heroSubtitle: '用了很久的 CashMan，想換成兩個人一起記？用截圖請 ChatGPT 整理成 CSV，就能把記錄搬到 Futari。',
+        differentiators: [
+          {
+            title: '雙人帳本是預設',
+            body: 'CashMan 是單人記帳的老幫手；Futari 一開始就為兩個人共用一本帳設計，記錄彼此都看得到。',
+          },
+          {
+            title: '分攤算給你看',
+            body: '誰付的、怎麼分、現在誰欠誰，餘額自動算清楚，不用自己記。',
+          },
+          {
+            title: '雲端同步、隨時帶走',
+            body: '記錄存在雲端，換手機不怕不見；想離開時 CSV 匯出，資料是你們的。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 CashMan 把要搬的交易截圖（下方有完整做法）。',
+        step2: '用 ChatGPT 把截圖整理成 CSV——下方有可直接複製的提示詞。',
+        step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
+        faq: [
+          {
+            question: 'CashMan 沒有匯出功能，資料真的搬得過來嗎？',
+            answer: '可以。把交易畫面截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截幾張圖？',
+            answer: '建議 5–10 張，往下捲動蓋過你想搬的時間範圍即可。重複出現的同一筆會自動去掉。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '用很久了，幾年的記錄都能搬嗎？',
+            answer: '可以，只要截圖蓋到的範圍都能整理成 CSV；筆數多的話分批截圖、分批上傳即可。',
+          },
+        ],
+      },
+      '1money': {
+        heroKicker: '1MONEY → FUTARI',
+        heroTitle: '你的 1Money 資料，可以帶走',
+        heroSubtitle: '喜歡 1Money 的簡潔，但想兩個人一起記？用截圖請 ChatGPT 整理成 CSV，就能搬到 Futari。',
+        differentiators: [
+          {
+            title: '兩個人共用一本帳',
+            body: '1Money 以個人記帳為主；Futari 是兩個人共用的一本帳，共同支出記一次，兩邊都看得到。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+          },
+          {
+            title: '多幣別也記得清楚',
+            body: '出國或跨幣別的支出照樣記，回頭看帳目一樣清楚。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 1Money 把要搬的交易截圖（下方有完整做法）。',
+        step2: '用 ChatGPT 把截圖整理成 CSV——下方有可直接複製的提示詞。',
+        step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
+        faq: [
+          {
+            question: '1Money 沒有完整匯出，資料真的搬得過來嗎？',
+            answer: '即使沒有完整匯出，把交易截圖請 ChatGPT 整理成 CSV 一樣能搬——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截幾張圖？',
+            answer: '建議 5–10 張，往下捲動蓋過你想搬的時間範圍即可。重複出現的同一筆會自動去掉。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '多幣別的記錄會跑掉嗎？',
+            answer: '幣別會一起整理進 CSV；非台幣的會照原數字先匯入，換算可以在匯入後逐筆調整。',
+          },
+        ],
+      },
+      icost: {
+        heroKicker: 'ICOST → FUTARI',
+        heroTitle: '你的 iCost 資料，可以帶走',
+        heroSubtitle: 'iCost 只有 iOS，想兩個人跨平台一起記？用截圖請 ChatGPT 整理成 CSV，就能搬到 Futari。',
+        differentiators: [
+          {
+            title: '兩個人、跨平台一起記',
+            body: 'iCost 限 iOS；Futari 是 iOS／Android／Web 都能用的雙人帳本，另一半用什麼手機都行。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 iCost 把要搬的交易截圖（下方有完整做法）。',
+        step2: '用 ChatGPT 把截圖整理成 CSV——下方有可直接複製的提示詞。',
+        step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
+        faq: [
+          {
+            question: 'iCost 沒有匯出功能，資料真的搬得過來嗎？',
+            answer: '可以。把交易畫面截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截幾張圖？',
+            answer: '建議 5–10 張，往下捲動蓋過你想搬的時間範圍即可。重複出現的同一筆會自動去掉。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '另一半用 Android，也能一起用嗎？',
+            answer: '可以。Futari 是跨平台的 PWA，iOS、Android、瀏覽器都能開，兩個人用不同手機也能共用同一本帳。',
+          },
+        ],
+      },
+      suishouji: {
+        heroKicker: 'SUISHOUJI → FUTARI',
+        heroTitle: '你的隨手記資料，可以帶走',
+        heroSubtitle: '隨手記用戶很多；想要一個一開始就為兩個人設計的帳本？用截圖請 ChatGPT 整理成 CSV，就能搬到 Futari。',
+        differentiators: [
+          {
+            title: '雙人是預設，不用另設共享',
+            body: '隨手記要另外開共享帳本；Futari 進來就是兩個人的帳，不必額外設定。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在隨手記把要搬的交易截圖（下方有完整做法）。',
+        step2: '用 ChatGPT 把截圖整理成 CSV——下方有可直接複製的提示詞。',
+        step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
+        faq: [
+          {
+            question: '隨手記的資料怎麼搬到 Futari？',
+            answer: '把交易畫面截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截幾張圖？',
+            answer: '建議 5–10 張，往下捲動蓋過你想搬的時間範圍即可。重複出現的同一筆會自動去掉。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '隨手記有共享帳本，跟 Futari 一樣嗎？',
+            answer: 'Futari 不需要另外開共享——進來就是兩個人的共同帳，還內建分攤與結算，這是它和單人 App 加共享功能最不一樣的地方。',
+          },
+        ],
+      },
     },
   },
 
@@ -4628,6 +4858,31 @@ export const zhTW: Translations = {
         title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
         description: '簡單記帳沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+      'fortune-city': {
+        title: '從記帳城市搬家到 Futari｜截圖轉 CSV',
+        description: '記帳城市沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: '記帳城市用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+      cashman: {
+        title: '從 CashMan 搬家到 Futari｜截圖轉 CSV',
+        description: 'CashMan 沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: 'CashMan 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+      '1money': {
+        title: '從 1Money 搬家到 Futari｜截圖轉 CSV',
+        description: '1Money 沒有完整匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: '1Money 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+      icost: {
+        title: '從 iCost 搬家到 Futari｜截圖轉 CSV',
+        description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: 'iCost 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+      suishouji: {
+        title: '從隨手記搬家到 Futari｜截圖轉 CSV',
+        description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: '隨手記用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
     },
   },
