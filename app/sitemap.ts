@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES } from '@/lib/migrate/sources'
+import { USE_CASE_SLUGS } from '@/lib/use-case/cases'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -24,6 +25,13 @@ const PATHS = [
     path: `/migrate/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
+    lastModified: '2026-05-30',
+  })),
+  // use-case pages — auto-derived from USE_CASE_SLUGS (#851)
+  ...USE_CASE_SLUGS.map((slug) => ({
+    path: `/use-case/${slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
     lastModified: '2026-05-30',
   })),
   // Legal pages

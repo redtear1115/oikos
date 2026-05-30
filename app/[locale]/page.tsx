@@ -106,6 +106,11 @@ export default async function RootPage({ params }: { params: Params }) {
         t={t.landing}
         ctaHref={ctaHref}
         signInHref={localizedHref('/sign-in', locale)}
+        useCaseHrefs={{
+          cohabitation: localizedHref('/use-case/cohabitation', locale),
+          newlyweds: localizedHref('/use-case/newlyweds', locale),
+          petOwners: localizedHref('/use-case/pet-owners', locale),
+        }}
         migrateHrefs={{
           honeydue: localizedHref('/migrate/honeydue', locale),
           spendee: localizedHref('/migrate/spendee', locale),

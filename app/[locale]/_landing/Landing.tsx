@@ -21,6 +21,13 @@ type Props = {
   ctaHref: string
   /** 「已有帳號」次要 link — 永遠指 sign-in（locale-aware）。 */
   signInHref: string
+  /** Locale-aware /use-case/* hrefs (#851). Three internal links to
+   *  situational SEO landing pages for long-tail keyword traffic. */
+  useCaseHrefs: {
+    cohabitation: string
+    newlyweds: string
+    petOwners: string
+  }
   /** Locale-aware /migrate/* hrefs (#613). Three internal links to strengthen
    *  the link graph for SEO and offer cross-tool migrants a direct path. */
   migrateHrefs: {
@@ -44,7 +51,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, languageSwitcher }: Props) {
+export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -321,6 +328,10 @@ export function Landing({ t, ctaHref, signInHref, migrateHrefs, legalLinks, lang
           and Footer so it lands in the user's decision moment. */}
       <TrustSection t={t} variant="full" />
 
+      {/* USE CASE — three situational /use-case/* links (#851). Strengthens
+          long-tail keyword SEO with intent-driven internal links. */}
+      <UseCaseLinksSection t={t} useCaseHrefs={useCaseHrefs} />
+
       {/* MIGRATE — three locale-aware /migrate/* links (#613). Strengthens the
           internal link graph for SEO and gives visitors arriving from another
           tool a direct next step. */}
@@ -445,6 +456,111 @@ function MigrateLinksSection({
               ctaLocation="footer_migrate"
               target={item.target}
               ariaLabel={t.migrateSection.cardAriaLabel.replace('{source}', item.source)}
+              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--hairline)',
+                color: 'var(--ink)',
+                textDecoration: 'none',
+              }}
+            >
+              <p
+                className="m-0 text-body md:text-[16px] font-medium"
+                style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
+              >
+                {item.title}
+              </p>
+              <p
+                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                style={{ color: 'var(--ink-2)' }}
+              >
+                {item.body}
+              </p>
+            </LandingCtaLink>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function UseCaseLinksSection({
+  t,
+  useCaseHrefs,
+}: {
+  t: LandingStrings
+  useCaseHrefs: Props['useCaseHrefs']
+}) {
+  const items: Array<{ href: string; slug: string; target: 'use_case_cohabitation' | 'use_case_newlyweds' | 'use_case_pet_owners'; title: string; body: string }> = [
+    {
+      href: useCaseHrefs.cohabitation,
+      slug: 'cohabitation',
+      target: 'use_case_cohabitation',
+      title: t.useCaseSection.cohabitationTitle,
+      body: t.useCaseSection.cohabitationBody,
+    },
+    {
+      href: useCaseHrefs.newlyweds,
+      slug: 'newlyweds',
+      target: 'use_case_newlyweds',
+      title: t.useCaseSection.newlywedsTitle,
+      body: t.useCaseSection.newlywedsBody,
+    },
+    {
+      href: useCaseHrefs.petOwners,
+      slug: 'pet-owners',
+      target: 'use_case_pet_owners',
+      title: t.useCaseSection.petOwnersTitle,
+      body: t.useCaseSection.petOwnersBody,
+    },
+  ]
+
+  return (
+    <section
+      className="relative z-10 px-5 md:px-16 py-12 md:py-16"
+      style={{ background: 'var(--bg)' }}
+    >
+      <div className="max-w-md md:max-w-[1080px] mx-auto">
+        <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
+          <div>
+            <p
+              className="m-0"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontSize: 12,
+                letterSpacing: '3.5px',
+                color: 'var(--ink-2)',
+              }}
+            >
+              {t.useCaseSection.kicker}
+            </p>
+            <h2
+              className="m-0 mt-1.5 text-[20px] md:text-[28px]"
+              style={{
+                fontFamily: 'var(--font-fraunces)',
+                fontWeight: 500,
+                letterSpacing: '-0.3px',
+              }}
+            >
+              {t.useCaseSection.title}
+            </h2>
+          </div>
+          <p
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
+            style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
+          >
+            {t.useCaseSection.subtitle}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          {items.map((item) => (
+            <LandingCtaLink
+              key={item.slug}
+              href={item.href}
+              ctaLocation="footer_use_case"
+              target={item.target}
+              ariaLabel={t.useCaseSection.cardAriaLabel.replace('{slug}', item.slug)}
               className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
               style={{
                 background: 'var(--surface)',

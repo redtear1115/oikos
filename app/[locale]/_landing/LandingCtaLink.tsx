@@ -10,11 +10,14 @@ type Target =
   | 'migrate_honeydue'
   | 'migrate_spendee'
   | 'migrate_cwmoney'
+  | 'use_case_cohabitation'
+  | 'use_case_newlyweds'
+  | 'use_case_pet_owners'
 
 interface Props {
   href: string
   /** Where on the page this CTA sits — for breakdown. */
-  ctaLocation: 'hero' | 'desktop_header' | 'secondary' | 'footer_migrate'
+  ctaLocation: 'hero' | 'desktop_header' | 'secondary' | 'footer_migrate' | 'footer_use_case'
   target: Target
   className?: string
   style?: CSSProperties
