@@ -109,4 +109,25 @@ describe('processBuffer — auto-detect routing', () => {
     expect(out.source).toBe('spendee')
     expect(out.rows[0]!.originalCurrency).toBe('TWD')
   })
+
+  it('routes the screenshot→ChatGPT→CSV output through the futari_generic mapper (#839 P2)', () => {
+    const csv = [
+      'date,category,amount,description,currency,kind',
+      '2026-05-30,飲食,150,星巴克,TWD,expense',
+      '2026-05-30,薪水,50000,五月,TWD,income',
+      '2026-05-28,交通,1200,東京地鐵,JPY,expense',
+    ].join('\n')
+    const out = processBuffer(bytes(csv))
+    expect(out.source).toBe('futari_generic')
+    expect(out.rows).toHaveLength(3)
+    expect(out.stats.invalid).toBe(0)
+    // kind drives type; categories map to Futari ids.
+    expect(out.rows[0]!.type).toBe('expense')
+    expect(out.rows[0]!.category).toBe('dining')
+    expect(out.rows[1]!.type).toBe('income')
+    // TWD is base — no tuple; JPY is captured for the import to surface.
+    expect(out.rows[0]!.originalCurrency).toBeUndefined()
+    expect(out.rows[2]!.originalCurrency).toBe('JPY')
+    expect(out.rows[2]!.originalAmount).toBe(1200)
+  })
 })

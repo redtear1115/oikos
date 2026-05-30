@@ -1836,6 +1836,8 @@ export const zhCN: Translations = {
       andromoney: 'AndroMoney',
       mobills: 'Mobills',
       manebo: 'Manebo',
+      futari_generic: 'Futari CSV',
+      'simple-daily-money': '简单记账',
       unknown: '其他',
     },
     differentiatorsHeading: '为什么选 Futari',
@@ -1891,7 +1893,42 @@ export const zhCN: Translations = {
           name: 'Manebo',
           description: '台湾热门的情侣记账 App，导出 CSV 带过来。',
         },
+        'simple-daily-money': {
+          name: '简单记账',
+          description: '台湾高人气的免费记账 App；用截图换成 CSV 带过来。',
+        },
       },
+    },
+    chatgptWorkflow: {
+      heading: '没有 CSV 导出？用截图换',
+      intro: '简单记账没有官方的 CSV 导出，但你可以用截图请 ChatGPT 帮你整理成 CSV，再上传。免费版的 ChatGPT 就能做。',
+      substeps: [
+        '在简单记账把交易列表往下滚，用手机截图（建议 5–10 张，盖过你想搬的时间范围）。',
+        '打开 ChatGPT，把所有截图一次上传，贴上下面这段提示词。',
+        '把 ChatGPT 返回的 csv 代码块整段复制，贴到纯文本编辑器存成 xxx.csv。',
+        '回到这里上传那个 csv，预览后建立账号完成导入。',
+      ],
+      promptLabel: '贴给 ChatGPT 的提示词',
+      prompt: `你是我的记账数据整理助手。我会上传一个记账 App 的截图，请帮我把上面的每一笔交易整理成 CSV 格式。
+
+要求：
+- CSV 第一行为 header：date,category,amount,description,currency,kind
+- date 用 YYYY-MM-DD；如果截图只显示月/日（例如 5/30），假设年份为当年
+- amount 用正整数（不要负号、不要小数）；如果原本显示为支出或红字／负号，kind 填 "expense"；如果是收入或绿字，kind 填 "income"
+- category 保留原始截图上的分类文字（中文／英文都原样）
+- description 保留商家名或备注栏文字；如果没有，留空白
+- currency 用 ISO 4217 三位代码（TWD／USD／JPY／CNY⋯）；如果截图没写，默认 TWD
+- 同一笔交易（相同日期＋金额＋描述）若在多张截图重复出现，只保留一笔
+- 输出时，只在一个 \`\`\`csv 代码块内输出 CSV 内容，前后不要加任何说明文字
+
+确认后我会上传截图。`,
+      copy: '复制提示词',
+      copied: '已复制',
+      formatLabel: 'CSV 会长这样',
+      formatExample: `date,category,amount,description,currency,kind
+2026-05-30,饮食,150,星巴克,TWD,expense
+2026-05-30,工资,50000,五月,TWD,income`,
+      note: 'currency 不是 TWD 的会照原数字先导入，换算可以在导入后逐笔调整。重复出现的同一笔（相同日期＋金额＋描述）会自动去掉。',
     },
     pages: {
       honeydue: {
@@ -2397,6 +2434,77 @@ export const zhCN: Translations = {
           ],
         },
       },
+      'simple-daily-money': {
+        heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
+        heroTitle: '你的简单记账数据，可以带走',
+        heroSubtitle: '简单记账没有 CSV 导出，但用截图请 ChatGPT 整理成 CSV，一样能把记录搬到 Futari，和伴侣一起接着写。',
+        differentiators: [
+          {
+            title: '两个人一起记，不是各记各的',
+            body: '简单记账很适合一个人快速记；Futari 则是两个人共用一本账，每笔共同支出记一次，两边都看得到。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+          },
+          {
+            title: '云端同步、随时带走',
+            body: '记录存在云端，换手机不怕不见；想离开时 CSV 导出，数据是你们的。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在简单记账把要搬的交易截图（下方有完整做法）。',
+        step2: '用 ChatGPT 把截图整理成 CSV——下方有可直接复制的提示词。',
+        step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
+        faq: [
+          {
+            question: '简单记账没有导出功能，数据真的搬得过来吗？',
+            answer: '可以。用截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+          },
+          {
+            question: '要截几张图？',
+            answer: '建议 5–10 张，往下滚动盖过你想搬的时间范围即可。同一笔重复出现的会自动去掉。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: 'ChatGPT 整理的分类会不会跑掉？',
+            answer: '分类文字会原样保留，上传后先预览，正式导入时可以对照调整成 Futari 的分类。',
+          },
+        ],
+        comparison: {
+          otherLabel: '简单记账',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 默认模式', tone: 'yes' },
+              other: { label: '✕ 单人设计', tone: 'no' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: '云端同步',
+              futari: { label: '✓ 即时', tone: 'yes' },
+              other: { label: '△ 视版本', tone: 'partial' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 含广告', tone: 'partial' },
+            },
+            {
+              feature: '数据导出带走',
+              futari: { label: '✓ CSV 导出', tone: 'yes' },
+              other: { label: '✕ 无导出', tone: 'no' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2454,6 +2562,11 @@ export const zhCN: Translations = {
         title: '从 Manebo 搬家到 Futari｜情侣共同记账',
         description: 'Manebo 用户的双人记账新选择。把 Manebo 的 CSV 导入 Futari——这个专为情侣、夫妻设计的共同账本，内建分摊结算、免费无广告，和对方一起接着记。',
         ogDescription: 'Manebo 用户的下一站：导出 CSV，搬进 Futari 情侣共同记账。',
+      },
+      'simple-daily-money': {
+        title: '从简单记账搬家到 Futari｜截图转 CSV',
+        description: '简单记账没有 CSV 导出？用截图请 ChatGPT 整理成 CSV，再上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
     },
   },
