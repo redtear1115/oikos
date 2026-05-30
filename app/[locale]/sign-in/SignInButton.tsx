@@ -46,14 +46,19 @@ export function SignInButton({ label }: { label: string }) {
 
       await Browser.open({ url: data.url })
 
-      // Listen for the deep link coming back into the app
-      App.addListener('appUrlOpen', async ({ url }) => {
+      // Listen for the deep link coming back into the app.
+      // Store the handle so we can remove the listener after it fires once —
+      // without this, every sign-in attempt accumulates a new listener.
+      const listener = await App.addListener('appUrlOpen', async ({ url }) => {
         if (!url.startsWith(`${CAPACITOR_SCHEME}://`)) return
+        await listener.remove()
         await Browser.close()
-        // Exchange the code in the callback URL for a session
-        const callbackUrl = url.replace(`${CAPACITOR_SCHEME}://login-callback`, '/auth/callback')
+        // Strip the custom scheme prefix, leaving /auth/callback?…&code=XXXX.
+        // buildAuthCallbackUrl already appended /auth/callback to the scheme
+        // origin, so we only strip the scheme+host portion here — NOT replace
+        // it with /auth/callback again (that would double the path).
+        const callbackUrl = url.replace(`${CAPACITOR_SCHEME}://login-callback`, '')
         const fullUrl = `https://futari.southern-light.dev${callbackUrl}`
-        // Navigate the WebView to the auth callback handler
         window.location.href = fullUrl
       })
     } else {
