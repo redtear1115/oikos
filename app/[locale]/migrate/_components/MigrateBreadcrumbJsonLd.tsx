@@ -3,12 +3,15 @@ import { localizedHref } from '@/lib/i18n/path'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-type Source = 'honeydue' | 'spendee' | 'cwmoney'
+type Source = 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills'
 
 const SOURCE_NAMES: Record<Source, string> = {
   honeydue: 'Honeydue',
   spendee: 'Spendee',
   cwmoney: 'CWMoney',
+  moneybook: 'Moneybook',
+  andromoney: 'AndroMoney',
+  mobills: 'Mobills',
 }
 
 /**

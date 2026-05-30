@@ -14,7 +14,15 @@
  */
 
 export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
-export type MigrateSource = KnownCsvSource | 'unknown'
+/**
+ * Slugs that exist as /migrate landing pages but have no header-sniff
+ * signature or dedicated mapper yet (#839 P1). The anonymous preview falls
+ * back to the page hint to label them; the authenticated importer handles
+ * their CSVs via the generic mapping wizard. Deliberately *not* part of
+ * `KnownCsvSource` — that union is the detector + mapper contract.
+ */
+export type MigratePageOnlySource = 'moneybook' | 'andromoney' | 'mobills'
+export type MigrateSource = KnownCsvSource | MigratePageOnlySource | 'unknown'
 export type DetectedSource = KnownCsvSource | 'generic' | 'ofx' | 'qif'
 
 /**

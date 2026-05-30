@@ -1832,6 +1832,9 @@ export const zhCN: Translations = {
       honeydue: 'Honeydue',
       spendee: 'Spendee',
       cwmoney: 'CWMoney',
+      moneybook: 'Moneybook',
+      andromoney: 'AndroMoney',
+      mobills: 'Mobills',
       unknown: '其他',
     },
     differentiatorsHeading: '为什么选 Futari',
@@ -1870,6 +1873,18 @@ export const zhCN: Translations = {
         cwmoney: {
           name: 'CWMoney',
           description: '常见的单人记账工具，用模板转成 CSV 即可。',
+        },
+        moneybook: {
+          name: '麻布记账',
+          description: '台湾的自动同步记账 App，导出 CSV 带过来。',
+        },
+        andromoney: {
+          name: 'AndroMoney',
+          description: '老牌的单人记账 App，导出 CSV 带过来。',
+        },
+        mobills: {
+          name: 'Mobills',
+          description: '国际个人理财 App，导出 CSV 带过来。',
         },
       },
     },
@@ -2093,6 +2108,219 @@ export const zhCN: Translations = {
           ],
         },
       },
+      moneybook: {
+        heroKicker: 'MONEYBOOK → FUTARI',
+        heroTitle: '你的麻布记账数据，可以带走',
+        heroSubtitle: '从麻布记账搬到 Futari：导出交易明细 CSV，上传预览后，和伴侣一起把这些记录接着写下去。',
+        differentiators: [
+          {
+            title: '两个人的账，不是一个人的工具',
+            body: '麻布记账是为个人对账设计的；Futari 从第一天就假设使用者是两个人，共同的账一起记、一起看。',
+          },
+          {
+            title: '分摊算给你看',
+            body: '谁付的、怎么分、现在谁欠谁，余额自动算清楚，不用自己在心里记。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在麻布记账导出交易明细，下载 CSV 文件。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '建立 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: '麻布记账的字段和 Futari 一样吗？',
+            answer: '不完全一样。上传后会先预览解析结果，正式导入时可以对照调整分类与字段，不会直接写进账本。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。格式特殊或无法识别的行会标记出来，供你确认。',
+          },
+          {
+            question: '麻布记账会自动同步银行，Futari 也会吗？',
+            answer: 'Futari 目前以手动记账为主，专注在两个人一起记下每笔共同支出；自动同步银行不在现阶段范围。',
+          },
+        ],
+        comparison: {
+          otherLabel: '麻布记账',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 默认模式', tone: 'yes' },
+              other: { label: '✕ 单人设计', tone: 'no' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: 'CSV 数据导入',
+              futari: { label: '✓ 直接上传', tone: 'yes' },
+              other: { label: '✓ 可导出', tone: 'yes' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 部分功能付费', tone: 'partial' },
+            },
+            {
+              feature: '端到端数据加密',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '未说明', tone: 'no' },
+            },
+          ],
+        },
+      },
+      andromoney: {
+        heroKicker: 'ANDROMONEY → FUTARI',
+        heroTitle: '你的 AndroMoney 数据，可以带走',
+        heroSubtitle: '从 AndroMoney 搬到 Futari：导出 CSV，上传预览后，把多年的记账和伴侣一起接着写。',
+        differentiators: [
+          {
+            title: '双人账本是默认',
+            body: 'AndroMoney 是单人记账的好手；Futari 则是为两个人共用一本账设计，记录彼此都看得到。',
+          },
+          {
+            title: '即时同步',
+            body: '一个人记下，另一个人马上看见，不用互传截图或文件对账。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或数据变现。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 AndroMoney → 设置 → 导出，把数据输出成 CSV。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '建立 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: '导入后数据需要再整理吗？',
+            answer: '类别可在导入流程中对照调整，一次完成，不需要事后手动修改。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。特殊类型（如转账）会标记供你确认。',
+          },
+          {
+            question: 'AndroMoney 的多账户，Futari 有对应吗？',
+            answer: 'Futari 是一本共同账本，专注在两个人的共同收支；不分多账户，而是用分摊模式记下每笔是谁付、怎么分。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'AndroMoney',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 默认模式', tone: 'yes' },
+              other: { label: '✕ 单人设计', tone: 'no' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: '即时云端同步',
+              futari: { label: '✓ 即时', tone: 'yes' },
+              other: { label: '△ 需手动备份', tone: 'partial' },
+            },
+            {
+              feature: '多币别记账',
+              futari: { label: '✓ 支持', tone: 'yes' },
+              other: { label: '✓ 支持', tone: 'yes' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 含广告／付费版', tone: 'partial' },
+            },
+          ],
+        },
+      },
+      mobills: {
+        heroKicker: 'MOBILLS → FUTARI',
+        heroTitle: '你的 Mobills 数据，可以带走',
+        heroSubtitle: '从 Mobills 搬到 Futari：导出 CSV，上传预览后，和伴侣一起把记录接着写下去。',
+        differentiators: [
+          {
+            title: '双人共用，不是各记各的',
+            body: 'Mobills 以个人理财为主；Futari 是两个人共用的一本账，共同支出记一次，两边都看得到。',
+          },
+          {
+            title: '分摊与结算内建',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+          },
+          {
+            title: '免费、无广告',
+            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 Mobills 导出交易记录，下载 CSV 文件。',
+        step2: '把 CSV 上传到这里，预览你的记账历史。',
+        step3: '建立 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: '导入后数据需要再整理吗？',
+            answer: '类别可在导入流程中对照调整，一次完成，不需要事后手动修改。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '原本的记账记录能全部带过来吗？',
+            answer: '支持 CSV 格式导入，大部分记录都能转移。特殊类型（如转账）会标记供你确认。',
+          },
+          {
+            question: 'Mobills 有预算功能，Futari 有吗？',
+            answer: 'Futari 不做预算上限，也不会提醒你超支——它记下你们花过的钱，呈现结果，但不替你们打分数。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Mobills',
+          rows: [
+            {
+              feature: '双人共同账本',
+              futari: { label: '✓ 默认模式', tone: 'yes' },
+              other: { label: '✕ 单人设计', tone: 'no' },
+            },
+            {
+              feature: '费用分摊模式',
+              futari: { label: '✓ 多种模式', tone: 'yes' },
+              other: { label: '✕ 无', tone: 'no' },
+            },
+            {
+              feature: '界面语言',
+              futari: { label: '✓ 中英日四语', tone: 'yes' },
+              other: { label: '△ 以英文为主', tone: 'partial' },
+            },
+            {
+              feature: '完全免费',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 进阶需订阅', tone: 'partial' },
+            },
+            {
+              feature: 'CSV 数据导入',
+              futari: { label: '✓ 直接上传', tone: 'yes' },
+              other: { label: '✓ 可导出', tone: 'yes' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -2130,6 +2358,21 @@ export const zhCN: Translations = {
         title: '从 CWMoney 搬家到 Futari｜Excel 导入',
         description: 'CWMoney 数据导出后怎么导入新工具？用我们提供的 Excel 转换模板整理成 CSV，再上传到 Futari 这个专为夫妻、情侣设计的共同账本，完成搬家。',
         ogDescription: 'CWMoney 用户搬家指南：Excel 转 CSV，搬进 Futari 双人记账。',
+      },
+      moneybook: {
+        title: '从麻布记账搬家到 Futari｜CSV 导入',
+        description: '麻布记账数据怎么搬到双人账本？把交易明细导出成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        ogDescription: '麻布记账用户的双人记账新选择：导出 CSV，搬进 Futari。',
+      },
+      andromoney: {
+        title: '从 AndroMoney 搬家到 Futari｜CSV 导入',
+        description: 'AndroMoney 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
+        ogDescription: 'AndroMoney 用户的双人记账新选择：导出 CSV，搬进 Futari。',
+      },
+      mobills: {
+        title: '从 Mobills 搬家到 Futari｜CSV 导入',
+        description: 'Mobills 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
+        ogDescription: 'Mobills 用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
     },
   },

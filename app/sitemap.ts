@@ -22,6 +22,9 @@ const PATHS = [
   { path: '/migrate/honeydue', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
   { path: '/migrate/spendee', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
   { path: '/migrate/cwmoney', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-20' },
+  { path: '/migrate/moneybook', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-30' },
+  { path: '/migrate/andromoney', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-30' },
+  { path: '/migrate/mobills', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-05-30' },
   // Legal pages
   { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },
   { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },

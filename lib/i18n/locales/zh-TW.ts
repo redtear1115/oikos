@@ -35,6 +35,31 @@ export type MigrateComparisonCopy = {
   ]
 }
 
+/** Base copy shape for the Taiwan P1 migrate pages (#839): hero + 3-step
+ *  walkthrough + 4-question FAQ + comparison, with no per-source extras
+ *  (unlike honeydue.intro / spendee.formatHint* / cwmoney.template*). */
+export type MigrateBasePageCopy = {
+  heroKicker: string
+  heroTitle: string
+  heroSubtitle: string
+  differentiators: readonly [
+    { title: string; body: string },
+    { title: string; body: string },
+    { title: string; body: string },
+  ]
+  stepsHeading: string
+  step1: string
+  step2: string
+  step3: string
+  faq: readonly [
+    { question: string; answer: string },
+    { question: string; answer: string },
+    { question: string; answer: string },
+    { question: string; answer: string },
+  ]
+  comparison: MigrateComparisonCopy
+}
+
 export type Translations = {
   signIn: {
     tagline: string
@@ -2220,6 +2245,9 @@ export type Translations = {
       honeydue: string
       spendee: string
       cwmoney: string
+      moneybook: string
+      andromoney: string
+      mobills: string
       /** Fallback shown when header sniffer + page hint both fail. */
       unknown: string
     }
@@ -2256,6 +2284,9 @@ export type Translations = {
         honeydue: { name: string; description: string }
         spendee: { name: string; description: string }
         cwmoney: { name: string; description: string }
+        moneybook: { name: string; description: string }
+        andromoney: { name: string; description: string }
+        mobills: { name: string; description: string }
       }
     }
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
@@ -2344,6 +2375,9 @@ export type Translations = {
         ]
         comparison: MigrateComparisonCopy
       }
+      moneybook: MigrateBasePageCopy
+      andromoney: MigrateBasePageCopy
+      mobills: MigrateBasePageCopy
     }
   }
 
@@ -2381,6 +2415,21 @@ export type Translations = {
         ogDescription: string
       }
       cwmoney: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      moneybook: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      andromoney: {
+        title: string
+        description: string
+        ogDescription: string
+      }
+      mobills: {
         title: string
         description: string
         ogDescription: string
@@ -4221,6 +4270,9 @@ export const zhTW: Translations = {
       honeydue: 'Honeydue',
       spendee: 'Spendee',
       cwmoney: 'CWMoney',
+      moneybook: 'Moneybook',
+      andromoney: 'AndroMoney',
+      mobills: 'Mobills',
       unknown: '其他',
     },
     differentiatorsHeading: '為什麼選 Futari',
@@ -4259,6 +4311,18 @@ export const zhTW: Translations = {
         cwmoney: {
           name: 'CWMoney',
           description: '台灣常見的單人記帳工具，用模板轉成 CSV 即可。',
+        },
+        moneybook: {
+          name: '麻布記帳',
+          description: '台灣的自動同步記帳 App，匯出 CSV 帶過來。',
+        },
+        andromoney: {
+          name: 'AndroMoney',
+          description: '老牌的單人記帳 App，匯出 CSV 帶過來。',
+        },
+        mobills: {
+          name: 'Mobills',
+          description: '國際個人理財 App，匯出 CSV 帶過來。',
         },
       },
     },
@@ -4482,6 +4546,219 @@ export const zhTW: Translations = {
           ],
         },
       },
+      moneybook: {
+        heroKicker: 'MONEYBOOK → FUTARI',
+        heroTitle: '你的麻布記帳資料，可以帶走',
+        heroSubtitle: '從麻布記帳搬到 Futari：匯出交易明細 CSV，上傳預覽後，和伴侶一起把這些記錄接著寫下去。',
+        differentiators: [
+          {
+            title: '兩個人的帳，不是一個人的工具',
+            body: '麻布記帳是為個人對帳設計的；Futari 從第一天就假設使用者是兩個人，共同的帳一起記、一起看。',
+          },
+          {
+            title: '分攤算給你看',
+            body: '誰付的、怎麼分、現在誰欠誰，餘額自動算清楚，不用自己在心裡記。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在麻布記帳匯出交易明細，下載 CSV 檔。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: '麻布記帳的欄位和 Futari 一樣嗎？',
+            answer: '不完全一樣。上傳後會先預覽解析結果，正式匯入時可以對照調整分類與欄位，不會直接寫進帳本。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。格式特殊或無法辨識的列會標記出來，供你確認。',
+          },
+          {
+            question: '麻布記帳會自動同步銀行，Futari 也會嗎？',
+            answer: 'Futari 目前以手動記帳為主，專注在兩個人一起記下每筆共同支出；自動同步銀行不在現階段範圍。',
+          },
+        ],
+        comparison: {
+          otherLabel: '麻布記帳',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 預設模式', tone: 'yes' },
+              other: { label: '✕ 單人設計', tone: 'no' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '✕ 無', tone: 'no' },
+            },
+            {
+              feature: 'CSV 資料匯入',
+              futari: { label: '✓ 直接上傳', tone: 'yes' },
+              other: { label: '✓ 可匯出', tone: 'yes' },
+            },
+            {
+              feature: '完全免費',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 部分功能付費', tone: 'partial' },
+            },
+            {
+              feature: '端對端資料加密',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '未說明', tone: 'no' },
+            },
+          ],
+        },
+      },
+      andromoney: {
+        heroKicker: 'ANDROMONEY → FUTARI',
+        heroTitle: '你的 AndroMoney 資料，可以帶走',
+        heroSubtitle: '從 AndroMoney 搬到 Futari：匯出 CSV，上傳預覽後，把多年的記帳和伴侶一起接著寫。',
+        differentiators: [
+          {
+            title: '雙人帳本是預設',
+            body: 'AndroMoney 是單人記帳的好手；Futari 則是為兩個人共用一本帳設計，記錄彼此都看得到。',
+          },
+          {
+            title: '即時同步',
+            body: '一個人記下，另一個人馬上看見，不用互傳截圖或檔案對帳。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或資料變現。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 AndroMoney → 設定 → 匯出，把資料輸出成 CSV。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: '匯入後資料需要再整理嗎？',
+            answer: '類別可在匯入流程中對照調整，一次完成，不需要事後手動修改。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。特殊類型（如轉帳）會標記供你確認。',
+          },
+          {
+            question: 'AndroMoney 的多帳戶，Futari 有對應嗎？',
+            answer: 'Futari 是一本共同帳本，專注在兩個人的共同收支；不分多帳戶，而是用分攤模式記下每筆是誰付、怎麼分。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'AndroMoney',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 預設模式', tone: 'yes' },
+              other: { label: '✕ 單人設計', tone: 'no' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '✕ 無', tone: 'no' },
+            },
+            {
+              feature: '即時雲端同步',
+              futari: { label: '✓ 即時', tone: 'yes' },
+              other: { label: '△ 需手動備份', tone: 'partial' },
+            },
+            {
+              feature: '多幣別記帳',
+              futari: { label: '✓ 支援', tone: 'yes' },
+              other: { label: '✓ 支援', tone: 'yes' },
+            },
+            {
+              feature: '完全免費',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 含廣告／付費版', tone: 'partial' },
+            },
+          ],
+        },
+      },
+      mobills: {
+        heroKicker: 'MOBILLS → FUTARI',
+        heroTitle: '你的 Mobills 資料，可以帶走',
+        heroSubtitle: '從 Mobills 搬到 Futari：匯出 CSV，上傳預覽後，和伴侶一起把記錄接著寫下去。',
+        differentiators: [
+          {
+            title: '雙人共用，不是各記各的',
+            body: 'Mobills 以個人理財為主；Futari 是兩個人共用的一本帳，共同支出記一次，兩邊都看得到。',
+          },
+          {
+            title: '分攤與結算內建',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+          },
+          {
+            title: '免費、無廣告',
+            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 Mobills 匯出交易紀錄，下載 CSV 檔。',
+        step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: '匯入後資料需要再整理嗎？',
+            answer: '類別可在匯入流程中對照調整，一次完成，不需要事後手動修改。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '原本的記帳記錄能全部帶過來嗎？',
+            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。特殊類型（如轉帳）會標記供你確認。',
+          },
+          {
+            question: 'Mobills 有預算功能，Futari 有嗎？',
+            answer: 'Futari 不做預算上限，也不會提醒你超支——它記下你們花過的錢，呈現結果，但不替你們打分數。',
+          },
+        ],
+        comparison: {
+          otherLabel: 'Mobills',
+          rows: [
+            {
+              feature: '雙人共同帳本',
+              futari: { label: '✓ 預設模式', tone: 'yes' },
+              other: { label: '✕ 單人設計', tone: 'no' },
+            },
+            {
+              feature: '費用分攤模式',
+              futari: { label: '✓ 多種模式', tone: 'yes' },
+              other: { label: '✕ 無', tone: 'no' },
+            },
+            {
+              feature: '介面語言',
+              futari: { label: '✓ 中英日四語', tone: 'yes' },
+              other: { label: '△ 以英文為主', tone: 'partial' },
+            },
+            {
+              feature: '完全免費',
+              futari: { label: '✓ 永久', tone: 'yes' },
+              other: { label: '△ 進階需訂閱', tone: 'partial' },
+            },
+            {
+              feature: 'CSV 資料匯入',
+              futari: { label: '✓ 直接上傳', tone: 'yes' },
+              other: { label: '✓ 可匯出', tone: 'yes' },
+            },
+          ],
+        },
+      },
     },
   },
 
@@ -4519,6 +4796,21 @@ export const zhTW: Translations = {
         title: '從 CWMoney 搬家到 Futari｜Excel 匯入',
         description: 'CWMoney 資料匯出後怎麼匯入新工具？用我們提供的 Excel 轉換模板整理成 CSV，再上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，完成搬家。',
         ogDescription: 'CWMoney 用戶搬家指南：Excel 轉 CSV，搬進 Futari 雙人記帳。',
+      },
+      moneybook: {
+        title: '從麻布記帳搬家到 Futari｜CSV 匯入',
+        description: '麻布記帳資料怎麼搬到雙人帳本？把交易明細匯出成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        ogDescription: '麻布記帳用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
+      },
+      andromoney: {
+        title: '從 AndroMoney 搬家到 Futari｜CSV 匯入',
+        description: 'AndroMoney 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
+        ogDescription: 'AndroMoney 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
+      },
+      mobills: {
+        title: '從 Mobills 搬家到 Futari｜CSV 匯入',
+        description: 'Mobills 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
+        ogDescription: 'Mobills 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
     },
   },
