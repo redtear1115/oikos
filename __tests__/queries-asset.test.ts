@@ -19,7 +19,7 @@ describe('listAssetsForGroup', () => {
         name: '我的 Tesla',
         deletedAt: null,
         createdAt: new Date('2026-05-01'),
-        plate: 'ABC-1234',
+        plateEncrypted: 'iv:tag:ciphertext',
         purchasedAt: '2024-06-01',
         purchasePrice: 800000,
       },
@@ -27,7 +27,9 @@ describe('listAssetsForGroup', () => {
     const rows = await listAssetsForGroup('grp-1')
     expect(rows).toHaveLength(1)
     expect(rows[0].name).toBe('我的 Tesla')
-    expect(rows[0].plate).toBe('ABC-1234')
+    // #837 — legacy plaintext `plate` dropped; only the encrypted presence
+    // signal remains on the payload (reveal goes through revealCarPlate).
+    expect(rows[0].plateEncrypted).toBe('iv:tag:ciphertext')
     expect(mockDb.select).toHaveBeenCalled()
   })
 })
@@ -42,7 +44,7 @@ describe('getAssetById', () => {
         name: '舊車',
         deletedAt: new Date('2026-04-01'),
         createdAt: new Date('2026-01-01'),
-        plate: 'XYZ-9',
+        plateEncrypted: 'iv:tag:ciphertext',
         purchasedAt: null,
         purchasePrice: null,
       },

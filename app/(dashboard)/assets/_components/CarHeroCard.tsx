@@ -9,7 +9,9 @@ import { useTranslations } from '@/lib/i18n/client'
 interface Props {
   id: string
   name: string
-  plate: string | null
+  /** #837 — true when an encrypted plate is stored; renders the masked chip.
+   *  Plaintext never reaches the client (reveal happens on the detail page). */
+  hasPlate: boolean
   color: string | null
   year: number | null
   brand: string | null
@@ -85,7 +87,7 @@ function fmtInt(n: number) {
 export function CarHeroCard({
   id,
   name,
-  plate,
+  hasPlate,
   color,
   year,
   brand,
@@ -130,7 +132,7 @@ export function CarHeroCard({
             >
               {name}
             </div>
-            {plate && (
+            {hasPlate && (
               // #826 — list context: the plate chip is rendered masked. The
               // detail page is where the user reveals via tap. We keep the
               // chip shape so the row's visual rhythm doesn't shift; only

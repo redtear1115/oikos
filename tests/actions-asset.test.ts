@@ -109,12 +109,15 @@ describe('createCar with auto-transaction', () => {
     const carDetailsPayload = valueCalls[1][0] as Record<string, unknown>
     expect(carDetailsPayload).toMatchObject({
       assetId: 'asset-1',
-      plate: 'ABC-1234',
       purchasedAt: '2026-04-01',
       purchasePrice: 500000,
       primaryUserId: 'user-a',
       fuelType: '95',
     })
+    // #837 — plate is stored encrypted only; the legacy plaintext `plate`
+    // column was dropped, so the payload carries plate_encrypted and no plate.
+    expect(typeof carDetailsPayload.plateEncrypted).toBe('string')
+    expect(carDetailsPayload.plate).toBeUndefined()
 
     const txnPayload = valueCalls[2][0] as Record<string, unknown>
     expect(txnPayload).toMatchObject({

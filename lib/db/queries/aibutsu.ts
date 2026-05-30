@@ -257,7 +257,10 @@ export async function getLinkedInsurancesForVehicle(vehicleId: string): Promise<
 
 export interface HouseDetailsRow {
   owner: string
-  address: string | null
+  /** #826/#837 — presence signal for the encrypted address (the detail page
+   *  derives `hasAddress` from this). Raw ciphertext never drives display;
+   *  reveal goes through revealHouseAddress. Legacy `address` dropped in 0053. */
+  addressEncrypted: string | null
   purchasedAt: string | null
   purchasePrice: number | null
 }
@@ -266,7 +269,7 @@ export async function getHouseDetails(assetId: string): Promise<HouseDetailsRow 
   const rows = await db
     .select({
       owner: houseDetails.owner,
-      address: houseDetails.address,
+      addressEncrypted: houseDetails.addressEncrypted,
       purchasedAt: houseDetails.purchasedAt,
       purchasePrice: houseDetails.purchasePrice,
     })

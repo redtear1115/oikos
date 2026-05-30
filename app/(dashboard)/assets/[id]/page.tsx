@@ -303,7 +303,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
       type: 'house',
       name: asset.name,
       notes: asset.notes,
-      houseAddress: houseDetailsData?.address ?? null,
+      // #837 — address is encrypted; the form gets only a has-value bool.
+      houseHasAddress: Boolean(houseDetailsData?.addressEncrypted),
       housePurchasedAt: houseDetailsData?.purchasedAt ?? null,
       housePurchasePrice: houseDetailsData?.purchasePrice ?? null,
     }
@@ -491,7 +492,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         type: asset.type,
         name: asset.name,
         notes: asset.notes,
-        plate: asset.plate ?? undefined,
+        // #837 — plate is encrypted; the form gets only a has-value bool.
+        carHasPlate: Boolean(asset.plateEncrypted),
         purchasedAt: asset.purchasedAt,
         purchasePrice: asset.purchasePrice,
         // '92' and 'electric' are legacy enum values; coerce to '95' for UI

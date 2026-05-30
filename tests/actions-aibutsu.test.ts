@@ -618,9 +618,12 @@ describe('createHouse', () => {
     expect(housePayload).toMatchObject({
       assetId: 'asset-h2',
       owner: VIEWER.id,
-      address: '台北市大安區某路1號',
       purchasedAt: '2020-06-15',
     })
+    // #837 — address is stored encrypted only; the legacy plaintext `address`
+    // column was dropped, so the payload carries address_encrypted and no address.
+    expect(typeof housePayload.addressEncrypted).toBe('string')
+    expect(housePayload.address).toBeUndefined()
   })
 
   it('creates auto-transaction when purchasePrice > 0', async () => {

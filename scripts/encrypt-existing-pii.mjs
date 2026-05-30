@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 /**
+ * ⚠️ SUNSET (#837) — historical artefact, NO LONGER RUNNABLE.
+ * The legacy `CarDetails.plate` / `HouseDetails.address` columns this script
+ * reads from were dropped in migration `0053_drop_legacy_plate_address.sql`
+ * once the backfill below had run cleanly on dev + prod. Kept for provenance
+ * of the #826 encryption rollout; executing it now fails (columns gone).
+ *
  * One-shot backfill for #826: encrypts the legacy `CarDetails.plate` and
  * `HouseDetails.address` plain-text values into the new `*_encrypted`
  * columns. Idempotent — only touches rows where the encrypted column is

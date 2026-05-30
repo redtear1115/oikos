@@ -17,7 +17,7 @@ import type { AssetSheetInitial, BodySharedProps } from './types'
 export type HouseInitial = Pick<
   AssetSheetInitial,
   | 'id' | 'name' | 'notes'
-  | 'houseAddress' | 'housePurchasedAt' | 'housePurchasePrice'
+  | 'houseHasAddress' | 'housePurchasedAt' | 'housePurchasePrice'
 >
 
 interface Props extends BodySharedProps {
@@ -26,7 +26,12 @@ interface Props extends BodySharedProps {
 
 export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
   const locale = useLocale()
-  const [address, setAddress] = useState(initial?.houseAddress ?? '')
+  // #837 — address is encrypted PII; the form always starts blank (no plaintext
+  // from the server). `hasAddress` enables 「先前已加密」 + 「清除」; same trinary
+  // UX as ChildSheetBody's nationalId.
+  const [address, setAddress] = useState('')
+  const [hasAddress, setHasAddress] = useState(initial?.houseHasAddress ?? false)
+  const [wantClearAddress, setWantClearAddress] = useState(false)
   const [purchasedAt, setPurchasedAt] = useState(initial?.housePurchasedAt ?? '')
   const [purchasePrice, setPurchasePrice] = useState(initial?.housePurchasePrice?.toString() ?? '')
   const [showCal, setShowCal] = useState(false)
@@ -40,7 +45,9 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
   } = useAssetSheetCommon({
     open, initial, onClose, onMutated,
     resetDomain: () => {
-      setAddress(initial?.houseAddress ?? '')
+      setAddress('')
+      setHasAddress(initial?.houseHasAddress ?? false)
+      setWantClearAddress(false)
       setPurchasedAt(initial?.housePurchasedAt ?? '')
       setPurchasePrice(initial?.housePurchasePrice?.toString() ?? '')
       setShowCal(false)
@@ -50,19 +57,23 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
   const canSave = name.trim() !== '' && !pending
 
   const handleSave = () => {
-    const payload = {
+    const base = {
       name: name.trim(),
-      address: address.trim() || null,
       purchasedAt: purchasedAt || null,
       purchasePrice: purchasePrice ? parseInt(purchasePrice, 10) : null,
       notes: notes.trim() || null,
     }
+    // #837 — address trinary on edit: typed string = set, blank + 「清除」 = null
+    // (clear), blank alone = undefined (keep existing). On create there's no
+    // existing value, so blank simply means null.
+    const editAddress: string | null | undefined =
+      address.trim().length > 0 ? address.trim() : (wantClearAddress ? null : undefined)
     runMutation(
       async () => {
         if (isEdit) {
-          await editHouse({ id: initial!.id, ...payload })
+          await editHouse({ id: initial!.id, ...base, address: editAddress })
         } else {
-          await createHouse(payload)
+          await createHouse({ ...base, address: address.trim() || null })
         }
       },
       () => { onMutated?.('saved'); onClose() },
@@ -93,19 +104,50 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       />
 
       <div className="flex flex-col gap-3 px-5 pb-2">
-        {/* Address */}
+        {/* Address — #837 encrypted PII; same trinary UX as child nationalId.
+            blank + 「清除」 clears, blank alone on edit keeps, typed value sets.
+            Generic encryptedHint / clear strings reused from `child`. */}
         <div className="flex flex-col gap-1">
           <label htmlFor={addressId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
-          <input
-            id={addressId}
-            type="text"
-            placeholder={ts.house.addressPlaceholder}
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            maxLength={80}
-            className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-            style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              id={addressId}
+              type="text"
+              placeholder={
+                wantClearAddress
+                  ? ts.child.pendingClearHint
+                  : (isEdit && hasAddress ? ts.child.encryptedHint : ts.house.addressPlaceholder)
+              }
+              value={address}
+              onChange={e => {
+                setAddress(e.target.value)
+                if (wantClearAddress) setWantClearAddress(false)
+              }}
+              maxLength={80}
+              className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
+              style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}
+            />
+            {isEdit && hasAddress && !wantClearAddress && address.trim() === '' && (
+              <button
+                type="button"
+                onClick={() => setWantClearAddress(true)}
+                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0"
+                style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+              >
+                {ts.child.clear}
+              </button>
+            )}
+            {isEdit && wantClearAddress && (
+              <button
+                type="button"
+                onClick={() => setWantClearAddress(false)}
+                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0"
+                style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+              >
+                {ts.child.cancelClear}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Purchase date */}
