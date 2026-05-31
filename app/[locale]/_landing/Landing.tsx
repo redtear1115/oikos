@@ -560,7 +560,7 @@ function UseCaseLinksSection({
               href={item.href}
               ctaLocation="footer_use_case"
               target={item.target}
-              ariaLabel={t.useCaseSection.cardAriaLabel.replace('{slug}', item.slug)}
+
               className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
               style={{
                 background: 'var(--surface)',

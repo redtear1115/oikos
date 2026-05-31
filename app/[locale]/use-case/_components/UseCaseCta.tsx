@@ -12,7 +12,7 @@ export function UseCaseCta({
       <Link
         href={signInHref}
         className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-body font-medium"
-        style={{ background: 'var(--accent)', textDecoration: 'none' }}
+        style={{ background: 'var(--ink)', textDecoration: 'none' }}
       >
         {label}
       </Link>
