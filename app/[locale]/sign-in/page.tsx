@@ -59,7 +59,7 @@ export default async function SignInPage({ params }: { params: Params }) {
   return (
     <main
       className="flex min-h-screen flex-col"
-      style={{ background: 'var(--bg)' }}
+      style={{ background: 'var(--bg-committed)' }}
     >
       {/* Warm TLS to Google's OAuth host so the post-click redirect costs less.
           Supabase preconnect lives in the root layout (covers every page);
