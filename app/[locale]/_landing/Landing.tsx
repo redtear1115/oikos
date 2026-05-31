@@ -9,6 +9,7 @@ import {
   StatsGlyph,
   ShieldOutlineGlyph,
 } from './FutariMark'
+import { IllustrationSlot } from './IllustrationSlot'
 import { LandingCtaLink } from './LandingCtaLink'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
@@ -56,7 +57,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
     <main
       className="relative min-h-dvh overflow-hidden"
       style={{
-        background: 'var(--bg)',
+        background: 'var(--bg-committed)',
         color: 'var(--ink)',
         paddingTop: 'env(safe-area-inset-top)',
       }}
@@ -111,10 +112,10 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
       <section className="relative z-10 px-6 md:px-16 pt-10 md:pt-12 pb-12 md:pb-20 max-w-md md:max-w-none mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:gap-10 md:max-w-[1280px] md:mx-auto">
           {/* Copy block */}
-          <div className="text-center md:text-left md:w-[600px] md:shrink-0">
-            {/* mobile: large mark above wordmark */}
-            <div className="md:hidden flex justify-center mb-7">
-              <FutariMark size={88} />
+          <div className="text-center md:text-left md:w-[520px] md:shrink-0">
+            {/* mobile: illustration band leads — replaces the large mark */}
+            <div className="md:hidden mb-6 px-1">
+              <IllustrationSlot mobile />
             </div>
 
             {/* mobile only: Futari wordmark + kana, decorative — h1 below
@@ -132,13 +133,6 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
             >
               Futari
             </p>
-            <p
-              className="md:hidden m-0 mt-3 mb-9 text-center"
-              style={{ color: 'var(--ink-2)', fontSize: 13, letterSpacing: '4px' }}
-            >
-              ふたり
-            </p>
-
             {/* desktop: small kicker above title */}
             <p
               className="hidden md:block m-0 mb-6"
@@ -242,9 +236,13 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
             </div>
           </div>
 
-          {/* Phone preview — desktop only */}
-          <div className="hidden md:flex flex-1 items-center justify-center">
-            <PhonePreview t={t} />
+          {/* Illustration + demoted phone — desktop only */}
+          <div className="hidden md:flex flex-1 self-stretch relative min-h-[420px] items-stretch py-2">
+            <IllustrationSlot />
+            {/* PhonePreview demoted to secondary product proof — overlaps illo corner */}
+            <div className="hidden lg:block absolute right-[-8px] bottom-6 z-10">
+              <PhonePreview t={t} scale={0.78} />
+            </div>
           </div>
         </div>
       </section>

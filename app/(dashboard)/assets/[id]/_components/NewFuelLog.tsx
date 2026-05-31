@@ -231,17 +231,17 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         {/* Hero — live km/L */}
         <div
           className="mx-4 mt-1 p-5 rounded-tile text-center shrink-0"
-          style={{ background: 'linear-gradient(180deg, #F1ECE0 0%, #E8E4D8 100%)' }}
+          style={{ background: 'linear-gradient(180deg, var(--bg) 0%, var(--bg-page) 100%)' }}
         >
-          <div className="text-xs text-[#8A7B5A] tracking-[1.4px] font-mono uppercase">本次油耗</div>
+          <div className="text-micro text-[var(--ink-3)] tracking-[1.4px] font-mono uppercase">本次油耗</div>
           <div className="mt-1.5 inline-flex items-baseline gap-1.5">
             <span
-              className="text-amount-lg font-medium text-[#3A2419] leading-none tabular-nums"
+              className="text-amount-lg font-medium text-[var(--ink)] leading-none tabular-nums"
               style={{ letterSpacing: '-1.5px' }}
             >{econ}</span>
-            <span className="text-sm text-[#8A7B5A] font-medium">km/L</span>
+            <span className="text-label text-[var(--ink-3)] font-medium">km/L</span>
           </div>
-          <div className="mt-1.5 text-xs text-[#8A7B5A] font-mono">
+          <div className="mt-1.5 text-micro text-[var(--ink-3)] font-mono">
             {lastOdometer === null
               ? '第一次加油 · 之後才能算油耗'
               : dist !== null && dist > 0

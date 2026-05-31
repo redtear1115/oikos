@@ -14,6 +14,10 @@ import { FutariMark } from './FutariMark'
 
 type Props = {
   t: Translations['landing']
+  /** Scale multiplier for the demoted desktop variant (0.78).
+   *  Default 1 = full size. Applied as CSS transform to preserve
+   *  layout flow for the parent's absolute positioning. */
+  scale?: number
 }
 
 type FeedRow = {
@@ -30,7 +34,7 @@ type AssetChip = {
   c: string
 }
 
-export function PhonePreview({ t }: Props) {
+export function PhonePreview({ t, scale = 1 }: Props) {
   const feedRows: FeedRow[] = [
     { categoryId: 'dining',  title: t.phoneMockFeed1Title, sub: t.phoneMockFeed1Sub, amount: '−840' },
     { categoryId: 'housing', title: t.phoneMockFeed2Title, sub: t.phoneMockFeed2Sub, amount: '−1,520' },
@@ -55,7 +59,8 @@ export function PhonePreview({ t }: Props) {
         padding: 12,
         boxShadow:
           '0 50px 80px -30px rgba(58, 36, 25, 0.35), 0 0 0 1px rgba(58, 36, 25, 0.06)',
-        transform: 'rotate(2.5deg)',
+        transform: scale !== 1 ? `scale(${scale}) rotate(2.5deg)` : 'rotate(2.5deg)',
+        ...(scale !== 1 && { transformOrigin: 'bottom right' }),
       }}
     >
       {/* notch */}
