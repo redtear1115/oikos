@@ -1947,6 +1947,7 @@ export type Translations = {
     /** Bullet list following the intro. */
     bullets: readonly string[]
     outro: string
+    contactLinkLabel: string
     backHome: string
     privacyLink: string
   }
@@ -1969,6 +1970,7 @@ export type Translations = {
     sectionRightsTitle: string
     sectionRightsBody: string
     outro: string
+    contactLinkLabel: string
     backHome: string
     termsLink: string
   }
@@ -3994,7 +3996,8 @@ export const zhTW: Translations = {
       '本服務保留因維護、安全或系統需求暫停或調整服務的權利，並將在可能的情況下提前告知。',
       '本服務條款適用中華民國法律，如有爭議以臺灣臺北地方法院為第一審管轄法院。',
     ],
-    outro: '如有任何疑問，請透過 support@futari.southern-light.dev 聯絡我們。',
+    outro: '如有任何疑問，',
+    contactLinkLabel: '歡迎到 GitHub 開 Issue 告訴我們',
     backHome: '← 回首頁',
     privacyLink: '隱私權政策',
   },
@@ -4030,8 +4033,9 @@ export const zhTW: Translations = {
       'PostHog（產品分析，收集匿名操作事件，不含個人識別資訊）',
     ],
     sectionRightsTitle: '您的權利',
-    sectionRightsBody: '您可隨時透過設定頁登出或刪除帳號。如需匯出或查詢您的個人資料，請透過 support@futari.southern-light.dev 聯絡我們。',
-    outro: '本政策若有變更，將在本頁更新並修改日期。如有任何疑問，請透過 support@futari.southern-light.dev 聯絡我們。',
+    sectionRightsBody: '您可隨時透過設定頁登出或刪除帳號。如需匯出或查詢您的個人資料，',
+    outro: '本政策若有變更，將在本頁更新並修改日期。如有任何疑問，',
+    contactLinkLabel: '歡迎到 GitHub 開 Issue 告訴我們',
     backHome: '← 回首頁',
     termsLink: '服務條款',
   },

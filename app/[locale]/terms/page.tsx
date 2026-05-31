@@ -58,7 +58,18 @@ export default async function TermsPage({ params }: { params: Params }) {
               <li key={i}>{bullet}</li>
             ))}
           </ul>
-          <p>{t.termsPage.outro}</p>
+          <p>
+            {t.termsPage.outro}
+            <a
+              href="https://github.com/redtear1115/oikos/issues/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              {t.termsPage.contactLinkLabel}
+            </a>
+            。
+          </p>
         </div>
 
         <div className="mt-12 flex gap-2 text-sm">

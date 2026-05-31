@@ -94,9 +94,31 @@ export default async function PrivacyPage({ params }: { params: Params }) {
           <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionRightsTitle}
           </h2>
-          <p>{t.privacyPage.sectionRightsBody}</p>
+          <p>
+            {t.privacyPage.sectionRightsBody}
+            <a
+              href="https://github.com/redtear1115/oikos/issues/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              {t.privacyPage.contactLinkLabel}
+            </a>
+            。
+          </p>
 
-          <p className="pt-2">{t.privacyPage.outro}</p>
+          <p className="pt-2">
+            {t.privacyPage.outro}
+            <a
+              href="https://github.com/redtear1115/oikos/issues/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              {t.privacyPage.contactLinkLabel}
+            </a>
+            。
+          </p>
         </div>
 
         <div className="mt-12 flex gap-2 text-sm">
