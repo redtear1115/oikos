@@ -60,7 +60,7 @@ export function PhonePreview({ t, scale = 1 }: Props) {
         boxShadow:
           '0 50px 80px -30px rgba(58, 36, 25, 0.35), 0 0 0 1px rgba(58, 36, 25, 0.06)',
         transform: scale !== 1 ? `scale(${scale}) rotate(2.5deg)` : 'rotate(2.5deg)',
-        transformOrigin: 'bottom right',
+        ...(scale !== 1 && { transformOrigin: 'bottom right' }),
       }}
     >
       {/* notch */}
