@@ -29,6 +29,11 @@ Futari belongs to the "Freedom Project" family — a brand built on the metaphor
 
 ## Links
 
-- Product: https://futari.southern-light.dev
-- Source / engineering context: private (codebase name "Oikos")
-- Full details: https://futari.southern-light.dev/llms-full.txt
+- [Futari — Home](https://futari.southern-light.dev/)
+- [Sign in](https://futari.southern-light.dev/zh-TW/sign-in)
+- [Use case: Cohabitation](https://futari.southern-light.dev/zh-TW/use-case/cohabitation)
+- [Use case: Newlyweds](https://futari.southern-light.dev/zh-TW/use-case/newlyweds)
+- [Use case: Pet owners](https://futari.southern-light.dev/zh-TW/use-case/pet-owners)
+- [Privacy policy](https://futari.southern-light.dev/zh-TW/privacy)
+- [Terms of service](https://futari.southern-light.dev/zh-TW/terms)
+- [Full LLM context](https://futari.southern-light.dev/llms-full.txt)
