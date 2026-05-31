@@ -42,7 +42,7 @@ interface Variant {
 const VARIANTS: Record<'sm' | 'md', Variant> = {
   sm: {
     label: 'block cursor-pointer rounded-2xl px-6 py-9 text-center transition-colors',
-    prompt: 'text-meta mb-3',
+    prompt: 'text-sm mb-3',
     button:
       'inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium',
     buttonStyle: {
@@ -61,13 +61,13 @@ const VARIANTS: Record<'sm' | 'md', Variant> = {
     label: 'block cursor-pointer rounded-2xl px-6 py-10 md:py-12 text-center transition-colors',
     prompt: 'text-base mb-3',
     button:
-      'inline-flex items-center justify-center h-11 px-6 rounded-xl text-white text-meta font-medium',
+      'inline-flex items-center justify-center h-11 px-6 rounded-xl text-white text-sm font-medium',
     buttonStyle: {
       background: 'var(--btn-primary-bg)',
       letterSpacing: '0.6px',
       boxShadow: '0 10px 24px -10px rgba(58, 36, 25, 0.4)',
     },
-    errorWrap: 'rounded-2xl px-5 py-4 text-meta text-center',
+    errorWrap: 'rounded-2xl px-5 py-4 text-sm text-center',
     errorStyle: {
       background: 'var(--surface)',
       border: '1px solid var(--hairline)',

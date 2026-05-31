@@ -167,12 +167,11 @@
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
   /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()).
-   * Even-px scale only (#876): 11/13/15px tiers (text-micro/label/body) were
-   * merged up into the Tailwind-native 12/14/16 (text-xs/sm/base) and removed.
-   * text-caption (12) / text-meta (14) kept as semantic aliases of xs / sm. */
+   * Even-px scale only (#876): the 11/13/15 tiers (text-micro/label/body) AND
+   * the 12/14 aliases (text-caption/text-meta) were removed — callsites use the
+   * Tailwind-native text-xs/sm/base (12/14/16) directly. Kept: text-mini (10,
+   * no Tailwind equivalent) and text-button (16, semantic button tier). */
   --text-mini:      10px;  /* badge superscript, tiny tracking labels (#670 audit 1.5) */
-  --text-caption:   12px;  /* secondary captions, footer notes — semantic alias of text-xs */
-  --text-meta:      14px;  /* metadata lines — semantic alias of text-sm */
   --text-button:    16px;
   --text-title:     22px;
   --text-page:      26px;

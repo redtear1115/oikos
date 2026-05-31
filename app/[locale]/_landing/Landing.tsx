@@ -96,7 +96,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           href={ctaHref}
           ctaLocation="desktop_header"
           target="sign_in"
-          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -216,7 +216,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
                 href={signInHref}
                 ctaLocation="secondary"
                 target="sign_in"
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-meta cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-sm cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -229,7 +229,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
 
             {/* Mobile sub-CTA hint */}
             <p
-              className="md:hidden m-0 mt-3 text-center text-caption"
+              className="md:hidden m-0 mt-3 text-center text-xs"
               style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
             >
               {t.ctaHint}
@@ -281,7 +281,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
               </h2>
             </div>
             <p
-              className="hidden md:block m-0 text-meta"
+              className="hidden md:block m-0 text-sm"
               style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 320 }}
               dangerouslySetInnerHTML={{ __html: t.featuresSubtitleHtml }}
             />
@@ -351,7 +351,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           style={{ color: 'var(--ink-2)' }}
         >
           <ShieldOutlineGlyph />
-          <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+          <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
             {t.footerTrust}
           </span>
         </div>
@@ -441,7 +441,7 @@ function MigrateLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.migrateSection.subtitle}
@@ -546,7 +546,7 @@ function UseCaseLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.useCaseSection.subtitle}
@@ -644,7 +644,7 @@ function FeatureEntry({
           </h3>
         </div>
         <p
-          className="m-0 text-meta md:text-base leading-[1.65] md:leading-[1.7]"
+          className="m-0 text-sm md:text-base leading-[1.65] md:leading-[1.7]"
           style={{ color: 'var(--ink-2)' }}
         >
           {body}

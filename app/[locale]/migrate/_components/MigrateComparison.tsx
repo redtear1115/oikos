@@ -42,7 +42,7 @@ export function MigrateComparison({
           border: '1px solid var(--hairline)',
         }}
       >
-        <table className="w-full border-collapse text-sm md:text-meta">
+        <table className="w-full border-collapse text-sm md:text-sm">
           <thead>
             <tr style={{ background: 'var(--surface-alt)' }}>
               <th

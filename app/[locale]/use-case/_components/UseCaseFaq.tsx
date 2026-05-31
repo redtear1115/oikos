@@ -52,7 +52,7 @@ export function UseCaseFaq({
               {question}
             </dt>
             <dd
-              className="m-0 mt-2 text-sm md:text-meta leading-[1.7]"
+              className="m-0 mt-2 text-sm md:text-sm leading-[1.7]"
               style={{ color: 'var(--ink-2)' }}
             >
               {answer}

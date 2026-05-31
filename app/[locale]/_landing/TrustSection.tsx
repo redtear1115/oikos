@@ -23,17 +23,17 @@ function CompactTrustRow({ t }: { t: LandingStrings }) {
       className="flex items-center gap-6"
       style={{ color: 'var(--ink-2)' }}
     >
-      <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+      <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
         {t.trustFree}
       </span>
       <span style={{ color: 'var(--hairline)' }}>·</span>
-      <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+      <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
         {t.trustPwa}
       </span>
       <span style={{ color: 'var(--hairline)' }}>·</span>
       <div className="flex items-center gap-1.5">
         <ShieldOutlineGlyph />
-        <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+        <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
           {t.trustEncrypted}
         </span>
       </div>
@@ -64,7 +64,7 @@ function FullTrustSection({ t }: { t: LandingStrings }) {
         </p>
 
         <ul
-          className="m-0 mt-8 md:mt-10 p-0 list-none flex flex-col md:flex-row md:justify-center items-center gap-3 md:gap-x-6 md:gap-y-0 text-meta md:text-base"
+          className="m-0 mt-8 md:mt-10 p-0 list-none flex flex-col md:flex-row md:justify-center items-center gap-3 md:gap-x-6 md:gap-y-0 text-sm md:text-base"
           style={{ color: 'var(--ink-2)' }}
         >
           <li className="inline-flex items-center gap-2">

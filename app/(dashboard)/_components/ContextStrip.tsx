@@ -169,7 +169,7 @@ export function ContextStrip({
               {trip.name}
             </span>
             {tripCurrency && (
-              <span className="text-caption" style={{ color: 'var(--ink-3)' }}>· {tripCurrency}</span>
+              <span className="text-xs" style={{ color: 'var(--ink-3)' }}>· {tripCurrency}</span>
             )}
           </div>
           <button

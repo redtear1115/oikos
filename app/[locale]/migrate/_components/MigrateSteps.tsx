@@ -27,7 +27,7 @@ export function MigrateSteps({
             // Anchor target for the HowToStep JSON-LD url (`...#step-N`, 1-based)
             // emitted by MigrateHowToJsonLd (#702) — keeps those anchors live.
             id={`step-${i + 1}`}
-            className="flex gap-5 items-start text-meta md:text-base leading-[1.75] py-4 first:pt-2"
+            className="flex gap-5 items-start text-sm md:text-base leading-[1.75] py-4 first:pt-2"
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >
             <span

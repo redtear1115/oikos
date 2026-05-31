@@ -34,7 +34,7 @@ export function MigrateTrustBlock({
             style={{ background: 'var(--surface)' }}
           >
             <p
-              className="m-0 text-meta md:text-base font-medium"
+              className="m-0 text-sm md:text-base font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}
@@ -81,7 +81,7 @@ export function MigrateFooter({
         style={{ color: 'var(--ink-2)' }}
       >
         <ShieldOutlineGlyph />
-        <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+        <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
           {trustNote}
         </span>
       </div>

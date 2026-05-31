@@ -49,7 +49,7 @@ export function MigrateChatgptWorkflow({
         >
           {copy.heading}
         </h2>
-        <p className="m-0 text-meta md:text-base leading-[1.7]" style={{ color: 'var(--ink-2)' }}>
+        <p className="m-0 text-sm md:text-base leading-[1.7]" style={{ color: 'var(--ink-2)' }}>
           {copy.intro}
         </p>
       </div>
@@ -58,7 +58,7 @@ export function MigrateChatgptWorkflow({
         {copy.substeps.map((text, i) => (
           <li
             key={i}
-            className="flex gap-4 items-start text-meta md:text-base leading-[1.7]"
+            className="flex gap-4 items-start text-sm md:text-base leading-[1.7]"
             style={{ color: 'var(--ink-2)' }}
           >
             <span
@@ -86,7 +86,7 @@ export function MigrateChatgptWorkflow({
       {/* Copyable ChatGPT prompt */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-caption" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
+          <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
             {copy.promptLabel}
           </span>
           <button
@@ -118,7 +118,7 @@ export function MigrateChatgptWorkflow({
 
       {/* CSV format example */}
       <div className="space-y-2">
-        <span className="text-caption" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
+        <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
           {copy.formatLabel}
         </span>
         <pre
@@ -132,7 +132,7 @@ export function MigrateChatgptWorkflow({
         >
           {copy.formatExample}
         </pre>
-        <p className="m-0 text-caption leading-[1.6]" style={{ color: 'var(--ink-3)' }}>
+        <p className="m-0 text-xs leading-[1.6]" style={{ color: 'var(--ink-3)' }}>
           {copy.note}
         </p>
       </div>

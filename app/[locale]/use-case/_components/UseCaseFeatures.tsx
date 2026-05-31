@@ -51,7 +51,7 @@ export function UseCaseFeatures({
                 </span>
                 <div>
                   <p
-                    className="m-0 text-meta font-medium"
+                    className="m-0 text-sm font-medium"
                     style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
                   >
                     {f.title}
