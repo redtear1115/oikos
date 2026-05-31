@@ -37,7 +37,7 @@ async function sendApnsNotification(
   token: string,
   title: string,
   body: string
-): Promise<void> {
+): Promise<number> {
   const payload = JSON.stringify({
     aps: {
       alert: { title, body },
@@ -62,6 +62,7 @@ async function sendApnsNotification(
     const err = await res.text()
     console.error(`[apns] failed token=${token.slice(0, 8)}… status=${res.status} err=${err}`)
   }
+  return res.status
 }
 
 Deno.serve(async (req) => {
@@ -114,15 +115,16 @@ Deno.serve(async (req) => {
   const key = await importApnsKey(APNS_PRIVATE_KEY_PEM)
   const jwt = await buildApnsJwt(key)
 
+  const staleTokens: string[] = []
   let sent = 0
   for (const { token } of tokens) {
-    await sendApnsNotification(
-      jwt,
-      token,
-      '有待確認的定期收支',
-      '點開 Futari 確認本期帳目'
-    )
-    sent++
+    const status = await sendApnsNotification(jwt, token, '有待確認的定期收支', '點開 Futari 確認本期帳目')
+    if (status >= 200 && status < 300) sent++
+    if (status === 410) staleTokens.push(token)
+  }
+
+  if (staleTokens.length > 0) {
+    await supabase.from('PushTokens').delete().in('token', staleTokens)
   }
 
   return new Response(JSON.stringify({ sent }), { status: 200 })
