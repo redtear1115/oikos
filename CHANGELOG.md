@@ -15,6 +15,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.4.1] - 2026-05-30
+
+主題：**Android 登入修復**——修正 Android app 內 Google 登入後被導回首頁、無法進入主畫面的問題（#866）。
+完整 diff：[v1.4.0...v1.4.1](https://github.com/redtear1115/oikos/compare/v1.4.0...v1.4.1)
+
+### 使用者可見變化
+
+- **Android 登入修復（#866）**：在 Android app 內用 Google 登入後，現在會直接進入主畫面，不再回到首頁要求重新登入。
+
+### 技術變更
+
+- **Capacitor OAuth deep link 路徑修正（#866）**：`buildAuthCallbackUrl` 已將 `/auth/callback` 接在 scheme origin 後，`appUrlOpen` handler 原本又把 `://login-callback` replace 成 `/auth/callback`，導致路徑重複（`/auth/callback/auth/callback`）回傳 404、OAuth code 從未 `exchangeCodeForSession`。改為只 strip scheme+host 前綴；並將 `appUrlOpen` listener 在首次 fire 後 `.remove()`，避免重複登入時 listener 累積。詳見 `app/[locale]/sign-in/SignInButton.tsx`。
+
 ## [1.4.0] - 2026-05-30
 
 主題：**Android 上架 · 情境 landing 頁**——用 Capacitor 把 PWA 包成 Android app，開始 Google Play 上架流程（#846）；新增情境 use-case landing 頁，覆蓋「兩人記帳」「夫妻記帳」等搜尋入口（#851）。
