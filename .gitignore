@@ -74,3 +74,8 @@ android/build/
 android/.idea/
 *.keystore
 *.jks
+
+# Capacitor / iOS (Xcode)
+ios/App/DerivedData/
+ios/App/build/
+ios/Pods/
