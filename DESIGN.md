@@ -196,14 +196,23 @@ Per愛物-type identity colors, each muted and emotive, with a tint derived via 
 - **Display** (Fraunces, 500, 19–26px, line-height 1.2, letter-spacing -0.3px): Headings on landing, sign-in, migrate, legal. The brand's speaking voice.
 - **Title** (Noto Sans TC, 500, 22px, line-height 1.3): Sheet titles, section heroes.
 - **Page** (Noto Sans TC, 500, 26px): Page and sub-page headers in the app.
-- **Body** (Noto Sans TC, 400, 15px, line-height 1.5): List items, form inputs, prose. Keep CJK measure comfortable; cap Latin prose near 65–75ch.
-- **Label** (Noto Sans TC, 500, 13px): Section labels, chips, captions. Metadata steps down to 11–12px.
+- **Body** (Noto Sans TC, 400, 16px, line-height 1.5): List items, form inputs, prose. Keep CJK measure comfortable; cap Latin prose near 65–75ch.
+- **Label** (Noto Sans TC, 500, 14px): Section labels, chips, captions. Metadata steps down to 12px.
 - **Amount** (numeric, 500, 44–56px, `tnum`): Hero balances and entry amounts. The one place numbers are allowed to be big, because the number is the moment.
+
+**The full scale (even-px only):** 10 (`text-mini`) · 12 (`text-xs`, `text-caption`) · 14 (`text-sm`, `text-meta`) · 16 (`text-base`, `text-button`) · 18 (`text-lg`) · 20 (`text-xl`) · 22 (`text-title`) · 26 (`text-page`) · 44 / 56 (`text-amount-md` / `text-amount-lg`). Every tier maps to a Tailwind `text-*` class; inline `fontSize` is not used. The `--fs-*` custom properties mirror these for the rare inline-only context.
 
 ### Named Rules
 **The Serif-Speaks Rule.** Fraunces is reserved for the brand's voice (headings and narrative). Never set body lists, inputs, or amounts in the serif. The sans does the work; the serif holds the feeling.
 
 **The No-Weight-600 Rule.** Weight 600 was dropped to cut render-blocking CSS; `font-semibold` falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights.
+
+**The Even-Px Rule (#876).** Font sizes are even-px only. The 11/13/15px tiers were removed; their callsites merged up into 12/14/16 (`text-xs` / `text-sm` / `text-base`). When a value feels "between" two tiers, round to the nearer even tier — do not reintroduce an odd size. A new font size requires explicit sign-off (see The Existing-Token-First Rule).
+
+**The Existing-Token-First Rule.** Before writing any visual value, reach for the token that already exists — type via `text-*` classes (or `--fs-*` for inline-only contexts), spacing via Tailwind utilities (`px-5`, `py-3`, `gap-2` …) and `--sheet-*`, corners via `--radius-*`, color via `--color-*` / `var(--ink*)`. The scale already covers almost every real need. Two hard constraints follow:
+
+1. **No inline `style` for token-covered values.** Static `fontSize`, `padding`, `margin`, `gap`, `borderRadius`, and color belong in utility classes, never in `style={{ … }}`. Inline `style` is reserved for genuinely dynamic values — computed transforms, data-driven dimensions, palette values resolved at runtime.
+2. **Never invent a token or a one-off value on your own.** If the existing scale genuinely cannot express what the design needs, stop and ask the user before adding a new font size, spacing step, radius, or token. Prefer even-px when a new size is approved.
 
 ## 4. Elevation
 
@@ -262,6 +271,8 @@ Large `tnum` numerics (44–56px) for the dashboard balance and entry amount. Th
 - **Do** respect `prefers-reduced-motion`; keep transitions near 150ms and ease-out (the about-fade-up uses cubic-bezier(0.22, 1, 0.36, 1)).
 - **Do** pair the Sage/Clay credit-debit distinction with a non-color cue (sign, label, icon) for color-blind legibility.
 - **Do** treat both partners as equals; never style solo mode as a deficient state.
+- **Do** reach for an existing token first — `text-*` for type, Tailwind spacing utilities + `--sheet-*` for padding, `--radius-*` for corners, `--color-*` / `var(--ink*)` for color (The Existing-Token-First Rule).
+- **Do** keep every font size even-px, mapped to a `text-*` class (The Even-Px Rule).
 
 ### Don't:
 - **Don't** use `#000` or `#fff` as a brand surface; text is Cocoa Ink, grounds are warm cream.
@@ -272,4 +283,6 @@ Large `tnum` numerics (44–56px) for the dashboard balance and entry amount. Th
 - **Don't** use a `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or alerts; use a full hairline, a tonal tint, or a leading icon instead.
 - **Don't** reach for a drop shadow to separate surfaces; the system is flat by default.
 - **Don't** default to a modal; exhaust inline and sheet-based progressive alternatives first.
+- **Don't** put token-covered values in inline `style={{ … }}` — static `fontSize` / `padding` / `margin` / `borderRadius` / color go in utility classes. Inline `style` is only for genuinely dynamic values.
+- **Don't** invent a new font size, spacing step, radius, or token on your own — if the scale can't express it, stop and ask first. Odd-px sizes are never reintroduced.
 - **Don't** fall into the teal-and-white budgeting-app aesthetic; the warm lamp exists to escape it.
