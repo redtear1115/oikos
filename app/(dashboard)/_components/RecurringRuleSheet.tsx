@@ -285,13 +285,8 @@ export function RecurringRuleSheet(props: Props) {
           )}
 
           {/* Amount */}
-          <div className="text-center" style={{ padding: '24px 24px 20px' }}>
-            <div
-              style={{
-                fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                letterSpacing: 1.2, marginBottom: 12,
-              }}
-            >
+          <div className="text-center px-6 pt-6 pb-5">
+            <div className="text-micro text-ink-3 tracking-label mb-3">
               {tNs.sheet.amountLabel}
             </div>
             <AmountInput
@@ -354,13 +349,8 @@ export function RecurringRuleSheet(props: Props) {
           {/* Description (expense only, required) */}
           {!isIncome && (
             <>
-              <div style={{ padding: '14px 20px' }}>
-                <div
-                  style={{
-                    fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                    letterSpacing: 1.2, marginBottom: 8,
-                  }}
-                >
+              <div className="px-5 py-3.5">
+                <div className="text-micro text-ink-3 tracking-label mb-2">
                   {t.recurringExpense.sheet.descriptionLabel}
                 </div>
                 <TextInput
@@ -369,18 +359,13 @@ export function RecurringRuleSheet(props: Props) {
                   placeholder={t.recurringExpense.sheet.descriptionPlaceholder}
                 />
               </div>
-              <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
+              <div className="oik-hairline" />
             </>
           )}
 
           {/* Category */}
-          <div style={{ padding: '18px 0 16px' }}>
-            <div
-              style={{
-                fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                letterSpacing: 1.2, padding: '0 20px 12px',
-              }}
-            >
+          <div className="pt-[18px] pb-4">
+            <div className="text-micro text-ink-3 tracking-label px-5 pb-3">
               {tNs.sheet.categoryLabel}
             </div>
             {isIncome ? (
@@ -428,14 +413,9 @@ export function RecurringRuleSheet(props: Props) {
           {/* Split type (expense only, non-solo) */}
           {!isIncome && !isSolo && (
             <>
-              <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
-              <div style={{ padding: '18px 20px 16px' }}>
-                <div
-                  style={{
-                    fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                    letterSpacing: 1.2, marginBottom: 12,
-                  }}
-                >
+              <div className="oik-hairline" />
+              <div className="px-5 pt-[18px] pb-4">
+                <div className="text-micro text-ink-3 tracking-label mb-3">
                   {t.recurringExpense.sheet.splitTypeLabel}
                 </div>
                 <SplitTypeSelector
@@ -450,16 +430,11 @@ export function RecurringRuleSheet(props: Props) {
             </>
           )}
 
-          <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
+          <div className="oik-hairline" />
 
           {/* Interval */}
-          <div style={{ padding: '18px 20px 16px' }}>
-            <div
-              style={{
-                fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                letterSpacing: 1.2, marginBottom: 12,
-              }}
-            >
+          <div className="px-5 pt-[18px] pb-4">
+            <div className="text-micro text-ink-3 tracking-label mb-3">
               {tNs.sheet.intervalLabel}
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -483,16 +458,11 @@ export function RecurringRuleSheet(props: Props) {
             </div>
           </div>
 
-          <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
+          <div className="oik-hairline" />
 
           {/* Day of month */}
-          <div style={{ padding: '18px 20px 16px' }}>
-            <div
-              style={{
-                fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                letterSpacing: 1.2, marginBottom: 12,
-              }}
-            >
+          <div className="px-5 pt-[18px] pb-4">
+            <div className="text-micro text-ink-3 tracking-label mb-3">
               {tNs.sheet.dayOfMonthLabel}
             </div>
             <DayPicker value={dayOfMonth} onChange={setDayOfMonth} />
@@ -510,13 +480,8 @@ export function RecurringRuleSheet(props: Props) {
 
           {/* Source (income only) */}
           {isIncome && (
-            <div style={{ padding: '14px 20px' }}>
-              <div
-                style={{
-                  fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                  letterSpacing: 1.2, marginBottom: 8,
-                }}
-              >
+            <div className="px-5 py-3.5">
+              <div className="text-micro text-ink-3 tracking-label mb-2">
                 {t.recurringIncome.sheet.sourceLabel}
               </div>
               <TextInput
@@ -528,50 +493,34 @@ export function RecurringRuleSheet(props: Props) {
           )}
 
           {/* Start / end dates */}
-          <div style={{ padding: '14px 20px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3 px-5 pt-3.5 pb-4">
             <label>
-              <div
-                style={{
-                  fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                  letterSpacing: 1.2, marginBottom: 8,
-                }}
-              >
+              <div className="text-micro text-ink-3 tracking-label mb-2">
                 {tNs.sheet.startsOnLabel}
               </div>
               <input
                 type="date"
                 value={startsOn}
                 onChange={(e) => setStartsOn(e.target.value)}
-                className="w-full bg-transparent outline-none"
+                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-label"
                 style={{
                   border: '1px solid var(--hairline)',
-                  borderRadius: 10,
-                  padding: '8px 10px',
-                  fontSize: 'var(--fs-sm)',
                   color: 'var(--ink)',
                   fontFamily: 'inherit',
                 }}
               />
             </label>
             <label>
-              <div
-                style={{
-                  fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                  letterSpacing: 1.2, marginBottom: 8,
-                }}
-              >
+              <div className="text-micro text-ink-3 tracking-label mb-2">
                 {tNs.sheet.endsOnLabel}
               </div>
               <input
                 type="date"
                 value={endsOn}
                 onChange={(e) => setEndsOn(e.target.value)}
-                className="w-full bg-transparent outline-none"
+                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-label"
                 style={{
                   border: '1px solid var(--hairline)',
-                  borderRadius: 10,
-                  padding: '8px 10px',
-                  fontSize: 'var(--fs-sm)',
                   color: 'var(--ink)',
                   fontFamily: 'inherit',
                 }}
@@ -583,25 +532,17 @@ export function RecurringRuleSheet(props: Props) {
           {isIncome ? (
             props.insuranceAssets.length > 0 && (
               <>
-                <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
-                <div style={{ padding: '14px 20px 16px' }}>
-                  <div
-                    style={{
-                      fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                      letterSpacing: 1.2, marginBottom: 8,
-                    }}
-                  >
+                <div className="oik-hairline" />
+                <div className="px-5 pt-3.5 pb-4">
+                  <div className="text-micro text-ink-3 tracking-label mb-2">
                     {t.recurringIncome.sheet.assetLabel}
                   </div>
                   <select
                     value={incomeAssetId}
                     onChange={(e) => setIncomeAssetId(e.target.value)}
-                    className="w-full bg-transparent"
+                    className="w-full bg-transparent rounded-chip px-2.5 py-2 text-label"
                     style={{
                       border: '1px solid var(--hairline)',
-                      borderRadius: 10,
-                      padding: '8px 10px',
-                      fontSize: 'var(--fs-sm)',
                       color: 'var(--ink)',
                       fontFamily: 'inherit',
                     }}
@@ -616,14 +557,9 @@ export function RecurringRuleSheet(props: Props) {
             )
           ) : (
             <>
-              <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
-              <div style={{ padding: '14px 20px 16px' }}>
-                <div
-                  style={{
-                    fontSize: 'var(--fs-micro)', color: 'var(--ink-3)',
-                    letterSpacing: 1.2, marginBottom: 8,
-                  }}
-                >
+              <div className="oik-hairline" />
+              <div className="px-5 pt-3.5 pb-4">
+                <div className="text-micro text-ink-3 tracking-label mb-2">
                   {t.recurringExpense.sheet.assetLabel}
                 </div>
                 <AssetLinkField value={expenseAssetId} onChange={setExpenseAssetId} open={open} />
@@ -634,8 +570,8 @@ export function RecurringRuleSheet(props: Props) {
           {/* Edit-mode actions */}
           {isEdit && (
             <>
-              <div style={{ height: 1, margin: '8px 20px 0', background: 'var(--hairline)' }} />
-              <div style={{ padding: '16px 20px 8px', display: 'flex', gap: 10 }}>
+              <div className="oik-hairline mt-2" />
+              <div className="flex gap-2.5 px-5 pt-4 pb-2">
                 <Button
                   variant="secondary"
                   onClick={handlePauseResume}

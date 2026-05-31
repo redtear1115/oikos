@@ -169,22 +169,15 @@ export function ContextStrip({
               {trip.name}
             </span>
             {tripCurrency && (
-              <span style={{ color: 'var(--ink-3)', fontSize: 12 }}>· {tripCurrency}</span>
+              <span className="text-caption" style={{ color: 'var(--ink-3)' }}>· {tripCurrency}</span>
             )}
           </div>
           <button
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.expandAriaLabel}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--ink-2)',
-              flexShrink: 0,
-              fontSize: 16,
-              lineHeight: 1,
-            }}
+            className="text-button leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            style={{ color: 'var(--ink-2)' }}
           >
             ›
           </button>
@@ -216,14 +209,8 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.collapseAriaLabel}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--ink-3)',
-              fontSize: 18,
-              lineHeight: 1,
-            }}
+            className="text-[18px] leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            style={{ color: 'var(--ink-3)' }}
           >
             −
           </button>
