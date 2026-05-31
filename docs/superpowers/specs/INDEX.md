@@ -114,6 +114,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 ### 體驗
 
+- [brand-register](brand-register-design.md) — 品牌面 Committed Register：landing/sign-in/migrate/terms/privacy 換 `--bg-committed` 暖底色 + 插圖欄位取代 PhonePreview 主視覺
 - [design-system-primitives](design-system-primitives-design.md) — Button, TextInput, Sheet primitives + token layer
 - [ia-unified-header](ia-unified-header-design.md) — 四大入口三層標頭統一（L1/L2/L3）+ ContextStrip 取代分散 banner
 - [onboarding](onboarding-design.md) — 新人 onboarding flow（sign-in → 建群組 → 邀請對方／稍後再說）
