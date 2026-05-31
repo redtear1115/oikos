@@ -13,7 +13,6 @@ import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
 import { canAccessGuardian } from '@/lib/guardian'
 import { captureServer } from '@/lib/analytics/server'
-import * as Sentry from '@sentry/nextjs'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
 
@@ -612,29 +611,24 @@ export async function revealChildName(assetId: string): Promise<string> {
  */
 export async function revealCarPlate(assetId: string): Promise<string> {
   'use server'
-  try {
-    const { group } = await requireViewerGroup()
+  const { group } = await requireViewerGroup()
 
-    const [row] = await db
-      .select({
-        assetType: assets.type,
-        assetDeletedAt: assets.deletedAt,
-        plateEncrypted: carDetails.plateEncrypted,
-      })
-      .from(assets)
-      .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
-      .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
-      .limit(1)
-    if (!row || row.assetDeletedAt || row.assetType !== 'car') {
-      throw new Error('找不到該愛物')
-    }
-
-    if (!row.plateEncrypted) throw new Error('尚未填寫此欄位')
-    return decrypt(row.plateEncrypted)
-  } catch (err) {
-    Sentry.captureException(err, { extra: { assetId, fn: 'revealCarPlate' } })
-    throw err
+  const [row] = await db
+    .select({
+      assetType: assets.type,
+      assetDeletedAt: assets.deletedAt,
+      plateEncrypted: carDetails.plateEncrypted,
+    })
+    .from(assets)
+    .leftJoin(carDetails, eq(carDetails.assetId, assets.id))
+    .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
+    .limit(1)
+  if (!row || row.assetDeletedAt || row.assetType !== 'car') {
+    throw new Error('找不到該愛物')
   }
+
+  if (!row.plateEncrypted) throw new Error('尚未填寫此欄位')
+  return decrypt(row.plateEncrypted)
 }
 
 /**
