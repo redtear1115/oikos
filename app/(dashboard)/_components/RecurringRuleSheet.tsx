@@ -286,7 +286,7 @@ export function RecurringRuleSheet(props: Props) {
 
           {/* Amount */}
           <div className="text-center px-6 pt-6 pb-5">
-            <div className="text-micro text-ink-3 tracking-label mb-3">
+            <div className="text-xs text-ink-3 tracking-label mb-3">
               {tNs.sheet.amountLabel}
             </div>
             <AmountInput
@@ -350,7 +350,7 @@ export function RecurringRuleSheet(props: Props) {
           {!isIncome && (
             <>
               <div className="px-5 py-3.5">
-                <div className="text-micro text-ink-3 tracking-label mb-2">
+                <div className="text-xs text-ink-3 tracking-label mb-2">
                   {t.recurringExpense.sheet.descriptionLabel}
                 </div>
                 <TextInput
@@ -365,7 +365,7 @@ export function RecurringRuleSheet(props: Props) {
 
           {/* Category */}
           <div className="pt-[18px] pb-4">
-            <div className="text-micro text-ink-3 tracking-label px-5 pb-3">
+            <div className="text-xs text-ink-3 tracking-label px-5 pb-3">
               {tNs.sheet.categoryLabel}
             </div>
             {isIncome ? (
@@ -415,7 +415,7 @@ export function RecurringRuleSheet(props: Props) {
             <>
               <div className="oik-hairline" />
               <div className="px-5 pt-[18px] pb-4">
-                <div className="text-micro text-ink-3 tracking-label mb-3">
+                <div className="text-xs text-ink-3 tracking-label mb-3">
                   {t.recurringExpense.sheet.splitTypeLabel}
                 </div>
                 <SplitTypeSelector
@@ -434,7 +434,7 @@ export function RecurringRuleSheet(props: Props) {
 
           {/* Interval */}
           <div className="px-5 pt-[18px] pb-4">
-            <div className="text-micro text-ink-3 tracking-label mb-3">
+            <div className="text-xs text-ink-3 tracking-label mb-3">
               {tNs.sheet.intervalLabel}
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -462,7 +462,7 @@ export function RecurringRuleSheet(props: Props) {
 
           {/* Day of month */}
           <div className="px-5 pt-[18px] pb-4">
-            <div className="text-micro text-ink-3 tracking-label mb-3">
+            <div className="text-xs text-ink-3 tracking-label mb-3">
               {tNs.sheet.dayOfMonthLabel}
             </div>
             <DayPicker value={dayOfMonth} onChange={setDayOfMonth} />
@@ -481,7 +481,7 @@ export function RecurringRuleSheet(props: Props) {
           {/* Source (income only) */}
           {isIncome && (
             <div className="px-5 py-3.5">
-              <div className="text-micro text-ink-3 tracking-label mb-2">
+              <div className="text-xs text-ink-3 tracking-label mb-2">
                 {t.recurringIncome.sheet.sourceLabel}
               </div>
               <TextInput
@@ -495,7 +495,7 @@ export function RecurringRuleSheet(props: Props) {
           {/* Start / end dates */}
           <div className="grid grid-cols-2 gap-3 px-5 pt-3.5 pb-4">
             <label>
-              <div className="text-micro text-ink-3 tracking-label mb-2">
+              <div className="text-xs text-ink-3 tracking-label mb-2">
                 {tNs.sheet.startsOnLabel}
               </div>
               <input
@@ -511,7 +511,7 @@ export function RecurringRuleSheet(props: Props) {
               />
             </label>
             <label>
-              <div className="text-micro text-ink-3 tracking-label mb-2">
+              <div className="text-xs text-ink-3 tracking-label mb-2">
                 {tNs.sheet.endsOnLabel}
               </div>
               <input
@@ -534,7 +534,7 @@ export function RecurringRuleSheet(props: Props) {
               <>
                 <div className="oik-hairline" />
                 <div className="px-5 pt-3.5 pb-4">
-                  <div className="text-micro text-ink-3 tracking-label mb-2">
+                  <div className="text-xs text-ink-3 tracking-label mb-2">
                     {t.recurringIncome.sheet.assetLabel}
                   </div>
                   <select
@@ -559,7 +559,7 @@ export function RecurringRuleSheet(props: Props) {
             <>
               <div className="oik-hairline" />
               <div className="px-5 pt-3.5 pb-4">
-                <div className="text-micro text-ink-3 tracking-label mb-2">
+                <div className="text-xs text-ink-3 tracking-label mb-2">
                   {t.recurringExpense.sheet.assetLabel}
                 </div>
                 <AssetLinkField value={expenseAssetId} onChange={setExpenseAssetId} open={open} />

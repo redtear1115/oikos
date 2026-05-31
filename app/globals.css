@@ -154,6 +154,7 @@
   --color-credit: var(--credit);
   --color-debit: var(--debit);
   --color-destructive: var(--destructive);
+  --color-hairline: var(--hairline);
   --font-serif: var(--font-fraunces);
   /* CJK fallback chain. TC system fonts first (primary locale: PingFang TC on
    * iOS/macOS → Microsoft JhengHei on Windows), then JP and SC system fonts so
@@ -181,8 +182,8 @@
   --text-amount-md: 44px;
   --text-amount-lg: 56px;
 
-  /* Section-label letter-spacing → tracking-label */
-  --letter-spacing-label: 1.2px;
+  /* Section-label letter-spacing → tracking-label (matches AddSheet / IncomeSheet 0.6px baseline) */
+  --letter-spacing-label: 0.6px;
 
   /* Control-height → Tailwind h-control-sm / h-control-md / h-control-lg */
   --height-control-sm: var(--control-sm);

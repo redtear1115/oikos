@@ -450,10 +450,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
         <SheetBody noPadding ref={scrollableRef}>
           {/* Amount + payer toggle */}
-          <div
-            className="px-6 pt-6 pb-7 text-center"
-            style={{ borderBottom: '1px solid var(--hairline)' }}
-          >
+          <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div
               className="text-xs tracking-[0.6px] mb-3"
               style={{ color: 'var(--ink-3)' }}
@@ -550,7 +547,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           </div>
 
           {/* Asset link (visible in both solo and dual mode) */}
-          <div className="px-5 pt-2 pb-[18px] mt-1" style={{ borderTop: '1px solid var(--hairline)' }}>
+          <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
             <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.assetLink}
             </div>
@@ -558,8 +555,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           </div>
 
           {!isSolo && (
-            <div className="px-5 pt-2 pb-[18px] mt-1"
-              style={{ borderTop: '1px solid var(--hairline)' }}>
+            <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
               <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.splitMethod}
               </div>
@@ -628,7 +624,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               accept a notes field, so anything typed here would be silently
               dropped — better to omit the affordance. */}
           {!isPending && (
-            <div className="px-5 pt-3 pb-6" style={{ borderTop: '1px solid var(--hairline)' }}>
+            <div className="px-5 pt-3 pb-6 border-t border-hairline">
               <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.notesLabel}
               </div>

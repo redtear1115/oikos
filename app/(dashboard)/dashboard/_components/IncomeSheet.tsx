@@ -285,10 +285,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
         <div ref={scrollableRef} className="overflow-auto flex-1">
           {/* Amount + recipient toggle */}
-          <div
-            className="px-6 pt-6 pb-7 text-center"
-            style={{ borderBottom: '1px solid var(--hairline)' }}
-          >
+          <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div
               className="text-xs tracking-[0.6px] mb-3"
               style={{ color: 'var(--ink-3)' }}
@@ -367,10 +364,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
           {/* Policy link section — only for maturity/claim */}
           {policyRelevant && (
-            <div
-              className="px-5 pt-2 pb-[18px] mt-1"
-              style={{ borderTop: '1px solid var(--hairline)' }}
-            >
+            <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
               <div
                 className="text-xs tracking-[0.6px] px-1 py-3"
                 style={{ color: 'var(--ink-3)' }}
@@ -481,10 +475,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           </div>
 
           {/* Note */}
-          <div
-            className="px-5 pt-3 pb-6"
-            style={{ borderTop: '1px solid var(--hairline)' }}
-          >
+          <div className="px-5 pt-3 pb-6 border-t border-hairline">
             <div
               className="text-xs tracking-[0.6px] px-1 py-3"
               style={{ color: 'var(--ink-3)' }}
