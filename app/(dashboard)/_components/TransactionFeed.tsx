@@ -304,12 +304,12 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
               {loading ? t.transactionFeed.loading : t.transactionFeed.loadMore}
             </button>
           ) : (
-            <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-center text-xs py-3" style={{ color: 'var(--ink-3)' }}>
               {t.records.offlineMoreNeedsNetwork}
             </div>
           )
         ) : (
-          <div className="text-center text-micro py-3" style={{ color: 'var(--ink-3)' }}>
+          <div className="text-center text-xs py-3" style={{ color: 'var(--ink-3)' }}>
             {t.transactionFeed.endOfFeed}
           </div>
         )}

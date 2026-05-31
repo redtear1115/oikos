@@ -60,7 +60,7 @@ export function WelcomeSoloCard({ groupId }: Props) {
       >
         <div className="flex-1">
           <div
-            className="text-button leading-tight"
+            className="text-base leading-tight"
             style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
           >
             {t.postLeave.welcomeSoloHeading}

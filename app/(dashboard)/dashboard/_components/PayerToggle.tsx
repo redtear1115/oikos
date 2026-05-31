@@ -15,7 +15,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
 
   return (
     <div
-      className="mt-[22px] flex items-center justify-center gap-2.5 text-label"
+      className="mt-[22px] flex items-center justify-center gap-2.5 text-sm"
       style={{ color: 'var(--ink-2)' }}
     >
       <span>{t.payerToggle.label}</span>
@@ -27,7 +27,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
           <button
             key={w}
             onClick={() => onChange(w)}
-            className="oik-segment h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5"
+            className="oik-segment h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5"
             style={{
               background: value === w ? 'var(--toggle-segment-thumb)' : 'transparent',
               color: value === w ? 'var(--ink)' : 'var(--ink-2)',

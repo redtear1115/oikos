@@ -27,12 +27,12 @@ export function MigrateCta({ t, signInHref, source, onClick }: Props) {
       <Link
         href={href}
         onClick={onClick}
-        className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-body font-medium cursor-pointer"
+        className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-base font-medium cursor-pointer"
         style={{ background: 'var(--btn-primary-bg)', letterSpacing: '1.2px', textDecoration: 'none' }}
       >
         {t.cta.button}
       </Link>
-      <p className="text-label" style={{ color: 'var(--ink-2)' }}>
+      <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
         {t.cta.hint}
       </p>
     </div>

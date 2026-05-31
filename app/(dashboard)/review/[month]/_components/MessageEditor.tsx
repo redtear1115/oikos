@@ -141,7 +141,7 @@ export function MessageEditor({
           aria-label={isSolo ? tr.editorTitleSolo : tr.editorTitle}
         />
         <div
-          className="mt-2 flex items-center justify-between text-micro"
+          className="mt-2 flex items-center justify-between text-xs"
           style={{ color: 'var(--ink-3)' }}
         >
           <span aria-live="polite">

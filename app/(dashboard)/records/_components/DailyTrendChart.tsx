@@ -131,7 +131,7 @@ export function DailyTrendChart({ data }: { data: ReadonlyArray<DailyTrendRow> }
             x={xOf(day - 1)}
             y={VB_H - 4}
             textAnchor="middle"
-            style={{ fontSize: 9, fill: 'var(--ink-3)', fontVariantNumeric: 'tabular-nums' }}
+            style={{ fontSize: 10, fill: 'var(--ink-3)', fontVariantNumeric: 'tabular-nums' }}
           >
             {day}
           </text>
@@ -139,7 +139,7 @@ export function DailyTrendChart({ data }: { data: ReadonlyArray<DailyTrendRow> }
       </svg>
 
       {/* Legend — colours decoded once, no per-bar labels. */}
-      <div className="flex items-center justify-center gap-4 mt-1" style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+      <div className="flex items-center justify-center gap-4 mt-1" style={{ fontSize: 12, color: 'var(--ink-3)' }}>
         <LegendItem swatch={<span style={swatch(TREND_INCOME_COLOR)} />} label={t.records.stats.trendIncome} />
         <LegendItem swatch={<span style={swatch(TREND_EXPENSE_COLOR)} />} label={t.records.stats.trendExpense} />
         <LegendItem

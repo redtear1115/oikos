@@ -83,7 +83,7 @@ export function PhonePreview({ t }: Props) {
             <div className="flex items-center gap-1.5">
               <FutariMark size={18} />
               <span
-                className="text-meta font-medium"
+                className="text-sm font-medium"
                 style={{ fontFamily: 'var(--font-fraunces)' }}
               >
                 Futari
@@ -91,13 +91,13 @@ export function PhonePreview({ t }: Props) {
             </div>
             <div className="flex items-center gap-1.5">
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-medium"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-xs font-medium"
                 style={{ background: 'var(--accent)' }}
               >
                 M
               </div>
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-medium"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-xs font-medium"
                 style={{ background: 'var(--asset-color-house)' }}
               >
                 T
@@ -126,7 +126,7 @@ export function PhonePreview({ t }: Props) {
               NT$ 1,240
             </p>
             <p
-              className="m-0 mt-1 text-micro"
+              className="m-0 mt-1 text-xs"
               style={{ color: 'var(--ink-2)' }}
             >
               {t.phoneMockBalancePeriod}
@@ -151,13 +151,13 @@ export function PhonePreview({ t }: Props) {
               >
                 <CategoryChip categoryId={r.categoryId} size={28} />
                 <div className="flex-1 min-w-0">
-                  <p className="m-0 text-caption font-medium">{r.title}</p>
+                  <p className="m-0 text-xs font-medium">{r.title}</p>
                   <p className="m-0 text-mini" style={{ color: 'var(--ink-2)' }}>
                     {r.sub}
                   </p>
                 </div>
                 <span
-                  className="text-caption tnum"
+                  className="text-xs tnum"
                   style={{
                     fontFamily: '-apple-system, "SF Pro Display", system-ui',
                     color: 'var(--ink)',

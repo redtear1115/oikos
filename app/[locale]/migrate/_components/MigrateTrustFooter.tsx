@@ -34,13 +34,13 @@ export function MigrateTrustBlock({
             style={{ background: 'var(--surface)' }}
           >
             <p
-              className="m-0 text-meta md:text-body font-medium"
+              className="m-0 text-sm md:text-base font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}
             </p>
             <p
-              className="m-0 mt-1.5 text-[12.5px] md:text-label leading-[1.65]"
+              className="m-0 mt-1.5 text-[12.5px] md:text-sm leading-[1.65]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}
@@ -81,7 +81,7 @@ export function MigrateFooter({
         style={{ color: 'var(--ink-2)' }}
       >
         <ShieldOutlineGlyph />
-        <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+        <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
           {trustNote}
         </span>
       </div>
@@ -95,7 +95,7 @@ export function MigrateFooter({
           <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
         </div>
         <span
-          className="text-micro"
+          className="text-xs"
           style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
         >
           © 2026 · MADE IN TAIWAN

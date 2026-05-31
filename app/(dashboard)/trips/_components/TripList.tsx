@@ -91,7 +91,7 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
       <div
         style={{
           fontFamily: 'var(--font-serif)',
-          fontSize: 'var(--fs-button)',
+          fontSize: 'var(--fs-base)',
           fontWeight: 500,
           color: 'var(--ink)',
           letterSpacing: '-0.2px',
@@ -149,7 +149,7 @@ function TripRow({ trip, variant, isLast }: { trip: Trip; variant: 'active' | 'p
           {trip.name}
         </div>
         <div
-          className="text-micro mt-0.5 flex items-center gap-1.5"
+          className="text-xs mt-0.5 flex items-center gap-1.5"
           style={{ color: 'var(--ink-3)' }}
         >
           <span>{dateLabel}</span>

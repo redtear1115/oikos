@@ -36,7 +36,7 @@ export function PrimaryUserToggle({ value, onChange }: PrimaryUserToggleProps) {
             key={opt.v ?? 'shared'}
             type="button"
             onClick={() => onChange(opt.v)}
-            className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
+            className={`oik-segment flex-1 h-9 rounded-lg text-sm font-medium ${
               sel ? 'font-medium' : ''
             }`}
             style={{

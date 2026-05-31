@@ -266,7 +266,7 @@ export function LeaveGroupFlow({
 function CardTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2
-      className="text-button mb-3 leading-tight"
+      className="text-base mb-3 leading-tight"
       style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
     >
       {children}

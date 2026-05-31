@@ -408,7 +408,7 @@ export function RecordsList({
                   key={kind}
                   type="button"
                   onClick={() => toggleKind(kind)}
-                  className="h-8 inline-flex items-center gap-[5px] cursor-pointer border-0 text-sm transition-colors duration-150"
+                  className="h-8 inline-flex items-center gap-1.5 cursor-pointer border-0 text-sm transition-colors duration-150"
                   style={{
                     padding: '0 14px',
                     borderRadius: 999,

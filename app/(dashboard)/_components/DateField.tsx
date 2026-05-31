@@ -74,7 +74,7 @@ export function DateField({ value, onChange, open, label, placeholder }: DateFie
       >
         <CalIcon />
         <div className="flex-1 text-left">
-          <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>{formatDateAbsolute(calendarSeed, locale)}</div>
+          <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>{formatDateAbsolute(calendarSeed, locale)}</div>
           <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{formatPickerSubtitle(calendarSeed, locale)}</div>
         </div>
         <Chevron />

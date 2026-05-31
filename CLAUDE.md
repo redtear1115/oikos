@@ -225,6 +225,11 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
 - Register＝`product`；Creative North Star＝「The Warm Lamp」。
 - DESIGN.md 是掃描現有 `app/globals.css` tokens 產生的；token 變動後可重跑 `/impeccable document` 同步。
+- **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
+  - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
+  - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。
+  - **禁止 inline `style` 寫 token 已涵蓋的靜態值**（`fontSize` / `padding` / `margin` / `borderRadius` / 顏色）；inline 只留給真正動態值（計算 transform、資料驅動尺寸）。
+  - **不得自行新增字級／間距／圓角／token**；既有 scale 真的表達不了時，先停下來問使用者。
 
 ---
 

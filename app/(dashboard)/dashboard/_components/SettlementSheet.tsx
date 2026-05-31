@@ -130,8 +130,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
 
         <SheetBody noPadding>
           {/* Amount + payer */}
-          <div className="px-6 pt-6 pb-7 text-center"
-            style={{ borderBottom: '1px solid var(--hairline)' }}>
+          <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div className="text-xs tracking-[0.6px] mb-3" style={{ color: 'var(--ink-3)' }}>
               {t.settlement.amountLabel}
             </div>
@@ -156,7 +155,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
               <CalIcon />
               <div className="flex-1 text-left">
-                <div className="text-body font-medium" style={{ color: 'var(--ink)' }}>
+                <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
                   {formatDateAbsolute(date, locale)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>

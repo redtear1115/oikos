@@ -401,7 +401,7 @@ function CurrencyRow(props: {
         </div>
         {isBase && (
           <span
-            className="text-micro tracking-[0.5px] px-2 py-0.5 rounded-full"
+            className="text-xs tracking-[0.5px] px-2 py-0.5 rounded-full"
             style={{ background: 'var(--ink)', color: 'var(--bg)' }}
           >
             {ts.basePill}

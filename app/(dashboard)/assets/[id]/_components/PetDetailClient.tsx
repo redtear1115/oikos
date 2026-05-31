@@ -137,7 +137,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="pet" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

@@ -173,7 +173,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
           <button
             type="button"
             onClick={() => setColor(null)}
-            className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-micro"
+            className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs"
             style={{
               border: color === null ? '3px solid var(--ink)' : '1.5px solid var(--hairline)',
               background: 'transparent',

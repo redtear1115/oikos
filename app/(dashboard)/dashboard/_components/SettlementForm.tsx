@@ -101,7 +101,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             el.select()
           }}
         >
-          <span className="text-button font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
+          <span className="text-base font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
           <input
             ref={inputRef}
             type="text"
@@ -158,10 +158,10 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
           >
             <CalIcon size={20} />
             <div className="flex-1 text-left">
-              <div className="text-label font-medium" style={{ color: 'var(--ink)' }}>
+              <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                 {formatDateAbsolute(date, locale)}
               </div>
-              <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
                 {formatPickerSubtitle(date, locale)}
               </div>
             </div>

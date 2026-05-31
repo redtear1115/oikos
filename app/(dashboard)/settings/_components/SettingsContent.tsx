@@ -104,7 +104,7 @@ export async function SettingsContent({
       </div>
 
       <div
-        className="text-micro text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
+        className="text-xs text-center mt-2 leading-relaxed tracking-[0.3px] pb-8"
         style={{ color: 'var(--ink-3)' }}
       >
         Futari · v{appVersion}

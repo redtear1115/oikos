@@ -34,7 +34,8 @@ export function UseCaseOtherCases({
           <li key={slug}>
             <Link
               href={localizedHref(`/use-case/${slug}`, locale)}
-className="inline-flex items-center px-4 py-2 rounded-[10px] text-meta"
+              aria-label={copy.cardAriaLabel.replace('{slug}', slug)}
+              className="inline-flex items-center px-4 py-2 rounded-[10px] text-sm"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',

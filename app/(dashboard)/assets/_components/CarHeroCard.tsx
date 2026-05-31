@@ -40,11 +40,11 @@ function FactChip({ label, tone = 'neutral' }: { label: string; tone?: ChipTone 
         display: 'inline-flex',
         alignItems: 'center',
         gap: 5,
-        padding: '4px 9px',
+        padding: '4px 8px',
         borderRadius: 999,
         background: bg,
         color: fg,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 500,
         letterSpacing: 0.2,
       }}
@@ -128,7 +128,7 @@ export function CarHeroCard({
           <div className="flex items-center gap-2">
             <div
               className="truncate"
-              style={{ fontSize: 'var(--fs-button)', color: 'var(--ink)', fontWeight: 500 }}
+              style={{ fontSize: 'var(--fs-base)', color: 'var(--ink)', fontWeight: 500 }}
             >
               {name}
             </div>
@@ -141,12 +141,12 @@ export function CarHeroCard({
                 className="shrink-0"
                 aria-label="●●●●●●"
                 style={{
-                  fontSize: 'var(--fs-micro)',
+                  fontSize: 'var(--fs-xs)',
                   color: 'var(--ink-3)',
                   fontFamily: '"JetBrains Mono", monospace',
                   letterSpacing: 0.8,
                   background: 'rgba(58,36,25,0.06)',
-                  padding: '2px 7px',
+                  padding: '2px 8px',
                   borderRadius: 5,
                 }}
               >
@@ -156,13 +156,13 @@ export function CarHeroCard({
           </div>
           <div
             className="truncate"
-            style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', marginTop: 2 }}
+            style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', marginTop: 2 }}
           >
             {subtitle}
           </div>
         </div>
         <div className="text-right shrink-0 ml-2">
-          <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
+          <div className="text-xs tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
           <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
             {formatAmount(monthAmount, 'twd')}
           </div>

@@ -54,7 +54,7 @@ export function GatedView() {
           background: 'var(--btn-primary-bg)',
           color: 'var(--btn-primary-text)',
           fontFamily: 'inherit',
-          fontSize: 'var(--fs-button)',
+          fontSize: 'var(--fs-base)',
           fontWeight: 500,
           letterSpacing: '0.2px',
           textDecoration: 'none',

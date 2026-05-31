@@ -14,11 +14,11 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
         <div className="flex justify-center mb-5">
           <FutariMark size={64} />
         </div>
-        <div className="text-button font-medium mb-2"
+        <div className="text-base font-medium mb-2"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {t.feed.noRecordsTitle}
         </div>
-        <div className="text-label leading-relaxed mb-6"
+        <div className="text-sm leading-relaxed mb-6"
           style={{ color: 'var(--ink-2)' }}>
           {t.feed.noRecordsHint}
         </div>

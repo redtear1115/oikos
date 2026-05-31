@@ -108,7 +108,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             blank + 「清除」 clears, blank alone on edit keeps, typed value sets.
             Generic encryptedHint / clear strings reused from `child`. */}
         <div className="flex flex-col gap-1">
-          <label htmlFor={addressId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
+          <label htmlFor={addressId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
           <div className="flex items-center gap-2">
             <input
               id={addressId}
@@ -152,7 +152,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
         {/* Purchase date */}
         <div className="flex flex-col gap-1">
-          <label htmlFor={purchaseDateId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasedAt}</label>
+          <label htmlFor={purchaseDateId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasedAt}</label>
           <button
             id={purchaseDateId}
             type="button"
@@ -173,7 +173,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
         {/* Purchase price */}
         <div className="flex flex-col gap-1">
-          <label htmlFor={purchasePriceId} className="text-micro tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
+          <label htmlFor={purchasePriceId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
           <input
             id={purchasePriceId}
             type="number"

@@ -34,7 +34,7 @@ export function UseCaseHero({
         {title}
       </h1>
       <p
-        className="text-body md:text-[17px] leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
+        className="text-base md:text-[17px] leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
         style={{ color: 'var(--ink-2)', maxWidth: 520 }}
       >
         {subtitle}
