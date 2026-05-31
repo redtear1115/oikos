@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date, jsonb, boolean, primaryKey,
+  timestamp, date, jsonb, boolean, primaryKey, unique,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -594,4 +594,6 @@ export const pushTokens = pgTable('PushTokens', {
   token: text('token').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (t) => ({
+  uniqueUserPlatformToken: unique('push_tokens_unique').on(t.userId, t.platform, t.token),
+}))
