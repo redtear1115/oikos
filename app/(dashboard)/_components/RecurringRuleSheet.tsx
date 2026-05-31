@@ -303,7 +303,7 @@ export function RecurringRuleSheet(props: Props) {
             {!isSolo && (
               isIncome ? (
                 <div
-                  className="flex items-center justify-center gap-2.5 text-label"
+                  className="flex items-center justify-center gap-2.5 text-sm"
                   style={{ marginTop: 18, color: 'var(--ink-2)' }}
                 >
                   <span>{t.recurringIncome.sheet.recipientPrompt}</span>
@@ -316,7 +316,7 @@ export function RecurringRuleSheet(props: Props) {
                         key={w}
                         type="button"
                         onClick={() => setRecipientWho(w)}
-                        className="oik-segment h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5"
+                        className="oik-segment h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5"
                         style={{
                           background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
                           color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
@@ -397,7 +397,7 @@ export function RecurringRuleSheet(props: Props) {
                       }}
                     >
                       <span
-                        className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-label font-medium"
+                        className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-sm font-medium"
                         style={{ background: c.tint, color: c.ink }}
                       >
                         {c.mono}
@@ -502,7 +502,7 @@ export function RecurringRuleSheet(props: Props) {
                 type="date"
                 value={startsOn}
                 onChange={(e) => setStartsOn(e.target.value)}
-                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-label"
+                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-sm"
                 style={{
                   border: '1px solid var(--hairline)',
                   color: 'var(--ink)',
@@ -518,7 +518,7 @@ export function RecurringRuleSheet(props: Props) {
                 type="date"
                 value={endsOn}
                 onChange={(e) => setEndsOn(e.target.value)}
-                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-label"
+                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-sm"
                 style={{
                   border: '1px solid var(--hairline)',
                   color: 'var(--ink)',
@@ -540,7 +540,7 @@ export function RecurringRuleSheet(props: Props) {
                   <select
                     value={incomeAssetId}
                     onChange={(e) => setIncomeAssetId(e.target.value)}
-                    className="w-full bg-transparent rounded-chip px-2.5 py-2 text-label"
+                    className="w-full bg-transparent rounded-chip px-2.5 py-2 text-sm"
                     style={{
                       border: '1px solid var(--hairline)',
                       color: 'var(--ink)',

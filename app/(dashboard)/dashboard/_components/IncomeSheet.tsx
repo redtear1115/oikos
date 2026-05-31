@@ -305,7 +305,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 income-palette accent on the selected pill. */}
             {!isSolo && (
               <div
-                className="mt-[22px] flex items-center justify-center gap-2.5 text-label"
+                className="mt-[22px] flex items-center justify-center gap-2.5 text-sm"
                 style={{ color: 'var(--ink-2)' }}
               >
                 <span>{t.incomeSheet.recipientPrompt}</span>
@@ -318,7 +318,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                       key={w}
                       type="button"
                       onClick={() => setRecipientWho(w)}
-                      className="oik-segment h-7 px-3.5 rounded-full border-0 text-label font-medium cursor-pointer flex items-center gap-1.5"
+                      className="oik-segment h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5"
                       style={{
                         background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
                         color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
@@ -392,7 +392,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                   <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                     {selectedPolicyName ?? t.incomeSheet.selectPolicy}
                   </div>
-                  <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
                     {category === 'maturity'
                       ? t.incomeSheet.maturityHint
                       : t.incomeSheet.claimHint}
@@ -436,7 +436,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                           <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
                             {a.name}
                           </div>
-                          <div className="text-micro mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                          <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
                             {t.incomeSheet.insuranceBadge}
                           </div>
                         </div>

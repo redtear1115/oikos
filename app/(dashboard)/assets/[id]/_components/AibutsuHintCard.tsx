@@ -42,13 +42,13 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
       }}
     >
       <p
-        className="text-micro font-medium mb-[5px]"
+        className="text-xs font-medium mb-1.5"
         style={{ color: style.accentColor, letterSpacing: '0.3px' }}
       >
         {t.assetDetail.hint.title}
       </p>
       <p
-        className="text-micro mb-[10px]"
+        className="text-xs mb-[10px]"
         style={{ color: 'var(--ink-2)', lineHeight: 1.9 }}
       >
         {items}
@@ -56,7 +56,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
       <button
         type="button"
         onClick={onCtaPress}
-        className="w-full h-9 rounded-chip text-label font-medium text-white cursor-pointer"
+        className="w-full h-9 rounded-chip text-sm font-medium text-white cursor-pointer"
         style={{
           background: 'var(--accent)',
           boxShadow: '0 2px 6px rgba(224,136,86,0.3)',

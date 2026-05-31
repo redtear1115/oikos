@@ -23,7 +23,7 @@ export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
     <button
       type="button"
       onClick={onClick}
-      className="oik-chip h-8 pl-1.5 pr-3 rounded-full text-label font-medium cursor-pointer inline-flex items-center gap-2 shrink-0"
+      className="oik-chip h-8 pl-1.5 pr-3 rounded-full text-sm font-medium cursor-pointer inline-flex items-center gap-2 shrink-0"
       style={{
         background: selected ? P.ink : 'var(--toggle-inactive-bg)',
         color: selected ? 'var(--toggle-active-text)' : 'var(--ink)',
@@ -42,7 +42,7 @@ export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 'var(--fs-label)',
+          fontSize: 'var(--fs-sm)',
           fontWeight: 500,
         }}
       >

@@ -84,7 +84,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
             Futari
           </span>
           <span
-            className="hidden md:inline text-micro ml-2"
+            className="hidden md:inline text-xs ml-2"
             style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
             ふたり
@@ -188,7 +188,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
 
             {/* body — both layouts */}
             <p
-              className="m-0 mt-5 md:mt-7 text-body md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
+              className="m-0 mt-5 md:mt-7 text-base md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
               style={{
                 color: 'var(--ink-2)',
                 maxWidth: 320,
@@ -367,7 +367,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           <div className="flex items-center gap-3">
             {languageSwitcher}
             <span
-              className="text-micro"
+              className="text-xs"
               style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
               © 2026 · MADE IN TAIWAN
@@ -465,13 +465,13 @@ function MigrateLinksSection({
               }}
             >
               <p
-                className="m-0 text-body md:text-[16px] font-medium"
+                className="m-0 text-base md:text-[16px] font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
@@ -570,13 +570,13 @@ function UseCaseLinksSection({
               }}
             >
               <p
-                className="m-0 text-body md:text-[16px] font-medium"
+                className="m-0 text-base md:text-[16px] font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
@@ -644,7 +644,7 @@ function FeatureEntry({
           </h3>
         </div>
         <p
-          className="m-0 text-meta md:text-body leading-[1.65] md:leading-[1.7]"
+          className="m-0 text-meta md:text-base leading-[1.65] md:leading-[1.7]"
           style={{ color: 'var(--ink-2)' }}
         >
           {body}

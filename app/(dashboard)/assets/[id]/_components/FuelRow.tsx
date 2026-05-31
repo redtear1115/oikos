@@ -50,23 +50,23 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-label text-[var(--ink)] font-medium">加油</span>
+          <span className="text-sm text-[var(--ink)] font-medium">加油</span>
           {econ !== null ? (
-            <span className="text-micro text-[#8A7B5A] font-mono bg-[#E8E4D8] px-1.5 py-px rounded">
+            <span className="text-xs text-[#8A7B5A] font-mono bg-[#E8E4D8] px-1.5 py-px rounded">
               {econ.toFixed(1)} km/L
             </span>
           ) : (
-            <span className="text-micro text-[var(--ink-3)] font-mono bg-[var(--surface-alt,#F5F2EC)] px-1.5 py-px rounded">
+            <span className="text-xs text-[var(--ink-3)] font-mono bg-[var(--surface-alt,#F5F2EC)] px-1.5 py-px rounded">
               — km/L
             </span>
           )}
         </div>
-        <div className="text-micro text-[var(--ink-3)] font-mono mt-1">
+        <div className="text-xs text-[var(--ink-3)] font-mono mt-1">
           {formatDateRelative(fuelLog.loggedAt, locale)} · {parseFloat(fuelLog.liters).toFixed(1)}L · {fmt(fuelLog.odometer)} km · {fuelLog.station ?? '—'}
         </div>
       </div>
 
-      <div className="text-body font-medium text-[var(--ink)] tabular-nums shrink-0">
+      <div className="text-base font-medium text-[var(--ink)] tabular-nums shrink-0">
         {formatAmount(amount, 'twd')}
       </div>
     </button>

@@ -103,7 +103,7 @@ export function AssetHero({
         {name && subtitle}
 
         <div className="text-center mt-5 pb-1">
-          <div className="text-micro font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>{t.assetDetail.car.avgEcon}</div>
+          <div className="text-xs font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>{t.assetDetail.car.avgEcon}</div>
           <div className="inline-flex items-baseline gap-1.5 mt-1.5">
             <span
               className="text-amount-lg font-medium tabular-nums leading-none"
@@ -111,9 +111,9 @@ export function AssetHero({
             >
               {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
             </span>
-            <span className="text-label font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
           </div>
-          <div className="text-micro font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
+          <div className="text-xs font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
             {avgEcon === null && fuelLogCount === 0
               ? t.assetDetail.car.avgEconNoLog
               : avgEcon === null
@@ -141,7 +141,7 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
   const dim = amount === 0
   return (
     <div>
-      <div className="text-micro tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-xs tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
       <div
         className="tnum tracking-[-1px] leading-none"
         style={{
@@ -163,7 +163,7 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1">
-      <div className="text-micro font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-xs font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
       <div className="text-button font-medium tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
     </div>
   )

@@ -96,7 +96,7 @@ export function BrandHeaderHint({ showTripButton }: { showTripButton: boolean })
   return (
     <div
       aria-hidden="true"
-      className="absolute right-0 top-full flex items-start gap-2 pt-[5px] pointer-events-none"
+      className="absolute right-0 top-full flex items-start gap-2 pt-1.5 pointer-events-none"
       style={{
         opacity,
         transform: `translateY(${translateY}px)`,
@@ -126,7 +126,7 @@ function Callout({ label }: { label: string }) {
       />
       {/* Pill label */}
       <div
-        className="px-[7px] py-[2px] rounded-full text-[11px] tracking-wide whitespace-nowrap"
+        className="px-2 py-[2px] rounded-full text-[11px] tracking-wide whitespace-nowrap"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',

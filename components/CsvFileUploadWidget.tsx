@@ -59,7 +59,7 @@ const VARIANTS: Record<'sm' | 'md', Variant> = {
   },
   md: {
     label: 'block cursor-pointer rounded-2xl px-6 py-10 md:py-12 text-center transition-colors',
-    prompt: 'text-body mb-3',
+    prompt: 'text-base mb-3',
     button:
       'inline-flex items-center justify-center h-11 px-6 rounded-xl text-white text-meta font-medium',
     buttonStyle: {

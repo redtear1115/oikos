@@ -18,7 +18,7 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {t.feed.noRecordsTitle}
         </div>
-        <div className="text-label leading-relaxed mb-6"
+        <div className="text-sm leading-relaxed mb-6"
           style={{ color: 'var(--ink-2)' }}>
           {t.feed.noRecordsHint}
         </div>

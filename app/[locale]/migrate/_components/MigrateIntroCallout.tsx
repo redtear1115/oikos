@@ -10,7 +10,7 @@ export function MigrateIntroCallout({ text }: { text: string }) {
       style={{ background: 'var(--surface-alt)' }}
     >
       <p
-        className="m-0 text-meta md:text-body leading-[1.85]"
+        className="m-0 text-meta md:text-base leading-[1.85]"
         style={{
           fontFamily: 'var(--font-fraunces)',
           fontStyle: 'italic',

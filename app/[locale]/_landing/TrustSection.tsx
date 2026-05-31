@@ -64,7 +64,7 @@ function FullTrustSection({ t }: { t: LandingStrings }) {
         </p>
 
         <ul
-          className="m-0 mt-8 md:mt-10 p-0 list-none flex flex-col md:flex-row md:justify-center items-center gap-3 md:gap-x-6 md:gap-y-0 text-meta md:text-body"
+          className="m-0 mt-8 md:mt-10 p-0 list-none flex flex-col md:flex-row md:justify-center items-center gap-3 md:gap-x-6 md:gap-y-0 text-meta md:text-base"
           style={{ color: 'var(--ink-2)' }}
         >
           <li className="inline-flex items-center gap-2">

@@ -88,7 +88,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
         {hasDates ? (
           <>
-            <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+            <div className="text-xs tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
               {pct >= 1 ? td.expired : td.coverageRemaining}
             </div>
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
@@ -101,7 +101,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
                 </span>
               )}
             </div>
-            <div className="text-micro mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+            <div className="text-xs mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
               {details?.annualPremium ? td.annualPremiumPrefix.replace('{amount}', details.annualPremium.toLocaleString()) : ''}
               {details?.annualPremium && details?.termYears ? ` · ` : ''}
               {details?.termYears ? td.termYearsLine.replace('{n}', String(details.termYears)) : ''}
@@ -109,7 +109,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
           </>
         ) : (
           <>
-            <div className="text-micro tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>{td.annualPremiumLabel}</div>
+            <div className="text-xs tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>{td.annualPremiumLabel}</div>
             {/* TODO(v0.17 currency): typographic split (small NT$ + large digits)
                  + termAndSumLine i18n template has "NT$" baked in — defer
                  migration until formatAmount supports digits-only mode. */}
@@ -120,7 +120,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
               </span>
             </div>
             {details?.termYears && details?.sumInsured && (
-              <div className="text-micro mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+              <div className="text-xs mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
                 {td.termAndSumLine.replace('{n}', String(details.termYears)).replace('{sum}', details.sumInsured.toLocaleString())}
               </div>
             )}
@@ -131,8 +131,8 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       {details?.startsAt && details?.endsAt && (
         <div className="mx-4 mt-[14px] p-4 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="flex justify-between items-baseline">
-            <span className="text-micro" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
-            <span className="text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
+            <span className="text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
               {td.yearsLeft.replace('{years}', yearsLeft.toFixed(1))}
             </span>
           </div>
@@ -143,7 +143,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
             {/* than enough for a 1.5px-tall progress bar. */}
             <div className="h-full rounded-full" style={{ width: `${(pct * 100).toFixed(2)}%`, background: tint.accent }} />
           </div>
-          <div className="mt-1.5 flex justify-between text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="mt-1.5 flex justify-between text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             <span>{details.startsAt}</span>
             <span>{details.endsAt}</span>
           </div>

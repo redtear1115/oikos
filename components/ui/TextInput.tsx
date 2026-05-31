@@ -32,14 +32,14 @@ export function TextInput({
       ].filter(Boolean).join(' ')}
     >
       {leftAddon && (
-        <span className="shrink-0 pl-3.5 text-body text-ink-2 select-none">
+        <span className="shrink-0 pl-3.5 text-base text-ink-2 select-none">
           {leftAddon}
         </span>
       )}
       <input
         className={[
           'flex-1 min-w-0 h-full bg-transparent',
-          'px-3.5 text-body text-ink',
+          'px-3.5 text-base text-ink',
           'border-0 outline-none',
           'placeholder:text-ink-3',
           'disabled:opacity-50 disabled:cursor-default',

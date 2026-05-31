@@ -91,13 +91,13 @@ export function PhonePreview({ t }: Props) {
             </div>
             <div className="flex items-center gap-1.5">
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-medium"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-xs font-medium"
                 style={{ background: 'var(--accent)' }}
               >
                 M
               </div>
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-micro font-medium"
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-xs font-medium"
                 style={{ background: 'var(--asset-color-house)' }}
               >
                 T
@@ -126,7 +126,7 @@ export function PhonePreview({ t }: Props) {
               NT$ 1,240
             </p>
             <p
-              className="m-0 mt-1 text-micro"
+              className="m-0 mt-1 text-xs"
               style={{ color: 'var(--ink-2)' }}
             >
               {t.phoneMockBalancePeriod}

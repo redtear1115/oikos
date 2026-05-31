@@ -130,7 +130,7 @@ function NavTab({ tab, label, active, allowPrefetch }: { tab: typeof TABS[number
       className="flex-1 flex flex-col items-center justify-center gap-0.5 pt-2 min-h-[64px] no-underline"
       style={{ color }}>
       <Icon active={active} color={active ? '#3A2419' : '#B89C8B'} />
-      <span className="text-micro tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
+      <span className="text-xs tracking-[0.4px]" style={{ fontWeight: active ? 600 : 400 }}>
         {label}
       </span>
     </Link>

@@ -107,7 +107,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         <div className="flex flex-wrap gap-1.5">
           {[{v: 'cat', label: ts.pet.speciesCat},{v: 'dog', label: ts.pet.speciesDog},{v: 'rabbit', label: ts.pet.speciesRabbit},{v: 'bird', label: ts.pet.speciesBird},{v: 'fish', label: ts.pet.speciesFish},{v: 'other', label: ts.pet.speciesOther}].map(o => (
             <button key={o.v} type="button" onClick={() => setSpecies(o.v)}
-              className="h-chip px-3.5 rounded-chip text-label"
+              className="h-chip px-3.5 rounded-chip text-sm"
               style={{
                 border: species === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: species === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -173,7 +173,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.pet.sectionHealth}</div>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.pet.sectionHealth}</div>
         <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
       </div>
 

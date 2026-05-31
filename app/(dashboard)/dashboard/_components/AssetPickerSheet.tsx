@@ -198,12 +198,12 @@ function PickerRow({
         {iconNode}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-body font-medium truncate" style={{ color: 'var(--ink)' }}>{title}</div>
+        <div className="text-base font-medium truncate" style={{ color: 'var(--ink)' }}>{title}</div>
         {subtitle && (
           <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>{subtitle}</div>
         )}
       </div>
-      {selected && <span className="text-body" style={{ color: 'var(--ink)' }}>✓</span>}
+      {selected && <span className="text-base" style={{ color: 'var(--ink)' }}>✓</span>}
     </button>
   )
 }

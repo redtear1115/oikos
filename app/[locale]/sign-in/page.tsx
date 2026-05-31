@@ -207,7 +207,7 @@ function AboutNarrative({
           return (
             <p
               key={j}
-              className="m-0 text-meta lg:text-body leading-[1.85]"
+              className="m-0 text-meta lg:text-base leading-[1.85]"
               style={{ color: 'var(--ink-2)' }}
             >
               {p}
@@ -215,7 +215,7 @@ function AboutNarrative({
           )
         })}
         <p
-          className="m-0 mt-4 text-label lg:text-meta leading-relaxed italic"
+          className="m-0 mt-4 text-sm lg:text-meta leading-relaxed italic"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontWeight: 400,

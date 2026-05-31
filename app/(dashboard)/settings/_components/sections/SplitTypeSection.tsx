@@ -64,7 +64,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
                 background: 'transparent',
               }}
             >
-              <span className="text-body" style={{ color: 'var(--ink)' }}>{opt.label}</span>
+              <span className="text-base" style={{ color: 'var(--ink)' }}>{opt.label}</span>
               <div
                 className="w-5 h-5 rounded-full transition-all duration-150"
                 style={{

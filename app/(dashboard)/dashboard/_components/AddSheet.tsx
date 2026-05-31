@@ -598,7 +598,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                       key={s}
                       type="button"
                       onClick={() => setStatus(s)}
-                      className="oik-segment h-8 px-4 rounded-full border-0 text-label font-medium cursor-pointer"
+                      className="oik-segment h-8 px-4 rounded-full border-0 text-sm font-medium cursor-pointer"
                       style={{
                         background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
                         color: sel ? 'var(--ink)' : 'var(--ink-2)',
@@ -612,7 +612,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 })}
               </div>
               {status === 'pending' && (
-                <div className="text-micro px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
+                <div className="text-xs px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
                   {t.addSheet.statusPendingHint}
                 </div>
               )}

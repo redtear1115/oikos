@@ -214,7 +214,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
           </div>
           {isEnded && (
             <span
-              className="shrink-0 px-2 py-0.5 rounded-full text-micro tracking-[0.5px]"
+              className="shrink-0 px-2 py-0.5 rounded-full text-xs tracking-[0.5px]"
               style={{
                 background: 'var(--hairline)',
                 color: 'var(--ink-2)',
@@ -236,7 +236,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)' }}>
+              <p className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)' }}>
                 {t.tripDetail.totalLabel}
               </p>
               <p
@@ -247,7 +247,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
               </p>
             </div>
             <span
-              className="shrink-0 mt-1 px-2 py-0.5 rounded-full text-micro tracking-[0.5px]"
+              className="shrink-0 mt-1 px-2 py-0.5 rounded-full text-xs tracking-[0.5px]"
               style={{
                 background: 'var(--hairline)',
                 color: 'var(--ink-2)',
@@ -294,7 +294,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
       {byCurrency.length > 1 && (
         <section className="mt-5 px-4">
           <div
-            className="text-micro tracking-[1.5px] uppercase px-1 pb-2"
+            className="text-xs tracking-[1.5px] uppercase px-1 pb-2"
             style={{ color: 'var(--ink-3)' }}
           >
             {t.tripDetail.currencyBreakdown}
@@ -326,7 +326,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
       <section className="mt-5 px-4">
         <div className="flex items-center justify-between px-1 pb-2">
           <div
-            className="text-micro tracking-[1.5px] uppercase"
+            className="text-xs tracking-[1.5px] uppercase"
             style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
           >
             {t.tripDetail.recordsCountLabel.replace('{n}', String(records.length))}
@@ -478,7 +478,7 @@ function PerSideMemberCard(props: {
         size={28}
       />
       <div className="min-w-0 flex-1">
-        <div className="text-micro tracking-[0.5px] truncate" style={{ color: 'var(--ink-3)' }}>
+        <div className="text-xs tracking-[0.5px] truncate" style={{ color: 'var(--ink-3)' }}>
           {props.label}
         </div>
         <div
@@ -540,7 +540,7 @@ function CurrencyBreakdownCard(props: {
           >
             {row.currency}
           </span>
-          <span className="text-micro" style={{ color: 'var(--ink-3)' }}>
+          <span className="text-xs" style={{ color: 'var(--ink-3)' }}>
             {row.count} {ts.recordsSuffix}
           </span>
         </div>

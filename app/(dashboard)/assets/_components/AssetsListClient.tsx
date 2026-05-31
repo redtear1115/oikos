@@ -154,7 +154,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
         >
           NT$ {totalAnnual.toLocaleString('en-US')}
         </div>
-        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--ink-3)' }}>
+        <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-3)' }}>
           共{' '}
           <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{count}</span>
           {' '}張保單
@@ -179,12 +179,12 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
             >
               {upcoming.a.insurance?.expiryDate ?? '—'}
             </div>
-            <div style={{ marginTop: 4, fontSize: 11, color: 'var(--ink-3)' }}>
+            <div style={{ marginTop: 4, fontSize: 12, color: 'var(--ink-3)' }}>
               {upcoming.a.name} · {upcoming.days} 天後
             </div>
           </>
         ) : (
-          <div style={{ marginTop: 4, fontSize: 13, color: 'var(--ink-3)' }}>—</div>
+          <div style={{ marginTop: 4, fontSize: 14, color: 'var(--ink-3)' }}>—</div>
         )}
       </div>
     </div>
@@ -401,7 +401,7 @@ export function AssetsListClient({ items }: Props) {
         gap: 8,
         color: 'var(--ink-2)',
         fontFamily: 'inherit',
-        fontSize: 'var(--fs-label)',
+        fontSize: 'var(--fs-sm)',
         cursor: 'pointer',
       }}
     >

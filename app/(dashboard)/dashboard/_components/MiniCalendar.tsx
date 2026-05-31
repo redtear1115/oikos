@@ -50,7 +50,7 @@ export function MiniCalendar({ value, onChange }: Props) {
           titleAriaLabel={mc.selectMonth}
           onTitle={() => setMode('months')}
         />
-        <div className="grid grid-cols-7 text-micro text-center mb-1.5"
+        <div className="grid grid-cols-7 text-xs text-center mb-1.5"
           style={{ color: 'var(--ink-3)' }}>
           {mc.weekdays.map(d => <div key={d}>{d}</div>)}
         </div>

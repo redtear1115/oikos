@@ -28,7 +28,7 @@ export function FuelTypeButtonGroup({ value, onChange }: FuelTypeButtonGroupProp
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
+            className={`oik-segment flex-1 h-9 rounded-lg text-sm font-medium ${
               sel ? 'font-medium' : ''
             }`}
             style={{

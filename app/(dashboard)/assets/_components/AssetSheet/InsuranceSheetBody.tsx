@@ -168,7 +168,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         <div className="flex flex-wrap gap-1.5">
           {[{v:'medical',label:ts.insurance.kindMedical},{v:'life',label:ts.insurance.kindLife},{v:'accident',label:ts.insurance.kindAccident},{v:'cancer',label:ts.insurance.kindCancer},{v:'illness',label:ts.insurance.kindIllness},{v:'car',label:ts.insurance.kindCar},{v:'savings',label:ts.insurance.kindSavings}].map(o => (
             <button key={o.v} type="button" onClick={() => setKind(o.v)}
-              className="h-chip px-3.5 rounded-chip text-label"
+              className="h-chip px-3.5 rounded-chip text-sm"
               style={{
                 border: kind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: kind === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -195,7 +195,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={opt.id}
                   type="button"
                   onClick={() => setPolicyHolderUserId(opt.id)}
-                  className={`oik-segment flex-1 h-9 rounded-lg text-label font-medium ${
+                  className={`oik-segment flex-1 h-9 rounded-lg text-sm font-medium ${
                     active ? 'font-medium' : ''
                   }`}
                   style={{
@@ -228,7 +228,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredChildId(null)
                 setInsured('')
               }}
-              className="h-chip px-3.5 rounded-chip text-label"
+              className="h-chip px-3.5 rounded-chip text-sm"
               style={{
                 border: insuredUserId === viewer.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === viewer.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -246,7 +246,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredChildId(null)
                   setInsured('')
                 }}
-                className="h-chip px-3.5 rounded-chip text-label"
+                className="h-chip px-3.5 rounded-chip text-sm"
                 style={{
                   border: insuredUserId === partner.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredUserId === partner.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -266,7 +266,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredUserId(null)
                   setInsured('')
                 }}
-                className="h-chip px-3.5 rounded-chip text-label"
+                className="h-chip px-3.5 rounded-chip text-sm"
                 style={{
                   border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -283,7 +283,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredUserId(null)
                 setInsuredChildId(null)
               }}
-              className="h-chip px-3.5 rounded-chip text-label"
+              className="h-chip px-3.5 rounded-chip text-sm"
               style={{
                 border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -316,7 +316,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionPremium}</div>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionPremium}</div>
         <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
       </div>
 
@@ -388,7 +388,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionContract}</div>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionContract}</div>
         <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
       </div>
 
@@ -415,7 +415,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       {carAssets.length > 0 && (
         <>
           <div className="flex items-center gap-2 mt-2 px-1">
-            <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionLinkedVehicle}</div>
+            <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.insurance.sectionLinkedVehicle}</div>
             <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
           </div>
           <Field label={ts.insurance.linkedVehicle}>
@@ -423,7 +423,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               <button
                 type="button"
                 onClick={() => setVehicleId(null)}
-                className="h-chip px-3.5 rounded-chip text-label"
+                className="h-chip px-3.5 rounded-chip text-sm"
                 style={{
                   border: vehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: vehicleId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -438,7 +438,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={car.id}
                   type="button"
                   onClick={() => setVehicleId(car.id)}
-                  className="h-chip px-3.5 rounded-chip text-label"
+                  className="h-chip px-3.5 rounded-chip text-sm"
                   style={{
                     border: vehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                     background: vehicleId === car.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',

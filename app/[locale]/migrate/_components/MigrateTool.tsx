@@ -90,7 +90,7 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
             style={{ color: 'var(--ink-3)' }}
           >
             <span
-              className="inline-flex items-center px-2 py-0.5 rounded-md text-micro"
+              className="inline-flex items-center px-2 py-0.5 rounded-md text-xs"
               style={{
                 background: 'var(--surface-alt)',
                 color: 'var(--ink-2)',

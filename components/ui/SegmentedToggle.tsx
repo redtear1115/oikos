@@ -40,7 +40,7 @@ export interface SegmentedToggleProps {
 // L3 row reads a notch smaller than the prominent mode toggle.
 const segmentSize: Record<SegmentedToggleSize, string> = {
   sm: 'h-7 px-2.5 text-xs',
-  md: 'h-8 px-3.5 text-label',
+  md: 'h-8 px-3.5 text-sm',
 }
 
 /**
@@ -71,7 +71,7 @@ export function SegmentedToggle({
           onClick={o.onClick}
           aria-pressed={o.active}
           aria-label={o.ariaLabel}
-          className={`oik-segment inline-flex items-center justify-center gap-[5px] cursor-pointer rounded-full border-0 font-medium transition-colors duration-150 ${segmentSize[size]}`}
+          className={`oik-segment inline-flex items-center justify-center gap-1.5 cursor-pointer rounded-full border-0 font-medium transition-colors duration-150 ${segmentSize[size]}`}
           style={{
             background: o.active ? (o.fillColor ?? 'var(--toggle-active-bg)') : 'transparent',
             color: o.active ? (o.activeTextColor ?? 'var(--toggle-active-text)') : 'var(--toggle-inactive-text)',

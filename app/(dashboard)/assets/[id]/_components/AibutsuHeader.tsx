@@ -129,8 +129,8 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
               <span
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 9,
-                  padding: '1px 5px',
+                  fontSize: 10,
+                  padding: '1px 6px',
                   borderRadius: 4,
                   background: badgeStyle.bg,
                   color: badgeStyle.fg,

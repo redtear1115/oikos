@@ -31,12 +31,12 @@ function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: st
   const days = Math.max(0, Math.floor((nowMs - new Date(purchasedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
-      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
+      <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
-      <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
+      <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
         {purchasedAt}{td.livingSuffix}
       </div>
     </div>
@@ -150,7 +150,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="house" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

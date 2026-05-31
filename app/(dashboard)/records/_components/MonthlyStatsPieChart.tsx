@@ -200,7 +200,7 @@ function CenterText({
         y={cy + 14}
         textAnchor="middle"
         style={{
-          fontSize: 11,
+          fontSize: 12,
           fill: 'var(--ink-3)',
         }}
       >

@@ -97,7 +97,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
             {stats.topCategories.map(({ name, count }) => (
               <li
                 key={name}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-label"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--hairline)',
@@ -118,7 +118,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
 function Stat({ label, tint }: { label: string; tint: CSSProperties['background'] }) {
   return (
     <div
-      className="rounded-xl px-4 py-3 text-body"
+      className="rounded-xl px-4 py-3 text-base"
       style={{ background: tint, color: 'var(--ink)' }}
     >
       {label}

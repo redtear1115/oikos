@@ -230,8 +230,8 @@ export function SavingsView({
       {details.startsAt && details.endsAt && !progress.awaitingMaturity && (
         <div className="mx-4 mt-3 p-4 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
           <div className="flex justify-between items-baseline">
-            <span className="text-micro" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
-            <span className="text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
+            <span className="text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
               {progress.yearsLeft !== null && progress.yearsLeft > 0
                 ? td.yearsLeft.replace('{years}', progress.yearsLeft.toFixed(1))
                 : progress.isMatured
@@ -251,7 +251,7 @@ export function SavingsView({
               }}
             />
           </div>
-          <div className="mt-1.5 flex justify-between text-micro" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="mt-1.5 flex justify-between text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             <span>{details.startsAt}</span>
             <span>{details.endsAt}</span>
           </div>
@@ -275,7 +275,7 @@ export function SavingsView({
       </div>
 
       <div className="px-5 pt-[18px] pb-2 flex items-center justify-between">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
           {ts.sectionReturn}
         </div>
         {/* Inline addReturn (記滿期金) opens IncomeSheet — write surface,
@@ -284,7 +284,7 @@ export function SavingsView({
           <button
             type="button"
             onClick={() => openRecordReturn()}
-            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-micro font-medium"
+            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
           >
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -481,14 +481,14 @@ function RecurringRulesSection({
   return (
     <>
       <div className="px-5 pt-[18px] pb-2 flex items-center justify-between">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
           {translations.recurringSectionTitle}
         </div>
         {rules.length > 0 && (
           <button
             type="button"
             onClick={onAdd}
-            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-micro font-medium bg-transparent border-0 cursor-pointer"
+            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium bg-transparent border-0 cursor-pointer"
             style={{ color: P.ink }}
           >
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">

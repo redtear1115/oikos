@@ -200,7 +200,7 @@ export function BalanceHero({
         }}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
-              <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1.2, flexShrink: 0 }}>
+              <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', letterSpacing: 1.2, flexShrink: 0 }}>
                 {t.balanceHero.monthlyIncome}
               </span>
               {heroCollapsed && (
@@ -208,7 +208,7 @@ export function BalanceHero({
                   className="tnum truncate"
                   style={{
                     fontFamily: 'var(--font-numeric)',
-                    fontSize: 'var(--fs-body)',
+                    fontSize: 'var(--fs-base)',
                     fontWeight: 600,
                     color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
                     letterSpacing: '-0.6px',
@@ -245,16 +245,16 @@ export function BalanceHero({
                 display: 'flex', gap: 16, alignItems: 'center',
               }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.countLabel}</div>
+                  <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.countLabel}</div>
                   <div style={{
-                    fontSize: 'var(--fs-body)', fontWeight: 600, color: 'var(--ink)', marginTop: 2,
+                    fontSize: 'var(--fs-base)', fontWeight: 600, color: 'var(--ink)', marginTop: 2,
                     fontFeatureSettings: '"tnum"',
                   }}>{incomeMonthCount}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`}</div>
                 </div>
                 <div style={{ width: 1, height: 28, background: 'var(--hairline)' }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.recent}</div>
-                  <div style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', marginTop: 2 }}>
+                  <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.recent}</div>
+                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--ink-2)', marginTop: 2 }}>
                     {recentIncomeLabel ?? t.balanceHero.noRecord}
                   </div>
                 </div>
@@ -264,10 +264,10 @@ export function BalanceHero({
                 borderTop: '1px solid var(--hairline)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.recurringIncome.title}</span>
+                <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.recurringIncome.title}</span>
                 <Link
                   href="/settings/recurring?tab=income"
-                  style={{ fontSize: 'var(--fs-label)', color: 'var(--ink-2)', textDecoration: 'none' }}
+                  style={{ fontSize: 'var(--fs-sm)', color: 'var(--ink-2)', textDecoration: 'none' }}
                 >
                   {t.balanceHero.manage}
                 </Link>
@@ -284,13 +284,13 @@ export function BalanceHero({
             <div className="flex items-center gap-2">
               <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={32} />
               <div className="flex-1 min-w-0 truncate transition-opacity duration-150" style={{ opacity: fading ? 0 : 1 }}>
-                <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 'var(--fs-body)' }}>{subjectName}</span>{' '}
-                <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-body)' }}>{verb}</span>{' '}
+                <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 'var(--fs-base)' }}>{subjectName}</span>{' '}
+                <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-base)' }}>{verb}</span>{' '}
                 <span
                   className="tnum"
                   style={{
                     fontFamily: 'var(--font-numeric)',
-                    fontSize: 'var(--fs-body)',
+                    fontSize: 'var(--fs-base)',
                     fontWeight: 600,
                     color: balanceColor,
                     letterSpacing: '-0.6px',
@@ -431,7 +431,7 @@ function SettleButton({ settleOpen, onToggle, ariaLabel, label }: {
       // extending 7px vertically + 4px horizontally (30 + 14 = 44; #147).
       className="relative min-h-[30px] inline-flex items-center gap-1 rounded-full cursor-pointer before:absolute before:-inset-y-[7px] before:-inset-x-1 before:content-['']"
       style={{
-        padding: '0 11px',
+        padding: '0 12px',
         border: '1px solid',
         borderColor: settleOpen ? 'var(--ink)' : 'var(--hairline)',
         background: settleOpen ? 'var(--ink)' : 'transparent',
@@ -441,7 +441,7 @@ function SettleButton({ settleOpen, onToggle, ariaLabel, label }: {
         transition: 'background 150ms, color 150ms, border-color 150ms',
       }}
     >
-      <span aria-hidden style={{ fontSize: 13 }}>⇄</span>
+      <span aria-hidden style={{ fontSize: 14 }}>⇄</span>
       <span>{label}</span>
     </button>
   )

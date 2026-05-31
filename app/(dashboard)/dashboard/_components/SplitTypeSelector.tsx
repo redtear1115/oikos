@@ -77,7 +77,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
         >
           <SplitGlyph kind="weighted" active={isWeighted} ratioA={splitRatioA} />
           <div className="flex-1">
-            <div className="text-body font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
+            <div className="text-base font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
               {weightedLabel}
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
@@ -128,7 +128,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
             }}>
             <SplitGlyph kind={s.id} active={sel} />
             <div className="flex-1">
-              <div className="text-body font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
+              <div className="text-base font-medium tracking-tight" style={{ color: 'var(--ink)' }}>
                 {s.label}
               </div>
               <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{s.sub}</div>
