@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.4.1** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.4.2** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -163,7 +163,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ## AI 開發協作規則
 
-- **commit + push 自主**：每完成一個邏輯單位（PR / feature）即自動 commit，並自動 push 到當前 feature branch，不必問。
+- **commit 自主、push 延到 PR-time**：每完成一個邏輯單位（PR / feature）即自動 commit，不必問；但**不要每個 commit 都 push**——本機累積，只在「要開 PR / 更新已開的 PR」時才 push。原因：`vercel.json` 沒有 git/deploy 設定，Vercel 預設「任何 branch 每次 push 都建一個 preview deployment」，逐 commit push 會產生大量不必要的 build。**例外**：當任務本身需要 preview 部署才能進行（例如測試已部署的 endpoint），iterative push 是必要且合理的。
 - **`main` / `release` 是 protected**：絕對不要直接 push 到這兩條，要進去都走 PR merge 流程。`gh pr merge --admin`（任何繞過 branch protection 的 merge）也要明確指令才執行。
 - **destructive ops**：動 prod 資料、force push 到 main/release、`reset --hard` 之類仍要明確確認 scope 後才執行。force-push（含 `--force-with-lease`）到 feature branch 在 rebase 後可自動執行。
 
@@ -225,6 +225,11 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
 - Register＝`product`；Creative North Star＝「The Warm Lamp」。
 - DESIGN.md 是掃描現有 `app/globals.css` tokens 產生的；token 變動後可重跑 `/impeccable document` 同步。
+- **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
+  - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
+  - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。
+  - **禁止 inline `style` 寫 token 已涵蓋的靜態值**（`fontSize` / `padding` / `margin` / `borderRadius` / 顏色）；inline 只留給真正動態值（計算 transform、資料驅動尺寸）。
+  - **不得自行新增字級／間距／圓角／token**；既有 scale 真的表達不了時，先停下來問使用者。
 
 ---
 

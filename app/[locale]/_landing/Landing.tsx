@@ -84,7 +84,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
             Futari
           </span>
           <span
-            className="hidden md:inline text-micro ml-2"
+            className="hidden md:inline text-xs ml-2"
             style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
             ふたり
@@ -96,7 +96,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           href={ctaHref}
           ctaLocation="desktop_header"
           target="sign_in"
-          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-meta font-medium cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
             letterSpacing: '1.2px',
@@ -188,7 +188,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
 
             {/* body — both layouts */}
             <p
-              className="m-0 mt-5 md:mt-7 text-body md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
+              className="m-0 mt-5 md:mt-7 text-base md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
               style={{
                 color: 'var(--ink-2)',
                 maxWidth: 320,
@@ -202,7 +202,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
                 href={ctaHref}
                 ctaLocation="hero"
                 target="sign_in"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-medium cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-base font-medium cursor-pointer"
                 style={{
                   background: 'var(--ink)',
                   letterSpacing: '1.8px',
@@ -216,7 +216,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
                 href={signInHref}
                 ctaLocation="secondary"
                 target="sign_in"
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-meta cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-sm cursor-pointer"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -229,7 +229,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
 
             {/* Mobile sub-CTA hint */}
             <p
-              className="md:hidden m-0 mt-3 text-center text-caption"
+              className="md:hidden m-0 mt-3 text-center text-xs"
               style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
             >
               {t.ctaHint}
@@ -281,7 +281,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
               </h2>
             </div>
             <p
-              className="hidden md:block m-0 text-meta"
+              className="hidden md:block m-0 text-sm"
               style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 320 }}
               dangerouslySetInnerHTML={{ __html: t.featuresSubtitleHtml }}
             />
@@ -351,7 +351,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           style={{ color: 'var(--ink-2)' }}
         >
           <ShieldOutlineGlyph />
-          <span className="text-caption" style={{ letterSpacing: '0.3px' }}>
+          <span className="text-xs" style={{ letterSpacing: '0.3px' }}>
             {t.footerTrust}
           </span>
         </div>
@@ -367,7 +367,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           <div className="flex items-center gap-3">
             {languageSwitcher}
             <span
-              className="text-micro"
+              className="text-xs"
               style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
             >
               © 2026 · MADE IN TAIWAN
@@ -441,7 +441,7 @@ function MigrateLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.migrateSection.subtitle}
@@ -465,13 +465,13 @@ function MigrateLinksSection({
               }}
             >
               <p
-                className="m-0 text-body md:text-[16px] font-medium"
+                className="m-0 text-base md:text-[16px] font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
@@ -546,7 +546,7 @@ function UseCaseLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-meta"
+            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.useCaseSection.subtitle}
@@ -560,7 +560,7 @@ function UseCaseLinksSection({
               href={item.href}
               ctaLocation="footer_use_case"
               target={item.target}
-              ariaLabel={t.useCaseSection.cardAriaLabel.replace('{slug}', item.slug)}
+
               className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
               style={{
                 background: 'var(--surface)',
@@ -570,13 +570,13 @@ function UseCaseLinksSection({
               }}
             >
               <p
-                className="m-0 text-body md:text-[16px] font-medium"
+                className="m-0 text-base md:text-[16px] font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-label md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
@@ -644,7 +644,7 @@ function FeatureEntry({
           </h3>
         </div>
         <p
-          className="m-0 text-meta md:text-body leading-[1.65] md:leading-[1.7]"
+          className="m-0 text-sm md:text-base leading-[1.65] md:leading-[1.7]"
           style={{ color: 'var(--ink-2)' }}
         >
           {body}

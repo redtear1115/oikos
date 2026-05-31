@@ -30,7 +30,7 @@ export function MonthSection({ monthKey, count, totalAmount }: Props) {
       >
         {monthLabel(monthKey, locale)}
       </span>
-      <span className="tnum text-micro" style={{ color: 'var(--ink-3)' }}>
+      <span className="tnum text-xs" style={{ color: 'var(--ink-3)' }}>
         {count}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`} · {formatAmount(totalAmount, 'twd')}
       </span>
     </div>

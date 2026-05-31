@@ -14,13 +14,13 @@ export function UseCasePainPoints({ items }: { items: readonly PainPoint[] }) {
             }}
           >
             <p
-              className="m-0 text-body md:text-[15.5px] font-medium"
+              className="m-0 text-base md:text-[15.5px] font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {heading}
             </p>
             <p
-              className="m-0 mt-2 text-label md:text-meta leading-[1.7]"
+              className="m-0 mt-2 text-sm md:text-sm leading-[1.7]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}

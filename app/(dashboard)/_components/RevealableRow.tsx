@@ -42,17 +42,17 @@ export function RevealableRow({ label, hasValue, revealAction, last, valueStyle 
   if (!hasValue) {
     return (
       <div
-        className="px-3.5 py-[11px] flex items-center gap-2.5"
+        className="px-3.5 py-3 flex items-center gap-2.5"
         style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
       >
         <div
-          className="text-micro shrink-0 tracking-[0.4px]"
+          className="text-xs shrink-0 tracking-[0.4px]"
           style={{ color: 'var(--ink-3)', width: 76 }}
         >
           {label}
         </div>
         <div
-          className="flex-1 text-label font-medium truncate"
+          className="flex-1 text-sm font-medium truncate"
           style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
         >
           —
@@ -82,17 +82,17 @@ export function RevealableRow({ label, hasValue, revealAction, last, valueStyle 
 
   return (
     <div
-      className="px-3.5 py-[11px] flex items-center gap-2.5"
+      className="px-3.5 py-3 flex items-center gap-2.5"
       style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
     >
       <div
-        className="text-micro shrink-0 tracking-[0.4px]"
+        className="text-xs shrink-0 tracking-[0.4px]"
         style={{ color: 'var(--ink-3)', width: 76 }}
       >
         {label}
       </div>
       <div
-        className="flex-1 text-label font-medium truncate"
+        className="flex-1 text-sm font-medium truncate"
         style={
           valueStyle ?? {
             color: 'var(--ink)',

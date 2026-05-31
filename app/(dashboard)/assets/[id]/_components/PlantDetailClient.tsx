@@ -40,12 +40,12 @@ function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: str
   const days = Math.max(0, Math.floor((nowMs - new Date(sproutedAt).getTime()) / 86400000))
   return (
     <div className="text-center py-2">
-      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.companionDays}</div>
+      <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.companionDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
-      <div className="text-micro mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
+      <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
         {sproutedAt}{td.sproutedSuffix}{waterEvery ? td.waterEveryFooter.replace('{n}', String(waterEvery)) : ''}
       </div>
     </div>
@@ -136,7 +136,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="plant" onCtaPress={() => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

@@ -117,14 +117,14 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
           )}
         </div>
         <div
-          className="text-micro flex items-center gap-1.5"
+          className="text-xs flex items-center gap-1.5"
           style={{ color: 'var(--ink-3)' }}
         >
           {dateLabel} · <Avatar memberRole={payerRole} initial={payerInitial} src={payerAvatar} size={16} /> {payerLabel}
         </div>
         {noteText && (
           <div
-            className="text-micro mt-1 italic line-clamp-2 break-words"
+            className="text-xs mt-1 italic line-clamp-2 break-words"
             style={{ color: 'var(--ink-2)' }}
           >
             “{noteText}”
@@ -145,7 +145,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
               {formatAmount(tx.originalAmount, tx.originalCurrency)}
             </div>
             <div
-              className="tnum text-micro mt-px"
+              className="tnum text-xs mt-px"
               style={{ color: 'var(--ink-3)' }}
             >
               ≈ {formatAmount(tx.amount, baseCurrency)}
@@ -160,7 +160,7 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
           </div>
         )}
         {showMyShare && (
-          <div className="tnum text-micro mt-px" style={{ color: myShareColor }}>
+          <div className="tnum text-xs mt-px" style={{ color: myShareColor }}>
             ${myShare.toLocaleString('en-US')}
           </div>
         )}

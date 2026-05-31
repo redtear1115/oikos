@@ -184,7 +184,7 @@ export function ChildCard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--ink-3)',
                 flexWrap: 'wrap',
               }}
@@ -282,7 +282,7 @@ export function PetCard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--ink-3)',
                 flexWrap: 'wrap',
               }}
@@ -361,7 +361,7 @@ export function PlantCard({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                fontSize: 11,
+                fontSize: 12,
                 color: 'var(--ink-3)',
               }}
             >
@@ -452,7 +452,7 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
               <div
                 style={{
                   marginTop: 3,
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'var(--ink-3)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',

@@ -6,7 +6,7 @@ export function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="px-5 pt-[18px] pb-2">
       <div
-        className="text-micro tracking-[1.5px] uppercase"
+        className="text-xs tracking-[1.5px] uppercase"
         style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
       >{children}</div>
     </div>
@@ -27,15 +27,15 @@ export function InfoRow({ label, value, mono = false, last = false }: {
 }) {
   return (
     <div
-      className="px-3.5 py-[11px] flex items-center gap-2.5"
+      className="px-3.5 py-3 flex items-center gap-2.5"
       style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
     >
       <div
-        className="text-micro shrink-0 tracking-[0.4px]"
+        className="text-xs shrink-0 tracking-[0.4px]"
         style={{ color: 'var(--ink-3)', width: 76 }}
       >{label}</div>
       <div
-        className="flex-1 text-label font-medium truncate"
+        className="flex-1 text-sm font-medium truncate"
         style={{
           color: 'var(--ink)',
           fontFamily: mono ? 'var(--font-numeric)' : 'inherit',
@@ -56,7 +56,7 @@ export function MoneyTwoCol({ month, total, accent }: { month: number; total: nu
         <div key={s.label} className="flex-1 flex items-stretch gap-2">
           {i > 0 && <div className="w-px" style={{ background: 'var(--hairline)' }} />}
           <div className="flex-1">
-            <div className="text-micro tracking-[1px]" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{s.label}</div>
+            <div className="text-xs tracking-[1px]" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{s.label}</div>
             {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design
                  before migrating to formatAmount. */}
             <div className="text-base font-medium mt-0.5 tabular-nums" style={{ color: 'var(--ink)' }}>
@@ -78,7 +78,7 @@ export function AgeDisplay({ birth, accent }: { birth: string; accent: string })
   const mos = months % 12
   return (
     <div className="text-center">
-      <div className="text-micro tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{t.assetDetail.age.label}</div>
+      <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{t.assetDetail.age.label}</div>
       <div className="inline-flex items-baseline gap-1 mt-1">
         <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-md)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -1 }}>
           {yrs}
@@ -89,7 +89,7 @@ export function AgeDisplay({ birth, accent }: { birth: string; accent: string })
             <span className="tabular-nums leading-none ml-1" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-title)', fontWeight: 500, color: 'var(--ink)' }}>
               {mos}
             </span>
-            <span className="text-micro font-medium" style={{ color: accent }}>{t.assetDetail.age.monthsSuffix}</span>
+            <span className="text-xs font-medium" style={{ color: accent }}>{t.assetDetail.age.monthsSuffix}</span>
           </>
         )}
       </div>

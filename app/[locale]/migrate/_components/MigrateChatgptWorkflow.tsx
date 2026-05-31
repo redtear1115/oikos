@@ -49,7 +49,7 @@ export function MigrateChatgptWorkflow({
         >
           {copy.heading}
         </h2>
-        <p className="m-0 text-meta md:text-body leading-[1.7]" style={{ color: 'var(--ink-2)' }}>
+        <p className="m-0 text-sm md:text-base leading-[1.7]" style={{ color: 'var(--ink-2)' }}>
           {copy.intro}
         </p>
       </div>
@@ -58,7 +58,7 @@ export function MigrateChatgptWorkflow({
         {copy.substeps.map((text, i) => (
           <li
             key={i}
-            className="flex gap-4 items-start text-meta md:text-body leading-[1.7]"
+            className="flex gap-4 items-start text-sm md:text-base leading-[1.7]"
             style={{ color: 'var(--ink-2)' }}
           >
             <span
@@ -86,13 +86,13 @@ export function MigrateChatgptWorkflow({
       {/* Copyable ChatGPT prompt */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-caption" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
+          <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
             {copy.promptLabel}
           </span>
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-bubble text-label font-medium cursor-pointer transition-opacity"
+            className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-bubble text-sm font-medium cursor-pointer transition-opacity"
             style={{
               background: 'var(--surface)',
               border: '1px solid var(--ink-3)',
@@ -104,7 +104,7 @@ export function MigrateChatgptWorkflow({
           </button>
         </div>
         <pre
-          className="m-0 overflow-x-auto whitespace-pre-wrap break-words text-label leading-[1.7] rounded-tile p-4"
+          className="m-0 overflow-x-auto whitespace-pre-wrap break-words text-sm leading-[1.7] rounded-tile p-4"
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -118,11 +118,11 @@ export function MigrateChatgptWorkflow({
 
       {/* CSV format example */}
       <div className="space-y-2">
-        <span className="text-caption" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
+        <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
           {copy.formatLabel}
         </span>
         <pre
-          className="m-0 overflow-x-auto text-label leading-[1.7] rounded-tile p-4"
+          className="m-0 overflow-x-auto text-sm leading-[1.7] rounded-tile p-4"
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--hairline)',
@@ -132,7 +132,7 @@ export function MigrateChatgptWorkflow({
         >
           {copy.formatExample}
         </pre>
-        <p className="m-0 text-caption leading-[1.6]" style={{ color: 'var(--ink-3)' }}>
+        <p className="m-0 text-xs leading-[1.6]" style={{ color: 'var(--ink-3)' }}>
           {copy.note}
         </p>
       </div>

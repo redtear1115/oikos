@@ -68,7 +68,7 @@ export function TypePicker({ value, onChange }: Props) {
               }}
             >
               <AssetIcon type={opt.value} size={20} color={sel ? 'var(--on-fill)' : 'var(--ink-2)'} />
-              <span className="text-micro font-medium">{opt.label}</span>
+              <span className="text-xs font-medium">{opt.label}</span>
             </button>
           )
         })}
@@ -84,8 +84,8 @@ export function TypePicker({ value, onChange }: Props) {
             border: showSecondaryRow ? '1px solid var(--ink)' : '1px solid transparent',
           }}
         >
-          <span className="text-button leading-[20px] font-medium tracking-[1px]" aria-hidden="true">⋯</span>
-          <span className="text-micro font-medium">{ts.type.more}</span>
+          <span className="text-base leading-[20px] font-medium tracking-[1px]" aria-hidden="true">⋯</span>
+          <span className="text-xs font-medium">{ts.type.more}</span>
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export function TypePicker({ value, onChange }: Props) {
                 }}
               >
                 <AssetIcon type={opt.value} size={20} color={sel ? 'var(--on-fill)' : 'var(--ink-2)'} />
-                <span className="text-micro font-medium">{opt.label}</span>
+                <span className="text-xs font-medium">{opt.label}</span>
               </button>
             )
           })}

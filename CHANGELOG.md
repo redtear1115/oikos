@@ -15,6 +15,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.4.2] - 2026-05-31
+
+主題：**解密修復 · 設計 token 收斂**——修正愛物車牌／房子地址在正式環境無法解密顯示的問題（#881）；設計 token 全面收斂；無障礙與 SEO 打磨。
+完整 diff：[v1.4.1...v1.4.2](https://github.com/redtear1115/oikos/compare/v1.4.1...v1.4.2)
+
+### 使用者可見變化
+
+- **車牌／地址可正常顯示（#881）**：愛物車輛的車牌、房子的地址先前在正式環境按「顯示」會出錯，現已修復，可正常解密查看。
+- **Android 新增紀錄輸入法修正（#872）**：Android app 內開啟新增表單時，關閉輸入法不再誤觸返回、導致表單意外關閉。
+- **無障礙改善（#875）**：修正 Lighthouse 無障礙檢測項目。
+
+### 技術變更
+
+- **PII 解密修復（#881）**：先前 PII backfill 對正式環境誤用了 dev 的 `ENCRYPTION_KEY`，導致車牌／地址 ciphertext 與 runtime key 不符、無法解密。已將受影響的 7 筆資料重新以正式 key 加密；新增 `scripts/rekey-mismatched-pii.mjs` re-key 工具備查（與 `encrypt-existing-pii.mjs` 並列）。
+- **設計 token 收斂（#876）**：type scale 改為 even-px、移除 `text-caption`／`text-meta`／`text-button` 別名、field-label tracking 統一為 0.6px、導入 `border-hairline` token；以 CSS 變數取代 hardcoded 值。
+- **英文 use-case meta description 修正（#702）**：3 條超過 155 字的描述縮短，避免 SERP 截斷。
+- **Terms／Privacy 改版（#879）**：更新為正式上線狀態文案，補上敏感欄位加密說明，聯絡方式改用 GitHub Issues。
+- **llms.txt 修正（#875）**。
+- **開發協作規則（#883）**：push 延到 PR-time，避免每個 commit 都觸發 Vercel preview build。
+
 ## [1.4.1] - 2026-05-30
 
 主題：**Android 登入修復**——修正 Android app 內 Google 登入後被導回首頁、無法進入主畫面的問題（#866）。
@@ -537,7 +557,9 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/redtear1115/oikos/compare/v1.4.1...v1.4.2
+[1.4.1]: https://github.com/redtear1115/oikos/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/redtear1115/oikos/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/redtear1115/oikos/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/redtear1115/oikos/compare/v1.3.0...v1.3.1

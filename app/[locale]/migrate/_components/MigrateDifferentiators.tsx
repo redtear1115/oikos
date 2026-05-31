@@ -29,7 +29,7 @@ export function MigrateDifferentiators({
             }}
           >
             <span
-              className="text-label md:text-body"
+              className="text-sm md:text-base"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
@@ -41,13 +41,13 @@ export function MigrateDifferentiators({
               {String(i + 1).padStart(2, '0')}
             </span>
             <p
-              className="m-0 text-body md:text-button font-medium"
+              className="m-0 text-base md:text-base font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {title}
             </p>
             <p
-              className="m-0 text-label md:text-meta leading-[1.65]"
+              className="m-0 text-sm md:text-sm leading-[1.65]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}

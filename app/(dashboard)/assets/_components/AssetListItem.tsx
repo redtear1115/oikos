@@ -62,7 +62,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
             <span
               className="font-mono shrink-0 px-1.5 py-px rounded-[4px] leading-none"
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 background: 'var(--saving-soft)',
                 color: 'var(--saving)',
               }}
@@ -76,7 +76,7 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
         </div>
       </div>
       <div className="text-right shrink-0 ml-2">
-        <div className="text-micro tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
+        <div className="text-xs tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
         <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
           {formatAmount(monthAmount, 'twd')}
         </div>

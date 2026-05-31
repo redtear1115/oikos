@@ -2,6 +2,27 @@
 
 import { useEffect, useRef } from 'react'
 
+// CloseWatcher landed in Chrome 120 (Dec 2023) and is the platform-canonical
+// way to intercept close requests (Android Back, Esc, VoiceOver z-gesture)
+// without touching the History API. It has a built-in close-request stack so
+// nested sheets unwind one layer at a time automatically.
+//
+// Safari does not support CloseWatcher yet — we fall back to the History API
+// path below for those browsers.
+//
+// Not yet in TypeScript's lib.dom.d.ts; declare the minimal interface we use.
+declare class CloseWatcher extends EventTarget {
+  constructor(options?: { signal?: AbortSignal })
+  /** Remove this watcher from the stack without triggering close — call when
+   *  the sheet is closed by means other than Back/Esc (backdrop, X button). */
+  destroy(): void
+  onclose: ((e: Event) => void) | null
+}
+
+// ---------------------------------------------------------------------------
+// History API fallback — used when CloseWatcher is unavailable (Safari).
+// ---------------------------------------------------------------------------
+
 interface SheetEntry {
   /** Invokes this sheet's `onClose`. */
   close: () => void
@@ -60,24 +81,27 @@ function ensurePopStateListener(): void {
   window.addEventListener('popstate', handlePopState)
 }
 
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
 /**
  * Wire Escape and the Android system Back button / browser Back gesture to
  * dismiss a sheet/modal while it's open. Pairs with the existing backdrop-click
  * affordance so the dismissal vocabulary matches desktop/PWA/Android
- * expectations (#255, #683).
+ * expectations (#255, #683, #872).
  *
- * Nested sheets are handled by a module-level stack: each open sheet pushes its
- * entry; only the top of the stack runs on Escape/Back; closing pops it. That's
- * why listeners are registered per-instance (Esc) rather than once at the app
- * root — registering only the topmost handler keeps the unwind order
- * predictable without a single global owner. Back is handled by one shared
- * `popstate` listener over the same stack.
+ * Strategy:
+ *  - Chrome 120+: use CloseWatcher — the platform-canonical API that intercepts
+ *    Back/Esc without History API manipulation. Avoids the race where Android
+ *    Chrome fires a spurious `popstate` when the soft keyboard dismisses after
+ *    IME composition (e.g. 注音 + Enter), which was closing the sheet (#872).
+ *  - Safari / older browsers: fall back to the History API approach — push a
+ *    synthetic history entry on open, close on `popstate`.
  *
- * Back-button mechanism: when a sheet opens we push a synthetic same-URL
- * history entry. Pressing Back pops that entry, fires `popstate`, and we close
- * the top sheet instead of navigating away. When a sheet is instead closed by
- * Esc / backdrop / X, we unwind the synthetic entry ourselves via
- * `history.back()` so a later Back doesn't waste a press on a phantom entry.
+ * Nested sheets unwind one layer per Back/Esc press in both paths:
+ *  - CloseWatcher: the browser maintains a built-in stack per browsing context.
+ *  - History API fallback: we maintain our own module-level stack.
  */
 export function useEscapeToClose(open: boolean, onClose: () => void): void {
   // Hold the latest onClose in a ref so we don't re-bind listeners every render
@@ -99,6 +123,25 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
 
   useEffect(() => {
     if (!open) return
+
+    // ------------------------------------------------------------------
+    // CloseWatcher path (Chrome 120+, Android)
+    // ------------------------------------------------------------------
+    if (typeof CloseWatcher !== 'undefined') {
+      const watcher = new CloseWatcher()
+      // `close` fires on Back, Esc, or any platform close gesture. The browser
+      // ensures only the topmost watcher fires — nested sheets just work.
+      watcher.onclose = () => onCloseRef.current()
+      return () => {
+        // Sheet closed by backdrop / X / save — remove from the browser's
+        // close-watcher stack without triggering `onclose`.
+        watcher.destroy()
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // History API fallback (Safari + older browsers)
+    // ------------------------------------------------------------------
     const entry: SheetEntry = { close: () => onCloseRef.current(), poppedByBack: false }
     stack.push(entry)
 
@@ -115,6 +158,8 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
       if (e.key !== 'Escape') return
       // During IME composition (e.g. typing Chinese), Escape cancels the
       // composition — don't also dismiss the sheet underneath.
+      // keyCode 229 covers boundary keydown events where isComposing is false
+      // even though composition is active (MDN-recommended guard pattern).
       if (e.isComposing || e.keyCode === 229) return
       if (stack[stack.length - 1] !== entry) return
       e.preventDefault()

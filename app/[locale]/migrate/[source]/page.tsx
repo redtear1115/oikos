@@ -74,7 +74,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
       <>
         <div>{page.step1}</div>
         <div className="mt-3 space-y-1.5">
-          <div className="text-caption" style={{ color: 'var(--ink-2)' }}>
+          <div className="text-xs" style={{ color: 'var(--ink-2)' }}>
             {page.formatHintLabel}
           </div>
           <code
@@ -87,7 +87,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
           >
             {page.formatHintHeaders}
           </code>
-          <p className="text-caption mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
+          <p className="text-xs mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
             {page.formatHintNote}
           </p>
         </div>
@@ -104,7 +104,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
         <a
           href={def.templateDownload.href}
           download
-          className="inline-flex items-center gap-2 mt-2 text-meta"
+          className="inline-flex items-center gap-2 mt-2 text-sm"
           style={{
             color: 'var(--ink)',
             textDecoration: 'underline',
@@ -115,7 +115,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
           <span aria-hidden>↓</span>
           <span>{page.templateDownloadLabel}</span>
         </a>
-        <p className="text-caption mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
+        <p className="text-xs mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
           {page.templateNote}
         </p>
       </>

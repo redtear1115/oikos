@@ -119,7 +119,7 @@ export function AssetSwitcher({
                 style={{
                   padding: '8px 14px 4px',
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 9,
+                  fontSize: 10,
                   letterSpacing: '1.2px',
                   color: 'var(--ink-3)',
                   textTransform: 'uppercase',
@@ -222,7 +222,7 @@ function SwitcherRow({
         <span
           className="truncate"
           style={{
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: isCurrent ? 500 : 400,
             color: 'var(--ink)',
             lineHeight: 1.3,
@@ -235,7 +235,7 @@ function SwitcherRow({
             className="truncate"
             style={{
               fontFamily: 'var(--font-numeric)',
-              fontSize: 9,
+              fontSize: 10,
               color: 'var(--ink-3)',
               lineHeight: 1.4,
             }}
@@ -250,8 +250,8 @@ function SwitcherRow({
         <span
           style={{
             fontFamily: 'var(--font-numeric)',
-            fontSize: 9,
-            padding: '1px 5px',
+            fontSize: 10,
+            padding: '1px 6px',
             borderRadius: 4,
             background: badgeStyle.bg,
             color: badgeStyle.fg,

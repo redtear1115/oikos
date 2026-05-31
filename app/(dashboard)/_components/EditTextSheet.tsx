@@ -101,18 +101,18 @@ export function EditTextSheet({
           <button
             onClick={pending ? undefined : onClose}
             disabled={pending}
-            className="bg-transparent border-0 text-body cursor-pointer p-1 disabled:opacity-50"
+            className="bg-transparent border-0 text-base cursor-pointer p-1 disabled:opacity-50"
             style={{ color: 'var(--ink-2)' }}
           >
             {t.common.cancel}
           </button>
-          <span id={titleId} className="text-body font-medium" style={{ color: 'var(--ink)' }}>
+          <span id={titleId} className="text-base font-medium" style={{ color: 'var(--ink)' }}>
             {title}
           </span>
           <button
             onClick={handleConfirm}
             disabled={pending || !value.trim()}
-            className="bg-transparent border-0 text-body font-medium cursor-pointer p-1 disabled:opacity-50"
+            className="bg-transparent border-0 text-base font-medium cursor-pointer p-1 disabled:opacity-50"
             style={{ color: 'var(--accent)' }}
           >
             {pending ? t.common.saving : t.common.done}
@@ -132,9 +132,8 @@ export function EditTextSheet({
               if (e.key === 'Enter' && !pending) { e.preventDefault(); handleConfirm() }
             }}
             placeholder={placeholder ?? title}
-            className="w-full h-12 px-3 rounded-xl outline-none"
+            className="w-full h-12 px-3 rounded-xl outline-none text-base"
             style={{
-              fontSize: 16,
               border: '1px solid var(--hairline)',
               color: 'var(--ink)',
               background: 'var(--surface)',
@@ -142,9 +141,9 @@ export function EditTextSheet({
             }}
           />
           {error && (
-            <div className="text-micro mt-2" style={{ color: 'var(--debit)' }}>{error}</div>
+            <div className="text-xs mt-2" style={{ color: 'var(--debit)' }}>{error}</div>
           )}
-          <div className="text-micro mt-1.5 text-right" style={{ color: 'var(--ink-3)' }}>
+          <div className="text-xs mt-1.5 text-right" style={{ color: 'var(--ink-3)' }}>
             {value.length} / {maxLength}
           </div>
         </div>

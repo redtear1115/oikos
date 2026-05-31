@@ -234,7 +234,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionId}</div>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionId}</div>
         <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
       </div>
 
@@ -334,7 +334,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex gap-1.5">
           {(['A', 'B', 'O', 'AB'] as const).map(b => (
             <button key={b} type="button" onClick={() => setBloodType(b)}
-              className="flex-1 h-9 rounded-chip text-label font-medium"
+              className="flex-1 h-9 rounded-chip text-sm font-medium"
               style={{
                 border: bloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: bloodType === b ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -353,7 +353,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionBody}</div>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionBody}</div>
         <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
       </div>
 

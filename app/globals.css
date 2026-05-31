@@ -129,13 +129,9 @@
   --switch-thumb-shadow: 0 1px 3px rgba(58, 36, 25, 0.20);
 
   /* Typography scale — P3-1 */
-  --fs-xs:        11px;   /* extra small: labels, metadata */
-  --fs-micro:     11px;   /* tab label, timestamp, metadata */
-  --fs-sm:        13px;   /* small: secondary text, captions */
-  --fs-label:     13px;   /* section label, chip, caption */
-  --fs-base:      15px;   /* base: body text, list items, form inputs */
-  --fs-body:      15px;   /* body text, list items, form inputs */
-  --fs-button:    16px;   /* button, CTA, month header */
+  --fs-xs:        12px;   /* extra small: labels, metadata (even-px unify #876, was 11) */
+  --fs-sm:        14px;   /* small: secondary text, captions (even-px unify #876, was 13) */
+  --fs-base:      16px;   /* base: body text, list items, form inputs, button, CTA (even-px unify #876) */
   --fs-title:     22px;   /* sheet title, section hero number */
   --fs-page:      26px;   /* page/sub-page header */
   --fs-amount-md: 44px;   /* settlement & detail hero amounts */
@@ -154,6 +150,7 @@
   --color-credit: var(--credit);
   --color-debit: var(--debit);
   --color-destructive: var(--destructive);
+  --color-hairline: var(--hairline);
   --font-serif: var(--font-fraunces);
   /* CJK fallback chain. TC system fonts first (primary locale: PingFang TC on
    * iOS/macOS → Microsoft JhengHei on Windows), then JP and SC system fonts so
@@ -168,18 +165,19 @@
   --font-sans: var(--font-noto-tc, 'PingFang TC'), 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK TC', sans-serif;
   --font-numeric: -apple-system, "SF Pro Display", system-ui;
 
-  /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()) */
+  /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()).
+   * Even-px scale only (#876): the 11/13/15 tiers (text-micro/label/body) AND
+   * the 12/14 aliases (text-caption/text-meta) were removed — callsites use the
+   * Tailwind-native text-xs/sm/base (12/14/16) directly. The only kept custom
+   * tier below text-title is text-mini (10) — no Tailwind equivalent. */
   --text-mini:      10px;  /* badge superscript, tiny tracking labels (#670 audit 1.5) */
-  --text-micro:     11px;
-  --text-caption:   12px;  /* secondary captions, footer notes (#670 audit 1.5) */
-  --text-label:     13px;
-  --text-meta:      14px;  /* metadata lines, between label (13) and body (15) (#670 audit 1.5) */
-  --text-body:      15px;
-  --text-button:    16px;
   --text-title:     22px;
   --text-page:      26px;
   --text-amount-md: 44px;
   --text-amount-lg: 56px;
+
+  /* Section-label letter-spacing → tracking-label (matches AddSheet / IncomeSheet 0.6px baseline) */
+  --letter-spacing-label: 0.6px;
 
   /* Control-height → Tailwind h-control-sm / h-control-md / h-control-lg */
   --height-control-sm: var(--control-sm);
@@ -199,6 +197,14 @@
  * `px-3.5 rounded-chip` for filter chips, sheet pickers, segmented toggles. */
 @utility h-chip {
   height: 34px;
+}
+
+/* Inset hairline divider — 1px rule inset by --sheet-x on both sides.
+ * Replaces repeated `height:1; margin:0 20px; background:var(--hairline)` inline styles. */
+@utility oik-hairline {
+  height: 1px;
+  margin-inline: var(--sheet-x);
+  background: var(--hairline);
 }
 
 /* Z-index layer scale (#670 audit 1.4) — replaces ad-hoc `z-[N]` arbitrary
@@ -277,6 +283,11 @@ body {
  * Class-based rules beat element-selector preflight, and `data-state` swaps
  * the on/off color without React re-mounting the inline-style attribute. */
 .oik-switch {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  padding: 0;
   background: var(--switch-off-bg);
   transition: background var(--toggle-transition);
 }
@@ -287,9 +298,17 @@ body {
   opacity: var(--toggle-disabled-opacity);
 }
 .oik-switch [data-switch-thumb] {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  margin-top: 2px;
+  transform: translateX(2px);
   background: var(--switch-thumb-bg);
   box-shadow: var(--switch-thumb-shadow);
   transition: transform var(--toggle-transition);
+}
+.oik-switch[data-state="on"] [data-switch-thumb] {
+  transform: translateX(20px);
 }
 
 @keyframes rt-flash {

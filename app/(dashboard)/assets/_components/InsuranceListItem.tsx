@@ -155,7 +155,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
     return (
       <span
         className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
-        style={{ fontSize: 11, background: bg, color: fg }}
+        style={{ fontSize: 12, background: bg, color: fg }}
       >
         {label}
       </span>
@@ -234,7 +234,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
               ) : policyHolderInitial ? (
                 <span
                   style={{
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: 500,
                     color: 'var(--ink)',
                     fontFamily: 'var(--font-serif)',
@@ -263,7 +263,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'var(--ink-3)',
                 }}
               >
@@ -291,13 +291,13 @@ export function InsuranceListItem({ id, name, data }: Props) {
               <div style={{ marginTop: 6 }}>
                 <div
                   className="font-mono"
-                  style={{ fontSize: 9, letterSpacing: 1, color: 'var(--ink-3)' }}
+                  style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
                 >
                   年繳
                 </div>
                 <div
                   className="tnum"
-                  style={{ marginTop: 1, fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}
+                  style={{ marginTop: 1, fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}
                 >
                   {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
                 </div>
@@ -391,7 +391,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
         }}
       >
         <h2
-          className="text-button mb-2 leading-tight"
+          className="text-base mb-2 leading-tight"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
         >
           {i.renewTitle}
@@ -495,13 +495,13 @@ function TimelineBar({
         <div>
           <div
             className="font-mono"
-            style={{ fontSize: 9, letterSpacing: 1, color: 'var(--ink-3)' }}
+            style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
           >
             {leftLabel}
           </div>
           <div
             className="font-mono tnum"
-            style={{ marginTop: 1, fontSize: 11, color: 'var(--ink-2)' }}
+            style={{ marginTop: 1, fontSize: 12, color: 'var(--ink-2)' }}
           >
             {leftValue}
           </div>
@@ -509,13 +509,13 @@ function TimelineBar({
         <div style={{ textAlign: 'right' }}>
           <div
             className="font-mono"
-            style={{ fontSize: 9, letterSpacing: 1, color: 'var(--ink-3)' }}
+            style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
           >
             {rightLabel}
           </div>
           <div
             className="font-mono tnum"
-            style={{ marginTop: 1, fontSize: 11, color: 'var(--ink-2)' }}
+            style={{ marginTop: 1, fontSize: 12, color: 'var(--ink-2)' }}
           >
             {rightValue}
           </div>

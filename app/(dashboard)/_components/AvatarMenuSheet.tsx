@@ -34,7 +34,7 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
     <SheetFrame open={open} onClose={onClose} ariaLabel={t.settings.title}>
       {/* Header: group name + avatar mini-cluster */}
       <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 shrink-0">
-          <div className="text-body font-medium truncate" style={{ color: 'var(--ink)' }}>
+          <div className="text-base font-medium truncate" style={{ color: 'var(--ink)' }}>
             {group.name}
           </div>
           <div className="flex shrink-0">

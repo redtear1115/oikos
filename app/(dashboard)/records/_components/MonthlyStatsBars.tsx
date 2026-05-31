@@ -202,7 +202,7 @@ function Bar({
               {label}
             </span>
           </span>
-          <span className="tnum text-micro shrink-0" style={{ color: 'var(--ink-3)' }}>
+          <span className="tnum text-xs shrink-0" style={{ color: 'var(--ink-3)' }}>
             {/* Bare amount — currency anchored once on the total / summary line above. */}
             {pct.toFixed(0)}% · {amount.toLocaleString('en-US')}
           </span>

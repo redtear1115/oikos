@@ -27,7 +27,7 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
               color: sel ? 'var(--on-fill)' : 'var(--ink)',
               border: sel ? '1px solid var(--ink)' : '1px solid var(--hairline)',
             }}>
-            <span aria-hidden="true" className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-label font-medium" style={{ background: c.tint, color: c.ink }}>
+            <span aria-hidden="true" className="w-6 h-6 rounded-[7px] inline-flex items-center justify-center text-sm font-medium" style={{ background: c.tint, color: c.ink }}>
               {c.mono}
             </span>
             {t.category[c.id]}

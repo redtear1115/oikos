@@ -70,7 +70,7 @@ export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = 
         >
           <Avatar memberRole={viewerRole} initial={viewer.initial} src={viewer.avatarUrl} size={26} />
           {partner && (
-            <div className="-ml-[7px]">
+            <div className="-ml-2">
               <Avatar memberRole={partnerRole} initial={partner.initial} src={partner.avatarUrl} size={26} ring />
             </div>
           )}

@@ -33,7 +33,7 @@ export function ErrorPage({ page, reset, digest }: ErrorPageProps) {
         {t.errorPage.retry}
       </button>
       {digest && (
-        <div className="mt-6 text-micro tracking-[0.4px] select-all" style={{ color: 'var(--ink-3)' }}>
+        <div className="mt-6 text-xs tracking-[0.4px] select-all" style={{ color: 'var(--ink-3)' }}>
           {t.errorPage.refLabel}: {digest}
         </div>
       )}

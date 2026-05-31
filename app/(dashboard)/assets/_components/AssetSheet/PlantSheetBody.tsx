@@ -129,7 +129,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </div>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-micro tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.plant.sectionCare}</div>
+        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.plant.sectionCare}</div>
         <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
       </div>
 
@@ -137,7 +137,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex gap-1.5">
           {[2, 3, 7, 14, 30].map(d => (
             <button key={d} type="button" onClick={() => setWaterEvery(d)}
-              className="flex-1 h-10 rounded-chip text-label font-medium"
+              className="flex-1 h-10 rounded-chip text-sm font-medium"
               style={{
                 border: waterEvery === d ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: waterEvery === d ? 'rgba(58,36,25,0.04)' : 'var(--surface)',

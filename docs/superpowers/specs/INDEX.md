@@ -102,6 +102,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [offline-browsing](offline-browsing-design.md) — PWA / Service Worker / opt-in 離線瀏覽
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
 - [conversion-analytics](conversion-analytics-design.md) — PostHog 轉換漏斗事件：入口頁（landing / migrate）→ 註冊 / 啟用追蹤 + 跨 OAuth 邊界歸因（維持 cookieless）
+- [native-auth](native-auth-design.md) — Capacitor 原生殼的 Google OAuth：web vs custom scheme redirect_to、deep link 回跳、Supabase Redirect URLs `/**` 設定不變量（含 #866 踩雷紀錄）
 
 ### 記帳核心
 
