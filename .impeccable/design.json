@@ -162,7 +162,8 @@
       { "name": "The Quiet-Money Rule", "body": "Sage means in, Clay means out. They never escalate to alarm-red or success-green. Money here is reported, not judged.", "section": "colors" },
       { "name": "The Serif-Speaks Rule", "body": "Fraunces is reserved for the brand's voice (headings and narrative). Never set body lists, inputs, or amounts in the serif.", "section": "typography" },
       { "name": "The No-Weight-600 Rule", "body": "Weight 600 was dropped to cut render-blocking CSS; font-semibold falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights.", "section": "typography" },
-      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. The only box-shadows are the toggle thumb lift and the focus ring; both functional, never decorative. To separate two surfaces, use a hairline or a tonal step.", "section": "elevation" }
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. The only box-shadows are the toggle thumb lift and the focus ring; both functional, never decorative. To separate two surfaces, use a hairline or a tonal step.", "section": "elevation" },
+      { "name": "The Brand-Surface Exemption", "section": "colors", "body": "The One Ember Rule governs PRODUCT surfaces (the ledger, settings, task flows). The BRAND-surface tier — landing, sign-in, migrate, terms, privacy — is exempt and may adopt a Committed color strategy: one warm hue (a deepened cream ground, --bg-committed #EFDDC4) covering 30–60% of the surface as the page's base tone. Ember (#E08856) stays rare even here: at most one moment per screen, as a primary CTA or a single point of warm light, never a large fill. Committed always commits the GROUND, never the accent." }
     ],
     "dos": [
       "Do keep Ember (#E08856) rare: one accent moment per screen.",

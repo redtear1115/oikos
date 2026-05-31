@@ -155,6 +155,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.4.3](CHANGELOG.md#143---2026-05-31) | 品牌面升溫 · Landing 插圖欄位上線 |
 | [v1.4.2](CHANGELOG.md#142---2026-05-31) | 車牌／地址解密修復 · 設計 token 收斂 |
 | [v1.4.1](CHANGELOG.md#141---2026-05-30) | Android 登入修復 |
 | [v1.4.0](CHANGELOG.md#140---2026-05-30) | Android 上架準備 · 情境 landing 頁 |

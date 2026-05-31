@@ -3,6 +3,10 @@
 :root {
   --bg: #FBEDE0;
   --bg-page: #E8D5B8;     /* darker frame visible behind the 448px app on landscape / desktop */
+  /* Committed brand-surface ground — morning-gentle deepened cream.
+     Brand-surface tier only (landing, sign-in, migrate, terms, privacy).
+     App shell + task surfaces keep --bg. */
+  --bg-committed: #EFDDC4;
   --surface: #FFFFFF;
   --surface-alt: #FFF6EC;
   --ink: #3A2419;

@@ -15,6 +15,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.4.3] - 2026-05-31
+
+主題：**品牌面升溫 · 插圖欄位上線**——Landing、Sign-in、Migrate、Terms、Privacy 換上 Committed 暖底色；Landing hero 加入插圖欄位，Mobile 以插圖開場取代大 mark。
+完整 diff：[v1.4.2...v1.4.3](https://github.com/redtear1115/oikos/compare/v1.4.2...v1.4.3)
+
+### 使用者可見變化
+
+- **Landing 插圖欄位（#832）**：桌面版 hero 右欄加入插圖（兩人並肩、暖燈、光點），PhonePreview 縮小為次要產品佐證疊在右下角；手機版改以插圖帶開場取代大 FutariMark。
+- **品牌頁面換底色（#832）**：Landing、Sign-in、Migrate、Terms、Privacy 從 `--bg` 換成 `--bg-committed`（加深的晨間奶油色），視覺上與 app 內頁拉開情感距離。
+
+### 技術變更
+
+- **新增 `--bg-committed` token**：`#EFDDC4`，只供品牌面使用，app shell 與任務介面沿用 `--bg`；同步更新 `.impeccable/design.json` Brand-Surface Exemption 規則。
+- **設計 token 收斂（#886）**：`FuelRow` + `NewFuelLog` 的 hardcoded hex 全面換 CSS variable（`var(--ink-3)` / `var(--bg-page)`），字級換 `text-micro` / `text-label` token。
+
 ## [1.4.2] - 2026-05-31
 
 主題：**解密修復 · 設計 token 收斂**——修正愛物車牌／房子地址在正式環境無法解密顯示的問題（#881）；設計 token 全面收斂；無障礙與 SEO 打磨。
@@ -557,7 +572,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/redtear1115/oikos/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/redtear1115/oikos/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/redtear1115/oikos/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/redtear1115/oikos/compare/v1.3.2...v1.4.0

@@ -38,7 +38,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
   return (
     <main
       className="min-h-screen px-6 py-12"
-      style={{ background: 'var(--bg)' }}
+      style={{ background: 'var(--bg-committed)' }}
     >
       <div className="max-w-md md:max-w-2xl mx-auto">
         <h1

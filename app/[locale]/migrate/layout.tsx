@@ -34,7 +34,7 @@ export default async function MigrateLayout({
     <main
       className="relative min-h-dvh overflow-hidden"
       style={{
-        background: 'var(--bg)',
+        background: 'var(--bg-committed)',
         color: 'var(--ink)',
         paddingTop: 'env(safe-area-inset-top)',
       }}
