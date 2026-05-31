@@ -17,6 +17,7 @@ export function IllustrationSlot({ mobile }: Props) {
         <Image
           src="/illustration-hero.png"
           alt=""
+          aria-hidden="true"
           fill
           className="object-cover object-top"
           priority
@@ -31,6 +32,7 @@ export function IllustrationSlot({ mobile }: Props) {
       <Image
         src="/illustration-hero.png"
         alt=""
+        aria-hidden="true"
         fill
         className="object-cover object-center"
         priority
