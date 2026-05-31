@@ -240,7 +240,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           <div className="hidden md:flex flex-1 self-stretch relative min-h-[420px] items-stretch py-2">
             <IllustrationSlot />
             {/* PhonePreview demoted to secondary product proof — overlaps illo corner */}
-            <div className="absolute right-[-8px] bottom-6 z-10">
+            <div className="hidden lg:block absolute right-[-8px] bottom-6 z-10">
               <PhonePreview t={t} scale={0.78} />
             </div>
           </div>
