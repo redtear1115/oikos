@@ -78,6 +78,11 @@ export default async function PrivacyPage({ params }: { params: Params }) {
           <p>{t.privacyPage.sectionStorageBody}</p>
 
           <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
+            {t.privacyPage.sectionRetentionTitle}
+          </h2>
+          <p>{t.privacyPage.sectionRetentionBody}</p>
+
+          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionThirdPartyTitle}
           </h2>
           <ul className="list-disc pl-5 space-y-2">

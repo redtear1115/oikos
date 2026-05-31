@@ -1962,6 +1962,8 @@ export type Translations = {
     sectionPurposeItems: readonly string[]
     sectionStorageTitle: string
     sectionStorageBody: string
+    sectionRetentionTitle: string
+    sectionRetentionBody: string
     sectionThirdPartyTitle: string
     sectionThirdPartyItems: readonly string[]
     sectionRightsTitle: string
@@ -3981,47 +3983,55 @@ export const zhTW: Translations = {
 
   termsPage: {
     heading: '服務條款',
-    lastUpdated: '最後更新：2026 年 5 月 3 日',
-    intro: 'Futari（以下簡稱「本服務」）目前處於 alpha 測試階段，僅提供受邀的小範圍使用者試用。正式版本上線前，使用者應留意：',
+    lastUpdated: '最後更新：2026 年 5 月 31 日',
+    intro: '使用 Futari（以下簡稱「本服務」）即表示您同意以下條款。請在使用前詳閱。',
     bullets: [
-      '本服務不保證資料的長期保存。測試期間可能因為資料庫重置、結構變更或部署錯誤導致紀錄遺失。',
-      '本服務不對使用者透過本服務所產生的金錢分攤紀錄之正確性負責。所有結算結果僅供使用者自行參考。',
-      '請勿在本服務上記錄不適合外洩的敏感資訊（例如身分證字號、信用卡號等）。',
-      '使用 Google 登入即表示您同意 Google 將您的基本帳號資訊（姓名、頭像、Email）提供給本服務。',
-      '您可隨時透過設定頁登出，或聯絡開發者刪除帳號。',
+      '本服務提供雙人共用記帳功能，包含交易紀錄、結算與共同財物管理。所有結算結果僅供使用者自行參考，本服務不對其正確性負責。',
+      '您的資料屬於您。本服務僅為顯示與計算目的使用您輸入的資料，不會出售或對外分享您的個人資料。',
+      '請勿記錄高度敏感的身分資訊（例如身分證字號、信用卡號等）。本服務的設計目的是記帳，不是機密文件保存。',
+      '使用 Google 登入即表示您同意 Google 將您的基本帳號資訊（姓名、頭像、Email）提供給本服務，作為帳號識別之用。',
+      '您可隨時透過設定頁登出或刪除帳號。帳號刪除後，所有相關資料將於 14 個工作天內從伺服器移除。',
+      '本服務保留因維護、安全或系統需求暫停或調整服務的權利，並將在可能的情況下提前告知。',
+      '本服務條款適用中華民國法律，如有爭議以臺灣臺北地方法院為第一審管轄法院。',
     ],
-    outro: '正式版本將提供完整的服務條款。目前如有任何疑慮，請直接聯絡開發者。',
+    outro: '如有任何疑問，請透過 support@futari.southern-light.dev 聯絡我們。',
     backHome: '← 回首頁',
     privacyLink: '隱私權政策',
   },
 
   privacyPage: {
     heading: '隱私權政策',
-    lastUpdated: '最後更新：2026 年 5 月 3 日',
-    intro: 'Futari 目前處於 alpha 測試階段，本頁說明測試期間的資料蒐集與處理方式。',
+    lastUpdated: '最後更新：2026 年 5 月 31 日',
+    intro: '本頁說明 Futari 如何蒐集、使用與保護您的個人資料。',
     sectionCollectTitle: '蒐集的資料',
     sectionCollectItems: [
       'Google OAuth 提供的基本帳號資訊：姓名、頭像、Email 地址。',
-      '您手動輸入的家計簿名稱、交易紀錄、結算紀錄、預設分攤偏好等。',
-      '邀請連結、邀請接受時間（用於連結雙方帳號）。',
+      '您手動輸入的記帳資料，包含交易紀錄、結算紀錄、分攤偏好、共同財物資訊等。',
+      '邀請連結與接受時間（用於連結雙方帳號）。',
+      '操作行為與錯誤資訊（用於改善服務品質，詳見第三方服務說明）。',
     ],
     sectionPurposeTitle: '資料用途',
     sectionPurposeItems: [
-      '顯示您與伴侶共用的記帳介面。',
-      '計算雙方欠款金額。',
-      '正式版上線前，可能用於開發者除錯（不會公開）。',
+      '顯示您與伴侶共用的記帳介面並計算雙方餘額。',
+      '提供定期收支、月度回顧等功能所需的計算。',
+      '偵測並修復服務錯誤（透過 Sentry 錯誤追蹤）。',
+      '分析功能使用情況以改善產品體驗（透過 PostHog，不含個人識別資訊）。',
     ],
     sectionStorageTitle: '資料儲存',
-    sectionStorageBody: '資料儲存於 Supabase（後端服務）的伺服器，位於日本東京區。測試版本不保證資料的長期保存，可能因為資料庫重置或結構變更而遺失。',
+    sectionStorageBody: '資料儲存於 Supabase 的伺服器，位於日本東京區，採加密傳輸與存取控制保護。',
+    sectionRetentionTitle: '資料保留期限',
+    sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記最多 1 年，之後由系統自動物理刪除。帳號刪除後，所有相關資料將於 14 個工作天內從伺服器移除。',
     sectionThirdPartyTitle: '第三方服務',
     sectionThirdPartyItems: [
       'Google（OAuth 登入）',
-      'Supabase（後端、資料庫、實時更新）',
+      'Supabase（後端、資料庫、即時同步）',
       'Vercel（網站託管）',
+      'Sentry（錯誤追蹤，收集匿名錯誤堆疊，不含個人識別資訊）',
+      'PostHog（產品分析，收集匿名操作事件，不含個人識別資訊）',
     ],
     sectionRightsTitle: '您的權利',
-    sectionRightsBody: '您可隨時透過設定頁登出，或聯絡開發者刪除您的帳號與所有相關資料。',
-    outro: '正式版本將提供完整的隱私權政策。目前如有任何疑慮，請直接聯絡開發者。',
+    sectionRightsBody: '您可隨時透過設定頁登出或刪除帳號。如需匯出或查詢您的個人資料，請透過 support@futari.southern-light.dev 聯絡我們。',
+    outro: '本政策若有變更，將在本頁更新並修改日期。如有任何疑問，請透過 support@futari.southern-light.dev 聯絡我們。',
     backHome: '← 回首頁',
     termsLink: '服務條款',
   },
