@@ -57,9 +57,10 @@ export function DescriptionAutocomplete({
 
   const choose = (s: string) => {
     onChange(s)
-    // Blur to dismiss the dropdown — also closes the soft keyboard on mobile,
-    // which matches the "tap → done" mental model for picking from a list.
-    inputRef.current?.blur()
+    // Do NOT blur here: setting the value to an exact match causes
+    // filterSuggestions to exclude it, so the dropdown closes automatically
+    // without us touching keyboard focus. Blurring would hide the Android
+    // soft keyboard and trigger a spurious popstate that closes the sheet (#872).
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

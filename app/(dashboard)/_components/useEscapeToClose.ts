@@ -30,6 +30,18 @@ const stack: SheetEntry[] = []
 let pendingSelfPops = 0
 
 let popStateListenerAttached = false
+let compositionEndListenerAttached = false
+
+/**
+ * Timestamp of the most recent `compositionend` event. Used to guard against
+ * spurious `popstate` events that Android Chrome fires when the soft keyboard
+ * dismisses after the user confirms an IME character (e.g. 注音 + Enter).
+ * Chrome internally pushes a history entry when the keyboard appears and pops
+ * it on dismiss — if that pop races our synthetic sheet entry, the sheet closes
+ * unintentionally (#872).
+ */
+let lastCompositionEndAt = 0
+const COMPOSITION_POPSTATE_GRACE_MS = 300
 
 /**
  * Single, app-lifetime `popstate` listener shared by every sheet. Using one
@@ -42,6 +54,14 @@ function handlePopState(): void {
   // other than Back).
   if (pendingSelfPops > 0) {
     pendingSelfPops--
+    return
+  }
+  // On Android Chrome, dismissing the soft keyboard after IME confirmation
+  // (e.g. 注音 + Enter) can fire a spurious `popstate` that would close the
+  // sheet unintentionally. If a `compositionend` just occurred, re-push our
+  // synthetic entry and bail — the user is still filling in the form (#872).
+  if (Date.now() - lastCompositionEndAt < COMPOSITION_POPSTATE_GRACE_MS) {
+    window.history.pushState(null, '')
     return
   }
   const top = stack[stack.length - 1]
@@ -58,6 +78,16 @@ function ensurePopStateListener(): void {
   if (popStateListenerAttached) return
   popStateListenerAttached = true
   window.addEventListener('popstate', handlePopState)
+}
+
+function ensureCompositionEndListener(): void {
+  if (compositionEndListenerAttached) return
+  compositionEndListenerAttached = true
+  window.addEventListener(
+    'compositionend',
+    () => { lastCompositionEndAt = Date.now() },
+    { passive: true, capture: true },
+  )
 }
 
 /**
@@ -109,6 +139,7 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
     // triggering a router transition. See node_modules/next/dist/client/
     // components/app-router.js (copyNextJsInternalHistoryState / onPopState).
     ensurePopStateListener()
+    ensureCompositionEndListener()
     window.history.pushState(null, '')
 
     const onKeyDown = (e: KeyboardEvent) => {
