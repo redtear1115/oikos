@@ -76,6 +76,10 @@ export async function proxy(request: NextRequest) {
     || pathname.startsWith('/auth/')
     || pathname.startsWith('/invite/')
     || pathname === '/offline'
+    // #881 — one-off PII re-key endpoint. Self-gated by REKEY_ADMIN_TOKEN, so
+    // it must bypass the Supabase auth wall (it's called server-to-server with
+    // no session cookie). Removed together with the route in the cleanup PR.
+    || pathname === '/api/admin/rekey-pii'
 
   if (!user && !isPublic) {
     // 未登入訪問 auth-walled 頁 → redirect 到 sign-in；
