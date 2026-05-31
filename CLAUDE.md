@@ -13,7 +13,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.4.2** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.4.3** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
