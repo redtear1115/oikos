@@ -1642,7 +1642,7 @@ export const en: Translations = {
       'To analyze feature usage and improve the product experience (via PostHog, with no personally identifiable information).',
     ],
     sectionStorageTitle: 'Where data is stored',
-    sectionStorageBody: 'Data is stored on Supabase servers in the Tokyo, Japan region, protected by encrypted connections and access controls.',
+    sectionStorageBody: "Data is stored on Supabase servers in the Tokyo, Japan region, protected by encrypted connections and access controls. Sensitive fields within your 愛物 records — including a child's full name, national ID number, health insurance card number, a car's licence plate, and a home address — are encrypted with AES-256-GCM before being written to the database. The database never holds plaintext; decryption only occurs through the application itself.",
     sectionRetentionTitle: 'Data retention',
     sectionRetentionBody: 'Your account data is retained for as long as your account remains active. Deleted transactions are kept as soft-deleted records for up to one year before being permanently removed by an automated process. Following account deletion, all related data will be removed from our servers within 14 business days.',
     sectionThirdPartyTitle: 'Third-party services',

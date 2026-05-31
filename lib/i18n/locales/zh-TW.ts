@@ -4021,7 +4021,7 @@ export const zhTW: Translations = {
       '分析功能使用情況以改善產品體驗（透過 PostHog，不含個人識別資訊）。',
     ],
     sectionStorageTitle: '資料儲存',
-    sectionStorageBody: '資料儲存於 Supabase 的伺服器，位於日本東京區，採加密傳輸與存取控制保護。',
+    sectionStorageBody: '資料儲存於 Supabase 的伺服器，位於日本東京區，採加密傳輸與存取控制保護。愛物中的機敏欄位（寶寶本名、身分證字號、健保卡號、車牌號碼、房屋地址）在寫入資料庫前以 AES-256-GCM 加密，資料庫中不存明文，唯有透過應用程式操作才能解密讀取。',
     sectionRetentionTitle: '資料保留期限',
     sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記最多 1 年，之後由系統自動物理刪除。帳號刪除後，所有相關資料將於 14 個工作天內從伺服器移除。',
     sectionThirdPartyTitle: '第三方服務',

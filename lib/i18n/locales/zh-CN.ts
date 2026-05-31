@@ -1641,7 +1641,7 @@ export const zhCN: Translations = {
       '分析功能使用情况以改善产品体验（通过 PostHog，不含个人识别信息）。',
     ],
     sectionStorageTitle: '数据存储',
-    sectionStorageBody: '数据存储于 Supabase 的服务器，位于日本东京区，采加密传输与访问控制保护。',
+    sectionStorageBody: '数据存储于 Supabase 的服务器，位于日本东京区，采加密传输与访问控制保护。愛物中的敏感字段（宝宝本名、身份证号、健保卡号、车牌号码、房屋地址）在写入数据库前以 AES-256-GCM 加密，数据库中不存明文，仅能通过应用程序操作解密读取。',
     sectionRetentionTitle: '数据保留期限',
     sectionRetentionBody: '您的账号数据在账号存续期间持续保存。您删除的交易记录会保留软删除标记最多 1 年，之后由系统自动物理删除。账号删除后，所有相关数据将于 14 个工作日内从服务器移除。',
     sectionThirdPartyTitle: '第三方服务',
