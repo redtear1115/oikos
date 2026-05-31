@@ -15,6 +15,7 @@ import { TranslationsProvider } from '@/lib/i18n/client'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
+import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
 
 // CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
 // but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
@@ -104,6 +105,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <TranslationsProvider value={t} locale={locale}>
       <ViewerProvider value={value}>
         <RealtimeProvider groupId={group.id}>
+          <PushTokenRegistrar userId={user.id} groupId={group.id} />
           <OfflineLifecycle />
           <ReconnectRefresh />
           <PartnerActivityToast />
