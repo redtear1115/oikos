@@ -223,7 +223,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               style={{ background: 'rgba(58,36,25,0.06)' }}
               aria-label="刪除"
             >
-              <span className="text-button leading-none text-[var(--ink)]">⋯</span>
+              <span className="text-base leading-none text-[var(--ink)]">⋯</span>
             </button>
           )}
         </div>

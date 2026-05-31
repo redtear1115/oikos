@@ -164,7 +164,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1">
       <div className="text-xs font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
-      <div className="text-button font-medium tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
+      <div className="text-base font-medium tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
     </div>
   )
 }

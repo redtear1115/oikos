@@ -70,7 +70,7 @@ export function MigrateOtherSources({
                 }}
               >
                 <p
-                  className="m-0 text-base md:text-button font-medium"
+                  className="m-0 text-base md:text-base font-medium"
                   style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
                 >
                   {item.name}

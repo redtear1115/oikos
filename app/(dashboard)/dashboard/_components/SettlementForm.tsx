@@ -101,7 +101,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             el.select()
           }}
         >
-          <span className="text-button font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
+          <span className="text-base font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
           <input
             ref={inputRef}
             type="text"

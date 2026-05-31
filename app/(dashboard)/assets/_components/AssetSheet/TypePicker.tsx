@@ -84,7 +84,7 @@ export function TypePicker({ value, onChange }: Props) {
             border: showSecondaryRow ? '1px solid var(--ink)' : '1px solid transparent',
           }}
         >
-          <span className="text-button leading-[20px] font-medium tracking-[1px]" aria-hidden="true">⋯</span>
+          <span className="text-base leading-[20px] font-medium tracking-[1px]" aria-hidden="true">⋯</span>
           <span className="text-xs font-medium">{ts.type.more}</span>
         </button>
       </div>

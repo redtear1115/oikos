@@ -131,8 +131,7 @@
   /* Typography scale — P3-1 */
   --fs-xs:        12px;   /* extra small: labels, metadata (even-px unify #876, was 11) */
   --fs-sm:        14px;   /* small: secondary text, captions (even-px unify #876, was 13) */
-  --fs-base:      16px;   /* base: body text, list items, form inputs (even-px unify #876, was 15) */
-  --fs-button:    16px;   /* button, CTA, month header */
+  --fs-base:      16px;   /* base: body text, list items, form inputs, button, CTA (even-px unify #876) */
   --fs-title:     22px;   /* sheet title, section hero number */
   --fs-page:      26px;   /* page/sub-page header */
   --fs-amount-md: 44px;   /* settlement & detail hero amounts */
@@ -169,10 +168,9 @@
   /* Map fs tokens → Tailwind text-* utilities (must be static values, not var()).
    * Even-px scale only (#876): the 11/13/15 tiers (text-micro/label/body) AND
    * the 12/14 aliases (text-caption/text-meta) were removed — callsites use the
-   * Tailwind-native text-xs/sm/base (12/14/16) directly. Kept: text-mini (10,
-   * no Tailwind equivalent) and text-button (16, semantic button tier). */
+   * Tailwind-native text-xs/sm/base (12/14/16) directly. The only kept custom
+   * tier below text-title is text-mini (10) — no Tailwind equivalent. */
   --text-mini:      10px;  /* badge superscript, tiny tracking labels (#670 audit 1.5) */
-  --text-button:    16px;
   --text-title:     22px;
   --text-page:      26px;
   --text-amount-md: 44px;

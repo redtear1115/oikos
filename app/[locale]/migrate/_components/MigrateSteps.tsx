@@ -31,7 +31,7 @@ export function MigrateSteps({
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >
             <span
-              className="shrink-0 inline-block text-button md:text-[18px]"
+              className="shrink-0 inline-block text-base md:text-[18px]"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',

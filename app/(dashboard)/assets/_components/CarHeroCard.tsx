@@ -128,7 +128,7 @@ export function CarHeroCard({
           <div className="flex items-center gap-2">
             <div
               className="truncate"
-              style={{ fontSize: 'var(--fs-button)', color: 'var(--ink)', fontWeight: 500 }}
+              style={{ fontSize: 'var(--fs-base)', color: 'var(--ink)', fontWeight: 500 }}
             >
               {name}
             </div>

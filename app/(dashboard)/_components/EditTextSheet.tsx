@@ -132,7 +132,7 @@ export function EditTextSheet({
               if (e.key === 'Enter' && !pending) { e.preventDefault(); handleConfirm() }
             }}
             placeholder={placeholder ?? title}
-            className="w-full h-12 px-3 rounded-xl outline-none text-button"
+            className="w-full h-12 px-3 rounded-xl outline-none text-base"
             style={{
               border: '1px solid var(--hairline)',
               color: 'var(--ink)',

@@ -23,8 +23,8 @@ const variantBase: Record<ButtonVariant, string> = {
 
 const sizeBase: Record<ButtonSize, string> = {
   sm: 'h-[var(--control-sm)] px-4 text-sm',
-  md: 'h-[var(--control-md)] px-5 text-button',
-  lg: 'h-[var(--control-lg)] px-6 text-button',
+  md: 'h-[var(--control-md)] px-5 text-base',
+  lg: 'h-[var(--control-lg)] px-6 text-base',
 }
 
 export function Button({

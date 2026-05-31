@@ -97,7 +97,7 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
       <div
         style={{
           fontFamily: 'var(--font-serif)',
-          fontSize: 'var(--fs-button)',
+          fontSize: 'var(--fs-base)',
           fontWeight: 500,
           color: 'var(--ink)',
           letterSpacing: '-0.2px',

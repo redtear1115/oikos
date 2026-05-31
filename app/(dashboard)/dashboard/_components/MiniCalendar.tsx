@@ -180,7 +180,7 @@ function Header({ prevLabel, nextLabel, onPrev, onNext, title, titleAriaLabel, o
   return (
     <div className="flex items-center justify-between mb-3">
       <button type="button" onClick={onPrev} aria-label={prevLabel}
-        className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-button leading-none"
+        className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-base leading-none"
         style={{ color: 'var(--ink-2)' }}>‹</button>
       {onTitle ? (
         <button type="button" onClick={onTitle} aria-label={titleAriaLabel}
@@ -192,7 +192,7 @@ function Header({ prevLabel, nextLabel, onPrev, onNext, title, titleAriaLabel, o
         <div className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{title}</div>
       )}
       <button type="button" onClick={onNext} aria-label={nextLabel}
-        className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-button leading-none"
+        className="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center text-base leading-none"
         style={{ color: 'var(--ink-2)' }}>›</button>
     </div>
   )

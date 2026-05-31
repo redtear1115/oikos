@@ -202,7 +202,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
                 href={ctaHref}
                 ctaLocation="hero"
                 target="sign_in"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-button font-medium cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-base font-medium cursor-pointer"
                 style={{
                   background: 'var(--ink)',
                   letterSpacing: '1.8px',
