@@ -95,12 +95,12 @@ function SceneCard({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-3 mb-1.5">
-          <h3
+          <p
             className="m-0 text-body font-medium leading-snug"
             style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
           >
             {title}
-          </h3>
+          </p>
           <span
             className="shrink-0 text-label"
             style={{
