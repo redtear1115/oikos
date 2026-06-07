@@ -37,13 +37,13 @@ const fraunces = Fraunces({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
-// GA4 — only loaded in production with a measurement ID configured. Same pattern
-// as PostHog (lib/providers.tsx#POSTHOG_ENABLED): dev / preview never inject the
-// gtag.js bundle, so no rogue events from local work and no consent banner
-// needed for non-prod environments. Build-time constant → identical on server
-// and client, no hydration mismatch from the conditional render below.
-const GA_MEASUREMENT_ID =
-  process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID : undefined
+// GA4 Measurement ID — hardcoded because it's a public identifier (the same
+// string is visible in every prod HTML via gtag.js, so an env var adds no
+// secrecy). Pairs with components/KofiWidget.tsx's SOURCE constant: both are
+// fork points when cloning this codebase to wildcard / blog — change them
+// together. Only injected when NODE_ENV === 'production' so dev / preview stay
+// clean of gtag.js without per-environment config.
+const GA_MEASUREMENT_ID = 'G-YHXFBMRQ3S'
 
 // Root layout metadata: platform / PWA / icons only.
 // Per-page title / description / openGraph / twitter are set in each
@@ -131,7 +131,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </PostHogProvider>
         <Analytics />
         <SpeedInsights />
-        {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   )
