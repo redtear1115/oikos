@@ -386,6 +386,13 @@
       "when": 1781300000000,
       "tag": "0055_recurring_push_cron",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1781400000000,
+      "tag": "0056_recurring_push_cron_vault",
+      "breakpoints": true
     }
   ]
 }
