@@ -1107,6 +1107,10 @@ export const en: Translations = {
     },
   },
 
+  support: {
+    buttonText: 'Support Futari',
+  },
+
   currencyPage: {
     title: 'Currency',
     back: 'Back',

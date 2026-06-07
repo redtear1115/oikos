@@ -1106,6 +1106,10 @@ export const zhCN: Translations = {
     },
   },
 
+  support: {
+    buttonText: '请喝杯咖啡',
+  },
+
   currencyPage: {
     title: '货币',
     back: '返回',

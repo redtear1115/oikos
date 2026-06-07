@@ -1105,6 +1105,10 @@ export const ja: Translations = {
     },
   },
 
+  support: {
+    buttonText: 'コーヒーを贈る',
+  },
+
   currencyPage: {
     title: '通貨',
     back: '戻る',

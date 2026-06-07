@@ -1397,6 +1397,12 @@ export type Translations = {
     }
   }
 
+  /** Ko-fi floating-chat widget (#893) — button label shown on the bottom-right
+   *  floating button. The widget mounts on landing and settings pages. */
+  support: {
+    buttonText: string
+  }
+
   /** /settings/currency page — base currency only since v0.17.4 (#410).
    *  Trip-scoped 心理匯率 lives inside each trip's TripSheet. */
   currencyPage: {
@@ -3484,6 +3490,10 @@ export const zhTW: Translations = {
         confirming: '正在加入…',
       },
     },
+  },
+
+  support: {
+    buttonText: '請喝杯咖啡',
   },
 
   currencyPage: {
