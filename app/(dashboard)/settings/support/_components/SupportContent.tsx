@@ -39,7 +39,7 @@ export function SupportContent() {
         >
           <iframe
             id="kofiframe"
-            src="https://ko-fi.com/ray19841115/?hidefeed=true&widget=true&embed=true&preview=true"
+            src="https://ko-fi.com/ray19841115/?hidefeed=true&widget=true&embed=true&preview=true&utm_source=futari_app&utm_medium=kofi_widget"
             title="Ko-fi · ray19841115"
             className="w-full block"
             style={{ height: '712px', border: 'none', background: 'transparent' }}
