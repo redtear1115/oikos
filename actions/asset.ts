@@ -12,7 +12,7 @@ import { revalidateAfterAssetMutation } from '@/lib/revalidate'
 import { listAssetsForGroup, getAssetById } from '@/lib/db/queries/asset'
 import { isAssetTemplateKey, validateTemplateFields, type AssetTemplateKey } from '@/lib/assetTemplates'
 import { canAccessGuardian } from '@/lib/guardian'
-import { captureServer } from '@/lib/analytics/server'
+import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
 
@@ -76,7 +76,7 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
 
   const { user: viewer, group } = await requireViewerGroup()
 
-  const [created] = await db.transaction(async (tx) => {
+  const { created, firstRecord } = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
       .values({ groupId: group.id, type: 'car', name: validated.name, notes: validated.notes })
@@ -100,6 +100,7 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
     // validateCarInput already enforces `purchasePrice > 0` (positive integer)
     // when present, so the truthy check below is sufficient — no need to guard
     // against 0 separately.
+    let firstRecord = false
     if (validated.purchasePrice) {
       const partnerId =
         group.memberB && group.memberB !== viewer.id
@@ -129,15 +130,20 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
       })
 
       await recalcGroupBalance(group.id, tx)
+      firstRecord = await isUserFirstNonDeletedRecord(tx, viewer.id, group.id)
     }
 
-    return [asset]
+    return { created: asset, firstRecord }
   })
 
   // Auto-tx affects /dashboard + /records too; revalidate unconditionally —
   // cheap, and keeps the call site simple.
   revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
 
+  // Activation signal (#891): purchase pair may be the viewer's first record.
+  if (firstRecord) {
+    await captureServer(viewer.id, 'first_record_created', { via: 'asset_purchase' })
+  }
   // Feature-adoption signal (#815).
   await captureServer(viewer.id, 'asset_created', { asset_type: 'car' })
 
@@ -1173,7 +1179,7 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
   const validated = validateHouseInput(input)
   const { user: viewer, group } = await requireViewerGroup()
 
-  const [created] = await db.transaction(async (tx) => {
+  const { created, firstRecord } = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
       .values({ groupId: group.id, type: 'house', name: validated.name, notes: validated.notes })
@@ -1188,6 +1194,7 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
       purchasePrice: validated.purchasePrice,
     })
 
+    let firstRecord = false
     if (validated.purchasePrice) {
       const partnerId =
         group.memberB && group.memberB !== viewer.id
@@ -1217,12 +1224,16 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
       })
 
       await recalcGroupBalance(group.id, tx)
+      firstRecord = await isUserFirstNonDeletedRecord(tx, viewer.id, group.id)
     }
 
-    return [asset]
+    return { created: asset, firstRecord }
   })
 
   revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
+  if (firstRecord) {
+    await captureServer(viewer.id, 'first_record_created', { via: 'asset_purchase' })
+  }
   await captureServer(viewer.id, 'asset_created', { asset_type: 'house' })
   return { id: created.id }
 }

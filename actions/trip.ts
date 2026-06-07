@@ -11,7 +11,7 @@ import {
   type TripCurrencySnapshot,
 } from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
-import { captureServer } from '@/lib/analytics/server'
+import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 
 /**
  * Build the rate_snapshot for a fresh trip. The default currency is always the
@@ -142,6 +142,7 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
       memberB: group.memberB,
     })
 
+    let firstRecord = false
     if (summaries.length > 0) {
       const endedAt = row.endedAt ?? new Date()
       await tx.insert(cashTransactions).values(summaries.map((s) => ({
@@ -157,15 +158,21 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
         tripId: row.id,
       })))
       await recalcGroupBalance(group.id, tx)
+      firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
     }
 
-    return { row, expenseCount: expenses.length }
+    return { row, expenseCount: expenses.length, firstRecord }
   })
 
   revalidatePath('/trips')
   revalidatePath(`/trips/${input.tripId}`)
   revalidatePath('/dashboard')
   revalidatePath('/records')
+
+  // Activation signal (#891): trip-end summary may be viewer's first record.
+  if (txResult.firstRecord) {
+    await captureServer(user.id, 'first_record_created', { via: 'trip_summary' })
+  }
 
   // Feature-adoption signal (#814): trip duration and scale.
   const { row: updated, expenseCount } = txResult
