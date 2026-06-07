@@ -727,7 +727,6 @@ export const en: Translations = {
     recurringSettings: 'Recurring Rules',
     sectionData: 'Data',
     trust: 'Your data',
-    support: 'Buy the maker a coffee',
     exportData: 'Export data (CSV)',
     pastTimes: 'Past chapters',
     trips: 'Trips',
@@ -1109,10 +1108,7 @@ export const en: Translations = {
   },
 
   support: {
-    title: 'Buy the maker a coffee',
-    back: 'Back',
-    pageHeading: 'Buy the maker a coffee',
-    pageSubtitle: 'Futari is made slowly, by one person. If it has held something for the two of you, a coffee’s worth of warmth is welcome here.',
+    buttonText: 'Buy a coffee',
   },
 
   currencyPage: {

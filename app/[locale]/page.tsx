@@ -5,6 +5,7 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
+import { KofiWidget } from '@/components/KofiWidget'
 import { Landing } from './_landing/Landing'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
@@ -124,6 +125,7 @@ export default async function RootPage({ params }: { params: Params }) {
         }}
         languageSwitcher={<LanguageSwitcher current={locale} variant="footer" />}
       />
+      <KofiWidget buttonText={t.support.buttonText} />
     </>
   )
 }

@@ -725,7 +725,6 @@ export const ja: Translations = {
     recurringSettings: '定期支出/収入設定',
     sectionData: 'データ',
     trust: 'データの安心',
-    support: '開発者にコーヒーを',
     exportData: 'データを書き出す（CSV）',
     pastTimes: '過ぎた時間',
     trips: '旅行',
@@ -1107,10 +1106,7 @@ export const ja: Translations = {
   },
 
   support: {
-    title: '開発者にコーヒーを',
-    back: '戻る',
-    pageHeading: '開発者にコーヒーを',
-    pageSubtitle: 'Futari は一人でゆっくり作っている小さな道具です。お二人にとって、何かを残せていたなら——ここでコーヒー一杯ぶんの温かさを。',
+    buttonText: 'コーヒーを贈る',
   },
 
   currencyPage: {
