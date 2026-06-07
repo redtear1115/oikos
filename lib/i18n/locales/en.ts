@@ -1108,7 +1108,7 @@ export const en: Translations = {
   },
 
   support: {
-    buttonText: 'Buy a coffee',
+    buttonText: 'Support Futari',
   },
 
   currencyPage: {

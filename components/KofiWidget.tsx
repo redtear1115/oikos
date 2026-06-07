@@ -15,6 +15,12 @@ import { useCallback } from 'react'
 // If two sites ship the same SOURCE, their traffic blurs together in GA and
 // you can't tell which site drove the click. Forgetting to change this line is
 // the most common bug — do it FIRST when forking.
+//
+// ⚠️ iOS App Store gate (#848): Apple Guideline 3.1.1 effectively bans tip-jar
+// flows that don't go through Apple IAP. Before shipping the iOS wrapper, this
+// component MUST be excluded from the iOS build (env flag at the mount sites in
+// app/[locale]/page.tsx and app/(dashboard)/settings/page.tsx). Google Play is
+// lenient for donation-framed widgets so Android stays as-is.
 // ============================================================================
 const SOURCE = 'futari'
 
