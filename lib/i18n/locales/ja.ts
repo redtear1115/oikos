@@ -1654,6 +1654,7 @@ export const ja: Translations = {
       'Vercel（Web ホスティング）',
       'Sentry（エラートラッキング：匿名のエラー情報を収集、個人識別情報は含まれません）',
       'PostHog（プロダクト分析：匿名の操作イベントを収集、個人識別情報は含まれません）',
+      'Google Analytics 4（流入元の分析：IP は匿名化、クロスサイトのパーソナライズは無効）',
     ],
     sectionRightsTitle: '利用者の権利',
     sectionRightsBody: '設定ページからいつでもサインアウトまたはアカウントを削除できます。個人データのエクスポートやお問い合わせは、',

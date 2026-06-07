@@ -1655,6 +1655,7 @@ export const zhCN: Translations = {
       'Vercel（网站托管）',
       'Sentry（错误追踪，收集匿名错误堆栈，不含个人识别信息）',
       'PostHog（产品分析，收集匿名操作事件，不含个人识别信息）',
+      'Google Analytics 4（流量来源分析，IP 匿名化，不启用跨站个人化）',
     ],
     sectionRightsTitle: '您的权利',
     sectionRightsBody: '您可随时通过设置页登出或删除账号。如需导出或查询您的个人数据，',
