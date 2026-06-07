@@ -4031,6 +4031,7 @@ export const zhTW: Translations = {
       'Vercel（網站託管）',
       'Sentry（錯誤追蹤，收集匿名錯誤堆疊，不含個人識別資訊）',
       'PostHog（產品分析，收集匿名操作事件，不含個人識別資訊）',
+      'Google Analytics 4（流量來源分析，IP 匿名化，不啟用跨站個人化）',
     ],
     sectionRightsTitle: '您的權利',
     sectionRightsBody: '您可隨時透過設定頁登出或刪除帳號。如需匯出或查詢您的個人資料，',

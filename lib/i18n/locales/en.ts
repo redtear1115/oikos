@@ -1652,6 +1652,7 @@ export const en: Translations = {
       'Vercel (web hosting)',
       'Sentry (error tracking — collects anonymous error traces, no personally identifiable information)',
       'PostHog (product analytics — collects anonymous usage events, no personally identifiable information)',
+      'Google Analytics 4 (traffic source analytics — IP-anonymised, cross-site personalisation disabled)',
     ],
     sectionRightsTitle: 'Your rights',
     sectionRightsBody: 'You may sign out or delete your account at any time from the settings page. To export or enquire about your personal data, ',

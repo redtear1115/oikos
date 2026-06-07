@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Fraunces } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import { PostHogProvider } from './providers'
@@ -35,6 +36,14 @@ const fraunces = Fraunces({
 })
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
+
+// GA4 — only loaded in production with a measurement ID configured. Same pattern
+// as PostHog (lib/providers.tsx#POSTHOG_ENABLED): dev / preview never inject the
+// gtag.js bundle, so no rogue events from local work and no consent banner
+// needed for non-prod environments. Build-time constant → identical on server
+// and client, no hydration mismatch from the conditional render below.
+const GA_MEASUREMENT_ID =
+  process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID : undefined
 
 // Root layout metadata: platform / PWA / icons only.
 // Per-page title / description / openGraph / twitter are set in each
@@ -122,6 +131,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </PostHogProvider>
         <Analytics />
         <SpeedInsights />
+        {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   )
