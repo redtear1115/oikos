@@ -980,6 +980,8 @@ export type Translations = {
     recurringSettings: string
     sectionData: string
     trust: string
+    /** #893 — 「支持 Futari」row label in settings footer. */
+    support: string
     exportData: string
     pastTimes: string
     trips: string
@@ -1395,6 +1397,15 @@ export type Translations = {
         confirming: string
       }
     }
+  }
+
+  /** /settings/support page — embedded Ko-fi tip jar (#893). The iframe lets
+   *  the user complete the donation without leaving the app. */
+  support: {
+    title: string
+    back: string
+    pageHeading: string
+    pageSubtitle: string
   }
 
   /** /settings/currency page — base currency only since v0.17.4 (#410).
@@ -3106,6 +3117,7 @@ export const zhTW: Translations = {
     recurringSettings: '定期支出/收入設定',
     sectionData: '資料',
     trust: '資料安全',
+    support: '請開發者喝杯咖啡',
     exportData: '匯出資料（CSV）',
     pastTimes: '過去的時光',
     trips: '旅行',
@@ -3484,6 +3496,13 @@ export const zhTW: Translations = {
         confirming: '正在加入…',
       },
     },
+  },
+
+  support: {
+    title: '請開發者喝杯咖啡',
+    back: '返回',
+    pageHeading: '請開發者喝杯咖啡',
+    pageSubtitle: 'Futari 是一個人慢慢做的小東西。若它替你們留住了什麼，這裡可以留下一杯咖啡的距離。',
   },
 
   currencyPage: {

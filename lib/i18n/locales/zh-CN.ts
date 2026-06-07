@@ -726,6 +726,7 @@ export const zhCN: Translations = {
     recurringSettings: '定期支出/收入设置',
     sectionData: '数据',
     trust: '数据安全',
+    support: '请开发者喝杯咖啡',
     exportData: '导出数据（CSV）',
     pastTimes: '过去的时光',
     trips: '旅行',
@@ -1104,6 +1105,13 @@ export const zhCN: Translations = {
         confirming: '正在加入…',
       },
     },
+  },
+
+  support: {
+    title: '请开发者喝杯咖啡',
+    back: '返回',
+    pageHeading: '请开发者喝杯咖啡',
+    pageSubtitle: 'Futari 是一个人慢慢做的小东西。若它替你们留住了什么，这里可以留下一杯咖啡的距离。',
   },
 
   currencyPage: {

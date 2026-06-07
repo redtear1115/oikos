@@ -5,6 +5,7 @@ import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { QuickAccessRow } from './QuickAccessRow'
 import { InstallGuideRow } from './InstallGuideRow'
 import { LogoutButton } from './LogoutButton'
+import { SupportLink } from './SupportLink'
 
 export interface ViewerInfo {
   id: string
@@ -108,6 +109,8 @@ export async function SettingsContent({
         style={{ color: 'var(--ink-3)' }}
       >
         Futari · v{appVersion}
+        <br />
+        <SupportLink label={t.settings.support} />
         <br />
         <a href="/terms" className="underline" style={{ color: 'var(--ink-3)' }}>{t.signIn.termsLink}</a>
         {' · '}
