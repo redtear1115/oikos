@@ -66,6 +66,8 @@ export default async function SignInPage({ params }: { params: Params }) {
           accounts.google.com is sign-in-specific. (#352) */}
       <link rel="preconnect" href="https://accounts.google.com" crossOrigin="anonymous" />
       <link rel="dns-prefetch" href="https://accounts.google.com" />
+      <link rel="preconnect" href="https://appleid.apple.com" crossOrigin="anonymous" />
+      <link rel="dns-prefetch" href="https://appleid.apple.com" />
 
       <div
         className="
@@ -116,7 +118,8 @@ export default async function SignInPage({ params }: { params: Params }) {
           </div>
 
           <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">
-            <SignInButton label={t.signIn.continueWithGoogle} />
+            <SignInButton provider="google" label={t.signIn.continueWithGoogle} />
+            <SignInButton provider="apple" label={t.signIn.continueWithApple} />
             <InstallHint t={t.signIn.installHint} />
             <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
               {t.signIn.termsPrefix}{' '}
