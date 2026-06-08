@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useState, useTransition } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { type Locale } from './locales-meta'
 import { isPublicLocalizedPath, localizedHref, stripLocaleFromPath } from './path'
@@ -40,36 +40,52 @@ export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const effectiveMode: Mode = mode ?? inferMode(pathname)
+  // Optimistic selection：點下去馬上反白，不用等 router.refresh() 重抓 server
+  // components（dashboard 約 2s）才有反應。pending 期間整組 dim + disable，
+  // 遮住等待空窗。refresh 完成後 `current` prop 會追上 `selected`，兩者一致。
+  const [selected, setSelected] = useState(current)
+  const [pending, startTransition] = useTransition()
 
   function switchLang(lang: string) {
-    if (lang === current) return
+    if (lang === selected || pending) return
+    setSelected(lang)
     // 兩種 mode 都同步 cookie：dashboard 才會用到、public 也方便登入後 dashboard 繼承
     // eslint-disable-next-line react-hooks/immutability -- document.cookie is the standard browser API for setting cookies client-side; there is no immutable alternative.
     document.cookie = `lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
 
-    if (effectiveMode === 'url') {
-      const basePath = stripLocaleFromPath(pathname)
-      router.push(localizedHref(basePath, lang as Locale))
-    } else {
-      router.refresh()
-    }
+    // startTransition 讓 React 把 refresh/navigation 標為 non-urgent，並在過程中
+    // 維持 `pending` 為 true 直到 server re-render 完成。
+    startTransition(() => {
+      if (effectiveMode === 'url') {
+        const basePath = stripLocaleFromPath(pathname)
+        router.push(localizedHref(basePath, lang as Locale))
+      } else {
+        router.refresh()
+      }
+    })
   }
 
   if (variant === 'footer') {
     return (
       <div
         className="flex items-center gap-3"
-        style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)' }}
+        aria-busy={pending}
+        style={{
+          fontSize: 'var(--fs-xs)',
+          color: 'var(--ink-3)',
+          opacity: pending ? 0.5 : 1,
+          transition: 'opacity 0.2s',
+        }}
       >
         {LOCALES.map(({ value, label }, i) => {
-          const active = current === value
+          const active = selected === value
           return (
             <Fragment key={value}>
               {i > 0 && <span aria-hidden="true">·</span>}
               <button
                 type="button"
                 onClick={() => switchLang(value)}
-                disabled={active}
+                disabled={active || pending}
                 aria-current={active ? 'true' : undefined}
                 className="cursor-pointer disabled:cursor-default"
                 style={{
@@ -89,17 +105,24 @@ export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
   return (
     <div
       className="rounded-[20px] overflow-hidden flex"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+      aria-busy={pending}
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--hairline)',
+        opacity: pending ? 0.6 : 1,
+        transition: 'opacity 0.2s',
+      }}
     >
       {LOCALES.map(({ value, label }, i) => {
-        const active = current === value
+        const active = selected === value
         return (
           <button
             type="button"
             key={value}
             onClick={() => switchLang(value)}
+            disabled={pending}
             aria-current={active ? 'true' : undefined}
-            className="flex-1 px-4 py-3 text-sm font-medium cursor-pointer transition-colors"
+            className="flex-1 px-4 py-3 text-sm font-medium cursor-pointer transition-colors disabled:cursor-default"
             style={{
               background: active ? 'var(--toggle-active-bg)' : 'transparent',
               color: active ? 'var(--toggle-active-text)' : 'var(--ink-2)',
