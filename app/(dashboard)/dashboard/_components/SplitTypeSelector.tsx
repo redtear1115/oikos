@@ -13,6 +13,13 @@ interface SplitTypeSelectorProps {
   onChange: (split: SplitType) => void
   amount: number
   payerWho: 'M' | 'T'
+  /**
+   * The group's default split shown in the viewer's angle (already passed
+   * through `toViewerShare` by the caller). Drives the "reset to default"
+   * affordance: when the slider has drifted off this value, a small button
+   * lets the user snap back to it (#902).
+   */
+  defaultViewerShare: number
 }
 
 type STS = Translations['splitTypeSelector']
@@ -45,11 +52,12 @@ function splitSub(sts: STS, splitId: 'all_mine' | 'all_theirs', payerWho: 'M' | 
     : sts.allTheirsPartnerPaid.replace('{amount}', formatAmount(amount, 'twd'))
 }
 
-export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onChange, amount, payerWho }: SplitTypeSelectorProps) {
+export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onChange, amount, payerWho, defaultViewerShare }: SplitTypeSelectorProps) {
   const t = useTranslations()
   const sts = t.splitTypeSelector
   const weightedLabel = splitRatioA === 50 ? t.splitType.even : t.splitType.weighted
   const isWeighted = value === 'weighted' || value === 'half'
+  const hasDriftedFromDefault = splitRatioA !== defaultViewerShare
 
   const staticOptions = [
     { id: 'all_mine'   as const, label: t.splitType.allMine,     sub: splitSub(sts, 'all_mine',   payerWho, amount) },
@@ -107,6 +115,16 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               aria-label={sts.ratioAriaLabel}
               className="w-full accent-[var(--ink)]"
             />
+            {hasDriftedFromDefault && (
+              <button
+                type="button"
+                onClick={() => onSplitRatioAChange(defaultViewerShare)}
+                className="self-end text-xs underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
+                style={{ color: 'var(--ink-3)' }}
+              >
+                {sts.resetToDefault}
+              </button>
+            )}
           </div>
         )}
       </div>
