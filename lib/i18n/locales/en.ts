@@ -424,6 +424,7 @@ export const en: Translations = {
     allTheirsPartnerPaid: 'You owe partner {amount}',
     meRatio: 'Me {ratio}%',
     partnerRatio: 'Partner {ratio}%',
+    resetToDefault: 'Reset to default',
   },
 
   pendingIncomeStack: {

@@ -328,6 +328,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
                 payerWho={payerWho}
                 splitRatioA={50}
                 onSplitRatioAChange={() => {}}
+                defaultViewerShare={50}
               />
             </div>
           )}

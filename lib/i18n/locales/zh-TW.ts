@@ -545,6 +545,8 @@ export type Translations = {
     meRatio: string
     /** Partner ratio label. `{ratio}` replaced. */
     partnerRatio: string
+    /** Button to snap the weighted ratio back to the group default (#902). */
+    resetToDefault: string
   }
 
   pendingIncomeStack: {
@@ -2809,6 +2811,7 @@ export const zhTW: Translations = {
     allTheirsPartnerPaid: '你欠對方 {amount}',
     meRatio: '我 {ratio}%',
     partnerRatio: '對方 {ratio}%',
+    resetToDefault: '回到預設',
   },
 
   pendingIncomeStack: {

@@ -423,6 +423,7 @@ export const zhCN: Translations = {
     allTheirsPartnerPaid: '你欠对方 {amount}',
     meRatio: '我 {ratio}%',
     partnerRatio: '对方 {ratio}%',
+    resetToDefault: '回到默认',
   },
 
   pendingIncomeStack: {

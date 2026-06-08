@@ -422,6 +422,7 @@ export const ja: Translations = {
     allTheirsPartnerPaid: 'パートナーに {amount} 借りている',
     meRatio: '自分 {ratio}%',
     partnerRatio: '相手 {ratio}%',
+    resetToDefault: 'デフォルトに戻す',
   },
 
   pendingIncomeStack: {
