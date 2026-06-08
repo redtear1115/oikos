@@ -103,6 +103,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
 - [conversion-analytics](conversion-analytics-design.md) — PostHog 轉換漏斗事件：入口頁（landing / migrate）→ 註冊 / 啟用追蹤 + 跨 OAuth 邊界歸因（維持 cookieless）
 - [native-auth](native-auth-design.md) — Capacitor 原生殼的 Google OAuth：web vs custom scheme redirect_to、deep link 回跳、Supabase Redirect URLs `/**` 設定不變量（含 #866 踩雷紀錄）
+- [sign-in-with-apple](2026-06-08-sign-in-with-apple-design.md) — Sign in with Apple（App Store 4.8 上架前置）：iOS native plugin `signInWithIdToken` / Android + web 走 OAuth 三路分支、native path 自補 attribution server action（#903）
 
 ### 記帳核心
 
