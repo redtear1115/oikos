@@ -1,6 +1,6 @@
 import {
   pgTable, pgEnum, uuid, text, integer, numeric,
-  timestamp, date, jsonb, boolean, primaryKey,
+  timestamp, date, jsonb, boolean, primaryKey, unique,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -583,3 +583,17 @@ export const monthlyReviewMessages = pgTable('MonthlyReviewMessages', {
   // Stamped by month-end cron; non-null = read-only forever.
   lockedAt: timestamp('locked_at', { withTimezone: true }),
 })
+
+// #1007 — Push device tokens for APNs (iOS) and FCM (Android future).
+// Upsert on (user_id, platform, token) — same device re-registers silently.
+export const pushTokens = pgTable('PushTokens', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  groupId: uuid('group_id').notNull().references(() => oikosGroups.id, { onDelete: 'cascade' }),
+  platform: text('platform').notNull(), // 'apns' or 'fcm'
+  token: text('token').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  uniqueUserPlatformToken: unique('push_tokens_unique').on(t.userId, t.platform, t.token),
+}))

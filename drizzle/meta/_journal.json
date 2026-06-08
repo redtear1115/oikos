@@ -372,6 +372,27 @@
       "when": 1781100000000,
       "tag": "0053_drop_legacy_plate_address",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1781200000000,
+      "tag": "0054_push_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1781300000000,
+      "tag": "0055_recurring_push_cron",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1781400000000,
+      "tag": "0056_recurring_push_cron_vault",
+      "breakpoints": true
     }
   ]
 }
