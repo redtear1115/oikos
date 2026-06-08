@@ -2,6 +2,7 @@
 
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { useTranslations } from '@/lib/i18n/client'
+import { EmptyStateShell } from './EmptyStateShell'
 
 interface Props {
   onAdd?: () => void
@@ -27,62 +28,62 @@ export function IncomeEmptyState({ onAdd }: Props) {
   ]
 
   return (
-    <div className="flex flex-col items-center px-6 py-16 text-center">
-      {/* Constellation SVG */}
-      <div style={{ position: 'relative', width: '100%', height: 220, marginBottom: 24 }}>
-        <svg
-          width="100%"
-          height="220"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
-          style={{ position: 'absolute', inset: 0 }}
-        >
-          {/* Constellation dots */}
-          {dots.map((d, i) => (
-            <circle
-              key={i}
-              cx={d.x}
-              cy={d.y}
-              r={d.r}
-              fill={P.ink}
-              opacity={d.o}
-            />
-          ))}
+    <EmptyStateShell
+      variant="bare"
+      illustration={
+        /* Constellation SVG */
+        <div style={{ position: 'relative', width: '100%', height: 220, marginBottom: 24 }}>
+          <svg
+            width="100%"
+            height="220"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden="true"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            {/* Constellation dots */}
+            {dots.map((d, i) => (
+              <circle
+                key={i}
+                cx={d.x}
+                cy={d.y}
+                r={d.r}
+                fill={P.ink}
+                opacity={d.o}
+              />
+            ))}
 
-          {/* Central halo — layered glow effect */}
-          <circle cx="50" cy="50" r="12" fill={P.glow} opacity="0.6" />
-          <circle cx="50" cy="50" r="8" fill={P.glow} opacity="0.4" />
-          <circle cx="50" cy="50" r="5" fill={P.ink} opacity="0.25" />
+            {/* Central halo — layered glow effect */}
+            <circle cx="50" cy="50" r="12" fill={P.glow} opacity="0.6" />
+            <circle cx="50" cy="50" r="8" fill={P.glow} opacity="0.4" />
+            <circle cx="50" cy="50" r="5" fill={P.ink} opacity="0.25" />
 
-          {/* Small center dot */}
-          <circle cx="50" cy="50" r="2" fill={P.ink} opacity="0.7" />
-        </svg>
-      </div>
-
-      {/* Caption */}
-      <p
-        className="text-sm mb-5"
-        style={{ color: 'var(--ink-2)', lineHeight: 1.6 }}
-      >
-        {t.feed.noIncome}
-      </p>
-
-      {/* CTA — conditionally rendered */}
-      {onAdd && (
-        <button
-          type="button"
-          onClick={onAdd}
-          className="h-10 px-6 rounded-full text-sm font-medium cursor-pointer border-0"
-          style={{
-            background: P.tint,
-            color: P.ink,
-            border: `1px solid ${P.ink}30`,
-          }}
-        >
-          {t.feed.addFirst}
-        </button>
-      )}
-    </div>
+            {/* Small center dot */}
+            <circle cx="50" cy="50" r="2" fill={P.ink} opacity="0.7" />
+          </svg>
+        </div>
+      }
+      caption={
+        <p className="text-sm mb-5" style={{ color: 'var(--ink-2)', lineHeight: 1.6 }}>
+          {t.feed.noIncome}
+        </p>
+      }
+      cta={
+        onAdd && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="h-10 px-6 rounded-full text-sm font-medium cursor-pointer border-0"
+            style={{
+              background: P.tint,
+              color: P.ink,
+              border: `1px solid ${P.ink}30`,
+            }}
+          >
+            {t.feed.addFirst}
+          </button>
+        )
+      }
+    />
   )
 }

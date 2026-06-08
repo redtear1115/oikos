@@ -7,8 +7,7 @@ import { IncomeEmptyState } from './IncomeEmptyState'
 import { toWire, type TxnFilter } from '@/lib/filter'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
-import { CompactRow } from './CompactRow'
-import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
+import { renderIncomeFeedRow } from './IncomeFeedRow'
 import { useTranslations } from '@/lib/i18n/client'
 import type { DashboardFeedData } from './Dashboard'
 
@@ -32,17 +31,12 @@ export function DashboardFeed({
   onAddTx,
 }: DashboardFeedProps) {
   const { recent, recentIncomeFeed } = use(feedDataPromise)
-  const P = DEFAULT_INCOME_PALETTE
   const t = useTranslations()
 
-  const incomeRenderRow = useCallback((tx: PagedTxnRow): React.ReactNode | undefined => {
-    if (tx.kind !== 'income') return undefined
-    return (
-      <div style={{ background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)` }}>
-        <CompactRow tx={tx} isLast={false} onClick={() => onItemClick(tx)} />
-      </div>
-    )
-  }, [onItemClick, P.glow])
+  const incomeRenderRow = useCallback(
+    (tx: PagedTxnRow) => renderIncomeFeedRow(tx, onItemClick),
+    [onItemClick],
+  )
 
   // Income loader closes over the active filter so the income feed responds
   // to L3 chip changes the same way the cash feed does — TransactionFeed

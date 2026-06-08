@@ -1,13 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { getIncomeCategory } from '@/lib/incomeCategories'
 import { confirmPending, skipPending } from '@/actions/recurringIncome'
-import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useTranslations } from '@/lib/i18n/client'
-import { describeError } from '@/lib/errors'
 import type { PendingRow } from '@/lib/db/queries/recurringIncome'
+import { PendingCard } from './PendingCard'
 
 export interface PendingIncomeCardProps {
   pending: PendingRow
@@ -15,121 +12,31 @@ export interface PendingIncomeCardProps {
 }
 
 export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
-  const router = useRouter()
   const t = useTranslations()
-  const [submitting, startTransition] = useTransition()
-  const [fading, setFading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [confirmingSkip, setConfirmingSkip] = useState(false)
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cat = getIncomeCategory(pending.category)
-
-  useEffect(() => {
-    return () => {
-      if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current)
-    }
-  }, [])
-
-  const handleConfirm = () => startTransition(async () => {
-    try {
-      await confirmPending(pending.id)
-      setFading(true)
-      refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
-    } catch (e) {
-      setError(describeError(e, t.pendingIncomeCard.confirmError, t.common.offlineError))
-    }
-  })
-
-  const performSkip = () => {
-    setConfirmingSkip(false)
-    startTransition(async () => {
-      try {
-        await skipPending(pending.id)
-        setFading(true)
-        refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
-      } catch (e) {
-        setError(describeError(e, t.pendingIncomeCard.skipError, t.common.offlineError))
-      }
-    })
-  }
+  const title = pending.source ?? cat.label
 
   return (
-    <>
-      <div
-        className="rounded-2xl p-4 transition-opacity duration-700"
-        style={{
-          background: `linear-gradient(135deg, ${cat.tint}30, transparent)`,
-          border: `1px solid ${cat.ink}20`,
-          opacity: fading ? 0 : 1,
-        }}
-      >
-        <div className="mb-3 flex items-start gap-3">
-          <span
-            className="grid h-9 w-9 place-items-center rounded-full text-[var(--fs-base)]"
-            style={{ background: cat.tint, color: cat.ink }}
-          >
-            {cat.mono}
-          </span>
-          <div className="flex-1">
-            <div className="text-[var(--fs-base)] font-medium" style={{ color: 'var(--ink)' }}>
-              {pending.source ?? cat.label}
-            </div>
-            <div className="text-[var(--fs-sm)]" style={{ color: 'var(--ink-3)' }}>
-              {pending.proposedDate}
-            </div>
-            {/* TODO(v0.17 currency): "NT$ {amount}" with space — design-driven,
-                 defer to design before migrating to formatAmount (which has no space). */}
-            <div className="mt-1 text-[var(--fs-2xl)] font-medium" style={{ color: 'var(--ink)' }}>
-              NT$ {pending.proposedAmount.toLocaleString()}
-            </div>
-          </div>
-        </div>
-
-        {error && (
-          <div
-            className="mb-3 rounded-xl px-3 py-2 text-[var(--fs-sm)] text-white"
-            style={{ background: 'var(--debit)' }}
-          >
-            {error}
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <button
-            type="button" onClick={handleConfirm} disabled={submitting}
-            className="flex-1 rounded-full py-2 text-[var(--fs-sm)] disabled:opacity-50"
-            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-          >
-            {t.pendingIncomeCard.confirm}
-          </button>
-          <button
-            type="button"
-            onClick={() => onEdit?.(pending)}
-            disabled={submitting || !onEdit}
-            className="rounded-full px-4 py-2 text-[var(--fs-sm)] disabled:opacity-30"
-            style={{ border: `1px solid ${cat.ink}40`, color: 'var(--ink-2)', background: 'transparent' }}
-          >
-            {t.pendingIncomeCard.edit}
-          </button>
-          <button
-            type="button" onClick={() => setConfirmingSkip(true)} disabled={submitting}
-            className="rounded-full px-4 py-2 text-[var(--fs-sm)] disabled:opacity-30"
-            style={{ border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
-          >
-            {t.pendingIncomeCard.skip}
-          </button>
-        </div>
-      </div>
-
-      <ConfirmModal
-        open={confirmingSkip}
-        title={t.pendingIncomeCard.skipTitle.replace('{date}', pending.proposedDate).replace('{name}', pending.source ?? cat.label)}
-        description={t.pendingIncomeCard.skipDescription}
-        confirmLabel={t.pendingIncomeCard.skip}
-        pending={submitting}
-        onCancel={() => setConfirmingSkip(false)}
-        onConfirm={performSkip}
-      />
-    </>
+    <PendingCard
+      cat={cat}
+      gradientAlpha="30"
+      title={title}
+      date={pending.proposedDate}
+      amount={pending.proposedAmount}
+      confirmLabel={t.pendingIncomeCard.confirm}
+      editLabel={t.pendingIncomeCard.edit}
+      skipLabel={t.pendingIncomeCard.skip}
+      primaryDisabledClass="disabled:opacity-50"
+      secondaryDisabledClass="disabled:opacity-30"
+      onConfirm={() => confirmPending(pending.id)}
+      onSkip={() => skipPending(pending.id)}
+      confirmErrorFallback={t.pendingIncomeCard.confirmError}
+      skipErrorFallback={t.pendingIncomeCard.skipError}
+      skipModalTitle={t.pendingIncomeCard.skipTitle
+        .replace('{date}', pending.proposedDate)
+        .replace('{name}', title)}
+      skipModalDescription={t.pendingIncomeCard.skipDescription}
+      onEdit={onEdit ? () => onEdit(pending) : undefined}
+    />
   )
 }
