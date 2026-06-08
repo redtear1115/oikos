@@ -4,6 +4,7 @@ export const en: Translations = {
   signIn: {
     tagline: 'Your ledger is ready, for the two of you.',
     continueWithGoogle: 'Continue with Google',
+    continueWithApple: 'Continue with Apple',
     termsPrefix: 'By continuing, you agree to our',
     termsLink: 'Terms of Service',
     termsAnd: 'and',
