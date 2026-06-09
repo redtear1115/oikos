@@ -459,6 +459,11 @@ export const en: Translations = {
       "We'll remove your data within 14 business days. You can come back and cancel any time before then. If you share a ledger, your partner's records stay, and your name will show as “a partner who left”.",
   },
 
+  accountDeletionBanner: {
+    message: 'Your account is scheduled for removal on {date}.',
+    cancel: 'Cancel deletion',
+  },
+
   splitRatioSection: {
     meSuffix: ' (me)',
     partnerSuffix: ' (partner)',

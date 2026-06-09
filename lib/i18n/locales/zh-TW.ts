@@ -598,6 +598,13 @@ export type Translations = {
     description: string
   }
 
+  accountDeletionBanner: {
+    /** Non-blocking strip message. `{date}` replaced with the scheduled removal date. */
+    message: string
+    /** Cancel-deletion button label. */
+    cancel: string
+  }
+
   splitRatioSection: {
     /** Inline label suffix for viewer. `{name}` replaced with displayName. */
     meSuffix: string
@@ -2856,6 +2863,11 @@ export const zhTW: Translations = {
     title: '確定要刪除帳號？',
     description:
       '我們會在 14 個工作天內移除你的資料。這段期間你隨時可以回來取消。若你和對方共用帳本，對方的紀錄會保留，你的名字會顯示為「已離開的夥伴」。',
+  },
+
+  accountDeletionBanner: {
+    message: '你的帳號預計於 {date} 移除。',
+    cancel: '取消刪除',
   },
 
   splitRatioSection: {
