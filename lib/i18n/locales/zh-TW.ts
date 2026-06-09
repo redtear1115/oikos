@@ -164,8 +164,6 @@ export type Translations = {
       spendeeBody: string
       cwmoneyTitle: string
       cwmoneyBody: string
-      /** Aria label template — `{source}` is the tool name. */
-      cardAriaLabel: string
     }
     /** Use-case section (#851) — three locale-aware links to /use-case/* on the
      *  landing page. Positioned after the migrate section to strengthen internal
@@ -1404,6 +1402,8 @@ export type Translations = {
    *  floating button. The widget mounts on landing and settings pages. */
   support: {
     buttonText: string
+    /** Accessible title for the Ko-fi floating widget iframe (frame-title, #919). */
+    frameTitle: string
   }
 
   /** /settings/currency page — base currency only since v0.17.4 (#410).
@@ -2526,7 +2526,6 @@ export const zhTW: Translations = {
       spendeeBody: '雙人共享是內建免費的，不必再解鎖付費方案。',
       cwmoneyTitle: '從 CWMoney 搬過來',
       cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
-      cardAriaLabel: '從 {source} 搬到 Futari',
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · ふたり',
@@ -3499,6 +3498,7 @@ export const zhTW: Translations = {
 
   support: {
     buttonText: '請喝杯咖啡',
+    frameTitle: 'Ko-fi 支持小視窗',
   },
 
   currencyPage: {

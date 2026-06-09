@@ -6,7 +6,7 @@ import { render, cleanup } from '@testing-library/react'
 // script (unavailable here), which we simulate by hand in the tests below.
 vi.mock('next/script', () => ({ default: () => null }))
 
-import { KofiWidget, teardownKofiWidget } from '@/components/KofiWidget'
+import { KofiWidget, teardownKofiWidget, titleKofiIframes } from '@/components/KofiWidget'
 
 /** Mimic the top-level DOM Ko-fi's overlay-widget.js appends to <body>. */
 function injectFakeKofiDom() {
@@ -22,6 +22,12 @@ function injectFakeKofiDom() {
   const wo = document.createElement('div')
   wo.className = 'kofi-wo-container'
   document.body.appendChild(wo)
+
+  // The floating iframe Ko-fi injects with no `title` attribute (#919).
+  const iframe = document.createElement('iframe')
+  iframe.id = 'kofi-wo-container-mobi-xyz'
+  iframe.className = 'floatingchat-container-mobi'
+  document.body.appendChild(iframe)
 }
 
 afterEach(() => {
@@ -48,7 +54,7 @@ describe('teardownKofiWidget', () => {
 
 describe('KofiWidget unmount (leaving /settings)', () => {
   it('removes the injected widget DOM when the component unmounts', () => {
-    const { unmount } = render(<KofiWidget buttonText="Support" />)
+    const { unmount } = render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
     // Simulate Ko-fi having drawn its widget after the script loaded.
     injectFakeKofiDom()
     expect(document.querySelector('.floatingchat-container-wrap')).not.toBeNull()
@@ -63,7 +69,7 @@ describe('KofiWidget unmount (leaving /settings)', () => {
     const gtag = vi.fn()
     ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
 
-    const { unmount } = render(<KofiWidget buttonText="Support" />)
+    const { unmount } = render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
     injectFakeKofiDom()
     const btn = document.querySelector('.floatingchat-donate-button') as HTMLElement
 
@@ -77,5 +83,40 @@ describe('KofiWidget unmount (leaving /settings)', () => {
     const btn2 = document.querySelector('.floatingchat-donate-button') as HTMLElement
     btn2.click()
     expect(gtag).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('titleKofiIframes (frame-title a11y, #919)', () => {
+  it('labels Ko-fi iframes that have no title and leaves existing titles alone', () => {
+    injectFakeKofiDom()
+    const labelled = document.createElement('iframe')
+    labelled.id = 'kofi-wo-container-pre'
+    labelled.setAttribute('title', 'Already labelled')
+    document.body.appendChild(labelled)
+
+    titleKofiIframes('Ko-fi support window')
+
+    const injected = document.querySelector(
+      'iframe.floatingchat-container-mobi',
+    ) as HTMLIFrameElement
+    expect(injected.getAttribute('title')).toBe('Ko-fi support window')
+    // pre-existing title is preserved
+    expect(labelled.getAttribute('title')).toBe('Already labelled')
+  })
+})
+
+describe('KofiWidget frame-title (async iframe injection)', () => {
+  it('titles the iframe once Ko-fi injects it after mount', async () => {
+    render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
+    // Ko-fi draws the widget (incl. the iframe) only after its script loads.
+    injectFakeKofiDom()
+
+    // The MutationObserver fires on a microtask; wait a tick for it to run.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const iframe = document.querySelector(
+      'iframe.floatingchat-container-mobi',
+    ) as HTMLIFrameElement
+    expect(iframe.getAttribute('title')).toBe('Ko-fi support window')
   })
 })

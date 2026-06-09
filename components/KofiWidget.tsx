@@ -49,6 +49,21 @@ export function teardownKofiWidget(): void {
   document.querySelectorAll(KOFI_INJECTED_SELECTOR).forEach((el) => el.remove())
 }
 
+// Ko-fi injects a floating iframe (id starts with `kofi-wo-container`, class
+// `floatingchat-container-mobi`) with no `title`, which fails the a11y
+// frame-title check (#919). We can't touch Ko-fi's markup, so we label the
+// iframe ourselves once it appears.
+const KOFI_IFRAME_SELECTOR =
+  'iframe[id^="kofi-wo-container"], iframe.floatingchat-container-mobi'
+
+/** Give every Ko-fi-injected iframe an accessible `title` if it lacks one. */
+export function titleKofiIframes(title: string): void {
+  if (typeof document === 'undefined') return
+  document.querySelectorAll<HTMLIFrameElement>(KOFI_IFRAME_SELECTOR).forEach((iframe) => {
+    if (!iframe.getAttribute('title')) iframe.setAttribute('title', title)
+  })
+}
+
 /**
  * Bottom-right floating Ko-fi widget. Click opens a Ko-fi-hosted modal so the
  * donation completes without leaving the site.
@@ -63,7 +78,13 @@ export function teardownKofiWidget(): void {
  * `source: SOURCE` so we can split traffic per site in GA reports. The event
  * call is a no-op until `window.gtag` is loaded (PR #896 + Vercel prod env).
  */
-export function KofiWidget({ buttonText }: { buttonText: string }) {
+export function KofiWidget({
+  buttonText,
+  frameTitle,
+}: {
+  buttonText: string
+  frameTitle: string
+}) {
   useEffect(() => {
     // Ko-fi script doesn't expose an onClick hook, so attach a delegated
     // listener on document — captures clicks regardless of when the widget
@@ -77,11 +98,20 @@ export function KofiWidget({ buttonText }: { buttonText: string }) {
     }
     document.addEventListener('click', onClick, { passive: true })
 
+    // The iframe is injected asynchronously (after the script loads + draws),
+    // so we can't set its `title` inline. Watch <body> for the injection and
+    // label it once it lands. Same scope/teardown contract as the rest of the
+    // component (#917) — the observer disconnects on unmount.
+    titleKofiIframes(frameTitle)
+    const observer = new MutationObserver(() => titleKofiIframes(frameTitle))
+    observer.observe(document.body, { childList: true, subtree: true })
+
     return () => {
+      observer.disconnect()
       document.removeEventListener('click', onClick)
       teardownKofiWidget()
     }
-  }, [])
+  }, [frameTitle])
 
   const handleLoad = useCallback(() => {
     if (typeof window === 'undefined') return
