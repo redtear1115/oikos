@@ -393,6 +393,13 @@
       "when": 1781400000000,
       "tag": "0056_recurring_push_cron_vault",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1781500000000,
+      "tag": "0057_account_deletion_requested_at",
+      "breakpoints": true
     }
   ]
 }
