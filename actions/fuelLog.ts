@@ -8,6 +8,7 @@ import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
+import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { FuelType } from '@/lib/fuel'
 
 /**
@@ -19,7 +20,7 @@ import type { FuelType } from '@/lib/fuel'
  * paidBy / splitType are taken from form input (Q4 B1 — user picks per-fill).
  */
 export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: string }> {
-  const { group } = await getViewerWriteContext()
+  const { user, group } = await getViewerWriteContext()
 
   const validated = validateFuelLogInput(input)
 
@@ -75,10 +76,17 @@ export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: strin
 
     await recalcGroupBalance(group.id, tx)
 
-    return { id: newLog.id, txnId: newTxn.id }
+    const firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
+
+    return { id: newLog.id, txnId: newTxn.id, firstRecord }
   })
 
   revalidateAfterTransactionMutation({ assetId: validated.assetId })
+
+  // Activation signal (#891): fuel pair may be the viewer's first record.
+  if (result.firstRecord) {
+    await captureServer(user.id, 'first_record_created', { via: 'fuel_log' })
+  }
 
   return { id: result.id }
 }

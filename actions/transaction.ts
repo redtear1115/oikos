@@ -12,7 +12,7 @@ import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
 import { resolveTxnFilter } from '@/lib/resolveTxnFilter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
-import { eq, and, isNull, sql } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { requireViewer } from '@/lib/auth/viewer'
 import { assertMemberInGroup } from '@/lib/auth/member'
@@ -21,7 +21,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { convertAmount, type CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
-import { captureServer } from '@/lib/analytics/server'
+import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 
 export interface CreateTransactionInput {
   amount: number              // integer NTD, > 0
@@ -119,20 +119,9 @@ export async function createTransaction(
       .returning({ id: cashTransactions.id })
     await recalcGroupBalance(group.id, tx)
 
-    // Per-user "first record" signal for the #43 phase C card. paid_by is the
-    // proxy for "who entered this row" — there is no created_by column. The
-    // typical first-record moment is the user logging their own purchase, so
-    // the proxy holds; an edge case where the user marks the partner as payer
-    // first won't fire the card.
-    const [countRow] = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(cashTransactions)
-      .where(and(
-        eq(cashTransactions.groupId, group.id),
-        eq(cashTransactions.paidBy, user.id),
-        isNull(cashTransactions.deletedAt),
-      ))
-    const isFirstTransaction = (countRow?.count ?? 0) === 1
+    // Per-user "first record" signal for the #43 phase C card. See
+    // isUserFirstNonDeletedRecord docstring for the partner-as-payer caveat.
+    const isFirstTransaction = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
 
     return { id: inserted.id, isFirstTransaction }
   })

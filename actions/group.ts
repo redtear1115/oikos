@@ -29,7 +29,12 @@ export async function createGroup(name: string) {
 
   const existing = await getActiveGroupForUser(user.id)
 
-  if (existing) throw new Error('Already in a group')
+  // Idempotent: a user already in a group who re-enters createGroup (cross-tab
+  // race, network retry, double-submit) gets their existing group back rather
+  // than an unhandled 'Already in a group' throw (#911). Return before the
+  // insert + `setup_completed` capture so we neither create a second group nor
+  // double-fire the onboarding-completed event.
+  if (existing) return existing
 
   const [group] = await db.transaction(async (tx) => {
     const [g] = await tx

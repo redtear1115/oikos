@@ -25,7 +25,7 @@ import { useRecurringRuleForm } from '@/lib/hooks/useRecurringRuleForm'
 import type { SplitType } from '@/lib/balance'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
-import { loadedSplitRatioToViewerShare, toMemberAShare } from '@/lib/splitRatio'
+import { loadedSplitRatioToViewerShare, toMemberAShare, toViewerShare } from '@/lib/splitRatio'
 
 const INTERVAL_VALUES: (1 | 3 | 6 | 12)[] = [1, 3, 6, 12]
 const P = DEFAULT_INCOME_PALETTE
@@ -425,6 +425,7 @@ export function RecurringRuleSheet(props: Props) {
                   payerWho={payerWho}
                   splitRatioA={splitRatioA}
                   onSplitRatioAChange={setSplitRatioA}
+                  defaultViewerShare={toViewerShare(groupDefaultRatioA ?? 50, viewerIsA)}
                 />
               </div>
             </>

@@ -38,7 +38,7 @@ import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
 import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
-import { loadedSplitRatioToViewerShare, toMemberAShare } from '@/lib/splitRatio'
+import { loadedSplitRatioToViewerShare, toMemberAShare, toViewerShare } from '@/lib/splitRatio'
 
 export interface AddSheetInitial {
   id: string
@@ -274,6 +274,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     if (split !== 'weighted') return null
     return toMemberAShare(splitRatioA, viewerIsA)
   }
+
+  // The group's default split (member A's share, defaulting to even) shown
+  // from the viewer's angle — the target the "reset to default" button snaps
+  // the weighted slider back to (#902).
+  const defaultViewerShare = toViewerShare(groupDefaultRatioA ?? 50, viewerIsA)
 
   const handleSave = () => {
     const n = parseInt(amount, 10)
@@ -566,6 +571,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 onChange={setSplit}
                 amount={parseInt(amount, 10) || 0}
                 payerWho={payerWho}
+                defaultViewerShare={defaultViewerShare}
               />
             </div>
           )}

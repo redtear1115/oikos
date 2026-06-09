@@ -8,7 +8,7 @@ import type { SettlementSheetInitial } from '@/app/(dashboard)/dashboard/_compon
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
-import { CompactRow } from '@/app/(dashboard)/dashboard/_components/CompactRow'
+import { renderIncomeFeedRow } from '@/app/(dashboard)/dashboard/_components/IncomeFeedRow'
 import Link from 'next/link'
 import type { AssetOption } from './FilterSheet'
 import { MonthSwitcher } from './MonthSwitcher'
@@ -314,18 +314,7 @@ export function RecordsList({
 
   // Income row mint-glow renderer (used in 'all' tab only)
   const P = DEFAULT_INCOME_PALETTE
-  const renderRow = (tx: PagedTxnRow): React.ReactNode | undefined => {
-    if (tx.kind !== 'income') return undefined
-    return (
-      <div
-        style={{
-          background: `linear-gradient(90deg, ${P.glow}55, transparent 60%)`,
-        }}
-      >
-        <CompactRow tx={tx} isLast={false} onClick={() => handleItemClick(tx)} />
-      </div>
-    )
-  }
+  const renderRow = (tx: PagedTxnRow) => renderIncomeFeedRow(tx, handleItemClick)
 
   const handleApplyFilter = (next: TxnFilter, nextRange?: DateRange) => {
     const params = new URLSearchParams(searchParams.toString())

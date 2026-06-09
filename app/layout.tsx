@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Fraunces } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import { PostHogProvider } from './providers'
@@ -35,6 +36,14 @@ const fraunces = Fraunces({
 })
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
+
+// GA4 Measurement ID — hardcoded because it's a public identifier (the same
+// string is visible in every prod HTML via gtag.js, so an env var adds no
+// secrecy). Pairs with components/KofiWidget.tsx's SOURCE constant: both are
+// fork points when cloning this codebase to wildcard / blog — change them
+// together. Only injected when NODE_ENV === 'production' so dev / preview stay
+// clean of gtag.js without per-environment config.
+const GA_MEASUREMENT_ID = 'G-YHXFBMRQ3S'
 
 // Root layout metadata: platform / PWA / icons only.
 // Per-page title / description / openGraph / twitter are set in each
@@ -122,6 +131,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </PostHogProvider>
         <Analytics />
         <SpeedInsights />
+        {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   )

@@ -3,7 +3,8 @@ import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
 import { inArray } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
-import { getLocale } from '@/lib/i18n/t'
+import { KofiWidget } from '@/components/KofiWidget'
+import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { getGroupBalance } from '@/lib/db/queries/balance'
 import { getTripSummary } from '@/lib/db/queries/trips'
 import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
@@ -15,9 +16,10 @@ import {
 import type { PendingSwap } from './_components/DangerZone'
 
 export default async function SettingsPage() {
-  const [{ user, group }, currentLocale] = await Promise.all([
+  const [{ user, group }, currentLocale, t] = await Promise.all([
     requireViewerGroupOrRedirect(),
     getLocale(),
+    getTranslations(),
   ])
 
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
@@ -72,6 +74,7 @@ export default async function SettingsPage() {
         tripSummary={tripSummary}
       />
       <BottomNavSkeleton />
+      <KofiWidget buttonText={t.support.buttonText} />
     </div>
   )
 }

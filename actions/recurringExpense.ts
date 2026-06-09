@@ -36,7 +36,7 @@ import {
 } from '@/lib/revalidate'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { captureServer } from '@/lib/analytics/server'
+import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 
 function assertPaidByInGroup(
   paidById: string,
@@ -211,7 +211,7 @@ export async function softDeleteRule(id: string): Promise<void> {
 }
 
 export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -269,11 +269,16 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
     if (!resolved) throw new Error('待確認支出已被其他裝置處理')
 
     await recalcGroupBalance(group.id, tx)
-    return { txId: created.id }
+    const firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
+    return { txId: created.id, firstRecord }
   })
 
   revalidateAfterTransactionMutation({ assetId: row.assetId })
-  return result
+  // Activation signal (#891): cron-confirmed occurrence may be viewer's first record.
+  if (result.firstRecord) {
+    await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
+  }
+  return { txId: result.txId }
 }
 
 export interface EditAndConfirmInput {
@@ -289,7 +294,7 @@ export async function editAndConfirmPending(
   input: EditAndConfirmInput,
 ): Promise<{ txId: string }> {
   const overrides = validateConfirmPendingExpenseInput(input.overrides)
-  const { group } = await requireViewerGroup()
+  const { user, group } = await requireViewerGroup()
 
   const [row] = await db
     .select({
@@ -357,11 +362,16 @@ export async function editAndConfirmPending(
     if (!resolved) throw new Error('待確認支出已被其他裝置處理')
 
     await recalcGroupBalance(group.id, tx)
-    return { txId: created.id }
+    const firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
+    return { txId: created.id, firstRecord }
   })
 
   revalidateAfterTransactionMutation({ assetId: finalAssetId })
-  return result
+  // Activation signal (#891): edited-and-confirmed occurrence may be viewer's first record.
+  if (result.firstRecord) {
+    await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
+  }
+  return { txId: result.txId }
 }
 
 export async function skipPending(pendingId: string): Promise<void> {

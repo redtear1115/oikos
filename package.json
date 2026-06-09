@@ -1,6 +1,6 @@
 {
   "name": "oikos",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -19,10 +19,14 @@
     "cap:build:android": "npx cap build android"
   },
   "dependencies": {
+    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^8.3.4",
     "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4",
+    "@capacitor/push-notifications": "^8.1.1",
+    "@next/third-parties": "^16.2.4",
     "@sentry/nextjs": "^10.53.1",
     "@serwist/next": "^9.5.11",
     "@supabase/ssr": "^0.10.2",
