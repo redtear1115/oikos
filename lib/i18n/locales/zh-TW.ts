@@ -36,6 +36,7 @@ export type Translations = {
   signIn: {
     tagline: string
     continueWithGoogle: string
+    continueWithApple: string
     termsPrefix: string
     termsLink: string
     termsAnd: string
@@ -2392,6 +2393,7 @@ export const zhTW: Translations = {
   signIn: {
     tagline: '帳本準備好了，邀請對方一起。',
     continueWithGoogle: '以 Google 帳號繼續',
+    continueWithApple: '以 Apple 帳號繼續',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
     termsAnd: '與',

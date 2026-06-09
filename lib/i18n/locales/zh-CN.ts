@@ -4,6 +4,7 @@ export const zhCN: Translations = {
   signIn: {
     tagline: '账本准备好了，邀请对方一起。',
     continueWithGoogle: '以 Google 账号继续',
+    continueWithApple: '以 Apple 账号继续',
     termsPrefix: '继续即表示您同意我们的',
     termsLink: '服务条款',
     termsAnd: '与',
