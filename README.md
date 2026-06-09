@@ -155,6 +155,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.5.0](CHANGELOG.md#150---2026-06-09) | iOS 啟程 · Sign in with Apple · 推播提醒 |
 | [v1.4.3](CHANGELOG.md#143---2026-05-31) | 品牌面升溫 · Landing 插圖欄位上線 |
 | [v1.4.2](CHANGELOG.md#142---2026-05-31) | 車牌／地址解密修復 · 設計 token 收斂 |
 | [v1.4.1](CHANGELOG.md#141---2026-05-30) | Android 登入修復 |

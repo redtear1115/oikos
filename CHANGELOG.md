@@ -15,6 +15,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.0] - 2026-06-09
+
+主題：**iOS 啟程 · Sign in with Apple · 推播提醒**——iOS 改用 Capacitor 殼並加入推播；Sign in with Apple 滿足 App Store Guideline 4.8；GA4 + Ko-fi 開始長線經營。
+完整 diff：[v1.4.3...v1.5.0](https://github.com/redtear1115/oikos/compare/v1.4.3...v1.5.0)
+
+### 使用者可見變化
+
+- **Sign in with Apple（#903）**：sign-in 頁加入「以 Apple 帳號繼續」，iOS 走原生登入、Android／web 走 OAuth，符合 App Store Guideline 4.8。
+- **iOS App + 推播提醒（#901 / #874）**：iOS 改用 Capacitor 殼，定期收支提醒透過 APNs 推播，到期前提醒確認。
+- **加權分攤「回到預設」（#902）**：調整加權分攤比例後，可一鍵還原回 group 預設值。
+- **語言切換即時化（#906）**：切換語系移除約 2 秒的凍結等待，改為 optimistic 立即反映。
+- **跨站 Ko-fi 支持入口（#893）**：landing／app 加入浮動 Ko-fi widget（iOS build 另行 gate）。
+- **App icon 更新**：替換 iOS + Android 新版 app 圖示。
+- **幣別頁返回修正（#898）**：新增表單點「幣別」不再需要多按一次返回才進入貨幣頁。
+
+### 技術變更
+
+- **建立群組 idempotent（#911）**：已在群組的使用者重入 `createGroup` 改回傳既有 group，不再丟未處理的 500（cross-tab／retry 競態）。
+- **GA4 整合（#894）**：導入 Google Analytics 4 與點擊事件追蹤，production-only。
+- **`first_record_created` 修正（#892）**：非手動路徑（如 import）也能正確發出啟用事件。
+- **solo-mode 元件去重（#897）**：支出／收入 sheet 共用同一組 pattern 元件。
+- **native-auth spec + Android 雜訊清理（#869）**。
+- **SEO meta description 收斂（#702）**：7 個 use-case 英文描述縮到 ≤155 字。
+
 ## [1.4.3] - 2026-05-31
 
 主題：**品牌面升溫 · 插圖欄位上線**——Landing、Sign-in、Migrate、Terms、Privacy 換上 Committed 暖底色；Landing hero 加入插圖欄位，Mobile 以插圖開場取代大 mark。
@@ -572,7 +596,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/redtear1115/oikos/compare/v1.4.3...v1.5.0
 [1.4.3]: https://github.com/redtear1115/oikos/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/redtear1115/oikos/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/redtear1115/oikos/compare/v1.4.0...v1.4.1
