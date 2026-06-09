@@ -56,6 +56,7 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
           group_not_found: invite.errors.groupNotFound,
           group_full: invite.errors.groupFull,
           already_member: invite.errors.alreadyMember,
+          already_in_duo: invite.errors.alreadyInDuo,
         }
         setError(errorMap[code as InviteAcceptError] ?? invite.errors.unknown)
       }
