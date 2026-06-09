@@ -35,6 +35,21 @@ const SUPABASE_ORIGIN = (() => {
 // whichever article won at build time.
 export const dynamic = 'force-dynamic'
 
+// Count of about-sections (kept in sync with the `sections` array in
+// AboutNarrative, which also `% length`-guards against drift).
+const ABOUT_SECTION_COUNT = 7
+
+// Which section is visually featured this request. Math.random() lives here,
+// OUTSIDE the component body, on purpose: this page is `force-dynamic` and
+// renders server-side once per request, so picking an article is a legitimate
+// per-request side effect — the client only hydrates the already-rendered HTML,
+// it never re-runs this, so there's no value to desync. Keeping the call out of
+// render is also what react-hooks/purity requires (it can't tell server from
+// client components). (#926)
+function pickFeaturedIndex(): number {
+  return Math.floor(Math.random() * ABOUT_SECTION_COUNT)
+}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale: raw } = await params
   if (!isLocale(raw)) return {}
@@ -108,7 +123,7 @@ export default async function SignInPage({ params }: { params: Params }) {
         >
           <AboutNarrative
             about={t.signIn.about}
-            featuredIndex={Math.floor(Math.random() * 7)}
+            featuredIndex={pickFeaturedIndex()}
           />
         </section>
 
