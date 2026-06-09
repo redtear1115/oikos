@@ -125,7 +125,7 @@ export default async function RootPage({ params }: { params: Params }) {
         }}
         languageSwitcher={<LanguageSwitcher current={locale} variant="footer" />}
       />
-      <KofiWidget buttonText={t.support.buttonText} />
+      <KofiWidget buttonText={t.support.buttonText} frameTitle={t.support.frameTitle} />
     </>
   )
 }

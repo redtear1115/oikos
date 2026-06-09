@@ -453,7 +453,11 @@ function MigrateLinksSection({
               href={item.href}
               ctaLocation="footer_migrate"
               target={item.target}
-              ariaLabel={t.migrateSection.cardAriaLabel.replace('{source}', item.source)}
+              // No custom aria-label: the visible title + body already
+              // self-describe the card, so the accessible name is computed from
+              // them — satisfying WCAG 2.5.3 Label in Name (#919). A bespoke
+              // aria-label ("從 X 搬到 Futari") wouldn't contain the visible
+              // "搬過來" text and failed label-content-name-mismatch.
               className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
               style={{
                 background: 'var(--surface)',
