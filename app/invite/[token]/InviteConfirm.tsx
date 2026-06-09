@@ -15,6 +15,7 @@ interface Props {
   token: string
   groupName: string
   inviterName: string
+  hasSoloLedger: boolean
   trust: TrustStrings
   invite: InviteStrings
 }
@@ -23,7 +24,7 @@ interface Props {
  * Bilateral trust confirmation step shown to the invitee (member B) before
  * acceptInvite() commits group membership.
  */
-export function InviteConfirm({ token, groupName, inviterName, trust, invite }: Props) {
+export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, trust, invite }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +57,7 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
           group_not_found: invite.errors.groupNotFound,
           group_full: invite.errors.groupFull,
           already_member: invite.errors.alreadyMember,
-          already_in_duo: invite.errors.alreadyInDuo,
+          already_in_duo: invite.errors.alreadyInDuo.replace('{partner}', invite.fallbackInviter),
         }
         setError(errorMap[code as InviteAcceptError] ?? invite.errors.unknown)
       }
@@ -94,6 +95,12 @@ export function InviteConfirm({ token, groupName, inviterName, trust, invite }: 
           >
             {error}
           </div>
+        )}
+
+        {hasSoloLedger && (
+          <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
+            {invite.soloLedgerNotice}
+          </p>
         )}
 
         <button
