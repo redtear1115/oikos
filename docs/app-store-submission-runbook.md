@@ -1,4 +1,8 @@
-# App Store / Play Store 上架 Runbook — Futari 1.5.0（首次送審）
+# App Store / Play Store 上架 Runbook — Futari（首次送審）
+
+> 送審的 native 殼對應 prod **v1.5.1**（首次送審的版本——1.5.0 已部署但不含上架 blocker 的修補；
+> Ko-fi gate 與帳號刪除都在 1.5.1 才上 prod）。native 版本號與 web 版本號脫鉤，這裡對齊到實際送審
+> 當下 prod 的版本以利對照。
 
 > 架構前提：Android / iOS 都是 **Capacitor 8 薄殼**，`server.url = https://futari.southern-light.dev`，
 > 載入線上網站。沒有 JS bundle 要打包進 app；網站邏輯改動透過 Vercel 部署生效，原生殼不需重送即可看到
@@ -12,25 +16,25 @@
 
 | # | Gap | 影響 | 狀態 |
 |---|---|---|---|
-| **B1** | **App 內無「刪除帳號」功能** | 🔴 **Apple 5.1.1(v) + Google Play 都強制**。隱私政策已承諾「可透過設定頁刪除帳號」，現況只有登出。**兩邊都會被拒**。 | ❌ 未做（需決策＋實作） |
+| **B1** | **App 內無「刪除帳號」功能** | 🔴 **Apple 5.1.1(v) + Google Play 都強制**。隱私政策已承諾「可透過設定頁刪除帳號」，現況只有登出。**兩邊都會被拒**。 | 🟡 已設計（[spec](superpowers/specs/2026-06-09-account-deletion-design.md) + [#923](https://github.com/redtear1115/oikos/issues/923)），待實作 |
 | B2 | iOS 未啟用 Push Notifications capability（無 `App.entitlements` / `aps-environment`） | 🟠 APNs 收不到 push；且 push 是 4.2 過審的主理由，審核員可能驗證 | ❌ 需在 Xcode 開 capability |
 | B3 | `android/app/google-services.json` 缺失 | 🟠 Android FCM push 不會運作（build 不會壞，但 push 失效） | ❌ 需從 Firebase Console 下載放入 |
 | B4 | Ko-fi iOS gate 尚未部署到 prod | 🟠 iOS 殼載入 prod 網站；gate 未上線前 iOS 會看到 tip jar（3.1.1 風險） | ✅ 程式碼已改（本 branch），待部署 prod |
-| B5 | 原生版本號對齊 1.5.0 | — | ✅ 已改（Android 105001 / iOS 1.5.0） |
+| B5 | 原生版本號對齊送審版本 | — | ✅ 已改（Android 105011 / iOS 1.5.1） |
 
 > **關鍵順序**：B4 的 Ko-fi gate 必須**先部署到 prod**，iOS 殼才看不到 tip jar。送 iOS 審核**之前**確認
 > `futari.southern-light.dev` 已是含 gate 的版本。
 
-### B1 刪除帳號 — 需要你決策的點
+### B1 刪除帳號 — 已設計，待實作
 
-這是兩人共享帳本，刪一個人會牽動共享資料，不是單純刪 row：
+設計拍板，全文見 [spec](superpowers/specs/2026-06-09-account-deletion-design.md)、追蹤 [#923](https://github.com/redtear1115/oikos/issues/923)（v1.5.1）。摘要：
 
-- **硬刪 vs 軟刪**：Apple 接受「排程刪除」，但要 app 內可發起、且預設不需人工客服。隱私政策寫「14 個工作天內移除」→ 對應軟刪 + 排程清除。
-- **共享帳本怎麼辦**：member 刪除後，對方的 `OikosGroups` / `CashTransactions` 等如何處理？（離開 group？關閉 epoch？匿名化？）
-- **auth.users 連動**：需刪 Supabase `auth.users` + `Profiles` + 解除 group 關聯。
-- 最小可過審版本：設定頁一個「刪除帳號」入口 → ConfirmModal → server action 觸發刪除/排程 → 登出。
+- **請求制**：設定頁「刪除帳號」按鈕 → 標記 `Profiles.deletion_requested_at` + 登出（零前置條件）。
+- **14 天可取消 grace period**：待刪除期間登入顯示非阻斷 banner + 取消鈕。
+- **後台 pg_cron 每日處理**：solo → 全刪；配對 → 匿名化刪除者（刪 auth.users、留 Profiles 墓碑），另一半保留完整共享歷史。
+- **Google web URL** 沿用現有 `/privacy`，不另開頁。
 
-→ 這是一個獨立 feature（含產品決策），建議當作上架前的第一個 sprint item 處理。
+→ 純 web + 後台，**會自動進到 native 殼**；但要過審，必須在送審前已部署到 prod（見 §4 順序）。
 
 ---
 
@@ -54,7 +58,7 @@ cd android
 ./gradlew bundleRelease
 # 產物：android/app/build/outputs/bundle/release/app-release.aab
 ```
-> versionCode 已是 `105001`（格式 `M·mm·pp·b`：`1·05·00·1`）。下次更新 build 把尾碼 +1（105002…），
+> versionCode 已是 `105011`（格式 `M·mm·pp·b`：`1·05·01·1`）。下次更新 build 把尾碼 +1（105012…），
 > 或進版時換 mm/pp。Play 要求 versionCode 嚴格遞增。
 
 ### 1.3 Play Console 上架資料
@@ -90,7 +94,7 @@ Xcode 內：
 3. Organizer → Distribute App → App Store Connect → Upload。
 4. 等 build 在 App Store Connect 處理完 → 進 TestFlight 自測（push / Apple 登入 / 主流程）。
 
-> `MARKETING_VERSION` 已是 1.5.0，`CURRENT_PROJECT_VERSION`（build number）=1；每次重新上傳同版本要 +1。
+> `MARKETING_VERSION` 已是 1.5.1，`CURRENT_PROJECT_VERSION`（build number）=1；每次重新上傳同版本要 +1。
 > 不需要 `out/` 或 `cap sync`（server.url 架構），除非改了原生 plugin / config。
 
 ### 2.3 App Store Connect 上架資料
@@ -131,12 +135,14 @@ available in Settings → 刪除帳號.
 
 ## 4. 一頁式順序總表
 
-1. **B1 刪除帳號** feature（決策＋實作＋部署 prod）— 兩store blocker
-2. **B4 Ko-fi gate 部署 prod**（本 branch merge → release → prod）
-3. Android：放 `google-services.json`(B3) → `bundleRelease` → Internal testing → 商店資料 → Production
-4. iOS：Xcode 開 Push capability(B2) → APNs key → Archive → TestFlight → 商店資料 → Submit
-5. 兩邊 App Privacy / Data safety 與 `/privacy` 內容一致
-6. Review Notes 附 demo 帳號 + 原生功能說明
+> 鐵則：審核員打開 app 看到的是「當下的 prod」（native 殼載 `server.url`）。所以**所有純 web/後台的
+> blocker 必須先上 prod，才送審**。
 
-> 版本對齊（Android 105001 / iOS 1.5.0）與 Ko-fi iOS gate 的程式碼已在
-> `chore/app-store-1.5.0` branch 完成。
+1. **實作 v1.5.1 並部署 prod** — 含 **B1 帳號刪除**([#923](https://github.com/redtear1115/oikos/issues/923)) + **B4 Ko-fi iOS gate**（兩者皆純 web/後台，會自動進殼）。走 `chore/release-v1.5.1 → main → release → prod`。
+2. Android：放 `google-services.json`(B3) → `bundleRelease` → Internal testing → 商店資料 → Production
+3. iOS：Xcode 開 Push capability(B2) → APNs key → Archive → TestFlight → 商店資料 → Submit
+4. 兩邊 App Privacy / Data safety 與 `/privacy` 內容一致
+5. Review Notes 附 demo 帳號 + 原生功能說明
+
+> 版本對齊（Android 105011 / iOS 1.5.1）、Ko-fi iOS gate 程式碼、帳號刪除 spec 已在
+> `chore/app-store-1.5.0` branch 完成（branch 名沿用，內容歸 v1.5.1）。

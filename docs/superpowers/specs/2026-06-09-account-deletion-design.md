@@ -1,7 +1,7 @@
 ---
 status: planned
 related_specs: [native-auth, product]
-related_issues: ["#848"]
+related_issues: ["#923", "#848"]
 ---
 
 # Account Deletion（帳號刪除）
