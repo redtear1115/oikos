@@ -1,7 +1,7 @@
 'use client'
 
 import Script from 'next/script'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 
 // ============================================================================
 // CROSS-SITE FORK POINT — change this constant when copying to another site.
@@ -35,15 +35,54 @@ declare global {
   }
 }
 
+// Ko-fi's overlay-widget.js appends its widget to <body>, OUTSIDE React's
+// tree — so App Router client navigation never tears it down. Without explicit
+// cleanup the floating button leaks across the whole app after the first page
+// that mounts <KofiWidget> (#917). These are the top-level elements the script
+// injects; removing them fully clears the widget.
+const KOFI_INJECTED_SELECTOR =
+  '.floatingchat-container-wrap, .floatingchat-container-wrap-mobi, [id^="kofi-popup-iframe"], .kofi-wo-container, .kofi-wo-container-mobi'
+
+/** Remove every Ko-fi-injected top-level element from the document. */
+export function teardownKofiWidget(): void {
+  if (typeof document === 'undefined') return
+  document.querySelectorAll(KOFI_INJECTED_SELECTOR).forEach((el) => el.remove())
+}
+
 /**
  * Bottom-right floating Ko-fi widget. Click opens a Ko-fi-hosted modal so the
  * donation completes without leaving the site.
+ *
+ * Scope (#917): the widget lives only where this component is mounted — the
+ * public landing and, when signed in, the Settings page. On unmount (e.g.
+ * navigating away from /settings) the effect cleanup removes both the injected
+ * DOM and the delegated click listener, so it doesn't bleed into the rest of
+ * the app or accumulate listeners across visits.
  *
  * On click, fires the cross-product `kofi_widget_click` GA event with
  * `source: SOURCE` so we can split traffic per site in GA reports. The event
  * call is a no-op until `window.gtag` is loaded (PR #896 + Vercel prod env).
  */
 export function KofiWidget({ buttonText }: { buttonText: string }) {
+  useEffect(() => {
+    // Ko-fi script doesn't expose an onClick hook, so attach a delegated
+    // listener on document — captures clicks regardless of when the widget
+    // injects its DOM. The button class is `.floatingchat-donate-button` per
+    // Ko-fi's overlay-widget.js. Registered on mount (not on script load) so
+    // we hold a stable reference to remove on unmount.
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target?.closest('.floatingchat-donate-button')) return
+      window.gtag?.('event', 'kofi_widget_click', { source: SOURCE })
+    }
+    document.addEventListener('click', onClick, { passive: true })
+
+    return () => {
+      document.removeEventListener('click', onClick)
+      teardownKofiWidget()
+    }
+  }, [])
+
   const handleLoad = useCallback(() => {
     if (typeof window === 'undefined') return
     if (!window.kofiWidgetOverlay) return
@@ -56,20 +95,6 @@ export function KofiWidget({ buttonText }: { buttonText: string }) {
       'floating-chat.donateButton.background-color': '#FBEDE0',
       'floating-chat.donateButton.text-color': '#322B23',
     })
-
-    // Ko-fi script doesn't expose an onClick hook, so attach a delegated
-    // listener on document — captures clicks regardless of when the widget
-    // injects its DOM (and re-injections, if any). The widget button class
-    // is `.floatingchat-donate-button` per Ko-fi's overlay-widget.js.
-    document.addEventListener(
-      'click',
-      (e) => {
-        const target = e.target as HTMLElement | null
-        if (!target?.closest('.floatingchat-donate-button')) return
-        window.gtag?.('event', 'kofi_widget_click', { source: SOURCE })
-      },
-      { passive: true },
-    )
   }, [buttonText])
 
   return (
