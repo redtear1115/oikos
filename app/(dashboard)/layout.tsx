@@ -42,6 +42,19 @@ const notoTC = Noto_Sans_TC({
   preload: false,
 })
 
+// Warm TLS to Supabase before the dashboard's first realtime/auth fetch. Scoped
+// to the authenticated layout (not the root) so the public landing page isn't
+// charged an unused connection — the landing never talks to Supabase. React
+// hoists these <link>s to <head>; preconnect ignores the path, origin only.
+// (#352 / #921)
+const SUPABASE_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').origin
+  } catch {
+    return null
+  }
+})()
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
@@ -103,6 +116,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <TranslationsProvider value={t} locale={locale}>
+      {SUPABASE_ORIGIN && (
+        <>
+          <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
+        </>
+      )}
       <ViewerProvider value={value}>
         <RealtimeProvider groupId={group.id}>
           <PushTokenRegistrar userId={user.id} groupId={group.id} />

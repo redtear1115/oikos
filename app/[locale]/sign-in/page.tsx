@@ -16,6 +16,19 @@ type AboutStrings = Translations['signIn']['about']
 
 type Params = Promise<{ locale: string }>
 
+// Warm TLS to Supabase before the OAuth click hits it. Used to live in the root
+// layout (every page), but the public landing never talks to Supabase, so it was
+// relocated here + to the dashboard layout to stop charging landing visitors an
+// unused connection. Sign-in needs it because the OAuth handshake goes through
+// Supabase Auth. (#352 / #921)
+const SUPABASE_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').origin
+  } catch {
+    return null
+  }
+})()
+
 // AboutNarrative picks a random featured article per request (silent rotation
 // — one story per visit, others kept in DOM via sr-only for SEO). Without
 // force-dynamic, Next would cache the static-ish sign-in page and freeze
@@ -61,9 +74,16 @@ export default async function SignInPage({ params }: { params: Params }) {
       className="flex min-h-screen flex-col"
       style={{ background: 'var(--bg-committed)' }}
     >
-      {/* Warm TLS to Google's OAuth host so the post-click redirect costs less.
-          Supabase preconnect lives in the root layout (covers every page);
-          accounts.google.com is sign-in-specific. (#352) */}
+      {/* Warm TLS to the OAuth hosts so the post-click redirect costs less.
+          Supabase (the auth backend the OAuth handshake routes through) is
+          preconnected here too, since it's no longer warmed at the root — the
+          landing page didn't need it. (#352 / #921) */}
+      {SUPABASE_ORIGIN && (
+        <>
+          <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
+        </>
+      )}
       <link rel="preconnect" href="https://accounts.google.com" crossOrigin="anonymous" />
       <link rel="dns-prefetch" href="https://accounts.google.com" />
       <link rel="preconnect" href="https://appleid.apple.com" crossOrigin="anonymous" />
