@@ -1583,6 +1583,7 @@ export const zhCN: Translations = {
     backToHome: '回到首页',
     joiningGroupLabel: '加入「{group}」',
     fallbackInviter: '对方',
+    soloLedgerNotice: '接受后，你目前的单人账本会成为一段过去的记录，之后仍可在「过去时光」回顾。',
     errors: {
       invalidOrExpired: '邀请链接无效或已过期',
       alreadyUsed: '邀请链接已被使用',
@@ -1591,6 +1592,7 @@ export const zhCN: Translations = {
       groupNotFound: '找不到群组',
       groupFull: '此账本已有两位成员',
       alreadyMember: '你已经是此账本的成员',
+      alreadyInDuo: '你已经和 {partner} 共用一本账本，要先离开才能加入新的。',
       unknown: '无法加入账本',
     },
   },

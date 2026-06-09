@@ -1582,6 +1582,7 @@ export const ja: Translations = {
     backToHome: 'ホームへ戻る',
     joiningGroupLabel: '「{group}」に参加',
     fallbackInviter: '相手',
+    soloLedgerNotice: '参加すると、今のひとり用の家計簿は過去の記録になります。あとから「過去の時間」で振り返れます。',
     errors: {
       invalidOrExpired: '招待リンクが無効または期限切れです',
       alreadyUsed: '招待リンクは既に使用されています',
@@ -1590,6 +1591,7 @@ export const ja: Translations = {
       groupNotFound: '家計簿が見つかりません',
       groupFull: 'この家計簿には既に二人のメンバーがいます',
       alreadyMember: 'あなたは既にこの家計簿のメンバーです',
+      alreadyInDuo: 'すでに {partner} さんと家計簿を共有しています。新しく参加するには、先に今の家計簿から抜けてください。',
       unknown: '家計簿に参加できません',
     },
   },
