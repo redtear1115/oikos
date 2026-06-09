@@ -400,6 +400,13 @@
       "when": 1781500000000,
       "tag": "0057_account_deletion_requested_at",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1781600000000,
+      "tag": "0058_account_deletion_processor",
+      "breakpoints": true
     }
   ]
 }
