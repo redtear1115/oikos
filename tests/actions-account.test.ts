@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockBuilder, resetDbMocks } from './_mocks/db'
 import { requestAccountDeletion, cancelAccountDeletion } from '@/actions/account'
+import { captureServer } from '@/lib/analytics/server'
 
 // signOut() calls redirect() (throws NEXT_REDIRECT) + analytics; stub both so
 // we can assert the DB write without the redirect aborting the test.
@@ -20,6 +21,7 @@ describe('requestAccountDeletion', () => {
     await requestAccountDeletion()
     const set = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(set.deletionRequestedAt).toBeInstanceOf(Date)
+    expect(vi.mocked(captureServer)).toHaveBeenCalledWith('user-a', 'account_deletion_requested')
   })
 
   it('rejects when unauthenticated', async () => {
@@ -34,6 +36,7 @@ describe('cancelAccountDeletion', () => {
     await cancelAccountDeletion()
     const set = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(set.deletionRequestedAt).toBeNull()
+    expect(vi.mocked(captureServer)).toHaveBeenCalledWith('user-a', 'account_deletion_cancelled')
   })
 
   it('rejects when unauthenticated', async () => {
