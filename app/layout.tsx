@@ -9,17 +9,6 @@ import { PostHogProvider } from './providers'
 import { PostHogPageView } from './posthog-pageview'
 import './globals.css'
 
-// Preconnect target derived once at module load — used to warm TLS to Supabase
-// before any real fetch (sign-in OAuth click on public pages, realtime + auth
-// on dashboard). Keeps the URL origin only; preconnect ignores the path. (#352)
-const SUPABASE_ORIGIN = (() => {
-  try {
-    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').origin
-  } catch {
-    return null
-  }
-})()
-
 // Fraunces is the landing hero typeface. Latin only, two weights (400 mobile
 // tagline, 500 everything else). `preload: false` skips the <link rel="preload">
 // for every woff2 unicode-range subset — those were putting 12 font files on the
@@ -106,22 +95,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             associate this PWA with the "雙人記帳" category rather than just
             the brand name "Futari", disambiguating from same-named apps. (#845) */}
         <meta name="application-name" content="Futari 雙人記帳" />
-        {/* Preconnect to Supabase so the TLS handshake is already done by the
-            time the user clicks Sign-In (OAuth) or hits the dashboard. React
-            hoists these to <head> automatically; rendering them explicitly in
-            <head> keeps the intent clear. (#352) */}
-        {SUPABASE_ORIGIN && (
-          <>
-            <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
-            <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
-          </>
-        )}
-        {/* Warm Google Fonts so Fraunces + Noto Sans TC woff2 fetches don't
-            wait for document parse. preconnect to fonts.googleapis.com (CSS
-            host); dns-prefetch to fonts.gstatic.com (font binary host) since
-            the actual binary URL isn't known until the CSS resolves. (#511) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        {/* Supabase preconnect intentionally NOT here: the public landing page
+            never talks to Supabase, so warming TLS to it at the root costs every
+            landing visitor an unused connection (PageSpeed flagged it as an
+            "unused preconnect"). It now lives where it's actually needed —
+            app/(dashboard)/layout.tsx (realtime + auth) and the sign-in page
+            (OAuth handshake). React hoists those <link>s to <head>. (#352 / #921)
+
+            Google Fonts hints (fonts.googleapis.com / fonts.gstatic.com) also
+            removed: fonts use next/font/google, which self-hosts the woff2 at
+            build time under same-origin /_next/static/media/. The browser never
+            connects to Google at runtime, so the original #511 hints were dead
+            weight. (#921) */}
       </head>
       <body className="antialiased">
         <InAppBrowserGuardLazy strings={t.inAppBrowser} />
