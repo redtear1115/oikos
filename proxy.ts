@@ -9,7 +9,6 @@ import {
 import {
   parseLocaleFromPath,
   isPublicLocalizedPath,
-  stripLocaleFromPath,
   localizedHref,
 } from './lib/i18n/path'
 
@@ -46,7 +45,6 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   const urlLocale = parseLocaleFromPath(pathname)
-  const pathWithoutLocale = stripLocaleFromPath(pathname)
 
   // 1) Locale handling — 只處理 public-localized paths.
   // Sync cookie 讓 root layout (cookie-based getLocale) 跟 URL 對齊；
@@ -69,26 +67,32 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 2) Auth check
-  const { data: { user } } = await supabase.auth.getUser()
-
+  // 2) Auth check — ONLY for protected (non-public) paths (#920 Phase 1).
+  // Public marketing routes (/, /sign-in, /terms, /privacy, /migrate/*,
+  // /use-case/*, /auth/*, /invite/*, /offline) don't need an edge→Supabase Auth
+  // round-trip: they render the same for everyone, so we skip getUser() entirely
+  // to cut TTFB. The two branches that historically used `user` were:
+  //   (a) unauthed → auth-walled redirect: only fires on protected paths (below).
+  //   (b) authed-on-/sign-in → /dashboard redirect: now done client-side on the
+  //       sign-in page itself (it's public, so the proxy no longer verifies it).
+  // Auth gating for protected routes is UNCHANGED — they still get a full
+  // getUser() verification and redirect exactly as before.
   const isPublic = isPublicLocalizedPath(pathname)
     || pathname.startsWith('/auth/')
     || pathname.startsWith('/invite/')
     || pathname === '/offline'
 
-  if (!user && !isPublic) {
-    // 未登入訪問 auth-walled 頁 → redirect 到 sign-in；
-    // 從現有 cookie 推算 locale prefix，讓使用者繼續講原語言。
-    const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value
-    const targetLocale: Locale = isLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE
-    const target = localizedHref('/sign-in', targetLocale)
-    return NextResponse.redirect(new URL(target, request.url))
-  }
+  if (!isPublic) {
+    const { data: { user } } = await supabase.auth.getUser()
 
-  // 已登入訪問 sign-in（任何 locale 變體）→ redirect 到 /dashboard
-  if (user && pathWithoutLocale === '/sign-in') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (!user) {
+      // 未登入訪問 auth-walled 頁 → redirect 到 sign-in；
+      // 從現有 cookie 推算 locale prefix，讓使用者繼續講原語言。
+      const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value
+      const targetLocale: Locale = isLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE
+      const target = localizedHref('/sign-in', targetLocale)
+      return NextResponse.redirect(new URL(target, request.url))
+    }
   }
 
   // 3) Apply rewrite if needed（要保留所有 cookies）

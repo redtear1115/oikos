@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
 import { SignInButton } from './SignInButton'
+import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
 import { BlogSection } from './BlogSection'
@@ -16,11 +17,39 @@ type AboutStrings = Translations['signIn']['about']
 
 type Params = Promise<{ locale: string }>
 
+// Warm TLS to Supabase before the OAuth click hits it. Used to live in the root
+// layout (every page), but the public landing never talks to Supabase, so it was
+// relocated here + to the dashboard layout to stop charging landing visitors an
+// unused connection. Sign-in needs it because the OAuth handshake goes through
+// Supabase Auth. (#352 / #921)
+const SUPABASE_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').origin
+  } catch {
+    return null
+  }
+})()
+
 // AboutNarrative picks a random featured article per request (silent rotation
 // — one story per visit, others kept in DOM via sr-only for SEO). Without
 // force-dynamic, Next would cache the static-ish sign-in page and freeze
 // whichever article won at build time.
 export const dynamic = 'force-dynamic'
+
+// Count of about-sections (kept in sync with the `sections` array in
+// AboutNarrative, which also `% length`-guards against drift).
+const ABOUT_SECTION_COUNT = 7
+
+// Which section is visually featured this request. Math.random() lives here,
+// OUTSIDE the component body, on purpose: this page is `force-dynamic` and
+// renders server-side once per request, so picking an article is a legitimate
+// per-request side effect — the client only hydrates the already-rendered HTML,
+// it never re-runs this, so there's no value to desync. Keeping the call out of
+// render is also what react-hooks/purity requires (it can't tell server from
+// client components). (#926)
+function pickFeaturedIndex(): number {
+  return Math.floor(Math.random() * ABOUT_SECTION_COUNT)
+}
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale: raw } = await params
@@ -61,9 +90,20 @@ export default async function SignInPage({ params }: { params: Params }) {
       className="flex min-h-screen flex-col"
       style={{ background: 'var(--bg-committed)' }}
     >
-      {/* Warm TLS to Google's OAuth host so the post-click redirect costs less.
-          Supabase preconnect lives in the root layout (covers every page);
-          accounts.google.com is sign-in-specific. (#352) */}
+      {/* Already-signed-in viewers get bounced to /dashboard client-side (#920
+          Phase 1) — the proxy no longer verifies auth on this public path. */}
+      <SignedInRedirect />
+
+      {/* Warm TLS to the OAuth hosts so the post-click redirect costs less.
+          Supabase (the auth backend the OAuth handshake routes through) is
+          preconnected here since it's no longer warmed at the root — the
+          landing page didn't need it. (#352 / #921) */}
+      {SUPABASE_ORIGIN && (
+        <>
+          <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href={SUPABASE_ORIGIN} />
+        </>
+      )}
       <link rel="preconnect" href="https://accounts.google.com" crossOrigin="anonymous" />
       <link rel="dns-prefetch" href="https://accounts.google.com" />
       <link rel="preconnect" href="https://appleid.apple.com" crossOrigin="anonymous" />
@@ -88,7 +128,7 @@ export default async function SignInPage({ params }: { params: Params }) {
         >
           <AboutNarrative
             about={t.signIn.about}
-            featuredIndex={Math.floor(Math.random() * 7)}
+            featuredIndex={pickFeaturedIndex()}
           />
         </section>
 

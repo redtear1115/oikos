@@ -137,7 +137,6 @@ export const zhCN: Translations = {
       spendeeBody: '双人共享是内建免费的，不必再解锁付费方案。',
       cwmoneyTitle: '从 CWMoney 搬过来',
       cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
-      cardAriaLabel: '从 {source} 搬到 Futari',
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · ふたり',
@@ -1123,6 +1122,7 @@ export const zhCN: Translations = {
 
   support: {
     buttonText: '请喝杯咖啡',
+    frameTitle: 'Ko-fi 支持小窗口',
   },
 
   currencyPage: {

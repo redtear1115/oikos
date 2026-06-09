@@ -137,7 +137,6 @@ export const en: Translations = {
       spendeeBody: 'Two-person sharing is free and built in, no paid unlock.',
       cwmoneyTitle: 'Move from CWMoney',
       cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
-      cardAriaLabel: 'Move from {source} to Futari',
     },
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
     jsonLdAppName: 'Futari · ふたり',
@@ -1124,6 +1123,7 @@ export const en: Translations = {
 
   support: {
     buttonText: 'Support Futari',
+    frameTitle: 'Ko-fi support window',
   },
 
   currencyPage: {

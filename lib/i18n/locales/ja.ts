@@ -136,7 +136,6 @@ export const ja: Translations = {
       spendeeBody: 'ふたり共有は最初から無料。有料プランの解除は不要です。',
       cwmoneyTitle: 'CWMoney から引っ越し',
       cwmoneyBody: 'Excel → CSV テンプレート付き。数分で移し替えられます。',
-      cardAriaLabel: '{source} から Futari へ引っ越し',
     },
     footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
     jsonLdAppName: 'Futari · ふたり',
@@ -1122,6 +1121,7 @@ export const ja: Translations = {
 
   support: {
     buttonText: 'コーヒーを贈る',
+    frameTitle: 'Ko-fi サポートウィンドウ',
   },
 
   currencyPage: {
