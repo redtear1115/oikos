@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
 import { SignInButton } from './SignInButton'
+import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
 import { BlogSection } from './BlogSection'
@@ -89,9 +90,13 @@ export default async function SignInPage({ params }: { params: Params }) {
       className="flex min-h-screen flex-col"
       style={{ background: 'var(--bg-committed)' }}
     >
+      {/* Already-signed-in viewers get bounced to /dashboard client-side (#920
+          Phase 1) — the proxy no longer verifies auth on this public path. */}
+      <SignedInRedirect />
+
       {/* Warm TLS to the OAuth hosts so the post-click redirect costs less.
           Supabase (the auth backend the OAuth handshake routes through) is
-          preconnected here too, since it's no longer warmed at the root — the
+          preconnected here since it's no longer warmed at the root — the
           landing page didn't need it. (#352 / #921) */}
       {SUPABASE_ORIGIN && (
         <>
