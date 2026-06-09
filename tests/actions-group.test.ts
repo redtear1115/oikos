@@ -22,9 +22,14 @@ describe('createGroup', () => {
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
-  it('throws if user already in a group', async () => {
+  it('idempotent: returns existing group instead of creating a second one', async () => {
+    // #911: a user already in a group who re-enters createGroup (cross-tab
+    // race, retry, double-submit) gets their existing group back — no throw,
+    // no second insert, no duplicate setup_completed.
     queueDbResult([{ id: 'existing-grp' }])
-    await expect(createGroup('新家')).rejects.toThrow('Already in a group')
+    const g = await createGroup('新家')
+    expect(g.id).toBe('existing-grp')
+    expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 
   it('throws unauthorized when no user', async () => {
