@@ -27,6 +27,7 @@ function injectFakeKofiDom() {
 afterEach(() => {
   cleanup()
   document.body.innerHTML = ''
+  delete (window as { Capacitor?: unknown }).Capacitor
 })
 
 describe('teardownKofiWidget', () => {
@@ -43,6 +44,39 @@ describe('teardownKofiWidget', () => {
     expect(document.querySelector('.kofi-wo-container')).toBeNull()
     // unrelated app DOM is untouched
     expect(document.querySelector('#app-content')).not.toBeNull()
+  })
+})
+
+describe('iOS App Store gate (#848, Apple Guideline 3.1.1)', () => {
+  it('does not wire up the tip jar inside the iOS native shell', () => {
+    // Simulate the Capacitor global the iOS webview injects.
+    ;(window as unknown as { Capacitor: { getPlatform: () => string } }).Capacitor = {
+      getPlatform: () => 'ios',
+    }
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+
+    render(<KofiWidget buttonText="Support" />)
+    // Even if Ko-fi's DOM somehow appeared, no click listener is attached on
+    // iOS, so the donate button is inert and the widget stays hidden.
+    injectFakeKofiDom()
+    const btn = document.querySelector('.floatingchat-donate-button') as HTMLElement
+    btn.click()
+    expect(gtag).not.toHaveBeenCalled()
+  })
+
+  it('still wires up the widget on web / Android (no Capacitor or non-ios)', () => {
+    ;(window as unknown as { Capacitor: { getPlatform: () => string } }).Capacitor = {
+      getPlatform: () => 'android',
+    }
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+
+    render(<KofiWidget buttonText="Support" />)
+    injectFakeKofiDom()
+    const btn = document.querySelector('.floatingchat-donate-button') as HTMLElement
+    btn.click()
+    expect(gtag).toHaveBeenCalledTimes(1)
   })
 })
 
