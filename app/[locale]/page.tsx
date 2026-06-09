@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { getCurrentUser } from '@/lib/supabase/server'
 import { isLocale, type Locale } from '@/lib/i18n/locales-meta'
 import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
@@ -45,11 +44,15 @@ export default async function RootPage({ params }: { params: Params }) {
   if (!isLocale(raw)) return null
   const locale: Locale = raw
   const t = dictionaries[locale]
-  // Public landing — never redirect. Signed-in viewers get the CTA pointed at
-  // /dashboard so they land back in the app in one tap; new viewers get
-  // /sign-in. Either way the page renders.
-  const user = await getCurrentUser()
-  const ctaHref = user ? '/dashboard' : localizedHref('/sign-in', locale)
+  // Public landing — never redirect, never reads server auth (#920 Phase 1).
+  // SSR always renders the logged-out CTA (→ /sign-in); the primary CTAs hydrate
+  // client-side and swap their href to /dashboard for signed-in viewers (see
+  // LandingPrimaryCta). Dropping the server getCurrentUser() here removes one
+  // Supabase Auth round-trip from the landing critical path. A brief
+  // wrong-href flash for signed-in viewers is acceptable — the visible label is
+  // identical (t.cta), only the destination differs. The page STAYS dynamic in
+  // Phase 1; making it static (root-layout cookie read) is Phase 2.
+  const signInHref = localizedHref('/sign-in', locale)
 
   // JSON-LD bundle for the public landing — SoftwareApplication (rich card for
   // the app itself, moved from /sign-in per #390 so the canonical lives on the
@@ -105,8 +108,8 @@ export default async function RootPage({ params }: { params: Params }) {
       />
       <Landing
         t={t.landing}
-        ctaHref={ctaHref}
-        signInHref={localizedHref('/sign-in', locale)}
+        signInHref={signInHref}
+        dashboardHref="/dashboard"
         useCaseHrefs={{
           cohabitation: localizedHref('/use-case/cohabitation', locale),
           newlyweds: localizedHref('/use-case/newlyweds', locale),

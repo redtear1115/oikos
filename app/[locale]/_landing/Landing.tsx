@@ -11,6 +11,7 @@ import {
 } from './FutariMark'
 import { IllustrationSlot } from './IllustrationSlot'
 import { LandingCtaLink } from './LandingCtaLink'
+import { LandingPrimaryCta } from './LandingPrimaryCta'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
 
@@ -18,10 +19,11 @@ type LandingStrings = Translations['landing']
 
 type Props = {
   t: LandingStrings
-  /** 主 CTA — 已登入 → /dashboard；未登入 → 該 locale 的 /sign-in。 */
-  ctaHref: string
-  /** 「已有帳號」次要 link — 永遠指 sign-in（locale-aware）。 */
+  /** 「已有帳號」次要 link + 主 CTA 的 SSR 預設 — 永遠指 sign-in（locale-aware）。
+   *  主 CTA 在 client hydrate 後若偵測到 session，會改指 dashboardHref (#920 P1)。 */
   signInHref: string
+  /** 主 CTA 已登入時的目的地（/dashboard）— client-side 才會切過去。 */
+  dashboardHref: string
   /** Locale-aware /use-case/* hrefs (#851). Three internal links to
    *  situational SEO landing pages for long-tail keyword traffic. */
   useCaseHrefs: {
@@ -52,7 +54,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
+export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -93,10 +95,10 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
         </div>
 
         {/* Desktop CTA in top-right; mobile relies on hero CTA only */}
-        <LandingCtaLink
-          href={ctaHref}
+        <LandingPrimaryCta
+          signInHref={signInHref}
+          dashboardHref={dashboardHref}
           ctaLocation="desktop_header"
-          target="sign_in"
           className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
@@ -105,7 +107,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
           }}
         >
           {t.cta}
-        </LandingCtaLink>
+        </LandingPrimaryCta>
       </header>
 
       {/* HERO — single column on mobile, two columns on md+ */}
@@ -192,10 +194,10 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
 
             {/* CTA row */}
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mt-10">
-              <LandingCtaLink
-                href={ctaHref}
+              <LandingPrimaryCta
+                signInHref={signInHref}
+                dashboardHref={dashboardHref}
                 ctaLocation="hero"
-                target="sign_in"
                 className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-base font-medium cursor-pointer"
                 style={{
                   background: 'var(--ink)',
@@ -205,7 +207,7 @@ export function Landing({ t, ctaHref, signInHref, useCaseHrefs, migrateHrefs, le
                 }}
               >
                 {t.cta}
-              </LandingCtaLink>
+              </LandingPrimaryCta>
               <LandingCtaLink
                 href={signInHref}
                 ctaLocation="secondary"
