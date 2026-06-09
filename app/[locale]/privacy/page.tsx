@@ -91,7 +91,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
             ))}
           </ul>
 
-          <h2 className="text-base font-medium pt-2" style={{ color: 'var(--ink)' }}>
+          <h2 id="account-deletion" className="text-base font-medium pt-2 scroll-mt-12" style={{ color: 'var(--ink)' }}>
             {t.privacyPage.sectionRightsTitle}
           </h2>
           <p>
