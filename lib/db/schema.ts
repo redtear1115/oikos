@@ -42,6 +42,7 @@ export const profiles = pgTable('Profiles', {
   avatarUrl: text('avatar_url'),
   defaultSplitType: splitTypeEnum('default_split_type').notNull().default('half'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  deletionRequestedAt: timestamp('deletion_requested_at', { withTimezone: true }),
 })
 
 export const oikosGroups = pgTable('OikosGroups', {

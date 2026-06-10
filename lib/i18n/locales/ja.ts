@@ -448,6 +448,19 @@ export const ja: Translations = {
     description: '次回は Google でサインインする必要があります。パートナーを招待していない記録は失われません。',
   },
 
+  deleteAccountButton: {
+    label: 'アカウントを削除',
+    pending: '処理中…',
+    title: 'アカウントを削除しますか？',
+    description:
+      'お客様のデータは14営業日以内に削除されます。それまではいつでも取り消せます。共有家計簿の場合、相手の記録は残り、あなたの名前は「退出したパートナー」と表示されます。',
+  },
+
+  accountDeletionBanner: {
+    message: 'アカウントは {date} に削除される予定です。',
+    cancel: '削除を取り消す',
+  },
+
   splitRatioSection: {
     meSuffix: '（自分）',
     partnerSuffix: '（相手）',

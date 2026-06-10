@@ -450,6 +450,19 @@ export const en: Translations = {
     description: 'You\'ll need to sign in again with Google next time. Records you\'ve added without inviting your partner won\'t be lost.',
   },
 
+  deleteAccountButton: {
+    label: 'Delete account',
+    pending: 'Working…',
+    title: 'Delete your account?',
+    description:
+      "We'll remove your data within 14 business days. You can come back and cancel any time before then. If you share a ledger, your partner's records stay, and your name will show as “a partner who left”.",
+  },
+
+  accountDeletionBanner: {
+    message: 'Your account is scheduled for removal on {date}.',
+    cancel: 'Cancel deletion',
+  },
+
   splitRatioSection: {
     meSuffix: ' (me)',
     partnerSuffix: ' (partner)',

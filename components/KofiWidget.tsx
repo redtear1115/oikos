@@ -1,7 +1,7 @@
 'use client'
 
 import Script from 'next/script'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // ============================================================================
 // CROSS-SITE FORK POINT — change this constant when copying to another site.
@@ -17,10 +17,12 @@ import { useCallback, useEffect } from 'react'
 // the most common bug — do it FIRST when forking.
 //
 // ⚠️ iOS App Store gate (#848): Apple Guideline 3.1.1 effectively bans tip-jar
-// flows that don't go through Apple IAP. Before shipping the iOS wrapper, this
-// component MUST be excluded from the iOS build (env flag at the mount sites in
-// app/[locale]/page.tsx and app/(dashboard)/settings/page.tsx). Google Play is
-// lenient for donation-framed widgets so Android stays as-is.
+// flows that don't go through Apple IAP. The widget is therefore hidden inside
+// the iOS native shell (see the runtime gate in KofiWidget below). The gate
+// MUST be runtime, not a build-time env flag: the same prod deployment serves
+// the web site plus the Android and iOS Capacitor shells (all load the remote
+// server.url), so only `Capacitor.getPlatform()` can tell iOS apart at render
+// time. Google Play is lenient for donation-framed widgets, so Android keeps it.
 // ============================================================================
 const SOURCE = 'futari'
 
@@ -42,6 +44,16 @@ declare global {
 // injects; removing them fully clears the widget.
 const KOFI_INJECTED_SELECTOR =
   '.floatingchat-container-wrap, .floatingchat-container-wrap-mobi, [id^="kofi-popup-iframe"], .kofi-wo-container, .kofi-wo-container-mobi'
+
+/**
+ * Capacitor's platform string ('ios' | 'android' | 'web'), read from the global
+ * the native webview injects. Returns 'web' off-shell (browser, SSR, jsdom).
+ */
+function getCapacitorPlatform(): string {
+  if (typeof window === 'undefined') return 'web'
+  const cap = (window as { Capacitor?: { getPlatform?: () => string } }).Capacitor
+  return cap?.getPlatform?.() ?? 'web'
+}
 
 /** Remove every Ko-fi-injected top-level element from the document. */
 export function teardownKofiWidget(): void {
@@ -85,7 +97,21 @@ export function KofiWidget({
   buttonText: string
   frameTitle: string
 }) {
+  // Apple Guideline 3.1.1 (#848): hide the tip jar inside the iOS native shell.
+  // Detected via the `Capacitor` global the webview injects (same approach as
+  // SignInButton) so the public web bundle doesn't pull in @capacitor/core, and
+  // so jsdom tests — where the global is absent — default to showing the widget.
+  // Starts false to match SSR (which always renders the <Script>); the effect
+  // flips it on the iOS shell after mount, avoiding a hydration mismatch.
+  const [isIosNative, setIsIosNative] = useState(false)
+
   useEffect(() => {
+    if (getCapacitorPlatform() === 'ios') {
+      setIsIosNative(true)
+      teardownKofiWidget()
+      return
+    }
+
     // Ko-fi script doesn't expose an onClick hook, so attach a delegated
     // listener on document — captures clicks regardless of when the widget
     // injects its DOM. The button class is `.floatingchat-donate-button` per
@@ -115,6 +141,9 @@ export function KofiWidget({
 
   const handleLoad = useCallback(() => {
     if (typeof window === 'undefined') return
+    // Belt-and-suspenders: if the script resolves before the iOS gate unmounts
+    // this component, don't draw the widget on iOS.
+    if (getCapacitorPlatform() === 'ios') return
     if (!window.kofiWidgetOverlay) return
 
     window.kofiWidgetOverlay.draw(KOFI_USERNAME, {
@@ -126,6 +155,8 @@ export function KofiWidget({
       'floating-chat.donateButton.text-color': '#322B23',
     })
   }, [buttonText])
+
+  if (isIosNative) return null
 
   return (
     <Script

@@ -16,6 +16,7 @@ import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
 import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
+import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
 
 // CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
 // but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
@@ -75,6 +76,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const viewerProfile = profilesRows.find(p => p.id === user.id)
   if (!viewerProfile) redirect('/sign-in')
 
+  const deletionRequestedAt = viewerProfile.deletionRequestedAt ?? null
+
   const partnerId = group.memberA === user.id ? group.memberB : group.memberA
   const partnerProfile = partnerId ? profilesRows.find(p => p.id === partnerId) : undefined
 
@@ -130,6 +133,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <PartnerActivityToast />
           <AvatarMenuProvider data={avatarMenuData}>
             <div className={`relative max-w-md mx-auto min-h-dvh ${notoTC.variable}`} style={{ background: 'var(--bg)' }}>
+              {deletionRequestedAt && (
+                <AccountDeletionBanner requestedAt={new Date(deletionRequestedAt).toISOString()} />
+              )}
               {children}
             </div>
           </AvatarMenuProvider>

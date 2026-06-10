@@ -585,6 +585,24 @@ export type Translations = {
     description: string
   }
 
+  deleteAccountButton: {
+    /** Button label when idle. */
+    label: string
+    /** Button label while the request is processing. */
+    pending: string
+    /** Confirm modal title. */
+    title: string
+    /** Confirm modal description. */
+    description: string
+  }
+
+  accountDeletionBanner: {
+    /** Non-blocking strip message. `{date}` replaced with the scheduled removal date. */
+    message: string
+    /** Cancel-deletion button label. */
+    cancel: string
+  }
+
   splitRatioSection: {
     /** Inline label suffix for viewer. `{name}` replaced with displayName. */
     meSuffix: string
@@ -2836,6 +2854,19 @@ export const zhTW: Translations = {
     pending: '登出中…',
     title: '登出 Futari？',
     description: '下次需要重新用 Google 登入。未邀請對方加入的紀錄不會遺失。',
+  },
+
+  deleteAccountButton: {
+    label: '刪除帳號',
+    pending: '處理中…',
+    title: '確定要刪除帳號？',
+    description:
+      '我們會在 14 個工作天內移除你的資料。這段期間你隨時可以回來取消。若你和對方共用帳本，對方的紀錄會保留，你的名字會顯示為「已離開的夥伴」。',
+  },
+
+  accountDeletionBanner: {
+    message: '你的帳號預計於 {date} 移除。',
+    cancel: '取消刪除',
   },
 
   splitRatioSection: {

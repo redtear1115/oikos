@@ -449,6 +449,19 @@ export const zhCN: Translations = {
     description: '下次需要重新用 Google 登录。未邀请对方加入的记录不会丢失。',
   },
 
+  deleteAccountButton: {
+    label: '删除账号',
+    pending: '处理中…',
+    title: '确定要删除账号？',
+    description:
+      '我们会在 14 个工作天内移除你的资料。这段期间你随时可以回来取消。若你和对方共用账本，对方的记录会保留，你的名字会显示为「已离开的伙伴」。',
+  },
+
+  accountDeletionBanner: {
+    message: '你的账号预计于 {date} 移除。',
+    cancel: '取消删除',
+  },
+
   splitRatioSection: {
     meSuffix: '（我）',
     partnerSuffix: '（对方）',
