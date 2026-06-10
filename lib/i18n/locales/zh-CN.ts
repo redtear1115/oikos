@@ -137,7 +137,6 @@ export const zhCN: Translations = {
       spendeeBody: '双人共享是内建免费的，不必再解锁付费方案。',
       cwmoneyTitle: '从 CWMoney 搬过来',
       cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
-      cardAriaLabel: '从 {source} 搬到 Futari',
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · ふたり',
@@ -448,6 +447,19 @@ export const zhCN: Translations = {
     pending: '登出中…',
     title: '登出 Futari？',
     description: '下次需要重新用 Google 登录。未邀请对方加入的记录不会丢失。',
+  },
+
+  deleteAccountButton: {
+    label: '删除账号',
+    pending: '处理中…',
+    title: '确定要删除账号？',
+    description:
+      '我们会在 14 个工作天内移除你的资料。这段期间你随时可以回来取消。若你和对方共用账本，对方的记录会保留，你的名字会显示为「已离开的伙伴」。',
+  },
+
+  accountDeletionBanner: {
+    message: '你的账号预计于 {date} 移除。',
+    cancel: '取消删除',
   },
 
   splitRatioSection: {
@@ -1110,6 +1122,7 @@ export const zhCN: Translations = {
 
   support: {
     buttonText: '请喝杯咖啡',
+    frameTitle: 'Ko-fi 支持小窗口',
   },
 
   currencyPage: {
@@ -1583,6 +1596,7 @@ export const zhCN: Translations = {
     backToHome: '回到首页',
     joiningGroupLabel: '加入「{group}」',
     fallbackInviter: '对方',
+    soloLedgerNotice: '接受后，你目前的单人账本会成为一段过去的记录，之后仍可在「过去时光」回顾。',
     errors: {
       invalidOrExpired: '邀请链接无效或已过期',
       alreadyUsed: '邀请链接已被使用',
@@ -1591,6 +1605,7 @@ export const zhCN: Translations = {
       groupNotFound: '找不到群组',
       groupFull: '此账本已有两位成员',
       alreadyMember: '你已经是此账本的成员',
+      alreadyInDuo: '你已经和 {partner} 共用一本账本，要先离开才能加入新的。',
       unknown: '无法加入账本',
     },
   },

@@ -11,10 +11,11 @@ import {
 import { requireViewer } from '@/lib/auth/viewer'
 import { captureServer } from '@/lib/analytics/server'
 import { and, eq, isNull, ne } from 'drizzle-orm'
+import { getActiveGroupForUser } from '@/lib/db/queries/group'
 
 export type InvitePreview =
-  | { ok: true; groupName: string; inviterName: string }
-  | { ok: false; error: InviteAcceptError }
+  | { ok: true; groupName: string; inviterName: string; hasSoloLedger: boolean }
+  | { ok: false; error: InviteAcceptError; partnerName?: string }
 
 export async function createInvite(groupId: string): Promise<string> {
   const { user } = await requireViewer()
@@ -55,8 +56,19 @@ export async function previewInvite(token: string): Promise<InvitePreview> {
     ? await db.select().from(oikosGroups).where(eq(oikosGroups.id, invite.groupId)).limit(1)
     : []
 
-  const result = validateInviteAcceptance(invite ?? null, group ?? null, user.id)
-  if (!result.ok) return { ok: false, error: result.error }
+  const viewerActiveGroup = await getActiveGroupForUser(user.id)
+  const result = validateInviteAcceptance(invite ?? null, group ?? null, user.id, viewerActiveGroup)
+  if (!result.ok) {
+    if (result.error === 'already_in_duo' && viewerActiveGroup) {
+      const partnerId =
+        viewerActiveGroup.memberA === user.id ? viewerActiveGroup.memberB : viewerActiveGroup.memberA
+      const [partner] = partnerId
+        ? await db.select({ displayName: profiles.displayName }).from(profiles).where(eq(profiles.id, partnerId)).limit(1)
+        : []
+      return { ok: false, error: result.error, partnerName: partner?.displayName ?? '' }
+    }
+    return { ok: false, error: result.error }
+  }
 
   const [inviter] = await db
     .select({ displayName: profiles.displayName })
@@ -64,10 +76,16 @@ export async function previewInvite(token: string): Promise<InvitePreview> {
     .where(eq(profiles.id, invite.invitedBy))
     .limit(1)
 
+  // Solo ledger elsewhere → it becomes a past chapter on accept; surface a
+  // gentle notice (#912). Duo is already rejected above.
+  const hasSoloLedger =
+    !!viewerActiveGroup && viewerActiveGroup.id !== group.id && viewerActiveGroup.memberB === null
+
   return {
     ok: true,
     groupName: group.name,
     inviterName: inviter?.displayName ?? '',
+    hasSoloLedger,
   }
 }
 
@@ -84,7 +102,8 @@ export async function acceptInvite(token: string): Promise<string> {
     ? await db.select().from(oikosGroups).where(eq(oikosGroups.id, invite.groupId)).limit(1)
     : []
 
-  const result = validateInviteAcceptance(invite ?? null, group ?? null, user.id)
+  const viewerActiveGroup = await getActiveGroupForUser(user.id)
+  const result = validateInviteAcceptance(invite ?? null, group ?? null, user.id, viewerActiveGroup)
   if (!result.ok) throw new Error(result.error)
 
   const now = new Date()

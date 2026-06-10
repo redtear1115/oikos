@@ -120,9 +120,11 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [ia-unified-header](ia-unified-header-design.md) — 四大入口三層標頭統一（L1/L2/L3）+ ContextStrip 取代分散 banner
 - [onboarding](onboarding-design.md) — 新人 onboarding flow（sign-in → 建群組 → 邀請對方／稍後再說）
 - [solo-mode](solo-mode-design.md) — 單人帳本模式：分攤鎖 all_mine、balance hero 隱藏、邀請 banner、升雙人不 retroactive
+- [invite-existing-group](2026-06-10-invite-existing-group-design.md) — 接受邀請時依接受者既有 group 狀態分流：單人＝接受前溫和告知（舊帳本變過去章節）、雙人＝擋下（固定兩人不可同時兩本）、無＝照舊；preview + accept 兩層（#912）
 - [epoch-readonly](epoch-readonly-design.md) — 過去章節 read-only + read-path 型別防呆
 - [monthly-review](monthly-review-design.md) — 雙人月度回顧儀式
 - [avatar-quick-settings](avatar-quick-settings-design.md) — Dashboard avatar 可點開 bottom sheet（個人 + 帳本身份設定）；Settings 主頁瘦身成 app + data + 危險區
+- [account-deletion](2026-06-09-account-deletion-design.md) — app 內發起刪除 + 14 天 grace + pg_cron 後台處理；配對情境匿名化刪除者、另一半保留完整歷史（上架 blocker）
 
 ### 提案與匯入
 

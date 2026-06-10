@@ -30,6 +30,17 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       persistence: 'memory',
       capture_pageview: false, // manual pageview below
       capture_pageleave: true,
+      // We don't use PostHog Surveys — the partner quiz is our own PartnerQuiz
+      // feature, not a PostHog survey. Leaving surveys on makes PostHog fetch
+      // the ~25 KiB /static/surveys.js bundle on first remote-config load
+      // (PageSpeed flagged it as unused JS on the landing page). Off = the
+      // surveys extension never loads. (#922)
+      disable_surveys: true,
+      // We don't analyze dead clicks (clicks that hit nothing actionable), so
+      // opt out of that autocapture path — keeps regular autocapture +
+      // pageview/pageleave intact while skipping the dead-click listener work.
+      // (#922)
+      capture_dead_clicks: false,
     })
   }, [])
 

@@ -74,7 +74,7 @@ export default async function SettingsPage() {
         tripSummary={tripSummary}
       />
       <BottomNavSkeleton />
-      <KofiWidget buttonText={t.support.buttonText} />
+      <KofiWidget buttonText={t.support.buttonText} frameTitle={t.support.frameTitle} />
     </div>
   )
 }

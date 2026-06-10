@@ -136,7 +136,6 @@ export const ja: Translations = {
       spendeeBody: 'ふたり共有は最初から無料。有料プランの解除は不要です。',
       cwmoneyTitle: 'CWMoney から引っ越し',
       cwmoneyBody: 'Excel → CSV テンプレート付き。数分で移し替えられます。',
-      cardAriaLabel: '{source} から Futari へ引っ越し',
     },
     footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
     jsonLdAppName: 'Futari · ふたり',
@@ -447,6 +446,19 @@ export const ja: Translations = {
     pending: 'ログアウト中…',
     title: 'Futari からログアウト？',
     description: '次回は Google でサインインする必要があります。パートナーを招待していない記録は失われません。',
+  },
+
+  deleteAccountButton: {
+    label: 'アカウントを削除',
+    pending: '処理中…',
+    title: 'アカウントを削除しますか？',
+    description:
+      'お客様のデータは14営業日以内に削除されます。それまではいつでも取り消せます。共有家計簿の場合、相手の記録は残り、あなたの名前は「退出したパートナー」と表示されます。',
+  },
+
+  accountDeletionBanner: {
+    message: 'アカウントは {date} に削除される予定です。',
+    cancel: '削除を取り消す',
   },
 
   splitRatioSection: {
@@ -1109,6 +1121,7 @@ export const ja: Translations = {
 
   support: {
     buttonText: 'コーヒーを贈る',
+    frameTitle: 'Ko-fi サポートウィンドウ',
   },
 
   currencyPage: {
@@ -1582,6 +1595,7 @@ export const ja: Translations = {
     backToHome: 'ホームへ戻る',
     joiningGroupLabel: '「{group}」に参加',
     fallbackInviter: '相手',
+    soloLedgerNotice: '参加すると、今のひとり用の家計簿は過去の記録になります。あとから「過去の時間」で振り返れます。',
     errors: {
       invalidOrExpired: '招待リンクが無効または期限切れです',
       alreadyUsed: '招待リンクは既に使用されています',
@@ -1590,6 +1604,7 @@ export const ja: Translations = {
       groupNotFound: '家計簿が見つかりません',
       groupFull: 'この家計簿には既に二人のメンバーがいます',
       alreadyMember: 'あなたは既にこの家計簿のメンバーです',
+      alreadyInDuo: 'すでに {partner} さんと家計簿を共有しています。新しく参加するには、先に今の家計簿から抜けてください。',
       unknown: '家計簿に参加できません',
     },
   },

@@ -137,7 +137,6 @@ export const en: Translations = {
       spendeeBody: 'Two-person sharing is free and built in, no paid unlock.',
       cwmoneyTitle: 'Move from CWMoney',
       cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
-      cardAriaLabel: 'Move from {source} to Futari',
     },
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
     jsonLdAppName: 'Futari · ふたり',
@@ -449,6 +448,19 @@ export const en: Translations = {
     pending: 'Logging out…',
     title: 'Log out of Futari?',
     description: 'You\'ll need to sign in again with Google next time. Records you\'ve added without inviting your partner won\'t be lost.',
+  },
+
+  deleteAccountButton: {
+    label: 'Delete account',
+    pending: 'Working…',
+    title: 'Delete your account?',
+    description:
+      "We'll remove your data within 14 business days. You can come back and cancel any time before then. If you share a ledger, your partner's records stay, and your name will show as “a partner who left”.",
+  },
+
+  accountDeletionBanner: {
+    message: 'Your account is scheduled for removal on {date}.',
+    cancel: 'Cancel deletion',
   },
 
   splitRatioSection: {
@@ -1111,6 +1123,7 @@ export const en: Translations = {
 
   support: {
     buttonText: 'Support Futari',
+    frameTitle: 'Ko-fi support window',
   },
 
   currencyPage: {
@@ -1584,6 +1597,7 @@ export const en: Translations = {
     backToHome: 'Back to home',
     joiningGroupLabel: 'Joining "{group}"',
     fallbackInviter: 'your partner',
+    soloLedgerNotice: 'Once you accept, your current solo ledger becomes a past chapter — you can still revisit it in Past Times.',
     errors: {
       invalidOrExpired: 'This invite link is invalid or expired.',
       alreadyUsed: 'This invite link has already been used.',
@@ -1592,6 +1606,7 @@ export const en: Translations = {
       groupNotFound: 'Ledger not found.',
       groupFull: 'This ledger already has two members.',
       alreadyMember: "You're already a member of this ledger.",
+      alreadyInDuo: 'You already share a ledger with {partner}. Leave it first to join a new one.',
       unknown: "Can't join this ledger.",
     },
   },

@@ -5,6 +5,7 @@ import { OfflineBrowsingToggle } from './OfflineBrowsingToggle'
 import { QuickAccessRow } from './QuickAccessRow'
 import { InstallGuideRow } from './InstallGuideRow'
 import { LogoutButton } from './LogoutButton'
+import { DeleteAccountButton } from './DeleteAccountButton'
 
 export interface ViewerInfo {
   id: string
@@ -101,6 +102,7 @@ export async function SettingsContent({
         * LogoutButton owns its own ConfirmModal + clearDynamicCache flow. */}
       <div className="px-4 mt-4 mb-5">
         <LogoutButton />
+        <DeleteAccountButton />
       </div>
 
       <div

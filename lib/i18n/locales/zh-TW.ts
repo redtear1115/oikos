@@ -164,8 +164,6 @@ export type Translations = {
       spendeeBody: string
       cwmoneyTitle: string
       cwmoneyBody: string
-      /** Aria label template — `{source}` is the tool name. */
-      cardAriaLabel: string
     }
     /** Use-case section (#851) — three locale-aware links to /use-case/* on the
      *  landing page. Positioned after the migrate section to strengthen internal
@@ -585,6 +583,24 @@ export type Translations = {
     title: string
     /** Confirm modal description. */
     description: string
+  }
+
+  deleteAccountButton: {
+    /** Button label when idle. */
+    label: string
+    /** Button label while the request is processing. */
+    pending: string
+    /** Confirm modal title. */
+    title: string
+    /** Confirm modal description. */
+    description: string
+  }
+
+  accountDeletionBanner: {
+    /** Non-blocking strip message. `{date}` replaced with the scheduled removal date. */
+    message: string
+    /** Cancel-deletion button label. */
+    cancel: string
   }
 
   splitRatioSection: {
@@ -1404,6 +1420,8 @@ export type Translations = {
    *  floating button. The widget mounts on landing and settings pages. */
   support: {
     buttonText: string
+    /** Accessible title for the Ko-fi floating widget iframe (frame-title, #919). */
+    frameTitle: string
   }
 
   /** /settings/currency page — base currency only since v0.17.4 (#410).
@@ -1921,6 +1939,9 @@ export type Translations = {
     joiningGroupLabel: string
     /** Used when the inviter has no display name set. */
     fallbackInviter: string
+    /** Shown on the accept screen when the accepter already has a solo ledger
+     *  that will become a past chapter (#912). */
+    soloLedgerNotice: string
     errors: {
       invalidOrExpired: string
       alreadyUsed: string
@@ -1929,6 +1950,8 @@ export type Translations = {
       groupNotFound: string
       groupFull: string
       alreadyMember: string
+      /** Template with `{partner}` — accepter is already in a duo group (#912). */
+      alreadyInDuo: string
       unknown: string
     }
   }
@@ -2526,7 +2549,6 @@ export const zhTW: Translations = {
       spendeeBody: '雙人共享是內建免費的，不必再解鎖付費方案。',
       cwmoneyTitle: '從 CWMoney 搬過來',
       cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
-      cardAriaLabel: '從 {source} 搬到 Futari',
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · ふたり',
@@ -2837,6 +2859,19 @@ export const zhTW: Translations = {
     pending: '登出中…',
     title: '登出 Futari？',
     description: '下次需要重新用 Google 登入。未邀請對方加入的紀錄不會遺失。',
+  },
+
+  deleteAccountButton: {
+    label: '刪除帳號',
+    pending: '處理中…',
+    title: '確定要刪除帳號？',
+    description:
+      '我們會在 14 個工作天內移除你的資料。這段期間你隨時可以回來取消。若你和對方共用帳本，對方的紀錄會保留，你的名字會顯示為「已離開的夥伴」。',
+  },
+
+  accountDeletionBanner: {
+    message: '你的帳號預計於 {date} 移除。',
+    cancel: '取消刪除',
   },
 
   splitRatioSection: {
@@ -3499,6 +3534,7 @@ export const zhTW: Translations = {
 
   support: {
     buttonText: '請喝杯咖啡',
+    frameTitle: 'Ko-fi 支持小視窗',
   },
 
   currencyPage: {
@@ -3972,6 +4008,7 @@ export const zhTW: Translations = {
     backToHome: '回到首頁',
     joiningGroupLabel: '加入「{group}」',
     fallbackInviter: '對方',
+    soloLedgerNotice: '接受後，你目前的單人帳本會成為一段過去的紀錄，之後仍可在「過去時光」回顧。',
     errors: {
       invalidOrExpired: '邀請連結無效或已過期',
       alreadyUsed: '邀請連結已被使用',
@@ -3980,6 +4017,7 @@ export const zhTW: Translations = {
       groupNotFound: '找不到群組',
       groupFull: '此帳本已有兩位成員',
       alreadyMember: '你已經是此帳本的成員',
+      alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
       unknown: '無法加入帳本',
     },
   },

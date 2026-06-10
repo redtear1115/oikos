@@ -28,6 +28,7 @@ export default async function InvitePage({ params }: Props) {
         token={token}
         groupName={preview.groupName}
         inviterName={preview.inviterName}
+        hasSoloLedger={preview.hasSoloLedger}
         trust={t.trust}
         invite={t.invite}
       />
@@ -42,8 +43,12 @@ export default async function InvitePage({ params }: Props) {
     group_not_found: t.invite.errors.groupNotFound,
     group_full: t.invite.errors.groupFull,
     already_member: t.invite.errors.alreadyMember,
+    already_in_duo: t.invite.errors.alreadyInDuo,
   }
-  const errorMessage = errorMap[preview.error] ?? t.invite.errors.unknown
+  const errorMessage =
+    preview.error === 'already_in_duo'
+      ? t.invite.errors.alreadyInDuo.replace('{partner}', preview.partnerName || t.invite.fallbackInviter)
+      : (errorMap[preview.error] ?? t.invite.errors.unknown)
 
   return (
     <main

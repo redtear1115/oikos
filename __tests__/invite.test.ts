@@ -51,7 +51,7 @@ describe('validateInviteAcceptance', () => {
 
   it('rejects expired invite', () => {
     const invite = { ...baseInvite, expiresAt: new Date('2000-01-01') }
-    const result = validateInviteAcceptance(invite, baseGroup, 'user-b', new Date('2025-01-01'))
+    const result = validateInviteAcceptance(invite, baseGroup, 'user-b', null, new Date('2025-01-01'))
     expect(result).toMatchObject({ ok: false, error: 'expired' })
   })
 
@@ -70,5 +70,22 @@ describe('validateInviteAcceptance', () => {
     const group = { ...baseGroup, memberB: 'user-b' }
     const result = validateInviteAcceptance(baseInvite, group, 'user-b')
     expect(result).toMatchObject({ ok: false, error: 'group_full' })
+  })
+
+  it('blocks when the accepter is already in a DUO group elsewhere', () => {
+    const myDuo = { ...baseGroup, id: 'grp-other', memberA: 'user-b', memberB: 'partner' }
+    const result = validateInviteAcceptance(baseInvite, baseGroup, 'user-b', myDuo)
+    expect(result).toEqual({ ok: false, error: 'already_in_duo' })
+  })
+
+  it('allows when the accepter is in a SOLO group elsewhere (no memberB)', () => {
+    const mySolo = { ...baseGroup, id: 'grp-other', memberA: 'user-b', memberB: null }
+    const result = validateInviteAcceptance(baseInvite, baseGroup, 'user-b', mySolo)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('allows when the accepter has no group', () => {
+    const result = validateInviteAcceptance(baseInvite, baseGroup, 'user-b', null)
+    expect(result).toEqual({ ok: true })
   })
 })
