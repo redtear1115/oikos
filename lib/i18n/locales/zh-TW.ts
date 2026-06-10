@@ -4080,6 +4080,7 @@ export const zhTW: Translations = {
     sectionThirdPartyTitle: '第三方服務',
     sectionThirdPartyItems: [
       'Google（OAuth 登入）',
+      'Apple（OAuth 登入）',
       'Supabase（後端、資料庫、即時同步）',
       'Vercel（網站託管）',
       'Sentry（錯誤追蹤，收集匿名錯誤堆疊，不含個人識別資訊）',

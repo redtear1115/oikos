@@ -1668,6 +1668,7 @@ export const zhCN: Translations = {
     sectionThirdPartyTitle: '第三方服务',
     sectionThirdPartyItems: [
       'Google（OAuth 登录）',
+      'Apple（OAuth 登录）',
       'Supabase（后端、数据库、实时同步）',
       'Vercel（网站托管）',
       'Sentry（错误追踪，收集匿名错误堆栈，不含个人识别信息）',
