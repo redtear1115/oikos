@@ -1939,6 +1939,9 @@ export type Translations = {
     joiningGroupLabel: string
     /** Used when the inviter has no display name set. */
     fallbackInviter: string
+    /** Shown on the accept screen when the accepter already has a solo ledger
+     *  that will become a past chapter (#912). */
+    soloLedgerNotice: string
     errors: {
       invalidOrExpired: string
       alreadyUsed: string
@@ -1947,6 +1950,8 @@ export type Translations = {
       groupNotFound: string
       groupFull: string
       alreadyMember: string
+      /** Template with `{partner}` — accepter is already in a duo group (#912). */
+      alreadyInDuo: string
       unknown: string
     }
   }
@@ -4003,6 +4008,7 @@ export const zhTW: Translations = {
     backToHome: '回到首頁',
     joiningGroupLabel: '加入「{group}」',
     fallbackInviter: '對方',
+    soloLedgerNotice: '接受後，你目前的單人帳本會成為一段過去的紀錄，之後仍可在「過去時光」回顧。',
     errors: {
       invalidOrExpired: '邀請連結無效或已過期',
       alreadyUsed: '邀請連結已被使用',
@@ -4011,6 +4017,7 @@ export const zhTW: Translations = {
       groupNotFound: '找不到群組',
       groupFull: '此帳本已有兩位成員',
       alreadyMember: '你已經是此帳本的成員',
+      alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
       unknown: '無法加入帳本',
     },
   },

@@ -1597,6 +1597,7 @@ export const en: Translations = {
     backToHome: 'Back to home',
     joiningGroupLabel: 'Joining "{group}"',
     fallbackInviter: 'your partner',
+    soloLedgerNotice: 'Once you accept, your current solo ledger becomes a past chapter — you can still revisit it in Past Times.',
     errors: {
       invalidOrExpired: 'This invite link is invalid or expired.',
       alreadyUsed: 'This invite link has already been used.',
@@ -1605,6 +1606,7 @@ export const en: Translations = {
       groupNotFound: 'Ledger not found.',
       groupFull: 'This ledger already has two members.',
       alreadyMember: "You're already a member of this ledger.",
+      alreadyInDuo: 'You already share a ledger with {partner}. Leave it first to join a new one.',
       unknown: "Can't join this ledger.",
     },
   },
