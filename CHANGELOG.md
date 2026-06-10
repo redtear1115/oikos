@@ -15,6 +15,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.1] - 2026-06-10
+
+主題：**上架準備 · 帳號刪除 · 落地頁提速**——App Store / Play 上架前置（帳號刪除）、落地頁效能與無障礙打磨。
+完整 diff：[v1.5.0...v1.5.1](https://github.com/redtear1115/oikos/compare/v1.5.0...v1.5.1)
+
+### 使用者可見變化
+
+- **帳號刪除（#923）**：設定頁危險區可申請刪除帳號，14 天緩衝期內可隨時取消（橫幅顯示預定移除日期）。App Store / Play 上架必要條件。
+- **邀請接受分流（#912）**：已在單人帳本的人接受邀請前，會看到溫和告知（舊的單人帳本會成為過去章節）；已在雙人帳本的人被擋下，提示先離開目前帳本。
+- **Ko-fi 懸浮 widget 範圍修正（#917）**：只在落地頁與設定頁出現；離開設定頁後不再殘留在整個 app。
+- **落地頁提速（#920 / #921 / #922）**：移除關鍵路徑的兩次 auth round-trip、清理 preconnect、bundle 瘦身，改善 FCP / TTFB。
+- **落地頁無障礙（#919）**：搬遷卡片 label-in-name、Ko-fi iframe frame-title。
+
+### 技術變更
+
+- **帳號刪除**：14 天 grace 軟刪除 + server-side 排程實刪；建立 App Store submission runbook（spec：account-deletion）。
+- **公開落地頁不讀 server auth（#920 Phase 1）**：sign-in / landing 改為 client-side 偵測 session 後再導向，公開落地頁因此可 edge cache。
+- **react-hooks/purity 修正（#926）**：sign-in 每請求隨機選文的邏輯移出 render。
+- **邀請驗證**：加入「接受者既有 group」判斷 + server 端硬擋雙人（防雙重 group）。
+- **測試對齊（#911 / #929）**：修正 stale 的 createGroup 測試以符合 idempotent 行為。
+
 ## [1.5.0] - 2026-06-09
 
 主題：**iOS 啟程 · Sign in with Apple · 推播提醒**——iOS 改用 Capacitor 殼並加入推播；Sign in with Apple 滿足 App Store Guideline 4.8；GA4 + Ko-fi 開始長線經營。
@@ -596,7 +617,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/redtear1115/oikos/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/redtear1115/oikos/compare/v1.4.3...v1.5.0
 [1.4.3]: https://github.com/redtear1115/oikos/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/redtear1115/oikos/compare/v1.4.1...v1.4.2
