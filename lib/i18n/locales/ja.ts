@@ -1667,6 +1667,7 @@ export const ja: Translations = {
     sectionThirdPartyTitle: '第三者サービス',
     sectionThirdPartyItems: [
       'Google（OAuth サインイン）',
+      'Apple（OAuth サインイン）',
       'Supabase（バックエンド、データベース、リアルタイム同期）',
       'Vercel（Web ホスティング）',
       'Sentry（エラートラッキング：匿名のエラー情報を収集、個人識別情報は含まれません）',

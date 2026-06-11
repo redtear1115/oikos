@@ -1669,6 +1669,7 @@ export const en: Translations = {
     sectionThirdPartyTitle: 'Third-party services',
     sectionThirdPartyItems: [
       'Google (OAuth sign-in)',
+      'Apple (OAuth sign-in)',
       'Supabase (backend, database, realtime sync)',
       'Vercel (web hosting)',
       'Sentry (error tracking — collects anonymous error traces, no personally identifiable information)',
