@@ -20,7 +20,7 @@
 
 > 依序執行。前置 1–3 可一次做完，4 之後是 build → 測 → 送的主流程。
 
-1. ⬜ **Apple Developer Portal — 確認 App ID 已勾 Push**
+1. ✅ **Apple Developer Portal — 確認 App ID 已勾 Push**
    Identifiers → `dev.southernlight.futari` → 確認 Push Notifications capability 已啟用。
    （entitlements 與 AppDelegate 程式碼端已完成，見 §C-B2；automatic signing 通常會自動補 App ID 設定，這步只是確認。）
 
@@ -29,7 +29,7 @@
    Push sender `supabase/functions/send-recurring-push` 已部署 prod（ACTIVE）且實際跑通（log 回 200，`importApnsKey` 解析成功）。
    > 僅證明「金鑰可解析 + 函式執行成功」；**push 真的送達實機**需真實 device token，留待 step 5 實機/TestFlight 驗證。
 
-3. ⬜ **App Store Connect — 建立 app 記錄**
+3. ✅ **App Store Connect — 建立 app 記錄**
    Bundle ID `dev.southernlight.futari`、SKU、名稱 Futari。
 
 4. ⬜ **Archive + 上傳 TestFlight**
