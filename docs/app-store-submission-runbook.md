@@ -32,7 +32,7 @@
 3. ✅ **App Store Connect — 建立 app 記錄**
    Bundle ID `dev.southernlight.futari`、SKU、名稱 Futari。
 
-4. ⬜ **Archive + 上傳 TestFlight**
+4. ✅ **Archive + 上傳 TestFlight** — 已上傳 `1.5.1(1)`
    ```bash
    npx cap open ios          # 開 Xcode
    ```
