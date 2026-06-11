@@ -7,7 +7,11 @@ android {
         applicationId "dev.southernlight.futari"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // versionCode：純單調計數器，與 semver 脫鉤。每次上傳 Play（含被拒重送 / 只改 metadata）
+        // 就 +1，永不歸零、不對應版號語意。Play 只要求嚴格遞增（上限 2,100,000,000）。
+        // 起點沿用舊的 105011，之後 105012 → 105013 → …（薄殼罕重送，純計數最不會踩溢位/歸零的坑）。
         versionCode 105011
+        // versionName：給使用者看的字串，對齊送審當下 prod 的 web semver；只在想讓使用者看到新版號時才動。
         versionName "1.5.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

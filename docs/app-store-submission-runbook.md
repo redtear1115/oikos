@@ -41,7 +41,7 @@
    2. Product → Archive。
    3. Organizer → Distribute App → App Store Connect → Upload。
    4. 等 build 在 App Store Connect 處理完。
-   > `MARKETING_VERSION` 已是 1.5.1，`CURRENT_PROJECT_VERSION`（build number）=1；每次重新上傳同版本要 +1。
+   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`MARKETING_VERSION=1.5.1` / `CURRENT_PROJECT_VERSION=1` 直接送。
    > 不需要 `out/` 或 `cap sync`（server.url 架構），除非改了原生 plugin / config。
 
 5. ⬜ **實機 / TestFlight 驗證**
@@ -77,8 +77,7 @@
    ./gradlew bundleRelease
    # 產物：android/app/build/outputs/bundle/release/app-release.aab
    ```
-   > versionCode 已是 `105011`（格式 `M·mm·pp·b`：`1·05·01·1`）。下次更新 build 把尾碼 +1（105012…），
-   > 或進版時換 mm/pp。Play 要求 versionCode 嚴格遞增。
+   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`versionCode 105011` / `versionName "1.5.1"` 直接送。
    > Upload keystore 已存在 `~/futari-release.keystore`（alias `futari`）。**務必備份**（遺失＝無法更新 app）。
 
 4. ⬜ **Play Console 上架資料**
@@ -136,3 +135,32 @@ with Apple. Solo mode lets a single user enter without a partner — no
 onboarding block. Demo: <email> / <password>. Account deletion is
 available in Settings → 刪除帳號.
 ```
+
+---
+
+## E. 版本號規則（策略 A：純單調計數器）
+
+> 大原則：薄殼（`server.url`）的網站靠 Vercel 持續更新、**不用重送 App**。原生版本號**只在「要再上傳一個商店二進位檔」時才動**
+> （改了原生 plugin / capacitor config，或要更新商店 metadata 重送）。日常 web release **不要** bump 原生。
+
+兩種號分清楚：
+
+| 號 | iOS | Android | 角色 | 何時動 |
+|---|---|---|---|---|
+| **使用者可見版號** | `MARKETING_VERSION` | `versionName` | 商店頁顯示的字串 | 只在「想讓使用者看到新版號」時；可對齊送審當下 prod 的 web semver |
+| **商店遞增計數** | `CURRENT_PROJECT_VERSION`（build number） | `versionCode` | 商店排序用的內部整數，**硬性 gate** | **每次上傳就 +1** |
+
+**鐵則（策略 A — 純單調計數器，與 semver 脫鉤）：**
+
+1. **每次上傳商店（含被拒重送、只改 metadata 的重送、TestFlight 每次傳）都把計數 +1**，永不歸零、不對應版號語意。
+2. iOS build number 與 Android versionCode **各自獨立**，不用湊成一樣。
+3. iOS：App Store 要求同一 `MARKETING_VERSION` 下 build number 唯一遞增；全域只增不減最不會出錯。⚠️ TestFlight 也吃此規則——1.5.1(1) 測完要修再傳必須 1.5.1(2)。
+4. Android：`versionCode` 嚴格遞增即可（上限 2,100,000,000）。起點沿用 `105011`，之後 `105012 → 105013 → …`，不再用舊的 `M·mm·pp·b` 語意編碼（build 段只有 1 位、第 10 次重送會溢位）。
+5. 改 `versionName` / `MARKETING_VERSION` 時，計數**照樣只 +1，不要跟著歸零**。
+
+**設定位置：**
+
+- iOS：`ios/App/App.xcodeproj/project.pbxproj` 的 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`（Debug + Release 兩處都要改）。
+- Android：`android/app/build.gradle` 的 `versionName` / `versionCode`（已附同義註解）。
+
+> 目前無自動 bump（release skill 只動 `package.json`）。薄殼罕重送，手動 bump 可接受；archive / `bundleRelease` 前先確認計數已 +1。
