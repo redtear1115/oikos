@@ -15,6 +15,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.2] - 2026-06-11
+
+主題：**首次送審就緒**——App Store / Play 首次送審前的最後收尾：暖燈品牌 app icon 正式落地、隱私頁補上 Apple 登入揭露、iOS 推播能力、上架 runbook 與原生版本號規則。
+完整 diff：[v1.5.1...v1.5.2](https://github.com/redtear1115/oikos/compare/v1.5.1...v1.5.2)
+
+### 使用者可見變化
+
+- **暖燈 App icon（#899 / #904）**：iOS + Android 換上 Futari 暖燈品牌圖示，取代先前的 Capacitor 預設圖與低解析啟動圖示。
+- **隱私政策補揭露 Apple 登入（#934）**：`/privacy` 第三方服務清單加入 Apple OAuth（4 語），與實際登入方式一致。
+
+### 技術變更
+
+- **iOS 推播能力（#936）**：啟用 Push Notifications capability（entitlements + AppDelegate APNs forwarding），讓定期收支提醒可透過 APNs 送達 iOS。
+- **上架文案 / data-safety 對照**：新增 App Store / Play listing copy 與 data-safety / App Privacy 對照表。
+- **原生版本號規則**：採「純單調計數器」策略——build number / versionCode 每次上傳商店 +1、與 semver 脫鉤、永不歸零；上架 runbook 改為行動導向並補版本規則小節。
+
 ## [1.5.1] - 2026-06-10
 
 主題：**上架準備 · 帳號刪除 · 落地頁提速**——App Store / Play 上架前置（帳號刪除）、落地頁效能與無障礙打磨。
@@ -617,7 +633,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/redtear1115/oikos/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/redtear1115/oikos/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/redtear1115/oikos/compare/v1.4.3...v1.5.0
 [1.4.3]: https://github.com/redtear1115/oikos/compare/v1.4.2...v1.4.3
