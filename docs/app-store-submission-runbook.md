@@ -24,8 +24,10 @@
    Identifiers → `dev.southernlight.futari` → 確認 Push Notifications capability 已啟用。
    （entitlements 與 AppDelegate 程式碼端已完成，見 §C-B2；automatic signing 通常會自動補 App ID 設定，這步只是確認。）
 
-2. ⬜ **APNs `.p8` 金鑰**
-   Apple Developer Portal → Keys → ＋ → Apple Push Notifications service（.p8）→ 設定到後端 push 發送端。
+2. ✅ **APNs `.p8` 金鑰 — 已配置**
+   金鑰已建立並以 PEM 形式設為 prod Supabase Edge Function secret：`APNS_PRIVATE_KEY_PEM` / `APNS_KEY_ID` / `APNS_TEAM_ID`。
+   Push sender `supabase/functions/send-recurring-push` 已部署 prod（ACTIVE）且實際跑通（log 回 200，`importApnsKey` 解析成功）。
+   > 僅證明「金鑰可解析 + 函式執行成功」；**push 真的送達實機**需真實 device token，留待 step 5 實機/TestFlight 驗證。
 
 3. ⬜ **App Store Connect — 建立 app 記錄**
    Bundle ID `dev.southernlight.futari`、SKU、名稱 Futari。
