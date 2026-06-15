@@ -137,6 +137,7 @@ export const en: Translations = {
       spendeeBody: 'Two-person sharing is free and built in, no paid unlock.',
       cwmoneyTitle: 'Move from CWMoney',
       cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
+      seeAll: 'See all migration guides',
     },
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
     jsonLdAppName: 'Futari · ふたり',
@@ -1960,6 +1961,13 @@ export const en: Translations = {
         },
       },
     },
+    hub: {
+      heroKicker: 'Bring it all with you',
+      heroTitle: 'Move your records to a ledger built for two',
+      heroSubtitle:
+        'Whichever app you track expenses in today, there is probably a guide here. Pick one and bring your history over in a few minutes.',
+      heading: 'Which one are you coming from?',
+    },
     chatgptWorkflow: {
       heading: 'No CSV export? Use screenshots',
       intro: 'If your old app has no CSV export, you can screenshot your records and have ChatGPT turn them into a CSV to upload. The free ChatGPT plan works.',
@@ -2661,6 +2669,11 @@ I will upload the screenshots once you confirm.`,
         description: 'Want a ledger built for two? Screenshot Sui Shou Ji, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free.',
         ogDescription: 'Sui Shou Ji to a two-person ledger — screenshot → ChatGPT → CSV → Futari.',
       },
+    },
+    migrateHub: {
+      title: 'Move to Futari from other expense apps · guide index',
+      description: 'Looking for an alternative to Honeydue, Spendee, CWMoney or other expense apps? Futari is a free shared ledger built for two — import your CSV and move your history over in minutes.',
+      ogDescription: 'Which expense app are you on now? Pick one and bring your history to Futari.',
     },
     useCase: {
       cohabitation: {

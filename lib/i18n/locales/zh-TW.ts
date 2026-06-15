@@ -164,6 +164,8 @@ export type Translations = {
       spendeeBody: string
       cwmoneyTitle: string
       cwmoneyBody: string
+      /** Link to the /migrate hub listing every source guide (#939). */
+      seeAll: string
     }
     /** Use-case section (#851) — three locale-aware links to /use-case/* on the
      *  landing page. Positioned after the migrate section to strengthen internal
@@ -2315,6 +2317,17 @@ export type Translations = {
         suishouji: { name: string; description: string }
       }
     }
+    /** Index/hub page at /migrate (#939) — lists every source as a card so
+     *  each per-source page sits 1 click from a crawlable hub. Card name/blurb
+     *  reuse otherSources.items; only the hub's own hero + section heading
+     *  live here. */
+    hub: {
+      heroKicker: string
+      heroTitle: string
+      heroSubtitle: string
+      /** Heading above the all-sources card grid. */
+      heading: string
+    }
     /** Shared screenshot→ChatGPT→CSV walkthrough (#839 P2) — used by
      *  /migrate/simple-daily-money and any future non-CSV-export source. */
     chatgptWorkflow: {
@@ -2362,6 +2375,12 @@ export type Translations = {
       description: string
       ogDescription: string
     }>
+    /** SEO copy for the /migrate hub/index page (#939). */
+    migrateHub: {
+      title: string
+      description: string
+      ogDescription: string
+    }
     /** SEO copy for /use-case/* situational landing pages (#851). */
     useCase: Record<import('@/lib/use-case/cases').UseCaseSlug, {
       title: string
@@ -2549,6 +2568,7 @@ export const zhTW: Translations = {
       spendeeBody: '雙人共享是內建免費的，不必再解鎖付費方案。',
       cwmoneyTitle: '從 CWMoney 搬過來',
       cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
+      seeAll: '看全部搬遷指南',
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · ふたり',
@@ -4368,6 +4388,12 @@ export const zhTW: Translations = {
         },
       },
     },
+    hub: {
+      heroKicker: '搬家不用從頭來過',
+      heroTitle: '把記過的帳，一起搬到 Futari',
+      heroSubtitle: '你現在用的記帳工具，這裡多半都有對應的搬遷指南。挑一個開始，幾分鐘就能把過去的紀錄帶過來。',
+      heading: '你現在用哪一個？',
+    },
     chatgptWorkflow: {
       heading: '沒有 CSV 匯出？用截圖換',
       intro: '如果原本的 App 沒有 CSV 匯出，可以用截圖請 ChatGPT 幫你整理成 CSV，再上傳。免費版的 ChatGPT 就能做。',
@@ -5027,6 +5053,11 @@ export const zhTW: Translations = {
         description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
         ogDescription: '隨手記用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
+    },
+    migrateHub: {
+      title: '從其他記帳 App 搬到 Futari｜搬遷指南總覽',
+      description: '正在找 Honeydue、Spendee、CWMoney、麻布記帳等記帳 App 的替代方案？Futari 是為兩個人做的免費共同帳本，支援 CSV 匯入，幾分鐘就能把過去的紀錄搬過來。',
+      ogDescription: '你現在用哪一個記帳 App？挑一個，把過去的紀錄一起搬到 Futari。',
     },
     useCase: {
       cohabitation: {

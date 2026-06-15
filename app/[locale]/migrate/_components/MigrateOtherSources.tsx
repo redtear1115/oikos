@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import type { Locale } from '@/lib/i18n/locales-meta'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
+import { MigrateSourceCard } from './MigrateSourceCard'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -58,43 +58,14 @@ export function MigrateOtherSources({
         {others.map((source) => {
           const item = copy.items[source]
           return (
-            <li key={source}>
-              <Link
-                href={localizedHref(`/migrate/${source}`, locale)}
-                className="block p-5 md:p-6 rounded-tile h-full"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--hairline)',
-                  color: 'inherit',
-                  textDecoration: 'none',
-                }}
-              >
-                <p
-                  className="m-0 text-base md:text-base font-medium"
-                  style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-                >
-                  {item.name}
-                </p>
-                <p
-                  className="m-0 mt-1.5 text-sm md:text-sm leading-[1.65]"
-                  style={{ color: 'var(--ink-2)' }}
-                >
-                  {item.description}
-                </p>
-                <span
-                  className="inline-flex items-center gap-1.5 mt-3 text-[13px]"
-                  style={{
-                    color: 'var(--ink)',
-                    textDecoration: 'underline',
-                    textDecorationColor: 'var(--accent)',
-                    textUnderlineOffset: '4px',
-                  }}
-                >
-                  {copy.cta}
-                  <span aria-hidden>→</span>
-                </span>
-              </Link>
-            </li>
+            <MigrateSourceCard
+              key={source}
+              locale={locale}
+              slug={source}
+              name={item.name}
+              description={item.description}
+              cta={copy.cta}
+            />
           )
         })}
       </ul>
