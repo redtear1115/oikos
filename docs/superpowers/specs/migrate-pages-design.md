@@ -3,9 +3,11 @@ status: approved
 first_shipped_in: v1.3.0
 updates:
   - v1.3.2 — CMS/data-driven refactor (sources.ts + [source]/page.tsx); Taiwan pages + screenshot→ChatGPT→CSV (#839 #852)
+  - v1.6.1 — /migrate hub/index page; landing + footer cross-links to lift per-source pages out of "discovered, not indexed" (#939)
 related_issues:
   - https://github.com/redtear1115/oikos/issues/852
   - https://github.com/redtear1115/oikos/issues/839
+  - https://github.com/redtear1115/oikos/issues/939
 related_specs:
   - csv-import-design.md
 ---
@@ -219,3 +221,28 @@ No page files to create. No union types to update manually.
 ## Extension to `/use-case/*`
 
 The same pattern applies to the persona landing pages (#851). A `lib/use-case/personas.ts` file would define `PersonaDef` objects, and `app/[locale]/use-case/[persona]/page.tsx` would be the single dynamic route. Design for that is out of scope here but the architecture is intentionally compatible.
+
+---
+
+## Hub / index page — `/migrate` (v1.6.1, #939)
+
+### Why
+
+Google Search Console reported the per-source pages as "Discovered – currently not indexed". One contributing factor was a shallow internal link graph: only 3 sources (honeydue / spendee / cwmoney) were linked from the landing page; the rest were reachable only via cross-links between migrate pages and the `ItemList` JSON-LD — effectively orphaned, far from the homepage. There was no single crawlable page listing every guide.
+
+### What
+
+A static index page at `app/[locale]/migrate/page.tsx` that lists **every** source in `MIGRATE_SOURCES` as a card, so each per-source page sits one click from a crawlable hub.
+
+- **Auto-derived from the registry** — `Object.keys(MIGRATE_SOURCES)`. Pruning or adding a competitor updates the hub (and its `ItemList`) with no edit here. This keeps the hub decoupled from the competitor-pruning work in #940.
+- **Inherits the existing `migrate/layout.tsx` shell** (logo / back link / language switcher / background / centred container), so the page renders only hero + grid + trust/footer.
+- **Card reuse** — the source card was extracted from `MigrateOtherSources` into a shared `MigrateSourceCard`. The hub shows all sources; `MigrateOtherSources` still filters out the current one. Both use the existing `migrate.otherSources.items` copy, so **no new per-source copy** was needed.
+- **New copy** is minimal: `migrate.hub.{heroKicker,heroTitle,heroSubtitle,heading}` + `seo.migrateHub.{title,description,ogDescription}` + a `migrate.migrateSection.seeAll` landing/footer label — all ×4 locales (en/ja flagged for native review).
+- **Structured data** — emits a `CollectionPage` wrapping an `ItemList` of every guide, giving the hub an identity distinct from each per-source page.
+- **SEO wiring** — `generateMetadata` uses `buildAlternates('/migrate', locale)` for canonical + hreflang; `/migrate` added to `sitemap.ts` (4 locales) and to `robots.ts` `PUBLIC_PATHS` (explicit allow).
+
+### Internal linking
+
+- Landing `MigrateLinksSection` keeps its 3 featured cards and gains a "see all" link to the hub.
+- The landing footer's legal-links row (already there for inbound link equity from a high-authority crawlable page) gains a hub link.
+- Each per-source page already cross-links the others via `MigrateOtherSources`.

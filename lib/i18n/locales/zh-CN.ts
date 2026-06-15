@@ -137,6 +137,7 @@ export const zhCN: Translations = {
       spendeeBody: '双人共享是内建免费的，不必再解锁付费方案。',
       cwmoneyTitle: '从 CWMoney 搬过来',
       cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
+      seeAll: '看全部迁移指南',
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · ふたり',
@@ -1956,6 +1957,12 @@ export const zhCN: Translations = {
         },
       },
     },
+    hub: {
+      heroKicker: '搬家不用从头来过',
+      heroTitle: '把记过的账，一起搬到 Futari',
+      heroSubtitle: '你现在用的记账工具，这里大多都有对应的迁移指南。挑一个开始，几分钟就能把过去的记录带过来。',
+      heading: '你现在用哪一个？',
+    },
     chatgptWorkflow: {
       heading: '没有 CSV 导出？用截图换',
       intro: '如果原本的 App 没有 CSV 导出，可以用截图请 ChatGPT 帮你整理成 CSV，再上传。免费版的 ChatGPT 就能做。',
@@ -2615,6 +2622,11 @@ export const zhCN: Translations = {
         description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
         ogDescription: '随手记用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
+    },
+    migrateHub: {
+      title: '从其他记账 App 搬到 Futari｜迁移指南总览',
+      description: '正在找 Honeydue、Spendee、随手记等记账 App 的替代方案？Futari 是为两个人做的免费共同账本，支持 CSV 导入，几分钟就能把过去的记录搬过来。',
+      ogDescription: '你现在用哪一个记账 App？挑一个，把过去的记录一起搬到 Futari。',
     },
     useCase: {
       cohabitation: {
