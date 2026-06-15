@@ -57,7 +57,7 @@ export const MIGRATE_SOURCES = {
     templateDownload: { href: '/cwmoney-template.xlsx' },
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '△ 需 VIP',   tone: 'partial' } },
         { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',       tone: 'no'      } },
         { feature: '多幣別記帳',   futari: { label: '✓ 支援',     tone: 'yes'     }, other: { label: '✓ 支援',     tone: 'yes'     } },
         { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ VIP 解鎖', tone: 'partial' } },
@@ -123,10 +123,10 @@ export const MIGRATE_SOURCES = {
     screenshotWorkflow: true,
     comparison: {
       rows: [
-        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計', tone: 'no'      } },
+        { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✓ 免費共享', tone: 'yes'     } },
         { feature: '費用分攤模式', futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',       tone: 'no'      } },
         { feature: '雲端同步',     futari: { label: '✓ 即時',     tone: 'yes'     }, other: { label: '△ 視版本',   tone: 'partial' } },
-        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 含廣告',   tone: 'partial' } },
+        { feature: '完全免費',     futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '△ 進階訂閱', tone: 'partial' } },
         { feature: '資料匯出帶走', futari: { label: '✓ CSV 匯出', tone: 'yes'     }, other: { label: '✕ 無匯出',   tone: 'no'      } },
       ],
     },
