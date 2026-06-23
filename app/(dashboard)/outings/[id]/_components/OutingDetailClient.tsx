@@ -3,9 +3,17 @@
 import { useMemo, useState } from 'react'
 import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import { useTranslations } from '@/lib/i18n/client'
+import { useRouter } from 'next/navigation'
 import { formatAmount } from '@/lib/currency'
 import type { OutingView } from '@/lib/outing/view'
 import type { OutingExpenseWithShares } from '@/lib/db/queries/outing'
+import { Button } from '@/components/ui/Button'
+import { AddExpenseSheet } from './AddExpenseSheet'
+import { AddParticipantSheet } from './AddParticipantSheet'
+import { SettleSheet } from './SettleSheet'
+import { EndOutingSheet } from './EndOutingSheet'
+
+type SheetKey = 'expense' | 'participant' | 'settle' | 'end' | null
 
 export interface OutingDetailOuting {
   id: string
@@ -33,6 +41,11 @@ const DOT_HUES = [
 export function OutingDetailClient({ outing, view, coupleNet, expenses, participants }: Props) {
   const t = useTranslations()
   const to = t.outing
+  const router = useRouter()
+  const [sheet, setSheet] = useState<SheetKey>(null)
+  const active = outing.status === 'active'
+  const close = () => setSheet(null)
+  const refresh = () => router.refresh()
   const nameOf = useMemo(() => {
     const m = new Map(participants.map((p) => [p.id, p.displayName]))
     return (id: string) => m.get(id) ?? '—'
@@ -130,10 +143,40 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
           </p>
         )}
 
-        {outing.status !== 'active' && (
+        {!active && (
           <p className="text-sm px-1" style={{ color: 'var(--ink-3)' }}>{to.endedNote}</p>
         )}
+
+        {active && (
+          <div className="flex flex-col gap-2.5 pt-1">
+            <Button variant="primary" onClick={() => setSheet('expense')}>{to.addExpense}</Button>
+            <div className="flex gap-2.5">
+              <Button variant="secondary" onClick={() => setSheet('participant')} className="flex-1">{to.addParticipant}</Button>
+              <Button variant="secondary" onClick={() => setSheet('settle')} className="flex-1">{to.settle}</Button>
+            </div>
+            <Button variant="ghost" onClick={() => setSheet('end')}>{to.endOuting}</Button>
+          </div>
+        )}
       </div>
+
+      <AddExpenseSheet
+        open={sheet === 'expense'}
+        outingId={outing.id}
+        currency={outing.currency}
+        participants={participants}
+        onClose={close}
+        onSaved={refresh}
+      />
+      <AddParticipantSheet open={sheet === 'participant'} outingId={outing.id} onClose={close} onSaved={refresh} />
+      <SettleSheet
+        open={sheet === 'settle'}
+        outingId={outing.id}
+        currency={outing.currency}
+        participants={participants}
+        onClose={close}
+        onSaved={refresh}
+      />
+      <EndOutingSheet open={sheet === 'end'} outingId={outing.id} onClose={close} onSaved={refresh} />
     </div>
   )
 }
