@@ -16,6 +16,7 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { outings, outingParticipants } = await import('@/lib/db/schema')
 const { listOutings, getOutingDetail } = await import('@/lib/db/queries/outing')
+const { createOuting } = await import('@/actions/outing')
 
 describe('outing queries', () => {
   it('listOutings returns group/epoch outings newest first; getOutingDetail hydrates', async () => {
@@ -39,5 +40,28 @@ describe('outing queries', () => {
     expect(detail!.participants.length).toBe(1)
     expect(detail!.expenses).toEqual([])
     expect(detail!.settlements).toEqual([])
+  })
+})
+
+describe('createOuting', () => {
+  it('creates an outing + a participant per group member', async () => {
+    const { userId, partnerId, groupId } = await seedGroup()
+    mockUserId = userId
+
+    const outing = await createOuting({ name: '九份' })
+    expect(outing.groupId).toBe(groupId)
+    expect(outing.currency).toBe('twd')
+    expect(outing.shareToken).toMatch(/^[A-Za-z0-9_-]{16,}$/)
+
+    const detail = await getOutingDetail(outing.id)
+    const profileIds = detail!.participants.map((p) => p.profileId).sort()
+    expect(profileIds).toEqual([userId, partnerId].sort())
+    expect(detail!.participants.every((p) => p.claimedAt !== null)).toBe(true)
+  })
+
+  it('rejects an empty name', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    await expect(createOuting({ name: '   ' })).rejects.toThrow()
   })
 })
