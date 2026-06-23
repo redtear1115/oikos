@@ -118,6 +118,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）
 - [trip-multi-currency](trip-multi-currency-design.md) — 「邊界複雜」：旅行子帳本（TripExpense sandbox）+ 多幣別 record + 心理匯率 snapshot；建立時鎖匯率、結束時 fold 為 2 筆 summary 回主帳本
+- [group-outing](2026-06-23-group-outing-design.md) — 多方分帳本（類 Splitwise，擴散獲客漏斗）：連結分享 + 匿名參與者（claim_token，解耦 Profile）+ 平分挑人 + 最少筆數轉帳建議；結束時只折兩成員相互欠額回主帳本 balance；無帳號者註冊認領 slot 帶走歷史
 
 ### 體驗
 
