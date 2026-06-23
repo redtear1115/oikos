@@ -669,6 +669,65 @@ export type Translations = {
     }
   }
 
+  /** 出遊 (Group Outing) list page. */
+  outingList: {
+    title: string
+    subtitle: string
+    sectionActive: string
+    sectionPast: string
+    endedTag: string
+    /** Participant count tag on a list row. `{count}` = number of participants. */
+    countTag: string
+    addCta: string
+    empty: { heading: string; body: string }
+  }
+
+  /** 出遊 detail + sheets. */
+  outing: {
+    shareLabel: string
+    copyLink: string
+    copied: string
+    participantsLabel: string
+    transfersLabel: string
+    /** "{from} → {to}" transfer row. */
+    transferRow: string
+    allSettled: string
+    expensesLabel: string
+    /** "{name} 付" payer tag. */
+    paidByTag: string
+    /** "{count} 人" split-count tag. */
+    splitCountTag: string
+    untitledExpense: string
+    emptyExpenses: string
+    addExpense: string
+    addParticipant: string
+    settle: string
+    endOuting: string
+    endedNote: string
+    /** "結束後你們倆的 {amount} 會折回主帳本。" */
+    coupleFoldNote: string
+    endConfirmTitle: string
+    endConfirmBody: string
+    form: {
+      nameLabel: string
+      namePlaceholder: string
+      saveCreate: string
+      payerLabel: string
+      amountLabel: string
+      splitLabel: string
+      descriptionLabel: string
+      participantNameLabel: string
+      participantNamePlaceholder: string
+      saveParticipant: string
+      saveExpense: string
+      settleFromLabel: string
+      settleToLabel: string
+      settleAmountLabel: string
+      saveSettle: string
+      confirmEnd: string
+    }
+  }
+
   /** Trip create/edit sheet (#42, #410). */
   tripSheet: {
     /** Sheet title for creating a new trip. */
@@ -2932,6 +2991,61 @@ export const zhTW: Translations = {
     empty: {
       heading: '還沒有旅行紀錄',
       body: '建一趟旅行，這段日子裡的每筆支出，就會自動收進來，回來再一起翻。',
+    },
+  },
+
+  outingList: {
+    title: '出遊',
+    subtitle: '揪一團，一起把帳記乾淨。',
+    sectionActive: '進行中',
+    sectionPast: '過去的出遊',
+    endedTag: '已結束',
+    countTag: '{count} 人',
+    addCta: '開一個出遊',
+    empty: {
+      heading: '還沒有出遊',
+      body: '揪朋友出門時，開一個出遊，誰付了什麼、誰該還誰，一起看得清楚。',
+    },
+  },
+
+  outing: {
+    shareLabel: '分享連結',
+    copyLink: '複製',
+    copied: '已複製',
+    participantsLabel: '參與者',
+    transfersLabel: '誰付給誰',
+    transferRow: '{from} → {to}',
+    allSettled: '都結清了。',
+    expensesLabel: '支出',
+    paidByTag: '{name} 付',
+    splitCountTag: '{count} 人',
+    untitledExpense: '一筆支出',
+    emptyExpenses: '還沒有支出。記下第一筆吧。',
+    addExpense: '記一筆',
+    addParticipant: '加一個人',
+    settle: '標記還款',
+    endOuting: '結束出遊',
+    endedNote: '這次出遊已經結束。',
+    coupleFoldNote: '結束後，你們倆的 {amount} 會折回主帳本。',
+    endConfirmTitle: '結束這次出遊',
+    endConfirmBody: '結束後就不能再記帳了。你們倆之間的部分會折回主帳本，朋友的部分留在這裡結算。',
+    form: {
+      nameLabel: '出遊名稱',
+      namePlaceholder: '例如：九份兩日',
+      saveCreate: '開始',
+      payerLabel: '誰付的',
+      amountLabel: '金額',
+      splitLabel: '分給誰',
+      descriptionLabel: '備註（選填）',
+      participantNameLabel: '名字',
+      participantNamePlaceholder: '朋友的名字',
+      saveParticipant: '加入',
+      saveExpense: '記下',
+      settleFromLabel: '誰還',
+      settleToLabel: '還給誰',
+      settleAmountLabel: '金額',
+      saveSettle: '記下還款',
+      confirmEnd: '結束出遊',
     },
   },
 
