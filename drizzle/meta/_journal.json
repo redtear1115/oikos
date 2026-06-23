@@ -414,6 +414,13 @@
       "when": 1781700000000,
       "tag": "0059_account_deletion_cron",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1781800000000,
+      "tag": "0060_outing_tables",
+      "breakpoints": true
     }
   ]
 }
