@@ -77,6 +77,8 @@ export async function SettingsContent({
           secondary={formatTripSummary(tripSummary, t.settings.tripsRow)}
         />
         <div className="mt-3" />
+        <LinkRow href="/outings" label={t.outingList.title} />
+        <div className="mt-3" />
         <LinkRow
           href="/settings/import"
           label={t.settings.import.navLabel}
