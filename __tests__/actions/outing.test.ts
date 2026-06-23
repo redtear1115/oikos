@@ -16,7 +16,7 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { outings, outingParticipants } = await import('@/lib/db/schema')
 const { listOutings, getOutingDetail } = await import('@/lib/db/queries/outing')
-const { createOuting, addOutingParticipant, addOutingExpense } = await import('@/actions/outing')
+const { createOuting, addOutingParticipant, addOutingExpense, recordOutingSettlement } = await import('@/actions/outing')
 const { outingExpenseShares: sharesTable } = await import('@/lib/db/schema')
 const { eq: eqOp } = await import('drizzle-orm')
 
@@ -136,6 +136,39 @@ describe('addOutingExpense', () => {
     const me = detail!.participants[0]
     await expect(addOutingExpense({
       outingId: outing.id, paidByParticipantId: me.id, amount: 100, participantIds: [randomUUID()],
+    })).rejects.toThrow()
+  })
+})
+
+describe('recordOutingSettlement', () => {
+  it('records a repayment between two participants', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '宜花東' })
+    const friend = await addOutingParticipant({ outingId: outing.id, displayName: '阿宏' })
+    const detail = await getOutingDetail(outing.id)
+    const me = detail!.participants.find((p) => p.profileId === userId)!
+
+    const s = await recordOutingSettlement({
+      outingId: outing.id, fromParticipantId: friend.id, toParticipantId: me.id, amount: 50,
+    })
+    expect(s.amount).toBe(50)
+
+    const after = await getOutingDetail(outing.id)
+    expect(after!.settlements.length).toBe(1)
+  })
+
+  it('rejects from === to and non-positive amount', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '澎湖' })
+    const detail = await getOutingDetail(outing.id)
+    const me = detail!.participants[0]
+    await expect(recordOutingSettlement({
+      outingId: outing.id, fromParticipantId: me.id, toParticipantId: me.id, amount: 10,
+    })).rejects.toThrow()
+    await expect(recordOutingSettlement({
+      outingId: outing.id, fromParticipantId: me.id, toParticipantId: detail!.participants[1].id, amount: 0,
     })).rejects.toThrow()
   })
 })
