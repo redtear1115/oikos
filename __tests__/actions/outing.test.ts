@@ -16,7 +16,7 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { outings, outingParticipants } = await import('@/lib/db/schema')
 const { listOutings, getOutingDetail } = await import('@/lib/db/queries/outing')
-const { createOuting } = await import('@/actions/outing')
+const { createOuting, addOutingParticipant } = await import('@/actions/outing')
 
 describe('outing queries', () => {
   it('listOutings returns group/epoch outings newest first; getOutingDetail hydrates', async () => {
@@ -63,5 +63,29 @@ describe('createOuting', () => {
     const { userId } = await seedGroup()
     mockUserId = userId
     await expect(createOuting({ name: '   ' })).rejects.toThrow()
+  })
+})
+
+describe('addOutingParticipant', () => {
+  it('adds a no-account friend (profileId null, has claim token)', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '墾丁' })
+
+    const p = await addOutingParticipant({ outingId: outing.id, displayName: '阿傑' })
+    expect(p.profileId).toBeNull()
+    expect(p.displayName).toBe('阿傑')
+    expect(p.claimToken).toMatch(/^[A-Za-z0-9_-]{16,}$/)
+  })
+
+  it('rejects adding to an outing of another group', async () => {
+    const a = await seedGroup()
+    mockUserId = a.userId
+    const outing = await createOuting({ name: 'A 的出遊' })
+    const b = await seedGroup()
+    mockUserId = b.userId // now acting as a different group's owner
+    await expect(
+      addOutingParticipant({ outingId: outing.id, displayName: '亂入' }),
+    ).rejects.toThrow()
   })
 })

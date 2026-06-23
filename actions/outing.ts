@@ -5,7 +5,7 @@ import {
   outings, outingParticipants, groupEpochs, profiles,
 } from '@/lib/db/schema'
 import { and, eq, isNull, inArray } from 'drizzle-orm'
-import { requireViewerGroup } from '@/lib/auth/viewer'
+import { requireViewerGroup, type ViewerGroup } from '@/lib/auth/viewer'
 import { generateShareToken, generateClaimToken } from '@/lib/outing/token'
 import { revalidatePath } from 'next/cache'
 
@@ -67,4 +67,43 @@ export async function createOuting(input: CreateOutingInput) {
 
   revalidatePath('/outings')
   return created
+}
+
+/** Load an active, non-deleted outing that belongs to `group`, or throw. */
+async function requireActiveOutingInGroup(outingId: string, group: ViewerGroup) {
+  const [outing] = await db
+    .select()
+    .from(outings)
+    .where(and(eq(outings.id, outingId), eq(outings.groupId, group.id), isNull(outings.deletedAt)))
+    .limit(1)
+  if (!outing) throw new Error('找不到出遊')
+  if (outing.status !== 'active') throw new Error('出遊已結束')
+  return outing
+}
+
+export interface AddParticipantInput {
+  outingId: string
+  displayName: string
+}
+
+export async function addOutingParticipant(input: AddParticipantInput) {
+  const { group } = await requireViewerGroup()
+  await requireActiveOutingInGroup(input.outingId, group)
+
+  const displayName = input.displayName.trim()
+  if (!displayName) throw new Error('名字為空')
+  if (displayName.length > 50) throw new Error('名字過長')
+
+  const [participant] = await db
+    .insert(outingParticipants)
+    .values({
+      outingId: input.outingId,
+      displayName,
+      profileId: null,
+      claimToken: generateClaimToken(),
+    })
+    .returning()
+
+  revalidatePath(`/outings/${input.outingId}`)
+  return participant
 }
