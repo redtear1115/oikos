@@ -212,3 +212,33 @@ export async function recordOutingSettlement(input: RecordSettlementInput) {
   revalidatePath(`/outings/${input.outingId}`)
   return settlement
 }
+
+export async function endOuting(input: { outingId: string }) {
+  const { group } = await requireViewerGroup()
+
+  // Conditional update on status='active' → idempotent: a second end yields no
+  // row. Fold-back into the couple ledger is wired in Phase 4 (coupleNet).
+  const [row] = await db
+    .update(outings)
+    .set({ status: 'ended', endedAt: new Date() })
+    .where(and(
+      eq(outings.id, input.outingId),
+      eq(outings.groupId, group.id),
+      eq(outings.status, 'active'),
+    ))
+    .returning()
+  if (!row) throw new Error('找不到進行中的出遊')
+
+  revalidatePath('/outings')
+  revalidatePath(`/outings/${input.outingId}`)
+  return row
+}
+
+export async function softDeleteOuting(input: { outingId: string }) {
+  const { group } = await requireViewerGroup()
+  await db
+    .update(outings)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(outings.id, input.outingId), eq(outings.groupId, group.id)))
+  revalidatePath('/outings')
+}
