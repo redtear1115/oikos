@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db/client'
 import {
-  outings, outingParticipants, outingExpenses, outingExpenseShares, groupEpochs, profiles,
+  outings, outingParticipants, outingExpenses, outingExpenseShares, outingSettlements, groupEpochs, profiles,
 } from '@/lib/db/schema'
 import { splitEqual } from '@/lib/outing/split'
 import { and, eq, isNull, inArray } from 'drizzle-orm'
@@ -169,4 +169,46 @@ export async function addOutingExpense(input: AddExpenseInput) {
 
   revalidatePath(`/outings/${input.outingId}`)
   return expense
+}
+
+export interface RecordSettlementInput {
+  outingId: string
+  fromParticipantId: string
+  toParticipantId: string
+  amount: number
+}
+
+export async function recordOutingSettlement(input: RecordSettlementInput) {
+  const { group } = await requireViewerGroup()
+  await requireActiveOutingInGroup(input.outingId, group)
+
+  if (input.fromParticipantId === input.toParticipantId) {
+    throw new Error('付款人與收款人不可相同')
+  }
+  if (!Number.isInteger(input.amount) || input.amount <= 0) {
+    throw new Error('金額需為正整數')
+  }
+
+  const parties = [input.fromParticipantId, input.toParticipantId]
+  const valid = await db
+    .select({ id: outingParticipants.id })
+    .from(outingParticipants)
+    .where(and(
+      eq(outingParticipants.outingId, input.outingId),
+      inArray(outingParticipants.id, parties),
+    ))
+  if (valid.length !== 2) throw new Error('參與者不屬於此出遊')
+
+  const [settlement] = await db
+    .insert(outingSettlements)
+    .values({
+      outingId: input.outingId,
+      fromParticipantId: input.fromParticipantId,
+      toParticipantId: input.toParticipantId,
+      amount: input.amount,
+    })
+    .returning()
+
+  revalidatePath(`/outings/${input.outingId}`)
+  return settlement
 }
