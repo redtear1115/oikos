@@ -16,7 +16,10 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { outings, outingParticipants } = await import('@/lib/db/schema')
 const { listOutings, getOutingDetail } = await import('@/lib/db/queries/outing')
-const { createOuting, addOutingParticipant, addOutingExpense, recordOutingSettlement } = await import('@/actions/outing')
+const {
+  createOuting, addOutingParticipant, addOutingExpense, recordOutingSettlement,
+  endOuting, softDeleteOuting,
+} = await import('@/actions/outing')
 const { outingExpenseShares: sharesTable } = await import('@/lib/db/schema')
 const { eq: eqOp } = await import('drizzle-orm')
 
@@ -170,5 +173,28 @@ describe('recordOutingSettlement', () => {
     await expect(recordOutingSettlement({
       outingId: outing.id, fromParticipantId: me.id, toParticipantId: detail!.participants[1].id, amount: 0,
     })).rejects.toThrow()
+  })
+})
+
+describe('endOuting / softDeleteOuting', () => {
+  it('endOuting closes an active outing and is idempotent', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '蘭嶼' })
+
+    const ended = await endOuting({ outingId: outing.id })
+    expect(ended.status).toBe('ended')
+    expect(ended.endedAt).not.toBeNull()
+    // second call: already ended → throws (no double-close)
+    await expect(endOuting({ outingId: outing.id })).rejects.toThrow()
+  })
+
+  it('softDeleteOuting hides it from listOutings', async () => {
+    const { userId, groupId, epochId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '綠島' })
+    await softDeleteOuting({ outingId: outing.id })
+    const list = await listOutings(groupId, epochId)
+    expect(list.some((x) => x.id === outing.id)).toBe(false)
   })
 })
