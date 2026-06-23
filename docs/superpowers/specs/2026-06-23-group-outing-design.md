@@ -2,10 +2,10 @@
 status: planned
 related_specs: [trip-multi-currency, onboarding, transactions, conversion-analytics, locale-currency]
 depends_on: [transactions]
-related_issues: []
+related_issues: ["#943"]
 ---
 
-# Group Outing — 揪團出遊分帳（對外名稱待定）
+# Group Outing — 出遊（對外名稱「出遊」；codebase 用 outing）
 
 > 一個短期、連結分享、多方參與的分帳本（類 Splitwise），作為 Futari 的擴散獲客漏斗頂端。
 
