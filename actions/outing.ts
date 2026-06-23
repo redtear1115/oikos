@@ -2,8 +2,9 @@
 
 import { db } from '@/lib/db/client'
 import {
-  outings, outingParticipants, groupEpochs, profiles,
+  outings, outingParticipants, outingExpenses, outingExpenseShares, groupEpochs, profiles,
 } from '@/lib/db/schema'
+import { splitEqual } from '@/lib/outing/split'
 import { and, eq, isNull, inArray } from 'drizzle-orm'
 import { requireViewerGroup, type ViewerGroup } from '@/lib/auth/viewer'
 import { generateShareToken, generateClaimToken } from '@/lib/outing/token'
@@ -106,4 +107,66 @@ export async function addOutingParticipant(input: AddParticipantInput) {
 
   revalidatePath(`/outings/${input.outingId}`)
   return participant
+}
+
+export interface AddExpenseInput {
+  outingId: string
+  paidByParticipantId: string
+  amount: number
+  participantIds: string[]
+  description?: string
+  category?: string
+}
+
+export async function addOutingExpense(input: AddExpenseInput) {
+  const { group } = await requireViewerGroup()
+  await requireActiveOutingInGroup(input.outingId, group)
+
+  if (!Number.isInteger(input.amount) || input.amount <= 0) {
+    throw new Error('金額需為正整數')
+  }
+  if (input.participantIds.length === 0) {
+    throw new Error('至少選一位分攤者')
+  }
+
+  // All referenced participants (payer + split set) must belong to this outing.
+  const referenced = Array.from(new Set([input.paidByParticipantId, ...input.participantIds]))
+  const valid = await db
+    .select({ id: outingParticipants.id })
+    .from(outingParticipants)
+    .where(and(
+      eq(outingParticipants.outingId, input.outingId),
+      inArray(outingParticipants.id, referenced),
+    ))
+  if (valid.length !== referenced.length) {
+    throw new Error('參與者不屬於此出遊')
+  }
+
+  const shares = splitEqual(input.amount, input.participantIds)
+
+  const expense = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(outingExpenses)
+      .values({
+        outingId: input.outingId,
+        paidByParticipantId: input.paidByParticipantId,
+        amount: input.amount,
+        description: input.description?.trim() || null,
+        category: input.category ?? null,
+        enteredByParticipantId: input.paidByParticipantId,
+      })
+      .returning()
+
+    await tx.insert(outingExpenseShares).values(
+      shares.map((s) => ({
+        expenseId: row.id,
+        participantId: s.participantId,
+        shareAmount: s.shareAmount,
+      })),
+    )
+    return row
+  })
+
+  revalidatePath(`/outings/${input.outingId}`)
+  return expense
 }

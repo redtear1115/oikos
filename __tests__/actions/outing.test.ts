@@ -16,7 +16,9 @@ vi.mock('next/cache', () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 const { db } = await import('@/lib/db/client')
 const { outings, outingParticipants } = await import('@/lib/db/schema')
 const { listOutings, getOutingDetail } = await import('@/lib/db/queries/outing')
-const { createOuting, addOutingParticipant } = await import('@/actions/outing')
+const { createOuting, addOutingParticipant, addOutingExpense } = await import('@/actions/outing')
+const { outingExpenseShares: sharesTable } = await import('@/lib/db/schema')
+const { eq: eqOp } = await import('drizzle-orm')
 
 describe('outing queries', () => {
   it('listOutings returns group/epoch outings newest first; getOutingDetail hydrates', async () => {
@@ -87,5 +89,53 @@ describe('addOutingParticipant', () => {
     await expect(
       addOutingParticipant({ outingId: outing.id, displayName: '亂入' }),
     ).rejects.toThrow()
+  })
+})
+
+describe('addOutingExpense', () => {
+  it('splits equally across chosen participants (Σ shares === amount)', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '台中' })
+    const friend = await addOutingParticipant({ outingId: outing.id, displayName: '小明' })
+    const detail0 = await getOutingDetail(outing.id)
+    const me = detail0!.participants.find((p) => p.profileId === userId)!
+
+    const expense = await addOutingExpense({
+      outingId: outing.id,
+      paidByParticipantId: me.id,
+      amount: 100,
+      participantIds: [me.id, friend.id],
+      description: '午餐',
+    })
+
+    const shares = await db.select().from(sharesTable).where(eqOp(sharesTable.expenseId, expense.id))
+    expect(shares.reduce((s, x) => s + x.shareAmount, 0)).toBe(100)
+    expect(shares.length).toBe(2)
+  })
+
+  it('rejects amount <= 0 and empty participant list', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '高雄' })
+    const detail = await getOutingDetail(outing.id)
+    const me = detail!.participants[0]
+    await expect(addOutingExpense({
+      outingId: outing.id, paidByParticipantId: me.id, amount: 0, participantIds: [me.id],
+    })).rejects.toThrow()
+    await expect(addOutingExpense({
+      outingId: outing.id, paidByParticipantId: me.id, amount: 100, participantIds: [],
+    })).rejects.toThrow()
+  })
+
+  it('rejects participants not in this outing', async () => {
+    const { userId } = await seedGroup()
+    mockUserId = userId
+    const outing = await createOuting({ name: '花蓮' })
+    const detail = await getOutingDetail(outing.id)
+    const me = detail!.participants[0]
+    await expect(addOutingExpense({
+      outingId: outing.id, paidByParticipantId: me.id, amount: 100, participantIds: [randomUUID()],
+    })).rejects.toThrow()
   })
 })
