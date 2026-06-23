@@ -4,9 +4,25 @@ import {
 } from '@/lib/db/schema'
 import { and, eq, isNull, inArray, sql } from 'drizzle-orm'
 
-export async function listOutings(groupId: string, epochId: string) {
+export interface OutingListRow {
+  id: string
+  name: string
+  status: 'active' | 'settling' | 'ended' | 'archived'
+  currency: 'twd' | 'cny' | 'usd' | 'jpy'
+  createdAt: Date
+  participantCount: number
+}
+
+export async function listOutings(groupId: string, epochId: string): Promise<OutingListRow[]> {
   return await db
-    .select()
+    .select({
+      id: outings.id,
+      name: outings.name,
+      status: outings.status,
+      currency: outings.currency,
+      createdAt: outings.createdAt,
+      participantCount: sql<number>`(select count(*)::int from "OutingParticipants" p where p.outing_id = ${outings.id})`,
+    })
     .from(outings)
     .where(and(
       eq(outings.groupId, groupId),
