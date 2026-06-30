@@ -12,6 +12,7 @@ import {
 import { IllustrationSlot } from './IllustrationSlot'
 import { LandingCtaLink } from './LandingCtaLink'
 import { LandingPrimaryCta } from './LandingPrimaryCta'
+import { LandingStandaloneRedirect } from './LandingStandaloneRedirect'
 import { PhonePreview } from './PhonePreview'
 import { TrustSection } from './TrustSection'
 
@@ -64,6 +65,10 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
         paddingTop: 'env(safe-area-inset-top)',
       }}
     >
+      {/* #949 — installed-app (PWA / Capacitor) signed-in users skip the public
+          landing and go straight to the dashboard. No-op in a browser tab. */}
+      <LandingStandaloneRedirect dashboardHref={dashboardHref} />
+
       {/* Decorative faint mark — desktop only, hidden on mobile */}
       <div
         aria-hidden
