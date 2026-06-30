@@ -15,6 +15,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.3] - 2026-06-30
+
+主題：**測試版回報修正**——安卓 / iOS 測試期間回報的三個問題：solo 旅行 500、鍵盤留白、已登入仍停在 landing。
+完整 diff：[v1.5.2...v1.5.3](https://github.com/redtear1115/oikos/compare/v1.5.2...v1.5.3)
+
+### 使用者可見變化
+
+- **solo 模式進旅行不再 500（#946）**：單人帳本開啟旅行頁時會跳錯誤，現已修正——每個帳本建立時就會開好當前章節。既有受影響帳本已一併補回。
+- **叫出鍵盤不再留一大片空白（#945）**：安卓 app 表單彈出鍵盤時，畫面會被一大片空白擋住、儲存鍵被遮住，現已讓畫面隨鍵盤縮放。
+- **已登入直接進主畫面（#949）**：從已安裝的 app / PWA 開啟時，登入過就直接進 dashboard，不再每次都停在 landing。
+
+### 技術變更
+
+- **#946**：`createGroup` 在同一 transaction 內開出初始 `GroupEpochs` open row（比照 0030 backfill）；新增 idempotent migration `0060` 補回任何缺 open epoch 的帳本。修復系統不變式「每個 group 恰好一筆 open epoch」。
+- **#945**：導入 `@capacitor/keyboard`，`resize: 'native'` + `resizeOnFullScreen`，讓 edge-to-edge WebView 在鍵盤彈出時原生 resize，搭配既有 `interactiveWidget: 'resizes-content'` 生效。
+- **#949**：新增 `LandingStandaloneRedirect`，僅在安裝版 context（standalone / Capacitor 原生）偵測本地 session 後 hard redirect 到 dashboard；瀏覽器分頁 no-op，保留 public landing / SEO。
+
 ## [1.5.2] - 2026-06-11
 
 主題：**首次送審就緒**——App Store / Play 首次送審前的最後收尾：暖燈品牌 app icon 正式落地、隱私頁補上 Apple 登入揭露、iOS 推播能力、上架 runbook 與原生版本號規則。
@@ -633,7 +650,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.2...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.3...HEAD
+[1.5.3]: https://github.com/redtear1115/oikos/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/redtear1115/oikos/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/redtear1115/oikos/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/redtear1115/oikos/compare/v1.4.3...v1.5.0
