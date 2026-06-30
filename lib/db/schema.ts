@@ -72,9 +72,10 @@ export const oikosGroups = pgTable('OikosGroups', {
  * per group at all times — that's the current epoch. Prior rows have `endedAt`
  * set to when the *next* chapter opened.
  *
- * Rows are written from `acceptInvite` (close solo, open duo) and `leaveGroup`
- * (close duo, open solo on both sides). `confirmSwap` does NOT touch this
- * table — swap relabels members without bumping the chapter (per spec).
+ * The initial open row is created by `createGroup` (#946); thereafter rows are
+ * written from `acceptInvite` (close solo, open duo) and `leaveGroup` (close
+ * duo, open solo on both sides). `confirmSwap` does NOT touch this table — swap
+ * relabels members without bumping the chapter (per spec).
  */
 export const groupEpochs = pgTable('GroupEpochs', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
