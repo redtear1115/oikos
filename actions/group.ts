@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { oikosGroups, groupBalance } from '@/lib/db/schema'
+import { oikosGroups, groupBalance, groupEpochs } from '@/lib/db/schema'
 import { createClient } from '@/lib/supabase/server'
 import { eq } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -46,6 +46,18 @@ export async function createGroup(name: string) {
       groupId: g.id,
       balance: 0,
       version: 0,
+    })
+
+    // #946 — open the initial epoch row. Every group must have exactly one
+    // open epoch (endedAt IS NULL); the 0030 migration backfilled this for
+    // existing groups but creation never opened it, so solo groups had zero
+    // epoch rows and /trips + trip creation threw '找不到當前章節' (500).
+    // Solo at creation: member_b_id stays null until a partner joins.
+    await tx.insert(groupEpochs).values({
+      groupId: g.id,
+      startedAt: g.currentEpochStartedAt,
+      memberAId: g.memberA,
+      memberBId: g.memberB,
     })
 
     return [g]
