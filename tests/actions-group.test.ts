@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
-import { mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
+import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createGroup, updateGroupName, toggleGuardianBeta } from '@/actions/group'
 import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
 
@@ -20,6 +20,31 @@ describe('createGroup', () => {
     const g = await createGroup('我們家')
     expect(g.id).toBe('grp-new')
     expect(mockDb.transaction).toHaveBeenCalledOnce()
+  })
+
+  it('opens the initial GroupEpochs row (#946 — solo trips 500)', async () => {
+    // Every group must have exactly one open epoch (endedAt IS NULL); the
+    // 0030 backfill established this for existing groups, but createGroup
+    // never opened the row for *new* solo groups — so /trips (and trip
+    // creation) threw '找不到當前章節' in solo mode. The open epoch must be
+    // created here, mirroring the backfill: started_at = currentEpochStartedAt,
+    // member_b_id = null for solo.
+    const startedAt = new Date('2026-06-30T00:00:00Z')
+    queueDbResult([])  // existing-group lookup → none
+    queueDbResult([{ id: 'grp-new', name: '我們家', memberA: 'user-a', memberB: null, currentEpochStartedAt: startedAt }])
+
+    await createGroup('我們家')
+
+    const epochInsert = mockBuilder.values.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .find((payload) => 'memberAId' in payload)
+    expect(epochInsert).toBeDefined()
+    expect(epochInsert).toMatchObject({
+      groupId: 'grp-new',
+      memberAId: 'user-a',
+      memberBId: null,
+      startedAt,
+    })
   })
 
   it('idempotent: returns existing group instead of creating a second one', async () => {
