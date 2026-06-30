@@ -25,6 +25,7 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.4",
     "@capacitor/ios": "^8.3.4",
+    "@capacitor/keyboard": "^8.0.5",
     "@capacitor/push-notifications": "^8.1.1",
     "@next/third-parties": "^16.2.4",
     "@sentry/nextjs": "^10.53.1",
