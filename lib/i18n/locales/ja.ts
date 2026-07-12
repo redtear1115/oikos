@@ -136,6 +136,7 @@ export const ja: Translations = {
       spendeeBody: 'ふたり共有は最初から無料。有料プランの解除は不要です。',
       cwmoneyTitle: 'CWMoney から引っ越し',
       cwmoneyBody: 'Excel → CSV テンプレート付き。数分で移し替えられます。',
+      seeAll: 'すべての移行ガイドを見る',
     },
     footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
     jsonLdAppName: 'Futari · ふたり',
@@ -1958,6 +1959,12 @@ export const ja: Translations = {
         },
       },
     },
+    hub: {
+      heroKicker: '記録ごと、引っ越せる',
+      heroTitle: 'これまでの記録を、ふたりの家計簿へ',
+      heroSubtitle: '今お使いの家計簿アプリにも、たいてい移行ガイドがあります。ひとつ選べば、数分で過去の記録を持ってこられます。',
+      heading: '今、どのアプリを使っていますか？',
+    },
     chatgptWorkflow: {
       heading: 'CSV 書き出しがない？スクショで',
       intro: '元のアプリに CSV 書き出しがなくても、スクリーンショットを ChatGPT に渡して CSV に整えてもらえば持ち込めます。無料版の ChatGPT でできます。',
@@ -2658,6 +2665,11 @@ I will upload the screenshots once you confirm.`,
         description: '最初からふたり向けの家計簿がほしい？隨手記をスクショして ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし。',
         ogDescription: '隨手記からふたりの家計簿へ——スクショ→ChatGPT→CSV→Futari。',
       },
+    },
+    migrateHub: {
+      title: '他の家計簿アプリから Futari へ移行｜ガイド一覧',
+      description: 'Honeydue や Spendee、マネボなど家計簿アプリの乗り換え先をお探しですか？Futari はふたりのための無料の共同家計簿。CSV を取り込めば、数分で過去の記録を移せます。',
+      ogDescription: '今どの家計簿アプリ？ひとつ選んで、過去の記録を Futari へ。',
     },
     useCase: {
       cohabitation: {
