@@ -3,6 +3,7 @@ last_updated: 2026-07-13
 status: shipped
 first_shipped_in: v0.1.0
 updates:
+  - v1.0.2: getCurrentUser() 內部由 getSession() 改為 auth.getUser()（消除 Supabase 安全性警告，#494）
   - v0.11.1: Auth 分層改採 `getCurrentUser()`（內部 `getSession()`）+ i18n cookie locale 接入
 related_specs: [locale-currency, trip-multi-currency, realtime, offline-browsing]
 related_issues: []
@@ -55,7 +56,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 | 位置 | 用 | 為什麼 |
 |---|---|---|
 | `proxy.ts` | `auth.getUser()` | 整個系統的 trust boundary，必須真打 Auth API 驗 token，防 cookie 偽造 |
-| Page / layout server components | `getCurrentUser()`（內部 `getSession()`）| Proxy 已先驗，cookie 在 page render 當下可信；省每頁 200–400ms HTTP 往返 |
+| Page / layout server components | `getCurrentUser()`（內部 `auth.getUser()` + React `cache()` 請求級去重）| Proxy 已先驗；`cache()` 保證同一 request 只打一次 Auth API。v1.0.2 起內部由 `getSession()` 改為 `getUser()`（消除 Supabase 安全性警告，#494），原「省 HTTP 往返」理由由請求級去重承接 |
 | Server actions（`actions/**.ts`）| `auth.getUser()` | Write path 直接被 client 呼叫，保守起見不省這層；單次 action 慢一點可接受 |
 
 **不採用**：無腦全面 `getSession()`（含 actions）/ 移除 proxy `getUser()` / process-level cache（Vercel 各 instance 不一致）/ Edge runtime（Drizzle 相容性）。
