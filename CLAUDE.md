@@ -128,8 +128,10 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 
 ### Worktree 工作流
 
-- 開發在 `.claude/worktrees/<adjective-name>-<hash>/` 的 git worktree 做事，每條 feature branch 一個 worktree，**不在 main repo 直接動**。
-- Worktree branch 命名 `claude/<adjective-name>-<hash>`；feature branch 名（要開 PR 用的）取自任務上下文（如 `chore/...` / `feat/...`），在 worktree 內 `git checkout -b` 切過去。
+- **預設不開 worktree**：實作工作直接在 main checkout 開 feature branch（`git checkout -b`）依序做，一次一個任務。
+- Worktree 只在兩種情況使用：①user 明確要求（「開 worktree」「同時開兩個」）②派工給需要寫檔隔離的平行背景 agent。
+- 使用 worktree 時：位置在 `.claude/worktrees/<adjective-name>-<hash>/`，每條 feature branch 一個 worktree，不回頭動 main checkout；worktree branch 命名 `claude/<adjective-name>-<hash>`，feature branch 名（要開 PR 用的）取自任務上下文（如 `chore/...` / `feat/...`），在 worktree 內 `git checkout -b` 切過去。
+- Worktree 缺 `.env.local` 時從 main checkout `ln -s`，不要 copy（copy 會在 key 輪替後 silently drift）。
 - Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
 
 ---
