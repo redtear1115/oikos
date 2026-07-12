@@ -1,6 +1,7 @@
 import type { Locale } from '@/lib/i18n/locales-meta'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import type { BlogPost } from '@/lib/blog-feed'
+import { withUtm } from '@/lib/utm'
 
 /**
  * Dev-log section pinned below the 3-column sign-in grid (issue #460).
@@ -43,7 +44,7 @@ export function BlogSection({
         {posts.map(post => (
           <li key={post.link}>
             <a
-              href={post.link}
+              href={withUtm(post.link, { source: 'futari_landing', medium: 'blog_section' })}
               target="_blank"
               rel="noopener noreferrer"
               className="block h-full rounded-lg border p-4 transition-opacity hover:opacity-80"
