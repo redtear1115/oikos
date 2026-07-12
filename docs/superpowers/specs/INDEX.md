@@ -99,7 +99,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 ## Spec 清單
 
-> 每筆：`[spec key](file) — 一句話 feature scope`。狀態看 spec 內 frontmatter。
+> 每筆以 spec key 連到對應檔案，破折號後接一句話 feature scope。狀態看 spec 內 frontmatter。
 
 ### 架構
 
@@ -159,6 +159,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ## 其他位置
 
 - 競品 / 用戶分析：[oikos-competitive-analysis.md](../oikos-competitive-analysis.md) · [user-feedback-analysis.md](../user-feedback-analysis.md)
+- 金流供應商研究（買斷/訂閱層預研）：[payment-provider-research.md](../payment-provider-research.md)
 - 版本歷史：[CHANGELOG.md](../../../CHANGELOG.md)
 - 版本對應 issue：GitHub milestones
 - 實作進行中的 plans / scratch docs：`docs/superpowers/plans/`（**gitignored**，本地工作用，不進 spec）
