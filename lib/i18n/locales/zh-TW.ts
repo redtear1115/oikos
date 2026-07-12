@@ -1,12 +1,13 @@
 /** Base copy shape for all /migrate/<source> pages.
  *  `comparison` has moved to lib/migrate/sources.ts (#852).
- *  Optional fields are source-specific extras — only honeydue has `intro`,
+ *  Optional fields are source-specific extras — `intro` is the per-source
+ *  objective background callout (#940: verified competitor facts only),
  *  only spendee has `formatHint*`, only cwmoney has `templateDownload*`. */
 export type MigrateBasePageCopy = {
   heroKicker: string
   heroTitle: string
   heroSubtitle: string
-  /** honeydue only — objective background paragraph rendered above differentiators */
+  /** Objective background paragraph rendered above differentiators. */
   intro?: string
   differentiators: readonly [
     { title: string; body: string },
@@ -4516,14 +4517,15 @@ export const zhTW: Translations = {
         heroKicker: 'CWMONEY → FUTARI',
         heroTitle: '你的 CWMoney 資料，可以帶走',
         heroSubtitle: 'CWMoney 資料匯出匯入指南：用轉換模板把 Excel 整理成 CSV，再上傳到 Futari。',
+        intro: 'CWMoney 是台灣的老牌記帳 App，這幾年同門陸續出現經典版、EX、存錢管家記帳通等多個版本並存；官方說明中心也有專頁處理「匯出的 CSV 打開是亂碼」的情況。下面的轉換模板，就是為了把這段路鋪平準備的。',
         differentiators: [
           {
-            title: '雙人帳本是預設',
-            body: '不必再靠折衷的工作流接合兩本各自的帳。',
+            title: '雙人帳本是預設，不是方案',
+            body: 'CWMoney 的共享帳本屬於訂閱方案、上限三人；Futari 從第一天就為兩個人設計，共用一本帳免費。',
           },
           {
-            title: '台幣整數金額',
-            body: '數字直接就是新台幣，不用再換算分位。',
+            title: '帶得走，不亂碼',
+            body: '匯出檔交給下方模板整理欄位，不用自己研究編碼設定；進了 Futari 之後想匯出，也是標準 UTF-8 CSV。',
           },
           {
             title: '紀錄不評判',
@@ -4531,12 +4533,16 @@ export const zhTW: Translations = {
           },
         ],
         stepsHeading: '搬遷三步',
-        step1: '在 CWMoney 匯出 Excel 格式的記帳資料（需 VIP）。',
+        step1: '在 CWMoney 匯出 Excel／CSV 格式的記帳資料。',
         step2: '下載下方的轉換模板，把資料貼進去。',
         step3: '上傳轉換後的 CSV，預覽並建立帳號匯入。',
         templateDownloadLabel: '下載轉換模板',
         templateNote: '模板會把 CWMoney 的欄位對應到 Futari 支援的格式。',
         faq: [
+          {
+            question: '匯出的檔案打開是亂碼，正常嗎？',
+            answer: '這是 CWMoney 匯出檔常見的編碼情況，官方說明中心也有專頁處理。不用自己修——把資料貼進下方轉換模板整理好再上傳就可以。',
+          },
           {
             question: '匯入後資料需要再整理嗎？',
             answer: '類別可在匯入流程中對照調整，一次完成，不需要事後手動修改。',
@@ -4544,10 +4550,6 @@ export const zhTW: Translations = {
           {
             question: '匯入需要付費嗎？',
             answer: 'Futari 完全免費，沒有隱藏費用。',
-          },
-          {
-            question: '原本的記帳記錄能全部帶過來嗎？',
-            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。特殊類型（如轉帳）會標記供你確認。',
           },
           {
             question: 'CWMoney 的資產功能，Futari 有對應嗎？',
@@ -4559,25 +4561,30 @@ export const zhTW: Translations = {
         heroKicker: 'MONEYBOOK → FUTARI',
         heroTitle: '你的麻布記帳資料，可以帶走',
         heroSubtitle: '從麻布記帳搬到 Futari：匯出交易明細 CSV，上傳預覽後，和伴侶一起把這些記錄接著寫下去。',
+        intro: '麻布記帳自 2026 年 4 月起改為全面收費：未訂閱的帳號無法再同步，也無法手動記帳；依官方公告，年費將於 2027 年起調整為 NT$1,499。如果你們正在重新考慮，想把這些年的記錄帶去一個核心功能免費的雙人帳本，這一頁是為此準備的。',
         differentiators: [
           {
-            title: '兩個人的帳，不是一個人的工具',
-            body: '麻布記帳是為個人對帳設計的；Futari 從第一天就假設使用者是兩個人，共同的帳一起記、一起看。',
+            title: '核心記帳，一直免費',
+            body: '不需要訂閱才能記下今天的支出；Futari 的雙人帳本、分攤與結算都在免費層。',
           },
           {
             title: '分攤算給你看',
             body: '誰付的、怎麼分、現在誰欠誰，餘額自動算清楚，不用自己在心裡記。',
           },
           {
-            title: '免費、無廣告',
-            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+            title: '不經手你們的網銀帳密',
+            body: '麻布的自動同步需要代理登入網銀；Futari 以手動記帳為主，兩個人記下的，就是你們願意記下的。',
           },
         ],
         stepsHeading: '搬遷三步',
-        step1: '在麻布記帳匯出交易明細，下載 CSV 檔。',
+        step1: '在麻布記帳（訂閱會員）用「明細匯出」把交易輸出成 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
         faq: [
+          {
+            question: '免費帳號還能把資料匯出來嗎？',
+            answer: '2026 年 4 月收費制上路後，明細匯出屬於訂閱會員功能。若你們還在訂閱期，建議先把明細匯出留存一份。',
+          },
           {
             question: '麻布記帳的欄位和 Futari 一樣嗎？',
             answer: '不完全一樣。上傳後會先預覽解析結果，正式匯入時可以對照調整分類與欄位，不會直接寫進帳本。',
@@ -4585,10 +4592,6 @@ export const zhTW: Translations = {
           {
             question: '匯入需要付費嗎？',
             answer: 'Futari 完全免費，沒有隱藏費用。',
-          },
-          {
-            question: '原本的記帳記錄能全部帶過來嗎？',
-            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。格式特殊或無法辨識的列會標記出來，供你確認。',
           },
           {
             question: '麻布記帳會自動同步銀行，Futari 也會嗎？',
@@ -4682,25 +4685,30 @@ export const zhTW: Translations = {
         heroKicker: 'MANEBO → FUTARI',
         heroTitle: '你的 Manebo 資料，可以帶走',
         heroSubtitle: '從 Manebo 搬到 Futari：匯出交易 CSV，上傳預覽後，和伴侶一起把記錄接著寫下去。',
+        intro: 'Manebo（まねーぼ）是日本獨立開發者打造的夫婦・情侶共有家計簿，至今仍活躍更新。不過它的 CSV 匯出屬於 Premium（月付訂閱）功能，免費版另有帳簿數與分類數的上限。如果你們想要一本資料進出都自由、核心功能免費的雙人帳本，這一頁是為搬家準備的。',
         differentiators: [
           {
-            title: '兩個人共用，不是各記各的',
-            body: 'Manebo 以個人記帳為核心；Futari 從第一天就假設使用者是兩個人，共同支出記一次、兩邊都看得到。',
+            title: '資料進出都免費',
+            body: '在 Manebo，把記錄匯出成 CSV 需要 Premium 訂閱；Futari 的匯入與匯出都不收費，記錄永遠帶得走。',
           },
           {
             title: '分攤與結算內建',
-            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清，不用再傳 LINE 對帳。',
+            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清，不用月底再對帳。',
           },
           {
             title: '免費、無廣告',
-            body: '核心記帳永遠免費，不靠廣告或拍賣資料生活。',
+            body: '核心記帳永遠免費，畫面裡沒有廣告，也沒有中途跳出的解鎖視窗。',
           },
         ],
         stepsHeading: '搬遷三步',
-        step1: '在 Manebo → 設定 → 匯出，把記帳資料輸出成 CSV。',
+        step1: '在 Manebo →「其他」→ CSV 匯出（Premium 功能），選擇時間範圍輸出 CSV。',
         step2: '把 CSV 上傳到這裡，預覽你的記帳歷史。',
         step3: '建立 Futari 帳號，一鍵完成搬遷。',
         faq: [
+          {
+            question: '沒有訂閱 Premium，資料拿得出來嗎？',
+            answer: 'Manebo 的 CSV 匯出是 Premium 功能。可以訂閱一個月、匯出後再取消；Futari 這邊的匯入不收費。',
+          },
           {
             question: 'Manebo 的欄位和 Futari 一樣嗎？',
             answer: '不完全一樣。上傳後會先預覽解析結果，正式匯入時可以對照調整分類與欄位，不會直接寫進帳本。',
@@ -4708,10 +4716,6 @@ export const zhTW: Translations = {
           {
             question: '匯入需要付費嗎？',
             answer: 'Futari 完全免費，沒有隱藏費用。',
-          },
-          {
-            question: '原本的記帳記錄能全部帶過來嗎？',
-            answer: '支援 CSV 格式匯入，大部分記錄都能轉移。格式特殊或無法辨識的列會標記出來，供你確認。',
           },
           {
             question: 'Manebo 支援多帳本，Futari 怎麼處理？',
@@ -4722,19 +4726,20 @@ export const zhTW: Translations = {
       'simple-daily-money': {
         heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
         heroTitle: '你的簡單記帳資料，可以帶走',
-        heroSubtitle: '簡單記帳沒有 CSV 匯出，但用截圖請 ChatGPT 整理成 CSV，一樣能把記錄搬到 Futari，和伴侶一起接著寫。',
+        heroSubtitle: '簡單記帳的 CSV 匯出是 VIP 功能；不想為了搬家先付費，用截圖請 ChatGPT 整理成 CSV，一樣能把記錄搬到 Futari。',
+        intro: '簡單記帳（SMoney）是 CMoney 集團旗下的人氣記帳 App，更新活躍、評價也好。不過它的共享帳本一次只能邀請一位，而且共享頁面只能查看、不能一起編輯；CSV 匯出則屬於 VIP 訂閱功能。想要兩個人都能動手記的同一本帳，下面是搬家的路。',
         differentiators: [
           {
-            title: '兩個人一起記，不是各記各的',
-            body: '簡單記帳很適合一個人快速記；Futari 則是兩個人共用一本帳，每筆共同支出記一次，兩邊都看得到。',
+            title: '一起記，不是只能看',
+            body: '簡單記帳的共享帳本是「兩人各記各的、合併查看」；Futari 是同一本帳，兩個人都能新增與修改，每筆記錄彼此都看得到。',
           },
           {
-            title: '分攤與結算內建',
-            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+            title: '誰欠誰，自動算',
+            body: '合併報表看得到總數，算不出誰該補多少。Futari 每筆選好分法——對半、依比例、各付各——餘額自動結算。',
           },
           {
-            title: '雲端同步、隨時帶走',
-            body: '記錄存在雲端，換手機不怕不見；想離開時 CSV 匯出，資料是你們的。',
+            title: '資料自由進出',
+            body: '在簡單記帳，CSV 匯出是 VIP 功能；Futari 的匯入與匯出都免費，記錄永遠是你們的。',
           },
         ],
         stepsHeading: '搬遷三步',
@@ -4743,8 +4748,8 @@ export const zhTW: Translations = {
         step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
         faq: [
           {
-            question: '簡單記帳沒有匯出功能，資料真的搬得過來嗎？',
-            answer: '可以。用截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+            question: '簡單記帳的 CSV 匯出要訂 VIP，不付費搬得動嗎？',
+            answer: '可以。把交易畫面截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
           },
           {
             question: '要截幾張圖？',
@@ -4763,19 +4768,20 @@ export const zhTW: Translations = {
       'fortune-city': {
         heroKicker: 'FORTUNE CITY → FUTARI',
         heroTitle: '你的記帳城市資料，可以帶走',
-        heroSubtitle: '記帳城市把記帳變成遊戲；想把記錄搬到 Futari 和伴侶一起記？用截圖請 ChatGPT 整理成 CSV 就行。',
+        heroSubtitle: '記帳城市把記帳變成遊戲；想把幾年的記錄搬到 Futari 和伴侶一起記，用截圖請 ChatGPT 整理成 CSV 就行——不用先為匯出訂閱。',
+        intro: '記帳城市（SPARKFUL 出品）仍在活躍更新，不過近來不少用戶反映訂閱視窗與廣告變多了。它其實有 CSV 匯出，但屬於訂閱功能，官方說明也提到匯出檔可能需要自行轉換編碼才能正常開啟。不想為了離開先訂閱的話，下面的截圖流程走得通。',
         differentiators: [
           {
-            title: '兩個人一起記，不是各記各的',
-            body: '記帳城市是一個人的城市；Futari 是兩個人共用一本帳，每筆共同支出記一次，兩邊都看得到。',
+            title: '兩個人的帳，不是一個人的城市',
+            body: '記帳城市是一座自己的城市，加上好友排行榜；Futari 是兩個人共用一本帳，每筆共同支出記一次，兩邊都看得到。',
           },
           {
-            title: '分攤與結算內建',
-            body: '對半、依比例、各付各、由一方負擔——選好之後，誰欠誰自動算清。',
+            title: '記下一筆，就只是記下一筆',
+            body: '沒有跳出的廣告，也沒有關不掉的解鎖視窗；記帳的節奏由你們決定。',
           },
           {
-            title: '把記錄帶著走',
-            body: '想離開時 CSV 匯出，資料是你們的，不會被鎖在某一座城市裡。',
+            title: '資料自由進出',
+            body: '在 Futari，匯出不需要訂閱，檔案是標準 UTF-8 CSV；哪天想離開，也一樣帶得走。',
           },
         ],
         stepsHeading: '搬遷三步',
@@ -4784,8 +4790,8 @@ export const zhTW: Translations = {
         step3: '把 CSV 上傳到這裡，預覽後建立帳號完成匯入。',
         faq: [
           {
-            question: '記帳城市沒有匯出功能，資料真的搬得過來嗎？',
-            answer: '可以。把交易畫面截圖請 ChatGPT 整理成 CSV 再上傳——下方有完整步驟和可複製的提示詞，免費版 ChatGPT 就能做。',
+            question: '記帳城市不是有 CSV 匯出嗎？',
+            answer: '有，但屬於訂閱功能，而且官方說明提到匯出檔在 Excel 打開可能出現亂碼、需要自行轉存編碼。沒訂閱的話，用下方截圖請 ChatGPT 整理的流程一樣能搬。',
           },
           {
             question: '要截幾張圖？',
@@ -5025,12 +5031,12 @@ export const zhTW: Translations = {
       },
       'simple-daily-money': {
         title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
-        description: '簡單記帳沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
         title: '從記帳城市搬家到 Futari｜截圖轉 CSV',
-        description: '記帳城市沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
         ogDescription: '記帳城市用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       cashman: {
