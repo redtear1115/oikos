@@ -131,6 +131,7 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 - **修改一律開 worktree**：任何會寫檔或動 git 狀態的任務（feature / fix / chore / docs）都先開 worktree，在裡面做事；main checkout 只做讀取。原因：main checkout 被多個平行 session 共用，HEAD 可能在指令之間被切走。
 - **位置統一 `.claude/worktrees/{issue_no}-{slug}/`**（例 `.claude/worktrees/946-solo-trip-epoch/`；沒有對應 issue 就只留 slug）。feature branch 名取自任務上下文（`feat/...` / `fix/...` / `chore/...`），開 worktree 時直接 `git worktree add .claude/worktrees/<dir> -b <branch> main`。
 - 工作模式不變：在本 session 依序做（一次一個任務）；平行背景 agent 只在明確要求時用，且各自有自己的 worktree。委派與否依全域 Orchestration 政策。
+- **兩套 worktree 各管各的情境**：主 session 的任務 worktree 用上述 `.claude/worktrees/{issue_no}-{slug}/` 手動慣例；平行 subagent 的隔離交給 harness 的 `isolation: "worktree"`（自動建立與回收，不落在此路徑）。
 - Worktree 缺 `.env.local` 時從 main checkout `ln -s`，不要 copy（copy 會在 key 輪替後 silently drift）。
 - Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
 
@@ -144,6 +145,8 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 | dev  | `oikos-dev` | https://ufhcprrauwsxdmscbkrf.supabase.co |
 
 兩個 Supabase project 完全獨立。Migration / realtime publication / pg_cron job 兩邊都要跑（`npm run db:migrate` 看本地 `.env.local` 指向哪個）。Vercel preview / prod 部署只連 prod project；本機 `npm run dev` 連 dev project。
+
+Migration 慣例（手寫 SQL + 手動 journal）、prod migration 跑法、pg_cron 的 Vault 授權、Apple Sign In 雷點、GA 歸因等營運知識見 [docs/superpowers/ops-runbook.md](docs/superpowers/ops-runbook.md)。
 
 ---
 
