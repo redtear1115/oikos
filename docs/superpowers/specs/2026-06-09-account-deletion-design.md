@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-07-13
 status: planned
 related_specs: [native-auth, product]
 related_issues: ["#923", "#848"]

@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-07-13
 status: shipped
 first_shipped_in: v0.7.0
 related_specs: [transactions, recurring, insurance, savings-view]

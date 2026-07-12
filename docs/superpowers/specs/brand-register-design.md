@@ -1,3 +1,7 @@
+---
+last_updated: 2026-07-13
+---
+
 # Brand-Surface Committed Register (#832)
 
 ---

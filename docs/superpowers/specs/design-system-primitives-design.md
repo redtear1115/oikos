@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-07-13
 status: shipped
 first_shipped_in: v1.1.2
 related_issues: ["#629"]

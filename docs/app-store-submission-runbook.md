@@ -1,3 +1,7 @@
+---
+last_updated: 2026-07-13
+---
+
 # App Store / Play Store 上架 Runbook — Futari（首次送審）
 
 > 送審的 native 殼對應 prod **v1.5.1**。native 版本號與 web 版本號脫鉤，這裡對齊到實際送審當下 prod 的版本以利對照。
