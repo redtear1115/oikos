@@ -1,4 +1,4 @@
--- 0060: Group Outing (出遊) — multi-party expense-splitting sub-ledger.
+-- 0061: Group Outing (出遊) — multi-party expense-splitting sub-ledger.
 -- 5 tables isolated from the two-person core. Participants decouple from
 -- Profiles (profile_id nullable). RLS enabled with NO policies → client
 -- direct access denied; all writes go through Server Actions (later phases).
