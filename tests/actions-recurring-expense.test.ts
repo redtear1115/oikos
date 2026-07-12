@@ -147,15 +147,20 @@ describe('resumeRule', () => {
   })
 
   it('keeps next_occurrence when already in future', async () => {
+    // computed relative to now — a hardcoded date silently expires
+    const d = new Date()
+    d.setDate(1)
+    d.setMonth(d.getMonth() + 13)
+    const futureFirst = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
     queueDbResult([GROUP])
     queueDbResult([{
       id: 'rule-1', groupId: GROUP.id,
-      nextOccurrenceAt: '2026-07-01', intervalMonths: 1, dayOfMonth: 1,
+      nextOccurrenceAt: futureFirst, intervalMonths: 1, dayOfMonth: 1,
     }])
     queueDbResult([{ id: 'rule-1' }])
     await resumeRule('rule-1')
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
-    expect(setCall.nextOccurrenceAt).toBe('2026-07-01')
+    expect(setCall.nextOccurrenceAt).toBe(futureFirst)
   })
 })
 
