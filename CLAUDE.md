@@ -129,8 +129,8 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 ### Worktree 工作流
 
 - **修改一律開 worktree**：任何會寫檔或動 git 狀態的任務（feature / fix / chore / docs）都先開 worktree，在裡面做事；main checkout 只做讀取。原因：main checkout 被多個平行 session 共用，HEAD 可能在指令之間被切走。
-- **位置統一 `.claude/worktree/{issue_no}-{slug}/`**（例 `.claude/worktree/946-solo-trip-epoch/`；沒有對應 issue 就只留 slug）。feature branch 名取自任務上下文（`feat/...` / `fix/...` / `chore/...`），開 worktree 時直接 `git worktree add .claude/worktree/<dir> -b <branch> main`。
-- 工作模式不變：在本 session 依序做（一次一個任務），不 dispatch implementation subagents；平行背景 agent 只在明確要求時用，且各自有自己的 worktree。
+- **位置統一 `.claude/worktrees/{issue_no}-{slug}/`**（例 `.claude/worktrees/946-solo-trip-epoch/`；沒有對應 issue 就只留 slug）。feature branch 名取自任務上下文（`feat/...` / `fix/...` / `chore/...`），開 worktree 時直接 `git worktree add .claude/worktrees/<dir> -b <branch> main`。
+- 工作模式不變：在本 session 依序做（一次一個任務）；平行背景 agent 只在明確要求時用，且各自有自己的 worktree。委派與否依全域 Orchestration 政策。
 - Worktree 缺 `.env.local` 時從 main checkout `ln -s`，不要 copy（copy 會在 key 輪替後 silently drift）。
 - Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
 

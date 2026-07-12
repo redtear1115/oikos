@@ -51,7 +51,6 @@ next-env.d.ts
 .claude/handoff/
 .claude/reports/
 .claude/worktrees/
-.claude/worktree/
 .claude/settings.local.json
 .superpowers/
 .worktrees/
