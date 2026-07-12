@@ -5,7 +5,7 @@ import { localizedHref } from '@/lib/i18n/path'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
 // Crawlable public pages. /sign-in intentionally excluded — see DISALLOWED below.
-const PUBLIC_PATHS = ['/', '/terms', '/privacy']
+const PUBLIC_PATHS = ['/', '/terms', '/privacy', '/migrate']
 // Public subtrees we want explicit allow signals for (so crawlers don't fall
 // back to default heuristics on /migrate/* growth).
 const PUBLIC_PREFIXES = ['/migrate']

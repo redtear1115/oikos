@@ -38,6 +38,8 @@ type Props = {
     honeydue: string
     spendee: string
     cwmoney: string
+    /** /migrate hub listing every source guide (#939). */
+    hub: string
   }
   /** Legal page links — kept in the landing footer so /terms and /privacy
    *  have inbound link equity from a high-authority crawlable page. /sign-in
@@ -365,6 +367,8 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
             className="flex items-center gap-3 text-[12px]"
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
+            <Link href={migrateHrefs.hub} className="underline">{t.migrateSection.seeAll}</Link>
+            <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
             <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>
             <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
             <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
@@ -487,6 +491,22 @@ function MigrateLinksSection({
               </p>
             </LandingCtaLink>
           ))}
+        </div>
+
+        <div className="mt-6 md:mt-7 text-center md:text-left">
+          <Link
+            href={migrateHrefs.hub}
+            className="inline-flex items-center gap-1.5 text-[13px] md:text-sm"
+            style={{
+              color: 'var(--ink)',
+              textDecoration: 'underline',
+              textDecorationColor: 'var(--accent)',
+              textUnderlineOffset: '4px',
+            }}
+          >
+            {t.migrateSection.seeAll}
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
     </section>

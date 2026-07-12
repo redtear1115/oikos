@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-07-13
 status: shipped
 first_shipped_in: v1.1.0
 updates:
@@ -55,7 +56,7 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 
 ### 競品研究 ref
 
-完整競品 CSV 欄位調查見 [`csv-import-research.md`](csv-import-research.md)（若該檔尚未補上，可參考 [#51 issue](https://github.com/redtear1115/oikos/issues/51) 的研究結果章節）。本 spec 不重複那份內容；本 spec 只 lock Futari 端要接收的格式。
+完整競品 CSV 欄位調查見 [#51 issue](https://github.com/redtear1115/oikos/issues/51) 的研究結果章節（原規劃的 `csv-import-research.md` 未落檔，調查內容留在 issue）。本 spec 不重複那份內容；本 spec 只 lock Futari 端要接收的格式。
 
 ---
 

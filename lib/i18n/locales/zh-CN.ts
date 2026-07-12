@@ -137,6 +137,7 @@ export const zhCN: Translations = {
       spendeeBody: '双人共享是内建免费的，不必再解锁付费方案。',
       cwmoneyTitle: '从 CWMoney 搬过来',
       cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
+      seeAll: '看全部迁移指南',
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · ふたり',
@@ -1956,6 +1957,12 @@ export const zhCN: Translations = {
         },
       },
     },
+    hub: {
+      heroKicker: '搬家不用从头来过',
+      heroTitle: '把记过的账，一起搬到 Futari',
+      heroSubtitle: '你现在用的记账工具，这里大多都有对应的迁移指南。挑一个开始，几分钟就能把过去的记录带过来。',
+      heading: '你现在用哪一个？',
+    },
     chatgptWorkflow: {
       heading: '没有 CSV 导出？用截图换',
       intro: '如果原本的 App 没有 CSV 导出，可以用截图请 ChatGPT 帮你整理成 CSV，再上传。免费版的 ChatGPT 就能做。',
@@ -2078,14 +2085,15 @@ export const zhCN: Translations = {
         heroKicker: 'CWMONEY → FUTARI',
         heroTitle: '你的 CWMoney 数据，可以带走',
         heroSubtitle: 'CWMoney 数据导出导入指南：用转换模板把 Excel 整理成 CSV，再上传到 Futari。',
+        intro: 'CWMoney 是台湾的老牌记账 App，这几年同门陆续出现经典版、EX、存钱管家记账通等多个版本并存；官方帮助中心也有专页处理「导出的 CSV 打开是乱码」的情况。下面的转换模板，就是为了把这段路铺平准备的。',
         differentiators: [
           {
-            title: '双人账本是默认',
-            body: '不必再靠折衷的工作流拼合两本各自的账。',
+            title: '双人账本是默认，不是套餐',
+            body: 'CWMoney 的共享账本属于订阅套餐、上限三人；Futari 从第一天就为两个人设计，共用一本账免费。',
           },
           {
-            title: '人民币整数金额',
-            body: '数字直接就是元，不用再换算分位。',
+            title: '带得走，不乱码',
+            body: '导出文件交给下方模板整理字段，不用自己研究编码设置；进了 Futari 之后想导出，也是标准 UTF-8 CSV。',
           },
           {
             title: '记录不评判',
@@ -2093,12 +2101,16 @@ export const zhCN: Translations = {
           },
         ],
         stepsHeading: '搬迁三步',
-        step1: '在 CWMoney 导出 Excel 格式的记账数据（需 VIP）。',
+        step1: '在 CWMoney 导出 Excel／CSV 格式的记账数据。',
         step2: '下载下方的转换模板，把数据粘进去。',
         step3: '上传转换后的 CSV，预览并创建账号导入。',
         templateDownloadLabel: '下载转换模板',
         templateNote: '模板会把 CWMoney 的字段对应到 Futari 支持的格式。',
         faq: [
+          {
+            question: '导出的文件打开是乱码，正常吗？',
+            answer: '这是 CWMoney 导出文件常见的编码情况，官方帮助中心也有专页处理。不用自己修——把数据粘进下方转换模板整理好再上传就可以。',
+          },
           {
             question: '导入后数据需要再整理吗？',
             answer: '类别可在导入流程中对照调整，一次完成，不需要事后手动修改。',
@@ -2106,10 +2118,6 @@ export const zhCN: Translations = {
           {
             question: '导入需要付费吗？',
             answer: 'Futari 完全免费，没有隐藏费用。',
-          },
-          {
-            question: '原本的记账记录能全部带过来吗？',
-            answer: '支持 CSV 格式导入，大部分记录都能转移。特殊类型（如转账）会标记供你确认。',
           },
           {
             question: 'CWMoney 的资产功能，Futari 有对应吗？',
@@ -2121,25 +2129,30 @@ export const zhCN: Translations = {
         heroKicker: 'MONEYBOOK → FUTARI',
         heroTitle: '你的麻布记账数据，可以带走',
         heroSubtitle: '从麻布记账搬到 Futari：导出交易明细 CSV，上传预览后，和伴侣一起把这些记录接着写下去。',
+        intro: '麻布记账自 2026 年 4 月起改为全面收费：未订阅的账号无法再同步，也无法手动记账；据官方公告，年费将于 2027 年起调整为 NT$1,499。如果你们正在重新考虑，想把这些年的记录带去一个核心功能免费的双人账本，这一页就是为此准备的。',
         differentiators: [
           {
-            title: '两个人的账，不是一个人的工具',
-            body: '麻布记账是为个人对账设计的；Futari 从第一天就假设使用者是两个人，共同的账一起记、一起看。',
+            title: '核心记账，一直免费',
+            body: '不需要订阅就能记下今天的支出；Futari 的双人账本、分摊与结算都在免费层。',
           },
           {
             title: '分摊算给你看',
             body: '谁付的、怎么分、现在谁欠谁，余额自动算清楚，不用自己在心里记。',
           },
           {
-            title: '免费、无广告',
-            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+            title: '不经手你们的网银账密',
+            body: '麻布的自动同步需要代理登录网银；Futari 以手动记账为主，两个人记下的，就是你们愿意记下的。',
           },
         ],
         stepsHeading: '搬迁三步',
-        step1: '在麻布记账导出交易明细，下载 CSV 文件。',
+        step1: '在麻布记账（订阅会员）用「明细导出」把交易输出成 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '建立 Futari 账号，一键完成搬迁。',
         faq: [
+          {
+            question: '免费账号还能把数据导出来吗？',
+            answer: '2026 年 4 月收费制上线后，明细导出属于订阅会员功能。若你们还在订阅期，建议先把明细导出留存一份。',
+          },
           {
             question: '麻布记账的字段和 Futari 一样吗？',
             answer: '不完全一样。上传后会先预览解析结果，正式导入时可以对照调整分类与字段，不会直接写进账本。',
@@ -2147,10 +2160,6 @@ export const zhCN: Translations = {
           {
             question: '导入需要付费吗？',
             answer: 'Futari 完全免费，没有隐藏费用。',
-          },
-          {
-            question: '原本的记账记录能全部带过来吗？',
-            answer: '支持 CSV 格式导入，大部分记录都能转移。格式特殊或无法识别的行会标记出来，供你确认。',
           },
           {
             question: '麻布记账会自动同步银行，Futari 也会吗？',
@@ -2244,25 +2253,30 @@ export const zhCN: Translations = {
         heroKicker: 'MANEBO → FUTARI',
         heroTitle: '你的 Manebo 数据，可以带走',
         heroSubtitle: '从 Manebo 搬到 Futari：导出交易 CSV，上传预览后，和伴侣一起把记录接着写下去。',
+        intro: 'Manebo（まねーぼ）是日本独立开发者打造的夫妇・情侣共有家计簿，至今仍活跃更新。不过它的 CSV 导出属于 Premium（月付订阅）功能，免费版另有账本数与分类数的上限。如果你们想要一本数据进出都自由、核心功能免费的双人账本，这一页是为搬家准备的。',
         differentiators: [
           {
-            title: '双人共用，不是各记各的',
-            body: 'Manebo 以个人记账为核心；Futari 是两个人共用的一本账，共同支出记一次、两边都看得到。',
+            title: '数据进出都免费',
+            body: '在 Manebo，把记录导出成 CSV 需要 Premium 订阅；Futari 的导入与导出都不收费，记录永远带得走。',
           },
           {
             title: '分摊与结算内建',
-            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清，不用再发消息对账。',
+            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清，不用月底再对账。',
           },
           {
             title: '免费、无广告',
-            body: '核心记账永远免费，不靠广告或拍卖数据生活。',
+            body: '核心记账永远免费，画面里没有广告，也没有中途弹出的解锁窗口。',
           },
         ],
         stepsHeading: '搬迁三步',
-        step1: '在 Manebo → 设置 → 导出，把记账数据输出成 CSV。',
+        step1: '在 Manebo →「其他」→ CSV 导出（Premium 功能），选择时间范围输出 CSV。',
         step2: '把 CSV 上传到这里，预览你的记账历史。',
         step3: '建立 Futari 账号，一键完成搬迁。',
         faq: [
+          {
+            question: '没有订阅 Premium，数据拿得出来吗？',
+            answer: 'Manebo 的 CSV 导出是 Premium 功能。可以订阅一个月、导出后再取消；Futari 这边的导入不收费。',
+          },
           {
             question: 'Manebo 的字段和 Futari 一样吗？',
             answer: '不完全一样。上传后会先预览解析结果，正式导入时可以对照调整分类与字段，不会直接写进账本。',
@@ -2270,10 +2284,6 @@ export const zhCN: Translations = {
           {
             question: '导入需要付费吗？',
             answer: 'Futari 完全免费，没有隐藏费用。',
-          },
-          {
-            question: '原本的记账记录能全部带过来吗？',
-            answer: '支持 CSV 格式导入，大部分记录都能转移。格式特殊或无法识别的行会标记出来，供你确认。',
           },
           {
             question: 'Manebo 支持多账本，Futari 怎么处理？',
@@ -2284,19 +2294,20 @@ export const zhCN: Translations = {
       'simple-daily-money': {
         heroKicker: 'SIMPLE DAILY MONEY → FUTARI',
         heroTitle: '你的简单记账数据，可以带走',
-        heroSubtitle: '简单记账没有 CSV 导出，但用截图请 ChatGPT 整理成 CSV，一样能把记录搬到 Futari，和伴侣一起接着写。',
+        heroSubtitle: '简单记账的 CSV 导出是 VIP 功能；不想为了搬家先付费，用截图请 ChatGPT 整理成 CSV，一样能把记录搬到 Futari。',
+        intro: '简单记账（SMoney）是 CMoney 集团旗下的人气记账 App，更新活跃、口碑也不错。不过它的共享账本一次只能邀请一位，而且共享页面只能查看、不能一起编辑；CSV 导出则属于 VIP 订阅功能。想要两个人都能动手记的同一本账，下面是搬家的路。',
         differentiators: [
           {
-            title: '两个人一起记，不是各记各的',
-            body: '简单记账很适合一个人快速记；Futari 则是两个人共用一本账，每笔共同支出记一次，两边都看得到。',
+            title: '一起记，不是只能看',
+            body: '简单记账的共享账本是「两人各记各的、合并查看」；Futari 是同一本账，两个人都能新增与修改，每笔记录彼此都看得到。',
           },
           {
-            title: '分摊与结算内建',
-            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+            title: '谁欠谁，自动算',
+            body: '合并报表看得到总数，算不出谁该补多少。Futari 每笔选好分法——对半、按比例、各付各——余额自动结算。',
           },
           {
-            title: '云端同步、随时带走',
-            body: '记录存在云端，换手机不怕不见；想离开时 CSV 导出，数据是你们的。',
+            title: '数据自由进出',
+            body: '在简单记账，CSV 导出是 VIP 功能；Futari 的导入与导出都免费，记录永远是你们的。',
           },
         ],
         stepsHeading: '搬迁三步',
@@ -2305,8 +2316,8 @@ export const zhCN: Translations = {
         step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
         faq: [
           {
-            question: '简单记账没有导出功能，数据真的搬得过来吗？',
-            answer: '可以。用截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+            question: '简单记账的 CSV 导出要订 VIP，不付费搬得动吗？',
+            answer: '可以。把交易画面截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
           },
           {
             question: '要截几张图？',
@@ -2325,19 +2336,20 @@ export const zhCN: Translations = {
       'fortune-city': {
         heroKicker: 'FORTUNE CITY → FUTARI',
         heroTitle: '你的记账城市数据，可以带走',
-        heroSubtitle: '记账城市把记账变成游戏；想把记录搬到 Futari 和伴侣一起记？用截图请 ChatGPT 整理成 CSV 就行。',
+        heroSubtitle: '记账城市把记账变成游戏；想把几年的记录搬到 Futari 和伴侣一起记，用截图请 ChatGPT 整理成 CSV 就行——不用先为导出订阅。',
+        intro: '记账城市（SPARKFUL 出品）仍在活跃更新，不过近来不少用户反映订阅弹窗与广告变多了。它其实有 CSV 导出，但属于订阅功能，官方说明也提到导出文件可能需要自行转换编码才能正常打开。不想为了离开先订阅的话，下面的截图流程走得通。',
         differentiators: [
           {
-            title: '两个人一起记，不是各记各的',
-            body: '记账城市是一个人的城市；Futari 是两个人共用一本账，每笔共同支出记一次，两边都看得到。',
+            title: '两个人的账，不是一个人的城市',
+            body: '记账城市是一座自己的城市，加上好友排行榜；Futari 是两个人共用一本账，每笔共同支出记一次，两边都看得到。',
           },
           {
-            title: '分摊与结算内建',
-            body: '对半、按比例、各付各、由一方负担——选好之后，谁欠谁自动算清。',
+            title: '记下一笔，就只是记下一笔',
+            body: '没有弹出的广告，也没有关不掉的解锁窗口；记账的节奏由你们决定。',
           },
           {
-            title: '把记录带着走',
-            body: '想离开时 CSV 导出，数据是你们的，不会被锁在某一座城市里。',
+            title: '数据自由进出',
+            body: '在 Futari，导出不需要订阅，文件是标准 UTF-8 CSV；哪天想离开，也一样带得走。',
           },
         ],
         stepsHeading: '搬迁三步',
@@ -2346,8 +2358,8 @@ export const zhCN: Translations = {
         step3: '把 CSV 上传到这里，预览后建立账号完成导入。',
         faq: [
           {
-            question: '记账城市没有导出功能，数据真的搬得过来吗？',
-            answer: '可以。把交易画面截图请 ChatGPT 整理成 CSV 再上传——下方有完整步骤和可复制的提示词，免费版 ChatGPT 就能做。',
+            question: '记账城市不是有 CSV 导出吗？',
+            answer: '有，但属于订阅功能，而且官方说明提到导出文件在 Excel 打开可能出现乱码、需要自行转存编码。没订阅的话，用下方截图请 ChatGPT 整理的流程一样能搬。',
           },
           {
             question: '要截几张图？',
@@ -2587,12 +2599,12 @@ export const zhCN: Translations = {
       },
       'simple-daily-money': {
         title: '从简单记账搬家到 Futari｜截图转 CSV',
-        description: '简单记账没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        description: '简单记账的 CSV 导出是 VIP 功能？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
         ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       'fortune-city': {
         title: '从记账城市搬家到 Futari｜截图转 CSV',
-        description: '记账城市没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
         ogDescription: '记账城市用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       cashman: {
@@ -2615,6 +2627,11 @@ export const zhCN: Translations = {
         description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
         ogDescription: '随手记用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
+    },
+    migrateHub: {
+      title: '从其他记账 App 搬到 Futari｜迁移指南总览',
+      description: '正在找 Honeydue、Spendee、随手记等记账 App 的替代方案？Futari 是为两个人做的免费共同账本，支持 CSV 导入，几分钟就能把过去的记录搬过来。',
+      ogDescription: '你现在用哪一个记账 App？挑一个，把过去的记录一起搬到 Futari。',
     },
     useCase: {
       cohabitation: {
