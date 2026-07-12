@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-20
+last_updated: 2026-07-13
 ---
 
 # Oikos (Futari) 競品分析報告

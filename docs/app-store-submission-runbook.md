@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-06-11
+last_updated: 2026-07-13
 ---
 
 # App Store / Play Store 上架 Runbook — Futari（首次送審）

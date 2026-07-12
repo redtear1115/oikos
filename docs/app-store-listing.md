@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-06-10
+last_updated: 2026-07-13
 ---
 
 # App Store / Play Store — 上架文案與表單填寫 (v1.5.1)

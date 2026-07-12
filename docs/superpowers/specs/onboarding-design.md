@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-15
+last_updated: 2026-07-13
 status: shipped
 first_shipped_in: v0.2.0
 related_specs: [solo-mode, transactions, locale-currency]

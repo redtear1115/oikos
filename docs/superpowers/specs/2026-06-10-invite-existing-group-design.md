@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-06-10
+last_updated: 2026-07-13
 status: planned
 related_specs: [native-auth, epoch-readonly, onboarding]
 related_issues: ["#912"]

@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-13
+last_updated: 2026-07-13
 status: blocked
 blocked_on: 財政部電子發票 API APP_ID（2023/3/31 新制不開放個人申請，需 ISO27001 認證）
 related_specs: [transactions, income, inbox-layer]

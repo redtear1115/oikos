@@ -1,4 +1,4 @@
-# docgrad scorecard — oikos @ 2026-07-13（第 1 輪後）
+# docgrad scorecard — oikos @ 2026-07-13（第 2 輪後）
 
 | 維度 | 星等 | 目標 | 主要失分點 |
 |---|---|---|---|
@@ -6,7 +6,7 @@
 | 正確性 | ★3 | ★4 | Ledger 7/8（87.5%）。fail：product-design.md 稱 `getCurrentUser()`「內部 `getSession()`」，實作是 `auth.getUser()`（lib/supabase/server.ts；code docstring 也自相矛盾） |
 | 新鮮度 | ★4 | ★4 | 達標（本輪 ★1→★4）。coverage 95.1%（39/41，entry 檔不計）、零 stale、零 mismatch。★5 需機械 gate（畢業建議範疇） |
 | 連結度 | ★3 | ★4 | 2 死鏈：INDEX.md:102 格式範例 `[spec key](file)` 未 escape；csv-import-design.md:59 → 不存在的 `csv-import-research.md`。孤兒 1：payment-provider-research.md |
-| 一致性 | ★2 | ★4 | 實質矛盾 1 組：epoch-readonly-design.md:61 說 leave／swap 都「關舊 epoch 開新」；CLAUDE.md 與 code（actions/membership.ts:102 `Epoch is NOT bumped`）都說 swap 不開新 |
+| 一致性 | ★4 | ★4 | 達標（第 2 輪 ★2→★4）。swap/epoch 矛盾已依 code 仲裁修正；抽查主題全一致、重疊處有互鏈。★5 需明文衝突仲裁慣例 |
 
 ## Token 經濟（不計星）
 
@@ -17,4 +17,4 @@
 
 ## 下一輪
 
-最低分維度＝一致性（★2）：修 epoch-readonly-design.md:61 的 swap 敘述（code 已仲裁）。
+最低分維度＝正確性（★3，rubric 順序先於連結度）：修 product-design.md 的 `getSession()` stale 敘述。

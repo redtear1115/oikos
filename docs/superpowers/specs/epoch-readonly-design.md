@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-13
+last_updated: 2026-07-13
 status: shipped
 first_shipped_in: v0.15.3
 related_specs: [transactions, income, monthly-review, realtime]
@@ -59,7 +59,7 @@ related_issues: ["#207"]
 **明確不擋的**：
 - `actions/epoch-view.ts`（操控 pin 狀態本身，不是寫 transaction）
 - `actions/auth.ts` / `actions/profile.ts`（跟 epoch 無關）
-- `actions/membership.ts` leave / swap（本身就是會關舊 epoch 開新 epoch 的動作）
+- `actions/membership.ts` leave / swap（leave 本身就是關舊 epoch 開新 epoch 的動作；swap 不動 epoch——同一段關係只是換角色標籤，見 `actions/membership.ts` swap 的 "Epoch is NOT bumped" 註解——兩者都不寫 transaction）
 - `actions/recurringIncome.ts` / `actions/recurringExpense.ts`（規則 CRUD，跨 epoch 持續存在）
 - `actions/monthlyReview.ts`（月度概念跟 epoch 兩條軸，不混）
 - `actions/asset.ts`（愛物是長存物件，不歸屬單一 epoch）

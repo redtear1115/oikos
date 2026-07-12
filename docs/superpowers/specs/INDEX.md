@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-06-10
+last_updated: 2026-07-13
 ---
 
 # Specs — Index & Writing Guide
