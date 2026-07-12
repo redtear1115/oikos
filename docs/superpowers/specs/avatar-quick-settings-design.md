@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-05-20
 status: shipped
 first_shipped_in: v0.17.5
 related_specs: [onboarding, solo-mode, locale-currency, guardian]

@@ -1,3 +1,7 @@
+---
+last_updated: 2026-06-10
+---
+
 # Specs — Index & Writing Guide
 
 > 這個目錄記錄 Oikos / Futari 每個 feature 的**設計**：要做什麼、為什麼這樣做、要回答誰的需求。
@@ -43,6 +47,7 @@ Spec 寫 **what / why / who**，不寫 **how**。
 
 ```yaml
 ---
+last_updated: YYYY-MM-DD         # 本檔內容最後實質更新日（docgrad 新鮮度訊號）
 status: shipped | planned | blocked
 first_shipped_in: v0.x.y         # 省略代表還沒 ship
 updates:
@@ -57,6 +62,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 欄位語意：
 
+- **`last_updated`** — 本檔內容最後實質更新日（YYYY-MM-DD）。改內容時同一 commit 一起更新；純 typo/格式修正可不動。
 - **`status`** — 三選一：
   - `shipped`：至少一個版本 ship 過（後續 updates 仍是 shipped）
   - `planned`：spec 已 lock，等開發

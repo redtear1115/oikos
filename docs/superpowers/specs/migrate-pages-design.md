@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-05-30
 status: approved
 first_shipped_in: v1.3.0
 updates:

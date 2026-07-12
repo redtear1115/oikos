@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-05-20
 status: shipped
 first_shipped_in: v1.1.0
 updates:

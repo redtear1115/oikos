@@ -1,0 +1,1 @@
+{"round": 1, "date": "2026-07-13", "dimension": "freshness", "scores": {"completeness": 4, "correctness": 3, "freshness": 4, "linkage": 3, "consistency": 2}, "notes": "39 檔 backfill last_updated（git 真實日期，coverage 0%→95.1%，零 mismatch）；INDEX.md frontmatter schema 補 last_updated 欄位說明"}

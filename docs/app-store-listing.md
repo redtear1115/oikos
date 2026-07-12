@@ -1,3 +1,7 @@
+---
+last_updated: 2026-06-10
+---
+
 # App Store / Play Store — 上架文案與表單填寫 (v1.5.1)
 
 > 配合 [app-store-submission-runbook.md](app-store-submission-runbook.md)。本檔提供可直接貼進 console 的**商店文案（4 語）**、

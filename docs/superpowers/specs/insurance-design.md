@@ -1,4 +1,5 @@
 ---
+last_updated: 2026-05-13
 status: shipped
 first_shipped_in: v0.6.0
 related_specs: [aibutsu, guardian, savings-view, aibutsu-templates]
