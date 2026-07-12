@@ -1,0 +1,17 @@
+# .docgrad.yml — docgrad 設定（進版控，團隊共用）
+docs_dirs: [docs/]
+entry_files: [CLAUDE.md, README.md]
+index_file: docs/superpowers/specs/INDEX.md
+exclude: [docs/superpowers/plans/, docs/superpowers/perf-baselines/]
+freshness:
+  convention: frontmatter
+  field: last_updated
+targets:
+  completeness: 4
+  correctness: 4
+  freshness: 4
+  linkage: 4
+  consistency: 4
+correctness_sample: 8
+scenario: "在記帳核心加一個新功能：schema + server action + UI + 4 語 i18n"
+language: zh-TW
