@@ -2672,7 +2672,7 @@ I will upload the screenshots once you confirm.`,
     },
     migrateHub: {
       title: 'Move to Futari from other expense apps · guide index',
-      description: 'Looking for an alternative to Honeydue, Spendee, CWMoney or other expense apps? Futari is a free shared ledger built for two — import your CSV and move your history over in minutes.',
+      description: 'Looking for an alternative to Honeydue, Spendee or CWMoney? Futari is a free shared ledger for two — import your CSV and move your history in minutes.',
       ogDescription: 'Which expense app are you on now? Pick one and bring your history to Futari.',
     },
     useCase: {
