@@ -15,6 +15,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.4] - 2026-07-13
+
+主題：**站穩地基**——修掉一次 prod 資料庫連線事故的根因，並把 migrate 競品頁從模板文案升級成查證過的專屬內容。
+完整 diff：[v1.5.3...v1.5.4](https://github.com/redtear1115/oikos/compare/v1.5.3...v1.5.4)
+
+### 使用者可見變化
+
+- **/migrate 競品頁文案全面改寫（#940）**：以 GSC 搜尋資料鎖定 manebo、簡單記帳、記帳城市、CWMoney、麻布記帳五頁，改為上網查證後的競品專屬內容（匯出路徑、付費牆、收費制變動），並修正多處「沒有匯出功能」的錯誤宣稱。4 語同步。
+- **/migrate 導覽頁（#939）**：新增列出所有搬家指南的 hub 頁，landing 與頁尾有入口。
+- **短暫的全站錯誤不再發生（#953）**：7/5 晚間資料庫連線池被打滿導致約 4 分鐘查詢失敗，已從根因修正。
+
+### 技術變更
+
+- **db client 連線池設限**：`lib/db/client.ts` 顯式設定 `max: 5` / `idle_timeout: 20` / `max_lifetime: 30min` / `connect_timeout: 10`——postgres.js 預設閒置連線永不釋放，在 Vercel lambda 凍結模式下會累積撞上 Supavisor 200 client connections 上限（EMAXCONN）。
+- **UTM convention 落地（#954）**：新增 `lib/utm.ts` builder 與 `docs/utm-convention.md`；sign-in 頁 blog 外連帶上 `utm_source` / `utm_medium`，與 GA event 分工記載於文件。
+- **`package-lock.json` version 欄位補正**：自 v1.5.3 起 lockfile 未跟版（1.5.2），`npm ci` 會失敗；本版起與 `package.json` 同步。
+- 內部：docgrad 文件收斂四輪（新鮮度／一致性／正確性／連結度 → ★4）、兩個既有測試失敗修復（#960）、worktree 工作流文件化。
+
 ## [1.5.3] - 2026-06-30
 
 主題：**測試版回報修正**——安卓 / iOS 測試期間回報的三個問題：solo 旅行 500、鍵盤留白、已登入仍停在 landing。
@@ -650,7 +668,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.3...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.4...HEAD
+[1.5.4]: https://github.com/redtear1115/oikos/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/redtear1115/oikos/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/redtear1115/oikos/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/redtear1115/oikos/compare/v1.5.0...v1.5.1
