@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-08-06
 ---
 
 # App Store / Play Store 上架 Runbook — Futari（首次送審）
@@ -64,29 +64,48 @@ last_updated: 2026-07-13
 
 ## B. Android 送審（可與 iOS 並行）— Google Play Console
 
-1. ⬜ **B3：放入 `android/app/google-services.json`**
-   Firebase Console → 專案設定 → Android app 下載。**這是 secret 檔，不入 git**；缺它 build 不會壞但 FCM push 失效。
+1. ⬜ **B3：放入 `android/app/google-services.json`** ⚠️ **送 Production 前的硬性前置**
+   Firebase Console → 專案設定 → Android app（package `dev.southernlight.futari`）下載。**這是 secret 檔，不入 git**。
+
+   > **缺它不會讓 build 失敗，但會靜默關掉推播**：`android/app/build.gradle:61-66` 只在檔案存在時
+   > 才 `apply plugin: 'com.google.gms.google-services'`，否則只寫一行 `logger.info`。
+   > 2026-08-06 實測：無此檔仍 `BUILD SUCCESSFUL`，產出的 AAB 完全沒有 FCM 設定。
+   > 所以「build 成功」不能當作推播可用的證據——上 Production 前務必補檔並重 build。
 
 2. ⬜ **Play Console 建立 app**（語言、app 名稱 Futari、分類：財務）。
 
-3. ⬜ **Build 簽章 AAB**
+3. ✅ **Build 簽章 AAB** — 2026-08-06 實跑成功
    ```bash
-   # 簽章參數由 build.gradle 從環境變數讀取
-   export KEYSTORE_PATH="$HOME/futari-release.keystore"
-   export KEYSTORE_PASSWORD='…'
-   export KEY_ALIAS='futari'
-   export KEY_PASSWORD='…'
+   # 簽章參數由 build.gradle 從環境變數讀取；值放在 repo 根目錄 .env（gitignored）
+   set -a; . ./.env; set +a
+
+   # ⚠️ 必須用 JDK 21：Capacitor 8 的 capacitor-android 以 source release 21 編譯。
+   # 機器上 PATH 的 Homebrew JDK 是 18，直接跑會炸 "invalid source release: 21"。
+   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
    cd android
    ./gradlew bundleRelease
    # 產物：android/app/build/outputs/bundle/release/app-release.aab
    ```
    > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`versionCode 105011` / `versionName "1.5.1"` 直接送。
-   > Upload keystore 已存在 `~/futari-release.keystore`（alias `futari`）。**務必備份**（遺失＝無法更新 app）。
+   > 驗證方式：`jarsigner -verify <aab>` 應回 `jar verified.`；
+   > `unzip -p <aab> META-INF/FUTARI.RSA | keytool -printcert` 的 SHA256 應等於下方 upload key 指紋。
+
+   > **Upload keystore（2026-08-06 重建）**：`~/futari-release.keystore`，alias `futari`，RSA 2048，效期至 2053-12。
+   > SHA-256 `9D:4A:6F:DF:47:F7:90:8F:CA:63:61:43:0A:B7:2B:4A:19:D2:F9:F0:4B:DA:81:55:F0:90:0B:91:60:96:7F:03`。
+   > 密碼在 repo 根目錄 `.env`（`KEYSTORE_PATH` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`，store 與 key 同值）。
+   >
+   > 重建原因：原 keystore（2026-05-30 建）密碼遺失——`keytool -genkey` 當時沒帶 `-storepass`，
+   > 密碼是互動輸入且從未寫入任何檔案（`.env` 內留的那組事後查證是錯的）。因為當時尚未送 Play、
+   > upload key 未與 Play App Signing 綁定，重建零代價。舊檔留在 `~/futari-release.keystore.bak`。
+   >
+   > ⚠️ **這個「重建零代價」的窗口在首次送出 Production 後就關閉**。之後遺失只能走 Google 的
+   > upload key reset 流程。密碼務必存進密碼管理器，keystore 檔案務必另外備份。
 
 4. ⬜ **Play Console 上架資料**
-   - 商店資訊：標題、簡短/完整說明（中英對照，套品牌文案準則）、圖示 512×512、Feature graphic 1024×500。
-   - 螢幕截圖：手機至少 2 張（建議 4–8）。可用 prod 網站手機視圖截。
+   - 商店資訊：標題、簡短/完整說明（中英對照，套品牌文案準則）。
+   - 圖示 512×512 + Feature graphic 1024×500（四語）→ ✅ 已產出，見 [store-assets/](store-assets/README.md)。
+   - 螢幕截圖：手機至少 2 張（建議 4–8）。⬜ 尚未產出。
    - **內容分級**問卷。
    - **資料安全（Data safety）**：申報 Supabase（帳號/財務）、Sentry（崩潰）、PostHog/GA（分析），須與 `/privacy` 一致。
    - 隱私政策 URL：`https://futari.southern-light.dev/<locale>/privacy`。
