@@ -41,8 +41,11 @@ const SCREENS = [
 
 // deviceScaleFactor 乘上 viewport 得到實際輸出像素。
 const FORMATS = [
-  { key: 'ios-6.7', width: 430, height: 932, dsr: 3 }, // → 1290×2796
-  { key: 'play', width: 360, height: 640, dsr: 3 },    // → 1080×1920
+  { key: 'ios-6.7', width: 430, height: 932, dsr: 3 },      // → 1290×2796
+  { key: 'play', width: 360, height: 640, dsr: 3 },         // → 1080×1920
+  // Play 的平板欄位（7 吋 / 10 吋）也要求 16:9 或 9:16，所以輸出像素與手機同為
+  // 1080×1920；差別在 CSS viewport 給 720px 寬，版面是用平板寬度算出來的。
+  { key: 'tablet', width: 720, height: 1280, dsr: 1.5, tablet: true }, // → 1080×1920
 ]
 
 async function login() {
@@ -100,7 +103,8 @@ async function capture() {
           width: fmt.width,
           height: fmt.height,
           deviceScaleFactor: fmt.dsr,
-          isMobile: true,
+          // 平板不宣告 isMobile，讓版面走桌機/寬螢幕分支（若 app 有的話）。
+          isMobile: !fmt.tablet,
           hasTouch: true,
         })
         const res = await page.goto(`${BASE}${screen.path}`, {
