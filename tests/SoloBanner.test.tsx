@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
 
 // Stub `useMember` — SoloBanner only reads `group.id` to feed the invite action,
@@ -22,24 +22,24 @@ import { SoloBanner } from '@/app/(dashboard)/dashboard/_components/SoloBanner'
 const wrap = (ui: React.ReactElement) => render(<I18nWrapper>{ui}</I18nWrapper>)
 
 describe('SoloBanner', () => {
-  // Regression for #61: when SoloBanner is visible the embedded mode toggle
-  // must forward clicks. Earlier it dropped `onChange`, leaving the income tab
-  // dead until the user dismissed the banner.
-  it('forwards income-tab clicks through onModeChange', () => {
-    const onModeChange = vi.fn()
-    const { getByRole } = wrap(
-      <SoloBanner mode="expense" onModeChange={onModeChange} />,
-    )
-    fireEvent.click(getByRole('button', { name: /收入模式/ }))
-    expect(onModeChange).toHaveBeenCalledWith('income')
+  // Regression for #969. History: #61 (2026-05-09) wired an embedded mode
+  // toggle inside SoloBanner, back when this banner was the only place that
+  // rendered one. The L1/L2/L3 restructure (7d17f7d, 2026-05-17) moved the
+  // toggle to the Dashboard L2 row and dropped BalanceHero's copy — but left
+  // SoloBanner's, so solo users saw the 支出/收入 pills twice.
+  //
+  // The toggle is now owned solely by the Dashboard L2 row (rendered
+  // unconditionally, so solo still gets a working one). SoloBanner must not
+  // render a second copy.
+  it('does not render its own mode toggle', () => {
+    const { queryByRole } = wrap(<SoloBanner />)
+    expect(queryByRole('button', { name: /收入模式/ })).toBeNull()
+    expect(queryByRole('button', { name: /支出模式/ })).toBeNull()
   })
 
-  it('forwards expense-tab clicks back through onModeChange', () => {
-    const onModeChange = vi.fn()
-    const { getByRole } = wrap(
-      <SoloBanner mode="income" onModeChange={onModeChange} />,
-    )
-    fireEvent.click(getByRole('button', { name: /支出模式/ }))
-    expect(onModeChange).toHaveBeenCalledWith('expense')
+  it('still renders the invite CTA and dismiss control', () => {
+    const onDismiss = vi.fn()
+    const { getByRole } = wrap(<SoloBanner onDismiss={onDismiss} />)
+    expect(getByRole('button', { name: /邀請|invite/i })).toBeTruthy()
   })
 })

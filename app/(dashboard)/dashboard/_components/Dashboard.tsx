@@ -333,13 +333,7 @@ export function Dashboard({
             </div>
           </div>
         ) : (
-          <SoloBanner
-            onDismiss={handleDismissBanner}
-            incomePendingCount={pendings.length}
-            expensePendingCount={expensePendings.length}
-            mode={mode}
-            onModeChange={setMode}
-          />
+          <SoloBanner onDismiss={handleDismissBanner} />
         )
       ) : (
         <BalanceHero
@@ -349,7 +343,6 @@ export function Dashboard({
           pendingBalanceDelta={pendingBalanceDelta}
           onSettleMutated={handleMutated}
           mode={mode}
-          onModeChange={setMode}
           incomeMonthTotal={incomeMonthTotal}
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
