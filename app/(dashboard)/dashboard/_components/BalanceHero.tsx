@@ -60,9 +60,9 @@ interface Props {
    *  Optional `info.savedAmount` carries the settlement amount so the parent
    *  can surface a success toast. */
   onSettleMutated?: (info?: { savedAmount?: number; edit?: boolean; deleted?: boolean }) => void
-  // Mode toggle (owned by Dashboard L2 row, not BalanceHero):
+  // Which hero layout to render. The mode *toggle* itself is owned by the
+  // Dashboard L2 row, not BalanceHero — this is read-only here.
   mode: 'expense' | 'income'
-  onModeChange: (m: 'expense' | 'income') => void
   // Income hero data (pre-fetched at page level):
   incomeMonthTotal: number
   incomeMonthCount: number
@@ -76,7 +76,6 @@ export function BalanceHero({
   pendingBalanceDelta = 0,
   onSettleMutated,
   mode,
-  onModeChange,
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,

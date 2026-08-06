@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
-import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
 import { useTranslations } from '@/lib/i18n/client'
@@ -14,27 +13,18 @@ interface Props {
    *  persisted dismissal state (typically localStorage) and is responsible for
    *  swapping in a fallback hero. */
   onDismiss?: () => void
-  /** Pending recurring-income count, threaded into ModeTogglePlaceholder so the
-   *  「收入模式」 tab gets the same mint-dot indicator as in non-solo flows. */
-  incomePendingCount?: number
-  /** Pending recurring-expense count — surfaces a dot on the 支出 pill while in 收入 mode. */
-  expensePendingCount?: number
-  mode?: 'expense' | 'income'
-  onModeChange?: (mode: 'expense' | 'income') => void
 }
 
 /**
  * Shown on the dashboard hero slot when the viewer is in a solo group
  * (member_b = null). Clicking the CTA generates an invite URL on demand
  * and pushes it through the Web Share API (or clipboard fallback).
+ *
+ * The expense/income mode toggle is NOT rendered here — it is owned by the
+ * Dashboard L2 row and rendered unconditionally there. Rendering a second
+ * copy inside this banner duplicated the toggle in solo mode (issue #969).
  */
-export function SoloBanner({
-  onDismiss,
-  incomePendingCount = 0,
-  expensePendingCount = 0,
-  mode,
-  onModeChange,
-}: Props = {}) {
+export function SoloBanner({ onDismiss }: Props = {}) {
   const { group } = useMember()
   const t = useTranslations()
   const [pending, startTransition] = useTransition()
@@ -68,13 +58,6 @@ export function SoloBanner({
 
   return (
     <div className="px-5 pt-6 pb-5">
-      <ModeTogglePlaceholder
-        mode={mode}
-        onChange={onModeChange}
-        incomePendingCount={incomePendingCount}
-        expensePendingCount={expensePendingCount}
-      />
-
       <div className="flex items-start gap-[14px]">
         <Avatar memberRole="b" initial="?" src={null} size={44} />
         <div className="flex-1 min-w-0 pt-[2px]">
