@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <title>Futari · store graphic render</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" />
+  <style>
+    /* Play feature graphic — 1024×500. All sizes scale via --s so the same
+     * template can render at 2x for a crisper master. Palette + type follow
+     * DESIGN.md (lamplit-cream ground, cocoa ink, ember accent, Fraunces
+     * display). Kept deliberately sparse: Play crops the outer band on some
+     * surfaces and may overlay a play button dead centre, so nothing load-
+     * bearing lives at the edges or the exact middle. */
+    html, body { margin: 0; padding: 0; }
+    body {
+      width: var(--w, 1024px);
+      height: var(--h, 500px);
+      background: #FBEDE0;
+      color: #3A2419;
+      font-family: 'Noto Sans TC', -apple-system, system-ui, sans-serif;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+    }
+    *::-webkit-scrollbar { display: none; }
+
+    /* Warm lamp wash from the right — the "light" half of the brand idea.
+     * Two stacked radials: a tight ember core and a wide cream bloom. */
+    .glow {
+      position: absolute;
+      right: calc(96px * var(--s));
+      top: 50%;
+      width: calc(620px * var(--s));
+      height: calc(620px * var(--s));
+      transform: translateY(-50%);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(224,136,86,0.42) 0%, rgba(224,136,86,0.20) 30%, rgba(224,136,86,0) 64%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0) 52%);
+      pointer-events: none;
+    }
+
+    /* Dashed orbit ring — echoes the app icon's sun/moon circuit. */
+    .orbit {
+      position: absolute;
+      right: calc(148px * var(--s));
+      top: 50%;
+      width: calc(396px * var(--s));
+      height: calc(396px * var(--s));
+      transform: translateY(-50%);
+      border: calc(2px * var(--s)) dashed rgba(224,136,86,0.42);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .copy {
+      position: relative;
+      padding-left: calc(84px * var(--s));
+      max-width: calc(600px * var(--s));
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: calc(13px * var(--s));
+      margin-bottom: calc(30px * var(--s));
+    }
+    .brand-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: calc(30px * var(--s));
+      font-weight: 500;
+      letter-spacing: calc(-0.5px * var(--s));
+    }
+    .kana {
+      font-size: calc(12px * var(--s));
+      letter-spacing: calc(6px * var(--s));
+      color: #7A5848;
+      margin-left: calc(10px * var(--s));
+    }
+
+    .headline {
+      font-family: 'Fraunces', 'Noto Sans JP', 'Noto Sans TC', Georgia, serif;
+      font-size: calc(86px * var(--s));
+      font-weight: 500;
+      line-height: 1.04;
+      letter-spacing: calc(-3px * var(--s));
+      margin: 0;
+    }
+    body[data-lang="en"] .headline {
+      font-size: calc(76px * var(--s));
+      letter-spacing: calc(-2px * var(--s));
+    }
+    body[data-lang="ja"] .headline {
+      font-size: calc(64px * var(--s));
+      letter-spacing: calc(-1px * var(--s));
+      line-height: 1.14;
+    }
+    .headline .accent { color: #E08856; font-style: italic; }
+
+    .sub {
+      display: flex;
+      align-items: center;
+      gap: calc(16px * var(--s));
+      margin-top: calc(34px * var(--s));
+    }
+    .sub-line {
+      width: calc(54px * var(--s));
+      height: calc(2px * var(--s));
+      background: #E08856;
+      flex: none;
+    }
+    .sub-text {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: calc(21px * var(--s));
+      color: #7A5848;
+      letter-spacing: calc(0.5px * var(--s));
+    }
+
+    .mark-wrap {
+      position: absolute;
+      right: calc(206px * var(--s));
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+    }
+    .mark { display: inline-flex; }
+  </style>
+</head>
+<body>
+  <script>
+    // Same two-figure mark as the OG template (scripts/og/template.html) —
+    // one cocoa figure, one ember figure, leaning into a shared heart.
+    function markSvg(size) {
+      return `<svg width="${size}" height="${size}" viewBox="0 0 32 32" aria-hidden="true">
+        <g transform="translate(16 18.5) scale(0.55)">
+          <path d="M 0 16 C -7 11, -15 6, -15 -2 C -15 -7, -11 -10, -7 -10 C -3 -10, -1 -8, 0 -5 Z" fill="#3A2419"/>
+          <circle cx="-9" cy="-13" r="4" fill="#3A2419"/>
+          <path d="M 0 16 C 7 11, 15 6, 15 -2 C 15 -7, 11 -10, 7 -10 C 3 -10, 1 -8, 0 -5 Z" fill="#E08856"/>
+          <circle cx="9" cy="-13" r="4" fill="#E08856"/>
+        </g>
+      </svg>`;
+    }
+
+    const params = new URLSearchParams(location.search);
+    const w = parseInt(params.get('w') || '1024', 10);
+    const h = parseInt(params.get('h') || '500', 10);
+    const scale = parseFloat(params.get('s') || '1');
+    const lang = params.get('lang') || 'zh';
+
+    document.body.style.setProperty('--w', w + 'px');
+    document.body.style.setProperty('--h', h + 'px');
+    document.body.style.setProperty('--s', String(scale));
+    document.body.dataset.lang = lang;
+
+    // Feature-graphic copy stays shorter than the OG headline: Play renders
+    // this small on phones, and the brand rule is "no feature list here".
+    const copy = {
+      zh: {
+        headline: '兩個人，<br /><span class="accent">一本帳。</span>',
+        sub: '一起記，回頭看會很暖',
+      },
+      'zh-CN': {
+        headline: '两个人，<br /><span class="accent">一本账。</span>',
+        sub: '一起记，回头看会很暖',
+      },
+      en: {
+        headline: 'Two people,<br /><span class="accent">one ledger.</span>',
+        sub: 'Keep the days you can look back on',
+      },
+      ja: {
+        headline: 'ふたりで、<br /><span class="accent">ひとつの家計簿。</span>',
+        sub: '一緒に記録する、振り返るとあたたかい',
+      },
+    };
+
+    const t = copy[lang] || copy.zh;
+
+    document.body.innerHTML = `
+      <div class="glow"></div>
+      <div class="orbit"></div>
+      <div class="mark-wrap"><span class="mark">${markSvg(Math.round(252 * scale))}</span></div>
+      <div class="copy">
+        <div class="brand-row">
+          <span class="mark">${markSvg(Math.round(42 * scale))}</span>
+          <span class="brand-name">Futari</span>
+          <span class="kana">ふ た り</span>
+        </div>
+        <h1 class="headline">${t.headline}</h1>
+        <div class="sub">
+          <span class="sub-line"></span>
+          <span class="sub-text">${t.sub}</span>
+        </div>
+      </div>
+    `;
+
+    document.fonts.ready.then(() => {
+      window.__OG_READY__ = true;
+    });
+  </script>
+</body>
+</html>
