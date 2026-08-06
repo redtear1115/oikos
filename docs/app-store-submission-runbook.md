@@ -64,13 +64,22 @@ last_updated: 2026-08-06
 
 ## B. Android 送審（可與 iOS 並行）— Google Play Console
 
-1. ⬜ **B3：放入 `android/app/google-services.json`** ⚠️ **送 Production 前的硬性前置**
-   Firebase Console → 專案設定 → Android app（package `dev.southernlight.futari`）下載。**這是 secret 檔，不入 git**。
+1. ✅ **B3：`android/app/google-services.json` — 首版不需要**
 
-   > **缺它不會讓 build 失敗，但會靜默關掉推播**：`android/app/build.gradle:61-66` 只在檔案存在時
-   > 才 `apply plugin: 'com.google.gms.google-services'`，否則只寫一行 `logger.info`。
-   > 2026-08-06 實測：無此檔仍 `BUILD SUCCESSFUL`，產出的 AAB 完全沒有 FCM 設定。
-   > 所以「build 成功」不能當作推播可用的證據——上 Production 前務必補檔並重 build。
+   > **2026-08-07 查證：Android 推播從未實作，補這個檔也不會讓它通。**
+   > - `lib/pushNotifications.ts:7` — `if (Capacitor.getPlatform() !== 'ios') return`，
+   >   Android 根本不註冊 push token。
+   > - `supabase/functions/send-recurring-push/index.ts:109` — `.eq('platform', 'apns')`，
+   >   發送端只撈 APNs token，沒有 FCM 分支。
+   > - `PushTokens.platform` 的註解雖寫 `'apns' or 'fcm'`，但 `'fcm'` 從未被寫入或讀取。
+   >
+   > 因此首版 Android **決定不含推播**（[#968](https://github.com/redtear1115/oikos/issues/968) 追蹤後續實作）。
+   > 這不構成退件或虛假宣稱風險：推播註冊是靜默的（`PushTokenRegistrar.tsx`），
+   > **沒有任何使用者可見的通知開關**；四語商店文案也都沒有承諾推播
+   > （只有 iOS Review Notes 提到 APNs，那是 iOS 專屬且屬實）。
+   >
+   > 沒有程式碼引用 Firebase，build 也不需要此檔（`build.gradle:61-66` 會條件式跳過
+   > google-services plugin）。等 #968 真的要做 FCM 時再從 Firebase Console 下載。
 
 2. ⬜ **Play Console 建立 app**（語言、app 名稱 Futari、分類：財務）。
 
