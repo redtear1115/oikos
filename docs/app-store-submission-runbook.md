@@ -52,7 +52,7 @@ last_updated: 2026-08-06
    Apple 登入 + push 收送 + 主流程。Apple 登入已接 `@capacitor-community/apple-sign-in`（見 [native-auth spec](superpowers/specs/native-auth-design.md)）。
 
 6. ⬜ **App Store Connect 上架資料**
-   - 截圖：6.7"（必）＋ 6.5" / 5.5"（視情況）。可用模擬器或實機截。
+   - 截圖：✅ 已產出 4 張 6.7"（1290×2796），見 [store-assets/](store-assets/README.md)。
    - 描述、關鍵字、support URL、行銷 URL、隱私政策 URL（文案見 [app-store-listing.md](app-store-listing.md)）。
    - **App Privacy**（Nutrition label）：申報 Supabase / Sentry / PostHog / GA，須與 `/privacy` 一致。
    - **App Review Information**：提供 **demo 帳號**（或註記「solo 模式可直接進入、無 onboarding block」）+ Review Notes（模板見 §D）。
@@ -114,7 +114,8 @@ last_updated: 2026-08-06
 4. ⬜ **Play Console 上架資料**
    - 商店資訊：標題、簡短/完整說明（中英對照，套品牌文案準則）。
    - 圖示 512×512 + Feature graphic 1024×500（四語）→ ✅ 已產出，見 [store-assets/](store-assets/README.md)。
-   - 螢幕截圖：手機至少 2 張（建議 4–8）。⬜ 尚未產出。
+   - 螢幕截圖：✅ 已產出 4 張 1080×1920（`*-play.png`）。
+     ⚠️ 不能用 App Store 那組 1290×2796：Play 規定長邊不得超過短邊 2 倍，2.167 會被退。
    - **內容分級**問卷。
    - **資料安全（Data safety）**：申報 Supabase（帳號/財務）、Sentry（崩潰）、PostHog/GA（分析），須與 `/privacy` 一致。
    - 隱私政策 URL：`https://futari.southern-light.dev/<locale>/privacy`。

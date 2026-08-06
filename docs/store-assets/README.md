@@ -17,7 +17,8 @@ last_updated: 2026-08-06
 | `graphics/play-feature-graphic-zh-CN.png` | 同上 | zh-CN 商店本地化 | ✅ |
 | `graphics/play-feature-graphic-en.png` | 同上 | en 商店本地化 | ✅ |
 | `graphics/play-feature-graphic-ja.png` | 同上 | ja 商店本地化 | ✅ |
-| `screenshots/` | Play 手機 ≥2 張；App Store 6.7"（1290×2796） | 兩商店必填 | ⬜ 未產出 |
+| `screenshots/*-ios-6.7.png` | 1290×2796、無 alpha | App Store 6.7"（必填），4 張 | ✅ |
+| `screenshots/*-play.png` | 1080×1920、無 alpha | Play 手機截圖（必填 ≥2），4 張 | ✅ |
 
 ## 怎麼重新產生
 
@@ -50,5 +51,37 @@ Play 會自行套圓角遮罩，不需要我們先裁圓角。
 
 ### 截圖
 
-尚未產出。需要一個已登入且有資料的 session；規劃見 runbook §A-6 / §B-4，
-建議畫面順序（說故事而非功能清單）見 [app-store-listing.md §8](../app-store-listing.md)。
+```bash
+cd scripts/og
+node capture-screens.mjs --login   # 首次：開視窗，人工登入一次
+node capture-screens.mjs           # 之後：headless 直接截
+```
+
+四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
+
+**兩種尺寸不能共用**：App Store 6.7" 必須正好 1290×2796（比例 2.167），
+但 Play 手機截圖規定長邊不得超過短邊 2 倍 —— 2.167 會被退，所以另出 1080×1920。
+
+**為什麼要人工登入一次**：本 app 只有 Google / Apple OAuth，沒有 email 密碼表單，
+程式拿不到 session。所以用專屬 userDataDir（`~/.futari-shots-profile`）登入一次後重複使用。
+Google 會擋「宣告自己被自動化控制」的瀏覽器，故 script 用系統安裝的 Chrome
+（`channel: 'chrome'`）並拿掉 `--enable-automation`。
+
+**畫面資料來自 dev（oikos-dev）**，2026-08-07 為了截圖整理過（見下）。
+`/review/[month]` 沒有收進來：2026-07 snapshot 無花費紀錄，畫面是空的。
+
+#### 2026-08-07 對 dev 帳本做的整理
+
+截圖用的 group：`3a896cf2-fe3c-4525-b5d6-789ce17e3e4e`。全部可還原：
+
+| 動作 | 細節 | 還原方式 |
+|---|---|---|
+| 改帳本名 | `測試用帳本` → `我們的帳本` | 改回即可 |
+| 補 8 月支出 | 11 筆（含 3 筆掛愛物） | 依 `description` 刪除 |
+| soft delete 異常 settlement | 2 筆金額 3,610 萬的測試資料<br>`ae064b80-56ef-404b-aeb2-ecf3faaa74bd`<br>`8b09acf7-d3c9-45e1-ad45-8d85bc969ee7` | `deleted_at = NULL` |
+| 跳過過期待確認 | 2 筆「零用錢」定期提案（6/9、7/9） | `skipped_at = NULL` |
+| 愛物改名 | `LapoGINI`→`小白`、`Faralliiii`→`阿福`、`巨山蟻`→`麻糬`、<br>`測試單車`→`通勤單車`、`小廢車`×2→`小綿羊`/`舊速可達` | 改回即可 |
+
+> ⚠️ 順帶發現：`GroupBalance` 的 cache 原本是 **0**，但照 `lib/db/queries/balance.ts`
+> 的公式重算是 **36,116,560** —— cache 長期未同步。那兩筆三千六百萬的測試 settlement
+> 是主因。dev 專屬問題，但值得確認 prod 沒有同樣的 cache 漂移。
