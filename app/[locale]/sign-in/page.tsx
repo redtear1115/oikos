@@ -16,6 +16,7 @@ import { BlogSection } from './BlogSection'
 type AboutStrings = Translations['signIn']['about']
 
 type Params = Promise<{ locale: string }>
+type Search = Promise<Record<string, string | string[] | undefined>>
 
 // Warm TLS to Supabase before the OAuth click hits it. Used to live in the root
 // layout (every page), but the public landing never talks to Supabase, so it was
@@ -79,11 +80,25 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   }
 }
 
-export default async function SignInPage({ params }: { params: Params }) {
-  const [{ locale: raw }, blogPosts] = await Promise.all([params, fetchBlogPosts()])
+export default async function SignInPage({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: Search
+}) {
+  const [{ locale: raw }, search, blogPosts] = await Promise.all([
+    params,
+    searchParams,
+    fetchBlogPosts(),
+  ])
   if (!isLocale(raw)) return null
   const locale: Locale = raw
   const t = dictionaries[locale]
+  // `/auth/callback` redirects here with ?error=auth_failed on every failure
+  // branch. Until #973 nothing read it, so a failed sign-in looked identical to
+  // never having tried — the user just saw the same page again.
+  const authFailed = search.error === 'auth_failed'
 
   return (
     <main
@@ -158,6 +173,15 @@ export default async function SignInPage({ params }: { params: Params }) {
           </div>
 
           <div className="w-full max-w-sm flex flex-col items-center gap-4 mt-12">
+            {authFailed && (
+              <p
+                role="status"
+                className="w-full m-0 rounded-xl px-4 py-3 text-sm text-center"
+                style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
+              >
+                {t.signIn.authFailedNotice}
+              </p>
+            )}
             <SignInButton provider="google" label={t.signIn.continueWithGoogle} />
             <SignInButton provider="apple" label={t.signIn.continueWithApple} />
             <InstallHint t={t.signIn.installHint} />

@@ -42,14 +42,20 @@ async function appleNativeSignIn(
   })
 
   const idToken = result.response?.identityToken
-  if (!idToken) return
+  if (!idToken) {
+    track('sign_in_failed', { reason: 'apple_no_id_token', provider: 'apple', path: 'ios_native' })
+    return
+  }
 
   const { error } = await supabase.auth.signInWithIdToken({
     provider: 'apple',
     token: idToken,
     nonce: rawNonce,
   })
-  if (error) return
+  if (error) {
+    track('sign_in_failed', { reason: 'id_token_rejected', provider: 'apple', path: 'ios_native' })
+    return
+  }
 
   // Bypasses /auth/callback, so replay its attribution here (best-effort).
   await recordNativeAuthConversion({ from: ctx.from, anonId: getAnonId() })
@@ -76,7 +82,10 @@ async function browserOAuthSignIn(
     provider,
     options: { redirectTo, skipBrowserRedirect: true },
   })
-  if (!data.url) return
+  if (!data.url) {
+    track('sign_in_failed', { reason: 'no_oauth_url', provider, path: 'capacitor_browser' })
+    return
+  }
 
   await Browser.open({ url: data.url })
 
@@ -101,7 +110,13 @@ async function webOAuthSignIn(
     from: ctx.from,
     anonId: getAnonId(),
   })
-  await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })
+  // On success this never returns normally — Supabase navigates away. An error
+  // here means we never even left for the provider, which is exactly the shape
+  // #972 is investigating on iOS Safari, so it must not stay silent.
+  const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })
+  if (error) {
+    track('sign_in_failed', { reason: 'oauth_redirect_failed', provider, path: 'web' })
+  }
 }
 
 export function SignInButton({ provider, label }: { provider: Provider; label: string }) {
