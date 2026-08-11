@@ -1,4 +1,5 @@
 import { PostHog } from 'posthog-node'
+import * as Sentry from '@sentry/nextjs'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { cashTransactions } from '@/lib/db/schema'
 import { db } from '@/lib/db/client'
@@ -14,6 +15,20 @@ const SERVER_ANALYTICS_ENABLED =
   process.env.NODE_ENV === 'production' && !!process.env.NEXT_PUBLIC_POSTHOG_KEY
 
 let client: PostHog | null = null
+
+/**
+ * Report a swallowed analytics failure without ever throwing. These paths used
+ * to be fully silent (`catch {}`), which is why a two-week ingestion or config
+ * problem would leave no trace anywhere (#973). Analytics still must not break
+ * the caller, so the report itself is best-effort too.
+ */
+function reportSilently(error: unknown, op: string): void {
+  try {
+    Sentry.captureException(error, { tags: { area: 'analytics', op } })
+  } catch {
+    // Reporting the failure must not become a new failure.
+  }
+}
 
 function getClient(): PostHog | null {
   if (!SERVER_ANALYTICS_ENABLED) return null
@@ -49,8 +64,10 @@ export async function captureServer(
       properties: { ...properties, ...(setOnce ? { $set_once: setOnce } : {}) },
     })
     await ph.flush()
-  } catch {
-    // swallow — never let analytics failures surface to the caller
+  } catch (e) {
+    // Swallow for the caller, but no longer swallow it entirely — report to
+    // Sentry so a broken ingestion path is visible instead of silent (#973).
+    reportSilently(e, `capture:${event}`)
   }
 }
 
@@ -90,7 +107,7 @@ export async function aliasServer(distinctId: string, anonId: string): Promise<v
   try {
     ph.alias({ distinctId, alias: anonId })
     await ph.flush()
-  } catch {
-    // swallow
+  } catch (e) {
+    reportSilently(e, 'alias')
   }
 }

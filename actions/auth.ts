@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { localizedHomePath } from '@/lib/i18n/server-redirect'
 import { cookies } from 'next/headers'
@@ -58,7 +59,15 @@ export async function recordNativeAuthConversion(opts: {
       { entry_source: entrySource, ...(migrateSource ? { migrate_source: migrateSource } : {}), locale },
       firstAuth ? { entry_source: entrySource } : undefined,
     )
-  } catch {
-    // Attribution must never break sign-in.
+  } catch (e) {
+    // Attribution must never break sign-in — but it must not vanish either.
+    // This is the ONLY conversion signal for iOS-native Apple (it bypasses
+    // /auth/callback entirely), so a silent failure here means a successful
+    // login that never reaches the funnel (#973).
+    try {
+      Sentry.captureException(e, { tags: { area: 'analytics', op: 'native_auth_conversion' } })
+    } catch {
+      // Reporting the failure must not become a new failure.
+    }
   }
 }

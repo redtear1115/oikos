@@ -3,11 +3,37 @@ import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
 import { cookies } from 'next/headers'
 import { localizedSignInPath } from '@/lib/i18n/server-redirect'
 import { LOCALE_COOKIE, DEFAULT_LOCALE, isLocale } from '@/lib/i18n/locales-meta'
 import { aliasServer, captureServer } from '@/lib/analytics/server'
 import { entrySourceFromParam, migrateSourceFromParam, isFirstAuth } from '@/lib/analytics/attribution'
+
+/**
+ * Record a failed sign-in so the funnel can tell "tried and failed" apart from
+ * "never tried". Both failure branches used to redirect silently, which is why
+ * a two-week outage on one platform left no signal at all (#972 / #973).
+ *
+ * `aid` is the pre-auth anonymous distinct_id that SignInButton carries through
+ * the OAuth hop; using it keeps the failure attached to the same person as the
+ * `sign_in_started` that preceded it. Without it we still emit the event under a
+ * shared bucket id so the count survives — `had_anon_id` marks which is which,
+ * since person-level maths on the bucket is meaningless.
+ */
+const FAILURE_BUCKET_ID = 'anon:auth-callback-failure'
+
+async function recordAuthFailure(
+  aid: string | null,
+  reason: 'missing_code' | 'exchange_error',
+  detail?: Record<string, unknown>,
+): Promise<void> {
+  await captureServer(aid ?? FAILURE_BUCKET_ID, 'sign_in_failed', {
+    reason,
+    had_anon_id: !!aid,
+    ...detail,
+  })
+}
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -24,12 +50,30 @@ export async function GET(request: Request) {
   const signInOnError = await localizedSignInPath('?error=auth_failed')
 
   if (!code) {
+    // No code means the provider bounced us without one. When the user declined
+    // consent (or the provider itself errored) it forwards its own reason in
+    // `error` / `error_description` — previously discarded. These are provider
+    // status strings, not user data, so they're safe to record.
+    await recordAuthFailure(aid, 'missing_code', {
+      oauth_error: searchParams.get('error'),
+      oauth_error_description: searchParams.get('error_description'),
+    })
     return NextResponse.redirect(new URL(signInOnError, origin))
   }
 
   const supabase = await createClient()
   const { error, data } = await supabase.auth.exchangeCodeForSession(code)
   if (error) {
+    // Never pass the raw error through — it can carry the auth code. Only the
+    // classification fields go to Sentry and PostHog.
+    await recordAuthFailure(aid, 'exchange_error', {
+      error_name: error.name,
+      error_status: error.status,
+    })
+    Sentry.captureException(
+      new Error(`exchangeCodeForSession failed: ${error.name}`),
+      { tags: { area: 'auth', op: 'exchange_code' }, extra: { status: error.status } },
+    )
     return NextResponse.redirect(new URL(signInOnError, origin))
   }
 
