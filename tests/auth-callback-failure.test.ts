@@ -17,8 +17,18 @@ const h = vi.hoisted(() => {
   return {
     state,
     exchangeCodeForSession: vi.fn(async (_code: string) => state.exchange),
-    captureServer: vi.fn(async () => {}),
-    aliasServer: vi.fn(async () => {}),
+    // Mirror captureServer's real arity — a zero-param vi.fn types
+    // `mock.calls` as the empty tuple, so the [0]/[1]/[2] readers below
+    // would not typecheck.
+    captureServer: vi.fn(
+      async (
+        _distinctId: string,
+        _event: string,
+        _properties?: Record<string, unknown>,
+        _setOnce?: Record<string, unknown>,
+      ) => {},
+    ),
+    aliasServer: vi.fn(async (_distinctId: string, _anonId: string) => {}),
     captureException: vi.fn(),
   }
 })
