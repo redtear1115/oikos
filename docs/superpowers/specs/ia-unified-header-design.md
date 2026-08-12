@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-08-12
 status: shipped
 first_shipped_in: v1.0.5
 related_specs: [structured-filter, trip-multi-currency, offline-browsing]
@@ -26,22 +26,15 @@ related_issues: []
 
 ### L1 — Page Title
 
-- 永遠出現。固定樣式：`var(--font-serif)` 24px / weight 500。
-- 右側可放 quick-action 圖示（`…` / `+` / custom icon）。
-- Dashboard 例外：使用 BrandHeader（group name + 雙頭像）。
+永遠出現，固定樣式，右側可放 quick-action 圖示。Dashboard 例外：用 BrandHeader（group name + 雙頭像）取代純文字標題。
 
 ### L2 — Primary Switch
 
-- Pill segmented，height 32px，padding 4px inner，**左對齊**（`display: inline-flex`，不全寬）。
-- 只承載**一個**互斥軸（支出/收入、愛物/守護、全部/支出/收入）。
-- Settings 無 L2（合理例外，不需補）。
+**左對齊**的 pill segmented，不全寬——這是刻意的：L2 只承載**一個**互斥軸（例如支出/收入、愛物/守護），全寬會暗示它跟頁面等寬重要，但它只是一個篩選維度，不該搶走視覺重量。Settings 沒有 L2（合理例外，不需要硬湊一個）。
 
 ### L3 — Filter Strip
 
-- 一條 `overflow-x: auto` chip 列，gap 8px，padding `12px 20px 0`。
-- Month chip 永遠最前（若有）；Filter chip 次之；drill chip 最後。
-- Chip height 28–32px，border-radius 999px。
-- 任一 chip active 時在 filter chip 上顯示 accent dot。
+一條可橫向捲動的 chip 列。排序固定：month chip（若有）最前、filter chip 次之、drill chip 最後——這個順序對應「時間範圍 → 條件篩選 → 目前 drill 結果」的心智模型，使用者掃視順序跟資料收斂順序一致。任一 chip active 時在 filter chip 上用 accent dot 標示，讓使用者不用展開就知道「現在有篩選在生效」。
 
 ---
 
@@ -49,44 +42,21 @@ related_issues: []
 
 ### Dashboard
 
-| 層 | 現況 | 目標 |
-|---|---|---|
-| L1 | BrandHeader（group name + 頭像） | 同左，右側加飛機 icon button（無 active trip 時顯示） |
-| Context Strip | 永遠顯示 trip empty-state CTA | 見 ContextStrip 規格，無事不渲染 |
-| L2 | ModeToggle **在 BalanceHero 內部** | 移出 BalanceHero → 獨立 L2 行，左對齊 |
-| L3 | 完全沒有 | 新增：本月 chip（唯讀，點開精簡 date picker）+ 篩選 chip（開精簡 FilterPanel） |
-| BalanceHero | 含 toggle | 移除 toggle，保留 balance + 結算 row |
+原本 ModeToggle 埋在 BalanceHero 卡片內部，L3 完全沒有——移出獨立成 L2 行，新增 L3（本月 chip + 篩選 chip）補齊三層。
 
-**精簡 FilterPanel（Dashboard 專用）**  
-只開放：付款人（我 / 夥伴 / 全部）。不含分類、金額範圍等 Records 專屬篩選。實作為輕量 bottom sheet 或 popover，不復用 Records 的 `FilterSheet`。
+**精簡 FilterPanel（Dashboard 專用）**：只開放付款人篩選（我 / 夥伴 / 全部），不含分類、金額範圍等 Records 專屬篩選——Dashboard 是總覽頁不是查帳頁，篩選維度刻意收斂，因此獨立實作、不復用 Records 的 `FilterSheet`。
 
 ### Records
 
-| 層 | 現況 | 目標 |
-|---|---|---|
-| L1 | PageTitle「紀錄」 | 同左，右側保留（可放 ⋯ menu） |
-| L2 | Tab pill（全部/支出/收入），左對齊但樣式略不同 | 統一為標準 L2 pill style（與 Dashboard 同形） |
-| L3 | MonthSwitcher 獨立全寬卡 + 「篩選 ›」文字按鈕 + drill chips | **月份 chip**（chip 本身有 ‹ ›，取代 MonthSwitcher 卡）+ FilterChip + drill chips，同一條 strip |
-
-MonthChip 行為：chip 內建左右 chevron 直接切月；tap chip 主體開 date picker（可選「全部」範圍）。`MonthSwitcher.tsx` 可保留邏輯、移除獨立的全寬容器。
+原本 MonthSwitcher 是獨立全寬卡、篩選是文字按鈕，兩者不在同一條視覺列——統一收進 L3 同一條 chip strip（月份 chip 帶 ‹ › 直接切月，取代原本的全寬卡）。
 
 ### Assets
 
-| 層 | 現況 | 目標 |
-|---|---|---|
-| L1 | PageTitle「愛物」 | 同左 |
-| L2 | **全寬** PillSegment（愛物/守護） | 左對齊 inline pill（同 L2 標準） |
-| L3 | 完全沒有 | 新增：種類 chips（全部 / 房 / 車 / 孩 / 寵 / 植 / 物） |
-
-L3 種類 chip 為 **client-side filter**：資料全在頁面，chip 控制顯示哪些 section/row。不做 URL sync。chip 顏色使用對應的 `--asset-color-{type}`。
+原本 L2 的 PillSegment（愛物/守護）是全寬，L3 完全沒有——L2 改左對齊，新增 L3 種類 chips。種類 chip 是 **client-side filter**（資料已在頁面上，chip 只控制顯示哪些 section/row），不做 URL sync——因為這是頁內瀏覽輔助，不是需要分享/加書籤的查詢狀態。
 
 ### Settings
 
-| 層 | 現況 | 目標 |
-|---|---|---|
-| L1 | PageTitle「設定」 | 同左，加 subtitle `帳號 · 應用 · 資料` |
-| L2 | — | — |
-| L3 | — | — |
+沒有 L2 / L3（合理例外）。L1 加 subtitle 標示頁面涵蓋範圍。
 
 ---
 
@@ -113,67 +83,17 @@ L1 下方、L2 上方。視覺上是 page-scoped（隨頁面主題色），不�
 
 ### Variants
 
-**offline**
-```
-[ 灰底橫幅 ] 離線中 · 顯示快取內容
-```
-全寬，無互動，隨連線恢復消失。
+四種：`offline`（全寬橫幅，隨連線恢復自動消失，無互動）、`past-epoch`（全寬橫幅，右側文字 link 可回到現在章節）、`partner-left`（卡片，可手動關閉並用 localStorage 記憶）、`active-trip`（展開/收合兩態，收合為單行 pill-like card，展開帶漸層背景，狀態同樣 localStorage 記憶）。`active-trip` 是唯一有展開/收合互動的 variant，因為旅行資訊比其他三種狀態承載更多內容（trip name / 開始日期 / 幣別），需要一個「先摘要、要看細節再展開」的層次。
 
-**past-epoch**
-```
-[ ink 底橫幅 ] 正在查看 YYYY/MM–YYYY/MM 的章節   [回到現在]
-```
-全寬，右側文字 link 回現在章節。
+### 觸發條件與判斷簡化
 
-**partner-left**
-```
-[ surface 卡，ink border ] 夥伴已離開帳本。之前的紀錄都還在。
-```
-可手動關閉（localStorage 記憶）。
-
-**active-trip — 展開**
-```
-┌─────────────────────────────────┐
-│ ● 進行中 · 旅行          [飛機] [−] │
-│ {trip name}                         │
-│ {startDate} 開始 · {currency}       │
-└─────────────────────────────────┘
-```
-漸層背景（accent mix），右上角 collapse button（−）和新增旅行 button（飛機圖示）。
-
-**active-trip — 收合**
-```
-[ ● 進行中 · {trip name} · currency  ›  ] [飛機]
-```
-單行 pill-like card。右側 + expand button。`localStorage` 記憶展開/收合狀態。
-
-### 觸發條件（Dashboard 頁）
-
-- `offline`：`OfflineLifecycle` 事件（現有 context）
-- `past-epoch`：`useMember().isPast === true`
-- `partner-left`：`useMember().isSolo && !useMember().partner`（初始有 partner 之後才 solo）→ 需要 `MemberContext` 加 `hadPartner` flag 或從 group 歷史判斷
-- `active-trip`：`activeTrips.length > 0`（現有 Dashboard prop）
-
-**partner-left 判斷簡化**：初期以「`isSolo` 且曾有 `member_b`（group.memberB 歷史上有值）」為條件，不另加複雜歷史查詢。
+`partner-left` 沒有既有的判斷欄位可用——「夥伴離開」跟「一開始就是單人模式」在資料上都是 `member_b IS NULL`，需要額外分辨「曾經有 partner」。初期簡化為「`isSolo` 且曾有 `member_b`」，不做複雜的歷史查詢，避免為一個邊界狀態引入額外的資料模型複雜度。
 
 ---
 
 ## i18n
 
-新增/修改的 key：
-
-```
-dashboard.contextStrip.offlineLine
-dashboard.contextStrip.pastEpochLine      // "正在查看 {start}–{end} 的章節"
-dashboard.contextStrip.backToNow          // "回到現在"
-dashboard.contextStrip.partnerLeftLine    // "夥伴已離開帳本。..."
-dashboard.contextStrip.tripKicker        // "進行中 · 旅行"
-dashboard.contextStrip.tripCollapse      // "−"
-dashboard.contextStrip.tripExpand        // "+"
-settings.subtitle                         // "帳號 · 應用 · 資料"
-```
-
-4 語同步（zh-TW 主稿）。
+新增 `dashboard.contextStrip.*`（四種 variant 各自的文案 + 展開/收合按鈕）與 `settings.subtitle`，4 語同步（zh-TW 主稿），實作見 `lib/i18n/locales/`。
 
 ---
 

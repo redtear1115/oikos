@@ -104,7 +104,7 @@ last_updated: 2026-07-13
 
 | # | Gap | 狀態 |
 |---|---|---|
-| **B1** | App 內「刪除帳號」（Apple 5.1.1(v) + Play 強制） | ✅ **已上 v1.5.1 prod** — 設定頁「刪除帳號」（[spec](superpowers/specs/2026-06-09-account-deletion-design.md) · [#923](https://github.com/redtear1115/oikos/issues/923)） |
+| **B1** | App 內「刪除帳號」（Apple 5.1.1(v) + Play 強制） | ✅ **已上 v1.5.1 prod** — 設定頁「刪除帳號」（[spec](superpowers/specs/account-deletion-design.md) · [#923](https://github.com/redtear1115/oikos/issues/923)） |
 | **B2** | iOS Push Notifications capability | ✅ **已完成**（[PR #936](https://github.com/redtear1115/oikos/pull/936)）— `ios/App/App/App.entitlements` 含 `aps-environment`，AppDelegate 接 `didRegister/didFailToRegister` forwarding |
 | **B4** | Ko-fi iOS gate（3.1.1 IAP 風險） | ✅ **已上 v1.5.1 prod** — iOS 殼看不到 tip jar |
 | **B5** | 原生版本號對齊 | ✅ Android `105011` / iOS `1.5.1` |
