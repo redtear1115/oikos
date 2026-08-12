@@ -15,6 +15,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.5] - 2026-08-12
+
+主題：**讓失敗被看見**——修掉 solo 模式一個看得見的重複，把登入失敗路徑從三層靜音補成有訊號、有提示，並補齊首次送審在素材端的最後缺口。
+完整 diff：[v1.5.4...v1.5.5](https://github.com/redtear1115/oikos/compare/v1.5.4...v1.5.5)
+
+### 使用者可見變化
+
+- **solo 模式不再出現兩組「支出／收入」切換（#969）**：單人帳本的主畫面上，模式切換器會上下各出現一次，現已修正。
+- **登入沒成功時會看到說明（#973）**：先前登入失敗會回到一模一樣的登入頁、沒有任何訊息，只能反覆重試；現在會告訴你這次沒有完成、可以再試一次。4 語同步。
+
+### 技術變更
+
+- **#969**：`7d17f7d` 的 L1/L2/L3 重構把 ModeToggle 移到 Dashboard L2 列時，`BalanceHero` 有跟著移除自己那份、`SoloBanner` 沒有，於是 solo 路徑同時渲染兩個。移除 `SoloBanner` 內嵌的 `ModeTogglePlaceholder` 與四個隨之無用的 props，並清掉 `BalanceHero` 同源的死 prop `onModeChange`（`mode` 保留，仍決定版型）。
+- **#973 失敗埋點**：`/auth/callback` 兩條失敗分支（缺 `code` / `exchangeCodeForSession` 出錯）各發一筆 `sign_in_failed`，帶 `reason` 與 `had_anon_id`；有 `aid` 時以該匿名 distinct_id 為 distinctId，讓失敗接回同一個人的 `sign_in_started`。缺 code 時另外記下 provider 自己回傳的 `error` / `error_description`（先前直接丟棄），可區分「使用者取消授權」與「什麼都沒拿到」。
+- **#973 不再吞錯**：`lib/analytics/server.ts` 的 `captureServer` / `aliasServer` 與 `actions/auth.ts` 的 `recordNativeAuthConversion` 原本是空 catch，改為回報 Sentry（仍不向呼叫端拋錯）。exchange 失敗只送 `error.name` / `error.status`，不傳原始 error 物件，避免一次性 auth code 外流。
+- **#973 client 端**：`SignInButton` 四條靜默 return（apple 無 idToken、idToken 被拒、拿不到 OAuth URL、web `signInWithOAuth` 回錯）補上 `sign_in_failed`，帶 `reason` / `provider` / `path`。
+- 這批埋點是為了診斷 [#972](https://github.com/redtear1115/oikos/issues/972)（Google 登入在 iOS Safari 上幾乎全數失敗：16 人出發、1 人回來）。#972 本身仍待實機重現，未包含在本版。
+- **上架素材與產生腳本（#971 / #935）**：`docs/store-assets/` 補齊 Play 512×512 圖示、四語 1024×500 feature graphic、App Store 6.7"（1290×2796）與 Play（1080×1920）截圖各 4 張；`scripts/og/` 新增 `capture-screens.mjs` / `render-store.mjs` / `store-graphic.html`。兩種截圖尺寸不可共用——Play 規定長邊不得超過短邊 2 倍，6.7" 的 2.167 比例會被退件。App Store submission runbook 同步更新實跑結果。
+- **文件稽核（#976）**：三份 implementation 味道過重的 spec（`brand-register` / `migrate-pages` / `ia-unified-header`）剝除 schema、TS type、wireframe、檔案清單，淨 −323 行且未刪任何設計理由；五份 spec 的 `status` 從 `planned` / `approved` / `ready-to-implement` 查證後修正為 `shipped` 並補上實際首發版本；三份 spec 檔名去掉日期前綴改為 `<key>-design.md`；`CLAUDE.md` 補上漏列的 `--asset-color-item` 與「專案內建 skill」段（`run-oikos` / `ja-i18n` 先前沒有任何連結指向）。
+
 ## [1.5.4] - 2026-07-13
 
 主題：**站穩地基**——修掉一次 prod 資料庫連線事故的根因，並把 migrate 競品頁從模板文案升級成查證過的專屬內容。
@@ -668,7 +688,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.4...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.5...HEAD
+[1.5.5]: https://github.com/redtear1115/oikos/compare/v1.5.4...v1.5.5
 [1.5.4]: https://github.com/redtear1115/oikos/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/redtear1115/oikos/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/redtear1115/oikos/compare/v1.5.1...v1.5.2
