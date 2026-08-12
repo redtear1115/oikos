@@ -1,0 +1,92 @@
+---
+last_updated: 2026-08-06
+---
+
+# Store assets — Futari
+
+上架用的圖形素材。文案在 [app-store-listing.md](../app-store-listing.md)，
+操作流程在 [app-store-submission-runbook.md](../app-store-submission-runbook.md)，
+追蹤 issue [#935](https://github.com/redtear1115/oikos/issues/935)。
+
+## 現況
+
+| 檔案 | 規格 | 用途 | 狀態 |
+|---|---|---|---|
+| `icons/play-icon-512.png` | 512×512、無 alpha | Play Console 應用程式圖示（必填） | ✅ |
+| `graphics/play-feature-graphic.png` | 1024×500、無 alpha | Play Feature graphic（必填）— zh-TW | ✅ |
+| `graphics/play-feature-graphic-zh-CN.png` | 同上 | zh-CN 商店本地化 | ✅ |
+| `graphics/play-feature-graphic-en.png` | 同上 | en 商店本地化 | ✅ |
+| `graphics/play-feature-graphic-ja.png` | 同上 | ja 商店本地化 | ✅ |
+| `screenshots/*-ios-6.7.png` | 1290×2796、無 alpha | App Store 6.7"（必填），4 張 | ✅ |
+| `screenshots/*-play.png` | 1080×1920、無 alpha | Play 手機截圖（必填 ≥2），4 張 | ✅ |
+
+## 怎麼重新產生
+
+### Feature graphic（四語）
+
+```bash
+cd scripts/og
+npm install          # 首次；puppeteer 會用 ~/.cache/puppeteer 既有的 Chromium
+node render-store.mjs
+```
+
+版型在 `scripts/og/store-graphic.html`，與 OG 圖共用同一組 mark SVG 與品牌色，
+但**不共用 render 腳本**——OG 圖輸出到 `public/`，商店素材輸出到本資料夾。
+改文案改 `store-graphic.html` 裡的 `copy` 物件（四語同步，見 CLAUDE.md i18n 規則）。
+
+版面刻意留白：Play 在部分版位會裁掉外緣、並可能在正中疊播放鍵，
+所以主要內容都靠左、圖形靠右，中央與四邊不放承重元素。
+
+### Play icon 512×512
+
+從 iOS 的 1024 母檔縮：
+
+```bash
+sips -Z 512 ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png \
+  --out docs/store-assets/icons/play-icon-512.png
+```
+
+母檔本身就是滿版奶油底（四角 `#FCE5C9`，非透明），縮完直接符合 Play 規格——
+Play 會自行套圓角遮罩，不需要我們先裁圓角。
+
+### 截圖
+
+```bash
+cd scripts/og
+node capture-screens.mjs --login   # 首次：開視窗，人工登入一次
+node capture-screens.mjs           # 之後：headless 直接截
+```
+
+四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
+
+**為什麼分兩種尺寸**：App Store 6.7" 必須**正好** 1290×2796（Apple 嚴格檢查）。
+Play 則寫「顯示比例**應為** 16:9 或 9:16」——是建議不是硬性下限：本專案 2026-06-02
+上傳的手機截圖是 1080×2400（比例 2.222），Play 照收。所以 Play 這組出 1080×1920
+是為了貼合建議值，不是因為 1290×2796 會被退。
+
+> 平板欄位（7 吋 / 10 吋）另有**短邊下限**：10 吋要求每邊 1,080 px 至 7,680 px，
+> 所以 1080×1920 剛好壓在下限，不能再小。
+
+**為什麼要人工登入一次**：本 app 只有 Google / Apple OAuth，沒有 email 密碼表單，
+程式拿不到 session。所以用專屬 userDataDir（`~/.futari-shots-profile`）登入一次後重複使用。
+Google 會擋「宣告自己被自動化控制」的瀏覽器，故 script 用系統安裝的 Chrome
+（`channel: 'chrome'`）並拿掉 `--enable-automation`。
+
+**畫面資料來自 dev（oikos-dev）**，2026-08-07 為了截圖整理過（見下）。
+`/review/[month]` 沒有收進來：2026-07 snapshot 無花費紀錄，畫面是空的。
+
+#### 2026-08-07 對 dev 帳本做的整理
+
+截圖用的 group：`3a896cf2-fe3c-4525-b5d6-789ce17e3e4e`。全部可還原：
+
+| 動作 | 細節 | 還原方式 |
+|---|---|---|
+| 改帳本名 | `測試用帳本` → `我們的帳本` | 改回即可 |
+| 補 8 月支出 | 11 筆（含 3 筆掛愛物） | 依 `description` 刪除 |
+| soft delete 異常 settlement | 2 筆金額 3,610 萬的測試資料<br>`ae064b80-56ef-404b-aeb2-ecf3faaa74bd`<br>`8b09acf7-d3c9-45e1-ad45-8d85bc969ee7` | `deleted_at = NULL` |
+| 跳過過期待確認 | 2 筆「零用錢」定期提案（6/9、7/9） | `skipped_at = NULL` |
+| 愛物改名 | `LapoGINI`→`小白`、`Faralliiii`→`阿福`、`巨山蟻`→`麻糬`、<br>`測試單車`→`通勤單車`、`小廢車`×2→`小綿羊`/`舊速可達` | 改回即可 |
+
+> ⚠️ 順帶發現：`GroupBalance` 的 cache 原本是 **0**，但照 `lib/db/queries/balance.ts`
+> 的公式重算是 **36,116,560** —— cache 長期未同步。那兩筆三千六百萬的測試 settlement
+> 是主因。dev 專屬問題，但值得確認 prod 沒有同樣的 cache 漂移。
