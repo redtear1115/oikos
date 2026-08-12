@@ -1,16 +1,13 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-08-12
+status: shipped
+first_shipped_in: v1.4.3
+related_specs: []
+related_issues: ["#832"]
+blocked_on: []
 ---
 
 # Brand-Surface Committed Register (#832)
-
----
-status: ready-to-implement
-first_shipped_in: ~v1.5.0
-related_issues: ["#832"]
-related_specs: []
-blocked_on: []
----
 
 ## What
 
@@ -42,126 +39,32 @@ The illustration adds human warmth that a phone screenshot alone cannot communic
 
 ## Design Tokens
 
-Add to `app/globals.css` inside `:root`:
-
-```css
-/* Committed brand-surface ground — morning-gentle deepened cream.
-   Brand-surface tier only (landing, sign-in, migrate, terms, privacy).
-   App shell + task surfaces keep --bg. */
---bg-committed: #EFDDC4;
-```
-
-Existing tokens reused unchanged: `--ink`, `--ink-2`, `--ink-3`, `--accent`, `--surface`, `--surface-alt`, `--hairline`.
+New token `--bg-committed: #EFDDC4`（morning-gentle 深化米色，brand-surface tier 專用；app shell / task surfaces 仍用 `--bg`）。實作見 [app/globals.css](../../../app/globals.css)。其餘沿用既有 token（`--ink`、`--ink-2`、`--ink-3`、`--accent`、`--surface`、`--surface-alt`、`--hairline`），不新增。
 
 ## Brand-Surface Exemption Rule
 
-Add to `.impeccable/design.json` under `narrative.rules`:
+One Ember Rule 原本管的是 PRODUCT 表面（帳本、設定、任務流程）。BRAND-surface tier（landing / sign-in / migrate / terms / privacy）是例外，可以採 Committed 色彩策略：一個暖色（`--bg-committed`）覆蓋 30–60% 表面作為底色。但即使在這裡，Ember（`#E08856`）仍要克制——每個畫面最多一個時刻（主 CTA 或單一暖光點），絕不大面積填色。**Committed 永遠是承諾「底色」，不是承諾「強調色」**——這是這條例外規則不失控的關鍵邊界。
 
-```json
-{
-  "name": "The Brand-Surface Exemption",
-  "section": "colors",
-  "body": "The One Ember Rule governs PRODUCT surfaces (the ledger, settings, task flows). The BRAND-surface tier — landing, sign-in, migrate, terms, privacy — is exempt and may adopt a Committed color strategy: one warm hue (a deepened cream ground, --bg-committed #EFDDC4) covering 30–60% of the surface as the page's base tone. Ember (#E08856) stays rare even here: at most one moment per screen, as a primary CTA or a single point of warm light, never a large fill. Committed always commits the GROUND, never the accent."
-}
-```
+實作為 `.impeccable/design.json` 的 `narrative.rules` 一條規則（name: "The Brand-Surface Exemption"），見 [.impeccable/design.json](../../../.impeccable/design.json)。
 
 ## Illustration Asset
 
-**File:** `public/illustration-hero.png` (landscape, ~16:9 for mobile band; the same image is used for both layouts, cropped via CSS object-fit/object-position)
-
-**Chosen image:** Two people seated on a sofa from behind, heads close together looking at a phone. A warm floor lamp behind them. Floating light orbs and flowing light trails in ember/sage/cream tones. Cozy evening interior, city window in background. Illustrated style, warm palette.
-
-**Mobile crop:** full-width band, `h-[252px]`, `object-cover object-top`, `rounded-3xl`
-
-**Desktop crop:** right column, fills `flex-1` height, `object-cover object-center`, `rounded-3xl`
+**Chosen image**（`public/illustration-hero.png`）：兩人從背後坐在沙發上，靠近看著手機，身後有暖色落地燈，漂浮的光點與光帶（ember/sage/cream 色調），溫馨的夜晚室內、背景有城市窗景。插畫風、暖色調——直接對應 Futari「陪伴式記錄」的品牌哲學，同一張圖靠 CSS object-fit/object-position 供 desktop / mobile 兩種佈局共用裁切。
 
 The illustration slot is isolated in a single `<IllustrationSlot>` component so swapping the image later requires no JSX changes.
 
-## Landing Hero — Desktop (`app/[locale]/_landing/Landing.tsx`)
+## Landing Hero — Desktop / Mobile
 
-**Layout change:** two-column hero, copy column shrinks from `w-[600px]` to `w-[520px]` to give the illustration column more room.
+Desktop：兩欄式 hero，copy 欄縮窄以讓出插圖欄空間；插圖填滿右欄，PhonePreview 縮小（新增 `scale` prop）疊在插圖右下角，退居次要的「product proof」角色，不再是唯一視覺。Copy（kicker / h1 / body / CTA）不變。
 
-**Right column (currently `<PhonePreview>` only):**
+Mobile：插圖 band 移到最前面（wordmark 之前），取代原本 `<FutariMark>` 作為情感開場——理由同上：插圖比單純 logo 更能傳達「陪伴」。kana 行同步從 mobile 移除以維持精簡。
 
-Replace with:
-```
-<div relative flex-1>
-  <IllustrationSlot />                  {/* fills column */}
-  <PhonePreview scale={0.78} />         {/* absolute, bottom-right corner, overlapping illo */}
-</div>
-```
-
-`PhonePreview` gets a `scale` prop (default `1`); at `0.78` it becomes a secondary product-proof tucked at the bottom-right of the illustration.
-
-**No copy changes.** Kicker, h1, body, CTA row are unchanged.
-
-## Landing Hero — Mobile
-
-**Layout change:** illustration band leads before the wordmark.
-
-Current order:
-1. `<FutariMark size={88} />`
-2. "Futari" wordmark
-3. kana
-4. tagline h1
-5. body
-6. CTA
-
-New order:
-1. `<IllustrationSlot mobile />` — full-width, 252px tall, `rounded-3xl`, `mx-4`
-2. "Futari" wordmark (keep)
-3. tagline h1 (keep)
-4. body (keep)
-5. CTA (keep)
-
-The large `<FutariMark size={88} />` above the wordmark is **removed** on mobile — the illustration takes that role as the emotional opener. The kana line (`ふたり`) is also removed from mobile (currently shown between wordmark and tagline).
+實作見 `app/[locale]/_landing/Landing.tsx`、`app/[locale]/_landing/IllustrationSlot.tsx`（新元件，`alt=""` 因為是裝飾性、意義由文案承載）、`app/[locale]/_landing/PhonePreview.tsx`（新增 `scale` prop）。
 
 ## Other Brand-Surface Pages
 
-Each page has `style={{ background: 'var(--bg)' }}` on its outermost element. Change to `var(--bg-committed)`.
-
-| File | Element |
-|---|---|
-| `app/[locale]/sign-in/page.tsx` | `<main>` background |
-| `app/[locale]/migrate/layout.tsx` | layout wrapper background |
-| `app/[locale]/terms/page.tsx` | `<main>` background |
-| `app/[locale]/privacy/page.tsx` | `<main>` background |
-
-No other changes to these files.
-
-## IllustrationSlot Component
-
-New file: `app/[locale]/_landing/IllustrationSlot.tsx`
-
-Props:
-- `mobile?: boolean` — if true, applies mobile dimensions/crop; default false (desktop)
-
-Renders a `<div>` containing a `<Image>` (Next.js) pointing to `/illustration-hero.png`.
-
-- Desktop: `w-full h-full object-cover object-center rounded-3xl`
-- Mobile: `w-full h-[252px] object-cover object-top rounded-3xl`
-
-No animation, no hover states. `alt=""` (decorative; the copy carries the meaning).
-
-## PhonePreview Scale Prop
-
-`app/[locale]/_landing/PhonePreview.tsx` currently renders at a fixed size. Add a `scale?: number` prop (default `1`) that multiplies width/transform to allow the `0.78` demoted variant on desktop without internal layout changes.
-
-The demoted phone is `position: absolute; right: -8px; bottom: 24px` inside the right column wrapper — overlapping the illustration's bottom-right corner.
+Sign-in / migrate layout / terms / privacy 的外層背景一律從 `--bg` 換成 `--bg-committed`，其餘不動。
 
 ## Interactions & Motion
 
-No behavioral change. No new animations. `prefers-reduced-motion` is unaffected.
-
-## Files to Edit
-
-1. `app/globals.css` — add `--bg-committed`
-2. `app/[locale]/_landing/Landing.tsx` — committed ground + hero layout + illo slot + mobile reorder
-3. `app/[locale]/_landing/IllustrationSlot.tsx` — **new file**
-4. `app/[locale]/_landing/PhonePreview.tsx` — add `scale` prop
-5. `app/[locale]/sign-in/page.tsx` — `--bg` → `--bg-committed`
-6. `app/[locale]/migrate/layout.tsx` — `--bg` → `--bg-committed`
-7. `app/[locale]/terms/page.tsx` — `--bg` → `--bg-committed`
-8. `app/[locale]/privacy/page.tsx` — `--bg` → `--bg-committed`
-9. `.impeccable/design.json` — add Brand-Surface Exemption rule
-10. `public/illustration-hero.png` — add illustration asset
+沒有行為變更，沒有新動畫；`prefers-reduced-motion` 不受影響。
