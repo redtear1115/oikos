@@ -1,6 +1,7 @@
 ---
-last_updated: 2026-07-13
-status: planned
+last_updated: 2026-08-12
+status: shipped
+first_shipped_in: v1.5.1
 related_specs: [native-auth, epoch-readonly, onboarding]
 related_issues: ["#912"]
 ---

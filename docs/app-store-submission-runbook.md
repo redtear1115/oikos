@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-08-06
 ---
 
 # App Store / Play Store 上架 Runbook — Futari（首次送審）
@@ -52,7 +52,7 @@ last_updated: 2026-07-13
    Apple 登入 + push 收送 + 主流程。Apple 登入已接 `@capacitor-community/apple-sign-in`（見 [native-auth spec](superpowers/specs/native-auth-design.md)）。
 
 6. ⬜ **App Store Connect 上架資料**
-   - 截圖：6.7"（必）＋ 6.5" / 5.5"（視情況）。可用模擬器或實機截。
+   - 截圖：✅ 已產出 4 張 6.7"（1290×2796），見 [store-assets/](store-assets/README.md)。
    - 描述、關鍵字、support URL、行銷 URL、隱私政策 URL（文案見 [app-store-listing.md](app-store-listing.md)）。
    - **App Privacy**（Nutrition label）：申報 Supabase / Sentry / PostHog / GA，須與 `/privacy` 一致。
    - **App Review Information**：提供 **demo 帳號**（或註記「solo 模式可直接進入、無 onboarding block」）+ Review Notes（模板見 §D）。
@@ -64,37 +64,82 @@ last_updated: 2026-07-13
 
 ## B. Android 送審（可與 iOS 並行）— Google Play Console
 
-1. ⬜ **B3：放入 `android/app/google-services.json`**
-   Firebase Console → 專案設定 → Android app 下載。**這是 secret 檔，不入 git**；缺它 build 不會壞但 FCM push 失效。
+1. ✅ **B3：`android/app/google-services.json` — 首版不需要**
 
-2. ⬜ **Play Console 建立 app**（語言、app 名稱 Futari、分類：財務）。
+   > **2026-08-07 查證：Android 推播從未實作，補這個檔也不會讓它通。**
+   > - `lib/pushNotifications.ts:7` — `if (Capacitor.getPlatform() !== 'ios') return`，
+   >   Android 根本不註冊 push token。
+   > - `supabase/functions/send-recurring-push/index.ts:109` — `.eq('platform', 'apns')`，
+   >   發送端只撈 APNs token，沒有 FCM 分支。
+   > - `PushTokens.platform` 的註解雖寫 `'apns' or 'fcm'`，但 `'fcm'` 從未被寫入或讀取。
+   >
+   > 因此首版 Android **決定不含推播**（[#968](https://github.com/redtear1115/oikos/issues/968) 追蹤後續實作）。
+   > 這不構成退件或虛假宣稱風險：推播註冊是靜默的（`PushTokenRegistrar.tsx`），
+   > **沒有任何使用者可見的通知開關**；四語商店文案也都沒有承諾推播
+   > （只有 iOS Review Notes 提到 APNs，那是 iOS 專屬且屬實）。
+   >
+   > 沒有程式碼引用 Firebase，build 也不需要此檔（`build.gradle:61-66` 會條件式跳過
+   > google-services plugin）。等 #968 真的要做 FCM 時再從 Firebase Console 下載。
 
-3. ⬜ **Build 簽章 AAB**
+2. ✅ **Play Console app 已建立**，且**已在跑封閉測試**（2026-06-08 起）。
+   商店資訊（名稱／簡短說明／完整說明／圖示／主題圖片／手機截圖）早已填妥。
+   > ⚠️ 2026-08-07 教訓：這份 runbook 當時仍標「⬜ 未建立」，導致重複產製已存在的素材。
+   > **動手前先開 Console 看實況**，不要以文件的勾選狀態為準。
+
+3. ✅ **Build 簽章 AAB** — 2026-08-06 實跑成功
    ```bash
-   # 簽章參數由 build.gradle 從環境變數讀取
-   export KEYSTORE_PATH="$HOME/futari-release.keystore"
-   export KEYSTORE_PASSWORD='…'
-   export KEY_ALIAS='futari'
-   export KEY_PASSWORD='…'
+   # 簽章參數由 build.gradle 從環境變數讀取；值放在 repo 根目錄 .env（gitignored）
+   set -a; . ./.env; set +a
+
+   # ⚠️ 必須用 JDK 21：Capacitor 8 的 capacitor-android 以 source release 21 編譯。
+   # 機器上 PATH 的 Homebrew JDK 是 18，直接跑會炸 "invalid source release: 21"。
+   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
    cd android
    ./gradlew bundleRelease
    # 產物：android/app/build/outputs/bundle/release/app-release.aab
    ```
    > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`versionCode 105011` / `versionName "1.5.1"` 直接送。
-   > Upload keystore 已存在 `~/futari-release.keystore`（alias `futari`）。**務必備份**（遺失＝無法更新 app）。
+   > 驗證方式：`jarsigner -verify <aab>` 應回 `jar verified.`；
+   > `unzip -p <aab> META-INF/FUTARI.RSA | keytool -printcert` 的 SHA256 應等於下方 upload key 指紋。
+
+   > **Upload keystore（2026-08-06 重建）**：`~/futari-release.keystore`，alias `futari`，RSA 2048，效期至 2053-12。
+   > SHA-256 `9D:4A:6F:DF:47:F7:90:8F:CA:63:61:43:0A:B7:2B:4A:19:D2:F9:F0:4B:DA:81:55:F0:90:0B:91:60:96:7F:03`。
+   > 密碼在 repo 根目錄 `.env`（`KEYSTORE_PATH` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`，store 與 key 同值）。
+   >
+   > 重建原因：原 keystore（2026-05-30 建）密碼遺失——`keytool -genkey` 當時沒帶 `-storepass`，
+   > 密碼是互動輸入且從未寫入任何檔案（`.env` 內留的那組事後查證是錯的）。因為當時尚未送 Play、
+   > upload key 未與 Play App Signing 綁定，重建零代價。舊檔留在 `~/futari-release.keystore.bak`。
+   >
+   > ⚠️ **這個「重建零代價」的窗口在首次送出 Production 後就關閉**。之後遺失只能走 Google 的
+   > upload key reset 流程。密碼務必存進密碼管理器，keystore 檔案務必另外備份。
 
 4. ⬜ **Play Console 上架資料**
-   - 商店資訊：標題、簡短/完整說明（中英對照，套品牌文案準則）、圖示 512×512、Feature graphic 1024×500。
-   - 螢幕截圖：手機至少 2 張（建議 4–8）。可用 prod 網站手機視圖截。
+   - 商店資訊：標題、簡短/完整說明（中英對照，套品牌文案準則）。
+   - 圖示 512×512 + Feature graphic 1024×500（四語）→ ✅ 已產出，見 [store-assets/](store-assets/README.md)。
+   - 螢幕截圖：手機 ✅ 早已上傳 4 張（1080×2400，2026-06-02）。
+     平板 7 吋 / 10 吋為**必填**且原本是空的 → ✅ 2026-08-07 各補 4 張 1080×1920。
+     > Play 寫「顯示比例應為 16:9 或 9:16」是建議值，非硬性；既有的 1080×2400
+     > （比例 2.222）照樣被接受。10 吋欄位另有短邊下限 1,080 px。
    - **內容分級**問卷。
    - **資料安全（Data safety）**：申報 Supabase（帳號/財務）、Sentry（崩潰）、PostHog/GA（分析），須與 `/privacy` 一致。
    - 隱私政策 URL：`https://futari.southern-light.dev/<locale>/privacy`。
    - **App access**：審核需登入 → 提供測試帳號，或說明 solo 模式可直接進入。
    - **帳號刪除**：Data safety 會問「是否提供刪除途徑」+ web 刪除說明 URL → 設定頁「刪除帳號」+ `/privacy`（已上線，見 §C-B1）。
 
-5. ⬜ **發佈軌道**
-   先 **Internal testing**（自己＋朋友裝、驗證 push / Apple-less 流程）→ 再 **Production**（首次審核約數小時–數天）。
+5. ⬜ **發佈軌道** — ⚠️ **這是 Android 的真正關鍵路徑，素材再齊也繞不過**
+
+   Google 對**個人開發者帳戶**申請正式版權限的硬性條件（2026-08-07 實況）：
+
+   | 條件 | 狀態 |
+   |---|---|
+   | 發布封閉測試版本 | ✅ |
+   | 至少 **12 名**測試人員參加封閉測試 | ❌ 目前 **9 名**（差 3 人） |
+   | 連續 **14 天**封閉測試，且全程維持 ≥12 名測試人員 | ❌ 未起算 |
+
+   「申請發布正式版」按鈕在條件滿足前是**灰的**。14 天從湊滿 12 人那天起算，
+   所以 **Android 上架最快是「找齊 3 個人」+ 14 天**。招募測試者是這條路的瓶頸，
+   不是程式或素材問題。
 
 ---
 
@@ -104,7 +149,7 @@ last_updated: 2026-07-13
 
 | # | Gap | 狀態 |
 |---|---|---|
-| **B1** | App 內「刪除帳號」（Apple 5.1.1(v) + Play 強制） | ✅ **已上 v1.5.1 prod** — 設定頁「刪除帳號」（[spec](superpowers/specs/2026-06-09-account-deletion-design.md) · [#923](https://github.com/redtear1115/oikos/issues/923)） |
+| **B1** | App 內「刪除帳號」（Apple 5.1.1(v) + Play 強制） | ✅ **已上 v1.5.1 prod** — 設定頁「刪除帳號」（[spec](superpowers/specs/account-deletion-design.md) · [#923](https://github.com/redtear1115/oikos/issues/923)） |
 | **B2** | iOS Push Notifications capability | ✅ **已完成**（[PR #936](https://github.com/redtear1115/oikos/pull/936)）— `ios/App/App/App.entitlements` 含 `aps-environment`，AppDelegate 接 `didRegister/didFailToRegister` forwarding |
 | **B4** | Ko-fi iOS gate（3.1.1 IAP 風險） | ✅ **已上 v1.5.1 prod** — iOS 殼看不到 tip jar |
 | **B5** | 原生版本號對齊 | ✅ Android `105011` / iOS `1.5.1` |
