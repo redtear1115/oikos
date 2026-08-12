@@ -122,7 +122,7 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 - 支出分類：`lib/categories.ts` — 每個 `Category` 自帶 primary `color` + derived `tint` + `ink` + `mono`；`chart` 為 `color` 的 alias，舊 callsite 不動。
 - 收入分類：`lib/incomeCategories.ts` — 同結構；另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。
 - 收入模式整體色票：`lib/incomePalettes.ts`（mint / gold / cream）— `ink` / `tint` / `glow` / `whisper` / `sheetBg` 五階。
-- 愛物 type token：`app/globals.css` 的 `--asset-color-{car,house,child,pet,plant,insurance}` 為主色；`--asset-tint-*` 透過 `color-mix(in srgb, var(--asset-color-*) 35%, white)` 推導，list rail 與未來愛物 donut 共用同一 hue family。
+- 愛物 type token：`app/globals.css` 的 `--asset-color-{car,house,child,pet,plant,insurance,item}` 為主色；`--asset-tint-*` 透過 `color-mix(in srgb, var(--asset-color-*) 35%, white)` 推導，list rail 與未來愛物 donut 共用同一 hue family。
 - 圖表專用色票：`lib/chartPalette.ts` — chart 自己挑的色（per-asset hash palette `ASSET_PALETTE`、未歸屬 fallback `ASSET_NULL_COLOR`、active bar track `ACTIVE_BAR_TRACK`）；donut 與 detail bars 共用同一 source of truth。分類／收入分類 slice 色不在此，仍在各自 domain 檔。
 - 派生 helper：`lib/colors.ts#lightenHex(hex, amount = 0.35)` — chip `tint` 從每個 `Category.color` deterministic 推得；新增分類只需給 `color` + `ink`，不必再挑 tint。
 
@@ -249,3 +249,12 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - Spec 清單分組：架構 / 記帳核心 / 體驗 / 提案與匯入 / 愛物 / 守護
 
 版本歷史看 [`CHANGELOG.md`](CHANGELOG.md)；版本對應 issue 看 GitHub milestones。
+
+---
+
+## 專案內建 skill
+
+`.claude/skills/` 有兩個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
+
+- [`run-oikos`](.claude/skills/run-oikos/SKILL.md) — 啟動並 smoke test dev server（`npm install` + `npm run dev` + curl），收錄冷機啟動會踩的雷（缺 `@next/bundle-analyzer`、缺 `.env.local`、port 3000 佔用、Turbopack lazy-compile 404）。
+- [`ja-i18n`](.claude/skills/ja-i18n/SKILL.md) — 維護 `lib/i18n/locales/ja.ts`：偵測未翻譯 key、辨識合法漢字的假陽性、更新漢字白名單。
