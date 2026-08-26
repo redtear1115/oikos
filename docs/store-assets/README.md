@@ -82,6 +82,21 @@ Play 則寫「顯示比例**應為** 16:9 或 9:16」——是建議不是硬性
 > 平板欄位（7 吋 / 10 吋）另有**短邊下限**：10 吋要求每邊 1,080 px 至 7,680 px，
 > 所以 1080×1920 剛好壓在下限，不能再小。
 
+#### 換機器時怎麼重建
+
+截圖環境有三個前置，順序不能顛倒：
+
+1. **`.env.local`** —— 必須是**原檔搬過來**，不能重生。裡面的 `ENCRYPTION_KEY`
+   要跟 dev DB 裡已加密的 PII 對得上；也不能用 `vercel env pull`，那會拉到 prod 的 key。
+2. **dev server 跑起來**（`npm run dev`）—— profile 存的是 `localhost:3000` 的 session，
+   沒有 server 就沒有東西可登入。
+3. **`~/.futari-shots-profile`** —— **重建，不要搬**。它是完整的 Chrome profile，
+   有一部分綁 Keychain 與機器，跨機器複製不保證有效，Google 也可能因為裝置變了而要求重驗。
+   在新機器上跑一次 `node capture-screens.mjs --login` 重登比較快也比較可靠。
+
+Node 版本走 repo 根目錄的 `.nvmrc`（Node 24 LTS）。若 `node -v` 不是 24，
+檢查 PATH 有沒有被其他工具自帶的 Node 遮掉。
+
 **為什麼要人工登入一次**：本 app 只有 Google / Apple OAuth，沒有 email 密碼表單，
 程式拿不到 session。所以用專屬 userDataDir（`~/.futari-shots-profile`）登入一次後重複使用。
 Google 會擋「宣告自己被自動化控制」的瀏覽器，故 script 用系統安裝的 Chrome
