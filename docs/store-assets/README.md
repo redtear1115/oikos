@@ -20,7 +20,7 @@ last_updated: 2026-08-06
 | `screenshots/*-ios-6.7.png` | 1290×2796、無 alpha | App Store 6.7"（必填），4 張 | ✅ |
 | `screenshots/*-play.png` | 1080×1920、無 alpha | Play 手機截圖（必填 ≥2），4 張 | ✅ |
 | `screenshots/*-tablet.png` | 1080×1920、無 alpha | Play 平板截圖（7 吋 / 10 吋），4 張 | ✅ |
-| `screenshots/*-ipad-13.png` | 2064×2752、無 alpha | App Store 13" iPad（必填），4 張 | ⏳ 待產出 |
+| `screenshots/*-ipad-13.png` | 2064×2752、無 alpha | App Store 13" iPad（必填），4 張 | ✅ |
 
 ## 怎麼重新產生
 
@@ -63,6 +63,12 @@ node capture-screens.mjs --only=ipad-13   # 只補某一組
 ⚠️ 不加 `--only` 會**覆寫全部** 16 張。已上架的那幾組是 2026-08-07 用當時整理過的
 dev 帳本截的，且 `SCREENS` 裡的 trip UUID 是寫死的 —— 資料漂移後重跑不保證截得一樣。
 補新尺寸時請用 `--only`。
+
+> **已知瑕疵（2026-08-27 發現）**：2026-08 那批 12 張左下角有 Next.js dev overlay 的
+> 黑色「N」浮標，`*-play.png` 裡它直接壓住「首頁」tab 圖示。截圖腳本現在會用 CSS
+> 蓋掉 `nextjs-portal`（iPad 這組已乾淨），但**已上傳到 Play 的那批沒有重截**。
+> 追蹤：重截 play / tablet / ios-6.7 需要先把 dev 帳本的日期往前推，否則畫面會顯示
+> 「20 天前」而不是「今天」。
 
 四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
 

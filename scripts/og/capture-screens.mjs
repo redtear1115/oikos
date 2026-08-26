@@ -145,8 +145,14 @@ async function capture() {
           )
         }
 
-        // 隱藏捲軸 + 等動畫與字體收斂
-        await page.addStyleTag({ content: '*::-webkit-scrollbar{display:none!important}' })
+        // 隱藏捲軸 + Next.js dev overlay 的浮標 + 等動畫與字體收斂。
+        // dev indicator 那顆黑色「N」是 dev server 才有的東西，2026-08 那批截圖
+        // 沒擋掉，在 *-play.png 裡直接壓住「首頁」tab 圖示。
+        await page.addStyleTag({
+          content:
+            '*::-webkit-scrollbar{display:none!important}' +
+            'nextjs-portal,[data-nextjs-toast],#__next-build-watcher{display:none!important}',
+        })
         await page.evaluate(() => document.fonts.ready)
         await new Promise((r) => setTimeout(r, 1200))
 

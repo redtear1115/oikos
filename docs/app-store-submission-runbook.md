@@ -52,7 +52,8 @@ last_updated: 2026-08-06
    Apple 登入 + push 收送 + 主流程。Apple 登入已接 `@capacitor-community/apple-sign-in`（見 [native-auth spec](superpowers/specs/native-auth-design.md)）。
 
 6. ⬜ **App Store Connect 上架資料**
-   - 截圖：✅ 已產出 4 張 6.7"（1290×2796），見 [store-assets/](store-assets/README.md)。
+   - 截圖：✅ 6.7" iPhone 4 張（1290×2796）+ 13" iPad 4 張（2064×2752），見 [store-assets/](store-assets/README.md)。
+     iPad 那格是必填 —— `project.pbxproj` 的 `TARGETED_DEVICE_FAMILY = "1,2"` 宣告了支援 iPad。
    - 描述、關鍵字、support URL、行銷 URL、隱私政策 URL（文案見 [app-store-listing.md](app-store-listing.md)）。
    - **App Privacy**（Nutrition label）：申報 Supabase / Sentry / PostHog / GA，須與 `/privacy` 一致。
    - **App Review Information**：註記「solo 模式可直接進入、無 onboarding block」+ Review Notes（模板見 §D）。
