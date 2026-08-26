@@ -6,8 +6,9 @@
 // 所以用一個專用的 userDataDir，人工登入一次後重複使用。
 //
 //   cd scripts/og
-//   node capture-screens.mjs --login    # 首次：開視窗，你手動登入
-//   node capture-screens.mjs            # 之後：headless 直接截
+//   node capture-screens.mjs --login       # 首次：開視窗，你手動登入
+//   node capture-screens.mjs               # 之後：headless 截全部尺寸
+//   node capture-screens.mjs --only=ipad-13  # 只補某一組，不動已驗過的圖
 //
 // 各組尺寸不能共用：
 //   App Store 6.7" 必須正好 1290×2796（比例 2.167:1）
@@ -25,6 +26,13 @@ const OUT_DIR = resolve(__dirname, '..', '..', 'docs', 'store-assets', 'screensh
 const PROFILE = join(homedir(), '.futari-shots-profile')
 const BASE = process.env.BASE_URL || 'http://localhost:3000'
 const LOGIN_MODE = process.argv.includes('--login')
+// 只截某幾組尺寸，例：--only=ipad-13。不給就全部重截。
+// 存在的理由：已上架那幾組是用整理過的 dev 帳本截的，重跑會整批覆寫；
+// 補一個新尺寸時沒有理由連帶重截已驗過的圖。
+const ONLY = (process.argv.find((a) => a.startsWith('--only=')) || '')
+  .replace('--only=', '')
+  .split(',')
+  .filter(Boolean)
 
 // 敘事順序（見 docs/app-store-listing.md §8）：說故事，不是功能清單。
 const SCREENS = [
@@ -100,8 +108,15 @@ async function capture() {
   })
   const results = []
 
+  const formats = ONLY.length ? FORMATS.filter((f) => ONLY.includes(f.key)) : FORMATS
+  if (!formats.length) {
+    throw new Error(
+      `--only=${ONLY.join(',')} 沒有對應的 format。可用：${FORMATS.map((f) => f.key).join(', ')}`
+    )
+  }
+
   try {
-    for (const fmt of FORMATS) {
+    for (const fmt of formats) {
       for (const screen of SCREENS) {
         const page = await browser.newPage()
         await page.setViewport({

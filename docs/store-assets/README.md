@@ -55,9 +55,14 @@ Play 會自行套圓角遮罩，不需要我們先裁圓角。
 
 ```bash
 cd scripts/og
-node capture-screens.mjs --login   # 首次：開視窗，人工登入一次
-node capture-screens.mjs           # 之後：headless 直接截
+node capture-screens.mjs --login          # 首次：開視窗，人工登入一次
+node capture-screens.mjs                  # headless 截全部尺寸
+node capture-screens.mjs --only=ipad-13   # 只補某一組
 ```
+
+⚠️ 不加 `--only` 會**覆寫全部** 16 張。已上架的那幾組是 2026-08-07 用當時整理過的
+dev 帳本截的，且 `SCREENS` 裡的 trip UUID 是寫死的 —— 資料漂移後重跑不保證截得一樣。
+補新尺寸時請用 `--only`。
 
 四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
 
