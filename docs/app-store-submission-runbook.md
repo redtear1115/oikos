@@ -55,7 +55,8 @@ last_updated: 2026-08-06
    - 截圖：✅ 已產出 4 張 6.7"（1290×2796），見 [store-assets/](store-assets/README.md)。
    - 描述、關鍵字、support URL、行銷 URL、隱私政策 URL（文案見 [app-store-listing.md](app-store-listing.md)）。
    - **App Privacy**（Nutrition label）：申報 Supabase / Sentry / PostHog / GA，須與 `/privacy` 一致。
-   - **App Review Information**：提供 **demo 帳號**（或註記「solo 模式可直接進入、無 onboarding block」）+ Review Notes（模板見 §D）。
+   - **App Review Information**：註記「solo 模式可直接進入、無 onboarding block」+ Review Notes（模板見 §D）。
+     本 app 只有 Google / Apple OAuth，**沒有 demo 帳號可提供**，審核員用自己的 Apple ID 登入。
 
 7. ⬜ **送審**
    TestFlight 驗證 OK → App Store Connect → 該版本 → Add for Review → Submit。
@@ -172,7 +173,7 @@ last_updated: 2026-08-06
 | **3.1.1 IAP** | Ko-fi tip jar 被視為繞過 IAP | ✅ iOS gate 已隱藏（已上 prod） |
 | **5.1.1(v) 帳號刪除** | 有註冊就必須 app 內可刪 | ✅ 設定頁「刪除帳號」（已上 prod） |
 | **4.8 Sign in with Apple** | 有第三方登入就要 Apple 登入 | ✅ 已接 `@capacitor-community/apple-sign-in`；送審前實機驗證 |
-| **2.1 完整性** | 審核員登不進 / 卡 onboarding | solo 模式可直接進；提供 demo 帳號 |
+| **2.1 完整性** | 審核員登不進 / 卡 onboarding | solo 模式可直接進；Review Notes 註明無 demo 帳號、請用自己的 Apple ID |
 | **5.1.1 隱私政策** | 須有可達 URL | ✅ `/privacy` 已存在 |
 
 **Review Notes 模板（iOS）**

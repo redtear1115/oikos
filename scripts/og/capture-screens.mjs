@@ -9,8 +9,9 @@
 //   node capture-screens.mjs --login    # 首次：開視窗，你手動登入
 //   node capture-screens.mjs            # 之後：headless 直接截
 //
-// 兩組尺寸不能共用：
+// 各組尺寸不能共用：
 //   App Store 6.7" 必須正好 1290×2796（比例 2.167:1）
+//   App Store 13" iPad 必須正好 2064×2752（或 2048×2732）—— 宣告支援 iPad 就是必填
 //   Play 手機截圖長邊不得超過短邊 2 倍 —— 2.167 會被退，故另出 1080×1920
 
 import puppeteer from 'puppeteer'
@@ -46,6 +47,10 @@ const FORMATS = [
   // Play 的平板欄位（7 吋 / 10 吋）也要求 16:9 或 9:16，所以輸出像素與手機同為
   // 1080×1920；差別在 CSS viewport 給 720px 寬，版面是用平板寬度算出來的。
   { key: 'tablet', width: 720, height: 1280, dsr: 1.5, tablet: true }, // → 1080×1920
+  // App Store 13" iPad：project.pbxproj 的 TARGETED_DEVICE_FAMILY = "1,2" 宣告支援
+  // iPad，App Store Connect 就強制要這格。1032×1376pt @2x 正是 13" iPad Pro 的
+  // logical size，乘 2 得到 Apple 唯一接受的 2064×2752。
+  { key: 'ipad-13', width: 1032, height: 1376, dsr: 2, tablet: true }, // → 2064×2752
 ]
 
 async function login() {

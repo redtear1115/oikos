@@ -19,6 +19,8 @@ last_updated: 2026-08-06
 | `graphics/play-feature-graphic-ja.png` | 同上 | ja 商店本地化 | ✅ |
 | `screenshots/*-ios-6.7.png` | 1290×2796、無 alpha | App Store 6.7"（必填），4 張 | ✅ |
 | `screenshots/*-play.png` | 1080×1920、無 alpha | Play 手機截圖（必填 ≥2），4 張 | ✅ |
+| `screenshots/*-tablet.png` | 1080×1920、無 alpha | Play 平板截圖（7 吋 / 10 吋），4 張 | ✅ |
+| `screenshots/*-ipad-13.png` | 2064×2752、無 alpha | App Store 13" iPad（必填），4 張 | ⏳ 待產出 |
 
 ## 怎麼重新產生
 
@@ -59,7 +61,9 @@ node capture-screens.mjs           # 之後：headless 直接截
 
 四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
 
-**為什麼分兩種尺寸**：App Store 6.7" 必須**正好** 1290×2796（Apple 嚴格檢查）。
+**為什麼分這麼多種尺寸**：App Store 6.7" 必須**正好** 1290×2796（Apple 嚴格檢查）。
+13" iPad 同樣嚴格，只收 2064×2752 或 2048×2732 —— 只要 `project.pbxproj` 的
+`TARGETED_DEVICE_FAMILY` 含 `2`（宣告支援 iPad），這格就是必填，不能只交 iPhone 截圖。
 Play 則寫「顯示比例**應為** 16:9 或 9:16」——是建議不是硬性下限：本專案 2026-06-02
 上傳的手機截圖是 1080×2400（比例 2.222），Play 照收。所以 Play 這組出 1080×1920
 是為了貼合建議值，不是因為 1290×2796 會被退。

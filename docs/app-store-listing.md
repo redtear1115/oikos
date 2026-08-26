@@ -224,7 +224,8 @@ Native features beyond the web experience:
 Access for review:
 - Solo mode lets a single reviewer enter without a partner — there is no
   onboarding block. You can sign in with Apple and use the app immediately.
-- Optional demo account: <email> / <password>
+- There is no demo account: the app has no email/password form, only Google
+  and Sign in with Apple. Please use your own Apple ID.
 
 Account deletion: Settings → 刪除帳號 (Delete account). A 14-day cancellable
 grace period applies; data is removed within 14 business days.
@@ -232,7 +233,8 @@ grace period applies; data is removed within 14 business days.
 No in-app purchases. The app is free; there is no tip jar shown on iOS.
 ```
 
-> Play Console 對應欄位：**App access**（說明 solo 可直接進入 + 選擇性 demo 帳號）；
+> Play Console 對應欄位：**App access**（選「All functionality is available without special access」，
+> 說明 solo 可直接進入、無 demo 帳號可給）；
 > **Test instructions** 放同一段（去掉 Apple 4.8 那行）。
 
 ---
