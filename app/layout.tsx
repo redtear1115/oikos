@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { GoogleAnalytics } from '@next/third-parties/google'
@@ -8,21 +7,18 @@ import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import { PostHogProvider } from './providers'
 import { PostHogPageView } from './posthog-pageview'
 import './globals.css'
-
-// Fraunces is the landing hero typeface. Latin only, two weights (400 mobile
-// tagline, 500 everything else). `preload: false` skips the <link rel="preload">
-// for every woff2 unicode-range subset — those were putting 12 font files on the
-// LCP critical path (~1.9s on mobile, flagged by Lighthouse). `display: swap`
-// already prevents FOIT, so the trade-off is a brief FOUT swap on the hero
-// headline in exchange for removing the font chain from the critical path.
-// Same reasoning applies to Noto Sans TC in the dashboard layout. (issues #454 / #572)
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-fraunces',
-  display: 'swap',
-  preload: false,
-})
+// Fraunces is the landing hero typeface. Two weights (400 mobile tagline, 500
+// everything else). Self-hosted from public/fonts/ rather than next/font/google:
+// that loader downloads every woff2 at build time and aborts the build if any
+// single fetch fails, which is a coin flip on every deploy. (#978 — see
+// scripts/fetch-google-fonts.mjs)
+//
+// The old `preload: false` behaviour carries over for free: plain @font-face CSS
+// emits no <link rel="preload">, so the unicode-range subsets stay off the LCP
+// critical path (they were costing ~1.9s on mobile). `display: swap` still
+// prevents FOIT, so the trade-off remains a brief FOUT on the hero headline.
+// Same reasoning applies to Noto Sans TC in the dashboard layout. (#454 / #572)
+import './fonts/fraunces.css'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -89,7 +85,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
   const t = await getTranslations()
   return (
-    <html lang={locale} className={fraunces.variable}>
+    <html lang={locale} className="font-fraunces">
       <head>
         {/* application-name lets Google Search Console and OS install prompts
             associate this PWA with the "雙人記帳" category rather than just
@@ -103,10 +99,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             (OAuth handshake). React hoists those <link>s to <head>. (#352 / #921)
 
             Google Fonts hints (fonts.googleapis.com / fonts.gstatic.com) also
-            removed: fonts use next/font/google, which self-hosts the woff2 at
-            build time under same-origin /_next/static/media/. The browser never
-            connects to Google at runtime, so the original #511 hints were dead
-            weight. (#921) */}
+            removed: the woff2 files are committed under public/fonts/ and served
+            same-origin. The browser never connects to Google, so the original
+            #511 hints were dead weight. (#921 / #978) */}
       </head>
       <body className="antialiased">
         <InAppBrowserGuardLazy strings={t.inAppBrowser} />
