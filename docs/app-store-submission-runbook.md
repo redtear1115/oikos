@@ -1,10 +1,10 @@
 ---
-last_updated: 2026-08-06
+last_updated: 2026-09-11
 ---
 
 # App Store / Play Store 上架 Runbook — Futari（首次送審）
 
-> 送審的 native 殼對應 prod **v1.5.1**。native 版本號與 web 版本號脫鉤，這裡對齊到實際送審當下 prod 的版本以利對照。
+> 送審的 native 殼對應 prod **v1.5.5**。native 版本號與 web 版本號脫鉤，這裡對齊到實際送審當下 prod 的版本以利對照。
 
 > 架構前提：Android / iOS 都是 **Capacitor 8 薄殼**，`server.url = https://futari.southern-light.dev`，
 > 載入線上網站。沒有 JS bundle 要打包進 app；網站邏輯改動透過 Vercel 部署生效，原生殼不需重送即可看到
@@ -12,9 +12,10 @@ last_updated: 2026-08-06
 >
 > Bundle ID（共用）：`dev.southernlight.futari` · Apple Team：`W64689HV8B`
 
-> **進度狀態（2026-06-11）**：**所有 code-side blocker 已完成**（v1.5.1 prod + [PR #936](https://github.com/redtear1115/oikos/pull/936)）。
-> 剩下的全是**人工操作步驟**（Xcode / Apple Developer / Firebase Console / Play Console / App Store Connect），
-> 無法由程式碼或部署完成。追蹤 issue：[#935](https://github.com/redtear1115/oikos/issues/935)。
+> **進度狀態（2026-09-11）**：iOS 重新送審中，native 殼 `1.5.5 (2)`。
+> 2026-06-11 上傳的 `1.5.1 (1)` 已於 **2026-09-09 過期**（TestFlight build 壽命 90 天 — 見 [§F](#f-build-90-天會過期)），必須重傳。
+> 過程中另外發現 **iOS 自 Capacitor 8 升級（2026-07-12）後從未編譯過**，SPM 依賴衝突直接擋住 archive
+> （修法見 [§G](#g-capacitor-8--apple-sign-in-的-spm-衝突)）。追蹤 issue：[#935](https://github.com/redtear1115/oikos/issues/935)。
 >
 > 鐵則：審核員打開 app 看到的是「當下的 prod」（native 殼載 `server.url`），純 web/後台的東西都已在 prod，可直接送審。
 
@@ -36,7 +37,7 @@ last_updated: 2026-08-06
 3. ✅ **App Store Connect — 建立 app 記錄**
    Bundle ID `dev.southernlight.futari`、SKU、名稱 Futari。
 
-4. ✅ **Archive + 上傳 TestFlight** — 已上傳 `1.5.1(1)`
+4. ⬜ **Archive + 上傳** — `1.5.1(1)` 已過期，重傳 `1.5.5(2)`
    ```bash
    npx cap open ios          # 開 Xcode
    ```
@@ -45,8 +46,32 @@ last_updated: 2026-08-06
    2. Product → Archive。
    3. Organizer → Distribute App → App Store Connect → Upload。
    4. 等 build 在 App Store Connect 處理完。
-   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`MARKETING_VERSION=1.5.1` / `CURRENT_PROJECT_VERSION=1` 直接送。
+   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。目前：`MARKETING_VERSION=1.5.5` / `CURRENT_PROJECT_VERSION=2`。
    > 不需要 `out/` 或 `cap sync`（server.url 架構），除非改了原生 plugin / config。
+   >
+   > **也可以完全不開 Xcode**，用 ASC API key 從 CLI 走完（key 見 [§H](#h-app-store-connect-api-key)）：
+   > ```bash
+   > xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+   >   -destination 'generic/platform=iOS' -archivePath <out>.xcarchive archive \
+   >   -allowProvisioningUpdates \
+   >   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 \
+   >   -authenticationKeyID <KEYID> -authenticationKeyIssuerID <ISSUER>
+   > cat > /tmp/ExportOptions.plist <<'EOF'
+   > <?xml version="1.0" encoding="UTF-8"?>
+   > <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   > <plist version="1.0"><dict>
+   >   <key>method</key><string>app-store-connect</string>
+   >   <key>teamID</key><string>W64689HV8B</string>
+   >   <key>signingStyle</key><string>automatic</string>
+   >   <key>uploadSymbols</key><true/>
+   > </dict></plist>
+   > EOF
+   > xcodebuild -exportArchive -archivePath <out>.xcarchive -exportPath <dir> \
+   >   -exportOptionsPlist /tmp/ExportOptions.plist -allowProvisioningUpdates \
+   >   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 \
+   >   -authenticationKeyID <KEYID> -authenticationKeyIssuerID <ISSUER>
+   > xcrun altool --upload-app -f <dir>/App.ipa -t ios --apiKey <KEYID> --apiIssuer <ISSUER>
+   > ```
 
 5. ⬜ **實機 / TestFlight 驗證**
    Apple 登入 + push 收送 + 主流程。Apple 登入已接 `@capacitor-community/apple-sign-in`（見 [native-auth spec](superpowers/specs/native-auth-design.md)）。
@@ -213,3 +238,90 @@ available in Settings → 刪除帳號.
 - Android：`android/app/build.gradle` 的 `versionName` / `versionCode`（已附同義註解）。
 
 > 目前無自動 bump（release skill 只動 `package.json`）。薄殼罕重送，手動 bump 可接受；archive / `bundleRelease` 前先確認計數已 +1。
+
+---
+
+## F. Build 90 天會過期
+
+**踩過一次**：`1.5.1 (1)` 2026-06-11 上傳，2026-09-09 到期，等到 09-10 要送審時整個版本沒有可用的 build。
+
+- TestFlight build 上傳後 **90 天**過期（`/iris/v1/builds` 的 `expirationDate` / `expired` 欄位）。
+- 過期的 build **不能拿來送審**，也不能再給測試者安裝，只能重新 archive 上傳。
+- 所以「先傳 build 卡位、metadata 慢慢填」這個做法有時效：**metadata 沒填完就別急著傳 build**，
+  或至少要意識到 90 天內必須送出去。
+- 查現況（登入 ASC 的瀏覽器 console 內執行即可）：
+  ```js
+  await (await fetch('/iris/v1/builds?filter[app]=<APP_ID>&fields[builds]=version,uploadedDate,expirationDate,expired,processingState',
+    {headers:{'X-Csrf-Itc':'itc'}})).text()
+  ```
+
+## G. Capacitor 8 × apple-sign-in 的 SPM 衝突
+
+**症狀**：`xcodebuild`（含 `-list`）直接失敗，訊息類似
+
+```
+Failed to resolve dependencies Dependencies could not be resolved because
+'apple-sign-in' depends on 'capacitor-swift-pm' 7.0.0..<8.0.0 and
+'push-notifications' depends on 'capacitor-swift-pm' 8.0.0..<9.0.0.
+```
+
+**根因**：`@capacitor-community/apple-sign-in` 最新版就是 **7.1.0**（上游 master 2025-12 後停更，仍宣告
+`.package(url: capacitor-swift-pm, from: "7.0.0")`，SwiftPM 讀作 `>=7.0.0 <8.0.0`），
+而 `ios/App/CapApp-SPM/Package.swift` 由 Capacitor CLI 產生、pin `exact: "8.3.4"`。兩者互斥。
+
+> ⚠️ 這個衝突在 2026-07-12 升 Capacitor 8 時就存在了，但因為薄殼平常不需要重 build iOS，
+> 一直到 2026-09-10 要重新送審才浮出來。**升 Capacitor 大版本後要記得實際 archive 一次 iOS**，
+> 不然問題會潛伏到下次送審。
+
+**修法**：用 `patch-package` 把 plugin 的版本範圍放寬到 `"7.0.0"..<"9.0.0"`。
+plugin 的 `Plugin.swift` 只有一個檔案、用的都是 Capacitor 6+ 就穩定的 API
+（`CAPPlugin` / `CAPBridgedPlugin` / `CAPPluginMethod` / `bridge?.saveCall`），不需要改程式碼。
+
+- `patches/@capacitor-community+apple-sign-in+7.1.0.patch`（一行 diff，進版控）
+- `package.json` 的 `postinstall` = `patch-package || exit 0`
+- plugin 版本 **pin 成精確 `7.1.0`**（不是 `^7.1.0`），避免 caret 讓 patch 版本錯配後靜默失效
+
+**為什麼 postinstall 是 fail-soft**：`postinstall` 是 Vercel 每次部署都會跑的共用安裝路徑，
+不是 iOS 專屬。patch 失敗若讓 install step 非零退出，就會炸掉 **web 部署**。
+`|| exit 0` 讓失敗只反映在 iOS：SPM 解析會大聲報上面那個錯，不會產出壞掉的 App。
+
+**改動這一段後的驗收**（缺一不可，否則會誤把「本機殘留的手改」當成修好了）：
+
+```bash
+# 1. clean room — 不能靠既有 node_modules
+rm -rf node_modules && npm ci     # 輸出要有 patch-package 套用 apple-sign-in 的成功行
+
+# 1b. 乾淨 checkout 必做：cap sync 的產物沒進版控（見下方註）
+mkdir -p out && npx cap sync ios
+
+# 2. archive 要從全新的 SPM 解析開始，不能吃快取
+#    （Package.resolved 已 pin 8.3.4，不指定就會重用舊解析結果）
+xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+  -destination 'generic/platform=iOS' \
+  -derivedDataPath "$T/dd" -clonedSourcePackagesDirPath "$T/spm" \
+  -archivePath "$T/a.xcarchive" archive CODE_SIGNING_ALLOWED=NO
+
+# 3. 對照組：把 node_modules 的 Package.swift 還原成 from: "7.0.0"，同樣全新目錄再跑
+#    必須失敗於依賴解析 —— 這才證明步驟 2 的成功來自 patch 而非快取
+```
+
+> ⚠️ **乾淨 checkout / 新 worktree 一定要先 `npx cap sync ios`**，否則 archive 會失敗於
+> `The file "public" / "config.xml" / "capacitor.config.json" couldn't be opened`。
+> 這三個是 `cap sync` 產物且被 gitignore，不在版控裡。`webDir` 是 `out`，而 `/out/` 也被 ignore，
+> 所以還要先 `mkdir -p out`（server.url 架構下裡面是空的沒關係，bundled 內容根本不會被用到）。
+> 實測 `cap sync` **不會**改動已 commit 的 `CapApp-SPM/Package.swift`（內容 byte-identical），
+> 所以這步不會把 patch 需求洗掉——它依然寫 `exact: "8.3.4"`。
+
+**若上游哪天出 v8**：移除 `patches/` 與 `postinstall`，把 plugin 升上去。
+**fallback（本專案未採用）**：把 `Plugin.swift` vendored 進 `ios/App/App/` 並從 `CapApp-SPM/Package.swift`
+移除該 SPM product — 完全不動 `package.json`，代價是 fork 上游程式碼、且 `npx cap sync` 會覆寫那個檔。
+
+## H. App Store Connect API key
+
+用來從 CLI 完成 archive 簽章與上傳，不必開 Xcode，也可用來查 ASC 狀態。
+
+- 建立位置：ASC → 使用者與存取權限 → 整合 → App Store Connect API → 團隊金鑰 → 產生 API 金鑰，角色 **App 管理**
+- `.p8` **只能下載一次**，放 `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8`（`chmod 600`）
+- Key ID / Issuer ID 不是機密（`.p8` 才是），但具體值不進 public repo — 存密碼管理器
+- ⚠️ CDP 控制的 Chrome 會擋自動下載，這步要人工在瀏覽器點
+

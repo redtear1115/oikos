@@ -1,8 +1,8 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-11
 ---
 
-# App Store / Play Store — 上架文案與表單填寫 (v1.5.1)
+# App Store / Play Store — 上架文案與表單填寫 (v1.5.5)
 
 > 配合 [app-store-submission-runbook.md](app-store-submission-runbook.md)。本檔提供可直接貼進 console 的**商店文案（4 語）**、
 > **Data safety / App Privacy 申報對照**、**Review Notes 模板**。
@@ -221,10 +221,21 @@ Native features beyond the web experience:
 - APNs push notifications (partner expense alerts, monthly-review reminders).
 - Native Sign in with Apple (alongside Google), per Guideline 4.8.
 
-Access for review:
-- Solo mode lets a single reviewer enter without a partner — there is no
-  onboarding block. You can sign in with Apple and use the app immediately.
-- Optional demo account: <email> / <password>
+Access for review — no username/password exists:
+- The app has no email/password form. Authentication is Google OAuth or
+  native Sign in with Apple only, so we cannot supply a demo login.
+- Please tap "Sign in with Apple". A solo ledger is created immediately and
+  is fully usable by one person — no partner and no onboarding step is
+  required to reach the main screens.
+
+About text written by users (for your assessment under 1.2):
+- The only free-form text two users exchange is the monthly review note:
+  one note per calendar month, visible solely to the single partner who
+  joined via that user's private invite link, locked read-only at month end.
+- There is no public feed, no discovery of other users, no way to share
+  content outside the pair, and no open chat. We therefore did not declare
+  user-generated content or messaging in the age-rating questionnaire, and
+  are flagging the mechanism here so you can judge it directly.
 
 Account deletion: Settings → 刪除帳號 (Delete account). A 14-day cancellable
 grace period applies; data is removed within 14 business days.
@@ -237,7 +248,15 @@ No in-app purchases. The app is free; there is no tip jar shown on iOS.
 
 ---
 
-## 8. 截圖需求（待產出）
+## 8. URL 欄位（2026-09-11 決定）
+
+| 欄位 | 值 | 備註 |
+|---|---|---|
+| 隱私權政策 URL | `https://futari.southern-light.dev/{locale}/privacy` | 各語系對應 |
+| 支援 URL | `https://futari.southern-light.dev/{locale}/privacy` | **站上沒有 support 頁**（`/support` 會 307 轉去登入）。隱私頁內有「歡迎到 GitHub 開 Issue 告訴我們」的聯絡連結，滿足 Apple「支援 URL 需有支援資訊」的要求。日後補正式 support 頁時一併換掉。 |
+| 行銷 URL | 留空 | 非必填 |
+
+## 9. 截圖需求
 
 | 平台 | 尺寸 | 數量 |
 |---|---|---|
