@@ -323,8 +323,69 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
 
 用來從 CLI 完成 archive 簽章與上傳，不必開 Xcode，也可用來查 ASC 狀態。
 
-- 建立位置：ASC → 使用者與存取權限 → 整合 → App Store Connect API → 團隊金鑰 → 產生 API 金鑰，角色 **App 管理**
+- 建立位置：ASC → 使用者與存取權限 → 整合 → App Store Connect API → 團隊金鑰 → 產生 API 金鑰
 - `.p8` **只能下載一次**，放 `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8`（`chmod 600`）
 - Key ID / Issuer ID 不是機密（`.p8` 才是），但具體值不進 public repo — 存密碼管理器
 - ⚠️ CDP 控制的 Chrome 會擋自動下載，這步要人工在瀏覽器點
+
+### 角色：上傳用 App 管理，但 export 需要「管理」
+
+⚠️ **踩過**：用 **App 管理** 角色的 key 跑 `xcodebuild -exportArchive` 會失敗：
+
+```
+error: exportArchive Cloud signing permission error
+error: exportArchive No signing certificate "iOS Distribution" found
+```
+
+Xcode 的 provisioning 日誌裡是 Apple 回的 403：
+
+```
+"You haven't been given access to cloud-managed distribution certificates.
+ Please contact your team's Account Holder or an Admin to give you access."
+```
+
+本團隊的 distribution 憑證是 Apple **雲端託管**型（Developer Portal 顯示 `Distribution Managed`），
+本機 keychain 沒有私鑰，所以 export 必須走雲端簽章 —— 而雲端簽章要求 key 有
+**管理（Admin）** 角色。App 管理不夠，且 **ASC 的 key 建立後權限不能修改**
+（介面明寫「你無法透過修改金鑰存取更多服務」），只能另外建一把。
+
+因此目前有兩把：
+
+| Key ID | 角色 | 用途 |
+|---|---|---|
+| `LRB54C7D5X` | App 管理 | `xcrun altool --validate-app` / `--upload-app` |
+| `795L42Z42U` | 管理 | `xcodebuild -exportArchive` 的雲端簽章 |
+
+> **`795L42Z42U` 不能上傳完就撤銷** —— 雲端簽章權限是**每次 export 都要**，不是只有第一次。
+> 若不想長期保留 Admin 級 key，有兩條替代路：
+> 1. **改用 Xcode GUI 的 Distribute App**：走的是帳戶持有人的登入身分，不需要任何 API key。
+> 2. **在本機建一張真正的 Apple Distribution 憑證**（CSR → Portal → `.cer` → 匯入 keychain）：
+>    有本機憑證後 export 就在本機簽，不碰雲端簽章，Admin key 即可撤銷，`LRB54C7D5X` 留著上傳就夠。
+>    代價是佔一個 distribution 憑證名額，私鑰務必另外備份。
+
+## I. 用 ASC API 填上架資料（比點表單快，且可逐項回查）
+
+送審資料幾乎都能用 App Store Connect API 寫，不必在網頁上逐格點。好處是每一項都能
+`GET` 回來驗證，不會「以為填了」。
+
+**JWT**：ASC 用 ES256 JWT，不需要第三方套件——`openssl dgst -sha256 -sign` 簽名後把
+DER 的 `SEQUENCE{r,s}` 轉成 raw 64 bytes，再組 `header.payload.signature`（base64url）。
+`aud` 固定 `appstoreconnect-v1`。
+
+**幾個實際踩到的點**：
+
+| 坑 | 說明 |
+|---|---|
+| 首次送審不能寫 `whatsNew` | `PATCH appStoreVersionLocalizations` 帶 `whatsNew`（**連 `null` 都算**）會回 `409 STATE_ERROR: Attribute 'whatsNew' cannot be edited at this time`。整個欄位要省略。 |
+| 年齡分級欄位型別混合 | `ageRatingDeclarations` 有些欄位是 enum（`NONE` / `INFREQUENT_OR_MILD` / `FREQUENT_OR_INTENSE`），有些是 boolean。全部丟 `"NONE"` 會回 409 並**列出哪些該是 BOOLEAN**——照著錯誤訊息修最快。路徑是 `PATCH /v1/ageRatingDeclarations/{id}`（不是 `/v1/appInfos/{id}/ageRatingDeclaration`，那會 405）。 |
+| inline 建立要用 `${local-id}` | `appPriceSchedules` / `appAvailabilities` 的 `included` 物件 id 必須長成 `${任意名稱}`，否則回 `invalid format`。 |
+| 新增語系會自動長出版本 localization | `POST appInfoLocalizations` 之後，該語系的 `appStoreVersionLocalizations` 會自動被建好（空的），所以後續要用 `PATCH` 而不是 `POST`。 |
+| App 隱私權**不在**公開 API | `appDataUsages` 那組公開端點全部 404。要用網頁的私有 iris API：`POST /iris/v1/appDataUsages`，一列 = `(app, category, dataProtection, purpose)`；詞彙表在 `/iris/v1/appDataUsageCategories`、`appDataUsagePurposes`、`appDataUsageDataProtections`。最後的「發佈」是**法律聲明**（同意內容正確且合法），要本人按。 |
+| 出口合規可以事後補在 build 上 | binary 若沒有 `ITSAppUsesNonExemptEncryption`，build 的 `usesNonExemptEncryption` 會是 `null`（送審 blocker）。**不需要重新 build**：`PATCH /v1/builds/{id}` 設 `usesNonExemptEncryption: false` 即可。 |
+| 截圖上傳是三步 | `POST /v1/appScreenshots`（給 `fileSize` / `fileName`）拿到 `uploadOperations` → 依每個 operation 的 `method` / `url` / `requestHeaders` PUT 對應 byte range → `PATCH` 設 `uploaded: true` + `sourceFileChecksum`（檔案的 MD5 hex）。 |
+| iPad 截圖用 `APP_IPAD_PRO_3GEN_129` | 13" 的 2064×2752 就放這個 display type，會被接受。iPhone 1290×2796 放 `APP_IPHONE_67`。 |
+
+> ⚠️ **2026-09-11 教訓（又一次）**：runbook 寫「截圖 ✅ 已產出」，但 ASC 上實際掛的是
+> 2026-06 用手機拍的 `IMG_88xx.PNG`（1242×2688，6.5" 格），**不是** `docs/store-assets/`
+> 那組設計過的 1290×2796。「素材產出」不等於「已上傳」。動手前先用 API 或 Console 看實況。
 
