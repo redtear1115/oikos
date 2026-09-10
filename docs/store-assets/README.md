@@ -19,6 +19,8 @@ last_updated: 2026-08-06
 | `graphics/play-feature-graphic-ja.png` | 同上 | ja 商店本地化 | ✅ |
 | `screenshots/*-ios-6.7.png` | 1290×2796、無 alpha | App Store 6.7"（必填），4 張 | ✅ |
 | `screenshots/*-play.png` | 1080×1920、無 alpha | Play 手機截圖（必填 ≥2），4 張 | ✅ |
+| `screenshots/*-tablet.png` | 1080×1920、無 alpha | Play 平板截圖（7 吋 / 10 吋），4 張 | ✅ |
+| `screenshots/*-ipad-13.png` | 2064×2752、無 alpha | App Store 13" iPad（必填），4 張 | ✅ |
 
 ## 怎麼重新產生
 
@@ -53,19 +55,47 @@ Play 會自行套圓角遮罩，不需要我們先裁圓角。
 
 ```bash
 cd scripts/og
-node capture-screens.mjs --login   # 首次：開視窗，人工登入一次
-node capture-screens.mjs           # 之後：headless 直接截
+node capture-screens.mjs --login          # 首次：開視窗，人工登入一次
+node capture-screens.mjs                  # headless 截全部尺寸
+node capture-screens.mjs --only=ipad-13   # 只補某一組
 ```
+
+⚠️ 不加 `--only` 會**覆寫全部** 16 張。已上架的那幾組是 2026-08-07 用當時整理過的
+dev 帳本截的，且 `SCREENS` 裡的 trip UUID 是寫死的 —— 資料漂移後重跑不保證截得一樣。
+補新尺寸時請用 `--only`。
+
+> **已知瑕疵（2026-08-27 發現）**：2026-08 那批 12 張左下角有 Next.js dev overlay 的
+> 黑色「N」浮標，`*-play.png` 裡它直接壓住「首頁」tab 圖示。截圖腳本現在會用 CSS
+> 蓋掉 `nextjs-portal`（iPad 這組已乾淨），但**已上傳到 Play 的那批沒有重截**。
+> 追蹤：重截 play / tablet / ios-6.7 需要先把 dev 帳本的日期往前推，否則畫面會顯示
+> 「20 天前」而不是「今天」。
 
 四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
 
-**為什麼分兩種尺寸**：App Store 6.7" 必須**正好** 1290×2796（Apple 嚴格檢查）。
+**為什麼分這麼多種尺寸**：App Store 6.7" 必須**正好** 1290×2796（Apple 嚴格檢查）。
+13" iPad 同樣嚴格，只收 2064×2752 或 2048×2732 —— 只要 `project.pbxproj` 的
+`TARGETED_DEVICE_FAMILY` 含 `2`（宣告支援 iPad），這格就是必填，不能只交 iPhone 截圖。
 Play 則寫「顯示比例**應為** 16:9 或 9:16」——是建議不是硬性下限：本專案 2026-06-02
 上傳的手機截圖是 1080×2400（比例 2.222），Play 照收。所以 Play 這組出 1080×1920
 是為了貼合建議值，不是因為 1290×2796 會被退。
 
 > 平板欄位（7 吋 / 10 吋）另有**短邊下限**：10 吋要求每邊 1,080 px 至 7,680 px，
 > 所以 1080×1920 剛好壓在下限，不能再小。
+
+#### 換機器時怎麼重建
+
+截圖環境有三個前置，順序不能顛倒：
+
+1. **`.env.local`** —— 必須是**原檔搬過來**，不能重生。裡面的 `ENCRYPTION_KEY`
+   要跟 dev DB 裡已加密的 PII 對得上；也不能用 `vercel env pull`，那會拉到 prod 的 key。
+2. **dev server 跑起來**（`npm run dev`）—— profile 存的是 `localhost:3000` 的 session，
+   沒有 server 就沒有東西可登入。
+3. **`~/.futari-shots-profile`** —— **重建，不要搬**。它是完整的 Chrome profile，
+   有一部分綁 Keychain 與機器，跨機器複製不保證有效，Google 也可能因為裝置變了而要求重驗。
+   在新機器上跑一次 `node capture-screens.mjs --login` 重登比較快也比較可靠。
+
+Node 版本走 repo 根目錄的 `.nvmrc`（Node 24 LTS）。若 `node -v` 不是 24，
+檢查 PATH 有沒有被其他工具自帶的 Node 遮掉。
 
 **為什麼要人工登入一次**：本 app 只有 Google / Apple OAuth，沒有 email 密碼表單，
 程式拿不到 session。所以用專屬 userDataDir（`~/.futari-shots-profile`）登入一次後重複使用。

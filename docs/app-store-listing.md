@@ -243,7 +243,8 @@ grace period applies; data is removed within 14 business days.
 No in-app purchases. The app is free; there is no tip jar shown on iOS.
 ```
 
-> Play Console 對應欄位：**App access**（說明 solo 可直接進入 + 選擇性 demo 帳號）；
+> Play Console 對應欄位：**App access**（選「All functionality is available without special access」，
+> 說明 solo 可直接進入、無 demo 帳號可給）；
 > **Test instructions** 放同一段（去掉 Apple 4.8 那行）。
 
 ---
