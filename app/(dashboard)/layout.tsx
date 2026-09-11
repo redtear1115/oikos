@@ -17,6 +17,7 @@ import { canAccessGuardian } from '@/lib/guardian'
 import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMenuProvider'
 import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
 import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
+import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
 
 // CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
 // but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
@@ -133,6 +134,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <PartnerActivityToast />
           <AvatarMenuProvider data={avatarMenuData}>
             <div className={`relative max-w-md mx-auto min-h-dvh ${notoTC.variable}`} style={{ background: 'var(--bg)' }}>
+              <ShellUpdateNotice />
               {deletionRequestedAt && (
                 <AccountDeletionBanner requestedAt={new Date(deletionRequestedAt).toISOString()} />
               )}
