@@ -211,6 +211,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ## AI 開發協作規則
 
+- **偏好透過 subagent roles 分工**：開發任務優先委派給 subagent（有對應 role 就用 role，如 pilotfish 的 scout / executor / verifier；需要指定 model 時用 ad-hoc subagent），主 session 負責 framing、brief、驗收與整合。平行 subagent 各自用 worktree 隔離（見「Worktree 工作流」）。
 - **commit 自主、push 延到 PR-time**：每完成一個邏輯單位（PR / feature）即自動 commit，不必問；但**不要每個 commit 都 push**——本機累積，只在「要開 PR / 更新已開的 PR」時才 push。原因：`vercel.json` 沒有 git/deploy 設定，Vercel 預設「任何 branch 每次 push 都建一個 preview deployment」，逐 commit push 會產生大量不必要的 build。**例外**：當任務本身需要 preview 部署才能進行（例如測試已部署的 endpoint），iterative push 是必要且合理的。
 - **`main` / `release` 是 protected**：絕對不要直接 push 到這兩條，要進去都走 PR merge 流程。`gh pr merge --admin`（任何繞過 branch protection 的 merge）也要明確指令才執行。
 - **destructive ops**：動 prod 資料、force push 到 main/release、`reset --hard` 之類仍要明確確認 scope 後才執行。force-push（含 `--force-with-lease`）到 feature branch 在 rebase 後可自動執行。
