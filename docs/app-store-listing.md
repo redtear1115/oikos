@@ -1,8 +1,8 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-11
 ---
 
-# App Store / Play Store — 上架文案與表單填寫 (v1.5.1)
+# App Store / Play Store — 上架文案與表單填寫 (v1.5.5)
 
 > 配合 [app-store-submission-runbook.md](app-store-submission-runbook.md)。本檔提供可直接貼進 console 的**商店文案（4 語）**、
 > **Data safety / App Privacy 申報對照**、**Review Notes 模板**。
@@ -221,10 +221,21 @@ Native features beyond the web experience:
 - APNs push notifications (partner expense alerts, monthly-review reminders).
 - Native Sign in with Apple (alongside Google), per Guideline 4.8.
 
-Access for review:
-- Solo mode lets a single reviewer enter without a partner — there is no
-  onboarding block. You can sign in with Apple and use the app immediately.
-- Optional demo account: <email> / <password>
+Access for review — no username/password exists:
+- The app has no email/password form. Authentication is Google OAuth or
+  native Sign in with Apple only, so we cannot supply a demo login.
+- Please tap "Sign in with Apple". A solo ledger is created immediately and
+  is fully usable by one person — no partner and no onboarding step is
+  required to reach the main screens.
+
+About text written by users (for your assessment under 1.2):
+- The only free-form text two users exchange is the monthly review note:
+  one note per calendar month, visible solely to the single partner who
+  joined via that user's private invite link, locked read-only at month end.
+- There is no public feed, no discovery of other users, no way to share
+  content outside the pair, and no open chat. We therefore did not declare
+  user-generated content or messaging in the age-rating questionnaire, and
+  are flagging the mechanism here so you can judge it directly.
 
 Account deletion: Settings → 刪除帳號 (Delete account). A 14-day cancellable
 grace period applies; data is removed within 14 business days.
@@ -232,12 +243,29 @@ grace period applies; data is removed within 14 business days.
 No in-app purchases. The app is free; there is no tip jar shown on iOS.
 ```
 
-> Play Console 對應欄位：**App access**（說明 solo 可直接進入 + 選擇性 demo 帳號）；
+> Play Console 對應欄位：**App access**（選「All functionality is available without special access」，
+> 說明 solo 可直接進入、無 demo 帳號可給）；
 > **Test instructions** 放同一段（去掉 Apple 4.8 那行）。
 
 ---
 
-## 8. 截圖需求（待產出）
+## 8. URL 欄位（2026-09-11 決定）
+
+| 欄位 | 值 | 備註 |
+|---|---|---|
+| 隱私權政策 URL | `https://futari.southern-light.dev/{locale}/privacy` | 各語系對應 |
+| 支援 URL | `https://futari.southern-light.dev/{locale}/privacy` | **站上沒有 support 頁**（`/support` 會 307 轉去登入），所以支援 URL 指向隱私頁。 |
+| 行銷 URL | 留空 | 非必填 |
+
+> ⚠️ **2026-09-11 修正**：原本隱私頁唯一的聯絡途徑是 GitHub「開 Issue」連結，而該連結對
+> **未登入訪客會 302 轉到 GitHub 登入頁** —— 等於沒有 GitHub 帳號的使用者或審核員根本聯絡不到我們，
+> 不符合 Guideline 1.5 對支援 URL 的要求。已在隱私頁加上 `support@southern-light.dev`
+> （Cloudflare Email Routing 轉寄，可隨時改指向而不用動程式碼），GitHub 連結保留作為次要途徑。
+>
+> 同時修掉一個相關的 bug：`/privacy` 與 `/terms` 的句尾全形句號 `。` 是**寫死在 JSX 裡**的，
+> 所以英文頁會出現 `...open an issue on GitHub 。`。已改成 i18n key `periodMark`（en 為 `.`）。
+
+## 9. 截圖需求
 
 | 平台 | 尺寸 | 數量 |
 |---|---|---|

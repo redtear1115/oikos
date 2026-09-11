@@ -456,7 +456,7 @@ export const zhCN: Translations = {
     pending: '处理中…',
     title: '确定要删除账号？',
     description:
-      '我们会在 14 个工作天内移除你的资料。这段期间你随时可以回来取消。若你和对方共用账本，对方的记录会保留，你的名字会显示为「已离开的伙伴」。',
+      '我们会在 14 天后移除你的资料。在那之前你随时可以回来取消。若你和对方共用账本，对方的记录会保留，你的名字会显示为「已离开的伙伴」。',
   },
 
   accountDeletionBanner: {
@@ -1641,6 +1641,7 @@ export const zhCN: Translations = {
     ],
     outro: '如有任何疑问，',
     contactLinkLabel: '欢迎到 GitHub 开 Issue 告诉我们',
+    periodMark: '。',
     backHome: '← 回首页',
     privacyLink: '隐私权政策',
   },
@@ -1681,6 +1682,9 @@ export const zhCN: Translations = {
     sectionRightsBody: '您可随时通过设置页登出或删除账号。如需导出或查询您的个人数据，',
     outro: '本政策若有变更，将在本页更新并修改日期。如有任何疑问，',
     contactLinkLabel: '欢迎到 GitHub 开 Issue 告诉我们',
+    contactEmailPrefix: '，或寄信到 ',
+    contactEmailSuffix: '。',
+    periodMark: '。',
     backHome: '← 回首页',
     termsLink: '服务条款',
   },

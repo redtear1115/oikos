@@ -6,7 +6,22 @@
       "Bash(npm run build)",
       "Bash(npm run db:generate)",
       "Bash(npm install *)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(npx tsc --noEmit:*)",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__read_page",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__read_console_messages",
+      "mcp__claude_ai_githubcopilot__issue_read",
+      "mcp__claude_ai_githubcopilot__pull_request_read",
+      "mcp__claude_ai_Sentry__search_issues",
+      "mcp__claude_ai_Sentry__search_events"
     ]
   }
 }

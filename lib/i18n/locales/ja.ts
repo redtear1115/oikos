@@ -455,7 +455,7 @@ export const ja: Translations = {
     pending: '処理中…',
     title: 'アカウントを削除しますか？',
     description:
-      'お客様のデータは14営業日以内に削除されます。それまではいつでも取り消せます。共有家計簿の場合、相手の記録は残り、あなたの名前は「退出したパートナー」と表示されます。',
+      'お客様のデータは14日後に削除されます。それまではいつでも取り消せます。共有家計簿の場合、相手の記録は残り、あなたの名前は「退出したパートナー」と表示されます。',
   },
 
   accountDeletionBanner: {
@@ -1640,6 +1640,7 @@ export const ja: Translations = {
     ],
     outro: 'ご不明な点がございましたら、',
     contactLinkLabel: 'GitHub で Issue を開いてお知らせください',
+    periodMark: '。',
     backHome: '← ホームに戻る',
     privacyLink: 'プライバシーポリシー',
   },
@@ -1680,6 +1681,9 @@ export const ja: Translations = {
     sectionRightsBody: '設定ページからいつでもサインアウトまたはアカウントを削除できます。個人データのエクスポートやお問い合わせは、',
     outro: 'ポリシーに変更がある場合は、本ページを更新し日付を修正します。ご不明な点がございましたら、',
     contactLinkLabel: 'GitHub で Issue を開いてお知らせください',
+    contactEmailPrefix: '。メールの場合は ',
+    contactEmailSuffix: ' までご連絡ください。',
+    periodMark: '。',
     backHome: '← ホームに戻る',
     termsLink: '利用規約',
   },

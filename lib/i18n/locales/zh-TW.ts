@@ -1987,6 +1987,8 @@ export type Translations = {
     bullets: readonly string[]
     outro: string
     contactLinkLabel: string
+    /** Sentence-final punctuation. Locale-dependent: `。` for zh/ja, `.` for en. */
+    periodMark: string
     backHome: string
     privacyLink: string
   }
@@ -2010,6 +2012,12 @@ export type Translations = {
     sectionRightsBody: string
     outro: string
     contactLinkLabel: string
+    /** Text before the support email address in the "your rights" paragraph. */
+    contactEmailPrefix: string
+    /** Text after the support email address, including the sentence-final mark. */
+    contactEmailSuffix: string
+    /** Sentence-final punctuation. Locale-dependent: `。` for zh/ja, `.` for en. */
+    periodMark: string
     backHome: string
     termsLink: string
   }
@@ -2892,7 +2900,7 @@ export const zhTW: Translations = {
     pending: '處理中…',
     title: '確定要刪除帳號？',
     description:
-      '我們會在 14 個工作天內移除你的資料。這段期間你隨時可以回來取消。若你和對方共用帳本，對方的紀錄會保留，你的名字會顯示為「已離開的夥伴」。',
+      '我們會在 14 天後移除你的資料。在那之前你隨時可以回來取消。若你和對方共用帳本，對方的紀錄會保留，你的名字會顯示為「已離開的夥伴」。',
   },
 
   accountDeletionBanner: {
@@ -4077,6 +4085,7 @@ export const zhTW: Translations = {
     ],
     outro: '如有任何疑問，',
     contactLinkLabel: '歡迎到 GitHub 開 Issue 告訴我們',
+    periodMark: '。',
     backHome: '← 回首頁',
     privacyLink: '隱私權政策',
   },
@@ -4117,6 +4126,9 @@ export const zhTW: Translations = {
     sectionRightsBody: '您可隨時透過設定頁登出或刪除帳號。如需匯出或查詢您的個人資料，',
     outro: '本政策若有變更，將在本頁更新並修改日期。如有任何疑問，',
     contactLinkLabel: '歡迎到 GitHub 開 Issue 告訴我們',
+    contactEmailPrefix: '，或寄信到 ',
+    contactEmailSuffix: '。',
+    periodMark: '。',
     backHome: '← 回首頁',
     termsLink: '服務條款',
   },
