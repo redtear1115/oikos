@@ -5,6 +5,13 @@ import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
 
+/** Public support address. Forwarded to the maintainer via Cloudflare Email
+ *  Routing, so it can be re-pointed without a code change. This is the only
+ *  contact route that works without a GitHub account, which is what the App
+ *  Store support URL (which points at this page) needs — see
+ *  docs/app-store-listing.md §8. */
+const SUPPORT_EMAIL = 'support@southern-light.dev'
+
 type Params = Promise<{ locale: string }>
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -104,7 +111,11 @@ export default async function PrivacyPage({ params }: { params: Params }) {
             >
               {t.privacyPage.contactLinkLabel}
             </a>
-            。
+            {t.privacyPage.contactEmailPrefix}
+            <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: 'var(--ink-2)' }}>
+              {SUPPORT_EMAIL}
+            </a>
+            {t.privacyPage.contactEmailSuffix}
           </p>
 
           <p className="pt-2">
@@ -117,7 +128,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
             >
               {t.privacyPage.contactLinkLabel}
             </a>
-            。
+            {t.privacyPage.periodMark}
           </p>
         </div>
 
