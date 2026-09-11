@@ -457,7 +457,7 @@ export const en: Translations = {
     pending: 'Working…',
     title: 'Delete your account?',
     description:
-      "We'll remove your data within 14 business days. You can come back and cancel any time before then. If you share a ledger, your partner's records stay, and your name will show as “a partner who left”.",
+      "We'll remove your data after 14 days. You can come back and cancel any time before then. If you share a ledger, your partner's records stay, and your name will show as “a partner who left”.",
   },
 
   accountDeletionBanner: {
