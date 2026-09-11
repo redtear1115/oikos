@@ -278,6 +278,10 @@ Failed to resolve dependencies Dependencies could not be resolved because
 > ⚠️ 這個衝突在 2026-07-12 升 Capacitor 8 時就存在了，但因為薄殼平常不需要重 build iOS，
 > 一直到 2026-09-10 要重新送審才浮出來。**升 Capacitor 大版本後要記得實際 archive 一次 iOS**，
 > 不然問題會潛伏到下次送審。
+>
+> 這件事現在由 CI 接手（#988）：`.github/workflows/native-smoke.yml` 在 `ios/**`、`patches/**`、
+> `package.json`、`package-lock.json` 被動到的 PR 上跑一次不簽章 archive，另加每月 cron 兜底。
+> 下面的驗收步驟仍然是本機手動改這一段時的檢查清單。
 
 **修法**：用 `patch-package` 把 plugin 的版本範圍放寬到 `"7.0.0"..<"9.0.0"`。
 plugin 的 `Plugin.swift` 只有一個檔案、用的都是 Capacitor 6+ 就穩定的 API

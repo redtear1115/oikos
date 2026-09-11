@@ -1,0 +1,45 @@
+name: CI
+
+# Web 檢查：每個開往 main 的 PR 都跑 lint + test + production build。
+# 三個 step 都不需要任何 secret：
+#   - `npm run test:ci` 排掉要連 dev Postgres 的 integration test（見 vitest.config.ci.ts）
+#   - `next build --webpack` 在完全空的環境下實測可通過（env 只影響 runtime 與
+#     Sentry source map 上傳；沒有 SENTRY_AUTH_TOKEN 時 withSentryConfig 靜默跳過上傳）
+# 所以這裡刻意不塞 dummy env——假的 NEXT_PUBLIC_* 只會被 inline 進 bundle，卻擋不住任何錯。
+
+on:
+  pull_request:
+    branches: [main]
+
+# 同一條 PR 連推多個 commit 時，只留最新那次。
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: lint · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test:ci
+
+      - name: Build
+        run: npm run build

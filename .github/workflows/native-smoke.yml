@@ -1,0 +1,124 @@
+name: Native smoke
+
+# 只證明「兩個原生殼還編得起來」，不簽章、不上傳、不出 artifact。
+#
+# 為什麼要有這個 job：Capacitor 8 升級（2026-07-12）後 iOS 因 SPM 版本衝突兩個月無法編譯，
+# 直到 2026-09-10 要送審才發現（runbook §G / #935）。薄殼平常不需要重 build 原生，
+# 所以這類壞掉會一路潛伏到下次送審。
+#
+# macOS runner 是 10 倍分鐘數計費，因此**不掛在每個 PR 上**：只在原生相關路徑被動到、
+# 每月一次的 cron、或手動觸發時才跑。
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'android/**'
+      - 'capacitor.config.ts'
+      - 'patches/**'
+      # package.json 管 Capacitor / plugin 版本；package-lock.json 也要收，因為
+      # caret 範圍下的 `npm update` 只會動 lock，而那正是 SPM 衝突的來源類型。
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/native-smoke.yml'
+  schedule:
+    # 每月 1 號 02:00 UTC。cron 只會在預設分支（main）上跑。
+    - cron: '0 2 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: native-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios-archive:
+    name: iOS archive（不簽章）
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Toolchain
+        run: xcodebuild -version
+
+      - name: Install
+        run: npm ci
+
+      # postinstall 是 `patch-package || exit 0`（fail-soft，免得 patch 壞掉炸掉 Vercel 的
+      # web 部署），所以 patch 沒套用不會讓 npm ci 變紅。這裡明確擋一次，讓它在 10 分鐘的
+      # archive 之前就報錯，而不是變成一句難讀的 SwiftPM 解析錯誤。
+      - name: 確認 apple-sign-in SPM patch 已套用
+        run: |
+          grep -q '"7.0.0"\.\.<"9.0.0"' node_modules/@capacitor-community/apple-sign-in/Package.swift \
+            || { echo "::error::patch-package 沒把 apple-sign-in 的 capacitor-swift-pm 範圍放寬（runbook §G）"; exit 1; }
+
+      # `out/`、`ios/App/App/public`、`capacitor.config.json` 都是 gitignore 的 cap sync 產物，
+      # 乾淨 checkout 一定要先補，否則 archive 會失敗在 "The file public couldn't be opened"。
+      # server.url 架構下 out/ 是空的沒關係，bundled 內容根本不會被用到。
+      - name: Capacitor sync（iOS）
+        run: |
+          mkdir -p out
+          npx cap sync ios
+
+      # derivedData 與 SPM clone 都指到全新目錄：Package.resolved 已 pin exact 8.3.4，
+      # 吃到舊的解析快取就驗不出 patch 是否真的有效（runbook §G 驗收步驟 2）。
+      - name: Archive
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm" \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+  android-build:
+    name: Android build（不簽章）
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Capacitor 8 的 capacitor.build.gradle 指定 sourceCompatibility 21。
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install
+        run: npm ci
+
+      # android/capacitor-cordova-android-plugins/ 與 assets/ 下的 config 都是 gitignore 的
+      # cap sync 產物，沒先 sync 的話 settings.gradle 會找不到 plugin 專案。
+      - name: Capacitor sync（Android）
+        run: |
+          mkdir -p out
+          npx cap sync android
+
+      # 用 assembleDebug：debug 走 Android 自動產生的 debug keystore，不需要任何 secret。
+      # release 變體的 signingConfig 從 KEYSTORE_PATH / KEYSTORE_PASSWORD 等環境變數讀
+      # （android/app/build.gradle），CI 沒有那些值——本機實測 assembleRelease 會停在
+      # `:app:validateSigningRelease` 的 "Keystore file ... not found"。這個 job 的目的只是
+      # 「證明還編得起來」，debug 變體一樣走完整個編譯與依賴解析。
+      - name: Gradle assembleDebug
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
