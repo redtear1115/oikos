@@ -68,7 +68,7 @@ export default async function TermsPage({ params }: { params: Params }) {
             >
               {t.termsPage.contactLinkLabel}
             </a>
-            。
+            {t.termsPage.periodMark}
           </p>
         </div>
 

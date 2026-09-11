@@ -254,8 +254,16 @@ No in-app purchases. The app is free; there is no tip jar shown on iOS.
 | 欄位 | 值 | 備註 |
 |---|---|---|
 | 隱私權政策 URL | `https://futari.southern-light.dev/{locale}/privacy` | 各語系對應 |
-| 支援 URL | `https://futari.southern-light.dev/{locale}/privacy` | **站上沒有 support 頁**（`/support` 會 307 轉去登入）。隱私頁內有「歡迎到 GitHub 開 Issue 告訴我們」的聯絡連結，滿足 Apple「支援 URL 需有支援資訊」的要求。日後補正式 support 頁時一併換掉。 |
+| 支援 URL | `https://futari.southern-light.dev/{locale}/privacy` | **站上沒有 support 頁**（`/support` 會 307 轉去登入），所以支援 URL 指向隱私頁。 |
 | 行銷 URL | 留空 | 非必填 |
+
+> ⚠️ **2026-09-11 修正**：原本隱私頁唯一的聯絡途徑是 GitHub「開 Issue」連結，而該連結對
+> **未登入訪客會 302 轉到 GitHub 登入頁** —— 等於沒有 GitHub 帳號的使用者或審核員根本聯絡不到我們，
+> 不符合 Guideline 1.5 對支援 URL 的要求。已在隱私頁加上 `support@southern-light.dev`
+> （Cloudflare Email Routing 轉寄，可隨時改指向而不用動程式碼），GitHub 連結保留作為次要途徑。
+>
+> 同時修掉一個相關的 bug：`/privacy` 與 `/terms` 的句尾全形句號 `。` 是**寫死在 JSX 裡**的，
+> 所以英文頁會出現 `...open an issue on GitHub 。`。已改成 i18n key `periodMark`（en 為 `.`）。
 
 ## 9. 截圖需求
 
