@@ -389,7 +389,7 @@ export const en: Translations = {
   bottomNav: {
     home: 'Home',
     records: 'Records',
-    assets: 'Things',
+    assets: 'Aibutsu',
     settings: 'Settings',
     addAriaLabel: 'Add record',
     navAriaLabel: 'Primary navigation',
@@ -620,14 +620,14 @@ export const en: Translations = {
   },
 
   assetPickerSheet: {
-    title: 'Pick a loved-one',
-    tablistAriaLabel: 'Pick a loved-one',
+    title: 'Pick an aibutsu',
+    tablistAriaLabel: 'Pick an aibutsu',
     noneTitle: 'No link',
-    noneSubtitle: 'This entry is not tied to any loved-one',
+    noneSubtitle: 'This entry is not tied to any aibutsu',
     loading: 'Loading…',
     loadFailed: 'Failed to load',
-    emptyAibutsu: 'No loved-ones yet. Add one from the 愛物 tab first.',
-    emptyGuardian: 'No policies yet. Add one from 愛物 > 守護 first.',
+    emptyAibutsu: 'No aibutsu yet. Add one from the Aibutsu tab first.',
+    emptyGuardian: 'No policies yet. Add one from Aibutsu > Guardian first.',
   },
 
   records: {
@@ -968,9 +968,9 @@ export const en: Translations = {
   },
 
   assets: {
-    title: 'Treasures',
+    title: 'Aibutsu',
     empty: {
-      title: 'No treasures yet',
+      title: 'No aibutsu yet',
       body: 'Add a car, pet, child, or policy to start recording the time and care you give them.',
     },
     section: {
@@ -980,12 +980,12 @@ export const en: Translations = {
       items: 'Items',
     },
     tabs: {
-      aibutsu: 'Treasures',
+      aibutsu: 'Aibutsu',
       guardian: 'Guardian',
     },
     tabEmpty: {
-      aibutsuHint: 'No treasures yet. Start with the button on the right.',
-      guardianHint: 'No policies yet. Record the coverage that guards your treasures.',
+      aibutsuHint: 'No aibutsu yet. Start with the button on the right.',
+      guardianHint: 'No policies yet. Record the coverage that guards your aibutsu.',
     },
     guardianGated: {
       title: 'Guardian is still in Beta',
@@ -1153,13 +1153,13 @@ export const en: Translations = {
   },
 
   assetSheet: {
-    titleNew: 'New treasure',
+    titleNew: 'New aibutsu',
     titleEdit: 'Edit {type}',
-    typeFallback: 'treasure',
+    typeFallback: 'aibutsu',
     saveChanges: 'Save changes',
     deleteConfirm: {
       title: 'Delete?',
-      description: 'This treasure and all linked expenses will be removed from the list.',
+      description: 'This aibutsu and all linked expenses will be removed from the list.',
       confirmLabel: 'Delete',
     },
     type: {
@@ -1330,8 +1330,8 @@ export const en: Translations = {
   assetDetail: {
     backAriaLabel: 'Back',
     editAriaLabel: 'Edit',
-    switcherAriaLabel: 'Switch treasure',
-    siblingRailAriaLabel: 'Other treasures',
+    switcherAriaLabel: 'Switch aibutsu',
+    siblingRailAriaLabel: 'Other aibutsu',
     switcher: {
       emptyGroup: '(none)',
       currentLabel: 'Current',
@@ -1532,7 +1532,7 @@ export const en: Translations = {
     },
     rule: {
       pausedHint: 'Paused',
-      pausedAssetDeletedHint: 'Paused (linked treasure deleted)',
+      pausedAssetDeletedHint: 'Paused (linked aibutsu deleted)',
       intervalEveryMonth: 'Monthly',
       intervalEveryQuarter: 'Quarterly',
       intervalEveryHalfYear: 'Every 6 months',
@@ -1566,7 +1566,7 @@ export const en: Translations = {
       descriptionPlaceholder: 'e.g., rent, subscription',
       startsOnLabel: 'Starts on',
       endsOnLabel: 'Ends on (optional)',
-      assetLabel: 'Linked treasure (optional)',
+      assetLabel: 'Linked aibutsu (optional)',
       assetNone: 'None',
       pauseAction: 'Pause',
       resumeAction: 'Resume',
@@ -1622,7 +1622,7 @@ export const en: Translations = {
     subtitle: 'Here are pages already saved on this device.',
     linkDashboard: 'Home',
     linkRecords: 'Records',
-    linkAssets: 'Things you love',
+    linkAssets: 'Aibutsu',
     footer: "We'll catch up when you're back online",
     metadataTitle: 'Offline · Futari',
   },
@@ -1666,7 +1666,7 @@ export const en: Translations = {
       'To analyze feature usage and improve the product experience (via PostHog, with no personally identifiable information).',
     ],
     sectionStorageTitle: 'Where data is stored',
-    sectionStorageBody: "Data is stored on Supabase servers in the Tokyo, Japan region, protected by encrypted connections and access controls. Sensitive fields within your 愛物 records — including a child's full name, national ID number, health insurance card number, a car's licence plate, and a home address — are encrypted with AES-256-GCM before being written to the database. The database never holds plaintext; decryption only occurs through the application itself.",
+    sectionStorageBody: "Data is stored on Supabase servers in the Tokyo, Japan region, protected by encrypted connections and access controls. Sensitive fields within your aibutsu records — including a child's full name, national ID number, health insurance card number, a car's licence plate, and a home address — are encrypted with AES-256-GCM before being written to the database. The database never holds plaintext; decryption only occurs through the application itself.",
     sectionRetentionTitle: 'Data retention',
     sectionRetentionBody: 'Your account data is retained for as long as your account remains active. Deleted transactions are kept as soft-deleted records for up to one year before being permanently removed by an automated process. Following account deletion, all related data will be removed from our servers within 14 business days.',
     sectionThirdPartyTitle: 'Third-party services',
