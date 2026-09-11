@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!--
+        Production origin: TLS only, no cleartext fallback.
+    -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">futari.southern-light.dev</domain>
+    </domain-config>
+
+    <!--
+        #990 — loopback only, so `CAP_SERVER_URL=http://10.0.2.2:3000 npx cap sync android`
+        can point the shell at a local dev server. `10.0.2.2` is the emulator's
+        alias for the host machine; `localhost` covers adb reverse / a server
+        running inside the emulator. Android ignores capacitor.config.json's
+        `server.cleartext` for the app WebView once networkSecurityConfig is set,
+        so this file is what actually permits it.
+
+        Safe to ship: it only relaxes cleartext for addresses that can never
+        leave the device, and the base config (cleartext denied, API 28+ default)
+        still covers every real host.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
     </domain-config>
 </network-security-config>
