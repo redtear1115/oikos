@@ -21,6 +21,9 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
+| [v1.5.6](https://github.com/redtear1115/oikos/milestone/64) | 三平台開發 harness 調整 |
+| [v1.6.0](https://github.com/redtear1115/oikos/milestone/55) | 出團多人旅行（付費功能） |
+| [v1.7.0](https://github.com/redtear1115/oikos/milestone/60) | 出遊．揪團一起記——多方分帳的擴散獲客 |
 | [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
 | [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 |
 
