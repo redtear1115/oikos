@@ -133,7 +133,45 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 - 工作模式不變：在本 session 依序做（一次一個任務）；平行背景 agent 只在明確要求時用，且各自有自己的 worktree。委派與否依全域 Orchestration 政策。
 - **兩套 worktree 各管各的情境**：主 session 的任務 worktree 用上述 `.claude/worktrees/{issue_no}-{slug}/` 手動慣例；平行 subagent 的隔離交給 harness 的 `isolation: "worktree"`（自動建立與回收，不落在此路徑）。
 - Worktree 缺 `.env.local` 時從 main checkout `ln -s`，不要 copy（copy 會在 key 輪替後 silently drift）。
+- 做 iOS 原生工作的 worktree，開完先 `mkdir -p out && npx cap sync ios`（`cap sync` 產物沒進版控，乾淨 checkout 缺這步 Xcode 會開不起來）。
 - Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
+
+---
+
+## 三平台架構（Web / iOS / Android）
+
+Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.url` 指向 prod（`https://futari.southern-light.dev`），iOS / Android 殼只是載入線上網站的 WebView。**web 改動經 Vercel 部署即時觸達三平台**，不必重送商店；只有動到原生輸入才要重新送審。
+
+送審步驟、Xcode／Gradle 雷點、ASC API 用法見 [docs/app-store-submission-runbook.md](docs/app-store-submission-runbook.md)。
+
+### 需要重新送審的 trigger
+
+- `ios/**`、`android/**`
+- `capacitor.config.ts`
+- `patches/**`
+- `package.json` 中 `@capacitor/*` 或 `@capacitor-community/*` 依賴變動
+- app icon / splash
+- 商店 metadata（`docs/store-assets/`、App Store Connect / Play Console 欄位）
+
+### 原生契約面（web 端，改動即時生效）
+
+以下是 Capacitor-aware 的 web 程式，**沒有送審這道防線**：改了就即時打到所有已安裝的殼（含舊版）。動到時要在真機殼內驗證，不能只看瀏覽器。
+
+- `lib/pushNotifications.ts`
+- `components/KofiWidget.tsx`（iOS IAP gate）
+- `app/[locale]/sign-in/SignInButton.tsx`
+- `app/[locale]/_landing/LandingStandaloneRedirect.tsx`
+- `app/[locale]/_landing/Landing.tsx`
+- `app/(dashboard)/_components/PushTokenRegistrar.tsx`
+
+### 版本號
+
+使用者可見版號（`MARKETING_VERSION` / `versionName`）與商店遞增計數（`CURRENT_PROJECT_VERSION` / `versionCode`）分離；計數每次上傳 +1、與 semver 脫鉤，日常 web release **不動**原生版本號。規則見 runbook §E。
+
+### 原生 build 雷點
+
+- Android 需 JDK 21：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
+- 乾淨 checkout / worktree 做 iOS 工作前先 `mkdir -p out && npx cap sync ios`
 
 ---
 
@@ -156,9 +194,11 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 要 release 時：
 
-1. 在 `chore/release-vX.Y.Z` 上跑 `git-develop:release` skill（bump version + CHANGELOG + CLAUDE.md + tag）
+1. 在 `chore/release-vX.Y.Z` 上跑 [`release`](.claude/skills/release/SKILL.md) skill（bump version + CHANGELOG + CLAUDE.md + README + tag）
 2. 開 PR `chore/release-vX.Y.Z → main`，merge 後 push tag
 3. 開 PR `main → release`，merge 後 Vercel 自動部 prod
+
+本版動過「三平台架構」列的原生 trigger 路徑時，release 後要另外確認原生殼是否需要重送商店（skill 會在收尾 checklist 標示；流程見 [runbook](docs/app-store-submission-runbook.md)）。
 
 ---
 
@@ -254,7 +294,8 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ## 專案內建 skill
 
-`.claude/skills/` 有兩個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
+`.claude/skills/` 有三個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
 
 - [`run-oikos`](.claude/skills/run-oikos/SKILL.md) — 啟動並 smoke test dev server（`npm install` + `npm run dev` + curl），收錄冷機啟動會踩的雷（缺 `@next/bundle-analyzer`、缺 `.env.local`、port 3000 佔用、Turbopack lazy-compile 404）。
 - [`ja-i18n`](.claude/skills/ja-i18n/SKILL.md) — 維護 `lib/i18n/locales/ja.ts`：偵測未翻譯 key、辨識合法漢字的假陽性、更新漢字白名單。
+- [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描與收尾 checklist；不 push、不碰 protected branch。
