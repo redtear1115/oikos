@@ -12,7 +12,10 @@ last_updated: 2026-09-11
 >
 > Bundle ID（共用）：`dev.southernlight.futari` · Apple Team：`W64689HV8B`
 
-> **進度狀態（2026-09-11）**：iOS 重新送審中，native 殼 `1.5.5 (2)`。
+> **進度狀態（2026-09-11）**：iOS 重新送審中，native 殼 bump 到 `1.5.5 (3)`。
+> `1.5.5 (2)` 被發現 `App.entitlements` 從建檔起就缺 `com.apple.developer.applesignin`，
+> 原生 Apple 登入在任何 TestFlight/App Store build 上從未可用（[PR #985](https://github.com/redtear1115/oikos/pull/985)，已 merge）。
+> `(3)` 補回 entitlement，**上傳後務必實機驗證原生 Apple 登入 sheet 真的彈出來，再回覆 Apple 的 Guideline 2.1 要求**（見下方進度）。
 > 2026-06-11 上傳的 `1.5.1 (1)` 已於 **2026-09-09 過期**（TestFlight build 壽命 90 天 — 見 [§F](#f-build-90-天會過期)），必須重傳。
 > 過程中另外發現 **iOS 自 Capacitor 8 升級（2026-07-12）後從未編譯過**，SPM 依賴衝突直接擋住 archive
 > （修法見 [§G](#g-capacitor-8--apple-sign-in-的-spm-衝突)）。追蹤 issue：[#935](https://github.com/redtear1115/oikos/issues/935)。
@@ -37,7 +40,7 @@ last_updated: 2026-09-11
 3. ✅ **App Store Connect — 建立 app 記錄**
    Bundle ID `dev.southernlight.futari`、SKU、名稱 Futari。
 
-4. ⬜ **Archive + 上傳** — `1.5.1(1)` 已過期，重傳 `1.5.5(2)`
+4. ⬜ **Archive + 上傳** — `1.5.5(2)` 缺 Apple Sign In entitlement，重傳 `1.5.5(3)`
    ```bash
    npx cap open ios          # 開 Xcode
    ```
@@ -46,7 +49,7 @@ last_updated: 2026-09-11
    2. Product → Archive。
    3. Organizer → Distribute App → App Store Connect → Upload。
    4. 等 build 在 App Store Connect 處理完。
-   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。目前：`MARKETING_VERSION=1.5.5` / `CURRENT_PROJECT_VERSION=2`。
+   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。目前：`MARKETING_VERSION=1.5.5` / `CURRENT_PROJECT_VERSION=3`。
    > 不需要 `out/` 或 `cap sync`（server.url 架構），除非改了原生 plugin / config。
    >
    > **也可以完全不開 Xcode**，用 ASC API key 從 CLI 走完（key 見 [§H](#h-app-store-connect-api-key)）：
