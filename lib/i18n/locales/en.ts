@@ -465,6 +465,11 @@ export const en: Translations = {
     cancel: 'Cancel deletion',
   },
 
+  shellUpdateNotice: {
+    message: 'This app version is out of date. Update it to use the latest features.',
+    dismissAriaLabel: 'Dismiss notice',
+  },
+
   splitRatioSection: {
     meSuffix: ' (me)',
     partnerSuffix: ' (partner)',
