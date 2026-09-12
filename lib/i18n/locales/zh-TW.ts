@@ -1034,6 +1034,20 @@ export type Translations = {
     dangerZone: {
       sectionTitle: string
       leaveCta: string
+      /** member_a only — invokes removePartner directly (no swap needed). */
+      removeCta: string
+      removeFlow: {
+        title: string
+        body: string
+        bullets: string[]
+        typePromptPrefix: string
+        typePromptSuffix: string
+        typePlaceholder: string
+        confirmText: string
+        removeButton: string
+        removing: string
+        cancel: string
+      }
       swapBanner: {
         yourProposal: string
         partnerProposal: string
@@ -1098,8 +1112,10 @@ export type Translations = {
         cannotConfirmOwnProposal: string
         notAMember: string
         onlyMemberBCanLeave: string
+        onlyMemberACanRemove: string
         balanceNotZero: string
         soloGroup: string
+        activeTrip: string
         fallback: string
       }
     }
@@ -3280,6 +3296,24 @@ export const zhTW: Translations = {
     dangerZone: {
       sectionTitle: '離開帳本',
       leaveCta: '我想離開這本帳本',
+      removeCta: '移除對方',
+      removeFlow: {
+        title: '移除 {partner}',
+        body: '{partner} 會離開這本帳本，帳本回到你一個人記錄。新的一段從現在開始；先前的紀錄留在原地，之後可以回頭查看。',
+        bullets: [
+          '{partner} 之後看不到這本帳本',
+          '尚未接受的邀請連結會失效',
+          '先前的紀錄留在這段章節裡，之後只能查看，不能再變動',
+          '這個操作沒有辦法復原',
+        ],
+        typePromptPrefix: '請輸入「',
+        typePromptSuffix: '」來確認',
+        typePlaceholder: '移除',
+        confirmText: '移除',
+        removeButton: '確定移除',
+        removing: '處理中…',
+        cancel: '先不要',
+      },
       swapBanner: {
         yourProposal: '你提出了身份互換，等對方確認',
         partnerProposal: '{partner} 提出了身份互換，等你確認',
@@ -3351,8 +3385,10 @@ export const zhTW: Translations = {
         cannotConfirmOwnProposal: '不能自己接受自己的提議',
         notAMember: '你不是這本帳本的成員',
         onlyMemberBCanLeave: '只有副帳號可以離開，請先發起身份互換',
+        onlyMemberACanRemove: '只有主帳號可以移除對方',
         balanceNotZero: '還有差額沒結清，無法離開',
         soloGroup: '已經是單人帳本',
+        activeTrip: '這本帳本目前有進行中的旅行，請先到「旅行」把它標記為結束，才能移除對方',
         fallback: '操作失敗，請稍後再試',
       },
     },
