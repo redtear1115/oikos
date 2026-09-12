@@ -25,9 +25,9 @@ interface Props {
  *   3. partner-left — solo mode and the group previously had a partner
  *   4. active-trip — there are active trips (prop-driven)
  *
- * Nothing in here pins to the top any more: a viewport-level `sticky top-0`
- * belongs in the shell top stack, which is the only element that can guarantee
- * it does not land on top of another one.
+ * Nothing in here pins to the top any more. Anything that wants the top of the
+ * viewport belongs in the shell top stack, which is the only element that can
+ * guarantee it does not land on top of another one.
  *
  * Renders nothing when none of the conditions apply.
  */
@@ -82,12 +82,12 @@ export function ContextStrip({
   // nothing to invite a partner into and no trip to be in the middle of, so the
   // lower-priority variants still do not render.
   //
-  // #1035 had just taught this bar to pay `env(safe-area-inset-top)` itself,
-  // because while pinned it was the topmost element and CSS has no "am I stuck"
-  // test. Moving it into the permanently-pinned stack removes the question
-  // rather than answering it, so that inset call goes with it — as
-  // `max(var(--safe-top),10px)`, same 10px baseline, now paid only when nothing
-  // is above it. The markup is otherwise carried over unchanged.
+  // #1035 had just taught this bar to call the status-bar inset itself, because
+  // while pinned it was the topmost element and CSS has no "am I stuck" test.
+  // Moving it into the permanently-pinned stack removes that question rather
+  // than answering it, so the bar now reads --safe-top instead: same 10px
+  // baseline, inset paid only when nothing is above it. The markup is otherwise
+  // carried over unchanged.
   if (isPast) return null
 
   // ─── Priority 3: partner-left ─────────────────────────────────────────────
