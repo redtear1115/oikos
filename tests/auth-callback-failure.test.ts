@@ -7,7 +7,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 interface ExchangeResult {
   error: { name: string; status?: number } | null
-  data: { user: { id: string; created_at?: string; user_metadata?: Record<string, unknown> } | null }
+  data: {
+    user: {
+      id: string
+      created_at?: string
+      user_metadata?: Record<string, unknown>
+      app_metadata?: Record<string, unknown>
+    } | null
+  }
 }
 
 // vi.mock factories are hoisted above module-scope consts, so the spies have to
@@ -157,5 +164,36 @@ describe('/auth/callback — success path is untouched', () => {
     const res = await call('?code=abc123&next=//evil.example.com')
 
     expect(res.headers.get('location')).toBe(`${ORIGIN}/dashboard`)
+  })
+
+  // #998: every signed_in used to look alike, so the iOS-native path (which
+  // bypasses this route entirely) was indistinguishable from web in the funnel.
+  it('tags the conversion with the web OAuth path', async () => {
+    await call('?code=abc123')
+
+    expect(propsOf()).toMatchObject({ path: 'web_oauth' })
+  })
+
+  it("carries the account's provider when Supabase reports one", async () => {
+    state.exchange = {
+      error: null,
+      data: {
+        user: {
+          id: 'user-1',
+          created_at: new Date(0).toISOString(),
+          app_metadata: { provider: 'google' },
+        },
+      },
+    }
+
+    await call('?code=abc123')
+
+    expect(propsOf()).toMatchObject({ provider: 'google' })
+  })
+
+  it('omits provider rather than guessing when Supabase reports none', async () => {
+    await call('?code=abc123')
+
+    expect(propsOf()).not.toHaveProperty('provider')
   })
 })

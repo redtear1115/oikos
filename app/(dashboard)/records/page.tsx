@@ -42,7 +42,7 @@ export default async function RecordsPage({
   }>
 }) {
   const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) redirect('/sign-in')
 
   const [resolvedParams, context] = await Promise.all([
     searchParams,
