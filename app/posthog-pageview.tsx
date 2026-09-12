@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from 'next/navigation'
 import { usePostHog } from 'posthog-js/react'
 import { useEffect, Suspense } from 'react'
-import { POSTHOG_ENABLED } from './providers'
+import { POSTHOG_ENABLED } from '@/lib/analytics/enabled'
 
 function PostHogPageViewInner() {
   const pathname = usePathname()
