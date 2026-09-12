@@ -1,27 +1,27 @@
-# docgrad scorecard — oikos @ 2026-07-13（第 4 輪後：達標收官）
+# docgrad scorecard — oikos @ 2026-09-13
 
-| 維度 | 星等 | 目標 | 備註 |
+> Round 5（v1.0.0 六維基線重起算；round 1–4 為五維時代，總體分數不可比）
+
+| 維度 | 星等 | 目標 | 主要失分點 |
 |---|---|---|---|
-| 完整性 | ★4 | ★4 | 邊緣缺口（不擋 ★4）：`supabase/functions/`、`scripts/` 無專屬文件 |
-| 正確性 | ★4 | ★4 | 第 3 輪 ★3→★4。auth 分層對齊 code（v1.0.2 #494）；ledger 8/8 |
-| 新鮮度 | ★4 | ★4 | 第 1 輪 ★1→★4。coverage 95.1%（39/41）、零 stale、零 mismatch；慣例：改內容同 commit 更新 `last_updated` |
-| 連結度 | ★4 | ★4 | 第 4 輪 ★3→★4。零死鏈、零孤兒、reachable 100% |
-| 一致性 | ★4 | ★4 | 第 2 輪 ★2→★4。swap/epoch 矛盾依 code 仲裁修正 |
+| 完整性 | ★4 | ★4 | CSV **匯出**（`app/api/export` + `lib/csv`）無 spec；授權層 `lib/auth` 零文件。drifted = 0 |
+| 正確性 | ★4 | ★4 | ledger 16/16（12 條原樣本 + 4 條全新抽樣）。未達 ★5：`epochClause` 盤點在 CLAUDE.md 被複述，非 refer-to-code |
+| 新鮮度 | ★4 | ★4 | 覆蓋 93.18%（`CLAUDE.md` / `ops-runbook.md` / `utm-convention.md` 無 `last_updated`）；1 筆 mismatch drift 21 天 |
+| 連結度 | ★4 | ★4 | 零死鏈、零壞錨；孤兒 1（`docs/utm-convention.md`，2.3%）、可達率 97.73% |
+| 一致性 | ★3 | ★4 | `[重複]` `epochClause` call-site 盤點同時活在 `CLAUDE.md:149` 與 `lib/db/queries/balance.ts` docstring，兩處無互鏈 |
+| 經濟性 | ★3 | ★3 | 固定成本 8,788 tokens、污染面 5.91% — **已達標** |
 
-## Token 經濟（不計星）
+## Token 經濟報告
+- 固定成本：8,788 tokens（`entry_files: CLAUDE.md`）— 已計星
+- 邊際成本（scenarios 機械計算）：`lib/i18n` 30,550 / depth 1 / fan_in 6 / code_pointer yes / **churn 24 ← 稅最重**；`lib/balance.ts` 31,820 / 1 / 4 / no / 0；`actions/transaction.ts` 17,573 / 1 / 2 / yes / 0；`app/(dashboard)/trips` 8,751 / — / 0 / no / 2
+- 污染面：5.91%（`docs/superpowers/plans/`）— 已計星
+- 解讀：入口檔不貴、索引 1 跳到位，沒有多跳檢索成本。問題在指路不在配置。`lib/i18n` 常碰又貴且無單一權威；`app/(dashboard)/trips` 相反——0 份 doc 錨定，而 `trip-multi-currency-design.md` 明明在講它卻沒指名目錄。
 
-- 固定成本：~7,210 tokens（CLAUDE.md 4,881 + README 2,329）
-- 邊際成本（scenario「記帳核心加新功能」）：~6,400 tokens（specs/INDEX.md → transactions-design.md → product-design.md）
-- 污染面：13.5%（docs/superpowers/plans/ 17.9k tokens，已 gitignore + exclude）
-- 解讀：固定/邊際比例健康；若要降固定稅，README 是第一候選（多數內容為指令/部署查表，可改由 CLAUDE.md 指路）
+### 可回溯性（report-only）
+- `code_pointer_ratio` 31.8%（22 個 area 僅 7 個 code 指得回 docs）。最刺眼：`app/(dashboard)` 226 檔、11 份 spec 指向它，code 裡零指標
+- `index_hotness` ratio 2.5（CLAUDE.md 30 commits/90d vs docs 中位數 2）
+- `structure.rules` 全域 `anchored_ratio` 0.069。偏長：`migrate-pages-design`(med 213.5/p90 291)、`CLAUDE.md`(163/311)、`onboarding-design`(146)
 
-## 殘留事項（★5 範疇或 docgrad 職權外）
-
-- `lib/supabase/server.ts` 的 `getCurrentUser` docstring stale（仍寫 "without an Auth API round-trip"）——code 修正不在 docgrad 職權，建議另開小 PR
-- ★5 缺口：新鮮度機械 gate、明文衝突仲裁慣例、`path › symbol()` 抗漂移錨點
-
-## 畢業建議
-
-建議把可機械化的規則沉澱成本 repo 自己的 docs-gate CI（死鏈/孤兒/新鮮度/入口檔 token 預算），
-docgrad 的三支 scripts（inventory/links/freshness）可直接搬去改造。docgrad 只評分與修內容，
-不代寫 CI——由團隊自行決定 gate 的嚴格度。
+## 建議下一步
+最低分維度＝**一致性 ★3**（唯一未達標）。失分點：
+1. `[重複]` `epochClause` 盤點兩處各自展開，無互鏈 — 建議 CLAUDE.md 改為指標、不複述數字（權威留在 `balance.ts` docstring，漂移風險最低）

@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.17.0
 updates:
@@ -272,7 +272,7 @@ Trip 結束時 (`actions/trip.ts#endTrip`)：
 | Currency picker UI | ❌ 不暴露 | ✅ TripExpenseSheet 內暴露 |
 | Balance 計算 | `lib/balance.ts` 處理 | 不算進 `GroupBalance`；trip 結束 fold 後 2 筆 summary 才算 |
 | 匯率來源 | base native，無需換算 | `trip.rate_snapshot`（trip 建立時凍結） |
-| Epoch 約束 | 透過 `transacted_at` 落點歸屬 | `epoch_id` notNull、強制單一 epoch |
+| Epoch 約束 | 透過 `created_at` 落點歸屬（`epochClause`） | `epoch_id` notNull、強制單一 epoch |
 
 唯一耦合點：**trip 結束時的 2 筆 summary `CashTransactions`**——這是讓 trip 視角收斂回主帳本視角的橋。
 

@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v1.1.0
 updates:
@@ -72,11 +72,19 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 | 分攤 split_type | **匯入時統一指定（單一規則）**；row-level 無法覆寫 | 來源 app 沒有 split 概念；強制 user 在預覽階段一次選定（all_mine / all_theirs / half / 50%） |
 | 預設付款人 | **整檔指定**，row-level 可由 `成員` 欄覆寫 | 與分攤同邏輯：能批量處理就批量處理；row-level 給個別覆蓋空間 |
 | 落地對象 | **僅 CashTransactions** + 收入落 **IncomeTransactions** | MVP 不匯入 settlement / asset / trip / recurring rule |
-| 章節歸屬 | **照 `transacted_at` 落到對應 epoch** | 包含過去 chapter；過去 chapter 仍然 read-only（[epoch-readonly](epoch-readonly-design.md)），但匯入是寫入動作，視為章節之外的歷史補登 |
+| 章節歸屬 | **一律落在當前 epoch**（`created_at = now()`） | 章節歸屬看 `created_at` 而非 `transacted_at`——匯入是「此刻記下一批歷史」，不是回到過去記帳。過去章節是凍結的（[epoch-readonly](epoch-readonly-design.md)），匯入不會、也不該把 row 塞進去 |
 | 重複偵測 | **Hash-based dedup**，碰撞時 user 選擇（跳過 / 雙寫 / 取代既有） | 重要：每次匯入都比對既有 row，避免再次匯入造成雙重紀錄 |
 | Dry-run | **預覽 = dry-run**，confirm 才寫入 DB；中途錯誤整批 rollback | atomic transaction，符合「不留半成品」 |
 | 匯入規模上限 | **單檔 ≤ 5000 列**（超過要拆檔） | UI preview 與 dedup 比對的可預期上界；保護 DB |
 | 回滾 | **MVP 提供 import_batch undo**（限同次匯入 24 小時內，未被後續編輯動到的 row） | 給「按錯」的安全網；不做長期歷史回滾 |
+
+> **不要把 `transacted_at` 當成章節邊界。** 這份 spec 曾有三處這樣寫（章節歸屬、早於建立日的
+> row、與 epoch-readonly 的互指），而 `actions/import.ts` 從來沒有實作過依日期挑 epoch 的邏輯——
+> 它只設 `transactedAt`，`createdAt` 走預設 `now()`。
+>
+> 失效的樣子不是報錯：feed 照常顯示那些 row，balance 讀 `created_at` 把它們整批漏掉，剛匯入的
+> 帳本 balance 顯示 0，**全程沒有任何錯誤訊息**。#1030 第一輪就是照舊版文件這樣寫而被 verifier
+> 判 REFUTED。理由全文見 `lib/db/queries/balance.ts` 開頭 docstring。
 
 ---
 
@@ -114,7 +122,7 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 |---|---|
 | 必填欄空 | 該 row 標記 `error`，預覽顯示紅字；user 必須在預覽編輯或捨棄該 row 才能繼續 |
 | 日期未來 > 7 天 | 該 row 標記 `warning`，預覽顯示橘字；user 確認後可繼續（容許「明天的房租已預扣」場景） |
-| 日期早於 group 建立日 | OK，照 `transacted_at` 落到對應 epoch；若該日期早於最早 epoch，落入該 epoch |
+| 日期早於 group 建立日 | OK。`transacted_at` 照收（不限制範圍），row 仍落在當前 epoch |
 | 金額 = 0 | 拒收（語意不明） |
 | 金額 > 9,999,999（base 幣別整數） | 拒收（保護 DB；user 應拆分） |
 | 重複 row（檔內自身重複） | 預覽顯示 `duplicate-in-file` 標記，user 選跳過 / 全留 |
@@ -236,7 +244,7 @@ sha256(
 - [inbox-layer](inbox-layer-design.md)：CSV 匯入**不走 Inbox**（Inbox 是 row-level 確認，CSV 一次大量 row，UX 不同；預覽 sheet 就是 CSV 的「Inbox 階段」）
 - [recurring](recurring-design.md)：匯入不建立 recurring rule，只匯入歷史 row
 - [solo-mode](solo-mode-design.md)：Solo group 強制 `all_mine`，預覽 UI 鎖定
-- [epoch-readonly](epoch-readonly-design.md)：匯入 row 照 `transacted_at` 落到對應 epoch（包含過去章節）；落地後仍受過去章節 read-only 保護（不可後續編輯）
+- [epoch-readonly](epoch-readonly-design.md)：匯入 row 一律落在當前 epoch（`created_at = now()`），不會進入過去章節；`transacted_at` 只是「這筆錢什麼時候花的」，不參與章節歸屬
 - [trip-multi-currency](trip-multi-currency-design.md)：MVP **不支援匯入到 trip**；trip 是 epoch-bound 子帳本，跨 trip 的歷史 row 沒有對應 trip_id 可填
 - [locale-currency](locale-currency-design.md)：匯入 row 一律 base 幣別整數；多幣別匯入延後
 

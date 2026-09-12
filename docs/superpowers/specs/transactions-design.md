@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.1.0
 updates:
@@ -72,7 +72,7 @@ Schema 走獨立 `Settlements` 表；軟刪除規則跟 Transaction 一致。
 
 **關鍵 invariant**：列表用 UNION SQL，把 transactions 和 settlements 統一為 `kind: 'transaction' | 'settlement'`，cursor 用 `(transactedAt, createdAt)` 複合鍵。
 
-Balance：每次寫入後**全量重算**，cache 在 `GroupBalance` table（per-group 單列）。`balance` 正數 = A 欠 B、負數 = B 欠 A。實作 `lib/balance.ts` + `lib/db/queries/balance.ts`。
+Balance：每次寫入後**全量重算**，cache 在 `GroupBalance` table（per-group 單列）。`balance` 正數 = **B 欠 A**、負數 = **A 欠 B**（`lib/balance.ts` 開頭的 `Positive = member_b owes member_a` 為準）。實作 `lib/balance.ts` + `lib/db/queries/balance.ts`。
 
 Past epoch 的 balance：`GroupBalance` cache 不分 epoch（per-group 單列），這是已知限制（見 [epoch-readonly](epoch-readonly-design.md) Out of scope）；past epoch view 看 balance 仍是 current epoch 的值。讀取的 transaction list 透過 required `epochWindow` 參數正確過濾。
 
