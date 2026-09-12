@@ -84,13 +84,19 @@ npm version X.Y.Z --no-git-tag-version
 
 ### 5. CLAUDE.md
 
-「目前狀態」段更新為：
+兩處要動：
+
+**(a)「目前狀態」段：**
 
 ```markdown
 **Latest released: vX.Y.Z** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 ```
 
-（只動這一行。下面的 milestone 表是 backlog，不是版本歷史。）
+**(b)「Backlog / 未釋出版本」表：把 `vX.Y.Z` 那一列刪掉。**
+
+這張表的定義是**還開著的 milestone**。發版意味著該 milestone 即將關閉（見第 9 步 checklist），所以它不再屬於 backlog。漏了這步表就會每發一版漂一次——v1.5.6 發布後就在表上多留了一版才被發現。
+
+表的其餘列不要動：那是別人的 backlog，不歸發版流程管。若發現表裡還有其他**已關閉**的 milestone，或缺了**開著**的，那是既有漂移——回報給使用者，不要順手塞進 release commit（release PR 只放版本性變更）。
 
 ### 6. README.md
 
@@ -138,7 +144,9 @@ tag **不 push**（第 9 步 checklist 裡等 PR merge 後才推）。
 4. gh pr create --base release --head main --title "release: vX.Y.Z" --milestone "<同上>"
 5. 該 PR merge 後 Vercel 自動部 prod
 6. (optional) gh release create vX.Y.Z --notes-from-tag  或用 CHANGELOG 該段內容
-7. 原生影響：<第 7 步的結論>
+7. 關閉 milestone：gh api -X PATCH repos/redtear1115/oikos/milestones/<number> -f state=closed
+   ※ 第 5 步 (b) 已把它從 CLAUDE.md backlog 表移除，這步讓 GitHub 那邊也對齊
+8. 原生影響：<第 7 步的結論>
 ```
 
 ## Gotchas
