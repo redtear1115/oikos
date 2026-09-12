@@ -4,6 +4,7 @@ import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
 import { useEffect } from 'react'
 import { detectPlatform, isNativeApp } from '@/lib/platform'
+import { flushQueue } from '@/lib/analytics/track'
 
 /**
  * PostHog only runs in production with a key configured. This keeps local dev
@@ -54,8 +55,21 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     // and anything conditional or route-scoped would leave some page loads
     // reporting no platform at all.
     const platform = detectPlatform()
-    if (!platform) return
-    posthog.register({ platform, is_native: isNativeApp(platform) })
+    if (platform) {
+      posthog.register({ platform, is_native: isNativeApp(platform) })
+    }
+
+    // #1014 — flush any events queued by `track()` before this effect ran
+    // (child components' on-mount effects fire before this parent one, so a
+    // child's on-mount `track()` call would otherwise hit an uninitialized
+    // PostHog instance and silently no-op). Must run unconditionally, after
+    // `register()`: queued events must inherit `platform` / `is_native` like
+    // every other event, not go out missing that dimension. Keeping this as
+    // its own statement (not nested inside the `if (platform)` block above)
+    // is what guarantees that — a bare `return` on `!platform` would skip the
+    // flush entirely on any page load where platform detection comes back
+    // null.
+    flushQueue()
 
     // Shell version, so any event can be sliced by installed shell — not just
     // the one-shot `shell_version_seen` in ShellUpdateNotice, which stays as it
@@ -64,14 +78,15 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     // out of the web bundle entirely (same discipline as #991). Late by design:
     // a round-trip to the native bridge must not sit in front of init, so the
     // first few events of a shell session simply carry no `shell_version`.
-    if (!isNativeApp(platform)) return
-    void import('@capacitor/app')
-      .then(({ App }) => App.getInfo())
-      .then((info) => posthog.register({ shell_version: info.version }))
-      .catch(() => {
-        // A shell too old to answer getInfo(), or a plugin load failure. The
-        // platform property is already registered; the version is a bonus.
-      })
+    if (platform && isNativeApp(platform)) {
+      void import('@capacitor/app')
+        .then(({ App }) => App.getInfo())
+        .then((info) => posthog.register({ shell_version: info.version }))
+        .catch(() => {
+          // A shell too old to answer getInfo(), or a plugin load failure. The
+          // platform property is already registered; the version is a bonus.
+        })
+    }
   }, [])
 
   if (!POSTHOG_ENABLED) return <>{children}</>
