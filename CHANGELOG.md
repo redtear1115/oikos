@@ -13,7 +13,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.5.11] - 2026-09-12
+
 主題：**讓頁面被找到，讓點擊被算到**——三個語系子樹沒有任何一條可爬的連結、情境頁的 CTA 從來沒有歸因、`/use-case` 根本是 404。這版修的都是「東西在那裡，但 Google 找不到、我們也量不到」。沒有一項是使用者抱怨出來的，全部來自一次 GSC + Lighthouse + 程式碼的對帳。
+完整 diff：[v1.5.10...v1.5.11](https://github.com/redtear1115/oikos/compare/v1.5.10...v1.5.11)
 
 ### 使用者可見變化
 
@@ -31,7 +36,6 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **字級收斂回偶數（#1066）**：清掉最後 6 處 11/13px。其中 landing 兩處是 `text-sm md:text-[13px]`（桌機比手機小），查 blame 後發現**不是刻意的密度決定**：原文是 `text-label md:text-[13px]`，而 `--text-label` 當時就是 13px，`md:` 那層是 no-op；#876 的 codemod 只替換具名 token、沒碰 raw arbitrary value，把無作用的覆寫變成了反向斷差。諷刺的是 #876 的標題正是「drop 11/13/15 tiers」。
 - **⚠️ 一次「兩張 PR 各自全綠、合起來爆掉」（#1068）**：#1056 讓 `UseCaseCta` 的 `slug` 成為必要 prop，#1057 新建的 hub 頁沒有傳——兩張**檔案層級零重疊**，git 無從報衝突，兩邊 CI 也都綠，因為各自是對「沒有對方」的 main 跑的。合併後 main 才 typecheck 失敗。修法是給 hub 自己的 `use_case_hub`，而**不是**把 `slug` 改成 optional——optional 會讓「忘了傳」與「這是 hub」塌陷成同一個狀態，等於把這次接住問題的那張網拆掉。**目前 CI 沒有任何一關在驗「合進 main 之後 main 是否仍成立」**；這次靠 typecheck 接住，下次未必。
 - **epoch 歸屬的兩個時間戳分工寫進文件（#1050）**：`created_at` 決定章節歸屬、`transacted_at` 決定月份統計。選錯不會報錯，只會靜默算少——feed 照常顯示、balance 整批漏掉。
-
 ## [1.5.10] - 2026-09-12
 
 主題：**看得見、按得到、算得準**——瀏海機種吃掉的按鈕、永遠空白的月度回顧、以及三個只在特定時刻才浮現的計算錯誤。這版修的都是「東西在那裡，但你碰不到或看不到」。
