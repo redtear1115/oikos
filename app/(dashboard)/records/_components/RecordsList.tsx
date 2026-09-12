@@ -345,22 +345,26 @@ export function RecordsList({
 
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
-      {/* Sticky header */}
+      {/* Sticky header — pins below the shell top stack rather than at the very
+          top of the viewport (#1037). The stack is itself sticky, so it is the
+          permanent topmost element whenever it holds anything; `--top-stack-h`
+          is its measured height and 0px when it is empty, which is exactly the
+          old `top-0`. */}
       <div
-        className="sticky top-0 z-20"
+        className="sticky top-[var(--top-stack-h)] z-20"
         style={{ background: 'var(--bg)' }}
       >
         {/* L1Header — unified across Dashboard / Records / Assets (#545 §1).
             pb-3 matches Assets L1 — keeps the title's breathing room while
             tightening the row a notch vs the earlier pb-4.
 
-            Reads env() directly instead of --safe-top (#1021): every other
-            header hands the status-bar inset to whatever shell top strip is on
-            screen, but this one is sticky. Once it pins, the strip has scrolled
-            away and this row is the topmost thing under the notch again, so it
-            has to keep paying the inset itself — the cost is a slightly wider
-            gap below the strip while scrolled to the top. */}
-        <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-3 flex items-center justify-between">
+            Reads --safe-top like every other header. Until #1037 it had to call
+            env() itself, because once it pinned, the shell strip above it had
+            scrolled away and this row was topmost again — at the cost of ~23px
+            of extra gap while scrolled to the top. Now the strip never scrolls
+            away, so "is there a band above me" is a static question again and
+            --safe-top already answers it. */}
+        <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
           <div
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}

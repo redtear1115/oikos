@@ -22,8 +22,10 @@ export function AccountDeletionBanner({ requestedAt }: { requestedAt: string }) 
 
   return (
     // `shell-top-strip` (globals.css) is what makes this reachable on a notched
-    // phone: as the first element in the dashboard shell, the banner absorbs the
-    // status-bar inset and cancels it for the page header below. (#1021)
+    // phone: as the first element in the shell top stack, the banner absorbs the
+    // status-bar inset and cancels it for every band below. And because the
+    // stack is sticky, the cancel button for a 14-day destructive countdown does
+    // not scroll away — which is the whole reason the stack exists. (#1021/#1037)
     <div className="shell-top-strip flex items-center justify-between gap-3 px-5 text-sm bg-surface text-ink border-b border-hairline">
       {/* The live region is the sentence only. A status region that also wraps
           the control tends to get re-announced as one blob on re-render, and the

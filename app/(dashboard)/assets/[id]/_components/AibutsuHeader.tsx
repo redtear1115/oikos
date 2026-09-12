@@ -170,16 +170,15 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
   const t = useTranslations()
   const hasSiblings = siblings && siblings.length > 0
   return (
-    /* Sticky, so it keeps paying the status-bar inset itself rather than reading
-       --safe-top: once pinned, any shell top strip above it has scrolled away and
-       this row is the topmost thing under the notch again, and CSS has no
-       cross-browser "is currently stuck" test (#1021, #1035). 48px is this
-       header's own top spacing — it used to be a bare pt-12 that happened to be
-       1px more than the iPhone notch inset, which is a coincidence, not a
-       guarantee. Stating the inset separately keeps the row clear of a deeper
-       one. */
+    /* Pins below the shell top stack, not at the viewport top (#1037). 48px is
+       this header's own top spacing — #1035 pulled it out of a bare `pt-12` that
+       happened to be 1px more than an iPhone notch, and that separation stays;
+       what changes is where the inset comes from. `env()` was only needed while
+       this row could become the topmost element mid-scroll. It can't any more,
+       so `--safe-top` answers it: the real inset when the stack is empty, zero
+       when it isn't. */
     <div
-      className="sticky top-0 z-20 px-4 pt-[max(env(safe-area-inset-top),48px)]"
+      className="sticky top-[var(--top-stack-h)] z-20 px-4 pt-[max(var(--safe-top),48px)]"
       style={{
         background: tint.bg,
         paddingBottom: hasSiblings ? 10 : 12,

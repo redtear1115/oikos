@@ -139,6 +139,12 @@
    * real inset, which is what every header got before the strips existed. */
   --safe-top: env(safe-area-inset-top, 0px);
 
+  /* Measured height of the shell top stack (#1037). `ShellTopStack` writes the
+   * real number here from a ResizeObserver; a page's own sticky header reads it
+   * as its `top`, so it pins directly below the stack instead of underneath it.
+   * 0px is both the no-JS answer and the correct one for an empty stack. */
+  --top-stack-h: 0px;
+
   /* Typography scale — P3-1 */
   --fs-xs:        12px;   /* extra small: labels, metadata (even-px unify #876, was 11) */
   --fs-sm:        14px;   /* small: secondary text, captions (even-px unify #876, was 13) */
@@ -322,27 +328,39 @@ body {
   transform: translateX(20px);
 }
 
-/* Shell top strips — the shell update notice (#991) and the account-deletion
- * banner (#1021). Both are injected by the dashboard layout above `{children}`,
- * so on a notched device whichever one renders first is the element the status
- * bar sits on top of.
+/* Shell top stack (#1037) — the one place in the dashboard where something is
+ * allowed to pin itself to the top of the viewport.
  *
- * Two rules, one invariant: the topmost strip pays the status-bar inset, and
- * everything after it starts flush. `~ *` zeroes --safe-top for every following
- * sibling and, by inheritance, their whole subtree — that covers both the second
- * strip and the page header inside `{children}`, so the inset is paid exactly
- * once and a banner never stacks a second inset-sized gap beneath itself.
+ * It holds every shell-level band, in render order: the update notice (#991),
+ * the account-deletion banner (#1021), the past-chapter bar. The stack is
+ * `sticky top-0` as a whole, so its children stack vertically and stay stacked
+ * while scrolling — sticky siblings do not yield to each other, which is why
+ * three separate `top-0` elements used to land on top of one another.
  *
- * Deliberate exception: a `position: sticky` page header keeps calling env()
- * itself (today: the /records L1 header + its skeleton). Once pinned, the strip
- * has scrolled away and the header is the topmost thing on screen again; CSS has
- * no cross-browser "is currently stuck" test, so that header keeps its own inset
- * and accepts the wider gap while unpinned rather than sliding under the notch. */
+ * Two consequences make the rest of the rules below fall out:
+ *
+ * 1. Whatever is first in the stack is permanently the topmost element on
+ *    screen, so it — and only it — pays the status-bar inset. `.shell-top-strip
+ *    ~ *` zeroes --safe-top for every later band, and `.shell-top-stack:has(> *)
+ *    ~ *` does the same for `{children}`, so the inset is paid exactly once no
+ *    matter which combination renders.
+ * 2. A page's own sticky header no longer has to guess whether it is currently
+ *    the topmost element. It pins at `top: var(--top-stack-h)` (published by
+ *    ShellTopStack) and reads --safe-top like every other header: real inset
+ *    when the stack is empty, zero when it isn't. That retires the "sticky
+ *    headers keep their own env()" exception #1021 and #1035 had to live with,
+ *    and with it the double-paid inset underneath BrandHeader.
+ *
+ * An empty stack is height 0 and matches no `:has(> *)`, so a page with no
+ * shell band behaves exactly as it did before the stack existed. */
 .shell-top-strip {
   padding-top: max(var(--safe-top), 0.75rem);  /* 0.75rem = the py-3 baseline both strips shared */
   padding-bottom: 0.75rem;
 }
 .shell-top-strip ~ * {
+  --safe-top: 0px;
+}
+.shell-top-stack:has(> *) ~ * {
   --safe-top: 0px;
 }
 

@@ -133,25 +133,26 @@ describe('ContextStrip', () => {
 
     // Offline text visible
     expect(screen.getByText('離線中・顯示最近一次連線的資料')).toBeTruthy()
-    // Past-epoch exit CTA not present
-    expect(screen.queryByText('回到現在')).toBeNull()
     // Trip name not present
     expect(screen.queryByText('Tokyo')).toBeNull()
     // Only one role="status" child rendered
     expect(container.querySelectorAll('[role="status"]').length).toBe(1)
   })
 
-  it('renders past-epoch banner when isPast and online; shows exit button', () => {
+  it('leaves the past-chapter band to the shell top stack', () => {
     const pastMember: MemberContextValue = {
       ...baseMember,
       isPast: true,
       epochEndedAt: '2024-06-30T00:00:00.000Z',
     }
 
-    renderStrip({}, pastMember)
+    // The band moved to PastChapterBar in the layout's sticky stack (#1037) —
+    // see tests/top-stack.test.tsx. What ContextStrip keeps is the suppression:
+    // in a past chapter it renders nothing of its own.
+    const { container } = renderStrip({}, pastMember)
 
-    expect(screen.getByText('回到現在')).toBeTruthy()
-    // Offline banner not shown
+    expect(container.firstChild).toBeNull()
+    expect(screen.queryByText('回到現在')).toBeNull()
     expect(screen.queryByText('離線中・顯示最近一次連線的資料')).toBeNull()
   })
 
@@ -200,11 +201,10 @@ describe('ContextStrip', () => {
       epochEndedAt: '2024-06-30T00:00:00.000Z',
     }
 
-    renderStrip({ activeTrips: [tokyoTrip] }, pastMember)
+    const { container } = renderStrip({ activeTrips: [tokyoTrip] }, pastMember)
 
-    // Past-epoch banner shown
-    expect(screen.getByText('回到現在')).toBeTruthy()
-    // Trip not shown
+    // A frozen chapter has nothing to be in the middle of.
+    expect(container.firstChild).toBeNull()
     expect(screen.queryByText('Tokyo')).toBeNull()
   })
 })

@@ -18,6 +18,8 @@ import { AvatarMenuProvider, type AvatarMenuData } from './_components/AvatarMen
 import { PushTokenRegistrar } from './_components/PushTokenRegistrar'
 import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
 import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
+import { ShellTopStack } from './_components/ShellTopStack'
+import { PastChapterBar } from './_components/PastChapterBar'
 
 // CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
 // but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
@@ -134,10 +136,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <PartnerActivityToast />
           <AvatarMenuProvider data={avatarMenuData}>
             <div className={`relative max-w-md mx-auto min-h-dvh ${notoTC.variable}`} style={{ background: 'var(--bg)' }}>
-              <ShellUpdateNotice />
-              {deletionRequestedAt && (
-                <AccountDeletionBanner requestedAt={new Date(deletionRequestedAt).toISOString()} />
-              )}
+              {/* Every band that pins to the top of the viewport goes in here,
+                  in priority order, so they stack instead of colliding (#1037).
+                  A page's own sticky header stays in `{children}` and pins at
+                  `top: var(--top-stack-h)` — see ShellTopStack for why it is
+                  the height that travels and not the element. */}
+              <ShellTopStack>
+                <ShellUpdateNotice />
+                {deletionRequestedAt && (
+                  <AccountDeletionBanner requestedAt={new Date(deletionRequestedAt).toISOString()} />
+                )}
+                <PastChapterBar />
+              </ShellTopStack>
               {children}
             </div>
           </AvatarMenuProvider>

@@ -181,25 +181,26 @@ function tsxFiles(dir: string, out: string[] = []): string[] {
 }
 
 describe('shell top strips — no header re-introduces its own inset', () => {
-  it('keeps raw env(safe-area-inset-top) to the documented sticky exception', () => {
+  it('leaves no raw env(safe-area-inset-top) anywhere in the dashboard', () => {
     const offenders = tsxFiles(join(REPO_ROOT, 'app/(dashboard)'))
       .filter((f) => readFileSync(f, 'utf8').includes('env(safe-area-inset-top)'))
       .map((f) => relative(REPO_ROOT, f))
       .sort()
 
-    // A sticky header outlives the strip above it (the strip scrolls away, the
-    // header pins), so every one of them — and the skeleton that has to match
-    // one pixel for pixel — keeps paying the inset itself. Every other dashboard
-    // header must read --safe-top, or a banner will push it under the notch.
-    // Growing this list means a new sticky header appeared; shrinking it means
-    // one stopped paying, which is #1035 all over again.
-    expect(offenders).toEqual([
-      'app/(dashboard)/_components/ContextStrip.tsx',
-      'app/(dashboard)/assets/[id]/_components/AibutsuHeader.tsx',
-      'app/(dashboard)/records/_components/RecordsList.tsx',
-      'app/(dashboard)/records/loading.tsx',
-      'app/(dashboard)/trips/[id]/_components/TripDetailClient.tsx',
-    ])
+    // This list used to hold the sticky headers, because a sticky header
+    // outlived the strip above it: the strip scrolled away, the header pinned,
+    // and it became the topmost element mid-scroll with no way for CSS to say
+    // so. #1037 removed that state rather than answering it — the shell top
+    // stack is itself sticky, so it never scrolls away and "is something above
+    // me" is a static question again. --safe-top already answers static
+    // questions, and it answers them for the whole subtree at once, which is
+    // why the list is now empty and not five entries long.
+    //
+    // A new entry here means someone reached for env() again. That is either a
+    // header that thinks it can outlive the stack (it can't) or one rendered
+    // outside the dashboard shell entirely — in which case it does not belong
+    // under app/(dashboard).
+    expect(offenders).toEqual([])
   })
 })
 
@@ -212,8 +213,8 @@ describe('shell top strips — no header re-introduces its own inset', () => {
  * inset at all, which is how ContextStrip spent its whole life rendering a 35px
  * bar underneath a 47px notch. Anything that can become the topmost element on
  * screen has to be enumerated, so this guard starts from the position property
- * instead: every `sticky top-0` / `fixed top-0` either handles the inset or is
- * listed below with the reason it doesn't need to.
+ * instead: every pinned element either handles the inset or is listed below
+ * with the reason it doesn't need to.
  *
  * The unit of judgement is one pinned element, not one file (#1042). The first
  * version asked both questions — "does anything in this file pin?" and "does
@@ -222,9 +223,33 @@ describe('shell top strips — no header re-introduces its own inset', () => {
  * passed no matter what was added to them afterwards; RecordsList.tsx worst of
  * all, 300+ lines with a sticky L1 already in place and a blanket pass for the
  * next one. The scan below walks each occurrence on its own and asks about
- * *that* class list, which means two kinds of "no inset here, and that's right"
- * have to be told apart — see the two exemption tables.
+ * *that* class list, which means the kinds of "no inset here, and that's right"
+ * have to be told apart — see the three exemption tables.
+ *
+ * #1037 changed what a pinned element can legally be pinned *to*, so the scan
+ * grew a second question. There are now two anchors:
+ *
+ *   `top-0`                      the top of the viewport
+ *   `top-[var(--top-stack-h)]`   the bottom edge of the shell top stack
+ *
+ * and inside the dashboard shell the first one is reserved. `position: sticky`
+ * elements do not yield to each other, so a second `top-0` does not queue up
+ * below the stack — it pins at the same line and loses on z-index, which is
+ * exactly the collision #1037 exists to remove. A page header written that way
+ * would still pass the inset question below while being invisible, so it gets
+ * its own assertion.
+ *
+ * "Pays the inset" also widened. Reading `--safe-top` is paying it: the variable
+ * resolves to the real inset when nothing is above you and to zero when the
+ * stack is, which is the same decision `env()` used to force each header to make
+ * for itself — only now it is made once, in CSS, for the whole subtree.
  */
+
+/** Class-list anchors that pin an element's top edge. See the note above for
+ *  why `top-[var(--top-stack-h)]` counts as pinned: it is still `position:
+ *  sticky`, it just measures from the stack instead of from the viewport. */
+const TOP_ANCHOR = String.raw`(?:\btop-0\b|\btop-\[var\(--top-stack-h\)\])`
+const PINS = String.raw`(?:\bsticky\b|\bfixed\b)`
 
 /** Matches a Tailwind class list that pins an element to the top of its
  *  containing block, in either class order. Bounded by the quote characters so
@@ -235,9 +260,16 @@ describe('shell top strips — no header re-introduces its own inset', () => {
  *  would not be found. The repo has no class helper today (no clsx / cn /
  *  classnames; every className is one string or one template literal), so this
  *  costs nothing yet. Introducing one means teaching this regex about it, and
- *  the failure mode is silence, so it will not announce itself. */
-const PINNED_TO_TOP =
-  /(?:\bsticky\b|\bfixed\b)[^"'`]*\btop-0\b|\btop-0\b[^"'`]*(?:\bsticky\b|\bfixed\b)/g
+ *  the failure mode is silence, so it will not announce itself.
+ *
+ *  Known boundary (#1037): the scan cannot tell a className from prose. Writing
+ *  `sticky top-0` inside a backticked phrase in a comment reports that comment
+ *  as an unhandled pinned element. That one fails loudly, so the fix is to
+ *  rephrase the comment rather than to teach the scanner about syntax. */
+const PINNED_TO_TOP = new RegExp(
+  `${PINS}[^"'\`]*${TOP_ANCHOR}|${TOP_ANCHOR}[^"'\`]*${PINS}`,
+  'g',
+)
 
 const QUOTE = /["'`]/
 
@@ -307,16 +339,44 @@ const NOT_UNDER_THE_STATUS_BAR: Exemption[] = [
 const INSET_PAID_BY_A_CHILD: Exemption[] = [
   {
     file: 'app/(dashboard)/records/_components/RecordsList.tsx',
-    classes: 'sticky top-0 z-20',
+    classes: 'sticky top-[var(--top-stack-h)] z-20',
     why:
       'this wrapper only pins and paints the background; the L1 row directly ' +
-      'inside it carries pt-[max(env(safe-area-inset-top),24px)] and pays the ' +
-      'inset for both. Merging them would put the padding on the painted box and ' +
-      'leave a gap above the background once pinned',
+      'inside it carries pt-[max(var(--safe-top),24px)] and pays the inset for ' +
+      'both. Merging them would put the padding on the painted box and leave a ' +
+      'gap above the background once pinned',
   },
 ]
 
-const EXEMPTIONS = [...NOT_UNDER_THE_STATUS_BAR, ...INSET_PAID_BY_A_CHILD]
+/** Category 3 — the shell top stack itself. It is the one element allowed to pin
+ *  at the viewport top, and it deliberately carries no padding of its own: the
+ *  first band inside it pays the inset through the `.shell-top-strip` rule in
+ *  globals.css, and the rest of the shell is cancelled from there. Putting the
+ *  padding on the container instead would charge the inset even when the stack
+ *  is empty, which is the 24px of dead space #1037 was careful not to add. */
+const INSET_PAID_BY_THE_STACK_CSS: Exemption[] = [
+  {
+    file: 'app/(dashboard)/_components/ShellTopStack.tsx',
+    classes: 'shell-top-stack sticky top-0 z-40',
+    why:
+      'the container pins; whichever band renders first inside it absorbs the ' +
+      'inset via `.shell-top-strip { padding-top: max(var(--safe-top), …) }` in ' +
+      'globals.css, and `.shell-top-stack:has(> *) ~ *` cancels it for the rest ' +
+      'of the page. An empty stack is height 0 and charges nothing',
+  },
+]
+
+const EXEMPTIONS = [
+  ...NOT_UNDER_THE_STATUS_BAR,
+  ...INSET_PAID_BY_A_CHILD,
+  ...INSET_PAID_BY_THE_STACK_CSS,
+]
+
+/** An element handles the inset when its own class list resolves it — either by
+ *  calling env() directly or by reading --safe-top, which is the same answer
+ *  routed through the variable that knows whether any inset is owed. */
+const paysTheInset = (classes: string) =>
+  classes.includes('env(safe-area-inset-top)') || classes.includes('var(--safe-top)')
 
 const describeElement = (el: PinnedElement) => `${el.file}:${el.line} — "${el.classes}"`
 
@@ -334,14 +394,31 @@ describe('safe-area — everything pinned to the top pays the inset', () => {
     expect(pinned.length).toBeGreaterThanOrEqual(EXEMPTIONS.length + 1)
   })
 
-  it('leaves no sticky/fixed top-0 element without an inset or a reason', () => {
+  it('leaves no pinned element without an inset or a reason', () => {
     const unhandled = pinned
-      .filter((el) => !el.classes.includes('env(safe-area-inset-top)'))
+      .filter((el) => !paysTheInset(el.classes))
       .filter((el) => !EXEMPTIONS.some((ex) => matches(ex, el)))
       .map(describeElement)
       .sort()
 
     expect(unhandled).toEqual([])
+  })
+
+  it('keeps `top-0` inside the dashboard to the shell top stack', () => {
+    // The inset question above cannot catch this one. A new page header written
+    // `sticky top-0 pt-[max(var(--safe-top),24px)]` pays its inset correctly and
+    // is still wrong: sticky elements do not yield to each other, so it pins on
+    // the same line as the stack rather than below it, and loses on z-index. The
+    // visible symptom is not a header under the notch — it is no header at all,
+    // and only on a device where the stack has something to show. (#1037)
+    const atViewportTop = pinned
+      .filter((el) => el.file.startsWith('app/(dashboard)'))
+      .filter((el) => el.classes.includes('top-0'))
+      .filter((el) => !EXEMPTIONS.some((ex) => matches(ex, el)))
+      .map(describeElement)
+      .sort()
+
+    expect(atViewportTop).toEqual([])
   })
 
   it('keeps the exemption lists free of entries nothing matches any more', () => {
@@ -367,9 +444,20 @@ describe('safe-area — everything pinned to the top pays the inset', () => {
     for (const ex of INSET_PAID_BY_A_CHILD) {
       const source = readFileSync(join(REPO_ROOT, ex.file), 'utf8')
       expect(
-        source.includes('env(safe-area-inset-top)'),
-        `${ex.file} claims a child pays the inset, but the file never calls env(safe-area-inset-top)`,
+        paysTheInset(source),
+        `${ex.file} claims a child pays the inset, but the file never resolves one`,
       ).toBe(true)
+    }
+  })
+
+  it('requires the stack exemption to have its payer rule in globals.css', () => {
+    // Same shape as the check above, one level further out: this category claims
+    // the payer is a CSS rule rather than a child element, so the rule has to
+    // exist. Both halves matter — the strip absorbs, the stack cancels.
+    for (const ex of INSET_PAID_BY_THE_STACK_CSS) {
+      expect(css, `${ex.file} claims globals.css pays the inset for it`)
+        .toMatch(/\.shell-top-strip\s*\{[^}]*padding-top:\s*max\(var\(--safe-top\)/)
+      expect(css).toMatch(/\.shell-top-stack:has\(>\s*\*\)\s*~\s*\*\s*\{[^}]*--safe-top:\s*0px/)
     }
   })
 })
