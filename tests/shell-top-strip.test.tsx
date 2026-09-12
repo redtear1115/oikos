@@ -223,7 +223,22 @@ const PINNED_TO_TOP =
   /(?:\bsticky\b|\bfixed\b)[^"'`]*\btop-0\b|\btop-0\b[^"'`]*(?:\bsticky\b|\bfixed\b)/
 
 /** Pinned elements that are not affected by the status bar, with the reason.
- *  Keep the reason concrete — "checked, it's fine" is how #1035 happened. */
+ *  Keep the reason concrete — "checked, it's fine" is how #1035 happened.
+ *
+ *  ⚠️ Known blind spot, tracked in #1042: both filters below run over the whole
+ *  file, so once a file contains one `env(safe-area-inset-top)` anywhere, every
+ *  *other* pinned element in that same file inherits the pass. The fix for #1035
+ *  was precisely "add env() to each file that pins", so after this lands all five
+ *  such files are blind — RecordsList.tsx most of all, since it already carries a
+ *  sticky L1 and is 300+ lines.
+ *
+ *  Going per-occurrence is not a one-line change: RecordsList's sticky wrapper
+ *  (`className="sticky top-0 z-20"`) legitimately carries no inset because its
+ *  inner row pays it, so a per-string check reports it as unhandled. The
+ *  follow-up needs to separate "carries no inset and doesn't need one" from
+ *  "carries no inset and its child pays", which is a second exemption category,
+ *  not a tighter regex. Verified by prototype — the naive version fails exactly
+ *  on that wrapper. */
 const NOT_UNDER_THE_STATUS_BAR: Record<string, string> = {
   'app/(dashboard)/_components/RecurringRuleSheet.tsx':
     'the error banner sticks inside SheetBody (flex-1 overflow-y-auto), not the ' +
