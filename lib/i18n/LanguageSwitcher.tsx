@@ -89,7 +89,12 @@ export function LanguageSwitcher({ current, variant = 'pill', mode }: Props) {
                 aria-current={active ? 'true' : undefined}
                 className="cursor-pointer disabled:cursor-default"
                 style={{
-                  color: active ? 'var(--ink-2)' : 'var(--ink-3)',
+                  // 每一階都往下沉一格（--ink-2 / --ink），因為 --ink-3 (#82654F)
+                  // 在 brand 底色 --bg-committed (#EFDDC4) 上只有 4.02:1，12px/400
+                  // 屬 normal text，未達 WCAG AA 的 4.5:1（#1059）。--ink-2 (#7A5848)
+                  // 在同底色是 4.77:1，仍比 active 的 --ink 淺，
+                  // 「非當前語系在視覺上退後」這個層級意圖保留不變。
+                  color: active ? 'var(--ink)' : 'var(--ink-2)',
                   fontWeight: active ? 500 : 400,
                 }}
               >
