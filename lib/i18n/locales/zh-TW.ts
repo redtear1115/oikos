@@ -2289,6 +2289,16 @@ export type Translations = {
       /** Reassurance line shown below upload + CTA. */
       privacyNote: string
     }
+    /** Standalone sign-up CTA between the differentiators and the migration
+     *  walkthrough (#1011). /migrate/* is a search landing page — this is the
+     *  only ungated `landing_cta_clicked` ask on it, and it says out loud that
+     *  bringing the old records over is optional and lives in settings. */
+    primaryCta: {
+      title: string
+      body: string
+      /** Primary button → sign-in with `?from=<source>` query. */
+      button: string
+    }
     sources: {
       /** Fallback shown when header sniffer + page hint both fail. */
       unknown: string
@@ -2353,6 +2363,8 @@ export type Translations = {
      *  /migrate/simple-daily-money and any future non-CSV-export source. */
     chatgptWorkflow: {
       heading: string
+      /** Sub-line in the collapsed <summary> — names the cost up front (#1011). */
+      toggleHint: string
       intro: string
       substeps: readonly [string, string, string, string]
       promptLabel: string
@@ -2362,6 +2374,8 @@ export type Translations = {
       formatLabel: string
       formatExample: string
       note: string
+      /** Closing line — the real importer lives in post-login settings (#1011). */
+      settingsHint: string
     }
     /** Per-source landing page copy — hero + 3-step walkthrough + optional
      *  per-source extras (e.g. honeydue.intro, cwmoney.templateDownloadLabel).
@@ -2593,7 +2607,7 @@ export const zhTW: Translations = {
       seeAll: '看全部搬遷指南',
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
-    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAppName: 'Futari · 雙人記帳',
     jsonLdAlternateNames: ['Futari 家計簿', '情侶記帳 app', '夫妻記帳', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
       '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
@@ -4337,6 +4351,11 @@ export const zhTW: Translations = {
       hint: '建立完帳號再把這份 CSV 匯入，原本記過的不用再記一次。',
       privacyNote: '預覽只在你的瀏覽器跑，沒有東西被傳出去。',
     },
+    primaryCta: {
+      title: '不搬舊帳，也可以先記今天',
+      body: '舊紀錄想搬再搬，登入後在設定裡隨時可以匯入。先記下今天這一筆，也是一個開頭。',
+      button: '建立 Futari 帳號',
+    },
     sources: {
       unknown: '其他',
     },
@@ -4427,6 +4446,7 @@ export const zhTW: Translations = {
     },
     chatgptWorkflow: {
       heading: '沒有 CSV 匯出？用截圖換',
+      toggleHint: '四個步驟，中間會用到 ChatGPT。',
       intro: '如果原本的 App 沒有 CSV 匯出，可以用截圖請 ChatGPT 幫你整理成 CSV，再上傳。免費版的 ChatGPT 就能做。',
       substeps: [
         '打開原本的記帳 App，把你想搬遷的交易截圖——往下捲動蓋過所有你要帶走的記錄。',
@@ -4455,6 +4475,7 @@ export const zhTW: Translations = {
 2026-05-30,飲食,150,星巴克,TWD,expense
 2026-05-30,薪水,50000,五月,TWD,income`,
       note: 'currency 不是 TWD 的會照原數字先匯入，換算可以在匯入後逐筆調整。重複出現的同一筆（相同日期＋金額＋描述）會自動去掉。',
+      settingsHint: '不急著現在弄也沒關係——登入後在設定裡一樣能匯入 CSV。',
     },
     pages: {
       honeydue: {
