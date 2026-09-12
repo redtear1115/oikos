@@ -1,3 +1,5 @@
+// 接受邀請時依接受者既有 group 狀態分流（單人告知 / 雙人擋下 / 無則照舊）的
+// 完整決策見 docs/superpowers/specs/invite-existing-group-design.md。
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'

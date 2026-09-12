@@ -1,3 +1,6 @@
+// use-case 頁與 migrate 頁共用同一套 registry 驅動架構，設計見
+// docs/superpowers/specs/migrate-pages-design.md；其上的轉換埋點見
+// conversion-analytics-design.md。
 // lib/use-case/cases.ts
 // Central registry for /use-case/<slug> situational SEO landing pages (#851).
 // Parallel structure to lib/migrate/sources.ts.

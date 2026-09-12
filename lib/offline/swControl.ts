@@ -1,5 +1,7 @@
 'use client'
 
+// Service Worker 的 opt-in 模型（為什麼不預設開啟）見
+// docs/superpowers/specs/offline-browsing-design.md。
 /**
  * Client-only helpers for controlling the Serwist-generated service worker.
  * Each helper is a no-op in environments without `navigator.serviceWorker`

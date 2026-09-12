@@ -1,5 +1,8 @@
 'use client'
 
+// Button / TextInput / Sheet 三個 primitive 與其 token layer 的設計依據見
+// docs/superpowers/specs/design-system-primitives-design.md；視覺 token 本身
+// 以 DESIGN.md 為準。
 import { type ButtonHTMLAttributes, type ReactNode } from 'react'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent'

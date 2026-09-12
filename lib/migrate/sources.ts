@@ -1,8 +1,10 @@
 // lib/migrate/sources.ts
 // Central source of truth for /migrate/<source> page competitor data (#852).
-// Comparison table labels are written in Chinese and are NOT translated —
-// the migrate pages' primary audience is Taiwanese and the labels are
-// symbol-based (✓/△/✕) with short phrases that don't meaningfully differ.
+//
+// Comparison table labels are written in Chinese and deliberately NOT
+// translated. The reasoning (and the rest of the registry-driven architecture)
+// lives in docs/superpowers/specs/migrate-pages-design.md — not restated here,
+// so there is only one copy to keep true.
 
 export type CellTone = 'yes' | 'partial' | 'no'
 

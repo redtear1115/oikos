@@ -63,6 +63,8 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 新增 page / layout 用 `getCurrentUser()`（in `lib/supabase/server.ts`），不要再呼叫 `auth.getUser()`。
 
+上表是**認證**（你是誰）該打哪個 API。**授權**（你能碰哪一本帳）是另一件事——四層閘門、查詢層刻意不驗 membership、以及編輯類 action 最容易漏的那個檢查，見 [authorization](authorization-design.md)。
+
 ---
 
 ## 3. 資料模型

@@ -1,3 +1,5 @@
+// 離線瀏覽是 opt-in 的，Service Worker 的註冊時機與快取策略見
+// docs/superpowers/specs/offline-browsing-design.md。
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getTranslations } from '@/lib/i18n/t'

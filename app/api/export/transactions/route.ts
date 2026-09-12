@@ -1,3 +1,5 @@
+// 匯出的範圍決定（刻意跨章節、刻意含 pending、為什麼入口在信任宣示頁）見
+// docs/superpowers/specs/csv-export-design.md。
 import { NextResponse } from 'next/server'
 import { eq, or } from 'drizzle-orm'
 import { getCurrentUser } from '@/lib/supabase/server'
