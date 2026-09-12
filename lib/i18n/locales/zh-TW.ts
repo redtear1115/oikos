@@ -42,6 +42,12 @@ export type Translations = {
      *  `?error=auth_failed`. Sign-in tone — state what happened and that
      *  retrying is fine; no alarm, no exclamation. (#973) */
     authFailedNotice: string
+    /** Shown while an OAuth attempt is in flight (#1083). On the native
+     *  shells the sign-in page stays mounted underneath the in-app browser,
+     *  so without a curtain the user returns to a fully interactive form and
+     *  can fire a second attempt into the first one's redirect. Sign-in tone —
+     *  quiet, present tense, no exclamation. */
+    signingIn: string
     termsPrefix: string
     termsLink: string
     termsAnd: string
@@ -2565,6 +2571,7 @@ export const zhTW: Translations = {
     continueWithGoogle: '以 Google 帳號繼續',
     continueWithApple: '以 Apple 帳號繼續',
     authFailedNotice: '剛才的登入沒有完成，再試一次就好。',
+    signingIn: '正在帶你進去',
     termsPrefix: '繼續即表示您同意我們的',
     termsLink: '服務條款',
     termsAnd: '與',
