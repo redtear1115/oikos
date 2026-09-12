@@ -1622,7 +1622,7 @@ export const en: Translations = {
     },
     meta: {
       // TODO(i18n): native review pending (#1016) — MT-quality draft.
-      title: 'Someone invited you to track finances together · Futari',
+      title: 'Someone invited you to a shared ledger · Futari',
       // TODO(i18n): native review pending (#1016) — MT-quality draft.
       description: 'A shared ledger for two. Open the link, sign in, and you can join.',
       ogDescription: 'A shared ledger for two. Open the link, sign in, and you can join.',
@@ -2625,7 +2625,7 @@ I will upload the screenshots once you confirm.`,
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
       invite: {
         // TODO(i18n): native review pending (#1016) — MT-quality draft.
-        title: 'Someone invited you to track finances together · Futari',
+        title: 'Someone invited you to a shared ledger · Futari',
         // TODO(i18n): native review pending (#1016) — MT-quality draft.
         description: 'Someone invited you to a shared ledger for two. Sign in to join.',
         ogDescription: 'A shared ledger for two. Sign in to join.',
