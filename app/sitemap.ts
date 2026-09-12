@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { SUPPORTED_LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/locales-meta'
 import { localizedHref } from '@/lib/i18n/path'
 import { MIGRATE_SOURCES } from '@/lib/migrate/sources'
-import { USE_CASE_SLUGS } from '@/lib/use-case/cases'
+import { USE_CASES } from '@/lib/use-case/cases'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-light.dev'
 
@@ -16,25 +16,27 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 // `lastModified` is a per-path manual constant rather than `new Date()` — Google
 // treats a moving lastmod as "everything just changed" and drops the crawl-
 // prioritisation signal entirely. Bump the date by hand when the page's content
-// actually changes; the comment next to each entry tracks the trigger. (#669)
+// actually changes. For migrate / use-case pages that date now lives next to
+// the content itself (`contentUpdatedAt` in each source/case registry); the
+// static pages below still carry their date manually in this file. (#669, #1004)
 const PATHS = [
   // Landing copy / hero / migrate cross-link section
-  { path: '/', changeFrequency: 'weekly' as const, priority: 1.0, lastModified: '2026-05-20' },
+  { path: '/', changeFrequency: 'weekly' as const, priority: 1.0, lastModified: '2026-06-16' },
   // migrate hub/index — lists every source, 1 click from each guide (#939)
   { path: '/migrate', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-06-16' },
   // migrate pages — auto-derived from MIGRATE_SOURCES (#852)
-  ...Object.keys(MIGRATE_SOURCES).map((slug) => ({
-    path: `/migrate/${slug}`,
+  ...Object.values(MIGRATE_SOURCES).map((source) => ({
+    path: `/migrate/${source.slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
-    lastModified: '2026-05-30',
+    lastModified: source.contentUpdatedAt,
   })),
-  // use-case pages — auto-derived from USE_CASE_SLUGS (#851)
-  ...USE_CASE_SLUGS.map((slug) => ({
-    path: `/use-case/${slug}`,
+  // use-case pages — auto-derived from USE_CASES (#851)
+  ...Object.values(USE_CASES).map((useCase) => ({
+    path: `/use-case/${useCase.slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
-    lastModified: '2026-05-30',
+    lastModified: useCase.contentUpdatedAt,
   })),
   // Legal pages
   { path: '/terms', changeFrequency: 'yearly' as const, priority: 0.3, lastModified: '2026-05-03' },

@@ -15,6 +15,10 @@ export type ComparisonRow = {
 export type SourceDef = {
   slug: string
   name: string
+  /** Content last-changed date (YYYY-MM-DD) for sitemap lastmod. Bump this
+   *  when this source's comparison rows or its i18n copy actually change —
+   *  it is the crawl-prioritisation signal, not a build timestamp. (#1004) */
+  contentUpdatedAt: string
   /** cwmoney only — renders a download link inside step 2 */
   templateDownload?: { href: string }
   /** Non-CSV-export apps (#839 P2): renders the shared screenshot→ChatGPT→CSV
@@ -28,6 +32,7 @@ export const MIGRATE_SOURCES = {
   honeydue: {
     slug: 'honeydue',
     name: 'Honeydue',
+    contentUpdatedAt: '2026-05-19',
     comparison: {
       rows: [
         { feature: '雙人共同帳本',   futari: { label: '✓ 支援',      tone: 'yes'     }, other: { label: '✓ 支援',      tone: 'yes'     } },
@@ -41,6 +46,7 @@ export const MIGRATE_SOURCES = {
   spendee: {
     slug: 'spendee',
     name: 'Spendee',
+    contentUpdatedAt: '2026-05-19',
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 免費內建',   tone: 'yes'     }, other: { label: '△ 需付費解鎖',   tone: 'partial' } },
@@ -54,6 +60,7 @@ export const MIGRATE_SOURCES = {
   cwmoney: {
     slug: 'cwmoney',
     name: 'CWMoney',
+    contentUpdatedAt: '2026-07-13',
     templateDownload: { href: '/cwmoney-template.xlsx' },
     comparison: {
       rows: [
@@ -68,6 +75,7 @@ export const MIGRATE_SOURCES = {
   moneybook: {
     slug: 'moneybook',
     name: 'Moneybook',
+    contentUpdatedAt: '2026-07-13',
     comparison: {
       rows: [
         { feature: '雙人共同帳本',   futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計',   tone: 'no'      } },
@@ -81,6 +89,7 @@ export const MIGRATE_SOURCES = {
   andromoney: {
     slug: 'andromoney',
     name: 'AndroMoney',
+    contentUpdatedAt: '2026-05-30',
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計',       tone: 'no'      } },
@@ -94,6 +103,7 @@ export const MIGRATE_SOURCES = {
   mobills: {
     slug: 'mobills',
     name: 'Mobills',
+    contentUpdatedAt: '2026-05-30',
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 預設模式',  tone: 'yes'     }, other: { label: '✕ 單人設計',   tone: 'no'      } },
@@ -107,6 +117,7 @@ export const MIGRATE_SOURCES = {
   manebo: {
     slug: 'manebo',
     name: 'Manebo',
+    contentUpdatedAt: '2026-07-13',
     comparison: {
       rows: [
         { feature: '雙人共同帳本',   futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '△ 需設定共享',      tone: 'partial' } },
@@ -120,6 +131,7 @@ export const MIGRATE_SOURCES = {
   'simple-daily-money': {
     slug: 'simple-daily-money',
     name: '簡單記帳',
+    contentUpdatedAt: '2026-07-13',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -134,6 +146,7 @@ export const MIGRATE_SOURCES = {
   'fortune-city': {
     slug: 'fortune-city',
     name: '記帳城市',
+    contentUpdatedAt: '2026-07-13',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -148,6 +161,7 @@ export const MIGRATE_SOURCES = {
   cashman: {
     slug: 'cashman',
     name: 'CashMan',
+    contentUpdatedAt: '2026-05-30',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -162,6 +176,7 @@ export const MIGRATE_SOURCES = {
   '1money': {
     slug: '1money',
     name: '1Money',
+    contentUpdatedAt: '2026-05-30',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -176,6 +191,7 @@ export const MIGRATE_SOURCES = {
   icost: {
     slug: 'icost',
     name: 'iCost',
+    contentUpdatedAt: '2026-05-30',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -190,6 +206,7 @@ export const MIGRATE_SOURCES = {
   suishouji: {
     slug: 'suishouji',
     name: '隨手記',
+    contentUpdatedAt: '2026-05-30',
     screenshotWorkflow: true,
     comparison: {
       rows: [
