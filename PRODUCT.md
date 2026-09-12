@@ -92,6 +92,18 @@ One codebase, three shells. These are design constraints, not implementation not
 
 **It is a WebView, and that is fine.** The shells load the production site; they are not native apps wearing a web skin. Do not chase native-feeling choreography (spring page pushes, interactive swipe-back, rubber-band overscroll mimicry) to disguise this. The honest target is a fast, calm, reduced-motion-safe web surface. Also budget for what WebView does worse: the software keyboard covers content without warning, `100vh` lies, and scroll containers stop at boundaries. Sheets and forms must stay usable with the keyboard open.
 
+## Surface Intents
+
+Every public surface has a job, and each job has a number that says whether the job is being done. The recurring mistake is not miscounting; it is reading a real number against the wrong intent and concluding that something is broken. What follows is what each surface is for, and — more usefully — which low numbers are expected.
+
+**`/migrate/*` (competitor migration pages).** These are organic-search landing pages for someone typing "how do I move off X". The job ends at sign-up, so the metric is `landing_cta_clicked`. The CSV import widget on the page is a logged-out bonus for the rare visitor who arrives already holding an export file; the real importer lives behind sign-in, in settings. `import_completed` from these pages is therefore not a success metric and never was. In ninety days exactly one person completed an import straight off organic search, and that is the expected shape — the number would sit near zero even if the pages were doing their job perfectly. The measure that actually discriminates is the CTA click: sources without the screenshot workflow convert at 26%, sources with it at 6.5%. That gap is where the friction is.
+
+**`/use-case/*` (scenario landing pages).** Ten pages across four locales, written for people searching a situation rather than a product. Organic arrivals are the metric. Ninety days in, organic arrivals are zero, and the ceiling is search volume, not page count or page quality. The pages do rank — cohabitation 18.5, newlyweds 7.5, aa-split 7.7 — which is Google's own evidence that they are not being treated as thin content. A page that ranks for a term nobody searches is a cheap bet that has not paid off yet. Their share of the sitemap is not a cost to optimize away.
+
+**Invitation flow.** The job is getting the second partner into the ledger, so the metric is acceptance after an invite is sent. Over 120 days, 25 people created a group, 6 tried to send an invite, and 5 succeeded; among those five the gap between creating the group and the partner joining was 2, 4, 6, 19, and 299 minutes. Three of five inside six minutes means the dominant scene is two people in the same room with one phone between them. Design for hand-over, not for delivery across distance. The small number of send attempts describes that scene; it is not evidence that the invite is failing.
+
+**Solo mode.** One person keeping the ledger is a complete state, not a waiting room. It deliberately has no conversion metric. The moment "solo → duo conversion rate" becomes a number someone is asked to move, the design follows it: reminders, nudges, a partner-shaped hole in the UI. That is the Gamified guilt the anti-references already rule out. Judge solo mode on whether one person can do everything the product promises, and leave it there.
+
 ## Accessibility & Inclusion
 
 - Hold WCAG AA contrast across the warm palette, especially on text-on-fill pairs (cream / terracotta / ink). `--ink-3` sits at 4.66:1 on cream and is the floor, not a starting point for further lightening.
