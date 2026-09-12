@@ -30,6 +30,22 @@ describe('LandingCtaLink', () => {
     expect(screen.getByText('開始').closest('a')!.getAttribute('href')).toBe('/zh-TW/sign-in?from=landing')
   })
 
+  it('lets fromParam override the landing tag (migrate pages tag their slug)', () => {
+    render(
+      <LandingCtaLink
+        href="/zh-TW/sign-in"
+        ctaLocation="migrate_primary"
+        target="sign_in"
+        fromParam="simple-daily-money"
+      >
+        建立帳號
+      </LandingCtaLink>,
+    )
+    expect(screen.getByText('建立帳號').closest('a')!.getAttribute('href')).toBe(
+      '/zh-TW/sign-in?from=simple-daily-money',
+    )
+  })
+
   it('does NOT append from for non-sign-in targets', () => {
     render(
       <LandingCtaLink href="/zh-TW/migrate/honeydue" ctaLocation="footer_migrate" target="migrate_honeydue">

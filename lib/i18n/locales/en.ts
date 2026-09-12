@@ -1886,6 +1886,11 @@ export const en: Translations = {
       hint: "Sign up, then import this CSV; you won't have to log it again.",
       privacyNote: 'Preview runs in your browser. Nothing leaves your device.',
     },
+    primaryCta: {
+      title: 'You can start without moving anything',
+      body: 'Bring the old records over whenever you feel like it — the importer waits in settings once you sign in. Today’s first entry is a fine place to begin.',
+      button: 'Create a Futari account',
+    },
     sources: {
       unknown: 'Other',
     },
@@ -1980,6 +1985,7 @@ export const en: Translations = {
     },
     chatgptWorkflow: {
       heading: 'No CSV export? Use screenshots',
+      toggleHint: 'Four steps, with a stop at ChatGPT along the way.',
       intro: 'If your old app has no CSV export, you can screenshot your records and have ChatGPT turn them into a CSV to upload. The free ChatGPT plan works.',
       substeps: [
         'In your old app, scroll your transaction list and take phone screenshots (5–10 is a good range to cover the period you want to move).',
@@ -2008,6 +2014,7 @@ I will upload the screenshots once you confirm.`,
 2026-05-30,Food,150,Starbucks,TWD,expense
 2026-05-30,Salary,50000,May,TWD,income`,
       note: 'Non-TWD rows import at their raw number first; you can adjust the conversion per row after import. Duplicates of the same entry (same date + amount + description) are dropped automatically.',
+      settingsHint: 'No rush — you can import the CSV from settings any time after you sign in.',
     },
     pages: {
       honeydue: {

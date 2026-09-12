@@ -17,8 +17,17 @@ type Target =
 interface Props {
   href: string
   /** Where on the page this CTA sits — for breakdown. */
-  ctaLocation: 'hero' | 'desktop_header' | 'secondary' | 'footer_migrate' | 'footer_use_case'
+  ctaLocation:
+    | 'hero'
+    | 'desktop_header'
+    | 'secondary'
+    | 'footer_migrate'
+    | 'footer_use_case'
+    | 'migrate_primary'
   target: Target
+  /** Overrides the `from=landing` attribution tag. /migrate/<source> reuses this
+   *  CTA off the landing page and tags its own slug, matching `MigrateCta`. */
+  fromParam?: string
   className?: string
   style?: CSSProperties
   ariaLabel?: string
@@ -31,8 +40,10 @@ interface Props {
  * The tag keys off the resolved href (a logged-in viewer's CTA points at
  * /dashboard and is left untouched); migrate destinations set their own `from`.
  */
-export function LandingCtaLink({ href, ctaLocation, target, className, style, ariaLabel, children }: Props) {
-  const finalHref = href.includes('/sign-in') ? appendQueryParam(href, 'from', 'landing') : href
+export function LandingCtaLink({ href, ctaLocation, target, fromParam, className, style, ariaLabel, children }: Props) {
+  const finalHref = href.includes('/sign-in')
+    ? appendQueryParam(href, 'from', fromParam ?? 'landing')
+    : href
   // Reuse the shared `oik-focus-ring` utility (globals.css) so keyboard focus is
   // visible against dark-fill CTAs; pointer clicks stay clean via :focus-visible.
   const cls = ['outline-none focus-visible:oik-focus-ring', className].filter(Boolean).join(' ')

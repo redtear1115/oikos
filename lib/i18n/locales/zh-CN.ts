@@ -1885,6 +1885,11 @@ export const zhCN: Translations = {
       hint: '建完账号再把这份 CSV 导入，原本记过的不用再记一次。',
       privacyNote: '预览只在你的浏览器跑，没有东西被传出去。',
     },
+    primaryCta: {
+      title: '不搬旧账，也可以先记今天',
+      body: '旧记录想搬再搬，登录后在设置里随时可以导入。先记下今天这一笔，也是一个开头。',
+      button: '创建 Futari 账号',
+    },
     sources: {
       unknown: '其他',
     },
@@ -1975,6 +1980,7 @@ export const zhCN: Translations = {
     },
     chatgptWorkflow: {
       heading: '没有 CSV 导出？用截图换',
+      toggleHint: '四个步骤，中间会用到 ChatGPT。',
       intro: '如果原本的 App 没有 CSV 导出，可以用截图请 ChatGPT 帮你整理成 CSV，再上传。免费版的 ChatGPT 就能做。',
       substeps: [
         '在原本的记账 App 把交易列表往下滚，用手机截图（建议 5–10 张，盖过你想搬的时间范围）。',
@@ -2003,6 +2009,7 @@ export const zhCN: Translations = {
 2026-05-30,饮食,150,星巴克,TWD,expense
 2026-05-30,工资,50000,五月,TWD,income`,
       note: 'currency 不是 TWD 的会照原数字先导入，换算可以在导入后逐笔调整。重复出现的同一笔（相同日期＋金额＋描述）会自动去掉。',
+      settingsHint: '不急着现在弄也没关系——登录后在设置里一样能导入 CSV。',
     },
     pages: {
       honeydue: {

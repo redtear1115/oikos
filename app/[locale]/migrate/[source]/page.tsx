@@ -10,6 +10,7 @@ import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateIntroCallout } from '../_components/MigrateIntroCallout'
 import { MigrateDifferentiators } from '../_components/MigrateDifferentiators'
 import { MigrateChatgptWorkflow } from '../_components/MigrateChatgptWorkflow'
+import { MigratePrimaryCta } from '../_components/MigratePrimaryCta'
 import { MigrateTrustBlock, MigrateFooter } from '../_components/MigrateTrustFooter'
 import { MigrateBreadcrumbJsonLd } from '../_components/MigrateBreadcrumbJsonLd'
 import { MigrateHowToJsonLd } from '../_components/MigrateHowToJsonLd'
@@ -138,6 +139,17 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
       {page.intro && <MigrateIntroCallout text={page.intro} />}
 
       <MigrateDifferentiators heading={t.differentiatorsHeading} items={page.differentiators} />
+
+      {/* The ask sits right after the reason to believe and ahead of every
+       *  migration mechanic (#1011) — /migrate/* is a search landing page, and
+       *  the walkthrough below is a bonus route, not the reason to be here. */}
+      <MigratePrimaryCta
+        title={t.primaryCta.title}
+        body={t.primaryCta.body}
+        button={t.primaryCta.button}
+        signInHref={signInHref}
+        source={slug}
+      />
 
       <MigrateSteps
         heading={page.stepsHeading}
