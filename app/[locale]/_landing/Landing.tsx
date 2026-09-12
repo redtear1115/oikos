@@ -452,7 +452,7 @@ function MigrateLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
+            className="m-0 mt-3 md:mt-0 text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.migrateSection.subtitle}
@@ -486,7 +486,7 @@ function MigrateLinksSection({
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
@@ -577,7 +577,7 @@ function UseCaseLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
+            className="m-0 mt-3 md:mt-0 text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.useCaseSection.subtitle}
@@ -607,7 +607,7 @@ function UseCaseLinksSection({
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
