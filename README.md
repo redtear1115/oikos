@@ -169,6 +169,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.5.9](CHANGELOG.md#159---2026-09-12) | 讓伴侶真的進得來 · 面對面掃碼 · 邀請授權修補 |
 | [v1.5.8](CHANGELOG.md#158---2026-09-12) | 自然搜尋體質 · sitemap 說實話 · 搬家教學收摺 |
 | [v1.5.7](CHANGELOG.md#157---2026-09-12) | 三平台觀測維度 · platform super property |
 | [v1.5.6](CHANGELOG.md#156---2026-09-12) | iOS 原生登入修復 · 三平台 CI 與發版地基 · 殼版本偵測 |

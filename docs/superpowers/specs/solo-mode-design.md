@@ -1,8 +1,8 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-12
 status: shipped
 first_shipped_in: v0.2.0
-related_specs: [onboarding, transactions, recurring]
+related_specs: [onboarding, transactions, recurring, solo-trip]
 related_issues: []
 ---
 
@@ -10,6 +10,9 @@ related_issues: []
 
 > `OikosGroups.member_b IS NULL` 的狀態：使用者已建立帳本但還沒邀請對方（或邀請被跳過）。
 > 不是「閹割版」，是完整的單人使用體驗。
+>
+> 這份 spec 成文於 v0.2.0，當時旅行還不存在，所以只涵蓋「我 vs 對方」兩種人。
+> 帳本裡出現第三種人（出團共旅者）之後的行為見 [solo-trip](solo-trip-design.md)。
 
 ---
 

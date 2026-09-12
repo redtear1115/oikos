@@ -403,6 +403,10 @@ export type Translations = {
     sendInvite: string
     sharedAndCopied: string
     copied: string
+    /** Web Share API title — deliberately generic, no group/inviter name (privacy). */
+    shareTitle: string
+    /** Web Share API text — deliberately generic, no group/inviter name (privacy). */
+    shareText: string
   }
 
   addSheet: {
@@ -1431,6 +1435,27 @@ export type Translations = {
     }
   }
 
+  /** Setup flow's invite step (#1017) — face-to-face QR path alongside the
+   *  existing link-share path. */
+  setup: {
+    invite: {
+      heading: string
+      /** Template with `{name}` placeholder for the group name. */
+      subtitle: string
+      qrHint: string
+      qrReveal: string
+      qrHide: string
+      qrAlt: string
+      linkHint: string
+      copy: string
+      share: string
+      skip: string
+      copied: string
+      shareFailed: string
+      creating: string
+    }
+  }
+
   /** Ko-fi floating-chat widget (#893) — button label shown on the bottom-right
    *  floating button. The widget mounts on landing and settings pages. */
   support: {
@@ -1967,7 +1992,23 @@ export type Translations = {
       alreadyMember: string
       /** Template with `{partner}` — accepter is already in a duo group (#912). */
       alreadyInDuo: string
+      /** The person who minted the invite is no longer in that ledger (#1031). */
+      inviterNotMember: string
       unknown: string
+    }
+    /** `<head>` metadata for the invite landing page. Deliberately generic —
+     *  no group name / inviter name / financial info (OG preview is crawled
+     *  and cached by chat-app link previewers; see issue #1016).
+     *
+     *  **Keep in sync with `seo.signIn.invite`.** The same generic card has to
+     *  exist on both routes: signed-in visitors land on /invite/[token], while
+     *  link previewers follow that route's redirect and end up rendering
+     *  /sign-in?from=invite instead. Metadata on the invite route alone never
+     *  reaches them — that was this issue's original, mistaken premise. */
+    meta: {
+      title: string
+      description: string
+      ogDescription: string
     }
   }
 
@@ -2395,6 +2436,15 @@ export type Translations = {
       title: string
       description: string
       ogDescription: string
+      /** `<head>` metadata for `/sign-in?from=invite` — the redirect target
+       *  when an invite link is opened while signed out. Deliberately as
+       *  generic as invite.meta (no group / inviter name), and always
+       *  `robots: noindex` since it's a per-token entry point (#1016). */
+      invite: {
+        title: string
+        description: string
+        ogDescription: string
+      }
     }
     terms: {
       title: string
@@ -2795,6 +2845,8 @@ export const zhTW: Translations = {
     sendInvite: '傳送邀請',
     sharedAndCopied: '已分享，連結也已複製',
     copied: '已複製連結',
+    shareTitle: '一起用 Futari 記帳',
+    shareText: '兩個人的共同帳本，點開連結就能加入。',
   },
 
   addSheet: {
@@ -3593,6 +3645,24 @@ export const zhTW: Translations = {
     },
   },
 
+  setup: {
+    invite: {
+      heading: '帳本準備好了，讓對方也進來',
+      subtitle: '對方加入後，就能一起記「{name}」。',
+      qrHint: '對方就在旁邊的話，直接掃這個',
+      qrReveal: '顯示 QR Code',
+      qrHide: '收起來',
+      qrAlt: '加入帳本的 QR Code',
+      linkHint: '不在旁邊的話，把連結傳過去',
+      copy: '複製',
+      share: '分享連結',
+      skip: '稍後再邀請 →',
+      copied: '已複製連結',
+      shareFailed: '分享失敗',
+      creating: '建立中…',
+    },
+  },
+
   support: {
     buttonText: '請喝杯咖啡',
     frameTitle: 'Ko-fi 支持小視窗',
@@ -4079,7 +4149,13 @@ export const zhTW: Translations = {
       groupFull: '此帳本已有兩位成員',
       alreadyMember: '你已經是此帳本的成員',
       alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
+      inviterNotMember: '發出這份邀請的人已經不在這本帳本裡，連結不再有效。',
       unknown: '無法加入帳本',
+    },
+    meta: {
+      title: '有人邀請你一起記帳 · Futari',
+      description: '兩個人的共同帳本。點開連結，登入後就能加入。',
+      ogDescription: '兩個人的共同帳本。點開連結，登入後就能加入。',
     },
   },
 
@@ -5035,6 +5111,12 @@ export const zhTW: Translations = {
       title: '登入 Futari · 開始兩個人的記帳生活',
       description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
       ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+      /** Keep in sync with `invite.meta` — see the note there. (#1016) */
+      invite: {
+        title: '有人邀請你一起記帳 · Futari',
+        description: '有人邀請你加入一本兩個人共用的帳本。登入後就能加入。',
+        ogDescription: '兩個人的共同帳本。登入後就能加入。',
+      },
     },
     terms: {
       title: '服務條款 · Futari',

@@ -328,6 +328,10 @@ export const ja: Translations = {
     sendInvite: '招待を送る',
     sharedAndCopied: '共有しました。リンクもコピー済み',
     copied: 'リンクをコピーしました',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareTitle: 'Futari で一緒に家計簿をつける',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareText: '二人のための共有家計簿です。リンクを開くと参加できます。',
   },
 
   addSheet: {
@@ -1126,6 +1130,25 @@ export const ja: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review.
+  setup: {
+    invite: {
+      heading: '家計簿の準備はできました。ふたりで始めましょう',
+      subtitle: '相手が参加すると、「{name}」をふたりで記録できます。',
+      qrHint: '相手がそばにいるなら、これを読み取ってもらいましょう',
+      qrReveal: 'QRコードを表示',
+      qrHide: '閉じる',
+      qrAlt: '家計簿に参加するためのQRコード',
+      linkHint: '離れているなら、リンクを送りましょう',
+      copy: 'コピー',
+      share: 'リンクを共有',
+      skip: 'あとで招待する →',
+      copied: 'リンクをコピーしました',
+      shareFailed: '共有できませんでした',
+      creating: '作成中…',
+    },
+  },
+
   support: {
     buttonText: 'コーヒーを贈る',
     frameTitle: 'Ko-fi サポートウィンドウ',
@@ -1612,7 +1635,15 @@ export const ja: Translations = {
       groupFull: 'この家計簿には既に二人のメンバーがいます',
       alreadyMember: 'あなたは既にこの家計簿のメンバーです',
       alreadyInDuo: 'すでに {partner} さんと家計簿を共有しています。新しく参加するには、先に今の家計簿から抜けてください。',
+      inviterNotMember: '招待を送った人は、すでにこの家計簿のメンバーではありません。リンクは無効です。',
       unknown: '家計簿に参加できません',
+    },
+    meta: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      title: '二人で家計簿をつけませんか · Futari',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      description: '二人のための共有家計簿です。リンクを開いてサインインすると参加できます。',
+      ogDescription: '二人のための共有家計簿です。リンクを開いてサインインすると参加できます。',
     },
   },
 
@@ -2609,6 +2640,13 @@ I will upload the screenshots once you confirm.`,
       title: 'Futari にサインイン · ふたりの家計簿をはじめよう',
       description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までふたりで一緒に整える PWA。',
       ogDescription: 'Google でワンタップサインイン、ふたりの家計簿をはじめよう。',
+      invite: {
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        title: '二人で家計簿をつけませんか · Futari',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        description: '二人のための共有家計簿に招待されました。サインインすると参加できます。',
+        ogDescription: '二人のための共有家計簿です。サインインすると参加できます。',
+      },
     },
     terms: {
       title: '利用規約 · Futari',

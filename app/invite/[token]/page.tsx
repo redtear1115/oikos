@@ -1,12 +1,47 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { previewInvite } from '@/actions/invite'
-import { getTranslations } from '@/lib/i18n/t'
+import { getTranslations, getLocale } from '@/lib/i18n/t'
+import { ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedSignInPath } from '@/lib/i18n/server-redirect'
 import { InviteConfirm } from './InviteConfirm'
 
 interface Props {
   params: Promise<{ token: string }>
+}
+
+// Deliberately generic — no group name, no inviter name, no financial info.
+// This preview is crawled and cached by chat-app link previewers (LINE,
+// Messenger, WhatsApp) the moment the invite link is pasted anywhere, so it
+// must look identical for every invite. `robots: noindex` keeps it out of
+// search engines even though a search crawler would ignore that signal less
+// reliably than `robots.ts` alone (see app/robots.ts, which already
+// disallows /invite/ for well-behaved crawlers).
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale()
+  const t = await getTranslations()
+  const { title, description, ogDescription } = t.invite.meta
+  return {
+    title,
+    description,
+    robots: { index: false, follow: false },
+    openGraph: {
+      title,
+      description: ogDescription,
+      siteName: 'Futari · 雙人記帳',
+      type: 'website',
+      locale: ogLocale(locale),
+      alternateLocale: alternateOgLocales(locale),
+      images: [{ url: ogImage(locale), width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: ogDescription,
+      images: [ogImage(locale)],
+    },
+  }
 }
 
 export default async function InvitePage({ params }: Props) {
@@ -44,6 +79,7 @@ export default async function InvitePage({ params }: Props) {
     group_full: t.invite.errors.groupFull,
     already_member: t.invite.errors.alreadyMember,
     already_in_duo: t.invite.errors.alreadyInDuo,
+    inviter_not_member: t.invite.errors.inviterNotMember,
   }
   const errorMessage =
     preview.error === 'already_in_duo'

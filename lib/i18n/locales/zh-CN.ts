@@ -329,6 +329,8 @@ export const zhCN: Translations = {
     sendInvite: '发送邀请',
     sharedAndCopied: '已分享，链接也已复制',
     copied: '已复制链接',
+    shareTitle: '一起用 Futari 记账',
+    shareText: '两个人的共同账本，点开链接就能加入。',
   },
 
   addSheet: {
@@ -1127,6 +1129,24 @@ export const zhCN: Translations = {
     },
   },
 
+  setup: {
+    invite: {
+      heading: '账本准备好了，让对方也进来',
+      subtitle: '对方加入后，就能一起记「{name}」。',
+      qrHint: '对方就在旁边的话，直接扫这个',
+      qrReveal: '显示二维码',
+      qrHide: '收起来',
+      qrAlt: '加入账本的二维码',
+      linkHint: '不在旁边的话，把链接发过去',
+      copy: '复制',
+      share: '分享链接',
+      skip: '稍后再邀请 →',
+      copied: '已复制链接',
+      shareFailed: '分享失败',
+      creating: '创建中…',
+    },
+  },
+
   support: {
     buttonText: '请喝杯咖啡',
     frameTitle: 'Ko-fi 支持小窗口',
@@ -1613,7 +1633,13 @@ export const zhCN: Translations = {
       groupFull: '此账本已有两位成员',
       alreadyMember: '你已经是此账本的成员',
       alreadyInDuo: '你已经和 {partner} 共用一本账本，要先离开才能加入新的。',
+      inviterNotMember: '发出这份邀请的人已经不在这本账本里，链接不再有效。',
       unknown: '无法加入账本',
+    },
+    meta: {
+      title: '有人邀请你一起记账 · Futari',
+      description: '两个人的共同账本。点开链接，登录后就能加入。',
+      ogDescription: '两个人的共同账本。点开链接，登录后就能加入。',
     },
   },
 
@@ -2569,6 +2595,11 @@ export const zhCN: Translations = {
       title: '登录 Futari · 开始两个人的记账生活',
       description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、照看保险与爱物的双人记账 PWA。',
       ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
+      invite: {
+        title: '有人邀请你一起记账 · Futari',
+        description: '有人邀请你加入一本两个人共用的账本。登录后就能加入。',
+        ogDescription: '两个人的共同账本。登录后就能加入。',
+      },
     },
     terms: {
       title: '服务条款 · Futari',

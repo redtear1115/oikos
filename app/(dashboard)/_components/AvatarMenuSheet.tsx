@@ -66,7 +66,6 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
                 displayName: partner.displayName,
                 email: '',
               } : null}
-              groupId={group.id}
             />
           </Section>
 

@@ -19,11 +19,9 @@ interface Props {
   viewer: MemberRowData
   /** Null in solo mode — invite CTA replaces the second row. */
   partner: MemberRowData | null
-  /** Group id — needed only for invite link generation in solo mode. */
-  groupId: string
 }
 
-export function MemberListSection({ viewer, partner, groupId }: Props) {
+export function MemberListSection({ viewer, partner }: Props) {
   const t = useTranslations()
   const isSolo = partner === null
 
@@ -40,8 +38,8 @@ export function MemberListSection({ viewer, partner, groupId }: Props) {
     setInviteError(null)
     startInviteTransition(async () => {
       try {
-        const url = await createInvite(groupId)
-        const result = await shareInviteLink(url)
+        const url = await createInvite()
+        const result = await shareInviteLink(url, t.soloBanner.shareTitle, t.soloBanner.shareText)
         setInviteToast(result === 'shared' ? t.soloBanner.sharedAndCopied : t.soloBanner.copied)
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)

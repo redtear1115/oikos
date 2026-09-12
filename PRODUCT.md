@@ -4,11 +4,33 @@
 
 product
 
+## Surface Tiers
+
+The register field above is the project default and governs everything inside the app shell. Three routes groups are **brand** surfaces and must be designed with the brand register instead. Do not treat them as app UI.
+
+**Brand register (design IS the product):**
+
+- `app/[locale]/page.tsx` and `app/[locale]/_landing/*` (landing)
+- `app/[locale]/migrate/page.tsx` and `app/[locale]/migrate/[source]/page.tsx` (competitor-migration SEO pages)
+- `app/[locale]/use-case/[slug]/page.tsx` (vertical narratives)
+- `app/[locale]/sign-in/page.tsx` (the threshold: brand voice, product restraint)
+- `app/[locale]/privacy`, `app/[locale]/terms` (legal, brand typography, no app chrome)
+
+**Product register (design SERVES the task):** everything under `app/(dashboard)/*`, plus `app/onboarding`, `app/setup`, `app/invite/[token]`, `app/offline`.
+
+The brand surfaces get the committed cream ground (`--bg-committed`) and Fraunces at full voice. The product surfaces get the working palette and Noto Sans TC. A brand surface that looks like the dashboard has failed; a dashboard screen that looks like the landing page has also failed.
+
 ## Users
 
 固定兩人（夫妻／伴侶）共用一本帳。Two people in an established relationship, sharing one ledger from their phones in the small gaps of daily life: at a checkout, in bed before sleep, on the commute. They are not accountants and have no wish to become ones. Usually one partner records more diligently than the other, so the tool has to serve both the self-disciplined type and the needs-a-nudge type without shaming either.
 
-The job to be done: log a shared expense in under a minute, see at a glance who owes whom, settle without awkwardness, and now and then look back and feel the relationship's story rather than just its totals. Mobile-first PWA; sessions are short and frequent.
+The job to be done: log a shared expense in under a minute, see at a glance who owes whom, settle without awkwardness, and now and then look back and feel the relationship's story rather than just its totals. Sessions are short and frequent.
+
+**One person is a complete state, not a waiting room.** Solo mode (`member_b IS NULL`) is a first-class way to use Futari, whether the partner has not joined yet, has left, or was never coming. Never style, word, or lay out solo mode as a deficiency or an incomplete setup.
+
+**Two is the core; more is an extension.** Group trips (v1.6.0) and multi-way splitting (v1.7.0) let this couple pull other people into one bounded stretch of spending. Those guests are visitors to the pair's ledger, not co-owners of it. When a design decision trades intimacy of the two for generality across N, the two win. The main ledger, the balance hero, the monthly review, and the partner quiz are all two-person surfaces and stay that way.
+
+**Delivery reaches three platforms from one web codebase.** Mobile-first PWA, plus iOS and Android Capacitor shells whose `server.url` points at production, so a web deploy lands on every installed shell immediately. `lib/platform.ts` distinguishes five contexts: `ios_native`, `android_native`, `ios_pwa`, `android_pwa`, `web`. Design for the narrowest of them, not for the browser you are previewing in. See **Platform Constraints** below.
 
 (MVP audience is the couple. The wider Freedom Project research covers pets, new parents, and others, but Futari's user is the pair.)
 
@@ -31,6 +53,8 @@ Voice shifts by surface tier:
 
 Never excited, never urgent, never congratulatory about money. The tool witnesses; it does not cheer.
 
+**The line between witness and sentimentality.** The most common copy failure is overshooting warmth into 矯情. A witness states what happened and stops: 「這個月你們一起記了 34 筆」. A sentimentalist adds a verdict about how that should feel: 「這個月你們好努力，真是甜蜜的一個月」. When a sentence tells the user what to feel, cut the telling and keep the fact. The warmth comes from noticing, not from adjectives.
+
 ## Anti-references
 
 What Futari must NOT look or sound like:
@@ -41,6 +65,10 @@ What Futari must NOT look or sound like:
 - **Gamified guilt.** Streaks, budget-exceeded red alarms, "you overspent" verdicts, anxiety used to drive engagement. Solo mode especially must never frame "your partner hasn't joined yet" as a problem state.
 - **Generic budgeting-app aesthetic.** The category reflex of teal-and-white pie charts and rows of identical metric cards. Futari's warm-lamp identity exists precisely to escape this.
 
+**The gravity problem.** The generic budgeting app is not one mistake, it is the resting state that every unconsidered decision drifts toward. A screen arrives there by accumulation: a card because the content needed a boundary, a shadow because the card needed to separate, a row of stats because the number felt lonely, a colored chart because the categories needed distinguishing. No single step was wrong. Bans alone do not hold, because the drift happens in the gaps between them.
+
+The counter-move is positive, not prohibitive. Before adding a container, ask what the hairline or the tonal step would do instead. Before adding a second number, ask whether the first one is actually the moment. Before reaching for a new component, ask which of the four primitives in `components/ui/` already covers it. The system is deliberately small: `Button`, `TextInput`, `SegmentedToggle`, `Sheet`. If a screen needs a fifth thing, that is a signal to re-read the problem, not a license to invent.
+
 Move toward (as feel, not to copy): warm reflective journaling apps such as Day One, Apple Journal, and Stoic for the unhurried personal tone; and the human, approachable end of money apps such as Monarch, Copilot Money, and Cleo for making finance feel like it belongs to people rather than spreadsheets.
 
 ## Design Principles
@@ -50,12 +78,34 @@ Move toward (as feel, not to copy): warm reflective journaling apps such as Day 
 3. **低門檻進入 (low barrier to entry).** No forced sign-up to start; the first record should be possible inside 60 seconds. Friction is the enemy of a daily habit.
 4. **不自動化取代感受 (automation must not replace feeling).** The system generates the presentation, but the result must not feel mechanical. Warmth is hand-felt, not computed.
 5. **兩人對等 (two equals).** Both partners, and both personality types (diligent and needs-a-nudge), are first-class. Never optimize for one at the other's expense, and never shame the less-active partner.
+6. **做到剛好就停 (build to the edge of the ask, then stop).** Futari's surface area is a cost paid by two people on a phone, so scope discipline is a design principle here, not a process note. Implement what was asked, completely. Do not grow a small change into a feature, do not add the adjacent screen nobody requested, and do not invent a new token, font size, spacing step, radius, or `components/ui/` primitive to solve a one-off. When the existing system genuinely cannot express the design, stop and ask. An unrequested addition is not generosity; it is surface area the couple has to navigate around forever.
+
+## Platform Constraints
+
+One codebase, three shells. These are design constraints, not implementation notes: they change what a screen may assume.
+
+**Safe area is not optional.** iPhone notch / Dynamic Island, home indicator, and the Android gesture bar all eat into the viewport inside the native shells, where there is no browser chrome to absorb them. Any fixed, sticky, or absolutely-positioned element (bottom nav, FAB, sheet footers, full-screen confirmation screens, toasts) must respect `env(safe-area-inset-*)`. The `--bottom-nav-offset` token reserves scroll clearance at the bottom; it does not solve the top. A destructive-action screen whose escape route sits under the notch is a trap, and has already shipped once: the cancel-deletion control on the account-deletion screen is unreachable on notched iPhones.
+
+**The same screen is not the same on all three platforms.** iOS shells may not surface external payment or donation links (`components/KofiWidget.tsx` already gates this). Design the paid tier and support entry points so that removing them on iOS leaves a coherent screen, not a hole. Never assume a single visual state across platforms, and never let the iOS variant read as the broken one.
+
+**Native permission prompts are relationship moments.** Push notifications and any future camera use (invoice scanning) trigger an OS dialog that cannot be restyled and can only be asked once in practice. Never fire one on first launch. Ask at the moment the user has just done the thing the permission serves, in plain language, with the value stated before the prompt appears. A denial must leave the feature gracefully closed, never a nagging banner. Guardian, push, and partner-activity surfaces carry the highest risk of turning companionship into surveillance; the permission moment is where that line is crossed or held.
+
+**It is a WebView, and that is fine.** The shells load the production site; they are not native apps wearing a web skin. Do not chase native-feeling choreography (spring page pushes, interactive swipe-back, rubber-band overscroll mimicry) to disguise this. The honest target is a fast, calm, reduced-motion-safe web surface. Also budget for what WebView does worse: the software keyboard covers content without warning, `100vh` lies, and scroll containers stop at boundaries. Sheets and forms must stay usable with the keyboard open.
 
 ## Accessibility & Inclusion
 
-- Hold WCAG AA contrast across the warm palette, especially on text-on-fill pairs (cream / terracotta / ink).
-- Respect `prefers-reduced-motion`: motion is gentle by default and fully removable.
+- Hold WCAG AA contrast across the warm palette, especially on text-on-fill pairs (cream / terracotta / ink). `--ink-3` sits at 4.66:1 on cream and is the floor, not a starting point for further lightening.
+- Respect `prefers-reduced-motion`: motion is gentle by default and fully removable. Every new animation needs a reduced-motion branch, matching the existing treatment of `.partner-toast` and `.about-article`.
 - Support dynamic type and scalable text; the app must stay usable at larger system font sizes.
-- Keep touch targets at or above 44px (the `--control-md` token already encodes this).
+- Keep touch targets at or above 44px (the `--control-md` token already encodes this), and keep them clear of safe-area insets (see **Platform Constraints**).
 - Do not rely on color alone for meaning. The credit (sage) versus debit (clay) distinction, and balance direction, need a non-color cue (sign, label, or icon) so the green and red pairing reads for color-blind users.
+- Keyboard focus is handled through `:focus-visible` on `.oik-btn` / `.oik-toggle` / `.oik-chip` / `.oik-segment` and `:focus-within` on `.oik-input-wrapper`. Any new interactive element joins that vocabulary rather than inventing its own ring.
 - Four locales (zh-TW primary, then zh-CN, en, ja): copy and layout must absorb both CJK and Latin lengths without breaking.
+
+### Known gap: no dark mode
+
+Futari is currently light-only. There is no `prefers-color-scheme` block in `app/globals.css`, so a user whose phone is in dark mode gets the full cream ground, including inside the native shells where there is no browser UI to soften the transition. This is an unfilled gap, not a design position.
+
+When it is filled, the direction is **the lamp at night, not the lamp switched off**. A dark Futari is a warm low-light room: deep cocoa-brown grounds rather than neutral charcoal, ember still the single accent and still rare, sage and clay held at the same quiet register rather than turned neon to survive a dark background. The failure mode to avoid is the default dark-mode inversion, which would land Futari squarely in the cold-fintech territory the whole identity exists to escape.
+
+Until that work is scoped and approved: do not invent a partial dark palette, do not add `dark:` variants ad hoc, and do not add a theme toggle. Build light-only, and raise the gap rather than patching around it.
