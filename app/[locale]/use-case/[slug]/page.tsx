@@ -11,6 +11,7 @@ import { UseCaseFeatures } from '../_components/UseCaseFeatures'
 import { UseCaseFaq } from '../_components/UseCaseFaq'
 import { UseCaseCta } from '../_components/UseCaseCta'
 import { UseCaseOtherCases } from '../_components/UseCaseOtherCases'
+import { UseCaseBreadcrumbJsonLd } from '../_components/UseCaseBreadcrumbJsonLd'
 
 type Params = Promise<{ locale: string; slug: string }>
 
@@ -62,6 +63,7 @@ export default async function UseCasePage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-10 md:space-y-14">
+      <UseCaseBreadcrumbJsonLd locale={locale} slug={useCaseSlug} />
       <UseCaseHero
         kicker={page.heroKicker}
         title={page.heroTitle}
@@ -76,7 +78,7 @@ export default async function UseCasePage({ params }: { params: Params }) {
         features={t.features}
       />
 
-      <UseCaseCta label={t.ctaLabel} signInHref={signInHref} />
+      <UseCaseCta label={t.ctaLabel} signInHref={signInHref} slug={useCaseSlug} />
 
       <UseCaseFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 

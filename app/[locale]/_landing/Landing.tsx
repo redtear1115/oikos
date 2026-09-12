@@ -31,6 +31,8 @@ type Props = {
     cohabitation: string
     newlyweds: string
     petOwners: string
+    /** /use-case hub listing every situation (#1057). */
+    hub: string
   }
   /** Locale-aware /migrate/* hrefs (#613). Three internal links to strengthen
    *  the link graph for SEO and offer cross-tool migrants a direct path. */
@@ -450,7 +452,7 @@ function MigrateLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
+            className="m-0 mt-3 md:mt-0 text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.migrateSection.subtitle}
@@ -484,7 +486,7 @@ function MigrateLinksSection({
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
@@ -496,7 +498,7 @@ function MigrateLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={migrateHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-[13px] md:text-sm"
+            className="inline-flex items-center gap-1.5 text-sm"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
@@ -575,7 +577,7 @@ function UseCaseLinksSection({
             </h2>
           </div>
           <p
-            className="m-0 mt-3 md:mt-0 text-[13px] md:text-sm"
+            className="m-0 mt-3 md:mt-0 text-sm"
             style={{ color: 'var(--ink-2)', lineHeight: 1.6, maxWidth: 360 }}
           >
             {t.useCaseSection.subtitle}
@@ -605,13 +607,32 @@ function UseCaseLinksSection({
                 {item.title}
               </p>
               <p
-                className="m-0 mt-1.5 text-sm md:text-[13px] leading-[1.6]"
+                className="m-0 mt-1.5 text-sm leading-[1.6]"
                 style={{ color: 'var(--ink-2)' }}
               >
                 {item.body}
               </p>
             </LandingCtaLink>
           ))}
+        </div>
+
+        {/* The other seven situations live behind one link rather than as ten
+            cards here — the landing section stays a sample of who this is for,
+            not a directory (#1057). */}
+        <div className="mt-6 md:mt-7 text-center md:text-left">
+          <Link
+            href={useCaseHrefs.hub}
+            className="inline-flex items-center gap-1.5 text-sm"
+            style={{
+              color: 'var(--ink)',
+              textDecoration: 'underline',
+              textDecorationColor: 'var(--accent)',
+              textUnderlineOffset: '4px',
+            }}
+          >
+            {t.useCaseSection.seeAll}
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
     </section>

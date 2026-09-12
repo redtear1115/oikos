@@ -9,7 +9,7 @@ import { LOCALE_COOKIE, DEFAULT_LOCALE, isLocale } from '@/lib/i18n/locales-meta
 import { aliasServer, captureServer } from '@/lib/analytics/server'
 import {
   entrySourceFromParam,
-  migrateSourceFromParam,
+  importResumeSourceFromParam,
   isFirstAuth,
   type AuthPath,
 } from '@/lib/analytics/attribution'
@@ -55,7 +55,7 @@ export async function recordNativeAuthConversion(opts: {
 
     const userId = user.id
     const entrySource = entrySourceFromParam(opts.from)
-    const migrateSource = migrateSourceFromParam(opts.from)
+    const importResumeSource = importResumeSourceFromParam(opts.from)
     const cookieStore = await cookies()
     const localeValue = cookieStore.get(LOCALE_COOKIE)?.value
     const locale = isLocale(localeValue) ? localeValue : DEFAULT_LOCALE
@@ -70,7 +70,7 @@ export async function recordNativeAuthConversion(opts: {
       firstAuth ? 'signed_up' : 'signed_in',
       {
         entry_source: entrySource,
-        ...(migrateSource ? { migrate_source: migrateSource } : {}),
+        ...(importResumeSource ? { migrate_source: importResumeSource } : {}),
         locale,
         path: NATIVE_AUTH_PATH,
         provider: NATIVE_AUTH_PROVIDER,

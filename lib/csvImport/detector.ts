@@ -15,7 +15,19 @@
 
 import { type MigrateSlug } from '@/lib/migrate/sources'
 
-export type KnownCsvSource = 'honeydue' | 'spendee' | 'cwmoney'
+/**
+ * The sources that have a header-sniff signature *and* a dedicated mapper
+ * (`mapHoneydue` / `mapSpendee` / `mapCwmoney` in `./index.ts`). This array is
+ * the authority for "can we parse this source's CSV" — `detectCsvSource`, the
+ * mapper switch, and the sign-in import-resume axis
+ * (`importResumeSourceFromParam` in `lib/analytics/attribution.ts`) all derive
+ * from it, so shipping a new parser means adding one entry here and nothing
+ * else. It is deliberately *not* the /migrate page list: most migrate pages
+ * exist without a parser.
+ */
+export const KNOWN_CSV_SOURCES = ['honeydue', 'spendee', 'cwmoney'] as const
+
+export type KnownCsvSource = (typeof KNOWN_CSV_SOURCES)[number]
 /**
  * Slugs that exist as /migrate landing pages but have no header-sniff
  * signature or dedicated mapper yet (#839 P1). The anonymous preview falls

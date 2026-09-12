@@ -10,7 +10,7 @@ import { LOCALE_COOKIE, DEFAULT_LOCALE, isLocale } from '@/lib/i18n/locales-meta
 import { aliasServer, captureServer } from '@/lib/analytics/server'
 import {
   entrySourceFromParam,
-  migrateSourceFromParam,
+  importResumeSourceFromParam,
   isFirstAuth,
   type AuthPath,
 } from '@/lib/analytics/attribution'
@@ -117,7 +117,7 @@ export async function GET(request: Request) {
   if (data.user) {
     const userId = data.user.id
     const entrySource = entrySourceFromParam(from)
-    const migrateSource = migrateSourceFromParam(from)
+    const importResumeSource = importResumeSourceFromParam(from)
     const cookieStore = await cookies()
     const localeValue = cookieStore.get(LOCALE_COOKIE)?.value
     const locale = isLocale(localeValue) ? localeValue : DEFAULT_LOCALE
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       firstAuth ? 'signed_up' : 'signed_in',
       {
         entry_source: entrySource,
-        ...(migrateSource ? { migrate_source: migrateSource } : {}),
+        ...(importResumeSource ? { migrate_source: importResumeSource } : {}),
         locale,
         path: AUTH_PATH,
         ...(provider ? { provider } : {}),

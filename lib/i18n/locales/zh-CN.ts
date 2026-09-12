@@ -126,7 +126,7 @@ export const zhCN: Translations = {
       newlywedsBody: '结婚之后从日常账本到爱物，一起看见两个人的生活全貌。',
       petOwnersTitle: '宠物家庭',
       petOwnersBody: '毛孩的每一笔费用都值得被记住，清楚看见两个人的心意。',
-      cardAriaLabel: '了解 {slug} 情境',
+      seeAll: '看全部 10 种情境',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -2012,6 +2012,10 @@ export const zhCN: Translations = {
           name: 'iCost',
           description: 'iOS 上人气的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: '分账起家的老朋友，群组交易导出表格就能带过来。',
+        },
         suishouji: {
           name: '随手记',
           description: '两岸用户众多的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
@@ -2561,6 +2565,48 @@ export const zhCN: Translations = {
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: '你的 Splitwise 记录，可以带走',
+        heroSubtitle: '从 Splitwise 搬到 Futari：把群组或好友的交易导出成表格，上传预览后，两个人接着把日常记下去。',
+        intro: 'Splitwise 是很多人分账的起点，群组与好友的交易都能导出成表格带走：网页版在群组页右上角的齿轮里选「Export spreadsheet」，手机则在标题栏右滑找到「Export」。免费账号每天可新增 4 笔支出，币种换算、收据扫描、图表等功能属于 Splitwise Pro。如果你们想要的不只是分账，而是一本日常都记得下的共同账本，这一页是为此准备的。',
+        differentiators: [
+          {
+            title: '不只分账，是一本共同账本',
+            body: '支出、收入、分类与每月回顾都在同一本账里；分摊与结算只是其中一段。',
+          },
+          {
+            title: '每天记几笔都可以',
+            body: '核心记账没有每日笔数上限，也没有广告，两个人想记就记。',
+          },
+          {
+            title: '多币种内建',
+            body: '旅行时用当地币种记下，主币种的余额自动换算好，不必另外升级。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 Splitwise 打开群组或好友页，用「Export spreadsheet」下载表格。',
+        step2: '把 CSV 上传到这里，预览你们的分账历史。',
+        step3: '创建 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: 'Splitwise 的数据怎么搬到 Futari？',
+            answer: '在群组或好友页导出表格，再把 CSV 上传到这里预览，创建账号后完成导入。',
+          },
+          {
+            question: '导出的字段和 Futari 一样吗？',
+            answer: '不完全一样。Splitwise 的导出每笔交易一行，除了总金额（Cost）还有每个人各自的分摊列。上传后会先预览解析结果，导入时可以对照调整字段与分类，不会直接写进账本。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '我们也用它记旅行的账，Futari 有对应的做法吗？',
+            answer: '有。Futari 的旅行账本把一趟旅行的支出独立记，可以用当地币种，结束后折回主账本，日常的账不会被旅行冲掉。',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: '你的随手记数据，可以带走',
@@ -2690,6 +2736,11 @@ export const zhCN: Translations = {
         description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、端到端加密。',
         ogDescription: 'iCost 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
+      splitwise: {
+        title: '从 Splitwise 搬家到 Futari｜导出表格、CSV 导入',
+        description: 'Splitwise 的群组与好友交易可以导出表格带走。上传到 Futari 这个为夫妻、情侣设计的共同账本，分摊、结算与日常记账都在同一本账里。免费、无广告、端到端加密。',
+        ogDescription: 'Splitwise 用户搬家指南：导出表格 → 上传 CSV → 搬进 Futari 双人记账。',
+      },
       suishouji: {
         title: '从随手记搬家到 Futari｜截图转 CSV',
         description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
@@ -2700,6 +2751,11 @@ export const zhCN: Translations = {
       title: '从其他记账 App 搬到 Futari｜迁移指南总览',
       description: '正在找 Honeydue、Spendee、随手记等记账 App 的替代方案？Futari 是为两个人做的免费共同账本，支持 CSV 导入，几分钟就能把过去的记录搬过来。',
       ogDescription: '你现在用哪一个记账 App？挑一个，把过去的记录一起搬到 Futari。',
+    },
+    useCaseHub: {
+      title: '双人记账的 10 种情境｜同居、新婚、旅行、宠物 — Futari',
+      description: '同居生活费怎么分、新婚夫妻的账怎么记、旅行费用怎么对、养宠物多了哪些开销——日子不同，记账的难处也不同。这里是 Futari 为 10 种双人情境写的说明，挑最接近你们的那一个。',
+      ogDescription: '10 种双人记账情境，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、端到端加密。',
     },
     useCase: {
       cohabitation: {
@@ -2787,7 +2843,56 @@ export const zhCN: Translations = {
     },
     otherCases: {
       heading: '其他情境',
-      cardAriaLabel: '查看 {slug} 页面',
+    },
+    hub: {
+      heroKicker: '两个人，十种日子',
+      heroTitle: '你们现在，是哪一种一起生活？',
+      heroSubtitle: '刚搬到一起、刚结婚、养了一只猫、在计划下一趟旅行——每种日子遇到的账都不太一样。挑一个最接近你们的，看看 Futari 在那里能帮上什么。',
+      heading: '挑一个最接近你们的',
+      cardCta: '看这个情境',
+      breadcrumbLabel: '使用情境',
+      items: {
+        cohabitation: {
+          name: '同居生活费',
+          description: '房租、水电、生活用品——搬到一起之后最先要面对的那几笔。',
+        },
+        newlyweds: {
+          name: '新婚夫妻',
+          description: '两个人的收入合成一本账，从婚后第一个月开始记。',
+        },
+        'pet-owners': {
+          name: '宠物家庭',
+          description: '猫粮、看诊、疫苗——多了一个成员，也多了一份共同的开销。',
+        },
+        travel: {
+          name: '旅行分摊',
+          description: '订房他付、车票你付，回来之后不用再翻聊天记录对账。',
+        },
+        roommates: {
+          name: '室友分摊',
+          description: '不是伴侣也能共用一本账，水电网费分得清清楚楚。',
+        },
+        'monthly-bills': {
+          name: '每月固定费',
+          description: '房租、保险、订阅服务——每个月都会来的那几笔。',
+        },
+        'big-purchases': {
+          name: '大笔支出',
+          description: '家电、家具、机票——一次付一大笔，分摊方式先说好更安心。',
+        },
+        dining: {
+          name: '外食费用',
+          description: '这顿我的、下顿你的，日常吃饭的账也留得住。',
+        },
+        parenting: {
+          name: '育儿费用',
+          description: '尿布、保姆、兴趣班，孩子的花费单独看得见。',
+        },
+        'aa-split': {
+          name: 'AA 制记账',
+          description: '对半、按比例、全额由一方——AA 不只一种分法。',
+        },
+      },
     },
     pages: {
       cohabitation: {

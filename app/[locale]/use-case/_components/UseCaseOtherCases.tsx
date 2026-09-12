@@ -41,7 +41,11 @@ export function UseCaseOtherCases({
           <li key={slug}>
             <Link
               href={localizedHref(`/use-case/${slug}`, locale)}
-              aria-label={copy.cardAriaLabel.replace('{slug}', slug)}
+              // 不放 aria-label：可見的情境名稱本身就是最好的 accessible name。
+              // 原本的 "查看 {slug} 頁面" 把路由用的英文 slug 塞進中文句子，
+              // 既不是本地化標題，也讓 accessible name 不包含可見文字，
+              // 撞上 WCAG 2.5.3 Label in Name（label-content-name-mismatch，#1059）。
+              // 與 Landing 的 migrate 卡片同一個解法（#919）。
               className="inline-flex items-center px-4 py-2 rounded-[10px] text-sm"
               style={{
                 background: 'var(--surface)',

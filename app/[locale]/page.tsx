@@ -114,6 +114,7 @@ export default async function RootPage({ params }: { params: Params }) {
           cohabitation: localizedHref('/use-case/cohabitation', locale),
           newlyweds: localizedHref('/use-case/newlyweds', locale),
           petOwners: localizedHref('/use-case/pet-owners', locale),
+          hub: localizedHref('/use-case', locale),
         }}
         migrateHrefs={{
           honeydue: localizedHref('/migrate/honeydue', locale),

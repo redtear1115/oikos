@@ -203,6 +203,24 @@ export const MIGRATE_SOURCES = {
       ],
     },
   },
+  splitwise: {
+    slug: 'splitwise',
+    name: 'Splitwise',
+    contentUpdatedAt: '2026-09-12',
+    // No screenshotWorkflow: Splitwise exports a spreadsheet per group /
+    // friendship (kb.splitwise.com "How can I double check my balances?"),
+    // so users arrive holding a real CSV. Headers don't match any dedicated
+    // sniff signature, so the file routes to the generic mapping wizard.
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本',   futari: { label: '✓ 預設模式',   tone: 'yes'     }, other: { label: '✓ 群組支援',      tone: 'yes'     } },
+        { feature: '費用分攤模式',   futari: { label: '✓ 多種模式',   tone: 'yes'     }, other: { label: '✓ 多種模式',      tone: 'yes'     } },
+        { feature: '每日記帳筆數',   futari: { label: '✓ 不限',       tone: 'yes'     }, other: { label: '△ 免費版每日 4 筆', tone: 'partial' } },
+        { feature: '多幣別記帳',     futari: { label: '✓ 內建換算',   tone: 'yes'     }, other: { label: '△ 換算需 Pro',    tone: 'partial' } },
+        { feature: '資料匯出帶走',   futari: { label: '✓ CSV 匯出',   tone: 'yes'     }, other: { label: '✓ 試算表匯出',    tone: 'yes'     } },
+      ],
+    },
+  },
   suishouji: {
     slug: 'suishouji',
     name: '隨手記',
@@ -220,5 +238,11 @@ export const MIGRATE_SOURCES = {
   },
 } satisfies Record<string, SourceDef>
 
+/**
+ * The registry keys, and the authority for "which /migrate pages exist".
+ * Pages, sitemap, i18n `Record<MigrateSlug, …>` and the analytics
+ * `entry_source` axis (`lib/analytics/attribution.ts`) all derive from it —
+ * adding a source here is enough. No hand-written copy of the slug list lives
+ * anywhere: the one that used to sit in this comment went stale at 8 of 15.
+ */
 export type MigrateSlug = keyof typeof MIGRATE_SOURCES
-// → 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo' | 'simple-daily-money'

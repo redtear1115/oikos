@@ -125,7 +125,7 @@ export const ja: Translations = {
       newlywedsBody: '日常の支出から愛するものまで、ふたりの生活を一冊の帳簿に。',
       petOwnersTitle: 'ペット家族',
       petOwnersBody: '毛の子への支出はすべて記録に値する。ふたりで見守る記録を。',
-      cardAriaLabel: '{slug} のシーンを見る',
+      seeAll: '10 のシーンをすべて見る',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -2019,6 +2019,10 @@ export const ja: Translations = {
           name: 'iCost',
           description: 'iOS で人気の家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: '割り勘の定番。グループをスプレッドシートに書き出せば、そのまま持ち込めます。',
+        },
         suishouji: {
           name: '隨手記',
           description: '中国語圏で広く使われる家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
@@ -2603,6 +2607,53 @@ I will upload the screenshots once you confirm.`,
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: 'Splitwise の記録も、持っていけます',
+        heroSubtitle:
+          'Splitwise から Futari へ：グループやフレンドの明細をスプレッドシートに書き出し、プレビューしてから、ふたりで日々の記録を続けられます。',
+        intro:
+          'Splitwise は割り勘の出発点としてよく使われていて、記録は持ち出せます。ウェブではグループまたはフレンドのページ右上の歯車から「Export spreadsheet」、モバイルではヘッダーメニューを右にスワイプして「Export」を選びます。無料アカウントは 1 日 4 件まで支出を追加でき、通貨換算・レシート読み取り・グラフなどは Splitwise Pro の機能です。割り勘だけでなく、日々の暮らしも収まる共同家計簿がほしいなら、このページはそのためのものです。',
+        differentiators: [
+          {
+            title: '割り勘だけでなく、ひとつの共同家計簿',
+            body: '支出も収入もカテゴリも月次の振り返りも同じ家計簿の中に。割り勘と精算はその一部です。',
+          },
+          {
+            title: '1 日の件数に上限なし',
+            body: '基本の記録に 1 日あたりの件数制限はなく、広告もありません。',
+          },
+          {
+            title: '多通貨に標準対応',
+            body: '旅先では現地通貨のまま記録でき、基準通貨の残高は自動で換算されます。アップグレードは不要です。',
+          },
+        ],
+        stepsHeading: '移行は 3 ステップ',
+        step1: 'Splitwise でグループかフレンドのページを開き、「Export spreadsheet」で書き出します。',
+        step2: 'CSV をここにアップロードして、これまでの明細をプレビューします。',
+        step3: 'Futari のアカウントを作成して、移行を完了します。',
+        faq: [
+          {
+            question: 'Splitwise のデータはどうやって Futari へ移しますか？',
+            answer:
+              'グループかフレンドのページからスプレッドシートを書き出し、CSV をここにアップロードしてプレビューし、アカウントを作成すれば取り込みが完了します。',
+          },
+          {
+            question: '書き出した列は Futari と同じですか？',
+            answer:
+              '同じではありません。Splitwise の書き出しは 1 明細 1 行で、合計金額（Cost）の列に加えて各メンバーの負担額の列が並びます。アップロード後にまず解析結果をプレビューし、取り込み時に列とカテゴリを対応づけられます。その前に家計簿へ書き込まれることはありません。',
+          },
+          {
+            question: '取り込みに費用はかかりますか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '旅行の記録にも使っています。Futari に同じようなものはありますか？',
+            answer:
+              'あります。Futari の旅行家計簿は 1 回の旅の支出を現地通貨のまま切り分けて記録し、旅が終わると本体の家計簿にまとめて戻します。',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: '隨手記のデータも、持っていけます',
@@ -2738,6 +2789,11 @@ I will upload the screenshots once you confirm.`,
         description: 'iCost は iOS 限定で書き出しなし？スクショを ChatGPT で CSV に整え、クロスプラットフォームのふたり家計簿 Futari に取り込むだけ。無料・広告なし。',
         ogDescription: 'iCost は iOS 限定——スクショ→ChatGPT→CSV→Futari、どの端末でも。',
       },
+      splitwise: {
+        title: 'Splitwise から Futari へ｜書き出した CSV を取り込む',
+        description: 'Splitwise のグループやフレンドの明細はスプレッドシートに書き出せます。カップル・夫婦の共同家計簿 Futari に取り込めば、割り勘も精算も日々の記録もひとつの家計簿に。無料・広告なし・暗号化。',
+        ogDescription: 'Splitwise からの移行ガイド：スプレッドシートを書き出し、CSV を Futari に取り込む。',
+      },
       suishouji: {
         title: '隨手記から Futari へ｜スクショを CSV に',
         description: '最初からふたり向けの家計簿がほしい？隨手記をスクショして ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし。',
@@ -2748,6 +2804,11 @@ I will upload the screenshots once you confirm.`,
       title: '他の家計簿アプリから Futari へ移行｜ガイド一覧',
       description: 'Honeydue や Spendee、マネボなど家計簿アプリの乗り換え先をお探しですか？Futari はふたりのための無料の共同家計簿。CSV を取り込めば、数分で過去の記録を移せます。',
       ogDescription: '今どの家計簿アプリ？ひとつ選んで、過去の記録を Futari へ。',
+    },
+    useCaseHub: {
+      title: 'ふたりの家計簿・10 のシーン｜同棲・新婚・旅行・ペット | Futari',
+      description: '同棲の生活費の分け方、新婚のお金のまとめ方、旅行費の精算、ペットと暮らす分の出費——暮らし方が違えば、家計簿の悩みも違います。ふたり向けに書いた 10 のシーンから、いちばん近いものをどうぞ。',
+      ogDescription: 'ふたりの家計簿、10 のシーン。いちばん近いものを選んでください——Futari は無料・広告なし・エンドツーエンド暗号化。',
     },
     useCase: {
       cohabitation: {
@@ -2835,7 +2896,56 @@ I will upload the screenshots once you confirm.`,
     },
     otherCases: {
       heading: 'ほかのシーン',
-      cardAriaLabel: '{slug} のページを見る',
+    },
+    hub: {
+      heroKicker: 'ふたり、10 とおりの日々',
+      heroTitle: 'いまのふたりは、どんな暮らし？',
+      heroSubtitle: '同棲を始めたばかり、結婚したばかり、猫を迎えたところ、次の旅行を計画中——暮らし方が違えば、出てくる出費も違います。いちばん近いシーンを選んで、そこで Futari に何ができるか見てみてください。',
+      heading: 'いちばん近いシーンをどうぞ',
+      cardCta: 'このシーンを見る',
+      breadcrumbLabel: '利用シーン',
+      items: {
+        cohabitation: {
+          name: '同棲の生活費',
+          description: '家賃・光熱費・日用品——一緒に住み始めて最初に向き合う出費。',
+        },
+        newlyweds: {
+          name: '新婚夫婦',
+          description: 'ふたりの収入をひとつの家計簿に。結婚後の 1 か月目から。',
+        },
+        'pet-owners': {
+          name: 'ペットのいる家',
+          description: 'フード・通院・ワクチン——家族がひとり増えると、共同の出費も増えます。',
+        },
+        travel: {
+          name: '旅行費の分担',
+          description: '宿は相手、チケットはあなた。帰ってからチャットをさかのぼらずに済みます。',
+        },
+        roommates: {
+          name: 'ルームシェア',
+          description: 'カップルでなくても家計簿は共有できます。光熱費も通信費もすっきり折半。',
+        },
+        'monthly-bills': {
+          name: '毎月の固定費',
+          description: '家賃・保険・サブスク——毎月かならずやってくるあの数件。',
+        },
+        'big-purchases': {
+          name: '大きな買い物',
+          description: '家電・家具・航空券。大きな支払いほど、分け方を先に決めておくと安心です。',
+        },
+        dining: {
+          name: '外食費',
+          description: '今回はわたし、次はあなた。日々の食事の記録もちゃんと残ります。',
+        },
+        parenting: {
+          name: '育児の費用',
+          description: 'おむつ・保育・習いごと——子どもにかかるお金だけを切り分けて見られます。',
+        },
+        'aa-split': {
+          name: '割り勘の記録',
+          description: '折半・収入比・どちらかが全額——公平な分け方はひとつではありません。',
+        },
+      },
     },
     pages: {
       cohabitation: {

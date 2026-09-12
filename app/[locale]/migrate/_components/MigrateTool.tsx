@@ -120,12 +120,13 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
             source={preview.detectedSource}
             onClick={() => track('migrate_cta_clicked', { migrate_source: hint })}
           />
-          <p className="text-center text-xs" style={{ color: 'var(--ink-3)' }}>
+          {/* Same ground as the privacy note below — --ink-3 would be 4.02:1 (#1059). */}
+          <p className="text-center text-xs" style={{ color: 'var(--ink-2)' }}>
             <button
               type="button"
               onClick={reset}
               className="underline cursor-pointer"
-              style={{ color: 'var(--ink-3)' }}
+              style={{ color: 'var(--ink-2)' }}
             >
               {t.upload.retry}
             </button>
@@ -133,8 +134,10 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
         </>
       )}
 
+      {/* --ink-2 not --ink-3: this note sits straight on --bg-committed, where
+          --ink-3 is only 4.02:1 at 12px — below WCAG AA 4.5:1 (#1059). */}
       {!showPreview && !showError && (
-        <p className="text-center text-xs" style={{ color: 'var(--ink-3)' }}>
+        <p className="text-center text-xs" style={{ color: 'var(--ink-2)' }}>
           {t.cta.privacyNote}
         </p>
       )}

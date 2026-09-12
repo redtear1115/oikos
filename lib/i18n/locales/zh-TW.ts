@@ -185,7 +185,10 @@ export type Translations = {
       newlywedsBody: string
       petOwnersTitle: string
       petOwnersBody: string
-      cardAriaLabel: string
+      /** Link to the /use-case hub listing every situation (#1057). The landing
+       *  keeps three cards; the remaining seven live one click away rather than
+       *  turning this section into a link wall. */
+      seeAll: string
     }
     /** Footer trust note. */
     footerTrust: string
@@ -2402,6 +2405,7 @@ export type Translations = {
         cashman: { name: string; description: string }
         '1money': { name: string; description: string }
         icost: { name: string; description: string }
+        splitwise: { name: string; description: string }
         suishouji: { name: string; description: string }
       }
     }
@@ -2482,6 +2486,12 @@ export type Translations = {
       description: string
       ogDescription: string
     }
+    /** SEO copy for the /use-case hub/index page (#1057). */
+    useCaseHub: {
+      title: string
+      description: string
+      ogDescription: string
+    }
     /** SEO copy for /use-case/* situational landing pages (#851). */
     useCase: Record<import('@/lib/use-case/cases').UseCaseSlug, {
       title: string
@@ -2511,7 +2521,24 @@ export type Translations = {
     ctaLabel: string
     otherCases: {
       heading: string
-      cardAriaLabel: string
+    }
+    /** /use-case hub/index page (#1057) — one entry point listing every
+     *  situation, mirroring the /migrate hub. `name` doubles as the middle
+     *  breadcrumb leaf name on each per-slug page (#1058). */
+    hub: {
+      heroKicker: string
+      heroTitle: string
+      heroSubtitle: string
+      /** Heading above the all-situations card grid. */
+      heading: string
+      /** Per-card read-more label. */
+      cardCta: string
+      /** Breadcrumb label for the hub node itself (#1058). */
+      breadcrumbLabel: string
+      items: Record<import('@/lib/use-case/cases').UseCaseSlug, {
+        name: string
+        description: string
+      }>
     }
     /** Per-slug copy. */
     pages: Record<import('@/lib/use-case/cases').UseCaseSlug, {
@@ -2658,7 +2685,7 @@ export const zhTW: Translations = {
       newlywedsBody: '結婚之後從日常帳本到愛物，一起看見兩個人的生活全貌。',
       petOwnersTitle: '寵物家庭',
       petOwnersBody: '毛孩的每一筆費用都值得被記住，清楚看見兩個人的心意。',
-      cardAriaLabel: '了解 {slug} 情境',
+      seeAll: '看全部 10 種情境',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -4544,6 +4571,10 @@ export const zhTW: Translations = {
           name: 'iCost',
           description: 'iOS 上人氣的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: '分帳起家的老朋友，群組交易匯出試算表就能帶過來。',
+        },
         suishouji: {
           name: '隨手記',
           description: '兩岸用戶眾多的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
@@ -5093,6 +5124,48 @@ export const zhTW: Translations = {
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: '你的 Splitwise 紀錄，可以帶走',
+        heroSubtitle: '從 Splitwise 搬到 Futari：把群組或好友的交易匯出成試算表，上傳預覽後，兩個人接著把日常記下去。',
+        intro: 'Splitwise 是很多人分帳的起點，群組與好友的交易都能匯出成試算表帶走：網頁版在群組頁右上角的齒輪選「Export spreadsheet」，手機則在標題列右滑找到「Export」。免費帳號每天可新增 4 筆支出，幣別換算、收據掃描、圖表等功能屬於 Splitwise Pro。如果你們想要的不只是分帳，而是一本日常都記得下的共同帳本，這一頁是為此準備的。',
+        differentiators: [
+          {
+            title: '不只分帳，是一本共同帳本',
+            body: '支出、收入、分類與每月回顧都在同一本帳裡；分攤與結算只是其中一段。',
+          },
+          {
+            title: '每天記幾筆都可以',
+            body: '核心記帳沒有每日筆數上限，也沒有廣告，兩個人想記就記。',
+          },
+          {
+            title: '多幣別內建',
+            body: '旅行時用當地幣別記下，主幣別的餘額自動換算好，不必另外升級。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 Splitwise 打開群組或好友頁，用「Export spreadsheet」下載試算表。',
+        step2: '把 CSV 上傳到這裡，預覽你們的分帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: 'Splitwise 的資料怎麼搬到 Futari？',
+            answer: '在群組或好友頁匯出試算表，再把 CSV 上傳到這裡預覽，建立帳號後完成匯入。',
+          },
+          {
+            question: '匯出的欄位和 Futari 一樣嗎？',
+            answer: '不完全一樣。Splitwise 的匯出每筆交易一列，除了總金額（Cost）還有每個人各自的分攤欄位。上傳後會先預覽解析結果，匯入時可以對照調整欄位與分類，不會直接寫進帳本。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '我們也用它記旅行的帳，Futari 有對應的做法嗎？',
+            answer: '有。Futari 的旅行帳本把一趟旅行的支出獨立記，可以用當地幣別，結束後折回主帳本，日常的帳不會被旅行洗掉。',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: '你的隨手記資料，可以帶走',
@@ -5223,6 +5296,11 @@ export const zhTW: Translations = {
         description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
         ogDescription: 'iCost 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
+      splitwise: {
+        title: '從 Splitwise 搬家到 Futari｜匯出試算表、CSV 匯入',
+        description: 'Splitwise 的群組與好友交易可以匯出試算表帶走。上傳到 Futari 這個為夫妻、伴侶設計的共同帳本，分攤、結算與日常記帳都在同一本帳裡。免費、無廣告、端對端加密。',
+        ogDescription: 'Splitwise 用戶搬家指南：匯出試算表 → 上傳 CSV → 搬進 Futari 雙人記帳。',
+      },
       suishouji: {
         title: '從隨手記搬家到 Futari｜截圖轉 CSV',
         description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
@@ -5233,6 +5311,11 @@ export const zhTW: Translations = {
       title: '從其他記帳 App 搬到 Futari｜搬遷指南總覽',
       description: '正在找 Honeydue、Spendee、CWMoney、麻布記帳等記帳 App 的替代方案？Futari 是為兩個人做的免費共同帳本，支援 CSV 匯入，幾分鐘就能把過去的紀錄搬過來。',
       ogDescription: '你現在用哪一個記帳 App？挑一個，把過去的紀錄一起搬到 Futari。',
+    },
+    useCaseHub: {
+      title: '雙人記帳的 10 種情境｜同居、新婚、旅行、寵物 — Futari',
+      description: '同居生活費怎麼分、新婚夫妻的帳怎麼記、旅行費用怎麼對、養寵物多了哪些開銷——不同的日子，記帳的難處不一樣。這裡是 Futari 為 10 種雙人情境寫的說明，挑最接近你們的那一個。',
+      ogDescription: '10 種雙人記帳情境，挑最接近你們生活的那一個——Futari 雙人帳本，免費、無廣告、端對端加密。',
     },
     useCase: {
       cohabitation: {
@@ -5320,7 +5403,56 @@ export const zhTW: Translations = {
     },
     otherCases: {
       heading: '其他情境',
-      cardAriaLabel: '查看 {slug} 頁面',
+    },
+    hub: {
+      heroKicker: '兩個人，十種日子',
+      heroTitle: '你們現在，是哪一種一起生活？',
+      heroSubtitle: '剛搬在一起、剛結婚、養了一隻貓、在計畫下一趟旅行——每種日子會遇到的帳都不太一樣。挑一個最接近你們的，看看 Futari 在那裡能幫上什麼。',
+      heading: '挑一個最接近你們的',
+      cardCta: '看這個情境',
+      breadcrumbLabel: '使用情境',
+      items: {
+        cohabitation: {
+          name: '同居生活費',
+          description: '房租、水電、生活用品——搬在一起之後最先要面對的那幾筆。',
+        },
+        newlyweds: {
+          name: '新婚夫妻',
+          description: '兩個人的收入合成一本帳，從婚後第一個月開始記。',
+        },
+        'pet-owners': {
+          name: '寵物家庭',
+          description: '飼料、看診、預防針——多了一個成員，也多了一份共同的開銷。',
+        },
+        travel: {
+          name: '旅行分攤',
+          description: '訂房他付、車票你付，回來之後不用再翻聊天記錄對帳。',
+        },
+        roommates: {
+          name: '室友分攤',
+          description: '不是伴侶也能共用一本帳，水電網路平分得清清楚楚。',
+        },
+        'monthly-bills': {
+          name: '每月固定費',
+          description: '房租、保險、訂閱服務——每個月都會來的那幾筆。',
+        },
+        'big-purchases': {
+          name: '大筆支出',
+          description: '家電、家具、機票——一次付一大筆，分攤方式先說好比較安心。',
+        },
+        dining: {
+          name: '外食費用',
+          description: '這頓我的、下頓你的，日常吃飯的帳也留得住。',
+        },
+        parenting: {
+          name: '育兒費用',
+          description: '尿布、保母、才藝班，孩子的花費獨立看得見。',
+        },
+        'aa-split': {
+          name: 'AA 制記帳',
+          description: '對半、按比例、全額由一方——AA 不只一種分法。',
+        },
+      },
     },
     pages: {
       cohabitation: {
