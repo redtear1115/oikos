@@ -455,3 +455,126 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
 
   return { groupId: newGroupId }
 }
+
+/**
+ * Member A removes member B from the ledger — the involuntary counterpart
+ * to `leaveGroup` (#1033). Exists because before this, a member who wanted a
+ * wrongly-joined or unwanted partner gone had no path: `leaveGroup` only lets
+ * member_b act, and `proposeSwap` + `confirmSwap` requires the very person
+ * you're trying to get away from to cooperate. Every membership mistake was
+ * therefore permanent (see #1033, and the security review that flagged it).
+ *
+ * Scoped to member_a only. member_a is schema-pinned (NOT NULL) on
+ * OikosGroups, so removing member_b never requires relabelling who occupies
+ * which slot — the group simply becomes solo in place, exactly like the
+ * stayer's side of `leaveGroup`. Letting member_b remove member_a would
+ * require member_b to take over the member_a slot, which — unlike
+ * `confirmSwap`'s live role-swap — would retroactively relabel *closed*
+ * epochs with the wrong person's name against historical split ratios. That
+ * needs its own design; it is not the gap this ticket closes.
+ *
+ * Deliberately does NOT require GroupBalance.balance === 0 (unlike
+ * leaveGroup): per docs/superpowers/specs/solo-trip-design.md Locked
+ * decision 5, a closed epoch's balance is settled history, not a live debt —
+ * and requiring settlement first would hand an unwanted member exactly the
+ * leverage this feature exists to remove (stall the settlement, block the
+ * removal forever).
+ *
+ * Removed member's data is intentionally left in place, in the epoch this
+ * call closes: unlike `leaveGroup` (a self-service action where the leaver
+ * takes their own rows to a new group they create for themselves), removal
+ * is done *to* someone. Spinning up a group in their name without consent
+ * isn't ours to do on their behalf. Their historical rows stay as read-only
+ * history for the remaining member — untouched by balance (epoch-scoped
+ * since #1030) or by anything else, since the epoch that contains them is
+ * now closed.
+ *
+ * Pre-conditions:
+ *   - Caller must be member_a of a duo group
+ *   - No active trip in the current epoch (mirrors leaveGroup's guard —
+ *     otherwise the trip would orphan when the epoch closes)
+ *
+ * Steps (symmetric to leaveGroup's stayer-side handling):
+ *   - Revoke any unaccepted GroupInvites on the group (closes the "the
+ *     minter is still a member" loophole a removed member's/owner's stale
+ *     invite would otherwise leave open — #1031's accept-side check alone
+ *     doesn't help here since the *remaining* member minted it)
+ *   - Close the current epoch, open a fresh solo epoch for member_a
+ *   - Clear member_b + any leftover pending-swap fields on the group
+ *   - Recalc balance (resolves to 0 — solo short-circuit)
+ *
+ * Irreversible.
+ */
+export async function removePartner(): Promise<{ groupId: string }> {
+  const { user, group } = await requireViewerGroup()
+
+  if (group.memberB === null) throw new Error('solo_group')
+  if (user.id !== group.memberA) throw new Error('only_member_a_can_remove')
+
+  const removedUserId = group.memberB
+
+  // Guard: reject if any active trip exists in the current epoch — same
+  // fence as leaveGroup, for the same reason (no orphaned trips).
+  const [currentEpochRow] = await db
+    .select()
+    .from(groupEpochs)
+    .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
+    .limit(1)
+  if (currentEpochRow && await hasActiveTrip(group.id, currentEpochRow.id)) {
+    throw new Error('active_trip')
+  }
+
+  const now = new Date()
+  const groupId = group.id
+
+  await db.transaction(async (tx) => {
+    // Revoke any unaccepted invites on this group. Without this, an invite
+    // minted by member_a before the removal still passes #1031's "issuer is
+    // still a member" check after the removal (member_a stays a member) —
+    // leaving a 7-day-valid key to whoever holds the link.
+    await tx
+      .update(groupInvites)
+      .set({ revokedAt: now })
+      .where(and(
+        eq(groupInvites.groupId, groupId),
+        isNull(groupInvites.acceptedAt),
+        isNull(groupInvites.revokedAt),
+      ))
+
+    // Close the duo chapter and open member_a's new solo chapter.
+    await tx
+      .update(groupEpochs)
+      .set({ endedAt: now })
+      .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
+
+    await tx.insert(groupEpochs).values({
+      groupId,
+      startedAt: now,
+      memberAId: group.memberA,
+      memberBId: null,
+    })
+
+    // The group becomes solo. Clear any leftover pending-swap fields
+    // defensively — same reasoning as leaveGroup's step 13.
+    await tx
+      .update(oikosGroups)
+      .set({
+        memberB: null,
+        pendingSwapProposedBy: null,
+        pendingSwapExpiresAt: null,
+        currentEpochStartedAt: now,
+      })
+      .where(eq(oikosGroups.id, groupId))
+
+    await recalcGroupBalance(groupId, tx)
+  })
+
+  revalidateAfterMembershipChange()
+
+  // Churn signal, mirroring 'group_left'. Captured on the remover (user.id)
+  // since the removed party never consented to this and shouldn't be the
+  // subject of an analytics event describing their own removal.
+  await captureServer(user.id, 'partner_removed', { removed_user_id: removedUserId })
+
+  return { groupId }
+}
