@@ -4,8 +4,9 @@ status: shipped
 first_shipped_in: v1.2.0
 updates:
   - v1.5.11: `/use-case/<slug>` CTA 接上歸因 — `?from=use-case-<slug>` + `landing_cta_clicked`，`entry_source` 擴充 per-slug `use_case_*`（#1056）
+  - v1.5.11: `entry_source` 的 migrate 取值改為衍生自 `lib/migrate/sources.ts` registry（全部 15 個，原本只認 3 個有 CSV parser 的，其餘靜默落進 `direct`）；import-resume 軸拆出獨立命名並衍生自 `lib/csvImport/detector.ts`（#1062）
 related_specs: [csv-import, solo-mode]
-related_issues: ["#734", "#1056"]
+related_issues: ["#734", "#1056", "#1062"]
 ---
 
 # 轉換分析 — 從入口頁到註冊的事件追蹤
@@ -69,10 +70,16 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
 ### 決策二：歸因 key 用單一 `from` query param（locked）
 
 `entry_source` 是整套漏斗的歸因軸，取值：
-`landing` | `migrate_honeydue` | `migrate_spendee` | `migrate_cwmoney` |
+`landing` | `migrate_<slug 底線化>`（每個 `/migrate/<slug>` 頁一個值）|
 `use_case_<slug>`（per-slug，見下）| `invite` | `direct`。
 
 - migrate 流程**已經**把 `?from=<source>` 帶進 `/sign-in`（`MigrateCta`），復用同一個 param。
+- migrate 取值衍生自 `lib/migrate/sources.ts` registry：新增一個競品頁，它當天就可被統計，
+  不必改分析程式（例：`simple-daily-money` → `migrate_simple_daily_money`）。slug 需在 registry 內，
+  否則回 `direct`——同 use-case，避免任意 query 值鑄出新的 breakdown 列。
+  **#1062 之前**這裡只認 `honeydue` / `spendee` / `cwmoney` 三個（那是「有 CSV parser」的清單，不是頁面清單），
+  其餘 12 頁靜默落進 `direct`。修好會造成斷層：`direct` 下降、`migrate_*` 跳升，那不是成效改善，
+  是歸因終於正確；跨部署前後比較無效，歷史事件無法回填。
 - landing 的 CTA 補上 `?from=landing`。
 - `/use-case/<slug>` 的 CTA 帶 `?from=use-case-<slug>`，對應 `entry_source = use_case_<slug 底線化>`
   （例：`use-case-aa-split` → `use_case_aa_split`）。**per-slug 而非單一 `use_case`**：這十個頁面
@@ -80,8 +87,11 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
   遠小於此。`use-case-` 前綴確保它不會和 migrate 的裸 source slug 撞名。slug 需在 `lib/use-case/cases.ts`
   的 registry 內，否則回 `direct`——避免任意 query 值鑄出新的 breakdown 列。
 - sign-in 直接到達、無 `from` → `direct`。
-- 分析讀 `from`；import-resume 語意只對已知 importer 來源生效，兩者不耦合
-  （`from=landing` 不會觸發任何 importer）。
+- **同一個 `from` param 餵兩個不同的軸，兩者不耦合**（#1062）：分析軸涵蓋全部 15 個 migrate 頁；
+  import-resume（`importResumeSourceFromParam`）只對**有 CSV parser** 的來源生效，權威來源是
+  `lib/csvImport/detector.ts` 的 `KNOWN_CSV_SOURCES`。放寬 import-resume 去吃整份 registry 不會報錯，
+  只會讓註冊後的 onboarding 去接一個沒有 mapper 的來源、匯入靜默不發生——所以那條界線由測試守著。
+  （`from=landing` 一樣不會觸發任何 importer。）
 - `entry_source` 在 client 首次落地時決定（first-touch），透過 `redirectTo` 過邊界，
   callback 寫成 person property（`$set_once`）+ 事件屬性。
 

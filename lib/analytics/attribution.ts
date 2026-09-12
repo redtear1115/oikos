@@ -1,7 +1,20 @@
 // Pure attribution helpers shared by client + server. No side effects, no SDK
 // imports — safe to import from anywhere. See conversion-analytics-design.md.
 
+import { KNOWN_CSV_SOURCES, type KnownCsvSource } from '@/lib/csvImport/detector'
+import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
 import { USE_CASE_SLUGS, type UseCaseSlug } from '@/lib/use-case/cases'
+
+/*
+ * Two different axes read the same `from` query param. They are NOT the same
+ * list and must never be merged (#1062):
+ *
+ *   analytics    — `entrySourceFromParam`, authority `lib/migrate/sources.ts`.
+ *                  Every /migrate page that exists should be countable.
+ *   import-resume — `importResumeSourceFromParam`, authority
+ *                  `lib/csvImport/detector.ts`. Only sources we can actually
+ *                  parse may resume an import after sign-in.
+ */
 
 /** `aa-split` → `aa_split`, so slugs survive into snake_case event values. */
 type Underscored<S extends string> = S extends `${infer Head}-${infer Tail}`
@@ -25,16 +38,30 @@ export type UseCaseEntrySource =
   | `use_case_${Underscored<UseCaseSlug>}`
   | 'use_case_hub'
 
+/**
+ * ANALYTICS AXIS — one value per `/migrate/<slug>` page, derived from the
+ * registry so a new competitor page is countable the day it ships. Before
+ * #1062 this union listed only the three sources that happen to have a CSV
+ * parser, and the other twelve pages — the ones carrying most of the traffic —
+ * were silently counted as `direct`.
+ */
+export type MigrateEntrySource = `migrate_${Underscored<MigrateSlug>}`
+
 export type EntrySource =
   | 'landing'
-  | 'migrate_honeydue'
-  | 'migrate_spendee'
-  | 'migrate_cwmoney'
+  | MigrateEntrySource
   | UseCaseEntrySource
   | 'invite'
   | 'direct'
 
-export type MigrateFromSource = 'honeydue' | 'spendee' | 'cwmoney'
+/**
+ * IMPORT-RESUME AXIS — not analytics. Narrower on purpose: only a source whose
+ * CSV we can parse may resume an import after sign-in. Widening this to the
+ * whole migrate registry throws no error; it just points the post-auth
+ * onboarding at a source with no mapper, which fails silently later. Guarded by
+ * a test in `tests/analytics-attribution.test.ts` for exactly that reason.
+ */
+export type ImportResumeSource = KnownCsvSource
 
 /** Prefix marking a `from` value as a use-case page, kept off migrate slugs. */
 const USE_CASE_FROM_PREFIX = 'use-case-'
@@ -74,29 +101,39 @@ function entrySourceForUseCase(from: string): UseCaseEntrySource | undefined {
  */
 export type AuthPath = 'web_oauth' | 'ios_native'
 
-/** Derive the analytics entry-source axis from the `from` query param. */
-export function entrySourceFromParam(from: string | null | undefined): EntrySource {
-  switch (from) {
-    case 'landing':
-      return 'landing'
-    case 'honeydue':
-      return 'migrate_honeydue'
-    case 'spendee':
-      return 'migrate_spendee'
-    case 'cwmoney':
-      return 'migrate_cwmoney'
-    case 'invite':
-      return 'invite'
-    default:
-      return entrySourceForUseCase(from ?? '') ?? 'direct'
-  }
+/**
+ * Migrate CTAs tag sign-in with the bare slug (`?from=cwmoney`), so membership
+ * of the registry is the whole test. `Object.keys` rather than `in`: `in` walks
+ * the prototype chain, which would let `?from=toString` mint a breakdown value.
+ */
+const MIGRATE_SLUGS = new Set<string>(Object.keys(MIGRATE_SOURCES))
+
+/** `simple-daily-money` → `migrate_simple_daily_money`; unknown slugs → undefined. */
+function entrySourceForMigrate(from: string): MigrateEntrySource | undefined {
+  if (!MIGRATE_SLUGS.has(from)) return undefined
+  return `migrate_${from.replaceAll('-', '_')}` as MigrateEntrySource
 }
 
-/** Raw migrate source when `from` is a known importer source, else undefined. */
-export function migrateSourceFromParam(
+/** Derive the analytics entry-source axis from the `from` query param. */
+export function entrySourceFromParam(from: string | null | undefined): EntrySource {
+  if (from === 'landing') return 'landing'
+  if (from === 'invite') return 'invite'
+  const value = from ?? ''
+  return entrySourceForMigrate(value) ?? entrySourceForUseCase(value) ?? 'direct'
+}
+
+/**
+ * The source whose import the post-auth onboarding should resume, or undefined.
+ * Reads the same `from` param as `entrySourceFromParam` but answers a different
+ * question — see the two-axis note at the top of this file. Only sources with a
+ * dedicated CSV parser qualify; everything else (including the twelve
+ * parser-less /migrate pages) is `undefined` here while still being counted by
+ * the analytics axis.
+ */
+export function importResumeSourceFromParam(
   from: string | null | undefined,
-): MigrateFromSource | undefined {
-  return from === 'honeydue' || from === 'spendee' || from === 'cwmoney' ? from : undefined
+): ImportResumeSource | undefined {
+  return KNOWN_CSV_SOURCES.find((source) => source === from)
 }
 
 /** Append an encoded key=value to a relative or absolute href. */

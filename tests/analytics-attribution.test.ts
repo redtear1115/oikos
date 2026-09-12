@@ -1,13 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import {
   entrySourceFromParam,
-  migrateSourceFromParam,
+  importResumeSourceFromParam,
   appendQueryParam,
   buildAuthCallbackUrl,
   isFirstAuth,
   fromParamForUseCase,
 } from '@/lib/analytics/attribution'
 import { USE_CASE_SLUGS } from '@/lib/use-case/cases'
+import { MIGRATE_SOURCES, type MigrateSlug } from '@/lib/migrate/sources'
+import { KNOWN_CSV_SOURCES } from '@/lib/csvImport/detector'
+
+const MIGRATE_SLUGS = Object.keys(MIGRATE_SOURCES) as MigrateSlug[]
 
 describe('entrySourceFromParam', () => {
   it('maps landing', () => expect(entrySourceFromParam('landing')).toBe('landing'))
@@ -15,6 +19,25 @@ describe('entrySourceFromParam', () => {
     expect(entrySourceFromParam('honeydue')).toBe('migrate_honeydue')
     expect(entrySourceFromParam('spendee')).toBe('migrate_spendee')
     expect(entrySourceFromParam('cwmoney')).toBe('migrate_cwmoney')
+  })
+  it('underscores hyphenated slugs (#1062)', () => {
+    expect(entrySourceFromParam('simple-daily-money')).toBe('migrate_simple_daily_money')
+  })
+  it('counts every registered migrate source, parser or not (#1062)', () => {
+    // The analytics axis follows lib/migrate/sources.ts, not the importer list.
+    // Adding a source to the registry must make it countable with no edit here;
+    // when it silently fell back to `direct`, twelve of fifteen pages — the ones
+    // carrying the traffic — were invisible in the funnel.
+    for (const slug of MIGRATE_SLUGS) {
+      expect(entrySourceFromParam(slug)).toBe(`migrate_${slug.replaceAll('-', '_')}`)
+    }
+    expect(MIGRATE_SLUGS.map((slug) => entrySourceFromParam(slug))).not.toContain('direct')
+  })
+  it('rejects an unregistered migrate slug rather than minting a value', () => {
+    expect(entrySourceFromParam('not-a-competitor')).toBe('direct')
+    // `in` would walk the prototype chain and turn this into `migrate_toString`.
+    expect(entrySourceFromParam('toString')).toBe('direct')
+    expect(entrySourceFromParam('constructor')).toBe('direct')
   })
   it('maps invite', () => expect(entrySourceFromParam('invite')).toBe('invite'))
   it('maps use-case pages per slug (#1056)', () => {
@@ -52,15 +75,37 @@ describe('fromParamForUseCase', () => {
     }
   })
   it('does not leak into the importer axis', () => {
-    expect(migrateSourceFromParam(fromParamForUseCase('travel'))).toBeUndefined()
+    expect(importResumeSourceFromParam(fromParamForUseCase('travel'))).toBeUndefined()
   })
 })
 
-describe('migrateSourceFromParam', () => {
-  it('returns the raw source only for known migrate sources', () => {
-    expect(migrateSourceFromParam('honeydue')).toBe('honeydue')
-    expect(migrateSourceFromParam('landing')).toBeUndefined()
-    expect(migrateSourceFromParam(null)).toBeUndefined()
+describe('importResumeSourceFromParam', () => {
+  it('returns the raw source for every source that has a CSV parser', () => {
+    // Derived from lib/csvImport/detector.ts: shipping a new parser makes
+    // import-resume follow with no edit in lib/analytics/attribution.ts.
+    for (const source of KNOWN_CSV_SOURCES) {
+      expect(importResumeSourceFromParam(source)).toBe(source)
+    }
+  })
+  it('stays undefined for migrate pages with no parser (#1062)', () => {
+    // Load-bearing, and the reason this test exists: widening this axis to the
+    // whole registry throws nothing — it points post-auth onboarding at a source
+    // with no mapper, and the import quietly never resumes. The analytics axis
+    // still counts these pages; only import-resume must not claim them.
+    const parserless = MIGRATE_SLUGS.filter(
+      (slug) => !(KNOWN_CSV_SOURCES as readonly string[]).includes(slug),
+    )
+    expect(parserless.length).toBeGreaterThan(0)
+    for (const slug of parserless) {
+      expect(importResumeSourceFromParam(slug)).toBeUndefined()
+      expect(entrySourceFromParam(slug)).not.toBe('direct')
+    }
+  })
+  it('ignores non-migrate from values', () => {
+    expect(importResumeSourceFromParam('landing')).toBeUndefined()
+    expect(importResumeSourceFromParam('invite')).toBeUndefined()
+    expect(importResumeSourceFromParam(null)).toBeUndefined()
+    expect(importResumeSourceFromParam(undefined)).toBeUndefined()
   })
 })
 
