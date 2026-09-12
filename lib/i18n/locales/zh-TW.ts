@@ -2406,6 +2406,7 @@ export type Translations = {
         cashman: { name: string; description: string }
         '1money': { name: string; description: string }
         icost: { name: string; description: string }
+        splitwise: { name: string; description: string }
         suishouji: { name: string; description: string }
       }
     }
@@ -4573,6 +4574,10 @@ export const zhTW: Translations = {
           name: 'iCost',
           description: 'iOS 上人氣的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: '分帳起家的老朋友，群組交易匯出試算表就能帶過來。',
+        },
         suishouji: {
           name: '隨手記',
           description: '兩岸用戶眾多的記帳 App，截圖請 ChatGPT 整理成 CSV 帶過來。',
@@ -5122,6 +5127,48 @@ export const zhTW: Translations = {
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: '你的 Splitwise 紀錄，可以帶走',
+        heroSubtitle: '從 Splitwise 搬到 Futari：把群組或好友的交易匯出成試算表，上傳預覽後，兩個人接著把日常記下去。',
+        intro: 'Splitwise 是很多人分帳的起點，群組與好友的交易都能匯出成試算表帶走：網頁版在群組頁右上角的齒輪選「Export spreadsheet」，手機則在標題列右滑找到「Export」。免費帳號每天可新增 4 筆支出，幣別換算、收據掃描、圖表等功能屬於 Splitwise Pro。如果你們想要的不只是分帳，而是一本日常都記得下的共同帳本，這一頁是為此準備的。',
+        differentiators: [
+          {
+            title: '不只分帳，是一本共同帳本',
+            body: '支出、收入、分類與每月回顧都在同一本帳裡；分攤與結算只是其中一段。',
+          },
+          {
+            title: '每天記幾筆都可以',
+            body: '核心記帳沒有每日筆數上限，也沒有廣告，兩個人想記就記。',
+          },
+          {
+            title: '多幣別內建',
+            body: '旅行時用當地幣別記下，主幣別的餘額自動換算好，不必另外升級。',
+          },
+        ],
+        stepsHeading: '搬遷三步',
+        step1: '在 Splitwise 打開群組或好友頁，用「Export spreadsheet」下載試算表。',
+        step2: '把 CSV 上傳到這裡，預覽你們的分帳歷史。',
+        step3: '建立 Futari 帳號，一鍵完成搬遷。',
+        faq: [
+          {
+            question: 'Splitwise 的資料怎麼搬到 Futari？',
+            answer: '在群組或好友頁匯出試算表，再把 CSV 上傳到這裡預覽，建立帳號後完成匯入。',
+          },
+          {
+            question: '匯出的欄位和 Futari 一樣嗎？',
+            answer: '不完全一樣。Splitwise 的匯出每筆交易一列，除了總金額（Cost）還有每個人各自的分攤欄位。上傳後會先預覽解析結果，匯入時可以對照調整欄位與分類，不會直接寫進帳本。',
+          },
+          {
+            question: '匯入需要付費嗎？',
+            answer: 'Futari 完全免費，沒有隱藏費用。',
+          },
+          {
+            question: '我們也用它記旅行的帳，Futari 有對應的做法嗎？',
+            answer: '有。Futari 的旅行帳本把一趟旅行的支出獨立記，可以用當地幣別，結束後折回主帳本，日常的帳不會被旅行洗掉。',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: '你的隨手記資料，可以帶走',
@@ -5251,6 +5298,11 @@ export const zhTW: Translations = {
         title: '從 iCost 搬家到 Futari｜截圖轉 CSV',
         description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
         ogDescription: 'iCost 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
+      },
+      splitwise: {
+        title: '從 Splitwise 搬家到 Futari｜匯出試算表、CSV 匯入',
+        description: 'Splitwise 的群組與好友交易可以匯出試算表帶走。上傳到 Futari 這個為夫妻、伴侶設計的共同帳本，分攤、結算與日常記帳都在同一本帳裡。免費、無廣告、端對端加密。',
+        ogDescription: 'Splitwise 用戶搬家指南：匯出試算表 → 上傳 CSV → 搬進 Futari 雙人記帳。',
       },
       suishouji: {
         title: '從隨手記搬家到 Futari｜截圖轉 CSV',

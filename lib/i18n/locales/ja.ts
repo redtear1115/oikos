@@ -2020,6 +2020,10 @@ export const ja: Translations = {
           name: 'iCost',
           description: 'iOS で人気の家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: '割り勘の定番。グループをスプレッドシートに書き出せば、そのまま持ち込めます。',
+        },
         suishouji: {
           name: '隨手記',
           description: '中国語圏で広く使われる家計簿アプリ。スクショ＋ChatGPT で CSV に整えて持ち込めます。',
@@ -2604,6 +2608,53 @@ I will upload the screenshots once you confirm.`,
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: 'Splitwise の記録も、持っていけます',
+        heroSubtitle:
+          'Splitwise から Futari へ：グループやフレンドの明細をスプレッドシートに書き出し、プレビューしてから、ふたりで日々の記録を続けられます。',
+        intro:
+          'Splitwise は割り勘の出発点としてよく使われていて、記録は持ち出せます。ウェブではグループまたはフレンドのページ右上の歯車から「Export spreadsheet」、モバイルではヘッダーメニューを右にスワイプして「Export」を選びます。無料アカウントは 1 日 4 件まで支出を追加でき、通貨換算・レシート読み取り・グラフなどは Splitwise Pro の機能です。割り勘だけでなく、日々の暮らしも収まる共同家計簿がほしいなら、このページはそのためのものです。',
+        differentiators: [
+          {
+            title: '割り勘だけでなく、ひとつの共同家計簿',
+            body: '支出も収入もカテゴリも月次の振り返りも同じ家計簿の中に。割り勘と精算はその一部です。',
+          },
+          {
+            title: '1 日の件数に上限なし',
+            body: '基本の記録に 1 日あたりの件数制限はなく、広告もありません。',
+          },
+          {
+            title: '多通貨に標準対応',
+            body: '旅先では現地通貨のまま記録でき、基準通貨の残高は自動で換算されます。アップグレードは不要です。',
+          },
+        ],
+        stepsHeading: '移行は 3 ステップ',
+        step1: 'Splitwise でグループかフレンドのページを開き、「Export spreadsheet」で書き出します。',
+        step2: 'CSV をここにアップロードして、これまでの明細をプレビューします。',
+        step3: 'Futari のアカウントを作成して、移行を完了します。',
+        faq: [
+          {
+            question: 'Splitwise のデータはどうやって Futari へ移しますか？',
+            answer:
+              'グループかフレンドのページからスプレッドシートを書き出し、CSV をここにアップロードしてプレビューし、アカウントを作成すれば取り込みが完了します。',
+          },
+          {
+            question: '書き出した列は Futari と同じですか？',
+            answer:
+              '同じではありません。Splitwise の書き出しは 1 明細 1 行で、合計金額（Cost）の列に加えて各メンバーの負担額の列が並びます。アップロード後にまず解析結果をプレビューし、取り込み時に列とカテゴリを対応づけられます。その前に家計簿へ書き込まれることはありません。',
+          },
+          {
+            question: '取り込みに費用はかかりますか？',
+            answer: 'Futari は完全無料で、隠れた費用はありません。',
+          },
+          {
+            question: '旅行の記録にも使っています。Futari に同じようなものはありますか？',
+            answer:
+              'あります。Futari の旅行家計簿は 1 回の旅の支出を現地通貨のまま切り分けて記録し、旅が終わると本体の家計簿にまとめて戻します。',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: '隨手記のデータも、持っていけます',
@@ -2738,6 +2789,11 @@ I will upload the screenshots once you confirm.`,
         title: 'iCost から Futari へ｜スクショを CSV に',
         description: 'iCost は iOS 限定で書き出しなし？スクショを ChatGPT で CSV に整え、クロスプラットフォームのふたり家計簿 Futari に取り込むだけ。無料・広告なし。',
         ogDescription: 'iCost は iOS 限定——スクショ→ChatGPT→CSV→Futari、どの端末でも。',
+      },
+      splitwise: {
+        title: 'Splitwise から Futari へ｜書き出した CSV を取り込む',
+        description: 'Splitwise のグループやフレンドの明細はスプレッドシートに書き出せます。カップル・夫婦の共同家計簿 Futari に取り込めば、割り勘も精算も日々の記録もひとつの家計簿に。無料・広告なし・暗号化。',
+        ogDescription: 'Splitwise からの移行ガイド：スプレッドシートを書き出し、CSV を Futari に取り込む。',
       },
       suishouji: {
         title: '隨手記から Futari へ｜スクショを CSV に',

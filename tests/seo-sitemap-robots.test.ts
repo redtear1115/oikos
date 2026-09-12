@@ -2,13 +2,18 @@ import { describe, it, expect } from 'vitest'
 import sitemap from '@/app/sitemap'
 import robots from '@/app/robots'
 import { SUPPORTED_LOCALES } from '@/lib/i18n/locales-meta'
+import { MIGRATE_SOURCES } from '@/lib/migrate/sources'
 
 describe('sitemap.xml', () => {
   const entries = sitemap()
   const urls = entries.map((e) => e.url)
 
-  it('includes all three /migrate/* landing pages per locale', () => {
-    const sources = ['honeydue', 'spendee', 'cwmoney']
+  // Registry-derived, not a hardcoded list: adding a source to
+  // MIGRATE_SOURCES must put 4 URLs in the sitemap without touching anything
+  // else (#1060).
+  it('includes every /migrate/* landing page in MIGRATE_SOURCES per locale', () => {
+    const sources = Object.keys(MIGRATE_SOURCES)
+    expect(sources).toContain('splitwise')
     for (const source of sources) {
       for (const locale of SUPPORTED_LOCALES) {
         const expected =

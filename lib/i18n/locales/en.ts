@@ -2022,6 +2022,10 @@ export const en: Translations = {
           name: 'iCost',
           description: 'A popular iOS-only ledger; screenshot + ChatGPT → CSV and bring it over.',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: 'Where many people start splitting; export a group spreadsheet and bring it over.',
+        },
         suishouji: {
           name: 'Sui Shou Ji',
           description: 'A widely used Chinese-language ledger; screenshot + ChatGPT → CSV and bring it over.',
@@ -2607,6 +2611,53 @@ I will upload the screenshots once you confirm.`,
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: 'Your Splitwise records can come with you',
+        heroSubtitle:
+          'Moving from Splitwise to Futari: export a group or friendship as a spreadsheet, preview the upload, and keep recording daily life together.',
+        intro:
+          'Splitwise is where a lot of people start splitting, and your transactions can leave with you: on the web, open a group or friendship and choose “Export spreadsheet” from the gear menu; on mobile, swipe the header menu and tap “Export”. Free accounts can add up to 4 expenses a day, and currency conversion, receipt scanning and charts are part of Splitwise Pro. If what the two of you want is not only splitting but one ledger that holds the everyday, this page is for that.',
+        differentiators: [
+          {
+            title: 'More than splitting — one shared ledger',
+            body: 'Expenses, income, categories and the monthly review live in the same ledger; splitting and settling are one part of it.',
+          },
+          {
+            title: 'Record as much as you like',
+            body: 'The core ledger has no daily entry cap and no ads.',
+          },
+          {
+            title: 'Multi-currency built in',
+            body: 'Record in the local currency while travelling; the balance in your base currency is converted for you, with nothing to upgrade.',
+          },
+        ],
+        stepsHeading: 'Three steps',
+        step1: 'Open the group or friendship in Splitwise and use “Export spreadsheet” to download it.',
+        step2: 'Upload the CSV here and preview your history.',
+        step3: 'Create a Futari account to finish the move.',
+        faq: [
+          {
+            question: 'How do I move my Splitwise data to Futari?',
+            answer:
+              'Export the group or friendship as a spreadsheet, upload the CSV here to preview it, then create an account to finish the import.',
+          },
+          {
+            question: 'Are the columns the same as Futari’s?',
+            answer:
+              'Not exactly. A Splitwise export puts each transaction on one row, with a Cost column plus a column per person for their share. You preview the parsed result first, and you can map columns and categories during import — nothing is written to your ledger before that.',
+          },
+          {
+            question: 'Does importing cost anything?',
+            answer: 'Futari is completely free, with no hidden charges.',
+          },
+          {
+            question: 'We also use it for trips — does Futari have something for that?',
+            answer:
+              'Yes. A Futari trip keeps one journey’s spending in its own ledger, in the local currency, and folds it back into the main ledger when the trip ends.',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: 'Your Sui Shou Ji data can come with you',
@@ -2742,6 +2793,11 @@ I will upload the screenshots once you confirm.`,
         title: 'Move from iCost to Futari · screenshot to CSV',
         description: 'iOS-only, no CSV export? Screenshot iCost, have ChatGPT convert to CSV, and import into Futari, the cross-platform couples ledger. Free, ad-free.',
         ogDescription: 'iCost is iOS-only — screenshot → ChatGPT → CSV → Futari, on any phone.',
+      },
+      splitwise: {
+        title: 'Move from Splitwise to Futari · export spreadsheet, import CSV',
+        description: 'Splitwise groups export as a spreadsheet. Upload it to Futari, the shared ledger for couples — splitting, settling and everyday records in one place.',
+        ogDescription: 'Splitwise migration guide: export the spreadsheet, upload the CSV, keep recording in Futari.',
       },
       suishouji: {
         title: 'Move from Sui Shou Ji to Futari · screenshot to CSV',
