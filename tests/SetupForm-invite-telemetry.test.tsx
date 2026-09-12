@@ -114,15 +114,15 @@ describe('SetupForm invite telemetry (#1015)', () => {
     expect(await screen.findByText(zhTW.setup.invite.shareFailed)).toBeTruthy()
   })
 
-  it('invite_skipped fires with attempted: false on a direct skip', async () => {
+  it("invite_skipped fires with attempted: 'none' on a direct skip", async () => {
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: false })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'none' })
   })
 
-  it('invite_skipped fires with attempted: true after a successful copy', async () => {
+  it("invite_skipped fires with attempted: 'sent' after a successful copy", async () => {
     stubClipboard(vi.fn().mockResolvedValue(undefined))
     await renderAtInviteStep()
 
@@ -133,10 +133,10 @@ describe('SetupForm invite telemetry (#1015)', () => {
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: true })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'sent' })
   })
 
-  it('invite_skipped fires with attempted: true after only revealing the QR', async () => {
+  it("invite_skipped fires with attempted: 'sent' after only revealing the QR", async () => {
     await renderAtInviteStep()
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.qrReveal))
@@ -146,10 +146,10 @@ describe('SetupForm invite telemetry (#1015)', () => {
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: true })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'sent' })
   })
 
-  it('invite_skipped fires with attempted: false when a copy attempt failed (no successful send)', async () => {
+  it("invite_skipped fires with attempted: 'failed' when a copy attempt failed — distinct from never trying", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error('denied')))
     await renderAtInviteStep()
 
@@ -160,6 +160,6 @@ describe('SetupForm invite telemetry (#1015)', () => {
 
     fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
 
-    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: false })
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: 'failed' })
   })
 })

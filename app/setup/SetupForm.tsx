@@ -39,7 +39,15 @@ export default function SetupForm({ t }: { t: Translations }) {
   // invite (revealed the QR, copied the link, or shared it) before hitting
   // skip. Answers "did they try before bailing?" — the split #1015 is built
   // around — with a single event instead of a fragile cross-event join.
-  const attemptedRef = useRef(false)
+  // What the user did about sending the invite, before they hit skip.
+  // Three states rather than a boolean on purpose (#1015): "never tried" and
+  // "tried but the clipboard/share failed" are different populations — one
+  // doesn't want to invite, the other wanted to and the product got in the
+  // way. Collapsing them into `false` invites the reading "72% don't want to
+  // invite", which would be wrong for whatever slice hit a broken clipboard.
+  // 'sent' only means something actually left the screen (copied / shared /
+  // QR shown), not that the partner ever received it.
+  const attemptedRef = useRef<'none' | 'failed' | 'sent'>('none')
 
   useEffect(() => {
     return () => {
@@ -82,13 +90,14 @@ export default function SetupForm({ t }: { t: Translations }) {
     if (!inviteUrl) return
     try {
       await navigator.clipboard.writeText(inviteUrl)
-      attemptedRef.current = true
+      attemptedRef.current = 'sent'
       track('invite_link_copied', { via: 'copy_button' })
       flashToast(invite.copied)
     } catch {
       // Clipboard API can reject in a non-secure context or when permission
       // is denied — surface it instead of leaving an unhandled rejection with
       // no user-visible feedback (see #1015).
+      if (attemptedRef.current === 'none') attemptedRef.current = 'failed'
       track('invite_copy_failed', { via: 'copy_button' })
       flashToast(invite.shareFailed)
     }
@@ -98,7 +107,7 @@ export default function SetupForm({ t }: { t: Translations }) {
     if (!inviteUrl) return
     try {
       const result = await shareInviteLink(inviteUrl)
-      attemptedRef.current = true
+      attemptedRef.current = 'sent'
       if (result === 'copied') {
         track('invite_link_copied', { via: 'share_button' })
         flashToast(invite.copied)
@@ -106,6 +115,7 @@ export default function SetupForm({ t }: { t: Translations }) {
         track('invite_link_shared')
       }
     } catch {
+      if (attemptedRef.current === 'none') attemptedRef.current = 'failed'
       track('invite_copy_failed', { via: 'share_button' })
       flashToast(invite.shareFailed)
     }
@@ -222,7 +232,7 @@ export default function SetupForm({ t }: { t: Translations }) {
             <InviteQr
               url={inviteUrl}
               t={invite}
-              onReveal={() => { attemptedRef.current = true }}
+              onReveal={() => { attemptedRef.current = 'sent' }}
             />
             <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
               {invite.qrHint}
