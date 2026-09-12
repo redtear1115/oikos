@@ -106,6 +106,8 @@ Every public surface has a job, and each job has a number that says whether the 
 
 **Solo mode.** One person keeping the ledger is a complete state, not a waiting room. It deliberately has no conversion metric. The moment "solo → duo conversion rate" becomes a number someone is asked to move, the design follows it: reminders, nudges, a partner-shaped hole in the UI. That is the Gamified guilt the anti-references already rule out. Judge solo mode on whether one person can do everything the product promises, and leave it there.
 
+What this bans is conversion metrics, not measurement. Whether a solo user gets *stuck* is worth watching closely — a trip that can't be closed because there is nobody to settle with, say. The test that separates the two: when the number gets worse, is the right response to fix something or to push the user? Fix means measure it. Push means it should never have been a number.
+
 ## Accessibility & Inclusion
 
 - Hold WCAG AA contrast across the warm palette, especially on text-on-fill pairs (cream / terracotta / ink). `--ink-3` sits at 4.66:1 on cream and is the floor, not a starting point for further lightening.
