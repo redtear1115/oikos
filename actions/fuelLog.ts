@@ -102,8 +102,9 @@ export interface EditFuelLogInput extends FuelLogInputRaw {
  *     SOFT-DELETE old row + INSERT new row carrying the same fuelLogId
  *   + recalcGroupBalance — all inside one DB transaction.
  *
- * Throws if the fuel log is missing or already soft-deleted, if the asset is
- * not in viewer's group, or if the payer is not a current group member.
+ * Throws if the fuel log is missing or already soft-deleted, if the fuel log's
+ * CURRENT asset is not in viewer's group, if the (possibly reassigned) target
+ * asset is not in viewer's group, or if the payer is not a current group member.
  */
 export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string }> {
   const { group } = await getViewerWriteContext()
@@ -119,6 +120,24 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
   if (!existingLog || existingLog.deletedAt) {
     throw new Error('加油記錄已刪除或不存在')
   }
+
+  // #1032 — the row being edited must itself belong to viewer's group. The
+  // lookup above is by id only, and the check below validates the *incoming*
+  // assetId, not the existing row: without this gate, holding another group's
+  // fuelLogId was enough to overwrite their fuel log, soft-delete their linked
+  // CashTransaction, and plant a replacement txn in the attacker's group
+  // carrying the victim's fuelLogId. Same shape as softDeleteFuelLog /
+  // getFuelLogById; do not reorder below any write.
+  const [existingAsset] = await db
+    .select({ id: assets.id })
+    .from(assets)
+    .where(and(
+      eq(assets.id, existingLog.assetId),
+      eq(assets.groupId, group.id),
+      eq(assets.type, 'car'),
+    ))
+    .limit(1)
+  if (!existingAsset) throw new Error('關聯資產不在家計簿內')
 
   // Verify the (possibly newly-assigned) asset belongs to viewer's group and is not soft-deleted.
   const [asset] = await db

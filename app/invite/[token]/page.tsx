@@ -79,6 +79,7 @@ export default async function InvitePage({ params }: Props) {
     group_full: t.invite.errors.groupFull,
     already_member: t.invite.errors.alreadyMember,
     already_in_duo: t.invite.errors.alreadyInDuo,
+    inviter_not_member: t.invite.errors.inviterNotMember,
   }
   const errorMessage =
     preview.error === 'already_in_duo'

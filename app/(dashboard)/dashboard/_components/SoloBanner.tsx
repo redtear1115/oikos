@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
@@ -25,7 +24,6 @@ interface Props {
  * copy inside this banner duplicated the toggle in solo mode (issue #969).
  */
 export function SoloBanner({ onDismiss }: Props = {}) {
-  const { group } = useMember()
   const t = useTranslations()
   const [pending, startTransition] = useTransition()
   const [toast, setToast] = useState<string | null>(null)
@@ -42,7 +40,7 @@ export function SoloBanner({ onDismiss }: Props = {}) {
     setError(null)
     startTransition(async () => {
       try {
-        const url = await createInvite(group.id)
+        const url = await createInvite()
         const result = await shareInviteLink(url, t.soloBanner.shareTitle, t.soloBanner.shareText)
         // Always confirm — desktop share sheets (especially Chrome on macOS) can be
         // unobtrusive enough that users don't realise anything happened. Since the

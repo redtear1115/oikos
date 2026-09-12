@@ -8,7 +8,7 @@ import {
   validateInviteAcceptance,
   type InviteAcceptError,
 } from '@/lib/invite'
-import { requireViewer } from '@/lib/auth/viewer'
+import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { captureServer } from '@/lib/analytics/server'
 import { and, eq, isNull, ne } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -17,14 +17,28 @@ export type InvitePreview =
   | { ok: true; groupName: string; inviterName: string; hasSoloLedger: boolean }
   | { ok: false; error: InviteAcceptError; partnerName?: string }
 
-export async function createInvite(groupId: string): Promise<string> {
-  const { user } = await requireViewer()
+/**
+ * Mint a 7-day invite link for the viewer's own ledger.
+ *
+ * #1031 — we do NOT accept a `groupId` arg: the group is resolved from the
+ * viewer, so a caller-supplied id is structurally unrepresentable. Same
+ * convention as `toggleGuardianBeta` (actions/group.ts). The previous shape
+ * `createInvite(groupId)` gated on `requireViewer()` only, which let anyone
+ * signed in mint an invite for *any* group id — and a group id is not a
+ * secret to an ex-partner (it ships in every dashboard RSC payload), so an
+ * ex-partner could re-invite themselves into the ledger they had left once it
+ * was back to solo. Resolving the group here, rather than validating an
+ * argument, is deliberate: a shared `requireGroupMember(groupId)` guard would
+ * keep inviting future callers to pass an id and trust the guard.
+ */
+export async function createInvite(): Promise<string> {
+  const { user, group } = await requireViewerGroup()
 
   const token = generateToken()
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   await db.insert(groupInvites).values({
-    groupId,
+    groupId: group.id,
     invitedBy: user.id,
     token,
     expiresAt,
@@ -32,7 +46,7 @@ export async function createInvite(groupId: string): Promise<string> {
 
   // Invite-funnel denominator (#734): an invite was sent. The matching
   // numerator is `partner_joined` when the invitee accepts.
-  await captureServer(user.id, 'invite_created', { group_id: groupId })
+  await captureServer(user.id, 'invite_created', { group_id: group.id })
 
   return getInviteUrl(token)
 }

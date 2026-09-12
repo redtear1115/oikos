@@ -1992,6 +1992,8 @@ export type Translations = {
       alreadyMember: string
       /** Template with `{partner}` — accepter is already in a duo group (#912). */
       alreadyInDuo: string
+      /** The person who minted the invite is no longer in that ledger (#1031). */
+      inviterNotMember: string
       unknown: string
     }
     /** `<head>` metadata for the invite landing page. Deliberately generic —
@@ -4147,6 +4149,7 @@ export const zhTW: Translations = {
       groupFull: '此帳本已有兩位成員',
       alreadyMember: '你已經是此帳本的成員',
       alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
+      inviterNotMember: '發出這份邀請的人已經不在這本帳本裡，連結不再有效。',
       unknown: '無法加入帳本',
     },
     meta: {

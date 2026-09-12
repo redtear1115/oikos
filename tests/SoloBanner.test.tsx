@@ -2,11 +2,9 @@ import { describe, it, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { I18nWrapper } from './_mocks/i18n'
 
-// Stub `useMember` — SoloBanner only reads `group.id` to feed the invite action,
-// which we never trigger in this test.
-vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
-  useMember: () => ({ group: { id: 'g-1' } }),
-}))
+// SoloBanner no longer reads MemberContext at all: since #1031 `createInvite()`
+// resolves the group from the viewer server-side, so the banner has no group id
+// to pass and the stub that used to live here is gone.
 
 // The invite server action shouldn't run during a unit test.
 vi.mock('@/actions/invite', () => ({
