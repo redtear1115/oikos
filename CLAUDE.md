@@ -242,6 +242,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 ## AI 開發協作規則
 
 - **寫限制的時候，連它失效時長什麼樣子一起寫**：人是靠症狀認出問題的，不是靠機制推導。「跨 server/client 不能 join」要補一句「症狀是查詢靜默回 0 筆」；「手寫段落可能在 refresh 時遺失」要補一句「失效的樣子不是檔案被清空，是某段在看似正常的文件重整裡被壓縮掉」。只寫機制，讀者下次撞到時不會認出那就是文件警告過的事。
+- **不要把沒解釋的選擇當疏忽**：看起來隨意的既有寫法，常是在一個沒被寫下來的約束底下的合理解。2026-09-12 踩了兩次——`pt-12` 看似魔術數字，實際是刻意大於 safe-area inset；safe-area guard 的檔案級比對看似偷懶，實際是唯一能容納「wrapper 負責 pin、內層負責 padding」這個正確形狀的粒度。兩次都是先當它是疏忽、動手改了才發現約束存在。**改之前先問「如果這是對的，它在解什麼我沒看到的問題」。**
 - **撤回一個論證之後，要掃所有引用它的地方**：結論被推翻了，但引用它的段落還活著、而且看起來仍然合理。撤回本身也值得留在文件裡——它標示了哪條推論路徑會出錯，而下一個人很可能會重新推導出同一個錯誤結論。
 - **偏好透過 subagent roles 分工**：開發任務優先委派給 subagent（有對應 role 就用 role，如 pilotfish 的 scout / executor / verifier；需要指定 model 時用 ad-hoc subagent），主 session 負責 framing、brief、驗收與整合。平行 subagent 各自用 worktree 隔離（見「Worktree 工作流」）。
 - **commit 自主、push 延到 PR-time**：每完成一個邏輯單位（PR / feature）即自動 commit，不必問；但**不要每個 commit 都 push**——本機累積，只在「要開 PR / 更新已開的 PR」時才 push。原因：`vercel.json` 沒有 git/deploy 設定，Vercel 預設「任何 branch 每次 push 都建一個 preview deployment」，逐 commit push 會產生大量不必要的 build。**例外**：當任務本身需要 preview 部署才能進行（例如測試已部署的 endpoint），iterative push 是必要且合理的。
