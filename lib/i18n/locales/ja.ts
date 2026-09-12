@@ -125,7 +125,6 @@ export const ja: Translations = {
       newlywedsBody: '日常の支出から愛するものまで、ふたりの生活を一冊の帳簿に。',
       petOwnersTitle: 'ペット家族',
       petOwnersBody: '毛の子への支出はすべて記録に値する。ふたりで見守る記録を。',
-      cardAriaLabel: '{slug} のシーンを見る',
       seeAll: '10 のシーンをすべて見る',
     },
     migrateSection: {
@@ -2897,7 +2896,6 @@ I will upload the screenshots once you confirm.`,
     },
     otherCases: {
       heading: 'ほかのシーン',
-      cardAriaLabel: '{slug} のページを見る',
     },
     hub: {
       heroKicker: 'ふたり、10 とおりの日々',

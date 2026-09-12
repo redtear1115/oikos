@@ -126,7 +126,6 @@ export const en: Translations = {
       newlywedsBody: 'From everyday expenses to shared assets, see your life together in one ledger.',
       petOwnersTitle: 'Pet families',
       petOwnersBody: 'Every cost for your pet is worth remembering — track it together.',
-      cardAriaLabel: 'See the {slug} use case',
       seeAll: 'See all ten situations',
     },
     migrateSection: {
@@ -2901,7 +2900,6 @@ I will upload the screenshots once you confirm.`,
     },
     otherCases: {
       heading: 'Other situations',
-      cardAriaLabel: 'See the {slug} page',
     },
     hub: {
       heroKicker: 'Two people, ten kinds of days',

@@ -126,7 +126,6 @@ export const zhCN: Translations = {
       newlywedsBody: '结婚之后从日常账本到爱物，一起看见两个人的生活全貌。',
       petOwnersTitle: '宠物家庭',
       petOwnersBody: '毛孩的每一笔费用都值得被记住，清楚看见两个人的心意。',
-      cardAriaLabel: '了解 {slug} 情境',
       seeAll: '看全部 10 种情境',
     },
     migrateSection: {
@@ -2844,7 +2843,6 @@ export const zhCN: Translations = {
     },
     otherCases: {
       heading: '其他情境',
-      cardAriaLabel: '查看 {slug} 页面',
     },
     hub: {
       heroKicker: '两个人，十种日子',
