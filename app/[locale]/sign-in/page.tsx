@@ -52,15 +52,33 @@ function pickFeaturedIndex(): number {
   return Math.floor(Math.random() * ABOUT_SECTION_COUNT)
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { locale: raw } = await params
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: Search
+}): Promise<Metadata> {
+  const [{ locale: raw }, search] = await Promise.all([params, searchParams])
   if (!isLocale(raw)) return {}
   const locale: Locale = raw
-  const t = dictionaries[locale].seo.signIn
+  const seo = dictionaries[locale].seo.signIn
+
+  // `/invite/[token]` redirects signed-out visitors here with `?from=invite`
+  // (app/invite/[token]/page.tsx). Chat-app link previewers (LINE, Messenger)
+  // follow that redirect, so the generic invite card has to live on *this*
+  // metadata, not just on the invite route — otherwise pasted invite links
+  // preview as the plain sign-in page (#1016). Deliberately as generic as
+  // invite.meta: no group name / inviter name / financial info, and always
+  // `robots: noindex` since it's a per-token entry point.
+  const isInvite = search.from === 'invite'
+  const t = isInvite ? seo.invite : seo
+
   return {
     title: t.title,
     description: t.description,
     alternates: buildAlternates('/sign-in', locale),
+    ...(isInvite && { robots: { index: false, follow: false } }),
     openGraph: {
       title: t.title,
       description: t.ogDescription,

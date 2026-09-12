@@ -328,6 +328,10 @@ export const ja: Translations = {
     sendInvite: '招待を送る',
     sharedAndCopied: '共有しました。リンクもコピー済み',
     copied: 'リンクをコピーしました',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareTitle: 'Futari で一緒に家計簿をつける',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareText: '二人のための共有家計簿です。リンクを開くと参加できます。',
   },
 
   addSheet: {
@@ -1633,6 +1637,13 @@ export const ja: Translations = {
       alreadyInDuo: 'すでに {partner} さんと家計簿を共有しています。新しく参加するには、先に今の家計簿から抜けてください。',
       unknown: '家計簿に参加できません',
     },
+    meta: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      title: '二人で家計簿をつけませんか · Futari',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      description: '二人のための共有家計簿です。リンクを開いてサインインすると参加できます。',
+      ogDescription: '二人のための共有家計簿です。リンクを開いてサインインすると参加できます。',
+    },
   },
 
   offlineBanner: {
@@ -2628,6 +2639,13 @@ I will upload the screenshots once you confirm.`,
       title: 'Futari にサインイン · ふたりの家計簿をはじめよう',
       description: 'Google アカウントで Futari にサインインし、パートナーと家計を共有。日常の支出、燃費、保険、資産までふたりで一緒に整える PWA。',
       ogDescription: 'Google でワンタップサインイン、ふたりの家計簿をはじめよう。',
+      invite: {
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        title: '二人で家計簿をつけませんか · Futari',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        description: '二人のための共有家計簿に招待されました。サインインすると参加できます。',
+        ogDescription: '二人のための共有家計簿です。サインインすると参加できます。',
+      },
     },
     terms: {
       title: '利用規約 · Futari',

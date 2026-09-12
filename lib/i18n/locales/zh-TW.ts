@@ -403,6 +403,10 @@ export type Translations = {
     sendInvite: string
     sharedAndCopied: string
     copied: string
+    /** Web Share API title — deliberately generic, no group/inviter name (privacy). */
+    shareTitle: string
+    /** Web Share API text — deliberately generic, no group/inviter name (privacy). */
+    shareText: string
   }
 
   addSheet: {
@@ -1990,6 +1994,20 @@ export type Translations = {
       alreadyInDuo: string
       unknown: string
     }
+    /** `<head>` metadata for the invite landing page. Deliberately generic —
+     *  no group name / inviter name / financial info (OG preview is crawled
+     *  and cached by chat-app link previewers; see issue #1016).
+     *
+     *  **Keep in sync with `seo.signIn.invite`.** The same generic card has to
+     *  exist on both routes: signed-in visitors land on /invite/[token], while
+     *  link previewers follow that route's redirect and end up rendering
+     *  /sign-in?from=invite instead. Metadata on the invite route alone never
+     *  reaches them — that was this issue's original, mistaken premise. */
+    meta: {
+      title: string
+      description: string
+      ogDescription: string
+    }
   }
 
   offlineBanner: {
@@ -2416,6 +2434,15 @@ export type Translations = {
       title: string
       description: string
       ogDescription: string
+      /** `<head>` metadata for `/sign-in?from=invite` — the redirect target
+       *  when an invite link is opened while signed out. Deliberately as
+       *  generic as invite.meta (no group / inviter name), and always
+       *  `robots: noindex` since it's a per-token entry point (#1016). */
+      invite: {
+        title: string
+        description: string
+        ogDescription: string
+      }
     }
     terms: {
       title: string
@@ -2816,6 +2843,8 @@ export const zhTW: Translations = {
     sendInvite: '傳送邀請',
     sharedAndCopied: '已分享，連結也已複製',
     copied: '已複製連結',
+    shareTitle: '一起用 Futari 記帳',
+    shareText: '兩個人的共同帳本，點開連結就能加入。',
   },
 
   addSheet: {
@@ -4120,6 +4149,11 @@ export const zhTW: Translations = {
       alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
       unknown: '無法加入帳本',
     },
+    meta: {
+      title: '有人邀請你一起記帳 · Futari',
+      description: '兩個人的共同帳本。點開連結，登入後就能加入。',
+      ogDescription: '兩個人的共同帳本。點開連結，登入後就能加入。',
+    },
   },
 
   offlineBanner: {
@@ -5074,6 +5108,12 @@ export const zhTW: Translations = {
       title: '登入 Futari · 開始兩個人的記帳生活',
       description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
       ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+      /** Keep in sync with `invite.meta` — see the note there. (#1016) */
+      invite: {
+        title: '有人邀請你一起記帳 · Futari',
+        description: '有人邀請你加入一本兩個人共用的帳本。登入後就能加入。',
+        ogDescription: '兩個人的共同帳本。登入後就能加入。',
+      },
     },
     terms: {
       title: '服務條款 · Futari',

@@ -41,7 +41,7 @@ export function MemberListSection({ viewer, partner, groupId }: Props) {
     startInviteTransition(async () => {
       try {
         const url = await createInvite(groupId)
-        const result = await shareInviteLink(url)
+        const result = await shareInviteLink(url, t.soloBanner.shareTitle, t.soloBanner.shareText)
         setInviteToast(result === 'shared' ? t.soloBanner.sharedAndCopied : t.soloBanner.copied)
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)

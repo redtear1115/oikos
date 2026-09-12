@@ -330,6 +330,10 @@ export const en: Translations = {
     sendInvite: 'Send invite',
     sharedAndCopied: 'Shared. Link also copied.',
     copied: 'Link copied',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareTitle: 'Track finances together on Futari',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareText: 'A shared ledger for two. Open the link to join.',
   },
 
   addSheet: {
@@ -1635,6 +1639,13 @@ export const en: Translations = {
       alreadyInDuo: 'You already share a ledger with {partner}. Leave it first to join a new one.',
       unknown: "Can't join this ledger.",
     },
+    meta: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      title: 'Someone invited you to a shared ledger · Futari',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      description: 'A shared ledger for two. Open the link, sign in, and you can join.',
+      ogDescription: 'A shared ledger for two. Open the link, sign in, and you can join.',
+    },
   },
 
   offlineBanner: {
@@ -2631,6 +2642,13 @@ I will upload the screenshots once you confirm.`,
       title: 'Sign in to Futari · Start budgeting together',
       description: 'Sign in with Google to start your couple-shared ledger: log daily spending and fuel costs, look after insurance and shared things, in a mobile-first PWA.',
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
+      invite: {
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        title: 'Someone invited you to a shared ledger · Futari',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        description: 'Someone invited you to a shared ledger for two. Sign in to join.',
+        ogDescription: 'A shared ledger for two. Sign in to join.',
+      },
     },
     terms: {
       title: 'Terms of Service · Futari',
