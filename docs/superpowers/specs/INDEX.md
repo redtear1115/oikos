@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-12
 ---
 
 # Specs — Index & Writing Guide
@@ -126,6 +126,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 - [ia-unified-header](ia-unified-header-design.md) — 四大入口三層標頭統一（L1/L2/L3）+ ContextStrip 取代分散 banner
 - [onboarding](onboarding-design.md) — 新人 onboarding flow（sign-in → 建群組 → 邀請對方／稍後再說）
 - [solo-mode](solo-mode-design.md) — 單人帳本模式：分攤鎖 all_mine、balance hero 隱藏、邀請 banner、升雙人不 retroactive
+- [solo-trip](solo-trip-design.md) — Solo × 旅行：共旅者兩階段（v1.6 名字 / v1.7 使用者）、共旅者的債不進 GroupBalance、`member_b IS NULL` 雙重語意拆分、epoch 範圍先於拿掉 solo 短路
 - [invite-existing-group](invite-existing-group-design.md) — 接受邀請時依接受者既有 group 狀態分流：單人＝接受前溫和告知（舊帳本變過去章節）、雙人＝擋下（固定兩人不可同時兩本）、無＝照舊；preview + accept 兩層（#912）
 - [epoch-readonly](epoch-readonly-design.md) — 過去章節 read-only + read-path 型別防呆
 - [monthly-review](monthly-review-design.md) — 雙人月度回顧儀式
