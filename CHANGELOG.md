@@ -15,6 +15,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.8] - 2026-09-12
+
+主題：**自然搜尋體質**——一次 90 天體檢，結果大半的工作是「查證後決定不做」。真正動手的只有兩處：讓 sitemap 的日期說實話，以及把搬家教學從落地頁的主流程收起來。
+完整 diff：[v1.5.7...v1.5.8](https://github.com/redtear1115/oikos/compare/v1.5.7...v1.5.8)
+
+### 使用者可見變化
+
+- **競品搬家頁改成先講為什麼，再講怎麼搬（#1011）**：截圖轉 CSV 的四步教學原本佔掉整整一屏，擋在「為什麼值得用 Futari」前面；現在收摺成一列，想看的人點開，內容一字未改。頁面上也終於有一個不必先上傳檔案就能按的註冊入口。
+
+### 技術變更
+
+- **sitemap `lastmod` 改由 registry 提供（#1004 / #1005）**：日期先前寫死在 `app/sitemap.ts`，與內容實際更新時間脫節達三個半月（migrate 五頁宣稱 5/30、實際 7/13）。改為 `contentUpdatedAt` 跟內容放在一起，並加 CI 內容 hash 護欄：改了文案沒更新日期就 fail。#669 當初「不要用 moving lastmod」的判斷仍然成立，壞掉的是手動 bump 的紀律，所以用機器補紀律而不是改設計。
+- **`jsonLdAppName` 依語系分流（#1009）**：四語共用 `'Futari · ふたり'`，Google 的 site-name 顯示行可能對英文搜尋者渲染日文假名。en → `Futari`、zh-TW → `Futari · 雙人記帳`、zh-CN → `Futari · 双人记账`、ja 不動。
+- **migrate 頁補上真正的 CTA（#1011）**：⚠️ **量測斷層** —— 該頁先前**沒有任何 `landing_cta_clicked` 發送點**（唯一發送處在 `LandingCtaLink.tsx:45`，migrate header 是裸 `<Link>`），所以先前引用的「26% vs 6.5%」量的是「訪客願不願意退回首頁再點一次」。本版補上 `cta_location: 'migrate_primary'` 後該事件數會跳升，那不是改善，是終於有東西可以量了。跨本次部署的前後比較無效。
+- **觀測的邊界寫進 CLAUDE.md（#1018）**：server 與 client 事件因 person_id 不同而無法 join（症狀是查詢靜默回 0 筆，不是錯誤）、`platform` 只存在於 client 事件、cookieless 下匿名訪客數膨脹、維度不回填、UA 分不出平台。另附業務 key 例外：兩邊事件若共用 `group_id` 這類 key 就能配對。
+- **`release` skill 補 backlog 表維護**：先前每發一版，CLAUDE.md 的 milestone 表就漂移一次。
+
+### 查證後撤銷的提案
+
+這版有一半的產出是「證明不需要做」，記錄於此以免下次重新推導：
+
+- **use-case 頁收斂（#1008）**：40 條 URL 佔 sitemap 37% 不構成問題。crawl budget 在 108 URL 的站不成立；thin content 也不成立——那些頁有排名（cohabitation 18.5 / newlyweds 7.5 / aa-split 7.7），有排名就是 Google 沒把它們當 thin content 的證據。
+- **手機 title 截斷（#1009 原範圍）**：手機 CTR 3.05% vs 桌機 6.20% 看似腰斬，Fisher exact **p = 0.175**——分子是 8 和 8。高曝光的 migrate 頁 title 全部離截斷點很遠。
+- **manebo 關鍵字前移**：GSC 顯示該頁 105 次曝光全數來自品牌詞 `manebo`，零品類詞。現況正確。
+
 ## [1.5.7] - 2026-09-12
 
 主題：**讓三個平台分得開**——同一份網站送到瀏覽器、安裝版與原生殼，觀測上卻混成一團。這版補上平台維度，往後每筆事件與每個錯誤都知道自己來自哪個平台。
@@ -728,7 +753,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.7...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.8...HEAD
+[1.5.8]: https://github.com/redtear1115/oikos/compare/v1.5.7...v1.5.8
 [1.5.7]: https://github.com/redtear1115/oikos/compare/v1.5.6...v1.5.7
 [1.5.6]: https://github.com/redtear1115/oikos/compare/v1.5.5...v1.5.6
 [1.5.5]: https://github.com/redtear1115/oikos/compare/v1.5.4...v1.5.5
