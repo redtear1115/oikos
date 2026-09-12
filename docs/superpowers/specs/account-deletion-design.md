@@ -12,7 +12,7 @@ related_issues: ["#923", "#848"]
 
 讓使用者**在 app 內發起刪除自己的帳號**，並由後台在承諾的期限內真正移除資料。
 
-這是 App Store / Play Store 上架的硬性 blocker：Apple Guideline 5.1.1(v) 與 Google Play 都要求「有註冊功能就必須提供 app 內可發起的帳號刪除」。現況只有登出（`actions/auth.ts#signOut`），沒有刪除——而且隱私政策已白紙黑字承諾「可透過設定頁刪除帳號、14 個工作天內移除」（[zh-TW.ts](../../../lib/i18n/locales/zh-TW.ts) `sectionRights` / `sectionRetention`），等於目前是空頭支票。
+這是 App Store / Play Store 上架的硬性 blocker：Apple Guideline 5.1.1(v) 與 Google Play 都要求「有註冊功能就必須提供 app 內可發起的帳號刪除」。現況只有登出（`actions/auth.ts#signOut`），沒有刪除——而且隱私政策已白紙黑字承諾「可透過設定頁刪除帳號、14 個工作天內移除」（[zh-TW.ts](../../../lib/i18n/locales/zh-TW.ts) `sectionRightsTitle` / `sectionRightsBody` / `sectionRetentionTitle` / `sectionRetentionBody`），等於目前是空頭支票。
 
 給誰看：實作這個 feature、或日後維護刪除/匿名化邏輯的人。
 

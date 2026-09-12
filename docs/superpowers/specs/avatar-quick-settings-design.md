@@ -92,7 +92,7 @@ Sections 內 row 風格沿用 `SettingsContent` 既有 `<Row>`／radio 風格。
 ### Solo 模式差異
 
 - 成員 section 只一列 + invite CTA（既有 `handleInvite` 邏輯）
-- 預設分攤方式鎖 `all_mine` + 提示文字（既有 `displayedSplit` 處理）
+- 預設分攤方式鎖 `all_mine` + 提示文字（既有 `SplitTypeSection.tsx` 的 `displayed` 區域變數處理）
 - 預設分攤比例 section 隱藏（沒有對方可分）
 - 守護 Beta toggle 仍可看可開（solo 也算合法 group）
 

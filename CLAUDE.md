@@ -319,7 +319,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - **DESIGN.md 與 PRODUCT.md 由 Impeccable 維護，refresh 是「model 全檔重寫」，不是機械產生。** `/impeccable document` 重寫 DESIGN.md、`/impeccable teach` 重寫 PRODUCT.md；真正機械地從 `app/globals.css` 抄過去的只有 `.impeccable/design.json` 的 token 值。工具不會靜默覆蓋（偵測到既有檔會先問要 refresh 哪一份），但**手寫段落能不能留下來，取決於當時跑 refresh 的 agent 有沒有先讀過現檔、刻意逐段帶過去**——那是判斷，不是保證。
   - 所以：**跑 refresh 前先讀現檔，逐段帶過，不要從零生成。** PRODUCT.md 的 Surface Intents、DESIGN.md 的任何手動補充都屬於這類。
   - 失效的樣子不是檔案被清空，而是某一段在一次看起來很正常的「文件重整」裡被壓縮掉。所以控制點是 git diff，不是工具。
-  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現在 13KB，實務上踩不到。
+  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現況遠大於該門檻，實務上踩不到。
 - **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
   - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
   - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。

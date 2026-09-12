@@ -100,7 +100,7 @@ Friend test 第二個月起出現高頻訊號：使用者翻 `/records` 想看�
        Array<{ key, label, total, count, percentage }>
 ```
 
-月份範圍計算：`monthStart` / `nextMonthStart` 用 `Asia/Taipei` 為基準；切月份透過 URL search param `?month=2026-05` 讓 server re-render；`month` 缺省 = 「now」對應 YYYY-MM；server validation 拒絕未來月、拒絕 group 創建月之前。
+月份範圍計算：`lib/monthKey.ts › monthRangeIso()` 回 `{ startIso, endIso }`（= 本月初到下月初的半開區間），以 `Asia/Taipei` 為基準；切月份透過 URL search param `?month=2026-05` 讓 server re-render；`month` 缺省 = 「now」對應 YYYY-MM；server validation 拒絕未來月、拒絕 group 創建月之前。
 
 ## Drill-down
 

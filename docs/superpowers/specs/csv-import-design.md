@@ -255,7 +255,7 @@ sha256(
 - `/settings` →「從其他 app 匯入」頁面提供：
   - 通用 CSV 範本下載（.csv，含 header + 3 列範例）
   - Phase 2 Excel 轉換模板連結（v1.1.0 ship 時可能只有 CWMoney→Futari，#557）
-- 範本檔由 spec 文件描述格式，實際檔案放在 `public/import-templates/`
+- 範本檔由 spec 文件描述格式，實際檔案放在 `public/` 根目錄（`cwmoney-template.xlsx` / `bank-statement-template.xlsx`；下載連結定義在 `lib/migrate/sources.ts`）
 
 ---
 

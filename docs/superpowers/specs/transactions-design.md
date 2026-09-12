@@ -39,7 +39,7 @@ Atomic invariant：上述兩步 + balance 重算必須同 DB transaction；任�
 
 ### Description autocomplete（v0.14.2）
 
-AddSheet 描述欄位輸入時，從目前 household 的歷史 CashTransaction 描述抓前綴（case-insensitive，最多 5 條）做 inline suggestion；soft-deleted 排除、空字串不顯示。實作落地點：`DescriptionAutocomplete` 元件 + `lib/db/queries/transactions.ts → suggestDescriptions()`。
+AddSheet 描述欄位輸入時，從目前 household 的歷史 CashTransaction 描述抓前綴（case-insensitive，最多 5 條）做 inline suggestion；soft-deleted 排除、空字串不顯示。實作落地點：`app/(dashboard)/dashboard/_components/DescriptionAutocomplete.tsx` + `actions/transaction.ts › getDescriptionSuggestions()`（server action，不在 query 層）。
 
 ### Weighted split（v0.14.1）
 

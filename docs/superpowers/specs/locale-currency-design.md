@@ -138,14 +138,14 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
   → RSC 重 render → getTranslations() 讀新 cookie → 整頁字串換掉
 ```
 
-實作落地點：`lib/i18n/`（locales-meta、t.ts、client.tsx、LanguageSwitcher、locales/{zh-TW,zh-CN,en,ja}.ts）；Provider 接入點 `app/(dashboard)/layout.tsx` + `app/sign-in/page.tsx`。
+實作落地點：`lib/i18n/`（locales-meta、t.ts、client.tsx、LanguageSwitcher、locales/{zh-TW,zh-CN,en,ja}.ts）；Provider 接入點只有 `app/(dashboard)/layout.tsx`（repo 內唯一 mount `TranslationsProvider` 的地方）；`app/[locale]/sign-in/page.tsx` 等 dashboard 外的頁面只在 server 端呼 `getTranslations()`，不進 client context。
 
 ### Part 2：Base currency 資料流
 
 ```
 建立 group → OikosGroups.base_currency 預設 'twd'
   ↓ 用戶（option）：Settings → 貨幣 → 改 base_currency
-  ↓ Server action `actions/group.ts#setBaseCurrency` 驗證當前 epoch 無 record
+  ↓ Server action `actions/currency.ts#setBaseCurrency` 驗證當前 epoch 無 record
   ↓ 通過 → UPDATE OikosGroups.base_currency
   ↓ 失敗 → throw + UI disable + hint card
 
@@ -153,7 +153,7 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
 讀取路徑：所有顯示 amount 的 callsite → formatAmount(amount, group.base_currency)
 ```
 
-實作落地點：`actions/group.ts#setBaseCurrency`、`app/(dashboard)/settings/currency/page.tsx`、`lib/currency.ts#formatAmount`。
+實作落地點：`actions/currency.ts#setBaseCurrency`、`app/(dashboard)/settings/currency/page.tsx`、`lib/currency.ts#formatAmount`。
 
 ### Part 3：Settings 結構
 
