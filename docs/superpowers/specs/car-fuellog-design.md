@@ -124,7 +124,7 @@ FAB 依 pathname 變身：
 
 ## 實作落地點
 
-`actions/fuelLog.ts` / `lib/fuelEcon.ts`（avgFuelEcon 計算）/ `lib/db/queries/fuelLog.ts` / `lib/primaryUser.ts`（primaryUserId 翻譯 helper）
+`actions/fuelLog.ts` / `lib/fuelEcon.ts`（`singleEcon()` 單次油耗、`computeAvgEcon()` 詳情頁平均）/ `lib/db/queries/fuelLog.ts`（`getCarHeroStats()` 另有一份 list hero 卡專用的 `avgFuelEcon` 計算，與 `computeAvgEcon()` 是兩份獨立實作）/ `lib/primaryUser.ts`（primaryUserId 翻譯 helper）
 
 ---
 

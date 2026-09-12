@@ -68,8 +68,8 @@ related_issues: []
 
 ### 優先序（由高到低）
 
-1. `offline` — 離線橫幅（目前由 `OfflineBanner` 在 layout 層顯示）
-2. `past-epoch` — 正在查看過去章節（目前由 `PastEpochBanner` 在 layout 層顯示）
+1. `offline` — 離線橫幅（寫 spec 時由 `OfflineBanner` 在 layout 層顯示；#617 已整併進 `ContextStrip` 並刪除該元件）
+2. `past-epoch` — 正在查看過去章節（寫 spec 時由 `PastEpochBanner` 顯示；#617 起改為 `PastChapterBar`，掛在 `app/(dashboard)/layout.tsx`）
 3. `partner-left` — 夥伴已離開帳本
 4. `active-trip` — 有進行中旅行
 
@@ -79,7 +79,7 @@ related_issues: []
 
 L1 下方、L2 上方。視覺上是 page-scoped（隨頁面主題色），不是固定在畫面頂端的全域 bar。
 
-**整合現有 banner**：`PastEpochBanner` 和 `OfflineBanner` 目前掛在 `app/(dashboard)/layout.tsx`，移至各頁的 ContextStrip slot 後從 layout 移除。`partner-left` 目前沒有獨立 banner，在此一起加入。
+**整合現有 banner**（已於 #617 完成）：`PastEpochBanner` 和 `OfflineBanner` 原本掛在 `app/(dashboard)/layout.tsx`，現已移入 `ContextStrip` 的優先序分支、兩個元件本身刪除；過去章節列改由 `PastChapterBar` 承擔。`partner-left` 同期一併加入。
 
 ### Variants
 
@@ -103,4 +103,4 @@ L1 下方、L2 上方。視覺上是 page-scoped（隨頁面主題色），不�
 - **不動** Records 的 FilterSheet 功能，只改 chip 的觸發方式
 - **不動** Assets 的 AssetSheet / 詳細頁邏輯
 - **不動** OfflineLifecycle / RealtimeProvider 底層邏輯
-- `PastEpochBanner` 和 `OfflineBanner` 從 layout 移除後，如有其他頁依賴需確認（目前只在 layout render）
+- ~~`PastEpochBanner` 和 `OfflineBanner` 從 layout 移除後，如有其他頁依賴需確認~~（#617 已完成；兩個元件不復存在）

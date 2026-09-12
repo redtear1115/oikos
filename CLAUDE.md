@@ -90,7 +90,7 @@ Realtime：Client subscribes → React state mutation
 - Base currency 預設 TWD（可選 TWD / CNY / USD / JPY），當前 epoch 無 record 時可改
 - 每次寫入後全量重算，cache 在 `GroupBalance`
 - 計算實作：`lib/balance.ts` + `lib/db/queries/balance.ts`
-- GroupBalance 欄位 `balance`：`> 0` = member_b 欠 member_a；`< 0` = member_a 欠 member_b
+- GroupBalance 欄位 `balance`：`> 0` = member_b 欠 member_a；`< 0` = member_a 欠 member_b（權威在 `lib/balance.ts` 開頭的 `Positive = member_b owes member_a`；本段是這份文件裡唯一展開它的地方）
 
 ### 編輯模式
 
@@ -110,10 +110,10 @@ Realtime：Client subscribes → React state mutation
 - **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount`（base 幣別整數）+ `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id` / `trip_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。多幣別 record 另存 `original_currency` / `original_amount` / `rate_snapshot`（NULL = base native）；balance 計算永遠看 base 幣別 `amount`。
 - **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
 - **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。強制 base 幣別。
-- **`GroupBalance`** — balance cache（per-group 單列）。`balance` `> 0` = member_b 欠 member_a，`< 0` = member_a 欠 member_b；每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。
+- **`GroupBalance`** — balance cache（per-group 單列）。每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。`balance` 的正負號語意見上面「Balance 計算規則」，此處不複述。
 - **`CurrencyRates`** — ⚠️ **Deprecated since v0.17.4 (#410)**。Trip-scoped 匯率已移入 `Trips.rate_snapshot`（free-text code + rate entries）；此表僅為相容舊 trip 資料保留，新 trip 不再寫入。見 `lib/db/schema.ts`。
-- **`Trips`** — 旅行子帳本。`epoch_id` notNull（**強制單一 epoch**：trip 不可跨章節）、`start_date >= currentEpochStartedAt`；`default_currency` 為 records 表單 currency selector 預設值；`status: 'active' | 'ended' | 'archived'`。`leaveGroup` 若有 active trip 則 reject「請先結束旅行」。
-- **`TripExpenses`** — 旅行隔離帳本（issue #42）。`trip_id` + `paid_by` + `amount`（base 幣別整數）+ optional `original_currency` / `original_amount`（free-text trip code，須對應 parent `Trips.rate_snapshot`）+ `category` + `split_type` + optional `split_ratio`（**payer's share %**，注意與 `CashTransactions.split_ratio_a`「member A 的 %」語意不同）。Trip UI 讀這張表；主帳本（/records、stats、balance）讀 `CashTransactions` 看不到這些 row。Trip end 時會寫一筆 summary `CashTransaction` 把 trip 折回主帳本。
+- **`Trips`** — 旅行子帳本。`epoch_id` notNull（**強制單一 epoch**：trip 不可跨章節）、`start_date >= currentEpochStartedAt`；`default_currency` 為 records 表單 currency selector 預設值；`status: 'active' | 'ended' | 'archived'`。`leaveGroup` 若有 active trip 則 reject「請先結束旅行」。spec: [trip-multi-currency-design.md](docs/superpowers/specs/trip-multi-currency-design.md)
+- **`TripExpenses`** — 旅行隔離帳本（issue #42）。`trip_id` + `paid_by` + `amount`（base 幣別整數）+ optional `original_currency` / `original_amount`（free-text trip code，須對應 parent `Trips.rate_snapshot`）+ `category` + `split_type` + optional `split_ratio`（**payer's share %**，注意與 `CashTransactions.split_ratio_a`「member A 的 %」語意不同）。Trip UI 讀這張表；主帳本（/records、stats、balance）讀 `CashTransactions` 看不到這些 row。Trip end 時會寫**最多兩筆** summary `CashTransaction`（每個付款人各一筆；solo group 只有一筆）把 trip 折回主帳本——實作 `lib/tripSummary.ts`、入口 `actions/trip.ts#endTrip`。
 - **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance` / `item`），舊 6 種用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`；`item` 走 template path (`template_key` + `template_fields` jsonb)，不開子表。
 - **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
 - **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
@@ -146,7 +146,7 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 
 - Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type 自己定義（`CarDetails.primary_user_id` / `HouseDetails.owner` / `InsuranceDetails.policy_holder_user_id`）。
 - CashTransaction 可 optional 關聯 `asset_id`（哪個愛物的支出）+ `fuel_log_id`（加油雙寫）+ `trip_id`（屬於哪段旅行）。
-- Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 **`created_at`** 落在哪個 epoch 來歸屬章節——是「何時被記下」，不是「何時發生」。章節是關係的分期，補記昨天的收據、匯入十年前的 CSV，都仍屬於當下這段關係。單一入口 `lib/db/queries/_predicates.ts#epochClause`（16 個 call site：transactions.ts 6、insurance.ts 5、asset.ts 3、incomes.ts 2，全部傳 `created_at`）＋ `lib/db/queries/balance.ts` 的 inline SQL。
+- Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 **`created_at`** 落在哪個 epoch 來歸屬章節——是「何時被記下」，不是「何時發生」。章節是關係的分期，補記昨天的收據、匯入十年前的 CSV，都仍屬於當下這段關係。單一入口 `lib/db/queries/_predicates.ts#epochClause`（所有 call site 一律傳 `created_at`）＋ `lib/db/queries/balance.ts` 的 inline SQL。**call-site 盤點不在這裡複述**——權威在 `lib/db/queries/balance.ts` 開頭 docstring，它與被描述的程式同檔同 MR，漂移風險最低。
 - **兩個時間戳分工**——選錯不會報錯，只會靜默算少：
 
   | 問題 | 用哪個 | 入口 |
@@ -319,7 +319,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - **DESIGN.md 與 PRODUCT.md 由 Impeccable 維護，refresh 是「model 全檔重寫」，不是機械產生。** `/impeccable document` 重寫 DESIGN.md、`/impeccable teach` 重寫 PRODUCT.md；真正機械地從 `app/globals.css` 抄過去的只有 `.impeccable/design.json` 的 token 值。工具不會靜默覆蓋（偵測到既有檔會先問要 refresh 哪一份），但**手寫段落能不能留下來，取決於當時跑 refresh 的 agent 有沒有先讀過現檔、刻意逐段帶過去**——那是判斷，不是保證。
   - 所以：**跑 refresh 前先讀現檔，逐段帶過，不要從零生成。** PRODUCT.md 的 Surface Intents、DESIGN.md 的任何手動補充都屬於這類。
   - 失效的樣子不是檔案被清空，而是某一段在一次看起來很正常的「文件重整」裡被壓縮掉。所以控制點是 git diff，不是工具。
-  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現在 13KB，實務上踩不到。
+  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現況遠大於該門檻，實務上踩不到。
 - **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
   - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
   - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。

@@ -153,7 +153,7 @@ Precache（L1）保留——靜態資源不含 PII，下個使用者用同一裝
 
 ## 實作落地點
 
-`next.config.ts`（Serwist 設定）/ `app/sw.ts`（runtime caching rules + precache manifest）/ `lib/offline/preference.ts` / `lib/offline/swControl.ts` / `lib/hooks/useOnlineStatus.ts` / `app/(dashboard)/settings/_components/OfflineBrowsingToggle.tsx` / `app/(dashboard)/_components/{OfflineLifecycle,OfflineBanner,ReconnectRefresh}.tsx` / `app/offline/page.tsx`
+`next.config.ts`（Serwist 設定）/ `app/sw.ts`（runtime caching rules + precache manifest）/ `lib/offline/preference.ts` / `lib/offline/swControl.ts` / `lib/hooks/useOnlineStatus.ts` / `app/(dashboard)/settings/_components/OfflineBrowsingToggle.tsx` / `app/(dashboard)/_components/{OfflineLifecycle,ReconnectRefresh}.tsx` / `app/(dashboard)/_components/ContextStrip.tsx`（離線橫幅已併入 ContextStrip 的 priority-1 分支，沒有獨立的 OfflineBanner 元件） / `app/offline/page.tsx`
 
 ---
 

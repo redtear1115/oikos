@@ -43,7 +43,7 @@ Savings framing 天然帶 ROI 氣質，但 Futari 是陪伴框架。本 spec 採
 3. 預估數字一律標「估」字，不偽裝成既定事實
 4. 文案有時序性（將到期 → 已到期 → 已收齊），不一句吃整個生命週期
 
-文案常數實作落地點：`app/(dashboard)/assets/[id]/_components/insurance/`（SavingsView 元件 + `lib/insurance.ts → heroSubCopy`）。
+文案常數實作落地點：`app/(dashboard)/assets/[id]/_components/insurance/`（SavingsView 元件；hero 副文案由 `SavingsHero.tsx › computeSub()` 依 progress / 起訖日推導，不是 `lib/insurance.ts` 的常數）。
 
 ---
 
@@ -161,7 +161,7 @@ MaturedAwaitingPrompt CTA 點擊 → 開 IncomeSheet 預填 `assetId, category='
 
 ## 實作落地點
 
-`lib/insurance.ts`（family 分派 + heroSubCopy）/ `lib/insuranceProgress.ts`（computeSavingsProgress + SavingsProgress type）/ `lib/db/queries/insurance.ts`（累計繳 / 累計拿回 / 分頁 query）/ `app/(dashboard)/assets/[id]/_components/insurance/`（SavingsView 元件）/ `lib/incomeCategories.ts`（maturity / dividend / survival_annuity tokens）/ `lib/incomePalettes.ts`（mint / gold accent token）
+`lib/insurance.ts`（險種 → framing family 分派 `getFramingGroup()`、`payCycleMonths()`、`computeNextPaymentDate()`）/ `app/(dashboard)/assets/[id]/_components/insurance/SavingsHero.tsx › computeSub()`（hero 副文案）/ `lib/insuranceProgress.ts`（computeSavingsProgress + SavingsProgress type）/ `lib/db/queries/insurance.ts`（累計繳 / 累計拿回 / 分頁 query）/ `app/(dashboard)/assets/[id]/_components/insurance/`（SavingsView 元件）/ `lib/incomeCategories.ts`（maturity / dividend / survival_annuity tokens）/ `lib/incomePalettes.ts`（mint / gold accent token）
 
 ---
 

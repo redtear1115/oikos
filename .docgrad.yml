@@ -1,17 +1,28 @@
 # .docgrad.yml — docgrad 設定（進版控，團隊共用）
 docs_dirs: [docs/]
-entry_files: [CLAUDE.md, README.md]
+entry_files: [CLAUDE.md]
 index_file: docs/superpowers/specs/INDEX.md
 exclude: [docs/superpowers/plans/, docs/superpowers/perf-baselines/]
+src_dirs: [app/, lib/, actions/, components/]
 freshness:
   convention: frontmatter
   field: last_updated
+coverage:
+  drift_after_days: 30
+  min_commits: 3
 targets:
   completeness: 4
   correctness: 4
   freshness: 4
   linkage: 4
   consistency: 4
-correctness_sample: 8
+  economy: 3
+economy:
+  entry_cost_tiers: [20000, 10000, 5000, 3000]
+  pollution_max: 0.1
+correctness_sample: 12
 scenario: "在記帳核心加一個新功能：schema + server action + UI + 4 語 i18n"
+scenarios: [actions/transaction.ts, lib/balance.ts, app/(dashboard)/trips, lib/i18n]
+rules:
+  pattern: "- **"
 language: zh-TW

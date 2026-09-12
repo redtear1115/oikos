@@ -161,6 +161,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 - 競品 / 用戶分析：[oikos-competitive-analysis.md](../oikos-competitive-analysis.md) · [user-feedback-analysis.md](../user-feedback-analysis.md)
 - 金流供應商研究（買斷/訂閱層預研）：[payment-provider-research.md](../payment-provider-research.md)
+- 跨產品外連 UTM 慣例：[utm-convention.md](../../utm-convention.md)（落地實作 `lib/utm.ts`）
 - 版本歷史：[CHANGELOG.md](../../../CHANGELOG.md)
 - 版本對應 issue：GitHub milestones
 - 實作進行中的 plans / scratch docs：`docs/superpowers/plans/`（**gitignored**，本地工作用，不進 spec）

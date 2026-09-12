@@ -103,7 +103,7 @@ related_issues: ["#44"]
 | 雙環境 | dev 與 prod Supabase 各自建 cron job | 與既有 cron 一致；migration `db:migrate` 兩邊都跑 |
 | Idempotency | snapshot insert with `ON CONFLICT (group_id, year, month) DO NOTHING` | 重跑 cron 不會炸 |
 | Realtime | **不訂閱 realtime**；async 共看靠 `router.refresh()` 重抓 | 對方寫了什麼下次刷新會看到；不做 cursor / presence |
-| Query reuse | snapshot 計算 reuse [stats](stats-design.md) 的 `monthlyStatsByCategory` / `monthlyStatsByAsset`；額外加 `monthlyLargestExpense` / `monthlyRecurringEvents` | stats spec 已預告會被 reuse |
+| Query reuse | snapshot 計算 reuse [stats](stats-design.md) 的 `monthlyStatsByCategory` / `monthlyStatsByAsset`；額外加 `MonthlyReviewSnapshots.largestExpense*`（amount / description / category / paidByName）與 `recurringEvents` | stats spec 已預告會被 reuse |
 | 閱讀路徑 | review page 直接 SELECT snapshot（無計算）| Snapshot 即真相 |
 
 ### 不採用

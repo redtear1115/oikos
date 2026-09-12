@@ -82,7 +82,7 @@ Phase 1 假設使用者一定是雙人組合。但在友人測試階段，部分
 
 ## 實作落地點
 
-`app/sign-in/page.tsx`（歡迎畫面）/ `app/setup/`（兩步 wizard）/ `actions/group.ts`（建立 OikosGroups + member_a）/ `actions/groupInvites.ts`（產生 invite token）/ `lib/i18n/LanguageSwitcher.tsx`（footer variant）
+`app/[locale]/sign-in/page.tsx`（歡迎畫面）/ `app/setup/`（兩步 wizard）/ `actions/group.ts`（建立 OikosGroups + member_a）/ `actions/invite.ts`（產生 invite token）/ `lib/i18n/LanguageSwitcher.tsx`（footer variant）
 
 ---
 
