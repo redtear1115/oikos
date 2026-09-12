@@ -1,4 +1,3 @@
-import { Noto_Sans_TC } from 'next/font/google'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
@@ -21,30 +20,29 @@ import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
 import { ShellTopStack } from './_components/ShellTopStack'
 import { PastChapterBar } from './_components/PastChapterBar'
 
-// CJK font note: `subsets: ['latin']` is honored for the @font-face metadata,
-// but Google Fonts still serves Noto Sans TC as ~100 unicode-range split files
-// per weight (render-blocking CSS grew ~100KB per extra weight). Each weight
-// added back here is a perf cost — verify build output (`grep '@font-face'
-// .next/static/css/*.css | wc -l`) before adding more. (issue #289)
+// CJK font note: Google serves Noto Sans TC as 105 unicode-range split files,
+// which is why this import is worth being careful with.
 //
-// `preload: false` keeps the @font-face definitions but skips the <link
-// rel="preload"> storm for ~11 unicode-range woff2 chunks. Initial CJK glyphs
-// render instantly via the PingFang TC / Microsoft JhengHei / Noto Sans CJK TC
-// fallback chain (see globals.css `--font-sans`); Noto Sans TC loads async and
-// swaps in via `display: swap`. Trades a tiny FOUT for ~700ms off the critical
-// path on mobile. (issues #318 / #319)
+// Self-hosted from public/fonts/ rather than next/font/google. That loader
+// fetches all 105 chunks over the network at build time (concurrently, and
+// `subsets` does NOT narrow the list — it only decides what gets preloaded), then
+// fails the entire build if any single fetch errors. One transient blip took a
+// preview deploy down on 2026-08-11 and the same dice roll applied to prod.
+// (#978 — regenerate with scripts/fetch-google-fonts.mjs)
 //
-// Scoped to dashboard layout (not root) so the landing page is freed from the
-// ~190KB @font-face CSS chunk. Onboarding (`app/onboarding/`) still falls back
-// to system-ui via inline styles — accepted minor regression for first-visit
-// perf. (issue #572)
-const notoTC = Noto_Sans_TC({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-noto-tc',
-  display: 'swap',
-  preload: false,
-})
+// Imported here and not in the root layout so the landing page stays free of the
+// ~190KB of @font-face declarations. Each extra weight is a real perf cost —
+// check `grep -c '@font-face' app/fonts/noto-sans-tc.css` before adding one.
+// (#289 / #572)
+//
+// No <link rel="preload"> is emitted for these chunks, matching the old
+// `preload: false`: initial CJK glyphs render immediately via the PingFang TC /
+// Microsoft JhengHei / Noto Sans CJK TC fallback chain (see globals.css
+// `--font-sans`), then Noto Sans TC swaps in via `display: swap`. Trades a tiny
+// FOUT for ~700ms off the mobile critical path. Onboarding (`app/onboarding/`)
+// still falls back to system-ui via inline styles — accepted minor regression
+// for first-visit perf. (#318 / #319 / #572)
+import '../fonts/noto-sans-tc.css'
 
 // Warm TLS to Supabase before the dashboard's first realtime/auth fetch. Scoped
 // to the authenticated layout (not the root) so the public landing page isn't
@@ -135,7 +133,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <ReconnectRefresh />
           <PartnerActivityToast />
           <AvatarMenuProvider data={avatarMenuData}>
-            <div className={`relative max-w-md mx-auto min-h-dvh ${notoTC.variable}`} style={{ background: 'var(--bg)' }}>
+            <div className="relative max-w-md mx-auto min-h-dvh font-noto-tc" style={{ background: 'var(--bg)' }}>
               {/* Every band that pins to the top of the viewport goes in here,
                   in priority order, so they stack instead of colliding (#1037).
                   A page's own sticky header stays in `{children}` and pins at
