@@ -18,6 +18,16 @@ import { resolve } from 'node:path'
 //   CashTransactions row. getGroupPendingBalanceDelta is computed live at
 //   read time (dashboard), so it surfaces the moment C accepts the invite —
 //   no write required at all.
+//
+// A fresh-verifier pass caught a P2 regression in the first fix attempt:
+// scoping by `transacted_at` / `settled_at` (rather than `created_at`) broke
+// backdating — a row created TODAY (inside the current epoch) but dated
+// yesterday would silently drop out of the balance sum while still showing
+// up in the feed (`lib/db/queries/_predicates.ts#epochClause`, the thing
+// every actual epoch-scoped read uses, filters on `created_at`). The three
+// tests below (backdated settled / backdated pending / backdated settlement)
+// pin that down: all three assert the record COUNTS when it was created in
+// the current epoch, regardless of what calendar date it's dated to.
 // ──────────────────────────────────────────────────────────────────────────
 
 function loadEnvLocal() {
@@ -128,6 +138,45 @@ async function seedDuoGroup(): Promise<SeedRefs> {
   })
 
   return { userAId, userBId, userCId, oldGroupId: group.id, txIds: [] }
+}
+
+/** Duo group whose current epoch started 1 hour ago — for the backdating tests. */
+async function seedRecentDuoGroup(): Promise<SeedRefs> {
+  const userAId = randomUUID()
+  const userBId = randomUUID()
+  const userCId = randomUUID()
+  const epochStartedAt = new Date(Date.now() - 60 * 60 * 1000)
+
+  await db.insert(profiles).values([
+    { id: userAId, displayName: 'TEST_1030_backdate_userA' },
+    { id: userBId, displayName: 'TEST_1030_backdate_userB' },
+    { id: userCId, displayName: 'TEST_1030_backdate_userC' },
+  ])
+
+  const [group] = await db.insert(oikosGroups).values({
+    name: 'TEST_1030_backdate_duo',
+    memberA: userAId,
+    memberB: userBId,
+    currentEpochStartedAt: epochStartedAt,
+  }).returning({ id: oikosGroups.id })
+
+  await db.insert(groupBalance).values({ groupId: group.id, balance: 0, version: 0 })
+
+  await db.insert(groupEpochs).values({
+    groupId: group.id,
+    startedAt: epochStartedAt,
+    memberAId: userAId,
+    memberBId: userBId,
+  })
+
+  return { userAId, userBId, userCId, oldGroupId: group.id, txIds: [] }
+}
+
+/** 'YYYY-MM-DD' for yesterday, local machine time — good enough for a date-only field. */
+function yesterdayYMD(): string {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return d.toISOString().slice(0, 10)
 }
 
 async function cleanup(refs: SeedRefs) {
@@ -257,4 +306,74 @@ describe('balance epoch scoping (#1030)', () => {
     // C's include-pending dashboard view. Fixed: epoch scoping excludes it.
     expect(await getGroupPendingBalanceDelta(oldGroupId)).toBe(0)
   }, 20000)
+
+  it('backdated settled row still counts — created in the current epoch, dated yesterday', async () => {
+    refs = await seedRecentDuoGroup()
+    const { userAId, oldGroupId } = refs
+
+    // Created right now (inside the current epoch, which started 1h ago) but
+    // dated yesterday — the normal "caught up on receipts" flow on day one of
+    // a new chapter. Must still count: created_at, not transacted_at, is the
+    // epoch boundary.
+    mockUserId = userAId
+    const tx = await createTransaction({
+      amount: 1000,
+      description: 'TEST backdated settled',
+      category: 'other',
+      splitType: 'half',
+      payerId: userAId,
+      transactedAt: yesterdayYMD(),
+    })
+    refs.txIds.push(tx.id)
+
+    expect(await getGroupBalance(oldGroupId)).toBe(500)
+  })
+
+  it('backdated pending row still counts in the include-pending view', async () => {
+    refs = await seedRecentDuoGroup()
+    const { userAId, oldGroupId } = refs
+
+    mockUserId = userAId
+    const tx = await createTransaction({
+      amount: 1000,
+      description: 'TEST backdated pending',
+      category: 'other',
+      splitType: 'half',
+      payerId: userAId,
+      transactedAt: yesterdayYMD(),
+      status: 'pending',
+    })
+    refs.txIds.push(tx.id)
+
+    expect(await getGroupPendingBalanceDelta(oldGroupId)).toBe(500)
+  })
+
+  it('backdated settlement still nets the balance down', async () => {
+    refs = await seedRecentDuoGroup()
+    const { userAId, userBId, oldGroupId } = refs
+
+    // A pays 1000 'half' today → balance +500.
+    mockUserId = userAId
+    const tx = await createTransaction({
+      amount: 1000,
+      description: 'TEST backdated settlement setup',
+      category: 'other',
+      splitType: 'half',
+      payerId: userAId,
+      transactedAt: new Date().toISOString().slice(0, 10),
+    })
+    refs.txIds.push(tx.id)
+    expect(await getGroupBalance(oldGroupId)).toBe(500)
+
+    // B settles 500 today, but the settlement is DATED yesterday (backdated,
+    // same "catching up" flow). Must still net the balance to 0.
+    mockUserId = userBId
+    await createSettlement({
+      amount: 500,
+      payerId: userBId,
+      settledAt: yesterdayYMD(),
+    })
+
+    expect(await getGroupBalance(oldGroupId)).toBe(0)
+  })
 })
