@@ -9,6 +9,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **使用者可見變化** — 使用者實際感知到的功能 / 修正，一句話、不寫技術細節
 - **技術變更** — 技術決定、重構、schema migration、breaking change（沒有的話省略）
 
+> **本檔從 1.0.0 起算。** v0.1.0 – v0.17.6（37 個版本）只保留在 git tag，沒有
+> changelog 條目。`docs/superpowers/specs/` 有 21 份 spec 的 `first_shipped_in`
+> 指向這段區間——查不到條目是正常的，不代表 spec 過期，用
+> `git show <tag>` 或 `git log v0.17.6` 追。
+
 ---
 
 ## [Unreleased]
