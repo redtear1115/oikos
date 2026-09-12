@@ -1,5 +1,6 @@
 'use client'
 
+import { CSV_ONLY_ACCEPT } from '@/lib/csvImport/accept'
 import {
   useId,
   useRef,
@@ -15,6 +16,10 @@ interface CsvFileUploadWidgetProps {
   loading?: boolean
   error?: string
   onRetry?: () => void
+  /** File-picker filter. Defaults to CSV text only — pass `IMPORT_ACCEPT`
+   *  (`lib/csvImport/accept`) when the caller runs the full `processFile`
+   *  pipeline and can therefore handle .ofx / .qif too. Note this only filters
+   *  the picker: drag-and-drop hands the file over regardless. */
   accept?: string
   promptText: string
   buttonText: string
@@ -83,7 +88,7 @@ export function CsvFileUploadWidget({
   loading = false,
   error,
   onRetry,
-  accept = '.csv,text/csv',
+  accept = CSV_ONLY_ACCEPT,
   promptText,
   buttonText,
   loadingText,

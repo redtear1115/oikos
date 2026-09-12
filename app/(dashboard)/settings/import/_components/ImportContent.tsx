@@ -121,7 +121,9 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
     if (!parsed) return null
     const remappedRows = parsed.result.rows.map(applyCategoryMap)
     return {
-      source: parsed.source as ImportSource,
+      // No cast: `ImportSource` is the detector's own source list, so whatever
+      // `processFile` detected (incl. ofx / qif) is what the action accepts.
+      source: parsed.source,
       fileName: parsed.file.name,
       totalRows: parsed.result.stats.total,
       rows: remappedRows.map((r) => ({

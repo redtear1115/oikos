@@ -38,7 +38,25 @@ export type KnownCsvSource = (typeof KNOWN_CSV_SOURCES)[number]
 // All MIGRATE_SOURCES slugs that are not KnownCsvSource (no dedicated CSV parser)
 export type MigratePageOnlySource = Exclude<MigrateSlug, KnownCsvSource>
 export type MigrateSource = MigrateSlug | 'unknown'
-export type DetectedSource = KnownCsvSource | 'generic' | 'futari_generic' | 'ofx' | 'qif'
+
+/**
+ * Every source label `processFile` can come back with — the CSV sources plus
+ * the two non-CSV formats. Exported as a *value* because the import server
+ * action validates the label the client posts back against it
+ * (`VALID_SOURCES` in `actions/import.ts`): the client only ever sends what the
+ * detector produced, so any list the server keeps separately is a second gate
+ * that silently drifts. #1088 was exactly that — `.ofx` / `.qif` parsed fine
+ * client-side and then died on「未支援的匯入來源」at submit.
+ */
+export const DETECTED_SOURCES = [
+  ...KNOWN_CSV_SOURCES,
+  'generic',
+  'futari_generic',
+  'ofx',
+  'qif',
+] as const
+
+export type DetectedSource = (typeof DETECTED_SOURCES)[number]
 
 /**
  * Best-effort source detection by header signature. Returns `null` rather

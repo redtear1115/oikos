@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { processBuffer } from '@/lib/csvImport'
+import { detectFormat, processBuffer, processFile } from '@/lib/csvImport'
 
 const enc = new TextEncoder()
 function bytes(s: string): ArrayBuffer {
@@ -129,5 +129,54 @@ describe('processBuffer — auto-detect routing', () => {
     expect(out.rows[0]!.originalCurrency).toBeUndefined()
     expect(out.rows[2]!.originalCurrency).toBe('JPY')
     expect(out.rows[2]!.originalAmount).toBe(1200)
+  })
+})
+
+describe('processFile — filename format hint (#1088)', () => {
+  // The import wizard ALWAYS passes a source (the source buttons are a required
+  // choice), so the hint has to survive an explicit CSV source or it is dead
+  // code on the only path that has a filename at all.
+  const WIZARD = { source: 'honeydue' } as const
+
+  // QIF without the leading `!Type:` line: the content sniffer cannot tell it
+  // from CSV, which is precisely why the extension hint exists.
+  const HEADERLESS_QIF = 'D01/15/2026\nT-500.00\nMCoffee\nLFood:Dining\n^\n'
+
+  it('sniffs the headerless QIF as CSV — the hint is the only signal left', () => {
+    expect(detectFormat(HEADERLESS_QIF)).toBe('csv')
+  })
+
+  it('routes a .qif through the QIF parser even when the wizard forced a CSV source', async () => {
+    const out = await processFile(new File([HEADERLESS_QIF], 'statement.qif'), WIZARD)
+    expect(out.source).toBe('qif')
+    expect(out.rows).toHaveLength(1)
+    expect(out.rows[0]!.amount).toBe(500)
+    expect(out.rows[0]!.type).toBe('expense')
+  })
+
+  it('routes a .ofx through the OFX parser even when the wizard forced a CSV source', async () => {
+    const ofx = [
+      'OFXHEADER:100',
+      '',
+      '<OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><CURDEF>TWD',
+      '<BANKTRANLIST>',
+      '<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260115<TRNAMT>-250.00<FITID>T1<MEMO>便利商店</STMTTRN>',
+      '</BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>',
+    ].join('\n')
+    const out = await processFile(new File([ofx], 'statement.ofx'), WIZARD)
+    expect(out.source).toBe('ofx')
+    expect(out.rows).toHaveLength(1)
+  })
+
+  it('leaves a real CSV on the CSV path — the hint only fires on .ofx / .qif', async () => {
+    const csv = 'Date,Name,Category,Amount,Account\n1/15/2026,Costco,Groceries,-250,Joint\n'
+    const out = await processFile(new File([csv], 'honeydue-export.csv'), WIZARD)
+    expect(out.source).toBe('honeydue')
+    expect(out.rows).toHaveLength(1)
+  })
+
+  it('does not second-guess a caller that already asked for ofx/qif', async () => {
+    const out = await processFile(new File([HEADERLESS_QIF], 'weird-name.csv'), { source: 'qif' })
+    expect(out.source).toBe('qif')
   })
 })
