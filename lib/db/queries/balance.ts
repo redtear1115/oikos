@@ -18,11 +18,12 @@ type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
  * cross-epoch balance would show a debt no one can settle or edit, since
  * `epoch-readonly` only allows writes into the current epoch.
  *
- * `created_at`, not `transacted_at` / `settled_at` — this deliberately
- * diverges from the (incorrect) claim in CLAUDE.md that epochs are scoped by
- * `transacted_at`. Every actual epoch-scoped read (`lib/db/queries/_predicates.ts
- * #epochClause`, 12 call sites across transactions.ts / incomes.ts / asset.ts
- * / insurance.ts) filters on `created_at`, and nothing constrains
+ * `created_at`, not `transacted_at` / `settled_at` — epochs are scoped by
+ * "when was this recorded", which is now what CLAUDE.md's Domain Model says
+ * too (it used to claim `transacted_at`; corrected in #1050).
+ * Every actual epoch-scoped read (`lib/db/queries/_predicates.ts
+ * #epochClause`, 16 call sites across transactions.ts / insurance.ts /
+ * asset.ts / incomes.ts) filters on `created_at`, and nothing constrains
  * `transactedAt` to fall inside the current epoch — `lib/validators.ts` only
  * checks its format, and both manual backdating (recording today, date picker
  * set to yesterday — completely normal on day one of a new chapter) and CSV import

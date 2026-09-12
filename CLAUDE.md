@@ -146,7 +146,16 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 
 - Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type 自己定義（`CarDetails.primary_user_id` / `HouseDetails.owner` / `InsuranceDetails.policy_holder_user_id`）。
 - CashTransaction 可 optional 關聯 `asset_id`（哪個愛物的支出）+ `fuel_log_id`（加油雙寫）+ `trip_id`（屬於哪段旅行）。
-- Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 `transacted_at` 落在哪個 epoch 來歸屬章節。
+- Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 **`created_at`** 落在哪個 epoch 來歸屬章節——是「何時被記下」，不是「何時發生」。章節是關係的分期，補記昨天的收據、匯入十年前的 CSV，都仍屬於當下這段關係。單一入口 `lib/db/queries/_predicates.ts#epochClause`（16 個 call site：transactions.ts 6、insurance.ts 5、asset.ts 3、incomes.ts 2，全部傳 `created_at`）＋ `lib/db/queries/balance.ts` 的 inline SQL。
+- **兩個時間戳分工**——選錯不會報錯，只會靜默算少：
+
+  | 問題 | 用哪個 | 入口 |
+  |---|---|---|
+  | 這筆屬於哪個章節？ | `created_at` | `epochClause` |
+  | 那個月花了／收了多少？ | CashTransactions `transacted_at`／Settlements `settled_at`／IncomeTransactions `occurred_at` | `dateRangeClause` / `dateColumnClause`、`compute_monthly_review_snapshot`（`drizzle/0061_*.sql`） |
+
+  `transactedAt` **沒有**「必須落在當前 epoch」的約束（`lib/validators.ts` 只驗格式）：手動 backdating、CSV 匯入（`actions/import.ts:225` 用來源檔日期）、定期支出確認（`actions/recurringExpense.ts` 用 `proposedDate`）都會在當前 epoch 寫入 `transacted_at` 很舊的 row。
+- **拿 `transacted_at` 當 epoch 邊界的失效長這樣**：feed 照常顯示那些 row、balance 把它們整批漏掉（剛匯入的帳本 balance 讀 0），**全程沒有任何錯誤訊息**。#1030 第一輪就是照舊版文件這樣寫而被 verifier 判 REFUTED。理由全文見 `lib/db/queries/balance.ts` 開頭 docstring。
 
 ### 分類色 token
 
