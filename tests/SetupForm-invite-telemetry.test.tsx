@@ -1,0 +1,165 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { zhTW } from '@/lib/i18n/locales/zh-TW'
+
+// Regression coverage for #1015: named invite-funnel events replacing the
+// autocapture $el_text reverse-engineering (which breaks on copy changes and
+// only ever covered zh-TW). See app/setup/SetupForm.tsx + InviteQr.tsx.
+
+vi.mock('@/lib/analytics/track', () => ({ track: vi.fn() }))
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}))
+vi.mock('@/actions/group', () => ({ createGroup: vi.fn() }))
+vi.mock('@/actions/invite', () => ({ createInvite: vi.fn() }))
+vi.mock('@/lib/share', () => ({ shareInviteLink: vi.fn() }))
+vi.mock('@/lib/install-guide', () => ({ isStandalone: () => true }))
+
+import SetupForm from '@/app/setup/SetupForm'
+import { track as trackMock } from '@/lib/analytics/track'
+import { createGroup } from '@/actions/group'
+import { createInvite } from '@/actions/invite'
+import { shareInviteLink } from '@/lib/share'
+
+/** Drives the form from the name step all the way to the invite step. */
+async function renderAtInviteStep() {
+  vi.mocked(createGroup).mockResolvedValue({ id: 'g1', name: '我們倆' } as never)
+  vi.mocked(createInvite).mockResolvedValue('https://futari.example/invite/tok123')
+
+  render(<SetupForm t={zhTW} />)
+
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: '我們倆' } })
+  fireEvent.click(screen.getByText('下一步'))
+  fireEvent.click(await screen.findByText(zhTW.trust.bilateral.inviter.cta))
+
+  await screen.findByText(zhTW.setup.invite.heading)
+}
+
+// clipboard is undefined in jsdom by default; stub per-test.
+function stubClipboard(writeText: (text: string) => Promise<void>) {
+  Object.assign(navigator, { clipboard: { writeText } })
+}
+
+describe('SetupForm invite telemetry (#1015)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('fires invite_qr_revealed once the QR successfully renders', async () => {
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.qrReveal))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_qr_revealed')
+    })
+  })
+
+  it('fires invite_link_copied with via: copy_button on successful copy', async () => {
+    stubClipboard(vi.fn().mockResolvedValue(undefined))
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'copy_button' })
+    })
+    expect(await screen.findByText(zhTW.setup.invite.copied)).toBeTruthy()
+  })
+
+  it('fires invite_copy_failed (not an unhandled rejection) when clipboard rejects, and still toasts', async () => {
+    stubClipboard(vi.fn().mockRejectedValue(new Error('denied')))
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'copy_button' })
+    })
+    expect(await screen.findByText(zhTW.setup.invite.shareFailed)).toBeTruthy()
+  })
+
+  it('fires invite_link_copied with via: share_button when shareInviteLink resolves "copied"', async () => {
+    vi.mocked(shareInviteLink).mockResolvedValue('copied')
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.share))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'share_button' })
+    })
+    expect(trackMock).not.toHaveBeenCalledWith('invite_link_shared', expect.anything())
+  })
+
+  it('fires invite_link_shared (no via) when shareInviteLink resolves "shared"', async () => {
+    vi.mocked(shareInviteLink).mockResolvedValue('shared')
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.share))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_link_shared')
+    })
+  })
+
+  it('fires invite_copy_failed with via: share_button when shareInviteLink throws', async () => {
+    vi.mocked(shareInviteLink).mockRejectedValue(new Error('nope'))
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.share))
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'share_button' })
+    })
+    expect(await screen.findByText(zhTW.setup.invite.shareFailed)).toBeTruthy()
+  })
+
+  it('invite_skipped fires with attempted: false on a direct skip', async () => {
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
+
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: false })
+  })
+
+  it('invite_skipped fires with attempted: true after a successful copy', async () => {
+    stubClipboard(vi.fn().mockResolvedValue(undefined))
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_link_copied', { via: 'copy_button' })
+    })
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
+
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: true })
+  })
+
+  it('invite_skipped fires with attempted: true after only revealing the QR', async () => {
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.qrReveal))
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_qr_revealed')
+    })
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
+
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: true })
+  })
+
+  it('invite_skipped fires with attempted: false when a copy attempt failed (no successful send)', async () => {
+    stubClipboard(vi.fn().mockRejectedValue(new Error('denied')))
+    await renderAtInviteStep()
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.copy))
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith('invite_copy_failed', { via: 'copy_button' })
+    })
+
+    fireEvent.click(screen.getByText(zhTW.setup.invite.skip))
+
+    expect(trackMock).toHaveBeenCalledWith('invite_skipped', { attempted: false })
+  })
+})

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createGroup } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
+import { track } from '@/lib/analytics/track'
 import { isStandalone } from '@/lib/install-guide'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
@@ -34,6 +35,11 @@ export default function SetupForm({ t }: { t: Translations }) {
   const [toast, setToast] = useState<string | null>(null)
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Whether the user has, at any point this session, successfully surfaced the
+  // invite (revealed the QR, copied the link, or shared it) before hitting
+  // skip. Answers "did they try before bailing?" — the split #1015 is built
+  // around — with a single event instead of a fragile cross-event join.
+  const attemptedRef = useRef(false)
 
   useEffect(() => {
     return () => {
@@ -74,16 +80,33 @@ export default function SetupForm({ t }: { t: Translations }) {
 
   const handleCopy = async () => {
     if (!inviteUrl) return
-    await navigator.clipboard.writeText(inviteUrl)
-    flashToast(invite.copied)
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      attemptedRef.current = true
+      track('invite_link_copied', { via: 'copy_button' })
+      flashToast(invite.copied)
+    } catch {
+      // Clipboard API can reject in a non-secure context or when permission
+      // is denied — surface it instead of leaving an unhandled rejection with
+      // no user-visible feedback (see #1015).
+      track('invite_copy_failed', { via: 'copy_button' })
+      flashToast(invite.shareFailed)
+    }
   }
 
   const handleShare = async () => {
     if (!inviteUrl) return
     try {
       const result = await shareInviteLink(inviteUrl)
-      if (result === 'copied') flashToast(invite.copied)
+      attemptedRef.current = true
+      if (result === 'copied') {
+        track('invite_link_copied', { via: 'share_button' })
+        flashToast(invite.copied)
+      } else {
+        track('invite_link_shared')
+      }
     } catch {
+      track('invite_copy_failed', { via: 'share_button' })
       flashToast(invite.shareFailed)
     }
   }
@@ -112,7 +135,10 @@ export default function SetupForm({ t }: { t: Translations }) {
     router.push('/dashboard')
   }
 
-  const handleSkip = () => goToDashboard()
+  const handleSkip = () => {
+    track('invite_skipped', { attempted: attemptedRef.current })
+    goToDashboard()
+  }
 
   const installGuideJsx = (
     <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} t={t} />
@@ -193,7 +219,11 @@ export default function SetupForm({ t }: { t: Translations }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <InviteQr url={inviteUrl} t={invite} />
+            <InviteQr
+              url={inviteUrl}
+              t={invite}
+              onReveal={() => { attemptedRef.current = true }}
+            />
             <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
               {invite.qrHint}
             </p>
