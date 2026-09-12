@@ -610,6 +610,14 @@ export type Translations = {
     cancel: string
   }
 
+  shellUpdateNotice: {
+    /** Non-blocking strip shown only inside a native shell older than
+     *  `MIN_SHELL_VERSION`. Neutral and dismissible — the app still works. */
+    message: string
+    /** Accessible label for the × dismiss button. */
+    dismissAriaLabel: string
+  }
+
   splitRatioSection: {
     /** Inline label suffix for viewer. `{name}` replaced with displayName. */
     meSuffix: string
@@ -2906,6 +2914,11 @@ export const zhTW: Translations = {
   accountDeletionBanner: {
     message: '你的帳號預計於 {date} 移除。',
     cancel: '取消刪除',
+  },
+
+  shellUpdateNotice: {
+    message: 'App 版本較舊，更新後可以使用最新的功能。',
+    dismissAriaLabel: '關閉提示',
   },
 
   splitRatioSection: {

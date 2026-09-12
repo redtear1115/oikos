@@ -463,6 +463,11 @@ export const ja: Translations = {
     cancel: '削除を取り消す',
   },
 
+  shellUpdateNotice: {
+    message: 'アプリのバージョンが古くなっています。更新すると最新の機能をご利用いただけます。',
+    dismissAriaLabel: '通知を閉じる',
+  },
+
   splitRatioSection: {
     meSuffix: '（自分）',
     partnerSuffix: '（相手）',
