@@ -11,6 +11,20 @@ export type EntrySource =
 
 export type MigrateFromSource = 'honeydue' | 'spendee' | 'cwmoney'
 
+/**
+ * Which client flow produced an auth success — the axis `signed_in` / `signed_up`
+ * were missing, which is why every conversion looked alike in PostHog (#998).
+ * Named after `sign_in_failed`'s existing `path` property so success and failure
+ * can be sliced the same way.
+ *
+ * - `web_oauth` — everything that lands on /auth/callback. That is browser web
+ *   *and* Android's in-app-browser OAuth: `buildAuthCallbackUrl` carries no
+ *   platform hint, so the callback genuinely cannot tell the two apart.
+ * - `ios_native` — Apple's native sheet via `signInWithIdToken`, which skips the
+ *   callback entirely and reports through `recordNativeAuthConversion`.
+ */
+export type AuthPath = 'web_oauth' | 'ios_native'
+
 /** Derive the analytics entry-source axis from the `from` query param. */
 export function entrySourceFromParam(from: string | null | undefined): EntrySource {
   switch (from) {
