@@ -58,6 +58,7 @@ export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, tr
           group_full: invite.errors.groupFull,
           already_member: invite.errors.alreadyMember,
           already_in_duo: invite.errors.alreadyInDuo.replace('{partner}', invite.fallbackInviter),
+          inviter_not_member: invite.errors.inviterNotMember,
         }
         setError(errorMap[code as InviteAcceptError] ?? invite.errors.unknown)
       }

@@ -1633,6 +1633,7 @@ export const zhCN: Translations = {
       groupFull: '此账本已有两位成员',
       alreadyMember: '你已经是此账本的成员',
       alreadyInDuo: '你已经和 {partner} 共用一本账本，要先离开才能加入新的。',
+      inviterNotMember: '发出这份邀请的人已经不在这本账本里，链接不再有效。',
       unknown: '无法加入账本',
     },
     meta: {

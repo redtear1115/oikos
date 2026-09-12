@@ -56,7 +56,7 @@ export default function SetupForm({ t }: { t: Translations }) {
     startTransition(async () => {
       try {
         const g = await createGroup(trimmed)
-        const url = await createInvite(g.id)
+        const url = await createInvite()
         setGroup({ id: g.id, name: g.name })
         setInviteUrl(url)
         setStep('invite')
