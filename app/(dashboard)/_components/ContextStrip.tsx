@@ -94,8 +94,23 @@ export function ContextStrip({
     const endLabel = epochEndedAt ? fmt(epochEndedAt) : ''
 
     return (
+      /* Sticky, so it has to pay the status-bar inset itself (#1035). The bar is
+         ~35px tall and the notch inset is 47px: pinned without an inset, the whole
+         sentence — and the only way out of the past chapter — sits behind the
+         clock. `--safe-top` can't help here, it's already zeroed for everything
+         below a shell top strip and, more fundamentally, this bar is only the
+         topmost element *while pinned*; CSS has no cross-browser "is stuck" test
+         (same exception as the /records L1 header, #1021).
+
+         The cost is bigger here than on /records: BrandHeader always sits above
+         this strip, so while scrolled to the top the inset is paid twice and the
+         dark bar grows by ~37px on notched devices. Pinning the shell top strip
+         instead would collapse both cases into one, but sticky elements don't
+         yield to each other — this bar would then need the strip's runtime
+         height — so that's its own ticket, not a padding change.
+         10px = the py-2.5 baseline this bar has always used. */
       <div
-        className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-2.5"
+        className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 pt-[max(env(safe-area-inset-top),10px)] pb-2.5"
         style={{ background: 'var(--ink)', color: 'var(--surface)' }}
         role="status"
       >

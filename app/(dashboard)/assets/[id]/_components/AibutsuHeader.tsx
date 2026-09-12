@@ -170,8 +170,16 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
   const t = useTranslations()
   const hasSiblings = siblings && siblings.length > 0
   return (
+    /* Sticky, so it keeps paying the status-bar inset itself rather than reading
+       --safe-top: once pinned, any shell top strip above it has scrolled away and
+       this row is the topmost thing under the notch again, and CSS has no
+       cross-browser "is currently stuck" test (#1021, #1035). 48px is this
+       header's own top spacing — it used to be a bare pt-12 that happened to be
+       1px more than the iPhone notch inset, which is a coincidence, not a
+       guarantee. Stating the inset separately keeps the row clear of a deeper
+       one. */
     <div
-      className="sticky top-0 z-20 px-4 pt-12"
+      className="sticky top-0 z-20 px-4 pt-[max(env(safe-area-inset-top),48px)]"
       style={{
         background: tint.bg,
         paddingBottom: hasSiblings ? 10 : 12,
