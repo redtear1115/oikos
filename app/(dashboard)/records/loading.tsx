@@ -2,14 +2,11 @@ export default function Loading() {
   return (
     <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
       {/* L1: title + 定期 shortcut — mirrors RecordsList's L1Header so the real
-          page paints over the skeleton with no vertical shift. That includes
-          the raw env() inset: the real header is sticky and keeps its own inset
-          (see RecordsList), so the skeleton must not collapse to --safe-top or
-          the title would jump when a shell top strip is on screen. (#1021) */}
-      <div
-        className="px-5 pb-3 flex items-center justify-between"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
-      >
+          page paints over the skeleton with no vertical shift. Both read
+          --safe-top: whatever the shell top stack is holding, it holds it for
+          the skeleton too, so the two agree without either of them knowing what
+          is up there. (#1021 / #1037) */}
+      <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
         <div className="h-7 w-20 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
         <div className="h-4 w-12 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.5 }} />
       </div>

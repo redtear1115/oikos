@@ -1,13 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { getOfflinePref } from '@/lib/offline/preference'
-import { exitPastEpoch } from '@/actions/epoch-view'
-import { useTranslations, useLocale } from '@/lib/i18n/client'
-import { formatDateShort } from '@/lib/format-date'
+import { useTranslations } from '@/lib/i18n/client'
 import type { ActiveTripBannerTrip } from '@/app/(dashboard)/dashboard/_components/ActiveTripBanner'
 import { UI_PREF_COOKIE, writeBoolCookie } from '@/lib/uiPrefsCookie'
 
@@ -22,9 +19,15 @@ interface Props {
 /**
  * Unified contextual strip — renders at most one banner variant in priority order:
  *   1. offline   — device is offline AND offline-pref is on
- *   2. past-epoch — viewer is pinned to a past chapter
+ *   2. past-epoch — viewer is pinned to a past chapter; the band itself moved to
+ *      the shell top stack (`PastChapterBar`, #1037), only the suppression of
+ *      everything below it is still decided here
  *   3. partner-left — solo mode and the group previously had a partner
  *   4. active-trip — there are active trips (prop-driven)
+ *
+ * Nothing in here pins to the top any more: a viewport-level `sticky top-0`
+ * belongs in the shell top stack, which is the only element that can guarantee
+ * it does not land on top of another one.
  *
  * Renders nothing when none of the conditions apply.
  */
@@ -35,9 +38,7 @@ export function ContextStrip({
   initialTripCollapsed,
 }: Props) {
   const t = useTranslations()
-  const locale = useLocale()
-  const router = useRouter()
-  const { isPast, isSolo, hadPartner, epochStartedAt, epochEndedAt } = useMember()
+  const { isPast, isSolo, hadPartner } = useMember()
   const isOnline = useOnlineStatus()
 
   // getOfflinePref reads localStorage, which is safe here because this is a
@@ -46,19 +47,6 @@ export function ContextStrip({
 
   const [partnerDismissed, setPartnerDismissed] = useState(initialPartnerDismissed)
   const [tripCollapsed, setTripCollapsed] = useState(initialTripCollapsed)
-
-  const [pending, startTransition] = useTransition()
-
-  const handleExitPastEpoch = () => {
-    startTransition(async () => {
-      try {
-        await exitPastEpoch()
-        router.refresh()
-      } catch {
-        // action can throw on network failure; pending state clears automatically
-      }
-    })
-  }
 
   const handleDismissPartner = () => {
     writeBoolCookie(UI_PREF_COOKIE.partnerLeftDismissed, true)
@@ -88,49 +76,19 @@ export function ContextStrip({
   }
 
   // ─── Priority 2: past-epoch ───────────────────────────────────────────────
-  if (isPast) {
-    const fmt = (iso: string) => formatDateShort(iso, locale, { withYear: true })
-    const startLabel = epochStartedAt ? fmt(epochStartedAt) : ''
-    const endLabel = epochEndedAt ? fmt(epochEndedAt) : ''
-
-    return (
-      /* Sticky, so it has to pay the status-bar inset itself (#1035). The bar is
-         ~35px tall and the notch inset is 47px: pinned without an inset, the whole
-         sentence — and the only way out of the past chapter — sits behind the
-         clock. `--safe-top` can't help here, it's already zeroed for everything
-         below a shell top strip and, more fundamentally, this bar is only the
-         topmost element *while pinned*; CSS has no cross-browser "is stuck" test
-         (same exception as the /records L1 header, #1021).
-
-         The cost is bigger here than on /records: BrandHeader always sits above
-         this strip, so while scrolled to the top the inset is paid twice and the
-         dark bar grows by ~37px on notched devices. Pinning the shell top strip
-         instead would collapse both cases into one, but sticky elements don't
-         yield to each other — this bar would then need the strip's runtime
-         height — so that's its own ticket, not a padding change.
-         10px = the py-2.5 baseline this bar has always used. */
-      <div
-        className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 pt-[max(env(safe-area-inset-top),10px)] pb-2.5"
-        style={{ background: 'var(--ink)', color: 'var(--surface)' }}
-        role="status"
-      >
-        <div className="text-xs leading-tight">
-          {t.pastTimes.bannerHeading
-            .replace('{start}', startLabel)
-            .replace('{end}', endLabel)}
-        </div>
-        <button
-          type="button"
-          onClick={handleExitPastEpoch}
-          disabled={pending}
-          className="text-xs font-medium underline-offset-2 hover:underline cursor-pointer disabled:opacity-50 shrink-0"
-          style={{ background: 'transparent', color: 'var(--surface)', border: 'none' }}
-        >
-          {t.pastTimes.bannerExitCta}
-        </button>
-      </div>
-    )
-  }
+  // The band itself now lives in the shell top stack (`PastChapterBar`, #1037)
+  // so it is pinned on every dashboard page instead of only this one. What stays
+  // here is the suppression it always implied: in a frozen chapter there is
+  // nothing to invite a partner into and no trip to be in the middle of, so the
+  // lower-priority variants still do not render.
+  //
+  // #1035 had just taught this bar to pay `env(safe-area-inset-top)` itself,
+  // because while pinned it was the topmost element and CSS has no "am I stuck"
+  // test. Moving it into the permanently-pinned stack removes the question
+  // rather than answering it, so that inset call goes with it — as
+  // `max(var(--safe-top),10px)`, same 10px baseline, now paid only when nothing
+  // is above it. The markup is otherwise carried over unchanged.
+  if (isPast) return null
 
   // ─── Priority 3: partner-left ─────────────────────────────────────────────
   if (showPartnerLeft) {
