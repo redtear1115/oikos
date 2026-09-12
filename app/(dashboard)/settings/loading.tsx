@@ -7,7 +7,7 @@ export default function Loading() {
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* Header: serif title + subtitle (matches SettingsContent header block). */}
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4">
+      <div className="px-5 pt-[max(var(--safe-top),24px)] pb-4">
         <Bar className="h-7 w-20" tone="strong" />
         <Bar className="h-3 w-44 mt-2" tone="soft" />
       </div>

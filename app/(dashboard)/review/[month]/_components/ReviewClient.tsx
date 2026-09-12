@@ -77,7 +77,7 @@ export function ReviewClient({
     <div className="relative min-h-dvh pb-[120px]">
       <header
         className="px-4 flex items-center justify-between"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
+        style={{ paddingTop: 'max(var(--safe-top), 24px)', paddingBottom: 8 }}
       >
         <button
           type="button"

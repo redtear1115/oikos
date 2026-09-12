@@ -4,7 +4,7 @@ export default function Loading() {
       {/* BrandHeader skeleton: safe-area top + two avatar circles */}
       <div
         className="flex items-center justify-between px-5 pb-2"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
+        style={{ paddingTop: 'max(var(--safe-top), 24px)' }}
       >
         <div className="h-8 w-8 rounded-full animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
         <div className="h-5 w-16 rounded-full animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />

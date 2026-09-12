@@ -89,16 +89,17 @@ export function ShellUpdateNotice() {
   }
 
   return (
-    <div
-      className="flex items-center justify-between gap-3 px-5 py-3 text-sm bg-surface text-ink border-b border-hairline"
-      role="status"
-    >
-      <span>{t.shellUpdateNotice.message}</span>
+    // `shell-top-strip` (globals.css): this notice is the first thing in the
+    // dashboard shell, so it owns the status-bar inset and cancels it for
+    // whatever renders below — the deletion banner or the page header. (#1021)
+    <div className="shell-top-strip flex items-center justify-between gap-3 px-5 text-sm bg-surface text-ink border-b border-hairline">
+      {/* Live region on the sentence, not on the row that holds the control. */}
+      <span role="status">{t.shellUpdateNotice.message}</span>
       <button
         type="button"
         onClick={handleDismiss}
         aria-label={t.shellUpdateNotice.dismissAriaLabel}
-        className="shrink-0 text-title leading-none bg-transparent border-0 cursor-pointer p-1 text-ink-3"
+        className="shrink-0 inline-flex items-center justify-center min-h-11 min-w-11 -mr-2 text-title leading-none bg-transparent border-0 cursor-pointer text-ink-3"
       >
         ×
       </button>
