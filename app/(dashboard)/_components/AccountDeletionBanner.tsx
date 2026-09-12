@@ -21,18 +21,21 @@ export function AccountDeletionBanner({ requestedAt }: { requestedAt: string }) 
   }
 
   return (
-    <div
-      className="flex items-center justify-between gap-3 px-5 py-3 text-sm"
-      style={{ background: 'var(--surface)', borderBottom: '1px solid var(--hairline)', color: 'var(--ink)' }}
-      role="status"
-    >
-      <span>{t.accountDeletionBanner.message.replace('{date}', removalDate)}</span>
+    // `shell-top-strip` (globals.css) is what makes this reachable on a notched
+    // phone: as the first element in the shell top stack, the banner absorbs the
+    // status-bar inset and cancels it for every band below. And because the
+    // stack is sticky, the cancel button for a 14-day destructive countdown does
+    // not scroll away — which is the whole reason the stack exists. (#1021/#1037)
+    <div className="shell-top-strip flex items-center justify-between gap-3 px-5 text-sm bg-surface text-ink border-b border-hairline">
+      {/* The live region is the sentence only. A status region that also wraps
+          the control tends to get re-announced as one blob on re-render, and the
+          escape hatch out of a destructive countdown should read as a button. */}
+      <span role="status">{t.accountDeletionBanner.message.replace('{date}', removalDate)}</span>
       <button
         type="button"
         onClick={handleCancel}
         disabled={pending}
-        className="shrink-0 text-sm font-medium underline disabled:opacity-50 cursor-pointer"
-        style={{ color: 'var(--destructive)' }}
+        className="shrink-0 inline-flex items-center min-h-11 px-2 -mr-2 text-sm font-medium underline disabled:opacity-50 cursor-pointer bg-transparent border-0 text-destructive"
       >
         {t.accountDeletionBanner.cancel}
       </button>

@@ -89,16 +89,26 @@ export function ShellUpdateNotice() {
   }
 
   return (
-    <div
-      className="flex items-center justify-between gap-3 px-5 py-3 text-sm bg-surface text-ink border-b border-hairline"
-      role="status"
-    >
-      <span>{t.shellUpdateNotice.message}</span>
+    // `shell-top-strip` (globals.css): this notice is the first band in the
+    // shell top stack, so it owns the status-bar inset and cancels it for
+    // whatever renders below — the deletion banner, the past-chapter bar, the
+    // page header. (#1021)
+    //
+    // It shares the class, and therefore the sticky stack, with the deletion
+    // banner. Splitting them so this gentler notice scrolls away was considered
+    // and dropped (#1037): the two would then be in different containers, the
+    // stack would have to work out whether it is currently the topmost element
+    // once the notice scrolled past, and that is the unanswerable question the
+    // stack was built to retire. The notice stays bounded the way #991 intended
+    // it to be — by being dismissable in one tap, not by scrolling out of reach.
+    <div className="shell-top-strip flex items-center justify-between gap-3 px-5 text-sm bg-surface text-ink border-b border-hairline">
+      {/* Live region on the sentence, not on the row that holds the control. */}
+      <span role="status">{t.shellUpdateNotice.message}</span>
       <button
         type="button"
         onClick={handleDismiss}
         aria-label={t.shellUpdateNotice.dismissAriaLabel}
-        className="shrink-0 text-title leading-none bg-transparent border-0 cursor-pointer p-1 text-ink-3"
+        className="shrink-0 inline-flex items-center justify-center min-h-11 min-w-11 -mr-2 text-title leading-none bg-transparent border-0 cursor-pointer text-ink-3"
       >
         ×
       </button>

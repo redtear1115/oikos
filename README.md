@@ -3,10 +3,20 @@
 > 家庭記帳工具，固定兩人（夫妻／伴侶）使用。
 > 對使用者顯示為 **Futari**；codebase 用 Oikos。
 
-Futari 是給兩人（夫妻／伴侶）的私密記帳 PWA，支援雙人支出分攤、愛物（車 / 房 / 子女 / 寵物 / 植物 / 保險 / 物品）管理與月度回顧。私人家庭工具，非 SaaS — 所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first。
+Futari 是私密記帳 PWA：兩人分攤支出、愛物（車 / 房 / 子女 / 寵物 / 植物 / 保險 / 物品）、月度回顧。私人家庭工具，不是 SaaS——所有功能圍繞「這筆錢怎麼分、誰欠誰多少」。Mobile-first。
 
 > 線上服務：<https://futari.southern-light.dev/> — v1.0 起對外有公開 landing（繁中／簡中／英／日），登入後是兩人專屬空間。
-> 最新版本與變更紀錄請見 [CHANGELOG.md](CHANGELOG.md)。開發脈絡見 [CLAUDE.md](CLAUDE.md)。
+> 最新版本與變更紀錄請見 [CHANGELOG.md](CHANGELOG.md)。
+
+---
+
+## 四份文件，各管一件事
+
+這份 README 講怎麼把專案跑起來、怎麼部署、發過哪些版。其他三份：
+
+- [CLAUDE.md](CLAUDE.md) — 要動 code 之前看的那份。架構、domain model、觀測的限制、協作慣例。
+- [PRODUCT.md](PRODUCT.md) — Futari 為誰而做、刻意不做什麼、各個 surface 的意圖與「不是 KPI 的數字」。寫文案、判讀數據之前先讀它。
+- [DESIGN.md](DESIGN.md) — 色票、字級、元件、Do's/Don'ts。由 `/impeccable document` 掃 `app/globals.css` 產生，不要手改。
 
 ---
 
@@ -169,6 +179,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.5.10](CHANGELOG.md#1510---2026-09-12) | 看得見、按得到、算得準 · 月度回顧修復 · safe-area 結構解 |
 | [v1.5.9](CHANGELOG.md#159---2026-09-12) | 讓伴侶真的進得來 · 面對面掃碼 · 邀請授權修補 |
 | [v1.5.8](CHANGELOG.md#158---2026-09-12) | 自然搜尋體質 · sitemap 說實話 · 搬家教學收摺 |
 | [v1.5.7](CHANGELOG.md#157---2026-09-12) | 三平台觀測維度 · platform super property |

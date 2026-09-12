@@ -132,6 +132,19 @@
   --switch-thumb-bg:     var(--surface);
   --switch-thumb-shadow: 0 1px 3px rgba(58, 36, 25, 0.20);
 
+  /* Status-bar inset that the topmost element on screen has to absorb (#1021).
+   * Page headers read this instead of calling env() themselves, so that a shell
+   * top strip (update notice / account-deletion banner) can take the inset over
+   * and cancel it for everything below — see `.shell-top-strip`. Defaults to the
+   * real inset, which is what every header got before the strips existed. */
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  /* Measured height of the shell top stack (#1037). `ShellTopStack` writes the
+   * real number here from a ResizeObserver; a page's own sticky header reads it
+   * as its `top`, so it pins directly below the stack instead of underneath it.
+   * 0px is both the no-JS answer and the correct one for an empty stack. */
+  --top-stack-h: 0px;
+
   /* Typography scale — P3-1 */
   --fs-xs:        12px;   /* extra small: labels, metadata (even-px unify #876, was 11) */
   --fs-sm:        14px;   /* small: secondary text, captions (even-px unify #876, was 13) */
@@ -315,6 +328,42 @@ body {
   transform: translateX(20px);
 }
 
+/* Shell top stack (#1037) — the one place in the dashboard where something is
+ * allowed to pin itself to the top of the viewport.
+ *
+ * It holds every shell-level band, in render order: the update notice (#991),
+ * the account-deletion banner (#1021), the past-chapter bar. The stack is
+ * `sticky top-0` as a whole, so its children stack vertically and stay stacked
+ * while scrolling — sticky siblings do not yield to each other, which is why
+ * three separate `top-0` elements used to land on top of one another.
+ *
+ * Two consequences make the rest of the rules below fall out:
+ *
+ * 1. Whatever is first in the stack is permanently the topmost element on
+ *    screen, so it — and only it — pays the status-bar inset. `.shell-top-strip
+ *    ~ *` zeroes --safe-top for every later band, and `.shell-top-stack:has(> *)
+ *    ~ *` does the same for `{children}`, so the inset is paid exactly once no
+ *    matter which combination renders.
+ * 2. A page's own sticky header no longer has to guess whether it is currently
+ *    the topmost element. It pins at `top: var(--top-stack-h)` (published by
+ *    ShellTopStack) and reads --safe-top like every other header: real inset
+ *    when the stack is empty, zero when it isn't. That retires the "sticky
+ *    headers keep their own env()" exception #1021 and #1035 had to live with,
+ *    and with it the double-paid inset underneath BrandHeader.
+ *
+ * An empty stack is height 0 and matches no `:has(> *)`, so a page with no
+ * shell band behaves exactly as it did before the stack existed. */
+.shell-top-strip {
+  padding-top: max(var(--safe-top), 0.75rem);  /* 0.75rem = the py-3 baseline both strips shared */
+  padding-bottom: 0.75rem;
+}
+.shell-top-strip ~ * {
+  --safe-top: 0px;
+}
+.shell-top-stack:has(> *) ~ * {
+  --safe-top: 0px;
+}
+
 @keyframes rt-flash {
   0%   { background: var(--realtime-flash); }
   100% { background: transparent; }
@@ -330,6 +379,40 @@ body {
 .rt-fading {
   animation: rt-fade-out 0.5s ease-out forwards;
   overflow: hidden;
+}
+
+/* Reduced motion for the realtime pair + the amount caret (#1022).
+ *
+ * `.rt-flash` is the product's signature beat — "the other person isn't here,
+ * but they just moved" — so it degrades to the same message told statically, not
+ * to silence. `step-end` holds --realtime-flash as a flat tint for the whole
+ * 2s and then drops it in a single frame: nothing interpolates, nothing moves,
+ * but the new row still announces itself and then settles like the rest.
+ *
+ * TransactionFeed only ever adds these classes, so the hold has to end on its
+ * own (no fill-mode) — otherwise a flashed row would wear the tint forever. */
+@keyframes rt-flash-hold {
+  from { background: var(--realtime-flash); }
+  to   { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rt-flash {
+    animation: rt-flash-hold 2s step-end;
+  }
+  /* No fade, no collapse: the row holds its place, visibly dimmed, for the
+   * 500ms the feed waits before removing it. The disappearance keeps a visible
+   * cause instead of a row silently blinking out of the list. */
+  .rt-fading {
+    animation: none;
+    opacity: 0.45;
+  }
+  /* The only `infinite` animation in the app, and the one most likely to bother
+   * a vestibular-sensitive reader. The caret rests in its visible state so the
+   * amount field still shows where typing lands. */
+  .animate-blink {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* Partner-activity toast — quiet fade+slide in, hold, then fade out across its

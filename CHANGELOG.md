@@ -15,6 +15,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.10] - 2026-09-12
+
+主題：**看得見、按得到、算得準**——瀏海機種吃掉的按鈕、永遠空白的月度回顧、以及三個只在特定時刻才浮現的計算錯誤。這版修的都是「東西在那裡，但你碰不到或看不到」。
+完整 diff：[v1.5.9...v1.5.10](https://github.com/redtear1115/oikos/compare/v1.5.9...v1.5.10)
+
+### 使用者可見變化
+
+- **月度回顧終於有內容（#1049）**：先前每個月的回顧都是空白。排程在算「剛開始的當月」而不是「剛結束的上個月」，而算出來的空白又因為寫入策略無法被更正——兩個問題串在一起才造成永久空白。既有的空白月份會在這版部署後補算回來（本月除外，它要等月底結束）。
+- **瀏海機種上按得到了（#1021 / #1035 / #1037）**：刪除帳號倒數的「取消」按鈕、過去章節提示、旅行與愛物的標題列，先前在有瀏海的 iPhone 上會被狀態列吃掉。現在所有頂部固定元素收進單一容器依序排列，最壞情況三層同時出現也都看得見。刪除倒數的橫幅改為常駐——**14 天倒數的逃生出口不該捲出畫面之外**。
+- **過去章節提示現在每頁都在（#1037）**：先前只有主畫面顯示，翻到帳務或統計時看到的是凍結的歷史，卻沒有任何標籤、也沒有返回的路。
+- **「減少動態效果」真的會全部停下（#1022）**：三個動畫先前沒有尊重系統設定，其中金額游標是無限循環的。關掉動態後仍看得出對方剛記了一筆或刪了一筆，不會變成靜默。
+- **可以移除對方了（#1033）**：先前帳本裡若有一個不該在的人，唯一的辦法是刪掉自己的帳號。現在設定頁可以移除，回到單人狀態。
+
+### 技術變更
+
+- **balance 限定當前章節（#1030）**：公式先前對整段歷史加總，所以前一段關係結清後留下的殘值會落到新伴侶頭上，且符號永遠對新伴侶不利。修復期間 verifier 攔下一個更嚴重的版本——第一版用 `transacted_at` 當邊界，會讓「補記昨天的收據」與「CSV 匯入歷史」整批從 balance 消失而 feed 照常顯示。最終採 `created_at`，與讀取層一致。
+- **remove-partner（#1033）**：與 `leaveGroup` 對稱（關舊開新 epoch、active trip 時擋下），並**撤銷未接受的邀請**——否則 remover 自己先前鑄的邀請仍會通過 #1031 的「鑄造者仍是成員」檢查。刻意不要求 balance 先歸零：那會讓「拖著不結清」變成被移除者卡住移除的槓桿。
+- **safe-area 的結構解（#1037）**：`ShellTopStack` 是唯一付 inset 的容器，頁面標題列釘在它下方。這一次同時消滅了三個先前「已知但接受」的取捨。
+- **測試 guard 從檔案級改為逐元素（#1042）**：舊版一個檔案只要任何地方有 `env()`，其中新增的固定元素就不再被偵測——而修復模式正好是「每個檔案都加 env()」。新增「inset 由子元素支付」豁免類別，並加上 tripwire：掃描結果少於豁免數就報錯，避免 regex 壞掉時所有斷言以空集合靜默通過。
+- **設計意圖與讀數據紀律寫進文件（#1023）**：`PRODUCT.md` 新增 Surface Intents，逐一寫明各 surface 的職責與**哪些低數字是預期的**；`CLAUDE.md` 收錄一天內六次結論被推翻得出的準則，第一條是「引用任何事件指標前先 grep 它的發送點」。
+
+### ⚠️ 部署需要跑 migration
+
+本版含 `0061`（月度回顧月份計算 + upsert 策略）與 `0062`（backfill 既有空白 snapshot）。**prod 與 dev 是獨立 project，兩邊都要跑**。
+
 ## [1.5.9] - 2026-09-12
 
 主題：**讓伴侶真的進得來**——實測發現 72% 的人建立帳本後連試都沒試就跳過邀請，而真正送出去的有 83% 成功。所以問題不在連結、不在接受流程，在於「把連結交到對方手上」這一步。這版補上面對面的路徑，順手把整條漏斗從幾乎全黑修到看得見。
@@ -777,7 +802,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.9...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.10...HEAD
+[1.5.10]: https://github.com/redtear1115/oikos/compare/v1.5.9...v1.5.10
 [1.5.9]: https://github.com/redtear1115/oikos/compare/v1.5.8...v1.5.9
 [1.5.8]: https://github.com/redtear1115/oikos/compare/v1.5.7...v1.5.8
 [1.5.7]: https://github.com/redtear1115/oikos/compare/v1.5.6...v1.5.7

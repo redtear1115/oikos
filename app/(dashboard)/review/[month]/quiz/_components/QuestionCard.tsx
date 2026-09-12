@@ -104,7 +104,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
       {/* Header — back link */}
       <header
         className="px-4 flex items-center justify-between"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
+        style={{ paddingTop: 'max(var(--safe-top), 24px)', paddingBottom: 8 }}
       >
         <Link
           href={reviewHref}
@@ -151,7 +151,9 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
         {/* Prompt */}
         <h1
           key={currentKey}
-          className="text-2xl leading-snug mb-6 animate-[cardIn_0.28s_ease]"
+          // motion-reduce keeps the new question's arrival instant instead of
+          // slid-in; the `key` swap already makes the change obvious. (#1022)
+          className="text-2xl leading-snug mb-6 animate-[cardIn_0.28s_ease] motion-reduce:animate-none"
           style={{
             fontFamily: 'var(--font-fraunces), Georgia, serif',
             color: 'var(--ink)',

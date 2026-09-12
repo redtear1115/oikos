@@ -3,6 +3,8 @@
 > 家庭記帳工具，對使用者顯示為 **Futari**；codebase 用 Oikos。
 > 固定兩人（夫妻／伴侶）使用。Mobile-first PWA。
 
+這份是 agent 工作指南——架構、domain model、慣例、邊界。要把專案跑起來或部署，看 [README.md](README.md)。動文案、判讀指標、做產品取捨之前，看 [PRODUCT.md](PRODUCT.md)：各 surface 的意圖與「哪些低數字是預期的」寫在那裡。視覺 token 與元件規則在 [DESIGN.md](DESIGN.md)。後兩份由 Impeccable 維護，改動前先讀「設計脈絡（Impeccable）」那段。
+
 ---
 
 ## ⚠️ Next.js 版本提醒
@@ -13,7 +15,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.5.9** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.5.10** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
 
 ## Backlog / 未釋出版本
 
@@ -63,6 +65,24 @@ Realtime：Client subscribes → React state mutation
 - **匿名訪客數是膨脹的**：cookieless 下每個 session 算新 person。已登入用戶走 identify 所以人數可靠。訪客絕對值不可用，只有同類頁面的**相對**比較有效。
 - **維度不回填**：`platform` 自 v1.5.7 部署起才有，`path` 自 v1.5.6 起。更早的事件永遠沒有，事後無法用 SQL 補。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
+
+### 讀數據的紀律
+
+> 2026-09-12 一天之內有六個結論被推翻。**沒有一個是算錯數字。**
+
+**第 0 條先做，它不需要判斷力：引用任何事件指標之前，先 grep 它的發送點。**
+
+不是問「這個數字代表什麼」，是問「這行 `track()` 在哪、什麼條件下會跑」。實例：`landing_cta_clicked` 全站只有 `app/[locale]/_landing/LandingCtaLink.tsx:45` 一處發送，migrate 頁的 header 是裸 `<Link>`——所以被引用一整天的「migrate 頁 CTA 轉換率 26% vs 6.5%」，量的其實是「訪客願不願意退回首頁再點一次」。一次 grep、10 秒就能發現。
+
+這條和下面三條性質不同：下面三條要你**在對的時機想起來**，而人不會知道自己正處在該用它的時機；第 0 條無條件執行，所以它不會失效。它擋掉的也是最貴的錯——不是讀錯數字，是**數字根本不是那個量**，而且那種錯沒有任何內部矛盾會讓人起疑。
+
+其餘三條：
+
+1. **極端值（0 / 1 / 100%）先問預期值。** 極端值最像洞見，也最常是誤讀。`import_completed` 90 天只有 1 筆看起來像功能壞了，實際上那個頁面從來不以它為 KPI（見 [PRODUCT.md](PRODUCT.md) 的 Surface Intents）。先問「這個數字本來該長什麼樣」，再問它為什麼偏離。
+2. **看到百分比，先還原成分子分母。** 分子是個位數或十位數時，任何比例都是雜訊。「手機 CTR 3.05% vs 桌機 6.20%」看起來像腰斬，實際是 8/262 vs 8/129，Fisher exact **p = 0.175**。`3.05%` 有三位有效數字、讀起來像精密測量——**百分比這個呈現格式本身隱藏了脆弱性**。同一件事寫成「262 次曝光只有 8 個人點」，任何人都會先問「8 個人夠判斷嗎」。
+3. **下結論前，檢查手上是否已有能否證它的資料。** 不是缺資料，是資料在手上卻沒被用進判斷。
+
+新增測量點會製造一個**看起來像成效的斷層**（例：#1027 補上 migrate 頁的 CTA 之後，`landing_cta_clicked` 會跳升，那不是改善，是終於有東西可以量了）。跨部署的前後比較一律無效，基準要從部署日重算。
 
 ### Balance 計算規則
 
@@ -221,6 +241,9 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ## AI 開發協作規則
 
+- **寫限制的時候，連它失效時長什麼樣子一起寫**：人是靠症狀認出問題的，不是靠機制推導。「跨 server/client 不能 join」要補一句「症狀是查詢靜默回 0 筆」；「手寫段落可能在 refresh 時遺失」要補一句「失效的樣子不是檔案被清空，是某段在看似正常的文件重整裡被壓縮掉」。只寫機制，讀者下次撞到時不會認出那就是文件警告過的事。
+- **不要把沒解釋的選擇當疏忽**：看起來隨意的既有寫法，常是在一個沒被寫下來的約束底下的合理解。2026-09-12 踩了兩次——`pt-12` 看似魔術數字，實際是刻意大於 safe-area inset；safe-area guard 的檔案級比對看似偷懶，實際是唯一能容納「wrapper 負責 pin、內層負責 padding」這個正確形狀的粒度。兩次都是先當它是疏忽、動手改了才發現約束存在。**改之前先問「如果這是對的，它在解什麼我沒看到的問題」。**
+- **撤回一個論證之後，要掃所有引用它的地方**：結論被推翻了，但引用它的段落還活著、而且看起來仍然合理。撤回本身也值得留在文件裡——它標示了哪條推論路徑會出錯，而下一個人很可能會重新推導出同一個錯誤結論。
 - **偏好透過 subagent roles 分工**：開發任務優先委派給 subagent（有對應 role 就用 role，如 pilotfish 的 scout / executor / verifier；需要指定 model 時用 ad-hoc subagent），主 session 負責 framing、brief、驗收與整合。平行 subagent 各自用 worktree 隔離（見「Worktree 工作流」）。
 - **commit 自主、push 延到 PR-time**：每完成一個邏輯單位（PR / feature）即自動 commit，不必問；但**不要每個 commit 都 push**——本機累積，只在「要開 PR / 更新已開的 PR」時才 push。原因：`vercel.json` 沒有 git/deploy 設定，Vercel 預設「任何 branch 每次 push 都建一個 preview deployment」，逐 commit push 會產生大量不必要的 build。**例外**：當任務本身需要 preview 部署才能進行（例如測試已部署的 endpoint），iterative push 是必要且合理的。
 - **`main` / `release` 是 protected**：絕對不要直接 push 到這兩條，要進去都走 PR merge 流程。`gh pr merge --admin`（任何繞過 branch protection 的 merge）也要明確指令才執行。
@@ -284,7 +307,10 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 - 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
 - Register＝`product`；Creative North Star＝「The Warm Lamp」。
-- DESIGN.md 是掃描現有 `app/globals.css` tokens 產生的；token 變動後可重跑 `/impeccable document` 同步。
+- **DESIGN.md 與 PRODUCT.md 由 Impeccable 維護，refresh 是「model 全檔重寫」，不是機械產生。** `/impeccable document` 重寫 DESIGN.md、`/impeccable teach` 重寫 PRODUCT.md；真正機械地從 `app/globals.css` 抄過去的只有 `.impeccable/design.json` 的 token 值。工具不會靜默覆蓋（偵測到既有檔會先問要 refresh 哪一份），但**手寫段落能不能留下來，取決於當時跑 refresh 的 agent 有沒有先讀過現檔、刻意逐段帶過去**——那是判斷，不是保證。
+  - 所以：**跑 refresh 前先讀現檔，逐段帶過，不要從零生成。** PRODUCT.md 的 Surface Intents、DESIGN.md 的任何手動補充都屬於這類。
+  - 失效的樣子不是檔案被清空，而是某一段在一次看起來很正常的「文件重整」裡被壓縮掉。所以控制點是 git diff，不是工具。
+  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現在 13KB，實務上踩不到。
 - **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
   - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
   - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。

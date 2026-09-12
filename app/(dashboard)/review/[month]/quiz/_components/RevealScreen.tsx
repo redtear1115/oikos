@@ -45,7 +45,7 @@ export function RevealScreen({
     >
       <header
         className="px-4 flex items-center justify-between"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)', paddingBottom: 8 }}
+        style={{ paddingTop: 'max(var(--safe-top), 24px)', paddingBottom: 8 }}
       >
         <Link
           href={reviewHref}

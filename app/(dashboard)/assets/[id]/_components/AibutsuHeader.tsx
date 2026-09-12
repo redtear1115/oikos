@@ -170,8 +170,15 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
   const t = useTranslations()
   const hasSiblings = siblings && siblings.length > 0
   return (
+    /* Pins below the shell top stack, not at the viewport top (#1037). 48px is
+       this header's own top spacing — #1035 pulled it out of a bare `pt-12` that
+       happened to be 1px more than an iPhone notch, and that separation stays;
+       what changes is where the inset comes from. `env()` was only needed while
+       this row could become the topmost element mid-scroll. It can't any more,
+       so `--safe-top` answers it: the real inset when the stack is empty, zero
+       when it isn't. */
     <div
-      className="sticky top-0 z-20 px-4 pt-12"
+      className="sticky top-[var(--top-stack-h)] z-20 px-4 pt-[max(var(--safe-top),48px)]"
       style={{
         background: tint.bg,
         paddingBottom: hasSiblings ? 10 : 12,

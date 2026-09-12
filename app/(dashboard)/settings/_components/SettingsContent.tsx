@@ -38,7 +38,7 @@ export async function SettingsContent({
 
   return (
     <>
-      <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-4">
+      <div className="px-5 pt-[max(var(--safe-top),24px)] pb-4">
         <div
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
