@@ -1,9 +1,11 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-12
 status: shipped
 first_shipped_in: v1.2.0
+updates:
+  - v1.5.11: `/use-case/<slug>` CTA 接上歸因 — `?from=use-case-<slug>` + `landing_cta_clicked`，`entry_source` 擴充 per-slug `use_case_*`（#1056）
 related_specs: [csv-import, solo-mode]
-related_issues: ["#734"]
+related_issues: ["#734", "#1056"]
 ---
 
 # 轉換分析 — 從入口頁到註冊的事件追蹤
@@ -67,10 +69,16 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
 ### 決策二：歸因 key 用單一 `from` query param（locked）
 
 `entry_source` 是整套漏斗的歸因軸，取值：
-`landing` | `migrate_honeydue` | `migrate_spendee` | `migrate_cwmoney` | `invite` | `direct`。
+`landing` | `migrate_honeydue` | `migrate_spendee` | `migrate_cwmoney` |
+`use_case_<slug>`（per-slug，見下）| `invite` | `direct`。
 
 - migrate 流程**已經**把 `?from=<source>` 帶進 `/sign-in`（`MigrateCta`），復用同一個 param。
 - landing 的 CTA 補上 `?from=landing`。
+- `/use-case/<slug>` 的 CTA 帶 `?from=use-case-<slug>`，對應 `entry_source = use_case_<slug 底線化>`
+  （例：`use-case-aa-split` → `use_case_aa_split`）。**per-slug 而非單一 `use_case`**：這十個頁面
+  存在的目的就是測「哪個情境會拉到人」，收斂成一個值會抹掉它們唯一要量的軸；breakdown 多十列的成本
+  遠小於此。`use-case-` 前綴確保它不會和 migrate 的裸 source slug 撞名。slug 需在 `lib/use-case/cases.ts`
+  的 registry 內，否則回 `direct`——避免任意 query 值鑄出新的 breakdown 列。
 - sign-in 直接到達、無 `from` → `direct`。
 - 分析讀 `from`；import-resume 語意只對已知 importer 來源生效，兩者不耦合
   （`from=landing` 不會觸發任何 importer）。
@@ -113,7 +121,7 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
 | event | 觸發時機 | 關鍵屬性 |
 |---|---|---|
 | `$pageview` *(已存在)* | 每個路由 | `$current_url` |
-| `landing_cta_clicked` | 點 landing 的 hero / 次要 / nav CTA | `cta_location`、`target`（`sign_in` \| `migrate_*`） |
+| `landing_cta_clicked` | 點 landing / migrate / use-case 的 CTA | `cta_location`（含 `use_case_primary`）、`target`（`sign_in` \| `migrate_*` \| `use_case_*`） |
 | `migrate_file_selected` | 在 `/migrate/*` 選了 CSV | `migrate_source` |
 | `migrate_preview_shown` | 解析成功、預覽渲染 | `migrate_source`、`detected_source`、`row_count` |
 | `migrate_preview_failed` | 解析失敗 | `migrate_source`、`reason` |
@@ -121,6 +129,7 @@ PostHog 目前刻意用 `persistence: 'memory'`（`app/providers.tsx`）以維�
 | `sign_in_started` | 點 Google 登入按鈕 | `entry_source` |
 
 實作落地點：landing CTA → `app/[locale]/_landing/Landing.tsx`；
+use-case CTA → `app/[locale]/use-case/_components/UseCaseCta.tsx`（走同一個 `LandingCtaLink`）；
 migrate 流程 → `app/[locale]/migrate/_components/MigrateTool.tsx` + `MigrateCta.tsx`
 （解析 hook `lib/migrate/useCsvPreview.ts`）；登入按鈕 → `app/[locale]/sign-in/SignInButton.tsx`。
 
