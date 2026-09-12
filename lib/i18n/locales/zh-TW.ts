@@ -185,7 +185,6 @@ export type Translations = {
       newlywedsBody: string
       petOwnersTitle: string
       petOwnersBody: string
-      cardAriaLabel: string
       /** Link to the /use-case hub listing every situation (#1057). The landing
        *  keeps three cards; the remaining seven live one click away rather than
        *  turning this section into a link wall. */
@@ -2522,7 +2521,6 @@ export type Translations = {
     ctaLabel: string
     otherCases: {
       heading: string
-      cardAriaLabel: string
     }
     /** /use-case hub/index page (#1057) — one entry point listing every
      *  situation, mirroring the /migrate hub. `name` doubles as the middle
@@ -2687,7 +2685,6 @@ export const zhTW: Translations = {
       newlywedsBody: '結婚之後從日常帳本到愛物，一起看見兩個人的生活全貌。',
       petOwnersTitle: '寵物家庭',
       petOwnersBody: '毛孩的每一筆費用都值得被記住，清楚看見兩個人的心意。',
-      cardAriaLabel: '了解 {slug} 情境',
       seeAll: '看全部 10 種情境',
     },
     migrateSection: {
@@ -5406,7 +5403,6 @@ export const zhTW: Translations = {
     },
     otherCases: {
       heading: '其他情境',
-      cardAriaLabel: '查看 {slug} 頁面',
     },
     hub: {
       heroKicker: '兩個人，十種日子',
