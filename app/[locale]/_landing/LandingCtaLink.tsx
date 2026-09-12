@@ -23,6 +23,7 @@ interface Props {
     | 'secondary'
     | 'footer_migrate'
     | 'footer_use_case'
+    | 'use_case_primary'
     | 'migrate_primary'
   target: Target
   /** Overrides the `from=landing` attribution tag. /migrate/<source> reuses this

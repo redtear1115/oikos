@@ -76,7 +76,7 @@ export default async function UseCasePage({ params }: { params: Params }) {
         features={t.features}
       />
 
-      <UseCaseCta label={t.ctaLabel} signInHref={signInHref} />
+      <UseCaseCta label={t.ctaLabel} signInHref={signInHref} slug={useCaseSlug} />
 
       <UseCaseFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 
