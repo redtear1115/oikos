@@ -3,6 +3,7 @@
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
 import { useEffect } from 'react'
+import { detectPlatform, isNativeApp } from '@/lib/platform'
 
 /**
  * PostHog only runs in production with a key configured. This keeps local dev
@@ -42,6 +43,35 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       // (#922)
       capture_dead_clicks: false,
     })
+
+    // #1002 — the platform dimension, as super properties so all 18 existing
+    // `track()` callsites (and autocapture) inherit it without being touched.
+    //
+    // Registration sits inline right after `init()` on purpose. Super
+    // properties are stored in the persistence layer, and ours is `'memory'`
+    // (cookieless), so they are cleared on every page load — the *only* safe
+    // place to register is the same synchronous path that initializes PostHog,
+    // and anything conditional or route-scoped would leave some page loads
+    // reporting no platform at all.
+    const platform = detectPlatform()
+    if (!platform) return
+    posthog.register({ platform, is_native: isNativeApp(platform) })
+
+    // Shell version, so any event can be sliced by installed shell — not just
+    // the one-shot `shell_version_seen` in ShellUpdateNotice, which stays as it
+    // is. Reading it needs `@capacitor/app`, so it is (a) gated on actually
+    // being native and (b) behind a dynamic import, keeping the plugin chunk
+    // out of the web bundle entirely (same discipline as #991). Late by design:
+    // a round-trip to the native bridge must not sit in front of init, so the
+    // first few events of a shell session simply carry no `shell_version`.
+    if (!isNativeApp(platform)) return
+    void import('@capacitor/app')
+      .then(({ App }) => App.getInfo())
+      .then((info) => posthog.register({ shell_version: info.version }))
+      .catch(() => {
+        // A shell too old to answer getInfo(), or a plugin load failure. The
+        // platform property is already registered; the version is a bonus.
+      })
   }, [])
 
   if (!POSTHOG_ENABLED) return <>{children}</>
