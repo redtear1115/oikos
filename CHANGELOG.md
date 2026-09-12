@@ -13,7 +13,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+主題：**讓頁面被找到，讓點擊被算到**——三個語系子樹沒有任何一條可爬的連結、情境頁的 CTA 從來沒有歸因、`/use-case` 根本是 404。這版修的都是「東西在那裡，但 Google 找不到、我們也量不到」。沒有一項是使用者抱怨出來的，全部來自一次 GSC + Lighthouse + 程式碼的對帳。
+
+### 使用者可見變化
+
+- **情境總覽頁（#1057）**：`/use-case` 先前是 404——十個情境頁只能靠 sitemap 與彼此的橫向連結被找到，其中 `monthly-bills` 與 `roommates` 兩頁 Google **從未抓取過**。現在有了總覽頁，landing 也連得過去。
+- **從 Splitwise 搬家（#1060）**：新增第 15 個搬遷指引。Splitwise 有官方的試算表匯出，所以走直接上傳、不必截圖轉檔。
+- **語系切換看得清楚了（#1059）**：切換鈕在暖色底上的對比只有 4.02，未達 WCAG AA 的 4.5。整組色階下沉一階後為 4.77 / 10.93，「非當前語系視覺退後」的層級仍在。migrate 頁內文另外兩處同樣成因的低對比也一併修掉。
+- **情境卡用語音控制點得到了（#1059）**：卡片的 accessible name 是「查看 cohabitation 頁面」，與可見文字「同居 AA 制」對不上——唸出看得見的字反而點不到。改為讓可見文字自己當 accessible name。
+
+### 技術變更
+
+- **三個語系子樹第一次有了可爬的入口（#1063）**：語系切換是 `<button>` + `router.push()`，對使用者正常，**對 Googlebot 等於不存在**——從 zh-TW 的任何頁面，指向 `/en`、`/ja`、`/zh-CN` 的 `<a href>` 是 0 條。sitemap 裡 108 個 URL 有 81 個（四分之三）住在這三座孤島上，GSC 因此報「已檢索 - 目前尚未建立索引」12 頁，示例裡 9 個是 en 或 ja。已排除 `noindex`、canonical、hreflang、robots.txt、內容太薄五項——同模板的 zh-TW 雙胞胎全都有索引，剩下的唯一結構差異就是內部連結權重。修法只動 `mode === 'url'`；dashboard 的 cookie mode URL 不變，維持 button。
+- **情境頁的轉換第一次量得到（#1056）**：`/use-case/*` 的 CTA 是裸的 `/sign-in`，既無 `?from=` 也無任何 `track()`。十個情境 × 四語系 = 40 個 URL 的註冊全部被算成 `direct`，CTA 點擊率是空白。與 #1027 同一類錯：測量點不存在，但漏斗查詢不會報錯，只會給出一個看似合理的數。歸因採 per-slug（`use_case_<slug>`）——這十頁存在的目的就是測「哪個情境拉得到人」，收斂成單一值會抹掉唯一要量的軸。
+- **migrate 歸因涵蓋全部 15 個 source，並與 import-resume 拆開（#1062）**：`entrySourceFromParam()` 先前只認 `honeydue` / `spendee` / `cwmoney`，另外 11 個靜默落進 `direct`——而那 11 個正是有流量的（28 天 20 次點擊裡 17 次來自 migrate 頁，只有 2 次走在有接的 source 上）。**但那三個不是漂移的手抄清單，是有 CSV parser 的那三個**：`migrateSourceFromParam()` 供 import-resume 使用，放寬它會讓使用者從沒有 parser 的來源註冊回來時試圖續接匯入。修法是把兩個概念拆成兩軸、各自綁到自己的權威來源（分析綁 `lib/migrate/sources.ts`，import-resume 綁 `lib/csvImport/detector.ts`），並把後者改名為 `importResumeSourceFromParam` ——名字相近又同住一檔，正是它被誤讀成同一件事的原因。順手擋掉一個洞：slug 查表若用 `in` 會走 prototype chain，`?from=toString` 就能鑄出一列 breakdown。
+- **情境頁補 BreadcrumbList（#1058）**：GSC 實測 `/migrate/*` 拿得到 Breadcrumbs 版位、`/use-case/*` 是 None。FAQ rich result 自 2023 起 Google 只對權威站點顯示，所以既有的 `FAQPage` 換不到 SERP 版位——breadcrumb 才是這裡實際拿得到的。
+- **字級收斂回偶數（#1066）**：清掉最後 6 處 11/13px。其中 landing 兩處是 `text-sm md:text-[13px]`（桌機比手機小），查 blame 後發現**不是刻意的密度決定**：原文是 `text-label md:text-[13px]`，而 `--text-label` 當時就是 13px，`md:` 那層是 no-op；#876 的 codemod 只替換具名 token、沒碰 raw arbitrary value，把無作用的覆寫變成了反向斷差。諷刺的是 #876 的標題正是「drop 11/13/15 tiers」。
+- **⚠️ 一次「兩張 PR 各自全綠、合起來爆掉」（#1068）**：#1056 讓 `UseCaseCta` 的 `slug` 成為必要 prop，#1057 新建的 hub 頁沒有傳——兩張**檔案層級零重疊**，git 無從報衝突，兩邊 CI 也都綠，因為各自是對「沒有對方」的 main 跑的。合併後 main 才 typecheck 失敗。修法是給 hub 自己的 `use_case_hub`，而**不是**把 `slug` 改成 optional——optional 會讓「忘了傳」與「這是 hub」塌陷成同一個狀態，等於把這次接住問題的那張網拆掉。**目前 CI 沒有任何一關在驗「合進 main 之後 main 是否仍成立」**；這次靠 typecheck 接住，下次未必。
+- **epoch 歸屬的兩個時間戳分工寫進文件（#1050）**：`created_at` 決定章節歸屬、`transacted_at` 決定月份統計。選錯不會報錯，只會靜默算少——feed 照常顯示、balance 整批漏掉。
 
 ## [1.5.10] - 2026-09-12
 
