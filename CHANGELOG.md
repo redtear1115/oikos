@@ -15,6 +15,23 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.7] - 2026-09-12
+
+主題：**讓三個平台分得開**——同一份網站送到瀏覽器、安裝版與原生殼，觀測上卻混成一團。這版補上平台維度，往後每筆事件與每個錯誤都知道自己來自哪個平台。
+完整 diff：[v1.5.6...v1.5.7](https://github.com/redtear1115/oikos/compare/v1.5.6...v1.5.7)
+
+### 使用者可見變化
+
+_沒有；純觀測面改動。_
+
+### 技術變更
+
+- **平台維度（#1002）**：新增 `lib/platform.ts`，偵測 `ios_native` / `android_native` / `ios_pwa` / `android_pwa` / `web` 五種執行環境。PostHog 以 super property 註冊 `platform` / `is_native`（原生殼另帶 `shell_version`），既有 18 個 `track()` callsite 一行未改即自動帶上；Sentry client 加 `platform` tag。
+- **為什麼需要**：UA 分不出來——實測 30 天 iOS 事件有 1621 筆是 WKWebView 卻被歸類為 Mobile Safari（佔 iOS 流量 43%），且原生殼、iOS 主畫面 PWA、其他 App 內嵌瀏覽器三者在 UA 上無法區分。維度只能在執行期注入，事後無法用 SQL 還原。
+- **SSR 回 `null` 而非 `'web'`**：server render 沒有平台可言，猜一個等於把每次伺服器渲染標記成瀏覽器造訪。server 端 auth 事件改以 v1.5.6 的 `path` 屬性區分。
+- **web bundle 零成本**：讀 `window.Capacitor` 全域而非 import `@capacitor/core`（native bridge 在 document start 就注入），`@capacitor/app` 走 dynamic import 並重用既有 chunk。實測 chunk 數 48 → 48、root layout +268 bytes，落地頁與登入頁不含任何 Capacitor runtime。
+- **既有 5 處平台偵測不動**：它們各自回答不同問題（有沒有 bridge / 哪個商店門檻 / 是否 iOS / 清理 listener），且其中兩處是原生契約面檔案。註記 `@capacitor/core` 被引入時會自我安裝 `window.Capacitor`，因此「全域存在」不能證明是原生，必須呼叫 `isNativePlatform()`。
+
 ## [1.5.6] - 2026-09-12
 
 主題：**讓殼跟上網站**——iOS 原生 Apple 登入修到真正可用，三平台的 CI、發版流程與殼版本偵測一次補齊；殼與網站之間的兩個盲區（登入漏斗、潛伏的編譯壞損）從此有訊號。
@@ -711,7 +728,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.6...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.7...HEAD
+[1.5.7]: https://github.com/redtear1115/oikos/compare/v1.5.6...v1.5.7
 [1.5.6]: https://github.com/redtear1115/oikos/compare/v1.5.5...v1.5.6
 [1.5.5]: https://github.com/redtear1115/oikos/compare/v1.5.4...v1.5.5
 [1.5.4]: https://github.com/redtear1115/oikos/compare/v1.5.3...v1.5.4

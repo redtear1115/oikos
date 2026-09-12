@@ -169,6 +169,7 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.5.7](CHANGELOG.md#157---2026-09-12) | 三平台觀測維度 · platform super property |
 | [v1.5.6](CHANGELOG.md#156---2026-09-12) | iOS 原生登入修復 · 三平台 CI 與發版地基 · 殼版本偵測 |
 | [v1.5.5](CHANGELOG.md#155---2026-08-12) | 登入失敗被看見 · solo 重複切換修正 · 送審素材補齊 |
 | [v1.5.4](CHANGELOG.md#154---2026-07-13) | DB 連線事故根因修復 · migrate 競品頁查證改寫 |
