@@ -7,6 +7,7 @@ import { cancelSwap, confirmSwap } from '@/actions/membership'
 import { formatDateAbsolute } from '@/lib/format-date'
 import { describeMembershipError } from '@/lib/membership-errors'
 import { LeaveGroupFlow } from './LeaveGroupFlow'
+import { RemovePartnerFlow } from './RemovePartnerFlow'
 
 export interface PendingSwap {
   /** 'self' = viewer proposed; 'partner' = partner proposed. */
@@ -37,6 +38,7 @@ export function DangerZone({
   const dz = t.settings.dangerZone
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [removeOpen, setRemoveOpen] = useState(false)
 
   return (
     <div className="px-4 mt-2 mb-5">
@@ -67,6 +69,26 @@ export function DangerZone({
         <div className="text-sm" aria-hidden="true">›</div>
       </button>
 
+      {/* member_a only — removePartner requires no cooperation from the
+        * other side (unlike leaveGroup's swap-then-leave path for member_a),
+        * so it's a distinct, separately-confirmed action rather than folded
+        * into LeaveGroupFlow's card4 branching. */}
+      {viewerIsMemberA && (
+        <button
+          type="button"
+          onClick={() => setRemoveOpen(true)}
+          className="mt-3 w-full flex items-center justify-between px-5 py-4 rounded-card text-left bg-transparent cursor-pointer"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--destructive-soft)',
+            color: 'var(--destructive)',
+          }}
+        >
+          <div className="text-sm font-medium">{dz.removeCta}</div>
+          <div className="text-sm" aria-hidden="true">›</div>
+        </button>
+      )}
+
       <LeaveGroupFlow
         open={open}
         onClose={() => setOpen(false)}
@@ -75,6 +97,14 @@ export function DangerZone({
         partnerName={partnerName}
         groupBalance={groupBalance}
       />
+
+      {viewerIsMemberA && (
+        <RemovePartnerFlow
+          open={removeOpen}
+          onClose={() => setRemoveOpen(false)}
+          partnerName={partnerName}
+        />
+      )}
     </div>
   )
 }

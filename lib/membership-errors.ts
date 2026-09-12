@@ -20,8 +20,10 @@ export function describeMembershipError(
       case 'cannot_confirm_own_proposal': return t.cannotConfirmOwnProposal
       case 'not_a_member':          return t.notAMember
       case 'only_member_b_can_leave': return t.onlyMemberBCanLeave
+      case 'only_member_a_can_remove': return t.onlyMemberACanRemove
       case 'balance_not_zero':      return t.balanceNotZero
       case 'solo_group':            return t.soloGroup
+      case 'active_trip':           return t.activeTrip
     }
   }
   return describeError(e, t.fallback, offlineMessage)

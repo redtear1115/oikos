@@ -6,6 +6,7 @@ import {
   cancelSwap,
   confirmSwap,
   leaveGroup,
+  removePartner,
 } from '@/actions/membership'
 
 const VIEWER_A = { id: 'user-a', email: 'a@example.com' }
@@ -222,5 +223,69 @@ describe('leaveGroup', () => {
     await leaveGroup()
     const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
     expect(insertedGroup.name).toBe('我的家計簿')
+  })
+})
+
+// ─── removePartner ───────────────────────────────────────────────────────────
+
+describe('removePartner', () => {
+  it('happy path: member_a removes member_b — closes epoch, opens solo epoch, clears member_b', async () => {
+    setMockUser(VIEWER_A)
+    queueDbResult([duoGroup()])            // group lookup
+    queueDbResult([{ id: 'epoch-1' }])     // active-trip guard: currentEpoch (.limit)
+    queueDbResult([{ n: 0 }])              // active-trip guard: hasActiveTrip count (.then)
+
+    const r = await removePartner()
+    expect(r).toEqual({ groupId: 'grp-1' })
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+
+    // First .set() inside the tx is the invite revocation
+    const inviteSet = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(inviteSet.revokedAt).toBeInstanceOf(Date)
+
+    // Second .set() closes the old epoch (endedAt)
+    const epochCloseSet = mockBuilder.set.mock.calls[1][0] as Record<string, unknown>
+    expect(epochCloseSet.endedAt).toBeInstanceOf(Date)
+
+    // The new epoch row inserted for member_a, solo
+    const insertedEpoch = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(insertedEpoch.memberAId).toBe('user-a')
+    expect(insertedEpoch.memberBId).toBeNull()
+
+    // Group is cleared back to solo
+    const groupSet = mockBuilder.set.mock.calls[2][0] as Record<string, unknown>
+    expect(groupSet.memberB).toBeNull()
+    expect(groupSet.pendingSwapProposedBy).toBeNull()
+  })
+
+  it('rejects when caller is member_b (only member_a can remove)', async () => {
+    setMockUser(VIEWER_B)
+    queueDbResult([duoGroup()])
+    await expect(removePartner()).rejects.toThrow('only_member_a_can_remove')
+  })
+
+  it('rejects in a solo group', async () => {
+    setMockUser(VIEWER_A)
+    queueDbResult([duoGroup({ memberB: null })])
+    await expect(removePartner()).rejects.toThrow('solo_group')
+  })
+
+  it('rejects when there is an active trip in the current epoch', async () => {
+    setMockUser(VIEWER_A)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ n: 1 }])              // hasActiveTrip → true
+    await expect(removePartner()).rejects.toThrow('active_trip')
+  })
+
+  it('throws unauthorized with no user', async () => {
+    setMockUser(null)
+    await expect(removePartner()).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when no group is found', async () => {
+    setMockUser(VIEWER_A)
+    queueDbResult([])
+    await expect(removePartner()).rejects.toThrow('找不到家計簿')
   })
 })
