@@ -363,6 +363,40 @@ body {
   overflow: hidden;
 }
 
+/* Reduced motion for the realtime pair + the amount caret (#1022).
+ *
+ * `.rt-flash` is the product's signature beat — "the other person isn't here,
+ * but they just moved" — so it degrades to the same message told statically, not
+ * to silence. `step-end` holds --realtime-flash as a flat tint for the whole
+ * 2s and then drops it in a single frame: nothing interpolates, nothing moves,
+ * but the new row still announces itself and then settles like the rest.
+ *
+ * TransactionFeed only ever adds these classes, so the hold has to end on its
+ * own (no fill-mode) — otherwise a flashed row would wear the tint forever. */
+@keyframes rt-flash-hold {
+  from { background: var(--realtime-flash); }
+  to   { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rt-flash {
+    animation: rt-flash-hold 2s step-end;
+  }
+  /* No fade, no collapse: the row holds its place, visibly dimmed, for the
+   * 500ms the feed waits before removing it. The disappearance keeps a visible
+   * cause instead of a row silently blinking out of the list. */
+  .rt-fading {
+    animation: none;
+    opacity: 0.45;
+  }
+  /* The only `infinite` animation in the app, and the one most likely to bother
+   * a vestibular-sensitive reader. The caret rests in its visible state so the
+   * amount field still shows where typing lands. */
+  .animate-blink {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* Partner-activity toast — quiet fade+slide in, hold, then fade out across its
  * full ~3s lifetime (JS unmounts at the same time). translateX(-50%) is baked
  * into each frame so it doesn't fight a Tailwind centering utility. */
