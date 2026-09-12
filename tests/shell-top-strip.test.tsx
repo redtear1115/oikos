@@ -188,12 +188,64 @@ describe('shell top strips — no header re-introduces its own inset', () => {
       .sort()
 
     // A sticky header outlives the strip above it (the strip scrolls away, the
-    // header pins), so it — and the skeleton that has to match it pixel for
-    // pixel — keep paying the inset themselves. Every other dashboard header
-    // must read --safe-top, or a banner will push it under the notch.
+    // header pins), so every one of them — and the skeleton that has to match
+    // one pixel for pixel — keeps paying the inset itself. Every other dashboard
+    // header must read --safe-top, or a banner will push it under the notch.
+    // Growing this list means a new sticky header appeared; shrinking it means
+    // one stopped paying, which is #1035 all over again.
     expect(offenders).toEqual([
+      'app/(dashboard)/_components/ContextStrip.tsx',
+      'app/(dashboard)/assets/[id]/_components/AibutsuHeader.tsx',
       'app/(dashboard)/records/_components/RecordsList.tsx',
       'app/(dashboard)/records/loading.tsx',
+      'app/(dashboard)/trips/[id]/_components/TripDetailClient.tsx',
     ])
+  })
+})
+
+/**
+ * #1035 — the same rule read from the other end.
+ *
+ * The allowlist above is keyed on "who calls env()", so it only ever catches a
+ * header that *added* an inset it shouldn't have. It cannot catch the opposite
+ * mistake — an element that pins itself to the top of the viewport and pays no
+ * inset at all, which is how ContextStrip spent its whole life rendering a 35px
+ * bar underneath a 47px notch. Anything that can become the topmost element on
+ * screen has to be enumerated, so this guard starts from the position property
+ * instead: every `sticky top-0` / `fixed top-0` either handles the inset or is
+ * listed here with the reason it doesn't need to.
+ */
+
+/** Matches a Tailwind class list that pins an element to the top of its
+ *  containing block, in either class order. Bounded by the quote characters so
+ *  it can't straddle two separate className strings. */
+const PINNED_TO_TOP =
+  /(?:\bsticky\b|\bfixed\b)[^"'`]*\btop-0\b|\btop-0\b[^"'`]*(?:\bsticky\b|\bfixed\b)/
+
+/** Pinned elements that are not affected by the status bar, with the reason.
+ *  Keep the reason concrete — "checked, it's fine" is how #1035 happened. */
+const NOT_UNDER_THE_STATUS_BAR: Record<string, string> = {
+  'app/(dashboard)/_components/RecurringRuleSheet.tsx':
+    'the error banner sticks inside SheetBody (flex-1 overflow-y-auto), not the ' +
+    'viewport, and SheetFrame is a bottom sheet capped at 92dvh — its top-0 is ' +
+    'the sheet body, which never reaches the status bar',
+}
+
+describe('safe-area — everything pinned to the top pays the inset', () => {
+  it('leaves no sticky/fixed top-0 element without an inset or a reason', () => {
+    const unhandled = [...tsxFiles(join(REPO_ROOT, 'app')), ...tsxFiles(join(REPO_ROOT, 'components'))]
+      .map((f) => ({ path: relative(REPO_ROOT, f), source: readFileSync(f, 'utf8') }))
+      .filter(({ source }) => PINNED_TO_TOP.test(source))
+      .filter(({ source }) => !source.includes('env(safe-area-inset-top)'))
+      .map(({ path }) => path)
+      .sort()
+
+    expect(unhandled).toEqual(Object.keys(NOT_UNDER_THE_STATUS_BAR).sort())
+  })
+
+  it('makes every exemption state its scroll container', () => {
+    for (const [path, reason] of Object.entries(NOT_UNDER_THE_STATUS_BAR)) {
+      expect(reason.trim(), `${path} is exempt without saying why`).not.toBe('')
+    }
   })
 })
