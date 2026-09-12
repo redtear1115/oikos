@@ -2012,6 +2012,10 @@ export const zhCN: Translations = {
           name: 'iCost',
           description: 'iOS 上人气的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
         },
+        splitwise: {
+          name: 'Splitwise',
+          description: '分账起家的老朋友，群组交易导出表格就能带过来。',
+        },
         suishouji: {
           name: '随手记',
           description: '两岸用户众多的记账 App，截图请 ChatGPT 整理成 CSV 带过来。',
@@ -2561,6 +2565,48 @@ export const zhCN: Translations = {
           },
         ],
       },
+      splitwise: {
+        heroKicker: 'SPLITWISE → FUTARI',
+        heroTitle: '你的 Splitwise 记录，可以带走',
+        heroSubtitle: '从 Splitwise 搬到 Futari：把群组或好友的交易导出成表格，上传预览后，两个人接着把日常记下去。',
+        intro: 'Splitwise 是很多人分账的起点，群组与好友的交易都能导出成表格带走：网页版在群组页右上角的齿轮里选「Export spreadsheet」，手机则在标题栏右滑找到「Export」。免费账号每天可新增 4 笔支出，币种换算、收据扫描、图表等功能属于 Splitwise Pro。如果你们想要的不只是分账，而是一本日常都记得下的共同账本，这一页是为此准备的。',
+        differentiators: [
+          {
+            title: '不只分账，是一本共同账本',
+            body: '支出、收入、分类与每月回顾都在同一本账里；分摊与结算只是其中一段。',
+          },
+          {
+            title: '每天记几笔都可以',
+            body: '核心记账没有每日笔数上限，也没有广告，两个人想记就记。',
+          },
+          {
+            title: '多币种内建',
+            body: '旅行时用当地币种记下，主币种的余额自动换算好，不必另外升级。',
+          },
+        ],
+        stepsHeading: '搬迁三步',
+        step1: '在 Splitwise 打开群组或好友页，用「Export spreadsheet」下载表格。',
+        step2: '把 CSV 上传到这里，预览你们的分账历史。',
+        step3: '创建 Futari 账号，一键完成搬迁。',
+        faq: [
+          {
+            question: 'Splitwise 的数据怎么搬到 Futari？',
+            answer: '在群组或好友页导出表格，再把 CSV 上传到这里预览，创建账号后完成导入。',
+          },
+          {
+            question: '导出的字段和 Futari 一样吗？',
+            answer: '不完全一样。Splitwise 的导出每笔交易一行，除了总金额（Cost）还有每个人各自的分摊列。上传后会先预览解析结果，导入时可以对照调整字段与分类，不会直接写进账本。',
+          },
+          {
+            question: '导入需要付费吗？',
+            answer: 'Futari 完全免费，没有隐藏费用。',
+          },
+          {
+            question: '我们也用它记旅行的账，Futari 有对应的做法吗？',
+            answer: '有。Futari 的旅行账本把一趟旅行的支出独立记，可以用当地币种，结束后折回主账本，日常的账不会被旅行冲掉。',
+          },
+        ],
+      },
       suishouji: {
         heroKicker: 'SUISHOUJI → FUTARI',
         heroTitle: '你的随手记数据，可以带走',
@@ -2689,6 +2735,11 @@ export const zhCN: Translations = {
         title: '从 iCost 搬家到 Futari｜截图转 CSV',
         description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、端到端加密。',
         ogDescription: 'iCost 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
+      },
+      splitwise: {
+        title: '从 Splitwise 搬家到 Futari｜导出表格、CSV 导入',
+        description: 'Splitwise 的群组与好友交易可以导出表格带走。上传到 Futari 这个为夫妻、情侣设计的共同账本，分摊、结算与日常记账都在同一本账里。免费、无广告、端到端加密。',
+        ogDescription: 'Splitwise 用户搬家指南：导出表格 → 上传 CSV → 搬进 Futari 双人记账。',
       },
       suishouji: {
         title: '从随手记搬家到 Futari｜截图转 CSV',

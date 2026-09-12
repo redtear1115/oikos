@@ -203,6 +203,24 @@ export const MIGRATE_SOURCES = {
       ],
     },
   },
+  splitwise: {
+    slug: 'splitwise',
+    name: 'Splitwise',
+    contentUpdatedAt: '2026-09-12',
+    // No screenshotWorkflow: Splitwise exports a spreadsheet per group /
+    // friendship (kb.splitwise.com "How can I double check my balances?"),
+    // so users arrive holding a real CSV. Headers don't match any dedicated
+    // sniff signature, so the file routes to the generic mapping wizard.
+    comparison: {
+      rows: [
+        { feature: '雙人共同帳本',   futari: { label: '✓ 預設模式',   tone: 'yes'     }, other: { label: '✓ 群組支援',      tone: 'yes'     } },
+        { feature: '費用分攤模式',   futari: { label: '✓ 多種模式',   tone: 'yes'     }, other: { label: '✓ 多種模式',      tone: 'yes'     } },
+        { feature: '每日記帳筆數',   futari: { label: '✓ 不限',       tone: 'yes'     }, other: { label: '△ 免費版每日 4 筆', tone: 'partial' } },
+        { feature: '多幣別記帳',     futari: { label: '✓ 內建換算',   tone: 'yes'     }, other: { label: '△ 換算需 Pro',    tone: 'partial' } },
+        { feature: '資料匯出帶走',   futari: { label: '✓ CSV 匯出',   tone: 'yes'     }, other: { label: '✓ 試算表匯出',    tone: 'yes'     } },
+      ],
+    },
+  },
   suishouji: {
     slug: 'suishouji',
     name: '隨手記',
