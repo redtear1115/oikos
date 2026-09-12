@@ -13,6 +13,12 @@ const APP_ORIGIN = 'https://futari.southern-light.dev'
 
 type Provider = 'google' | 'apple'
 
+// These stay local rather than moving to `lib/platform.ts` (#1002). That module
+// answers an analytics question — which of five surfaces is this — while the
+// three-way auth branch below needs a raw Capacitor platform string, and this is
+// a native-contract file that reaches installed shells without an App Store
+// review in between. Deduplication isn't worth touching it for.
+
 /** True when running inside a Capacitor native shell (Android / iOS). */
 function isCapacitor(): boolean {
   return typeof window !== 'undefined' && !!(window as unknown as Record<string, unknown>).Capacitor
