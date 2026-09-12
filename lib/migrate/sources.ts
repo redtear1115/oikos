@@ -238,5 +238,11 @@ export const MIGRATE_SOURCES = {
   },
 } satisfies Record<string, SourceDef>
 
+/**
+ * The registry keys, and the authority for "which /migrate pages exist".
+ * Pages, sitemap, i18n `Record<MigrateSlug, …>` and the analytics
+ * `entry_source` axis (`lib/analytics/attribution.ts`) all derive from it —
+ * adding a source here is enough. No hand-written copy of the slug list lives
+ * anywhere: the one that used to sit in this comment went stale at 8 of 15.
+ */
 export type MigrateSlug = keyof typeof MIGRATE_SOURCES
-// → 'honeydue' | 'spendee' | 'cwmoney' | 'moneybook' | 'andromoney' | 'mobills' | 'manebo' | 'simple-daily-money'
