@@ -31,6 +31,8 @@ type Props = {
     cohabitation: string
     newlyweds: string
     petOwners: string
+    /** /use-case hub listing every situation (#1057). */
+    hub: string
   }
   /** Locale-aware /migrate/* hrefs (#613). Three internal links to strengthen
    *  the link graph for SEO and offer cross-tool migrants a direct path. */
@@ -496,7 +498,7 @@ function MigrateLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={migrateHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-[13px] md:text-sm"
+            className="inline-flex items-center gap-1.5 text-sm"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
@@ -612,6 +614,25 @@ function UseCaseLinksSection({
               </p>
             </LandingCtaLink>
           ))}
+        </div>
+
+        {/* The other seven situations live behind one link rather than as ten
+            cards here — the landing section stays a sample of who this is for,
+            not a directory (#1057). */}
+        <div className="mt-6 md:mt-7 text-center md:text-left">
+          <Link
+            href={useCaseHrefs.hub}
+            className="inline-flex items-center gap-1.5 text-sm"
+            style={{
+              color: 'var(--ink)',
+              textDecoration: 'underline',
+              textDecorationColor: 'var(--accent)',
+              textUnderlineOffset: '4px',
+            }}
+          >
+            {t.useCaseSection.seeAll}
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
     </section>

@@ -186,6 +186,10 @@ export type Translations = {
       petOwnersTitle: string
       petOwnersBody: string
       cardAriaLabel: string
+      /** Link to the /use-case hub listing every situation (#1057). The landing
+       *  keeps three cards; the remaining seven live one click away rather than
+       *  turning this section into a link wall. */
+      seeAll: string
     }
     /** Footer trust note. */
     footerTrust: string
@@ -2482,6 +2486,12 @@ export type Translations = {
       description: string
       ogDescription: string
     }
+    /** SEO copy for the /use-case hub/index page (#1057). */
+    useCaseHub: {
+      title: string
+      description: string
+      ogDescription: string
+    }
     /** SEO copy for /use-case/* situational landing pages (#851). */
     useCase: Record<import('@/lib/use-case/cases').UseCaseSlug, {
       title: string
@@ -2512,6 +2522,24 @@ export type Translations = {
     otherCases: {
       heading: string
       cardAriaLabel: string
+    }
+    /** /use-case hub/index page (#1057) — one entry point listing every
+     *  situation, mirroring the /migrate hub. `name` doubles as the middle
+     *  breadcrumb leaf name on each per-slug page (#1058). */
+    hub: {
+      heroKicker: string
+      heroTitle: string
+      heroSubtitle: string
+      /** Heading above the all-situations card grid. */
+      heading: string
+      /** Per-card read-more label. */
+      cardCta: string
+      /** Breadcrumb label for the hub node itself (#1058). */
+      breadcrumbLabel: string
+      items: Record<import('@/lib/use-case/cases').UseCaseSlug, {
+        name: string
+        description: string
+      }>
     }
     /** Per-slug copy. */
     pages: Record<import('@/lib/use-case/cases').UseCaseSlug, {
@@ -2659,6 +2687,7 @@ export const zhTW: Translations = {
       petOwnersTitle: '寵物家庭',
       petOwnersBody: '毛孩的每一筆費用都值得被記住，清楚看見兩個人的心意。',
       cardAriaLabel: '了解 {slug} 情境',
+      seeAll: '看全部 10 種情境',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -5234,6 +5263,11 @@ export const zhTW: Translations = {
       description: '正在找 Honeydue、Spendee、CWMoney、麻布記帳等記帳 App 的替代方案？Futari 是為兩個人做的免費共同帳本，支援 CSV 匯入，幾分鐘就能把過去的紀錄搬過來。',
       ogDescription: '你現在用哪一個記帳 App？挑一個，把過去的紀錄一起搬到 Futari。',
     },
+    useCaseHub: {
+      title: '雙人記帳的 10 種情境｜同居、新婚、旅行、寵物 — Futari',
+      description: '同居生活費怎麼分、新婚夫妻的帳怎麼記、旅行費用怎麼對、養寵物多了哪些開銷——不同的日子，記帳的難處不一樣。這裡是 Futari 為 10 種雙人情境寫的說明，挑最接近你們的那一個。',
+      ogDescription: '10 種雙人記帳情境，挑最接近你們生活的那一個——Futari 雙人帳本，免費、無廣告、端對端加密。',
+    },
     useCase: {
       cohabitation: {
         title: '同居 AA 制記帳｜同居生活費怎麼分？Futari',
@@ -5321,6 +5355,56 @@ export const zhTW: Translations = {
     otherCases: {
       heading: '其他情境',
       cardAriaLabel: '查看 {slug} 頁面',
+    },
+    hub: {
+      heroKicker: '兩個人，十種日子',
+      heroTitle: '你們現在，是哪一種一起生活？',
+      heroSubtitle: '剛搬在一起、剛結婚、養了一隻貓、在計畫下一趟旅行——每種日子會遇到的帳都不太一樣。挑一個最接近你們的，看看 Futari 在那裡能幫上什麼。',
+      heading: '挑一個最接近你們的',
+      cardCta: '看這個情境',
+      breadcrumbLabel: '使用情境',
+      items: {
+        cohabitation: {
+          name: '同居生活費',
+          description: '房租、水電、生活用品——搬在一起之後最先要面對的那幾筆。',
+        },
+        newlyweds: {
+          name: '新婚夫妻',
+          description: '兩個人的收入合成一本帳，從婚後第一個月開始記。',
+        },
+        'pet-owners': {
+          name: '寵物家庭',
+          description: '飼料、看診、預防針——多了一個成員，也多了一份共同的開銷。',
+        },
+        travel: {
+          name: '旅行分攤',
+          description: '訂房他付、車票你付，回來之後不用再翻聊天記錄對帳。',
+        },
+        roommates: {
+          name: '室友分攤',
+          description: '不是伴侶也能共用一本帳，水電網路平分得清清楚楚。',
+        },
+        'monthly-bills': {
+          name: '每月固定費',
+          description: '房租、保險、訂閱服務——每個月都會來的那幾筆。',
+        },
+        'big-purchases': {
+          name: '大筆支出',
+          description: '家電、家具、機票——一次付一大筆，分攤方式先說好比較安心。',
+        },
+        dining: {
+          name: '外食費用',
+          description: '這頓我的、下頓你的，日常吃飯的帳也留得住。',
+        },
+        parenting: {
+          name: '育兒費用',
+          description: '尿布、保母、才藝班，孩子的花費獨立看得見。',
+        },
+        'aa-split': {
+          name: 'AA 制記帳',
+          description: '對半、按比例、全額由一方——AA 不只一種分法。',
+        },
+      },
     },
     pages: {
       cohabitation: {
