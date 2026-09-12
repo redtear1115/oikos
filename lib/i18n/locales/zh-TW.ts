@@ -403,6 +403,10 @@ export type Translations = {
     sendInvite: string
     sharedAndCopied: string
     copied: string
+    /** Web Share API title — deliberately generic, no group/inviter name (privacy). */
+    shareTitle: string
+    /** Web Share API text — deliberately generic, no group/inviter name (privacy). */
+    shareText: string
   }
 
   addSheet: {
@@ -1969,6 +1973,14 @@ export type Translations = {
       alreadyInDuo: string
       unknown: string
     }
+    /** `<head>` metadata for the invite landing page. Deliberately generic —
+     *  no group name / inviter name / financial info (OG preview is crawled
+     *  and cached by chat-app link previewers; see issue #1016). */
+    meta: {
+      title: string
+      description: string
+      ogDescription: string
+    }
   }
 
   offlineBanner: {
@@ -2795,6 +2807,8 @@ export const zhTW: Translations = {
     sendInvite: '傳送邀請',
     sharedAndCopied: '已分享，連結也已複製',
     copied: '已複製連結',
+    shareTitle: '一起用 Futari 記帳',
+    shareText: '兩個人的共同帳本，點開連結就能加入。',
   },
 
   addSheet: {
@@ -4080,6 +4094,11 @@ export const zhTW: Translations = {
       alreadyMember: '你已經是此帳本的成員',
       alreadyInDuo: '你已經和 {partner} 共用一本帳本，要先離開才能加入新的。',
       unknown: '無法加入帳本',
+    },
+    meta: {
+      title: '有人邀請你一起記帳 · Futari',
+      description: '兩個人的共同帳本。點開連結，登入後就能加入。',
+      ogDescription: '兩個人的共同帳本。點開連結，登入後就能加入。',
     },
   },
 

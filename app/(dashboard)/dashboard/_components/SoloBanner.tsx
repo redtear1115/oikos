@@ -43,7 +43,7 @@ export function SoloBanner({ onDismiss }: Props = {}) {
     startTransition(async () => {
       try {
         const url = await createInvite(group.id)
-        const result = await shareInviteLink(url)
+        const result = await shareInviteLink(url, t.soloBanner.shareTitle, t.soloBanner.shareText)
         // Always confirm — desktop share sheets (especially Chrome on macOS) can be
         // unobtrusive enough that users don't realise anything happened. Since the
         // helper always copies first, the URL is on the clipboard either way.

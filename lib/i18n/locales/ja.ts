@@ -328,6 +328,10 @@ export const ja: Translations = {
     sendInvite: '招待を送る',
     sharedAndCopied: '共有しました。リンクもコピー済み',
     copied: 'リンクをコピーしました',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareTitle: 'Futari で一緒に家計簿をつける',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareText: '二人のための共有家計簿です。リンクを開くと参加できます。',
   },
 
   addSheet: {
@@ -1613,6 +1617,13 @@ export const ja: Translations = {
       alreadyMember: 'あなたは既にこの家計簿のメンバーです',
       alreadyInDuo: 'すでに {partner} さんと家計簿を共有しています。新しく参加するには、先に今の家計簿から抜けてください。',
       unknown: '家計簿に参加できません',
+    },
+    meta: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      title: '二人で家計簿をつけませんか · Futari',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      description: '二人のための共有家計簿です。リンクを開いてサインインすると参加できます。',
+      ogDescription: '二人のための共有家計簿です。リンクを開いてサインインすると参加できます。',
     },
   },
 

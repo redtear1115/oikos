@@ -15,6 +15,7 @@
 export async function shareInviteLink(
   url: string,
   title = 'Futari 邀請',
+  text?: string,
 ): Promise<'shared' | 'copied'> {
   // Step 1: copy to clipboard. This is the reliable path for desktop users —
   // even if step 2 below opens a share sheet they don't want, the URL is
@@ -33,7 +34,7 @@ export async function shareInviteLink(
   // Step 2: try the native share sheet (mobile users get LINE / iMessage / etc.).
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
     try {
-      await navigator.share({ title, url })
+      await navigator.share({ title, text, url })
       return 'shared'
     } catch (e) {
       // AbortError = user dismissed the share sheet. Anything else = share

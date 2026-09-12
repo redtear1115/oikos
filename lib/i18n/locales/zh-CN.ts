@@ -329,6 +329,8 @@ export const zhCN: Translations = {
     sendInvite: '发送邀请',
     sharedAndCopied: '已分享，链接也已复制',
     copied: '已复制链接',
+    shareTitle: '一起用 Futari 记账',
+    shareText: '两个人的共同账本，点开链接就能加入。',
   },
 
   addSheet: {
@@ -1614,6 +1616,11 @@ export const zhCN: Translations = {
       alreadyMember: '你已经是此账本的成员',
       alreadyInDuo: '你已经和 {partner} 共用一本账本，要先离开才能加入新的。',
       unknown: '无法加入账本',
+    },
+    meta: {
+      title: '有人邀请你一起记账 · Futari',
+      description: '两个人的共同账本。点开链接，登录后就能加入。',
+      ogDescription: '两个人的共同账本。点开链接，登录后就能加入。',
     },
   },
 

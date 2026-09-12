@@ -330,6 +330,10 @@ export const en: Translations = {
     sendInvite: 'Send invite',
     sharedAndCopied: 'Shared. Link also copied.',
     copied: 'Link copied',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareTitle: 'Track finances together on Futari',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    shareText: 'A shared ledger for two. Open the link to join.',
   },
 
   addSheet: {
@@ -1615,6 +1619,13 @@ export const en: Translations = {
       alreadyMember: "You're already a member of this ledger.",
       alreadyInDuo: 'You already share a ledger with {partner}. Leave it first to join a new one.',
       unknown: "Can't join this ledger.",
+    },
+    meta: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      title: 'Someone invited you to track finances together · Futari',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      description: 'A shared ledger for two. Open the link, sign in, and you can join.',
+      ogDescription: 'A shared ledger for two. Open the link, sign in, and you can join.',
     },
   },
 
