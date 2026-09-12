@@ -2576,6 +2576,11 @@ export const zhCN: Translations = {
       title: '登录 Futari · 开始两个人的记账生活',
       description: '用 Google 账号登录 Futari，开始与伴侣共享家计、记录日常开销与爱车油耗、照看保险与爱物的双人记账 PWA。',
       ogDescription: '用 Google 一键登录，开始两个人的家计簿。',
+      invite: {
+        title: '有人邀请你一起记账 · Futari',
+        description: '有人邀请你加入一本两个人共用的账本。登录后就能加入。',
+        ogDescription: '两个人的共同账本。登录后就能加入。',
+      },
     },
     terms: {
       title: '服务条款 · Futari',

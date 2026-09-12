@@ -2623,6 +2623,13 @@ I will upload the screenshots once you confirm.`,
       title: 'Sign in to Futari · Start budgeting together',
       description: 'Sign in with Google to start your couple-shared ledger: log daily spending and fuel costs, look after insurance and shared things, in a mobile-first PWA.',
       ogDescription: 'One tap to sign in with Google and start your shared household ledger.',
+      invite: {
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        title: 'Someone invited you to track finances together · Futari',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        description: 'Someone invited you to a shared ledger for two. Sign in to join.',
+        ogDescription: 'A shared ledger for two. Sign in to join.',
+      },
     },
     terms: {
       title: 'Terms of Service · Futari',

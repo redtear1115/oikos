@@ -2407,6 +2407,15 @@ export type Translations = {
       title: string
       description: string
       ogDescription: string
+      /** `<head>` metadata for `/sign-in?from=invite` — the redirect target
+       *  when an invite link is opened while signed out. Deliberately as
+       *  generic as invite.meta (no group / inviter name), and always
+       *  `robots: noindex` since it's a per-token entry point (#1016). */
+      invite: {
+        title: string
+        description: string
+        ogDescription: string
+      }
     }
     terms: {
       title: string
@@ -5054,6 +5063,11 @@ export const zhTW: Translations = {
       title: '登入 Futari · 開始兩個人的記帳生活',
       description: '用 Google 帳號登入 Futari，開始與伴侶共享家計、紀錄日常開銷與愛車油耗、照看保險與愛物的雙人記帳 PWA。',
       ogDescription: '用 Google 一鍵登入，開始兩個人的家計簿。',
+      invite: {
+        title: '有人邀請你一起記帳 · Futari',
+        description: '有人邀請你加入一本兩個人共用的帳本。登入後就能加入。',
+        ogDescription: '兩個人的共同帳本。登入後就能加入。',
+      },
     },
     terms: {
       title: '服務條款 · Futari',
