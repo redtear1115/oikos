@@ -120,7 +120,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   const { id } = await params
 
   const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) redirect('/sign-in')
 
   const context = await resolveViewerEpochContext(user.id)
   if (!context) redirect('/onboarding')
