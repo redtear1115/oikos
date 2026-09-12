@@ -2,7 +2,10 @@ export default function Loading() {
   return (
     <div className="relative max-w-md mx-auto min-h-dvh" style={{ background: 'var(--bg)' }}>
       {/* L1: title + 定期 shortcut — mirrors RecordsList's L1Header so the real
-          page paints over the skeleton with no vertical shift. */}
+          page paints over the skeleton with no vertical shift. That includes
+          the raw env() inset: the real header is sticky and keeps its own inset
+          (see RecordsList), so the skeleton must not collapse to --safe-top or
+          the title would jump when a shell top strip is on screen. (#1021) */}
       <div
         className="px-5 pb-3 flex items-center justify-between"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}

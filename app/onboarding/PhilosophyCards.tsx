@@ -364,10 +364,17 @@ export default function PhilosophyCards() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: c.bg, overflow: 'hidden' }}>
+      {/* The card slide has to live in a stylesheet, not in an inline style:
+          an inline `animation` outranks every rule, so a
+          `prefers-reduced-motion` branch could never take it back. (#1022) */}
       <style>{`
         @keyframes cardIn {
           from { opacity: 0; transform: translateX(20px); }
           to   { opacity: 1; transform: translateX(0);    }
+        }
+        .philosophy-card-in { animation: cardIn 0.28s ease; }
+        @media (prefers-reduced-motion: reduce) {
+          .philosophy-card-in { animation: none; }
         }
       `}</style>
       <div style={{
@@ -377,7 +384,7 @@ export default function PhilosophyCards() {
         margin: '0 auto',
         overflow: 'hidden',
       }}>
-        <div key={index} style={{ position: 'absolute', inset: 0, animation: 'cardIn 0.28s ease' }}>
+        <div key={index} className="philosophy-card-in" style={{ position: 'absolute', inset: 0 }}>
           {cards[index]}
         </div>
       </div>

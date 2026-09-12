@@ -352,7 +352,14 @@ export function RecordsList({
       >
         {/* L1Header — unified across Dashboard / Records / Assets (#545 §1).
             pb-3 matches Assets L1 — keeps the title's breathing room while
-            tightening the row a notch vs the earlier pb-4. */}
+            tightening the row a notch vs the earlier pb-4.
+
+            Reads env() directly instead of --safe-top (#1021): every other
+            header hands the status-bar inset to whatever shell top strip is on
+            screen, but this one is sticky. Once it pins, the strip has scrolled
+            away and this row is the topmost thing under the notch again, so it
+            has to keep paying the inset itself — the cost is a slightly wider
+            gap below the strip while scrolled to the top. */}
         <div className="px-5 pt-[max(env(safe-area-inset-top),24px)] pb-3 flex items-center justify-between">
           <div
             className="text-2xl font-medium tracking-tight"

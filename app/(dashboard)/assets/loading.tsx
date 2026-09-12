@@ -4,7 +4,7 @@ export default function Loading() {
       {/* Page title */}
       <div
         className="px-5 pb-4"
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
+        style={{ paddingTop: 'max(var(--safe-top), 24px)' }}
       >
         <div className="h-6 w-16 rounded animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
       </div>
