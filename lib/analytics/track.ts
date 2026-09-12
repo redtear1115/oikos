@@ -1,7 +1,7 @@
 'use client'
 
 import posthog from 'posthog-js'
-import { POSTHOG_ENABLED } from '@/app/providers'
+import { POSTHOG_ENABLED } from '@/lib/analytics/enabled'
 
 /** Hard cap on the pre-init queue. See `track()` for the reasoning. */
 const MAX_QUEUE_SIZE = 50

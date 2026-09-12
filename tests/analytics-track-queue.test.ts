@@ -13,7 +13,7 @@ vi.mock('posthog-js', () => ({
   default: { capture: h.capture },
 }))
 
-vi.mock('@/app/providers', () => ({
+vi.mock('@/lib/analytics/enabled', () => ({
   POSTHOG_ENABLED: true,
 }))
 
