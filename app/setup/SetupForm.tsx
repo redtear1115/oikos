@@ -8,6 +8,7 @@ import { shareInviteLink } from '@/lib/share'
 import { isStandalone } from '@/lib/install-guide'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
+import InviteQr from '@/app/setup/InviteQr'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 const NAME_SUGGESTIONS = ['我們倆', '○○家', '日日', 'Home', '一起']
 const NAME_MAX = 20
@@ -22,6 +23,7 @@ interface CreatedGroup {
 
 export default function SetupForm({ t }: { t: Translations }) {
   const trust = t.trust
+  const invite = t.setup.invite
   const router = useRouter()
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
@@ -73,16 +75,16 @@ export default function SetupForm({ t }: { t: Translations }) {
   const handleCopy = async () => {
     if (!inviteUrl) return
     await navigator.clipboard.writeText(inviteUrl)
-    flashToast('已複製連結')
+    flashToast(invite.copied)
   }
 
   const handleShare = async () => {
     if (!inviteUrl) return
     try {
       const result = await shareInviteLink(inviteUrl)
-      if (result === 'copied') flashToast('已複製連結')
+      if (result === 'copied') flashToast(invite.copied)
     } catch {
-      flashToast('分享失敗')
+      flashToast(invite.shareFailed)
     }
   }
 
@@ -161,7 +163,7 @@ export default function SetupForm({ t }: { t: Translations }) {
             className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
-            {pending ? '建立中…' : trust.bilateral.inviter.cta}
+            {pending ? invite.creating : trust.bilateral.inviter.cta}
           </button>
         </div>
       </main>
@@ -183,62 +185,52 @@ export default function SetupForm({ t }: { t: Translations }) {
               className="text-page leading-tight"
               style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
             >
-              把連結傳給對方
+              {invite.heading}
             </h1>
             <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>
-              對方點開後就能加入「{group.name}」。
+              {invite.subtitle.replace('{name}', group.name)}
             </p>
           </div>
 
-          <div
-            className="rounded-2xl p-4 flex flex-col gap-3"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium"
-                style={{ background: 'var(--accent-soft)', color: 'var(--ink)' }}
-              >
-                我
-              </div>
-              <span className="text-sm" style={{ color: 'var(--ink)' }}>已加入</span>
-            </div>
-            <div className="flex items-center gap-3" style={{ opacity: 0.7 }}>
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm"
-                style={{ background: 'var(--surface-alt)', color: 'var(--ink-3)', border: '1px dashed var(--ink-3)' }}
-              >
-                ?
-              </div>
-              <span className="text-sm" style={{ color: 'var(--ink-2)' }}>還在等對方加入</span>
-            </div>
+          <div className="flex flex-col gap-2">
+            <InviteQr url={inviteUrl} t={invite} />
+            <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
+              {invite.qrHint}
+            </p>
           </div>
 
-          <div
-            className="rounded-2xl px-4 py-3 flex items-center gap-3"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            <div className="flex-1 min-w-0 text-xs break-all" style={{ color: 'var(--ink-2)' }}>
-              {inviteUrl}
+          <div className="h-px" style={{ background: 'var(--hairline)' }} aria-hidden="true" />
+
+          <div className="flex flex-col gap-2">
+            <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
+              {invite.linkHint}
+            </p>
+            <div
+              className="rounded-2xl px-4 py-3 flex items-center gap-3"
+              style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+            >
+              <div className="flex-1 min-w-0 text-xs break-all" style={{ color: 'var(--ink-2)' }}>
+                {inviteUrl}
+              </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
+                style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
+              >
+                {invite.copy}
+              </button>
             </div>
+
             <button
               type="button"
-              onClick={handleCopy}
-              className="h-9 px-3 rounded-lg border-0 text-sm font-medium cursor-pointer shrink-0"
-              style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
+              onClick={handleShare}
+              className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer"
+              style={{ background: 'var(--accent)', color: 'var(--on-fill)' }}
             >
-              複製
+              {invite.share}
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={handleShare}
-            className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer"
-            style={{ background: 'var(--accent)', color: 'var(--on-fill)' }}
-          >
-            分享連結
-          </button>
 
           <div
             className="rounded-2xl px-4 py-3.5 flex flex-col gap-2"
@@ -266,7 +258,7 @@ export default function SetupForm({ t }: { t: Translations }) {
             className="text-sm bg-transparent border-0 cursor-pointer mt-2"
             style={{ color: 'var(--ink-2)' }}
           >
-            稍後再邀請 →
+            {invite.skip}
           </button>
 
           {toast && (
