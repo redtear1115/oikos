@@ -1,6 +1,6 @@
 import { LandingCtaLink } from '../../_landing/LandingCtaLink'
-import { fromParamForUseCase } from '@/lib/analytics/attribution'
-import type { UseCaseSlug } from '@/lib/use-case/cases'
+import { fromParamForUseCase, type UseCaseCtaSource } from '@/lib/analytics/attribution'
+
 
 /**
  * Sign-up ask on /use-case/<slug>.
@@ -19,7 +19,7 @@ export function UseCaseCta({
   label: string
   /** Locale-aware /sign-in href; `LandingCtaLink` appends the `from` tag. */
   signInHref: string
-  slug: UseCaseSlug
+  slug: UseCaseCtaSource
 }) {
   return (
     <div className="text-center md:text-left">

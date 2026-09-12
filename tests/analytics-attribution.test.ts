@@ -24,6 +24,9 @@ describe('entrySourceFromParam', () => {
   it('rejects an unregistered use-case slug rather than minting a value', () => {
     expect(entrySourceFromParam('use-case-not-a-page')).toBe('direct')
     expect(entrySourceFromParam('use-case-')).toBe('direct')
+    // 'hub' is the one non-slug value that IS legal — guard the boundary so a
+    // future rename can't quietly turn it back into `direct`.
+    expect(entrySourceFromParam('use-case-hubs')).toBe('direct')
   })
   it('falls back to direct for null/unknown', () => {
     expect(entrySourceFromParam(null)).toBe('direct')
@@ -35,6 +38,11 @@ describe('entrySourceFromParam', () => {
 describe('fromParamForUseCase', () => {
   it('prefixes the slug so it cannot collide with a migrate source', () => {
     expect(fromParamForUseCase('travel')).toBe('use-case-travel')
+    // The /use-case index is not one of the ten scenarios. It carries its own
+    // value rather than borrowing a slug's — main went red because the hub's
+    // CTA had no source at all (#1061 + #1064 merged clean but didn't compile).
+    expect(fromParamForUseCase('hub')).toBe('use-case-hub')
+    expect(entrySourceFromParam('use-case-hub')).toBe('use_case_hub')
   })
   it('round-trips through entrySourceFromParam for every registered slug', () => {
     for (const slug of USE_CASE_SLUGS) {

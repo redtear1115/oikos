@@ -14,7 +14,16 @@ type Underscored<S extends string> = S extends `${infer Head}-${infer Tail}`
  * which situation pulls; collapsing them would erase the only axis they were
  * built to measure, and PostHog breakdowns cost nothing extra per value.
  */
-export type UseCaseEntrySource = `use_case_${Underscored<UseCaseSlug>}`
+/**
+ * `hub` is the `/use-case` index, not one of the ten scenarios. It gets its own
+ * value rather than borrowing a slug's: a click there says "browsing the
+ * situations", which is a different intent from "this situation is mine".
+ */
+export type UseCaseCtaSource = UseCaseSlug | 'hub'
+
+export type UseCaseEntrySource =
+  | `use_case_${Underscored<UseCaseSlug>}`
+  | 'use_case_hub'
 
 export type EntrySource =
   | 'landing'
@@ -38,16 +47,17 @@ const USE_CASE_FROM_PREFIX = 'use-case-'
  * Named `fromParamFor…`, not `useCase…`: a `use` prefix makes
  * `react-hooks/rules-of-hooks` treat every call site as a hook call and fail lint.
  */
-export function fromParamForUseCase(slug: UseCaseSlug): string {
-  return `${USE_CASE_FROM_PREFIX}${slug}`
+export function fromParamForUseCase(source: UseCaseCtaSource): string {
+  return `${USE_CASE_FROM_PREFIX}${source}`
 }
 
 /** `use-case-aa-split` → `use_case_aa_split`; unknown slugs → undefined. */
 function entrySourceForUseCase(from: string): UseCaseEntrySource | undefined {
   if (!from.startsWith(USE_CASE_FROM_PREFIX)) return undefined
-  const slug = from.slice(USE_CASE_FROM_PREFIX.length)
-  if (!USE_CASE_SLUGS.includes(slug as UseCaseSlug)) return undefined
-  return `use_case_${slug.replaceAll('-', '_')}` as UseCaseEntrySource
+  const source = from.slice(USE_CASE_FROM_PREFIX.length)
+  if (source === 'hub') return 'use_case_hub'
+  if (!USE_CASE_SLUGS.includes(source as UseCaseSlug)) return undefined
+  return `use_case_${source.replaceAll('-', '_')}` as UseCaseEntrySource
 }
 
 /**

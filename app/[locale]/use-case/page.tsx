@@ -109,7 +109,7 @@ export default async function UseCaseHubPage({ params }: { params: Params }) {
         </ul>
       </section>
 
-      <UseCaseCta label={t.ctaLabel} signInHref={localizedHref('/sign-in', locale)} />
+      <UseCaseCta label={t.ctaLabel} signInHref={localizedHref('/sign-in', locale)} slug="hub" />
     </div>
   )
 }
