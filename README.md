@@ -83,7 +83,8 @@ npm run dev
 | `npm start` | 跑生產 build |
 | `npm run lint` | ESLint |
 | `npm test` | vitest watch mode |
-| `npm run test:run` | vitest 一次性 |
+| `npm run test:run` | vitest 一次性（含要連 dev DB 的 integration test） |
+| `npm run test:ci` | vitest 一次性，排掉需要 DB 的 integration test（CI 用） |
 | `npm run db:generate` | Drizzle：從 schema 生 migration |
 | `npm run db:migrate` | Drizzle：apply migrations |
 | `npm run db:studio` | Drizzle Studio（DB browser） |
@@ -117,6 +118,19 @@ drizzle/                  SQL migrations + journal
 __tests__/, tests/        vitest 測試
 docs/superpowers/specs/   架構規格 + 設計決策
 ```
+
+---
+
+## CI（GitHub Actions）
+
+| Workflow | 觸發 | 做什麼 |
+|---|---|---|
+| `.github/workflows/ci.yml` | 每個 PR to `main` | `npm ci` → `lint` → `test:ci` → `build`（不需要任何 secret） |
+| `.github/workflows/native-smoke.yml` | 動到 `ios/**`、`android/**`、`capacitor.config.ts`、`patches/**`、`package.json`、`package-lock.json` 的 PR；每月 1 號 cron；手動 | iOS 不簽章 archive（macOS runner）＋ Android `assembleDebug`（JDK 21） |
+
+原生 smoke 刻意不掛在每個 PR 上——macOS runner 是 10 倍分鐘數計費。它存在的理由是
+[app-store-submission-runbook §G](docs/app-store-submission-runbook.md)：Capacitor 8 的 SPM
+衝突潛伏了兩個月，直到要送審才被發現。
 
 ---
 
@@ -155,6 +169,11 @@ docs/superpowers/specs/   架構規格 + 設計決策
 
 | 版本 | 範圍 |
 |---|---|
+| [v1.5.6](CHANGELOG.md#156---2026-09-12) | iOS 原生登入修復 · 三平台 CI 與發版地基 · 殼版本偵測 |
+| [v1.5.5](CHANGELOG.md#155---2026-08-12) | 登入失敗被看見 · solo 重複切換修正 · 送審素材補齊 |
+| [v1.5.4](CHANGELOG.md#154---2026-07-13) | DB 連線事故根因修復 · migrate 競品頁查證改寫 |
+| [v1.5.3](CHANGELOG.md#153---2026-06-30) | 測試版回報修正 · solo 旅行 500 · 鍵盤留白 |
+| [v1.5.2](CHANGELOG.md#152---2026-06-11) | 首次送審就緒 · 暖燈 App icon · iOS 推播能力 |
 | [v1.5.1](CHANGELOG.md#151---2026-06-10) | 上架準備 · 帳號刪除 · 落地頁提速 |
 | [v1.5.0](CHANGELOG.md#150---2026-06-09) | iOS 啟程 · Sign in with Apple · 推播提醒 |
 | [v1.4.3](CHANGELOG.md#143---2026-05-31) | 品牌面升溫 · Landing 插圖欄位上線 |

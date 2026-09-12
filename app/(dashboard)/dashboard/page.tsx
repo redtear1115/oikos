@@ -42,7 +42,11 @@ const PAGE_SIZE = 20
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthorized')
+  // Layout already gates this, but Next renders layout + page in parallel, so a
+  // signed-out visitor (crawlers hit /dashboard directly) still reaches here.
+  // Redirect rather than throw — throwing turned those visits into 500s and
+  // Sentry noise (#997).
+  if (!user) redirect('/sign-in')
 
   // Pin-aware: when pinned to a past epoch (possibly on a different group, see
   // #141), group + window follow the pin so feed + balance scope to the right

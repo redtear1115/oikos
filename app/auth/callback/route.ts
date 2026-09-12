@@ -8,7 +8,12 @@ import { cookies } from 'next/headers'
 import { localizedSignInPath } from '@/lib/i18n/server-redirect'
 import { LOCALE_COOKIE, DEFAULT_LOCALE, isLocale } from '@/lib/i18n/locales-meta'
 import { aliasServer, captureServer } from '@/lib/analytics/server'
-import { entrySourceFromParam, migrateSourceFromParam, isFirstAuth } from '@/lib/analytics/attribution'
+import {
+  entrySourceFromParam,
+  migrateSourceFromParam,
+  isFirstAuth,
+  type AuthPath,
+} from '@/lib/analytics/attribution'
 
 /**
  * Record a failed sign-in so the funnel can tell "tried and failed" apart from
@@ -22,6 +27,22 @@ import { entrySourceFromParam, migrateSourceFromParam, isFirstAuth } from '@/lib
  * since person-level maths on the bucket is meaningless.
  */
 const FAILURE_BUCKET_ID = 'anon:auth-callback-failure'
+
+/** Every sign-in reaching this route came through the web OAuth redirect. */
+const AUTH_PATH: AuthPath = 'web_oauth'
+
+/**
+ * Which OAuth provider the session belongs to, when Supabase tells us. Read from
+ * `app_metadata.provider`, which is the provider the account was created with —
+ * for an account with several linked identities it can name a different one than
+ * this sign-in used. Futari never offers identity linking, so in practice the two
+ * agree; treat the property as "the account's provider", not a per-attempt fact.
+ * Omitted entirely when absent rather than guessed.
+ */
+function providerOf(user: { app_metadata?: Record<string, unknown> } | null): string | undefined {
+  const provider = user?.app_metadata?.provider
+  return typeof provider === 'string' && provider ? provider : undefined
+}
 
 async function recordAuthFailure(
   aid: string | null,
@@ -106,10 +127,18 @@ export async function GET(request: Request) {
     const createdAt = data.user.created_at ? new Date(data.user.created_at) : new Date(0)
     const firstAuth = isFirstAuth(createdAt, new Date())
 
+    const provider = providerOf(data.user)
+
     await captureServer(
       userId,
       firstAuth ? 'signed_up' : 'signed_in',
-      { entry_source: entrySource, ...(migrateSource ? { migrate_source: migrateSource } : {}), locale },
+      {
+        entry_source: entrySource,
+        ...(migrateSource ? { migrate_source: migrateSource } : {}),
+        locale,
+        path: AUTH_PATH,
+        ...(provider ? { provider } : {}),
+      },
       firstAuth ? { entry_source: entrySource } : undefined,
     )
   }

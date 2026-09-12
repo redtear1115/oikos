@@ -464,6 +464,11 @@ export const zhCN: Translations = {
     cancel: '取消删除',
   },
 
+  shellUpdateNotice: {
+    message: 'App 版本较旧，更新后可以使用最新的功能。',
+    dismissAriaLabel: '关闭提示',
+  },
+
   splitRatioSection: {
     meSuffix: '（我）',
     partnerSuffix: '（对方）',

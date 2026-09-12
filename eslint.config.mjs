@@ -39,6 +39,25 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // `no-html-link-for-pages` stays ON project-wide (an `<a>` to an internal
+    // app route is usually a real mistake a future edit could make), and is
+    // only waived for the files below, where the `<a>` is deliberate:
+    // - Settings footer links to bare `/terms` / `/privacy`: those paths only
+    //   exist because the locale middleware (proxy.ts) resolves them, and a
+    //   full navigation avoids `<Link />` prefetching legal pages nobody opens.
+    // - invite/[token] error page's `/dashboard` link: a full page load re-runs
+    //   middleware auth, so an unauthenticated visitor lands on sign-in instead
+    //   of a client-side transition into a layout that will bounce them anyway.
+    files: [
+      "app/(dashboard)/settings/_components/SettingsContent.tsx",
+      // Brackets are glob character classes, so the dynamic segment needs escaping.
+      "app/invite/\\[token\\]/page.tsx",
+    ],
+    rules: {
+      "@next/next/no-html-link-for-pages": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

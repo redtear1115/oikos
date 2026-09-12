@@ -5,6 +5,7 @@ import { track, getAnonId } from '@/lib/analytics/track'
 import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attribution'
 import { recordNativeAuthConversion } from '@/actions/auth'
 import { generateNonce, sha256Hex } from '@/lib/auth/nonce'
+import { isUserCancelled } from '@/lib/auth/appleSignInError'
 
 // Deep link scheme registered in AndroidManifest.xml / capacitor.config.ts
 const CAPACITOR_SCHEME = 'dev.southernlight.futari'
@@ -130,12 +131,31 @@ export function SignInButton({ provider, label }: { provider: Provider; label: s
     const supabase = createClient()
     const ctx = { next, from }
 
-    if (provider === 'apple' && getPlatform() === 'ios') {
-      await appleNativeSignIn(supabase, ctx)
-    } else if (isCapacitor()) {
-      await browserOAuthSignIn(supabase, provider, ctx)
-    } else {
-      await webOAuthSignIn(supabase, provider, ctx)
+    try {
+      if (provider === 'apple' && getPlatform() === 'ios') {
+        try {
+          await appleNativeSignIn(supabase, ctx)
+        } catch (err) {
+          // The native sheet failed. Until #935 this path had no catch at all,
+          // so a missing `com.apple.developer.applesignin` entitlement made the
+          // button look dead on every TestFlight build. Never leave it silent.
+          if (isUserCancelled(err)) return
+          track('sign_in_failed', { reason: 'apple_native_unavailable', provider, path: 'ios_native' })
+          console.error('[sign-in] native Apple failed, falling back to browser OAuth', err)
+          // Same flow Google already uses on this platform, and it reaches the
+          // same Apple authorize page the web build uses — so a reviewer or user
+          // can still get in even when the native sheet refuses to present.
+          await browserOAuthSignIn(supabase, provider, ctx)
+        }
+      } else if (isCapacitor()) {
+        await browserOAuthSignIn(supabase, provider, ctx)
+      } else {
+        await webOAuthSignIn(supabase, provider, ctx)
+      }
+    } catch (err) {
+      // A throw here reaches nothing the user can see, so at minimum record it.
+      track('sign_in_failed', { reason: 'unexpected', provider, path: getPlatform() })
+      console.error('[sign-in] unexpected failure', err)
     }
   }
 

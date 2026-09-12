@@ -15,6 +15,29 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.6] - 2026-09-12
+
+主題：**讓殼跟上網站**——iOS 原生 Apple 登入修到真正可用，三平台的 CI、發版流程與殼版本偵測一次補齊；殼與網站之間的兩個盲區（登入漏斗、潛伏的編譯壞損）從此有訊號。
+完整 diff：[v1.5.5...v1.5.6](https://github.com/redtear1115/oikos/compare/v1.5.5...v1.5.6)
+
+### 使用者可見變化
+
+- **iOS 原生 Apple 登入修復（#935）**：Sign in with Apple 的 entitlement 從專案建檔起就缺，原生登入在任何 TestFlight / App Store build 上從未可用；`1.5.5 (3)` 補回並已實機驗證。取消或失敗也不再無聲——原生流程失敗會自動退回瀏覽器登入，不會卡在原地。
+- **未登入直開內頁不再出現錯誤頁（#997）**：未登入狀態直接開 dashboard / 帳務 / 愛物頁，先前會看到 500 錯誤，現在一律導回登入頁。
+- **舊版 App 會收到溫和的更新提示（#991）**：安裝版低於門檻時，主畫面上方出現可關閉的提示。目前門檻低於所有已釋出版本，預設不顯示；抬門檻是之後看過版本分佈的營運決定。
+- **隱私頁補上可用的聯絡 email**，刪除帳號對話框的取消期限文案改為正確數字。4 語同步。
+
+### 技術變更
+
+- **CI 三件組（#988）**：web PR 跑 lint / test / build（`test:ci` 排除需 DB 的 integration 檔）；原生殼編譯 smoke（path filter + 每月 cron + 手動觸發）——iOS archive 不簽章、Android `assembleDebug`。SPM 衝突類壞損改在引入當週的 PR 就紅，而不是送審當天才爆。
+- **Capacitor 8 × apple-sign-in 的 SPM 衝突修復（#935）**：`patch-package` 放寬 plugin 的 `capacitor-swift-pm` 版本範圍（clean-room 驗收含對照組）；iOS native 計數 bump 至 `1.5.5 (3)`。
+- **三平台 harness 制度化（#987 / #989）**：CLAUDE.md 新增三平台架構段落（送審 trigger、原生契約面、版本號策略）；`release` / `ship-native` 兩個 repo-scoped skill 取代外部 plugin 依賴，發版流程內建原生影響掃描。
+- **`CAP_SERVER_URL` dev 覆寫（#990）**：殼可指向 localhost / Vercel preview 測原生契約面；未設定時產物 byte-identical，cleartext 只在 http 覆寫時放寬且 Android 限 loopback（`localhost` / `10.0.2.2`）。
+- **登入轉換可歸因（#998）**：`signed_in` / `signed_up` 加 `path`（`web_oauth` / `ios_native`）與 `provider`；原生轉換路徑（`recordNativeAuthConversion`）補上首個測試檔。
+- **殼版本偵測（#991）**：`lib/shellVersion.ts` per-platform `MIN_SHELL_VERSION` + 數值化版本比較（fail-open）；`shell_version_seen` 事件開始累積安裝版本分佈。web / PWA 路徑零影響（`@capacitor/app` 走 dynamic import，經 build chunk 驗證）。
+- **lint 與工具鏈**：`no-html-link-for-pages` 全域保留、兩個查證過的檔案 scoped 豁免（#996）；Node 鎖 24 LTS（`.nvmrc`）；`.claude/settings.json` 補唯讀指令 allowlist。
+- **上架素材與 runbook**：13" iPad 截圖、出口合規宣告、ASC API key 角色分工與填表實戰坑全數記入 `docs/app-store-submission-runbook.md`。
+
 ## [1.5.5] - 2026-08-12
 
 主題：**讓失敗被看見**——修掉 solo 模式一個看得見的重複，把登入失敗路徑從三層靜音補成有訊號、有提示，並補齊首次送審在素材端的最後缺口。
@@ -688,7 +711,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.5...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.6...HEAD
+[1.5.6]: https://github.com/redtear1115/oikos/compare/v1.5.5...v1.5.6
 [1.5.5]: https://github.com/redtear1115/oikos/compare/v1.5.4...v1.5.5
 [1.5.4]: https://github.com/redtear1115/oikos/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/redtear1115/oikos/compare/v1.5.2...v1.5.3

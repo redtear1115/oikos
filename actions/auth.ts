@@ -7,7 +7,12 @@ import { localizedHomePath } from '@/lib/i18n/server-redirect'
 import { cookies } from 'next/headers'
 import { LOCALE_COOKIE, DEFAULT_LOCALE, isLocale } from '@/lib/i18n/locales-meta'
 import { aliasServer, captureServer } from '@/lib/analytics/server'
-import { entrySourceFromParam, migrateSourceFromParam, isFirstAuth } from '@/lib/analytics/attribution'
+import {
+  entrySourceFromParam,
+  migrateSourceFromParam,
+  isFirstAuth,
+  type AuthPath,
+} from '@/lib/analytics/attribution'
 
 export async function signOut() {
   const supabase = await createClient()
@@ -30,6 +35,13 @@ export async function signOut() {
  * can't be spoofed. No-op if no session is visible yet. Never throws — the
  * caller's navigation must proceed regardless.
  */
+// Facts of this action's only call site (SignInButton's `appleNativeSignIn`),
+// not client-supplied hints — Apple's native sheet is the sole flow that lands
+// here. Hardcoding them keeps the funnel axis unspoofable, same reasoning as
+// reading the user from the server session below.
+const NATIVE_AUTH_PATH: AuthPath = 'ios_native'
+const NATIVE_AUTH_PROVIDER = 'apple'
+
 export async function recordNativeAuthConversion(opts: {
   from?: string | null
   anonId?: string | null
@@ -56,7 +68,13 @@ export async function recordNativeAuthConversion(opts: {
     await captureServer(
       userId,
       firstAuth ? 'signed_up' : 'signed_in',
-      { entry_source: entrySource, ...(migrateSource ? { migrate_source: migrateSource } : {}), locale },
+      {
+        entry_source: entrySource,
+        ...(migrateSource ? { migrate_source: migrateSource } : {}),
+        locale,
+        path: NATIVE_AUTH_PATH,
+        provider: NATIVE_AUTH_PROVIDER,
+      },
       firstAuth ? { entry_source: entrySource } : undefined,
     )
   } catch (e) {
