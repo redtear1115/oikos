@@ -1126,6 +1126,25 @@ export const ja: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review.
+  setup: {
+    invite: {
+      heading: '家計簿の準備はできました。ふたりで始めましょう',
+      subtitle: '相手が参加すると、「{name}」をふたりで記録できます。',
+      qrHint: '相手がそばにいるなら、これを読み取ってもらいましょう',
+      qrReveal: 'QRコードを表示',
+      qrHide: '閉じる',
+      qrAlt: '家計簿に参加するためのQRコード',
+      linkHint: '離れているなら、リンクを送りましょう',
+      copy: 'コピー',
+      share: 'リンクを共有',
+      skip: 'あとで招待する →',
+      copied: 'リンクをコピーしました',
+      shareFailed: '共有できませんでした',
+      creating: '作成中…',
+    },
+  },
+
   support: {
     buttonText: 'コーヒーを贈る',
     frameTitle: 'Ko-fi サポートウィンドウ',

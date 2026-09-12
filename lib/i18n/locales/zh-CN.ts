@@ -1127,6 +1127,24 @@ export const zhCN: Translations = {
     },
   },
 
+  setup: {
+    invite: {
+      heading: '账本准备好了，让对方也进来',
+      subtitle: '对方加入后，就能一起记「{name}」。',
+      qrHint: '对方就在旁边的话，直接扫这个',
+      qrReveal: '显示二维码',
+      qrHide: '收起来',
+      qrAlt: '加入账本的二维码',
+      linkHint: '不在旁边的话，把链接发过去',
+      copy: '复制',
+      share: '分享链接',
+      skip: '稍后再邀请 →',
+      copied: '已复制链接',
+      shareFailed: '分享失败',
+      creating: '创建中…',
+    },
+  },
+
   support: {
     buttonText: '请喝杯咖啡',
     frameTitle: 'Ko-fi 支持小窗口',

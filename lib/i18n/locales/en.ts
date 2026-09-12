@@ -1128,6 +1128,25 @@ export const en: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review.
+  setup: {
+    invite: {
+      heading: 'Your ledger is ready — bring your partner in',
+      subtitle: 'Once they join, you can track "{name}" together.',
+      qrHint: 'If they are with you, have them scan this',
+      qrReveal: 'Show QR code',
+      qrHide: 'Hide',
+      qrAlt: 'QR code to join the ledger',
+      linkHint: 'If they are not, send them the link',
+      copy: 'Copy',
+      share: 'Share link',
+      skip: 'Invite later →',
+      copied: 'Link copied',
+      shareFailed: 'Could not share',
+      creating: 'Creating…',
+    },
+  },
+
   support: {
     buttonText: 'Support Futari',
     frameTitle: 'Ko-fi support window',

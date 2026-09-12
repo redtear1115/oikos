@@ -1431,6 +1431,27 @@ export type Translations = {
     }
   }
 
+  /** Setup flow's invite step (#1017) — face-to-face QR path alongside the
+   *  existing link-share path. */
+  setup: {
+    invite: {
+      heading: string
+      /** Template with `{name}` placeholder for the group name. */
+      subtitle: string
+      qrHint: string
+      qrReveal: string
+      qrHide: string
+      qrAlt: string
+      linkHint: string
+      copy: string
+      share: string
+      skip: string
+      copied: string
+      shareFailed: string
+      creating: string
+    }
+  }
+
   /** Ko-fi floating-chat widget (#893) — button label shown on the bottom-right
    *  floating button. The widget mounts on landing and settings pages. */
   support: {
@@ -3590,6 +3611,24 @@ export const zhTW: Translations = {
         cta: '我也是',
         confirming: '正在加入…',
       },
+    },
+  },
+
+  setup: {
+    invite: {
+      heading: '帳本準備好了，讓對方也進來',
+      subtitle: '對方加入後，就能一起記「{name}」。',
+      qrHint: '對方就在旁邊的話，直接掃這個',
+      qrReveal: '顯示 QR Code',
+      qrHide: '收起來',
+      qrAlt: '加入帳本的 QR Code',
+      linkHint: '不在旁邊的話，把連結傳過去',
+      copy: '複製',
+      share: '分享連結',
+      skip: '稍後再邀請 →',
+      copied: '已複製連結',
+      shareFailed: '分享失敗',
+      creating: '建立中…',
     },
   },
 
