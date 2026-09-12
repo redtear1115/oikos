@@ -3,7 +3,7 @@
 > 家庭記帳工具，對使用者顯示為 **Futari**；codebase 用 Oikos。
 > 固定兩人（夫妻／伴侶）使用。Mobile-first PWA。
 
-這份是 agent 工作指南——架構、domain model、慣例、邊界。要把專案跑起來或部署，看 [README.md](README.md)。動文案、判讀指標、做產品取捨之前，看 [PRODUCT.md](PRODUCT.md)：各 surface 的意圖與「哪些低數字是預期的」寫在那裡。視覺 token 與元件規則在 [DESIGN.md](DESIGN.md)，那份是產生出來的，見下方「設計脈絡（Impeccable）」。
+這份是 agent 工作指南——架構、domain model、慣例、邊界。要把專案跑起來或部署，看 [README.md](README.md)。動文案、判讀指標、做產品取捨之前，看 [PRODUCT.md](PRODUCT.md)：各 surface 的意圖與「哪些低數字是預期的」寫在那裡。視覺 token 與元件規則在 [DESIGN.md](DESIGN.md)。後兩份由 Impeccable 維護，改動前先讀「設計脈絡（Impeccable）」那段。
 
 ---
 
@@ -286,7 +286,10 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 - 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
 - Register＝`product`；Creative North Star＝「The Warm Lamp」。
-- **DESIGN.md 是 generated artifact，不要手改。** 它（含 YAML frontmatter）由 `/impeccable document` 掃描 `app/globals.css` 產生，任何手動編輯——包括補連結、改語氣——都會在下次 regenerate 時消失。要改內容就改產生來源：token 改 `app/globals.css` 後重跑 `/impeccable document`；格式問題改 Impeccable 的輸出模板。
+- **DESIGN.md 與 PRODUCT.md 由 Impeccable 維護，refresh 是「model 全檔重寫」，不是機械產生。** `/impeccable document` 重寫 DESIGN.md、`/impeccable teach` 重寫 PRODUCT.md；真正機械地從 `app/globals.css` 抄過去的只有 `.impeccable/design.json` 的 token 值。工具不會靜默覆蓋（偵測到既有檔會先問要 refresh 哪一份），但**手寫段落能不能留下來，取決於當時跑 refresh 的 agent 有沒有先讀過現檔、刻意逐段帶過去**——那是判斷，不是保證。
+  - 所以：**跑 refresh 前先讀現檔，逐段帶過，不要從零生成。** PRODUCT.md 的 Surface Intents、DESIGN.md 的任何手動補充都屬於這類。
+  - 失效的樣子不是檔案被清空，而是某一段在一次看起來很正常的「文件重整」裡被壓縮掉。所以控制點是 git diff，不是工具。
+  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現在 13KB，實務上踩不到。
 - **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
   - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
   - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。
