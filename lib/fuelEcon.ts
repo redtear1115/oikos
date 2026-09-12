@@ -7,30 +7,57 @@
  * hero-card average was a second, independent implementation living in the
  * query layer under the name `avgFuelEcon`.
  *
- * ⚠️ There are currently TWO averages, and they are NOT interchangeable:
+ * ## One average, distance-weighted, 180-day window (#1095)
  *
- *   - `computeAvgEcon`     — mean of per-fill km/L, last 180 days only.
- *                            Used by the asset detail page.
- *   - `computeOverallEcon` — total distance / total liters, no time window.
- *                            Used by the assets-list car hero card.
+ * There used to be two averages — a mean of per-fill ratios on the detail page
+ * and a ratio of totals on the hero card — and the same car showed two numbers.
+ * #1095 collapsed them into `computeAvgEcon`:
  *
- * They agree only when every fill has the same liters AND everything is inside
- * the 180-day window; otherwise they return different numbers for the same car
- * (see `tests/fuelEcon.test.ts` › "兩種平均法的差異"). Collapsing them into one
- * is a product decision, not a refactor — `car-fuellog-design.md` Q12 says the
- * window should be 近 6 個月, which `computeOverallEcon` does not honour.
+ *   - **Distance-weighted** (total distance ÷ total liters), not the mean of
+ *     per-fill km/L. The arithmetic mean systematically overstates economy: it
+ *     gives a 20 L thrifty leg the same weight as a 50 L thirsty one, but the
+ *     driver paid for the 50 L. Totals answer the question actually being
+ *     asked — "over this period, how far did we get on how much fuel".
+ *   - **Window = last 180 days, measured from `now`, not from the last fill.**
+ *     「平均油耗」means *recent* economy. Anchoring to the last fill would make
+ *     a car parked for two years still report a number, which is precisely the
+ *     reading the window exists to prevent. Consequence (intended, see #1095):
+ *     a car with no fill-up in the last 180 days has **no** average and the
+ *     callers must render their existing null state.
+ *
+ * Failure mode to recognise: if this ever silently returns a number for a car
+ * that has not been refuelled in half a year, the window anchor has drifted to
+ * the data instead of the clock.
  */
 
 interface FuelLogLike {
   liters: string | number
   odometer: number
   loggedAt: Date
+  /**
+   * Optional tie-break for same-day fills — "which one was written down first".
+   * Not the chapter/epoch predicate (that is a query-layer concern); purely an
+   * ordering key so two fills sharing a `loggedAt` sort deterministically.
+   * Callers that omit it get the input array order for ties.
+   */
+  createdAt?: Date
 }
 
 const SIX_MONTHS_DAYS = 180
 
 function toLiters(v: string | number): number {
   return typeof v === 'string' ? parseFloat(v) : v
+}
+
+/**
+ * Oldest → newest. Ties on `loggedAt` break on `createdAt` when present, so the
+ * result does not depend on the order the caller happened to fetch rows in.
+ */
+function ascending(a: FuelLogLike, b: FuelLogLike): number {
+  const byLogged = a.loggedAt.getTime() - b.loggedAt.getTime()
+  if (byLogged !== 0) return byLogged
+  if (a.createdAt && b.createdAt) return a.createdAt.getTime() - b.createdAt.getTime()
+  return 0
 }
 
 /**
@@ -46,56 +73,35 @@ export function singleEcon(curr: FuelLogLike, prev: FuelLogLike | null): number 
 }
 
 /**
- * Average km/L over the last 180 days. Returns null when fewer than 2 entries
- * fall in the window (no pair to compute).
+ * Average km/L over the last 180 days: total distance ÷ total liters.
+ *
+ * The earliest in-window entry establishes the starting odometer, but the fuel
+ * it put in was burned *before* the measured distance began — so its liters
+ * must not be counted against that distance. Its odometer still anchors the
+ * range.
+ *
+ * Returns null when fewer than 2 entries fall in the window (nothing to measure
+ * between), or when the distance / liters totals are non-positive (odometer
+ * entered backwards, zero-liter rows).
+ *
+ * Because this is a ratio of totals rather than a mean of pairs, one mis-keyed
+ * mid-series odometer no longer voids just its own pair — it shifts the whole
+ * result. Only a first/last reversal makes it null.
+ *
+ * `now` is injectable for tests; production callers use the real clock.
  */
 export function computeAvgEcon(logs: FuelLogLike[], now: Date = new Date()): number | null {
   const cutoff = new Date(now.getTime() - SIX_MONTHS_DAYS * 24 * 60 * 60 * 1000)
-  const inWindow = logs
-    .filter(l => l.loggedAt >= cutoff)
-    .sort((a, b) => a.loggedAt.getTime() - b.loggedAt.getTime())  // ascending
+  const inWindow = [...logs].filter(l => l.loggedAt >= cutoff).sort(ascending)
 
   if (inWindow.length < 2) return null
 
-  const econs: number[] = []
-  for (let i = 1; i < inWindow.length; i++) {
-    const e = singleEcon(inWindow[i], inWindow[i - 1])
-    if (e !== null) econs.push(e)
-  }
-  if (econs.length === 0) return null
-  return econs.reduce((a, b) => a + b, 0) / econs.length
-}
-
-/**
- * Overall km/L across the whole input set: total distance / total liters,
- * excluding the earliest entry's liters.
- *
- * The earliest entry establishes the starting odometer, but the fuel it put in
- * was burned *before* the measured distance began — so its liters must not be
- * counted against that distance. Its odometer still anchors the range.
- *
- * Unlike `computeAvgEcon` this applies **no time window**, and it weights each
- * fill by its liters (one ratio of totals) instead of averaging the per-fill
- * ratios. A single mid-series odometer rollback does not void the result here,
- * whereas `computeAvgEcon` drops just that pair.
- *
- * Returns null when fewer than 2 entries, or when distance / liters sum to a
- * non-positive value (odometer entered backwards, zero-liter rows).
- *
- * Ordering: sorted by `loggedAt` descending before use. The sort is stable, so
- * entries sharing a `loggedAt` keep the caller's order — callers that need a
- * deterministic tie-break (e.g. `created_at`) must pre-sort.
- */
-export function computeOverallEcon(logs: FuelLogLike[]): number | null {
-  if (logs.length < 2) return null
-  const desc = [...logs].sort((a, b) => b.loggedAt.getTime() - a.loggedAt.getTime())
-
-  const latest = desc[0]
-  const earliest = desc[desc.length - 1]
+  const earliest = inWindow[0]
+  const latest = inWindow[inWindow.length - 1]
   const distance = latest.odometer - earliest.odometer
   // Skip the earliest entry's liters (it is the baseline fill-up).
-  const litersSum = desc
-    .slice(0, desc.length - 1)
+  const litersSum = inWindow
+    .slice(1)
     .reduce((acc, l) => acc + toLiters(l.liters), 0)
 
   if (distance <= 0 || litersSum <= 0) return null
