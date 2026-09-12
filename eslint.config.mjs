@@ -27,14 +27,6 @@ const eslintConfig = defineConfig([
       // case the React docs themselves cite as a legitimate use of useEffect.
       // We've reviewed every callsite; opting out project-wide.
       "react-hooks/set-state-in-effect": "off",
-      // `no-html-link-for-pages` is a Pages-Router-era rule: it assumes every
-      // internal path is a real file route that `<Link />` can client-navigate to.
-      // Here the public pages live under `app/[locale]/…` and the bare `/terms`,
-      // `/privacy` paths only exist because the locale middleware resolves them, so
-      // the `<a>` (full navigation, middleware picks the locale) is the intended
-      // behaviour rather than an oversight. Turning CI on with this rule enabled
-      // would mean starting red on a rule we don't intend to obey.
-      "@next/next/no-html-link-for-pages": "off",
       // Allow underscore-prefix to mark intentionally-unused destructure / args / vars.
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -45,6 +37,25 @@ const eslintConfig = defineConfig([
           destructuredArrayIgnorePattern: "^_",
         },
       ],
+    },
+  },
+  {
+    // `no-html-link-for-pages` stays ON project-wide (an `<a>` to an internal
+    // app route is usually a real mistake a future edit could make), and is
+    // only waived for the files below, where the `<a>` is deliberate:
+    // - Settings footer links to bare `/terms` / `/privacy`: those paths only
+    //   exist because the locale middleware (proxy.ts) resolves them, and a
+    //   full navigation avoids `<Link />` prefetching legal pages nobody opens.
+    // - invite/[token] error page's `/dashboard` link: a full page load re-runs
+    //   middleware auth, so an unauthenticated visitor lands on sign-in instead
+    //   of a client-side transition into a layout that will bounce them anyway.
+    files: [
+      "app/(dashboard)/settings/_components/SettingsContent.tsx",
+      // Brackets are glob character classes, so the dynamic segment needs escaping.
+      "app/invite/\\[token\\]/page.tsx",
+    ],
+    rules: {
+      "@next/next/no-html-link-for-pages": "off",
     },
   },
 ]);
