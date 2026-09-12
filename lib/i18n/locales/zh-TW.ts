@@ -2593,7 +2593,7 @@ export const zhTW: Translations = {
       seeAll: '看全部搬遷指南',
     },
     footerTrust: '端對端加密 · 資料只屬於你們兩個',
-    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAppName: 'Futari · 雙人記帳',
     jsonLdAlternateNames: ['Futari 家計簿', '情侶記帳 app', '夫妻記帳', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
       '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',

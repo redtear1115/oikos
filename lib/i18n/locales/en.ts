@@ -141,7 +141,7 @@ export const en: Translations = {
       seeAll: 'See all migration guides',
     },
     footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
-    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAppName: 'Futari',
     jsonLdAlternateNames: ["Futari · couple's ledger", 'Futari shared finance app', '兩個人的家計簿', 'ふたり 家計簿'],
     jsonLdAppDescription:
       "A shared finance app built for couples and partners. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs.",

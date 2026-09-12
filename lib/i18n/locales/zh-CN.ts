@@ -141,7 +141,7 @@ export const zhCN: Translations = {
       seeAll: '看全部迁移指南',
     },
     footerTrust: '端到端加密 · 数据只属于你们两个',
-    jsonLdAppName: 'Futari · ふたり',
+    jsonLdAppName: 'Futari · 双人记账',
     jsonLdAlternateNames: ['Futari 家计簿', '两个人的家计簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
       '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
