@@ -10,15 +10,57 @@ type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
  * Recompute and persist GroupBalance from active transactions + settlements.
  * MUST be called within the same DB transaction as any mutating write.
  * Pass `tx` if running inside a Drizzle transaction; falls back to `db` otherwise.
+ *
+ * Scoped to the CURRENT epoch (issue #1030): rows are filtered to
+ * `created_at >= OikosGroups.current_epoch_started_at`. Per
+ * docs/superpowers/specs/solo-trip-design.md, balance follows the same
+ * "current chapter only" rule as /records, stats and dashboard — a
+ * cross-epoch balance would show a debt no one can settle or edit, since
+ * `epoch-readonly` only allows writes into the current epoch.
+ *
+ * `created_at`, not `transacted_at` / `settled_at` — this deliberately
+ * diverges from the (incorrect) claim in CLAUDE.md that epochs are scoped by
+ * `transacted_at`. Every actual epoch-scoped read (`lib/db/queries/_predicates.ts
+ * #epochClause`, 12 call sites across transactions.ts / incomes.ts / asset.ts
+ * / insurance.ts) filters on `created_at`, and nothing constrains
+ * `transactedAt` to fall inside the current epoch — `lib/validators.ts` only
+ * checks its format, and both manual backdating (recording today, date picker
+ * set to yesterday — completely normal on day one of a new chapter) and CSV import
+ * (`actions/import.ts` writes `transactedAt` from the source file's historical
+ * date) routinely put rows with an old `transactedAt` in the current epoch.
+ * Scoping balance by `transacted_at` would silently drop exactly those rows
+ * from the sum while the feed still shows them — a freshly-imported ledger's
+ * balance would read 0 no matter how much history it carries in. `created_at`
+ * is what actually answers "was this recorded during the current chapter."
+ *
+ * Without this, `leaveGroup` moving the stayer-side legs of settled
+ * transactions to the leaver's new group (while the payer-side legs of the
+ * *other* member's settlement stay behind) leaves the stayer's group with a
+ * structurally non-zero sum over ALL history. That residue used to be masked
+ * by the solo short-circuit below; a new partner accepting the invite
+ * inherits it as soon as this formula next runs. The moved/left-behind rows'
+ * `created_at` predates the leave, and `current_epoch_started_at` is bumped
+ * forward at both leave and accept (same DB transaction, see
+ * actions/membership.ts + actions/invite.ts) — so `created_at` excludes the
+ * residue exactly as `transacted_at` would have, without the CSV / backdating
+ * regression.
  */
 export async function recalcGroupBalance(
   groupId: string,
   tx: typeof db | DbTransaction = db,
 ): Promise<void> {
   // Solo groups (member_b IS NULL) have no one to owe / be owed by — balance is
-  // structurally 0. Skipping the formula matters for groups that previously had
-  // a partner and inherit historical 'half' / 'weighted' rows after leaveGroup;
-  // running the formula on those would produce a nonsense balance.
+  // structurally 0. Kept as defense-in-depth even now that epoch scoping makes
+  // the formula itself resolve to 0 for solo groups under the normal flow
+  // (AddSheet forces splitType='all_mine' when isSolo — see
+  // app/(dashboard)/dashboard/_components/AddSheet.tsx:293; actions/import.ts's
+  // normaliseSplitType and actions/asset.ts's deriveTxnFromPrimaryUser do the
+  // same server-side for import rows and asset-purchase transactions). The
+  // manual create/edit path (actions/transaction.ts + lib/validators.ts) is
+  // the one write path that does NOT independently re-check split_type
+  // against solo status server-side — a determined client could still submit
+  // a non-'all_mine' split on a solo group's member_a. This short-circuit
+  // remains the only hard guarantee against that gap.
   await tx.execute(sql`
     UPDATE "GroupBalance"
     SET balance = CASE
@@ -45,6 +87,7 @@ export async function recalcGroupBalance(
         WHERE group_id = ${groupId}
           AND deleted_at IS NULL
           AND status = 'settled'
+          AND created_at >= (SELECT current_epoch_started_at FROM "OikosGroups" WHERE id = ${groupId})
       ) + (
         -- Settlement deltas (matches lib/balance.ts settlementDelta):
         -- paid_by = member_a (A paid B) → +amount (B now indebted to A)
@@ -57,6 +100,7 @@ export async function recalcGroupBalance(
         ), 0)
         FROM "Settlements"
         WHERE group_id = ${groupId} AND deleted_at IS NULL
+          AND created_at >= (SELECT current_epoch_started_at FROM "OikosGroups" WHERE id = ${groupId})
       )
     END,
     version = version + 1,
@@ -80,6 +124,13 @@ export async function getGroupBalance(groupId: string): Promise<number> {
  *
  * Returns 0 for solo groups (no member_b means balance is structurally 0;
  * matches the recalcGroupBalance solo guard).
+ *
+ * Scoped to the current epoch by `created_at` (issue #1030), same rationale
+ * as recalcGroupBalance (see its docstring for why `created_at` and not
+ * `transacted_at`): this is a live, read-time computation (no cache), so a
+ * stayer's leftover pending row from a prior duo chapter would otherwise
+ * surface in a new partner's dashboard the moment they accept the invite —
+ * before any write ever happens.
  */
 export async function getGroupPendingBalanceDelta(groupId: string): Promise<number> {
   const rows = await db.execute<{ delta: number }>(sql`
@@ -107,6 +158,7 @@ export async function getGroupPendingBalanceDelta(groupId: string): Promise<numb
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
       AND status = 'pending'
+      AND created_at >= (SELECT current_epoch_started_at FROM "OikosGroups" WHERE id = ${groupId})
   `)
   return Number(rows[0]?.delta ?? 0)
 }
