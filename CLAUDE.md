@@ -3,6 +3,8 @@
 > 家庭記帳工具，對使用者顯示為 **Futari**；codebase 用 Oikos。
 > 固定兩人（夫妻／伴侶）使用。Mobile-first PWA。
 
+這份是 agent 工作指南——架構、domain model、慣例、邊界。另外三份分工如下：[README.md](README.md) 是怎麼跑起來與怎麼部署；[PRODUCT.md](PRODUCT.md) 是策略層，寫明產品為誰而做、各 surface 的意圖與哪些低數字是預期的（動文案或判讀指標前讀它）；[DESIGN.md](DESIGN.md) 是視覺系統，由工具產生，見下方「設計脈絡（Impeccable）」。
+
 ---
 
 ## ⚠️ Next.js 版本提醒
@@ -284,7 +286,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 - 改動 UI 時以 `DESIGN.md` 為視覺準則；文案仍依上方「品牌文案準則」。
 - Register＝`product`；Creative North Star＝「The Warm Lamp」。
-- DESIGN.md 是掃描現有 `app/globals.css` tokens 產生的；token 變動後可重跑 `/impeccable document` 同步。
+- **DESIGN.md 是 generated artifact，不要手改。** 它（含 YAML frontmatter）由 `/impeccable document` 掃描 `app/globals.css` 產生，任何手動編輯——包括補連結、改語氣——都會在下次 regenerate 時消失。要改內容就改產生來源：token 改 `app/globals.css` 後重跑 `/impeccable document`；格式問題改 Impeccable 的輸出模板。
 - **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
   - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
   - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。
