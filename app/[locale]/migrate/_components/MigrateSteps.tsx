@@ -35,7 +35,9 @@ export function MigrateSteps({
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
-                color: 'var(--ink-3)',
+                // --ink-3 只有 4.02:1 on --bg-committed（#1059）。序號的「退後感」
+                // 本來就主要由 italic Fraunces + letterSpacing 承擔，不靠更淺的色階。
+                color: 'var(--ink-2)',
                 letterSpacing: '0.8px',
                 minWidth: 28,
               }}
