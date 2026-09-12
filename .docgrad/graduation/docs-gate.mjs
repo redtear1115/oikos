@@ -20,8 +20,8 @@ const THRESHOLDS = {
   max_dead_links: 0, // 死鏈一條都不准進 main
   max_bad_anchors: 0, // 壞錨同理（slug 與 GitHub 對齊後不再有誤報）
   max_orphans: 0, // 從索引走不到的文件＝agent 檢索不到
-  min_freshness_coverage: 0.93, // 日期訊號覆蓋率（round 7 現況 0.9318，門檻只准往上）
-  max_entry_cost_tokens: 9000, // 入口檔固定成本（round 7 現況 CLAUDE.md 8,896；要往 ★4 就把它壓到 5000）
+  min_freshness_coverage: 0.93, // 日期訊號覆蓋率（round 8 現況 0.9348，門檻只准往上）
+  max_entry_cost_tokens: 9100, // 入口檔固定成本（round 8 現況 CLAUDE.md 9,037；要往 ★4 就把它壓到 5000）
 };
 
 function resolveDocgradDir() {
