@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createGroup } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
+import { track } from '@/lib/analytics/track'
 import { isStandalone } from '@/lib/install-guide'
 import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
@@ -34,6 +35,19 @@ export default function SetupForm({ t }: { t: Translations }) {
   const [toast, setToast] = useState<string | null>(null)
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Whether the user has, at any point this session, successfully surfaced the
+  // invite (revealed the QR, copied the link, or shared it) before hitting
+  // skip. Answers "did they try before bailing?" — the split #1015 is built
+  // around — with a single event instead of a fragile cross-event join.
+  // What the user did about sending the invite, before they hit skip.
+  // Three states rather than a boolean on purpose (#1015): "never tried" and
+  // "tried but the clipboard/share failed" are different populations — one
+  // doesn't want to invite, the other wanted to and the product got in the
+  // way. Collapsing them into `false` invites the reading "72% don't want to
+  // invite", which would be wrong for whatever slice hit a broken clipboard.
+  // 'sent' only means something actually left the screen (copied / shared /
+  // QR shown), not that the partner ever received it.
+  const attemptedRef = useRef<'none' | 'failed' | 'sent'>('none')
 
   useEffect(() => {
     return () => {
@@ -74,16 +88,35 @@ export default function SetupForm({ t }: { t: Translations }) {
 
   const handleCopy = async () => {
     if (!inviteUrl) return
-    await navigator.clipboard.writeText(inviteUrl)
-    flashToast(invite.copied)
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      attemptedRef.current = 'sent'
+      track('invite_link_copied', { via: 'copy_button' })
+      flashToast(invite.copied)
+    } catch {
+      // Clipboard API can reject in a non-secure context or when permission
+      // is denied — surface it instead of leaving an unhandled rejection with
+      // no user-visible feedback (see #1015).
+      if (attemptedRef.current === 'none') attemptedRef.current = 'failed'
+      track('invite_copy_failed', { via: 'copy_button' })
+      flashToast(invite.shareFailed)
+    }
   }
 
   const handleShare = async () => {
     if (!inviteUrl) return
     try {
       const result = await shareInviteLink(inviteUrl)
-      if (result === 'copied') flashToast(invite.copied)
+      attemptedRef.current = 'sent'
+      if (result === 'copied') {
+        track('invite_link_copied', { via: 'share_button' })
+        flashToast(invite.copied)
+      } else {
+        track('invite_link_shared')
+      }
     } catch {
+      if (attemptedRef.current === 'none') attemptedRef.current = 'failed'
+      track('invite_copy_failed', { via: 'share_button' })
       flashToast(invite.shareFailed)
     }
   }
@@ -112,7 +145,10 @@ export default function SetupForm({ t }: { t: Translations }) {
     router.push('/dashboard')
   }
 
-  const handleSkip = () => goToDashboard()
+  const handleSkip = () => {
+    track('invite_skipped', { attempted: attemptedRef.current })
+    goToDashboard()
+  }
 
   const installGuideJsx = (
     <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} t={t} />
@@ -193,7 +229,11 @@ export default function SetupForm({ t }: { t: Translations }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <InviteQr url={inviteUrl} t={invite} />
+            <InviteQr
+              url={inviteUrl}
+              t={invite}
+              onReveal={() => { attemptedRef.current = 'sent' }}
+            />
             <p className="text-xs" style={{ color: 'var(--ink-3)' }}>
               {invite.qrHint}
             </p>

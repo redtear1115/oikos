@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { track } from '@/lib/analytics/track'
 
 /**
  * How long the QR stays visible after the user taps "reveal", in ms.
@@ -16,7 +17,16 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
  */
 const QR_VISIBLE_MS = 60_000
 
-export default function InviteQr({ url, t }: { url: string; t: Translations['setup']['invite'] }) {
+export default function InviteQr({
+  url,
+  t,
+  onReveal,
+}: {
+  url: string
+  t: Translations['setup']['invite']
+  /** Called after the QR is successfully rendered (not on failure). */
+  onReveal?: () => void
+}) {
   const [svg, setSvg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -44,6 +54,8 @@ export default function InviteQr({ url, t }: { url: string; t: Translations['set
       const markup = renderSVG(url, { ecc: 'M', border: 2 })
       setSvg(markup)
       scheduleAutoHide()
+      track('invite_qr_revealed')
+      onReveal?.()
     } finally {
       setLoading(false)
     }
