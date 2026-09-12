@@ -392,3 +392,39 @@ DER 的 `SEQUENCE{r,s}` 轉成 raw 64 bytes，再組 `header.payload.signature`�
 > 2026-06 用手機拍的 `IMG_88xx.PNG`（1242×2688，6.5" 格），**不是** `docs/store-assets/`
 > 那組設計過的 1290×2796。「素材產出」不等於「已上傳」。動手前先用 API 或 Console 看實況。
 
+---
+
+## J. 讓殼載非 prod 的 web（`CAP_SERVER_URL`）
+
+殼是薄的，`server.url` 指向哪裡就顯示哪裡。以前那個值寫死 prod，代表**原生契約面**（deep link、
+Apple Sign In、推播、keyboard resize）的 web 改動只有上了 prod 才知道殼會不會壞。
+現在 `capacitor.config.ts` 讀 `CAP_SERVER_URL`，`cap sync` 時生效：
+
+```bash
+# 本機 dev server（iOS 模擬器）
+CAP_SERVER_URL=http://localhost:3000 npx cap sync ios
+
+# 本機 dev server（Android 模擬器；10.0.2.2 = 模擬器眼中的宿主機）
+CAP_SERVER_URL=http://10.0.2.2:3000 npx cap sync android
+#   或先 adb reverse tcp:3000 tcp:3000，然後照樣用 http://localhost:3000
+
+# Vercel preview
+CAP_SERVER_URL=https://<branch>.vercel.app npx cap sync ios
+```
+
+**cleartext 只在 `http://` 覆寫時放寬**，https 覆寫（preview）維持 prod 的安全姿態。
+兩邊平台實際需要的東西不同：
+
+| | 需要什麼 | 備註 |
+|---|---|---|
+| iOS | 不用改 Info.plist | ATS 對 loopback 本來就豁免，模擬器直接載 `http://localhost` |
+| Android | `network_security_config.xml` 開 `localhost` / `10.0.2.2` 的 cleartext | 設了 `networkSecurityConfig` 之後 Android 就**不看** capacitor config 的 `cleartext`，那個檔才是真正決定權 |
+
+`server.allowNavigation` 刻意不設 — Capacitor 的 Bridge 本來就允許在 `server.url` 自己的 origin 內導航。
+
+**收尾**：`capacitor.config.json` 兩邊都被 gitignore，覆寫不會漏進 commit；但它會留在原生專案裡
+直到下次不帶變數的 `cap sync`。**要 archive／送審前先重跑一次乾淨的 `npx cap sync`**，
+確認 `ios/App/App/capacitor.config.json` 的 `server.url` 是 `https://futari.southern-light.dev`。
+
+> 登入流程另計：OAuth callback 與 deep link 走的是 Supabase / Apple 那邊註冊的網域，
+> 指向 localhost 時未必能走完整段登入。要測登入相關的契約面，用 Vercel preview 比較實際。
