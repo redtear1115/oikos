@@ -6,18 +6,43 @@
 // tests/__snapshots__/content-updated-at.snapshot.json 進版控。
 // hash 變了但 contentUpdatedAt 沒變 → fail，並指名是哪個 source/case。
 //
-// 刻意排除 lib/i18n/locales/*.ts：那些檔案很大（4 語 × 全站文案），把它們納入
-// hash 會讓這個測試對任何一次 i18n 動作都敏感，訊號雜訊比太差。migrate /
-// use-case 頁面的「主要內容」（comparison rows / features）已經直接存在
-// sources.ts / cases.ts 裡，這個測試只看這兩個檔案就足以捕捉本次 issue
-// 描述的漏更情境。i18n 文案本身的 lastmod 精確度是已知取捨，留給未來如果
-// 真的需要再處理。
+// 涵蓋範圍：sources.ts / cases.ts 的內容欄位（comparison rows / features），
+// 加上 4 個 locale 檔裡 per-slug 的 i18n 子樹——migrate.pages.<slug> 與
+// useCase.pages.<slug>，也就是 hero / intro / differentiators / faq 等頁面
+// 實際文案所在。刻意不納入整個 locale 檔或整個 migrate / useCase 物件：那樣
+// 會讓任何一次 i18n 動作（哪怕跟這些頁面無關）都觸發，訊號雜訊比太差，是前一
+// 版刻意避開的取捨；只看每個 slug 自己的子樹才精準對應「這個頁面的內容變了」。
 import { describe, it, expect } from 'vitest'
 import { createHash } from 'crypto'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import { MIGRATE_SOURCES, type SourceDef } from '@/lib/migrate/sources'
 import { USE_CASES } from '@/lib/use-case/cases'
+import { zhTW } from '@/lib/i18n/locales/zh-TW'
+import { en } from '@/lib/i18n/locales/en'
+import { zhCN } from '@/lib/i18n/locales/zh-CN'
+import { ja } from '@/lib/i18n/locales/ja'
+
+const LOCALES = { zhTW, en, zhCN, ja } as const
+
+/** 取出 4 個 locale 裡 migrate.pages.<slug> 子樹，依 locale key 排序組成一個
+ *  物件，作為該 slug 的 i18n 內容。缺某個 locale 的 slug 時該欄位是
+ *  undefined，一樣會被納入 hash（等同「內容從有變沒有」）。 */
+function collectMigrateI18n(slug: string) {
+  const result: Record<string, unknown> = {}
+  for (const [localeKey, locale] of Object.entries(LOCALES)) {
+    result[localeKey] = (locale.migrate.pages as Record<string, unknown>)[slug]
+  }
+  return result
+}
+
+function collectUseCaseI18n(slug: string) {
+  const result: Record<string, unknown> = {}
+  for (const [localeKey, locale] of Object.entries(LOCALES)) {
+    result[localeKey] = (locale.useCase.pages as Record<string, unknown>)[slug]
+  }
+  return result
+}
 
 const SNAPSHOT_PATH = resolve(
   __dirname,
@@ -70,6 +95,7 @@ describe('contentUpdatedAt 護欄 (#1005)', () => {
           comparisonRows: source.comparison.rows,
           templateDownload: source.templateDownload ?? null,
           screenshotWorkflow: source.screenshotWorkflow ?? false,
+          i18n: collectMigrateI18n(key),
         }
         const contentHash = hashContent(contentOnly)
         const expected = snapshot.migrateSources[key]
@@ -80,11 +106,11 @@ describe('contentUpdatedAt 護欄 (#1005)', () => {
         ).toBeDefined()
 
         if (contentHash !== expected.contentHash) {
-          // 內容變了。此時 contentUpdatedAt 至少要跟 snapshot 記錄的不一樣，
-          // 否則代表改了內容卻忘記 bump 日期。
+          // 內容變了（comparison 欄位或 i18n 文案）。此時 contentUpdatedAt
+          // 至少要跟 snapshot 記錄的不一樣，否則代表改了內容卻忘記 bump 日期。
           expect(
             source.contentUpdatedAt,
-            `${key} 的內容變了，但 contentUpdatedAt 仍是 ${expected.contentUpdatedAt}。` +
+            `${key} 的內容變了（comparison 欄位或 i18n 文案），但 contentUpdatedAt 仍是 ${expected.contentUpdatedAt}。` +
               `請更新該欄位，並重跑 \`${UPDATE_CMD}\`。`,
           ).not.toBe(expected.contentUpdatedAt)
         }
@@ -105,7 +131,10 @@ describe('contentUpdatedAt 護欄 (#1005)', () => {
   describe('lib/use-case/cases.ts', () => {
     for (const [key, useCase] of Object.entries(USE_CASES)) {
       it(`${key} 的內容 hash 與 snapshot 一致`, () => {
-        const contentOnly = { features: useCase.features }
+        const contentOnly = {
+          features: useCase.features,
+          i18n: collectUseCaseI18n(key),
+        }
         const contentHash = hashContent(contentOnly)
         const expected = snapshot.useCases[key]
 
@@ -117,7 +146,7 @@ describe('contentUpdatedAt 護欄 (#1005)', () => {
         if (contentHash !== expected.contentHash) {
           expect(
             useCase.contentUpdatedAt,
-            `${key} 的內容變了，但 contentUpdatedAt 仍是 ${expected.contentUpdatedAt}。` +
+            `${key} 的內容變了（features 欄位或 i18n 文案），但 contentUpdatedAt 仍是 ${expected.contentUpdatedAt}。` +
               `請更新該欄位，並重跑 \`${UPDATE_CMD}\`。`,
           ).not.toBe(expected.contentUpdatedAt)
         }
