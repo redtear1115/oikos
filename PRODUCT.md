@@ -1,5 +1,7 @@
 # Product
 
+The strategy layer: who Futari is for, what it refuses to be, and what each surface is trying to do. Read it before writing copy or judging a metric. The rest of the documentation splits like this — [README.md](README.md) for running and deploying the project, [CLAUDE.md](CLAUDE.md) for architecture and working conventions, [DESIGN.md](DESIGN.md) for the visual system. That last one is generated from `app/globals.css` by `/impeccable document`, so don't hand-edit it.
+
 ## Register
 
 product
@@ -22,7 +24,7 @@ The brand surfaces get the committed cream ground (`--bg-committed`) and Fraunce
 
 ## Users
 
-固定兩人（夫妻／伴侶）共用一本帳。Two people in an established relationship, sharing one ledger from their phones in the small gaps of daily life: at a checkout, in bed before sleep, on the commute. They are not accountants and have no wish to become ones. Usually one partner records more diligently than the other, so the tool has to serve both the self-disciplined type and the needs-a-nudge type without shaming either.
+固定兩人（夫妻／伴侶）共用一本帳。Two people in an established relationship, sharing one ledger from their phones: at a checkout, in bed before sleep, on the commute. They are not accountants and have no wish to become ones. Usually one partner records more diligently than the other, so the tool has to serve both the self-disciplined type and the needs-a-nudge type without shaming either.
 
 The job to be done: log a shared expense in under a minute, see at a glance who owes whom, settle without awkwardness, and now and then look back and feel the relationship's story rather than just its totals. Sessions are short and frequent.
 
@@ -38,7 +40,7 @@ The job to be done: log a shared expense in under a minute, see at a glance who 
 
 Futari (codebase: Oikos) is a two-person household expense tracker that reframes a daily chore as a way of feeling accompanied. It is not a budgeting tool that judges spending; it is a 陪伴式記錄框架 (companion-style recording framework). Records become points of light that, over time, form a shared "life spectrum." The product's symbol is a lamp: present and warm, never intrusive.
 
-Success looks like a couple reaching for Futari without friction, clearing balances without friction or guilt, and at month-end or when revisiting a past chapter feeling warmth instead of scrutiny. Retention comes from the relationship the tool holds, not from streaks or pressure.
+Success looks like a couple reaching for Futari without thinking about it, settling up without guilt, and at month-end or on a past chapter feeling warmth rather than scrutiny. Retention comes from the relationship the tool holds, not from streaks or pressure.
 
 ## Brand Personality
 
@@ -69,14 +71,14 @@ What Futari must NOT look or sound like:
 
 The counter-move is positive, not prohibitive. Before adding a container, ask what the hairline or the tonal step would do instead. Before adding a second number, ask whether the first one is actually the moment. Before reaching for a new component, ask which of the four primitives in `components/ui/` already covers it. The system is deliberately small: `Button`, `TextInput`, `SegmentedToggle`, `Sheet`. If a screen needs a fifth thing, that is a signal to re-read the problem, not a license to invent.
 
-Move toward (as feel, not to copy): warm reflective journaling apps such as Day One, Apple Journal, and Stoic for the unhurried personal tone; and the human, approachable end of money apps such as Monarch, Copilot Money, and Cleo for making finance feel like it belongs to people rather than spreadsheets.
+Move toward, as feel rather than as something to copy: Day One, Apple Journal, and Stoic, for the unhurried tone of a journal. On the money side, Monarch, Copilot Money, and Cleo — they make finance feel like it belongs to people instead of to spreadsheets.
 
 ## Design Principles
 
 1. **陪伴優先，工具其次 (companionship first, tool second).** Every interaction answers one question: does this make the user feel accompanied? Utility is necessary, never the point.
 2. **不評判，不定義好壞 (no judgment, no good or bad).** Never present a record so that it implies the user spent well or badly. Witness; do not score.
-3. **低門檻進入 (low barrier to entry).** No forced sign-up to start; the first record should be possible inside 60 seconds. Friction is the enemy of a daily habit.
-4. **不自動化取代感受 (automation must not replace feeling).** The system generates the presentation, but the result must not feel mechanical. Warmth is hand-felt, not computed.
+3. **低門檻進入 (low barrier to entry).** No forced sign-up to start; the first record should be possible inside 60 seconds.
+4. **不自動化取代感受 (automation must not replace feeling).** The system generates the presentation, but the result must not feel mechanical.
 5. **兩人對等 (two equals).** Both partners, and both personality types (diligent and needs-a-nudge), are first-class. Never optimize for one at the other's expense, and never shame the less-active partner.
 6. **做到剛好就停 (build to the edge of the ask, then stop).** Futari's surface area is a cost paid by two people on a phone, so scope discipline is a design principle here, not a process note. Implement what was asked, completely. Do not grow a small change into a feature, do not add the adjacent screen nobody requested, and do not invent a new token, font size, spacing step, radius, or `components/ui/` primitive to solve a one-off. When the existing system genuinely cannot express the design, stop and ask. An unrequested addition is not generosity; it is surface area the couple has to navigate around forever.
 
@@ -91,6 +93,22 @@ One codebase, three shells. These are design constraints, not implementation not
 **Native permission prompts are relationship moments.** Push notifications and any future camera use (invoice scanning) trigger an OS dialog that cannot be restyled and can only be asked once in practice. Never fire one on first launch. Ask at the moment the user has just done the thing the permission serves, in plain language, with the value stated before the prompt appears. A denial must leave the feature gracefully closed, never a nagging banner. Guardian, push, and partner-activity surfaces carry the highest risk of turning companionship into surveillance; the permission moment is where that line is crossed or held.
 
 **It is a WebView, and that is fine.** The shells load the production site; they are not native apps wearing a web skin. Do not chase native-feeling choreography (spring page pushes, interactive swipe-back, rubber-band overscroll mimicry) to disguise this. The honest target is a fast, calm, reduced-motion-safe web surface. Also budget for what WebView does worse: the software keyboard covers content without warning, `100vh` lies, and scroll containers stop at boundaries. Sheets and forms must stay usable with the keyboard open.
+
+## Surface Intents
+
+Every public surface has a job, and each job has a number that says whether the job is being done. The recurring mistake isn't miscounting — it's reading a real number against the wrong intent and concluding something is broken. Several of the numbers below are supposed to be low.
+
+**`/migrate/*` (competitor migration pages).** Someone searches "how do I move off X" and lands here. The job ends at sign-up, so the metric is `landing_cta_clicked`. The CSV import widget on the page is a logged-out bonus for the rare visitor who arrives already holding an export file; the real importer lives behind sign-in, in settings. `import_completed` from these pages was never a success metric. In ninety days exactly one person completed an import straight off organic search, and that's the expected shape — the count would sit near zero even if the pages were doing their job perfectly. What discriminates is the CTA click: sources without the screenshot workflow convert at 26%, sources with it at 6.5%. That gap is where the friction is.
+
+**`/use-case/*` (scenario landing pages).** Ten pages across four locales, written for people searching a situation rather than a product. Organic arrivals are the metric, and ninety days in there are none. The ceiling is search volume, not page count or page quality: the pages do rank — cohabitation 18.5, newlyweds 7.5, aa-split 7.7 — which is Google's own evidence that they aren't being treated as thin content. A page that ranks for a term nobody searches is a cheap bet that hasn't paid off. Its share of the sitemap is not a cost to optimize away.
+
+**Invitation flow.** Getting the second partner into the ledger, measured by what happens after an invite is sent. Over 120 days, 25 people created a group, 6 tried to send an invite, and 5 succeeded. Among those five, the gap between creating the group and the partner joining was 2, 4, 6, 19, and 299 minutes. Three of five inside six minutes means the dominant scene is two people in the same room with one phone between them. Design for hand-over, not for delivery across distance — and read the small number of send attempts as a description of that scene rather than as a failing invite.
+
+**Solo mode.** The Users section above states the position: one person is a complete state, not a waiting room. The metric follows from it — solo mode deliberately has none. The moment "solo → duo conversion rate" becomes a number someone is asked to move, the design follows it: reminders, nudges, a partner-shaped hole in the UI. That is the Gamified guilt the anti-references already rule out. Judge solo mode on whether one person can do everything the product promises, and leave it there.
+
+A related rule, from the same instinct: **do not surface a number the user cannot act on.** Balance is scoped to the current chapter for exactly this reason — `epoch-readonly` guarantees writes land only in the open epoch, so a cross-chapter balance would display a debt nobody can settle, edit, or clear. A permanent unpayable-looking debt is the anxiety the anti-references rule out, arriving through arithmetic instead of copy. Where the numbers get placed is a product decision, not only an engineering one.
+
+What this bans is conversion metrics, not measurement. Whether a solo user gets *stuck* is worth watching closely — a trip that can't be closed because there is nobody to settle with, say. The test that separates the two: when the number gets worse, is the right response to fix something or to push the user? Fix means measure it. Push means it should never have been a number.
 
 ## Accessibility & Inclusion
 
