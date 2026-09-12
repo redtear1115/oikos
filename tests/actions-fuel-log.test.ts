@@ -24,6 +24,12 @@ function setCookie(key: string, value: string | null) {
 
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 import { PAST_EPOCH_COOKIE } from '@/lib/db/queries/epoch'
+import { assets } from '@/lib/db/schema'
+
+/** How many of the reads in this action were Assets-ownership lookups. */
+function assetLookupCount(): number {
+  return mockBuilder.from.mock.calls.filter((call) => call[0] === assets).length
+}
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -214,7 +220,8 @@ describe('editFuelLog', () => {
     queueDbResult([GROUP])                                                          // group lookup
     queueDbResult([OPEN_EPOCH])                                                     // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])     // fuel log lookup
-    queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // asset ownership
+    queueDbResult([{ id: 'asset-1' }])                                              // #1032 — EDITED row's asset ownership
+    queueDbResult([{ id: 'asset-1', deletedAt: null }])                             // incoming asset ownership
     queueDbResult([{ id: 'old-txn-id' }])                                           // linked txn lookup
     // Inside the transaction:
     //   tx.update(fuelLogs)... (no .returning, await on chain) → consumes via .then
@@ -332,7 +339,8 @@ describe('editFuelLog', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])
-    queueDbResult([{ id: 'asset-1', deletedAt: null }])
+    queueDbResult([{ id: 'asset-1' }])                    // #1032 — edited row's asset
+    queueDbResult([{ id: 'asset-1', deletedAt: null }])   // incoming asset
 
     await expect(editFuelLog({
       id: 'fuel-log-id',
@@ -341,6 +349,69 @@ describe('editFuelLog', () => {
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-stranger', splitType: 'all_mine',
     })).rejects.toThrow('付款人不在家計簿內')
+  })
+
+  // ─── Regression for #1032 ───────────────────────────────────────────────
+  // The pre-fix action looked the existing row up by id alone and then
+  // ownership-checked the assetId the CALLER supplied — so a fuelLogId from
+  // another group passed straight through, taking the victim's fuel log and
+  // their linked CashTransaction with it. Both halves are pinned here: the
+  // edited row's own asset must be resolved against the viewer's group (there
+  // are now TWO Assets lookups, not one), and the gate must trip before any
+  // write. The end-to-end proof against real Postgres lives in
+  // `__tests__/actions/editFuelLog.crossGroup.test.ts`.
+
+  it('resolves the EDITED row\'s asset against the viewer group, not just the incoming one (#1032)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])
+    queueDbResult([{ id: 'asset-1' }])                    // edited row's asset — in group
+    queueDbResult([{ id: 'asset-2', deletedAt: null }])   // incoming (reassigned) asset — in group
+    queueDbResult([{ id: 'old-txn-id' }])                 // linked txn lookup
+    queueDbResult([])                                     // UPDATE fuelLogs
+    queueDbResult([{ id: 'old-txn-id' }])                 // UPDATE old txn .returning
+    queueDbResult([{ id: 'new-txn-id' }])                 // INSERT new txn .returning
+    queueDbResult([])                                     // recalc
+    queueDbResult([])                                     // recalc delta
+
+    await editFuelLog({
+      id: 'fuel-log-id',
+      assetId: 'asset-2',
+      liters: 40, odometer: 87000, cost: 1500,
+      fuelType: '95', loggedAt: '2026-05-06', station: null,
+      paidBy: 'user-a', splitType: 'all_mine',
+    })
+
+    // Two Assets reads: the row being edited, then the row it is moving to.
+    // Pre-fix there was exactly one — the incoming asset — which is the bug.
+    expect(assetLookupCount()).toBe(2)
+  })
+
+  it('rejects a fuelLogId whose asset is outside the viewer group, even when the incoming assetId is inside it (#1032)', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
+    // The victim's fuel log — the attacker holds its id from their duo days.
+    queueDbResult([{ id: 'fuel-log-id', assetId: 'victim-asset', deletedAt: null }])
+    // Ownership lookup on that asset comes back empty: it is not in the
+    // attacker's group. The attacker's own 'asset-1' would have satisfied the
+    // pre-fix check, so the throw must happen here, on the edited row.
+    queueDbResult([])
+
+    await expect(editFuelLog({
+      id: 'fuel-log-id',
+      assetId: 'asset-1',
+      liters: 40, odometer: 87000, cost: 1500,
+      fuelType: '95', loggedAt: '2026-05-06', station: null,
+      paidBy: 'user-a', splitType: 'all_mine',
+    })).rejects.toThrow('關聯資產不在家計簿內')
+
+    // Nothing was written: no transaction, no soft-delete of the victim's txn.
+    expect(mockDb.transaction).not.toHaveBeenCalled()
+    expect(mockDb.update).not.toHaveBeenCalled()
+    expect(mockDb.insert).not.toHaveBeenCalled()
+    // The gate fired on the FIRST Assets read — the edited row's — before the
+    // incoming assetId was ever looked at.
+    expect(assetLookupCount()).toBe(1)
   })
 
   it('rejects when viewer is pinned to a past epoch', async () => {
