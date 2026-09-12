@@ -43,7 +43,7 @@ export function MigrateSourceCard({
           {description}
         </p>
         <span
-          className="inline-flex items-center gap-1.5 mt-3 text-[13px]"
+          className="inline-flex items-center gap-1.5 mt-3 text-sm"
           style={{
             color: 'var(--ink)',
             textDecoration: 'underline',
