@@ -1,3 +1,5 @@
+// 訂閱規則（INSERT prepend / UPDATE fade / balance cross-fade / reconnect /
+// filter 靜默跳過）見 docs/superpowers/specs/realtime-design.md。
 /**
  * Discriminated union for realtime events flowing from the RealtimeProvider's
  * channel subscriptions to the page-level subscribers (TransactionFeed, BalanceHero).

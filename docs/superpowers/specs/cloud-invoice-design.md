@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: blocked
 blocked_on: 財政部電子發票 API APP_ID（2023/3/31 新制不開放個人申請，需 ISO27001 認證）
 related_specs: [transactions, income, inbox-layer]
@@ -148,4 +148,5 @@ Commit 整體在一個 DB transaction 內；任何步驟失敗整批 rollback + 
 - 財政部電子發票 API 文件：[einvoice.nat.gov.tw](https://www.einvoice.nat.gov.tw/)
 - Schema 真相：`lib/db/schema.ts`（`invoiceCredentials` / `cashTransactions.invoiceNumber`）
 - 加密 helper：`lib/crypto.ts`
+- API client 與差異比對：`lib/invoice/`（`api.ts` / `diff.ts`——已 seed，等 APP_ID 解鎖才接上）
 - 平行設計參考：[income](income-design.md)（平行 sheet 模式）/ [inbox-layer](inbox-layer-design.md)（將來作為 `bill_import` source 加入 Inbox 抽象）

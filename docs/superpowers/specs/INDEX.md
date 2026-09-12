@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-12
+last_updated: 2026-09-13
 ---
 
 # Specs — Index & Writing Guide
@@ -104,6 +104,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ### 架構
 
 - [product](product-design.md) — Tech stack / 整體架構 / Auth 分層 / Schema 設計原則
+- [authorization](authorization-design.md) — 授權模型：查詢層不驗 membership、四層閘門（proxy / viewer / write context / payload 斷言）、「驗了新值沒驗被改的列」失效樣態（#1031 #1032）
 - [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語 cookie-based locale）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
 - [offline-browsing](offline-browsing-design.md) — PWA / Service Worker / opt-in 離線瀏覽
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
@@ -114,6 +115,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ### 記帳核心
 
 - [transactions](transactions-design.md) — 雙人記帳 CRUD / Settlement / Balance / /records FAB context-awareness
+- [csv-export](csv-export-design.md) — 支出紀錄整包帶走（入口在信任宣示頁）；刻意跨章節、刻意含 pending
 - [income](income-design.md) — IncomeTransactions + IncomeSheet（進帳獨立 ledger）
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）

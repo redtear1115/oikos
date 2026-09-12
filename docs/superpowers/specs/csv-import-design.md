@@ -247,6 +247,7 @@ sha256(
 - [epoch-readonly](epoch-readonly-design.md)：匯入 row 一律落在當前 epoch（`created_at = now()`），不會進入過去章節；`transacted_at` 只是「這筆錢什麼時候花的」，不參與章節歸屬
 - [trip-multi-currency](trip-multi-currency-design.md)：MVP **不支援匯入到 trip**；trip 是 epoch-bound 子帳本，跨 trip 的歷史 row 沒有對應 trip_id 可填
 - [locale-currency](locale-currency-design.md)：匯入 row 一律 base 幣別整數；多幣別匯入延後
+- [csv-export](csv-export-design.md)：反向操作。「能帶走」與「能帶進來」是同一個立場的兩面
 
 ---
 

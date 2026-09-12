@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.1.0
 updates:
@@ -40,7 +40,7 @@ Realtime 是 Supabase postgres_changes 接出來的事件流，本 spec 鎖定�
 | `OikosGroups` | guardian beta flag flip / member_b 接受邀請後升雙人 |
 | `RecurringIncomeRules` / `RecurringExpenseRules` | 規則建立 / 編輯（settings 頁同步） |
 
-實作落地點：`app/(dashboard)/_components/RealtimeProvider.tsx`。
+實作落地點：`app/(dashboard)/_components/RealtimeProvider.tsx`（訂閱與 React state 更新）/ `lib/realtime/`（`event.ts` 事件型別、`payload-schema.ts` payload 驗證）。
 
 ---
 

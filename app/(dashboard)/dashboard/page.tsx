@@ -1,3 +1,6 @@
+// Dashboard 是登入後的主畫面，多數 feature 都在這條 route group 底下。改這裡之前
+// 先看 docs/superpowers/specs/INDEX.md 找對應 spec——三層標頭的規則在
+// ia-unified-header-design.md，過去章節的唯讀約束在 epoch-readonly-design.md。
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'

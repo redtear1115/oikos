@@ -1,3 +1,12 @@
+// Supabase server clients. Which helper belongs at which position (proxy /
+// page / server action) and why pages may use the cached session is decided in
+// docs/superpowers/specs/product-design.md §Auth 驗證分層 — new page/layout code
+// uses `getCurrentUser()` below rather than calling `auth.getUser()` directly.
+//
+// That is authentication. Authorization — which ledger a viewer may touch, and
+// why the query layer deliberately does not check membership — is
+// docs/superpowers/specs/authorization-design.md.
+
 import { cache } from 'react'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'

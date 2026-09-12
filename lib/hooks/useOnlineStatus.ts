@@ -1,5 +1,7 @@
 'use client'
 
+// 連線狀態如何影響離線瀏覽與 realtime 重連，見
+// docs/superpowers/specs/offline-browsing-design.md 與 realtime-design.md。
 import { useEffect, useState } from 'react'
 
 /**

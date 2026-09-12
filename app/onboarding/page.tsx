@@ -1,3 +1,6 @@
+// 這頁是 sign-in 之後、建立帳本之前的哲學卡片。整條 onboarding 動線
+// （sign-in → 建群組 → 邀請對方／稍後再說）見
+// docs/superpowers/specs/onboarding-design.md。
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'

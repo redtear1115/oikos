@@ -1,3 +1,6 @@
+// CSV 匯出的欄位取捨與 Excel 相容性決定（BOM、CRLF、台北時區日期）見
+// docs/superpowers/specs/csv-export-design.md。注意這支是「匯出」，匯入在
+// lib/csvImport/。
 import type { SplitType } from '@/lib/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
