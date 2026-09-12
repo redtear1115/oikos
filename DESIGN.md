@@ -3,12 +3,13 @@ name: Futari
 description: A warm, two-person household ledger that feels like a lamp left on, not a spreadsheet.
 colors:
   lamplit-cream: "#FBEDE0"
+  committed-cream: "#EFDDC4"
   frame-sand: "#E8D5B8"
   surface-white: "#FFFFFF"
   surface-warm: "#FFF6EC"
   cocoa-ink: "#3A2419"
   cocoa-ink-2: "#7A5848"
-  cocoa-ink-3: "#B89C8B"
+  cocoa-ink-3: "#82654F"
   ember: "#E08856"
   ember-soft: "#F8D9C2"
   sage: "#7A9F7E"
@@ -16,6 +17,8 @@ colors:
   destructive: "#B85A48"
   warning: "#B45309"
   sage-saving: "#5A7A66"
+  saving-soft: "#DDE5DC"
+  realtime-flash: "#FFFBE8"
   asset-house: "#CB9B79"
   asset-car: "#BDB290"
   asset-child: "#D7A1A6"
@@ -30,6 +33,12 @@ typography:
     fontWeight: 500
     lineHeight: 1.2
     letterSpacing: "-0.3px"
+  page:
+    fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
+    fontSize: "26px"
+    fontWeight: 500
+    lineHeight: 1.3
+    letterSpacing: "normal"
   title:
     fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
     fontSize: "22px"
@@ -38,16 +47,22 @@ typography:
     letterSpacing: "normal"
   body:
     fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
-    fontSize: "15px"
+    fontSize: "16px"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "normal"
   label:
     fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
-    fontSize: "13px"
+    fontSize: "14px"
     fontWeight: 500
     lineHeight: 1.4
-    letterSpacing: "normal"
+    letterSpacing: "0.6px"
+  mini:
+    fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
+    fontSize: "10px"
+    fontWeight: 500
+    lineHeight: 1.4
+    letterSpacing: "0.6px"
   button:
     fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif"
     fontSize: "16px"
@@ -74,9 +89,17 @@ spacing:
   sheet-x: "20px"
   sheet-y-top: "16px"
   sheet-y-bottom: "24px"
+  bottom-nav-offset: "112px"
 components:
   button-primary:
     backgroundColor: "{colors.cocoa-ink}"
+    textColor: "{colors.surface-white}"
+    rounded: "{rounded.bubble}"
+    height: "{spacing.control-md}"
+    padding: "0 20px"
+    typography: "{typography.button}"
+  button-accent:
+    backgroundColor: "{colors.ember}"
     textColor: "{colors.surface-white}"
     rounded: "{rounded.bubble}"
     height: "{spacing.control-md}"
@@ -98,6 +121,13 @@ components:
     typography: "{typography.button}"
   button-danger:
     backgroundColor: "{colors.destructive}"
+    textColor: "{colors.surface-white}"
+    rounded: "{rounded.bubble}"
+    height: "{spacing.control-md}"
+    padding: "0 20px"
+    typography: "{typography.button}"
+  button-disabled:
+    backgroundColor: "{colors.cocoa-ink-3}"
     textColor: "{colors.surface-white}"
     rounded: "{rounded.bubble}"
     height: "{spacing.control-md}"
@@ -129,6 +159,16 @@ components:
     textColor: "{colors.cocoa-ink}"
     rounded: "{rounded.card}"
     padding: "20px"
+  sheet:
+    backgroundColor: "{colors.surface-white}"
+    textColor: "{colors.cocoa-ink}"
+    rounded: "{rounded.card}"
+    padding: "16px 20px 24px"
+  switch-on:
+    backgroundColor: "{colors.ember}"
+    rounded: "{rounded.full}"
+    width: "44px"
+    height: "26px"
 ---
 
 # Design System: Futari
@@ -139,16 +179,20 @@ components:
 
 Futari is a ledger that behaves like a lamp left on for two people. The light is present and warm; it witnesses the day without glaring at it. Everything in this system serves that feeling: a daily accounting chore reframed as companionship (陪伴式記錄框架), where each record is a small point of warm light and the running story matters more than any single number. The palette is hearth-toned, the surfaces sit flat and quiet, and the type carries an editorial calm rather than dashboard urgency.
 
-The register is **product**: design serves the task. But the task is emotional, so restraint is the discipline, not coldness. Controls are confident and unhurried (refined and restrained), surfaces lean on hairlines and tonal warmth instead of drop shadows, and motion is a soft exhale, never a performance. The signature gesture is the dark-ink fill: the primary commit button (記下 / 儲存 / 確認) is the firm anchor in a soft, cream-lit room.
+The register is **product**: design serves the task. But the task is emotional, so restraint is the discipline, not coldness. Controls are confident and unhurried (refined and restrained), surfaces lean on hairlines and tonal warmth instead of drop shadows, and motion is a soft exhale, never a performance. Two gestures carry the system's signature. The first is the **dark-ink fill**: the primary commit button (記下 / 儲存 / 確認) is the firm anchor in a soft, cream-lit room. The second is the **realtime warm flash**: the pale-yellow pulse when the partner records something from somewhere else. One is the user acting; the other is being accompanied. Both earn their weight because everything around them is quiet.
 
-This system explicitly rejects the things a money app reflexively becomes. No cold fintech gravitas (navy-and-gold, dense grids, "wealth management" weight). No hype-SaaS costume (purple gradients, decorative glass, big-number hero metrics, exclamation marks). No surveillance framing (the words 管理 / 追蹤 / 監控 are banned in copy, and nothing should feel audited). No gamified guilt (streaks, red budget alarms, "you overspent" verdicts). The warm-lamp identity exists precisely to escape the teal-and-white budgeting-app cliché.
+The system runs on two grounds, not one. App surfaces sit on Lamplit Cream (`--bg`); brand surfaces (landing, sign-in, migrate, terms, privacy) sit on the deepened Committed Cream (`--bg-committed`) and let Fraunces speak at full voice. It also ships inside iOS and Android WebView shells, so it deliberately suppresses browser-document behavior (overscroll bounce, tap-highlight flash, visible scrollbars) to stop the shell from feeling like a web page in a frame.
+
+This system explicitly rejects the things a money app reflexively becomes. No cold fintech gravitas (navy-and-gold, dense grids, "wealth management" weight). No hype-SaaS costume (purple gradients, decorative glass, big-number hero metrics, exclamation marks). No surveillance framing (the words 管理 / 追蹤 / 監控 are banned in copy, and nothing should feel audited). No gamified guilt (streaks, red budget alarms, "you overspent" verdicts). The warm-lamp identity exists precisely to escape the teal-and-white budgeting-app cliché, and that cliché is a gravity well, not a single mistake: it is where a screen lands when nobody decided otherwise.
 
 **Key Characteristics:**
 - Hearth-toned warm palette: lamplit cream ground, cocoa-ink text, a single ember accent.
+- Two grounds: app cream (`--bg`) for task surfaces, committed cream (`--bg-committed`) for brand surfaces.
 - Flat by default: hairlines and tonal layers convey depth, not shadows.
 - Editorial serif (Fraunces) for voice; humanist CJK sans (Noto Sans TC) for the work.
-- Generous, friendly radii (14–20px) on a tight, calm type scale.
+- Generous, friendly radii (10–20px) on a tight, calm, even-px type scale.
 - Gentle, reduced-motion-aware motion; nothing bounces.
+- A deliberately tiny component vocabulary: four primitives, no more.
 - Two equals: no UI ever favors or shames one partner.
 
 ## 2. Colors
@@ -163,126 +207,183 @@ A warm domestic palette lit from one ember source, kept low-chroma so nothing sh
 - **Cocoa Ink** (#3A2419): The system's anchor. Primary text and, as a fill, the primary commit button and selected chips/segments. The dark-ink fill is the firmest gesture in the room.
 
 ### Tertiary
-- **Sage** (#7A9F7E): Credit / income / money-coming-in. Also the savings family (#5A7A66 deep, #DDE5DC soft).
-- **Clay** (#D17561): Debit / money-going-out, and soft error tints (#D17561 at 10%). The balance-hero "you owe" amount uses a muted clay (`--debit-quiet`, clay mixed toward cocoa-ink) so the debtor figure reads as calm earth, not alarm (witnessing tone).
+- **Sage** (#7A9F7E): Credit / income / money-coming-in. Also the savings family, with Sage Saving (#5A7A66) for badge text and Saving Soft (#DDE5DC) for its fill.
+- **Clay** (#D17561): Debit / money-going-out, and soft error tints (clay at 10%). Clay has two derived companions that exist purely to hold WCAG AA: `--debit-quiet` (clay mixed 72% with cocoa-ink) for the balance-hero "you owe" amount, so the debtor figure reads as calm earth rather than alarm; and `--debit-text` (clay mixed 60% with cocoa-ink, ~4.87:1) for any alert body sitting on the 10% clay tint, because plain clay fails AA there at ~2.7:1.
+- **Warning** (#B45309): Amber for paused and warning states, with a 12% tint for the paused pill badge. Distinct from destructive so "paused" never reads as "broken."
+- **Destructive** (#B85A48): Deeper red reserved for irreversible actions (leave ledger, delete, sign out), with a 25% tint for its outline variant. Deliberately separate from Clay so "leaving" never reads as "an expense."
+- **Realtime Flash** (#FFFBE8): The pale warm yellow that pulses once behind a row when the partner writes from another device. See **The Realtime Flash** in Components.
 
 ### Neutral
-- **Lamplit Cream** (#FBEDE0): The app ground; the warm room the content sits in.
-- **Frame Sand** (#E8D5B8): The darker frame visible behind the 448px app shell on wider screens.
+- **Lamplit Cream** (#FBEDE0): The app ground; the warm room the task surfaces sit in.
+- **Committed Cream** (#EFDDC4): The deepened brand-surface ground. Landing, sign-in, migrate, terms, and privacy only. It is the same room with the lamp turned up, not a different palette.
+- **Frame Sand** (#E8D5B8): The darker frame visible behind the 448px app shell on wider screens, and the `html`/`body` ground everywhere.
 - **Surface White** (#FFFFFF) and **Surface Warm** (#FFF6EC): Card and sheet surfaces; the warm variant adds quiet separation without a border.
 - **Cocoa Ink 2** (#7A5848): Secondary text, ghost-button label.
-- **Cocoa Ink 3** (#B89C8B): Tertiary text, placeholders, secondary-button border, disabled fills.
-- **Hairline** (rgba(58,36,25,0.10)): The default separator. This system divides with hairlines, not boxes.
+- **Cocoa Ink 3** (#82654F): Tertiary text, captions, metadata, placeholders, secondary-button border, disabled fills. Darkened from an earlier, prettier #B89C8B, which sat at 2.24:1 on cream and failed AA. At #82654F it reaches 4.66:1. This is the floor, not a starting point for lightening back toward the old value.
+- **Hairline** (rgba(58,36,25,0.10)): The default separator. This system divides with hairlines, not boxes. The `oik-hairline` utility draws the canonical version, inset by `--sheet-x` on both sides.
+- **Grabber** (rgba(58,36,25,0.18)): The sheet drag-handle bar. The only place a neutral is allowed to be more present than a hairline.
 
 ### Asset Hue Family (signature)
-Per愛物-type identity colors, each muted and emotive, with a tint derived via `color-mix(... 35%, white)` so list rails and future charts stay in one hue family per type: House (#CB9B79), Car (#BDB290), Child (#D7A1A6), Pet (#D4AC79), Plant (#9BBA8A), Insurance (#9EB59B), Item (#B7AAA0, the muted generic that sits beneath the emotive types).
+Per愛物-type identity colors, each muted and emotive, with a tint derived via `color-mix(... 35%, white)` so list rails and charts stay in one hue family per type: House (#CB9B79), Car (#BDB290), Child (#D7A1A6), Pet (#D4AC79), Plant (#9BBA8A), Insurance (#9EB59B), Item (#B7AAA0, the muted generic that sits beneath the emotive types).
 
 ### Named Rules
+
 **The One Ember Rule.** Ember (#E08856) is the only accent, and it stays rare: the FAB, a primary CTA, an on-state. If two embers compete on one screen, one of them is wrong. Its scarcity is what makes it feel warm.
 
-**The Pure-Black-and-White Ban.** Never `#000` or `#fff` as a brand surface. Text is Cocoa Ink (#3A2419); grounds are warm cream. Surface White (#FFFFFF) is permitted only for cards and sheets that need to lift off the cream, never as the page ground.
+**The Pure-Black-and-White Ban.** Never `#000` or `#fff` as a brand surface. Text is Cocoa Ink (#3A2419); grounds are warm cream. Surface White (#FFFFFF) is permitted only for cards and sheets that need to lift off the cream, never as the page ground. The one sanctioned white is `--on-fill`, the shared foreground for text on ink / ember / destructive fills.
 
 **The Quiet-Money Rule.** Sage means in, Clay means out. They never escalate to alarm-red or success-green. Money here is reported, not judged.
 
+**The Two-Grounds Rule.** `--bg` is where the couple works; `--bg-committed` is where the product speaks. Brand surfaces take the committed ground and the serif; app surfaces take the app ground and the sans. Never mix: a landing section on `--bg` looks unfinished, and a dashboard on `--bg-committed` looks like a marketing page wearing app chrome.
+
+**The Derived-Contrast Rule.** When a warm hue must carry text or sit under text, it gets a cocoa-ink-mixed companion rather than an opacity reduction. `--debit-quiet` and `--debit-text` exist for exactly this. Never solve a contrast failure by lightening the background or reaching for a new hue.
+
 ## 3. Typography
 
-**Display Font:** Fraunces (with Georgia, serif). Latin only, weights 400 and 500.
-**Body Font:** Noto Sans TC (with PingFang TC, Microsoft JhengHei, and a JP/SC system fallback chain).
+**Display Font:** Fraunces (with Georgia, serif). Latin only, weights 400 and 500, loaded via `next/font/google` at the root layout.
+**Body Font:** Noto Sans TC (with a PingFang TC → Microsoft JhengHei → JP → SC → Noto Sans CJK TC fallback chain). Weights 400 and 500, loaded only in the dashboard layout so brand routes stay light.
 **Numeric Font:** SF Pro Display / system numerics, with `tnum` for aligned figures.
 
 **Character:** An editorial serif voice over a humanist CJK working face. Fraunces carries the emotional register (headings, the about narrative, the punchline italic at weight 400); Noto Sans TC does the daily work, crisp and neutral. The serif is where the lamp speaks; the sans is where the ledger lists.
 
 ### Hierarchy
-- **Display** (Fraunces, 500, 19–26px, line-height 1.2, letter-spacing -0.3px): Headings on landing, sign-in, migrate, legal. The brand's speaking voice.
+- **Display** (Fraunces, 500, 19–26px, line-height 1.2, letter-spacing -0.3px): Headings on landing, sign-in, migrate, use-case, legal. The brand's speaking voice.
+- **Page** (Noto Sans TC, 500, 26px): Page and sub-page headers inside the app.
 - **Title** (Noto Sans TC, 500, 22px, line-height 1.3): Sheet titles, section heroes.
-- **Page** (Noto Sans TC, 500, 26px): Page and sub-page headers in the app.
 - **Body** (Noto Sans TC, 400, 16px, line-height 1.5): List items, form inputs, prose. Keep CJK measure comfortable; cap Latin prose near 65–75ch.
-- **Label** (Noto Sans TC, 500, 14px): Section labels, chips, captions. Metadata steps down to 12px.
+- **Label** (Noto Sans TC, 500, 14px, letter-spacing 0.6px via `tracking-label`): Section labels, chips, captions. Metadata steps down to 12px.
+- **Mini** (10px): Badge superscripts and tiny tracking labels. The only tier below 12px, and the only kept custom tier below Title.
 - **Amount** (numeric, 500, 44–56px, `tnum`): Hero balances and entry amounts. The one place numbers are allowed to be big, because the number is the moment.
 
-**The full scale (even-px only):** 10 (`text-mini`) · 12 (`text-xs`) · 14 (`text-sm`) · 16 (`text-base`) · 18 (`text-lg`) · 20 (`text-xl`) · 22 (`text-title`) · 26 (`text-page`) · 44 / 56 (`text-amount-md` / `text-amount-lg`). One class per tier, each mapping to a Tailwind `text-*`; inline `fontSize` is not used. The `--fs-*` custom properties mirror these for the rare inline-only context. The only kept custom tier below the title/page/amount heroes is `text-mini` (10, no Tailwind equivalent). Every pure-alias tier (`text-micro`/`label`/`body`/`caption`/`meta`/`button`) was removed in favour of the Tailwind-native `text-xs`/`sm`/`base`.
+**The full scale (even-px only):** 10 (`text-mini`) · 12 (`text-xs`) · 14 (`text-sm`) · 16 (`text-base`) · 18 (`text-lg`) · 20 (`text-xl`) · 22 (`text-title`) · 26 (`text-page`) · 44 / 56 (`text-amount-md` / `text-amount-lg`). One class per tier, each mapping to a Tailwind `text-*`; inline `fontSize` is not used. The `--fs-*` custom properties mirror the custom tiers for the rare inline-only context; 18 and 20 are Tailwind natives with no `--fs-*` twin. Every pure-alias tier (`text-micro`/`label`/`body`/`caption`/`meta`/`button`) was removed in favour of the Tailwind-native `text-xs`/`sm`/`base`.
 
 ### Named Rules
-**The Serif-Speaks Rule.** Fraunces is reserved for the brand's voice (headings and narrative). Never set body lists, inputs, or amounts in the serif. The sans does the work; the serif holds the feeling.
 
-**The No-Weight-600 Rule.** Weight 600 was dropped to cut render-blocking CSS; `font-semibold` falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights.
+**The Serif-Speaks Rule.** Fraunces is reserved for the brand's voice (headings and narrative on brand surfaces). Never set body lists, inputs, labels, buttons, or amounts in the serif. The sans does the work; the serif holds the feeling. Fraunces is not loaded at all inside the dashboard layout, so reaching for it there is both off-brand and a font that will not arrive.
 
-**The Even-Px Rule (#876).** Font sizes are even-px only. The 11/13/15px tiers were removed; their callsites merged up into 12/14/16 (`text-xs` / `text-sm` / `text-base`). When a value feels "between" two tiers, round to the nearer even tier — do not reintroduce an odd size. A new font size requires explicit sign-off (see The Existing-Token-First Rule).
+**The No-Weight-600 Rule.** Weight 600 was dropped to cut render-blocking CSS; `font-semibold` silently falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights. Writing `font-semibold` and expecting it to look different from `font-medium` is a bug, not a style choice.
 
-**The Existing-Token-First Rule.** Before writing any visual value, reach for the token that already exists — type via `text-*` classes (or `--fs-*` for inline-only contexts), spacing via Tailwind utilities (`px-5`, `py-3`, `gap-2` …) and `--sheet-*`, corners via `--radius-*`, color via `--color-*` / `var(--ink*)`. The scale already covers almost every real need. Two hard constraints follow:
+**The Even-Px Rule (#876).** Font sizes are even-px only. The 11/13/15px tiers were removed; their callsites merged up into 12/14/16 (`text-xs` / `text-sm` / `text-base`). When a value feels "between" two tiers, round to the nearer even tier. Do not reintroduce an odd size.
 
-1. **No inline `style` for token-covered values.** Static `fontSize`, `padding`, `margin`, `gap`, `borderRadius`, and color belong in utility classes, never in `style={{ … }}`. Inline `style` is reserved for genuinely dynamic values — computed transforms, data-driven dimensions, palette values resolved at runtime.
-2. **Never invent a token or a one-off value on your own.** If the existing scale genuinely cannot express what the design needs, stop and ask the user before adding a new font size, spacing step, radius, or token. Prefer even-px when a new size is approved.
+**The Existing-Token-First Rule.** Before writing any visual value, reach for the token that already exists: type via `text-*` classes (or `--fs-*` for inline-only contexts), spacing via Tailwind utilities (`px-5`, `py-3`, `gap-2`) and `--sheet-*`, corners via `--radius-*`, color via `--color-*` / `var(--ink*)`, stacking via the `z-*` layer utilities. The scale already covers almost every real need. Two hard constraints follow:
+
+1. **No inline `style` for token-covered values.** Static `fontSize`, `padding`, `margin`, `gap`, `borderRadius`, `z-index`, and color belong in utility classes, never in `style={{ … }}`. Inline `style` is reserved for genuinely dynamic values: computed transforms, data-driven dimensions, palette values resolved at runtime.
+2. **Never invent a token or a one-off value on your own.** If the existing scale genuinely cannot express what the design needs, stop and ask the user before adding a new font size, spacing step, radius, z-layer, or token. Prefer even-px when a new size is approved.
 
 ## 4. Elevation
 
-This system is **flat by default**. Depth comes from tonal layering (cream ground → warm/white surface → hairline divider), not from drop shadows. There are no ambient card shadows; a card lifts by being Surface White on Lamplit Cream with a hairline, not by casting.
+This system is **flat by default**. Depth comes from tonal layering (frame sand → cream ground → warm/white surface → hairline divider), not from drop shadows. There are no ambient card shadows; a card lifts by being Surface White on Lamplit Cream with a hairline, not by casting.
+
+What the system does have instead of shadows is an explicit **stacking order**, expressed as named `z-*` utilities so nothing reaches for an arbitrary `z-[999]`:
+
+- `z-relative` (1): local stacking context.
+- `z-nav` (80): the bottom nav band. The FAB (`z-[85]`) and home indicator (`z-[81]`) are spatial tweaks inside this band, not separate layers.
+- `z-sheet-backdrop` (90) → `z-floating` (95) → `z-sheet` (100): the standard sheet stack, with `z-floating` for cards that must sit over the backdrop.
+- `z-modal` (110): modal and toast layer.
+- `z-nested-backdrop` (112) → `z-nested-sheet` (115): a sheet opened from inside another sheet.
+- `z-top-toast` (120): the ceiling. Nothing goes above it.
+
+Because the app runs inside iOS and Android WebViews, elevation also means respecting what the OS occupies. Any fixed, sticky, or absolutely-positioned element must clear `env(safe-area-inset-*)`: the notch and Dynamic Island at the top, the home indicator and Android gesture bar at the bottom. `--bottom-nav-offset` (112px) reserves scroll clearance so the last feed row is not pinched by the FAB, but it solves only the bottom. A destructive-confirmation screen whose escape control sits under the notch is a trap, and has shipped before.
 
 ### Shadow Vocabulary (deliberately tiny)
-- **Thumb lift** (`box-shadow: 0 1px 3px rgba(58,36,25,0.20)`): Only on the moving thumb of a switch or segmented toggle, so the moving piece reads as physical.
+- **Thumb lift** (`box-shadow: 0 1px 3px rgba(58,36,25,0.20)`): Only on the moving thumb of a switch, so the moving piece reads as physical.
 - **Segment thumb** (`box-shadow: 0 1px 3px rgba(31,27,22,0.10)`): The selected segment's quiet lift.
-- **Focus ring** (`box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent)`): Keyboard focus on buttons, inputs, toggles. Soft ember, pointer clicks stay clean.
+- **Focus ring** (`box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent)`): Keyboard focus on buttons, inputs, toggles. Soft ember, and pointer clicks stay clean because every rule uses `:focus-visible`, not `:focus`.
 
 ### Named Rules
-**The Flat-By-Default Rule.** Surfaces are flat at rest. The only box-shadows in the system are the toggle thumb lift and the focus ring; both are functional, never decorative. If you reach for a shadow to separate two surfaces, use a hairline or a tonal step instead.
+
+**The Flat-By-Default Rule.** Surfaces are flat at rest. The only box-shadows in the system are the toggle thumb lift, the segment thumb, and the focus ring; all three are functional, never decorative. If you reach for a shadow to separate two surfaces, use a hairline or a tonal step instead.
+
+**The Named-Layer Rule.** Every stacking decision uses a `z-*` utility from the scale above. An arbitrary `z-[N]` in new code means either the layer already exists under a name, or a new layer needs sign-off. There is no third case.
+
+**The Safe-Area Rule.** Nothing interactive is positioned against a viewport edge without an `env(safe-area-inset-*)` allowance. Verify in the native shell, not the browser: the browser has chrome that hides this failure.
 
 ## 5. Components
 
+The vocabulary is deliberately tiny. `components/ui/` holds four primitives: `Button`, `TextInput`, `SegmentedToggle`, and the compound `Sheet` (`SheetHeader` / `SheetBody` / `SheetFooter`). There is no skeleton, drawer, toast, or empty-state primitive, and that is a constraint, not an oversight. A screen that seems to need a fifth primitive is a screen to re-read, not a license to invent one.
+
 ### Buttons
 - **Shape:** Friendly rounded (`--radius-bubble`, 14px). Heights via control tokens: sm 36px, md 44px, lg 52px. Font weight 500, label truncates rather than wraps.
-- **Primary:** Cocoa Ink fill (#3A2419) with Surface White text. The firm commit anchor (記下 / 儲存 / 繼續 / 確認).
-- **Secondary:** Surface White with Cocoa Ink text and a Cocoa Ink 3 (#B89C8B) hairline border. The calm alternative (取消 / 輔助).
+- **Primary:** Cocoa Ink fill (#3A2419) with `--on-fill` text. The firm commit anchor (記下 / 儲存 / 繼續 / 確認).
+- **Accent:** Ember fill with `--on-fill` text. The rare ember commit (empty-state "add first record", invite, monthly-review entry). Subject to the One Ember Rule. Flat: no drop shadow; the fill carries it.
+- **Secondary:** Surface White with Cocoa Ink text and a Cocoa Ink 3 (#82654F) hairline border. The calm alternative (取消 / 輔助).
 - **Ghost:** Transparent with Cocoa Ink 2 (#7A5848) text, no border.
 - **Danger:** Destructive fill (#B85A48) with white text (離開帳本 / 刪除). Distinct from Clay debit so "leaving" never reads as "an expense."
-- **Accent:** Ember fill (`--btn-accent-bg`) with white text. The rare ember commit (empty-state "add first record", invite, monthly-review entry). Subject to the One Ember Rule. Flat: no drop-shadow; the fill carries it.
-- **States:** `transition-opacity 150ms`; disabled drops to opacity 0.40. Focus shows the 2px ember ring.
+- **Disabled:** Cocoa Ink 3 fill at opacity 0.40. Never a grey from outside the palette.
+- **States:** `transition-opacity 150ms`. Focus shows the 2px ember ring via `.oik-btn:focus-visible`.
 
 ### Chips / Toggles
 - **`SegmentedToggle`** (`components/ui/SegmentedToggle.tsx`): the shared primitive for every pill toggle (mode toggle, balance-view, payer/split L3 filters). Presentational and selection-agnostic, so single-select and the dual-select (≥1) member toggles share one surface without sharing one selection rule. `size` `sm` (28px, dense rows) / `md` (32px, mode toggle); per-segment `fillColor` override (member `--ink`/`--accent`, income mint); `.oik-segment` focus ring; `--toggle-*` tokens throughout. Action toggles (`SettleButton`) and the +/− collapse (`ToggleButton`) stay separate by intent.
-- **Selected:** Cocoa Ink fill, white text. **Unselected:** Surface White, Cocoa Ink 2 text, hairline border. Compact at 34px tall, `--radius-chip` (10px).
-- **Segmented selector:** A track at `rgba(58,36,25,0.05)` with a Surface White thumb (the only place a tiny shadow lifts the selected segment).
-- **Switch (settings):** iOS-style; Ember "on", hairline "off", white thumb with the thumb-lift shadow.
+- **Selected:** Cocoa Ink fill, `--on-fill` text. **Unselected:** Surface White, Cocoa Ink 2 text, hairline border. Compact at 34px tall (`h-chip`), `--radius-chip` (10px).
+- **Segmented selector:** A track at `rgba(58,36,25,0.05)` with a Surface White thumb (one of the three sanctioned shadows).
+- **Switch (settings):** iOS-style, 44×26px with a 22px thumb. Ember "on", hairline "off", white thumb with the thumb-lift shadow. Track and thumb colors live in `.oik-switch` CSS rather than inline style, so Tailwind preflight's `button { background-color: transparent }` cannot override them; `data-state` swaps the fill without a React re-mount.
 
 ### Cards / Containers
-- **Corner style:** `--radius-card` (20px) for primary surfaces; `--radius-tile` (18px) for tiles/previews.
+- **Corner style:** `--radius-card` (20px) for primary surfaces; `--radius-tile` (18px) for tiles and previews.
 - **Background:** Surface White or Surface Warm on the Lamplit Cream ground.
 - **Shadow strategy:** None. See Elevation; separation is a hairline and a tonal step.
 - **Internal padding:** Sheets use `--sheet-x` 20px, top 16px, bottom 24px. Vary padding for rhythm; do not pad everything identically.
+- **Dividers:** `oik-hairline`, a 1px rule inset by `--sheet-x` on both sides. Prefer it to wrapping two pieces of content in separate containers.
 
 ### Inputs / Fields
-- **Style:** Surface White, Cocoa Ink text, `--radius-bubble` (14px), 44px tall.
-- **Focus:** The wrapper shows the 2px ember focus ring on `:focus-within`. No glow, no border-color flip.
-- **Error:** Clay (#D17561) text on a 10% Clay tint. Never an alarm red, never an exclamation mark.
+- **Style:** `--input-bg` (Surface White, kept as its own token so inputs can be themed independently), Cocoa Ink text, `--radius-bubble` (14px), 44px tall.
+- **Focus:** The `.oik-input-wrapper` shows the 2px ember ring on `:focus-within`. No glow, no border-color flip.
+- **Error:** `--debit-text` on a `--debit-soft` tint. Never an alarm red, never an exclamation mark.
+- **Keyboard:** Inside the native shells the software keyboard covers content without warning and `100vh` overreports. Forms and sheets must stay usable and scrollable with the keyboard open.
 
 ### Navigation
-- **Bottom nav + FAB** (mobile shell): a fixed band (z 80–89). The FAB is the one ember element, the round invitation to record. Scroll containers reserve `--bottom-nav-offset` (112px) so the last row never hides behind the FAB.
+- **Bottom nav + FAB** (mobile shell): a fixed band at `z-nav` (80–89), 78px tall. The FAB is the one ember element, the round invitation to record. Scroll containers reserve `--bottom-nav-offset` (112px) so the last row never hides behind the FAB. Both must clear the bottom safe-area inset.
+- **Document behavior is suppressed on purpose.** `overscroll-behavior: none` blocks Android Chrome pull-to-refresh and edge bounce; `-webkit-tap-highlight-color: transparent` kills the grey tap flash; scrollbars are hidden. The shell is a fixed app surface, not a scrolling document. Do not reintroduce these behaviors, and do not go the other way by simulating native choreography (spring page pushes, interactive swipe-back) to disguise the WebView.
 
 ### Signature: The Amount Hero
-Large `tnum` numerics (44–56px) for the dashboard balance and entry amount. This is the deliberate exception to the system's restraint: the number gets to be big because, in this moment, the number is the point. Pair it with quiet labels, never with a supporting grid of stats (that is the hero-metric cliché this system bans).
+Large `tnum` numerics (44–56px) for the dashboard balance and entry amount. This is the deliberate exception to the system's restraint: the number gets to be big because, in this moment, the number is the point. Pair it with quiet labels, never with a supporting grid of stats (that is the hero-metric cliché this system bans). When the figure is a debt owed, it uses `--debit-quiet`, not full Clay.
+
+### Signature: The Realtime Flash
+The second signature, and the only place the system animates something the user did not do. When the partner writes from another device, the arriving row pulses once from Realtime Flash (#FFFBE8) to transparent over 1s ease-out (`.rt-flash`); a removed row collapses via `.rt-fading` (opacity and max-height, 0.5s ease-out); and a `partner-toast` fades and slides 8px in, holds, and fades out across a 3s lifetime with `cubic-bezier` ease-out.
+
+This is 陪伴 made literal: the other person is not here, but they just moved. It earns signature status for the same reason the ember does, by being rare. Rules:
+
+- **One flash per arrival.** Never loop, never repeat, never stack flashes when several rows arrive together.
+- **Warm, not alert.** The flash color is a pale warm yellow that reads as a lamp flickering, not a notification badge. It never becomes ember, sage, or clay.
+- **Under one second, then gone.** It must be finished before the user can react to it. If a user has time to look at the flash, it is too slow.
+- **Never for the user's own writes.** The user already knows what they did; flashing it back is a machine congratulating them.
+- **Never a count.** No "3 new records" badge, no unread state, no tally. It is a presence signal, not an inbox.
 
 ## 6. Do's and Don'ts
 
+Each Don't carries a one-sentence audit test. Run the test on the screen; if it fails, the Don't applies.
+
 ### Do:
 - **Do** keep Ember (#E08856) rare: one accent moment per screen (the One Ember Rule).
-- **Do** separate surfaces with hairlines (rgba(58,36,25,0.10)) and tonal steps (cream → warm → white), not shadows.
-- **Do** set headings and brand voice in Fraunces 500; set the working ledger in Noto Sans TC.
+- **Do** separate surfaces with hairlines (rgba(58,36,25,0.10)) and tonal steps (sand → cream → warm → white), not shadows. Reach for `oik-hairline` before reaching for a container.
+- **Do** set brand-surface headings in Fraunces 500 on `--bg-committed`; set the working ledger in Noto Sans TC on `--bg`.
 - **Do** use the dark Cocoa Ink fill for the primary commit, so the one firm action is unmistakable.
 - **Do** give amounts room to be big with `tnum`, paired with a quiet label.
-- **Do** respect `prefers-reduced-motion`; keep transitions near 150ms and ease-out (the about-fade-up uses cubic-bezier(0.22, 1, 0.36, 1)).
+- **Do** give every new animation a `prefers-reduced-motion: reduce` branch, matching `.partner-toast` and `.about-article`. Three existing animations (`.rt-flash`, `.rt-fading`, `.animate-blink`) still lack one; adding motion without a branch widens a known gap.
+- **Do** keep transitions near 150ms and ease-out (the about fade-up uses `cubic-bezier(0.22, 1, 0.36, 1)`).
 - **Do** pair the Sage/Clay credit-debit distinction with a non-color cue (sign, label, icon) for color-blind legibility.
-- **Do** treat both partners as equals; never style solo mode as a deficient state.
-- **Do** reach for an existing token first — `text-*` for type, Tailwind spacing utilities + `--sheet-*` for padding, `--radius-*` for corners, `--color-*` / `var(--ink*)` for color (The Existing-Token-First Rule).
+- **Do** solve a warm-hue contrast failure with a cocoa-ink-mixed companion (`--debit-text`, `--debit-quiet`), never by lightening the ground.
+- **Do** treat both partners as equals, and treat solo mode as a complete state rather than a half-finished setup.
+- **Do** clear `env(safe-area-inset-*)` on every fixed or sticky element, and verify it in the native shell rather than the browser.
+- **Do** reach for an existing token first: `text-*` for type, Tailwind spacing utilities plus `--sheet-*` for padding, `--radius-*` for corners, `--color-*` / `var(--ink*)` for color, `z-*` for stacking.
 - **Do** keep every font size even-px, mapped to a `text-*` class (The Even-Px Rule).
 
 ### Don't:
-- **Don't** use `#000` or `#fff` as a brand surface; text is Cocoa Ink, grounds are warm cream.
-- **Don't** ship cold fintech (navy-and-gold, dense data grids, "wealth management" gravitas).
-- **Don't** ship hype-SaaS costume: purple gradients, decorative glassmorphism, gradient text, or the big-number hero-metric dashboard template.
-- **Don't** use exclamation marks in UI copy, or the words 管理 / 追蹤 / 監控.
-- **Don't** add gamified guilt: streaks, budget-exceeded red alarms, "you overspent" verdicts, or anxiety to drive engagement.
-- **Don't** use a `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or alerts; use a full hairline, a tonal tint, or a leading icon instead.
-- **Don't** reach for a drop shadow to separate surfaces; the system is flat by default.
-- **Don't** default to a modal; exhaust inline and sheet-based progressive alternatives first.
-- **Don't** put token-covered values in inline `style={{ … }}` — static `fontSize` / `padding` / `margin` / `borderRadius` / color go in utility classes. Inline `style` is only for genuinely dynamic values.
-- **Don't** invent a new font size, spacing step, radius, or token on your own — if the scale can't express it, stop and ask first. Odd-px sizes are never reintroduced.
-- **Don't** fall into the teal-and-white budgeting-app aesthetic; the warm lamp exists to escape it.
+- **Don't** use `#000` or `#fff` as a brand surface; text is Cocoa Ink, grounds are warm cream. *Test: search the diff for `#fff`, `#ffffff`, `white`, and `black`; every hit that is not `--on-fill` on a filled control is wrong.*
+- **Don't** ship cold fintech (navy-and-gold, dense data grids, "wealth management" gravitas). *Test: if the screen would look at home with a stock-ticker strip added to it, it is too institutional.*
+- **Don't** ship hype-SaaS costume: purple gradients, decorative glassmorphism, gradient text, or the big-number hero-metric dashboard template. *Test: if there is more than one big number on the screen, none of them is the moment.*
+- **Don't** let the screen drift back to the generic budgeting app. *Test: screenshot it and desaturate to greyscale; if you can still count discrete rectangular blocks, there are too many containers, and the hairline should be doing that work.*
+- **Don't** use exclamation marks in UI copy, or the words 管理 / 追蹤 / 監控. *Test: grep the diff's i18n keys for `！`, `!`, `管理`, `追蹤`, `監控`; any hit in user-facing copy is wrong.*
+- **Don't** tell the user how to feel about their own records. *Test: read the string aloud; if it contains an adjective about the user or their month rather than a fact about what happened, cut the adjective.*
+- **Don't** add gamified guilt: streaks, budget-exceeded red alarms, "you overspent" verdicts, or anxiety to drive engagement. *Test: if a number turns red or a state escalates because a threshold was crossed, it is a verdict.*
+- **Don't** use a `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or alerts; use a full hairline, a tonal tint, or a leading icon instead. *Test: grep for `border-l-` and `border-r-` above 1px.*
+- **Don't** reach for a drop shadow to separate surfaces; the system is flat by default. *Test: if the diff adds a `box-shadow` that is not the thumb lift, segment thumb, or focus ring, it is decorative.*
+- **Don't** default to a modal; exhaust inline and sheet-based progressive alternatives first. *Test: if the content could live in a `Sheet` or expand in place, the modal is laziness.*
+- **Don't** write an arbitrary `z-[N]`. *Test: grep for `z-[` in the diff; every hit outside the nav band's `z-[81]` / `z-[85]` needs either an existing named layer or sign-off.*
+- **Don't** put token-covered values in inline `style={{ … }}`; static `fontSize` / `padding` / `margin` / `borderRadius` / `z-index` / color go in utility classes. *Test: grep the diff for `style={{`; every surviving hit must be a genuinely computed value.*
+- **Don't** invent a new font size, spacing step, radius, z-layer, token, or `components/ui/` primitive on your own. *Test: if the change adds a line to `:root` or a file to `components/ui/`, stop and ask first.*
+- **Don't** use `font-semibold` expecting visible weight change; weight 600 is not loaded. *Test: grep for `font-semibold`; it renders identically to `font-medium`.*
+- **Don't** add a partial dark palette, ad-hoc `dark:` variants, or a theme toggle. *Test: grep for `dark:` and `prefers-color-scheme`; Futari is light-only until the night-lamp direction is scoped and approved.*
+- **Don't** position anything interactive against a viewport edge without a safe-area allowance. *Test: open the screen in the iOS shell on a notched device and try to reach every control, especially the escape route on a destructive-confirmation screen.*
+- **Don't** simulate native choreography (spring page pushes, interactive swipe-back, rubber-band overscroll) to disguise the WebView. *Test: if an animation exists to make the web feel native rather than to convey state, cut it.*
+- **Don't** fall into the teal-and-white budgeting-app aesthetic; the warm lamp exists to escape it. *Test: if the palette would survive being swapped for teal-and-white without the screen looking wrong, the warmth is not doing any work.*

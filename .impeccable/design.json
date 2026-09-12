@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-05-25T00:00:00.000Z",
+  "generatedAt": "2026-09-12T09:21:29Z",
   "title": "Design System: Futari",
   "extensions": {
     "colorMeta": {
@@ -8,59 +8,292 @@
         "role": "primary",
         "displayName": "Ember",
         "canonical": "#E08856",
-        "tonalRamp": ["#5C2E14", "#7E3F1C", "#A85428", "#C66B38", "#E08856", "#EBA277", "#F3C2A3", "#FBE3D2"]
+        "tonalRamp": [
+          "#5C2E14",
+          "#7E3F1C",
+          "#A85428",
+          "#C66B38",
+          "#E08856",
+          "#EBA277",
+          "#F3C2A3",
+          "#FBE3D2"
+        ]
       },
       "cocoa-ink": {
         "role": "secondary",
         "displayName": "Cocoa Ink",
         "canonical": "#3A2419",
-        "tonalRamp": ["#1F130C", "#2C1B11", "#3A2419", "#553828", "#74503B", "#9A7560", "#C2A491", "#E7D6C9"]
+        "tonalRamp": [
+          "#1F130C",
+          "#2C1B11",
+          "#3A2419",
+          "#553828",
+          "#74503B",
+          "#9A7560",
+          "#C2A491",
+          "#E7D6C9"
+        ]
       },
       "lamplit-cream": {
         "role": "neutral",
         "displayName": "Lamplit Cream",
         "canonical": "#FBEDE0",
-        "tonalRamp": ["#6E5E4C", "#93826C", "#B8A78E", "#D8C9B2", "#EBDDC8", "#F4E9D9", "#FBEDE0", "#FFF7EE"]
+        "tonalRamp": [
+          "#6E5E4C",
+          "#93826C",
+          "#B8A78E",
+          "#D8C9B2",
+          "#EBDDC8",
+          "#F4E9D9",
+          "#FBEDE0",
+          "#FFF7EE"
+        ]
       },
       "sage": {
         "role": "tertiary",
         "displayName": "Sage",
         "canonical": "#7A9F7E",
-        "tonalRamp": ["#2F4633", "#3F5C44", "#527456", "#66896A", "#7A9F7E", "#99B79C", "#BCD0BE", "#DFEAE0"]
+        "tonalRamp": [
+          "#2F4633",
+          "#3F5C44",
+          "#527456",
+          "#66896A",
+          "#7A9F7E",
+          "#99B79C",
+          "#BCD0BE",
+          "#DFEAE0"
+        ]
       },
       "clay": {
         "role": "tertiary",
         "displayName": "Clay",
         "canonical": "#D17561",
-        "tonalRamp": ["#5A271D", "#7A3727", "#9D4A36", "#BB5C47", "#D17561", "#DD9384", "#E9B6AC", "#F4DAD3"]
+        "tonalRamp": [
+          "#5A271D",
+          "#7A3727",
+          "#9D4A36",
+          "#BB5C47",
+          "#D17561",
+          "#DD9384",
+          "#E9B6AC",
+          "#F4DAD3"
+        ]
       },
       "destructive": {
         "role": "support",
         "displayName": "Destructive",
         "canonical": "#B85A48",
-        "tonalRamp": ["#4E2018", "#682B20", "#8A3A2C", "#A24839", "#B85A48", "#CB7C6D", "#DCA499", "#EECCC4"]
+        "tonalRamp": [
+          "#4E2018",
+          "#682B20",
+          "#8A3A2C",
+          "#A24839",
+          "#B85A48",
+          "#CB7C6D",
+          "#DCA499",
+          "#EECCC4"
+        ]
+      },
+      "cocoa-ink-3": {
+        "role": "neutral",
+        "displayName": "Cocoa Ink 3",
+        "canonical": "#82654F",
+        "note": "Darkened from #B89C8B (2.24:1 on cream, failed AA) to 4.66:1. This is the contrast floor, not a starting point for lightening back.",
+        "tonalRamp": [
+          "#2A1F16",
+          "#3F2F22",
+          "#56402F",
+          "#6C513E",
+          "#82654F",
+          "#A08471",
+          "#C2AA9B",
+          "#E3D6CB"
+        ]
+      },
+      "committed-cream": {
+        "role": "neutral",
+        "displayName": "Committed Cream",
+        "canonical": "#EFDDC4",
+        "note": "Brand-surface ground only (landing, sign-in, migrate, terms, privacy). App surfaces keep lamplit-cream.",
+        "tonalRamp": [
+          "#4A3E2C",
+          "#6B5A41",
+          "#8E7A5B",
+          "#B29B78",
+          "#D0BC9C",
+          "#EFDDC4",
+          "#F5E9D8",
+          "#FAF3E9"
+        ]
+      },
+      "realtime-flash": {
+        "role": "tertiary",
+        "displayName": "Realtime Flash",
+        "canonical": "#FFFBE8",
+        "note": "The single-pulse ground behind a row the partner just wrote from another device. Never loops, never becomes ember.",
+        "tonalRamp": [
+          "#4A4528",
+          "#6B653A",
+          "#8E884F",
+          "#B2AB68",
+          "#D0C98A",
+          "#E8E2B4",
+          "#F7F2D6",
+          "#FFFBE8"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Warning Amber",
+        "canonical": "#B45309",
+        "note": "Paused and warning states, with a 12% tint for the paused pill. Separate from destructive so \"paused\" never reads as \"broken\".",
+        "tonalRamp": [
+          "#3A1A03",
+          "#532705",
+          "#6F3506",
+          "#914407",
+          "#B45309",
+          "#D4771F",
+          "#E5A05C",
+          "#F2CCA0"
+        ]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display (Fraunces)", "purpose": "Brand voice: headings on landing, sign-in, migrate, legal, and the about narrative. Never for the working ledger." },
-      "title": { "displayName": "Title", "purpose": "Sheet titles and section heroes." },
-      "body": { "displayName": "Body", "purpose": "List items, inputs, prose. Humanist CJK working face." },
-      "label": { "displayName": "Label", "purpose": "Section labels, chips, captions." },
-      "amount": { "displayName": "Amount", "purpose": "Hero balances and entry amounts; tabular numerics, the one place numbers are big." }
+      "display": {
+        "displayName": "Display (Fraunces)",
+        "purpose": "Brand voice: headings on landing, sign-in, migrate, legal, and the about narrative. Never for the working ledger."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sheet titles and section heroes."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "List items, form inputs, prose at 16px. Cap Latin prose near 65-75ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Section labels, chips, captions at 14px with 0.6px tracking (tracking-label). Metadata steps down to 12px."
+      },
+      "amount": {
+        "displayName": "Amount",
+        "purpose": "Hero balances and entry amounts; tabular numerics, the one place numbers are big."
+      },
+      "page": {
+        "displayName": "Page",
+        "purpose": "Page and sub-page headers inside the app. Noto Sans TC 500 at 26px, never the serif."
+      },
+      "mini": {
+        "displayName": "Mini",
+        "purpose": "Badge superscripts and tiny tracking labels at 10px. The only tier below 12px."
+      }
     },
     "shadows": [
-      { "name": "thumb-lift", "value": "0 1px 3px rgba(58,36,25,0.20)", "purpose": "The moving thumb of a switch reads as physical. The only lift on an interactive control." },
-      { "name": "segment-thumb", "value": "0 1px 3px rgba(31,27,22,0.10)", "purpose": "Quiet lift under the selected segment of a segmented toggle." },
-      { "name": "focus-ring", "value": "0 0 0 2px color-mix(in srgb, #E08856 55%, transparent)", "purpose": "Keyboard focus on buttons, inputs, toggles. Soft ember; pointer clicks stay clean." }
+      {
+        "name": "thumb-lift",
+        "value": "0 1px 3px rgba(58,36,25,0.20)",
+        "purpose": "The moving thumb of a switch reads as physical. The only lift on an interactive control."
+      },
+      {
+        "name": "segment-thumb",
+        "value": "0 1px 3px rgba(31,27,22,0.10)",
+        "purpose": "Quiet lift under the selected segment of a segmented toggle."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 2px color-mix(in srgb, #E08856 55%, transparent)",
+        "purpose": "Keyboard focus on buttons, inputs, toggles. Soft ember; pointer clicks stay clean."
+      }
     ],
     "motion": [
-      { "name": "control-transition", "value": "150ms ease", "purpose": "Shared timing for buttons, chips, switches, segments." },
-      { "name": "ease-out-soft", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "The about-article fade-up; a quiet opening beat, reduced-motion-aware." },
-      { "name": "partner-toast", "value": "3s ease-out both", "purpose": "Partner-activity toast: fade+slide in, hold, fade out across its full lifetime." }
+      {
+        "name": "control-transition",
+        "value": "150ms ease",
+        "purpose": "Shared timing for buttons, chips, switches, segments."
+      },
+      {
+        "name": "ease-out-soft",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "The about-article fade-up; a quiet opening beat, reduced-motion-aware."
+      },
+      {
+        "name": "partner-toast",
+        "value": "3s ease-out both",
+        "purpose": "Partner-activity toast: fade+slide 8px in, hold, fade out across its full lifetime. Reduced-motion branch present."
+      },
+      {
+        "name": "realtime-flash",
+        "value": "1s ease-out",
+        "purpose": "Single warm-yellow pulse behind a row the partner just wrote. One flash per arrival, never for the user own writes, never a count. Reduced-motion branch MISSING."
+      },
+      {
+        "name": "realtime-fade-out",
+        "value": "0.5s ease-out forwards",
+        "purpose": "Collapse of a row removed from another device (opacity + max-height). Reduced-motion branch MISSING."
+      },
+      {
+        "name": "blink",
+        "value": "1s step-end infinite",
+        "purpose": "Amount-entry caret. Reduced-motion branch MISSING."
+      }
     ],
     "breakpoints": [
-      { "name": "app-shell", "value": "448px" },
-      { "name": "lg", "value": "1024px" }
+      {
+        "name": "app-shell",
+        "value": "448px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ],
+    "layers": [
+      {
+        "name": "z-relative",
+        "value": 1,
+        "purpose": "Local stacking context."
+      },
+      {
+        "name": "z-nav",
+        "value": 80,
+        "purpose": "Bottom nav band. FAB (85) and home indicator (81) are spatial tweaks inside it, not separate layers."
+      },
+      {
+        "name": "z-sheet-backdrop",
+        "value": 90,
+        "purpose": "Backdrop behind a sheet."
+      },
+      {
+        "name": "z-floating",
+        "value": 95,
+        "purpose": "Cards that must sit over the backdrop."
+      },
+      {
+        "name": "z-sheet",
+        "value": 100,
+        "purpose": "The standard sheet body."
+      },
+      {
+        "name": "z-modal",
+        "value": 110,
+        "purpose": "Modal and toast layer."
+      },
+      {
+        "name": "z-nested-backdrop",
+        "value": 112,
+        "purpose": "Backdrop for a sheet opened from inside another sheet."
+      },
+      {
+        "name": "z-nested-sheet",
+        "value": 115,
+        "purpose": "Body of a sheet opened from inside another sheet."
+      },
+      {
+        "name": "z-top-toast",
+        "value": 120,
+        "purpose": "The ceiling. Nothing goes above it."
+      }
     ]
   },
   "components": [
@@ -143,48 +376,125 @@
       "description": "The single ember moment in the shell: the round invitation to record. The One Ember Rule lives here.",
       "html": "<button class=\"ds-fab\" aria-label=\"記一筆\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"/><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"/></svg></button>",
       "css": ".ds-fab { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 9999px; border: none; background: var(--accent, #E08856); color: var(--on-fill, #fff); box-shadow: 0 0 0 5px rgba(224,136,86,0.18); cursor: pointer; transition: transform 150ms ease; } .ds-fab:hover { transform: translateY(-2px); } .ds-fab:focus-visible { outline: none; box-shadow: 0 0 0 5px rgba(224,136,86,0.18), 0 0 0 7px var(--focus-ring-color, rgba(224,136,86,0.55)); }"
+    },
+    {
+      "name": "Realtime Flash Row",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "A ledger row as it arrives from the partner device: one warm pulse, under a second, then gone.",
+      "html": "<div class=\"ds-rt-row\"><span class=\"ds-rt-label\">午餐</span><span class=\"ds-rt-amount\">320</span></div>",
+      "css": ".ds-rt-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; background: transparent; color: var(--ink, #3A2419); font-family: var(--font-sans, sans-serif); border-radius: 14px; animation: ds-rt-flash 1s ease-out; } .ds-rt-label { font-size: 16px; font-weight: 400; } .ds-rt-amount { font-family: -apple-system, \"SF Pro Display\", system-ui; font-size: 16px; font-weight: 500; font-feature-settings: \"tnum\"; color: var(--debit, #D17561); } @keyframes ds-rt-flash { 0% { background: var(--realtime-flash, #FFFBE8); } 100% { background: transparent; } } @media (prefers-reduced-motion: reduce) { .ds-rt-row { animation: none; } }"
     }
   ],
   "narrative": {
     "northStar": "The Warm Lamp",
-    "overview": "Futari is a ledger that behaves like a lamp left on for two people. The light is present and warm; it witnesses the day without glaring at it. The register is product, but the task is emotional, so restraint is the discipline, not coldness: flat surfaces, hairline separation, a single ember accent, and an editorial serif voice over a humanist CJK working face. The dark cocoa-ink fill is the firm commit anchor in a soft, cream-lit room. The system exists to escape what a money app reflexively becomes: cold fintech, hype-SaaS costume, surveillance framing, gamified guilt, and the teal-and-white budgeting cliché.",
+    "overview": "Futari is a ledger that behaves like a lamp left on for two people. The light is present and warm; it witnesses the day without glaring at it. Each record is a small point of warm light, and the running story matters more than any single number. The palette is hearth-toned, the surfaces sit flat and quiet, and the type carries an editorial calm rather than dashboard urgency.\n\nThe register is product: design serves the task. But the task is emotional, so restraint is the discipline, not coldness. Two gestures carry the signature. The dark-ink fill is the user acting: the primary commit button is the firm anchor in a soft, cream-lit room. The realtime warm flash is being accompanied: a pale-yellow pulse when the partner records from somewhere else. Both earn their weight because everything around them is quiet.\n\nThe system runs on two grounds. App surfaces sit on Lamplit Cream; brand surfaces sit on the deepened Committed Cream and let Fraunces speak at full voice. It also ships inside iOS and Android WebView shells, so it suppresses browser-document behavior (overscroll bounce, tap-highlight flash, visible scrollbars) rather than letting the shell feel like a web page in a frame. It explicitly rejects cold fintech gravitas, hype-SaaS costume, surveillance framing, and gamified guilt. The teal-and-white budgeting-app cliche is a gravity well, not a single mistake: it is where a screen lands when nobody decided otherwise.",
     "keyCharacteristics": [
       "Hearth-toned warm palette: lamplit cream ground, cocoa-ink text, a single ember accent.",
+      "Two grounds: app cream for task surfaces, committed cream for brand surfaces.",
       "Flat by default: hairlines and tonal layers convey depth, not shadows.",
       "Editorial serif (Fraunces) for voice; humanist CJK sans (Noto Sans TC) for the work.",
-      "Generous, friendly radii (14-20px) on a tight, calm type scale.",
+      "Generous, friendly radii (10-20px) on a tight, calm, even-px type scale.",
       "Gentle, reduced-motion-aware motion; nothing bounces.",
+      "A deliberately tiny component vocabulary: four primitives, no more.",
       "Two equals: no UI ever favors or shames one partner."
     ],
     "rules": [
-      { "name": "The One Ember Rule", "body": "Ember (#E08856) is the only accent, and it stays rare: the FAB, a primary CTA, an on-state. If two embers compete on one screen, one of them is wrong. Its scarcity is what makes it feel warm.", "section": "colors" },
-      { "name": "The Pure-Black-and-White Ban", "body": "Never #000 or #fff as a brand surface. Text is Cocoa Ink (#3A2419); grounds are warm cream. Surface White is permitted only for cards and sheets that need to lift off the cream.", "section": "colors" },
-      { "name": "The Quiet-Money Rule", "body": "Sage means in, Clay means out. They never escalate to alarm-red or success-green. Money here is reported, not judged.", "section": "colors" },
-      { "name": "The Serif-Speaks Rule", "body": "Fraunces is reserved for the brand's voice (headings and narrative). Never set body lists, inputs, or amounts in the serif.", "section": "typography" },
-      { "name": "The No-Weight-600 Rule", "body": "Weight 600 was dropped to cut render-blocking CSS; font-semibold falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights.", "section": "typography" },
-      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. The only box-shadows are the toggle thumb lift and the focus ring; both functional, never decorative. To separate two surfaces, use a hairline or a tonal step.", "section": "elevation" },
-      { "name": "The Brand-Surface Exemption", "section": "colors", "body": "The One Ember Rule governs PRODUCT surfaces (the ledger, settings, task flows). The BRAND-surface tier — landing, sign-in, migrate, terms, privacy — is exempt and may adopt a Committed color strategy: one warm hue (a deepened cream ground, --bg-committed #EFDDC4) covering 30–60% of the surface as the page's base tone. Ember (#E08856) stays rare even here: at most one moment per screen, as a primary CTA or a single point of warm light, never a large fill. Committed always commits the GROUND, never the accent." }
+      {
+        "name": "The One Ember Rule",
+        "section": "colors",
+        "body": "Ember (#E08856) is the only accent, and it stays rare: the FAB, a primary CTA, an on-state. If two embers compete on one screen, one of them is wrong."
+      },
+      {
+        "name": "The Pure-Black-and-White Ban",
+        "section": "colors",
+        "body": "Never #000 or #fff as a brand surface. Text is Cocoa Ink; grounds are warm cream. Surface White is permitted only for cards and sheets. The one sanctioned white is --on-fill, the shared foreground for text on filled controls."
+      },
+      {
+        "name": "The Quiet-Money Rule",
+        "section": "colors",
+        "body": "Sage means in, Clay means out. They never escalate to alarm-red or success-green. Money here is reported, not judged."
+      },
+      {
+        "name": "The Two-Grounds Rule",
+        "section": "colors",
+        "body": "--bg is where the couple works; --bg-committed is where the product speaks. A landing section on --bg looks unfinished, and a dashboard on --bg-committed looks like a marketing page wearing app chrome."
+      },
+      {
+        "name": "The Derived-Contrast Rule",
+        "section": "colors",
+        "body": "When a warm hue must carry text or sit under text, it gets a cocoa-ink-mixed companion (--debit-quiet, --debit-text) rather than an opacity reduction. Never solve a contrast failure by lightening the background."
+      },
+      {
+        "name": "The Serif-Speaks Rule",
+        "section": "typography",
+        "body": "Fraunces is reserved for the brand voice on brand surfaces. Never set body lists, inputs, labels, buttons, or amounts in the serif. Fraunces is not loaded inside the dashboard layout at all."
+      },
+      {
+        "name": "The No-Weight-600 Rule",
+        "section": "typography",
+        "body": "Weight 600 was dropped to cut render-blocking CSS; font-semibold silently falls back to 500. Build hierarchy with size and the 400/500 contrast."
+      },
+      {
+        "name": "The Even-Px Rule",
+        "section": "typography",
+        "body": "Font sizes are even-px only. The 11/13/15px tiers were removed. When a value feels between two tiers, round to the nearer even tier."
+      },
+      {
+        "name": "The Existing-Token-First Rule",
+        "section": "typography",
+        "body": "Reach for the token that already exists: text-* for type, Tailwind spacing plus --sheet-*, --radius-* for corners, --color-* for color, z-* for stacking. No inline style for token-covered values, and never invent a token on your own: stop and ask."
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "section": "elevation",
+        "body": "Surfaces are flat at rest. The only box-shadows are the toggle thumb lift, the segment thumb, and the focus ring. To separate two surfaces, use a hairline or a tonal step."
+      },
+      {
+        "name": "The Named-Layer Rule",
+        "section": "elevation",
+        "body": "Every stacking decision uses a z-* utility from the scale. An arbitrary z-[N] means either the layer already exists under a name, or a new layer needs sign-off."
+      },
+      {
+        "name": "The Safe-Area Rule",
+        "section": "elevation",
+        "body": "Nothing interactive is positioned against a viewport edge without an env(safe-area-inset-*) allowance. Verify in the native shell, not the browser: the browser has chrome that hides this failure."
+      }
     ],
     "dos": [
       "Do keep Ember (#E08856) rare: one accent moment per screen.",
-      "Do separate surfaces with hairlines and tonal steps, not shadows.",
-      "Do set headings and brand voice in Fraunces 500; set the working ledger in Noto Sans TC.",
+      "Do separate surfaces with hairlines and tonal steps (sand to cream to warm to white), not shadows. Reach for oik-hairline before reaching for a container.",
+      "Do set brand-surface headings in Fraunces 500 on --bg-committed; set the working ledger in Noto Sans TC on --bg.",
       "Do use the dark Cocoa Ink fill for the primary commit, so the one firm action is unmistakable.",
       "Do give amounts room to be big with tnum, paired with a quiet label.",
-      "Do respect prefers-reduced-motion; keep transitions near 150ms and ease-out.",
+      "Do give every new animation a prefers-reduced-motion branch. Three existing animations (rt-flash, rt-fading, animate-blink) still lack one.",
+      "Do keep transitions near 150ms and ease-out.",
       "Do pair the Sage/Clay credit-debit distinction with a non-color cue for color-blind legibility.",
-      "Do treat both partners as equals; never style solo mode as a deficient state."
+      "Do solve a warm-hue contrast failure with a cocoa-ink-mixed companion, never by lightening the ground.",
+      "Do treat both partners as equals, and treat solo mode as a complete state rather than a half-finished setup.",
+      "Do clear env(safe-area-inset-*) on every fixed or sticky element, and verify it in the native shell.",
+      "Do reach for an existing token first, including z-* for stacking.",
+      "Do keep every font size even-px, mapped to a text-* class."
     ],
     "donts": [
-      "Don't use #000 or #fff as a brand surface; text is Cocoa Ink, grounds are warm cream.",
-      "Don't ship cold fintech (navy-and-gold, dense data grids, wealth-management gravitas).",
-      "Don't ship hype-SaaS costume: purple gradients, decorative glassmorphism, gradient text, or the big-number hero-metric dashboard.",
-      "Don't use exclamation marks in UI copy, or the words 管理 / 追蹤 / 監控.",
-      "Don't add gamified guilt: streaks, budget-exceeded red alarms, you-overspent verdicts, or anxiety to drive engagement.",
-      "Don't use a border-left or border-right greater than 1px as a colored accent stripe; use a full hairline, a tonal tint, or a leading icon.",
-      "Don't reach for a drop shadow to separate surfaces; the system is flat by default.",
-      "Don't default to a modal; exhaust inline and sheet-based progressive alternatives first.",
-      "Don't fall into the teal-and-white budgeting-app aesthetic; the warm lamp exists to escape it."
+      "Don’t use #000 or #fff as a brand surface. Test: every #fff hit that is not --on-fill on a filled control is wrong.",
+      "Don’t ship cold fintech (navy-and-gold, dense data grids, wealth-management gravitas). Test: if the screen would look at home with a stock-ticker strip added, it is too institutional.",
+      "Don’t ship hype-SaaS costume: purple gradients, decorative glassmorphism, gradient text, or the big-number hero-metric template. Test: if there is more than one big number, none of them is the moment.",
+      "Don’t let the screen drift back to the generic budgeting app. Test: desaturate a screenshot to greyscale; if you can still count discrete rectangular blocks, there are too many containers.",
+      "Don’t use exclamation marks in UI copy, or the words 管理 / 追蹤 / 監控. Test: grep the diff i18n keys for them.",
+      "Don’t tell the user how to feel about their own records. Test: if the string contains an adjective about the user or their month rather than a fact, cut the adjective.",
+      "Don’t add gamified guilt: streaks, budget-exceeded alarms, overspent verdicts. Test: if a number turns red because a threshold was crossed, it is a verdict.",
+      "Don’t use a border-left or border-right greater than 1px as a colored accent stripe. Test: grep for border-l- and border-r- above 1px.",
+      "Don’t reach for a drop shadow to separate surfaces. Test: any box-shadow that is not the thumb lift, segment thumb, or focus ring is decorative.",
+      "Don’t default to a modal. Test: if the content could live in a Sheet or expand in place, the modal is laziness.",
+      "Don’t write an arbitrary z-[N]. Test: grep for z-[ ; every hit outside the nav band needs a named layer or sign-off.",
+      "Don’t put token-covered values in inline style. Test: every surviving style={{ hit must be a genuinely computed value.",
+      "Don’t invent a new font size, spacing step, radius, z-layer, token, or components/ui primitive. Test: if the change adds a line to :root or a file to components/ui/, stop and ask.",
+      "Don’t use font-semibold expecting visible weight change; weight 600 is not loaded.",
+      "Don’t add a partial dark palette, ad-hoc dark: variants, or a theme toggle. Futari is light-only until the night-lamp direction is scoped and approved.",
+      "Don’t position anything interactive against a viewport edge without a safe-area allowance. Test: try to reach every control in the iOS shell on a notched device, especially the escape route on a destructive-confirmation screen.",
+      "Don’t simulate native choreography to disguise the WebView. Test: if an animation exists to make the web feel native rather than to convey state, cut it.",
+      "Don’t fall into the teal-and-white budgeting-app aesthetic. Test: if the palette would survive being swapped for teal-and-white without the screen looking wrong, the warmth is not doing any work."
     ]
   }
 }
