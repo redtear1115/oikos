@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.1.0
 updates:
@@ -73,7 +73,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 - **時間**：`timestamptz`
 - **金額**：`integer`（台幣，無小數）
 - **軟刪除**：Transaction / Settlement / FuelLog / Asset 用 `deleted_at`
-- **不支援 update**：「編輯」= soft delete + insert，同一 DB transaction
+- **不支援 update**：「編輯」= soft delete + insert，同一 DB transaction（規則詳見 `CLAUDE.md`「編輯模式」段）
 - **欠款計算**：每次寫入後全量重算，cache 在 `GroupBalance` table
 - **命名**：PascalCase；避開 SQL reserved word（Group → OikosGroups、Transaction → CashTransactions）
 
