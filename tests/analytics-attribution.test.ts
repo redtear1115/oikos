@@ -5,7 +5,9 @@ import {
   appendQueryParam,
   buildAuthCallbackUrl,
   isFirstAuth,
+  fromParamForUseCase,
 } from '@/lib/analytics/attribution'
+import { USE_CASE_SLUGS } from '@/lib/use-case/cases'
 
 describe('entrySourceFromParam', () => {
   it('maps landing', () => expect(entrySourceFromParam('landing')).toBe('landing'))
@@ -15,10 +17,34 @@ describe('entrySourceFromParam', () => {
     expect(entrySourceFromParam('cwmoney')).toBe('migrate_cwmoney')
   })
   it('maps invite', () => expect(entrySourceFromParam('invite')).toBe('invite'))
+  it('maps use-case pages per slug (#1056)', () => {
+    expect(entrySourceFromParam('use-case-cohabitation')).toBe('use_case_cohabitation')
+    expect(entrySourceFromParam('use-case-aa-split')).toBe('use_case_aa_split')
+  })
+  it('rejects an unregistered use-case slug rather than minting a value', () => {
+    expect(entrySourceFromParam('use-case-not-a-page')).toBe('direct')
+    expect(entrySourceFromParam('use-case-')).toBe('direct')
+  })
   it('falls back to direct for null/unknown', () => {
     expect(entrySourceFromParam(null)).toBe('direct')
     expect(entrySourceFromParam(undefined)).toBe('direct')
     expect(entrySourceFromParam('garbage')).toBe('direct')
+  })
+})
+
+describe('fromParamForUseCase', () => {
+  it('prefixes the slug so it cannot collide with a migrate source', () => {
+    expect(fromParamForUseCase('travel')).toBe('use-case-travel')
+  })
+  it('round-trips through entrySourceFromParam for every registered slug', () => {
+    for (const slug of USE_CASE_SLUGS) {
+      expect(entrySourceFromParam(fromParamForUseCase(slug))).toBe(
+        `use_case_${slug.replaceAll('-', '_')}`,
+      )
+    }
+  })
+  it('does not leak into the importer axis', () => {
+    expect(migrateSourceFromParam(fromParamForUseCase('travel'))).toBeUndefined()
   })
 })
 

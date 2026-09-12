@@ -1,15 +1,54 @@
 // Pure attribution helpers shared by client + server. No side effects, no SDK
 // imports — safe to import from anywhere. See conversion-analytics-design.md.
 
+import { USE_CASE_SLUGS, type UseCaseSlug } from '@/lib/use-case/cases'
+
+/** `aa-split` → `aa_split`, so slugs survive into snake_case event values. */
+type Underscored<S extends string> = S extends `${infer Head}-${infer Tail}`
+  ? `${Head}_${Underscored<Tail>}`
+  : S
+
+/**
+ * One `entry_source` per use-case page rather than a single collapsed
+ * `use_case` (#1056). The ten `/use-case/<slug>` pages exist precisely to test
+ * which situation pulls; collapsing them would erase the only axis they were
+ * built to measure, and PostHog breakdowns cost nothing extra per value.
+ */
+export type UseCaseEntrySource = `use_case_${Underscored<UseCaseSlug>}`
+
 export type EntrySource =
   | 'landing'
   | 'migrate_honeydue'
   | 'migrate_spendee'
   | 'migrate_cwmoney'
+  | UseCaseEntrySource
   | 'invite'
   | 'direct'
 
 export type MigrateFromSource = 'honeydue' | 'spendee' | 'cwmoney'
+
+/** Prefix marking a `from` value as a use-case page, kept off migrate slugs. */
+const USE_CASE_FROM_PREFIX = 'use-case-'
+
+/**
+ * The `from` query value a `/use-case/<slug>` CTA tags its sign-in link with.
+ * Single source of truth so the emitter and `entrySourceFromParam` cannot drift
+ * — a mismatch there is silent, it just reads back as `direct`.
+ *
+ * Named `fromParamFor…`, not `useCase…`: a `use` prefix makes
+ * `react-hooks/rules-of-hooks` treat every call site as a hook call and fail lint.
+ */
+export function fromParamForUseCase(slug: UseCaseSlug): string {
+  return `${USE_CASE_FROM_PREFIX}${slug}`
+}
+
+/** `use-case-aa-split` → `use_case_aa_split`; unknown slugs → undefined. */
+function entrySourceForUseCase(from: string): UseCaseEntrySource | undefined {
+  if (!from.startsWith(USE_CASE_FROM_PREFIX)) return undefined
+  const slug = from.slice(USE_CASE_FROM_PREFIX.length)
+  if (!USE_CASE_SLUGS.includes(slug as UseCaseSlug)) return undefined
+  return `use_case_${slug.replaceAll('-', '_')}` as UseCaseEntrySource
+}
 
 /**
  * Which client flow produced an auth success — the axis `signed_in` / `signed_up`
@@ -39,7 +78,7 @@ export function entrySourceFromParam(from: string | null | undefined): EntrySour
     case 'invite':
       return 'invite'
     default:
-      return 'direct'
+      return entrySourceForUseCase(from ?? '') ?? 'direct'
   }
 }
 
