@@ -5,6 +5,7 @@ export const en: Translations = {
     tagline: 'Your ledger is ready, for the two of you.',
     continueWithGoogle: 'Continue with Google',
     authFailedNotice: "That sign-in didn't finish. You can try again.",
+    signingIn: 'Signing you in',
     continueWithApple: 'Continue with Apple',
     termsPrefix: 'By continuing, you agree to our',
     termsLink: 'Terms of Service',

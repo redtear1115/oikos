@@ -7,7 +7,7 @@ import { localizedHref } from '@/lib/i18n/path'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { fetchBlogPosts } from '@/lib/blog-feed'
-import { SignInButton } from './SignInButton'
+import { SignInActions } from './SignInActions'
 import { SignedInRedirect } from './SignedInRedirect'
 import { InstallHint } from './InstallHint'
 import { FeatureCards } from './FeatureCards'
@@ -200,8 +200,11 @@ export default async function SignInPage({
                 {t.signIn.authFailedNotice}
               </p>
             )}
-            <SignInButton provider="google" label={t.signIn.continueWithGoogle} />
-            <SignInButton provider="apple" label={t.signIn.continueWithApple} />
+            <SignInActions
+              googleLabel={t.signIn.continueWithGoogle}
+              appleLabel={t.signIn.continueWithApple}
+              pendingLabel={t.signIn.signingIn}
+            />
             <InstallHint t={t.signIn.installHint} />
             <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
               {t.signIn.termsPrefix}{' '}

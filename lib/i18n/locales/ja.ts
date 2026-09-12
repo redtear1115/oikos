@@ -5,6 +5,7 @@ export const ja: Translations = {
     tagline: '家計簿の準備はできました。ふたりで始めましょう。',
     continueWithGoogle: 'Google アカウントで続ける',
     authFailedNotice: 'ログインが完了しませんでした。もう一度お試しください。',
+    signingIn: 'サインインしています',
     continueWithApple: 'Apple で続ける',
     termsPrefix: '続行すると、当社の',
     termsLink: '利用規約',
