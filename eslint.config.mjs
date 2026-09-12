@@ -27,6 +27,14 @@ const eslintConfig = defineConfig([
       // case the React docs themselves cite as a legitimate use of useEffect.
       // We've reviewed every callsite; opting out project-wide.
       "react-hooks/set-state-in-effect": "off",
+      // `no-html-link-for-pages` is a Pages-Router-era rule: it assumes every
+      // internal path is a real file route that `<Link />` can client-navigate to.
+      // Here the public pages live under `app/[locale]/…` and the bare `/terms`,
+      // `/privacy` paths only exist because the locale middleware resolves them, so
+      // the `<a>` (full navigation, middleware picks the locale) is the intended
+      // behaviour rather than an oversight. Turning CI on with this rule enabled
+      // would mean starting red on a rule we don't intend to obey.
+      "@next/next/no-html-link-for-pages": "off",
       // Allow underscore-prefix to mark intentionally-unused destructure / args / vars.
       "@typescript-eslint/no-unused-vars": [
         "warn",
