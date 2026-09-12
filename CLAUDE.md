@@ -3,7 +3,7 @@
 > 家庭記帳工具，對使用者顯示為 **Futari**；codebase 用 Oikos。
 > 固定兩人（夫妻／伴侶）使用。Mobile-first PWA。
 
-這份是 agent 工作指南——架構、domain model、慣例、邊界。另外三份分工如下：[README.md](README.md) 是怎麼跑起來與怎麼部署；[PRODUCT.md](PRODUCT.md) 是策略層，寫明產品為誰而做、各 surface 的意圖與哪些低數字是預期的（動文案或判讀指標前讀它）；[DESIGN.md](DESIGN.md) 是視覺系統，由工具產生，見下方「設計脈絡（Impeccable）」。
+這份是 agent 工作指南——架構、domain model、慣例、邊界。要把專案跑起來或部署，看 [README.md](README.md)。動文案、判讀指標、做產品取捨之前，看 [PRODUCT.md](PRODUCT.md)：各 surface 的意圖與「哪些低數字是預期的」寫在那裡。視覺 token 與元件規則在 [DESIGN.md](DESIGN.md)，那份是產生出來的，見下方「設計脈絡（Impeccable）」。
 
 ---
 
