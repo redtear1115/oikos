@@ -60,24 +60,23 @@ export default function InviteQr({ url, t }: { url: string; t: Translations['set
         type="button"
         onClick={handleReveal}
         disabled={loading}
-        className="oik-btn h-12 rounded-xl border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink)' }}
+        className="oik-btn h-12 rounded-xl border border-hairline bg-surface text-ink text-sm font-medium cursor-pointer disabled:opacity-50"
       >
-        {loading ? t.creating : t.qrReveal}
+        {t.qrReveal}
       </button>
     )
   }
 
   return (
-    <div
-      className="rounded-2xl p-4 flex flex-col items-center gap-3"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-    >
+    <div className="rounded-2xl border border-hairline bg-surface p-4 flex flex-col items-center gap-3">
       {/*
-        QR modules are fixed white-on-near-black regardless of theme. Scanners
-        depend on high contrast; swapping in brand/theme colors here would
-        hurt scannability. This is deliberate — do not "fix" it to follow
-        the app's color tokens.
+        The QR stays pure black-on-white in every theme. uqr's renderSVG paints
+        its own `<rect fill="white">` behind the modules, so the code keeps full
+        contrast even when this card's surface token goes dark — that background
+        rect is load-bearing for dark-mode scannability, not decoration.
+        Scanners depend on that contrast; recolouring the modules to brand or
+        theme tokens would hurt them. Deliberate — do not "fix" it to follow the
+        app's palette.
       */}
       <div
         role="img"
@@ -88,8 +87,7 @@ export default function InviteQr({ url, t }: { url: string; t: Translations['set
       <button
         type="button"
         onClick={handleHide}
-        className="oik-btn h-9 px-4 rounded-lg border-0 text-sm cursor-pointer"
-        style={{ background: 'var(--surface-alt)', color: 'var(--ink-2)' }}
+        className="oik-btn h-9 px-4 rounded-lg border-0 bg-surface-alt text-ink-2 text-sm cursor-pointer"
       >
         {t.qrHide}
       </button>
