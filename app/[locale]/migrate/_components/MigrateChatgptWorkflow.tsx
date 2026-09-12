@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState, type SyntheticEvent } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { track } from '@/lib/analytics/track'
 
@@ -13,8 +13,14 @@ type WorkflowCopy = Translations['migrate']['chatgptWorkflow']
  * the CSV ChatGPT returns. Presentational + a copy-to-clipboard button; the
  * uploaded file is parsed by the existing `futari_generic` path.
  *
+ * Collapsed by default since #1011. Expanded, this block runs 600px+ and used
+ * to be the first substantial thing a search visitor met — a detailed manual
+ * for a bonus entry point, standing in front of the reason to sign up. It is
+ * not hidden (the markup still ships, so crawlers and anyone who wants it get
+ * the whole thing one click away); it just no longer sets the page's agenda.
+ *
  * `source` is the page slug (e.g. 'simple-daily-money'), passed through to the
- * copy-prompt analytics event so we can see which app drives prompt copies.
+ * copy-prompt and expand analytics events so we can see which app drives them.
  */
 export function MigrateChatgptWorkflow({
   copy,
@@ -24,6 +30,13 @@ export function MigrateChatgptWorkflow({
   source: string
 }) {
   const [copied, setCopied] = useState(false)
+  const expandedOnce = useRef(false)
+
+  function handleToggle(e: SyntheticEvent<HTMLDetailsElement>) {
+    if (!e.currentTarget.open || expandedOnce.current) return
+    expandedOnce.current = true
+    track('migrate_workflow_expanded', { migrate_source: source })
+  }
 
   async function handleCopy() {
     try {
@@ -38,105 +51,135 @@ export function MigrateChatgptWorkflow({
   }
 
   return (
-    <section
-      className="rounded-card p-5 md:p-6 space-y-5"
-      style={{ background: 'var(--surface-alt)', border: '1px solid var(--hairline)' }}
+    <details
+      className="group rounded-card bg-surface-alt border border-hairline"
+      onToggle={handleToggle}
     >
-      <div className="space-y-2">
-        <h2
-          className="m-0 text-[20px] md:text-[22px] font-medium"
-          style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-        >
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer p-5 md:p-6 flex items-start justify-between gap-4">
+        <h2 className="m-0 flex-1 min-w-0 text-xl md:text-title font-medium text-ink">
           {copy.heading}
+          <span className="block mt-1.5 text-sm font-normal leading-[1.7] text-ink-3">
+            {copy.toggleHint}
+          </span>
         </h2>
+        <ChevronGlyph />
+      </summary>
+
+      <div className="px-5 pb-5 md:px-6 md:pb-6 space-y-5">
         <p className="m-0 text-sm md:text-base leading-[1.7]" style={{ color: 'var(--ink-2)' }}>
           {copy.intro}
         </p>
-      </div>
 
-      <ol className="m-0 list-none p-0 space-y-3">
-        {copy.substeps.map((text, i) => (
-          <li
-            key={i}
-            className="flex gap-4 items-start text-sm md:text-base leading-[1.7]"
-            style={{ color: 'var(--ink-2)' }}
-          >
-            <span
-              aria-hidden
-              className="shrink-0 inline-flex items-center justify-center"
+        <ol className="m-0 list-none p-0 space-y-3">
+          {copy.substeps.map((text, i) => (
+            <li
+              key={i}
+              className="flex gap-4 items-start text-sm md:text-base leading-[1.7]"
+              style={{ color: 'var(--ink-2)' }}
+            >
+              <span
+                aria-hidden
+                className="shrink-0 inline-flex items-center justify-center"
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 8,
+                  background: 'var(--surface)',
+                  border: '1px solid var(--hairline)',
+                  fontFamily: 'var(--font-fraunces)',
+                  fontStyle: 'italic',
+                  fontSize: 13,
+                  color: 'var(--ink-3)',
+                }}
+              >
+                {i + 1}
+              </span>
+              <span className="flex-1 min-w-0">{text}</span>
+            </li>
+          ))}
+        </ol>
+
+        {/* Copyable ChatGPT prompt */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
+              {copy.promptLabel}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-bubble text-sm font-medium cursor-pointer transition-opacity"
               style={{
-                width: 24,
-                height: 24,
-                borderRadius: 8,
                 background: 'var(--surface)',
-                border: '1px solid var(--hairline)',
-                fontFamily: 'var(--font-fraunces)',
-                fontStyle: 'italic',
-                fontSize: 13,
-                color: 'var(--ink-3)',
+                border: '1px solid var(--ink-3)',
+                color: 'var(--ink)',
               }}
             >
-              {i + 1}
-            </span>
-            <span className="flex-1 min-w-0">{text}</span>
-          </li>
-        ))}
-      </ol>
-
-      {/* Copyable ChatGPT prompt */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
-            {copy.promptLabel}
-          </span>
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-bubble text-sm font-medium cursor-pointer transition-opacity"
+              <CopyGlyph />
+              {copied ? copy.copied : copy.copy}
+            </button>
+          </div>
+          <pre
+            className="m-0 overflow-x-auto whitespace-pre-wrap break-words text-sm leading-[1.7] rounded-tile p-4"
             style={{
               background: 'var(--surface)',
-              border: '1px solid var(--ink-3)',
+              border: '1px solid var(--hairline)',
               color: 'var(--ink)',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             }}
           >
-            <CopyGlyph />
-            {copied ? copy.copied : copy.copy}
-          </button>
+            {copy.prompt}
+          </pre>
         </div>
-        <pre
-          className="m-0 overflow-x-auto whitespace-pre-wrap break-words text-sm leading-[1.7] rounded-tile p-4"
-          style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--hairline)',
-            color: 'var(--ink)',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          }}
-        >
-          {copy.prompt}
-        </pre>
-      </div>
 
-      {/* CSV format example */}
-      <div className="space-y-2">
-        <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
-          {copy.formatLabel}
-        </span>
-        <pre
-          className="m-0 overflow-x-auto text-sm leading-[1.7] rounded-tile p-4"
-          style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--hairline)',
-            color: 'var(--ink-2)',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          }}
-        >
-          {copy.formatExample}
-        </pre>
-        <p className="m-0 text-xs leading-[1.6]" style={{ color: 'var(--ink-3)' }}>
-          {copy.note}
+        {/* CSV format example */}
+        <div className="space-y-2">
+          <span className="text-xs" style={{ color: 'var(--ink-3)', letterSpacing: '0.4px' }}>
+            {copy.formatLabel}
+          </span>
+          <pre
+            className="m-0 overflow-x-auto text-sm leading-[1.7] rounded-tile p-4"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--hairline)',
+              color: 'var(--ink-2)',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+            }}
+          >
+            {copy.formatExample}
+          </pre>
+          <p className="m-0 text-xs leading-[1.6]" style={{ color: 'var(--ink-3)' }}>
+            {copy.note}
+          </p>
+        </div>
+
+        <p className="m-0 pt-4 border-t border-hairline text-xs leading-[1.6] text-ink-3">
+          {copy.settingsHint}
         </p>
       </div>
-    </section>
+    </details>
+  )
+}
+
+/** Disclosure affordance for the <summary>; flips when the block is open. */
+function ChevronGlyph({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className="mt-1 shrink-0 text-ink-3 transition-transform group-open:rotate-180"
+    >
+      <path
+        d="M6 9.5 L12 15.5 L18 9.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 

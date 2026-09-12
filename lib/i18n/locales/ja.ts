@@ -1884,6 +1884,11 @@ export const ja: Translations = {
       hint: 'アカウントを作ってから CSV を取り込めば、もう一度入力し直す必要はありません。',
       privacyNote: 'プレビューはブラウザ内だけで動きます。データは外に出ません。',
     },
+    primaryCta: {
+      title: '移さなくても、今日から始められます',
+      body: 'これまでの記録は、あとからでも大丈夫です。サインインすれば、設定からいつでも取り込めます。まずは今日の一件から。',
+      button: 'Futari のアカウントを作る',
+    },
     sources: {
       unknown: 'その他',
     },
@@ -1977,6 +1982,7 @@ export const ja: Translations = {
     },
     chatgptWorkflow: {
       heading: 'CSV 書き出しがない？スクショで',
+      toggleHint: '4 ステップ、途中で ChatGPT を使います。',
       intro: '元のアプリに CSV 書き出しがなくても、スクリーンショットを ChatGPT に渡して CSV に整えてもらえば持ち込めます。無料版の ChatGPT でできます。',
       substeps: [
         '元のアプリで取引一覧をスクロールし、スマホでスクリーンショットを撮ります（移したい期間をカバーする 5〜10 枚が目安）。',
@@ -2005,6 +2011,7 @@ I will upload the screenshots once you confirm.`,
 2026-05-30,食費,150,スターバックス,TWD,expense
 2026-05-30,給与,50000,5月,TWD,income`,
       note: 'TWD 以外の行はまず元の数字で取り込まれます。換算は取り込み後に行ごとに調整できます。同じ取引（同じ日付＋金額＋説明）の重複は自動で取り除かれます。',
+      settingsHint: '今すぐでなくても大丈夫です。サインインしたあと、設定からいつでも CSV を取り込めます。',
     },
     pages: {
       honeydue: {
