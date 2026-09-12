@@ -213,6 +213,7 @@ Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.
 ### 原生 build 雷點
 
 - Android 需 JDK 21：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
+  - 「21」是 Capacitor 8 `sourceCompatibility` 的**下限，不是上限**。Android Studio 內附的 JBR 會隨 Studio 更新往上漂，看到它比 21 新不代表這行過期——2026-09-13 實測 JBR 已是 JDK 25，Gradle 8.14.3 + AGP 8.13 下 `assembleDebug` 245 個 task 全過。**不要為了湊「21」另外裝 JDK**（Gradle 官方支援矩陣只寫到 24，照著推會得出「JBR 太新不能用」的錯誤結論，實際不會發生）。
 - 乾淨 checkout / worktree 做 iOS 工作前先 `mkdir -p out && npx cap sync ios`
 
 ---
