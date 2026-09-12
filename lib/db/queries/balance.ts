@@ -10,15 +10,36 @@ type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
  * Recompute and persist GroupBalance from active transactions + settlements.
  * MUST be called within the same DB transaction as any mutating write.
  * Pass `tx` if running inside a Drizzle transaction; falls back to `db` otherwise.
+ *
+ * Scoped to the CURRENT epoch (issue #1030): rows are filtered to
+ * `transacted_at >= OikosGroups.current_epoch_started_at`. Per
+ * docs/superpowers/specs/solo-trip-design.md, balance follows the same
+ * "current chapter only" rule as /records, stats and dashboard — a
+ * cross-epoch balance would show a debt no one can settle or edit, since
+ * `epoch-readonly` only allows writes into the current epoch.
+ *
+ * Without this, `leaveGroup` moving the stayer-side legs of settled
+ * transactions to the leaver's new group (while the payer-side legs of the
+ * *other* member's settlement stay behind) leaves the stayer's group with a
+ * structurally non-zero sum over ALL history. That residue used to be masked
+ * by the solo short-circuit below; a new partner accepting the invite
+ * inherits it as soon as this formula next runs. current_epoch_started_at is
+ * bumped in lockstep with GroupEpochs on every leave/accept (same DB
+ * transaction, see actions/membership.ts + actions/invite.ts), so it's a
+ * correct, index-friendly proxy for "the current chapter" without an extra
+ * join to GroupEpochs.
  */
 export async function recalcGroupBalance(
   groupId: string,
   tx: typeof db | DbTransaction = db,
 ): Promise<void> {
   // Solo groups (member_b IS NULL) have no one to owe / be owed by — balance is
-  // structurally 0. Skipping the formula matters for groups that previously had
-  // a partner and inherit historical 'half' / 'weighted' rows after leaveGroup;
-  // running the formula on those would produce a nonsense balance.
+  // structurally 0. Kept as defense-in-depth even now that epoch scoping makes
+  // the formula itself resolve to 0 for solo groups under the normal UI flow
+  // (AddSheet forces splitType='all_mine' when isSolo — see
+  // app/(dashboard)/dashboard/_components/AddSheet.tsx:293): nothing at the
+  // server layer currently rejects a non-'all_mine' split_type paid solely by
+  // member_a on a solo group, so this remains the only hard guarantee.
   await tx.execute(sql`
     UPDATE "GroupBalance"
     SET balance = CASE
@@ -45,6 +66,7 @@ export async function recalcGroupBalance(
         WHERE group_id = ${groupId}
           AND deleted_at IS NULL
           AND status = 'settled'
+          AND transacted_at >= (SELECT current_epoch_started_at FROM "OikosGroups" WHERE id = ${groupId})
       ) + (
         -- Settlement deltas (matches lib/balance.ts settlementDelta):
         -- paid_by = member_a (A paid B) → +amount (B now indebted to A)
@@ -57,6 +79,7 @@ export async function recalcGroupBalance(
         ), 0)
         FROM "Settlements"
         WHERE group_id = ${groupId} AND deleted_at IS NULL
+          AND settled_at >= (SELECT current_epoch_started_at FROM "OikosGroups" WHERE id = ${groupId})
       )
     END,
     version = version + 1,
@@ -80,6 +103,12 @@ export async function getGroupBalance(groupId: string): Promise<number> {
  *
  * Returns 0 for solo groups (no member_b means balance is structurally 0;
  * matches the recalcGroupBalance solo guard).
+ *
+ * Scoped to the current epoch (issue #1030), same rationale as
+ * recalcGroupBalance: this is a live, read-time computation (no cache), so a
+ * stayer's leftover pending row from a prior duo chapter would otherwise
+ * surface in a new partner's dashboard the moment they accept the invite —
+ * before any write ever happens.
  */
 export async function getGroupPendingBalanceDelta(groupId: string): Promise<number> {
   const rows = await db.execute<{ delta: number }>(sql`
@@ -107,6 +136,7 @@ export async function getGroupPendingBalanceDelta(groupId: string): Promise<numb
     WHERE group_id = ${groupId}
       AND deleted_at IS NULL
       AND status = 'pending'
+      AND transacted_at >= (SELECT current_epoch_started_at FROM "OikosGroups" WHERE id = ${groupId})
   `)
   return Number(rows[0]?.delta ?? 0)
 }
