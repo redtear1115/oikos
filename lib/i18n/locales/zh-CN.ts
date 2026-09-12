@@ -127,7 +127,7 @@ export const zhCN: Translations = {
       petOwnersTitle: '宠物家庭',
       petOwnersBody: '毛孩的每一笔费用都值得被记住，清楚看见两个人的心意。',
       cardAriaLabel: '了解 {slug} 情境',
-      seeAll: '看全部 10 种场景',
+      seeAll: '看全部 10 种情境',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -2703,9 +2703,9 @@ export const zhCN: Translations = {
       ogDescription: '你现在用哪一个记账 App？挑一个，把过去的记录一起搬到 Futari。',
     },
     useCaseHub: {
-      title: '双人记账的 10 种场景｜同居、新婚、旅行、宠物 — Futari',
-      description: '同居生活费怎么分、新婚夫妻的账怎么记、旅行费用怎么对、养宠物多了哪些开销——日子不同，记账的难处也不同。这里是 Futari 为 10 种双人场景写的说明，挑最接近你们的那一个。',
-      ogDescription: '10 种双人记账场景，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、端到端加密。',
+      title: '双人记账的 10 种情境｜同居、新婚、旅行、宠物 — Futari',
+      description: '同居生活费怎么分、新婚夫妻的账怎么记、旅行费用怎么对、养宠物多了哪些开销——日子不同，记账的难处也不同。这里是 Futari 为 10 种双人情境写的说明，挑最接近你们的那一个。',
+      ogDescription: '10 种双人记账情境，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、端到端加密。',
     },
     useCase: {
       cohabitation: {
@@ -2800,8 +2800,8 @@ export const zhCN: Translations = {
       heroTitle: '你们现在，是哪一种一起生活？',
       heroSubtitle: '刚搬到一起、刚结婚、养了一只猫、在计划下一趟旅行——每种日子遇到的账都不太一样。挑一个最接近你们的，看看 Futari 在那里能帮上什么。',
       heading: '挑一个最接近你们的',
-      cardCta: '看这个场景',
-      breadcrumbLabel: '使用场景',
+      cardCta: '看这个情境',
+      breadcrumbLabel: '使用情境',
       items: {
         cohabitation: {
           name: '同居生活费',

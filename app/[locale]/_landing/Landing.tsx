@@ -498,7 +498,7 @@ function MigrateLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={migrateHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-[13px] md:text-sm"
+            className="inline-flex items-center gap-1.5 text-sm"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
