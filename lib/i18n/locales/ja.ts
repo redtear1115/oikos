@@ -126,6 +126,7 @@ export const ja: Translations = {
       petOwnersTitle: 'ペット家族',
       petOwnersBody: '毛の子への支出はすべて記録に値する。ふたりで見守る記録を。',
       cardAriaLabel: '{slug} のシーンを見る',
+      seeAll: '10 のシーンをすべて見る',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -2749,6 +2750,11 @@ I will upload the screenshots once you confirm.`,
       description: 'Honeydue や Spendee、マネボなど家計簿アプリの乗り換え先をお探しですか？Futari はふたりのための無料の共同家計簿。CSV を取り込めば、数分で過去の記録を移せます。',
       ogDescription: '今どの家計簿アプリ？ひとつ選んで、過去の記録を Futari へ。',
     },
+    useCaseHub: {
+      title: 'ふたりの家計簿・10 のシーン｜同棲・新婚・旅行・ペット | Futari',
+      description: '同棲の生活費の分け方、新婚のお金のまとめ方、旅行費の精算、ペットと暮らす分の出費——暮らし方が違えば、家計簿の悩みも違います。ふたり向けに書いた 10 のシーンから、いちばん近いものをどうぞ。',
+      ogDescription: 'ふたりの家計簿、10 のシーン。いちばん近いものを選んでください——Futari は無料・広告なし・エンドツーエンド暗号化。',
+    },
     useCase: {
       cohabitation: {
         title: '同棲の生活費折半｜カップルの共同家計管理 | Futari',
@@ -2836,6 +2842,56 @@ I will upload the screenshots once you confirm.`,
     otherCases: {
       heading: 'ほかのシーン',
       cardAriaLabel: '{slug} のページを見る',
+    },
+    hub: {
+      heroKicker: 'ふたり、10 とおりの日々',
+      heroTitle: 'いまのふたりは、どんな暮らし？',
+      heroSubtitle: '同棲を始めたばかり、結婚したばかり、猫を迎えたところ、次の旅行を計画中——暮らし方が違えば、出てくる出費も違います。いちばん近いシーンを選んで、そこで Futari に何ができるか見てみてください。',
+      heading: 'いちばん近いシーンをどうぞ',
+      cardCta: 'このシーンを見る',
+      breadcrumbLabel: '利用シーン',
+      items: {
+        cohabitation: {
+          name: '同棲の生活費',
+          description: '家賃・光熱費・日用品——一緒に住み始めて最初に向き合う出費。',
+        },
+        newlyweds: {
+          name: '新婚夫婦',
+          description: 'ふたりの収入をひとつの家計簿に。結婚後の 1 か月目から。',
+        },
+        'pet-owners': {
+          name: 'ペットのいる家',
+          description: 'フード・通院・ワクチン——家族がひとり増えると、共同の出費も増えます。',
+        },
+        travel: {
+          name: '旅行費の分担',
+          description: '宿は相手、チケットはあなた。帰ってからチャットをさかのぼらずに済みます。',
+        },
+        roommates: {
+          name: 'ルームシェア',
+          description: 'カップルでなくても家計簿は共有できます。光熱費も通信費もすっきり折半。',
+        },
+        'monthly-bills': {
+          name: '毎月の固定費',
+          description: '家賃・保険・サブスク——毎月かならずやってくるあの数件。',
+        },
+        'big-purchases': {
+          name: '大きな買い物',
+          description: '家電・家具・航空券。大きな支払いほど、分け方を先に決めておくと安心です。',
+        },
+        dining: {
+          name: '外食費',
+          description: '今回はわたし、次はあなた。日々の食事の記録もちゃんと残ります。',
+        },
+        parenting: {
+          name: '育児の費用',
+          description: 'おむつ・保育・習いごと——子どもにかかるお金だけを切り分けて見られます。',
+        },
+        'aa-split': {
+          name: '割り勘の記録',
+          description: '折半・収入比・どちらかが全額——公平な分け方はひとつではありません。',
+        },
+      },
     },
     pages: {
       cohabitation: {

@@ -31,6 +31,8 @@ const PATHS = [
     priority: 0.8,
     lastModified: source.contentUpdatedAt,
   })),
+  // use-case hub/index — lists every situation, 1 click from each page (#1057)
+  { path: '/use-case', changeFrequency: 'monthly' as const, priority: 0.7, lastModified: '2026-09-12' },
   // use-case pages — auto-derived from USE_CASES (#851)
   ...Object.values(USE_CASES).map((useCase) => ({
     path: `/use-case/${useCase.slug}`,

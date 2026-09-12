@@ -127,6 +127,7 @@ export const en: Translations = {
       petOwnersTitle: 'Pet families',
       petOwnersBody: 'Every cost for your pet is worth remembering — track it together.',
       cardAriaLabel: 'See the {slug} use case',
+      seeAll: 'See all ten situations',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -2753,6 +2754,11 @@ I will upload the screenshots once you confirm.`,
       description: 'Looking for an alternative to Honeydue, Spendee or CWMoney? Futari is a free shared ledger for two — import your CSV and move your history in minutes.',
       ogDescription: 'Which expense app are you on now? Pick one and bring your history to Futari.',
     },
+    useCaseHub: {
+      title: 'Ten ways two people share a ledger · cohabiting, newlyweds, travel, pets | Futari',
+      description: 'Rent after moving in, a first married budget, a trip to settle, a cat with vet bills — ten ways two people share a ledger. Pick the closest one.',
+      ogDescription: 'Ten situations, one shared ledger. Pick the one closest to your life — Futari is free, ad-free and end-to-end encrypted.',
+    },
     useCase: {
       cohabitation: {
         title: 'Cohabitation budgeting · splitting living costs as a couple | Futari',
@@ -2840,6 +2846,56 @@ I will upload the screenshots once you confirm.`,
     otherCases: {
       heading: 'Other situations',
       cardAriaLabel: 'See the {slug} page',
+    },
+    hub: {
+      heroKicker: 'Two people, ten kinds of days',
+      heroTitle: 'Which way of living together is yours?',
+      heroSubtitle: 'Just moved in, just married, a cat who came with bills, a trip being planned — each kind of day brings its own kind of ledger. Pick the one closest to yours and see what Futari does there.',
+      heading: 'Pick the one closest to yours',
+      cardCta: 'Read this one',
+      breadcrumbLabel: 'Situations',
+      items: {
+        cohabitation: {
+          name: 'Living together',
+          description: 'Rent, utilities, the things a shared home keeps needing — the first costs you face after moving in.',
+        },
+        newlyweds: {
+          name: 'Newlyweds',
+          description: 'Two incomes, one ledger, starting with the first month of married life.',
+        },
+        'pet-owners': {
+          name: 'Pet households',
+          description: 'Food, check-ups, vaccines — one more family member, one more set of shared costs.',
+        },
+        travel: {
+          name: 'Travel',
+          description: 'They booked the room, you bought the tickets. Come home without scrolling back through chat.',
+        },
+        roommates: {
+          name: 'Roommates',
+          description: 'You do not have to be a couple to share a ledger. Bills split cleanly, no chasing.',
+        },
+        'monthly-bills': {
+          name: 'Monthly bills',
+          description: 'Rent, insurance, subscriptions — the handful that arrives every month.',
+        },
+        'big-purchases': {
+          name: 'Big purchases',
+          description: 'Appliances, furniture, flights. One large payment goes easier when the split is agreed first.',
+        },
+        dining: {
+          name: 'Eating out',
+          description: 'This one is on me, the next is on you. Everyday meals stay accounted for.',
+        },
+        parenting: {
+          name: 'Raising a child',
+          description: 'Nappies, childcare, classes — what a child costs, visible on its own.',
+        },
+        'aa-split': {
+          name: 'Splitting costs',
+          description: 'Half and half, by income, or all on one side — there is more than one fair split.',
+        },
+      },
     },
     pages: {
       cohabitation: {

@@ -127,6 +127,7 @@ export const zhCN: Translations = {
       petOwnersTitle: '宠物家庭',
       petOwnersBody: '毛孩的每一笔费用都值得被记住，清楚看见两个人的心意。',
       cardAriaLabel: '了解 {slug} 情境',
+      seeAll: '看全部 10 种场景',
     },
     migrateSection: {
       kicker: 'FROM ELSEWHERE ──',
@@ -2701,6 +2702,11 @@ export const zhCN: Translations = {
       description: '正在找 Honeydue、Spendee、随手记等记账 App 的替代方案？Futari 是为两个人做的免费共同账本，支持 CSV 导入，几分钟就能把过去的记录搬过来。',
       ogDescription: '你现在用哪一个记账 App？挑一个，把过去的记录一起搬到 Futari。',
     },
+    useCaseHub: {
+      title: '双人记账的 10 种场景｜同居、新婚、旅行、宠物 — Futari',
+      description: '同居生活费怎么分、新婚夫妻的账怎么记、旅行费用怎么对、养宠物多了哪些开销——日子不同，记账的难处也不同。这里是 Futari 为 10 种双人场景写的说明，挑最接近你们的那一个。',
+      ogDescription: '10 种双人记账场景，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、端到端加密。',
+    },
     useCase: {
       cohabitation: {
         title: '同居 AA 制记账｜同居生活费怎么分？Futari',
@@ -2788,6 +2794,56 @@ export const zhCN: Translations = {
     otherCases: {
       heading: '其他情境',
       cardAriaLabel: '查看 {slug} 页面',
+    },
+    hub: {
+      heroKicker: '两个人，十种日子',
+      heroTitle: '你们现在，是哪一种一起生活？',
+      heroSubtitle: '刚搬到一起、刚结婚、养了一只猫、在计划下一趟旅行——每种日子遇到的账都不太一样。挑一个最接近你们的，看看 Futari 在那里能帮上什么。',
+      heading: '挑一个最接近你们的',
+      cardCta: '看这个场景',
+      breadcrumbLabel: '使用场景',
+      items: {
+        cohabitation: {
+          name: '同居生活费',
+          description: '房租、水电、生活用品——搬到一起之后最先要面对的那几笔。',
+        },
+        newlyweds: {
+          name: '新婚夫妻',
+          description: '两个人的收入合成一本账，从婚后第一个月开始记。',
+        },
+        'pet-owners': {
+          name: '宠物家庭',
+          description: '猫粮、看诊、疫苗——多了一个成员，也多了一份共同的开销。',
+        },
+        travel: {
+          name: '旅行分摊',
+          description: '订房他付、车票你付，回来之后不用再翻聊天记录对账。',
+        },
+        roommates: {
+          name: '室友分摊',
+          description: '不是伴侣也能共用一本账，水电网费分得清清楚楚。',
+        },
+        'monthly-bills': {
+          name: '每月固定费',
+          description: '房租、保险、订阅服务——每个月都会来的那几笔。',
+        },
+        'big-purchases': {
+          name: '大笔支出',
+          description: '家电、家具、机票——一次付一大笔，分摊方式先说好更安心。',
+        },
+        dining: {
+          name: '外食费用',
+          description: '这顿我的、下顿你的，日常吃饭的账也留得住。',
+        },
+        parenting: {
+          name: '育儿费用',
+          description: '尿布、保姆、兴趣班，孩子的花费单独看得见。',
+        },
+        'aa-split': {
+          name: 'AA 制记账',
+          description: '对半、按比例、全额由一方——AA 不只一种分法。',
+        },
+      },
     },
     pages: {
       cohabitation: {
