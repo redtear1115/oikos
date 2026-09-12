@@ -15,6 +15,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.9] - 2026-09-12
+
+主題：**讓伴侶真的進得來**——實測發現 72% 的人建立帳本後連試都沒試就跳過邀請，而真正送出去的有 83% 成功。所以問題不在連結、不在接受流程，在於「把連結交到對方手上」這一步。這版補上面對面的路徑，順手把整條漏斗從幾乎全黑修到看得見。
+完整 diff：[v1.5.8...v1.5.9](https://github.com/redtear1115/oikos/compare/v1.5.8...v1.5.9)
+
+### 使用者可見變化
+
+- **面對面掃碼加入（#1017）**：邀請步驟多一個 QR，對方拿手機掃就能加入，不必先把連結傳出去。資料顯示成功的邀請幾乎都是當場完成的——五個成功案例裡三個在六分鐘內，對方就在旁邊。複製與分享連結照舊保留，遠距那條路沒有變。
+- **邀請連結在通訊軟體裡有預覽了（#1016）**：先前貼到 LINE 是一條裸網址，現在有標題、說明與圖。
+- **登入失敗與複製失敗不再無聲（#1014 / #1015）**：剪貼簿被瀏覽器拒絕時會明確告知，不再只是「按了沒反應」。
+
+### 技術變更
+
+- **🔒 安全修補（#1031，P1）**：`createInvite` 先前只檢查有沒有登入，不檢查呼叫者是不是該帳本的成員。group id 會隨每次 dashboard render 送到 client，所以**前任伴侶天然握有它**——離開後可為舊帳本鑄一張邀請並自己接受，取回帳本讀寫權與解密後的住家地址、兒童身分資料。修法是移除 `groupId` 參數、改由 viewer 反查，讓錯誤的呼叫形狀在結構上無法表達；accept 端另加「鑄造者仍是成員」檢查，關掉的是整類而非單一實例。**prod 當時零暴露**（符合條件的帳本為 0），修的是前瞻風險。
+- **🔒 `editFuelLog` 補 group 約束（#1032，P3）**：被編輯的加油紀錄只用 id 查詢，唯一的檢查驗的是新傳入的 asset。改為比照同檔 `softDeleteFuelLog` 的「父層 scope 到 group、子層 scope 到父層」。
+- **on-mount 的 `track()` 不再被丟棄（#1014）**：`posthog.init()` 在 provider 的 effect 裡，而 React effect 由子到父執行——任何子元件在 on-mount 呼叫 `track()` 都跑在 init 之前，事件靜默丟失。`invite_link_opened` 因此四個月 0 筆。改為未 init 時排隊，並由 provider 在 `register()` 之後顯式 flush，確保 queued 事件帶得到 super property。
+- **邀請漏斗埋點（#1015）**：複製、分享、跳過、剪貼簿失敗各有具名事件，取代先前靠 autocapture 中文字串反推的做法（文案一改就斷，且只涵蓋 zh-TW）。
+- **設計脈絡文件重整（#1025）**：`PRODUCT.md` 補 Surface Tiers（brand vs product register）、solo 定位、三平台交付前提；`DESIGN.md` 對齊 code 現況。
+- **solo × 旅行 spec（#1039）**：回答「帳本出現第三種人之後狀態機怎麼走」，並鎖定 balance 看當前章節——理由是過去章節是凍結的歷史，跨章節的 balance 會顯示一個使用者無法結算也無法清除的欠款。
+
+### ⚠️ 量測斷層
+
+#1015 的新埋點與 #1014 的 queue 修復都會讓事件數跳升。**那不是成效，是先前量不到的東西終於量得到了。** 跨本次部署的前後比較無效。
+
 ## [1.5.8] - 2026-09-12
 
 主題：**自然搜尋體質**——一次 90 天體檢，結果大半的工作是「查證後決定不做」。真正動手的只有兩處：讓 sitemap 的日期說實話，以及把搬家教學從落地頁的主流程收起來。
@@ -753,7 +777,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.8...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.9...HEAD
+[1.5.9]: https://github.com/redtear1115/oikos/compare/v1.5.8...v1.5.9
 [1.5.8]: https://github.com/redtear1115/oikos/compare/v1.5.7...v1.5.8
 [1.5.7]: https://github.com/redtear1115/oikos/compare/v1.5.6...v1.5.7
 [1.5.6]: https://github.com/redtear1115/oikos/compare/v1.5.5...v1.5.6
