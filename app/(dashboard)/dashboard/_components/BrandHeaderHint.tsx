@@ -126,7 +126,7 @@ function Callout({ label }: { label: string }) {
       />
       {/* Pill label */}
       <div
-        className="px-2 py-[2px] rounded-full text-[11px] tracking-wide whitespace-nowrap"
+        className="px-2 py-[2px] rounded-full text-xs tracking-wide whitespace-nowrap"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
