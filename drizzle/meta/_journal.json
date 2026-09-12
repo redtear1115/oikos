@@ -421,6 +421,20 @@
       "when": 1781800000000,
       "tag": "0060_backfill_missing_open_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1781900000000,
+      "tag": "0061_fix_monthly_review_month_calc",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0062_backfill_monthly_review_snapshots",
+      "breakpoints": true
     }
   ]
 }
