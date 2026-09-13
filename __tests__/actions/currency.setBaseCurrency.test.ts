@@ -7,8 +7,11 @@ import { resolve } from 'node:path'
 //
 // The lock rule: setBaseCurrency rejects if the current epoch has any
 // non-deleted CashTransactions, IncomeTransactions, or Settlements.
-// Records outside the current epoch (transactedAt < currentEpochStartedAt)
-// must NOT block the change. Soft-deleted records must NOT block the change.
+// Chapter membership is decided by `created_at` (#1106) — a row whose event
+// date (transactedAt / occurredAt / settledAt) predates the epoch start still
+// belongs to the current chapter when it was RECORDED during it, e.g. a CSV
+// import of last year's receipts. Only `createdAt < currentEpochStartedAt`
+// puts a row outside. Soft-deleted records must NOT block the change.
 //
 // This suite uses the real dev DB because the logic involves counting rows
 // from Postgres; mocking the DB would not exercise the Drizzle query path.
@@ -58,6 +61,7 @@ const {
   settlements,
 } = await import('@/lib/db/schema')
 const { setBaseCurrency } = await import('@/actions/currency')
+const { currentEpochHasRecords } = await import('@/lib/db/queries/epoch')
 const { eq, inArray } = await import('drizzle-orm')
 
 beforeAll(() => {
@@ -204,7 +208,9 @@ describe('setBaseCurrency — lock rule (#68)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    // Insert a cash transaction BEFORE the epoch start
+    // Insert a cash transaction RECORDED before the epoch start — createdAt is
+    // what decides chapter membership (#1106), so this row belongs to the
+    // previous chapter.
     const [tx] = await db.insert(cashTransactions).values({
       groupId: refs.groupId,
       paidBy: refs.userId,
@@ -213,6 +219,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
       description: 'TEST_68 past cash',
       category: 'food',
       transactedAt: new Date('2026-05-13T23:59:59Z'), // before epoch start 2026-05-14T00:00:00Z
+      createdAt: new Date('2026-05-13T23:59:59Z'),
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(tx.id)
 
@@ -248,5 +255,215 @@ describe('setBaseCurrency — lock rule (#68)', () => {
     const [updated] = await db.select().from(oikosGroups)
       .where(eq(oikosGroups.id, refs.groupId)).limit(1)
     expect(updated.baseCurrency).toBe('jpy')
+  })
+})
+
+// ─── Regression for #1106: backdated rows must still lock the currency ─────
+//
+// The guard used to count by event date (transactedAt / occurredAt /
+// settledAt). A ledger seeded by CSV import — every event date last year,
+// every createdAt now — therefore counted 0 records and let the base currency
+// change, silently re-reading every stored integer as a different currency
+// (TWD 1000 → JPY 1000). Chapter membership is `created_at`; these rows show
+// up in /records, stats and balance, so they must block the change.
+// ──────────────────────────────────────────────────────────────────────────
+describe('setBaseCurrency — backdated records still lock (#1106)', () => {
+  let activeRefs: SeedRefs | null = null
+
+  afterEach(async () => {
+    if (activeRefs) {
+      try { await cleanup(activeRefs) } catch (e) { console.error('cleanup failed', e) }
+      activeRefs = null
+    }
+  })
+
+  // A year before the epoch start (2026-05-14), recorded now.
+  const BACKDATED = new Date('2025-05-14T03:00:00Z')
+
+  it('rejects for a cash transaction backdated before the epoch start', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const [tx] = await db.insert(cashTransactions).values({
+      groupId: refs.groupId,
+      paidBy: refs.userId,
+      amount: 100,
+      splitType: 'all_mine',
+      description: 'TEST_1106 imported cash',
+      category: 'food',
+      transactedAt: BACKDATED,
+      // createdAt left to defaultNow() — recorded during the current chapter.
+    }).returning({ id: cashTransactions.id })
+    refs.cashTxIds.push(tx.id)
+
+    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('紀錄')
+
+    const [after] = await db.select().from(oikosGroups)
+      .where(eq(oikosGroups.id, refs.groupId)).limit(1)
+    expect(after.baseCurrency).toBe('twd')
+  })
+
+  it('rejects for an income transaction backdated before the epoch start', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const [tx] = await db.insert(incomeTransactions).values({
+      groupId: refs.groupId,
+      recipientId: refs.userId,
+      amount: 50000,
+      category: 'salary',
+      occurredAt: '2025-05-14',
+    }).returning({ id: incomeTransactions.id })
+    refs.incomeTxIds.push(tx.id)
+
+    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('紀錄')
+
+    const [after] = await db.select().from(oikosGroups)
+      .where(eq(oikosGroups.id, refs.groupId)).limit(1)
+    expect(after.baseCurrency).toBe('twd')
+  })
+
+  it('rejects for a settlement backdated before the epoch start', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+    mockUserId = refs.userId
+
+    const [s] = await db.insert(settlements).values({
+      groupId: refs.groupId,
+      paidBy: refs.userId,
+      amount: 500,
+      settledAt: BACKDATED,
+    }).returning({ id: settlements.id })
+    refs.settlementIds.push(s.id)
+
+    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('紀錄')
+
+    const [after] = await db.select().from(oikosGroups)
+      .where(eq(oikosGroups.id, refs.groupId)).limit(1)
+    expect(after.baseCurrency).toBe('twd')
+  })
+})
+
+// ─── The display side of the same guard (#1106) ────────────────────────────
+//
+// `app/(dashboard)/settings/currency/page.tsx` renders
+// `canChangeBase={!hasRecords}` straight off `currentEpochHasRecords(group)`,
+// so the helper IS the page's answer — exercising it here covers the disabled
+// selector without rendering an async server component. The page holds no other
+// logic between the two: one call, one negation, one prop.
+//
+// This half used to count by event date independently of the action, which is
+// how the two drifted: after the action was fixed, an imported ledger would
+// still show an enabled selector that errored on click.
+// ──────────────────────────────────────────────────────────────────────────
+describe('currentEpochHasRecords — backs canChangeBase on the settings page', () => {
+  let activeRefs: SeedRefs | null = null
+
+  afterEach(async () => {
+    if (activeRefs) {
+      try { await cleanup(activeRefs) } catch (e) { console.error('cleanup failed', e) }
+      activeRefs = null
+    }
+  })
+
+  const BACKDATED = new Date('2025-05-14T03:00:00Z')
+
+  function groupRef(refs: SeedRefs) {
+    return { id: refs.groupId, currentEpochStartedAt: refs.epochStartedAt }
+  }
+
+  it('is false for an empty chapter (selector enabled)', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+    expect(await currentEpochHasRecords(groupRef(refs))).toBe(false)
+  })
+
+  it('is true after importing a backdated cash transaction (selector disabled)', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+
+    const [tx] = await db.insert(cashTransactions).values({
+      groupId: refs.groupId,
+      paidBy: refs.userId,
+      amount: 100,
+      splitType: 'all_mine',
+      description: 'TEST_1106 imported cash',
+      category: 'food',
+      transactedAt: BACKDATED,
+    }).returning({ id: cashTransactions.id })
+    refs.cashTxIds.push(tx.id)
+
+    expect(await currentEpochHasRecords(groupRef(refs))).toBe(true)
+  })
+
+  it('is true after importing a backdated income transaction', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+
+    const [tx] = await db.insert(incomeTransactions).values({
+      groupId: refs.groupId,
+      recipientId: refs.userId,
+      amount: 50000,
+      category: 'salary',
+      occurredAt: '2025-05-14',
+    }).returning({ id: incomeTransactions.id })
+    refs.incomeTxIds.push(tx.id)
+
+    expect(await currentEpochHasRecords(groupRef(refs))).toBe(true)
+  })
+
+  it('is true after importing a backdated settlement', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+
+    const [s] = await db.insert(settlements).values({
+      groupId: refs.groupId,
+      paidBy: refs.userId,
+      amount: 500,
+      settledAt: BACKDATED,
+    }).returning({ id: settlements.id })
+    refs.settlementIds.push(s.id)
+
+    expect(await currentEpochHasRecords(groupRef(refs))).toBe(true)
+  })
+
+  it('is false for a row recorded in the PREVIOUS chapter', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+
+    const [tx] = await db.insert(cashTransactions).values({
+      groupId: refs.groupId,
+      paidBy: refs.userId,
+      amount: 100,
+      splitType: 'all_mine',
+      description: 'TEST_1106 previous chapter',
+      category: 'food',
+      transactedAt: new Date('2026-05-13T23:59:59Z'),
+      createdAt: new Date('2026-05-13T23:59:59Z'),
+    }).returning({ id: cashTransactions.id })
+    refs.cashTxIds.push(tx.id)
+
+    expect(await currentEpochHasRecords(groupRef(refs))).toBe(false)
+  })
+
+  it('is false when the only in-chapter row is soft-deleted', async () => {
+    const refs = await seedSoloGroup()
+    activeRefs = refs
+
+    const [tx] = await db.insert(cashTransactions).values({
+      groupId: refs.groupId,
+      paidBy: refs.userId,
+      amount: 100,
+      splitType: 'all_mine',
+      description: 'TEST_1106 deleted cash',
+      category: 'food',
+      transactedAt: BACKDATED,
+      deletedAt: new Date(),
+    }).returning({ id: cashTransactions.id })
+    refs.cashTxIds.push(tx.id)
+
+    expect(await currentEpochHasRecords(groupRef(refs))).toBe(false)
   })
 })

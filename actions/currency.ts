@@ -1,10 +1,11 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { oikosGroups, cashTransactions, incomeTransactions, settlements } from '@/lib/db/schema'
-import { eq, and, isNull, gte, count } from 'drizzle-orm'
+import { oikosGroups } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { currentEpochHasRecords } from '@/lib/db/queries/epoch'
 import { upsertRate } from '@/lib/db/queries/currencyRates'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
@@ -18,35 +19,10 @@ export async function setBaseCurrency(input: { currency: CurrencyCode }) {
     return  // no-op
   }
 
-  const epochStart = group.currentEpochStartedAt
-  const epochStartDate = epochStart.toISOString().slice(0, 10)
-
-  const [cashRow] = await db
-    .select({ n: count() })
-    .from(cashTransactions)
-    .where(and(
-      eq(cashTransactions.groupId, group.id),
-      gte(cashTransactions.transactedAt, epochStart),
-      isNull(cashTransactions.deletedAt),
-    ))
-  const [incomeRow] = await db
-    .select({ n: count() })
-    .from(incomeTransactions)
-    .where(and(
-      eq(incomeTransactions.groupId, group.id),
-      gte(incomeTransactions.occurredAt, epochStartDate),
-      isNull(incomeTransactions.deletedAt),
-    ))
-  const [settlementRow] = await db
-    .select({ n: count() })
-    .from(settlements)
-    .where(and(
-      eq(settlements.groupId, group.id),
-      gte(settlements.settledAt, epochStart),
-      isNull(settlements.deletedAt),
-    ))
-
-  if (Number(cashRow.n) + Number(incomeRow.n) + Number(settlementRow.n) > 0) {
+  // `created_at`, not the event dates — a backdated / imported row still
+  // belongs to the chapter it was recorded in. Shared with the settings page so
+  // the disabled selector and this guard can't drift apart again (#1106).
+  if (await currentEpochHasRecords(group)) {
     throw new Error('當前章節已有紀錄、不可修改主體幣別')
   }
 
