@@ -14,6 +14,7 @@ import { revalidateAfterImportMutation } from '@/lib/revalidate'
 import { isValidCategoryId } from '@/lib/categories'
 import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 import { MAX_AMOUNT } from '@/lib/validators'
+import { DETECTED_SOURCES, type DetectedSource } from '@/lib/csvImport/detector'
 import { captureServer } from '@/lib/analytics/server'
 
 /**
@@ -34,8 +35,14 @@ import { captureServer } from '@/lib/analytics/server'
  * `rolled_back_at` on the batch; balance is recomputed from the active set.
  */
 
-const VALID_SOURCES = ['honeydue', 'spendee', 'cwmoney', 'generic'] as const
-export type ImportSource = (typeof VALID_SOURCES)[number]
+/**
+ * The client posts back whatever label `processFile` detected, so the allowlist
+ * has to be the detector's own list — a hand-maintained copy here drifts and
+ * turns into a second gate behind the file picker. It did: `.ofx` / `.qif`
+ * parsed fine client-side and then died on「未支援的匯入來源」at submit (#1088).
+ */
+const VALID_SOURCES = DETECTED_SOURCES
+export type ImportSource = DetectedSource
 
 const VALID_PAYERS = ['a', 'b'] as const
 export type ImportPayerMember = (typeof VALID_PAYERS)[number]

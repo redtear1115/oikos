@@ -36,7 +36,8 @@ export {
   parseCsvBuffer,
   parseCsvText,
 } from './parser'
-export { detectCsvSource, detectFormat, detectSource } from './detector'
+export { DETECTED_SOURCES, detectCsvSource, detectFormat, detectSource } from './detector'
+export { CSV_ONLY_ACCEPT, IMPORT_ACCEPT } from './accept'
 export { computeStats } from './stats'
 export {
   mapCategory,
@@ -130,8 +131,14 @@ export async function processFile(
   const buffer = await file.arrayBuffer()
   // Filename hint: .ofx / .qif extensions force the format even if the
   // content sniff misses (e.g. unusual encoding stripped the header line).
-  // Content sniff still runs and wins for the CSV vs CSV-with-weird-name case.
-  if (!options.source) {
+  //
+  // It deliberately overrides a caller-supplied *CSV* source too. The import
+  // wizard always passes one (the source buttons are a required choice), so
+  // gating this on `!options.source` made the hint dead code on the only path
+  // that has a filename at all — a header-mangled .ofx picked in the wizard
+  // would have fallen through to the CSV mapper and produced junk rows rather
+  // than an error (#1088). An explicit ofx/qif from the caller is left alone.
+  if (options.source !== 'ofx' && options.source !== 'qif') {
     const name = file.name.toLowerCase()
     if (name.endsWith('.ofx')) options = { ...options, source: 'ofx' }
     else if (name.endsWith('.qif')) options = { ...options, source: 'qif' }

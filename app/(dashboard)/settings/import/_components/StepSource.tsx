@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import { CsvFileUploadWidget } from '@/components/CsvFileUploadWidget'
+import { IMPORT_ACCEPT, type DetectedSource } from '@/lib/csvImport'
 import type { ImportSource } from '@/actions/import'
 import type { ParsedFileState } from './ImportContent'
 import { SectionCard } from './SectionCard'
@@ -16,7 +17,20 @@ interface Props {
   onReset: () => void
 }
 
-const SOURCE_OPTIONS: ImportSource[] = ['honeydue', 'spendee', 'cwmoney', 'generic']
+/** The sources a user picks by hand. `ofx` / `qif` / `futari_generic` are also
+ *  valid `ImportSource`s but are recognised from the file itself, never chosen
+ *  here — hence the narrow literal type rather than `ImportSource[]`. */
+const SOURCE_OPTIONS = ['honeydue', 'spendee', 'cwmoney', 'generic'] as const satisfies readonly ImportSource[]
+
+/**
+ * Label for the *detected* source. Only the hand-picked ones have translated
+ * names; a file recognised as OFX / QIF falls back to the bare format acronym
+ * (a format name, not copy — it reads the same in all four locales). Without
+ * the fallback the template rendered the literal string "undefined".
+ */
+function sourceLabel(source: DetectedSource, labels: Record<string, string | undefined>): string {
+  return labels[source] ?? source.toUpperCase()
+}
 
 export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Props) {
   const t = useTranslations()
@@ -78,6 +92,7 @@ export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Prop
         buttonText={tImport.uploadButton}
         loadingText={tImport.parsing}
         retryText={tImport.retryCta}
+        accept={IMPORT_ACCEPT}
         size="sm"
       />
 
@@ -87,7 +102,7 @@ export function StepSource({ onFile, parseError, parsed, onNext, onReset }: Prop
             {tImport.fileSelected.replace('{name}', parsed.file.name)}
           </div>
           <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
-            {tImport.sourceDetected.replace('{source}', t.settings.import.step1.sources[parsed.source as ImportSource])}
+            {tImport.sourceDetected.replace('{source}', sourceLabel(parsed.source, tImport.sources))}
           </div>
           <div className="text-xs mt-1" style={{ color: 'var(--ink-3)' }}>
             {tImport.summary
