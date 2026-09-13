@@ -100,8 +100,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             Google Fonts hints (fonts.googleapis.com / fonts.gstatic.com) also
             removed: the woff2 files are committed under public/fonts/ and served
-            same-origin. The browser never connects to Google, so the original
-            #511 hints were dead weight. (#921 / #978) */}
+            same-origin — actually from /_next/static/media/ (Next's CSS
+            pipeline bundles the @font-face url()s), not from /fonts/ itself.
+            The browser never connects to Google, so the original #511 hints
+            were dead weight. (#921 / #978) */}
       </head>
       <body className="antialiased">
         <InAppBrowserGuardLazy strings={t.inAppBrowser} />
