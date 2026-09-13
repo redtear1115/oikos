@@ -234,9 +234,14 @@ describe('removePartner', () => {
     queueDbResult([duoGroup()])            // group lookup
     queueDbResult([{ id: 'epoch-1' }])     // active-trip guard: currentEpoch (.limit)
     queueDbResult([{ n: 0 }])              // active-trip guard: hasActiveTrip count (.then)
+    queueDbResult([])                      // tx: invite revocation (.then)
+    queueDbResult([])                      // tx: close old epoch (.then)
+    queueDbResult([{ id: 'epoch-2' }])     // tx: insert new solo epoch (.returning)
 
     const r = await removePartner()
-    expect(r).toEqual({ groupId: 'grp-1' })
+    // epochId is what RemovePartnerFlow keys its "I removed them" flag off, so
+    // PartnerLeftCard can pick the removal variant (#1121).
+    expect(r).toEqual({ groupId: 'grp-1', epochId: 'epoch-2' })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
 
     // First .set() inside the tx is the invite revocation

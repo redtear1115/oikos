@@ -64,6 +64,28 @@ describe('collectKeyPaths (detection logic)', () => {
   })
 })
 
+// #1123 — `⟂` (U+27C2 PERPENDICULAR) was used as decoration on the
+// emotionally heaviest string in the product. It belongs to no icon vocabulary
+// here and `--font-sans`'s CJK fallback chain does not guarantee it, so on some
+// Android WebViews the line opened with a tofu box — silently, no error.
+describe('i18n glyph safety', () => {
+  const RISKY_GLYPHS = ['⟂']
+
+  for (const [name, dict] of Object.entries(locales)) {
+    it(`${name} uses no math/decorative glyphs outside the icon vocabulary`, () => {
+      const offenders = collectKeyPaths(dict).filter((path) => {
+        const value = path.split('.').reduce<unknown>(
+          (acc, key) => (acc as Record<string, unknown>)?.[key],
+          dict,
+        )
+        const text = Array.isArray(value) ? value.join(' ') : String(value)
+        return RISKY_GLYPHS.some((g) => text.includes(g))
+      })
+      expect(offenders).toEqual([])
+    })
+  }
+})
+
 describe('i18n locale key coverage', () => {
   it(`${REFERENCE_LOCALE} (reference) has a non-empty key set`, () => {
     expect(referenceKeys.size).toBeGreaterThan(0)

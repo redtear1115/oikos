@@ -44,22 +44,35 @@ export function StepRules({ viewer, partner, viewerIsMemberA, rules, onChange, o
         <div className="text-xs font-medium px-1 mb-2" style={{ color: 'var(--ink-3)' }}>
           {tImport.payerLabel}
         </div>
-        <div className="grid grid-cols-2 gap-2 mb-1">
-          <PayerButton
-            label={memberA.displayName}
-            active={rules.payer === 'a'}
-            onClick={() => setPayer('a')}
-          />
-          <PayerButton
-            label={memberB?.displayName ?? '—'}
-            active={rules.payer === 'b'}
-            onClick={() => setPayer('b')}
-            disabled={!hasPartner}
-          />
-        </div>
-        <div className="text-xs px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
-          {tImport.payerHint}
-        </div>
+        {/* Solo collapses to a hint rather than keeping a disabled "—" button
+            around (#1122) — a wizard step reports a choice being made, not a
+            state being displayed, and an unlabelled dead button conveys
+            nothing. Mirrors the split section below, which already does this.
+            The payer default is already 'a' for a solo viewer (they are always
+            member_a), so nothing needs resetting here. */}
+        {hasPartner ? (
+          <>
+            <div className="grid grid-cols-2 gap-2 mb-1">
+              <PayerButton
+                label={memberA.displayName}
+                active={rules.payer === 'a'}
+                onClick={() => setPayer('a')}
+              />
+              <PayerButton
+                label={memberB?.displayName ?? ''}
+                active={rules.payer === 'b'}
+                onClick={() => setPayer('b')}
+              />
+            </div>
+            <div className="text-xs px-1 mt-2" style={{ color: 'var(--ink-3)' }}>
+              {tImport.payerHint}
+            </div>
+          </>
+        ) : (
+          <div className="text-xs px-1" style={{ color: 'var(--ink-3)' }}>
+            {tImport.payerSoloHint}
+          </div>
+        )}
       </SectionCard>
 
       <SectionCard>
@@ -98,19 +111,16 @@ function PayerButton({
   label,
   active,
   onClick,
-  disabled,
 }: {
   label: string
   active: boolean
   onClick: () => void
-  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className="px-4 py-3 rounded-xl text-sm cursor-pointer disabled:cursor-default disabled:opacity-50"
+      className="px-4 py-3 rounded-xl text-sm cursor-pointer"
       style={{
         background: active ? 'var(--surface-alt)' : 'var(--surface)',
         border: `1px solid ${active ? 'var(--ink-2)' : 'var(--hairline)'}`,

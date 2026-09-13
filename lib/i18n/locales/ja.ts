@@ -734,7 +734,8 @@ export const ja: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
-    soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloLockHint: 'ひとりのあいだは、記録はすべて自分の分になります。',
     defaultSplitLabel: 'デフォルトの分担方法',
     inviteCta: '相手を招待',
     quickAccessRow: '個人と家計の設定',
@@ -902,6 +903,8 @@ export const ja: Translations = {
         subtitle: 'この取り込み全体のデフォルトを設定します',
         payerLabel: 'デフォルト支払者',
         payerHint: '取り込み後に行ごとに調整できます',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        payerSoloHint: 'ひとりのあいだは、支払者はすべて自分になります',
         splitLabel: 'デフォルト分担',
         splitOptions: {
           all_mine: 'すべて自分',
@@ -954,10 +957,13 @@ export const ja: Translations = {
   },
 
   postLeave: {
-    partnerLeftHeading: '⟂ {partner} が離れました',
+    partnerLeftHeading: '{partner} が離れました',
     partnerLeftBody: 'ここまでの記録はすべて残っています。ここからは、ひとりの時間です。',
     welcomeSoloHeading: 'おかえり、ひとりの時間に',
     welcomeSoloBody: '家計簿はぜんぶ、あなたと一緒にここに来ました。これから、ゆっくりで大丈夫。',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    removedPartnerHeading: 'ひとりの時間に戻りました',
+    removedPartnerBody: '家計簿はぜんぶ、そのまま残っています。これから、ゆっくりで大丈夫。',
     dismissAria: '閉じる',
   },
 
@@ -1810,12 +1816,14 @@ export const ja: Translations = {
     revealFraming: '君は朝日、相手は月明かり。違う時間に、同じ家を照らしている。どっちの答えが正しいわけじゃない。相手が気にしていることを、覚えていればそれでいい。',
     revealHeaderA: 'あなた',
     revealHeaderB: '相手',
-    soloFallback: 'これは二人で答える 3 問。相手が家計簿に加わったら、また来てね。',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloFallback: 'この 3 問は、ふたりで答えるものです。今月のふりかえりの他の部分は、そのまま見られます。',
     errorNotFound: 'この問答が見つかりません',
     errors: {
       submitFailed: '送信できませんでした。少し待ってから試してください',
       alreadyAnswered: 'もう答え終わっているよ',
-      solo: '一人ではまだ答えられないよ',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      solo: 'この問答は、ふたりで答えるものです',
     },
     questions: {
       impulse: {

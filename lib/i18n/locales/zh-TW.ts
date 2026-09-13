@@ -1172,6 +1172,9 @@ export type Translations = {
         subtitle: string
         payerLabel: string
         payerHint: string
+        /** Replaces the payer grid when the viewer is solo (#1122) — a solo
+         *  ledger has exactly one payer, so the grid had nothing to choose. */
+        payerSoloHint: string
         splitLabel: string
         splitOptions: {
           all_mine: string
@@ -1230,6 +1233,16 @@ export type Translations = {
     /** Leaver's "welcome back to solo" card. */
     welcomeSoloHeading: string
     welcomeSoloBody: string
+    /**
+     * Remover's variant of the same card (#1121). member_a removing member_b
+     * closes the duo epoch and opens a solo one, which is indistinguishable
+     * from "partner left" on the server — so the client flag set by
+     * `RemovePartnerFlow` swaps the copy. Deliberately does NOT restate what
+     * the remover just did (they typed a confirm string; they know); it uses
+     * the `welcomeSolo*` register instead — a statement about the ledger.
+     */
+    removedPartnerHeading: string
+    removedPartnerBody: string
     dismissAria: string
   }
 
@@ -3297,7 +3310,7 @@ export const zhTW: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
-    soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+    soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',
@@ -3465,6 +3478,7 @@ export const zhTW: Translations = {
         subtitle: '為這次匯入的紀錄統一指定預設值',
         payerLabel: '預設付款人',
         payerHint: '可在匯入完成後逐筆修改',
+        payerSoloHint: '單人狀態下，付款人都是你',
         splitLabel: '預設分攤方式',
         splitOptions: {
           all_mine: '全部我的',
@@ -3517,10 +3531,12 @@ export const zhTW: Translations = {
   },
 
   postLeave: {
-    partnerLeftHeading: '⟂ {partner} 已離開',
+    partnerLeftHeading: '{partner} 已離開',
     partnerLeftBody: '到目前為止的記錄都還在。從這裡開始，是你一個人的時光。',
     welcomeSoloHeading: '歡迎回到一個人',
     welcomeSoloBody: '帳本完整地跟著你過來。從今天起，可以慢慢來。',
+    removedPartnerHeading: '回到一個人',
+    removedPartnerBody: '帳本完整地留著。從今天起，可以慢慢來。',
     dismissAria: '關閉',
   },
 
@@ -4370,12 +4386,12 @@ export const zhTW: Translations = {
     revealFraming: '你們一個是日出、一個是月光。不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '對方',
-    soloFallback: '兩個人才能一起回答這 3 題。等對方加入家計簿，再回來吧。',
+    soloFallback: '這 3 題是兩個人一起答的。這個月的回顧，其他部分都在。',
     errorNotFound: '找不到這次的問答',
     errors: {
       submitFailed: '送出失敗，等一下再試',
       alreadyAnswered: '你已經答完了',
-      solo: '一個人的時候還沒辦法答題',
+      solo: '這份問答是兩個人一起答的',
     },
     questions: {
       impulse: {

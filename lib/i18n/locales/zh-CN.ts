@@ -731,7 +731,7 @@ export const zhCN: Translations = {
     sectionPersonal: '个人',
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
-    soloLockHint: '单人状态下固定为「全部我的」，邀请对方加入后可调整。',
+    soloLockHint: '单人状态下，每笔记录都算你的。',
     defaultSplitLabel: '默认分摊方式',
     inviteCta: '邀请对方加入',
     quickAccessRow: '个人与账本设置',
@@ -899,6 +899,7 @@ export const zhCN: Translations = {
         subtitle: '为这次导入的记录统一指定默认值',
         payerLabel: '默认付款人',
         payerHint: '可在导入完成后逐笔修改',
+        payerSoloHint: '单人状态下，付款人都是你',
         splitLabel: '默认分摊方式',
         splitOptions: {
           all_mine: '全部我的',
@@ -951,10 +952,12 @@ export const zhCN: Translations = {
   },
 
   postLeave: {
-    partnerLeftHeading: '⟂ {partner} 已离开',
+    partnerLeftHeading: '{partner} 已离开',
     partnerLeftBody: '到目前为止的记录都还在。从这里开始，是你一个人的时光。',
     welcomeSoloHeading: '欢迎回到一个人',
     welcomeSoloBody: '账本完整地跟着你过来。从今天起，可以慢慢来。',
+    removedPartnerHeading: '回到一个人',
+    removedPartnerBody: '账本完整地留着。从今天起，可以慢慢来。',
     dismissAria: '关闭',
   },
 
@@ -1804,12 +1807,12 @@ export const zhCN: Translations = {
     revealFraming: '你们一个是日出、一个是月光。不同的时刻，照同一个家。没有谁的答案比较对，记住对方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '对方',
-    soloFallback: '两个人才能一起回答这 3 题。等对方加入家计簿，再回来吧。',
+    soloFallback: '这 3 题是两个人一起答的。这个月的回顾，其他部分都在。',
     errorNotFound: '找不到这次的问答',
     errors: {
       submitFailed: '送出失败，等一下再试',
       alreadyAnswered: '你已经答完了',
-      solo: '一个人的时候还没办法答题',
+      solo: '这份问答是两个人一起答的',
     },
     questions: {
       impulse: {
