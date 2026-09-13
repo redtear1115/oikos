@@ -8,6 +8,13 @@
 > **本張 round 8 scorecard 的每一個數字都量在 46 檔的舊語料上**，與 round 9 起的分數不可比較。
 > 分母變化與理由見 `.docgrad/history.jsonl` 的 round 9。
 
+> **⚠️ 語料再度變更於 round 10（2026-09-13，#1086 / #1103）：48 → 50 檔、claims 335 → 356。**
+> 與 round 9 不同，這次是**雙向**：固定成本 9,209 → **5,391**（Domain Model 速查與觀測段搬出
+> `CLAUDE.md`），但語料同時變大。**經濟性的改善與新鮮度／正確性分母的變動方向相反，走勢圖上
+> 不可混為一談。** 另有兩件下一輪必須先處理：ledger 的 `CLAUDE.md:149` 因文件搬移而主鍵失效
+> （docgrad#41），以及污染面在本機 checkout 與乾淨 checkout 分別量到 10.66% / 5.17%
+> （docgrad#35）。詳見 `.docgrad/history.jsonl` 的 round 10。
+
 本輪的觸發點是 main 合入四個 PR（#1077 docs 健檢腳本、#1078 自架字型、#1080 docgrad 收斂、
 #1082 授權／CSV 匯出兩份新 spec）。round 7 收官時六維全數達標，本輪要回答的是「合入之後還成立嗎」。
 
