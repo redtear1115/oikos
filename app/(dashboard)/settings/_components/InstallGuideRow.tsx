@@ -28,7 +28,7 @@ export function InstallGuideRow() {
         </div>
       </button>
 
-      <InstallGuide open={open} onClose={() => setOpen(false)} t={t} />
+      <InstallGuide open={open} onClose={() => setOpen(false)} t={t} source="settings" />
     </>
   )
 }

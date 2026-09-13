@@ -151,7 +151,7 @@ export default function SetupForm({ t }: { t: Translations }) {
   }
 
   const installGuideJsx = (
-    <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} t={t} />
+    <InstallGuide open={installGuideOpen} onClose={dismissInstallGuide} t={t} source="setup" />
   )
 
   if (step === 'trust') {

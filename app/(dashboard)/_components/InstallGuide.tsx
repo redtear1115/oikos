@@ -5,12 +5,24 @@ import { SheetFrame } from './SheetFrame'
 import { SheetBody, SheetHeader } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { getPlatform, type Platform } from '@/lib/install-guide'
+import { track } from '@/lib/analytics/track'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+
+/** Which of the two entry points opened the sheet. See the `source` prop. */
+export type InstallGuideSource = 'setup' | 'settings'
 
 interface Props {
   open: boolean
   onClose: () => void
   t: Translations
+  /**
+   * Where this sheet was opened from. Required, not defaulted: the two call
+   * sites mean opposite things and must never be summed. `'setup'` is
+   * automatic and interrupts the activation window; `'settings'` is the user
+   * asking for it. A single `install_guide_shown` count mixing them would read
+   * as interest when most of it is interruption.
+   */
+  source: InstallGuideSource
 }
 
 /**
@@ -19,20 +31,40 @@ interface Props {
  *   1. Auto-shown after first /setup completion (if not already a PWA)
  *   2. Reopenable from /settings → 加到主畫面
  */
-export function InstallGuide({ open, onClose, t }: Props) {
+export function InstallGuide({ open, onClose, t, source }: Props) {
   // Detect on open (not on mount) so SSR doesn't render platform-specific UI.
   const [platform, setPlatform] = useState<Platform>('unknown')
+  // #1126 — the sheet sits inside the only window where activation happens
+  // (8 of the users who ever logged a record did it within 12 minutes of
+  // creating their ledger), and until now nothing measured it at all.
+  //
+  // Fires on the open transition, NOT on mount. `open` is a prop, so this
+  // component stays mounted-and-closed for the whole life of the page that
+  // owns it — tracking on mount would count every /setup and /settings page
+  // load as an impression, which is the metric quietly not being the thing
+  // anyone thinks it is.
   useEffect(() => {
-    if (open) setPlatform(getPlatform())
-  }, [open])
+    if (!open) return
+    const detected = getPlatform()
+    setPlatform(detected)
+    track('install_guide_shown', { source, install_platform: detected })
+  }, [open, source])
+
+  // Wraps every dismissal path, not just the button: SheetFrame also closes on
+  // backdrop tap and swipe-down, and a dismissal we don't see is a dismissal
+  // that looks like the user still sitting on the sheet.
+  const handleClose = () => {
+    track('install_guide_dismissed', { source, install_platform: platform })
+    onClose()
+  }
 
   return (
-    <SheetFrame open={open} onClose={onClose} ariaLabel={t.installGuide.title} topRadius={28}>
+    <SheetFrame open={open} onClose={handleClose} ariaLabel={t.installGuide.title} topRadius={28}>
       <SheetHeader
         title={t.installGuide.title}
         centered
         leading={
-          <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="p-1">
             {t.installGuide.close}
           </Button>
         }
