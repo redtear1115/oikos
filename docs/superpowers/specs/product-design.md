@@ -95,7 +95,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 - `IncomeTransactions`（進帳，平行於 CashTransactions，見 [income](income-design.md)）
 - `InvoiceCredentials`（加密驗證碼，見 [cloud-invoice](cloud-invoice-design.md)）
 
-Balance 計算規則詳見 `CLAUDE.md`「Balance 計算規則」段；實作在 `lib/balance.ts` + `lib/db/queries/balance.ts`。
+Balance 計算規則詳見 [domain-model](domain-model-design.md)「Balance 計算規則」段；實作在 `lib/balance.ts` + `lib/db/queries/balance.ts`。
 
 ---
 
