@@ -319,13 +319,12 @@ export function BalanceHero({
               </div>
 
               <div
-                className="tnum text-center leading-[1.05] tracking-[-1.4px] transition-opacity duration-150 mt-1.5"
+                // text-amount-fluid: the clamp keeps the visual hierarchy on
+                // normal amounts while shrinking gracefully on 7-digit balances
+                // so they fit a 375px viewport without truncation. (#1132)
+                className="tnum text-center leading-[1.05] text-amount-fluid tracking-amount transition-opacity duration-150 mt-1.5"
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  // clamp keeps the visual hierarchy on normal amounts while
-                  // shrinking gracefully on 7-digit balances so they fit a
-                  // 375px viewport without truncation.
-                  fontSize: 'clamp(40px, 12vw, 56px)',
                   fontWeight: 600,
                   color: balanceColor,
                   opacity: fading ? 0 : 1,

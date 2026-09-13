@@ -43,16 +43,15 @@ export function SoloMonthHero({ monthKey, total, count }: Props) {
       </div>
 
       <div
-        className={`tnum text-center leading-[1.05] tracking-[-1.4px] font-medium mt-1.5 ${
+        // Shares BalanceHero's expense-hero type rather than re-deriving it:
+        // both are the same Amount tier. Since #1132 that sharing is a token
+        // (text-amount-fluid / tracking-amount) instead of two copies of the
+        // same literal that could drift apart unnoticed.
+        className={`tnum text-center leading-[1.05] text-amount-fluid tracking-amount font-medium mt-1.5 ${
           total > 0 ? 'text-ink' : 'text-ink-3'
         }`}
         style={{
           fontFamily: 'var(--font-numeric)',
-          // Carried over from BalanceHero's expense hero rather than re-derived:
-          // both are the same Amount tier, and a month total runs to 7 digits
-          // more often than a balance does, so the same clamp keeps it on one
-          // line at 375px instead of truncating.
-          fontSize: 'clamp(40px, 12vw, 56px)',
         }}
       >
         {/* TODO(v0.17 currency): NT$ is hard-coded here exactly as in
