@@ -28,6 +28,7 @@ import {
 } from '@/lib/db/queries/monthlyReview'
 import {
   currentYearMonthInTaipei,
+  formatYearMonth,
   previousMonth,
   truncateCodepoints,
 } from '@/lib/monthlyReview'
@@ -66,9 +67,6 @@ export default async function DashboardPage() {
   //   LeaveGroupFlow on success — no SSR data needed beyond the group id.
   const shouldCheckPriorLeaver = !epochWindow.isPast && !group.memberB && !!epochWindow.epochId
 
-  const now = new Date()
-  const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-
   // Monthly review banner state. Surface only when:
   //   1. snapshot exists for the previous month
   //   2. viewer hasn't dismissed it
@@ -76,6 +74,21 @@ export default async function DashboardPage() {
   // to the viewer's own. Solo mode always quotes the viewer.
   const todayYM = currentYearMonthInTaipei()
   const reviewedYM = previousMonth(todayYM)
+
+  // The month key both heroes aggregate and label by. Derived from `todayYM`
+  // rather than a second clock read, so the heroes and the review banner can
+  // never disagree about which month "now" is.
+  //
+  // It has to be the Taipei month specifically: the rows are bucketed with
+  // `AT TIME ZONE 'Asia/Taipei'` (lib/db/queries/_predicates.ts), while Vercel
+  // runs the server in UTC. Building this key from a raw `new Date()` used to
+  // yield the *previous* month between 00:00 and 08:00 Taipei on the 1st.
+  //
+  // That failure is quiet rather than contradictory: the label matches what the
+  // hero actually summed, so nothing on screen looks broken — a user on the 1st
+  // just spends the morning looking at last month and has no way to tell. It
+  // also fixes itself by lunchtime, which is why it survived this long. (#1130)
+  const yyyymm = formatYearMonth(todayYM)
   const isSolo = !group.memberB
   const viewerIsA = group.memberA === user.id
 
