@@ -136,8 +136,8 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 
 ### Step 1 — 上傳檔案
 
-- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）
-- 客戶端檔案大小上限：2 MB
+- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）——這是 **parser pipeline** 支援的範圍（`lib/csvImport/index.ts` 的格式偵測）。**檔案選擇器目前只開 `.csv`**（`components/CsvFileUploadWidget.tsx` 的 `accept` 預設值），後三種只有拖放進得來；這是 code 沒跟上 spec，不是 spec 寫錯
+- 檔案大小上限：**spec 原訂 client 端 2 MB，實際從未實作**——repo 內沒有任何大小檢查。大檔的行為目前是「瀏覽器 parse 到卡住為止」
 - 上傳後立即在 client 端 parse + 跑 schema validation；不過 schema 直接跳錯誤頁，無 server round-trip
 
 ### Step 2 — 預覽表格
@@ -253,10 +253,13 @@ sha256(
 
 ## 範本與下載
 
-- `/settings` →「從其他 app 匯入」頁面提供：
-  - 通用 CSV 範本下載（.csv，含 header + 3 列範例）
-  - Phase 2 Excel 轉換模板連結（v1.1.0 ship 時可能只有 CWMoney→Futari，#557）
-- 範本檔由 spec 文件描述格式，實際檔案放在 `public/` 根目錄（`cwmoney-template.xlsx` / `bank-statement-template.xlsx`；下載連結定義在 `lib/migrate/sources.ts`）
+範本的實際入口是 **migrate 頁**，不是匯入 wizard——`/settings` →「從其他 app 匯入」頁面**沒有**任何範本下載 UI（`app/(dashboard)/settings/import/` 底下查無）。
+
+| 範本 | 檔案 | 下載入口 |
+|---|---|---|
+| CWMoney Excel 轉換模板（#557） | `public/cwmoney-template.xlsx` | `lib/migrate/sources.ts` 的 `templateDownload`，由 `app/[locale]/migrate/[source]/page.tsx` 在 step 2 渲染。**registry 裡只有 cwmoney 這一個 source 有這個欄位** |
+| 銀行對帳單 3-sheet 模板（#585） | `public/bank-statement-template.xlsx` | **無**——檔案 ship 了、`scripts/build-bank-statement-template.py` 也在，但 repo 內沒有任何連結指向它。CHANGELOG 寫的「從 /migrate 入口下載」目前不成立 |
+| 通用 CSV 範本 | — | **不存在**。`public/` 底下沒有 `.csv` 範本，也沒有任何地方即時產生一份 |
 
 ---
 
