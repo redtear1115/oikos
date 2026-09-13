@@ -1807,6 +1807,7 @@ export const zhCN: Translations = {
     revealFraming: '你们一个是日出、一个是月光。不同的时刻，照同一个家。没有谁的答案比较对，记住对方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '对方',
+    soloHeading: '两个人的问答',
     soloFallback: '这 3 题是两个人一起答的。这个月的回顾，其他部分都在。',
     errorNotFound: '找不到这次的问答',
     errors: {

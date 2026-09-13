@@ -2235,6 +2235,9 @@ export type Translations = {
     revealHeaderA: string
     /** Header label for member B column. */
     revealHeaderB: string
+    /** Heading above `soloFallback`. Separate from `revealHeading` because that
+     *  one is second-person plural and the solo viewer is here alone. */
+    soloHeading: string
     /** Fallback rendered when viewer is solo (member_b IS NULL). */
     soloFallback: string
     /** Generic error: session doesn't exist or doesn't belong to viewer. */
@@ -4386,6 +4389,7 @@ export const zhTW: Translations = {
     revealFraming: '你們一個是日出、一個是月光。不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '對方',
+    soloHeading: '兩個人的問答',
     soloFallback: '這 3 題是兩個人一起答的。這個月的回顧，其他部分都在。',
     errorNotFound: '找不到這次的問答',
     errors: {

@@ -1819,6 +1819,8 @@ export const en: Translations = {
     revealHeaderA: 'You',
     revealHeaderB: 'Partner',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloHeading: 'A quiz for two',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloFallback: 'These three questions are answered by two people. The rest of this month’s review is still there.',
     errorNotFound: "Couldn't find this quiz",
     errors: {

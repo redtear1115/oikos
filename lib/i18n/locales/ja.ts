@@ -1817,6 +1817,8 @@ export const ja: Translations = {
     revealHeaderA: 'あなた',
     revealHeaderB: '相手',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloHeading: 'ふたりの問答',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloFallback: 'この 3 問は、ふたりで答えるものです。今月のふりかえりの他の部分は、そのまま見られます。',
     errorNotFound: 'この問答が見つかりません',
     errors: {

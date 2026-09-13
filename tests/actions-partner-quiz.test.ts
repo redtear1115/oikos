@@ -193,11 +193,14 @@ describe('submitPartnerQuizAnswers', () => {
     })).rejects.toThrow(/範圍/)
   })
 
-  it('refuses in solo mode', async () => {
+  // #1123 — QuestionCard renders whatever this action throws. A prose message
+  // here would ship hard-coded zh-TW to en / ja viewers, so the contract is an
+  // error CODE that `describeQuizError` maps to `quiz.errors.solo`.
+  it('refuses in solo mode with a code, not prose', async () => {
     queueDbResult([SOLO_GROUP])
     await expect(submitPartnerQuizAnswers({
       sessionId: 'sess-solo',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/一個人/)
+    })).rejects.toThrow(/^solo_group$/)
   })
 })

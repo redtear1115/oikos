@@ -86,7 +86,10 @@ export async function submitPartnerQuizAnswers(
 ): Promise<SubmitPartnerQuizAnswersResult> {
   const { user, group } = await requireViewerGroup()
   if (!group.memberB) {
-    throw new Error('一個人的時候還沒辦法答題')
+    // Error CODE, not prose: QuestionCard renders whatever this action throws,
+    // so a literal string here ships hard-coded zh-TW to en / ja viewers and
+    // bypasses `quiz.errors.solo` entirely. Mapped by `describeQuizError`.
+    throw new Error('solo_group')
   }
 
   const [session] = await db
