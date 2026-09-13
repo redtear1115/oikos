@@ -184,6 +184,9 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 
 Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.url` 指向 prod（`https://futari.southern-light.dev`），iOS / Android 殼只是載入線上網站的 WebView。**web 改動經 Vercel 部署即時觸達三平台**，不必重送商店；只有動到原生輸入才要重新送審。
 
+- **推論：平台差異只能 runtime 判斷。** 編譯期只有一份產物，`NEXT_PUBLIC_PLATFORM=ios` 這類 build-time flag 分不出平台；SSR 同理（`lib/platform.ts#detectPlatform` 在 server 回 `null`）。一律在 render 時讀 `Capacitor.getPlatform()`，範例 `components/KofiWidget.tsx`（iOS 隱藏 Ko-fi widget，Apple Guideline 3.1.1）。
+  - **失效的樣子**：build 過、type check 過、`npm run dev` 正常、Vercel 部署成功——錯只在真機殼裡顯現，而且是靜默的：該隱藏的元件照樣顯示（或該顯示的不見），沒有任何錯誤訊息。
+
 送審步驟、Xcode／Gradle 雷點、ASC API 用法見 [docs/app-store-submission-runbook.md](docs/app-store-submission-runbook.md)。
 
 ### 需要重新送審的 trigger
