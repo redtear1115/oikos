@@ -8,13 +8,13 @@ product
 
 ## Surface Tiers
 
-The register field above is the project default and governs everything inside the app shell. Three routes groups are **brand** surfaces and must be designed with the brand register instead. Do not treat them as app UI.
+The register field above is the project default and governs everything inside the app shell. Five route groups are **brand** surfaces and must be designed with the brand register instead. Do not treat them as app UI.
 
 **Brand register (design IS the product):**
 
 - `app/[locale]/page.tsx` and `app/[locale]/_landing/*` (landing)
 - `app/[locale]/migrate/page.tsx` and `app/[locale]/migrate/[source]/page.tsx` (competitor-migration SEO pages)
-- `app/[locale]/use-case/[slug]/page.tsx` (vertical narratives)
+- `app/[locale]/use-case/page.tsx` and `app/[locale]/use-case/[slug]/page.tsx` (vertical narratives)
 - `app/[locale]/sign-in/page.tsx` (the threshold: brand voice, product restraint)
 - `app/[locale]/privacy`, `app/[locale]/terms` (legal, brand typography, no app chrome)
 
