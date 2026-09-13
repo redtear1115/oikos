@@ -87,16 +87,32 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        const { groupId: newGroupId } = await leaveGroup()
-        // Mark the brand-new solo group so WelcomeSoloCard can surface a
-        // dismissible "歡迎回到一個人" card on the leaver's first dashboard
-        // render. Done client-side because the new groupId only exists after
-        // the server action resolves, before the navigation lands.
-        try {
-          window.localStorage.setItem('futari_just_left_' + newGroupId, '1')
-        } catch {
-          // Private-browsing localStorage failure: the welcome card simply
-          // won't show. Not worth blocking the navigation.
+        const { epochId } = await leaveGroup()
+        // Mark the leaver's brand-new solo *epoch* so WelcomeSoloCard can
+        // surface a dismissible "歡迎回到一個人" card on their first dashboard
+        // render. Done client-side because the epoch only exists after the
+        // server action resolves, before the navigation lands.
+        //
+        // Epoch-keyed since #1125, group-keyed before that. Both keys moved at
+        // once — this one and `futari_welcome_solo_dismissed_` inside the card
+        // — because moving only one would resurrect cards a user had already
+        // dismissed. Same key space as `RemovePartnerFlow`'s
+        // `futari_partner_removed_`.
+        //
+        // ⚠️ Known, bounded regression at deploy time: anyone who left the
+        // ledger shortly before this shipped is carrying a
+        // `futari_just_left_<groupId>` flag that no code reads any more, so
+        // their one-shot welcome card silently never appears. No data loss, no
+        // error, and the window is only as wide as "left but hasn't opened the
+        // dashboard yet". Accepted deliberately — do not go re-adding a
+        // group-keyed read path when someone reports the card missing.
+        if (epochId) {
+          try {
+            window.localStorage.setItem('futari_just_left_' + epochId, '1')
+          } catch {
+            // Private-browsing localStorage failure: the welcome card simply
+            // won't show. Not worth blocking the navigation.
+          }
         }
         router.refresh()
         router.push('/dashboard')

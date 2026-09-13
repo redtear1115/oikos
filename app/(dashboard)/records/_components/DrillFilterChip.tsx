@@ -79,6 +79,8 @@ export function DrillFilterChip({ drill, assetName, onClear }: Props) {
           transition: `background var(--toggle-transition), color var(--toggle-transition)`,
         }}
       >
+        {/* × U+00D7 — filter-chip clear, not a surface close. Same deliberate
+            split as DateRangeChip; see the note there. (#1125) */}
         ×
       </button>
     </div>

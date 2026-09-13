@@ -43,7 +43,7 @@ describe('FirstRecordCard', () => {
     expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 
-  it('clears seen flag and calls onDismiss when × close is clicked', () => {
+  it('clears seen flag and calls onDismiss when ✕ close is clicked', () => {
     const onDismiss = vi.fn()
     wrap(<FirstRecordCard show={true} onDismiss={onDismiss} />)
     fireEvent.click(screen.getByRole('button', { name: '關閉提示' }))

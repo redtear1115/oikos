@@ -149,7 +149,7 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.collapseAriaLabel}
-            className="text-[18px] leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            className="text-lg leading-none shrink-0 cursor-pointer bg-transparent border-none"
             style={{ color: 'var(--ink-3)' }}
           >
             −
