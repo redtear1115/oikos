@@ -79,6 +79,25 @@ npm version X.Y.Z --no-git-tag-version
 - 檔案最底下的連結定義區：`[Unreleased]` 改指 `vX.Y.Z...HEAD`，並新增一行 `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
 - 文案遵守 CLAUDE.md 的品牌文案準則（zh-TW、不用感嘆號、不用「管理」「追蹤」「監控」）
 
+**改完跑這段驗證，不要只靠肉眼**：
+
+```bash
+# 每個 ## [X.Y.Z] 標題都必須有對應的 [X.Y.Z]: 定義行，缺了標題就是壞掉的參照連結
+diff <(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | tr -d '#[] ' | sort) \
+     <(grep -oE '^\[[0-9]+\.[0-9]+\.[0-9]+\]:' CHANGELOG.md | tr -d '[]:' | sort) \
+  && echo '✓ 連結定義完整' || echo '✗ 上列版本不對稱（< = 有標題沒定義，> = 有定義沒標題）'
+
+# [Unreleased] 必須指向剛發的這一版
+grep -E '^\[Unreleased\]: .*compare/vX\.Y\.Z\.\.\.HEAD$' CHANGELOG.md \
+  && echo '✓ [Unreleased] 已更新' || echo '✗ [Unreleased] 沒指向 vX.Y.Z'
+```
+
+> **為什麼是「驗證」而不只是「提醒」**：下面 Gotchas 從一開始就寫著「`[Unreleased]` 的 compare
+> link 一定要一起改」，而 **v1.5.11 仍然漏了**——`[Unreleased]` 留在 `v1.5.10`，`[1.5.11]` 那行
+> 根本沒被加進去，`## [1.5.11]` 標題因此是壞的參照連結，直到 v1.5.12 發版才被發現。
+> **指令存在、但沒有檢查，等於沒有。** 這段 diff 在當時就會抓到（實測對 `v1.5.11:CHANGELOG.md`
+> 跑會印出 `< 1.5.11`）。
+
 **`[Unreleased]` 是空的（`_Nothing unreleased yet._`）**：警告使用者這版沒有累積任何 changelog 條目，
 問他要「用 `git log vPREV..HEAD` 現場整理」還是「先補 `[Unreleased]` 再回來」。不要自作主張塞內容。
 
@@ -153,5 +172,5 @@ tag **不 push**（第 9 步 checklist 裡等 PR merge 後才推）。
 
 - **`npm version` 會在 dirty working tree 上拒跑**（`Git working directory not clean`）。先確認工作區只剩要發版的改動，或用 `--force` 前先想清楚。
 - **CHANGELOG anchor 格式**：`#151---2026-06-10` ← `1.5.1` 的點被拿掉、` - ` 變成 `---`。手寫容易錯，貼上後在 GitHub 上點一次確認。
-- **`[Unreleased]` 的 compare link 一定要一起改**，否則永遠指著舊 tag，diff 會越積越多。
+- **`[Unreleased]` 的 compare link 一定要一起改**，否則永遠指著舊 tag，diff 會越積越多。這條光靠提醒擋不住（v1.5.11 就漏了），所以第 4 步有一段 diff 驗證——**跑它**。
 - **release PR 不要夾帶功能改動**。這條 branch 只放上面五個檔案的版本性變更；有東西沒進 `[Unreleased]` 就先回 feature branch 補。
