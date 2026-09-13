@@ -32,7 +32,8 @@ describe('PostHogProvider flush ordering (#1014)', () => {
     h.init.mockClear()
     h.register.mockClear()
     h.capture.mockClear()
-    vi.stubEnv('NODE_ENV', 'production')
+    // The gate is the deployment, not NODE_ENV (#1116) — see lib/deployEnv.ts.
+    vi.stubEnv('NEXT_PUBLIC_DEPLOY_ENV', 'production')
     vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', 'test-key')
   })
 

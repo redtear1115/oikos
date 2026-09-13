@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { cashTransactions } from '@/lib/db/schema'
 import { db } from '@/lib/db/client'
+import { IS_PROD_DEPLOY } from '@/lib/deployEnv'
 
 // Either the top-level db client or a PgTransaction handed back from
 // `db.transaction(async (tx) => ...)`. Both expose the .select() API used
@@ -11,8 +12,10 @@ type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 // Mirror the client gate (app/providers.tsx) without importing the 'use client'
 // module into server code. NEXT_PUBLIC_* vars are available server-side too.
-const SERVER_ANALYTICS_ENABLED =
-  process.env.NODE_ENV === 'production' && !!process.env.NEXT_PUBLIC_POSTHOG_KEY
+// Gated on the deployment, not on NODE_ENV — a local `next build && next start`
+// is also NODE_ENV=production and used to write straight into the prod project
+// (#1116, see lib/deployEnv.ts).
+const SERVER_ANALYTICS_ENABLED = IS_PROD_DEPLOY && !!process.env.NEXT_PUBLIC_POSTHOG_KEY
 
 let client: PostHog | null = null
 
