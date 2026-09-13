@@ -27,7 +27,14 @@ interface FuelLogLike {
   loggedAt: Date
 }
 
-const SIX_MONTHS_DAYS = 180
+/**
+ * The detail-page econ window, in days. Exported so the UI layer can tell the
+ * two shapes of `computeAvgEcon(...) === null` apart (a car with plenty of
+ * history that simply has not been refuelled inside this window vs. a car that
+ * genuinely lacks logs) without hard-coding a second copy of 180 — see #1097
+ * and `lib/fuelEconHint.ts`. Read-only for callers; the math below owns it.
+ */
+export const SIX_MONTHS_DAYS = 180
 
 function toLiters(v: string | number): number {
   return typeof v === 'string' ? parseFloat(v) : v

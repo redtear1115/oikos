@@ -2,6 +2,7 @@
 
 import { resolveCarColor } from '../../_components/carColor'
 import { useTranslations } from '@/lib/i18n/client'
+import { avgEconHint } from '@/lib/fuelEconHint'
 import type { FuelType } from '@/lib/fuel'
 
 interface AssetHeroProps {
@@ -15,7 +16,13 @@ interface AssetHeroProps {
   monthAmount: number
   totalAmount: number
   avgEcon: number | null
-  fuelLogCount: number
+  /**
+   * Newest fuel log's `loggedAt` (ISO) in the current chapter, null when the
+   * chapter has none. Replaces the old `fuelLogCount` (#1097): the count alone
+   * could not tell 「窗內不足 2 筆」 from 「窗外有 5 筆、窗內 0 筆」, so a car
+   * parked for half a year was told it needed at least 2 logs.
+   */
+  lastFuelAt: string | null
   onEdit?: () => void
 }
 
@@ -39,10 +46,11 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
 
 export function AssetHero({
   name, brand, model, year, fuelType, color,
-  monthAmount, totalAmount, avgEcon, fuelLogCount, onEdit,
+  monthAmount, totalAmount, avgEcon, lastFuelAt, onEdit,
 }: AssetHeroProps) {
   const t = useTranslations()
   const isElectric = fuelType === 'electric'
+  const econHint = avgEconHint(avgEcon, lastFuelAt ? new Date(lastFuelAt) : null)
   const swatch = resolveCarColor(color)
 
   // Shared subtitle — brand model · year. The plate is intentionally absent
@@ -114,9 +122,11 @@ export function AssetHero({
             <span className="text-sm font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
           </div>
           <div className="text-xs font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
-            {avgEcon === null && fuelLogCount === 0
+            {econHint === 'noLog'
               ? t.assetDetail.car.avgEconNoLog
-              : avgEcon === null
+              : econHint === 'stale'
+              ? t.assetDetail.car.avgEconStale
+              : econHint === 'needMore'
               ? t.assetDetail.car.avgEconNeedMore
               : t.assetDetail.car.avgEconRecent}
           </div>

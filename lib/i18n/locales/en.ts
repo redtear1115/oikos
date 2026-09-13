@@ -1434,6 +1434,7 @@ export const en: Translations = {
       avgEcon: 'Avg fuel economy',
       avgEconNoLog: 'Add the first refuel to see economy',
       avgEconNeedMore: 'Need at least 2 refuel logs',
+      avgEconStale: 'No refuels in the last 6 months',
       avgEconRecent: 'Last 6 months',
       plate: 'Plate',
       plateSection: 'Vehicle',

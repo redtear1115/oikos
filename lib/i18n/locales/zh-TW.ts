@@ -1757,6 +1757,8 @@ export type Translations = {
       avgEcon: string
       avgEconNoLog: string
       avgEconNeedMore: string
+      /** #1097 — 窗外有紀錄、窗內 0 筆：不是紀錄不夠，是這半年沒開。 */
+      avgEconStale: string
       avgEconRecent: string
       /** #826 — label for the encrypted plate row. */
       plate: string
@@ -3995,6 +3997,7 @@ export const zhTW: Translations = {
       avgEcon: '平均油耗',
       avgEconNoLog: '加第一筆油看油耗',
       avgEconNeedMore: '需要至少 2 次加油記錄',
+      avgEconStale: '近 6 個月沒有加油記錄',
       avgEconRecent: '近 6 個月',
       plate: '車牌',
       plateSection: '車輛資訊',

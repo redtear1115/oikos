@@ -1432,6 +1432,7 @@ export const ja: Translations = {
       avgEcon: '平均燃費',
       avgEconNoLog: '最初の給油で燃費が見られます',
       avgEconNeedMore: '少なくとも 2 回の給油記録が必要',
+      avgEconStale: '直近 6 ヶ月の給油記録がありません',
       avgEconRecent: '直近 6 ヶ月',
       plate: 'ナンバー',
       plateSection: '車両情報',

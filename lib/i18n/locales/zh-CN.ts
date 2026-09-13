@@ -1430,6 +1430,7 @@ export const zhCN: Translations = {
       avgEcon: '平均油耗',
       avgEconNoLog: '加第一笔油看油耗',
       avgEconNeedMore: '需要至少 2 次加油记录',
+      avgEconStale: '近 6 个月没有加油记录',
       avgEconRecent: '近 6 个月',
       plate: '车牌',
       plateSection: '车辆信息',
