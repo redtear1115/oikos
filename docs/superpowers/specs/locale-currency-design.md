@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.11.1
 updates:
@@ -7,8 +7,10 @@ updates:
   - v0.17.0: 加入 group `base_currency`（4 選 1：TWD / CNY / USD / JPY），預設 `'twd'`；Settings → 貨幣可改主體幣別；當前 epoch 無 record 時可改、有 record 則鎖（#68）
   - v0.17.1: `/settings/currency` UX pass — 主體幣別被鎖住的解釋卡、design token 對齊（PR #333 closes #322 #323 #324 #325 #326）
   - v0.17.3: spec 重組——i18n + base_currency 設定整合為「一次性決策」哲學（#364），擴充自原 `i18n-design.md`
-related_specs: [onboarding, trip-multi-currency, product]
-related_issues: ["#20", "#21", "#68", "#322", "#364"]
+  - v1.0.0: public 頁面（landing / sign-in / terms / privacy）改 URL-prefix locale routing（#400 #462），推翻原本「URL prefix 一律不採用」的決定；dashboard 維持 cookie
+  - v1.5.11: url mode 的語系選項改成真的 `<a href>`，讓三個語系子樹拿得到跨語系內部連結（#1063）
+related_specs: [onboarding, trip-multi-currency, product, migrate-pages]
+related_issues: ["#20", "#21", "#68", "#322", "#364", "#400", "#1063", "#1103"]
 ---
 
 # 語言 × 初始幣別
@@ -63,13 +65,13 @@ Onboarding 已經有三步（歡迎 → 建群組 → 邀請對方）。加第�
 |---|---|---|
 | 支援語系 | **zh-TW / zh-CN / en / ja**（4 語） | 主要 TA + 日本市場（Futari／ふたり 名稱就是對日本市場的邀請） |
 | 預設語系 | **`zh-TW`** | 主要 TA；fallback 維持原 Phase 1 體驗 |
-| Locale 識別 | **`lang` cookie**（1 年 max-age、SameSite=Lax）+ optional `?lang=` 入口 | URL prefix（`/zh-TW/dashboard`）成本高（路由全改）+ 視覺破壞；cookie 一次設好不影響 URL、shareable link 無須帶 locale |
-| 切換 UX | **`document.cookie =` + `router.refresh()`** | 不過 server action（純 client），延遲最低；router.refresh 觸發 RSC 重新 render → server 讀新 cookie → 字典換掉 |
+| Locale 識別 | **Public 頁看 URL path locale**（`/en/sign-in`；default locale 不加 prefix）、**dashboard 看 `lang` cookie**（1 年 max-age、SameSite=Lax） | 兩種流量的需求不同：public 頁要每個語系各自可索引（hreflang + per-locale sitemap，v1.0.0 #400 #462），dashboard 的 URL 沒有 SEO 價值、cookie 讓 shareable link 不必帶 locale。`proxy.ts` 在 public path 上把 cookie 同步成 URL locale，登入後 dashboard 因此繼承同一語言。**沒有 `?lang=` query 入口** |
+| 切換 UX | **兩種 mode**：`cookie` → `document.cookie =` + `router.refresh()`；`url` → 同步 cookie + `router.push(localizedHref(...))` | 都不過 server action（純 client），延遲最低。dashboard 走 `cookie`：refresh 觸發 RSC 重新 render → server 讀新 cookie → 字典換掉；public 頁走 `url`：直接換到對應 locale 的 URL。Mode 由 `lib/i18n/path.ts › isPublicLocalizedPath()` 自動推斷 |
 | 字典載體 | **TypeScript const object**，與 `Translations` type 對齊 | 編譯期檢查 missing key；無 runtime fetch；trade-off 是 4 個檔案要手動同步（接受） |
 | 字典結構 | **巢狀 namespace**（`signIn` / `common` / `dashboard` / `records` / `settings` / `assets` 等） | 同 namespace 同一頁，避免 flat key 命名衝突；type 直接 mirror |
-| Server 取得 | **`getTranslations()`**（`'server-only'`，讀 `cookies()`） | RSC 直接 await；proxy 不參與 dictionary lookup |
-| Client 取得 | **`<TranslationsProvider value={t}>` + `useTranslations()`** | 由 dashboard layout / sign-in page 一次性 fetch + 注入；client 純讀 context、不重新 fetch |
-| Provider 邊界 | **dashboard layout 包整個登入區；sign-in page 自帶** | sign-in 是 public 頁、layout 不適合 wrap；兩邊各自 await 簡單可預期 |
+| Server 取得 | **`lib/i18n/t.ts › getTranslations()`**（server-only——用 `next/headers` 的 `cookies()`，在 client component 會 throw） | RSC 直接 await；proxy 不參與 dictionary lookup |
+| Client 取得 | **`<TranslationsProvider value={t}>` + `useTranslations()`**（僅 dashboard 子樹） | 由 dashboard layout 一次性 fetch + 注入；client 純讀 context、不重新 fetch。Dashboard 外的頁面不進 context——見下一列 |
+| Provider 邊界 | **只有 dashboard layout**（`app/(dashboard)/layout.tsx`，repo 內唯一 mount `TranslationsProvider` 的地方） | Public 頁是 server component、直接從 URL locale 取字典，字串以 props 傳給底下的 client component 就夠，不需要 client context。單一 mount 點讓「這個 client component 拿不拿得到 `useTranslations()`」不必逐頁推敲 |
 | LanguageSwitcher 變體 | **`pill`**（Settings、卡片式 segmented）/ **`footer`**（sign-in、低調 inline 文字） | 兩個情境視覺權重不同；單一元件 `variant` prop 切換 |
 | 翻譯漏洞處理 | **不做 fallback**（type 強制每語系每 key 都填） | 漏字 = 編譯失敗，比 runtime fallback 更早暴露 |
 | Plural / interpolation | **目前不需要** | 字典實際看下來都是固定字串；遇到動態量詞採 `${count} 筆紀錄` 直接拼，不引 ICU MessageFormat |
@@ -87,7 +89,7 @@ Onboarding 已經有三步（歡迎 → 建群組 → 邀請對方）。加第�
 | 鎖住時的 UI | **disable + hint card**「為什麼鎖住」+「開新章節重設」替代路徑 | 用陪伴語解釋而非冷冰冰的錯誤 |
 | 影響範圍 | balance / settlement / report / 主帳本所有顯示視角全圍繞此幣別 | 與 [trip-multi-currency](trip-multi-currency-design.md) 的「主帳本永遠單幣別」立場一致 |
 | 與 locale 的耦合 | **完全獨立**——locale 切換不改 currency、currency 切換不改 locale | 雙人跨境家庭常見：介面語言與主體幣別屬不同決策 |
-| Locale-aware currency formatting | **不做** | 金額顯示走 `lib/currency.ts#formatAmount(amount, currency)`，幣別符號與千分位由 currency 決定、不由 locale 決定 |
+| Locale-aware currency formatting | **不做** | 金額顯示走 `lib/currency.ts › formatAmount(amount, currency)`，幣別符號與千分位由 currency 決定、不由 locale 決定 |
 
 ---
 
@@ -96,7 +98,7 @@ Onboarding 已經有三步（歡迎 → 建群組 → 邀請對方）。加第�
 ### Locale
 
 - ❌ **next-intl / i18next**：framework 自帶的 plural / loader / namespace splitting 對目前體積過重；自製 70 行夠用
-- ❌ **URL prefix locale（`/[locale]/...`）**：影響全 routing、所有 link、proxy 重做；cookie 路徑成本最低
+- ⚠️ ~~**URL prefix locale（`/[locale]/...`）**：影響全 routing、所有 link、proxy 重做；cookie 路徑成本最低~~ — **這條在 v1.0.0（#400 #462）被推翻**。成本評估沒錯，但它沒把 SEO 算進來：cookie-only 的話四個語系共用同一個 URL，等於只有一個語系可索引。最終落在混合——public 頁走 URL prefix、dashboard 仍走 cookie。保留這條是因為「cookie 成本最低」的推論本身仍然成立，下一個人很容易重新推導出同一個結論
 - ❌ **Proxy 直接讀字典 + render 階段 inject**：proxy 跨 RSC / Server Action / Edge 多 runtime 邊界，字典體積會被多次序列化
 - ❌ **每次 client 切語系打 server action**：純 cookie 寫 + router.refresh 已足夠；多一次 round-trip 沒必要
 - ❌ **動態 import 字典**（依語系 lazy load）：4 語總體積仍小，code split 收益不抵複雜度
@@ -124,21 +126,33 @@ Onboarding 已經有三步（歡迎 → 建群組 → 邀請對方）。加第�
 
 ```
 Request 進來
-  ↓ proxy：?lang=xx 若存在 → 寫 cookie
-  ↓ Server entry：await getTranslations() ← 讀 cookie → 取對應 dict
+  ↓ proxy.ts
+  │   public localized path（path.ts › isPublicLocalizedPath）
+  │     → locale 取自 URL 第一段（path.ts › parseLocaleFromPath），無 prefix 則 DEFAULT_LOCALE
+  │     → 寫 `lang` cookie（同步用，不是識別來源）；無 prefix 時再 rewrite 到 /<DEFAULT_LOCALE>/<path>
+  │   其餘 path（dashboard / onboarding / setup / invite / auth / api / offline）
+  │     → proxy 不動 cookie
+  ↓ Public 頁（app/[locale]/**）：從 URL params 的 locale 直接取 t.ts › dictionaries[locale]
+  │     → 字串以 props 傳給底下的 client component（不進 context）
+  ↓ Dashboard RSC：await t.ts › getTranslations() ← 讀 cookie → 取對應 dict
   ↓ 渲染 RSC：t.signIn.tagline / t.dashboard.balance 等
-  ↓ 傳到 dashboard layout：<TranslationsProvider value={t}>
-  ↓ Client component：const t = useTranslations() → 讀 context
+  ↓ 傳到 dashboard layout：<TranslationsProvider value={t} locale={locale}>
+  ↓ Dashboard client component：const t = useTranslations() → 讀 context
 ```
 
-切換流程：
+切換流程（`lib/i18n/LanguageSwitcher.tsx › switchLang()`，兩種 mode 先做同一件事）：
 
 ```
-LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
-  → RSC 重 render → getTranslations() 讀新 cookie → 整頁字串換掉
+LanguageSwitcher click → document.cookie = `lang=xx; ...`
+  ├─ cookie mode（dashboard）：router.refresh()
+  │    → RSC 重 render → getTranslations() 讀新 cookie → 整頁字串換掉
+  └─ url mode（public 頁）：router.push(path.ts › localizedHref(basePath, lang))
+       → 換到對應 locale 的 URL；proxy 再把 cookie 對齊該 locale
 ```
 
-實作落地點：`lib/i18n/`（locales-meta、t.ts、client.tsx、LanguageSwitcher、locales/{zh-TW,zh-CN,en,ja}.ts）；Provider 接入點只有 `app/(dashboard)/layout.tsx`（repo 內唯一 mount `TranslationsProvider` 的地方）；`app/[locale]/sign-in/page.tsx` 等 dashboard 外的頁面只在 server 端呼 `getTranslations()`，不進 client context。
+兩種 mode 都寫 cookie，是為了讓 public 頁選過的語言在登入後被 dashboard 繼承。
+
+實作落地點：`lib/i18n/`（locales-meta、t.ts、path.ts、seo.ts、client.tsx、LanguageSwitcher、locales/{zh-TW,zh-CN,en,ja}.ts）＋ root 的 `proxy.ts`；Provider 接入點只有 `app/(dashboard)/layout.tsx`（repo 內唯一 mount `TranslationsProvider` 的地方）；`app/[locale]/sign-in/page.tsx` 等 dashboard 外的頁面直接讀 `lib/i18n/t.ts › dictionaries[locale]`（locale 來自 URL segment，不經 `getTranslations()`、不進 client context）。
 
 ### Part 2：Base currency 資料流
 
@@ -153,7 +167,7 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
 讀取路徑：所有顯示 amount 的 callsite → formatAmount(amount, group.base_currency)
 ```
 
-實作落地點：`actions/currency.ts#setBaseCurrency`、`app/(dashboard)/settings/currency/page.tsx`、`lib/currency.ts#formatAmount`。
+實作落地點：`actions/currency.ts › setBaseCurrency()`、`app/(dashboard)/settings/currency/page.tsx`、`lib/currency.ts › formatAmount()`。
 
 ### Part 3：Settings 結構
 
@@ -210,8 +224,9 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
 
 - LanguageSwitcher (pill) 在 `/settings` 主頁：4 個 segment 即點即切
 - LanguageSwitcher (footer) 在 `/sign-in`：低調 inline 文字
-- 切換不重整 URL、shareable link 不含 locale
-- 切換立即生效（無 reload，靠 `router.refresh()`）
+- **Dashboard（cookie mode）**：切換不動 URL、dashboard 的 shareable link 不含 locale；立即生效（無 reload，靠 `router.refresh()`）
+- **Public 頁（url mode）**：切換換到 `/en/sign-in` 這類 locale URL；每個選項是真的 `<a href>`（v1.5.11 #1063）——用 `router.push()` 的 `<button>` 對使用者正常，對 Googlebot 等於三個語系子樹沒有任何入口
+- 當前語系那一格既不是連結也不是按鈕（`aria-current="true"` 的 `<span>`）
 
 ### Base currency 設定
 
@@ -234,7 +249,7 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
 | Entity | 既有 / 新增 | 變更 |
 |---|---|---|
 | `OikosGroups.base_currency` | v0.17.0 既有 | enum，預設 `'twd'`；當前 epoch 無 record 時可改 |
-| Cookie `lang` | 既有 | 1 年 max-age、SameSite=Lax；proxy 寫入 |
+| Cookie `lang` | 既有 | 1 年 max-age、SameSite=Lax。**只在 public localized path 上由 `proxy.ts` 依 URL locale 寫入**；dashboard 的值來自 LanguageSwitcher 自己的 `document.cookie` |
 
 詳細欄位以 [lib/db/schema.ts](../../../lib/db/schema.ts) 為準。
 
@@ -257,8 +272,9 @@ LanguageSwitcher click → document.cookie = `lang=xx; ...` → router.refresh()
 
 - 任何頁面切 4 語都看到對應翻譯，無中文殘漏
 - 漏一個 key 在編譯期 TypeScript 報錯（不靠 runtime 偵錯）
-- 切換語系不重整 URL、shareable link 不含 locale
-- 日期格式跟 locale 切換（`Intl.DateTimeFormat`）
+- Dashboard 切換語系不動 URL、dashboard 的 shareable link 不含 locale
+- Public 頁切換語系換到對應 locale URL，且該選項在 HTML 裡是可爬的 `<a href>`
+- 日期格式跟 locale 切換（`lib/format-date.ts`，底層 `Intl.DateTimeFormat(locale)`）
 
 ### Base currency
 
