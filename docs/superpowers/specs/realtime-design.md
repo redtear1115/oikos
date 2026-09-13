@@ -26,7 +26,7 @@ Realtime 是 Supabase postgres_changes 接出來的事件流，本 spec 鎖定�
 
 ## 訂閱結構
 
-每個 group 開一個 channel：`group:${groupId}`，訂閱多張 table 的 INSERT / UPDATE / DELETE：
+每個 group 開一個 channel：`group:${groupId}`。多數 table 訂 `event: '*'`（INSERT / UPDATE / DELETE 全收），**但 `GroupBalance` 與 `OikosGroups` 只訂 `UPDATE`**——那兩張表的 row 由 group 建立時就存在、之後只會被改寫，不會新增或刪除。逐表的 event 與 filter 見下表：
 
 | Table | 用途 |
 |---|---|

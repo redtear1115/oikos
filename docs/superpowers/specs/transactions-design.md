@@ -70,7 +70,7 @@ Schema 走獨立 `Settlements` 表；軟刪除規則跟 Transaction 一致。
 
 ## Balance + 列表
 
-**關鍵 invariant**：列表用 UNION SQL，把 transactions 和 settlements 統一為 `kind: 'transaction' | 'settlement'`，cursor 用 `(transactedAt, createdAt)` 複合鍵。
+**關鍵 invariant**：列表用 UNION SQL，把三種來源統一為 `lib/db/queries/transactions.ts › FeedKind` = `'transaction' | 'settlement' | 'income'`（income row 的 `splitType` 為 null），cursor 用 `(transactedAt / settledAt / occurredAt, createdAt)` 複合鍵。
 
 Balance：每次寫入後**全量重算**，cache 在 `GroupBalance` table（per-group 單列）。`balance` 正數 = **B 欠 A**、負數 = **A 欠 B**（`lib/balance.ts` 開頭的 `Positive = member_b owes member_a` 為準）。實作 `lib/balance.ts` + `lib/db/queries/balance.ts`。
 
