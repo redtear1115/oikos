@@ -104,11 +104,13 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ### 架構
 
 - [product](product-design.md) — Tech stack / 整體架構 / Auth 分層 / Schema 設計原則
+- [domain-model](domain-model-design.md) — Entity 目錄與關係圖 / Balance 計算規則 / 分類色 token（自 `CLAUDE.md` 搬出，#1086）
 - [authorization](authorization-design.md) — 授權模型：查詢層不驗 membership、四層閘門（proxy / viewer / write context / payload 斷言）、「驗了新值沒驗被改的列」失效樣態（#1031 #1032）
 - [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語 cookie-based locale）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
 - [offline-browsing](offline-browsing-design.md) — PWA / Service Worker / opt-in 離線瀏覽
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
 - [conversion-analytics](conversion-analytics-design.md) — PostHog 轉換漏斗事件：入口頁（landing / migrate）→ 註冊 / 啟用追蹤 + 跨 OAuth 邊界歸因（維持 cookieless）
+- [observability](observability-design.md) — **分析數據前必讀**：觀測的結構性邊界（server/client 不 join、`platform` 只在 client、維度不回填）＋ 讀數據的紀律（自 `CLAUDE.md` 搬出，#1086）
 - [native-auth](native-auth-design.md) — Capacitor 原生殼的 Google OAuth：web vs custom scheme redirect_to、deep link 回跳、Supabase Redirect URLs `/**` 設定不變量（含 #866 踩雷紀錄）
 - [sign-in-with-apple](sign-in-with-apple-design.md) — Sign in with Apple（App Store 4.8 上架前置）：iOS native plugin `signInWithIdToken` / Android + web 走 OAuth 三路分支、native path 自補 attribution server action（#903）
 
