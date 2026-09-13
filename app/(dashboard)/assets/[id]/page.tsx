@@ -452,8 +452,16 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   const initialTxns = serializeTxns(txnRows)
 
+  // Same function, same window as the assets-list hero card (#1095) — one car
+  // must not report two different averages. `createdAt` is passed purely as the
+  // same-day ordering tie-break `computeAvgEcon` uses.
   const avgEcon = computeAvgEcon(
-    fuelLogs.map(f => ({ liters: f.liters, odometer: f.odometer, loggedAt: f.loggedAt })),
+    fuelLogs.map(f => ({
+      liters: f.liters,
+      odometer: f.odometer,
+      loggedAt: f.loggedAt,
+      createdAt: f.createdAt,
+    })),
   )
 
   // Serialize fuelLogs for client (Date → ISO string)

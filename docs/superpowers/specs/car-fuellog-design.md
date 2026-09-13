@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.3.0
 updates:
@@ -7,8 +7,9 @@ updates:
   - v0.4.0: Slice 2 — FuelLog + 購車雙寫 + NewCarForm 擴充（primaryUserId / fuelType / brand / model / year / color）
   - v0.8.1: AssetPickerSheet inline 分組 + carDetails brand/model/year/color polish
   - v0.11.4: AssetListItem per-type tint（#28）
+  - v1.6.0: avgFuelEcon 統一為「近 180 天距離加權」，詳情頁與 hero 卡共用同一函式；listFuelLogsForAsset 補 created_at tie-break（#1089 / #1095）
 related_specs: [aibutsu, transactions]
-related_issues: ["#28"]
+related_issues: ["#28", "#1089", "#1095"]
 ---
 
 # 車輛 & FuelLog
@@ -95,7 +96,7 @@ FAB 依 pathname 變身：
 | Q9 | 編輯 FuelLog → dedicated NewFuelLog sheet | UX 直覺對應「我在編輯一次加油事件」；不污染 AddSheet |
 | Q10 | action bar 三顆，FAB 隱藏 | 所有寫入動作集中在 action bar |
 | Q11 | NewFuelLog 只收 PayerToggle；desc auto-generated；default = `primaryUserId ?? viewer` | 跟 mockup 一致 |
-| Q12 | avgFuelEcon 視窗 = 近 6 個月 | 接近一次保養週期 |
+| Q12 | avgFuelEcon = 近 6 個月（180 天）**距離加權**平均：窗內總距離 ÷ 總公升，扣掉最早一筆的公升數（那桶油燒在量測區間之前）。窗的基準點是**今天**，不是最後一筆加油 | 6 個月接近一次保養週期。加權而非「每段 km/L 取算術平均」——算術平均讓省油的短程和耗油的長程等權重，會系統性高估；使用者付錢的是燒掉的公升數。基準點取今天是因為「平均油耗」指的是近期油耗，所以半年沒加油的車**應該**算不出平均（走 null 空狀態），而不是顯示一個陳年數字 |
 | Q13 | 第一筆 FuelLog km/L 顯示「—」 | 簡單；user 知道第一筆是基準 |
 | Q14 | 不存 econ，每次 query 即時算 | friend-test 規模 query cost 不痛 |
 | Q15 | `carDetails.fuelType` backfill NOT NULL DEFAULT '95' | 友 test 規模 default 95% 油車安全 |
@@ -111,10 +112,11 @@ FAB 依 pathname 變身：
 | 第一筆加油（沒上筆） | km/L 顯示「—」；hero「—」+ 副標「加第一筆油看油耗」 |
 | 編輯加油改了 odometer | 不存 econ，下次 query 自動重算 |
 | 倒退 odometer（user 輸錯） | DB 不擋；UI 顯示「—」（dist ≤ 0 fallback） |
-| 同日多筆加油 | 排序穩定（`logged_at + created_at` tie-break） |
+| 同日多筆加油 | 排序穩定（`logged_at + created_at` tie-break）；兩份 list query 用同一組 ORDER BY，平均油耗不隨抓取順序變動 |
+| 超過 180 天沒加油 | 平均油耗顯示「—」（無近期資料，非錯誤）；里程與上次加油日期照常顯示 |
 | 軟刪一筆中間的加油 | recalc 不算 deleted；後續筆「上一筆」自動跳過 |
 | 電車（`fuelType=electric`） | NewFuelLog 不可開；仍可關聯到電車記停車 / 過路費 |
-| 油車改電車 | hero avgFuelEcon 仍算歷史平均；action bar 隱藏 `[加油]` |
+| 油車改電車 | hero avgFuelEcon 仍算近 180 天平均（超窗即「—」）；action bar 隱藏 `[加油]` |
 | 購車 transaction 被軟刪 | `carDetails.purchasePrice` 不變（drift 允許）；hero 累計總額少這筆 |
 | `purchasePrice` 為空或 0 | 不建 auto-tx |
 | AddSheet 編輯 fuel transaction | 路由判斷 `fuelLogId IS NOT NULL` → 開 NewFuelLog |
@@ -124,7 +126,7 @@ FAB 依 pathname 變身：
 
 ## 實作落地點
 
-`actions/fuelLog.ts` / `lib/fuelEcon.ts`（`singleEcon()` 單次油耗、`computeAvgEcon()` 詳情頁平均）/ `lib/db/queries/fuelLog.ts`（`getCarHeroStats()` 另有一份 list hero 卡專用的 `avgFuelEcon` 計算，與 `computeAvgEcon()` 是兩份獨立實作）/ `lib/primaryUser.ts`（primaryUserId 翻譯 helper）
+`actions/fuelLog.ts` / `lib/fuelEcon.ts`（`singleEcon()` 單次油耗、`computeAvgEcon()` 平均油耗——**詳情頁與 hero 卡共用這一份**，#1095 收斂）/ `lib/db/queries/fuelLog.ts`（`getCarHeroStats()` 只抓 row，油耗算術一律委派 `lib/fuelEcon.ts`）/ `lib/primaryUser.ts`（primaryUserId 翻譯 helper）
 
 ---
 
@@ -133,7 +135,9 @@ FAB 依 pathname 變身：
 - 建立 car asset（purchasePrice > 0）→ 同 tx 內 INSERT Asset + CarDetails + CashTransaction（auto-tx，category=`transit`）
 - 加油（NewFuelLog）→ 同 tx 內 INSERT FuelLog + CashTransaction（`fuelLogId` 反向綁定）
 - 編輯 fuel transaction → 路由到 NewFuelLog（不開 AddSheet）
-- avgFuelEcon = 近 6 個月平均；hero 顯示 `toFixed(1)` km/L
+- avgFuelEcon = 近 6 個月（180 天）距離加權平均（總距離 ÷ 總公升，扣掉窗內最早一筆的公升數）；hero 顯示 `toFixed(1)` km/L
+- 同一台車、同一批資料，詳情頁與 hero 卡顯示**同一個數字**（同一個函式、同一個窗）
+- 近 180 天內不足 2 筆加油 → 平均油耗「—」；里程與上次加油日期不受窗影響
 - 第一筆加油 / 倒退 odometer → km/L 顯示「—」
 - 軟刪購車 tx → CarDetails purchase fields 不變；hero 累計減少
 - 油車改電車 → action bar 隱藏 [加油]；NewFuelLog 不可開；歷史平均仍算
