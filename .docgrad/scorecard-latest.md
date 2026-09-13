@@ -3,6 +3,11 @@
 > Round 8｜docgrad 1.3.1、rubric `f46f90cc`｜資料來源 `docgrad/converge` @ 453de28
 > round 1–4 為五維時代，總體分數不可與本輪比較
 
+> **⚠️ 語料範圍已於 round 9 變更（2026-09-13，#1087）：46 → 48 檔**——`docs_files` 納入 root 的
+> `PRODUCT.md`／`DESIGN.md`（條件式載入的必讀文件，先前完全不在語料內）。
+> **本張 round 8 scorecard 的每一個數字都量在 46 檔的舊語料上**，與 round 9 起的分數不可比較。
+> 分母變化與理由見 `.docgrad/history.jsonl` 的 round 9。
+
 本輪的觸發點是 main 合入四個 PR（#1077 docs 健檢腳本、#1078 自架字型、#1080 docgrad 收斂、
 #1082 授權／CSV 匯出兩份新 spec）。round 7 收官時六維全數達標，本輪要回答的是「合入之後還成立嗎」。
 

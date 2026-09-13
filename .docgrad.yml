@@ -1,5 +1,6 @@
 # .docgrad.yml — docgrad 設定（進版控，團隊共用）
 docs_dirs: [docs/]
+docs_files: [PRODUCT.md, DESIGN.md]
 entry_files: [CLAUDE.md]
 index_file: docs/superpowers/specs/INDEX.md
 exclude: [docs/superpowers/plans/, docs/superpowers/perf-baselines/]
