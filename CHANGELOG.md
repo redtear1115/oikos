@@ -18,7 +18,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **一個人記帳時，dashboard 上有自己的主畫面了（#1118）**：原本那塊位置放的是「邀請對方」的 banner，關掉之後只剩一行灰字，看不到任何金額。現在顯示當月總額與筆數；收入模式與雙人一樣。邀請功能維持在 設定 → 成員。
+
+### 技術變更
+
+- **solo 穩態收斂成一種（#1118 / #1119）**：`SoloBanner` 與 dashboard 上所有邀請 CTA 刪除，改由新的 `SoloMonthHero`（沿用 `monthlyStatsByCategory`，只在 solo 時查）填 hero slot；`MemberContext.hadPartner` 與 `ContextStrip` 的 partner-left 分支整組移除——`hadPartner` 讀當下的 `member_b`，在它要偵測的狀態下恆為 false，該分支從來沒有被渲染過。連帶清掉 `oikos_partner_left_dismissed` cookie 與 `oikos_solo_banner_dismissed` localStorage 這兩套 dismissal 機制。
 
 ## [1.5.12] - 2026-09-13
 

@@ -3,11 +3,10 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
 import { BrandHeader } from './BrandHeader'
 import { ModeTogglePlaceholder } from './ModeTogglePlaceholder'
 import { ContextStrip } from '@/app/(dashboard)/_components/ContextStrip'
-import { SoloBanner } from './SoloBanner'
+import { SoloMonthHero } from './SoloMonthHero'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { BalanceHero } from './BalanceHero'
@@ -37,8 +36,6 @@ const SettlementSheet = dynamic(() => import('./SettlementSheet').then((m) => m.
 const IncomeSheet = dynamic(() => import('./IncomeSheet').then((m) => m.IncomeSheet), { ssr: false })
 const TripSheet = dynamic(() => import('@/app/(dashboard)/trips/_components/TripSheet').then((m) => m.TripSheet), { ssr: false })
 
-const SOLO_BANNER_DISMISS_KEY = 'oikos_solo_banner_dismissed'
-
 /** Info every sheet hands back through onMutated so Dashboard can drive a
  *  success toast + the first-record card without each sheet owning its own
  *  toast state. `savedAmount` is the integer TWD value just written;
@@ -64,6 +61,13 @@ export interface DashboardProps {
   incomeMonthTotal: number
   incomeMonthCount: number
   recentIncomeLabel: string | null
+  /** Solo expense hero (#1118). Only summed when the viewer is solo — a duo
+   *  renders BalanceHero here and never reads these. */
+  expenseMonthTotal: number
+  expenseMonthCount: number
+  /** 'YYYY-MM' the two figures above were summed over; also what the hero
+   *  labels itself with, so figure and label cannot drift apart. */
+  expenseMonthKey: string
   pendings: PendingRow[]
   expensePendings: PendingExpenseRow[]
   feedDataPromise: Promise<DashboardFeedData>
@@ -78,7 +82,6 @@ export interface DashboardProps {
    *  the client and the collapse toggles don't cause a hydration mismatch. */
   initialHeroCollapsed: boolean
   initialIncludePending: boolean
-  initialPartnerDismissed: boolean
   initialTripCollapsed: boolean
 }
 
@@ -89,6 +92,9 @@ export function Dashboard({
   incomeMonthTotal,
   incomeMonthCount,
   recentIncomeLabel,
+  expenseMonthTotal,
+  expenseMonthCount,
+  expenseMonthKey,
   pendings,
   expensePendings,
   feedDataPromise,
@@ -98,7 +104,6 @@ export function Dashboard({
   rates = [],
   initialHeroCollapsed,
   initialIncludePending,
-  initialPartnerDismissed,
   initialTripCollapsed,
 }: DashboardProps) {
   const router = useRouter()
@@ -132,7 +137,7 @@ export function Dashboard({
   // visible when both sides are selected — matches how the user reads
   // those records. See `useDashboardReducer.ts` for the full state shape.
   const [state, dispatch] = useDashboardReducer()
-  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard, toast, bannerDismissed } = state
+  const { mode, modal, payerFilter, splitFilter, tripSheetOpen, fuelSheet, showFirstCard, toast } = state
 
   const [, startFuelLoad] = useTransition()
 
@@ -146,20 +151,6 @@ export function Dashboard({
     toastTimerRef.current = setTimeout(() => dispatch({ type: 'setToast', toast: null }), durationMs)
   }, [dispatch])
   useEffect(() => () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current) }, [])
-
-  // SoloBanner dismissal — persisted in localStorage, hydrated on mount.
-  // SSR renders the banner; on first client paint we may swap to the fallback hero.
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    dispatch({
-      type: 'setBannerDismissed',
-      dismissed: window.localStorage.getItem(SOLO_BANNER_DISMISS_KEY) === 'true',
-    })
-  }, [dispatch])
-  const handleDismissBanner = () => {
-    window.localStorage.setItem(SOLO_BANNER_DISMISS_KEY, 'true')
-    dispatch({ type: 'setBannerDismissed', dismissed: true })
-  }
 
   const setMode = useCallback((next: 'expense' | 'income') => dispatch({ type: 'setMode', mode: next }), [dispatch])
   const setPayerFilter = useCallback((next: DashboardPayer) => dispatch({ type: 'setPayerFilter', value: next }), [dispatch])
@@ -294,11 +285,10 @@ export function Dashboard({
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* L1: Brand identity */}
       <BrandHeader showTripButton={activeTrips.length === 0} onTripClick={() => dispatch({ type: 'openTripSheet' })} />
-      {/* L3: Contextual strip (offline / past-epoch / partner-left / active-trip) */}
+      {/* L3: Contextual strip (offline / past-epoch / active-trip) */}
       <ContextStrip
         activeTrips={activeTrips}
         baseCurrency={baseCurrency}
-        initialPartnerDismissed={initialPartnerDismissed}
         initialTripCollapsed={initialTripCollapsed}
       />
       {/* L2: Mode toggle — left-aligned */}
@@ -322,19 +312,16 @@ export function Dashboard({
           t={t}
         />
       )}
-      {isSolo ? (
-        bannerDismissed ? (
-          <div className="px-5 pt-3 pb-5">
-            <div className="text-xs flex items-center justify-between" style={{ color: 'var(--ink-3)' }}>
-              <span>{t.dashboard.soloHint}</span>
-              <Link href="/settings" className="underline" style={{ color: 'var(--ink-2)' }}>
-                {t.dashboard.inviteCta}
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <SoloBanner onDismiss={handleDismissBanner} />
-        )
+      {/* Hero slot. Only the expense side ever differed by member count: a
+          solo ledger has no balance to show, so it shows the month instead.
+          The income branch of BalanceHero never involved a partner, so solo
+          and duo share it. (#1118) */}
+      {isSolo && mode === 'expense' ? (
+        <SoloMonthHero
+          monthKey={expenseMonthKey}
+          total={expenseMonthTotal}
+          count={expenseMonthCount}
+        />
       ) : (
         <BalanceHero
           rawBalance={balance}

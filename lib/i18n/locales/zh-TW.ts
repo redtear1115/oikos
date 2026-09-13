@@ -334,8 +334,13 @@ export type Translations = {
   }
 
   dashboard: {
-    soloHint: string
-    inviteCta: string
+    /** Solo expense hero. `{month}` is the locale's own month name, resolved
+     *  at render with Intl (「9月」/ "September"), never string-concatenated. */
+    soloHero: {
+      monthLabel: string
+      /** `{count}` = number of expense records in the month. */
+      countLabel: string
+    }
     addExpense: string
     addIncome: string
     filterLabel: string
@@ -404,12 +409,10 @@ export type Translations = {
     modeToggleAriaLabel: string
   }
 
+  /** Invite-link sharing strings. Named for the dashboard banner that used to
+   *  own them (#1118 deleted it); the only caller now is Settings → 成員. */
   soloBanner: {
-    waiting: string
-    sendInviteHint: string
-    dismissAriaLabel: string
     generating: string
-    sendInvite: string
     sharedAndCopied: string
     copied: string
     /** Web Share API title — deliberately generic, no group/inviter name (privacy). */
@@ -1264,10 +1267,6 @@ export type Translations = {
       splitType: string
       notes: string
     }
-  }
-
-  contextStrip: {
-    partnerLeftLine: string
   }
 
   assets: {
@@ -2844,8 +2843,10 @@ export const zhTW: Translations = {
   },
 
   dashboard: {
-    soloHint: '目前是你一個人在記',
-    inviteCta: '邀請對方 →',
+    soloHero: {
+      monthLabel: '{month}記下',
+      countLabel: '{count} 筆',
+    },
     addExpense: '新增一筆',
     addIncome: '記一筆收入',
     filterLabel: '篩選',
@@ -2890,11 +2891,7 @@ export const zhTW: Translations = {
   },
 
   soloBanner: {
-    waiting: '帳本準備好了，邀請對方一起',
-    sendInviteHint: '把連結傳給對方',
-    dismissAriaLabel: '關閉提示',
     generating: '產生中…',
-    sendInvite: '傳送邀請',
     sharedAndCopied: '已分享，連結也已複製',
     copied: '已複製連結',
     shareTitle: '一起用 Futari 記帳',
@@ -3555,10 +3552,6 @@ export const zhTW: Translations = {
       splitType: '分攤',
       notes: '備註',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: '夥伴已離開帳本。之前的紀錄都還在。',
   },
 
   assets: {
