@@ -169,7 +169,7 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
   revalidatePath('/dashboard')
   revalidatePath('/records')
 
-  // Activation signal (#891): trip-end summary may be viewer's first record.
+  // Milestone signal (#891, not the activation metric — see #1127): trip-end summary may be viewer's first record.
   if (txResult.firstRecord) {
     await captureServer(user.id, 'first_record_created', { via: 'trip_summary' })
   }
