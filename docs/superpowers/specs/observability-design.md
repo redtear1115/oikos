@@ -4,8 +4,9 @@ status: shipped
 first_shipped_in: v1.2.0
 updates:
   - v1.5.11: 自 `CLAUDE.md` 搬入（入口檔固定 token 稅，#1086）；內容逐字保留，只改相對連結路徑
+  - v1.5.13: 補「`first_record_created` 不是活化指標」這條邊界（#1127）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086"]
+related_issues: ["#1018", "#1086", "#1127"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -26,6 +27,10 @@ related_issues: ["#1018", "#1086"]
 - **匿名訪客數是膨脹的**：cookieless 下每個 session 算新 person。已登入用戶走 identify 所以人數可靠。訪客絕對值不可用，只有同類頁面的**相對**比較有效。
 - **維度不回填**：`platform` 自 v1.5.7 部署起才有，`path` 自 v1.5.6 起。更早的事件永遠沒有，事後無法用 SQL 補。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
+- **`first_record_created` 不是活化指標，活化用 `record_created ≥ 1`。** 它的語意是「**viewer 記了自己付的那一筆**」——`isUserFirstNonDeletedRecord()`（`lib/analytics/server.ts`）數的是 `paidBy = viewer.id` 的列，所以**替伴侶記帳的人永遠不會觸發它**（#891 刻意如此）。那個語意對它原本的用途（#734 的啟用里程碑、`via` 分流）是對的，只是不等於活化。
+  - 證據：90 天內 `record_created ≥ 1` 有 17 人，`first_record_created` 只有 11 人——差的 6 人確實在用產品，卻在活化口徑下被算成沒活化。
+  - **失效的樣子不是查詢報錯，是活化率緩慢地、看起來很合理地往下走。** 雙人帳本愈多、其中一方主要替另一方記帳的比例愈高，分子就漏得愈多，而曲線沒有任何不連續。等到有人去追「為什麼活化率降了」，會先去查 onboarding，不會想到是口徑。
+  - 小樣本上兩個口徑會**看起來一樣**（2026-09 的新客群裡剛好都是 8 人），所以「我算過，沒差」不能當成安全的理由。
 
 ---
 

@@ -274,7 +274,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
   })
 
   revalidateAfterTransactionMutation({ assetId: row.assetId })
-  // Activation signal (#891): cron-confirmed occurrence may be viewer's first record.
+  // Milestone signal (#891, not the activation metric — see #1127): cron-confirmed occurrence may be viewer's first record.
   if (result.firstRecord) {
     await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
   }
@@ -367,7 +367,7 @@ export async function editAndConfirmPending(
   })
 
   revalidateAfterTransactionMutation({ assetId: finalAssetId })
-  // Activation signal (#891): edited-and-confirmed occurrence may be viewer's first record.
+  // Milestone signal (#891, not the activation metric — see #1127): edited-and-confirmed occurrence may be viewer's first record.
   if (result.firstRecord) {
     await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
   }

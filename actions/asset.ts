@@ -140,7 +140,7 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
   // cheap, and keeps the call site simple.
   revalidateAfterAssetMutation(null, { affectsRecords: true, affectsDashboard: true })
 
-  // Activation signal (#891): purchase pair may be the viewer's first record.
+  // Milestone signal (#891, not the activation metric — see #1127): purchase pair may be the viewer's first record.
   if (firstRecord) {
     await captureServer(viewer.id, 'first_record_created', { via: 'asset_purchase' })
   }

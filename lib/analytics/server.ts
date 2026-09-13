@@ -79,10 +79,18 @@ export async function captureServer(
  * the first time in `groupId`. Counts non-deleted rows where `paidBy = userId`;
  * caller fires `first_record_created` iff the result is true.
  *
- * Semantic matches actions/transaction.ts:122-126: activation = "the viewer
- * logged their own purchase". Pass `viewer.id` (not the row's `paidBy`); if
- * the viewer marked the partner as payer, this returns false — partner-as-
- * payer first does not activate the viewer (#891).
+ * Semantic: "the viewer logged their own purchase". Pass `viewer.id` (not the
+ * row's `paidBy`); if the viewer marked the partner as payer, this returns
+ * false — partner-as-payer first does not activate the viewer (#891).
+ *
+ * **That is not the activation metric.** `first_record_created` answers "did
+ * this user log a purchase of their own", which is narrower than "is this user
+ * using the product": someone who only ever records their partner's spending
+ * never fires it. Over 90 days, 17 people had `record_created` and 11 had
+ * `first_record_created` — the 6 in between are active users the narrow
+ * reading drops. Activation is `record_created >= 1`; this event stays for the
+ * milestone card and its `via` breakdown (#734). See
+ * docs/superpowers/specs/observability-design.md (#1127).
  *
  * Call inside the same DB transaction, AFTER the insert. Fire the event
  * outside the transaction so a slow network call doesn't extend tx duration.
