@@ -1,11 +1,12 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v1.1.0
 updates:
   - v1.1.1: 新增 Spendee / Honeydue / CWMoney 原生格式自動 parse（mapper + detector）；銀行對帳單 .xlsx 轉換模板；OFX 1.x/2.x + QIF parser（#585 #586）
-related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency]
-related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586"]
+  - v1.3.2: 新增 futari_generic——截圖→ChatGPT→CSV 產出的固定 header 格式，偵測 + 專屬 mapper（#839 #1094）
+related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency, migrate-pages]
+related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586", "#839", "#1094"]
 ---
 
 # CSV 匯入歷史紀錄
@@ -72,11 +73,19 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 | 分攤 split_type | **匯入時統一指定（單一規則）**；row-level 無法覆寫 | 來源 app 沒有 split 概念；強制 user 在預覽階段一次選定（all_mine / all_theirs / half / 50%） |
 | 預設付款人 | **整檔指定**，row-level 可由 `成員` 欄覆寫 | 與分攤同邏輯：能批量處理就批量處理；row-level 給個別覆蓋空間 |
 | 落地對象 | **僅 CashTransactions** + 收入落 **IncomeTransactions** | MVP 不匯入 settlement / asset / trip / recurring rule |
-| 章節歸屬 | **照 `transacted_at` 落到對應 epoch** | 包含過去 chapter；過去 chapter 仍然 read-only（[epoch-readonly](epoch-readonly-design.md)），但匯入是寫入動作，視為章節之外的歷史補登 |
+| 章節歸屬 | **一律落在當前 epoch**（`created_at = now()`） | 章節歸屬看 `created_at` 而非 `transacted_at`——匯入是「此刻記下一批歷史」，不是回到過去記帳。過去章節是凍結的（[epoch-readonly](epoch-readonly-design.md)），匯入不會、也不該把 row 塞進去 |
 | 重複偵測 | **Hash-based dedup**，碰撞時 user 選擇（跳過 / 雙寫 / 取代既有） | 重要：每次匯入都比對既有 row，避免再次匯入造成雙重紀錄 |
 | Dry-run | **預覽 = dry-run**，confirm 才寫入 DB；中途錯誤整批 rollback | atomic transaction，符合「不留半成品」 |
 | 匯入規模上限 | **單檔 ≤ 5000 列**（超過要拆檔） | UI preview 與 dedup 比對的可預期上界；保護 DB |
 | 回滾 | **MVP 提供 import_batch undo**（限同次匯入 24 小時內，未被後續編輯動到的 row） | 給「按錯」的安全網；不做長期歷史回滾 |
+
+> **不要把 `transacted_at` 當成章節邊界。** 這份 spec 曾有三處這樣寫（章節歸屬、早於建立日的
+> row、與 epoch-readonly 的互指），而 `actions/import.ts` 從來沒有實作過依日期挑 epoch 的邏輯——
+> 它只設 `transactedAt`，`createdAt` 走預設 `now()`。
+>
+> 失效的樣子不是報錯：feed 照常顯示那些 row，balance 讀 `created_at` 把它們整批漏掉，剛匯入的
+> 帳本 balance 顯示 0，**全程沒有任何錯誤訊息**。#1030 第一輪就是照舊版文件這樣寫而被 verifier
+> 判 REFUTED。理由全文見 `lib/db/queries/balance.ts` 開頭 docstring。
 
 ---
 
@@ -114,11 +123,21 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 |---|---|
 | 必填欄空 | 該 row 標記 `error`，預覽顯示紅字；user 必須在預覽編輯或捨棄該 row 才能繼續 |
 | 日期未來 > 7 天 | 該 row 標記 `warning`，預覽顯示橘字；user 確認後可繼續（容許「明天的房租已預扣」場景） |
-| 日期早於 group 建立日 | OK，照 `transacted_at` 落到對應 epoch；若該日期早於最早 epoch，落入該 epoch |
+| 日期早於 group 建立日 | OK。`transacted_at` 照收（不限制範圍），row 仍落在當前 epoch |
 | 金額 = 0 | 拒收（語意不明） |
 | 金額 > 9,999,999（base 幣別整數） | 拒收（保護 DB；user 應拆分） |
 | 重複 row（檔內自身重複） | 預覽顯示 `duplicate-in-file` 標記，user 選跳過 / 全留 |
 | 重複 row（檔 vs 既有 DB） | 走 dedup 流程，見下節 |
+
+---
+
+## futari_generic — 截圖→ChatGPT→CSV 的終點（v1.3.2, #839）
+
+沒有匯出功能的競品，其 `/migrate` 頁（`screenshotWorkflow` flag，見 [migrate-pages-design.md](migrate-pages-design.md)）把使用者導向「截圖 → 請 ChatGPT 整理成 CSV → 上傳」。那份產出的 header 是我們自己在提示詞裡指定的固定六欄（權威在 `migrate.chatgptWorkflow.prompt` 的文案，不是任何一份 code 常數），所以它是**可以被偵測的來源**，不需要使用者手動對欄位。
+
+**wizard 上沒有、也不該有 `futari_generic` 按鈕**——使用者不知道自己手上這份叫什麼，他只會按「通用 CSV」。因此 `'generic'` 不是一個來源，而是「我沒有簽名，請用我給的 headerMap」的標記：它是唯一一個即使由呼叫端明確指定、仍會再 sniff 一次 header 的值。認出 futari_generic 就改走專屬 mapper（`kind` 欄位決定收支，不看金額正負號）。其餘來源（honeydue / spendee / cwmoney / ofx / qif）指定了就不再被二次猜測。
+
+**這條 re-sniff 不存在時的失效長這樣（#1094）**：ChatGPT 產出的小寫 header 撞上 wizard 寫死的大小寫敏感 headerMap，三列進、零列出，畫面只顯示「沒有有效資料」。沒有例外、沒有任何一個字指向真正原因，所以使用者不會把它回報成這個問題——整條 SEO → migrate 頁 → 匯入的獲客漏斗在最後一步靜默斷掉。
 
 ---
 
@@ -128,8 +147,9 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 
 ### Step 1 — 上傳檔案
 
-- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）
-- 客戶端檔案大小上限：2 MB
+- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）——這是 **parser pipeline** 支援的範圍（`lib/csvImport/index.ts › processBuffer()` 的格式偵測）。匯入 wizard 的檔案選擇器四種全開（`lib/csvImport/accept.ts › IMPORT_ACCEPT`，掛在 `StepSource`）。
+  - **`/migrate` 的匿名預覽刻意只收 CSV**（`lib/csvImport/accept.ts › CSV_ONLY_ACCEPT`）——它只跑 `parseCsvText`，`.ofx` 進去不會報錯、會畫出一張沒有意義的預覽表。這是設計不是落後（#1088）
+- 檔案大小上限：**spec 原訂 client 端 2 MB，實際從未實作**——repo 內沒有任何大小檢查。大檔的行為目前是「瀏覽器 parse 到卡住為止」
 - 上傳後立即在 client 端 parse + 跑 schema validation；不過 schema 直接跳錯誤頁，無 server round-trip
 
 ### Step 2 — 預覽表格
@@ -236,18 +256,22 @@ sha256(
 - [inbox-layer](inbox-layer-design.md)：CSV 匯入**不走 Inbox**（Inbox 是 row-level 確認，CSV 一次大量 row，UX 不同；預覽 sheet 就是 CSV 的「Inbox 階段」）
 - [recurring](recurring-design.md)：匯入不建立 recurring rule，只匯入歷史 row
 - [solo-mode](solo-mode-design.md)：Solo group 強制 `all_mine`，預覽 UI 鎖定
-- [epoch-readonly](epoch-readonly-design.md)：匯入 row 照 `transacted_at` 落到對應 epoch（包含過去章節）；落地後仍受過去章節 read-only 保護（不可後續編輯）
+- [epoch-readonly](epoch-readonly-design.md)：匯入 row 一律落在當前 epoch（`created_at = now()`），不會進入過去章節；`transacted_at` 只是「這筆錢什麼時候花的」，不參與章節歸屬
 - [trip-multi-currency](trip-multi-currency-design.md)：MVP **不支援匯入到 trip**；trip 是 epoch-bound 子帳本，跨 trip 的歷史 row 沒有對應 trip_id 可填
 - [locale-currency](locale-currency-design.md)：匯入 row 一律 base 幣別整數；多幣別匯入延後
+- [csv-export](csv-export-design.md)：反向操作。「能帶走」與「能帶進來」是同一個立場的兩面
 
 ---
 
 ## 範本與下載
 
-- `/settings` →「從其他 app 匯入」頁面提供：
-  - 通用 CSV 範本下載（.csv，含 header + 3 列範例）
-  - Phase 2 Excel 轉換模板連結（v1.1.0 ship 時可能只有 CWMoney→Futari，#557）
-- 範本檔由 spec 文件描述格式，實際檔案放在 `public/import-templates/`
+範本的實際入口是 **migrate 頁**，不是匯入 wizard——`/settings` →「從其他 app 匯入」頁面**沒有**任何範本下載 UI（`app/(dashboard)/settings/import/` 底下查無）。
+
+| 範本 | 檔案 | 下載入口 |
+|---|---|---|
+| CWMoney Excel 轉換模板（#557） | `public/cwmoney-template.xlsx` | `lib/migrate/sources.ts` 的 `templateDownload`，由 `app/[locale]/migrate/[source]/page.tsx` 在 step 2 渲染。**registry 裡只有 cwmoney 這一個 source 有這個欄位** |
+| 銀行對帳單 3-sheet 模板（#585） | `public/bank-statement-template.xlsx` | **無**——檔案 ship 了、`scripts/build-bank-statement-template.py` 也在，但 repo 內沒有任何連結指向它。CHANGELOG 寫的「從 /migrate 入口下載」目前不成立 |
+| 通用 CSV 範本 | — | **不存在**。`public/` 底下沒有 `.csv` 範本，也沒有任何地方即時產生一份 |
 
 ---
 

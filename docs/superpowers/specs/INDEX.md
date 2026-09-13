@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-12
+last_updated: 2026-09-13
 ---
 
 # Specs — Index & Writing Guide
@@ -104,16 +104,20 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 ### 架構
 
 - [product](product-design.md) — Tech stack / 整體架構 / Auth 分層 / Schema 設計原則
-- [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語 cookie-based locale）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
+- [domain-model](domain-model-design.md) — Entity 目錄與關係圖 / Balance 計算規則 / 分類色 token（自 `CLAUDE.md` 搬出，#1086）
+- [authorization](authorization-design.md) — 授權模型：查詢層不驗 membership、四層閘門（proxy / viewer / write context / payload 斷言）、「驗了新值沒驗被改的列」失效樣態（#1031 #1032）
+- [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語；public 頁 URL prefix + dashboard cookie 的混合模型）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
 - [offline-browsing](offline-browsing-design.md) — PWA / Service Worker / opt-in 離線瀏覽
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
 - [conversion-analytics](conversion-analytics-design.md) — PostHog 轉換漏斗事件：入口頁（landing / migrate）→ 註冊 / 啟用追蹤 + 跨 OAuth 邊界歸因（維持 cookieless）
+- [observability](observability-design.md) — **分析數據前必讀**：觀測的結構性邊界（server/client 不 join、`platform` 只在 client、維度不回填）＋ 讀數據的紀律（自 `CLAUDE.md` 搬出，#1086）
 - [native-auth](native-auth-design.md) — Capacitor 原生殼的 Google OAuth：web vs custom scheme redirect_to、deep link 回跳、Supabase Redirect URLs `/**` 設定不變量（含 #866 踩雷紀錄）
 - [sign-in-with-apple](sign-in-with-apple-design.md) — Sign in with Apple（App Store 4.8 上架前置）：iOS native plugin `signInWithIdToken` / Android + web 走 OAuth 三路分支、native path 自補 attribution server action（#903）
 
 ### 記帳核心
 
 - [transactions](transactions-design.md) — 雙人記帳 CRUD / Settlement / Balance / /records FAB context-awareness
+- [csv-export](csv-export-design.md) — 支出紀錄整包帶走（入口在信任宣示頁）；刻意跨章節、刻意含 pending
 - [income](income-design.md) — IncomeTransactions + IncomeSheet（進帳獨立 ledger）
 - [structured-filter](structured-filter-design.md) — /records 結構化篩選器（日期 / 愛物 / 誰付 / 分攤 / 分類 + URL 分享）
 - [stats](stats-design.md) — /records 月度／分類統計（含 drill-down 從 stats row → feed filter chip）
@@ -161,6 +165,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 - 競品 / 用戶分析：[oikos-competitive-analysis.md](../oikos-competitive-analysis.md) · [user-feedback-analysis.md](../user-feedback-analysis.md)
 - 金流供應商研究（買斷/訂閱層預研）：[payment-provider-research.md](../payment-provider-research.md)
+- 跨產品外連 UTM 慣例：[utm-convention.md](../../utm-convention.md)（落地實作 `lib/utm.ts`）
 - 版本歷史：[CHANGELOG.md](../../../CHANGELOG.md)
 - 版本對應 issue：GitHub milestones
 - 實作進行中的 plans / scratch docs：`docs/superpowers/plans/`（**gitignored**，本地工作用，不進 spec）

@@ -1,3 +1,6 @@
+// OAuth 回跳的三路分支（web / iOS native / Android）與 Supabase Redirect URLs
+// 的設定不變量見 docs/superpowers/specs/native-auth-design.md 與
+// sign-in-with-apple-design.md。
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'

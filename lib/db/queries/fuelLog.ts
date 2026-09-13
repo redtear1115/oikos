@@ -3,6 +3,7 @@ import { fuelLogs } from '@/lib/db/schema'
 import { and, desc, eq, gte, isNull, lt, sql } from 'drizzle-orm'
 import { type EpochWindow } from './epoch'
 import type { FuelType } from '@/lib/fuel'
+import { computeAvgEcon } from '@/lib/fuelEcon'
 
 export interface FuelLogRow {
   id: string
@@ -17,7 +18,18 @@ export interface FuelLogRow {
 
 /**
  * List active fuel logs for an asset within the given epoch window, sorted by
- * loggedAt desc.
+ * `logged_at DESC, created_at DESC`.
+ *
+ * The `created_at` tie-break is required, not cosmetic: two fills on the same
+ * day are otherwise returned in whatever order Postgres feels like, and callers
+ * that treat `rows[0]` as "the latest fill" or drop the earliest row's liters
+ * (`computeAvgEcon`) then get a number that changes between identical requests
+ * with no error anywhere. Matches `listFuelLogsWithPrev` below exactly — the two
+ * must agree or the detail page and the hero card disagree again (#1095).
+ *
+ * `created_at` here is an *ordering* key ("which of the two was written down
+ * first"), not the chapter predicate — that is the separate `epochWindow`
+ * filter on the same column below.
  *
  * Chapter-scope: filters by `created_at` against `epochWindow` so that pinning
  * a past chapter shows only the fills logged during that chapter.
@@ -36,7 +48,7 @@ export async function listFuelLogsForAsset(
     .select()
     .from(fuelLogs)
     .where(and(...conditions))
-    .orderBy(desc(fuelLogs.loggedAt))
+    .orderBy(desc(fuelLogs.loggedAt), desc(fuelLogs.createdAt))
   return rows.map((r) => ({
     id: r.id,
     assetId: r.assetId,
@@ -112,44 +124,42 @@ export async function listFuelLogsWithPrev(
  * Hero card stats for a car asset on the assets list.
  *   latestOdometer: newest fuel log's odometer; falls back to initialOdometer
  *     when there are zero logs (still null if both unset).
- *   avgFuelEcon: chapter-scoped average km/L. Defined as
- *       (max_odometer - min_odometer) / SUM(liters of all logs except the
- *       earliest one).  The earliest log establishes the starting odometer
- *       but its liters happened *before* the measured distance, so we exclude
- *       it. Returns null when fewer than 2 logs exist within the chapter.
+ *   avgFuelEcon: distance-weighted km/L over the last 180 days, computed by
+ *     `computeAvgEcon` in `lib/fuelEcon.ts` — this function does no econ math
+ *     of its own (#1089). Returns null when fewer than 2 logs fall inside that
+ *     window.
+ *
+ * This is the same function, and therefore the same number, the asset detail
+ * page shows (#1095). Before that the hero card used an unwindowed ratio of
+ * totals and the detail page a 180-day mean of per-fill ratios, so one car
+ * reported two averages.
+ *
+ * Note the asymmetry: `latestOdometer` / `lastFuelDate` stay chapter-scoped and
+ * unwindowed (they describe the car, not recent economy), while `avgFuelEcon`
+ * is additionally narrowed to 180 days. A car parked for half a year keeps its
+ * odometer and last-fuel date but has no average — intended, see #1095.
  *
  * Done in JS off listFuelLogsForAsset to keep the SQL trivially auditable;
  * N is small (a handful of fill-ups per car for the foreseeable future).
  *
  * Chapter-scope: takes an `epochWindow` and threads it through to
  * `listFuelLogsForAsset`, so a pinned past chapter's stats reflect only the
- * fills that happened in that chapter.
+ * fills that happened in that chapter. Combined with the 180-day window, "the
+ * earliest log" whose liters get excluded is the earliest fill that is both in
+ * the chapter and inside the window — not all-time.
  */
 export async function getCarHeroStats(
   assetId: string,
   initialOdometer: number | null,
   epochWindow: EpochWindow,
 ): Promise<{ latestOdometer: number | null; avgFuelEcon: number | null; lastFuelDate: Date | null }> {
-  const logs = await listFuelLogsForAsset(assetId, epochWindow)  // desc by loggedAt
+  const logs = await listFuelLogsForAsset(assetId, epochWindow)  // desc by loggedAt, createdAt
   if (logs.length === 0) {
     return { latestOdometer: initialOdometer, avgFuelEcon: null, lastFuelDate: null }
   }
   const latestOdometer = logs[0].odometer
   const lastFuelDate = logs[0].loggedAt
-  if (logs.length < 2) {
-    return { latestOdometer, avgFuelEcon: null, lastFuelDate }
-  }
-  // logs are desc; earliest is logs[logs.length - 1]
-  const earliest = logs[logs.length - 1]
-  const distance = latestOdometer - earliest.odometer
-  // Exclude earliest log's liters (it's the baseline fill-up).
-  const litersSum = logs
-    .slice(0, logs.length - 1)
-    .reduce((acc, l) => acc + parseFloat(l.liters), 0)
-  if (distance <= 0 || litersSum <= 0) {
-    return { latestOdometer, avgFuelEcon: null, lastFuelDate }
-  }
-  return { latestOdometer, avgFuelEcon: distance / litersSum, lastFuelDate }
+  return { latestOdometer, avgFuelEcon: computeAvgEcon(logs), lastFuelDate }
 }
 
 /**

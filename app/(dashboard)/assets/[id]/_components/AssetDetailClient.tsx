@@ -77,6 +77,13 @@ export function AssetDetailClient({
   const [fuelSheetMode, setFuelSheetMode] = useState<'create' | 'edit'>('create')
   const [fuelSheetInitial, setFuelSheetInitial] = useState<NewFuelLogInitial | null>(null)
 
+  // #1097 — newest fill-up in this chapter, or null when there are none. Taken
+  // as an explicit max rather than initialFuelLogs[0] so the hero subtitle does
+  // not silently depend on the query's ORDER BY.
+  const lastFuelAt = initialFuelLogs.length === 0
+    ? null
+    : initialFuelLogs.reduce((a, b) => (a.loggedAt >= b.loggedAt ? a : b)).loggedAt
+
   // Build a map of fuelLogId → fuelLog for timeline row rendering
   const fuelLogMap = new Map(initialFuelLogs.map(f => [f.id, f]))
   // lastOdometer: most recent entry (array is DESC order from server), fallback to initialOdometer
@@ -179,7 +186,7 @@ export function AssetDetailClient({
         monthAmount={monthAmount}
         totalAmount={totalAmount}
         avgEcon={avgEcon}
-        fuelLogCount={initialFuelLogs.length}
+        lastFuelAt={lastFuelAt}
       />
 
       {/* #826 — licence plate is encrypted at rest; tap 「顯示」 to decrypt via

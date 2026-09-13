@@ -1,11 +1,8 @@
 import { getCurrentUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { db } from '@/lib/db/client'
-import { cashTransactions, incomeTransactions, settlements } from '@/lib/db/schema'
-import { and, count, eq, gte, isNull } from 'drizzle-orm'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { listActiveTrips } from '@/lib/db/queries/trips'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { currentEpochHasRecords, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { parseTripCurrencySnapshot } from '@/lib/trip-currency'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
 import type { RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -18,31 +15,16 @@ export default async function CurrencySettingsPage() {
   if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
 
-  const epochStart = group.currentEpochStartedAt
-  const epochStartDate = epochStart.toISOString().slice(0, 10)
-
-  const [cashRow, incomeRow, settlementRow, rawRates, rawActiveTrips] = await Promise.all([
-    db.select({ n: count() }).from(cashTransactions).where(and(
-      eq(cashTransactions.groupId, group.id),
-      gte(cashTransactions.transactedAt, epochStart),
-      isNull(cashTransactions.deletedAt),
-    )),
-    db.select({ n: count() }).from(incomeTransactions).where(and(
-      eq(incomeTransactions.groupId, group.id),
-      gte(incomeTransactions.occurredAt, epochStartDate),
-      isNull(incomeTransactions.deletedAt),
-    )),
-    db.select({ n: count() }).from(settlements).where(and(
-      eq(settlements.groupId, group.id),
-      gte(settlements.settledAt, epochStart),
-      isNull(settlements.deletedAt),
-    )),
+  // Same question, same answer as the server action's guard — see
+  // `currentEpochHasRecords`. Asking it here rather than counting rows inline is
+  // what keeps the disabled selector honest about what the action will do.
+  const [hasRecords, rawRates, rawActiveTrips] = await Promise.all([
+    currentEpochHasRecords(group),
     listRatesForGroup(group.id),
     epochWindow.epochId
       ? listActiveTrips(group.id, epochWindow.epochId)
       : Promise.resolve([]),
   ])
-  const recordCount = Number(cashRow[0].n) + Number(incomeRow[0].n) + Number(settlementRow[0].n)
 
   const rates: RateEntry[] = rawRates.map((r) => ({
     fromCurrency: r.fromCurrency,
@@ -66,7 +48,7 @@ export default async function CurrencySettingsPage() {
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       <CurrencySettings
         baseCurrency={group.baseCurrency}
-        canChangeBase={recordCount === 0}
+        canChangeBase={!hasRecords}
         groupDefaultRatioA={group.defaultSplitRatioA ?? null}
         activeTrips={activeTrips}
         rates={rates}

@@ -1,9 +1,9 @@
 ---
-last_updated: 2026-09-12
+last_updated: 2026-09-13
 status: planned
 related_specs: [solo-mode, trip-multi-currency, epoch-readonly, invite-existing-group, transactions]
 depends_on: [solo-mode, trip-multi-currency]
-related_issues: ["#1030", "#1031", "#1033"]
+related_issues: ["#1030", "#1031", "#1033", "#1103"]
 ---
 
 # Solo × 旅行 — 當帳本裡出現不是伴侶的人
@@ -68,7 +68,7 @@ related_issues: ["#1030", "#1031", "#1033"]
 
 ### 2. 共旅者的債不進 `GroupBalance.balance`
 
-**`GroupBalance.balance` 是一個帶符號的純量，語意恰好是「member_b 欠 member_a 多少」**（正負定義見 `lib/db/schema.ts` 與 [transactions](transactions-design.md)）。一個數字只能表達兩個人之間的一個方向。它結構上無法承載「阿傑欠我 300、小美欠我 500」。
+**`GroupBalance.balance` 是一個帶符號的純量，只能表達伴侶兩人之間的一個方向**（正負號語意的權威在 `lib/balance.ts › transactionDelta()` 上方的 docstring；另見 [transactions](transactions-design.md)）。它結構上無法承載「阿傑欠我 300、小美欠我 500」。
 
 所以共旅者的債需要自己的表達方式，活在 trip 的層級。主帳本的 balance 繼續只講伴侶之間的事。
 
@@ -96,6 +96,8 @@ related_issues: ["#1030", "#1031", "#1033"]
 - 「這個位子空著，歡迎任何持有邀請的人進來」（權限）
 
 security-reviewer 指出後者是 #1031 / #1032 可達且永久的原因：**每一個分手後的 group 都無限期停在「accept 路徑視為可加入」的狀態，而擁有者無法關門。**
+
+> 可達性本身已於 v1.5.9 / v1.5.10 關掉——accept 端加了「鑄造者仍是成員」檢查（#1031，`actions/invite.ts`），`leaveGroup` 與 `removePartner` 都撤銷未接受的邀請（`actions/membership.ts`）。但**那是堵住路徑，不是拆開語意**：`member_b IS NULL` 仍然一個欄位扛兩件事，下面這條決定還沒實作。
 
 **決定：狀態與權限分離。** 「是不是單人帳本」繼續由 `member_b IS NULL` 推導；「要不要接受新伴侶」成為一個擁有者可控的獨立旗標，預設關閉。
 
@@ -156,18 +158,20 @@ balance 回答的是「我們**現在**之間怎麼樣」，而章節的定義�
 | 共旅者在 trip 結束後 | 保留在該 trip 的歷史裡，不進入任何 group-level 清單 | trip-scoped，見 Locked decision 1 |
 | duo group 的 trip 只有一人參加 | 允許。trip 的參與者與 group 的成員是兩個獨立概念 | 出團不是 solo 專屬情境 |
 
+> 兩列「移除伴侶」的行為**已於 v1.5.10 隨 #1033 實作**（`actions/membership.ts › removePartner()`：active trip 時 reject、關舊開新 epoch、撤銷未接受的邀請）。**唯一沒跟著落地的是「門自動關上」的那個旗標**——目前靠 accept 端的「鑄造者仍是成員」檢查擋住，不是靠一個擁有者可控的狀態。其餘各列或是既有行為、或仍待 v1.6 落地。
+
 ---
 
 ## 前置條件
 
 這份 spec 的實作**不能在 #1030 之前開始**。依序：
 
-1. **#1030** — balance 公式與 pending delta 加 epoch 範圍，並依 Locked decision 5 採「當前章節」語意
-2. **拿掉 `member_b IS NULL → 0` 短路** — #1030 完成後才安全
-3. **#1033** — remove-partner，依 Locked decision 4 的關門語意
-4. **v1.6 出團** — 共旅者 entity + trip-level 債務表達
+1. ✅ **#1030** — balance 公式與 pending delta 加 epoch 範圍，並依 Locked decision 5 採「當前章節」語意。**v1.5.10 已 ship**（實作與理由見 `lib/db/queries/balance.ts` 開頭 docstring；邊界用 `created_at` 不是 `transacted_at`）
+2. ⬜ **拿掉 `member_b IS NULL → 0` 短路** — #1030 完成後才安全。**尚未做**：短路仍在 `lib/db/queries/balance.ts` 的兩段 inline SQL 裡
+3. ✅ **#1033** — remove-partner，依 Locked decision 4 的關門語意。**v1.5.10 已 ship**（`actions/membership.ts › removePartner()`：關舊開新 epoch、active trip 時擋下、撤銷未接受的邀請）；但 Locked decision 4 的「狀態／權限分離旗標」本身還沒進 schema
+4. ⬜ **v1.6 出團** — 共旅者 entity + trip-level 債務表達
 
-#1031 / #1032（授權修補）與上列平行，不互相阻擋。
+#1031 / #1032（授權修補）與上列平行，不互相阻擋；兩者已於 v1.5.9 ship。
 
 > balance 是核心正確性。#1030 與短路移除完成後，必須跑獨立的 post-implementation 驗證，不以測試通過代替。
 

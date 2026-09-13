@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-import type { MigrateSource } from '@/lib/csvImport'
+import { CSV_ONLY_ACCEPT, type MigrateSource } from '@/lib/csvImport'
 import { track } from '@/lib/analytics/track'
 import { useCsvPreview } from '@/lib/migrate/useCsvPreview'
 import { CsvFileUploadWidget } from '@/components/CsvFileUploadWidget'
@@ -68,6 +68,11 @@ export function MigrateTool({ t, signInHref, hint }: Props) {
         buttonText={t.upload.button}
         loadingText={t.upload.parsing}
         retryText={t.upload.retry}
+        // Stated explicitly even though it matches the widget default: this
+        // preview runs `parseCsvText` only (`useCsvPreview`), so unlike the
+        // signed-in wizard it must NOT offer .ofx / .qif — those would parse
+        // into a nonsense table instead of failing.
+        accept={CSV_ONLY_ACCEPT}
         size="md"
         icon={
           <div

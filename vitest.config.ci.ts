@@ -3,7 +3,8 @@ import baseConfig from './vitest.config'
 
 // CI variant of the test run (`npm run test:ci`).
 //
-// `__tests__/actions/**` and `__tests__/queries-trips.test.ts` are *integration*
+// `__tests__/actions/**`, `__tests__/queries-trips.test.ts` and
+// `__tests__/queries-fuelLog.test.ts` are *integration*
 // tests: they load `.env.local` themselves and talk to the real dev Supabase
 // Postgres, throwing in `beforeAll` when `DATABASE_URL` is missing. That throw is
 // deliberate — locally a silent skip would let DB regressions slip through — but
@@ -16,7 +17,11 @@ export default mergeConfig(
   baseConfig,
   defineConfig({
     test: {
-      exclude: ['__tests__/actions/**', '__tests__/queries-trips.test.ts'],
+      exclude: [
+        '__tests__/actions/**',
+        '__tests__/queries-trips.test.ts',
+        '__tests__/queries-fuelLog.test.ts',
+      ],
     },
   }),
 )

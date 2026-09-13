@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.1.0
 updates:
@@ -28,7 +28,7 @@ related_issues: []
 | 加密 | AES-256-GCM in Server Actions | key 在 Vercel env，DB 只存 ciphertext |
 | Real-time | Supabase Realtime postgres_changes | partner 異裝置變動立即反應 |
 | PWA | 是 | 加到主畫面；離線瀏覽見 [offline-browsing](offline-browsing-design.md) |
-| i18n | 自製字典 + cookie-based locale | 4 語（zh-TW / zh-CN / en / ja）；見 [locale-currency](locale-currency-design.md) |
+| i18n | 自製字典 + 混合 locale：public 頁走 URL prefix `/[locale]`、dashboard 讀 `lang` cookie | 4 語（zh-TW / zh-CN / en / ja）；分岔點 `lib/i18n/path.ts › isPublicLocalizedPath()`，細節見 [locale-currency](locale-currency-design.md) |
 
 dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
@@ -63,6 +63,8 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 新增 page / layout 用 `getCurrentUser()`（in `lib/supabase/server.ts`），不要再呼叫 `auth.getUser()`。
 
+上表是**認證**（你是誰）該打哪個 API。**授權**（你能碰哪一本帳）是另一件事——四層閘門、查詢層刻意不驗 membership、以及編輯類 action 最容易漏的那個檢查，見 [authorization](authorization-design.md)。
+
 ---
 
 ## 3. 資料模型
@@ -71,9 +73,9 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 
 - **ID**：uuid，預設 `gen_random_uuid()`
 - **時間**：`timestamptz`
-- **金額**：`integer`（台幣，無小數）
+- **金額**：`integer`，單位依 group `base_currency`——TWD / CNY / JPY 無小數，**USD 以分儲存**（1.50 USD = `150`）。權威 `lib/currency.ts › currencyPrecision()`；見 [locale-currency](locale-currency-design.md)
 - **軟刪除**：Transaction / Settlement / FuelLog / Asset 用 `deleted_at`
-- **不支援 update**：「編輯」= soft delete + insert，同一 DB transaction
+- **不支援 update**：「編輯」= soft delete + insert，同一 DB transaction（規則詳見 `CLAUDE.md`「編輯模式」段）
 - **欠款計算**：每次寫入後全量重算，cache 在 `GroupBalance` table
 - **命名**：PascalCase；避開 SQL reserved word（Group → OikosGroups、Transaction → CashTransactions）
 
@@ -93,7 +95,7 @@ dev / prod 是獨立的兩個 Supabase project（migration 需兩邊都跑）。
 - `IncomeTransactions`（進帳，平行於 CashTransactions，見 [income](income-design.md)）
 - `InvoiceCredentials`（加密驗證碼，見 [cloud-invoice](cloud-invoice-design.md)）
 
-Balance 計算規則詳見 `CLAUDE.md`「Balance 計算規則」段；實作在 `lib/balance.ts` + `lib/db/queries/balance.ts`。
+Balance 計算規則詳見 [domain-model](domain-model-design.md)「Balance 計算規則」段；實作在 `lib/balance.ts` + `lib/db/queries/balance.ts`。
 
 ---
 

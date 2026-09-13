@@ -78,6 +78,16 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
       {
+        // Self-hosted woff2 (#978). next/font used to emit these under
+        // /_next/static/media/, which Next serves immutable for us; serving them
+        // from public/ means we have to say so ourselves, or every repeat visit
+        // revalidates 105 font chunks. Filenames come from Google and change
+        // whenever the font revision does, so a regeneration ships new names
+        // rather than new bytes under an old name.
+        source: "/fonts/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         // OG images change occasionally (rendered by scripts/og/); a week of
         // CDN caching is enough — most social crawlers re-fetch on share anyway.
         // Enumerated because path-to-regexp can't repeat a param without

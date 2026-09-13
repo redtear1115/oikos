@@ -15,7 +15,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.5.11** — 完整版本歷史見 [CHANGELOG.md](CHANGELOG.md)
+**Latest released: v1.5.12** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
 
 ## Backlog / 未釋出版本
 
@@ -48,49 +48,12 @@ Realtime：Client subscribes → React state mutation
 - DB queries：`lib/db/queries/`
 - Validators：`lib/validators.ts`
 - Realtime：`app/(dashboard)/_components/RealtimeProvider.tsx`
-- i18n：`lib/i18n/`（server `getTranslations()` → dashboard layout `<TranslationsProvider>` → client `useTranslations()`；cookie-based locale，4 語）
+- i18n：`lib/i18n/`（server `getTranslations()` → dashboard layout `<TranslationsProvider>` → client `useTranslations()`；4 語。public 頁走 URL prefix `app/[locale]` 並寫入 locale cookie，dashboard 讀該 cookie——`proxy.ts › isPublicLocalizedPath()` 是分岔點）
 - Migrate（競品搬遷 SEO 頁）：`lib/migrate/sources.ts`（source registry：competitor facts + comparison + `screenshotWorkflow` flag）→ 單一動態路由 `app/[locale]/migrate/[source]/page.tsx`；sitemap / cross-link / JSON-LD 全部自動衍生。非匯出 App 走截圖→ChatGPT→CSV（`futari_generic` parser，見 `lib/csvImport/`）。spec: [migrate-pages-design.md](docs/superpowers/specs/migrate-pages-design.md)
 - Schema：`lib/db/schema.ts`
 - Migrations：`drizzle/`
 - Specs：`docs/superpowers/specs/`
-- 觀測：Sentry 錯誤追蹤（client `instrumentation-client.ts`／server `sentry.server.config.ts`＋edge `sentry.edge.config.ts`，由 `instrumentation.ts` 的 `register()` + `onRequestError` 載入；`next.config.ts` 以 `withSentryConfig` 包裹）＋ PostHog 分析（`app/providers.tsx`）。皆只在 `NODE_ENV === 'production'` 送出。**做數據分析前先讀下面「觀測的邊界」。**
-
-### 觀測的邊界（分析前必讀）
-
-> 這幾條是結構性限制，不是資料不足。不知道的話會算出看似合理、實際無意義的數字——已經各發生過一次（#1018）。
-
-- **server 與 client 事件不 join**：`captureServer`（`lib/analytics/server.ts`）用 userId 當 distinct_id；client 在 `person_profiles: 'identified_only'` + `persistence: 'memory'`（cookieless）下是匿名 id。跨兩邊的漏斗**算不出來**，單邊分析才成立。**症狀是查詢靜默回 0 筆、沒有任何錯誤**——那是結構限制，不是你 SQL 寫錯，也不是資料不足。
-  - **例外：若兩邊事件都帶同一個業務 key，用那個 key 配對就能繞過 person 斷裂。** person 不通不代表事件無法關聯。實例：`invite_created` 與 `partner_joined` 都帶 `group_id`，藉此算出「建立群組 → 夥伴加入」的時間差（#1017），那是純 person join 拿不到的。**放棄之前先找有沒有共同的業務 key。**
-- **`platform` 只在 client 事件上**：`detectPlatform()`（`lib/platform.ts`）在 SSR 回 `null`（server render 沒有平台可言）。server 端的 `signed_in` / `signed_up` 要改用 `path`（`web_oauth` / `ios_native`）分辨。所以「iOS 殼使用者的登入成功率」這類跨維度問題無解。
-- **匿名訪客數是膨脹的**：cookieless 下每個 session 算新 person。已登入用戶走 identify 所以人數可靠。訪客絕對值不可用，只有同類頁面的**相對**比較有效。
-- **維度不回填**：`platform` 自 v1.5.7 部署起才有，`path` 自 v1.5.6 起。更早的事件永遠沒有，事後無法用 SQL 補。
-- **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
-
-### 讀數據的紀律
-
-> 2026-09-12 一天之內有六個結論被推翻。**沒有一個是算錯數字。**
-
-**第 0 條先做，它不需要判斷力：引用任何事件指標之前，先 grep 它的發送點。**
-
-不是問「這個數字代表什麼」，是問「這行 `track()` 在哪、什麼條件下會跑」。實例：`landing_cta_clicked` 全站只有 `app/[locale]/_landing/LandingCtaLink.tsx:45` 一處發送，migrate 頁的 header 是裸 `<Link>`——所以被引用一整天的「migrate 頁 CTA 轉換率 26% vs 6.5%」，量的其實是「訪客願不願意退回首頁再點一次」。一次 grep、10 秒就能發現。
-
-這條和下面三條性質不同：下面三條要你**在對的時機想起來**，而人不會知道自己正處在該用它的時機；第 0 條無條件執行，所以它不會失效。它擋掉的也是最貴的錯——不是讀錯數字，是**數字根本不是那個量**，而且那種錯沒有任何內部矛盾會讓人起疑。
-
-其餘三條：
-
-1. **極端值（0 / 1 / 100%）先問預期值。** 極端值最像洞見，也最常是誤讀。`import_completed` 90 天只有 1 筆看起來像功能壞了，實際上那個頁面從來不以它為 KPI（見 [PRODUCT.md](PRODUCT.md) 的 Surface Intents）。先問「這個數字本來該長什麼樣」，再問它為什麼偏離。
-2. **看到百分比，先還原成分子分母。** 分子是個位數或十位數時，任何比例都是雜訊。「手機 CTR 3.05% vs 桌機 6.20%」看起來像腰斬，實際是 8/262 vs 8/129，Fisher exact **p = 0.175**。`3.05%` 有三位有效數字、讀起來像精密測量——**百分比這個呈現格式本身隱藏了脆弱性**。同一件事寫成「262 次曝光只有 8 個人點」，任何人都會先問「8 個人夠判斷嗎」。
-3. **下結論前，檢查手上是否已有能否證它的資料。** 不是缺資料，是資料在手上卻沒被用進判斷。
-
-新增測量點會製造一個**看起來像成效的斷層**（例：#1027 補上 migrate 頁的 CTA 之後，`landing_cta_clicked` 會跳升，那不是改善，是終於有東西可以量了）。跨部署的前後比較一律無效，基準要從部署日重算。
-
-### Balance 計算規則
-
-- 金額單位依 base currency 而異：TWD / CNY / JPY 為整數（無小數）；USD 以 *100 儲存為整數（即 1.50 USD 存為 150）。Balance 計算永遠看 base 幣別的 raw integer 值。
-- Base currency 預設 TWD（可選 TWD / CNY / USD / JPY），當前 epoch 無 record 時可改
-- 每次寫入後全量重算，cache 在 `GroupBalance`
-- 計算實作：`lib/balance.ts` + `lib/db/queries/balance.ts`
-- GroupBalance 欄位 `balance`：`> 0` = member_b 欠 member_a；`< 0` = member_a 欠 member_b
+- 觀測：Sentry 錯誤追蹤（client `instrumentation-client.ts`／server `sentry.server.config.ts`＋edge `sentry.edge.config.ts`，由 `instrumentation.ts` 的 `register()` + `onRequestError` 載入；`next.config.ts` 以 `withSentryConfig` 包裹）＋ PostHog 分析（`app/providers.tsx`）。皆只在 `NODE_ENV === 'production'` 送出。**做數據分析前必讀 [observability-design.md](docs/superpowers/specs/observability-design.md)**——觀測的結構性邊界（症狀是查詢靜默回 0 筆、沒有任何錯誤，不是你 SQL 寫錯）與讀數據的紀律（第 0 條：引用任何事件指標前，先 grep 它的發送點）都在那裡。
 
 ### 編輯模式
 
@@ -100,75 +63,11 @@ Realtime：Client subscribes → React state mutation
 
 ## Domain Model 速查
 
-> Schema 真相在 `lib/db/schema.ts`，這裡只說「entity 是什麼 + 怎麼接」。
+Entity 目錄、Entity 關係、Balance 計算規則、分類色 token 見 [domain-model-design.md](docs/superpowers/specs/domain-model-design.md)。
 
-### 主要 entity
+---
 
-- **`OikosGroups`（Group）** — 兩人帳本本體。`member_a` notNull / `member_b` nullable（solo 模式 = `member_b IS NULL`）。`current_epoch_started_at` 標記目前章節起點；`default_split_ratio_a` 為 group 預設依比例分；`guardian_beta_enabled` 控制守護模組可見性（單一閘門 `lib/guardian.ts#canAccessGuardian`，將來付費層 cut-over 只動該函式）；`base_currency` 為 group 主體幣別（TWD/CNY/USD/JPY，當前 epoch 無 record 時可改）。
-- **`Profiles`（OikosUser）** — mirror `auth.users.id` 的使用者 profile（displayName / avatar / `default_split_type`）。
-- **`GroupEpochs`** — 關係章節歷史。每個 group 同時間恰好一筆 `endedAt IS NULL`（current epoch）；swap 不開新 epoch、leave 才會關舊開新。`/records` / stats / dashboard 預設只看當前 chapter，`/past-times` 翻歷史。
-- **`CashTransactions`** — 核心支出紀錄。`group_id` + `paid_by` + `amount`（base 幣別整數）+ `split_type`（`all_mine` / `all_theirs` / `half` / `weighted`）+ `category` + optional `asset_id` / `fuel_log_id` / `trip_id`。`status: 'settled' | 'pending'`（pending 不計入 balance）。多幣別 record 另存 `original_currency` / `original_amount` / `rate_snapshot`（NULL = base native）；balance 計算永遠看 base 幣別 `amount`。
-- **`IncomeTransactions`** — 進帳紀錄。`recipient_id` + `category`（獨立 income category）+ optional `asset_id`；不進 balance。
-- **`Settlements`** — 還款紀錄。`paid_by` 給對方的金額，反向影響 balance。強制 base 幣別。
-- **`GroupBalance`** — balance cache（per-group 單列）。`balance` `> 0` = member_b 欠 member_a，`< 0` = member_a 欠 member_b；每次寫入後由 `lib/balance.ts` 全量重算；幣別無感（永遠 base 幣別整數）。
-- **`CurrencyRates`** — ⚠️ **Deprecated since v0.17.4 (#410)**。Trip-scoped 匯率已移入 `Trips.rate_snapshot`（free-text code + rate entries）；此表僅為相容舊 trip 資料保留，新 trip 不再寫入。見 `lib/db/schema.ts`。
-- **`Trips`** — 旅行子帳本。`epoch_id` notNull（**強制單一 epoch**：trip 不可跨章節）、`start_date >= currentEpochStartedAt`；`default_currency` 為 records 表單 currency selector 預設值；`status: 'active' | 'ended' | 'archived'`。`leaveGroup` 若有 active trip 則 reject「請先結束旅行」。
-- **`TripExpenses`** — 旅行隔離帳本（issue #42）。`trip_id` + `paid_by` + `amount`（base 幣別整數）+ optional `original_currency` / `original_amount`（free-text trip code，須對應 parent `Trips.rate_snapshot`）+ `category` + `split_type` + optional `split_ratio`（**payer's share %**，注意與 `CashTransactions.split_ratio_a`「member A 的 %」語意不同）。Trip UI 讀這張表；主帳本（/records、stats、balance）讀 `CashTransactions` 看不到這些 row。Trip end 時會寫一筆 summary `CashTransaction` 把 trip 折回主帳本。
-- **`Assets`（愛物）** — 共用 base table（`type` enum: `car` / `house` / `child` / `pet` / `plant` / `insurance` / `item`），舊 6 種用 1:1 子表存細節：`CarDetails` / `HouseDetails` / `ChildDetails` / `PetDetails` / `PlantDetails` / `InsuranceDetails`；`item` 走 template path (`template_key` + `template_fields` jsonb)，不開子表。
-- **`FuelLogs`** — 車輛加油紀錄；與 `CashTransactions` 透過 `fuel_log_id` 雙寫關聯。
-- **`RecurringIncomeRules` / `RecurringExpenseRules`** — 定期收支規則；pg_cron 每日依 `next_occurrence_at` 產生 `PendingIncomeOccurrences` / `PendingExpenseOccurrences`，使用者 confirm 才落地成真實 transaction。
-- **`MonthlyReviewSnapshots` / `MonthlyReviewMessages`** — 月初 cron 凍結的雙人月度回顧資料。
-- **`PartnerQuizSessions` / `PartnerQuizAnswers`** — 伴侶問答（v0.15.2）。問題池抽 3 題，雙方獨立作答，全部到齊後 reveal。每個 group 目前只有一份 session（MVP 鎖定）。見 `lib/db/schema.ts`。
-- **`ImportBatches` / `ImportErrors`** — CSV import 批次紀錄（v1.1.0）。每次匯入一筆 `ImportBatches`；`CashTransactions.importBatchId` + `IncomeTransactions.importBatchId` FK 讓整批可 rollback。`ImportErrors` 存失敗行原始資料供用戶下載修正後再傳。見 `lib/db/schema.ts`。
-- **`InvoiceCredentials` / `InvoiceImportSnapshots` / `InvoiceImportRuns`** — 雲端發票匯入（spec: [cloud-invoice](docs/superpowers/specs/cloud-invoice-design.md)，`status: blocked`）。Schema 已建立，功能卡在財政部 APP_ID 申請。見 `lib/db/schema.ts`。
-
-### Entity 關係
-
-```
-Profiles ─┬─< OikosGroups.member_a, member_b
-          ├─< CashTransactions.paid_by
-          ├─< IncomeTransactions.recipient_id
-          └─< InsuranceDetails.policy_holder_user_id / insured_user_id
-
-OikosGroups ─┬─< GroupEpochs (1 open + N closed) ─< Trips (epoch-bound) ─< TripExpenses
-             ├─< CashTransactions / IncomeTransactions / Settlements
-             ├─< Assets ─┬─< CarDetails ─< FuelLogs
-             │           ├─< HouseDetails / ChildDetails / PetDetails / PlantDetails
-             │           └─< InsuranceDetails (可 FK 回 Asset: vehicle_id / insured_child_id)
-             ├─< ImportBatches ─< ImportErrors
-             ├─< PartnerQuizSessions ─< PartnerQuizAnswers
-             ├─< InvoiceCredentials / InvoiceImportRuns (blocked feature)
-             ├─< CurrencyRates (⚠️ deprecated since v0.17.4)
-             └─── GroupBalance (1:1)
-
-CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatches (rollback FK)
-```
-
-- Asset 屬於 Group，**沒有** `owner_user_id`；個別 owner 語意各 type 自己定義（`CarDetails.primary_user_id` / `HouseDetails.owner` / `InsuranceDetails.policy_holder_user_id`）。
-- CashTransaction 可 optional 關聯 `asset_id`（哪個愛物的支出）+ `fuel_log_id`（加油雙寫）+ `trip_id`（屬於哪段旅行）。
-- Epoch 是「時間軸 slice」不是 entity owner：transactions / settlements 透過 **`created_at`** 落在哪個 epoch 來歸屬章節——是「何時被記下」，不是「何時發生」。章節是關係的分期，補記昨天的收據、匯入十年前的 CSV，都仍屬於當下這段關係。單一入口 `lib/db/queries/_predicates.ts#epochClause`（16 個 call site：transactions.ts 6、insurance.ts 5、asset.ts 3、incomes.ts 2，全部傳 `created_at`）＋ `lib/db/queries/balance.ts` 的 inline SQL。
-- **兩個時間戳分工**——選錯不會報錯，只會靜默算少：
-
-  | 問題 | 用哪個 | 入口 |
-  |---|---|---|
-  | 這筆屬於哪個章節？ | `created_at` | `epochClause` |
-  | 那個月花了／收了多少？ | CashTransactions `transacted_at`／Settlements `settled_at`／IncomeTransactions `occurred_at` | `dateRangeClause` / `dateColumnClause`、`compute_monthly_review_snapshot`（`drizzle/0061_*.sql`） |
-
-  `transactedAt` **沒有**「必須落在當前 epoch」的約束（`lib/validators.ts` 只驗格式）：手動 backdating、CSV 匯入（`actions/import.ts:225` 用來源檔日期）、定期支出確認（`actions/recurringExpense.ts` 用 `proposedDate`）都會在當前 epoch 寫入 `transacted_at` 很舊的 row。
-- **拿 `transacted_at` 當 epoch 邊界的失效長這樣**：feed 照常顯示那些 row、balance 把它們整批漏掉（剛匯入的帳本 balance 讀 0），**全程沒有任何錯誤訊息**。#1030 第一輪就是照舊版文件這樣寫而被 verifier 判 REFUTED。理由全文見 `lib/db/queries/balance.ts` 開頭 docstring。
-
-### 分類色 token
-
-> 每個分類只宣告一個 primary `color`，chip 用的 `tint` 由 `lightenHex()` 推得，確保同一分類在 feed icon 與 donut slice 之間共用同一 hue family。
-
-- 支出分類：`lib/categories.ts` — 每個 `Category` 自帶 primary `color` + derived `tint` + `ink` + `mono`；`chart` 為 `color` 的 alias，舊 callsite 不動。
-- 收入分類：`lib/incomeCategories.ts` — 同結構；另有 `SAVINGS_RETURN_CATEGORIES` 標記「已拿回」桶（maturity / dividend / survival_annuity）。
-- 收入模式整體色票：`lib/incomePalettes.ts`（mint / gold / cream）— `ink` / `tint` / `glow` / `whisper` / `sheetBg` 五階。
-- 愛物 type token：`app/globals.css` 的 `--asset-color-{car,house,child,pet,plant,insurance,item}` 為主色；`--asset-tint-*` 透過 `color-mix(in srgb, var(--asset-color-*) 35%, white)` 推導，list rail 與未來愛物 donut 共用同一 hue family。
-- 圖表專用色票：`lib/chartPalette.ts` — chart 自己挑的色（per-asset hash palette `ASSET_PALETTE`、未歸屬 fallback `ASSET_NULL_COLOR`、active bar track `ACTIVE_BAR_TRACK`）；donut 與 detail bars 共用同一 source of truth。分類／收入分類 slice 色不在此，仍在各自 domain 檔。
-- 派生 helper：`lib/colors.ts#lightenHex(hex, amount = 0.35)` — chip `tint` 從每個 `Category.color` deterministic 推得；新增分類只需給 `color` + `ink`，不必再挑 tint。
-
-### Worktree 工作流
+## Worktree 工作流
 
 - **修改一律開 worktree**：任何會寫檔或動 git 狀態的任務（feature / fix / chore / docs）都先開 worktree，在裡面做事；main checkout 只做讀取。原因：main checkout 被多個平行 session 共用，HEAD 可能在指令之間被切走。
 - **位置統一 `.claude/worktrees/{issue_no}-{slug}/`**（例 `.claude/worktrees/946-solo-trip-epoch/`；沒有對應 issue 就只留 slug）。feature branch 名取自任務上下文（`feat/...` / `fix/...` / `chore/...`），開 worktree 時直接 `git worktree add .claude/worktrees/<dir> -b <branch> main`。
@@ -183,6 +82,9 @@ CashTransactions.importBatchId / IncomeTransactions.importBatchId → ImportBatc
 ## 三平台架構（Web / iOS / Android）
 
 Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.url` 指向 prod（`https://futari.southern-light.dev`），iOS / Android 殼只是載入線上網站的 WebView。**web 改動經 Vercel 部署即時觸達三平台**，不必重送商店；只有動到原生輸入才要重新送審。
+
+- **推論：平台差異只能 runtime 判斷。** 編譯期只有一份產物，`NEXT_PUBLIC_PLATFORM=ios` 這類 build-time flag 分不出平台；SSR 同理（`lib/platform.ts#detectPlatform` 在 server 回 `null`）。一律在 render 時讀 `Capacitor.getPlatform()`，範例 `components/KofiWidget.tsx`（iOS 隱藏 Ko-fi widget，Apple Guideline 3.1.1）。
+  - **失效的樣子**：build 過、type check 過、`npm run dev` 正常、Vercel 部署成功——錯只在真機殼裡顯現，而且是靜默的：該隱藏的元件照樣顯示（或該顯示的不見），沒有任何錯誤訊息。
 
 送審步驟、Xcode／Gradle 雷點、ASC API 用法見 [docs/app-store-submission-runbook.md](docs/app-store-submission-runbook.md)。
 
@@ -213,6 +115,7 @@ Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.
 ### 原生 build 雷點
 
 - Android 需 JDK 21：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
+  - 「21」是 Capacitor 8 `sourceCompatibility` 的**下限，不是上限**。Android Studio 內附的 JBR 會隨 Studio 更新往上漂，看到它比 21 新不代表這行過期——2026-09-13 實測 JBR 已是 JDK 25，Gradle 8.14.3 + AGP 8.13 下 `assembleDebug` 245 個 task 全過。**不要為了湊「21」另外裝 JDK**（Gradle 官方支援矩陣只寫到 24，照著推會得出「JBR 太新不能用」的錯誤結論，實際不會發生）。
 - 乾淨 checkout / worktree 做 iOS 工作前先 `mkdir -p out && npx cap sync ios`
 
 ---
@@ -319,7 +222,7 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 - **DESIGN.md 與 PRODUCT.md 由 Impeccable 維護，refresh 是「model 全檔重寫」，不是機械產生。** `/impeccable document` 重寫 DESIGN.md、`/impeccable teach` 重寫 PRODUCT.md；真正機械地從 `app/globals.css` 抄過去的只有 `.impeccable/design.json` 的 token 值。工具不會靜默覆蓋（偵測到既有檔會先問要 refresh 哪一份），但**手寫段落能不能留下來，取決於當時跑 refresh 的 agent 有沒有先讀過現檔、刻意逐段帶過去**——那是判斷，不是保證。
   - 所以：**跑 refresh 前先讀現檔，逐段帶過，不要從零生成。** PRODUCT.md 的 Surface Intents、DESIGN.md 的任何手動補充都屬於這類。
   - 失效的樣子不是檔案被清空，而是某一段在一次看起來很正常的「文件重整」裡被壓縮掉。所以控制點是 git diff，不是工具。
-  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現在 13KB，實務上踩不到。
+  - 另一條邊緣路徑：任何 impeccable 指令偵測到 PRODUCT.md 缺失、空白、少於 200 字元或含 `[TODO]` 時，會把 teach 當成 setup blocker 自動拉起來。現況遠大於該門檻，實務上踩不到。
 - **Token 紀律（硬性，見 DESIGN.md §3 The Existing-Token-First / Even-Px Rule）**：
   - 字級一律偶數 px，且必對應 `text-*` class；11/13/15 已廢除，落在中間就取最近偶數。
   - 任何視覺值先找既有 token：型別 `text-*`、間距 Tailwind utility＋`--sheet-*`、圓角 `--radius-*`、顏色 `--color-*` / `var(--ink*)`。

@@ -1,9 +1,17 @@
 import { cache } from 'react'
 import { db } from '@/lib/db/client'
-import { groupEpochs, oikosGroups, profiles } from '@/lib/db/schema'
-import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
+import {
+  cashTransactions,
+  groupEpochs,
+  incomeTransactions,
+  oikosGroups,
+  profiles,
+  settlements,
+} from '@/lib/db/schema'
+import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { epochClause } from '@/lib/db/queries/_predicates'
 
 /** Cookie key the past-times feature uses to pin the viewer to a prior epoch. */
 export const PAST_EPOCH_COOKIE = 'futari_past_epoch'
@@ -88,6 +96,63 @@ export async function getActiveEpochWindow(
   // somehow escaped backfill). Treat as "show everything" with a sentinel
   // far-past startedAt so the filter never excludes anything.
   return { startedAt: new Date(0), endedAt: null, epochId: null, isPast: false }
+}
+
+/**
+ * Does the group's CURRENT chapter contain any ledger record — cash, income,
+ * or settlement — that hasn't been soft-deleted?
+ *
+ * The one question behind the base-currency lock (#68), asked from both sides:
+ * `actions/currency.ts#setBaseCurrency` enforces it, and the currency settings
+ * page renders the selector disabled from the same answer. Those used to be two
+ * independent implementations, which is exactly how they drifted apart — #1106
+ * fixed the timestamp in the action while the page kept counting by event date.
+ * Callers get a boolean, not three counts, so there is nothing left to
+ * re-derive (or re-derive differently) at either call site.
+ *
+ * Chapter membership is `created_at`, never the event dates (`transacted_at` /
+ * `occurred_at` / `settled_at`) — see the docstring atop
+ * `lib/db/queries/balance.ts`. A CSV import of last year's receipts lands rows
+ * whose event dates predate the chapter but which were *recorded* inside it;
+ * they show up in /records, stats and balance, so they lock the currency too.
+ * Counting by event date reported 0 records for exactly that ledger and let the
+ * base currency change, silently re-reading every stored integer amount as a
+ * different currency.
+ *
+ * Always the current chapter, never the pinned one: a viewer time-travelling
+ * through 過去的時光 still can't edit history, and the lock is about what the
+ * live chapter already holds.
+ */
+export async function currentEpochHasRecords(
+  group: Pick<typeof oikosGroups.$inferSelect, 'id' | 'currentEpochStartedAt'>,
+): Promise<boolean> {
+  const window: EpochWindow = {
+    startedAt: group.currentEpochStartedAt,
+    // The current chapter is open by definition — no upper bound.
+    endedAt: null,
+    epochId: null,
+    isPast: false,
+  }
+
+  const [cashRow, incomeRow, settlementRow] = await Promise.all([
+    db.select({ n: count() }).from(cashTransactions).where(and(
+      eq(cashTransactions.groupId, group.id),
+      epochClause(cashTransactions.createdAt, window),
+      isNull(cashTransactions.deletedAt),
+    )),
+    db.select({ n: count() }).from(incomeTransactions).where(and(
+      eq(incomeTransactions.groupId, group.id),
+      epochClause(incomeTransactions.createdAt, window),
+      isNull(incomeTransactions.deletedAt),
+    )),
+    db.select({ n: count() }).from(settlements).where(and(
+      eq(settlements.groupId, group.id),
+      epochClause(settlements.createdAt, window),
+      isNull(settlements.deletedAt),
+    )),
+  ])
+
+  return Number(cashRow[0].n) + Number(incomeRow[0].n) + Number(settlementRow[0].n) > 0
 }
 
 /**

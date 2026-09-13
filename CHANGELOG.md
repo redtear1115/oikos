@@ -9,11 +9,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **使用者可見變化** — 使用者實際感知到的功能 / 修正，一句話、不寫技術細節
 - **技術變更** — 技術決定、重構、schema migration、breaking change（沒有的話省略）
 
+> **本檔從 1.0.0 起算。** v0.1.0 – v0.17.6（37 個版本）只保留在 git tag，沒有
+> changelog 條目。`docs/superpowers/specs/` 有 21 份 spec 的 `first_shipped_in`
+> 指向這段區間——查不到條目是正常的，不代表 spec 過期，用
+> `git show <tag>` 或 `git log v0.17.6` 追。
+
 ---
 
 ## [Unreleased]
 
 _Nothing unreleased yet._
+
+## [1.5.12] - 2026-09-13
+
+主題：**讓文件與 code 對帳**——把 36 條文件宣稱逐條打開 code 驗證，撞出三個沒人回報過的 bug：匯入舊帳後可以繞過幣別鎖、截圖轉 CSV 那條路走不到終點、檔案選擇器選不到一半支援的格式。這版修的都是「文件寫得好好的，但 code 沒照著做」——沒有一項是使用者抱怨出來的。
+完整 diff：[v1.5.11...v1.5.12](https://github.com/redtear1115/oikos/compare/v1.5.11...v1.5.12)
+
+### 使用者可見變化
+
+- **OAuth 登入時蓋上等待畫面（#1083）**：從外部瀏覽器回來的那一瞬間，登入頁還能再按一次——而第二次點擊會讓回來的連結失去接收者，卡在原地。現在那段時間會明確顯示正在處理。
+- **匯入舊帳後不能再改主體幣別（#1106）**：匯入一批去年的紀錄之後，幣別鎖沒有攔住，而改幣別不會換算任何數字——整本帳會被當成另一種貨幣解讀，且不會有任何錯誤訊息。
+- **平均油耗兩個畫面顯示同一個數字（#1095）**：愛物列表與詳情頁先前用不同算法，同一台車會看到不同的油耗。現在統一為近 180 天的距離加權。
+- **久沒加油的車不再被說「需要至少 2 次加油記錄」（#1097）**：紀錄其實夠多，只是都超過半年。現在會說清楚是沒有近期資料。
+- **匯入的檔案選擇器補上 `.txt` / `.ofx` / `.qif`（#1088）**：這三種格式一直解析得了，但選檔時是灰的，只有拖放進得來。
+- **截圖轉 CSV 的匯入補回自動辨識（#1094）**：用 ChatGPT 把截圖轉成 CSV 之後，選「通用 CSV」會讀不到任何一列。
+- **字型改為自架（#978）**：不再需要連到 Google 的網域才能顯示正確字體。
+
+### 技術變更
+
+- **油耗計算收斂成一份（#1089 / #1095）**：`computeOverallEcon` 刪除，詳情頁與 hero 卡共用 `lib/fuelEcon.ts › computeAvgEcon()`；`listFuelLogsForAsset` 補上 `created_at` tie-break，同日多筆加油的排序不再不定。
+- **幣別鎖收斂成單一 helper（#1106）**：`lib/db/queries/epoch.ts › currentEpochHasRecords()`，server action 與 settings 頁共用，改以 `created_at` 判定章節歸屬（先前用事件發生日，與 `epochClause` 的權威定義不一致）。
+- **文件體系收斂 round 5–13（#1076 #1079 #1080 #1081 #1082 #1084 #1085 #1086 #1087 #1103）**：六維達標；`CLAUDE.md` 每次任務的固定 token 成本 9,209 → 5,391（Domain Model 與觀測段移入 `docs/superpowers/specs/`）；文件宣稱的抽樣覆蓋 3.9% → 10.1%。
+- **文件健檢腳本與 runtime 平台約束（#1075 #1077）**：`scripts/check-docs.sh` 檢查破鏈、路徑引用、spec ↔ INDEX 雙向覆蓋；`CLAUDE.md` 記下「三平台共用同一份 prod deployment，平台差異只能 runtime 判斷」及其失效時的樣子。
 
 ## [1.5.11] - 2026-09-12
 
@@ -823,7 +850,9 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.10...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.12...HEAD
+[1.5.12]: https://github.com/redtear1115/oikos/compare/v1.5.11...v1.5.12
+[1.5.11]: https://github.com/redtear1115/oikos/compare/v1.5.10...v1.5.11
 [1.5.10]: https://github.com/redtear1115/oikos/compare/v1.5.9...v1.5.10
 [1.5.9]: https://github.com/redtear1115/oikos/compare/v1.5.8...v1.5.9
 [1.5.8]: https://github.com/redtear1115/oikos/compare/v1.5.7...v1.5.8

@@ -13,6 +13,21 @@ const APP_ORIGIN = 'https://futari.southern-light.dev'
 
 type Provider = 'google' | 'apple'
 
+/**
+ * What an attempt did, from the caller's point of view (#1083).
+ *
+ * `'navigating'` — a redirect is already under way and this page is about to be
+ * replaced, so the waiting curtain must STAY up until the new page lands.
+ * `'aborted'` — nothing further will happen (cancelled, or we failed before ever
+ * leaving), so the curtain must come down. Getting this backwards strands the
+ * user behind a full-screen overlay with no way out, which is worse than the
+ * double-tap bug the curtain exists to prevent.
+ */
+type SignInOutcome = 'navigating' | 'aborted'
+
+/** Minimal shape of a Capacitor listener handle — avoids importing @capacitor/core. */
+type Removable = { remove: () => Promise<void> }
+
 // These stay local rather than moving to `lib/platform.ts` (#1002). That module
 // answers an analytics question — which of five surfaces is this — while the
 // three-way auth branch below needs a raw Capacitor platform string, and this is
@@ -35,7 +50,7 @@ function getPlatform(): string {
 async function appleNativeSignIn(
   supabase: ReturnType<typeof createClient>,
   ctx: { next: string; from: string | null },
-): Promise<void> {
+): Promise<SignInOutcome> {
   const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
 
   const rawNonce = generateNonce()
@@ -51,7 +66,7 @@ async function appleNativeSignIn(
   const idToken = result.response?.identityToken
   if (!idToken) {
     track('sign_in_failed', { reason: 'apple_no_id_token', provider: 'apple', path: 'ios_native' })
-    return
+    return 'aborted'
   }
 
   const { error } = await supabase.auth.signInWithIdToken({
@@ -61,13 +76,16 @@ async function appleNativeSignIn(
   })
   if (error) {
     track('sign_in_failed', { reason: 'id_token_rejected', provider: 'apple', path: 'ios_native' })
-    return
+    return 'aborted'
   }
 
   // Bypasses /auth/callback, so replay its attribution here (best-effort).
+  // This is a server action — on a slow link it is seconds during which the page
+  // is still the sign-in form, which is exactly why the curtain covers it.
   await recordNativeAuthConversion({ from: ctx.from, anonId: getAnonId() })
 
   window.location.href = `${APP_ORIGIN}${ctx.next}`
+  return 'navigating'
 }
 
 /** Android-native: in-app browser OAuth + custom-scheme deep link back. */
@@ -75,7 +93,7 @@ async function browserOAuthSignIn(
   supabase: ReturnType<typeof createClient>,
   provider: Provider,
   ctx: { next: string; from: string | null },
-): Promise<void> {
+): Promise<SignInOutcome> {
   const { Browser } = await import('@capacitor/browser')
   const { App } = await import('@capacitor/app')
 
@@ -91,19 +109,53 @@ async function browserOAuthSignIn(
   })
   if (!data.url) {
     track('sign_in_failed', { reason: 'no_oauth_url', provider, path: 'capacitor_browser' })
-    return
+    return 'aborted'
   }
 
-  await Browser.open({ url: data.url })
-
-  // Remove the listener after it fires once — otherwise every attempt leaks one.
-  const listener = await App.addListener('appUrlOpen', async ({ url }) => {
-    if (!url.startsWith(`${CAPACITOR_SCHEME}://`)) return
-    await listener.remove()
-    await Browser.close()
-    const callbackUrl = url.replace(`${CAPACITOR_SCHEME}://login-callback`, '')
-    window.location.href = `${APP_ORIGIN}${callbackUrl}`
+  let settle!: (outcome: SignInOutcome) => void
+  const outcome = new Promise<SignInOutcome>((resolve) => {
+    settle = resolve
   })
+
+  // Both listeners have to be torn down by whichever one fires, and each needs
+  // to remove the other — collecting them in one array sidesteps the
+  // declaration order problem that referring to them by name would create.
+  const listeners: Removable[] = []
+  let done = false
+  const finish = async (result: SignInOutcome) => {
+    if (done) return
+    done = true
+    for (const listener of listeners.splice(0)) await listener.remove()
+    settle(result)
+  }
+
+  // Registered BEFORE Browser.open so the deep link cannot arrive while we are
+  // still awaiting registration. The old post-open order was safe in practice
+  // (the user has to authorise first), but the ordering costs nothing.
+  listeners.push(
+    await App.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.startsWith(`${CAPACITOR_SCHEME}://`)) return
+      if (done) return
+      const callbackUrl = url.replace(`${CAPACITOR_SCHEME}://login-callback`, '')
+      await finish('navigating')
+      await Browser.close()
+      window.location.href = `${APP_ORIGIN}${callbackUrl}`
+    }),
+  )
+
+  // The user dismissed the in-app browser without authorising — swiped it away,
+  // pressed back, or cancelled at the provider. No deep link will ever arrive,
+  // so this is the ONLY signal that the attempt is over; without it the curtain
+  // would hang forever. Our own Browser.close() above fires this too, which the
+  // `done` guard in finish() absorbs.
+  listeners.push(
+    await Browser.addListener('browserFinished', async () => {
+      await finish('aborted')
+    }),
+  )
+
+  await Browser.open({ url: data.url })
+  return outcome
 }
 
 /** Web: ordinary OAuth redirect through /auth/callback. */
@@ -111,7 +163,7 @@ async function webOAuthSignIn(
   supabase: ReturnType<typeof createClient>,
   provider: Provider,
   ctx: { next: string; from: string | null },
-): Promise<void> {
+): Promise<SignInOutcome> {
   const redirectTo = buildAuthCallbackUrl(window.location.origin, {
     next: ctx.next,
     from: ctx.from,
@@ -123,11 +175,31 @@ async function webOAuthSignIn(
   const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })
   if (error) {
     track('sign_in_failed', { reason: 'oauth_redirect_failed', provider, path: 'web' })
+    return 'aborted'
   }
+  return 'navigating'
 }
 
-export function SignInButton({ provider, label }: { provider: Provider; label: string }) {
+export function SignInButton({
+  provider,
+  label,
+  pending,
+  onStart,
+  onAbort,
+}: {
+  provider: Provider
+  label: string
+  /** True while EITHER provider has an attempt in flight — both buttons lock together. */
+  pending: boolean
+  onStart: () => void
+  onAbort: () => void
+}) {
   const handleSignIn = async () => {
+    // The curtain already blocks pointer input; this covers the keyboard path
+    // (Enter on a focused button) and any race before React repaints.
+    if (pending) return
+    onStart()
+
     const search = new URLSearchParams(window.location.search)
     const next = search.get('next') ?? '/dashboard'
     const from = search.get('from')
@@ -136,32 +208,40 @@ export function SignInButton({ provider, label }: { provider: Provider; label: s
 
     const supabase = createClient()
     const ctx = { next, from }
+    let outcome: SignInOutcome = 'aborted'
 
     try {
       if (provider === 'apple' && getPlatform() === 'ios') {
         try {
-          await appleNativeSignIn(supabase, ctx)
+          outcome = await appleNativeSignIn(supabase, ctx)
         } catch (err) {
           // The native sheet failed. Until #935 this path had no catch at all,
           // so a missing `com.apple.developer.applesignin` entitlement made the
           // button look dead on every TestFlight build. Never leave it silent.
-          if (isUserCancelled(err)) return
-          track('sign_in_failed', { reason: 'apple_native_unavailable', provider, path: 'ios_native' })
-          console.error('[sign-in] native Apple failed, falling back to browser OAuth', err)
-          // Same flow Google already uses on this platform, and it reaches the
-          // same Apple authorize page the web build uses — so a reviewer or user
-          // can still get in even when the native sheet refuses to present.
-          await browserOAuthSignIn(supabase, provider, ctx)
+          if (isUserCancelled(err)) {
+            outcome = 'aborted'
+          } else {
+            track('sign_in_failed', { reason: 'apple_native_unavailable', provider, path: 'ios_native' })
+            console.error('[sign-in] native Apple failed, falling back to browser OAuth', err)
+            // Same flow Google already uses on this platform, and it reaches the
+            // same Apple authorize page the web build uses — so a reviewer or user
+            // can still get in even when the native sheet refuses to present.
+            outcome = await browserOAuthSignIn(supabase, provider, ctx)
+          }
         }
       } else if (isCapacitor()) {
-        await browserOAuthSignIn(supabase, provider, ctx)
+        outcome = await browserOAuthSignIn(supabase, provider, ctx)
       } else {
-        await webOAuthSignIn(supabase, provider, ctx)
+        outcome = await webOAuthSignIn(supabase, provider, ctx)
       }
     } catch (err) {
       // A throw here reaches nothing the user can see, so at minimum record it.
       track('sign_in_failed', { reason: 'unexpected', provider, path: getPlatform() })
       console.error('[sign-in] unexpected failure', err)
+      outcome = 'aborted'
+    } finally {
+      // Only 'navigating' keeps the curtain — see SignInOutcome.
+      if (outcome === 'aborted') onAbort()
     }
   }
 
@@ -171,7 +251,9 @@ export function SignInButton({ provider, label }: { provider: Provider; label: s
     <button
       type="button"
       onClick={handleSignIn}
-      className="w-full h-12 rounded-xl border-0 text-sm font-medium cursor-pointer flex items-center justify-center gap-2"
+      disabled={pending}
+      aria-busy={pending}
+      className="w-full h-12 rounded-xl border-0 text-sm font-medium cursor-pointer flex items-center justify-center gap-2 disabled:cursor-default"
       style={
         isApple
           ? { background: '#000', color: '#fff' }

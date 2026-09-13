@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-13
 status: shipped
 first_shipped_in: v0.1.0
 updates:
@@ -26,7 +26,7 @@ Realtime 是 Supabase postgres_changes 接出來的事件流，本 spec 鎖定�
 
 ## 訂閱結構
 
-每個 group 開一個 channel：`group:${groupId}`，訂閱多張 table 的 INSERT / UPDATE / DELETE：
+每個 group 開一個 channel：`group:${groupId}`。多數 table 訂 `event: '*'`（INSERT / UPDATE / DELETE 全收），**但 `GroupBalance` 與 `OikosGroups` 只訂 `UPDATE`**——那兩張表的 row 由 group 建立時就存在、之後只會被改寫，不會新增或刪除。逐表的 event 與 filter 見下表：
 
 | Table | 用途 |
 |---|---|
@@ -39,8 +39,9 @@ Realtime 是 Supabase postgres_changes 接出來的事件流，本 spec 鎖定�
 | `Assets` | 愛物 CRUD（list 與 detail 頁同步） |
 | `OikosGroups` | guardian beta flag flip / member_b 接受邀請後升雙人 |
 | `RecurringIncomeRules` / `RecurringExpenseRules` | 規則建立 / 編輯（settings 頁同步） |
+| `FuelLogs` | 加油紀錄變動（愛物詳情頁）。**唯一沒有 `group_id` filter 的訂閱**——`FuelLogs` 沒有 `group_id` 欄位，無法用 filter 收斂，改訂閱全表並靠 RLS policy `fuel_logs_member_select` 只投遞看得到的 row，client 端再依 `assetId` 過濾 |
 
-實作落地點：`app/(dashboard)/_components/RealtimeProvider.tsx`。
+實作落地點：`app/(dashboard)/_components/RealtimeProvider.tsx`（訂閱與 React state 更新）/ `lib/realtime/`（`event.ts` 事件型別、`payload-schema.ts` payload 驗證）。
 
 ---
 
