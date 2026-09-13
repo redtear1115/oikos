@@ -1,6 +1,6 @@
 # Product
 
-The strategy layer: who Futari is for, what it refuses to be, and what each surface is trying to do. Read it before writing copy or judging a metric. The rest of the documentation splits like this — [README.md](README.md) for running and deploying the project, [CLAUDE.md](CLAUDE.md) for architecture and working conventions, [DESIGN.md](DESIGN.md) for the visual system. That last one is generated from `app/globals.css` by `/impeccable document`, so don't hand-edit it.
+The strategy layer: who Futari is for, what it refuses to be, and what each surface is trying to do. Read it before writing copy or judging a metric. The rest of the documentation splits like this — [README.md](README.md) for running and deploying the project, [CLAUDE.md](CLAUDE.md) for architecture and working conventions, [DESIGN.md](DESIGN.md) for the visual system. Both this file and DESIGN.md are rewritten wholesale by Impeccable (`/impeccable teach` and `/impeccable document` respectively) — a model rewrite, not a mechanical export. Only `.impeccable/design.json` is copied mechanically from `app/globals.css`. Hand-written sections survive a refresh only if whoever runs it reads the current file first and carries them across, so check `git diff` after any refresh — see CLAUDE.md's "設計脈絡（Impeccable）" section.
 
 ## Register
 
