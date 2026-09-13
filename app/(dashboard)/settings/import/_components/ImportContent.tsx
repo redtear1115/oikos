@@ -80,6 +80,12 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
       // 'generic' source still needs a HeaderMap; until the generic-mapping
       // sub-flow lands the wizard simply hides that source choice — see the
       // empty `headerMap` branch in lib/csvImport which would throw.
+      //
+      // The placeholder map below is title-cased and matched case-sensitively,
+      // so it fits almost nothing on its own. `processFile` re-sniffs a
+      // 'generic' file for the screenshot→ChatGPT→CSV signature before falling
+      // back to it (#1094) — that is the path the /migrate pages send people
+      // down, and it is why `futari_generic` needs no button of its own.
       const result =
         requestedSource === 'generic'
           ? await processFile(file, { source: 'generic', headerMap: { date: 'Date', amount: 'Amount' } })

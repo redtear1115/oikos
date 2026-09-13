@@ -27,8 +27,15 @@ const SOURCE_OPTIONS = ['honeydue', 'spendee', 'cwmoney', 'generic'] as const sa
  * names; a file recognised as OFX / QIF falls back to the bare format acronym
  * (a format name, not copy — it reads the same in all four locales). Without
  * the fallback the template rendered the literal string "undefined".
+ *
+ * `futari_generic` borrows the generic label instead of that fallback: it is
+ * only ever reached from the 「通用 CSV」 button (the screenshot→ChatGPT→CSV
+ * file is recognised inside `processFile`, #1094), so echoing the button the
+ * user just pressed is both truthful and free of a new string. The raw
+ * fallback would have shown "FUTARI_GENERIC" — an internal identifier.
  */
 function sourceLabel(source: DetectedSource, labels: Record<string, string | undefined>): string {
+  if (source === 'futari_generic') return labels.generic ?? source.toUpperCase()
   return labels[source] ?? source.toUpperCase()
 }
 

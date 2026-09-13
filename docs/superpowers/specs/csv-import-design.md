@@ -4,8 +4,9 @@ status: shipped
 first_shipped_in: v1.1.0
 updates:
   - v1.1.1: 新增 Spendee / Honeydue / CWMoney 原生格式自動 parse（mapper + detector）；銀行對帳單 .xlsx 轉換模板；OFX 1.x/2.x + QIF parser（#585 #586）
-related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency]
-related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586"]
+  - v1.3.2: 新增 futari_generic——截圖→ChatGPT→CSV 產出的固定 header 格式，偵測 + 專屬 mapper（#839 #1094）
+related_specs: [transactions, income, inbox-layer, recurring, solo-mode, trip-multi-currency, locale-currency, migrate-pages]
+related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", "#586", "#839", "#1094"]
 ---
 
 # CSV 匯入歷史紀錄
@@ -127,6 +128,16 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 | 金額 > 9,999,999（base 幣別整數） | 拒收（保護 DB；user 應拆分） |
 | 重複 row（檔內自身重複） | 預覽顯示 `duplicate-in-file` 標記，user 選跳過 / 全留 |
 | 重複 row（檔 vs 既有 DB） | 走 dedup 流程，見下節 |
+
+---
+
+## futari_generic — 截圖→ChatGPT→CSV 的終點（v1.3.2, #839）
+
+沒有匯出功能的競品，其 `/migrate` 頁（`screenshotWorkflow` flag，見 [migrate-pages-design.md](migrate-pages-design.md)）把使用者導向「截圖 → 請 ChatGPT 整理成 CSV → 上傳」。那份產出的 header 是我們自己在提示詞裡指定的固定六欄（權威在 `migrate.chatgptWorkflow.prompt` 的文案，不是任何一份 code 常數），所以它是**可以被偵測的來源**，不需要使用者手動對欄位。
+
+**wizard 上沒有、也不該有 `futari_generic` 按鈕**——使用者不知道自己手上這份叫什麼，他只會按「通用 CSV」。因此 `'generic'` 不是一個來源，而是「我沒有簽名，請用我給的 headerMap」的標記：它是唯一一個即使由呼叫端明確指定、仍會再 sniff 一次 header 的值。認出 futari_generic 就改走專屬 mapper（`kind` 欄位決定收支，不看金額正負號）。其餘來源（honeydue / spendee / cwmoney / ofx / qif）指定了就不再被二次猜測。
+
+**這條 re-sniff 不存在時的失效長這樣（#1094）**：ChatGPT 產出的小寫 header 撞上 wizard 寫死的大小寫敏感 headerMap，三列進、零列出，畫面只顯示「沒有有效資料」。沒有例外、沒有任何一個字指向真正原因，所以使用者不會把它回報成這個問題——整條 SEO → migrate 頁 → 匯入的獲客漏斗在最後一步靜默斷掉。
 
 ---
 

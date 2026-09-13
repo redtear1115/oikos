@@ -180,3 +180,69 @@ describe('processFile — filename format hint (#1088)', () => {
     expect(out.source).toBe('qif')
   })
 })
+
+/**
+ * #1094. The screenshot→ChatGPT→CSV workflow (#839 P2) ends at the import
+ * wizard, where the only button that fits is 「通用 CSV」 — `futari_generic` is
+ * deliberately not offered, it is meant to be recognised. The wizard hands
+ * `{ source: 'generic', headerMap: { date: 'Date', amount: 'Amount' } }` to
+ * `processFile`, and the prompt we give users produces *lowercase* headers, so
+ * `mapGeneric`'s case-sensitive lookup found neither column: three rows in,
+ * zero valid rows out, and the user saw 「沒有有效資料」with nothing pointing
+ * at the real cause.
+ *
+ * The header row and sample rows below are copied verbatim from the copy the
+ * user is shown — `migrate.chatgptWorkflow.prompt` / `.formatExample` in
+ * `lib/i18n/locales/zh-TW.ts`. Change those and this fixture must follow.
+ */
+describe('generic wizard path — screenshot→ChatGPT→CSV (#1094)', () => {
+  const WIZARD_GENERIC = {
+    source: 'generic',
+    headerMap: { date: 'Date', amount: 'Amount' },
+  } as const
+
+  const CHATGPT_CSV = [
+    'date,category,amount,description,currency,kind',
+    '2026-05-30,飲食,150,星巴克,TWD,expense',
+    '2026-05-30,薪水,50000,五月,TWD,income',
+    '2026-05-28,交通,1200,東京地鐵,JPY,expense',
+  ].join('\n')
+
+  it('parses the ChatGPT output the user actually uploads', async () => {
+    const out = await processFile(new File([CHATGPT_CSV], 'chatgpt.csv'), WIZARD_GENERIC)
+    // Row count first: zero valid rows is what the user hits — the wizard
+    // turns it into 「沒有有效資料」 and the upload dead-ends there.
+    expect(out.stats.valid).toBe(3)
+    expect(out.stats.invalid).toBe(0)
+    expect(out.rows).toHaveLength(3)
+    expect(out.source).toBe('futari_generic')
+    // The futari_generic mapper, not mapGeneric: `kind` drives the type rather
+    // than the amount sign, and non-TWD rows keep their currency tuple.
+    expect(out.rows[0]!.type).toBe('expense')
+    expect(out.rows[0]!.category).toBe('dining')
+    expect(out.rows[1]!.type).toBe('income')
+    expect(out.rows[2]!.originalCurrency).toBe('JPY')
+  })
+
+  it('still honours the headerMap for a CSV with no signature', () => {
+    const csv = 'when,how_much,kind,what\n2026-01-01,100,支出,午餐\n'
+    const out = processBuffer(bytes(csv), {
+      source: 'generic',
+      headerMap: { date: 'when', amount: 'how_much', type: 'kind', description: 'what' },
+    })
+    expect(out.source).toBe('generic')
+    expect(out.rows[0]!.description).toBe('午餐')
+  })
+
+  it('does not upgrade a generic pick to one of the three picked sources', () => {
+    // Honeydue headers, but the user chose 「通用 CSV」. Only `futari_generic`
+    // overrides that choice — everything else keeps the headerMap contract.
+    const csv = 'Date,Name,Category,Amount,Account\n1/15/2026,Costco,Groceries,-250,Joint\n'
+    const out = processBuffer(bytes(csv), {
+      source: 'generic',
+      headerMap: { date: 'Date', amount: 'Amount' },
+    })
+    expect(out.source).toBe('generic')
+    expect(out.rows).toHaveLength(1)
+  })
+})
