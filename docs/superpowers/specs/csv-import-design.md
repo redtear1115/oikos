@@ -147,7 +147,8 @@ related_issues: ["#51", "#552", "#553", "#554", "#555", "#556", "#557", "#585", 
 
 ### Step 1 — 上傳檔案
 
-- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）——這是 **parser pipeline** 支援的範圍（`lib/csvImport/index.ts` 的格式偵測）。**檔案選擇器目前只開 `.csv`**（`components/CsvFileUploadWidget.tsx` 的 `accept` 預設值），後三種只有拖放進得來；這是 code 沒跟上 spec，不是 spec 寫錯
+- 支援副檔名：`.csv`、`.txt`（內容仍須為 CSV）、`.ofx`（OFX 1.x/2.x）、`.qif`（QIF line-oriented）——這是 **parser pipeline** 支援的範圍（`lib/csvImport/index.ts › processBuffer()` 的格式偵測）。匯入 wizard 的檔案選擇器四種全開（`lib/csvImport/accept.ts › IMPORT_ACCEPT`，掛在 `StepSource`）。
+  - **`/migrate` 的匿名預覽刻意只收 CSV**（`lib/csvImport/accept.ts › CSV_ONLY_ACCEPT`）——它只跑 `parseCsvText`，`.ofx` 進去不會報錯、會畫出一張沒有意義的預覽表。這是設計不是落後（#1088）
 - 檔案大小上限：**spec 原訂 client 端 2 MB，實際從未實作**——repo 內沒有任何大小檢查。大檔的行為目前是「瀏覽器 parse 到卡住為止」
 - 上傳後立即在 client 端 parse + 跑 schema validation；不過 schema 直接跳錯誤頁，無 server round-trip
 
