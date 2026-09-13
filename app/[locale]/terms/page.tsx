@@ -47,7 +47,7 @@ export default async function TermsPage({ params }: { params: Params }) {
         >
           {t.termsPage.heading}
         </h1>
-        <p className="text-xs mb-8" style={{ color: 'var(--ink-3)' }}>
+        <p className="text-xs mb-8" style={{ color: 'var(--ink-2)' }}>
           {t.termsPage.lastUpdated}
         </p>
 
