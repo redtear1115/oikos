@@ -105,7 +105,7 @@ blocked_on: 外部依賴敘述                            # 只有 status=blocke
 
 - [product](product-design.md) — Tech stack / 整體架構 / Auth 分層 / Schema 設計原則
 - [authorization](authorization-design.md) — 授權模型：查詢層不驗 membership、四層閘門（proxy / viewer / write context / payload 斷言）、「驗了新值沒驗被改的列」失效樣態（#1031 #1032）
-- [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語 cookie-based locale）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
+- [locale-currency](locale-currency-design.md) — 「保持簡單」：多語（4 語；public 頁 URL prefix + dashboard cookie 的混合模型）+ 初始幣別選擇（per-group base_currency），onboarding 一次性決策、locale ⊥ currency、日常無 picker
 - [offline-browsing](offline-browsing-design.md) — PWA / Service Worker / opt-in 離線瀏覽
 - [realtime](realtime-design.md) — Realtime 訂閱規則：INSERT prepend / UPDATE fade / balance cross-fade / reconnect / filter 靜默跳過
 - [conversion-analytics](conversion-analytics-design.md) — PostHog 轉換漏斗事件：入口頁（landing / migrate）→ 註冊 / 啟用追蹤 + 跨 OAuth 邊界歸因（維持 cookieless）
