@@ -15,7 +15,6 @@
 export const UI_PREF_COOKIE = {
   heroCollapsed: 'oikos_hero_collapsed',
   balanceIncludePending: 'oikos_balance_include_pending',
-  partnerLeftDismissed: 'oikos_partner_left_dismissed',
   tripCollapsed: 'oikos_trip_collapsed',
 } as const
 

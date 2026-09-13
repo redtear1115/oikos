@@ -41,7 +41,6 @@ export interface DashboardState {
   fuelSheet: FuelSheetState
   showFirstCard: boolean
   toast: string | null
-  bannerDismissed: boolean
 }
 
 export type DashboardAction =
@@ -56,7 +55,6 @@ export type DashboardAction =
   | { type: 'closeFuelSheet' }
   | { type: 'setShowFirstCard'; show: boolean }
   | { type: 'setToast'; toast: string | null }
-  | { type: 'setBannerDismissed'; dismissed: boolean }
 
 export const initialDashboardState: DashboardState = {
   mode: 'expense',
@@ -67,7 +65,6 @@ export const initialDashboardState: DashboardState = {
   fuelSheet: { open: false, initial: null, car: null },
   showFirstCard: false,
   toast: null,
-  bannerDismissed: false,
 }
 
 export function dashboardReducer(state: DashboardState, action: DashboardAction): DashboardState {
@@ -94,8 +91,6 @@ export function dashboardReducer(state: DashboardState, action: DashboardAction)
       return state.showFirstCard === action.show ? state : { ...state, showFirstCard: action.show }
     case 'setToast':
       return state.toast === action.toast ? state : { ...state, toast: action.toast }
-    case 'setBannerDismissed':
-      return state.bannerDismissed === action.dismissed ? state : { ...state, bannerDismissed: action.dismissed }
   }
 }
 

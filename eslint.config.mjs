@@ -20,7 +20,7 @@ const eslintConfig = defineConfig([
       // The `react-hooks/set-state-in-effect` rule (added in eslint-plugin-react-hooks v6)
       // flags any setState() call inside a useEffect body. Many of our intentional
       // patterns trip it: prefilling sheet form state when `open` toggles true,
-      // hydrating localStorage on mount (Dashboard SoloBanner dismissal), syncing
+      // hydrating localStorage on mount (WelcomeSoloCard / PartnerLeftCard dismissal), syncing
       // server-rendered props into client-only animation state (BalanceHero), and
       // reseeding draft filter state when the FilterSheet (re-)opens. Each of these
       // is "syncing internal state to an external prop/system change" — exactly the

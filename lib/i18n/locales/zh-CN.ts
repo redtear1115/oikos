@@ -277,8 +277,10 @@ export const zhCN: Translations = {
   },
 
   dashboard: {
-    soloHint: '目前是你一个人在记',
-    inviteCta: '邀请对方 →',
+    soloHero: {
+      monthLabel: '{month}记下',
+      countLabel: '{count} 笔',
+    },
     addExpense: '新增一笔',
     addIncome: '记一笔收入',
     filterLabel: '筛选',
@@ -323,11 +325,7 @@ export const zhCN: Translations = {
   },
 
   soloBanner: {
-    waiting: '账本准备好了，邀请对方一起',
-    sendInviteHint: '把链接发给对方',
-    dismissAriaLabel: '关闭提示',
     generating: '生成中…',
-    sendInvite: '发送邀请',
     sharedAndCopied: '已分享，链接也已复制',
     copied: '已复制链接',
     shareTitle: '一起用 Futari 记账',
@@ -988,10 +986,6 @@ export const zhCN: Translations = {
       splitType: '分摊',
       notes: '备注',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: '伙伴已离开账本。之前的记录都还在。',
   },
 
   assets: {

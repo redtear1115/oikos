@@ -276,8 +276,12 @@ export const ja: Translations = {
   },
 
   dashboard: {
-    soloHint: '今はひとりで記録中',
-    inviteCta: '相手を招待 →',
+    soloHero: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      monthLabel: '{month}の記録',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      countLabel: '{count} 件',
+    },
     addExpense: '記録を追加',
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
@@ -322,11 +326,7 @@ export const ja: Translations = {
   },
 
   soloBanner: {
-    waiting: '家計簿の準備はできました。ふたりで始めましょう',
-    sendInviteHint: 'リンクを相手に送りましょう',
-    dismissAriaLabel: '通知を閉じる',
     generating: '生成中…',
-    sendInvite: '招待を送る',
     sharedAndCopied: '共有しました。リンクもコピー済み',
     copied: 'リンクをコピーしました',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
@@ -989,10 +989,6 @@ export const ja: Translations = {
       splitType: '負担',
       notes: 'メモ',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: 'パートナーがアカウントを離れました。これまでの記録はすべて残っています。',
   },
 
   assets: {

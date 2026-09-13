@@ -9,7 +9,7 @@ import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { getGroupBalance, getGroupPendingBalanceDelta } from '@/lib/db/queries/balance'
-import { listTransactionsPaged } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, monthlyStatsByCategory } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { resolveViewerEpochContext, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
@@ -90,6 +90,7 @@ export default async function DashboardPage() {
     pendings,
     expensePendings,
     latestIncomes,
+    soloExpenseStats,
     t,
     locale,
     reviewSnapshot,
@@ -104,6 +105,13 @@ export default async function DashboardPage() {
     listActivePendings(group.id),
     listActiveExpensePendings(group.id),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
+    // Solo expense hero (#1118): the month total + record count that replace
+    // the balance a solo ledger cannot have. Reuses the stats donut's query and
+    // folds its rows rather than adding a second aggregate — and only runs at
+    // all when the viewer is solo, so a duo pays nothing for it.
+    isSolo
+      ? monthlyStatsByCategory(group.id, yyyymm, null, undefined, epochWindow)
+      : Promise.resolve([]),
     getTranslations(),
     getLocale(),
     loadMonthlyReviewSnapshot(group.id, reviewedYM.year, reviewedYM.month),
@@ -153,6 +161,13 @@ export default async function DashboardPage() {
       currentEpochId: epochWindow.epochId,
     }
   }
+
+  // Same month key the income hero uses, so the two heroes never name
+  // different months behind the same mode toggle.
+  const expenseMonth = soloExpenseStats.reduce(
+    (acc, r) => ({ total: acc.total + r.total, count: acc.count + r.count }),
+    { total: 0, count: 0 },
+  )
 
   const recentIncomeLabel = latestIncomes.length > 0
     ? (() => {
@@ -239,7 +254,6 @@ export default async function DashboardPage() {
   const cookieStore = await cookies()
   const initialHeroCollapsed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.heroCollapsed)?.value, false)
   const initialIncludePending = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.balanceIncludePending)?.value, false)
-  const initialPartnerDismissed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.partnerLeftDismissed)?.value, false)
   const initialTripCollapsed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.tripCollapsed)?.value, true)
 
   return (
@@ -268,6 +282,9 @@ export default async function DashboardPage() {
         incomeMonthTotal={incomeSummary.total}
         incomeMonthCount={incomeSummary.count}
         recentIncomeLabel={recentIncomeLabel}
+        expenseMonthTotal={expenseMonth.total}
+        expenseMonthCount={expenseMonth.count}
+        expenseMonthKey={yyyymm}
         pendings={pendings}
         expensePendings={expensePendings}
         feedDataPromise={feedDataPromise}
@@ -277,7 +294,6 @@ export default async function DashboardPage() {
         rates={rates}
         initialHeroCollapsed={initialHeroCollapsed}
         initialIncludePending={initialIncludePending}
-        initialPartnerDismissed={initialPartnerDismissed}
         initialTripCollapsed={initialTripCollapsed}
       />
     </>

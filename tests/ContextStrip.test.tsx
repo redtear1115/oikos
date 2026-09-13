@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { I18nWrapper } from './_mocks/i18n'
 import { MemberProvider, type MemberContextValue } from '@/app/(dashboard)/_components/MemberContext'
@@ -53,7 +53,6 @@ const baseMember: MemberContextValue = {
   canAccessGuardian: false,
   epochStartedAt: '2024-01-01T00:00:00.000Z',
   epochEndedAt: null,
-  hadPartner: false,
 }
 
 const tokyoTrip: ActiveTripBannerTrip = {
@@ -83,22 +82,13 @@ function renderStrip(
   props: {
     activeTrips?: ActiveTripBannerTrip[]
     baseCurrency?: string
-    initialPartnerDismissed?: boolean
     initialTripCollapsed?: boolean
   } = {},
   member: MemberContextValue = baseMember,
 ) {
-  const {
-    initialPartnerDismissed = false,
-    initialTripCollapsed = true,
-    ...rest
-  } = props
+  const { initialTripCollapsed = true, ...rest } = props
   return render(
-    <ContextStrip
-      {...rest}
-      initialPartnerDismissed={initialPartnerDismissed}
-      initialTripCollapsed={initialTripCollapsed}
-    />,
+    <ContextStrip {...rest} initialTripCollapsed={initialTripCollapsed} />,
     {
       wrapper: ({ children }) => <Wrapper member={member}>{children}</Wrapper>,
     },
@@ -156,36 +146,24 @@ describe('ContextStrip', () => {
     expect(screen.queryByText('離線中・顯示最近一次連線的資料')).toBeNull()
   })
 
-  it('renders partner-left banner when isSolo + hadPartner', () => {
-    const soloMember: MemberContextValue = {
-      ...baseMember,
-      isSolo: true,
-      hadPartner: true,
-      partner: null,
-    }
-
-    renderStrip({}, soloMember)
-
-    expect(screen.getByText('夥伴已離開帳本。之前的紀錄都還在。')).toBeTruthy()
-  })
-
-  it('partner-left banner can be dismissed', () => {
-    const soloMember: MemberContextValue = {
-      ...baseMember,
-      isSolo: true,
-      hadPartner: true,
-      partner: null,
-    }
+  // #1119 removed the partner-left variant that used to sit between the
+  // past-epoch check and the trip banner. These two guard what its removal
+  // could have broken: solo on its own says nothing, and the layer below it
+  // still reaches solo viewers.
+  it('renders nothing for a solo viewer with no other condition', () => {
+    const soloMember: MemberContextValue = { ...baseMember, isSolo: true, partner: null }
 
     const { container } = renderStrip({}, soloMember)
 
-    expect(screen.getByText('夥伴已離開帳本。之前的紀錄都還在。')).toBeTruthy()
-
-    const dismissBtn = screen.getByRole('button', { name: 'dismiss' })
-    fireEvent.click(dismissBtn)
-
     expect(container.firstChild).toBeNull()
-    expect(document.cookie).toContain('oikos_partner_left_dismissed=1')
+  })
+
+  it('still renders the trip banner for a solo viewer', () => {
+    const soloMember: MemberContextValue = { ...baseMember, isSolo: true, partner: null }
+
+    renderStrip({ activeTrips: [tokyoTrip] }, soloMember)
+
+    expect(screen.getByText('Tokyo')).toBeTruthy()
   })
 
   it('renders trip name when activeTrips provided (collapsed default)', () => {

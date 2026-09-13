@@ -277,8 +277,12 @@ export const en: Translations = {
   },
 
   dashboard: {
-    soloHint: "For now, it's just you",
-    inviteCta: 'Invite partner →',
+    soloHero: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      monthLabel: '{month}',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      countLabel: '{count} recorded',
+    },
     addExpense: 'Add entry',
     addIncome: 'Add income',
     filterLabel: 'Filter',
@@ -324,11 +328,7 @@ export const en: Translations = {
   },
 
   soloBanner: {
-    waiting: 'Your ledger is ready, for the two of you',
-    sendInviteHint: 'Send the link to your partner',
-    dismissAriaLabel: 'Dismiss',
     generating: 'Generating…',
-    sendInvite: 'Send invite',
     sharedAndCopied: 'Shared. Link also copied.',
     copied: 'Link copied',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
@@ -991,10 +991,6 @@ export const en: Translations = {
       splitType: 'Split',
       notes: 'Notes',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: 'Your partner has left the account. All previous records are still here.',
   },
 
   assets: {
