@@ -78,16 +78,35 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
   return (
     <>
       <SheetBackdrop open={open} onClick={handleClose} />
+      {/* Same shell as LeaveGroupFlow, and deliberately identical rather than
+          merely similar — the two flows share a failure mode and a fix (#1124).
+          Layout box only: it spans the viewport and pays the safe-area insets
+          so the centred panel can never grow into the notch. It stays
+          `pointer-events: none` throughout, so clicks outside the panel fall
+          through to SheetBackdrop, which owns dismiss-by-backdrop.
+
+          `env()` directly, NOT `var(--safe-top)`: globals.css zeroes
+          `--safe-top` for every sibling after the shell top stack, and this
+          flow renders inside settings, i.e. inside those siblings. The token
+          would read 0px here, so the allowance would silently be no allowance
+          at all — the markup would look fixed and the ✕ would still land under
+          the Dynamic Island. See DESIGN.md §4. */}
       <div
-        className="fixed left-1/2 top-1/2 z-modal w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card flex flex-col"
+        className="fixed inset-0 z-modal flex items-center justify-center px-4"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+          pointerEvents: 'none',
+        }}
+      >
+      <div
+        className="w-full max-w-md max-h-full rounded-card flex flex-col"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
-          boxShadow: '0 20px 60px rgba(31,27,22,0.18)',
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 200ms',
-          maxHeight: 'calc(100dvh - 64px)',
         }}
         role="dialog"
         aria-modal="true"
@@ -174,6 +193,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </>
   )
