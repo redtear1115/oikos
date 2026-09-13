@@ -253,9 +253,24 @@ Per愛物-type identity colors, each muted and emotive, with a tint derived via 
 - **Body** (Noto Sans TC, 400, 16px, line-height 1.5): List items, form inputs, prose. Keep CJK measure comfortable; cap Latin prose near 65–75ch.
 - **Label** (Noto Sans TC, 500, 14px, letter-spacing 0.6px via `tracking-label`): Section labels, chips, captions. Metadata steps down to 12px.
 - **Mini** (10px): Badge superscripts and tiny tracking labels. The only tier below 12px, and the only kept custom tier below Title.
-- **Amount** (numeric, 500, 44–56px, `tnum`): Hero balances and entry amounts. The one place numbers are allowed to be big, because the number is the moment.
+- **Amount** (numeric, 500, 40–56px, `tnum`, `tracking-amount` −1.4px): Hero balances and entry amounts. The one place numbers are allowed to be big, because the number is the moment. The two dashboard expense heroes are fluid (`text-amount-fluid`), which is where the 40px floor comes from; the static 44 and 56 tiers cover everything else.
 
-**The full scale (even-px only):** 10 (`text-mini`) · 12 (`text-xs`) · 14 (`text-sm`) · 16 (`text-base`) · 18 (`text-lg`) · 20 (`text-xl`) · 22 (`text-title`) · 26 (`text-page`) · 44 / 56 (`text-amount-md` / `text-amount-lg`). One class per tier, each mapping to a Tailwind `text-*`; inline `fontSize` is not used. The `--fs-*` custom properties mirror the custom tiers for the rare inline-only context; 18 and 20 are Tailwind natives with no `--fs-*` twin. Every pure-alias tier (`text-micro`/`label`/`body`/`caption`/`meta`/`button`) was removed in favour of the Tailwind-native `text-xs`/`sm`/`base`.
+**The full scale (even-px only):** 10 (`text-mini`) · 12 (`text-xs`) · 14 (`text-sm`) · 16 (`text-base`) · 18 (`text-lg`) · 20 (`text-xl`) · 22 (`text-title`) · 26 (`text-page`) · **40** (the `text-amount-fluid` floor — see below) · 44 / 56 (`text-amount-md` / `text-amount-lg`). One class per tier, each mapping to a Tailwind `text-*`; inline `fontSize` is not used. The `--fs-*` custom properties mirror the custom tiers for the rare inline-only context; 18 and 20 are Tailwind natives with no `--fs-*` twin. Every pure-alias tier (`text-micro`/`label`/`body`/`caption`/`meta`/`button`) was removed in favour of the Tailwind-native `text-xs`/`sm`/`base`.
+
+**The fluid tiers, and why there are two families (#1132).** Not all type here is static px. Four `clamp()` tiers scale with the viewport, and they are deliberately split along the register line this section already draws — the names carry the split, and merging them would erase it:
+
+| token | value | register |
+|---|---|---|
+| `text-amount-fluid` | `clamp(40px, 12vw, 56px)` | **product** — both dashboard expense heroes |
+| `text-display-wordmark` | `clamp(56px, 14vw, 84px)` | **brand** — landing, mobile wordmark |
+| `text-display-tagline` | `clamp(34px, 9vw, 56px)` | **brand** — landing, mobile tagline |
+| `text-display-tagline-lg` | `clamp(56px, 8vw, 96px)` | **brand** — landing, desktop headline |
+
+40 and 34 are real rendered sizes, not typos against the Even-Px Rule: both are even, and both are the *lower bound of a range* rather than a tier anyone sets directly. **Do not "correct" a `clamp()` floor up to the nearest listed tier** — that changes what ships on narrow screens, and nothing in CI will catch it.
+
+The landing page's own letter-spacings (−1.5 / −1 / −3.5px) stay inline on purpose: each appears exactly once, so there is no drift to prevent, and promoting a one-off to a token would describe a scale that does not exist.
+
+**Tracking tokens live in the `--tracking-*` namespace.** `--tracking-label` (0.6px) and `--tracking-amount` (−1.4px). This is load-bearing: `--letter-spacing-*` generates no utility at all, and until #1143 `tracking-label` silently resolved to `letter-spacing: normal` in all 12 places that asked for it. Nothing failed loudly — the class was spelled correctly, the token was defined and commented, no build warning fired. When adding a tracking token, confirm the computed value in a browser rather than trusting that the class exists.
 
 ### Named Rules
 
@@ -284,6 +299,8 @@ What the system does have instead of shadows is an explicit **stacking order**, 
 - `z-top-toast` (120): the ceiling. Nothing goes above it.
 
 Because the app runs inside iOS and Android WebViews, elevation also means respecting what the OS occupies. Any fixed, sticky, or absolutely-positioned element must clear `env(safe-area-inset-*)`: the notch and Dynamic Island at the top, the home indicator and Android gesture bar at the bottom. `--bottom-nav-offset` (112px) reserves scroll clearance so the last feed row is not pinched by the FAB, but it solves only the bottom. A destructive-confirmation screen whose escape control sits under the notch is a trap, and has shipped before.
+
+**Read the inset from `env()`, not from `--safe-top`, anywhere under the dashboard shell.** `--safe-top` is not a general-purpose safe-area source: it exists for the shell's top stack, where `.shell-top-strip ~ *` and `.shell-top-stack:has(> *) ~ *` deliberately zero it so the inset is paid exactly once by whichever band is topmost. Page content inside the shell *is* one of those later siblings, so `var(--safe-top)` reads `0px` there. Using it looks like handling the safe area and provides no allowance at all — no error, no warning, correct-looking markup, and the control still lands under the Dynamic Island. It is only visible by reaching for the control on a notched device. `LeaveGroupFlow` (#1124) carries a comment at its own use of `env(safe-area-inset-top, 0px)` saying this, because the Existing-Token-First Rule otherwise reads as an instruction to "fix" it back.
 
 ### Shadow Vocabulary (deliberately tiny)
 - **Thumb lift** (`box-shadow: 0 1px 3px rgba(58,36,25,0.20)`): Only on the moving thumb of a switch, so the moving piece reads as physical.
