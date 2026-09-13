@@ -1827,6 +1827,10 @@ export const en: Translations = {
       submitFailed: 'Submission failed. Please try again.',
       alreadyAnswered: "You've already finished",
       // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      alreadyRevealed: 'This quiz is already open, so the answers are set.',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      wrongGroup: 'This quiz belongs to a different ledger',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
       solo: 'This quiz is answered by two people',
     },
     questions: {

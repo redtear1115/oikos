@@ -21,9 +21,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### 使用者可見變化
 
 - **一個人記帳時，dashboard 上有自己的主畫面了（#1118）**：原本那塊位置放的是「邀請對方」的 banner，關掉之後只剩一行灰字，看不到任何金額。現在顯示當月總額與筆數；收入模式與雙人一樣。邀請功能維持在 設定 → 成員。
+- **兩個人的問答，錯誤訊息會跟著介面語言了（#1140）**：先前四種情況（已經答完、已經揭曉、找不到這次的問答、問答不屬於這個家計簿）不論介面設定成哪一種語言，一律顯示繁體中文。最常遇到的是兩台裝置或兩個分頁同時送出同一次作答。
 
 ### 技術變更
 
+- **`partner_quiz_started` 從發不出去的地方搬到真正建立 session 的地方（#1139）**：唯一的發送點在 `startPartnerQuizSession()` 裡，而那個 action 自 lazy-create 改寫後就沒有生產呼叫端——事件在 prod 恆為 0，同一份 spec 的 `partner_quiz_completed` 卻正常送出，兩者併用會算出無限大的轉換率。埋點移入 `review/[month]/quiz/page.tsx` 的 insert 成功分支（UNIQUE 衝突後 re-read 那條刻意不送，否則每次重整都算一次「開始」），孤兒 action 與它的測試一併刪除。**基準要從部署日重算**：這不是成長，是終於有東西可以量了。
+- **partner quiz 的 server action 全面改丟錯誤代碼（#1140）**：`submitPartnerQuizAnswers` 剩下的四條繁中字面值換成 `session_not_found` / `wrong_group` / `already_revealed` / `already_answered`，由 `describeQuizError` 映射；`quiz.errors` 新增 `alreadyRevealed` / `wrongGroup` 兩個 key（4 語），另外兩條沿用既有的 `quiz.errors.alreadyAnswered` 與 `quiz.errorNotFound`。`describeQuizError` 的參數從 `quiz.errors` 放寬成整個 `quiz`，才拿得到 `errorNotFound`——那句話同時是 `QuestionCard` 壞 key fallback 的文案，複製一份會多出一個漂移點。
 - **solo 穩態收斂成一種（#1118 / #1119）**：`SoloBanner` 與 dashboard 上所有邀請 CTA 刪除，改由新的 `SoloMonthHero`（沿用 `monthlyStatsByCategory`，只在 solo 時查）填 hero slot；`MemberContext.hadPartner` 與 `ContextStrip` 的 partner-left 分支整組移除——`hadPartner` 讀當下的 `member_b`，在它要偵測的狀態下恆為 false，該分支從來沒有被渲染過。連帶清掉 `oikos_partner_left_dismissed` cookie 與 `oikos_solo_banner_dismissed` localStorage 這兩套 dismissal 機制。
 
 ## [1.5.12] - 2026-09-13

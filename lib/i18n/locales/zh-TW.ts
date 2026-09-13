@@ -2242,10 +2242,13 @@ export type Translations = {
     soloFallback: string
     /** Generic error: session doesn't exist or doesn't belong to viewer. */
     errorNotFound: string
-    /** Errors thrown by submitPartnerQuizAnswers / startPartnerQuizSession. */
+    /** Errors thrown by submitPartnerQuizAnswers, mapped by `describeQuizError`.
+     *  `session_not_found` reuses `errorNotFound` above rather than duplicating it. */
     errors: {
       submitFailed: string
       alreadyAnswered: string
+      alreadyRevealed: string
+      wrongGroup: string
       solo: string
     }
     /** Question pool — 6 keys, each with prompt + 3 lettered choices. */
@@ -4395,6 +4398,8 @@ export const zhTW: Translations = {
     errors: {
       submitFailed: '送出失敗，等一下再試',
       alreadyAnswered: '你已經答完了',
+      alreadyRevealed: '這次問答已經揭曉，答案不能再改了',
+      wrongGroup: '這次的問答不屬於這個家計簿',
       solo: '這份問答是兩個人一起答的',
     },
     questions: {

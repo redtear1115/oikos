@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockBuilder, mockDb, queueDbResult, resetDbMocks } from './_mocks/db'
-import {
-  startPartnerQuizSession,
-  submitPartnerQuizAnswers,
-} from '@/actions/partnerQuiz'
+import { submitPartnerQuizAnswers } from '@/actions/partnerQuiz'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -19,43 +16,6 @@ const GOOD_ANSWERS = [
 beforeEach(() => {
   resetDbMocks()
   setMockUser(VIEWER)
-})
-
-describe('startPartnerQuizSession', () => {
-  it('returns the existing session when one already exists', async () => {
-    queueDbResult([GROUP])
-    queueDbResult([{ id: 'sess-1', questionKeys: QUESTION_KEYS }])
-
-    const out = await startPartnerQuizSession()
-    expect(out).toEqual({
-      sessionId: 'sess-1',
-      questionKeys: QUESTION_KEYS,
-      createdNew: false,
-    })
-  })
-
-  it('creates a session with 3 random keys when none exists', async () => {
-    queueDbResult([GROUP])
-    queueDbResult([])                          // no existing
-    queueDbResult([{ id: 'sess-new', questionKeys: ['big_purchase', 'future', 'recording_motive'] }])
-
-    const out = await startPartnerQuizSession()
-    expect(out.createdNew).toBe(true)
-    expect(out.sessionId).toBe('sess-new')
-    expect(out.questionKeys).toHaveLength(3)
-
-    const insertedValues = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
-    expect(insertedValues.groupId).toBe(GROUP.id)
-    // Insert payload carries 3 distinct keys from the pool.
-    const inserted = insertedValues.questionKeys as string[]
-    expect(inserted).toHaveLength(3)
-    expect(new Set(inserted).size).toBe(3)
-  })
-
-  it('refuses to start for a solo group', async () => {
-    queueDbResult([SOLO_GROUP])
-    await expect(startPartnerQuizSession()).rejects.toThrow(/一個人/)
-  })
 })
 
 describe('submitPartnerQuizAnswers', () => {
@@ -139,7 +99,7 @@ describe('submitPartnerQuizAnswers', () => {
     await expect(submitPartnerQuizAnswers({
       sessionId: 'sess-3',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/答完/)
+    })).rejects.toThrow(/^already_answered$/)
 
     expect(mockDb.insert).not.toHaveBeenCalled()
   })
@@ -156,7 +116,7 @@ describe('submitPartnerQuizAnswers', () => {
     await expect(submitPartnerQuizAnswers({
       sessionId: 'sess-x',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/不屬於/)
+    })).rejects.toThrow(/^wrong_group$/)
   })
 
   it('refuses when the session is already revealed', async () => {
@@ -171,7 +131,7 @@ describe('submitPartnerQuizAnswers', () => {
     await expect(submitPartnerQuizAnswers({
       sessionId: 'sess-4',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/揭曉/)
+    })).rejects.toThrow(/^already_revealed$/)
   })
 
   it('rejects an answer set whose keys don’t match the session', async () => {
@@ -193,9 +153,12 @@ describe('submitPartnerQuizAnswers', () => {
     })).rejects.toThrow(/範圍/)
   })
 
-  // #1123 — QuestionCard renders whatever this action throws. A prose message
-  // here would ship hard-coded zh-TW to en / ja viewers, so the contract is an
-  // error CODE that `describeQuizError` maps to `quiz.errors.solo`.
+  // #1123 / #1140 — QuestionCard renders whatever this action throws. A prose
+  // message here would ship hard-coded zh-TW to en / ja viewers, so the contract
+  // for every rejection is an error CODE that `describeQuizError` maps to a
+  // dictionary entry. The regexes above and below are anchored on purpose: a
+  // substring match would still pass if someone reintroduced a sentence that
+  // happens to contain the code.
   it('refuses in solo mode with a code, not prose', async () => {
     queueDbResult([SOLO_GROUP])
     await expect(submitPartnerQuizAnswers({
