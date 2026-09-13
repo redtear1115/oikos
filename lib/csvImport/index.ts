@@ -8,7 +8,9 @@
  *
  * Auto-detect uses the shared header sniffer in `detector.ts`; when the file
  * doesn't match a known source it falls through to `'generic'` and the caller
- * is expected to supply a `HeaderMap` via the mapping wizard.
+ * is expected to supply a `HeaderMap` via the mapping wizard. A caller-supplied
+ * `'generic'` is still sniffed for the `futari_generic` signature — see
+ * `resolveSource` below for why that one label is not taken at face value.
  *
  * OFX / QIF take a separate codepath: `detectFormat` sniffs the decoded text
  * for `OFXHEADER:` / `<OFX>` / `!Type:`, and the file skips the CSV parser
@@ -73,7 +75,9 @@ import type {
 } from './types'
 
 export interface ProcessOptions {
-  /** Force a specific source. Skips header sniffing. */
+  /** Force a specific source. Skips header sniffing — except for `'generic'`,
+   *  which is a "no signature, use my headerMap" marker rather than a source
+   *  and is re-sniffed for `futari_generic` (see `resolveSource`). */
   source?: DetectedSource
   /** Required when source resolves to `'generic'`. */
   headerMap?: HeaderMap
@@ -162,9 +166,36 @@ export function processBuffer(
   return runCsv(text, options)
 }
 
+/**
+ * Which mapper the file actually gets.
+ *
+ * `'generic'` is the one caller-supplied source that is still sniffed, because
+ * it isn't a source: it means "I have no signature for this file, use my
+ * headerMap". The screenshot→ChatGPT→CSV output (#839 P2) lands there — the
+ * wizard has no button for `futari_generic` (it is meant to be *recognised*,
+ * not picked), so the file arrived labelled `'generic'` and went through
+ * `mapGeneric` with the wizard's hardcoded `{ date: 'Date', amount: 'Amount' }`
+ * map. Those headers are lowercase, `mapGeneric`'s lookup is case-sensitive,
+ * and the result was zero valid rows behind the generic「沒有有效資料」
+ * message — no error, nothing naming the real cause, so nobody reported it as
+ * this bug (#1094).
+ *
+ * Only the `futari_generic` upgrade happens here. A user who picks the generic
+ * wizard for a Honeydue/Spendee/CWMoney export still gets their headerMap
+ * honoured, and the forced sources (incl. ofx / qif) are never second-guessed.
+ */
+function resolveSource(
+  headers: readonly string[],
+  requested: DetectedSource | undefined,
+): DetectedSource {
+  if (!requested) return detectSource(headers)
+  if (requested !== 'generic') return requested
+  return detectSource(headers) === 'futari_generic' ? 'futari_generic' : 'generic'
+}
+
 function runCsv(text: string, options: ProcessOptions): ProcessResult {
   const { headers, rows: rawRows } = parseCsvText(text)
-  const source = options.source ?? detectSource(headers)
+  const source = resolveSource(headers, options.source)
   // Empty file: nothing to map. Bail before requiring a headerMap so callers
   // can probe the file shape without committing to a mapper choice.
   if (rawRows.length === 0) {
