@@ -315,13 +315,29 @@ export function Dashboard({
       {/* Hero slot. Only the expense side ever differed by member count: a
           solo ledger has no balance to show, so it shows the month instead.
           The income branch of BalanceHero never involved a partner, so solo
-          and duo share it. (#1118) */}
+          and duo share it. (#1118)
+
+          Nothing at all while pinned to a past chapter (#1131). The figures
+          come from `monthlyStatsByCategory`, which ANDs "this calendar month"
+          against the pinned epoch's rows — an intersection that is empty for
+          any chapter that closed before this month. The hero would render
+          "{current month} · NT$ 0 · 0 筆": a heading holding an opinion about a
+          month that is not in this chapter. PRODUCT.md's rule is to not
+          surface a number the user cannot act on, and a past chapter is
+          read-only by design, so there is no version of this figure worth
+          showing here.
+
+          Do NOT "fix" this by falling back to BalanceHero: `getGroupBalance()`
+          takes no epoch argument, so it would show the *current* balance
+          inside a frozen chapter. Honest and empty beats wrong. */}
       {isSolo && mode === 'expense' ? (
-        <SoloMonthHero
-          monthKey={expenseMonthKey}
-          total={expenseMonthTotal}
-          count={expenseMonthCount}
-        />
+        isPast ? null : (
+          <SoloMonthHero
+            monthKey={expenseMonthKey}
+            total={expenseMonthTotal}
+            count={expenseMonthCount}
+          />
+        )
       ) : (
         <BalanceHero
           rawBalance={balance}
