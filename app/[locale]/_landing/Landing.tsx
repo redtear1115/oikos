@@ -133,12 +133,11 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
                 carries the actual page heading (tagline) so screen-reader
                 navigation lands on page purpose, not the brand name. */}
             <p
-              className="md:hidden m-0 text-center"
+              className="md:hidden m-0 text-center text-display-wordmark"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontWeight: 500,
                 letterSpacing: '-1.5px',
-                fontSize: 'clamp(56px, 14vw, 84px)',
                 lineHeight: 1,
               }}
             >
@@ -171,9 +170,8 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
                   even though per-character it's smaller; lh 1.15 keeps
                   the block tight, letter-spacing -1px tightens CJK rhythm. */}
               <span
-                className="md:hidden block"
+                className="md:hidden block text-display-tagline"
                 style={{
-                  fontSize: 'clamp(34px, 9vw, 56px)',
                   fontWeight: 400,
                   lineHeight: 1.15,
                   letterSpacing: '-1px',
@@ -182,9 +180,8 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
               />
               {/* desktop: tagline as the giant headline */}
               <span
-                className="hidden md:inline"
+                className="hidden md:inline text-display-tagline-lg"
                 style={{
-                  fontSize: 'clamp(56px, 8vw, 96px)',
                   letterSpacing: '-3.5px',
                 }}
                 dangerouslySetInnerHTML={{ __html: t.taglineHtml }}
