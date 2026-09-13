@@ -42,7 +42,9 @@ export function QuizClient(props: QuizClientProps) {
   if (props.mode === 'solo') {
     return (
       <FullScreenSurface
-        title={tq.revealHeading}
+        // Not `revealHeading` — that one is second-person plural (「你們的」),
+        // addressed to a viewer who is here alone. (#1123)
+        title={tq.soloHeading}
         body={tq.soloFallback}
         backHref={reviewHref}
         backLabel={tq.answerBack}

@@ -52,7 +52,21 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        await removePartner()
+        const { epochId } = await removePartner()
+        // Mark the brand-new solo epoch so `PartnerLeftCard` renders its
+        // removal variant instead of "{partner} has left" (#1121). The server
+        // can't tell the two apart — removal closes the duo epoch and opens a
+        // solo one, exactly like the partner walking out — so the distinction
+        // only exists on the client that performed the removal. Same shape as
+        // `LeaveGroupFlow`'s `futari_just_left_` flag.
+        if (epochId) {
+          try {
+            window.localStorage.setItem('futari_partner_removed_' + epochId, '1')
+          } catch {
+            // Private-browsing storage failure: the card falls back to the
+            // "partner left" copy. Not worth blocking the navigation.
+          }
+        }
         router.refresh()
         router.push('/dashboard')
       } catch (e) {
