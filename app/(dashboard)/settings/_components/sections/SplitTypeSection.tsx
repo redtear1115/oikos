@@ -83,7 +83,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               aria-checked={sel}
               onClick={() => handleChange(opt.id)}
               disabled={saving}
-              className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
+              className="flex items-center justify-between min-h-11 px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
               style={{
                 borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
                 background: 'transparent',

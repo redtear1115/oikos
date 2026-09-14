@@ -164,7 +164,7 @@ function SwapPendingBanner({
             type="button"
             onClick={run(cancelSwap)}
             disabled={busy}
-            className="flex-1 h-10 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
+            className="flex-1 h-11 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{
               background: 'var(--btn-secondary-bg)',
               color: 'var(--btn-secondary-text)',
@@ -179,7 +179,7 @@ function SwapPendingBanner({
               type="button"
               onClick={run(cancelSwap)}
               disabled={busy}
-              className="flex-1 h-10 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
+              className="flex-1 h-11 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{
                 background: 'var(--btn-secondary-bg)',
                 color: 'var(--btn-secondary-text)',
@@ -192,7 +192,7 @@ function SwapPendingBanner({
               type="button"
               onClick={run(confirmSwap)}
               disabled={busy}
-              className="flex-1 h-10 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
+              className="flex-1 h-11 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
               style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
             >
               {busy ? banner.processing : banner.acceptCta}

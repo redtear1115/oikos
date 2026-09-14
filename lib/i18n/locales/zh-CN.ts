@@ -479,6 +479,7 @@ export const zhCN: Translations = {
   splitRatioSection: {
     meSuffix: '（我）',
     partnerSuffix: '（对方）',
+    ariaLabel: '默认分摊比例',
   },
 
   errorPage: {
