@@ -208,7 +208,7 @@ Couples and partners — spouses, life partners, or co-living roommates — who 
 
 ### Will my data disappear?
 
-No. Data is stored in Supabase Postgres with automatic backups. Futari does not have an inactivity-deletion policy. Past chapters become read-only but remain in the database forever, accessible via the past-times view.
+No. Futari does not have an inactivity-deletion policy. Past chapters become read-only but stay in your ledger for as long as your account exists, accessible via the past-times view.
 
 For deleted records, Futari uses soft-delete: edited or deleted entries are marked `deleted_at` and physically removed only after one year by a scheduled job. This means accidental deletions are recoverable within a year via database-level recovery.
 
@@ -248,9 +248,9 @@ Futari supports relationship transitions through **chapters (epochs)**. When a p
 
 ### How does Futari handle privacy?
 
-- All data is stored in Supabase Postgres with row-level security ensuring only group members can read/write their group's data.
-- Sensitive fields (insurance details, financial identifiers) use application-level encryption.
-- Authentication is handled via Supabase Auth (email + password).
+- Each ledger is open only to its two members. Access is scoped by group membership in the app's server-side code; row-level security additionally scopes realtime reads to group members.
+- A small set of sensitive aibutsu fields — a child's legal name, national ID number and health-insurance card number, a car's licence plate, a home address, and an e-invoice carrier verification code — are encrypted with AES-256-GCM by the application before they are written to the database. The key is held server-side, so this is field-level encryption at rest, not end-to-end encryption; the rest of the ledger (amounts, descriptions, categories, notes) is stored without application-level encryption.
+- Connections to the app use HTTPS. Sign-in is via Google or Apple (Supabase Auth OAuth).
 - There is no third-party analytics tracking individual users' financial data.
 
 ### Is there a desktop version?

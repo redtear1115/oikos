@@ -20,9 +20,9 @@ related_issues: ["#19", "#126", "#1206", "#1225"]
 
 Oikos 是 mobile-first PWA：`public/manifest.json` 已宣告 `display: standalone`、`start_url: /dashboard`，使用者可從手機加到主畫面、看似 app。但目前**沒有任何 Service Worker**，斷網時主畫面點下去只會看到瀏覽器離線頁——對「家庭日常記帳」這類隨時想翻一下歷史的場景體感不好（捷運上、地下停車場、出國漫遊等都會踩到）。
 
-需求面只要求「瀏覽」，不要求「寫入」。離線寫入會帶來 conflict resolution、雙人 race、加密欄位（v0.10.0 才剛端到端加密）的安全疑慮，**全部不在本 spec 範圍**。
+需求面只要求「瀏覽」，不要求「寫入」。離線寫入會帶來 conflict resolution、雙人 race、加密欄位（v0.10.0 才剛上欄位級靜態加密）的安全疑慮，**全部不在本 spec 範圍**。
 
-此外，把 PII（金額、姓名、遮罩 ID）cache 在裝置上是**裝置端的隱私決定**，不是純技術功能。v0.10.0 剛把身分證／健保卡 E2E 加密，呼應「使用者控制自己資料」的基調，本功能採 **opt-in**：預設關閉，使用者到 Settings 主動開啟才會註冊 SW、開始 cache。共用裝置、低可信任環境、儲存吃緊的舊機都可以選擇不開。
+此外，把 PII（金額、姓名、遮罩 ID）cache 在裝置上是**裝置端的隱私決定**，不是純技術功能。v0.10.0 剛把身分證／健保卡做欄位級靜態加密，呼應「使用者控制自己資料」的基調，本功能採 **opt-in**：預設關閉，使用者到 Settings 主動開啟才會註冊 SW、開始 cache。共用裝置、低可信任環境、儲存吃緊的舊機都可以選擇不開。
 
 ---
 
@@ -56,7 +56,7 @@ Oikos 是 mobile-first PWA：`public/manifest.json` 已宣告 `display: standalo
 
 | 維度 | 決定 | 理由 |
 |---|---|---|
-| 啟用模式 | **opt-in via Settings 開關**，預設關閉；存 localStorage `offline-browsing-enabled` | Cache PII 是裝置端隱私決定（v0.10.0 才剛 E2E 加密敏感欄位）；尊重「使用者控制自己資料」基調 |
+| 啟用模式 | **opt-in via Settings 開關**，預設關閉；存 localStorage `offline-browsing-enabled` | Cache PII 是裝置端隱私決定（v0.10.0 才剛以欄位級靜態加密保護敏感欄位）；尊重「使用者控制自己資料」基調 |
 | Toggle 持久化位置 | **localStorage（per device / browser）**，不存 Supabase user prefs | SW 是裝置能力（瀏覽器支援、儲存配額、共享裝置疑慮），語意上是 per-device 而非 per-user；同帳號跨裝置要分別 opt-in |
 | Toggle off 行為 | **unregister SW + 清 caches + localStorage = false** | 使用者關閉是主動撤回信任，不只 bypass cache 還要把已存資料抹乾淨 |
 | SW framework | **Serwist (`@serwist/next`)** | next-pwa 維護停滯、Next 16 / App Router 兼容回報差；Serwist 為其精神後繼 |

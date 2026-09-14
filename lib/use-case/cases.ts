@@ -28,7 +28,7 @@ export type UseCaseDef = {
 export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   cohabitation: {
     slug: 'cohabitation',
-    contentUpdatedAt: '2026-05-30',
+    contentUpdatedAt: '2026-09-15',
     features: ['split', 'realtime', 'encrypt', 'history'],
   },
   newlyweds: {
@@ -38,42 +38,42 @@ export const USE_CASES: Record<UseCaseSlug, UseCaseDef> = {
   },
   'pet-owners': {
     slug: 'pet-owners',
-    contentUpdatedAt: '2026-05-30',
+    contentUpdatedAt: '2026-09-15',
     features: ['asset', 'split', 'history', 'encrypt'],
   },
   travel: {
     slug: 'travel',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['trip', 'split', 'realtime', 'history'],
   },
   roommates: {
     slug: 'roommates',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['split', 'realtime', 'encrypt', 'history'],
   },
   'monthly-bills': {
     slug: 'monthly-bills',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['split', 'realtime', 'history', 'encrypt'],
   },
   'big-purchases': {
     slug: 'big-purchases',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['asset', 'split', 'history', 'realtime'],
   },
   dining: {
     slug: 'dining',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['split', 'realtime', 'history', 'encrypt'],
   },
   parenting: {
     slug: 'parenting',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['asset', 'split', 'realtime', 'history'],
   },
   'aa-split': {
     slug: 'aa-split',
-    contentUpdatedAt: '2026-05-31',
+    contentUpdatedAt: '2026-09-15',
     features: ['split', 'realtime', 'encrypt', 'history'],
   },
 } as const

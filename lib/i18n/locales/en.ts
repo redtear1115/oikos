@@ -90,14 +90,14 @@ export const en: Translations = {
     cta: 'Begin together',
     ctaHint: 'Free · Try without signing up · For two',
     alreadyHaveAccount: 'I already have an account',
-    trustEncrypted: 'End-to-end encrypted',
+    trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: 'Your records belong only to the two of you. No ads, no data selling.',
       encryption: {
-        title: 'End-to-end encrypted',
-        body: 'Your data is encrypted in transit and at rest. Not even we can read it.',
+        title: 'Open only to you two',
+        body: "Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details like a child's legal name or ID number get an extra layer of encryption before they're stored.",
       },
       portability: {
         title: 'Take it with you',
@@ -143,7 +143,7 @@ export const en: Translations = {
       cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
       seeAll: 'See all migration guides',
     },
-    footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
+    footerTrust: 'Open only to you two · Your data stays between the two of you',
     jsonLdAppName: 'Futari',
     jsonLdAlternateNames: ["Futari · couple's ledger", 'Futari shared finance app', '兩個人的家計簿', 'ふたり 家計簿'],
     jsonLdAppDescription:
@@ -171,7 +171,7 @@ export const en: Translations = {
       {
         question: 'Is my data safe?',
         answer:
-          "All data is stored in an encrypted Supabase database, accessible only to you and your partner. We don't share or sell your ledger content.",
+          "Your ledger is open only to you and your partner. Connections are encrypted over HTTPS, and sensitive fields such as a child's legal name, ID number, health insurance number, licence plate, and home address are encrypted before they're written to the database. We don't share or sell your ledger content.",
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -1155,21 +1155,21 @@ export const en: Translations = {
     pageHeading: 'Your records belong to the two of you',
     pageSubtitle: 'Our promises, written down here.',
     encryption: {
-      heading: 'Only the two of you can read it',
-      body: 'We encrypt your records with AES-256-GCM. We can\'t read them either.',
+      heading: 'Open only to the two of you',
+      body: "Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details like a child's legal name, ID number, licence plate, and address get an extra layer of encryption before we store them.",
     },
     portability: {
       heading: 'Take it all with you, anytime',
       body: 'We won\'t lock you in. If you ever want to leave, you can take everything with you.',
     },
     backup: {
-      heading: 'We hold them safe for you',
-      body: 'We back up every record we keep for you. Even if you forget, we won\'t.',
+      heading: 'Every entry, kept',
+      body: "As long as your account is here, every entry you've recorded stays here.",
     },
     onboarding: {
       line1: 'Your records, only yours',
       line2: 'Take it all with you, anytime',
-      line3: 'Every entry, held safe by us',
+      line3: 'Every entry, kept',
     },
     bilateral: {
       inviter: {
@@ -2104,8 +2104,8 @@ export const en: Translations = {
       heading: 'Why this is safe to do',
       items: [
         {
-          title: 'End-to-end encrypted',
-          body: 'Nobody outside the two of you can read what is in this ledger.',
+          title: 'Open only to you two',
+          body: 'Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details are stored encrypted.',
         },
         {
           title: 'Yours to take back',
@@ -2117,7 +2117,7 @@ export const en: Translations = {
         },
       ],
     },
-    footerTrust: 'End-to-end encrypted · this ledger belongs to the two of you',
+    footerTrust: 'Open only to you two · this ledger belongs to the two of you',
     // TODO(#612): en copy below pending native review
     otherSources: {
       heading: 'Coming from another app?',
@@ -2227,7 +2227,7 @@ I will upload the screenshots once you confirm.`,
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Your Honeydue history can come with you',
         heroSubtitle: 'Move from Honeydue to Futari in about three minutes: upload your CSV and keep years of shared budgeting intact.',
-        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home: free, ad-free, and end-to-end encrypted.",
+        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home: free, ad-free, and open only to the two of you.",
         differentiators: [
           {
             title: 'Still actively shipping',
@@ -2884,7 +2884,7 @@ I will upload the screenshots once you confirm.`,
     migrate: {
       honeydue: {
         title: 'Import from Honeydue to Futari',
-        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples: Futari is an ad-free, end-to-end encrypted ledger. Move your data in 3 minutes.',
+        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples: Futari is an ad-free ledger just for the two of you. Move your data in 3 minutes.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
@@ -2900,22 +2900,22 @@ I will upload the screenshots once you confirm.`,
       // TODO(#839): en copy below pending native review
       moneybook: {
         title: 'Import from Moneybook to Futari · CSV guide',
-        description: 'Moving Moneybook data to a shared ledger? Export CSV and import into Futari, built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Moneybook data to a shared ledger? Export CSV and import into Futari, built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where Moneybook users go next: export CSV and import into Futari.',
       },
       andromoney: {
         title: 'Import from AndroMoney to Futari · CSV guide',
-        description: 'Moving AndroMoney data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving AndroMoney data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where AndroMoney users go next: export CSV and import into Futari.',
       },
       mobills: {
         title: 'Import from Mobills to Futari · CSV guide',
-        description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where Mobills users go next: export CSV and import into Futari.',
       },
       manebo: {
         title: 'Import from Manebo to Futari · Couple budgeting',
-        description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
       },
       'simple-daily-money': {
@@ -2931,12 +2931,12 @@ I will upload the screenshots once you confirm.`,
       },
       cashman: {
         title: 'Move from CashMan to Futari · screenshot to CSV',
-        description: 'No CSV export? Screenshot CashMan, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        description: 'No CSV export? Screenshot CashMan, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, just for you two.',
         ogDescription: 'CashMan has no export — screenshot → ChatGPT → CSV → Futari.',
       },
       '1money': {
         title: 'Move from 1Money to Futari · screenshot to CSV',
-        description: 'No full export? Screenshot 1Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        description: 'No full export? Screenshot 1Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, just for you two.',
         ogDescription: '1Money to a two-person ledger — screenshot → ChatGPT → CSV → Futari.',
       },
       icost: {
@@ -2963,12 +2963,12 @@ I will upload the screenshots once you confirm.`,
     useCaseHub: {
       title: 'Ten ways two people share a ledger · cohabiting, newlyweds, travel, pets | Futari',
       description: 'Rent after moving in, a first married budget, a trip to settle, a cat with vet bills — ten ways two people share a ledger. Pick the closest one.',
-      ogDescription: 'Ten situations, one shared ledger. Pick the one closest to your life — Futari is free, ad-free and end-to-end encrypted.',
+      ogDescription: 'Ten situations, one shared ledger. Pick the one closest to your life — Futari is free, ad-free and just for the two of you.',
     },
     useCase: {
       cohabitation: {
         title: 'Cohabitation budgeting · splitting living costs as a couple | Futari',
-        description: 'Splitting living costs after moving in together? Futari is a shared ledger for two — split 50/50, by income, or however suits you. Free and encrypted.',
+        description: 'Splitting living costs after moving in together? Futari is a shared ledger for two — split 50/50, by income, or however suits you. Free, just for you two.',
         ogDescription: 'The shared ledger for cohabiting couples — split costs fairly, see the balance clearly.',
       },
       newlyweds: {
@@ -3041,8 +3041,8 @@ I will upload the screenshots once you confirm.`,
         body: 'One person records something and the other sees it instantly. The ledger is the conversation.',
       },
       encrypt: {
-        title: 'End-to-end encryption',
-        body: 'Your ledger is visible only to the two of you. The server never decrypts what you record.',
+        title: 'Open only to you two',
+        body: "Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details like a child's legal name or ID number are encrypted again before they're stored.",
       },
       history: {
         title: 'Chapter-based history',
@@ -3124,7 +3124,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: 'What\'s the best app for splitting costs when living together?',
-            answer: 'Futari is a shared ledger designed for two people from the ground up. It supports multiple split modes, real-time sync, and end-to-end encryption — without having to retrofit a personal finance app.',
+            answer: 'Futari is a shared ledger designed for two people from the ground up. It supports multiple split modes and real-time sync, and the ledger is open only to the two of you — without having to retrofit a personal finance app.',
           },
           {
             question: 'How do we track who owes what when cohabiting?',
@@ -3132,7 +3132,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3256,7 +3256,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: 'What\'s a good app for splitting costs with a roommate?',
-            answer: 'Futari is a shared ledger built for two people. It supports multiple split modes, real-time sync, and end-to-end encryption — so shared living costs are always visible to both without needing group chat reconciliation.',
+            answer: 'Futari is a shared ledger built for two people. It supports multiple split modes and real-time sync — so shared living costs are always visible to both without needing group chat reconciliation.',
           },
           {
             question: 'How do we track who owes what for shared bills?',
@@ -3264,7 +3264,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3297,7 +3297,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3330,7 +3330,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3363,7 +3363,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3396,7 +3396,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3429,7 +3429,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },

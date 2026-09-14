@@ -65,7 +65,7 @@ export const zhCN: Translations = {
       c2Body: '旅行子账本独立记账，回来清楚看这趟谁多付了多少，不用再翻聊天记录对账。',
       c3Title: '这笔是帮你买的',
       c3Body: '每笔账可以留一句话。让那个「顺手帮你缴的」不只是数字，是一句记得。',
-      c4Title: '你们的账，只有你们看得到',
+      c4Title: '你们的账，只开放给你们俩',
       c4Body: '没有「我的账」跟「你的账」之分。进来的就是共同的，没有可见度分级。',
     },
     blog: {
@@ -90,14 +90,14 @@ export const zhCN: Translations = {
     cta: '一起记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
-    trustEncrypted: '端到端加密',
+    trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
       encryption: {
-        title: '端到端加密',
-        body: '数据传输与存储全程加密，连我们自己也读不到内容。',
+        title: '只开放给你们俩',
+        body: '账本只对你们两人的账号开放。连接以 HTTPS 加密；宝宝本名、身份证号这类敏感数据，会再加密一层才存进数据库。',
       },
       portability: {
         title: '随时带走',
@@ -143,7 +143,7 @@ export const zhCN: Translations = {
       cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
       seeAll: '看全部迁移指南',
     },
-    footerTrust: '端到端加密 · 数据只属于你们两个',
+    footerTrust: '只开放给你们俩 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · 双人记账',
     jsonLdAlternateNames: ['Futari 家计簿', '两个人的家计簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
@@ -171,7 +171,7 @@ export const zhCN: Translations = {
       {
         question: '数据安全吗？',
         answer:
-          '所有数据存储于 Supabase 加密数据库，仅你和伴侣两人能访问。我们不会分享或出售你的记账内容。',
+          '账本只开放给你和伴侣两人。连接以 HTTPS 加密；宝宝本名、身份证号、健保卡号、车牌、房屋地址等敏感字段，会先加密才存进数据库。我们不会分享或出售你的记账内容。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -1147,21 +1147,21 @@ export const zhCN: Translations = {
     pageHeading: '你们的数据，属于你们俩',
     pageSubtitle: '我们的承诺，写在这里。',
     encryption: {
-      heading: '只有你们俩能看到',
-      body: '我们用 AES-256-GCM 为你们的记录加密。连我们自己，也读不到内容。',
+      heading: '只开放给你们俩',
+      body: '账本只对你们两人的账号开放。连接以 HTTPS 加密；宝宝本名、身份证号、车牌和地址这类敏感数据，我们会再加密一层才存进数据库。',
     },
     portability: {
       heading: '随时都能整包带走',
       body: '我们不会把你们绑在这里。日后想离开，所有记录都能整批带走。',
     },
     backup: {
-      heading: '我们替你们守着',
-      body: '每一笔记录，我们都备份保管。即使你们忘了，我们也替你们留着。',
+      heading: '每一笔，都会好好留着',
+      body: '只要账号还在，你们记下的每一笔都会留在这里。',
     },
     onboarding: {
       line1: '数据只属于你们俩',
       line2: '随时都能整包带走',
-      line3: '每一笔我们都替你们守着',
+      line3: '每一笔，都会好好留着',
     },
     bilateral: {
       inviter: {
@@ -2085,8 +2085,8 @@ export const zhCN: Translations = {
       heading: '为什么可以放心搬过来',
       items: [
         {
-          title: '端到端加密',
-          body: '你们之外，没有人能看见这本账的内容。',
+          title: '只开放给你们俩',
+          body: '账本只对你们两人的账号开放。连接以 HTTPS 加密，敏感数据另外加密保存。',
         },
         {
           title: '随时可以带走',
@@ -2098,7 +2098,7 @@ export const zhCN: Translations = {
         },
       ],
     },
-    footerTrust: '端到端加密 · 数据只属于你们两个',
+    footerTrust: '只开放给你们俩 · 数据只属于你们两个',
     otherSources: {
       heading: '从其他工具搬过来',
       cta: '看搬迁指南',
@@ -2205,7 +2205,7 @@ export const zhCN: Translations = {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 数据，可以带走',
         heroSubtitle: '从 Honeydue 搬迁到 Futari 只要三分钟——上传 CSV，这几年的记账完整保留。',
-        intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、数据加密。',
+        intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、只开放给你们俩。',
         differentiators: [
           {
             title: '仍在持续迭代',
@@ -2817,7 +2817,7 @@ export const zhCN: Translations = {
     migrate: {
       honeydue: {
         title: '从 Honeydue 搬家到 Futari｜数据导入',
-        description: 'Honeydue 替代方案首选。Futari 是专为夫妻、情侣设计的共同账本，3 分钟完成搬家、继续一起记账。免费、无广告、端到端加密。',
+        description: 'Honeydue 替代方案首选。Futari 是专为夫妻、情侣设计的共同账本，3 分钟完成搬家、继续一起记账。免费、无广告、只开放给你们俩。',
         ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {
@@ -2832,17 +2832,17 @@ export const zhCN: Translations = {
       },
       moneybook: {
         title: '从麻布记账搬家到 Futari｜CSV 导入',
-        description: '麻布记账数据怎么搬到双人账本？把交易明细导出成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        description: '麻布记账数据怎么搬到双人账本？把交易明细导出成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '麻布记账用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
       andromoney: {
         title: '从 AndroMoney 搬家到 Futari｜CSV 导入',
-        description: 'AndroMoney 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
+        description: 'AndroMoney 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、只开放给你们俩。',
         ogDescription: 'AndroMoney 用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
       mobills: {
         title: '从 Mobills 搬家到 Futari｜CSV 导入',
-        description: 'Mobills 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
+        description: 'Mobills 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、只开放给你们俩。',
         ogDescription: 'Mobills 用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
       manebo: {
@@ -2852,37 +2852,37 @@ export const zhCN: Translations = {
       },
       'simple-daily-money': {
         title: '从简单记账搬家到 Futari｜截图转 CSV',
-        description: '简单记账的 CSV 导出是 VIP 功能？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        description: '简单记账的 CSV 导出是 VIP 功能？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       'fortune-city': {
         title: '从记账城市搬家到 Futari｜截图转 CSV',
-        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '记账城市用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       cashman: {
         title: '从 CashMan 搬家到 Futari｜截图转 CSV',
-        description: 'CashMan 没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: 'CashMan 没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: 'CashMan 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       '1money': {
         title: '从 1Money 搬家到 Futari｜截图转 CSV',
-        description: '1Money 没有完整导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '1Money 没有完整导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '1Money 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       icost: {
         title: '从 iCost 搬家到 Futari｜截图转 CSV',
-        description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: 'iCost 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       splitwise: {
         title: '从 Splitwise 搬家到 Futari｜导出表格、CSV 导入',
-        description: 'Splitwise 的群组与好友交易可以导出表格带走。上传到 Futari 这个为夫妻、情侣设计的共同账本，分摊、结算与日常记账都在同一本账里。免费、无广告、端到端加密。',
+        description: 'Splitwise 的群组与好友交易可以导出表格带走。上传到 Futari 这个为夫妻、情侣设计的共同账本，分摊、结算与日常记账都在同一本账里。免费、无广告、只开放给你们俩。',
         ogDescription: 'Splitwise 用户搬家指南：导出表格 → 上传 CSV → 搬进 Futari 双人记账。',
       },
       suishouji: {
         title: '从随手记搬家到 Futari｜截图转 CSV',
-        description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '随手记用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
     },
@@ -2894,13 +2894,13 @@ export const zhCN: Translations = {
     useCaseHub: {
       title: '双人记账的 10 种情境｜同居、新婚、旅行、宠物 — Futari',
       description: '同居生活费怎么分、新婚夫妻的账怎么记、旅行费用怎么对、养宠物多了哪些开销——日子不同，记账的难处也不同。这里是 Futari 为 10 种双人情境写的说明，挑最接近你们的那一个。',
-      ogDescription: '10 种双人记账情境，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、端到端加密。',
+      ogDescription: '10 种双人记账情境，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、只开放给你们俩。',
     },
     useCase: {
       cohabitation: {
         title: '同居 AA 制记账｜同居生活费怎么分？Futari',
         description: '同居生活费怎么分才不伤感情？Futari 是专为情侣设计的双人账本，支援 AA 对半、按比例等多种分摊模式，轻松记下每笔同居开销。',
-        ogDescription: '同居 AA 制最适合的记账工具——Futari 双人账本，免费、无广告、端到端加密。',
+        ogDescription: '同居 AA 制最适合的记账工具——Futari 双人账本，免费、无广告、只开放给你们俩。',
       },
       newlyweds: {
         title: '新婚家计分摊｜夫妻记账怎么记？Futari',
@@ -2914,7 +2914,7 @@ export const zhCN: Translations = {
       },
       travel: {
         title: '旅行费用分摊｜出游账本怎么记？Futari',
-        description: '旅行费用怎么分才清楚？Futari 旅行子账本让出游支出跟日常账分开，回来之后一目了然谁出了多少，不用在群组里对账。免费、无广告、端到端加密。',
+        description: '旅行费用怎么分才清楚？Futari 旅行子账本让出游支出跟日常账分开，回来之后一目了然谁出了多少，不用在群组里对账。免费、无广告、只开放给你们俩。',
         ogDescription: '出游账本不再乱——Futari 旅行子账本，把这趟旅行的费用记清楚。',
       },
       roommates: {
@@ -2924,7 +2924,7 @@ export const zhCN: Translations = {
       },
       'monthly-bills': {
         title: '每月固定开销记账｜房租水电怎么一起管？Futari',
-        description: '房租、水电、网络、保险——每月固定支出怎么和伴侣一起追踪？Futari 让两个人即时看到固定账，清楚知道谁付了什么。免费、端到端加密。',
+        description: '房租、水电、网络、保险——每月固定支出怎么和伴侣一起记？Futari 让两个人即时看到固定账，清楚知道谁付了什么。免费、只开放给你们俩。',
         ogDescription: '两个人的固定开销管理——Futari，每月必要支出一起看，不再只靠其中一人记。',
       },
       'big-purchases': {
@@ -2972,8 +2972,8 @@ export const zhCN: Translations = {
         body: '其中一个人记下去，另一个人马上看得到。不需要截图传微信，账本就是对话本身。',
       },
       encrypt: {
-        title: '端到端加密',
-        body: '账本只有你们两个人看得到。服务器不解密，也不读你们记了什么。',
+        title: '只开放给你们俩',
+        body: '账本只对你们两人的账号开放。连接以 HTTPS 加密，宝宝本名、身份证号这类敏感数据，也会另外加密才存进数据库。',
       },
       history: {
         title: '章节式记忆',
@@ -3055,7 +3055,7 @@ export const zhCN: Translations = {
         faq: [
           {
             question: '同居记账 app 有哪些选择？',
-            answer: 'Futari 是专为情侣设计的双人账本，从一开始就预设两个人一起使用，支援多种分摊模式、实时同步、端到端加密。不需要把个人记账工具改造成双人版。',
+            answer: 'Futari 是专为情侣设计的双人账本，从一开始就预设两个人一起使用，支持多种分摊模式、实时同步，账本只开放给你们俩。不需要把个人记账工具改造成双人版。',
           },
           {
             question: '同居 AA 制要怎么记账比较清楚？',
@@ -3063,7 +3063,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3162,7 +3162,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3195,7 +3195,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3228,7 +3228,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3261,7 +3261,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3294,7 +3294,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3327,7 +3327,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3360,7 +3360,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
