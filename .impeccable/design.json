@@ -396,7 +396,7 @@
       "Editorial serif (Fraunces) for voice; humanist CJK sans (Noto Sans TC) for the work.",
       "Generous, friendly radii (10-20px) on a tight, calm, even-px type scale.",
       "Gentle, reduced-motion-aware motion; nothing bounces.",
-      "A deliberately tiny component vocabulary: four primitives, no more.",
+      "A deliberately tiny component vocabulary: five primitives (Button, TextInput, TextArea, SegmentedToggle, Sheet), no more.",
       "Two equals: no UI ever favors or shames one partner."
     ],
     "rules": [

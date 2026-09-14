@@ -330,7 +330,7 @@ Zero-blur `0 0 0 Npx` values (selected swatch rings, the avatar ring, an inset 1
 
 ## 5. Components
 
-The vocabulary is deliberately tiny. `components/ui/` holds four primitives: `Button`, `TextInput`, `SegmentedToggle`, and the compound `Sheet` (`SheetHeader` / `SheetBody` / `SheetFooter`). There is no skeleton, drawer, toast, or empty-state primitive, and that is a constraint, not an oversight. A screen that seems to need a fifth primitive is a screen to re-read, not a license to invent one.
+The vocabulary is deliberately tiny. `components/ui/` holds five primitives: `Button`, `TextInput`, `TextArea`, `SegmentedToggle`, and the compound `Sheet` (`SheetHeader` / `SheetBody` / `SheetFooter`). There is no skeleton, drawer, toast, or empty-state primitive, and that is a constraint, not an oversight. A screen that seems to need a sixth primitive is a screen to re-read, not a license to invent one. `TextArea` was the one addition (#1194, approved 2026-09-15), and it earned the slot by being the same field in a second shape, not a new idea: four hand-rolled `<textarea>`s already existed with no primitive to reach for, and each had drifted.
 
 ### Buttons
 - **Shape:** Friendly rounded (`--radius-bubble`, 14px). Heights via control tokens: sm 36px, md 44px, lg 52px. Font weight 500, label truncates rather than wraps.
@@ -360,6 +360,8 @@ The vocabulary is deliberately tiny. `components/ui/` holds four primitives: `Bu
 - **Focus:** The `.oik-input-wrapper` shows the 2px ember ring on `:focus-within`. No glow, no border-color flip.
 - **Error:** `--debit-text` on a `--debit-soft` tint. Never an alarm red, never an exclamation mark.
 - **Keyboard:** Inside the native shells the software keyboard covers content without warning and `100vh` overreports. Forms and sheets must stay usable and scrollable with the keyboard open.
+- **`TextInput`** (`components/ui/TextInput.tsx`) is that style as a primitive: `--input-bg`, hairline border, `--radius-bubble`, `--control-md` (44px), 16px Cocoa Ink text, ember ring via `.oik-input-wrapper`. Optional `leftAddon` / `rightAddon` for a unit or counter, `error` for the destructive border. Every native attribute and `ref` lands on the `<input>`, so label association behaves exactly as on a bare field. Don't reach for it when the control is not a text field (`range`, `file`, `checkbox`) or when the input *is* the display — the amount fields (`AmountInput`, `SettlementForm`) are typographic objects that happen to accept typing, and boxing them would turn the record's headline into a form row.
+- **`TextArea`** (`components/ui/TextArea.tsx`) is the same field in its multi-line shape, on the same tokens: `--input-bg`, hairline border, `--radius-bubble`, minimum `--control-md`, 16px text, the same `:focus-within` ring, and `resize-y` so a long note can be opened up. Height comes from `rows`. It carries no label of its own — pass `id` with an external `<label htmlFor>`. Don't use it inside a container that already has its own border (a bordered card), where a second box reads as a nested frame rather than a field; there, a borderless textarea on the card ground is correct.
 
 ### Navigation
 - **Bottom nav + FAB** (mobile shell): a fixed band at `z-nav` (80–89), 78px tall. The FAB is the one ember element, the round invitation to record. Scroll containers reserve `--bottom-nav-offset` (112px) so the last row never hides behind the FAB. Both must clear the bottom safe-area inset.
@@ -411,7 +413,7 @@ Each Don't carries a one-sentence audit test. Run the test on the screen; if it 
 - **Don't** default to a modal; exhaust inline and sheet-based progressive alternatives first. *Test: if the content could live in a `Sheet` or expand in place, the modal is laziness.*
 - **Don't** write an arbitrary `z-[N]`. *Test: grep for `z-[` in the diff; every hit outside the nav band's `z-[81]` / `z-[85]` needs either an existing named layer or sign-off.*
 - **Don't** put token-covered values in inline `style={{ … }}`; static `fontSize` / `padding` / `margin` / `borderRadius` / `z-index` / color go in utility classes. *Test: grep the diff for `style={{`; every surviving hit must be a genuinely computed value.*
-- **Don't** invent a new font size, spacing step, radius, z-layer, token, or `components/ui/` primitive on your own. *Test: if the change adds a line to `:root` or a file to `components/ui/`, stop and ask first.*
+- **Don't** invent a new font size, spacing step, radius, z-layer, token, or `components/ui/` primitive on your own. *Test: if the change adds a line to `:root` or a file to `components/ui/`, stop and ask first.* (The rule stands as written. `TextArea` was added through it, not around it: asked in #1194, approved 2026-09-15.)
 - **Don't** use `font-semibold` expecting visible weight change; weight 600 is not loaded. *Test: grep for `font-semibold`; it renders identically to `font-medium`.*
 - **Don't** add a partial dark palette, ad-hoc `dark:` variants, or a theme toggle. *Test: grep for `dark:` and `prefers-color-scheme`; Futari is light-only until the night-lamp direction is scoped and approved.*
 - **Don't** position anything interactive against a viewport edge without a safe-area allowance. *Test: open the screen in the iOS shell on a notched device and try to reach every control, especially the escape route on a destructive-confirmation screen.*
