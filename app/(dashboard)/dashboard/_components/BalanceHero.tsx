@@ -208,7 +208,7 @@ export function BalanceHero({
                   style={{
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-base)',
-                    fontWeight: 500,
+                    fontWeight: 600,
                     color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
                     letterSpacing: '-0.6px',
                     fontFeatureSettings: '"tnum"',
@@ -231,7 +231,7 @@ export function BalanceHero({
             <>
               <div style={{
                 fontFamily: 'var(--font-numeric)',
-                fontSize: 'var(--fs-amount-md)', fontWeight: 500,
+                fontSize: 'var(--fs-amount-md)', fontWeight: 600,
                 color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
                 letterSpacing: -1.2, marginTop: 4,
                 fontFeatureSettings: '"tnum"',
@@ -290,7 +290,7 @@ export function BalanceHero({
                   style={{
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-base)',
-                    fontWeight: 500,
+                    fontWeight: 600,
                     color: balanceColor,
                     letterSpacing: '-0.6px',
                   }}
@@ -325,7 +325,7 @@ export function BalanceHero({
                 className="tnum text-center leading-[1.05] text-amount-fluid tracking-amount transition-opacity duration-150 mt-1.5"
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   color: balanceColor,
                   opacity: fading ? 0 : 1,
                 }}
