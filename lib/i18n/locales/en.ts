@@ -291,6 +291,8 @@ export const en: Translations = {
     filterAriaLabel: 'Open filter',
     burdenMe: 'Mine',
     burdenPartner: "Partner's",
+    payerFilterAriaLabel: 'Filter by who paid',
+    burdenFilterAriaLabel: 'Filter by whose share',
     headerHint: {
       trip: 'Trip',
       settings: 'Settings',
@@ -327,6 +329,8 @@ export const en: Translations = {
     modeSettledLabel: 'Now',
     modeIncludePendingLabel: 'After settle',
     modeToggleAriaLabel: 'Toggle between current and after-settle balance',
+    expandAriaLabel: 'Expand summary card',
+    collapseAriaLabel: 'Collapse summary card',
   },
 
   soloBanner: {

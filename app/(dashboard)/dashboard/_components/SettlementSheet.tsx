@@ -190,11 +190,16 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
       </SheetFrame>
 
       {error && open && (
+        // Error surface per DESIGN.md: --debit-text on --debit-soft, over an
+        // opaque --surface so the floating toast stays legible above whatever
+        // it covers (~5.2:1). Was white on --debit, 3.27:1 (#1197).
         <div
-          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
+          role="alert"
+          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] rounded-xl border border-hairline bg-[var(--surface)]"
         >
-          {error}
+          <div className="px-4 py-3 rounded-xl text-sm bg-[var(--debit-soft)] text-[var(--debit-text)]">
+            {error}
+          </div>
         </div>
       )}
 

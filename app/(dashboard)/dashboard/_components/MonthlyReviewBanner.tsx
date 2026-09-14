@@ -68,7 +68,8 @@ export function MonthlyReviewBanner({
           type="button"
           onClick={dismiss}
           aria-label={tr.closeAriaLabel}
-          className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center bg-transparent border-0 cursor-pointer rounded-full"
+          // 36px visible; the ::before adds 4px on every side → 44px hit area (#1197).
+          className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center bg-transparent border-0 cursor-pointer rounded-full before:absolute before:-inset-1 before:content-['']"
           style={{ color: 'var(--ink-3)' }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">

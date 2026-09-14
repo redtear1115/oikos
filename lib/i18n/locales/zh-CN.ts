@@ -289,6 +289,8 @@ export const zhCN: Translations = {
     filterAriaLabel: '打开筛选',
     burdenMe: '算我的',
     burdenPartner: '算对方的',
+    payerFilterAriaLabel: '按谁付的筛选',
+    burdenFilterAriaLabel: '按算谁的筛选',
     headerHint: {
       trip: '旅行',
       settings: '设置',
@@ -324,6 +326,8 @@ export const zhCN: Translations = {
     modeSettledLabel: '现在',
     modeIncludePendingLabel: '结算后',
     modeToggleAriaLabel: '切换 显示「现在」或「结算后」金额',
+    expandAriaLabel: '展开摘要卡',
+    collapseAriaLabel: '收起摘要卡',
   },
 
   soloBanner: {

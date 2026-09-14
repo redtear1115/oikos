@@ -291,6 +291,22 @@ describe('design-contrast — pairings the system claims are safe', () => {
   it('--destructive on --bg clears graphical-object AA (3:1) for destructive-action iconography', () => {
     expect(contrastOf('--destructive', '--bg')).toBeGreaterThanOrEqual(GRAPHICAL_MIN)
   })
+
+  it('#1197 fix — --btn-primary-text on --btn-primary-bg clears normal-text AA (settlement commit button, SettlementForm)', () => {
+    const ratio = contrastOf('--btn-primary-text', '--btn-primary-bg')
+    console.log(`[design-contrast] #1197 --btn-primary-text on --btn-primary-bg = ${ratio.toFixed(2)}:1`)
+    expect(ratio).toBeGreaterThanOrEqual(NORMAL_TEXT_MIN)
+  })
+
+  it('#1197 fix — --debit-text on --debit-soft laid over opaque --surface clears normal-text AA (PendingCard / SettlementSheet error surfaces)', () => {
+    // Both error surfaces put the translucent --debit-soft tint on an opaque
+    // --surface layer so the ratio doesn't depend on whatever is behind them
+    // (a category gradient card, or a floating toast over the sheet).
+    const ground = compositeOver(resolve('--debit-soft'), resolve('--surface'))
+    const ratio = contrastRatio(compositeOver(resolve('--debit-text'), ground), ground)
+    console.log(`[design-contrast] #1197 --debit-text on --debit-soft-over-surface = ${ratio.toFixed(2)}:1`)
+    expect(ratio).toBeGreaterThanOrEqual(NORMAL_TEXT_MIN)
+  })
 })
 
 describe('design-contrast — known-bad pairings, encoded as passing assertions on the current (broken) ratio', () => {
@@ -322,7 +338,11 @@ describe('design-contrast — known-bad pairings, encoded as passing assertions 
     expect(resolve('--on-fill')).toEqual({ r: 255, g: 255, b: 255, a: 1 })
   })
 
-  it('#1197 — white on --accent is below 4.5:1 (~2.68:1), on the settlement commit button', () => {
+  // The settlement commit button no longer uses this pairing (#1197 moved it
+  // to --btn-primary-*, asserted above). The pairing itself is unchanged and
+  // still backs --btn-accent-bg / --btn-accent-text wherever the accent
+  // button is used, so the known-bad ratio stays pinned here.
+  it('#1197 — white on --accent is below 4.5:1 (~2.68:1); was the settlement commit button, still the --btn-accent-* pairing', () => {
     const ratio = contrastOf('--on-fill', '--accent')
     console.log(`[design-contrast] #1197 --on-fill on --accent = ${ratio.toFixed(2)}:1`)
     expect(Math.abs(ratio - 2.68)).toBeLessThan(0.05)

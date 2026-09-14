@@ -116,7 +116,9 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.expandAriaLabel}
-            className="text-base leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            // Bare glyph, ~16px. The ::before pads the hit area to ~44px tall;
+            // sideways it reaches only as far as the gap-3 / px-4 around it (#1197).
+            className="relative text-base leading-none shrink-0 cursor-pointer bg-transparent border-none before:absolute before:-inset-y-3.5 before:-inset-x-3 before:content-['']"
             style={{ color: 'var(--ink-2)' }}
           >
             ›
@@ -149,7 +151,8 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.collapseAriaLabel}
-            className="text-lg leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            // Bare glyph, ~18px; ::before pads the hit area to ≥44px (#1197).
+            className="relative text-lg leading-none shrink-0 cursor-pointer bg-transparent border-none before:absolute before:-inset-y-3.5 before:-inset-x-3 before:content-['']"
             style={{ color: 'var(--ink-3)' }}
           >
             −

@@ -220,7 +220,7 @@ export function BalanceHero({
             </div>
             <ToggleButton
               onClick={toggleCollapsed}
-              ariaLabel={heroCollapsed ? 'expand' : 'collapse'}
+              ariaLabel={heroCollapsed ? t.balanceHero.expandAriaLabel : t.balanceHero.collapseAriaLabel}
               expanded={!heroCollapsed}
             >
               {heroCollapsed ? '+' : '−'}
@@ -300,7 +300,7 @@ export function BalanceHero({
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} label={t.balanceHero.settleLabel} />}
-                <ToggleButton onClick={toggleCollapsed} ariaLabel="expand" expanded={false}>+</ToggleButton>
+                <ToggleButton onClick={toggleCollapsed} ariaLabel={t.balanceHero.expandAriaLabel} expanded={false}>+</ToggleButton>
               </div>
             </div>
           ) : (
@@ -315,7 +315,7 @@ export function BalanceHero({
                   <span className="font-medium" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
                   <span>{verb}</span>
                 </div>
-                <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
+                <ToggleButton onClick={toggleCollapsed} ariaLabel={t.balanceHero.collapseAriaLabel} expanded={true}>−</ToggleButton>
               </div>
 
               <div

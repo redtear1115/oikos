@@ -362,6 +362,9 @@ export type Translations = {
      *  actually bears the cost), NOT raw split_type. */
     burdenMe: string
     burdenPartner: string
+    /** `role="group"` names for the L3 payer / burden dual-toggles (#1197). */
+    payerFilterAriaLabel: string
+    burdenFilterAriaLabel: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
     /** First-use floating label hints below the BrandHeader icon buttons (#765).
      *  Shown once per device (localStorage), auto-dismiss after 3.5 s. */
@@ -420,6 +423,9 @@ export type Translations = {
     modeIncludePendingLabel: string
     /** Aria label for the settled/include-pending toggle. */
     modeToggleAriaLabel: string
+    /** Aria labels for the hero's +/− collapse toggle (#1197). */
+    expandAriaLabel: string
+    collapseAriaLabel: string
   }
 
   /** Invite-link sharing strings. Named for the dashboard banner that used to
@@ -3025,6 +3031,8 @@ export const zhTW: Translations = {
     filterAriaLabel: '開啟篩選',
     burdenMe: '算我的',
     burdenPartner: '算對方的',
+    payerFilterAriaLabel: '依誰付的篩選',
+    burdenFilterAriaLabel: '依算誰的篩選',
     headerHint: {
       trip: '旅行',
       settings: '設定',
@@ -3060,6 +3068,8 @@ export const zhTW: Translations = {
     modeSettledLabel: '現在',
     modeIncludePendingLabel: '結算後',
     modeToggleAriaLabel: '切換 顯示「現在」或「結算後」金額',
+    expandAriaLabel: '展開摘要卡',
+    collapseAriaLabel: '收合摘要卡',
   },
 
   soloBanner: {

@@ -139,18 +139,23 @@ export function PendingCard({
         </div>
 
         {error && (
-          <div
-            className="mb-3 rounded-xl px-3 py-2 text-[var(--fs-sm)] text-white"
-            style={{ background: 'var(--debit)' }}
-          >
-            {error}
+          // Error surface per DESIGN.md: --debit-text on --debit-soft. The
+          // translucent tint sits on an opaque --surface so the ratio (~5.2:1)
+          // doesn't depend on the category gradient behind the card. Was
+          // white on --debit, 3.27:1 (#1197 / #1168).
+          <div role="alert" className="mb-3 rounded-xl bg-[var(--surface)]">
+            <div className="rounded-xl px-3 py-2 text-[var(--fs-sm)] bg-[var(--debit-soft)] text-[var(--debit-text)]">
+              {error}
+            </div>
           </div>
         )}
 
+        {/* Buttons render ~36px tall; the ::before adds 4px above and below
+            so each hit area reaches 44px without changing the layout (#147). */}
         <div className="flex gap-2">
           <button
             type="button" onClick={handleConfirm} disabled={submitting}
-            className={`flex-1 rounded-full py-2 text-[var(--fs-sm)] ${primaryDisabledClass}`}
+            className={`relative flex-1 rounded-full py-2 text-[var(--fs-sm)] before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] ${primaryDisabledClass}`}
             style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
             {confirmLabel}
@@ -159,14 +164,14 @@ export function PendingCard({
             type="button"
             onClick={onEdit}
             disabled={submitting || !onEdit}
-            className={`rounded-full px-4 py-2 text-[var(--fs-sm)] ${secondaryDisabledClass}`}
+            className={`relative rounded-full px-4 py-2 text-[var(--fs-sm)] before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] ${secondaryDisabledClass}`}
             style={{ border: `1px solid ${cat.ink}40`, color: 'var(--ink-2)', background: 'transparent' }}
           >
             {editLabel}
           </button>
           <button
             type="button" onClick={() => setConfirmingSkip(true)} disabled={submitting}
-            className={`rounded-full px-4 py-2 text-[var(--fs-sm)] ${secondaryDisabledClass}`}
+            className={`relative rounded-full px-4 py-2 text-[var(--fs-sm)] before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] ${secondaryDisabledClass}`}
             style={{ border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
           >
             {skipLabel}

@@ -292,6 +292,8 @@ export const ja: Translations = {
     filterAriaLabel: '絞り込みを開く',
     burdenMe: '自分の分',
     burdenPartner: '相手の分',
+    payerFilterAriaLabel: '支払い者で絞り込み',
+    burdenFilterAriaLabel: '負担者で絞り込み',
     headerHint: {
       trip: '旅行',
       settings: '設定',
@@ -327,6 +329,8 @@ export const ja: Translations = {
     modeSettledLabel: '現在',
     modeIncludePendingLabel: '精算後',
     modeToggleAriaLabel: '「現在」と「精算後」の残高を切り替え',
+    expandAriaLabel: 'サマリーカードを開く',
+    collapseAriaLabel: 'サマリーカードを折りたたむ',
   },
 
   soloBanner: {
