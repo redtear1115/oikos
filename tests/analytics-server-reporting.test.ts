@@ -27,7 +27,8 @@ vi.mock('@/lib/db/client', () => ({ db: {} }))
 /** Import fresh so the module-level enablement gate re-reads the stubbed env. */
 async function loadModule() {
   vi.resetModules()
-  vi.stubEnv('NODE_ENV', 'production')
+  // The gate is the deployment, not NODE_ENV (#1116) — see lib/deployEnv.ts.
+  vi.stubEnv('NEXT_PUBLIC_DEPLOY_ENV', 'production')
   vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', 'phc_test')
   return import('@/lib/analytics/server')
 }

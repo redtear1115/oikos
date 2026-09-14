@@ -67,7 +67,6 @@ const member: MemberContextValue = {
   canAccessGuardian: false,
   epochStartedAt: '2026-01-01T00:00:00.000Z',
   epochEndedAt: null,
-  hadPartner: false,
 }
 
 function row(id: string, desc: string, paidBy: string): PagedTxnRow {

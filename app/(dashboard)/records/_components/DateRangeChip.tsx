@@ -50,6 +50,11 @@ export function DateRangeChip({ dateRange, onClear }: Props) {
         className="h-5 w-5 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer text-base leading-none"
         style={{ color: 'var(--ink-3)' }}
       >
+        {/* × U+00D7, deliberately NOT the ✕ U+2715 used by every card and sheet
+            close button (#1125). Two different actions: ✕ closes a surface, ×
+            takes one condition off a filter that stays. The lighter, narrower
+            glyph carries that — a chip clear should not read as heavy as
+            dismissing the panel it sits in. Leave it. */}
         ×
       </button>
     </div>

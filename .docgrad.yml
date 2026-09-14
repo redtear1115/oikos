@@ -21,6 +21,16 @@ targets:
 economy:
   entry_cost_tiers: [20000, 10000, 5000, 3000]
   pollution_max: 0.1
+# claim_candidates_cap：inventory.mjs 發出幾條候選；抽樣只能從發出來的裡面取。
+# 100 不是拍腦袋的兩倍——候選排序是「refs 數 → path → line」，而本 repo refs >= 2 的
+# 只有 98 條，之後 337 條全是 refs=1、排序退化成路徑字母序。所以 100 正好切在
+# 「排序還有意義」的邊界上；再往上加只是擴大一團無差別候選的視窗（實測 435 全發
+# 輸出 281KB vs 100 的約 115KB）。
+#
+# ⚠️ 這個數字算的是「發出幾條」，不是「幾條沒驗過」——已在 ledger 的照樣佔視窗。
+# cap 60 時前 60 條裡有 27 條已驗過，實際可抽只剩 33。所以這是買時間不是解決問題，
+# 根因見 docgrad#54。
+claim_candidates_cap: 100
 correctness_sample: 12
 scenario: "在記帳核心加一個新功能：schema + server action + UI + 4 語 i18n"
 scenarios: [actions/transaction.ts, lib/balance.ts, app/(dashboard)/trips, lib/i18n]

@@ -87,16 +87,32 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        const { groupId: newGroupId } = await leaveGroup()
-        // Mark the brand-new solo group so WelcomeSoloCard can surface a
-        // dismissible "歡迎回到一個人" card on the leaver's first dashboard
-        // render. Done client-side because the new groupId only exists after
-        // the server action resolves, before the navigation lands.
-        try {
-          window.localStorage.setItem('futari_just_left_' + newGroupId, '1')
-        } catch {
-          // Private-browsing localStorage failure: the welcome card simply
-          // won't show. Not worth blocking the navigation.
+        const { epochId } = await leaveGroup()
+        // Mark the leaver's brand-new solo *epoch* so WelcomeSoloCard can
+        // surface a dismissible "歡迎回到一個人" card on their first dashboard
+        // render. Done client-side because the epoch only exists after the
+        // server action resolves, before the navigation lands.
+        //
+        // Epoch-keyed since #1125, group-keyed before that. Both keys moved at
+        // once — this one and `futari_welcome_solo_dismissed_` inside the card
+        // — because moving only one would resurrect cards a user had already
+        // dismissed. Same key space as `RemovePartnerFlow`'s
+        // `futari_partner_removed_`.
+        //
+        // ⚠️ Known, bounded regression at deploy time: anyone who left the
+        // ledger shortly before this shipped is carrying a
+        // `futari_just_left_<groupId>` flag that no code reads any more, so
+        // their one-shot welcome card silently never appears. No data loss, no
+        // error, and the window is only as wide as "left but hasn't opened the
+        // dashboard yet". Accepted deliberately — do not go re-adding a
+        // group-keyed read path when someone reports the card missing.
+        if (epochId) {
+          try {
+            window.localStorage.setItem('futari_just_left_' + epochId, '1')
+          } catch {
+            // Private-browsing localStorage failure: the welcome card simply
+            // won't show. Not worth blocking the navigation.
+          }
         }
         router.refresh()
         router.push('/dashboard')
@@ -125,6 +141,12 @@ export function LeaveGroupFlow({
       case 3:
         setStep(2)
         return
+      // `final` is reachable only from step 4, so back means step 4. Without
+      // this case the new footer button on `final` would be a dead control —
+      // worse than no button, because it looks like a way out. (#1124)
+      case 'final':
+        setStep(4)
+        return
     }
   }
   const goNext = () => {
@@ -144,16 +166,34 @@ export function LeaveGroupFlow({
   return (
     <>
       <SheetBackdrop open={open} onClick={handleClose} />
+      {/* Layout box only — it spans the viewport and pays the safe-area insets
+          so the centred panel below can never grow into the notch. It stays
+          `pointer-events: none` throughout: clicks outside the panel have to
+          fall through to SheetBackdrop, which owns dismiss-by-backdrop.
+
+          `env()` directly, NOT `var(--safe-top)`: globals.css zeroes
+          `--safe-top` for every sibling after the shell top stack
+          (`.shell-top-strip ~ *`, `.shell-top-stack:has(> *) ~ *`), and this
+          flow renders inside settings, i.e. inside those siblings. The token
+          would read 0px here, so the allowance would silently be no allowance
+          at all — the markup would look fixed and the ✕ would still land under
+          the Dynamic Island, with nothing to show for it. (#1124) */}
       <div
-        className="fixed left-1/2 top-1/2 z-modal w-[calc(100%-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card flex flex-col"
+        className="fixed inset-0 z-modal flex items-center justify-center px-4"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+          pointerEvents: 'none',
+        }}
+      >
+      <div
+        className="w-full max-w-md max-h-full rounded-card flex flex-col"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
-          boxShadow: '0 20px 60px rgba(31,27,22,0.18)',
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 200ms',
-          maxHeight: 'calc(100dvh - 64px)',
         }}
         role="dialog"
         aria-modal="true"
@@ -231,8 +271,15 @@ export function LeaveGroupFlow({
           )}
         </div>
 
-        {/* Footer nav for step 1-3 */}
-        {(step === 1 || step === 2 || step === 3) && (
+        {/* Footer nav for step 1-3, and for `final` — the riskiest step in the
+            product had no exit at all except the ✕, which is exactly the
+            control that safe-area failures eat. An escape route that depends
+            on one unreachable affordance is not an escape route. (#1124)
+
+            `flow.back` is reused rather than adding a `cancel` key: the same
+            string already labels this button on steps 2-3, and going back to
+            step 4 is literally what it does here. */}
+        {(step === 1 || step === 2 || step === 3 || step === 'final') && (
           <div className="px-5 pb-5 pt-2 flex items-center justify-between gap-3 border-t" style={{ borderColor: 'var(--hairline)' }}>
             <button
               type="button"
@@ -247,17 +294,24 @@ export function LeaveGroupFlow({
             >
               {step === 1 ? flow.close : flow.back}
             </button>
-            <button
-              type="button"
-              onClick={goNext}
-              disabled={pending}
-              className="h-11 px-5 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-            >
-              {flow.next}
-            </button>
+            {/* No "next" on `final`: the forward action there is the
+                destructive confirm inside FinalConfirm, behind a typed
+                confirmation. A second primary button beside it would be a
+                second way to leave, which is the opposite of the point. */}
+            {step !== 'final' && (
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={pending}
+                className="h-11 px-5 rounded-xl text-sm font-medium cursor-pointer disabled:opacity-50"
+                style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
+              >
+                {flow.next}
+              </button>
+            )}
           </div>
         )}
+      </div>
       </div>
     </>
   )

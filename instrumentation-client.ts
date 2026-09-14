@@ -1,11 +1,15 @@
 import * as Sentry from '@sentry/nextjs'
 import { detectPlatform } from '@/lib/platform'
+import { DEPLOY_ENV, IS_PROD_DEPLOY } from '@/lib/deployEnv'
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  // Only send errors in production to keep free-tier quota
-  enabled: process.env.NODE_ENV === 'production',
+  // The deployment, not the build mode. `NODE_ENV` filed local prod builds and
+  // preview deployments under `environment: production` too — 84 of 85 events
+  // in the prod feed turned out to be localhost (#1116, see lib/deployEnv.ts).
+  environment: DEPLOY_ENV,
+  // Only send errors from the production deployment, to keep free-tier quota
+  enabled: IS_PROD_DEPLOY,
   tracesSampleRate: 0.1,
   // Send structured logs to Sentry → Logs. consoleLoggingIntegration forwards
   // console.error/warn so existing logging shows up without Sentry.logger calls.
@@ -27,10 +31,10 @@ Sentry.init({
 // empty `os.name` / `browser.name`, and even an Apple-Sign-In failure that can
 // only originate in the iOS shell couldn't be attributed to it.
 //
-// Safe with `enabled: false` (dev): `setTag` only writes to the current scope,
-// and a disabled client sends nothing — so this adds no dev noise and no
-// failure mode of its own. Client config only; server and edge have no platform
-// to report.
+// Safe with `enabled: false` (local / preview): `setTag` only writes to the
+// current scope, and a disabled client sends nothing — so this adds no noise
+// and no failure mode of its own. Client config only; server and edge have no
+// platform to report.
 const platform = detectPlatform()
 if (platform) Sentry.setTag('platform', platform)
 

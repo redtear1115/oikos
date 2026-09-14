@@ -11,6 +11,7 @@ import {
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { parseYearMonth, currentYearMonthInTaipei, isAfter } from '@/lib/monthlyReview'
 import { pickQuizQuestions } from '@/lib/partnerQuiz'
+import { captureServer } from '@/lib/analytics/server'
 import { QuizClient } from './_components/QuizClient'
 
 interface PageProps {
@@ -70,9 +71,18 @@ export default async function PartnerQuizPage({ params }: PageProps) {
 
   // Load (or lazily create) the session. Entering this page IS the "start"
   // event per spec — we don't gate it behind a button click.
+  //
+  // Session creation lives here, inline, and not behind a server action: the
+  // page has to have a session before it can render anything, so a `'use server'`
+  // round-trip would only add a hop the render already can't proceed without.
+  // There used to be a `startPartnerQuizSession()` action doing the same thing;
+  // it had no caller for months while the telemetry inside it silently reported
+  // zero (#1139). Please don't reintroduce one — put changes to how a session
+  // comes into existence right here.
   let session = await loadPartnerQuizSessionByGroup(group.id)
   if (!session) {
     const picked = pickQuizQuestions()
+    let createdNew = false
     // Tolerate the race where a partner just clicked the same link by relying
     // on UNIQUE (group_id) — re-read on conflict.
     try {
@@ -87,12 +97,26 @@ export default async function PartnerQuizPage({ params }: PageProps) {
           revealedAt: partnerQuizSessions.revealedAt,
         })
       session = created
+      createdNew = true
     } catch {
       session = await loadPartnerQuizSessionByGroup(group.id)
       if (!session) {
         // Truly unexpected — surface as 404 rather than swallow.
         notFound()
       }
+    }
+    // Engagement signal (#818, moved here from the orphan action in #1139).
+    // UNIQUE (group_id) makes a successful insert the one moment a session comes
+    // into existence, so `createdNew` is the only condition under which this can
+    // fire once per session. The conflict branch above deliberately does not
+    // fire: it re-reads a session the partner just created. Neither does the
+    // outer `if` — that is skipped entirely on every later visit, which is what
+    // keeps a refresh from counting as another start.
+    //
+    // Kept outside the try so a `captureServer` failure can never be mistaken
+    // for an insert conflict and send the render down the re-read path.
+    if (createdNew) {
+      await captureServer(user.id, 'partner_quiz_started', { question_count: picked.length })
     }
   }
 

@@ -4,66 +4,12 @@ import { db } from '@/lib/db/client'
 import { partnerQuizAnswers, partnerQuizSessions } from '@/lib/db/schema'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
-  pickQuizQuestions,
   validateAnswersBatch,
   type PartnerQuizAnswerInput,
 } from '@/lib/partnerQuiz'
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
-
-export interface StartPartnerQuizSessionResult {
-  sessionId: string
-  questionKeys: string[]
-  createdNew: boolean
-}
-
-/**
- * Idempotent: returns the existing session for the viewer's group if any,
- * otherwise creates a fresh one with 3 random keys from the pool. Refuses to
- * start a session for a solo group — quiz is a two-person ritual.
- */
-export async function startPartnerQuizSession(): Promise<StartPartnerQuizSessionResult> {
-  const { user, group } = await requireViewerGroup()
-  if (!group.memberB) {
-    throw new Error('一個人的時候還沒辦法開始這題問答')
-  }
-
-  const [existing] = await db
-    .select({
-      id: partnerQuizSessions.id,
-      questionKeys: partnerQuizSessions.questionKeys,
-    })
-    .from(partnerQuizSessions)
-    .where(eq(partnerQuizSessions.groupId, group.id))
-    .limit(1)
-
-  if (existing) {
-    return {
-      sessionId: existing.id,
-      questionKeys: existing.questionKeys,
-      createdNew: false,
-    }
-  }
-
-  const picked = pickQuizQuestions()
-  const [created] = await db
-    .insert(partnerQuizSessions)
-    .values({
-      groupId: group.id,
-      questionKeys: picked,
-    })
-    .returning({ id: partnerQuizSessions.id, questionKeys: partnerQuizSessions.questionKeys })
-
-  // Engagement signal (#818): only fire on the first start, not on idempotent loads.
-  await captureServer(user.id, 'partner_quiz_started', { question_count: picked.length })
-
-  return {
-    sessionId: created.id,
-    questionKeys: created.questionKeys,
-    createdNew: true,
-  }
-}
 
 export interface SubmitPartnerQuizAnswersInput {
   sessionId: string
@@ -86,7 +32,10 @@ export async function submitPartnerQuizAnswers(
 ): Promise<SubmitPartnerQuizAnswersResult> {
   const { user, group } = await requireViewerGroup()
   if (!group.memberB) {
-    throw new Error('一個人的時候還沒辦法答題')
+    // Error CODE, not prose: QuestionCard renders whatever this action throws,
+    // so a literal string here ships hard-coded zh-TW to en / ja viewers and
+    // bypasses `quiz.errors.solo` entirely. Mapped by `describeQuizError`.
+    throw new Error('solo_group')
   }
 
   const [session] = await db
@@ -100,10 +49,11 @@ export async function submitPartnerQuizAnswers(
     .where(eq(partnerQuizSessions.id, input.sessionId))
     .limit(1)
 
-  if (!session) throw new Error('找不到這次的問答')
-  if (session.groupId !== group.id) throw new Error('這次的問答不屬於這個家計簿')
+  // Codes, not prose — same contract as `solo_group` above (#1140).
+  if (!session) throw new Error('session_not_found')
+  if (session.groupId !== group.id) throw new Error('wrong_group')
   if (session.revealedAt) {
-    throw new Error('這次問答已揭曉，無法再修改')
+    throw new Error('already_revealed')
   }
 
   const { answers } = validateAnswersBatch(session.questionKeys, input.answers)
@@ -117,7 +67,7 @@ export async function submitPartnerQuizAnswers(
         eq(partnerQuizAnswers.memberId, user.id),
       ))
     if (existing.length > 0) {
-      throw new Error('你已經答完了')
+      throw new Error('already_answered')
     }
 
     await tx.insert(partnerQuizAnswers).values(

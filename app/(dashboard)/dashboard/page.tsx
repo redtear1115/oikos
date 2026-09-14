@@ -9,7 +9,7 @@ import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { getGroupBalance, getGroupPendingBalanceDelta } from '@/lib/db/queries/balance'
-import { listTransactionsPaged } from '@/lib/db/queries/transactions'
+import { listTransactionsPaged, monthlyStatsByCategory } from '@/lib/db/queries/transactions'
 import { listIncomeMonthSummary, listIncomesPaged } from '@/lib/db/queries/incomes'
 import { resolveViewerEpochContext, getLatestPriorClosedEpoch } from '@/lib/db/queries/epoch'
 import { PartnerLeftCard } from './_components/PartnerLeftCard'
@@ -28,6 +28,7 @@ import {
 } from '@/lib/db/queries/monthlyReview'
 import {
   currentYearMonthInTaipei,
+  formatYearMonth,
   previousMonth,
   truncateCodepoints,
 } from '@/lib/monthlyReview'
@@ -66,9 +67,6 @@ export default async function DashboardPage() {
   //   LeaveGroupFlow on success — no SSR data needed beyond the group id.
   const shouldCheckPriorLeaver = !epochWindow.isPast && !group.memberB && !!epochWindow.epochId
 
-  const now = new Date()
-  const yyyymm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-
   // Monthly review banner state. Surface only when:
   //   1. snapshot exists for the previous month
   //   2. viewer hasn't dismissed it
@@ -76,6 +74,21 @@ export default async function DashboardPage() {
   // to the viewer's own. Solo mode always quotes the viewer.
   const todayYM = currentYearMonthInTaipei()
   const reviewedYM = previousMonth(todayYM)
+
+  // The month key both heroes aggregate and label by. Derived from `todayYM`
+  // rather than a second clock read, so the heroes and the review banner can
+  // never disagree about which month "now" is.
+  //
+  // It has to be the Taipei month specifically: the rows are bucketed with
+  // `AT TIME ZONE 'Asia/Taipei'` (lib/db/queries/_predicates.ts), while Vercel
+  // runs the server in UTC. Building this key from a raw `new Date()` used to
+  // yield the *previous* month between 00:00 and 08:00 Taipei on the 1st.
+  //
+  // That failure is quiet rather than contradictory: the label matches what the
+  // hero actually summed, so nothing on screen looks broken — a user on the 1st
+  // just spends the morning looking at last month and has no way to tell. It
+  // also fixes itself by lunchtime, which is why it survived this long. (#1130)
+  const yyyymm = formatYearMonth(todayYM)
   const isSolo = !group.memberB
   const viewerIsA = group.memberA === user.id
 
@@ -90,6 +103,7 @@ export default async function DashboardPage() {
     pendings,
     expensePendings,
     latestIncomes,
+    soloExpenseStats,
     t,
     locale,
     reviewSnapshot,
@@ -104,6 +118,13 @@ export default async function DashboardPage() {
     listActivePendings(group.id),
     listActiveExpensePendings(group.id),
     listIncomesPaged(group.id, null, 1, undefined, undefined, undefined, undefined, epochWindow),
+    // Solo expense hero (#1118): the month total + record count that replace
+    // the balance a solo ledger cannot have. Reuses the stats donut's query and
+    // folds its rows rather than adding a second aggregate — and only runs at
+    // all when the viewer is solo, so a duo pays nothing for it.
+    isSolo
+      ? monthlyStatsByCategory(group.id, yyyymm, null, undefined, epochWindow)
+      : Promise.resolve([]),
     getTranslations(),
     getLocale(),
     loadMonthlyReviewSnapshot(group.id, reviewedYM.year, reviewedYM.month),
@@ -153,6 +174,13 @@ export default async function DashboardPage() {
       currentEpochId: epochWindow.epochId,
     }
   }
+
+  // Same month key the income hero uses, so the two heroes never name
+  // different months behind the same mode toggle.
+  const expenseMonth = soloExpenseStats.reduce(
+    (acc, r) => ({ total: acc.total + r.total, count: acc.count + r.count }),
+    { total: 0, count: 0 },
+  )
 
   const recentIncomeLabel = latestIncomes.length > 0
     ? (() => {
@@ -239,7 +267,6 @@ export default async function DashboardPage() {
   const cookieStore = await cookies()
   const initialHeroCollapsed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.heroCollapsed)?.value, false)
   const initialIncludePending = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.balanceIncludePending)?.value, false)
-  const initialPartnerDismissed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.partnerLeftDismissed)?.value, false)
   const initialTripCollapsed = parseBoolCookie(cookieStore.get(UI_PREF_COOKIE.tripCollapsed)?.value, true)
 
   return (
@@ -251,7 +278,7 @@ export default async function DashboardPage() {
         />
       )}
       {!partnerLeftProps && !group.memberB && !epochWindow.isPast && (
-        <WelcomeSoloCard groupId={group.id} />
+        <WelcomeSoloCard epochId={epochWindow.epochId} />
       )}
       {bannerProps && (
         <MonthlyReviewBanner
@@ -268,6 +295,9 @@ export default async function DashboardPage() {
         incomeMonthTotal={incomeSummary.total}
         incomeMonthCount={incomeSummary.count}
         recentIncomeLabel={recentIncomeLabel}
+        expenseMonthTotal={expenseMonth.total}
+        expenseMonthCount={expenseMonth.count}
+        expenseMonthKey={yyyymm}
         pendings={pendings}
         expensePendings={expensePendings}
         feedDataPromise={feedDataPromise}
@@ -277,7 +307,6 @@ export default async function DashboardPage() {
         rates={rates}
         initialHeroCollapsed={initialHeroCollapsed}
         initialIncludePending={initialIncludePending}
-        initialPartnerDismissed={initialPartnerDismissed}
         initialTripCollapsed={initialTripCollapsed}
       />
     </>

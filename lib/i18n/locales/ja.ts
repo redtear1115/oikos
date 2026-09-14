@@ -276,8 +276,12 @@ export const ja: Translations = {
   },
 
   dashboard: {
-    soloHint: '今はひとりで記録中',
-    inviteCta: '相手を招待 →',
+    soloHero: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      monthLabel: '{month}の記録',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      countLabel: '{count} 件',
+    },
     addExpense: '記録を追加',
     addIncome: '収入を記録',
     filterLabel: '絞り込み',
@@ -322,11 +326,7 @@ export const ja: Translations = {
   },
 
   soloBanner: {
-    waiting: '家計簿の準備はできました。ふたりで始めましょう',
-    sendInviteHint: 'リンクを相手に送りましょう',
-    dismissAriaLabel: '通知を閉じる',
     generating: '生成中…',
-    sendInvite: '招待を送る',
     sharedAndCopied: '共有しました。リンクもコピー済み',
     copied: 'リンクをコピーしました',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
@@ -734,7 +734,8 @@ export const ja: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
-    soloLockHint: 'ひとりモードでは「すべて自分」に固定されています。相手が参加すると変更できます。',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloLockHint: 'ひとりのあいだは、記録はすべて自分の分になります。',
     defaultSplitLabel: 'デフォルトの分担方法',
     inviteCta: '相手を招待',
     quickAccessRow: '個人と家計の設定',
@@ -902,6 +903,8 @@ export const ja: Translations = {
         subtitle: 'この取り込み全体のデフォルトを設定します',
         payerLabel: 'デフォルト支払者',
         payerHint: '取り込み後に行ごとに調整できます',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        payerSoloHint: 'ひとりのあいだは、支払者はすべて自分になります',
         splitLabel: 'デフォルト分担',
         splitOptions: {
           all_mine: 'すべて自分',
@@ -954,10 +957,13 @@ export const ja: Translations = {
   },
 
   postLeave: {
-    partnerLeftHeading: '⟂ {partner} が離れました',
+    partnerLeftHeading: '{partner} が離れました',
     partnerLeftBody: 'ここまでの記録はすべて残っています。ここからは、ひとりの時間です。',
     welcomeSoloHeading: 'おかえり、ひとりの時間に',
     welcomeSoloBody: '家計簿はぜんぶ、あなたと一緒にここに来ました。これから、ゆっくりで大丈夫。',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    removedPartnerHeading: 'ひとりの時間に戻りました',
+    removedPartnerBody: '家計簿はぜんぶ、そのまま残っています。これから、ゆっくりで大丈夫。',
     dismissAria: '閉じる',
   },
 
@@ -989,10 +995,6 @@ export const ja: Translations = {
       splitType: '負担',
       notes: 'メモ',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: 'パートナーがアカウントを離れました。これまでの記録はすべて残っています。',
   },
 
   assets: {
@@ -1814,12 +1816,20 @@ export const ja: Translations = {
     revealFraming: '君は朝日、相手は月明かり。違う時間に、同じ家を照らしている。どっちの答えが正しいわけじゃない。相手が気にしていることを、覚えていればそれでいい。',
     revealHeaderA: 'あなた',
     revealHeaderB: '相手',
-    soloFallback: 'これは二人で答える 3 問。相手が家計簿に加わったら、また来てね。',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloHeading: 'ふたりの問答',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloFallback: 'この 3 問は、ふたりで答えるものです。今月のふりかえりの他の部分は、そのまま見られます。',
     errorNotFound: 'この問答が見つかりません',
     errors: {
       submitFailed: '送信できませんでした。少し待ってから試してください',
       alreadyAnswered: 'もう答え終わっているよ',
-      solo: '一人ではまだ答えられないよ',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      alreadyRevealed: 'この問答はもう開いたから、答えは変えられないよ',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      wrongGroup: 'この問答は、この家計簿のものではありません',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      solo: 'この問答は、ふたりで答えるものです',
     },
     questions: {
       impulse: {

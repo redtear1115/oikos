@@ -334,8 +334,13 @@ export type Translations = {
   }
 
   dashboard: {
-    soloHint: string
-    inviteCta: string
+    /** Solo expense hero. `{month}` is the locale's own month name, resolved
+     *  at render with Intl (「9月」/ "September"), never string-concatenated. */
+    soloHero: {
+      monthLabel: string
+      /** `{count}` = number of expense records in the month. */
+      countLabel: string
+    }
     addExpense: string
     addIncome: string
     filterLabel: string
@@ -404,12 +409,10 @@ export type Translations = {
     modeToggleAriaLabel: string
   }
 
+  /** Invite-link sharing strings. Named for the dashboard banner that used to
+   *  own them (#1118 deleted it); the only caller now is Settings → 成員. */
   soloBanner: {
-    waiting: string
-    sendInviteHint: string
-    dismissAriaLabel: string
     generating: string
-    sendInvite: string
     sharedAndCopied: string
     copied: string
     /** Web Share API title — deliberately generic, no group/inviter name (privacy). */
@@ -627,7 +630,7 @@ export type Translations = {
     /** Non-blocking strip shown only inside a native shell older than
      *  `MIN_SHELL_VERSION`. Neutral and dismissible — the app still works. */
     message: string
-    /** Accessible label for the × dismiss button. */
+    /** Accessible label for the ✕ dismiss button. */
     dismissAriaLabel: string
   }
 
@@ -1169,6 +1172,9 @@ export type Translations = {
         subtitle: string
         payerLabel: string
         payerHint: string
+        /** Replaces the payer grid when the viewer is solo (#1122) — a solo
+         *  ledger has exactly one payer, so the grid had nothing to choose. */
+        payerSoloHint: string
         splitLabel: string
         splitOptions: {
           all_mine: string
@@ -1227,6 +1233,16 @@ export type Translations = {
     /** Leaver's "welcome back to solo" card. */
     welcomeSoloHeading: string
     welcomeSoloBody: string
+    /**
+     * Remover's variant of the same card (#1121). member_a removing member_b
+     * closes the duo epoch and opens a solo one, which is indistinguishable
+     * from "partner left" on the server — so the client flag set by
+     * `RemovePartnerFlow` swaps the copy. Deliberately does NOT restate what
+     * the remover just did (they typed a confirm string; they know); it uses
+     * the `welcomeSolo*` register instead — a statement about the ledger.
+     */
+    removedPartnerHeading: string
+    removedPartnerBody: string
     dismissAria: string
   }
 
@@ -1264,10 +1280,6 @@ export type Translations = {
       splitType: string
       notes: string
     }
-  }
-
-  contextStrip: {
-    partnerLeftLine: string
   }
 
   assets: {
@@ -2223,14 +2235,20 @@ export type Translations = {
     revealHeaderA: string
     /** Header label for member B column. */
     revealHeaderB: string
+    /** Heading above `soloFallback`. Separate from `revealHeading` because that
+     *  one is second-person plural and the solo viewer is here alone. */
+    soloHeading: string
     /** Fallback rendered when viewer is solo (member_b IS NULL). */
     soloFallback: string
     /** Generic error: session doesn't exist or doesn't belong to viewer. */
     errorNotFound: string
-    /** Errors thrown by submitPartnerQuizAnswers / startPartnerQuizSession. */
+    /** Errors thrown by submitPartnerQuizAnswers, mapped by `describeQuizError`.
+     *  `session_not_found` reuses `errorNotFound` above rather than duplicating it. */
     errors: {
       submitFailed: string
       alreadyAnswered: string
+      alreadyRevealed: string
+      wrongGroup: string
       solo: string
     }
     /** Question pool — 6 keys, each with prompt + 3 lettered choices. */
@@ -2844,8 +2862,10 @@ export const zhTW: Translations = {
   },
 
   dashboard: {
-    soloHint: '目前是你一個人在記',
-    inviteCta: '邀請對方 →',
+    soloHero: {
+      monthLabel: '{month}記下',
+      countLabel: '{count} 筆',
+    },
     addExpense: '新增一筆',
     addIncome: '記一筆收入',
     filterLabel: '篩選',
@@ -2890,11 +2910,7 @@ export const zhTW: Translations = {
   },
 
   soloBanner: {
-    waiting: '帳本準備好了，邀請對方一起',
-    sendInviteHint: '把連結傳給對方',
-    dismissAriaLabel: '關閉提示',
     generating: '產生中…',
-    sendInvite: '傳送邀請',
     sharedAndCopied: '已分享，連結也已複製',
     copied: '已複製連結',
     shareTitle: '一起用 Futari 記帳',
@@ -3300,7 +3316,7 @@ export const zhTW: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
-    soloLockHint: '單人狀態下固定為「全部我的」，邀請對方加入後可調整。',
+    soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
     quickAccessRow: '個人與帳本設定',
@@ -3468,6 +3484,7 @@ export const zhTW: Translations = {
         subtitle: '為這次匯入的紀錄統一指定預設值',
         payerLabel: '預設付款人',
         payerHint: '可在匯入完成後逐筆修改',
+        payerSoloHint: '單人狀態下，付款人都是你',
         splitLabel: '預設分攤方式',
         splitOptions: {
           all_mine: '全部我的',
@@ -3520,10 +3537,12 @@ export const zhTW: Translations = {
   },
 
   postLeave: {
-    partnerLeftHeading: '⟂ {partner} 已離開',
+    partnerLeftHeading: '{partner} 已離開',
     partnerLeftBody: '到目前為止的記錄都還在。從這裡開始，是你一個人的時光。',
     welcomeSoloHeading: '歡迎回到一個人',
     welcomeSoloBody: '帳本完整地跟著你過來。從今天起，可以慢慢來。',
+    removedPartnerHeading: '回到一個人',
+    removedPartnerBody: '帳本完整地留著。從今天起，可以慢慢來。',
     dismissAria: '關閉',
   },
 
@@ -3555,10 +3574,6 @@ export const zhTW: Translations = {
       splitType: '分攤',
       notes: '備註',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: '夥伴已離開帳本。之前的紀錄都還在。',
   },
 
   assets: {
@@ -4377,12 +4392,15 @@ export const zhTW: Translations = {
     revealFraming: '你們一個是日出、一個是月光。不同的時刻，照同一個家。沒有誰的答案比較對，記住對方在意的就好。',
     revealHeaderA: '你',
     revealHeaderB: '對方',
-    soloFallback: '兩個人才能一起回答這 3 題。等對方加入家計簿，再回來吧。',
+    soloHeading: '兩個人的問答',
+    soloFallback: '這 3 題是兩個人一起答的。這個月的回顧，其他部分都在。',
     errorNotFound: '找不到這次的問答',
     errors: {
       submitFailed: '送出失敗，等一下再試',
       alreadyAnswered: '你已經答完了',
-      solo: '一個人的時候還沒辦法答題',
+      alreadyRevealed: '這次問答已經揭曉，答案不能再改了',
+      wrongGroup: '這次的問答不屬於這個家計簿',
+      solo: '這份問答是兩個人一起答的',
     },
     questions: {
       impulse: {

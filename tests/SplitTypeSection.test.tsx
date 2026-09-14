@@ -31,13 +31,43 @@ describe('SplitTypeSection — a11y', () => {
     expect(checked[0].textContent).toContain('平分')
   })
 
-  it('reflects the solo lock — all_mine is checked regardless of stored value', () => {
-    // Stored preference is half, but solo forces the displayed value to all_mine.
-    const checked = (() => {
-      wrap({ current: 'half', isSolo: true })
-      return screen.getAllByRole('radio', { checked: true })
-    })()
-    expect(checked).toHaveLength(1)
-    expect(checked[0].textContent).toContain('全部我的')
+})
+
+// #1122 — solo used to render all three radios disabled, including "全部對方的"
+// for a partner who isn't there. It now renders the one configuration that
+// exists, as a readout rather than a dead control.
+describe('SplitTypeSection — solo', () => {
+  it('renders a single row for 全部我的, with no radios and nothing disabled', () => {
+    const { container } = wrap({ current: 'half', isSolo: true })
+    expect(screen.queryAllByRole('radio')).toHaveLength(0)
+    expect(screen.queryByRole('radiogroup')).toBeNull()
+    expect(screen.getByText('全部我的')).toBeTruthy()
+    expect(container.querySelectorAll('button:disabled')).toHaveLength(0)
+  })
+
+  it('never renders 全部對方的 — the option names a partner who is not here', () => {
+    wrap({ current: 'all_theirs', isSolo: true })
+    expect(screen.queryByText('全部對方的')).toBeNull()
+    expect(screen.queryByText('平分')).toBeNull()
+  })
+
+  it('does not write the stored preference back — solo is a display, not a save', async () => {
+    const { updateDefaultSplitType } = await import('@/actions/profile')
+    wrap({ current: 'half', isSolo: true })
+    screen.getByText('全部我的').click()
+    expect(updateDefaultSplitType).not.toHaveBeenCalled()
+  })
+
+  it('shows the solo hint, and the hint does not promise a future partner', () => {
+    wrap({ current: 'half', isSolo: true })
+    const hint = screen.getByText(/單人狀態下/)
+    expect(hint).toBeTruthy()
+    expect(hint.textContent).not.toContain('邀請')
+    expect(hint.textContent).not.toContain('加入後')
+  })
+
+  it('keeps the group label reachable for assistive tech', () => {
+    wrap({ current: 'half', isSolo: true })
+    expect(screen.getByRole('group', { name: '預設分攤方式' })).toBeTruthy()
   })
 })

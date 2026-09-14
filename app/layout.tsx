@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
+import { IS_PROD_DEPLOY } from '@/lib/deployEnv'
 import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import { PostHogProvider } from './providers'
 import { PostHogPageView } from './posthog-pageview'
@@ -26,8 +27,23 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 // string is visible in every prod HTML via gtag.js, so an env var adds no
 // secrecy). Pairs with components/KofiWidget.tsx's SOURCE constant: both are
 // fork points when cloning this codebase to wildcard / blog — change them
-// together. Only injected when NODE_ENV === 'production' so dev / preview stay
-// clean of gtag.js without per-environment config.
+// together.
+//
+// Injected only on the production *deployment* (#1116). This comment used to
+// say the previous `NODE_ENV === 'production'` gate kept "dev / preview clean
+// of gtag.js without per-environment config" — that inference is wrong, and
+// it is recorded here rather than deleted because it is an easy one to
+// re-derive: a Vercel preview deployment is also `NODE_ENV=production`, so
+// every preview, and every local `next build && next start`, was loading
+// gtag.js and reporting page_views into the live property. Measured, not
+// assumed: a local prod build sent a `g/collect` hit carrying
+// `dl=http://localhost/zh-TW`.
+//
+// This is a gate, never a removal. G-YHXFBMRQ3S is shared across products to
+// attribute Ko-fi revenue to its source, so it must keep receiving production
+// traffic — the failure direction here is two-sided, and the one that hurts is
+// gating prod off by accident: attribution data simply goes to zero one day,
+// with no error anywhere. Confirm it is still receiving after deploying.
 const GA_MEASUREMENT_ID = 'G-YHXFBMRQ3S'
 
 // Root layout metadata: platform / PWA / icons only.
@@ -100,8 +116,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
             Google Fonts hints (fonts.googleapis.com / fonts.gstatic.com) also
             removed: the woff2 files are committed under public/fonts/ and served
-            same-origin. The browser never connects to Google, so the original
-            #511 hints were dead weight. (#921 / #978) */}
+            same-origin — actually from /_next/static/media/ (Next's CSS
+            pipeline bundles the @font-face url()s), not from /fonts/ itself.
+            The browser never connects to Google, so the original #511 hints
+            were dead weight. (#921 / #978) */}
       </head>
       <body className="antialiased">
         <InAppBrowserGuardLazy strings={t.inAppBrowser} />
@@ -111,7 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </PostHogProvider>
         <Analytics />
         <SpeedInsights />
-        {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
+        {IS_PROD_DEPLOY && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   )

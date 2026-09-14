@@ -158,6 +158,9 @@ describe('removePartner', () => {
       isNull(groupEpochs.endedAt),
     ))
     expect(openEpochs).toHaveLength(1)
+    // The returned epochId is the new solo epoch — RemovePartnerFlow keys its
+    // client flag off it so PartnerLeftCard shows the removal variant (#1121).
+    expect(result.epochId).toBe(openEpochs[0].id)
     expect(openEpochs[0].memberAId).toBe(refs.userAId)
     expect(openEpochs[0].memberBId).toBeNull()
 

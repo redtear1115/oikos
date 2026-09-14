@@ -12,7 +12,6 @@ interface Props {
   activeTrips?: ActiveTripBannerTrip[]
   baseCurrency?: string
   /** Read from cookies server-side so SSR matches the client (avoids hydration mismatch). */
-  initialPartnerDismissed: boolean
   initialTripCollapsed: boolean
 }
 
@@ -22,8 +21,16 @@ interface Props {
  *   2. past-epoch — viewer is pinned to a past chapter; the band itself moved to
  *      the shell top stack (`PastChapterBar`, #1037), only the suppression of
  *      everything below it is still decided here
- *   3. partner-left — solo mode and the group previously had a partner
- *   4. active-trip — there are active trips (prop-driven)
+ *   3. active-trip — there are active trips (prop-driven)
+ *
+ * There used to be a partner-left variant between past-epoch and active-trip.
+ * It was removed with #1119: `hadPartner` was derived from the *current*
+ * `member_b` column, which is null in exactly the state the banner was built
+ * to detect, so the branch was unreachable. It is not coming back as a fixed
+ * derivation either — a solo ledger is one steady state however it was
+ * reached (see `pastTimes.currentChapterSolo`「現在 · 一個人」), and the
+ * difference between "partner left" and "always solo" belongs to the one-shot
+ * arrival cards (`PartnerLeftCard` / `WelcomeSoloCard`), not to the shell.
  *
  * Nothing in here pins to the top any more. Anything that wants the top of the
  * viewport belongs in the shell top stack, which is the only element that can
@@ -34,32 +41,23 @@ interface Props {
 export function ContextStrip({
   activeTrips = [],
   baseCurrency,
-  initialPartnerDismissed,
   initialTripCollapsed,
 }: Props) {
   const t = useTranslations()
-  const { isPast, isSolo, hadPartner } = useMember()
+  const { isPast } = useMember()
   const isOnline = useOnlineStatus()
 
   // getOfflinePref reads localStorage, which is safe here because this is a
   // client component; we wrap in useState to avoid SSR mismatch.
   const [offlinePrefOn] = useState(() => getOfflinePref())
 
-  const [partnerDismissed, setPartnerDismissed] = useState(initialPartnerDismissed)
   const [tripCollapsed, setTripCollapsed] = useState(initialTripCollapsed)
-
-  const handleDismissPartner = () => {
-    writeBoolCookie(UI_PREF_COOKIE.partnerLeftDismissed, true)
-    setPartnerDismissed(true)
-  }
 
   const handleTripToggle = () => {
     const next = !tripCollapsed
     writeBoolCookie(UI_PREF_COOKIE.tripCollapsed, next)
     setTripCollapsed(next)
   }
-
-  const showPartnerLeft = isSolo && hadPartner && !partnerDismissed
 
   // ─── Priority 1: offline ─────────────────────────────────────────────────
   if (offlinePrefOn && !isOnline) {
@@ -90,38 +88,7 @@ export function ContextStrip({
   // carried over unchanged.
   if (isPast) return null
 
-  // ─── Priority 3: partner-left ─────────────────────────────────────────────
-  if (showPartnerLeft) {
-    return (
-      <div
-        className="mx-5 my-2 rounded-2xl flex items-start justify-between gap-3 px-4 py-3 text-sm"
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--ink)',
-          color: 'var(--ink)',
-        }}
-        role="status"
-      >
-        <span>{t.contextStrip.partnerLeftLine}</span>
-        <button
-          type="button"
-          onClick={handleDismissPartner}
-          aria-label="dismiss"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--ink-3)',
-            flexShrink: 0,
-          }}
-        >
-          ×
-        </button>
-      </div>
-    )
-  }
-
-  // ─── Priority 4: active-trip ──────────────────────────────────────────────
+  // ─── Priority 3: active-trip ──────────────────────────────────────────────
   if (activeTrips.length > 0) {
     const trip = activeTrips[0]
     const tripCurrency = trip.defaultCurrency ?? baseCurrency ?? null
@@ -182,7 +149,7 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.collapseAriaLabel}
-            className="text-[18px] leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            className="text-lg leading-none shrink-0 cursor-pointer bg-transparent border-none"
             style={{ color: 'var(--ink-3)' }}
           >
             −

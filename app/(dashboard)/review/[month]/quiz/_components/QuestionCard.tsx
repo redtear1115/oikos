@@ -10,6 +10,7 @@ import {
   type PartnerQuizQuestionKey,
 } from '@/lib/partnerQuiz'
 import { submitPartnerQuizAnswers } from '@/actions/partnerQuiz'
+import { describeQuizError } from '@/lib/quiz-errors'
 
 export interface QuestionCardProps {
   sessionId: string
@@ -80,8 +81,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           router.refresh()
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : tq.errors.submitFailed
-        setError(message)
+        setError(describeQuizError(err, tq, t.common.offlineError))
       }
     })
   }

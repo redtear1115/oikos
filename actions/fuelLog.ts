@@ -83,7 +83,7 @@ export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: strin
 
   revalidateAfterTransactionMutation({ assetId: validated.assetId })
 
-  // Activation signal (#891): fuel pair may be the viewer's first record.
+  // Milestone signal (#891, not the activation metric — see #1127): fuel pair may be the viewer's first record.
   if (result.firstRecord) {
     await captureServer(user.id, 'first_record_created', { via: 'fuel_log' })
   }

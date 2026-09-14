@@ -277,8 +277,12 @@ export const en: Translations = {
   },
 
   dashboard: {
-    soloHint: "For now, it's just you",
-    inviteCta: 'Invite partner →',
+    soloHero: {
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      monthLabel: '{month}',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      countLabel: '{count} recorded',
+    },
     addExpense: 'Add entry',
     addIncome: 'Add income',
     filterLabel: 'Filter',
@@ -324,11 +328,7 @@ export const en: Translations = {
   },
 
   soloBanner: {
-    waiting: 'Your ledger is ready, for the two of you',
-    sendInviteHint: 'Send the link to your partner',
-    dismissAriaLabel: 'Dismiss',
     generating: 'Generating…',
-    sendInvite: 'Send invite',
     sharedAndCopied: 'Shared. Link also copied.',
     copied: 'Link copied',
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
@@ -736,7 +736,8 @@ export const en: Translations = {
     sectionPersonal: 'Personal',
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
-    soloLockHint: 'While solo, this is locked to "All mine." Adjust after your partner joins.',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloLockHint: 'While solo, every record is yours.',
     defaultSplitLabel: 'Default split',
     inviteCta: 'Invite partner',
     quickAccessRow: 'Personal & group settings',
@@ -904,6 +905,8 @@ export const en: Translations = {
         subtitle: 'Set a default for this batch; you can adjust rows later',
         payerLabel: 'Default payer',
         payerHint: 'You can edit each row after the import',
+        // TODO(i18n): native review pending (#1016) — MT-quality draft.
+        payerSoloHint: 'While solo, you are the payer on every row',
         splitLabel: 'Default split',
         splitOptions: {
           all_mine: 'All mine',
@@ -956,10 +959,13 @@ export const en: Translations = {
   },
 
   postLeave: {
-    partnerLeftHeading: '⟂ {partner} has left',
+    partnerLeftHeading: '{partner} has left',
     partnerLeftBody: "Everything until now is still here. From this point on, this ledger is just for you.",
     welcomeSoloHeading: 'Welcome back to one person',
     welcomeSoloBody: 'Your ledger came with you, all of it. Take your time from here.',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    removedPartnerHeading: 'Back to one person',
+    removedPartnerBody: 'Your ledger stays, all of it. Take your time from here.',
     dismissAria: 'Dismiss',
   },
 
@@ -991,10 +997,6 @@ export const en: Translations = {
       splitType: 'Split',
       notes: 'Notes',
     },
-  },
-
-  contextStrip: {
-    partnerLeftLine: 'Your partner has left the account. All previous records are still here.',
   },
 
   assets: {
@@ -1816,12 +1818,20 @@ export const en: Translations = {
     revealFraming: "One of you is sunrise, the other is moonlight. Different hours, same home. No answer is more right; it's enough to remember what the other one cares about.",
     revealHeaderA: 'You',
     revealHeaderB: 'Partner',
-    soloFallback: "This one takes two. Come back once your partner has joined the ledger.",
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloHeading: 'A quiz for two',
+    // TODO(i18n): native review pending (#1016) — MT-quality draft.
+    soloFallback: 'These three questions are answered by two people. The rest of this month’s review is still there.',
     errorNotFound: "Couldn't find this quiz",
     errors: {
       submitFailed: 'Submission failed. Please try again.',
       alreadyAnswered: "You've already finished",
-      solo: "Can't run this quiz on your own yet",
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      alreadyRevealed: 'This quiz is already open, so the answers are set.',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      wrongGroup: 'This quiz belongs to a different ledger',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      solo: 'This quiz is answered by two people',
     },
     questions: {
       impulse: {

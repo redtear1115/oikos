@@ -18,11 +18,6 @@ export function SplitTypeSection({ current, isSolo }: Props) {
   const [saving, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  // In solo mode the only valid configuration is all_mine, so the radio is
-  // visually locked to that value. The user's stored preference (in DB) is
-  // preserved untouched and re-takes effect when partner joins.
-  const displayed: SplitType = isSolo ? 'all_mine' : current
-
   const handleChange = (next: SplitType) => {
     if (next === current) return
     setError(null)
@@ -34,6 +29,36 @@ export function SplitTypeSection({ current, isSolo }: Props) {
         setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
       }
     })
+  }
+
+  // Solo has exactly one valid configuration, so the section stops being a
+  // choice and becomes a readout of what the ledger is set to (#1122). It is
+  // rendered rather than collapsed to a bare hint because a settings row's
+  // job is to show the current value — and it is a static row rather than a
+  // disabled radio because a greyed-out "all theirs" next to a partner who
+  // isn't here reads as an interface the user has failed to complete.
+  //
+  // The DB preference is deliberately left untouched: nothing here writes,
+  // so a duo-era choice comes back intact when a partner joins.
+  if (isSolo) {
+    return (
+      <div>
+        <div
+          role="group"
+          aria-label={t.settings.defaultSplitLabel}
+          className="rounded-card overflow-hidden flex flex-col"
+          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+        >
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-base" style={{ color: 'var(--ink)' }}>{t.splitType.allMine}</span>
+            <SplitRadioDot selected />
+          </div>
+        </div>
+        <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
+          {t.settings.soloLockHint}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -49,7 +74,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
           { id: 'all_mine' as const,   label: t.splitType.allMine },
           { id: 'all_theirs' as const, label: t.splitType.allPartners },
         ]).map((opt, i) => {
-          const sel = displayed === opt.id
+          const sel = current === opt.id
           return (
             <button
               type="button"
@@ -57,7 +82,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               role="radio"
               aria-checked={sel}
               onClick={() => handleChange(opt.id)}
-              disabled={saving || isSolo}
+              disabled={saving}
               className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
               style={{
                 borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
@@ -65,26 +90,27 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               }}
             >
               <span className="text-base" style={{ color: 'var(--ink)' }}>{opt.label}</span>
-              <div
-                className="w-5 h-5 rounded-full transition-all duration-150"
-                style={{
-                  border: sel ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
-                  background: sel ? 'var(--ink)' : 'transparent',
-                  boxShadow: sel ? 'inset 0 0 0 3px var(--surface)' : 'none',
-                }}
-              />
+              <SplitRadioDot selected={sel} />
             </button>
           )
         })}
       </div>
-      {isSolo && (
-        <div className="text-xs mt-2 px-1" style={{ color: 'var(--ink-3)' }}>
-          {t.settings.soloLockHint}
-        </div>
-      )}
       {error && (
         <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>{error}</div>
       )}
     </div>
+  )
+}
+
+function SplitRadioDot({ selected }: { selected: boolean }) {
+  return (
+    <div
+      className="w-5 h-5 rounded-full transition-all duration-150"
+      style={{
+        border: selected ? '6px solid var(--ink)' : '1.5px solid var(--hairline)',
+        background: selected ? 'var(--ink)' : 'transparent',
+        boxShadow: selected ? 'inset 0 0 0 3px var(--surface)' : 'none',
+      }}
+    />
   )
 }

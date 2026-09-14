@@ -199,8 +199,13 @@ export async function confirmSwap(): Promise<{ ok: true }> {
  *   - current_epoch_started_at: bumped on both groups (new chapters)
  *
  * Irreversible.
+ *
+ * Returns the leaver's new solo group id AND the id of the fresh solo epoch
+ * opened on it. `epochId` exists for `LeaveGroupFlow`'s one-shot welcome flag
+ * (#1125) — dismissal state in this product is epoch-keyed everywhere, so the
+ * flag has to be too. See the comment on that insert below.
  */
-export async function leaveGroup(): Promise<{ groupId: string }> {
+export async function leaveGroup(): Promise<{ groupId: string; epochId: string }> {
   const { user, group } = await requireViewerGroup()
 
   if (group.memberB === null) throw new Error('solo_group')
@@ -274,7 +279,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     : sql`NULL`
 
   const now = new Date()
-  const newGroupId = await db.transaction(async (tx) => {
+  const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
     // 1. Create the leaver's new solo group + balance row
     const [newGroup] = await tx
       .insert(oikosGroups)
@@ -294,12 +299,24 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
 
     // Open the leaver's fresh solo epoch on the new group (no prior open row
     // exists since the group itself is brand-new).
-    await tx.insert(groupEpochs).values({
-      groupId: newGroup.id,
-      startedAt: now,
-      memberAId: leaver,
-      memberBId: null,
-    })
+    //
+    // `.returning` so `LeaveGroupFlow` can key its `futari_just_left_` flag off
+    // this epoch id rather than the new group id (#1125). Group-keyed was never
+    // *wrong* here — every leave mints a brand-new group, so that id is already
+    // single-use — but `WelcomeSoloCard` sits in the same dashboard slot as
+    // `PartnerLeftCard`, which is epoch-keyed (#1121), and one slot answering
+    // "what does dismissing mean?" two ways is the defect #1125 was filed for.
+    // Epoch-keyed is also the answer that matches 過去章節 read-only: a chapter
+    // is the unit a one-shot arrival card belongs to.
+    const [newEpoch] = await tx
+      .insert(groupEpochs)
+      .values({
+        groupId: newGroup.id,
+        startedAt: now,
+        memberAId: leaver,
+        memberBId: null,
+      })
+      .returning({ id: groupEpochs.id })
 
     // 2. Move assets owned by the leaver
     if (movingAssetIds.length > 0) {
@@ -444,7 +461,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
     await recalcGroupBalance(oldGroupId, tx)
     await recalcGroupBalance(newGroup.id, tx)
 
-    return newGroup.id
+    return { newGroupId: newGroup.id, newEpochId: newEpoch?.id ?? '' }
   })
 
   revalidateAfterMembershipChange()
@@ -453,7 +470,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
   // this point) before the group split completes on the client side.
   await captureServer(user.id, 'group_left', { had_partner: true })
 
-  return { groupId: newGroupId }
+  return { groupId: newGroupId, epochId: newEpochId }
 }
 
 /**
@@ -505,7 +522,7 @@ export async function leaveGroup(): Promise<{ groupId: string }> {
  *
  * Irreversible.
  */
-export async function removePartner(): Promise<{ groupId: string }> {
+export async function removePartner(): Promise<{ groupId: string; epochId: string }> {
   const { user, group } = await requireViewerGroup()
 
   if (group.memberB === null) throw new Error('solo_group')
@@ -526,6 +543,10 @@ export async function removePartner(): Promise<{ groupId: string }> {
 
   const now = new Date()
   const groupId = group.id
+  // Returned to the caller so `RemovePartnerFlow` can key its client flag off
+  // the same epoch id `PartnerLeftCard` uses for dismissal (#1121). Group-keyed
+  // would go stale: a flag left unread survives a later re-invite.
+  let newEpochId = ''
 
   await db.transaction(async (tx) => {
     // Revoke any unaccepted invites on this group. Without this, an invite
@@ -547,12 +568,16 @@ export async function removePartner(): Promise<{ groupId: string }> {
       .set({ endedAt: now })
       .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
 
-    await tx.insert(groupEpochs).values({
-      groupId,
-      startedAt: now,
-      memberAId: group.memberA,
-      memberBId: null,
-    })
+    const [newEpoch] = await tx
+      .insert(groupEpochs)
+      .values({
+        groupId,
+        startedAt: now,
+        memberAId: group.memberA,
+        memberBId: null,
+      })
+      .returning({ id: groupEpochs.id })
+    newEpochId = newEpoch?.id ?? ''
 
     // The group becomes solo. Clear any leftover pending-swap fields
     // defensively — same reasoning as leaveGroup's step 13.
@@ -576,5 +601,5 @@ export async function removePartner(): Promise<{ groupId: string }> {
   // subject of an analytics event describing their own removal.
   await captureServer(user.id, 'partner_removed', { removed_user_id: removedUserId })
 
-  return { groupId }
+  return { groupId, epochId: newEpochId }
 }

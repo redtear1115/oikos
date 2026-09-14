@@ -128,7 +128,10 @@ export async function createTransaction(
 
   revalidateAfterTransactionMutation({ assetId: validated.assetId })
 
-  // Activation signal (#734): the user's first manual record.
+  // Milestone signal (#734): the user's first manual record *of their own
+  // purchase*. Not the activation metric — it misses anyone who only records
+  // for their partner; use `record_created >= 1` for that (#1127, and the
+  // isUserFirstNonDeletedRecord docstring).
   if (result.isFirstTransaction) {
     await captureServer(user.id, 'first_record_created', { via: 'manual' })
   }

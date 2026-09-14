@@ -14,33 +14,54 @@ interface Props {
 }
 
 const DISMISS_KEY_PREFIX = 'futari_partner_left_'
+const REMOVED_KEY_PREFIX = 'futari_partner_removed_'
+
+type Variant = 'hidden' | 'left' | 'removed'
 
 /**
  * One-shot card surfaced on the stayer's dashboard the first time they open
  * the app after the partner leaves. SSR detection (`PartnerLeftCard` is only
  * rendered when the prior epoch had a partner and the current is solo); this
  * client component just gates on a localStorage dismissal flag.
+ *
+ * Two variants behind the same SSR condition (#1121). `removePartner` produces
+ * the identical epoch shape as the partner leaving — closed duo epoch, open
+ * solo epoch — so the server cannot distinguish "they left" from "I removed
+ * them". `RemovePartnerFlow` writes an epoch-keyed flag on success and the
+ * removal variant reads it. Without it, the person who just typed a confirm
+ * string to remove someone is told that someone left them.
  */
 export function PartnerLeftCard({ partnerName, currentEpochId }: Props) {
   const t = useTranslations()
-  const [hidden, setHidden] = useState(true)  // start hidden until we read storage
+  const [variant, setVariant] = useState<Variant>('hidden')  // hidden until we read storage
 
   useEffect(() => {
-    const key = DISMISS_KEY_PREFIX + currentEpochId
-    if (typeof window !== 'undefined' && window.localStorage.getItem(key) === '1') return
-    setHidden(false)
+    if (typeof window === 'undefined') return
+    if (window.localStorage.getItem(DISMISS_KEY_PREFIX + currentEpochId) === '1') return
+    const removed = window.localStorage.getItem(REMOVED_KEY_PREFIX + currentEpochId) === '1'
+    setVariant(removed ? 'removed' : 'left')
   }, [currentEpochId])
 
-  if (hidden) return null
+  if (variant === 'hidden') return null
+
+  const removed = variant === 'removed'
+  const heading = removed
+    ? t.postLeave.removedPartnerHeading
+    : t.postLeave.partnerLeftHeading.replace('{partner}', partnerName)
+  const body = removed ? t.postLeave.removedPartnerBody : t.postLeave.partnerLeftBody
 
   const handleDismiss = () => {
     try {
       window.localStorage.setItem(DISMISS_KEY_PREFIX + currentEpochId, '1')
+      // The removal marker is one-shot — the dismissal flag above is what
+      // keeps the card down from here, so clear it rather than leaving a
+      // stale key behind for this epoch.
+      window.localStorage.removeItem(REMOVED_KEY_PREFIX + currentEpochId)
     } catch {
       // localStorage can throw in private mode; failing to persist just means
       // the card re-shows on next open, which is acceptable.
     }
-    setHidden(true)
+    setVariant('hidden')
   }
 
   return (
@@ -58,10 +79,10 @@ export function PartnerLeftCard({ partnerName, currentEpochId }: Props) {
             className="text-base leading-tight"
             style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
           >
-            {t.postLeave.partnerLeftHeading.replace('{partner}', partnerName)}
+            {heading}
           </div>
           <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-            {t.postLeave.partnerLeftBody}
+            {body}
           </p>
         </div>
         <button

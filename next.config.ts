@@ -36,6 +36,13 @@ const nextConfig: NextConfig = {
     // valid revision. VERCEL_GIT_COMMIT_SHA changes on every deploy; falls
     // back to 'dev' for local builds where the var isn't set.
     NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? 'dev',
+    // #1116 — which deployment this build belongs to, for the Sentry /
+    // PostHog gates. Injected here rather than read from Vercel's mirrored
+    // NEXT_PUBLIC_VERCEL_ENV so the client value can't vanish if the
+    // "expose System Environment Variables" project setting is ever turned
+    // off. Falls back to 'local' for any build off Vercel. See lib/deployEnv.ts
+    // for why NODE_ENV was the wrong question.
+    NEXT_PUBLIC_DEPLOY_ENV: process.env.VERCEL_ENV ?? 'local',
   },
   images: {
     // AVIF first, then WebP — Next.js negotiates via the request Accept header

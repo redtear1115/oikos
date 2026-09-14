@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { cashTransactions } from '@/lib/db/schema'
 import { db } from '@/lib/db/client'
+import { IS_PROD_DEPLOY } from '@/lib/deployEnv'
 
 // Either the top-level db client or a PgTransaction handed back from
 // `db.transaction(async (tx) => ...)`. Both expose the .select() API used
@@ -11,8 +12,10 @@ type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 // Mirror the client gate (app/providers.tsx) without importing the 'use client'
 // module into server code. NEXT_PUBLIC_* vars are available server-side too.
-const SERVER_ANALYTICS_ENABLED =
-  process.env.NODE_ENV === 'production' && !!process.env.NEXT_PUBLIC_POSTHOG_KEY
+// Gated on the deployment, not on NODE_ENV — a local `next build && next start`
+// is also NODE_ENV=production and used to write straight into the prod project
+// (#1116, see lib/deployEnv.ts).
+const SERVER_ANALYTICS_ENABLED = IS_PROD_DEPLOY && !!process.env.NEXT_PUBLIC_POSTHOG_KEY
 
 let client: PostHog | null = null
 
@@ -76,10 +79,18 @@ export async function captureServer(
  * the first time in `groupId`. Counts non-deleted rows where `paidBy = userId`;
  * caller fires `first_record_created` iff the result is true.
  *
- * Semantic matches actions/transaction.ts:122-126: activation = "the viewer
- * logged their own purchase". Pass `viewer.id` (not the row's `paidBy`); if
- * the viewer marked the partner as payer, this returns false — partner-as-
- * payer first does not activate the viewer (#891).
+ * Semantic: "the viewer logged their own purchase". Pass `viewer.id` (not the
+ * row's `paidBy`); if the viewer marked the partner as payer, this returns
+ * false — partner-as-payer first does not activate the viewer (#891).
+ *
+ * **That is not the activation metric.** `first_record_created` answers "did
+ * this user log a purchase of their own", which is narrower than "is this user
+ * using the product": someone who only ever records their partner's spending
+ * never fires it. Over 90 days, 17 people had `record_created` and 11 had
+ * `first_record_created` — the 6 in between are active users the narrow
+ * reading drops. Activation is `record_created >= 1`; this event stays for the
+ * milestone card and its `via` breakdown (#734). See
+ * docs/superpowers/specs/observability-design.md (#1127).
  *
  * Call inside the same DB transaction, AFTER the insert. Fire the event
  * outside the transaction so a slow network call doesn't extend tx duration.

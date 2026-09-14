@@ -110,7 +110,11 @@ export function ShellUpdateNotice() {
         aria-label={t.shellUpdateNotice.dismissAriaLabel}
         className="shrink-0 inline-flex items-center justify-center min-h-11 min-w-11 -mr-2 text-title leading-none bg-transparent border-0 cursor-pointer text-ink-3"
       >
-        ×
+        {/* ✕ U+2715 — close-this-surface, same as every dismissible card and
+            sheet (#1125). The notice pins to the shell top strip, so it sits
+            above whatever the page renders and would otherwise put the other
+            spelling on screen next to them. */}
+        ✕
       </button>
     </div>
   )

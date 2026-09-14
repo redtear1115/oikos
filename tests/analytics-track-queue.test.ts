@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// `track()` / `flushQueue()` gate on `POSTHOG_ENABLED`, which is a build-time
-// const in `app/providers.tsx` (`NODE_ENV === 'production' && ...`). Vitest
-// runs with `NODE_ENV=test`, so mock the provider module directly rather than
-// juggling `vi.stubEnv` + `vi.resetModules` — this also sidesteps pulling in
+// `track()` / `flushQueue()` gate on `POSTHOG_ENABLED`, a build-time const in
+// `lib/analytics/enabled.ts` (production *deployment* + key — #1116). Vitest
+// runs off Vercel, so mock that leaf module directly rather than juggling
+// `vi.stubEnv` + `vi.resetModules` — this also sidesteps pulling in
 // `posthog-js/react` and `lib/platform` just to read one boolean.
 const h = vi.hoisted(() => ({
   capture: vi.fn(),

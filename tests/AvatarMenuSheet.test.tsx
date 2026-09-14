@@ -65,7 +65,6 @@ function makeCtx(opts: { solo: boolean }): MemberContextValue {
     canAccessGuardian: false,
     epochStartedAt: '2024-01-01T00:00:00.000Z',
     epochEndedAt: null,
-    hadPartner: false,
   }
 }
 
@@ -146,7 +145,9 @@ describe('AvatarMenuSheet — solo mode', () => {
 
   it('shows the solo lock hint under split-type section', () => {
     wrap(makeCtx({ solo: true }))
-    // t.settings.soloLockHint = '單人狀態下固定為「全部我的」，邀請對方加入後可調整。'
-    expect(screen.getByText(/單人狀態下固定為/)).toBeTruthy()
+    // t.settings.soloLockHint = '單人狀態下，每筆記錄都算你的。' (#1122 — the
+    // old wording promised "邀請對方加入後可調整", which reads as a waiting room
+    // to someone whose partner just left.)
+    expect(screen.getByText(/單人狀態下，每筆記錄都算你的/)).toBeTruthy()
   })
 })
