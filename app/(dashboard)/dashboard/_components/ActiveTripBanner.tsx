@@ -221,7 +221,10 @@ function SmallCircleButton({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
-      className="shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer"
+      // Visible circle stays 28px; the ::before adds 8px above and below
+      // (44px tall) and 2px sideways, which stays inside the 6px gap between
+      // the paired buttons so the two hit areas never overlap (#1197).
+      className="relative shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer before:absolute before:-inset-y-2 before:-inset-x-0.5 before:content-['']"
       style={{
         width: 28,
         height: 28,
