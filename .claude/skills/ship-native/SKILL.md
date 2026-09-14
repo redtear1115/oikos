@@ -260,6 +260,7 @@ AAB=android/app/build/outputs/bundle/release/app-release.aab
 | `exportArchive Cloud signing permission error` / `No signing certificate "iOS Distribution" found` | 用了 App 管理角色的 key 跑 export；雲端簽章要 Admin | 換 `795L42Z42U`。ASC 的 key 建立後權限**不能改**，只能另建一把 |
 | `invalid source release: 21` | PATH 上的 JDK 比 21 舊 | `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` |
 | `BUG! exception in phase 'semantic analysis' ... Unsupported class file major version 69`（或 70…） | JBR 隨 Android Studio 更新漂到比 Gradle 支援的還新（69 = Java 25 需 Gradle 9.1+、70 = Java 26 需 9.4+） | 升 `android/gradle/wrapper/gradle-wrapper.properties`（連帶 AGP），見 #1207；不要另裝舊 JDK |
+| `getDefaultProguardFile('proguard-android.txt') is no longer supported`（出錯的是 `:capacitor-community-apple-sign-in`） | apple-sign-in 的 Android patch 沒套上。常見於 #1207 之前就裝好的 `node_modules`：對已套過舊 patch 的目錄套新 patch 會失敗，而 postinstall 是 `patch-package \|\| exit 0`，npm 不會報錯 | `rm -rf node_modules && npm ci`，確認輸出有 `@capacitor-community/apple-sign-in@7.1.0 ✔` |
 | patch-package 重產的 patch 多出幾百行 `android/build/**` 二進位 | Gradle 把 plugin 的 build 產物寫進 `node_modules/<plugin>/android/build/`，patch-package 會一起收 | 重產前 `rm -rf node_modules/<plugin>/android/build`，產完 `grep '^diff --git' patches/*.patch` 確認只有預期檔案 |
 | AAB 出來了但 `jarsigner -verify` 不過 | `.env` 沒 source 進來；`build.gradle` 的密碼有 `?: ""` fallback，不會讓 build 失敗 | `set -a; . ./.env; set +a` 後重跑 |
 | ASC 回「build number 已存在」 | 同一 `MARKETING_VERSION` 下 build number 必須唯一遞增，TestFlight 也吃這規則 | 計數再 +1 重傳。**不要**改 `MARKETING_VERSION` 繞過 |

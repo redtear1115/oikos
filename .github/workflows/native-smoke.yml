@@ -107,6 +107,14 @@ jobs:
       - name: Install
         run: npm ci
 
+      # 同 iOS job：postinstall fail-soft，patch 沒套上不會讓 npm ci 變紅。AGP 9 下沒套上的樣子是
+      # assembleDebug 撞 "getDefaultProguardFile('proguard-android.txt') is no longer supported"，
+      # 看不出是 patch 問題（#1207）。
+      - name: 確認 apple-sign-in Android patch 已套用
+        run: |
+          grep -q "proguard-android-optimize.txt" node_modules/@capacitor-community/apple-sign-in/android/build.gradle \
+            || { echo "::error::patch-package 沒把 apple-sign-in 的 Android proguard 設定改成 proguard-android-optimize.txt（#1207）"; exit 1; }
+
       # android/capacitor-cordova-android-plugins/ 與 assets/ 下的 config 都是 gitignore 的
       # cap sync 產物，沒先 sync 的話 settings.gradle 會找不到 plugin 專案。
       - name: Capacitor sync（Android）
