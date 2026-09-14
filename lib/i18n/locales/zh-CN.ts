@@ -1813,6 +1813,8 @@ export const zhCN: Translations = {
     errors: {
       submitFailed: '送出失败，等一下再试',
       alreadyAnswered: '你已经答完了',
+      alreadyRevealed: '这次问答已经揭晓，答案不能再改了',
+      wrongGroup: '这次的问答不属于这个家计簿',
       solo: '这份问答是两个人一起答的',
     },
     questions: {

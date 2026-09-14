@@ -1825,6 +1825,10 @@ export const ja: Translations = {
       submitFailed: '送信できませんでした。少し待ってから試してください',
       alreadyAnswered: 'もう答え終わっているよ',
       // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      alreadyRevealed: 'この問答はもう開いたから、答えは変えられないよ',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
+      wrongGroup: 'この問答は、この家計簿のものではありません',
+      // TODO(i18n): native review pending (#1016) — MT-quality draft.
       solo: 'この問答は、ふたりで答えるものです',
     },
     questions: {

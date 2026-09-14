@@ -56,6 +56,42 @@ describe('QuestionCard — solo error copy comes from the locale', () => {
     const alert = await waitFor(() => screen.getByRole('alert'))
     expect(alert.textContent).toBe(zhTW.quiz.errors.submitFailed)
   })
+
+  // #1140 — the other four rejections were still prose. `already_answered` is
+  // the one a real user hits (two devices, or two tabs, submitting the same
+  // final question), so it gets the render-level proof that the code reaches
+  // the dictionary instead of the screen. Per-locale resolution is covered in
+  // `quiz-errors.test.ts`; this harness only has zh-TW.
+  it('shows quiz.errors.alreadyAnswered for the already_answered code', async () => {
+    const { submitPartnerQuizAnswers } = await import('@/actions/partnerQuiz')
+    vi.mocked(submitPartnerQuizAnswers).mockRejectedValue(new Error('already_answered'))
+
+    const { container } = renderCard()
+    await submitOnce(container)
+
+    const alert = await waitFor(() => screen.getByRole('alert'))
+    expect(alert.textContent).toBe(zhTW.quiz.errors.alreadyAnswered)
+    expect(alert.textContent).not.toContain('already_answered')
+  })
+
+  it('shows quiz.errorNotFound / quiz.errors.wrongGroup for the tamper codes', async () => {
+    const { submitPartnerQuizAnswers } = await import('@/actions/partnerQuiz')
+
+    for (const [code, expected] of [
+      ['session_not_found', zhTW.quiz.errorNotFound],
+      ['wrong_group', zhTW.quiz.errors.wrongGroup],
+      ['already_revealed', zhTW.quiz.errors.alreadyRevealed],
+    ] as const) {
+      vi.mocked(submitPartnerQuizAnswers).mockRejectedValue(new Error(code))
+      const { container, unmount } = renderCard()
+      await submitOnce(container)
+
+      const alert = await waitFor(() => screen.getByRole('alert'))
+      expect(alert.textContent, code).toBe(expected)
+      expect(alert.textContent, code).not.toContain(code)
+      unmount()
+    }
+  })
 })
 
 // #1123 — the solo branch reused `revealHeading` (「你們的理財組合」), a

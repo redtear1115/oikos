@@ -81,7 +81,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           router.refresh()
         }
       } catch (err) {
-        setError(describeQuizError(err, tq.errors, t.common.offlineError))
+        setError(describeQuizError(err, tq, t.common.offlineError))
       }
     })
   }
