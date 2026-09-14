@@ -629,7 +629,7 @@ export function FilterSheet({
                   border: '1px solid var(--hairline)',
                 }}
               >
-                <span aria-hidden style={{ fontSize: 14 }}>↗</span>
+                <span aria-hidden className="text-sm">↗</span>
                 {t.filterSheet.shareLink}
               </button>
               {shareToast && (

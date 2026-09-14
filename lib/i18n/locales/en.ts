@@ -685,6 +685,7 @@ export const en: Translations = {
       trendIncome: 'Income',
       trendNet: 'Cumulative net',
       trendChartLabel: 'Daily income and spending trend',
+      pieChartLabel: 'Breakdown chart, {count} segments',
     },
   },
 

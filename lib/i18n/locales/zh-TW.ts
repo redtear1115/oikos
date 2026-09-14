@@ -969,6 +969,8 @@ export type Translations = {
       trendIncome: string
       trendNet: string
       trendChartLabel: string
+      /** Donut chart a11y label (#1169). `{count}` = number of non-zero slices. */
+      pieChartLabel: string
     }
   }
 
@@ -3416,6 +3418,7 @@ export const zhTW: Translations = {
       trendIncome: '收入',
       trendNet: '累計結餘',
       trendChartLabel: '每日收支趨勢',
+      pieChartLabel: '占比圓餅圖，共 {count} 項',
     },
   },
 

@@ -249,6 +249,16 @@ export function RecordsList({
   const [summaries, setSummaries] = useState<{ key: string; data: FeedMonthSummary[] }>(
     () => ({ key: feedKey, data: monthSummaries }),
   )
+  // When the SSR `monthSummaries` prop may be trusted as-is. It describes the
+  // 全部 view as of the moment it arrived — and only until the view moves off
+  // that key. After a tab / drill / filter change, realtime refetches can have
+  // superseded it, and a same-reference prop says nothing new; coming back to
+  // 全部 must refetch instead of restoring it. Symptom if this is dropped:
+  // switching 支出 → 全部 shows the numbers from page load, not the ones
+  // realtime had corrected since.
+  const ssrPropRef = useRef(monthSummaries)
+  const ssrKeyRef = useRef(feedKey)
+  const ssrSupersededRef = useRef(false)
   // Mirrors `feedKey` into a ref so the debounced realtime refetch below
   // (scheduled from one render, resolving on a later one) can tell whether
   // it's still the current view by the time its response comes back.
@@ -256,12 +266,21 @@ export function RecordsList({
   useEffect(() => { feedKeyRef.current = feedKey }, [feedKey])
 
   useEffect(() => {
+    if (monthSummaries !== ssrPropRef.current) {
+      // Fresh SSR payload (navigation or `router.refresh()`), computed for the
+      // URL the view is on right now.
+      ssrPropRef.current = monthSummaries
+      ssrKeyRef.current = feedKey
+      ssrSupersededRef.current = false
+    } else if (feedKey !== ssrKeyRef.current) {
+      ssrSupersededRef.current = true
+    }
     // 全部 tab with the URL-derived drill/filter/range IS the SSR key —
     // `drillAppliesToTab(drill, 'all')` is always true (see lib/drill.ts),
     // so `effectiveDrillKey` on this tab always equals the raw URL drill's
-    // key, which is exactly what `feedKey` reduces to here. No fetch needed;
-    // just re-sync to the (possibly refreshed) SSR prop.
-    if (tab === 'all') {
+    // key, which is exactly what `feedKey` reduces to here. No fetch needed
+    // while the prop still describes this exact view.
+    if (tab === 'all' && !ssrSupersededRef.current) {
       setSummaries({ key: feedKey, data: monthSummaries })
       return
     }
@@ -464,12 +483,12 @@ export function RecordsList({
             away, so "is there a band above me" is a static question again and
             --safe-top already answers it. */}
         <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
-          <div
+          <h1
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
           >
             {t.records.title}
-          </div>
+          </h1>
           {/* Recurring entry — moved from the inline section card (#545 §4)
               to keep L3 focused on time/filter chips. */}
           <Link
@@ -478,7 +497,7 @@ export function RecordsList({
             style={{ color: 'var(--ink-2)' }}
           >
             {t.records.recurringShortcut}
-            <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>›</span>
+            <span aria-hidden className="text-sm leading-none">›</span>
           </Link>
         </div>
 
@@ -487,19 +506,19 @@ export function RecordsList({
             selected — see toggleKind for why. */}
         <div className="px-5 pb-3">
           <div
-            className="inline-flex items-center"
+            className="inline-flex items-center rounded-full p-0.75 gap-0.5"
             style={{
               background: 'var(--surface)',
               border: '0.5px solid var(--hairline)',
-              borderRadius: 999,
-              padding: 3,
-              gap: 2,
             }}
           >
+            {/* Dot colours, rendered values unchanged: the expense dot sits on
+                the ink fill, so it is the on-fill foreground at 55% (was a raw
+                rgba white); the income dot is the mint palette ink at 70%. */}
             {([
-              { kind: 'expense' as const, label: t.records.tabExpense, dotColor: 'rgba(255,255,255,0.55)' },
-              { kind: 'income' as const, label: t.records.tabIncome, dotColor: '#3F6A56' },
-            ]).map(({ kind, label, dotColor }) => {
+              { kind: 'expense' as const, label: t.records.tabExpense, dotColor: 'var(--on-fill)', dotOpacity: 'opacity-55' },
+              { kind: 'income' as const, label: t.records.tabIncome, dotColor: P.ink, dotOpacity: 'opacity-70' },
+            ]).map(({ kind, label, dotColor, dotOpacity }) => {
               const sel = selectedKinds.has(kind)
               const isIncome = kind === 'income'
               return (
@@ -507,10 +526,8 @@ export function RecordsList({
                   key={kind}
                   type="button"
                   onClick={() => toggleKind(kind)}
-                  className="h-8 inline-flex items-center gap-1.5 cursor-pointer border-0 text-sm transition-colors duration-150"
+                  className="h-8 px-3.5 rounded-full inline-flex items-center gap-1.5 cursor-pointer border-0 text-sm transition-colors duration-150"
                   style={{
-                    padding: '0 14px',
-                    borderRadius: 999,
                     background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
                     color: sel ? (isIncome ? P.ink : 'var(--on-fill)') : 'var(--ink-3)',
                     fontWeight: sel ? 600 : 500,
@@ -520,14 +537,8 @@ export function RecordsList({
                   {sel && (
                     <span
                       aria-hidden
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: '50%',
-                        background: dotColor,
-                        opacity: isIncome ? 0.7 : 1,
-                        flexShrink: 0,
-                      }}
+                      className={`size-1.5 rounded-full shrink-0 ${dotOpacity}`}
+                      style={{ background: dotColor }}
                     />
                   )}
                   {label}
@@ -539,9 +550,15 @@ export function RecordsList({
 
         {/* L3: month/date chip + filter chip + drill chips — single scrolling row.
             All "narrow the view" controls live here so the mental model is unified:
-            L2 = what type of record, L3 = what time / filter / drill scope. */}
+            L2 = what type of record, L3 = what time / filter / drill scope.
+
+            `pt-1.5 -mt-1.5` is layout-neutral on purpose: `overflow-x-auto`
+            also clips overflow-y, and clipping applies to hit-testing. The h-8
+            chips extend their tap areas to 44px with ::before pseudos that
+            reach 6px above the chip; with no top padding that strip was cut
+            off and the real tap area stopped at ~38px. (#1169) */}
         <div
-          className="flex items-center gap-2 px-5 pb-3 overflow-x-auto"
+          className="flex items-center gap-2 px-5 pt-1.5 -mt-1.5 pb-3 overflow-x-auto"
           style={{ scrollbarWidth: 'none' } as React.CSSProperties}
         >
           {/* Month or date range chip */}
@@ -567,8 +584,8 @@ export function RecordsList({
             {filterActive && (
               <span
                 aria-hidden
-                className="inline-block rounded-full shrink-0"
-                style={{ width: 6, height: 6, background: 'var(--accent)' }}
+                className="inline-block size-1.5 rounded-full shrink-0"
+                style={{ background: 'var(--accent)' }}
               />
             )}
           </button>
@@ -611,7 +628,13 @@ export function RecordsList({
         renderRow={tab !== 'income' ? renderRow : undefined}
         monthSummaries={{
           mode: tab,
-          byMonth: Object.fromEntries(summaries.data.map((s) => [s.monthKey, s])),
+          // Only summaries fetched for THIS view. While a new key's fetch is in
+          // flight — or after it failed (offline) — the previous key's numbers
+          // would otherwise sit on this tab's headers; an empty map makes each
+          // month fall back to the loaded-rows sum instead.
+          byMonth: summaries.key === feedKey
+            ? Object.fromEntries(summaries.data.map((s) => [s.monthKey, s]))
+            : {},
         }}
         emptyState={
           tab === 'income'

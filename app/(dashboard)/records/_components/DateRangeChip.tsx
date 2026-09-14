@@ -47,7 +47,11 @@ export function DateRangeChip({ dateRange, onClear }: Props) {
         type="button"
         onClick={onClear}
         aria-label={t.filterSheet.dateRangeClear}
-        className="h-5 w-5 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer text-base leading-none"
+        // Visible glyph box stays 20px; the ::before pseudo extends the tap
+        // area 12px each side to 44px (WCAG / iOS HIG), same trick as the
+        // MonthSwitcher trigger (#147). This × is the only way out of a
+        // custom range, so a missable target traps the view. (#1169)
+        className="relative h-5 w-5 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer text-base leading-none before:absolute before:-inset-3 before:content-['']"
         style={{ color: 'var(--ink-3)' }}
       >
         {/* × U+00D7, deliberately NOT the ✕ U+2715 used by every card and sheet

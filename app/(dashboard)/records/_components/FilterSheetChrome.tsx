@@ -36,8 +36,8 @@ export function AssetGroupSection({
       <div className="flex items-center gap-2 mb-2 px-0.5">
         <span
           aria-hidden="true"
-          className="inline-block rounded-full shrink-0"
-          style={{ width: 6, height: 6, background: dotColor }}
+          className="inline-block size-1.5 rounded-full shrink-0"
+          style={{ background: dotColor }}
         />
         <div className="text-xs font-medium" style={{ color: 'var(--ink-3)' }}>{label}</div>
       </div>
@@ -79,8 +79,8 @@ export function Chip({
       {dotColor && (
         <span
           aria-hidden="true"
-          className="inline-block rounded-full shrink-0"
-          style={{ width: 6, height: 6, background: dotColor }}
+          className="inline-block size-1.5 rounded-full shrink-0"
+          style={{ background: dotColor }}
         />
       )}
       {label}

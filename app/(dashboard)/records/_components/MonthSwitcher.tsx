@@ -137,17 +137,17 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
       ref={popoverRef}
       role="dialog"
       aria-label={t.records.monthPicker.dialogLabel}
-      className="rounded-2xl"
+      // z-sheet: the popover floats over page chrome at the sheet layer (was a
+      // bare zIndex 100, the same value). The shadow is sanctioned — a portalled
+      // popover leaves the page plane (#1157) — but is tinted from --ink like
+      // the system's other shadows instead of raw black. (#1170)
+      className="fixed z-sheet rounded-2xl p-3 w-70"
       style={{
-        position: 'fixed',
         left: anchor.left,
         top: anchor.top,
-        zIndex: 100,
         background: 'var(--surface)',
         border: '1px solid var(--hairline)',
-        padding: 12,
-        width: 280,
-        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+        boxShadow: '0 8px 24px color-mix(in srgb, var(--ink) 12%, transparent)',
       }}
     >
       {/* Year navigation row */}
@@ -235,13 +235,11 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
         {monthLabel(monthKey, locale)}
         <span
           aria-hidden
+          className="inline-block text-mini leading-none"
           style={{
-            fontSize: 10,
             color: 'var(--ink-3)',
             transform: open ? 'rotate(180deg)' : 'none',
             transition: 'transform 0.15s ease',
-            display: 'inline-block',
-            lineHeight: 1,
           }}
         >
           ▾
