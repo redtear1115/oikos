@@ -103,7 +103,7 @@ export default async function InvitePage({ params }: Props) {
         >
           {t.invite.errorTitle}
         </h1>
-        <p className="text-sm mb-6" style={{ color: 'var(--debit)' }}>
+        <p className="text-sm mb-6" style={{ color: 'var(--debit-text)' }}>
           {errorMessage}
         </p>
         <a

@@ -136,7 +136,7 @@ export function CurrencySettings(props: {
         </div>
 
         {baseError && (
-          <p className="text-sm mt-2" style={{ color: 'var(--debit)' }}>
+          <p className="text-sm mt-2" style={{ color: 'var(--debit-text)' }}>
             {baseError}
           </p>
         )}

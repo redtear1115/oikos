@@ -56,7 +56,7 @@ export function ImportResult({ result, onRollback, onDone, onAnother, rollbackin
               onClick={onRollback}
               disabled={rollbacking}
               className="flex-1 h-11 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--surface)', border: '1px solid var(--debit)', color: 'var(--debit)' }}
+              style={{ background: 'var(--surface)', border: '1px solid var(--debit)', color: 'var(--debit-text)' }}
             >
               {rollbacking ? tImport.rollbacking : tImport.rollbackCta}
             </button>

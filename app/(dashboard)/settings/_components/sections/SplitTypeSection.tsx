@@ -96,7 +96,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
         })}
       </div>
       {error && (
-        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>{error}</div>
+        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit-text)' }}>{error}</div>
       )}
     </div>
   )
