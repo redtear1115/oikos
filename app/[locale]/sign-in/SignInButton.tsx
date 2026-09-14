@@ -6,9 +6,16 @@ import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attr
 import { recordNativeAuthConversion } from '@/actions/auth'
 import { generateNonce, sha256Hex } from '@/lib/auth/nonce'
 import { isUserCancelled } from '@/lib/auth/appleSignInError'
+import { nativeCallbackUrl, safeSameOriginUrl } from '@/lib/auth/nativeRedirect'
 
 // Deep link scheme registered in AndroidManifest.xml / capacitor.config.ts
 const CAPACITOR_SCHEME = 'dev.southernlight.futari'
+// Only the Apple `redirectURI` — the return URL registered on the Apple Services
+// ID, so it is intentionally prod. NOT for navigation: navigation uses
+// window.location.origin so a shell overridden via CAP_SERVER_URL (localhost /
+// Vercel preview, runbook §J, #1214) can complete sign-in. Navigating to this
+// constant instead leaves such a shell stuck on the "正在帶你進去" curtain with
+// no error.
 const APP_ORIGIN = 'https://futari.southern-light.dev'
 
 type Provider = 'google' | 'apple'
@@ -84,7 +91,9 @@ async function appleNativeSignIn(
   // is still the sign-in form, which is exactly why the curtain covers it.
   await recordNativeAuthConversion({ from: ctx.from, anonId: getAnonId() })
 
-  window.location.href = `${APP_ORIGIN}${ctx.next}`
+  // `next` comes from the query string — safeSameOriginUrl refuses anything
+  // that would leave this origin (e.g. `@evil.com`, `//evil.com`).
+  window.location.href = safeSameOriginUrl(window.location.origin, ctx.next)
   return 'navigating'
 }
 
@@ -136,10 +145,13 @@ async function browserOAuthSignIn(
     await App.addListener('appUrlOpen', async ({ url }) => {
       if (!url.startsWith(`${CAPACITOR_SCHEME}://`)) return
       if (done) return
-      const callbackUrl = url.replace(`${CAPACITOR_SCHEME}://login-callback`, '')
+      // Not our OAuth callback (or shaped to escape this origin): ignore it
+      // rather than finishing — a stray link must not tear down a live attempt.
+      const target = nativeCallbackUrl(window.location.origin, url, CAPACITOR_SCHEME)
+      if (target === null) return
       await finish('navigating')
       await Browser.close()
-      window.location.href = `${APP_ORIGIN}${callbackUrl}`
+      window.location.href = target
     }),
   )
 
