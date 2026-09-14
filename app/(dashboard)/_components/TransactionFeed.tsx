@@ -327,7 +327,9 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
             aria-label={t.transactionFeed.closeAriaLabel}
             className="bg-transparent border-0 text-white text-base leading-none cursor-pointer p-0"
           >
-            ×
+            {/* ✕ U+2715 — close-this-surface (#1125); this dismisses the whole
+                error toast, it is not a filter-chip clear. */}
+            ✕
           </button>
         </div>
       )}

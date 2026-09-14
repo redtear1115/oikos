@@ -630,7 +630,7 @@ export type Translations = {
     /** Non-blocking strip shown only inside a native shell older than
      *  `MIN_SHELL_VERSION`. Neutral and dismissible — the app still works. */
     message: string
-    /** Accessible label for the × dismiss button. */
+    /** Accessible label for the ✕ dismiss button. */
     dismissAriaLabel: string
   }
 

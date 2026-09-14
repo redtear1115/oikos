@@ -278,7 +278,7 @@ export default async function DashboardPage() {
         />
       )}
       {!partnerLeftProps && !group.memberB && !epochWindow.isPast && (
-        <WelcomeSoloCard groupId={group.id} />
+        <WelcomeSoloCard epochId={epochWindow.epochId} />
       )}
       {bannerProps && (
         <MonthlyReviewBanner

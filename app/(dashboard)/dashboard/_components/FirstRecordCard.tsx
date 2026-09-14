@@ -68,7 +68,13 @@ export function FirstRecordCard({ show, onDismiss }: Props) {
           className="absolute right-3 top-2 bg-transparent border-0 cursor-pointer p-1 text-title leading-none rounded-md focus-visible:outline-2 focus-visible:outline-offset-2"
           style={{ color: 'var(--ink-3)', outlineColor: 'var(--accent)' }}
         >
-          ×
+          {/* ✕ U+2715, the close-this-surface glyph (#1125). Not × U+00D7 —
+              that one is reserved for clearing a filter chip. This card shares
+              the dashboard slot with WelcomeSoloCard / PartnerLeftCard and can
+              be on screen beside them: this card lights up once the first
+              record of a chapter lands, which is well before an arrival card
+              gets dismissed. So the two spellings were literally adjacent. */}
+          ✕
         </button>
         <p
           className="text-base leading-relaxed pr-6 mb-4"
