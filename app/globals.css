@@ -350,6 +350,25 @@ body {
   padding: 0;
   background: var(--switch-off-bg);
   transition: background var(--toggle-transition);
+  position: relative;
+}
+/* Touch target (#1227). The 44×26 track is the iOS switch silhouette DESIGN.md
+ * specifies, so the visual box stays put; only the hit area grows. This
+ * transparent pseudo-element is vertically centred on the track and is
+ * `--control-md` (44px) tall, so taps up to 9px above/below the track still
+ * land on the <button>. It paints nothing and takes no layout space.
+ * Failure looks like: visuals and tests fine, but a finger landing on the
+ * switch's top/bottom edge does nothing, with no error anywhere.
+ * Callers must leave ≥9px of clear space above and below the track (both
+ * current settings rows sit in `py-4` cards, 16px). Width is already 44px. */
+.oik-switch::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--control-md);
+  transform: translateY(-50%);
 }
 .oik-switch[data-state="on"] {
   background: var(--switch-on-bg);
