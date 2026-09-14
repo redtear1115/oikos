@@ -18,7 +18,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 技術變更
+
+- **原生殼的登入可以在 localhost / Vercel preview 上走完（#1214）**：原生授權完成後，`SignInButton` 原本一律導回寫死的 prod origin，殼用 `CAP_SERVER_URL` 指向其他環境時會永遠停在「正在帶你進去」。改為導回殼當下的 origin；殼連 prod 時兩者相同，行為不變。
+- **補上原生登入的兩個 open redirect（#1214）**：iOS 原生 Apple 登入的 `?next=` 與 Android deep link 的回跳路徑原本未驗證（例：`next=@evil.com/x` 會導去 `evil.com`）。新增 `lib/auth/nativeRedirect.ts`，比照 `/auth/callback` 的規則並要求同源；不相干的 deep link 直接忽略、不會中止進行中的登入。
 
 ## [1.5.13] - 2026-09-14
 

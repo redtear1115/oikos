@@ -408,13 +408,27 @@ Apple Sign In、推播、keyboard resize）的 web 改動只有上了 prod 才�
 # 本機 dev server（iOS 模擬器）
 CAP_SERVER_URL=http://localhost:3000 npx cap sync ios
 
-# 本機 dev server（Android 模擬器；10.0.2.2 = 模擬器眼中的宿主機）
-CAP_SERVER_URL=http://10.0.2.2:3000 npx cap sync android
-#   或先 adb reverse tcp:3000 tcp:3000，然後照樣用 http://localhost:3000
+# 本機 dev server（Android 模擬器）——用 adb reverse，不要用 10.0.2.2（見下方警告）
+adb reverse tcp:3000 tcp:3000
+CAP_SERVER_URL=http://localhost:3000 npx cap sync android
 
-# Vercel preview
-CAP_SERVER_URL=https://<branch>.vercel.app npx cap sync ios
+# Vercel preview（有 Deployment Protection，要帶 bypass 參數，見下方）
+CAP_SERVER_URL="https://<branch>.vercel.app/?x-vercel-protection-bypass=<SECRET>&x-vercel-set-bypass-cookie=samesitenone" npx cap sync ios
 ```
+
+> ⚠️ **Android 別用 `http://10.0.2.2:3000`。** Next 16 的 dev server 預設擋掉非 localhost 來源的
+> dev 資源（`allowedDevOrigins`），頁面畫得出來但**沒 hydrate**。
+> **失效的樣子**：畫面完全正常，按鈕點了沒有任何反應、沒有錯誤；只有 dev server log 有一行
+> `Blocked cross-origin request to Next.js dev resource ... from "10.0.2.2"`。
+> `adb reverse` 讓模擬器的 `localhost:3000` 通到宿主機，來源就是 localhost，不必改 `next.config.ts`。
+> （每次模擬器重開要重跑 `adb reverse`。）
+
+> ⚠️ **Vercel preview 有 Deployment Protection。** 直接指 preview URL，殼會停在 Vercel SSO
+> 登入頁，而且在 WebView 裡登不進去（SSO 導去 `vercel.com`，離開了 `server.url` 的 origin）。
+> 到 Vercel 專案 Settings → Deployment Protection → **Protection Bypass for Automation** 產生 secret，
+> 帶在 URL 上：第一次載入時 Vercel 會把 bypass cookie 寫進 WebView。
+> secret 只會落在 gitignored 的 `capacitor.config.json`，但它仍是機密——測完照「收尾」重跑乾淨的 `cap sync`。
+> preview 連的是 **prod Supabase**，在上面寫入的資料進 prod 帳本。
 
 **cleartext 只在 `http://` 覆寫時放寬**，https 覆寫（preview）維持 prod 的安全姿態。
 兩邊平台實際需要的東西不同：
@@ -430,5 +444,13 @@ CAP_SERVER_URL=https://<branch>.vercel.app npx cap sync ios
 直到下次不帶變數的 `cap sync`。**要 archive／送審前先重跑一次乾淨的 `npx cap sync`**，
 確認 `ios/App/App/capacitor.config.json` 的 `server.url` 是 `https://futari.southern-light.dev`。
 
-> 登入流程另計：OAuth callback 與 deep link 走的是 Supabase / Apple 那邊註冊的網域，
-> 指向 localhost 時未必能走完整段登入。要測登入相關的契約面，用 Vercel preview 比較實際。
+> **登入**：原生授權完成後，`SignInButton.tsx` 導回**殼當下的 origin**（`window.location.origin`）的
+> `/auth/callback`，所以 localhost 與 preview 都能走完（#1214）。
+> 在那之前這裡寫死 prod origin，覆寫下的**失效的樣子**是：Custom Tab 開、授權完成、deep link
+> 回到 app，然後畫面**永遠停在「正在帶你進去」**、沒有錯誤——PKCE verifier 存在殼當下的 origin，
+> prod 讀不到。若再看到這個症狀，先查導向是否又被寫死成某個固定 origin。
+>
+> 仍需外部設定才走得完的部分：
+> - Supabase 該專案的 Redirect URLs 要含 `dev.southernlight.futari://login-callback**`（dev 專案 2026-09-15 實測已含）
+> - iOS 原生 Apple：模擬器要先在「設定」**手動**登入 Apple 帳號（「使用其他 Apple 裝置」在模擬器上點了沒反應）；
+>   dev 專案的 Apple provider Client IDs 要含 bundle id `dev.southernlight.futari`，否則 `signInWithIdToken` 會被拒
