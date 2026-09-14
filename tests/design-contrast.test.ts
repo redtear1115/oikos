@@ -349,3 +349,15 @@ describe('design-contrast — known-bad pairings, encoded as passing assertions 
     expect(ratio).toBeLessThan(NORMAL_TEXT_MIN)
   })
 })
+
+describe('design-contrast — #1197 TransactionFeed error toast', () => {
+  // Its own block so it shares no lines with the other #1197 assertions
+  // (SettlementForm / PendingCard) landing in parallel.
+  it('#1197 — TransactionFeed load-failure toast: --debit-text on --debit-soft over opaque --surface clears normal-text AA; the old white on --debit does not', () => {
+    const ground = compositeOver(resolve('--debit-soft'), resolve('--surface'))
+    const ratio = contrastRatio(compositeOver(resolve('--debit-text'), ground), ground)
+    console.log(`[design-contrast] #1197 TransactionFeed toast --debit-text on --debit-soft-over-surface = ${ratio.toFixed(2)}:1`)
+    expect(ratio).toBeGreaterThanOrEqual(NORMAL_TEXT_MIN)
+    expect(contrastOf('--on-fill', '--debit')).toBeLessThan(NORMAL_TEXT_MIN)
+  })
+})

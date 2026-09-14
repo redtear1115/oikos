@@ -36,9 +36,17 @@ export function DashboardFilterRow({
   // explicit tap opens them when nothing is filtered yet.
   const showToggles = open || hasActiveFilter
 
+  // `pt-1.5 -mt-1.5` is layout-neutral on purpose (same fix as the /records L3
+  // row, #1169): `overflow-x-auto` also clips overflow-y, and clipping applies
+  // to hit-testing. The chip and the dual-toggle segments pad their tap areas
+  // to 44px with ::before pseudos that reach ~5px above the row's content box;
+  // without top padding that strip is cut off and the real tap area stops
+  // short of 44px. The existing pb-2 already covers the bottom edge.
+  // Symptom if the padding goes: nothing looks different, taps on the top few
+  // px above a chip just stop registering (#1197).
   return (
     <div
-      className="flex items-center gap-2 px-5 pb-2 overflow-x-auto"
+      className="flex items-center gap-2 px-5 pt-1.5 -mt-1.5 pb-2 overflow-x-auto"
       style={{ scrollbarWidth: 'none' } as React.CSSProperties}
     >
       <button
@@ -46,7 +54,9 @@ export function DashboardFilterRow({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={showToggles}
         aria-label={t.dashboard.filterAriaLabel}
-        className="h-8 px-3 rounded-full text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer transition-colors duration-150"
+        // Visible chip stays 32px; the ::before extends the hit area 6px up
+        // and down to 44px (same pattern as SettleButton, #147).
+        className="relative h-8 px-3 rounded-full text-sm flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
         style={{
           background: hasActiveFilter ? 'var(--ink)' : 'var(--surface)',
           color: hasActiveFilter ? 'var(--on-fill)' : 'var(--ink-2)',

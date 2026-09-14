@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { loadAsset } from '@/actions/asset'
 import { Chevron } from '@/app/(dashboard)/_components/sheet-icons'
+import { useTranslations } from '@/lib/i18n/client'
 
 // AssetPickerSheet is a nested sheet that only opens on user tap — lazy-load
 // to keep AddSheet's initial bundle lean (#670 audit 6.1).
@@ -19,6 +20,7 @@ interface AssetLinkFieldProps {
 }
 
 export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFieldProps) {
+  const t = useTranslations()
   const [assetInfo, setAssetInfo] = useState<{ name: string; deletedAt: string | null } | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const loadedIdRef = useRef<string | null>(null)
@@ -64,13 +66,13 @@ export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFiel
             <>
               <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
                 {assetInfo.name}
-                {assetInfo.deletedAt && <span className="ml-2 text-xs" style={{ color: 'var(--ink-3)' }}>（已刪除）</span>}
+                {assetInfo.deletedAt && <span className="ml-2 text-xs" style={{ color: 'var(--ink-3)' }}>{t.assetPickerSheet.deletedSuffix}</span>}
               </div>
             </>
           ) : assetId && !assetInfo ? (
-            <div className="text-base" style={{ color: 'var(--ink-3)' }}>載入中…</div>
+            <div className="text-base" style={{ color: 'var(--ink-3)' }}>{t.assetPickerSheet.loading}</div>
           ) : (
-            <div className="text-base" style={{ color: 'var(--ink-3)' }}>不關聯</div>
+            <div className="text-base" style={{ color: 'var(--ink-3)' }}>{t.assetPickerSheet.noneTitle}</div>
           )}
         </div>
         <Chevron />

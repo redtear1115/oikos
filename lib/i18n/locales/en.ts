@@ -652,6 +652,7 @@ export const en: Translations = {
     loadFailed: 'Failed to load',
     emptyAibutsu: 'No aibutsu yet. Add one from the Aibutsu tab first.',
     emptyGuardian: 'No policies yet. Add one from Aibutsu > Guardian first.',
+    deletedSuffix: '(deleted)',
   },
 
   records: {

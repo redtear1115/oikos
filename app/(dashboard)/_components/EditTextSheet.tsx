@@ -3,6 +3,7 @@
 import { useState, useEffect, useId, useRef, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
+import { useFocusTrap } from './useFocusTrap'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -33,6 +34,7 @@ export function EditTextSheet({
   const [pending, startTransition] = useTransition()
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
 
   useEffect(() => {
@@ -41,7 +43,29 @@ export function EditTextSheet({
     setError('')
   }, [open, initialValue])
 
+  // This sheet hand-rolls its panel instead of using SheetFrame because it
+  // rides the soft keyboard (`bottom: keyboardOffset`), which SheetFrame's
+  // fixed `bottom-0` can't express. So it opts into SheetFrame's dialog rules
+  // itself: trap Tab while open, restore focus to the trigger on close, and
+  // `inert` + no dialog role while closed (#1197, mirrors SheetFrame #1176).
+  // Symptom if this goes: nothing errors, but Tab walks out of the open sheet
+  // onto the settings page behind it, and after 完成 / 取消 / Escape focus
+  // lands on <body> instead of the row that opened the sheet.
+  useFocusTrap(open, panelRef)
+
   useFocusAndSelectOnOpen(open, inputRef)
+
+  // Dismiss the iOS soft keyboard on close — same reason as SheetFrame: the
+  // focus restore alone doesn't reliably blur the input on iOS.
+  useEffect(() => {
+    if (open) return
+    const panel = panelRef.current
+    if (!panel) return
+    const active = document.activeElement
+    if (active instanceof HTMLElement && panel.contains(active)) {
+      active.blur()
+    }
+  }, [open])
 
   // Push sheet up when the soft keyboard appears
   useEffect(() => {
@@ -76,9 +100,11 @@ export function EditTextSheet({
     <>
       <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
+        ref={panelRef}
+        // Dialog semantics only while open; the closed panel stays mounted for
+        // the slide-down and is kept out of Tab order / the a11y tree by inert.
+        {...(open ? { role: 'dialog', 'aria-modal': true as const, 'aria-labelledby': titleId } : {})}
+        inert={!open}
         className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-sheet flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',

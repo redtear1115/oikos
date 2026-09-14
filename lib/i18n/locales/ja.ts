@@ -652,6 +652,7 @@ export const ja: Translations = {
     loadFailed: '読み込みに失敗しました',
     emptyAibutsu: 'まだ愛物がありません。まず「愛物」タブから追加してください。',
     emptyGuardian: 'まだ保険がありません。まず「愛物 > 守護」から追加してください。',
+    deletedSuffix: '（削除済み）',
   },
 
   records: {

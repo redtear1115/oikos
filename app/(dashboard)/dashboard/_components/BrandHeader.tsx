@@ -41,10 +41,14 @@ export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = 
     <div className="flex items-center justify-between gap-3 px-5 pt-[max(var(--safe-top),24px)] pb-2">
       <div className="flex items-center gap-[10px] min-w-0 flex-1">
         <FutariMark size={36} />
-        <div className="text-title font-medium tracking-tight truncate"
+        {/* The ledger name is the dashboard's visible title, so it carries the
+            page's only <h1> (#1197). BrandHeader renders on /dashboard alone;
+            other routes own their own h1. Preflight zeroes h1's default size,
+            weight and margin, so the classes below still decide the look. */}
+        <h1 className="text-title font-medium tracking-tight truncate"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
           {group.name}
-        </div>
+        </h1>
       </div>
       {/* relative: anchor for BrandHeaderHint absolute callouts */}
       <div className="relative flex items-center gap-2 shrink-0">
