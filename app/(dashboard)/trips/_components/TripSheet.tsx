@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useId, useMemo, useState, useTransition } from 'react'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { createTrip, updateTrip } from '@/actions/trip'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
@@ -241,7 +241,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
         <label className="block">
           <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.nameLabel}</span>
           <input
-            className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
+            className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
             style={{
               background: 'var(--surface)',
               border: '1px solid var(--hairline)',
@@ -259,7 +259,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
             <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.startDateLabel}</span>
             <input
               type="date"
-              className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
+              className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',
@@ -273,10 +273,10 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
             <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.endDateLabel}</span>
             <input
               type="date"
-              className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
+              className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
               style={{
                 background: 'var(--surface)',
-                border: dateInvalid ? '1px solid var(--debit, #c0392b)' : '1px solid var(--hairline)',
+                border: dateInvalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
                 color: 'var(--ink)',
               }}
               value={endDate}
@@ -287,7 +287,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
         </div>
 
         {dateInvalid && (
-          <p className="text-xs -mt-2" style={{ color: 'var(--debit, #c0392b)' }} role="alert">
+          <p className="text-xs -mt-2" style={{ color: 'var(--debit-text)' }} role="alert">
             {ts.endBeforeStart}
           </p>
         )}
@@ -465,7 +465,7 @@ function CustomCurrencyRow(props: {
   return (
     <RowFrame>
       {/* Custom row header: code + label inputs + remove. The remove button
-          is a separate 44pt target since the inputs themselves are 36px tall. */}
+          is a separate 44pt target since the inputs themselves are also 44px tall. */}
       <div className="flex items-center gap-2 px-3 pt-3">
         <input
           type="text"
@@ -474,7 +474,7 @@ function CustomCurrencyRow(props: {
           placeholder={tsRow.codePlaceholder}
           maxLength={16}
           aria-label={tsRow.codeAriaLabel}
-          className="w-20 rounded-lg px-2 py-2 text-sm uppercase"
+          className="w-20 h-[var(--control-md)] rounded-lg px-2 text-sm uppercase"
           style={{
             background: 'var(--bg)',
             border: '1px solid var(--hairline)',
@@ -488,7 +488,7 @@ function CustomCurrencyRow(props: {
           placeholder={tsRow.labelPlaceholder}
           maxLength={32}
           aria-label={tsRow.labelAriaLabel}
-          className="flex-1 min-w-0 rounded-lg px-2 py-2 text-sm"
+          className="flex-1 min-w-0 h-[var(--control-md)] rounded-lg px-2 text-sm"
           style={{
             background: 'var(--bg)',
             border: '1px solid var(--hairline)',
@@ -576,6 +576,7 @@ function RateRow(props: {
   const t = useTranslations()
   const ts = t.tripSheet
   const { code, baseCode, rate, invalid } = props
+  const errorId = useId()
   return (
     <div className="px-3 pt-2 flex flex-col gap-1">
       <div className="flex items-center gap-2">
@@ -590,7 +591,9 @@ function RateRow(props: {
           value={rate || ''}
           onChange={e => props.onRateChange(e.target.value)}
           aria-invalid={invalid}
-          className="flex-1 min-w-0 rounded-lg px-2.5 py-2 text-sm"
+          aria-label={ts.rateAriaLabel.replace('{code}', code).replace('{baseCode}', baseCode)}
+          aria-describedby={invalid ? errorId : undefined}
+          className="flex-1 min-w-0 h-[var(--control-md)] rounded-lg px-2.5 text-sm"
           style={{
             background: 'var(--bg)',
             border: invalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
@@ -602,7 +605,7 @@ function RateRow(props: {
         </span>
       </div>
       {invalid ? (
-        <p className="text-xs" style={{ color: 'var(--debit-text)' }} role="alert">
+        <p id={errorId} className="text-xs" style={{ color: 'var(--debit-text)' }} role="alert">
           {ts.errors.rateInvalidInline}
         </p>
       ) : rate > 0 ? (

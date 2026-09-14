@@ -85,10 +85,10 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
           <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t.tripDetail.endDateLabel}</span>
           <input
             type="date"
-            className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm"
+            className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
             style={{
               background: 'var(--surface)',
-              border: dateInvalid ? '1px solid var(--debit, #c0392b)' : '1px solid var(--hairline)',
+              border: dateInvalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
               color: 'var(--ink)',
             }}
             min={startDate}
@@ -98,7 +98,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
         </label>
 
         {dateInvalid && (
-          <p className="text-xs" style={{ color: 'var(--debit, #c0392b)' }}>
+          <p className="text-xs" style={{ color: 'var(--debit-text)' }}>
             {t.tripDetail.endDateBeforeStart.replace('{date}', startDate)}
           </p>
         )}

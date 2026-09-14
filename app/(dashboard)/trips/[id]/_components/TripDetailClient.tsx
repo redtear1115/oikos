@@ -208,7 +208,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         <div className="mt-1 flex items-baseline justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1
-              className="text-2xl font-medium tracking-tight truncate"
+              className="text-page font-medium tracking-tight truncate"
               style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
             >
               {trip.name}
@@ -247,7 +247,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 {t.tripDetail.totalLabel}
               </p>
               <p
-                className="mt-1 text-3xl font-medium tnum tracking-[-0.5px]"
+                className="mt-1 text-page font-medium tnum tracking-[-0.5px]"
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
               >
                 {formatAmount(totalBase, baseCurrency)}
