@@ -177,11 +177,27 @@ PR body 的段落（以 #1215 為範本）：
 ## 7. 收尾（使用者 merge 之後，或下次被叫回來時）
 
 - **stacked PR**：base PR merge 之後，`gh pr edit <n> --base main`，確認 `files` 數量沒變，再更新 PR body 裡 stacked 的說明。GitHub 只在 base branch 被刪除時才會自動 retarget，branch 還在的話，PR 會停在舊的 base 上。
-- **比對 merge 進去的 head。** `gh pr view <n> --json headRefOid,mergeCommit` 查出的 head，要等於驗證過的 sha。
-  - **失效的樣子**：修正 commit 在 PR merge **之後**才 push 到 branch，就被孤立在已經 merge 的 branch 上。GitHub 不會提示，PR 顯示 merged，main 卻少了那個修正。
-  - 2026-09-14 一次踩到三個：#1213 的 rebase 修正沒進去，main 測試因此紅燈；#1216 的 hover 修正、#1221 的 NUL byte 修正也都沒進去。最後靠 #1224 補回。
-  - 補救：從 main 開一條新 PR，把遺漏的 commit cherry-pick 進去。**不要**再 push 到已經 merge 的 branch。
-- 轉交修正給其他 session 時，要同時提醒使用者「等那條 PR 的 head 更新之後再 merge」。
+- **比對 merge 進去的 head，而且要用 ancestry 查，不要用字串比對。**
+
+  ```bash
+  git fetch -q origin
+  git merge-base --is-ancestor <驗證過的 sha> origin/main && echo IN || echo "NOT in main"
+  ```
+
+  對每一條剛 merge 的 PR 都跑一次。`gh pr view <n> --json headRefOid` 只會告訴你「merge 當下的 head 是什麼」，不會告訴你「後來 push 的修正進去了沒」。
+  - **失效的樣子**：修正 commit 在 PR merge **之後**才 push 到 branch，就被孤立在已經 merge 的 branch 上。GitHub 不會提示，PR 顯示 merged、branch ref 還在、commit 也沒丟，但 main 少了那個修正。**只看 PR 頁面永遠看不出來。**
+  - 更糟的一種：被孤立的剛好是**使用者親自做的決定**。2026-09-14 的 #1245，使用者決定「金額保留 600」，但 merge 的是決定前的 head，main 上所有金額變成 500，而且沒有任何測試會紅。所以除了 ancestry，**還要回頭 grep 那個決定本身**（例：`git grep -c 'fontWeight: 600' origin/main -- <檔案>`，預期非 0）。
+  - 這個模式連續三批都發生：#1213/#1216/#1221 →#1224；#1245 的 600 與掃描器修正、#1247 的 rovingTabIndex 修正 → #1253。**預設它會再發生，每批 merge 後都查。**
+  - 補救：從**當前 main** 開一條新 PR，把遺漏的 diff 帶進來。**不要**再 push 到已經 merge 的 branch（那條 branch 已經沒有 PR 會載它）。
+- **要 pin SHA 時讀 branch ref，不要讀 PR 的 headRefOid。**
+
+  ```bash
+  git ls-remote origin refs/heads/<branch>          # 真實的最新 head
+  git fetch -q origin <branch>:refs/remotes/pr/<n> --force
+  ```
+
+  - **失效的樣子**：`refs/pull/<n>/head` 和 `gh pr view --json headRefOid` 會延遲。2026-09-14 peer 告知 #1245 有新 head 之後，`git fetch origin pull/1245/head` 拿回來的仍是舊 commit，`gh pr view` 也還顯示舊 sha；只有 `git ls-remote origin refs/heads/<branch>` 是新的。差別是靜默的——你會很有把握地驗證並 pin 一個過期的 commit。
+- 轉交修正給其他 session 時，要同時提醒使用者「等那條 PR 的 head 更新之後再 merge」，並在回報裡附上**預期的 pin SHA**，讓使用者 merge 時可以對照。
 - PR merge 之後：`git worktree remove .claude/worktrees/<n>-<slug>`，並刪除 branch。
 - 這次如果有新的摩擦，回頭更新本檔。
 
@@ -254,4 +270,15 @@ gh pr list --state open --json number,title,headRefName,baseRefName,milestone,me
 
 修正項目轉交給 owner session 時要寫清楚：PR 編號、file:line、症狀、建議修法。**使用者的決定可以轉述，但對方應該向使用者本人再確認一次**，這是對的，不要催。
 
-使用者 merge 之後，照第 7 步比對每條 merge 進去的 head，再到 main 上實跑受影響的測試。整批驗證用過的暫時 worktree 和整合 branch 全部清掉。
+**批次的 merge 後檢查（一定要做，不是選配）。** 使用者 merge 之後，對**每一條**跑第 7 步的 ancestry 檢查，再到 main 上實跑受影響的測試：
+
+```bash
+git fetch -q origin
+for s in <各 PR 驗證過的 sha>; do
+  git merge-base --is-ancestor $s origin/main && echo "$s IN" || echo "$s NOT in main"
+done
+```
+
+批次特別容易踩到孤立修正：驗證期間 peer session 常會在 PR 上補修正，而使用者可能在修正 push 之前就按下 merge。**一條一條查，不要抽驗。** 有人回報「已經 merge 了」時，先跑這段再回話。
+
+整批驗證用過的暫時 worktree 和整合 branch 全部清掉。
