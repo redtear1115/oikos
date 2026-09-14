@@ -21,7 +21,7 @@ export function CardCategory({
   const total = snapshot.topCategoryTotal ?? 0
   const empty = !snapshot.topCategory || total <= 0
 
-  const tint = category?.tint ?? 'var(--surface-2, var(--hairline))'
+  const tint = category?.tint ?? 'var(--hairline)'
 
   const localizedCategory = category
     ? (t.category[category.id as keyof typeof t.category] ?? category.label)

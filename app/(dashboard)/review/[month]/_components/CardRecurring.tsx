@@ -9,7 +9,8 @@ export function CardRecurring({ snapshot }: { snapshot: MonthlyReviewSnapshotRow
   const tr = t.monthlyReview
   const events = snapshot.recurringEvents
 
-  const tint = 'var(--surface-2, #E2E0F0)'
+  // Off-palette color with no token; tracked in #1179, kept as-is to avoid a visual change.
+  const tint = '#E2E0F0'
 
   return (
     <CardShell title={tr.card3Title} tint={tint}>

@@ -127,7 +127,7 @@ export function PendingCard({
             </div>
             {/* TODO(v0.17 currency): "NT$ {amount}" with space — design-driven,
                  defer to design before migrating to formatAmount (which has no space). */}
-            <div className="mt-1 text-[var(--fs-2xl)] font-medium" style={{ color: 'var(--ink)' }}>
+            <div className="mt-1 text-title font-medium" style={{ color: 'var(--ink)' }}>
               NT$ {amount.toLocaleString()}
             </div>
             {meta && (
