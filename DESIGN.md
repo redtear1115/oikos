@@ -240,7 +240,7 @@ Per愛物-type identity colors, each muted and emotive, with a tint derived via 
 
 ## 3. Typography
 
-**Display Font:** Fraunces (with Georgia, serif). Latin only, weights 400 and 500, loaded via `next/font/google` at the root layout.
+**Display Font:** Fraunces (with Georgia, serif). Latin only, weights 400 and 500, self-hosted as plain `@font-face` in `app/fonts/fraunces.css` (not `next/font/google`, #978), imported by the root layout. The root `<html>` carries `font-fraunces`, so the family resolves on every route, the dashboard included.
 **Body Font:** Noto Sans TC (with a PingFang TC → Microsoft JhengHei → JP → SC → Noto Sans CJK TC fallback chain). Weights 400 and 500, loaded only in the dashboard layout so brand routes stay light.
 **Numeric Font:** SF Pro Display / system numerics, with `tnum` for aligned figures.
 
@@ -274,7 +274,9 @@ The landing page's own letter-spacings (−1.5 / −1 / −3.5px) stay inline on
 
 ### Named Rules
 
-**The Serif-Speaks Rule.** Fraunces is reserved for the brand's voice (headings and narrative on brand surfaces). Never set body lists, inputs, labels, buttons, or amounts in the serif. The sans does the work; the serif holds the feeling. Fraunces is not loaded at all inside the dashboard layout, so reaching for it there is both off-brand and a font that will not arrive.
+**The Serif-Speaks Rule.** Fraunces is the voice, not the workhorse. On brand surfaces it sets headings and narrative at full voice. Inside the app it is a deliberate exception, used for the moments that ask the couple to stop and look (the monthly review and quiz screens, the partner-left and solo-welcome cards, the leave-ledger and remove-partner flows, the confirm-modal title, the active-trip banner) and for names the couple gave something (the ledger name in `BrandHeader`, asset and trip names). Never set body lists, inputs, labels, buttons, or amounts in the serif. The sans does the work; the serif holds the feeling. *Test: if the serif text is something the user taps, types into, or adds up, it is wrong.*
+
+Availability is never the argument, because the font loads everywhere: `app/layout.tsx` imports `app/fonts/fraunces.css` and puts `font-fraunces` on `<html>`, and the dashboard layout only swaps the *default* family to Noto Sans TC (`font-noto-tc` on its wrapper) without unloading anything. An earlier version of this rule said Fraunces was not loaded inside the dashboard. That was false, and it failed quietly: a design review followed it to a confident, well-cited P1 to strip the serif from intentional emotional moments (#1162). The comment on `.font-fraunces` in `fraunces.css` ("layouts opt subtrees in by class") still describes that older setup, so do not re-derive the claim from it. Two facts do constrain the serif: it ships only Latin subsets, so in zh-TW / zh-CN / ja a serif heading draws its CJK glyphs from the platform fallback and reads as Fraunces only on Latin letters and digits; and the app's L1 titles (Records, Assets, Settings) and month section labels are currently serif while the Page tier above says sans. That disagreement is unresolved; do not "fix" either side without a decision.
 
 **The No-Weight-600 Rule.** Weight 600 was dropped to cut render-blocking CSS; `font-semibold` silently falls back to 500. Build hierarchy with size and the 400/500 contrast, not heavier weights. Writing `font-semibold` and expecting it to look different from `font-medium` is a bug, not a style choice.
 
@@ -302,14 +304,25 @@ Because the app runs inside iOS and Android WebViews, elevation also means respe
 
 **Read the inset from `env()`, not from `--safe-top`, anywhere under the dashboard shell.** `--safe-top` is not a general-purpose safe-area source: it exists for the shell's top stack, where `.shell-top-strip ~ *` and `.shell-top-stack:has(> *) ~ *` deliberately zero it so the inset is paid exactly once by whichever band is topmost. Page content inside the shell *is* one of those later siblings, so `var(--safe-top)` reads `0px` there. Using it looks like handling the safe area and provides no allowance at all — no error, no warning, correct-looking markup, and the control still lands under the Dynamic Island. It is only visible by reaching for the control on a notched device. `LeaveGroupFlow` (#1124) carries a comment at its own use of `env(safe-area-inset-top, 0px)` saying this, because the Existing-Token-First Rule otherwise reads as an instruction to "fix" it back.
 
-### Shadow Vocabulary (deliberately tiny)
-- **Thumb lift** (`box-shadow: 0 1px 3px rgba(58,36,25,0.20)`): Only on the moving thumb of a switch, so the moving piece reads as physical.
-- **Segment thumb** (`box-shadow: 0 1px 3px rgba(31,27,22,0.10)`): The selected segment's quiet lift.
-- **Focus ring** (`box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent)`): Keyboard focus on buttons, inputs, toggles. Soft ember, and pointer clicks stay clean because every rule uses `:focus-visible`, not `:focus`.
+### Shadow Vocabulary (two small tiers)
+
+**Functional micro-shadows** (tokens in `app/globals.css`):
+- **Thumb lift** (`--switch-thumb-shadow`, `0 1px 3px rgba(58,36,25,0.20)`): Only on the moving thumb of a switch, so the moving piece reads as physical.
+- **Segment thumb** (`--toggle-segment-thumb-shadow`, `0 1px 3px rgba(31,27,22,0.10)`): The selected segment's quiet lift.
+- **Focus ring** (`--toggle-focus-ring`, `0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent)`; `oik-focus-ring`, `.oik-btn`, and `.oik-input-wrapper` draw the same ring from `--focus-ring-color`): Keyboard focus on buttons, inputs, toggles. Soft ember, and pointer clicks stay clean because every rule uses `:focus-visible`, not `:focus`.
+
+**Off-plane elevation** (inline literals, not yet tokens; one value per role, so reuse it rather than adding another):
+- **Sheet top edge** (`0 -10px 40px rgba(0,0,0,0.18)`): the `SheetFrame` default, repeated by sheets and floating cards that render their own frame. The income sheets use the same shape in cocoa (`rgba(58,36,25,0.18)`).
+- **Modal** (`0 20px 60px rgba(31,27,22,0.18)`): `ConfirmModal` and the insurance renew dialog.
+- **Popover / autocomplete**: `MonthSwitcher`, `AssetSwitcher`, and `DescriptionAutocomplete` each carry a different value today. Three values for one role is drift; a new popover picks one of these, not a fourth.
+- **Toast** (`shadow-lg`): `PartnerActivityToast`.
+- **FAB** (`0 8px 22px rgba(31,27,22,0.28), 0 0 0 5px var(--surface)`): the bottom-nav FAB; the second layer is a surface-colored ring, not extra depth.
+
+Zero-blur `0 0 0 Npx` values (selected swatch rings, the avatar ring, an inset 1px hairline) are borders drawn with `box-shadow`, not elevation. Judge them as borders. Turning the off-plane values into named tokens is worthwhile and still needs sign-off under the Existing-Token-First Rule.
 
 ### Named Rules
 
-**The Flat-By-Default Rule.** Surfaces are flat at rest. The only box-shadows in the system are the toggle thumb lift, the segment thumb, and the focus ring; all three are functional, never decorative. If you reach for a shadow to separate two surfaces, use a hairline or a tonal step instead.
+**The Flat-By-Default Rule.** Surfaces are flat at rest. A shadow is allowed in exactly two cases: one of the three functional micro-shadows, or an element that has physically left the page plane (a sheet, modal, popover or autocomplete, toast, fixed floating card, or the FAB), using the value listed above for that role. Anything that scrolls in normal flow with its neighbours (a card, a list row, an in-sheet CTA, an inline button) gets no shadow; separate it with a hairline or a tonal step. An earlier version of this rule said the three micro-shadows were the only box-shadows in the system. Shipped code never matched that (#1157), and a test that flags every sheet gets ignored, which is how decorative shadows slipped in beside the legitimate ones. That is also what the failure looks like: a soft ember or cocoa glow under an in-flow button reads as polish in review, passes every check, and nudges the screen toward the hype-SaaS costume without anyone deciding it should.
 
 **The Named-Layer Rule.** Every stacking decision uses a `z-*` utility from the scale above. An arbitrary `z-[N]` in new code means either the layer already exists under a name, or a new layer needs sign-off. There is no third case.
 
@@ -332,7 +345,7 @@ The vocabulary is deliberately tiny. `components/ui/` holds four primitives: `Bu
 ### Chips / Toggles
 - **`SegmentedToggle`** (`components/ui/SegmentedToggle.tsx`): the shared primitive for every pill toggle (mode toggle, balance-view, payer/split L3 filters). Presentational and selection-agnostic, so single-select and the dual-select (≥1) member toggles share one surface without sharing one selection rule. `size` `sm` (28px, dense rows) / `md` (32px, mode toggle); per-segment `fillColor` override (member `--ink`/`--accent`, income mint); `.oik-segment` focus ring; `--toggle-*` tokens throughout. Action toggles (`SettleButton`) and the +/− collapse (`ToggleButton`) stay separate by intent.
 - **Selected:** Cocoa Ink fill, `--on-fill` text. **Unselected:** Surface White, Cocoa Ink 2 text, hairline border. Compact at 34px tall (`h-chip`), `--radius-chip` (10px).
-- **Segmented selector:** A track at `rgba(58,36,25,0.05)` with a Surface White thumb (one of the three sanctioned shadows).
+- **Segmented selector:** A track at `rgba(58,36,25,0.05)` with a Surface White thumb (one of the three functional micro-shadows).
 - **Switch (settings):** iOS-style, 44×26px with a 22px thumb. Ember "on", hairline "off", white thumb with the thumb-lift shadow. Track and thumb colors live in `.oik-switch` CSS rather than inline style, so Tailwind preflight's `button { background-color: transparent }` cannot override them; `data-state` swaps the fill without a React re-mount.
 
 ### Cards / Containers
@@ -394,7 +407,7 @@ Each Don't carries a one-sentence audit test. Run the test on the screen; if it 
 - **Don't** tell the user how to feel about their own records. *Test: read the string aloud; if it contains an adjective about the user or their month rather than a fact about what happened, cut the adjective.*
 - **Don't** add gamified guilt: streaks, budget-exceeded red alarms, "you overspent" verdicts, or anxiety to drive engagement. *Test: if a number turns red or a state escalates because a threshold was crossed, it is a verdict.*
 - **Don't** use a `border-left` or `border-right` greater than 1px as a colored accent stripe on cards, list items, or alerts; use a full hairline, a tonal tint, or a leading icon instead. *Test: grep for `border-l-` and `border-r-` above 1px.*
-- **Don't** reach for a drop shadow to separate surfaces; the system is flat by default. *Test: if the diff adds a `box-shadow` that is not the thumb lift, segment thumb, or focus ring, it is decorative.*
+- **Don't** reach for a drop shadow to separate surfaces; the system is flat by default. *Test: for each `box-shadow` / `boxShadow` / `shadow-*` in the diff that is not a functional micro-shadow, check whether the element is fixed, floating, or layered over other content; if it scrolls in normal flow with its neighbours, the shadow is decorative. Zero-blur `0 0 0 Npx` rings are borders, not shadows.*
 - **Don't** default to a modal; exhaust inline and sheet-based progressive alternatives first. *Test: if the content could live in a `Sheet` or expand in place, the modal is laziness.*
 - **Don't** write an arbitrary `z-[N]`. *Test: grep for `z-[` in the diff; every hit outside the nav band's `z-[81]` / `z-[85]` needs either an existing named layer or sign-off.*
 - **Don't** put token-covered values in inline `style={{ … }}`; static `fontSize` / `padding` / `margin` / `borderRadius` / `z-index` / color go in utility classes. *Test: grep the diff for `style={{`; every surviving hit must be a genuinely computed value.*

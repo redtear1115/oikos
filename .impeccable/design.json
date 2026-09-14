@@ -428,7 +428,7 @@
       {
         "name": "The Serif-Speaks Rule",
         "section": "typography",
-        "body": "Fraunces is reserved for the brand voice on brand surfaces. Never set body lists, inputs, labels, buttons, or amounts in the serif. Fraunces is not loaded inside the dashboard layout at all."
+        "body": "Fraunces is the brand voice on brand surfaces and a deliberate in-app exception for stop-and-look moments (monthly review, quiz, partner-left, leave-ledger) and names the couple gave something. Never set body lists, inputs, labels, buttons, or amounts in the serif. It is loaded globally (root layout), so availability is never the argument."
       },
       {
         "name": "The No-Weight-600 Rule",
@@ -448,7 +448,7 @@
       {
         "name": "The Flat-By-Default Rule",
         "section": "elevation",
-        "body": "Surfaces are flat at rest. The only box-shadows are the toggle thumb lift, the segment thumb, and the focus ring. To separate two surfaces, use a hairline or a tonal step."
+        "body": "Surfaces are flat at rest. Shadows are allowed only for the three functional micro-shadows (thumb lift, segment thumb, focus ring) and for elements that have left the page plane (sheet, modal, popover, toast, floating card, FAB), reusing the listed value for that role. Anything in normal flow gets a hairline or a tonal step instead."
       },
       {
         "name": "The Named-Layer Rule",
@@ -485,7 +485,7 @@
       "Don’t tell the user how to feel about their own records. Test: if the string contains an adjective about the user or their month rather than a fact, cut the adjective.",
       "Don’t add gamified guilt: streaks, budget-exceeded alarms, overspent verdicts. Test: if a number turns red because a threshold was crossed, it is a verdict.",
       "Don’t use a border-left or border-right greater than 1px as a colored accent stripe. Test: grep for border-l- and border-r- above 1px.",
-      "Don’t reach for a drop shadow to separate surfaces. Test: any box-shadow that is not the thumb lift, segment thumb, or focus ring is decorative.",
+      "Don’t reach for a drop shadow to separate surfaces. Test: a shadow that is not a functional micro-shadow, on an element that scrolls in normal flow with its neighbours, is decorative. Zero-blur 0 0 0 Npx rings are borders.",
       "Don’t default to a modal. Test: if the content could live in a Sheet or expand in place, the modal is laziness.",
       "Don’t write an arbitrary z-[N]. Test: grep for z-[ ; every hit outside the nav band needs a named layer or sign-off.",
       "Don’t put token-covered values in inline style. Test: every surviving style={{ hit must be a genuinely computed value.",
