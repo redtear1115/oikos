@@ -136,7 +136,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
                       color: active ? 'var(--on-fill)' : 'var(--ink-2)',
                       fontFamily: 'inherit',
                       fontSize: 'var(--fs-base)',
-                      fontWeight: active ? 600 : 500,
+                      fontWeight: 500,
                       border: 'none',
                       cursor: 'pointer',
                       letterSpacing: '0.2px',

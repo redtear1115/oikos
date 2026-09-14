@@ -530,7 +530,7 @@ export function RecordsList({
                   style={{
                     background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
                     color: sel ? (isIncome ? P.ink : 'var(--on-fill)') : 'var(--ink-3)',
-                    fontWeight: sel ? 600 : 500,
+                    fontWeight: 500,
                   }}
                   aria-pressed={sel}
                 >

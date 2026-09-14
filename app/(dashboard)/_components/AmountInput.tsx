@@ -127,7 +127,7 @@ export function AmountInput({
         style={{
           fontFamily: 'var(--font-numeric)',
           fontSize: 'var(--fs-amount-lg)',
-          fontWeight: 600,
+          fontWeight: 500,
           color: value ? 'var(--ink)' : 'var(--ink-3)',
           width,
           caretColor,

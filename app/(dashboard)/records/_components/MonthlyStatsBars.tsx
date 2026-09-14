@@ -195,7 +195,7 @@ function Bar({
             <span
               style={{
                 color: 'var(--ink)',
-                fontWeight: active ? 600 : 400,
+                fontWeight: active ? 500 : 400,
               }}
               className="truncate"
             >

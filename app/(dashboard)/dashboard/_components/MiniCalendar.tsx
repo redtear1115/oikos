@@ -69,7 +69,7 @@ export function MiniCalendar({ value, onChange }: Props) {
                   background: sel ? 'var(--ink)' : 'transparent',
                   color: sel ? 'var(--on-fill)' : 'var(--ink)',
                   fontFamily: 'var(--font-numeric)',
-                  fontWeight: isToday ? 600 : 400,
+                  fontWeight: isToday ? 500 : 400,
                 }}>
                 {d}
                 {isToday && !sel && (

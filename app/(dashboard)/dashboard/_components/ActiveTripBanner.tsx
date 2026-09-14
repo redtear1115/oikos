@@ -185,7 +185,7 @@ export function ActiveTripBanner({ trips, baseCurrency }: Props) {
                   fontSize: 22,
                   lineHeight: 1,
                   color: 'var(--ink-2)',
-                  fontWeight: 300,
+                  fontWeight: 400,
                   display: 'inline-block',
                   transform: 'translateY(2px)',
                 }}

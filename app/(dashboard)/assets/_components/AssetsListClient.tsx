@@ -469,7 +469,7 @@ export function AssetsListClient({ items }: Props) {
                 borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
                 color: active ? 'var(--on-fill)' : 'var(--ink-3)',
-                fontWeight: active ? 600 : 500,
+                fontWeight: 500,
               }}
             >
               {id === 'aibutsu' ? t.assets.tabs.aibutsu : t.assets.tabs.guardian}
