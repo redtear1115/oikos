@@ -177,7 +177,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 border: kind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: kind === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: kind === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: kind === o.v ? 600 : 500,
+                fontWeight: 500,
               }}>{o.label}</button>
           ))}
         </div>
@@ -237,7 +237,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 border: insuredUserId === viewer.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === viewer.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: insuredUserId === viewer.id ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: insuredUserId === viewer.id ? 600 : 500,
+                fontWeight: 500,
               }}
             >
               {t.common.me}
@@ -255,7 +255,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   border: insuredUserId === partner.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredUserId === partner.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                   color: insuredUserId === partner.id ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: insuredUserId === partner.id ? 600 : 500,
+                  fontWeight: 500,
                 }}
               >
                 {partner.displayName ?? t.common.partner}
@@ -275,7 +275,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                   color: insuredChildId === child.id ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: insuredChildId === child.id ? 600 : 500,
+                  fontWeight: 500,
                 }}
               >
                 {child.name}
@@ -292,7 +292,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: insuredUserId === null && insuredChildId === null ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: insuredUserId === null && insuredChildId === null ? 600 : 500,
+                fontWeight: 500,
               }}
             >
               {ts.insurance.insuredFreeform}
@@ -432,7 +432,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   border: vehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: vehicleId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                   color: vehicleId === null ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: vehicleId === null ? 600 : 500,
+                  fontWeight: 500,
                 }}
               >
                 {ts.insurance.noLink}
@@ -447,7 +447,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                     border: vehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                     background: vehicleId === car.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                     color: vehicleId === car.id ? 'var(--ink)' : 'var(--ink-2)',
-                    fontWeight: vehicleId === car.id ? 600 : 500,
+                    fontWeight: 500,
                   }}
                 >
                   {car.name}

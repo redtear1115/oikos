@@ -68,7 +68,7 @@ export function DrillFilterChip({ drill, assetName, onClear }: Props) {
         style={{ background: chart }}
       />
       <span>{t.records.stats.drillChipPrefix}</span>
-      <span className="font-semibold">{label}</span>
+      <span className="font-medium">{label}</span>
       <button
         type="button"
         onClick={onClear}

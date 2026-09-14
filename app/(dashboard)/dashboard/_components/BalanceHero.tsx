@@ -208,7 +208,7 @@ export function BalanceHero({
                   style={{
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-base)',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
                     letterSpacing: '-0.6px',
                     fontFeatureSettings: '"tnum"',
@@ -231,7 +231,7 @@ export function BalanceHero({
             <>
               <div style={{
                 fontFamily: 'var(--font-numeric)',
-                fontSize: 'var(--fs-amount-md)', fontWeight: 600,
+                fontSize: 'var(--fs-amount-md)', fontWeight: 500,
                 color: incomeMonthTotal > 0 ? P.ink : 'var(--ink-3)',
                 letterSpacing: -1.2, marginTop: 4,
                 fontFeatureSettings: '"tnum"',
@@ -246,7 +246,7 @@ export function BalanceHero({
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.countLabel}</div>
                   <div style={{
-                    fontSize: 'var(--fs-base)', fontWeight: 600, color: 'var(--ink)', marginTop: 2,
+                    fontSize: 'var(--fs-base)', fontWeight: 500, color: 'var(--ink)', marginTop: 2,
                     fontFeatureSettings: '"tnum"',
                   }}>{incomeMonthCount}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`}</div>
                 </div>
@@ -283,14 +283,14 @@ export function BalanceHero({
             <div className="flex items-center gap-2">
               <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={32} />
               <div className="flex-1 min-w-0 truncate transition-opacity duration-150" style={{ opacity: fading ? 0 : 1 }}>
-                <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 'var(--fs-base)' }}>{subjectName}</span>{' '}
+                <span style={{ fontWeight: 500, color: 'var(--ink)', fontSize: 'var(--fs-base)' }}>{subjectName}</span>{' '}
                 <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-base)' }}>{verb}</span>{' '}
                 <span
                   className="tnum"
                   style={{
                     fontFamily: 'var(--font-numeric)',
                     fontSize: 'var(--fs-base)',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: balanceColor,
                     letterSpacing: '-0.6px',
                   }}
@@ -325,7 +325,7 @@ export function BalanceHero({
                 className="tnum text-center leading-[1.05] text-amount-fluid tracking-amount transition-opacity duration-150 mt-1.5"
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   color: balanceColor,
                   opacity: fading ? 0 : 1,
                 }}

@@ -112,7 +112,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
                 border: species === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: species === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: species === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: species === o.v ? 600 : 500,
+                fontWeight: 500,
               }}>{o.label}</button>
           ))}
         </div>

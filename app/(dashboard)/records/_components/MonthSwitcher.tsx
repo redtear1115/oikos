@@ -198,7 +198,7 @@ export function MonthSwitcher({ monthKey, minMonthKey = '1970-01', maxMonthKey }
               style={{
                 background: sel ? 'var(--ink)' : 'transparent',
                 color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
-                fontWeight: sel ? 600 : 400,
+                fontWeight: sel ? 500 : 400,
               }}
               aria-pressed={sel}
             >

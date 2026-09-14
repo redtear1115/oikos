@@ -271,7 +271,7 @@ export function RecurringRuleSheet(props: Props) {
             disabled={saveDisabled}
             style={{
               color: amount && !pending ? saveColor : 'var(--ink-3)',
-              fontWeight: 600,
+              fontWeight: 500,
             }}
           >
             {pending ? t.common.saving : t.common.save}

@@ -119,7 +119,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             style={{
               fontFamily: 'var(--font-numeric)',
               fontSize: 'var(--fs-amount-md)',
-              fontWeight: 600,
+              fontWeight: 500,
               color: amount ? 'var(--ink)' : 'var(--ink-3)',
               width: `${Math.max(amount.length || 1, 2)}ch`,
               caretColor: 'var(--accent)',
