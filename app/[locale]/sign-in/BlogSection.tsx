@@ -49,7 +49,7 @@ export function BlogSection({
               className="block h-full rounded-lg border border-ink-3 p-4 transition-opacity hover:opacity-80 focus-visible:oik-focus-ring"
             >
               {post.pubDate && (
-                <div className="mb-2 text-xs text-ink-3">
+                <div className="mb-2 text-xs text-ink-2">
                   {dateFmt.format(new Date(post.pubDate))}
                 </div>
               )}

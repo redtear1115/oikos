@@ -193,7 +193,7 @@ export default async function SignInPage({
               pendingLabel={t.signIn.signingIn}
             />
             <InstallHint t={t.signIn.installHint} />
-            <p className="text-xs text-ink-3 text-center">
+            <p className="text-xs text-ink-2 text-center">
               {t.signIn.termsPrefix}{' '}
               <Link href={localizedHref('/terms', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.termsLink}</Link>
               {' '}{t.signIn.termsAnd}{' '}
@@ -293,7 +293,7 @@ function AboutNarrative({
             </p>
           )
         })}
-        <p className="m-0 mt-4 font-serif font-normal text-ink-3 text-sm leading-relaxed italic tracking-[-0.05px]">
+        <p className="m-0 mt-4 font-serif font-normal text-ink-2 text-sm leading-relaxed italic tracking-[-0.05px]">
           {about.moreStoriesHint}
         </p>
       </article>

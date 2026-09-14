@@ -42,7 +42,7 @@ export function InstallHint({ t }: Props) {
       <button
         type="button"
         onClick={handleClick}
-        className="oik-btn bg-transparent border-0 p-1 text-xs text-ink-3 cursor-pointer inline-flex items-center gap-1"
+        className="oik-btn bg-transparent border-0 p-1 text-xs text-ink-2 cursor-pointer inline-flex items-center gap-1"
         aria-expanded={isIos ? iosExpanded : undefined}
       >
         <span>{t.cta}</span>
