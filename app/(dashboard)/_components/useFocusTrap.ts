@@ -17,21 +17,50 @@ function focusables(panel: HTMLElement): HTMLElement[] {
   )
 }
 
+interface TrapEntry {
+  /** Where focus goes back to when this trap is released. Mutable: see the
+   *  hand-off in the cleanup below. */
+  restoreTo: HTMLElement | null
+  /** The panel element captured at activation. Refs are already detached by
+   *  the time a passive-effect cleanup runs on unmount, so the cleanup can't
+   *  read `panelRef.current` to ask "was this node inside me". */
+  panel: HTMLElement | null
+}
+
+/**
+ * Module-level stack of active traps, mirroring the one in useEscapeToClose.
+ * Every trap listens on `window`, so without it two open traps (a SheetFrame
+ * plus the ConfirmModal it spawned) each run their own "focus left my panel →
+ * pull it back" logic on the same Tab press and cancel each other out: Tab is
+ * swallowed and the modal's confirm button is pointer-only (#1171 F1, #1176).
+ * Only the most recently activated trap handles Tab.
+ */
+const stack: TrapEntry[] = []
+
 /**
  * Trap Tab / Shift+Tab inside `panelRef` while `open` is true, and restore
- * focus to the previously-focused element when the sheet closes.
+ * focus to the previously-focused element when the trap is released.
  *
  * Pairs with useFocusAndSelectOnOpen (which moves focus *into* the sheet on
  * mount) and useEscapeToClose (which handles dismissal). The trap is passive
  * — it only intercepts Tab when focus would leave the panel.
+ *
+ * Nested traps: only the topmost one responds. Traps are ordered by
+ * activation, not by DOM position — so a modal can be portalled anywhere and
+ * still sit above the sheet that opened it.
  */
 export function useFocusTrap(open: boolean, panelRef: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     if (!open) return
-    const previouslyFocused = document.activeElement as HTMLElement | null
+    const entry: TrapEntry = {
+      restoreTo: document.activeElement as HTMLElement | null,
+      panel: panelRef.current,
+    }
+    stack.push(entry)
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return
+      if (stack[stack.length - 1] !== entry) return
       const panel = panelRef.current
       if (!panel) return
       const items = focusables(panel)
@@ -61,10 +90,29 @@ export function useFocusTrap(open: boolean, panelRef: RefObject<HTMLElement | nu
     window.addEventListener('keydown', onKeyDown)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
+      const i = stack.indexOf(entry)
+      if (i < 0) return
+      const wasTop = i === stack.length - 1
+      stack.splice(i, 1)
+
+      if (!wasTop) {
+        // A lower layer closed while something above it is still open — e.g.
+        // a sheet's delete-confirm fires onDelete, which closes the sheet in
+        // the same commit as the modal. Don't move focus now (the upper trap
+        // still owns it). But if the upper layer's restore target lives inside
+        // this panel, that target is about to be hidden, so hand it ours
+        // instead; otherwise focus would be restored into a closed sheet.
+        const above = stack[i]
+        if (above?.restoreTo && entry.panel?.contains(above.restoreTo)) {
+          above.restoreTo = entry.restoreTo
+        }
+        return
+      }
+
       // Restore focus to the trigger after close. Guard against the previous
       // element being detached (e.g. parent re-rendered) — focus() on a
       // detached node is a no-op but harmless.
-      previouslyFocused?.focus?.()
+      entry.restoreTo?.focus?.()
     }
   // panelRef is stable; intentionally omitted
   // eslint-disable-next-line react-hooks/exhaustive-deps
