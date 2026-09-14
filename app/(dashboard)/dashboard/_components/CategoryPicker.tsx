@@ -13,7 +13,12 @@ interface CategoryPickerProps {
 export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
   const t = useTranslations()
   return (
-    <ScrollFadeRow className="flex gap-2 px-5">
+    // Chips stay visually 38px; each ::before adds 3px above and below for a
+    // 44px tap area (#1186). The scroller clips overflow at its padding box,
+    // so `py-[3px]` gives the pseudo room to exist and `-my-[3px]` cancels
+    // that padding out of the layout. Symptom if the padding is dropped:
+    // nothing looks different, the extra 3px just stops receiving taps.
+    <ScrollFadeRow className="flex gap-2 px-5 py-[3px] -my-[3px]">
       {PICKABLE_CATEGORIES.map(c => {
         const sel = value === c.id
         return (
@@ -21,7 +26,7 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
             type="button"
             aria-pressed={sel}
             aria-label={t.category[c.id]}
-            className="h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
+            className="relative before:absolute before:inset-x-0 before:-inset-y-[3px] before:content-[''] h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
             style={{
               background: sel ? 'var(--ink)' : 'var(--surface)',
               color: sel ? 'var(--on-fill)' : 'var(--ink)',

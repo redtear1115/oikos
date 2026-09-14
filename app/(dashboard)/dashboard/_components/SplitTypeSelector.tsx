@@ -116,10 +116,14 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               className="w-full accent-[var(--ink)]"
             />
             {hasDriftedFromDefault && (
+              // Tap area extends sideways and down into the card's bottom
+              // padding only — extending upward would overlap the range
+              // slider directly above and steal drags from it. That caps it
+              // below 44px without a layout change (#1186).
               <button
                 type="button"
                 onClick={() => onSplitRatioAChange(defaultViewerShare)}
-                className="self-end text-xs underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
+                className="relative before:absolute before:-inset-x-3 before:top-0 before:-bottom-3 before:content-[''] self-end text-xs underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
                 style={{ color: 'var(--ink-3)' }}
               >
                 {sts.resetToDefault}
