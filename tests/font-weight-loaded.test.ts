@@ -21,13 +21,27 @@ import { join, relative } from 'node:path'
  * `@font-face` files, then walks `app/**`, `components/**`, `lib/**` for
  * every weight request and asserts each one is in the loaded set.
  *
+ * The one exception: `--font-numeric` (`-apple-system, 'SF Pro Display',
+ * system-ui`) is a *system* family, and the system family does ship a real
+ * 600. Amounts are the app's loudest element and they are set in it, so they
+ * are allowed 600 (#1167 decision, 2026-09-15). The exception is granted
+ * structurally, not by a line list: a weight request counts as numeric only
+ * when the element's own `style={{ … }}` object or `className` names
+ * `font-numeric`. Inheriting it from an ancestor does not qualify — the test
+ * cannot follow that, and neither can a reader skimming the component.
+ *
+ * Why that narrowness matters: the failure it prevents is silent in both
+ * directions. Put 600 on CJK text and the glyphs quietly fall back to the 500
+ * face (a selected tab stops looking selected) or get synthesized into smeared
+ * strokes on platforms that still fake bold. Neither raises an error, and both
+ * look plausible in a screenshot.
+ *
  * Boundaries (what this does NOT see):
- * - It is family-agnostic. It cannot tell which font-family an element
- *   resolves to, so it holds every request to the Noto Sans TC set — including
- *   elements on `--font-numeric` (system SF, which does ship 600/700). That is
- *   deliberate (#1167 decision: the whole app speaks 400/500), not a claim
- *   that the system font lacks those faces. Fraunces is asserted to ship the
- *   same set, so one allowed set is valid for both self-hosted families.
+ * - Family resolution beyond that one literal marker. An element on
+ *   `--font-numeric` by inheritance is held to 400/500; that is a false
+ *   negative the test accepts in exchange for a rule you can check by eye.
+ *   Fraunces is asserted to ship the same set as Noto Sans TC, so one allowed
+ *   set is valid for both self-hosted families.
  * - Implicit weights: `<strong>` / `<b>` (preflight `bolder`), UA-bold elements
  *   like `<th>`, and markup inside i18n `*Html` strings are not scanned.
  *   Those resolve to the nearest loaded face (500) and, with synthesis off,
@@ -95,6 +109,42 @@ interface WeightRequest {
   source: string
   /** null = the expression carried no evaluable weight */
   weights: number[] | null
+  /** the element literally names the numeric (system) family */
+  numeric: boolean
+}
+
+/** Byte ranges of every `style={{ … }}` object and every `className="…"` /
+ *  `className={…}` value in a file, paired with whether that text names the
+ *  numeric family. A weight request inside a range marked true is the element
+ *  that also sets the family, which is the only shape that earns the 600
+ *  exception. */
+function numericRanges(text: string): [number, number][] {
+  const ranges: [number, number][] = []
+  const openers = /(style=\{\{|className=\{|className=")/g
+  for (const m of text.matchAll(openers)) {
+    const start = m.index!
+    let i = start + m[0].length
+    if (m[0] === 'className="') {
+      const end = text.indexOf('"', i)
+      if (end === -1) continue
+      if (/font-numeric/.test(text.slice(start, end))) ranges.push([start, end])
+      continue
+    }
+    // Brace depth the opener already consumed: `style={{` opens two, a
+    // `className={` expression one. Getting this wrong is exactly the kind of
+    // silent failure this file is about — an over-counted depth runs the scan
+    // past the closing brace and swallows the following siblings, so unrelated
+    // elements inherit the numeric exception and a 600 on CJK text sails
+    // through a green suite.
+    let depth = m[0] === 'style={{' ? 2 : 1
+    while (i < text.length && depth > 0) {
+      if (text[i] === '{') depth++
+      else if (text[i] === '}') depth--
+      i++
+    }
+    if (/--font-numeric|font-numeric/.test(text.slice(start, i))) ranges.push([start, i])
+  }
+  return ranges
 }
 
 /** Pull every weight literal out of an inline/CSS value expression, e.g.
@@ -116,19 +166,28 @@ for (const file of scanFiles) {
   const raw = readFileSync(file, 'utf8')
   const text = file.endsWith('.css') ? stripCssComments(raw) : raw
   const rel = relative(REPO_ROOT, file)
+  const ranges = file.endsWith('.css') ? [] : numericRanges(text)
+  const isNumeric = (offset: number) => ranges.some(([a, b]) => offset >= a && offset <= b)
+
+  let offset = 0
   text.split('\n').forEach((line, idx) => {
+    const lineStart = offset
+    offset += line.length + 1
     const where = `${rel}:${idx + 1}`
+    const push = (index: number, source: string, weights: number[] | null) =>
+      requests.push({ where, source, weights, numeric: isNumeric(lineStart + index) })
+
     // Inline style object: fontWeight: <expr>
     for (const m of line.matchAll(/\bfontWeight\s*:\s*([^,}\n]+)/g)) {
-      requests.push({ where, source: m[0].trim(), weights: weightsInExpression(m[1]) })
+      push(m.index!, m[0].trim(), weightsInExpression(m[1]))
     }
     // JSX / SVG attribute: fontWeight="600" or fontWeight={600}
     for (const m of line.matchAll(/\bfontWeight=(?:"([^"]*)"|\{([^}]*)\})/g)) {
-      requests.push({ where, source: m[0], weights: weightsInExpression(m[1] ?? m[2]) })
+      push(m.index!, m[0], weightsInExpression(m[1] ?? m[2]))
     }
     // CSS declaration: font-weight: <value>
     for (const m of line.matchAll(/(?<![\w-])font-weight\s*:\s*([^;}\n]+)/g)) {
-      requests.push({ where, source: m[0].trim(), weights: weightsInExpression(m[1]) })
+      push(m.index!, m[0].trim(), weightsInExpression(m[1]))
     }
     // Tailwind utility: font-semibold / font-[600]
     for (const m of line.matchAll(
@@ -136,10 +195,13 @@ for (const file of scanFiles) {
     )) {
       const token = m[1]
       const w = token.startsWith('[') ? Number(token.slice(1, -1)) : TAILWIND_WEIGHTS[token]
-      requests.push({ where, source: m[0], weights: [w] })
+      push(m.index!, m[0], [w])
     }
   })
 }
+
+/** Weights the system numeric family ships beyond the self-hosted set. */
+const NUMERIC_EXTRA = new Set([600])
 
 describe('font-weight-loaded — every weight request has a self-hosted face (#1167)', () => {
   it('parses a non-empty loaded set from the Noto Sans TC face file', () => {
@@ -154,12 +216,47 @@ describe('font-weight-loaded — every weight request has a self-hosted face (#1
     expect(requests.length).toBeGreaterThan(20)
   })
 
-  it('requests only weights that are loaded', () => {
+  it('text elements request only weights that are loaded', () => {
     const allowed = [...NOTO_WEIGHTS].sort().join('/')
     const bad = requests
-      .filter((r) => r.weights !== null && r.weights.some((w) => !NOTO_WEIGHTS.has(w)))
-      .map((r) => `${r.where} — ${r.source} (loaded: ${allowed})`)
+      .filter((r) => !r.numeric && r.weights !== null && r.weights.some((w) => !NOTO_WEIGHTS.has(w)))
+      .map(
+        (r) =>
+          `${r.where} — ${r.source}\n    self-hosted faces: ${allowed}. This element does not name ` +
+          `font-numeric, so it renders in Noto Sans TC / Fraunces. Asking for anything else is ` +
+          `silent: the glyphs fall back to the nearest loaded face (a "selected" state stops ` +
+          `looking selected) or, where bold is synthesized, CJK strokes smear together. ` +
+          `Only amounts on --font-numeric may use 600.`
+      )
     expect(bad, bad.join('\n')).toEqual([])
+  })
+
+  it('numeric elements may use 600 — and nothing beyond what the system family ships', () => {
+    // The exception exists because --font-numeric is `-apple-system, 'SF Pro
+    // Display', system-ui`: a system family with a real 600, unlike the
+    // self-hosted webfonts. Amounts are the app's loudest element and are set
+    // in it, so 600 there is a genuine face, not a fallback (#1167,
+    // 2026-09-15). It stays this narrow so it cannot quietly spread to text:
+    // the marker must be on the element itself.
+    const allowed = new Set([...NOTO_WEIGHTS, ...NUMERIC_EXTRA])
+    const bad = requests
+      .filter((r) => r.numeric && r.weights !== null && r.weights.some((w) => !allowed.has(w)))
+      .map((r) => `${r.where} — ${r.source} (numeric element; allowed: ${[...allowed].sort().join('/')})`)
+    expect(bad, bad.join('\n')).toEqual([])
+  })
+
+  it('the numeric exception covers the amount displays and nothing else', () => {
+    // A named inventory, so that a 600 quietly appearing on a new element is
+    // visible in the diff rather than absorbed by the rule above.
+    const sites = requests
+      .filter((r) => r.numeric && r.weights?.some((w) => NUMERIC_EXTRA.has(w)))
+      .map((r) => r.where.replace(/:\d+$/, ''))
+    expect([...new Set(sites)].sort()).toEqual([
+      'app/(dashboard)/_components/AmountInput.tsx',
+      'app/(dashboard)/dashboard/_components/BalanceHero.tsx',
+      'app/(dashboard)/dashboard/_components/MiniCalendar.tsx',
+      'app/(dashboard)/dashboard/_components/SettlementForm.tsx',
+    ])
   })
 
   it('has no weight expression it cannot evaluate', () => {

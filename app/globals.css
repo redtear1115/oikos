@@ -178,13 +178,17 @@
    * sign-in) `--font-noto-tc` is unset entirely (#572) — the inline `var(...)`
    * fallback ensures `--font-sans` stays valid.
    *
-   * Weights: the app speaks 400 and 500 only (#1167). Weight 600 was dropped
-   * from the self-hosted faces to cut render-blocking CSS (#289, #713), and
-   * `body` sets `font-synthesis-weight: none` so a browser can never fake a
-   * bold from the 500 face. Do not write 600 / font-semibold / font-bold —
+   * Weights: text speaks 400 and 500 only (#1167). Weight 600 was dropped from
+   * the self-hosted faces to cut render-blocking CSS (#289, #713), and `body`
+   * sets `font-synthesis-weight: none` so a browser can never fake a bold from
+   * the 500 face. Do not write 600 / font-semibold / font-bold on text —
    * tests/font-weight-loaded.test.ts fails on any request outside the weights
    * declared in app/fonts/*.css. Build hierarchy with size, color and the
    * 400/500 contrast instead.
+   * The numbers font has 600; the text font does not. `--font-numeric` below
+   * is a *system* family (SF Pro / system-ui), which ships a real Semibold, so
+   * amounts set in it may use 600 — the test allows 600 only on an element
+   * that names font-numeric itself, not on one inheriting it.
    * What breaking this looks like, with no error anywhere: a selected tab or
    * chip that only differed by `sel ? 600 : 500` looks unselected (both states
    * resolve to the same 500 face); or, if synthesis is ever re-enabled, CJK
