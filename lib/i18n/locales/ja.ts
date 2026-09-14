@@ -539,6 +539,7 @@ export const ja: Translations = {
     addCustomCta: '+ 通貨を追加',
     footerNote: 'この旅の期間に記録した支出は、自動的にこの旅にひも付きます。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: '{code} の {baseCode} に対する為替レート',
     basePill: '基準',
     usedCountNote: '{n} 件の記録あり。レートを変えても既存の金額は変わりません',
     customRow: {

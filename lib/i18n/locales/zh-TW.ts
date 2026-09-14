@@ -748,6 +748,11 @@ export type Translations = {
     /** Inline hint under the rate input showing the inverse direction.
      *  `{default}` is the base currency code. */
     rateInverseFormat: string
+    /** Accessible name on the rate `<input type="number">` (visually the field
+     *  has no standalone label, just the "1 {code} =" / "{baseCode}" chrome
+     *  around it). `{code}` is the row's currency, `{baseCode}` the trip's
+     *  base currency. */
+    rateAriaLabel: string
     /** Pill on the base currency's header row — base is always present and
      *  is the trip's reference currency (no longer user-switchable). */
     basePill: string
@@ -3121,6 +3126,7 @@ export const zhTW: Translations = {
     addCustomCta: '+ 自訂幣別',
     footerNote: '這趟期間記錄的支出，會自動掛在這次旅行底下。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: '{code} 對 {baseCode} 的匯率',
     basePill: '基礎貨幣',
     usedCountNote: '已記過 {n} 筆；改匯率不影響舊紀錄',
     customRow: {

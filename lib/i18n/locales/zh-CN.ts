@@ -536,6 +536,7 @@ export const zhCN: Translations = {
     addCustomCta: '+ 自定义货币',
     footerNote: '这趟期间记录的支出，会自动挂在这次旅行底下。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: '{code} 对 {baseCode} 的汇率',
     basePill: '基础货币',
     usedCountNote: '已记过 {n} 笔；改汇率不影响旧记录',
     customRow: {

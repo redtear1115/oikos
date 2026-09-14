@@ -541,6 +541,7 @@ export const en: Translations = {
     addCustomCta: '+ Custom currency',
     footerNote: 'Expenses recorded during this trip will be tagged here automatically.',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: 'Exchange rate for {code} to {baseCode}',
     basePill: 'Base',
     usedCountNote: '{n} record(s) so far; editing the rate keeps them unchanged',
     customRow: {
