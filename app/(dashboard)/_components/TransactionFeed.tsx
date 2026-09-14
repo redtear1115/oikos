@@ -246,8 +246,35 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     }
   })
 
+  // Error surface per DESIGN.md: --debit-text on --debit-soft, over an opaque
+  // --surface so the floating toast stays legible above the feed it covers
+  // (~5.2:1). Was white on --debit, 3.27:1 (#1197 / #1168). role="alert" so a
+  // failed load is announced, not just painted. Built before the empty-state
+  // return below: a filter refetch that failed while the list was empty used
+  // to leave nothing on screen and nothing announced.
+  const errorToast = error ? (
+    <div
+      role="alert"
+      className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] rounded-xl border border-hairline bg-[var(--surface)]"
+    >
+      <div className="px-4 py-3 rounded-xl text-sm flex items-center gap-3 bg-[var(--debit-soft)] text-[var(--debit-text)]">
+        <span className="flex-1">{error}</span>
+        <button
+          type="button"
+          onClick={() => setError('')}
+          aria-label={t.transactionFeed.closeAriaLabel}
+          className="bg-transparent border-0 text-[var(--debit-text)] text-base leading-none cursor-pointer p-0"
+        >
+          {/* ✕ U+2715 — close-this-surface (#1125); this dismisses the whole
+              error toast, it is not a filter-chip clear. */}
+          ✕
+        </button>
+      </div>
+    </div>
+  ) : null
+
   if (items.length === 0) {
-    return <>{emptyState}</>
+    return <>{emptyState}{errorToast}</>
   }
 
   const groups = groupByMonth(items, (i) => i.transactedAt)
@@ -343,24 +370,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         )}
       </div>
 
-      {error && (
-        <div
-          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white flex items-center gap-3"
-          style={{ background: 'var(--debit)' }}
-        >
-          <span className="flex-1">{error}</span>
-          <button
-            type="button"
-            onClick={() => setError('')}
-            aria-label={t.transactionFeed.closeAriaLabel}
-            className="bg-transparent border-0 text-white text-base leading-none cursor-pointer p-0"
-          >
-            {/* ✕ U+2715 — close-this-surface (#1125); this dismisses the whole
-                error toast, it is not a filter-chip clear. */}
-            ✕
-          </button>
-        </div>
-      )}
+      {errorToast}
     </>
   )
 }

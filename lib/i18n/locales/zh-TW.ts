@@ -921,6 +921,9 @@ export type Translations = {
     emptyAibutsu: string
     /** Empty-state copy when the 守護 tab has no insurance assets. */
     emptyGuardian: string
+    /** Suffix after a linked asset's name in AssetLinkField when that asset
+     *  has been soft-deleted. Carries its own brackets / spacing per locale. */
+    deletedSuffix: string
   }
 
   records: {
@@ -3372,6 +3375,7 @@ export const zhTW: Translations = {
     loadFailed: '載入失敗',
     emptyAibutsu: '還沒有愛物，先到「愛物」分頁新增。',
     emptyGuardian: '還沒有保單，先到「愛物 > 守護」分頁新增。',
+    deletedSuffix: '（已刪除）',
   },
 
   records: {

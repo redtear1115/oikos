@@ -636,6 +636,7 @@ export const zhCN: Translations = {
     loadFailed: '加载失败',
     emptyAibutsu: '还没有爱物，先到「爱物」分页新增。',
     emptyGuardian: '还没有保单，先到「爱物 > 守护」分页新增。',
+    deletedSuffix: '（已删除）',
   },
 
   records: {
