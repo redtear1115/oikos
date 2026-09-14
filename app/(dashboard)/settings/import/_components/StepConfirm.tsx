@@ -47,6 +47,11 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
             <tbody>
               {preview.map((row, i) => {
                 const cat = row.type === 'expense' ? getCategory(row.category) : getIncomeCategory(row.category)
+                // Display only — `row.category` (what gets written) stays the id.
+                const catLabel =
+                  row.type === 'expense'
+                    ? (t.category[getCategory(row.category).id] ?? cat.label)
+                    : (t.incomeCategory[getIncomeCategory(row.category).id] ?? cat.label)
                 return (
                   <tr
                     key={i}
@@ -61,7 +66,7 @@ export function StepConfirm({ rows, invalidCount, onBack, onConfirm, submitting 
                         className="px-2 py-0.5 rounded-md text-xs"
                         style={{ background: cat.tint, color: cat.ink }}
                       >
-                        {cat.label}
+                        {catLabel}
                       </span>
                     </td>
                     <td className="py-2 px-2 text-right whitespace-nowrap">

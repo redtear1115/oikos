@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import type { ResultState } from './ImportContent'
 import { SectionCard } from './SectionCard'
@@ -18,21 +18,39 @@ export function ImportResult({ result, onRollback, onDone, onAnother, rollbackin
   const t = useTranslations()
   const tImport = t.settings.import.result
   const [confirming, setConfirming] = useState(false)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const bodyId = useId()
+
+  // #1182 — this screen replaces the confirm step the moment the write lands,
+  // unmounting the button that had focus. Move focus onto the outcome so it is
+  // both announced and the starting point for the next Tab. The heading is
+  // described by the count + rollback window, so focus reads the whole result
+  // once. (Focus rather than a mounted role="status": a live region inserted
+  // together with its content is not reliably announced, and both at once
+  // would read it twice.)
+  useEffect(() => {
+    headingRef.current?.focus()
+  }, [])
 
   return (
     <div className="px-4 pt-4 pb-6 space-y-4">
       <SectionCard className="py-6 text-center">
-        <div
-          className="text-xl font-medium mb-2"
+        <h2
+          ref={headingRef}
+          tabIndex={-1}
+          aria-describedby={bodyId}
+          className="text-xl font-medium mb-2 focus:outline-none"
           style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)' }}
         >
           {tImport.successHeading}
-        </div>
-        <div className="text-sm" style={{ color: 'var(--ink-2)' }}>
-          {tImport.successBody.replace('{count}', String(result.importedCount))}
-        </div>
-        <div className="text-xs mt-3" style={{ color: 'var(--ink-3)' }}>
-          {tImport.rollbackHint}
+        </h2>
+        <div id={bodyId}>
+          <div className="text-sm" style={{ color: 'var(--ink-2)' }}>
+            {tImport.successBody.replace('{count}', String(result.importedCount))}
+          </div>
+          <div className="text-xs mt-3" style={{ color: 'var(--ink-3)' }}>
+            {tImport.rollbackHint}
+          </div>
         </div>
       </SectionCard>
 
