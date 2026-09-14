@@ -7,8 +7,10 @@ import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
+import { TextArea } from '@/components/ui/TextArea'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DescriptionAutocomplete } from './DescriptionAutocomplete'
 import {
@@ -252,6 +254,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // appending to "240" → "2405").
   useFocusAndSelectOnOpen(open, amountInputRef)
   const statusLabelId = useId()
+  const notesId = useId()
+  const isDirty = useDirtyCheck(open, {
+    amount, desc, category, split, splitRatioA, payerWho, date, notes, status, assetId, tripId, currency,
+  })
 
   const isPending = !!pendingExpenseId
   // Edit affordance (delete button + editTransaction path) only for real tx.
@@ -432,7 +438,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
   return (
     <>
-      <SheetFrame open={open} onClose={onClose} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
+      <SheetFrame open={open} onClose={onClose} isDirty={isDirty} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
         {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive.
             Both buttons stay visually `sm` (36px) so the header height doesn't
             change; the ::before adds 4px above and below for a 44px tap area
@@ -650,17 +656,16 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               dropped — better to omit the affordance. */}
           {!isPending && (
             <div className="px-5 pt-3 pb-6 border-t border-hairline">
-              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <label htmlFor={notesId} className="block text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.notesLabel}
-              </div>
-              <textarea
+              </label>
+              <TextArea
+                id={notesId}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={t.addSheet.notesPlaceholder}
                 maxLength={2000}
                 rows={3}
-                className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
-                style={{ color: 'var(--ink)' }}
               />
             </div>
           )}

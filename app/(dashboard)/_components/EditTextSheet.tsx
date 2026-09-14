@@ -4,6 +4,8 @@ import { useState, useEffect, useId, useRef, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
 import { useFocusTrap } from './useFocusTrap'
+import { useDirtyCheck, useUnsavedChangesGuard } from './useUnsavedChangesGuard'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -55,6 +57,11 @@ export function EditTextSheet({
 
   useFocusAndSelectOnOpen(open, inputRef)
 
+  // Backdrop / Escape / Back ask before dropping an edited value (#1183);
+  // 取消 still closes straight away.
+  const isDirty = useDirtyCheck(open, value)
+  const { requestClose, confirm } = useUnsavedChangesGuard(open, onClose, isDirty)
+
   // Dismiss the iOS soft keyboard on close — same reason as SheetFrame: the
   // focus restore alone doesn't reliably blur the input on iOS.
   useEffect(() => {
@@ -98,7 +105,8 @@ export function EditTextSheet({
 
   return (
     <>
-      <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
+      <SheetBackdrop open={open} onClick={pending ? () => false : requestClose} />
+      {confirm}
       <div
         ref={panelRef}
         // Dialog semantics only while open; the closed panel stays mounted for
@@ -147,7 +155,7 @@ export function EditTextSheet({
 
         {/* Input + error + char count */}
         <div className="px-5 pb-6">
-          <input
+          <TextInput
             ref={inputRef}
             type="text"
             value={value}
@@ -158,13 +166,6 @@ export function EditTextSheet({
               if (e.key === 'Enter' && !pending) { e.preventDefault(); handleConfirm() }
             }}
             placeholder={placeholder ?? title}
-            className="w-full h-12 px-3 rounded-xl outline-none text-base"
-            style={{
-              border: '1px solid var(--hairline)',
-              color: 'var(--ink)',
-              background: 'var(--surface)',
-              fontFamily: 'inherit',
-            }}
           />
           {error && (
             <div className="text-xs mt-2" style={{ color: 'var(--debit-text)' }}>{error}</div>

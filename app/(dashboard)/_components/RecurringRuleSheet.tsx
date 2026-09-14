@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
+import { useDirtyCheck } from './useUnsavedChangesGuard'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
@@ -231,6 +232,14 @@ export function RecurringRuleSheet(props: Props) {
   const intervalLabelId = useId()
   const assetSelectId = useId()
 
+  // Only the active variant's fields count; the other side is inert state.
+  const isDirty = useDirtyCheck(open, {
+    amount, intervalMonths, dayOfMonth, startsOn, endsOn,
+    ...(isIncome
+      ? { incomeCategory, recipientWho, source, incomeAssetId }
+      : { expenseCategory, payerWho, splitType, splitRatioA, description, expenseAssetId }),
+  })
+
   const saveColor = isIncome ? P.ink : 'var(--accent)'
   const saveDisabled = !amount || pending
 
@@ -239,6 +248,7 @@ export function RecurringRuleSheet(props: Props) {
       <SheetFrame
         open={open}
         onClose={onClose}
+        isDirty={isDirty}
         ariaLabel={isEdit ? tNs.sheet.titleEdit : tNs.sheet.titleNew}
         background={isIncome ? P.sheetBg : undefined}
         boxShadow={isIncome ? '0 -10px 40px rgba(58,36,25,0.18)' : undefined}
@@ -525,32 +535,20 @@ export function RecurringRuleSheet(props: Props) {
               <div className="text-xs text-ink-3 tracking-label mb-2">
                 {tNs.sheet.startsOnLabel}
               </div>
-              <input
+              <TextInput
                 type="date"
                 value={startsOn}
                 onChange={(e) => setStartsOn(e.target.value)}
-                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-sm"
-                style={{
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                  fontFamily: 'inherit',
-                }}
               />
             </label>
             <label>
               <div className="text-xs text-ink-3 tracking-label mb-2">
                 {tNs.sheet.endsOnLabel}
               </div>
-              <input
+              <TextInput
                 type="date"
                 value={endsOn}
                 onChange={(e) => setEndsOn(e.target.value)}
-                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-sm"
-                style={{
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                  fontFamily: 'inherit',
-                }}
               />
             </label>
           </div>

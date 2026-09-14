@@ -216,6 +216,12 @@ export const en: Translations = {
       cancel: 'Cancel',
       retry: 'Retry',
     },
+    unsavedChanges: {
+      title: 'Your changes aren’t saved yet',
+      description: 'If you leave now, what you entered won’t be kept.',
+      discard: 'Discard',
+      keepEditing: 'Keep editing',
+    },
   },
 
   splitType: {

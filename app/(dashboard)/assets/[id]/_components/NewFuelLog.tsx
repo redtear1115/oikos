@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useMemo, useTransition } from 'react'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
+import { TextInput } from '@/components/ui/TextInput'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
@@ -185,6 +187,8 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     })
   }
 
+  const isDirty = useDirtyCheck(open, { liters, odometer, cost, fuelType, payerWho, split, date })
+
   if (!open) return null
 
   return (
@@ -192,6 +196,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
       <SheetFrame
         open={open}
         onClose={onClose}
+        isDirty={isDirty}
         ariaLabel={mode === 'edit' ? tf.titleEdit : tf.titleNew}
         topRadius={28}
         heightDvh={94}
@@ -260,15 +265,13 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         {/* Form */}
         <div className="overflow-auto flex-1 px-4 pt-4 pb-3 flex flex-col gap-2.5">
           <FormRow label={tf.liters} unit={tf.litersUnit}>
-            <input
+            <TextInput
               value={liters}
               onChange={e => setLiters(e.target.value)}
               type="number"
               inputMode="decimal"
               step="0.01"
               placeholder="0.00"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-base outline-none"
-              style={{ color: 'var(--ink)' }}
             />
           </FormRow>
 
@@ -277,26 +280,22 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             unit="km"
             hint={lastOdometer !== null ? tf.lastOdometer.replace('{km}', lastOdometer.toLocaleString()) : undefined}
           >
-            <input
+            <TextInput
               value={odometer}
               onChange={e => setOdometer(e.target.value)}
               type="number"
               inputMode="numeric"
               placeholder="0"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-base outline-none"
-              style={{ color: 'var(--ink)' }}
             />
           </FormRow>
 
           <FormRow label={tf.cost} unit="NT$">
-            <input
+            <TextInput
               value={cost}
               onChange={e => setCost(e.target.value)}
               type="number"
               inputMode="numeric"
               placeholder="0"
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-base outline-none"
-              style={{ color: 'var(--ink)' }}
             />
           </FormRow>
 

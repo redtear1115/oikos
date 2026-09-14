@@ -217,6 +217,12 @@ export const ja: Translations = {
       cancel: 'キャンセル',
       retry: '再試行',
     },
+    unsavedChanges: {
+      title: '入力した内容はまだ保存されていません',
+      description: 'このまま閉じると、入力した内容は残りません。',
+      discard: '破棄する',
+      keepEditing: '入力を続ける',
+    },
   },
 
   splitType: {

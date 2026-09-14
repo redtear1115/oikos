@@ -7,6 +7,7 @@ import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { PayerToggle } from './PayerToggle'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { SheetBody, SheetFooter } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
@@ -56,6 +57,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   }, [open, initial, viewer.id])
 
   useFocusAndSelectOnOpen(open, amountInputRef)
+  const isDirty = useDirtyCheck(open, { amount, payerWho, date })
 
   const handleSave = () => {
     if (!initial) return
@@ -96,7 +98,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
 
   return (
     <>
-      <SheetFrame open={open} onClose={onClose} ariaLabel={t.settlement.editTitle}>
+      <SheetFrame open={open} onClose={onClose} isDirty={isDirty} ariaLabel={t.settlement.editTitle}>
         {/* 3-column header (cancel | title | save) — SheetHeader primitive is
             2-column (title + single trailing), so we keep a custom wrapper
             and use Button primitives for the actions. Mirrors the pilot

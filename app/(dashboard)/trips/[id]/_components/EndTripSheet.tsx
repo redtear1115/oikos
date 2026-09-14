@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
+import { TextInput } from '@/components/ui/TextInput'
 import { endTrip } from '@/actions/trip'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -36,6 +38,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
     setErr(null)
   }, [open, suggestedEndDate])
 
+  const isDirty = useDirtyCheck(open, { endDate })
   const dateInvalid = endDate < startDate
   const canSave = !dateInvalid && !pending
 
@@ -63,6 +66,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
       error={err ?? ''}
       onClose={onClose}
       onSave={submit}
+      isDirty={isDirty}
       destructive
     >
       <div className="flex flex-col gap-3">
@@ -83,14 +87,11 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
 
         <label className="block">
           <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{t.tripDetail.endDateLabel}</span>
-          <input
+          <TextInput
             type="date"
-            className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
-            style={{
-              background: 'var(--surface)',
-              border: dateInvalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
-              color: 'var(--ink)',
-            }}
+            className="mt-1.5"
+            error={dateInvalid}
+            aria-invalid={dateInvalid}
             min={startDate}
             value={endDate}
             onChange={e => setEndDate(e.target.value)}

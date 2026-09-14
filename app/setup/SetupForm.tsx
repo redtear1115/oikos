@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { TextInput } from '@/components/ui/TextInput'
 import { createGroup } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
@@ -339,29 +340,24 @@ export default function SetupForm({ t }: { t: Translations }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <div
-            className="rounded-2xl px-4 py-3 flex items-center gap-3"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-          >
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
-              maxLength={NAME_MAX}
-              placeholder=""
-              // The heading is the field's visible label; the subtitle and
-              // counter describe it (#1166 — was announced as "edit text, blank").
-              aria-labelledby={nameHeadingId}
-              aria-describedby={`${nameHintId} ${nameCountId}`}
-              aria-invalid={error ? true : undefined}
-              className="flex-1 bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)' }}
-              autoFocus
-            />
-            <span id={nameCountId} className="text-xs tnum shrink-0" style={{ color: 'var(--ink-3)' }}>
-              {name.length}/{NAME_MAX}
-            </span>
-          </div>
+          <TextInput
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
+            maxLength={NAME_MAX}
+            placeholder=""
+            // The heading is the field's visible label; the subtitle and
+            // counter describe it (#1166 — was announced as "edit text, blank").
+            aria-labelledby={nameHeadingId}
+            aria-describedby={`${nameHintId} ${nameCountId}`}
+            aria-invalid={error ? true : undefined}
+            autoFocus
+            rightAddon={
+              <span id={nameCountId} className="text-xs tnum shrink-0 pr-1.5" style={{ color: 'var(--ink-3)' }}>
+                {name.length}/{NAME_MAX}
+              </span>
+            }
+          />
           <div className="flex gap-2 flex-wrap">
             {nameT.suggestions.map((s) => (
               <button
