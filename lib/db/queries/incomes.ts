@@ -4,6 +4,7 @@ import { and, eq, isNull, desc, sql, type SQL } from 'drizzle-orm'
 import type { DrillFilter } from '@/lib/drill'
 import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
 import type { EpochWindow } from './epoch'
+import type { FeedMonthSummary } from './feedMonthSummary'
 import {
   amountClause,
   andClause,
@@ -73,6 +74,34 @@ function assetIdsDrizzleClause(assetIds: string[]): SQL | undefined {
   return sql`(${incomeTransactions.assetId} IS NULL OR ${inList})`
 }
 
+/**
+ * Row-producing WHERE conditions for the 收入 tab feed — everything except
+ * the cursor / ORDER BY / LIMIT that only the pager needs. Shared by
+ * `listIncomesPaged` (adds cursor + paging) and `listIncomesMonthSummaries`
+ * (adds a `GROUP BY` month instead) so the two can never drift (#1208).
+ */
+function buildIncomeFeedConditions(opts: {
+  groupId: string
+  monthKey: string | undefined
+  drill: DrillFilter | null | undefined
+  filter: ResolvedIncomeFilter | undefined
+  dateRange: DateRange | null | undefined
+  epochWindow: EpochWindow
+}): (SQL | undefined)[] {
+  const { groupId, monthKey, drill, filter, dateRange, epochWindow } = opts
+  return [
+    eq(incomeTransactions.groupId, groupId),
+    isNull(incomeTransactions.deletedAt),
+    dateColumnClause(monthKey, dateRange, incomeTransactions.occurredAt),
+    drill?.kind === 'income' ? eq(incomeTransactions.category, drill.categoryId) : undefined,
+    eqValueClause(incomeTransactions.recipientId, filter?.recipientId),
+    filter ? categoryInClause(filter.incomeCategories, incomeTransactions.category) : undefined,
+    filter ? amountClause(filter.amountMin, filter.amountMax, incomeTransactions.amount) : undefined,
+    filter ? assetIdsDrizzleClause(filter.assetIds) : undefined,
+    epochClause(incomeTransactions.createdAt, epochWindow),
+  ]
+}
+
 export async function listIncomesPaged(
   groupId: string,
   cursor: IncomeCursor | null,
@@ -92,18 +121,10 @@ export async function listIncomesPaged(
   if (filter?.cutAll) return []
 
   const conditions: (SQL | undefined)[] = [
-    eq(incomeTransactions.groupId, groupId),
-    isNull(incomeTransactions.deletedAt),
+    ...buildIncomeFeedConditions({ groupId, monthKey, drill, filter, dateRange, epochWindow }),
     cursor
       ? sql`(occurred_at, created_at) < (${cursor.occurredAt}::date, ${cursor.createdAt}::timestamptz)`
       : undefined,
-    dateColumnClause(monthKey, dateRange, incomeTransactions.occurredAt),
-    drill?.kind === 'income' ? eq(incomeTransactions.category, drill.categoryId) : undefined,
-    eqValueClause(incomeTransactions.recipientId, filter?.recipientId),
-    filter ? categoryInClause(filter.incomeCategories, incomeTransactions.category) : undefined,
-    filter ? amountClause(filter.amountMin, filter.amountMax, incomeTransactions.amount) : undefined,
-    filter ? assetIdsDrizzleClause(filter.assetIds) : undefined,
-    epochClause(incomeTransactions.createdAt, epochWindow),
   ]
 
   const rows = await db
@@ -124,6 +145,47 @@ export async function listIncomesPaged(
     .limit(limit)
 
   return rows
+}
+
+/**
+ * Per-month aggregate for the 收入 tab, using the exact same row-producing
+ * conditions as `listIncomesPaged` (via `buildIncomeFeedConditions`) but
+ * grouped by calendar month instead of paged. `occurred_at` is already a
+ * `date` column (no tz conversion needed, same as `dateColumnClause`).
+ * Powers the records-feed month headers so they read the same number
+ * regardless of how many pages have loaded (#1208).
+ */
+export async function listIncomesMonthSummaries(
+  groupId: string,
+  monthKey: string | undefined,
+  drill: DrillFilter | null | undefined,
+  filter: ResolvedIncomeFilter | undefined,
+  dateRange: DateRange | null | undefined,
+  epochWindow: EpochWindow,
+): Promise<FeedMonthSummary[]> {
+  // Same short-circuits as the pager — see listIncomesPaged above.
+  if (drill && drill.kind !== 'income') return []
+  if (filter?.cutAll) return []
+
+  const conditions = buildIncomeFeedConditions({ groupId, monthKey, drill, filter, dateRange, epochWindow })
+  const monthExpr = sql<string>`to_char(${incomeTransactions.occurredAt}, 'YYYY-MM')`
+
+  const rows = await db
+    .select({
+      month: monthExpr,
+      count: sql<number>`count(*)::int`,
+      total: sql<number>`coalesce(sum(${incomeTransactions.amount}), 0)::int`,
+    })
+    .from(incomeTransactions)
+    .where(and(...conditions))
+    .groupBy(monthExpr)
+
+  return rows.map((r) => ({
+    monthKey: r.month,
+    count: r.count,
+    expenseTotal: 0,
+    incomeTotal: r.total,
+  }))
 }
 
 export async function listIncomeMonthSummary(

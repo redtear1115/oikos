@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { assets } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
-import { listFeedAllPaged, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
+import { listFeedAllPaged, listFeedAllMonthSummaries, getGroupCreationMonthKey } from '@/lib/db/queries/transactions'
 import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { RecordsList } from './_components/RecordsList'
@@ -119,20 +119,25 @@ export default async function RecordsPage({
     .where(and(eq(assets.groupId, group.id), isNull(assets.deletedAt)))
     .orderBy(assets.createdAt)
 
-  // Feed and creation-month metadata in parallel; feed is now scoped to the
-  // selected date range and structured filter.
+  // Feed rows + per-month summaries in parallel, both scoped identically
+  // (same filter/drill/date-range/epoch) so the feed's month headers agree
+  // with the rows underneath them from first paint (#1208). The 'all' tab is
+  // the only one SSR'd here — the 支出/收入 tabs are client-only (L2 toggle),
+  // so RecordsList fetches their summaries via `loadRecordsMonthSummaries`.
   const feedMonthKey = dateRange.kind === 'month' ? monthKey : undefined
   const feedDateRange = dateRange.kind === 'month' ? null : dateRange
-  const feedRows = await listFeedAllPaged({
+  const feedOpts = {
     groupId: group.id,
-    cursor: null,
-    limit: PAGE_SIZE,
     filter: resolved,
     monthKey: feedMonthKey,
     drill,
     dateRange: feedDateRange,
     epochWindow,
-  })
+  }
+  const [feedRows, monthSummaries] = await Promise.all([
+    listFeedAllPaged({ ...feedOpts, cursor: null, limit: PAGE_SIZE }),
+    listFeedAllMonthSummaries(feedOpts),
+  ])
 
   const initial = feedRows.map((r) => ({
     id: r.id,
@@ -159,6 +164,7 @@ export default async function RecordsPage({
     <RecordsList
       initial={initial}
       pageSize={PAGE_SIZE}
+      monthSummaries={monthSummaries}
       monthKey={monthKey}
       maxMonthKey={nowKey}
       dateRange={dateRange}
