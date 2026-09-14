@@ -38,6 +38,39 @@ interface TrapEntry {
 const stack: TrapEntry[] = []
 
 /**
+ * Put focus back after the topmost trap closes (#1242).
+ *
+ * `preventScroll`: the trigger is often a list row far down a scrolled page.
+ * A plain focus() scrolls it into view, so closing a sheet opened from that
+ * row jumps the page. Supported from iOS/Safari 15 (our Capacitor floor is
+ * iOS 15.0); older engines ignore the options object and still focus, they
+ * just keep the old scrolling behaviour.
+ *
+ * Detached trigger: the element that opened the trap can be gone by now —
+ * deleting a record from its sheet removes the very row that opened it.
+ * focus() on a detached node silently does nothing and focus is left on
+ * <body>, so the next Tab restarts from the top of the document. Fall back to
+ * the trap that is now on top (a sheet under a closing modal): its panel if
+ * the panel is itself focusable, else its first control.
+ *
+ * With no trap left underneath there is no fallback on purpose: the dashboard
+ * has no focusable <main> landmark, and guessing at "the next row" could land
+ * on something unrelated. Focus stays where the browser leaves it (<body>).
+ * Symptom of that case, so it isn't mistaken for a regression: after deleting
+ * a record from its sheet, the next Tab starts from the page header.
+ */
+function restoreFocus(target: HTMLElement | null, below: TrapEntry | undefined): void {
+  if (target?.isConnected) {
+    target.focus({ preventScroll: true })
+    return
+  }
+  const panel = below?.panel
+  if (!panel?.isConnected) return
+  const into = panel.hasAttribute('tabindex') ? panel : focusables(panel)[0]
+  into?.focus({ preventScroll: true })
+}
+
+/**
  * Trap Tab / Shift+Tab inside `panelRef` while `open` is true, and restore
  * focus to the previously-focused element when the trap is released.
  *
@@ -131,10 +164,7 @@ export function useFocusTrap(open: boolean, panelRef: RefObject<HTMLElement | nu
         return
       }
 
-      // Restore focus to the trigger after close. Guard against the previous
-      // element being detached (e.g. parent re-rendered) — focus() on a
-      // detached node is a no-op but harmless.
-      entry.restoreTo?.focus?.()
+      restoreFocus(entry.restoreTo, stack[stack.length - 1])
     }
   // panelRef is stable; intentionally omitted
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -225,12 +225,10 @@ describe('EditTextSheet focus trap + closed state', () => {
     expect(document.activeElement).toBe(input)
   })
 
-  // Restore needs PR #1230's useFocusTrap change: on main the trap reads its
-  // restore target in a passive effect, after useFocusAndSelectOnOpen (a
-  // layout effect) has already moved focus into the input, so it records the
-  // input instead of the trigger. #1230 moves that read into a layout effect
-  // without changing the hook's call signature. Unskip once #1230 is on main.
-  it.skip('restores focus to the trigger after Escape (needs #1230)', async () => {
+  // Depends on #1230: useFocusTrap reads its restore target in a layout effect,
+  // before useFocusAndSelectOnOpen (also a layout effect, in the parent) moves
+  // focus into the input. With a passive read it records the input instead.
+  it('restores focus to the trigger after Escape', async () => {
     render(<Host />)
     const trigger = screen.getByRole('button', { name: '帳本名稱' })
     trigger.focus()

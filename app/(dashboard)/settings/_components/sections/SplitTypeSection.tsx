@@ -6,6 +6,7 @@ import { updateDefaultSplitType } from '@/actions/profile'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 
 interface Props {
   current: SplitType
@@ -19,7 +20,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const handleChange = (next: SplitType) => {
-    if (next === current) return
+    if (saving || next === current) return
     setError(null)
     startTransition(async () => {
       try {
@@ -66,6 +67,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
       <div
         role="radiogroup"
         aria-label={t.settings.defaultSplitLabel}
+        onKeyDown={onRadioGroupKeyDown}
         className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
@@ -81,9 +83,14 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               key={opt.id}
               role="radio"
               aria-checked={sel}
+              tabIndex={rovingTabIndex(sel, i === 0, true)}
               onClick={() => handleChange(opt.id)}
-              disabled={saving}
-              className="flex items-center justify-between min-h-11 px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
+              // `aria-disabled`, not `disabled`, while saving (#1242): an arrow
+              // key selects and saves, and a real `disabled` would drop focus
+              // off the radio the user just moved to — the next arrow press
+              // then goes nowhere. handleChange ignores presses while saving.
+              aria-disabled={saving || undefined}
+              className="flex items-center justify-between min-h-11 px-4 py-3 text-left cursor-pointer aria-disabled:cursor-default aria-disabled:opacity-60"
               style={{
                 borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
                 background: 'transparent',

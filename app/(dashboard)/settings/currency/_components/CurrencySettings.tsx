@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { setBaseCurrency } from '@/actions/currency'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
@@ -37,7 +38,7 @@ export function CurrencySettings(props: {
   const [addOpen, setAddOpen] = useState(false)
 
   function onBaseChange(next: CurrencyCode) {
-    if (next === base) return
+    if (pending || next === base) return
     setBaseError(null)
     setBase(next)
     start(async () => {
@@ -99,6 +100,7 @@ export function CurrencySettings(props: {
         <div
           role="radiogroup"
           aria-label={tc.base.sectionTitle}
+          onKeyDown={onRadioGroupKeyDown}
           className="grid gap-2"
           style={{ gridTemplateColumns: `repeat(${CURRENCIES.length}, minmax(0, 1fr))` }}
         >
@@ -110,8 +112,14 @@ export function CurrencySettings(props: {
                 key={c}
                 type="button"
                 onClick={() => onBaseChange(c)}
-                disabled={disabled}
+                // A locked base is really disabled; a pending save is only
+                // `aria-disabled` so the radio an arrow key just selected
+                // keeps focus while the save runs (#1242). onBaseChange
+                // ignores presses while pending.
+                disabled={!props.canChangeBase}
+                aria-disabled={pending || undefined}
                 aria-checked={selected}
+                tabIndex={rovingTabIndex(selected, c === CURRENCIES[0], true)}
                 role="radio"
                 className="h-11 rounded-full cursor-pointer border text-sm font-medium"
                 style={{

@@ -52,8 +52,10 @@ export function LeaveGroupFlow({
   const titleId = useId()
 
   // Tab stays inside the panel while open; focus returns to the "leave" row
-  // on close (#1172). Declared before the focus effects below so the trap
-  // captures the trigger as its restore target before focus moves.
+  // on close (#1172). Call order relative to the focus effects below does not
+  // matter: the trap records its restore target in a layout effect, and every
+  // layout effect in a commit runs before every passive one, so the trigger is
+  // captured before those effects move focus (#1230).
   useFocusTrap(open, panelRef)
 
   // Focus the panel itself on open — the screen reader announces the dialog
@@ -62,15 +64,22 @@ export function LeaveGroupFlow({
     if (open) panelRef.current?.focus()
   }, [open])
 
-  // Step changes swap the card body, which can unmount the focused control
-  // (card 4's yes/no, the swap-sent OK). Without this, focus falls to <body>
-  // and the next Tab starts from outside the dialog. Only recovers lost
-  // focus: if the control survived (the footer "next"), leave it alone so a
-  // keyboard user can keep pressing it.
+  // Step changes move focus to the new card's <h2> (#1242), the same move the
+  // import wizard makes between steps (#1182). Two failures this covers:
+  //  - the footer "next" survives the swap, so focus used to stay on it and
+  //    nothing announced the new card — a VoiceOver user pressing "next"
+  //    three times in a row walked past the step 2–3 warnings unheard;
+  //  - card 4's yes/no and the swap-sent OK unmount, which dropped focus to
+  //    <body> and restarted Tab from outside the dialog.
+  // The cost is one extra Tab back to "next" for keyboard users; the heading
+  // is what they are there to read. Skipped on open (the panel effect above
+  // owns that) and while closed (the reset below changes step too).
+  const lastStepRef = useRef(step)
   useEffect(() => {
+    if (lastStepRef.current === step) return
+    lastStepRef.current = step
     if (!open) return
-    const panel = panelRef.current
-    if (panel && !panel.contains(document.activeElement)) panel.focus()
+    panelRef.current?.querySelector<HTMLElement>('h2')?.focus()
   }, [open, step])
 
   // Reset state when sheet closes so the next open starts fresh.
@@ -362,7 +371,9 @@ function CardTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2
       id={id}
-      className="text-base mb-3 leading-tight"
+      // Focus target on step change (see the step effect in LeaveGroupFlow).
+      tabIndex={-1}
+      className="text-base mb-3 leading-tight focus:outline-none"
       style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
     >
       {children}

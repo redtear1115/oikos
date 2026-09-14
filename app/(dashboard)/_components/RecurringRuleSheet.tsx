@@ -12,6 +12,7 @@ import { Avatar } from './Avatar'
 import { useMember, whoToMemberRole } from './MemberContext'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
 import { AssetLinkField } from '@/app/(dashboard)/dashboard/_components/AssetLinkField'
 import { DayPicker } from '@/app/(dashboard)/settings/recurring-income/_components/DayPicker'
@@ -328,6 +329,7 @@ export function RecurringRuleSheet(props: Props) {
                   <div
                     role="radiogroup"
                     aria-labelledby={recipientLabelId}
+                    onKeyDown={onRadioGroupKeyDown}
                     className="inline-flex rounded-full p-[3px] gap-0.5"
                     style={{ background: 'var(--toggle-segment-track)' }}
                   >
@@ -337,6 +339,7 @@ export function RecurringRuleSheet(props: Props) {
                         type="button"
                         role="radio"
                         aria-checked={recipientWho === w}
+                        tabIndex={rovingTabIndex(recipientWho === w, w === 'M', true)}
                         onClick={() => setRecipientWho(w)}
                         className="oik-segment relative h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
                         style={{

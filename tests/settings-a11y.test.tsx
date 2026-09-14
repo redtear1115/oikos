@@ -209,7 +209,7 @@ describe('LeaveGroupFlow focus management', () => {
     expect(document.activeElement).toBe(trigger)
   })
 
-  it('pulls focus back into the panel when a step change unmounts the focused control', async () => {
+  it('moves focus to the new card heading when a step change unmounts the focused control', async () => {
     proposeSwap.mockResolvedValue(undefined)
     render(<LeaveHarness viewerIsMemberA />)
     openFrom('離開帳本')
@@ -221,9 +221,16 @@ describe('LeaveGroupFlow focus management', () => {
     yes.focus()
     fireEvent.click(yes)
 
+    // The focus move runs in a passive effect after the async proposeSwap
+    // resolves and the step commits; seeing the new card's text doesn't mean
+    // that effect has run yet, so the focus assertion must wait too (it was
+    // a synchronous expect and failed ~1 in 5 full runs under load).
     await waitFor(() => expect(screen.getByText(flow.swapProposed.ok)).toBeTruthy())
-    const dialog = screen.getByRole('dialog')
-    expect(dialog.contains(document.activeElement)).toBe(true)
+    await waitFor(() => {
+      const heading = screen.getByRole('heading', { level: 2 })
+      expect(heading).toHaveTextContent(flow.swapProposed.title)
+      expect(document.activeElement).toBe(heading)
+    })
   })
 
   it('labels the final type-to-confirm input', () => {
