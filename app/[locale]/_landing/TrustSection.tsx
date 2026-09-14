@@ -52,7 +52,7 @@ function FullTrustSection({ t }: { t: LandingStrings }) {
             card chrome around it. The three trust facts that used to sit in
             three identical cards collapse to a single inline row underneath. */}
         <p
-          className="m-0 text-[24px] md:text-[34px] leading-[1.45] md:leading-[1.35]"
+          className="m-0 text-title md:text-page leading-[1.45] md:leading-[1.35]"
           style={{
             fontFamily: 'var(--font-fraunces)',
             fontWeight: 400,
