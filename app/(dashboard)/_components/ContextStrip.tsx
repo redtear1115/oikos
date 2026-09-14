@@ -17,7 +17,9 @@ interface Props {
 
 /**
  * Unified contextual strip — renders at most one banner variant in priority order:
- *   1. offline   — device is offline AND offline-pref is on
+ *   1. offline   — device is offline, for everyone (#1206). The offline-pref
+ *      only picks the copy: with it on the page may be the cached snapshot;
+ *      with it off nothing is cached, so the cache wording would be false.
  *   2. past-epoch — viewer is pinned to a past chapter; the band itself moved to
  *      the shell top stack (`PastChapterBar`, #1037), only the suppression of
  *      everything below it is still decided here
@@ -60,7 +62,10 @@ export function ContextStrip({
   }
 
   // ─── Priority 1: offline ─────────────────────────────────────────────────
-  if (offlinePrefOn && !isOnline) {
+  // Used to be gated on offlinePrefOn, because the only copy described the
+  // cache. That left everyone who never opened Settings with no signal at all
+  // until a write failed (#1206).
+  if (!isOnline) {
     return (
       <div
         role="status"
@@ -68,7 +73,7 @@ export function ContextStrip({
         className="px-5 py-2 text-sm"
         style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
       >
-        {t.offlineBanner.text}
+        {offlinePrefOn ? t.offlineBanner.text : t.offlineBanner.textNoCache}
       </div>
     )
   }

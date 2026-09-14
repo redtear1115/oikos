@@ -129,6 +129,44 @@ describe('ContextStrip', () => {
     expect(container.querySelectorAll('[role="status"]').length).toBe(1)
   })
 
+  // #1206: the disconnect notice is no longer gated on offline browsing. The
+  // pref only chooses the copy — without it nothing is cached, so the
+  // "showing last connection's data" wording would not be true.
+  it('renders the no-cache offline notice when offline browsing is off', () => {
+    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    vi.mocked(getOfflinePref).mockReturnValue(false)
+
+    const { container } = renderStrip()
+
+    const status = container.querySelector('[role="status"]')
+    expect(status).not.toBeNull()
+    expect(status?.getAttribute('aria-live')).toBe('polite')
+    expect(status?.textContent).toBe('離線中・恢復連線後會自動更新')
+    expect(screen.queryByText('離線中・顯示最近一次連線的資料')).toBeNull()
+  })
+
+  it('renders the cached-data notice when offline browsing is on', () => {
+    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    vi.mocked(getOfflinePref).mockReturnValue(true)
+
+    renderStrip()
+
+    expect(screen.getByRole('status').textContent).toBe('離線中・顯示最近一次連線的資料')
+    expect(screen.queryByText('離線中・恢復連線後會自動更新')).toBeNull()
+  })
+
+  it('removes the offline notice once back online', () => {
+    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    const { container, rerender } = renderStrip({ activeTrips: [tokyoTrip] })
+    expect(screen.getByRole('status')).toBeTruthy()
+
+    vi.mocked(useOnlineStatus).mockReturnValue(true)
+    rerender(<ContextStrip activeTrips={[tokyoTrip]} initialTripCollapsed />)
+
+    expect(container.querySelector('[role="status"]')).toBeNull()
+    expect(screen.getByText('Tokyo')).toBeTruthy()
+  })
+
   it('leaves the past-chapter band to the shell top stack', () => {
     const pastMember: MemberContextValue = {
       ...baseMember,

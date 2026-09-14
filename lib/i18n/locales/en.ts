@@ -1768,6 +1768,7 @@ export const en: Translations = {
 
   offlineBanner: {
     text: "Offline · showing your last connection's data",
+    textNoCache: 'Offline · will update once you reconnect',
   },
 
   offlinePage: {
