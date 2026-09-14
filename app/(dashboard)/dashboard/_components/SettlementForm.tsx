@@ -201,7 +201,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         </div>
 
         {error && (
-          <div className="mt-3 text-xs" style={{ color: 'var(--debit-text)' }}>
+          <div className="mt-3 text-xs" style={{ color: 'var(--debit)' }}>
             {error}
           </div>
         )}

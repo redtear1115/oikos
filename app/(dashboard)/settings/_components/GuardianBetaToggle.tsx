@@ -57,7 +57,7 @@ export function GuardianBetaToggle({ enabled }: Props) {
         />
       </div>
       {error && (
-        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit-text)' }}>
+        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
           {error}
         </div>
       )}
