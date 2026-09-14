@@ -201,7 +201,7 @@ function SwapPendingBanner({
         )}
       </div>
       {errorMsg && (
-        <div className="text-xs" style={{ color: 'var(--debit)' }} role="alert">{errorMsg}</div>
+        <div className="text-xs" style={{ color: 'var(--debit-text)' }} role="alert">{errorMsg}</div>
       )}
     </div>
   )

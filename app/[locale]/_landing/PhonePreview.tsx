@@ -49,14 +49,16 @@ export function PhonePreview({ t, scale = 1 }: Props) {
   ]
 
   return (
+    // Decorative product mock — not the real dashboard, no live data or
+    // interaction. Hidden from assistive tech as one subtree.
     <div
-      className="relative shrink-0"
+      aria-hidden="true"
+      className="relative shrink-0 p-3"
       style={{
         width: 320,
         height: 640,
         borderRadius: 44,
         background: '#1a1310',
-        padding: 12,
         boxShadow:
           '0 50px 80px -30px rgba(58, 36, 25, 0.35), 0 0 0 1px rgba(58, 36, 25, 0.06)',
         transform: scale !== 1 ? `scale(${scale}) rotate(2.5deg)` : 'rotate(2.5deg)',
@@ -65,7 +67,6 @@ export function PhonePreview({ t, scale = 1 }: Props) {
     >
       {/* notch */}
       <div
-        aria-hidden
         className="absolute z-10"
         style={{
           top: 14,
@@ -96,14 +97,14 @@ export function PhonePreview({ t, scale = 1 }: Props) {
             </div>
             <div className="flex items-center gap-1.5">
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-xs font-medium"
-                style={{ background: 'var(--accent)' }}
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-xs font-medium"
+                style={{ background: 'var(--accent)', color: 'var(--on-fill)' }}
               >
                 M
               </div>
               <div
-                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-xs font-medium"
-                style={{ background: 'var(--asset-color-house)' }}
+                className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-xs font-medium"
+                style={{ background: 'var(--asset-color-house)', color: 'var(--on-fill)' }}
               >
                 T
               </div>
@@ -119,10 +120,9 @@ export function PhonePreview({ t, scale = 1 }: Props) {
               {t.phoneMockBalanceCaption}
             </p>
             <p
-              className="m-0 tnum"
+              className="m-0 tnum text-amount-md"
               style={{
-                fontFamily: '-apple-system, "SF Pro Display", system-ui',
-                fontSize: 44,
+                fontFamily: 'var(--font-numeric)',
                 fontWeight: 500,
                 letterSpacing: '-1.5px',
                 color: 'var(--ink)',
@@ -164,7 +164,7 @@ export function PhonePreview({ t, scale = 1 }: Props) {
                 <span
                   className="text-xs tnum"
                   style={{
-                    fontFamily: '-apple-system, "SF Pro Display", system-ui',
+                    fontFamily: 'var(--font-numeric)',
                     color: 'var(--ink)',
                   }}
                 >
@@ -194,10 +194,10 @@ export function PhonePreview({ t, scale = 1 }: Props) {
 
         {/* FAB */}
         <div
-          aria-hidden
-          className="absolute right-[18px] bottom-[18px] w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-medium"
+          className="absolute right-[18px] bottom-[18px] w-12 h-12 rounded-full flex items-center justify-center text-2xl font-medium"
           style={{
             background: 'var(--accent)',
+            color: 'var(--on-fill)',
             boxShadow: '0 8px 16px -4px rgba(224, 136, 86, 0.5)',
           }}
         >
