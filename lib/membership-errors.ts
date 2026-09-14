@@ -1,16 +1,18 @@
 import { describeError } from './errors'
+import type { ActionErrorMessages } from './action-errors'
 import type { Translations } from './i18n/locales/zh-TW'
 
 /**
  * Map a membership server-action error (proposeSwap / cancelSwap / confirmSwap /
  * leaveGroup) to a user-facing localized string. Error codes are the literal
  * strings thrown by `actions/membership.ts`; anything else flows through
- * `describeError` (network detection + generic fallback).
+ * `describeError` (network detection + shared action codes + generic fallback).
  */
 export function describeMembershipError(
   e: unknown,
   t: Translations['settings']['dangerZone']['errors'],
   offlineMessage: string,
+  actionErrors: ActionErrorMessages,
 ): string {
   if (e instanceof Error) {
     switch (e.message) {
@@ -26,5 +28,5 @@ export function describeMembershipError(
       case 'active_trip':           return t.activeTrip
     }
   }
-  return describeError(e, t.fallback, offlineMessage)
+  return describeError(e, t.fallback, offlineMessage, actionErrors)
 }

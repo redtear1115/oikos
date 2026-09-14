@@ -44,7 +44,7 @@ export function MemberListSection({ viewer, partner }: Props) {
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
       } catch (e) {
-        setInviteError(describeError(e, t.common.error, t.common.offlineError))
+        setInviteError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

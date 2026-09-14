@@ -89,11 +89,11 @@ export function useAssetSheetCommon<I extends CommonInitial>(
           await op()
           onSuccess?.()
         } catch (e) {
-          setError(describeError(e, t.common.error, t.common.offlineError))
+          setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
         }
       })
     },
-    [t.common.error, t.common.offlineError],
+    [t.common.error, t.common.offlineError, t.errors.actions],
   )
 
   /** Soft-delete the current asset. No-op in create mode. */

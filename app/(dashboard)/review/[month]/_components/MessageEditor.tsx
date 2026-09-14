@@ -82,7 +82,7 @@ export function MessageEditor({
       setSavedValue(next)
       setState({ kind: 'saved' })
     } catch (err) {
-      const message = describeError(err, tr.errors.saveFailed, t.common.offlineError)
+      const message = describeError(err, tr.errors.saveFailed, t.common.offlineError, t.errors.actions)
       setState({ kind: 'error', message })
     }
   }

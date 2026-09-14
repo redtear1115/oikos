@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { endTrip } from '@/actions/trip'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 interface Props {
   open: boolean
@@ -47,7 +48,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
         onClose()
         router.refresh()
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : t.tripDetail.endFailure)
+        setErr(describeError(e, t.tripDetail.endFailure, t.common.offlineError, t.errors.actions))
       }
     })
   }

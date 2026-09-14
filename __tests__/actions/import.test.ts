@@ -273,7 +273,7 @@ describe('actions/import.ts — round-trip (#607)', () => {
     expect(batch.rolledBackAt).not.toBeNull()
 
     // Second rollback rejects (idempotent guard).
-    await expect(rollbackImportBatch(batchId)).rejects.toThrow('復原')
+    await expect(rollbackImportBatch(batchId)).rejects.toThrow('import_already_rolled_back')
   })
 
   it('getImportHistory returns recent batches with rollbackable flag', async () => {
@@ -331,6 +331,6 @@ describe('actions/import.ts — round-trip (#607)', () => {
         ],
         errors: [],
       }),
-    ).rejects.toThrow('金額')
+    ).rejects.toThrow('import_row_invalid_amount?row=1')
   })
 })

@@ -15,6 +15,7 @@ import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterIncomeMutation } from '@/lib/revalidate'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 export type CreateIncomeInput = IncomeInput
 
@@ -28,7 +29,7 @@ async function getViewerReadContext() {
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('找不到家計簿')
+  if (!context) throw actionError('group_not_found')
 
   return { user, group: context.group, epochWindow: context.window }
 }
@@ -36,7 +37,7 @@ async function getViewerReadContext() {
 export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
   const { user, group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
-  assertMemberInGroup(validated.recipientId, group, '收入歸屬不在家計簿內')
+  assertMemberInGroup(validated.recipientId, group, 'recipient_not_in_group')
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
   const [created] = await db
@@ -66,7 +67,7 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
 export async function editIncome(input: EditIncomeInput): Promise<{ id: string }> {
   const { group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
-  assertMemberInGroup(validated.recipientId, group, '收入歸屬不在家計簿內')
+  assertMemberInGroup(validated.recipientId, group, 'recipient_not_in_group')
   if (validated.assetId) await assertAssetInGroup(validated.assetId, group.id)
 
   const [created] = await db.transaction(async (tx) => {
@@ -79,7 +80,7 @@ export async function editIncome(input: EditIncomeInput): Promise<{ id: string }
         isNull(incomeTransactions.deletedAt),
       ))
       .returning({ id: incomeTransactions.id })
-    if (deleted.length === 0) throw new Error('找不到該筆收入')
+    if (deleted.length === 0) throw actionError('income_not_found')
 
     return await tx
       .insert(incomeTransactions)
@@ -111,7 +112,7 @@ export async function softDeleteIncome(id: string): Promise<void> {
       isNull(incomeTransactions.deletedAt),
     ))
     .limit(1)
-  if (!row) throw new Error('找不到該筆收入')
+  if (!row) throw actionError('income_not_found')
 
   await db
     .update(incomeTransactions)

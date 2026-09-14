@@ -361,6 +361,6 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     await db.delete(profiles).where(eq(profiles.id, userId2))
 
     expect(err).not.toBeNull()
-    expect(err!.message).toMatch(/旅行/)
+    expect(err!.message).toMatch('trip_missing')
   })
 })

@@ -7,6 +7,7 @@ import { requireViewer } from '@/lib/auth/viewer'
 import { revalidateAfterProfileMutation } from '@/lib/revalidate'
 import { validateName } from '@/lib/validators'
 import type { SplitType } from '@/lib/balance'
+import { actionError } from '@/lib/action-errors'
 
 export async function updateDisplayName(name: string): Promise<{ ok: true }> {
   const { user } = await requireViewer()
@@ -19,7 +20,7 @@ export async function updateDisplayName(name: string): Promise<{ ok: true }> {
     .where(eq(profiles.id, user.id))
     .returning({ id: profiles.id })
 
-  if (result.length === 0) throw new Error('找不到個人資料')
+  if (result.length === 0) throw actionError('profile_not_found')
 
   // Display name shows in headers / rows across the app.
   revalidateAfterProfileMutation()
@@ -32,7 +33,7 @@ export async function updateDefaultSplitType(splitType: SplitType): Promise<{ ok
   const { user } = await requireViewer()
 
   if (!VALID_SPLIT_TYPES.includes(splitType)) {
-    throw new Error('分攤方式無效')
+    throw actionError('split_type_invalid')
   }
 
   const result = await db
@@ -41,7 +42,7 @@ export async function updateDefaultSplitType(splitType: SplitType): Promise<{ ok
     .where(eq(profiles.id, user.id))
     .returning({ id: profiles.id })
 
-  if (result.length === 0) throw new Error('找不到個人資料')
+  if (result.length === 0) throw actionError('profile_not_found')
 
   revalidateAfterProfileMutation()
   return { ok: true }

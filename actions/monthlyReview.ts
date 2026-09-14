@@ -6,6 +6,7 @@ import { requireViewerGroup } from '@/lib/auth/viewer'
 import { validateMessageBody, formatYearMonth } from '@/lib/monthlyReview'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { actionError } from '@/lib/action-errors'
 
 export interface UpsertMonthlyReviewMessageInput {
   /** Message is *given to* this month (future-facing — see schema comment). */
@@ -40,7 +41,7 @@ export async function upsertMonthlyReviewMessage(
     .limit(1)
 
   if (existing?.lockedAt) {
-    throw new Error('這個月的留言已鎖定，無法再修改')
+    throw actionError('review_month_locked')
   }
 
   let id: string
@@ -55,7 +56,7 @@ export async function upsertMonthlyReviewMessage(
         isNull(monthlyReviewMessages.lockedAt),
       ))
       .returning({ id: monthlyReviewMessages.id })
-    if (!updated) throw new Error('留言已鎖定，無法再修改')
+    if (!updated) throw actionError('review_message_locked')
     id = updated.id
   } else {
     const [created] = await db

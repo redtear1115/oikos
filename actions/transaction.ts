@@ -34,6 +34,7 @@ import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { convertAmount, type CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 export interface CreateTransactionInput {
   amount: number              // integer NTD, > 0
@@ -64,7 +65,7 @@ export async function createTransaction(
   })
 
   // Payer must be in group
-  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
+  assertMemberInGroup(input.payerId, group, 'payer_not_in_group')
 
   // Asset ownership + not-deleted check (only if assetId provided)
   if (validated.assetId) {
@@ -85,7 +86,7 @@ export async function createTransaction(
       (r) => r.fromCurrency === inputCurrency && r.toCurrency === group.baseCurrency,
     )
     if (!rate) {
-      throw new Error(`未設定 ${inputCurrency.toUpperCase()} → ${group.baseCurrency.toUpperCase()} 匯率`)
+      throw actionError('fx_rate_not_set', { from: inputCurrency.toUpperCase(), to: group.baseCurrency.toUpperCase() })
     }
     baseAmount = convertAmount({
       amount: validated.amount,
@@ -105,7 +106,7 @@ export async function createTransaction(
       .from(trips)
       .where(eq(trips.id, input.tripId))
       .limit(1)
-    if (!t || t.groupId !== group.id) throw new Error('旅行不存在')
+    if (!t || t.groupId !== group.id) throw actionError('trip_missing')
   }
 
   const result = await db.transaction(async (tx) => {
@@ -175,7 +176,7 @@ export async function softDeleteTransaction(transactionId: string): Promise<void
         isNull(cashTransactions.deletedAt),
       ))
       .returning({ id: cashTransactions.id })
-    if (updated.length === 0) throw new Error('找不到該筆紀錄')
+    if (updated.length === 0) throw actionError('record_not_found')
     await recalcGroupBalance(group.id, tx)
   })
 
@@ -209,7 +210,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
     splitRatioA: input.splitRatioA ?? null,
   })
 
-  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
+  assertMemberInGroup(input.payerId, group, 'payer_not_in_group')
 
   // 1. Look up old row to (a) prove existence, (b) get its assetId for the
   //    "kept zombie" exemption check.
@@ -222,7 +223,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
       isNull(cashTransactions.deletedAt),
     ))
     .limit(1)
-  if (!oldRow) throw new Error('找不到該筆紀錄')
+  if (!oldRow) throw actionError('record_not_found')
 
   // 2. Asset check — only when newly assigning (or changing) to a different asset.
   if (validated.assetId && validated.assetId !== oldRow.assetId) {
@@ -242,7 +243,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
       (r) => r.fromCurrency === editInputCurrency && r.toCurrency === group.baseCurrency,
     )
     if (!rate) {
-      throw new Error(`未設定 ${editInputCurrency.toUpperCase()} → ${group.baseCurrency.toUpperCase()} 匯率`)
+      throw actionError('fx_rate_not_set', { from: editInputCurrency.toUpperCase(), to: group.baseCurrency.toUpperCase() })
     }
     editBaseAmount = convertAmount({
       amount: validated.amount,
@@ -262,7 +263,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
       .from(trips)
       .where(eq(trips.id, input.tripId))
       .limit(1)
-    if (!t || t.groupId !== group.id) throw new Error('旅行不存在')
+    if (!t || t.groupId !== group.id) throw actionError('trip_missing')
   }
 
   // 3. Soft-delete old + insert new in one tx. Keep .returning() on the soft-delete
@@ -279,7 +280,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
         isNull(cashTransactions.deletedAt),
       ))
       .returning({ id: cashTransactions.id })
-    if (deleted.length === 0) throw new Error('找不到該筆紀錄')
+    if (deleted.length === 0) throw actionError('record_not_found')
 
     const inserted = await tx
       .insert(cashTransactions)
@@ -366,7 +367,7 @@ export async function loadMoreTransactions(
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('找不到家計簿')
+  if (!context) throw actionError('group_not_found')
   const { group, window: epochWindow } = context
 
   const resolved = resolveWireFilter(filterWire, user.id, group)
@@ -399,7 +400,7 @@ export async function loadMoreFeedAll(
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('找不到家計簿')
+  if (!context) throw actionError('group_not_found')
   const { group, window: epochWindow } = context
 
   const resolved = resolveWireFilter(filterWire, user.id, group)
@@ -468,7 +469,7 @@ export async function loadMoreTransactionsForAsset(
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('找不到家計簿')
+  if (!context) throw actionError('group_not_found')
   const { group, window: epochWindow } = context
 
   const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit, epochWindow)

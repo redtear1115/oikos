@@ -9,6 +9,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { validateSettlementInput } from '@/lib/validators'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 export interface EditSettlementInput {
   oldId: string
@@ -37,7 +38,7 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
     note: input.note,
   })
 
-  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
+  assertMemberInGroup(input.payerId, group, 'payer_not_in_group')
 
   const [created] = await db.transaction(async (tx) => {
     const inserted = await tx
@@ -78,7 +79,7 @@ export async function softDeleteSettlement(settlementId: string): Promise<void> 
         isNull(settlements.deletedAt),
       ))
       .returning({ id: settlements.id })
-    if (updated.length === 0) throw new Error('找不到該筆紀錄')
+    if (updated.length === 0) throw actionError('record_not_found')
     await recalcGroupBalance(group.id, tx)
   })
 
@@ -95,7 +96,7 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
     note: input.note,
   })
 
-  assertMemberInGroup(input.payerId, group, '付款人不在家計簿內')
+  assertMemberInGroup(input.payerId, group, 'payer_not_in_group')
 
   const [created] = await db.transaction(async (tx) => {
     const deleted = await tx
@@ -107,7 +108,7 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
         isNull(settlements.deletedAt),
       ))
       .returning({ id: settlements.id })
-    if (deleted.length === 0) throw new Error('找不到該筆紀錄')
+    if (deleted.length === 0) throw actionError('record_not_found')
 
     const inserted = await tx
       .insert(settlements)

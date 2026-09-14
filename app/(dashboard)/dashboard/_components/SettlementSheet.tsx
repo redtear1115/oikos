@@ -74,7 +74,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.({ savedAmount: n, edit: true })
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -89,7 +89,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.({ deleted: true })
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

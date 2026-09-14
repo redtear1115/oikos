@@ -47,7 +47,7 @@ describe('validateAnswersBatch', () => {
       { questionKey: 'future', choiceKey: 'a' },
       { questionKey: 'risk', choiceKey: 'b' },
       { questionKey: 'transparency', choiceKey: 'c' },
-    ])).toThrow(/範圍/)
+    ])).toThrow('quiz_question_out_of_range')
   })
 
   it('rejects a choice outside a/b/c', () => {
@@ -55,7 +55,7 @@ describe('validateAnswersBatch', () => {
       { questionKey: 'impulse', choiceKey: 'd' },
       { questionKey: 'risk', choiceKey: 'b' },
       { questionKey: 'transparency', choiceKey: 'c' },
-    ])).toThrow(/選項/)
+    ])).toThrow('quiz_choice_out_of_range')
   })
 
   it('rejects duplicates of the same question_key', () => {
@@ -63,21 +63,21 @@ describe('validateAnswersBatch', () => {
       { questionKey: 'impulse', choiceKey: 'a' },
       { questionKey: 'impulse', choiceKey: 'b' },
       { questionKey: 'transparency', choiceKey: 'c' },
-    ])).toThrow(/重複/)
+    ])).toThrow('quiz_question_duplicate')
   })
 
   it('rejects a batch that misses one question or has too many', () => {
     expect(() => validateAnswersBatch(SESSION_KEYS, [
       { questionKey: 'impulse', choiceKey: 'a' },
       { questionKey: 'risk', choiceKey: 'b' },
-    ])).toThrow(/3 題/)
+    ])).toThrow('quiz_answers_incomplete')
 
     expect(() => validateAnswersBatch(SESSION_KEYS, [
       { questionKey: 'impulse', choiceKey: 'a' },
       { questionKey: 'risk', choiceKey: 'b' },
       { questionKey: 'transparency', choiceKey: 'c' },
       { questionKey: 'transparency', choiceKey: 'a' },
-    ])).toThrow(/3 題/)
+    ])).toThrow('quiz_answers_incomplete')
   })
 })
 

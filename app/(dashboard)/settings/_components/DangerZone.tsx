@@ -139,7 +139,7 @@ function SwapPendingBanner({
         await fn()
         onChanged()
       } catch (e) {
-        setErrorMsg(banner.errorPrefix + describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(banner.errorPrefix + describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }

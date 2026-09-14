@@ -73,7 +73,7 @@ export function RevealableRow({ label, hasValue, revealAction, last, valueStyle 
         setRevealed(value)
         setError(null)
       } catch (e) {
-        setError(describeError(e, t.assetDetail.reveal.error, t.common.offlineError))
+        setError(describeError(e, t.assetDetail.reveal.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

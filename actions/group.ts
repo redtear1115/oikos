@@ -10,6 +10,7 @@ import { revalidateSettings } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
 import { validateName } from '@/lib/validators'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 export async function getMyGroup() {
   // Read-only "is the viewer in a group?" probe used by client RTV bootstrap.
@@ -89,7 +90,7 @@ export async function updateGroupName(name: string): Promise<{ ok: true }> {
 
 export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true }> {
   if (!Number.isInteger(ratioA) || ratioA < 1 || ratioA > 99) {
-    throw new Error('分攤比例必須為 1–99 的整數')
+    throw actionError('split_ratio_invalid')
   }
 
   const { group } = await requireViewerGroup()

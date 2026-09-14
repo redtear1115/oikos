@@ -54,7 +54,7 @@ describe('createRule', () => {
       amount: 1000, category: 'other', paidBy: 'stranger', splitType: 'half',
       description: 'x', intervalMonths: 1, dayOfMonth: 1,
       startsOn: '2026-05-07', endsOn: null,
-    })).rejects.toThrow(/付款人/)
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   it('rejects when settle category provided', async () => {
@@ -113,7 +113,7 @@ describe('updateRule', () => {
       paidBy: 'user-a', splitType: 'half', description: 'x',
       intervalMonths: 1, dayOfMonth: 1,
       startsOn: '2026-05-01', endsOn: null,
-    })).rejects.toThrow(/找不到/)
+    })).rejects.toThrow('recurring_rule_not_found')
   })
 })
 
@@ -180,7 +180,7 @@ describe('softDeleteRule', () => {
   it('throws when rule not in viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteRule('rule-x')).rejects.toThrow(/找不到/)
+    await expect(softDeleteRule('rule-x')).rejects.toThrow('recurring_rule_not_found')
   })
 })
 
@@ -218,7 +218,7 @@ describe('confirmPending', () => {
   it('throws when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(confirmPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
+    await expect(confirmPending('pend-x')).rejects.toThrow('pending_expense_not_found')
   })
 
   it('throws race message when proposedPaidBy left the group', async () => {
@@ -231,7 +231,7 @@ describe('confirmPending', () => {
       category: 'housing', assetId: null,
     }])
 
-    await expect(confirmPending('pend-1')).rejects.toThrow(/partner 剛剛已處理/)
+    await expect(confirmPending('pend-1')).rejects.toThrow('pending_expense_partner_handled')
     // No insert / update should have run when race-guard fired
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
@@ -283,7 +283,7 @@ describe('editAndConfirmPending', () => {
     await expect(editAndConfirmPending({
       pendingId: 'pend-1',
       overrides: { paidBy: 'stranger' },
-    })).rejects.toThrow(/付款人/)
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   it('throws when pending already resolved or skipped', async () => {
@@ -292,7 +292,7 @@ describe('editAndConfirmPending', () => {
     await expect(editAndConfirmPending({
       pendingId: 'pend-x',
       overrides: { amount: 30000 },
-    })).rejects.toThrow(/已被處理|找不到/)
+    })).rejects.toThrow('pending_expense_not_found')
   })
 })
 
@@ -309,6 +309,6 @@ describe('skipPending', () => {
   it('throws when already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(skipPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
+    await expect(skipPending('pend-x')).rejects.toThrow('pending_expense_not_found')
   })
 })

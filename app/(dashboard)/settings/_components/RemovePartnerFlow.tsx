@@ -70,7 +70,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
         router.refresh()
         router.push('/dashboard')
       } catch (e) {
-        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }

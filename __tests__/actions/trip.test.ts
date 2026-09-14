@@ -185,7 +185,7 @@ describe('createTrip', () => {
     await expect(createTrip({
       name: 'Past trip',
       startDate: '2026-05-09',  // before epoch started 2026-05-10
-    })).rejects.toThrow('不可建在過去章節')
+    })).rejects.toThrow('trip_in_past_epoch')
   })
 
   it('rejects when name is empty', async () => {
@@ -196,7 +196,7 @@ describe('createTrip', () => {
     await expect(createTrip({
       name: '',
       startDate: '2026-05-10',
-    })).rejects.toThrow('旅行名稱為空')
+    })).rejects.toThrow('trip_name_empty')
   })
 
   it('rejects when name is whitespace only', async () => {
@@ -207,7 +207,7 @@ describe('createTrip', () => {
     await expect(createTrip({
       name: '   ',
       startDate: '2026-05-10',
-    })).rejects.toThrow('旅行名稱為空')
+    })).rejects.toThrow('trip_name_empty')
   })
 
   it('rejects when endDate < startDate', async () => {
@@ -219,7 +219,7 @@ describe('createTrip', () => {
       name: '倒退旅行',
       startDate: '2026-05-15',
       endDate: '2026-05-14',
-    })).rejects.toThrow('結束日期不可早於起始日')
+    })).rejects.toThrow('trip_end_before_start')
   })
 })
 
@@ -275,7 +275,7 @@ describe('updateTrip', () => {
     await expect(updateTrip({
       tripId: created.id,
       startDate: '2026-05-09',  // before epoch started 2026-05-10
-    })).rejects.toThrow('不可移動至過去章節')
+    })).rejects.toThrow('trip_move_to_past_epoch')
   })
 
   it('succeeds when startDate is on or after currentEpochStartedAt', async () => {
@@ -434,7 +434,7 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     const beforeBalance = await readBalance(refs.groupId)
 
     await expect(endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
-      .rejects.toThrow('找不到進行中的旅行')
+      .rejects.toThrow('active_trip_not_found')
 
     const afterRows = await listSummaryRows(refs.groupId, trip.id)
     expect(afterRows).toHaveLength(beforeRows.length)

@@ -11,6 +11,7 @@ import { fetchInvoicesByCarrier } from '@/lib/invoice/api'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateSettings } from '@/lib/revalidate'
+import { actionError, type ActionErrorCode } from '@/lib/action-errors'
 
 /**
  * v0.9.0 Phase A — credential CRUD only.
@@ -24,18 +25,20 @@ import { revalidateSettings } from '@/lib/revalidate'
  *     and may be UPDATEd in place).
  */
 
-// Known 財政部 MoF API error codes mapped to user-readable Chinese messages.
-// Unknown codes fall through to a generic 驗證失敗 message in `mapMofErrorToMessage`.
+// Known 財政部 MoF API error codes mapped to action error codes (#1156 — the
+// user-readable sentences live in `errors.actions.invoice_mof_*` in each locale).
+// Unknown codes fall through to `invoice_mof_verify_failed` (carries the raw code).
 // Add new codes here as we encounter them — keeping this as a const Record (vs a
 // switch) keeps additions a one-line change and makes the full coverage greppable.
-const MOF_ERROR_MESSAGES: Record<string, string> = {
-  '919': '條碼或驗證碼有誤，請確認',
-  '953': '服務暫時無法使用，稍後再試',
-  '998': '服務暫時無法使用，稍後再試',
+const MOF_ERROR_CODES: Record<string, ActionErrorCode> = {
+  '919': 'invoice_mof_code_invalid',
+  '953': 'invoice_mof_unavailable',
+  '998': 'invoice_mof_unavailable',
 }
 
-function mapMofErrorToMessage(code: string): string {
-  return MOF_ERROR_MESSAGES[code] ?? `驗證失敗（${code}）`
+function mapMofError(code: string): Error {
+  const mapped = MOF_ERROR_CODES[code]
+  return mapped ? actionError(mapped) : actionError('invoice_mof_verify_failed', { code })
 }
 
 /**
@@ -58,7 +61,7 @@ async function verifyCarrierAgainstApi(barcode: string, verificationCode: string
   })
 
   if (!result.ok) {
-    throw new Error(mapMofErrorToMessage(result.code))
+    throw mapMofError(result.code)
   }
 }
 
@@ -86,7 +89,7 @@ export async function createInvoiceCredential(
       isNull(invoiceCredentials.deletedAt),
     ))
     .limit(1)
-  if (existing) throw new Error('此條碼已綁定')
+  if (existing) throw actionError('invoice_barcode_already_bound')
 
   await verifyCarrierAgainstApi(validated.barcode, validated.verificationCode)
 
@@ -120,7 +123,7 @@ export async function renameInvoiceCredential(
   let trimmed: string | null = null
   if (nickname !== null && nickname !== undefined) {
     const t = nickname.trim()
-    if (t.length > 16) throw new Error('暱稱最長 16 字')
+    if (t.length > 16) throw actionError('invoice_nickname_too_long')
     trimmed = t.length > 0 ? t : null
   }
 
@@ -134,7 +137,7 @@ export async function renameInvoiceCredential(
       isNull(invoiceCredentials.deletedAt),
     ))
     .returning({ id: invoiceCredentials.id })
-  if (updated.length === 0) throw new Error('找不到該載具')
+  if (updated.length === 0) throw actionError('invoice_carrier_not_found')
 
   revalidateSettings()
 }
@@ -170,7 +173,7 @@ export async function refreshInvoiceCredential(
         isNull(invoiceCredentials.deletedAt),
       ))
       .limit(1)
-    if (!existing) throw new Error('找不到該載具')
+    if (!existing) throw actionError('invoice_carrier_not_found')
 
     const validated = validateInvoiceCarrierInput({
       barcode: existing.barcode,
@@ -190,7 +193,7 @@ export async function refreshInvoiceCredential(
         isNull(invoiceCredentials.deletedAt),
       ))
       .returning({ id: invoiceCredentials.id })
-    if (deleted.length === 0) throw new Error('找不到該載具')
+    if (deleted.length === 0) throw actionError('invoice_carrier_not_found')
 
     return await tx
       .insert(invoiceCredentials)
@@ -227,7 +230,7 @@ export async function deleteInvoiceCredential(id: string): Promise<void> {
       isNull(invoiceCredentials.deletedAt),
     ))
     .returning({ id: invoiceCredentials.id })
-  if (updated.length === 0) throw new Error('找不到該載具')
+  if (updated.length === 0) throw actionError('invoice_carrier_not_found')
 
   revalidateSettings()
 }

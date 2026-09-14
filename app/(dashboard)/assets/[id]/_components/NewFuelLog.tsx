@@ -166,7 +166,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         }
         onClose()
       } catch (err) {
-        setError(describeError(err, t.common.error, t.common.offlineError))
+        setError(describeError(err, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -179,7 +179,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         await softDeleteFuelLog(initial.fuelLogId)
         onClose()
       } catch (err) {
-        setError(describeError(err, t.common.error, t.common.offlineError))
+        setError(describeError(err, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

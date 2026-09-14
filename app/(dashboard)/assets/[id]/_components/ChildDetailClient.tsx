@@ -62,7 +62,7 @@ function RevealableRow({
         setRevealed(value)
         setError(null)
       } catch (e) {
-        setError(describeError(e, t.assetDetail.child.revealError, t.common.offlineError))
+        setError(describeError(e, t.assetDetail.child.revealError, t.common.offlineError, t.errors.actions))
       }
     })
   }

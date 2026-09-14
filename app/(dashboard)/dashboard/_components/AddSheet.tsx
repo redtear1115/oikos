@@ -39,6 +39,7 @@ import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
 import { loadedSplitRatioToViewerShare, toMemberAShare, toViewerShare } from '@/lib/splitRatio'
+import { isActionError } from '@/lib/action-errors'
 
 export interface AddSheetInitial {
   id: string
@@ -391,11 +392,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           onMutated?.({ isFirstTransaction, savedAmount: n, edit: isEdit || isPending })
           onClose()
         },
-        onError: (msg) => {
+        onError: (_msg, e) => {
           // Race: partner confirmed/skipped this pending in another tab/device
-          // before our edit-confirm landed. Action errors in that case contain
-          // '待確認支出' (matches both '已被處理或找不到' and '已被其他裝置處理').
-          if (isPending && msg.includes('待確認支出')) {
+          // before our edit-confirm landed: `pending_expense_not_found` (pre-check)
+          // or `pending_expense_handled_elsewhere` (in-tx guard). Matched by code,
+          // not by the localized message, so it works in every locale (#1156).
+          if (isPending && isActionError(e, 'pending_expense_not_found', 'pending_expense_handled_elsewhere')) {
             onMutated?.()
             onClose()
             onRaceResolved?.(t.recurringExpense.raceMessage)

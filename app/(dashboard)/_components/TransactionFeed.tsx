@@ -85,7 +85,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }, [filter, loader, pageSize, monthKey, t])
@@ -114,7 +114,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

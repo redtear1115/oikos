@@ -120,7 +120,7 @@ describe('createTransaction', () => {
     await expect(createTransaction({
       amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-stranger', transactedAt: '2026-05-16',
-    })).rejects.toThrow('付款人不在家計簿內')
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   it('persists trimmed notes on insert', async () => {
@@ -202,7 +202,7 @@ describe('editTransaction', () => {
       oldId: 'tx-missing', amount: 200, description: 'x',
       category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: '2026-05-16',
-    })).rejects.toThrow('找不到該筆紀錄')
+    })).rejects.toThrow('record_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -339,7 +339,7 @@ describe('softDeleteTransaction', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
-    await expect(softDeleteTransaction('tx-missing')).rejects.toThrow('找不到該筆紀錄')
+    await expect(softDeleteTransaction('tx-missing')).rejects.toThrow('record_not_found')
   })
 
   it('throws unauthorized when no user', async () => {

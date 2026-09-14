@@ -71,7 +71,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         onMutated({ savedAmount: parsed })
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
