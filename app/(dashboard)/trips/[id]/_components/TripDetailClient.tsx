@@ -159,7 +159,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             }}
             className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit cursor-pointer"
             style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)', border: 'none' }}
-            aria-label={t.tripList.backAriaLabel}
+            aria-label="返回旅行列表"
           >
             <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
               <path
@@ -170,7 +170,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 strokeLinejoin="round"
               />
             </svg>
-            <span>{t.tripList.title}</span>
+            <span>旅行</span>
           </button>
           {!isPast && !isEnded ? (
             <button
@@ -216,7 +216,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-3)' }}>
               {trip.endDate
                 ? `${trip.startDate} – ${trip.endDate}`
-                : t.tripList.dateRangeActive.replace('{startDate}', trip.startDate)}
+                : `${trip.startDate} 起,進行中`}
             </p>
           </div>
           {isEnded && (
@@ -227,7 +227,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 color: 'var(--ink-2)',
               }}
             >
-              {t.tripList.endedTag}
+              已結束
             </span>
           )}
         </div>

@@ -66,7 +66,7 @@ export function TrustContent() {
           <span className="text-sm shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</span>
         </button>
         {exportError && (
-          <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit-text)' }}>
+          <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
             {exportError}
           </div>
         )}

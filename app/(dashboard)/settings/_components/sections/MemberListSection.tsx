@@ -80,7 +80,7 @@ export function MemberListSection({ viewer, partner }: Props) {
             </div>
           )}
           {inviteError && (
-            <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--debit-text)' }}>
+            <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--debit)' }}>
               {inviteError}
             </div>
           )}
