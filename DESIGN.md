@@ -192,7 +192,7 @@ This system explicitly rejects the things a money app reflexively becomes. No co
 - Editorial serif (Fraunces) for voice; humanist CJK sans (Noto Sans TC) for the work.
 - Generous, friendly radii (10–20px) on a tight, calm, even-px type scale.
 - Gentle, reduced-motion-aware motion; nothing bounces.
-- A deliberately tiny component vocabulary: four primitives, no more.
+- A deliberately tiny component vocabulary: the primitives in §5 and no more (the count lives there, so adding one means editing one place).
 - Two equals: no UI ever favors or shames one partner.
 
 ## 2. Colors
