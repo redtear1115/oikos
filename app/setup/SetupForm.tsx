@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createGroup } from '@/actions/group'
 import { createInvite } from '@/actions/invite'
@@ -11,7 +11,6 @@ import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
 import InviteQr from '@/app/setup/InviteQr'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
-const NAME_SUGGESTIONS = ['我們倆', '○○家', '日日', 'Home', '一起']
 const NAME_MAX = 20
 const INSTALL_GUIDE_SEEN_KEY = 'oikos_install_guide_seen'
 
@@ -25,6 +24,10 @@ interface CreatedGroup {
 export default function SetupForm({ t }: { t: Translations }) {
   const trust = t.trust
   const invite = t.setup.invite
+  const nameT = t.setup.name
+  const nameHeadingId = useId()
+  const nameHintId = useId()
+  const nameCountId = useId()
   const router = useRouter()
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
@@ -58,7 +61,7 @@ export default function SetupForm({ t }: { t: Translations }) {
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = name.trim()
-    if (!trimmed) { setError('請輸入名稱'); return }
+    if (!trimmed) { setError(nameT.required); return }
     setError('')
     setStep('trust')
   }
@@ -74,8 +77,10 @@ export default function SetupForm({ t }: { t: Translations }) {
         setGroup({ id: g.id, name: g.name })
         setInviteUrl(url)
         setStep('invite')
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '發生錯誤')
+      } catch {
+        // Always the localised message: a raw server `Error.message` here was
+        // hardcoded zh-TW, so en / ja users read Chinese (#1166).
+        setError(nameT.failed)
       }
     })
   }
@@ -189,7 +194,7 @@ export default function SetupForm({ t }: { t: Translations }) {
           <TrustCommitments t={trust} />
 
           {error && (
-            <p className="text-sm" style={{ color: 'var(--debit-text)' }}>{error}</p>
+            <p role="alert" className="text-sm" style={{ color: 'var(--debit-text)' }}>{error}</p>
           )}
 
           <button
@@ -301,11 +306,11 @@ export default function SetupForm({ t }: { t: Translations }) {
             {invite.skip}
           </button>
 
-          {toast && (
-            <div className="text-xs text-center" style={{ color: 'var(--ink-2)' }}>
-              {toast}
-            </div>
-          )}
+          {/* Live region stays mounted so screen readers announce the toast
+              when its text appears (copy / share feedback). */}
+          <div role="status" aria-live="polite" className="text-xs text-center" style={{ color: 'var(--ink-2)' }}>
+            {toast}
+          </div>
         </div>
       </main>
       {installGuideJsx}
@@ -322,13 +327,14 @@ export default function SetupForm({ t }: { t: Translations }) {
       <form onSubmit={handleNameSubmit} className="max-w-sm w-full mx-auto flex flex-col gap-6">
         <div>
           <h1
+            id={nameHeadingId}
             className="text-page leading-tight"
             style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
           >
-            幫你們的家計簿取個名字
+            {nameT.heading}
           </h1>
-          <p className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>
-            之後可以隨時改。簡短一點比較好記。
+          <p id={nameHintId} className="text-sm mt-2" style={{ color: 'var(--ink-2)' }}>
+            {nameT.subtitle}
           </p>
         </div>
 
@@ -343,16 +349,21 @@ export default function SetupForm({ t }: { t: Translations }) {
               onChange={(e) => setName(e.target.value.slice(0, NAME_MAX))}
               maxLength={NAME_MAX}
               placeholder=""
+              // The heading is the field's visible label; the subtitle and
+              // counter describe it (#1166 — was announced as "edit text, blank").
+              aria-labelledby={nameHeadingId}
+              aria-describedby={`${nameHintId} ${nameCountId}`}
+              aria-invalid={error ? true : undefined}
               className="flex-1 bg-transparent border-0 outline-none text-base"
               style={{ color: 'var(--ink)' }}
               autoFocus
             />
-            <span className="text-xs tnum shrink-0" style={{ color: 'var(--ink-3)' }}>
+            <span id={nameCountId} className="text-xs tnum shrink-0" style={{ color: 'var(--ink-3)' }}>
               {name.length}/{NAME_MAX}
             </span>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {NAME_SUGGESTIONS.map((s) => (
+            {nameT.suggestions.map((s) => (
               <button
                 type="button"
                 key={s}
@@ -371,7 +382,7 @@ export default function SetupForm({ t }: { t: Translations }) {
         </div>
 
         {error && (
-          <p className="text-sm" style={{ color: 'var(--debit-text)' }}>{error}</p>
+          <p role="alert" className="text-sm" style={{ color: 'var(--debit-text)' }}>{error}</p>
         )}
 
         <button
@@ -380,7 +391,7 @@ export default function SetupForm({ t }: { t: Translations }) {
           className="h-12 rounded-xl border-0 text-sm font-medium cursor-pointer disabled:opacity-50"
           style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
-          下一步
+          {nameT.next}
         </button>
       </form>
     </main>

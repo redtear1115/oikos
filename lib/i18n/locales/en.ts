@@ -973,6 +973,7 @@ export const en: Translations = {
     title: 'Past chapters',
     back: 'Back',
     intro: 'This ledger has lived through several chapters. Each one is what the two of you wrote then.',
+    readOnlyNote: 'Chapters you have turned past stay just as they were. You can come back to look, but they no longer change.',
     currentChapter: 'Now · with {partner}',
     currentChapterSolo: 'Now · on your own',
     chapterRange: '{start} – {end}',
@@ -1129,7 +1130,6 @@ export const en: Translations = {
     portability: {
       heading: 'Take it all with you, anytime',
       body: 'We won\'t lock you in. If you ever want to leave, you can take everything with you.',
-      comingSoonHint: 'Export coming soon',
     },
     backup: {
       heading: 'We hold them safe for you',
@@ -1157,6 +1157,14 @@ export const en: Translations = {
 
   // TODO: unconfirmed translation — needs native review.
   setup: {
+    name: {
+      heading: 'Give your ledger a name',
+      subtitle: 'You can change it anytime. Short names are easier to remember.',
+      suggestions: ['Us two', 'Home', 'Our place', 'Day by day', 'Together'],
+      next: 'Next',
+      required: 'Please enter a name',
+      failed: 'Something went wrong',
+    },
     invite: {
       heading: 'Your ledger is ready — bring your partner in',
       subtitle: 'Once they join, you can track "{name}" together.',

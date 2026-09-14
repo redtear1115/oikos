@@ -1260,6 +1260,9 @@ export type Translations = {
     withPartner: string
     soloLabel: string
     enterCta: string
+    /** Why a past chapter can be opened but not changed (#1190). Product
+     *  stance, not a technical limit — see epoch-readonly-design.md. */
+    readOnlyNote: string
     /** Banner copy across the top of dashboard / records when a past epoch is pinned. */
     bannerHeading: string
     bannerExitCta: string
@@ -1445,7 +1448,6 @@ export type Translations = {
     portability: {
       heading: string
       body: string
-      comingSoonHint: string
     }
     backup: {
       heading: string
@@ -1475,6 +1477,17 @@ export type Translations = {
   /** Setup flow's invite step (#1017) — face-to-face QR path alongside the
    *  existing link-share path. */
   setup: {
+    /** Step 1 — naming the ledger (#1166). */
+    name: {
+      heading: string
+      subtitle: string
+      /** Tap-to-fill examples. Localised, not translated — each locale picks
+       *  names that feel natural there. */
+      suggestions: readonly string[]
+      next: string
+      required: string
+      failed: string
+    }
     invite: {
       heading: string
       /** Template with `{name}` placeholder for the group name. */
@@ -3550,6 +3563,7 @@ export const zhTW: Translations = {
     title: '過去的時光',
     back: '返回',
     intro: '這本帳本有過好幾段時光。每一段都是當時的你們留下來的。',
+    readOnlyNote: '翻過去的章節會照當時的樣子留著，可以回來看，不再修改。',
     currentChapter: '現在 · 跟 {partner}',
     currentChapterSolo: '現在 · 一個人',
     chapterRange: '{start} – {end}',
@@ -3706,7 +3720,6 @@ export const zhTW: Translations = {
     portability: {
       heading: '隨時都能整包帶走',
       body: '我們不會把你們綁在這裡。日後想離開，所有紀錄都能整批帶走。',
-      comingSoonHint: '匯出功能即將推出',
     },
     backup: {
       heading: '我們替你們守著',
@@ -3733,6 +3746,14 @@ export const zhTW: Translations = {
   },
 
   setup: {
+    name: {
+      heading: '幫你們的家計簿取個名字',
+      subtitle: '之後可以隨時改。簡短一點比較好記。',
+      suggestions: ['我們倆', '○○家', '日日', 'Home', '一起'],
+      next: '下一步',
+      required: '請輸入名稱',
+      failed: '發生錯誤',
+    },
     invite: {
       heading: '帳本準備好了，讓對方也進來',
       subtitle: '對方加入後，就能一起記「{name}」。',

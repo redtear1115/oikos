@@ -965,6 +965,7 @@ export const zhCN: Translations = {
     title: '过去的时光',
     back: '返回',
     intro: '这本账本有过好几段时光。每一段都是当时的你们留下来的。',
+    readOnlyNote: '翻过去的章节会照当时的样子留着，可以回来看，不再修改。',
     currentChapter: '现在 · 跟 {partner}',
     currentChapterSolo: '现在 · 一个人',
     chapterRange: '{start} – {end}',
@@ -1121,7 +1122,6 @@ export const zhCN: Translations = {
     portability: {
       heading: '随时都能整包带走',
       body: '我们不会把你们绑在这里。日后想离开，所有记录都能整批带走。',
-      comingSoonHint: '导出功能即将推出',
     },
     backup: {
       heading: '我们替你们守着',
@@ -1148,6 +1148,14 @@ export const zhCN: Translations = {
   },
 
   setup: {
+    name: {
+      heading: '给你们的家计簿取个名字',
+      subtitle: '之后可以随时改。简短一点比较好记。',
+      suggestions: ['我们俩', '○○家', '日日', 'Home', '一起'],
+      next: '下一步',
+      required: '请输入名称',
+      failed: '出错了',
+    },
     invite: {
       heading: '账本准备好了，让对方也进来',
       subtitle: '对方加入后，就能一起记「{name}」。',

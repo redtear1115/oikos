@@ -971,6 +971,7 @@ export const ja: Translations = {
     title: '過ぎた時間',
     back: '戻る',
     intro: 'この家計簿には、いくつもの時間が積もっています。どれもその時のふたりの記録です。',
+    readOnlyNote: '過ぎた時間は、その時のまま残ります。見返すことはできますが、書き換えることはありません。',
     currentChapter: 'いま · {partner} と',
     currentChapterSolo: 'いま · ひとりで',
     chapterRange: '{start} – {end}',
@@ -1127,7 +1128,6 @@ export const ja: Translations = {
     portability: {
       heading: 'いつでも、まるごと持ち出せます',
       body: 'お二人を縛りつけることはありません。離れる時も、すべて持っていけます。',
-      comingSoonHint: 'エクスポート機能、近日公開',
     },
     backup: {
       heading: '私たちが、お預かりします',
@@ -1155,6 +1155,14 @@ export const ja: Translations = {
 
   // TODO: unconfirmed translation — needs native review.
   setup: {
+    name: {
+      heading: '家計簿に名前をつけましょう',
+      subtitle: 'あとからいつでも変えられます。短いほうが覚えやすいです。',
+      suggestions: ['ふたり', '○○家', 'わが家', 'Home', 'いっしょ'],
+      next: '次へ',
+      required: '名前を入力してください',
+      failed: 'エラーが発生しました',
+    },
     invite: {
       heading: '家計簿の準備はできました。ふたりで始めましょう',
       subtitle: '相手が参加すると、「{name}」をふたりで記録できます。',

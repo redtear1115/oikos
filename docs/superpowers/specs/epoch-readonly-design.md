@@ -101,7 +101,7 @@ Brainstorming 過程中討論過「給 `CashTransactions` / `IncomeTransactions`
 - ❌ 加 `epoch_id` schema 欄位（理由見上）
 - ❌ 動 `GroupBalance` cache 的結構（per-group 單列不分 epoch 是另一個 issue）
 - ❌ 重做 leave / swap 的 epoch 邊界處理（現狀正確）
-- ❌ 「過去章節不可編輯」的 UI 文案／說明 affordance（留設計師決定後補）
+- ❌ 「過去章節不可編輯」的 UI 文案／說明 affordance（留設計師決定後補）——#1190 已在 `/settings/past-times` intro 下補一句 `pastTimes.readOnlyNote`（進入過去章節的唯一入口）；釘選狀態橫幅（`PastChapterBar`）的能力提示仍未做
 - ❌ 「修正當時記錯」這類「允許過去編輯」的功能（產品立場決定先不做）
 
 ## 風險與 follow-up
