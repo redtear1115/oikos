@@ -18,6 +18,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.5.13] - 2026-09-14
+
+主題：**solo 不是等待狀態**——一個人記帳本來就是完整的用法。dashboard 上那塊位置不再放「邀請對方」，而是使用者自己的數字；設定裡不再有一排灰掉、等著另一個人來才能按的選項。同一版還撞出一批「宣稱與實際不符」的東西：一個從來沒生效過的字距 token、一個恆為 false 的旗標、一個從未送出過的埋點——它們都不會報錯。
+完整 diff：[v1.5.12...v1.5.13](https://github.com/redtear1115/oikos/compare/v1.5.12...v1.5.13)
+
 ### 使用者可見變化
 
 - **一個人記帳時，dashboard 上有自己的主畫面了（#1118）**：原本那塊位置放的是「邀請對方」的 banner，關掉之後只剩一行灰字，看不到任何金額。現在顯示當月總額與筆數；收入模式與雙人一樣。邀請功能維持在 設定 → 成員。
@@ -880,7 +887,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.12...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.13...HEAD
+[1.5.13]: https://github.com/redtear1115/oikos/compare/v1.5.12...v1.5.13
 [1.5.12]: https://github.com/redtear1115/oikos/compare/v1.5.11...v1.5.12
 [1.5.11]: https://github.com/redtear1115/oikos/compare/v1.5.10...v1.5.11
 [1.5.10]: https://github.com/redtear1115/oikos/compare/v1.5.9...v1.5.10
