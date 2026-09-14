@@ -2875,7 +2875,7 @@ export const zhTW: Translations = {
       c2Body: '旅行子帳本獨立記帳，回來清楚看這趟誰多付了多少，不用再翻聊天記錄對帳。',
       c3Title: '這筆是幫你買的',
       c3Body: '每筆帳可以留一句話。讓那個「順手幫你繳的」不只是數字，是一句記得。',
-      c4Title: '你們的帳，只有你們看得到',
+      c4Title: '你們的帳，只開放給你們倆',
       c4Body: '沒有「我的帳」跟「你的帳」之分。進來的就是共同的，沒有能見度分級。',
     },
     blog: {
@@ -2900,14 +2900,14 @@ export const zhTW: Translations = {
     cta: '一起記錄',
     ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
     alreadyHaveAccount: '已經有帳號 · 登入',
-    trustEncrypted: '端對端加密',
+    trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
       encryption: {
-        title: '端對端加密',
-        body: '資料傳輸與儲存全程加密，連我們自己也讀不到內容。',
+        title: '只開放給你們倆',
+        body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密；寶寶本名、身分證字號這類機敏資料，會再加密一層才存進資料庫。',
       },
       portability: {
         title: '隨時帶走',
@@ -2953,7 +2953,7 @@ export const zhTW: Translations = {
       cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
       seeAll: '看全部搬遷指南',
     },
-    footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    footerTrust: '只開放給你們倆 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · 雙人記帳',
     jsonLdAlternateNames: ['Futari 家計簿', '情侶記帳 app', '夫妻記帳', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
@@ -2981,7 +2981,7 @@ export const zhTW: Translations = {
       {
         question: '資料安全嗎？',
         answer:
-          '所有資料儲存於 Supabase 加密資料庫，僅你和伴侶兩人能存取。我們不會分享或販售你的記帳內容。',
+          '帳本只開放給你和伴侶兩人。連線以 HTTPS 加密；寶寶本名、身分證字號、健保卡號、車牌、房屋地址等機敏欄位，會先加密才存進資料庫。我們不會分享或販售你的記帳內容。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -3957,21 +3957,21 @@ export const zhTW: Translations = {
     pageHeading: '你們的資料，屬於你們倆',
     pageSubtitle: '我們的承諾，寫在這裡。',
     encryption: {
-      heading: '只有你們倆能看到',
-      body: '我們用 AES-256-GCM 為你們的紀錄加密。連我們自己，也讀不到內容。',
+      heading: '只開放給你們倆',
+      body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密；寶寶本名、身分證字號、車牌和地址這類機敏資料，我們會再加密一層才存進資料庫。',
     },
     portability: {
       heading: '隨時都能整包帶走',
       body: '我們不會把你們綁在這裡。日後想離開，所有紀錄都能整批帶走。',
     },
     backup: {
-      heading: '我們替你們守著',
-      body: '每一筆紀錄，我們都備份保管。即使你們忘了，我們也替你們留著。',
+      heading: '每一筆，都會好好留著',
+      body: '只要帳號還在，你們記下的每一筆都會留在這裡。',
     },
     onboarding: {
       line1: '資料只屬於你們倆',
       line2: '隨時都能整包帶走',
-      line3: '每一筆我們都替你們守著',
+      line3: '每一筆，都會好好留著',
     },
     bilateral: {
       inviter: {
@@ -4895,8 +4895,8 @@ export const zhTW: Translations = {
       heading: '為什麼可以放心搬過來',
       items: [
         {
-          title: '端對端加密',
-          body: '你們之外，沒有人能看見這本帳的內容。',
+          title: '只開放給你們倆',
+          body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密，機敏資料另外加密保存。',
         },
         {
           title: '隨時可以帶走',
@@ -4908,7 +4908,7 @@ export const zhTW: Translations = {
         },
       ],
     },
-    footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    footerTrust: '只開放給你們倆 · 資料只屬於你們兩個',
     otherSources: {
       heading: '從其他工具搬過來',
       cta: '看搬遷指南',
@@ -5015,7 +5015,7 @@ export const zhTW: Translations = {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 資料，可以帶走',
         heroSubtitle: '從 Honeydue 搬遷到 Futari 只要三分鐘——上傳 CSV，這幾年的記帳完整保留。',
-        intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、資料加密。',
+        intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、只開放給你們倆。',
         differentiators: [
           {
             title: '仍在持續迭代',
@@ -5628,7 +5628,7 @@ export const zhTW: Translations = {
     migrate: {
       honeydue: {
         title: '從 Honeydue 搬家到 Futari｜資料匯入',
-        description: 'Honeydue 替代方案首選。Futari 是專為夫妻、伴侶設計的共同帳本，3 分鐘完成搬家、繼續一起記帳。免費、無廣告、端對端加密。',
+        description: 'Honeydue 替代方案首選。Futari 是專為夫妻、伴侶設計的共同帳本，3 分鐘完成搬家、繼續一起記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: 'Honeydue 用戶的下一站：3 分鐘搬遷到 Futari，雙人記帳繼續。',
       },
       spendee: {
@@ -5643,17 +5643,17 @@ export const zhTW: Translations = {
       },
       moneybook: {
         title: '從麻布記帳搬家到 Futari｜CSV 匯入',
-        description: '麻布記帳資料怎麼搬到雙人帳本？把交易明細匯出成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        description: '麻布記帳資料怎麼搬到雙人帳本？把交易明細匯出成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '麻布記帳用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
       andromoney: {
         title: '從 AndroMoney 搬家到 Futari｜CSV 匯入',
-        description: 'AndroMoney 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
+        description: 'AndroMoney 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: 'AndroMoney 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
       mobills: {
         title: '從 Mobills 搬家到 Futari｜CSV 匯入',
-        description: 'Mobills 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
+        description: 'Mobills 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: 'Mobills 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
       manebo: {
@@ -5663,37 +5663,37 @@ export const zhTW: Translations = {
       },
       'simple-daily-money': {
         title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
-        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
         title: '從記帳城市搬家到 Futari｜截圖轉 CSV',
-        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '記帳城市用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       cashman: {
         title: '從 CashMan 搬家到 Futari｜截圖轉 CSV',
-        description: 'CashMan 沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: 'CashMan 沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: 'CashMan 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       '1money': {
         title: '從 1Money 搬家到 Futari｜截圖轉 CSV',
-        description: '1Money 沒有完整匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '1Money 沒有完整匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '1Money 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       icost: {
         title: '從 iCost 搬家到 Futari｜截圖轉 CSV',
-        description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: 'iCost 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       splitwise: {
         title: '從 Splitwise 搬家到 Futari｜匯出試算表、CSV 匯入',
-        description: 'Splitwise 的群組與好友交易可以匯出試算表帶走。上傳到 Futari 這個為夫妻、伴侶設計的共同帳本，分攤、結算與日常記帳都在同一本帳裡。免費、無廣告、端對端加密。',
+        description: 'Splitwise 的群組與好友交易可以匯出試算表帶走。上傳到 Futari 這個為夫妻、伴侶設計的共同帳本，分攤、結算與日常記帳都在同一本帳裡。免費、無廣告、只開放給你們倆。',
         ogDescription: 'Splitwise 用戶搬家指南：匯出試算表 → 上傳 CSV → 搬進 Futari 雙人記帳。',
       },
       suishouji: {
         title: '從隨手記搬家到 Futari｜截圖轉 CSV',
-        description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '隨手記用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
     },
@@ -5705,13 +5705,13 @@ export const zhTW: Translations = {
     useCaseHub: {
       title: '雙人記帳的 10 種情境｜同居、新婚、旅行、寵物 — Futari',
       description: '同居生活費怎麼分、新婚夫妻的帳怎麼記、旅行費用怎麼對、養寵物多了哪些開銷——不同的日子，記帳的難處不一樣。這裡是 Futari 為 10 種雙人情境寫的說明，挑最接近你們的那一個。',
-      ogDescription: '10 種雙人記帳情境，挑最接近你們生活的那一個——Futari 雙人帳本，免費、無廣告、端對端加密。',
+      ogDescription: '10 種雙人記帳情境，挑最接近你們生活的那一個——Futari 雙人帳本，免費、無廣告、只開放給你們倆。',
     },
     useCase: {
       cohabitation: {
         title: '同居 AA 制記帳｜同居生活費怎麼分？Futari',
         description: '同居生活費怎麼分才不傷感情？Futari 是專為伴侶設計的雙人帳本，支援 AA 對半、按比例、全額等多種分攤模式，輕鬆記下每筆同居開銷，清楚看見兩個人的生活。',
-        ogDescription: '同居 AA 制最適合的記帳工具——Futari 雙人帳本，免費、無廣告、端對端加密。',
+        ogDescription: '同居 AA 制最適合的記帳工具——Futari 雙人帳本，免費、無廣告、只開放給你們倆。',
       },
       newlyweds: {
         title: '新婚家計分攤｜夫妻記帳怎麼記？Futari',
@@ -5725,7 +5725,7 @@ export const zhTW: Translations = {
       },
       travel: {
         title: '旅行費用分攤｜出遊帳本怎麼記？Futari',
-        description: '旅行費用怎麼分才清楚？Futari 旅行子帳本讓出遊支出跟日常帳分開，回來之後一目瞭然誰出了多少，不用在群組裡對帳。免費、無廣告、端對端加密。',
+        description: '旅行費用怎麼分才清楚？Futari 旅行子帳本讓出遊支出跟日常帳分開，回來之後一目瞭然誰出了多少，不用在群組裡對帳。免費、無廣告、只開放給你們倆。',
         ogDescription: '出遊帳本不再亂——Futari 旅行子帳本，把這趟旅行的費用記清楚。',
       },
       roommates: {
@@ -5735,27 +5735,27 @@ export const zhTW: Translations = {
       },
       'monthly-bills': {
         title: '每月固定開銷記帳｜房租水電怎麼一起管？Futari',
-        description: '房租、水電、網路、保險——每月固定支出怎麼和伴侶一起追蹤？Futari 讓兩個人即時看到固定帳，清楚知道誰付了什麼、餘額怎麼走。免費、端對端加密。',
+        description: '房租、水電、網路、保險——每月固定支出怎麼和伴侶一起記？Futari 讓兩個人即時看到固定帳，清楚知道誰付了什麼、餘額怎麼走。免費、只開放給你們倆。',
         ogDescription: '兩個人的固定開銷管理——Futari，每月必要支出一起看，不再只靠其中一人記。',
       },
       'big-purchases': {
         title: '大筆支出計畫｜購車換機怎麼和伴侶一起追蹤？Futari',
-        description: '購車、換電腦、旅遊基金——大筆支出怎麼和伴侶一起規劃記帳？Futari 讓每筆大額費用關聯到對應愛物，清楚看見這項支出的完整樣貌。免費、端對端加密。',
+        description: '購車、換電腦、旅遊基金——大筆支出怎麼和伴侶一起規劃記帳？Futari 讓每筆大額費用關聯到對應愛物，清楚看見這項支出的完整樣貌。免費、只開放給你們倆。',
         ogDescription: '大筆支出不再說不清——Futari，把每項重要花費記清楚、兩個人一起看到。',
       },
       dining: {
         title: '外食費用記帳｜吃飯開銷怎麼和另一半一起追蹤？Futari',
-        description: '每天吃飯、外送、咖啡——飲食開銷最容易不知不覺累積。Futari 讓兩個人的外食費用一起記、一起看，輕鬆知道這個月吃了多少。免費、無廣告、端對端加密。',
+        description: '每天吃飯、外送、咖啡——飲食開銷最容易不知不覺累積。Futari 讓兩個人的外食費用一起記、一起看，輕鬆知道這個月吃了多少。免費、無廣告、只開放給你們倆。',
         ogDescription: '外食帳不再算不清——Futari，把兩個人的飲食開銷一起記清楚。',
       },
       parenting: {
         title: '育兒費用記帳｜寶寶花費怎麼和另一半一起追蹤？Futari',
-        description: '奶粉、尿布、回診、保險——育兒開銷零碎又頻繁，兩個人一起記才不漏。Futari 讓每筆育兒費用關聯到小孩，清楚看見寶貝的每一筆支出。免費、端對端加密。',
+        description: '奶粉、尿布、回診、保險——育兒開銷零碎又頻繁，兩個人一起記才不漏。Futari 讓每筆育兒費用關聯到小孩，清楚看見寶貝的每一筆支出。免費、只開放給你們倆。',
         ogDescription: '育兒記帳首選——Futari，把每筆寶寶費用記下來，兩個人一起看見。',
       },
       'aa-split': {
         title: 'AA 制記帳｜輪流付帳怎麼算清楚？Futari',
-        description: 'AA 制、輪流付、各負擔一類費用——不管你們怎麼分，Futari 都能記清楚。雙人記帳專為兩個人設計，餘額自動計算，誰欠誰多少一眼就知道。免費、端對端加密。',
+        description: 'AA 制、輪流付、各負擔一類費用——不管你們怎麼分，Futari 都能記清楚。雙人記帳專為兩個人設計，餘額自動計算，誰欠誰多少一眼就知道。免費、只開放給你們倆。',
         ogDescription: 'AA 制記帳最清楚的工具——Futari，選好分法，帳就自動算好。',
       },
     },
@@ -5783,8 +5783,8 @@ export const zhTW: Translations = {
         body: '其中一個人記下去，另一個人馬上看得到。不需要截圖傳 LINE，帳本就是對話本身。',
       },
       encrypt: {
-        title: '端對端加密',
-        body: '帳本只有你們兩個人看得到。伺服器不解密，也不讀你們記了什麼。',
+        title: '只開放給你們倆',
+        body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密，寶寶本名、身分證字號這類機敏資料，也會另外加密才存進資料庫。',
       },
       history: {
         title: '章節式記憶',
@@ -5866,7 +5866,7 @@ export const zhTW: Translations = {
         faq: [
           {
             question: '同居記帳 app 有哪些選擇？',
-            answer: 'Futari 是專為伴侶設計的雙人帳本，從一開始就預設兩個人一起使用，支援多種分攤模式、即時同步、端對端加密。不需要把個人記帳工具改造成雙人版。',
+            answer: 'Futari 是專為伴侶設計的雙人帳本，從一開始就預設兩個人一起使用，支援多種分攤模式、即時同步，帳本只開放給你們倆。不需要把個人記帳工具改造成雙人版。',
           },
           {
             question: '同居 AA 制要怎麼記帳比較清楚？',
@@ -5874,7 +5874,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -6006,7 +6006,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -6039,7 +6039,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -6072,7 +6072,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -6105,7 +6105,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -6138,7 +6138,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -6171,7 +6171,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },

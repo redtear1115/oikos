@@ -1,66 +1,66 @@
 {
   "migrateSources": {
     "honeydue": {
-      "contentHash": "c9adbe09d8a89687aea9e34a90b9777f0277e284b4bcb529040119c6ac004ddb",
-      "contentUpdatedAt": "2026-09-14"
+      "contentHash": "5f367096a3ec5f47540b66b76685e9bbb808668dbe59bd3b6672bd819c538cf1",
+      "contentUpdatedAt": "2026-09-15"
     },
     "spendee": {
       "contentHash": "2b4b4bf41b52eb678da0b2320efe4efad47a766b07883e6c9b1a4c22145696d1",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "cwmoney": {
       "contentHash": "5c0bbca5ce52365acaad2cdd413e123f8c0232d1ad43e08266f3f1017f143161",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "moneybook": {
-      "contentHash": "48c348d0780bcfebc06bfdc414001e463b68546bfb398c434d1e21112cd3a91f",
-      "contentUpdatedAt": "2026-09-14"
+      "contentHash": "8c2fe765e46902e2ebaef8e36f0ea3c4c022ece63be3cbae18cbe56e5668111b",
+      "contentUpdatedAt": "2026-09-15"
     },
     "andromoney": {
       "contentHash": "3144b7164af7923c069066c1710d1133a160c3e12a80e41b8443986aa7d658fe",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "mobills": {
       "contentHash": "ff69e920af084516ce59a26fb7bda62c290926442c2b33cc0a44fec77276dc8f",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "manebo": {
-      "contentHash": "0616ce2c45490c01559686ef07183acbdc6551b7e1a0417cc5f35370874dd3f5",
-      "contentUpdatedAt": "2026-09-14"
+      "contentHash": "7645acdace89666d7aaeb1e5937e6ee03ac35155d0ff131a3a86817f927d0227",
+      "contentUpdatedAt": "2026-09-15"
     },
     "simple-daily-money": {
       "contentHash": "d053f8cc525606d7e22ba0bdb79c81a41661a44de62574f442a1127992afe3b5",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "fortune-city": {
       "contentHash": "d0e8f1d8902c900ee1b6a09e3e74ca8e1e57fc9b54c4e474156e20b5acc994a1",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "cashman": {
       "contentHash": "d5a2a437ac889f73f967b34c6c4f6c0afebbce7665008332673faf6c940de00d",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "1money": {
       "contentHash": "06e7271ecb6f422aee1ba8b7e2d61c6f93218cd998f53bd0f21750f0b0ab9a31",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "icost": {
       "contentHash": "71372676d17401a128e5397b0b74026d26a2dcf9ad023fe1092a1a7501a77673",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "splitwise": {
       "contentHash": "48532c21c33126512d31561976598320d2a50049b9274398b1c7d76233b27006",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     },
     "suishouji": {
       "contentHash": "5d78712019ec27f35202147731b838627987e1c5bf0aa7eaf0124f44f3669051",
-      "contentUpdatedAt": "2026-09-14"
+      "contentUpdatedAt": "2026-09-15"
     }
   },
   "useCases": {
     "cohabitation": {
-      "contentHash": "b2c4ffc315b986c64e94deb3bdb4be1c102b108c49242291eb8d43243c9ba12a",
-      "contentUpdatedAt": "2026-05-30"
+      "contentHash": "447a78a46e2192db29d4f93235513f23ea85e3e2425b58c0477614edd2f34323",
+      "contentUpdatedAt": "2026-09-15"
     },
     "newlyweds": {
       "contentHash": "93a4286bb5bc58cd57900d916167057875b0c365f224cdd56a78b5cab346d546",
@@ -68,35 +68,35 @@
     },
     "pet-owners": {
       "contentHash": "92756392d60cec7894d55aecf3ef97baffbc31f2a007986fa2e77bcef1d65f14",
-      "contentUpdatedAt": "2026-05-30"
+      "contentUpdatedAt": "2026-09-15"
     },
     "travel": {
-      "contentHash": "b035a2f1df8991fa7776c89b75b5e8bb2b1f8c79220fd9719db3446db656b573",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "3bb5708e132d21b4765a50a3252a56601f6c17cbd83fb45df9b89d81a649326a",
+      "contentUpdatedAt": "2026-09-15"
     },
     "roommates": {
-      "contentHash": "6c1e60c6bd688c20c2189544cfd1bc2eee434b901502efaedab46f612d99d9cf",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "963fdff8a7877879ba49fe9fa8fb2190756ca721e908427bb6ca5b81f26f1c6e",
+      "contentUpdatedAt": "2026-09-15"
     },
     "monthly-bills": {
-      "contentHash": "40e5b6a8779c81788c42f04ffa1adebe325babac0616611d745c0d4a67eecbb2",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "741ae68bf113bee2682156e9b2825002c960eabdd2c171f13f2add96dc033b68",
+      "contentUpdatedAt": "2026-09-15"
     },
     "big-purchases": {
-      "contentHash": "cd2eb6b0880cdd7d63ffd1266952aaf64d19b97009dda1d450023b7bc778675a",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "175cdf27b65c4a90f73b85a49212de63c23733b9d28af4a4098e4f90be480c69",
+      "contentUpdatedAt": "2026-09-15"
     },
     "dining": {
-      "contentHash": "075134082a5e55a84f987860fa976fc287ff9ca8c31ae844f5a956ed474ea9ab",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "905b7a6f7271537be6a3075fa6332215e00ffb66cd746eace2416d138a08ead7",
+      "contentUpdatedAt": "2026-09-15"
     },
     "parenting": {
-      "contentHash": "e91d0c80baed7207993129fe4fc248337092af1bde9411fdbffa9bd7bf5c0dda",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "5d5024e5f4906f1869ca06a51080dab57d47495efcbade47bc58f71ac9adc7ae",
+      "contentUpdatedAt": "2026-09-15"
     },
     "aa-split": {
-      "contentHash": "7912ffe5e819d528bc0dc51a440e2451bf6abbf91685677b85c95d7743d333d2",
-      "contentUpdatedAt": "2026-05-31"
+      "contentHash": "ef8ee89c0dda13b7066fd30a9717cdb5ab5ae3cb38ff1d1cf1cc046dfb579398",
+      "contentUpdatedAt": "2026-09-15"
     }
   }
 }

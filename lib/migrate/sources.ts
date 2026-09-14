@@ -107,21 +107,20 @@ export const MIGRATE_SOURCES = {
   honeydue: {
     slug: 'honeydue',
     name: 'Honeydue',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     comparison: {
       rows: [
         { feature: '雙人共同帳本',   futari: { label: '✓ 支援',      tone: 'yes'     }, other: { label: '✓ 支援',      tone: 'yes'     } },
         { feature: '費用分攤模式',   futari: { label: '✓ 多種模式',  tone: 'yes'     }, other: { label: { i18n: 'basicHalfSplit' },  tone: 'partial' } },
         { feature: '持續維護更新',   futari: { label: '✓ 每兩週發版', tone: 'yes'    }, other: { label: { i18n: 'updatesSlowed' },  tone: 'partial' } },
         { feature: '多幣別記帳',     futari: { label: '✓ 支援',      tone: 'yes'     }, other: { label: '✕ 無',        tone: 'no'      } },
-        { feature: '端對端資料加密', futari: { label: '✓ 支援',      tone: 'yes'     }, other: { label: { i18n: 'notStated' },      tone: 'no'      } },
       ],
     },
   },
   spendee: {
     slug: 'spendee',
     name: 'Spendee',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 免費內建',   tone: 'yes'     }, other: { label: { i18n: 'paidUnlock' },   tone: 'partial' } },
@@ -135,7 +134,7 @@ export const MIGRATE_SOURCES = {
   cwmoney: {
     slug: 'cwmoney',
     name: 'CWMoney',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     templateDownload: { href: '/cwmoney-template.xlsx' },
     comparison: {
       rows: [
@@ -150,21 +149,20 @@ export const MIGRATE_SOURCES = {
   moneybook: {
     slug: 'moneybook',
     name: 'Moneybook',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     comparison: {
       rows: [
         { feature: '雙人共同帳本',   futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計',   tone: 'no'      } },
         { feature: '費用分攤模式',   futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',         tone: 'no'      } },
         { feature: 'CSV 資料匯出',   futari: { label: '✓ 免費',     tone: 'yes'     }, other: { label: { i18n: 'requiresSubscription' },     tone: 'partial' } },
         { feature: '完全免費',       futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: '✕ 訂閱制',     tone: 'no'      } },
-        { feature: '端對端資料加密', futari: { label: '✓ 支援',     tone: 'yes'     }, other: { label: { i18n: 'notStated' },       tone: 'no'      } },
       ],
     },
   },
   andromoney: {
     slug: 'andromoney',
     name: 'AndroMoney',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: '✕ 單人設計',       tone: 'no'      } },
@@ -178,7 +176,7 @@ export const MIGRATE_SOURCES = {
   mobills: {
     slug: 'mobills',
     name: 'Mobills',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     comparison: {
       rows: [
         { feature: '雙人共同帳本', futari: { label: '✓ 預設模式',  tone: 'yes'     }, other: { label: '✕ 單人設計',   tone: 'no'      } },
@@ -192,21 +190,20 @@ export const MIGRATE_SOURCES = {
   manebo: {
     slug: 'manebo',
     name: 'Manebo',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     comparison: {
       rows: [
         { feature: '雙人共同帳本',   futari: { label: '✓ 預設模式', tone: 'yes'     }, other: { label: { i18n: 'sharingSetupRequired' },      tone: 'partial' } },
         { feature: '費用分攤模式',   futari: { label: '✓ 多種模式', tone: 'yes'     }, other: { label: '✕ 無',              tone: 'no'      } },
         { feature: 'CSV 資料匯出',   futari: { label: '✓ 免費',     tone: 'yes'     }, other: { label: { i18n: 'premiumOnly' },    tone: 'partial' } },
         { feature: '完全免費',       futari: { label: '✓ 永久',     tone: 'yes'     }, other: { label: { i18n: 'someFeaturesPaid' },    tone: 'partial' } },
-        { feature: '端對端資料加密', futari: { label: '✓ 支援',     tone: 'yes'     }, other: { label: { i18n: 'notStated' },            tone: 'no'      } },
       ],
     },
   },
   'simple-daily-money': {
     slug: 'simple-daily-money',
     name: '簡單記帳',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -221,7 +218,7 @@ export const MIGRATE_SOURCES = {
   'fortune-city': {
     slug: 'fortune-city',
     name: '記帳城市',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -236,7 +233,7 @@ export const MIGRATE_SOURCES = {
   cashman: {
     slug: 'cashman',
     name: 'CashMan',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -251,7 +248,7 @@ export const MIGRATE_SOURCES = {
   '1money': {
     slug: '1money',
     name: '1Money',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -266,7 +263,7 @@ export const MIGRATE_SOURCES = {
   icost: {
     slug: 'icost',
     name: 'iCost',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     screenshotWorkflow: true,
     comparison: {
       rows: [
@@ -281,7 +278,7 @@ export const MIGRATE_SOURCES = {
   splitwise: {
     slug: 'splitwise',
     name: 'Splitwise',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     // No screenshotWorkflow: Splitwise exports a spreadsheet per group /
     // friendship (kb.splitwise.com "How can I double check my balances?"),
     // so users arrive holding a real CSV. Headers don't match any dedicated
@@ -299,7 +296,7 @@ export const MIGRATE_SOURCES = {
   suishouji: {
     slug: 'suishouji',
     name: '隨手記',
-    contentUpdatedAt: '2026-09-14',
+    contentUpdatedAt: '2026-09-15',
     screenshotWorkflow: true,
     comparison: {
       rows: [

@@ -64,7 +64,7 @@ export async function getPlantListDetailsBatch(assetIds: string[]): Promise<Map<
 export interface ChildDetailsRow {
   birthday: string | null
   gender: 'male' | 'female' | 'other' | null
-  // PII fields are end-to-end encrypted at rest (see actions/asset.ts:
+  // PII fields are encrypted at rest with app-level AES-256-GCM, server-held key — not end-to-end (see actions/asset.ts:
   // createChild / editChild / revealChildPii). The detail page never receives
   // plaintext from this query — it gets booleans + a server action ("reveal")
   // for on-demand decryption. AssetSheet's edit form likewise starts these

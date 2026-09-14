@@ -53,8 +53,8 @@ Futari 是專為兩個人設計的共享帳本。
 ・多幣別：出國也能用當地幣別記，回到主幣別自動換算。
 
 安心使用
-・端對端加密：機敏欄位在寫入前以 AES-256-GCM 加密，資料庫不存明文。
-・資料存於日本東京區，加密傳輸與存取控制保護。
+・只開放給你們倆：帳本只對你們兩人的帳號開放，連線以 HTTPS 加密。
+・機敏欄位加密：寶寶本名、身分證字號、健保卡號、車牌、房屋地址等欄位，在寫入前以 AES-256-GCM 加密。
 ・可隨時在設定頁刪除帳號。
 ・免費使用，iOS / Android / Web 都能開。
 
@@ -92,8 +92,8 @@ Futari 是专为两个人设计的共享账本。
 ・多币别：出国也能用当地货币记，回到主货币自动换算。
 
 安心使用
-・端到端加密：敏感字段在写入前以 AES-256-GCM 加密，数据库不存明文。
-・数据存于日本东京区，加密传输与访问控制保护。
+・只开放给你们俩：账本只对你们两人的账号开放，连接以 HTTPS 加密。
+・敏感字段加密：宝宝本名、身份证号、健保卡号、车牌、房屋地址等字段，在写入前以 AES-256-GCM 加密。
 ・可随时在设置页删除账号。
 ・免费使用，iOS / Android / Web 都能打开。
 
@@ -131,8 +131,8 @@ More than money
 ・Multi-currency: record in the local currency abroad; it converts back to your home currency automatically.
 
 Use it with peace of mind
-・End-to-end encryption: sensitive fields are encrypted with AES-256-GCM before they're stored — no plaintext in the database.
-・Data is stored in Tokyo, Japan, protected by encrypted transport and access control.
+・Open only to you two: only your two accounts can open the ledger, and connections are encrypted over HTTPS.
+・Sensitive-field encryption: fields like a child's legal name, ID number, health insurance number, licence plate, and home address are encrypted with AES-256-GCM before they're stored.
 ・You can delete your account anytime from Settings.
 ・Free to use, on iOS / Android / Web.
 
@@ -170,8 +170,8 @@ Futari は、ふたりのための共有家計簿です。
 ・多通貨：海外では現地通貨で記録し、メイン通貨へ自動換算。
 
 安心して使えます
-・エンドツーエンド暗号化：機微な項目は保存前に AES-256-GCM で暗号化。データベースに平文は残しません。
-・データは日本・東京リージョンに保存し、暗号化通信とアクセス制御で保護。
+・ふたりだけに開放：家計簿を開けるのは、ふたりのアカウントだけ。通信は HTTPS で暗号化。
+・機微な項目の暗号化：お子さまの本名・マイナンバー・健康保険証番号・ナンバープレート・住所などは、保存前に AES-256-GCM で暗号化。
 ・設定からいつでもアカウントを削除できます。
 ・無料。iOS / Android / Web で使えます。
 

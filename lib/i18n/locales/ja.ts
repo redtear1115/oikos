@@ -91,14 +91,14 @@ export const ja: Translations = {
     cta: 'ふたりではじめる',
     ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
     alreadyHaveAccount: 'アカウントをお持ちの方',
-    trustEncrypted: 'エンドツーエンド暗号化',
+    trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
       encryption: {
-        title: 'エンドツーエンド暗号化',
-        body: 'データは送信時も保存時も常に暗号化。私たちにも中身は読めません。',
+        title: 'ふたりだけに開放',
+        body: '家計簿を開けるのは、ふたりのアカウントだけです。通信は HTTPS で暗号化され、お子さまの本名やマイナンバーなどの機微な情報は、さらに暗号化してから保存します。',
       },
       portability: {
         title: 'いつでも持ち出せる',
@@ -144,7 +144,7 @@ export const ja: Translations = {
       cwmoneyBody: 'Excel → CSV テンプレート付き。数分で移し替えられます。',
       seeAll: 'すべての移行ガイドを見る',
     },
-    footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
+    footerTrust: 'ふたりだけに開放 · データはふたりだけのもの',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ['ふたり 家計簿', 'Futari 家計簿', '二人の家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
@@ -172,7 +172,7 @@ export const ja: Translations = {
       {
         question: 'データは安全ですか？',
         answer:
-          'すべてのデータはSupabaseの暗号化データベースに保存され、あなたとパートナーだけがアクセスできます。家計の内容を共有・販売することはありません。',
+          '家計簿はあなたとパートナーのふたりだけに開放しています。通信は HTTPS で暗号化され、お子さまの本名・マイナンバー・健康保険証番号・ナンバープレート・住所などの機微な項目は、データベースに書き込む前に暗号化します。家計の内容を共有・販売することはありません。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -1155,21 +1155,21 @@ export const ja: Translations = {
     pageHeading: 'お二人の記録は、お二人のもの',
     pageSubtitle: '私たちのお約束を、ここに。',
     encryption: {
-      heading: 'お二人だけが見られます',
-      body: '記録は AES-256-GCM で暗号化しています。私たちにも、中身は読めません。',
+      heading: 'お二人だけに開かれています',
+      body: 'この家計簿を開けるのは、お二人のアカウントだけです。通信は HTTPS で暗号化され、お子さまの本名・マイナンバー・ナンバープレート・住所などの機微な情報は、さらに暗号化してから保存しています。',
     },
     portability: {
       heading: 'いつでも、まるごと持ち出せます',
       body: 'お二人を縛りつけることはありません。離れる時も、すべて持っていけます。',
     },
     backup: {
-      heading: '私たちが、お預かりします',
-      body: '一つひとつの記録を、しっかり保管しています。お二人が忘れても、ちゃんと守っています。',
+      heading: '一つひとつ、ちゃんと残ります',
+      body: 'アカウントがある限り、記録したものはすべてここに残ります。',
     },
     onboarding: {
       line1: '記録は、お二人だけのもの',
       line2: 'いつでも、まるごと持ち出せます',
-      line3: '一つひとつ、私たちが守ります',
+      line3: '一つひとつ、ちゃんと残ります',
     },
     bilateral: {
       inviter: {
@@ -2103,8 +2103,8 @@ export const ja: Translations = {
       heading: '安心して引っ越せる理由',
       items: [
         {
-          title: 'エンドツーエンド暗号化',
-          body: 'ふたり以外、誰もこの家計簿の中身を見られません。',
+          title: 'ふたりだけに開放',
+          body: '家計簿を開けるのは、ふたりのアカウントだけ。通信は HTTPS で暗号化され、機微な情報は暗号化して保存します。',
         },
         {
           title: 'いつでも持ち出せる',
@@ -2116,7 +2116,7 @@ export const ja: Translations = {
         },
       ],
     },
-    footerTrust: 'エンドツーエンド暗号化 · この家計簿はふたりだけのもの',
+    footerTrust: 'ふたりだけに開放 · この家計簿はふたりだけのもの',
     // TODO(#612): ja copy below pending native review
     otherSources: {
       heading: 'ほかのアプリから引っ越す',
@@ -2225,7 +2225,7 @@ I will upload the screenshots once you confirm.`,
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Honeydue のデータは、そのまま連れていけます',
         heroSubtitle: 'Honeydue から Futari への引っ越しは約 3 分。CSV をアップロードして、これまでの記録をそのまま残せます。',
-        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります。無料、広告なし、エンドツーエンド暗号化。',
+        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります。無料、広告なし、ふたりだけに開放。',
         differentiators: [
           {
             title: '今もアップデートが続いています',
@@ -2882,7 +2882,7 @@ I will upload the screenshots once you confirm.`,
     migrate: {
       honeydue: {
         title: 'Honeydue から Futari へ｜移行ガイド',
-        description: 'Honeydue の代替に。カップル・夫婦の共同家計簿 Futari なら、3 分でデータを引っ越して、無料・広告なし・エンドツーエンド暗号化で続けられます。',
+        description: 'Honeydue の代替に。カップル・夫婦の共同家計簿 Futari なら、3 分でデータを引っ越して、無料・広告なし、ふたりだけの家計簿として続けられます。',
         ogDescription: 'Honeydue ユーザーの次の住みか。Futari でふたりの家計をそのまま続ける。',
       },
       spendee: {
@@ -2898,42 +2898,42 @@ I will upload the screenshots once you confirm.`,
       // TODO(#839): ja copy below pending native review
       moneybook: {
         title: 'Moneybook から Futari へ｜CSV 取り込み',
-        description: 'Moneybook のデータをふたりの家計簿へ。取引明細を CSV で書き出し、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'Moneybook のデータをふたりの家計簿へ。取引明細を CSV で書き出し、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Moneybook ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       andromoney: {
         title: 'AndroMoney から Futari へ｜CSV 取り込み',
-        description: 'AndroMoney のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'AndroMoney のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'AndroMoney ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       mobills: {
         title: 'Mobills から Futari へ｜CSV 取り込み',
-        description: 'Mobills のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'Mobills のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Mobills ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       manebo: {
         title: 'Manebo から Futari へ｜カップル共同家計簿',
-        description: 'Manebo のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'Manebo のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Manebo ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       'simple-daily-money': {
         title: '簡単家計簿から Futari へ｜スクショを CSV に',
-        description: '簡単家計簿の CSV 書き出しは VIP 機能？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: '簡単家計簿の CSV 書き出しは VIP 機能？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '簡単家計簿からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       'fortune-city': {
         title: '記帳城市から Futari へ｜スクショを CSV に',
-        description: '記帳城市の CSV 書き出しはサブスク限定？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: '記帳城市の CSV 書き出しはサブスク限定？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '記帳城市からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       cashman: {
         title: 'CashMan から Futari へ｜スクショを CSV に',
-        description: 'CashMan に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'CashMan に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'CashMan は書き出し非対応——スクショ→ChatGPT→CSV→Futari。',
       },
       '1money': {
         title: '1Money から Futari へ｜スクショを CSV に',
-        description: '1Money に完全な書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: '1Money に完全な書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '1Money からふたりの家計簿へ——スクショ→ChatGPT→CSV→Futari。',
       },
       icost: {
@@ -2943,7 +2943,7 @@ I will upload the screenshots once you confirm.`,
       },
       splitwise: {
         title: 'Splitwise から Futari へ｜書き出した CSV を取り込む',
-        description: 'Splitwise のグループやフレンドの明細はスプレッドシートに書き出せます。カップル・夫婦の共同家計簿 Futari に取り込めば、割り勘も精算も日々の記録もひとつの家計簿に。無料・広告なし・暗号化。',
+        description: 'Splitwise のグループやフレンドの明細はスプレッドシートに書き出せます。カップル・夫婦の共同家計簿 Futari に取り込めば、割り勘も精算も日々の記録もひとつの家計簿に。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Splitwise からの移行ガイド：スプレッドシートを書き出し、CSV を Futari に取り込む。',
       },
       suishouji: {
@@ -2960,12 +2960,12 @@ I will upload the screenshots once you confirm.`,
     useCaseHub: {
       title: 'ふたりの家計簿・10 のシーン｜同棲・新婚・旅行・ペット | Futari',
       description: '同棲の生活費の分け方、新婚のお金のまとめ方、旅行費の精算、ペットと暮らす分の出費——暮らし方が違えば、家計簿の悩みも違います。ふたり向けに書いた 10 のシーンから、いちばん近いものをどうぞ。',
-      ogDescription: 'ふたりの家計簿、10 のシーン。いちばん近いものを選んでください——Futari は無料・広告なし・エンドツーエンド暗号化。',
+      ogDescription: 'ふたりの家計簿、10 のシーン。いちばん近いものを選んでください——Futari は無料・広告なし・ふたりだけに開放。',
     },
     useCase: {
       cohabitation: {
         title: '同棲の生活費折半｜カップルの共同家計管理 | Futari',
-        description: '同棲の生活費ってどう分ける？Futari はカップル向けに設計されたふたりの家計簿。折半・収入比・片方負担など複数の分担モードに対応。無料・広告なし・暗号化済み。',
+        description: '同棲の生活費ってどう分ける？Futari はカップル向けに設計されたふたりの家計簿。折半・収入比・片方負担など複数の分担モードに対応。無料・広告なし・ふたりだけに開放。',
         ogDescription: '同棲カップルの生活費管理なら Futari——折半・比率・どんな分け方にも対応。',
       },
       newlyweds: {
@@ -2980,12 +2980,12 @@ I will upload the screenshots once you confirm.`,
       },
       travel: {
         title: '旅行費用の分担｜旅先の支出をふたりで記録 | Futari',
-        description: '旅行の費用ってどう分ける？Futari の旅行サブ帳簿で日常費と分けて記録。帰宅後すぐ誰がいくら払ったかわかります。無料・広告なし・エンドツーエンド暗号化。',
+        description: '旅行の費用ってどう分ける？Futari の旅行サブ帳簿で日常費と分けて記録。帰宅後すぐ誰がいくら払ったかわかります。無料・広告なし・ふたりだけに開放。',
         ogDescription: '旅行費をすっきり管理——Futari の旅行サブ帳簿で、帰ったらすぐ精算。',
       },
       roommates: {
         title: 'ルームメイトとの費用分担｜同居の生活費を透明に | Futari',
-        description: '家賃・光熱費・日用品などのルームメイト費用をスマートに分担。Futari はふたりの支出をひとつの帳簿にまとめ、残高をいつでも確認できます。無料・暗号化済み。',
+        description: '家賃・光熱費・日用品などのルームメイト費用をスマートに分担。Futari はふたりの支出をひとつの帳簿にまとめ、残高をいつでも確認できます。無料・ふたりだけに開放。',
         ogDescription: '同居費用を透明に——Futari で毎回の支出を記録し、残高を自動管理。',
       },
       'monthly-bills': {
@@ -2995,7 +2995,7 @@ I will upload the screenshots once you confirm.`,
       },
       'big-purchases': {
         title: '大きな買い物の管理｜車・家電の費用をふたりで追跡 | Futari',
-        description: '車・家電・旅行積立など、大きな支出はふたりで記録して管理しませんか。Futari では支出を愛するものに紐づけ、費用全体をひと目で把握できます。無料・暗号化済み。',
+        description: '車・家電・旅行積立など、大きな支出はふたりで記録してみませんか。Futari では支出を愛するものに紐づけ、費用全体をひと目で把握できます。無料・ふたりだけに開放。',
         ogDescription: '大きな支出をふたりで透明に——Futari で愛するものに紐づけて全体を把握。',
       },
       dining: {
@@ -3005,7 +3005,7 @@ I will upload the screenshots once you confirm.`,
       },
       parenting: {
         title: '育児費用の記録｜赤ちゃんの支出をふたりで管理 | Futari',
-        description: 'ミルク・おむつ・健診・習い事——育児の支出は多くて細かい。Futari ではすべての費用を子どもに紐づけて記録できるので、ふたりで全体を把握できます。無料・暗号化済み。',
+        description: 'ミルク・おむつ・健診・習い事——育児の支出は多くて細かい。Futari ではすべての費用を子どもに紐づけて記録できるので、ふたりで全体を把握できます。無料・ふたりだけに開放。',
         ogDescription: '育児費をふたりで管理——Futari で子どもへの支出をひとつにまとめて。',
       },
       'aa-split': {
@@ -3038,8 +3038,8 @@ I will upload the screenshots once you confirm.`,
         body: '片方が記録したら、もう片方にすぐ届きます。LINEでスクショを送らなくていい。',
       },
       encrypt: {
-        title: 'エンドツーエンド暗号化',
-        body: '帳簿はふたりだけが見られます。サーバーは復号せず、何を記録したかを読みません。',
+        title: 'ふたりだけに開放',
+        body: '帳簿を開けるのは、ふたりのアカウントだけ。通信は HTTPS で暗号化され、お子さまの本名やマイナンバーなどの機微な情報は、さらに暗号化してから保存します。',
       },
       history: {
         title: 'チャプター式の記録',
@@ -3121,7 +3121,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: '同棲カップルにおすすめの家計管理アプリは？',
-            answer: 'Futari は最初からふたりで使うことを前提に設計された共同家計簿です。複数の分担モード・リアルタイム同期・エンドツーエンド暗号化に対応しています。',
+            answer: 'Futari は最初からふたりで使うことを前提に設計された共同家計簿です。複数の分担モードとリアルタイム同期に対応し、家計簿はふたりだけに開放しています。',
           },
           {
             question: '同棲の生活費をわかりやすく管理するには？',
@@ -3129,7 +3129,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3253,7 +3253,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: 'ルームメイトとの費用分担に使えるアプリは？',
-            answer: 'Futari はふたりで使うことを前提に設計された共同家計簿です。複数の分担モード・リアルタイム同期・暗号化に対応し、LINEで追いかけなくても費用を把握できます。',
+            answer: 'Futari はふたりで使うことを前提に設計された共同家計簿です。複数の分担モードとリアルタイム同期に対応し、LINEで追いかけなくても費用を把握できます。',
           },
           {
             question: '同居費用をわかりやすく管理するには？',
@@ -3261,7 +3261,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3294,7 +3294,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3327,7 +3327,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3360,7 +3360,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3393,7 +3393,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3426,7 +3426,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
