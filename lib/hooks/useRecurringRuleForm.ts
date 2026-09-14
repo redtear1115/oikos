@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { localTodayISO } from '@/lib/local-date'
+import { describeError } from '@/lib/errors'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface CommonInitial {
   id: string
@@ -49,6 +51,7 @@ export function useRecurringRuleForm({
   onMutated,
   onClose,
 }: UseRecurringRuleFormOptions) {
+  const t = useTranslations()
   const [amount, setAmount] = useState(0)
   const [intervalMonths, setIntervalMonths] = useState<1 | 3 | 6 | 12>(1)
   const [dayOfMonth, setDayOfMonth] = useState(new Date().getDate())
@@ -89,7 +92,7 @@ export function useRecurringRuleForm({
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : errorMessages.operationFailed)
+        setError(describeError(e, errorMessages.operationFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -103,7 +106,7 @@ export function useRecurringRuleForm({
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : errorMessages.deleteFailed)
+        setError(describeError(e, errorMessages.deleteFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -120,7 +123,7 @@ export function useRecurringRuleForm({
         onMutated()
         onClose()
       } catch (e) {
-        setError(e instanceof Error ? e.message : fallbackErrorMessage)
+        setError(describeError(e, fallbackErrorMessage, t.common.offlineError, t.errors.actions))
       }
     })
   }

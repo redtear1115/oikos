@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState, useEffect } from 'react'
+import { useId, useMemo, useRef, useState, useEffect } from 'react'
 import { DescIcon } from '@/app/(dashboard)/_components/sheet-icons'
 
 interface Props {
@@ -11,6 +11,9 @@ interface Props {
   placeholder: string
   /** Aria label for the suggestion listbox. */
   listboxLabel: string
+  /** Id of an error message about the description. When set, the input is
+   *  marked `aria-invalid` and described by it. */
+  errorMessageId?: string
 }
 
 const MAX_VISIBLE = 6
@@ -41,10 +44,17 @@ export function DescriptionAutocomplete({
   suggestions,
   placeholder,
   listboxLabel,
+  errorMessageId,
 }: Props) {
   const [focused, setFocused] = useState(false)
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Focus never leaves the input, so the highlighted option only reaches a
+  // screen reader through aria-activedescendant. Without it, arrow keys moved
+  // an unannounced highlight and Enter replaced what the user typed with an
+  // option they were never told about (#1186).
+  const listboxId = useId()
+  const optionId = (i: number) => `${listboxId}-opt-${i}`
 
   const filtered = useMemo(() => filterSuggestions(value, suggestions), [value, suggestions])
   const open = focused && filtered.length > 0
@@ -100,14 +110,17 @@ export function DescriptionAutocomplete({
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
-          aria-controls="description-suggestions"
+          aria-invalid={errorMessageId ? true : undefined}
+          aria-describedby={errorMessageId}
+          aria-controls={listboxId}
+          aria-activedescendant={open && filtered[active] !== undefined ? optionId(active) : undefined}
           autoComplete="off"
         />
       </div>
 
       {open && (
         <ul
-          id="description-suggestions"
+          id={listboxId}
           role="listbox"
           aria-label={listboxLabel}
           className="absolute left-0 right-0 z-10 max-h-64 overflow-auto"
@@ -123,6 +136,7 @@ export function DescriptionAutocomplete({
             return (
               <li
                 key={s}
+                id={optionId(i)}
                 role="option"
                 aria-selected={isActive}
                 // onMouseDown fires before the input's blur, so preventDefault

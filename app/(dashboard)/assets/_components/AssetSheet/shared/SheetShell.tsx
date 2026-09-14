@@ -20,6 +20,8 @@ interface Props {
    * or deleting an asset.
    */
   destructive?: boolean
+  /** Unsaved-input check (see SheetFrame `isDirty`, #1183). */
+  isDirty?: () => boolean
 }
 
 // Shared sheet chrome: backdrop, slide-up container with fixed height,
@@ -37,6 +39,7 @@ export function SheetShell({
   onSave,
   children,
   destructive = false,
+  isDirty,
 }: Props) {
   const t = useTranslations()
   const accentColor = destructive ? 'var(--destructive)' : 'var(--accent)'
@@ -48,6 +51,7 @@ export function SheetShell({
     <SheetFrame
       open={open}
       onClose={onClose}
+      isDirty={isDirty}
       ariaLabel={title}
       // Fix the sheet height so toggling between types (long form like 車/保險 vs short like 植物/房子)
       // doesn't make the sheet jump. Inner content scrolls when needed.
@@ -80,7 +84,7 @@ export function SheetShell({
         {error && (
           <div
             className="mt-3 text-sm"
-            style={{ color: 'var(--error, #c0392b)' }}
+            style={{ color: 'var(--debit-text)' }}
             role="alert"
           >
             {error}

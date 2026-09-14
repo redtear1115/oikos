@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import {
   createInsurance,
@@ -14,6 +14,7 @@ import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -36,6 +37,10 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   // Defaults to viewer.id on create. In solo mode the toggle is hidden because
   // there's only one possible value.
   const { viewer, partner } = useMember()
+  // #1174 — the 被保人 Field wraps a chip row plus a conditional text input,
+  // so it can't use Field's render-prop id. Pass our own id through `htmlFor`
+  // so the freeform input gets the Field label as its accessible name.
+  const insuredInputId = useId()
 
   const [kind, setKind] = useState(initial?.insKind ?? 'medical')
   const [insured, setInsured] = useState(initial?.insInsured ?? '')
@@ -143,6 +148,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.insurance) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, kind, insured, insuredChildId, insuredUserId, policyHolderUserId, insurer,
+    policyNo, premium, sumInsured, payCycle, startsAt, endsAt, termYears, vehicleId,
+    expectedMaturityAmount, accountValue,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -153,6 +164,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 
@@ -168,12 +180,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         <div className="flex flex-wrap gap-1.5">
           {[{v:'medical',label:ts.insurance.kindMedical},{v:'life',label:ts.insurance.kindLife},{v:'accident',label:ts.insurance.kindAccident},{v:'cancer',label:ts.insurance.kindCancer},{v:'illness',label:ts.insurance.kindIllness},{v:'car',label:ts.insurance.kindCar},{v:'savings',label:ts.insurance.kindSavings}].map(o => (
             <button key={o.v} type="button" onClick={() => setKind(o.v)}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: kind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: kind === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: kind === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: kind === o.v ? 600 : 500,
+                fontWeight: 500,
               }}>{o.label}</button>
           ))}
         </div>
@@ -195,7 +207,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={opt.id}
                   type="button"
                   onClick={() => setPolicyHolderUserId(opt.id)}
-                  className={`oik-segment flex-1 h-9 rounded-lg text-sm font-medium ${
+                  className={`oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] ${
                     active ? 'font-medium' : ''
                   }`}
                   style={{
@@ -218,7 +230,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
           row always renders since 「我」is always an option; 「對方」 is hidden
           in solo mode. Picking a member or child clears the freeform text;
           picking 自行輸入 reveals the text input. */}
-      <Field label={ts.insurance.insured}>
+      <Field label={ts.insurance.insured} htmlFor={insuredInputId}>
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-1.5">
             <button
@@ -228,12 +240,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredChildId(null)
                 setInsured('')
               }}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: insuredUserId === viewer.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === viewer.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: insuredUserId === viewer.id ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: insuredUserId === viewer.id ? 600 : 500,
+                fontWeight: 500,
               }}
             >
               {t.common.me}
@@ -246,12 +258,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredChildId(null)
                   setInsured('')
                 }}
-                className="h-chip px-3.5 rounded-chip text-sm"
+                className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: insuredUserId === partner.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredUserId === partner.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                   color: insuredUserId === partner.id ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: insuredUserId === partner.id ? 600 : 500,
+                  fontWeight: 500,
                 }}
               >
                 {partner.displayName ?? t.common.partner}
@@ -266,12 +278,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredUserId(null)
                   setInsured('')
                 }}
-                className="h-chip px-3.5 rounded-chip text-sm"
+                className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                   color: insuredChildId === child.id ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: insuredChildId === child.id ? 600 : 500,
+                  fontWeight: 500,
                 }}
               >
                 {child.name}
@@ -283,19 +295,19 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredUserId(null)
                 setInsuredChildId(null)
               }}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: insuredUserId === null && insuredChildId === null ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: insuredUserId === null && insuredChildId === null ? 600 : 500,
+                fontWeight: 500,
               }}
             >
               {ts.insurance.insuredFreeform}
             </button>
           </div>
           {insuredUserId === null && insuredChildId === null && (
-            <TextInput value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
+            <TextInput id={insuredInputId} value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
               placeholder={ts.insurance.insuredPlaceholder} />
           )}
         </div>
@@ -374,7 +386,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
             const sel = payCycle === o.v
             return (
               <button key={o.v} type="button" onClick={() => setPayCycle(o.v)}
-                className="oik-segment flex-1 h-8 rounded-[9px] text-xs font-medium"
+                className="oik-segment relative flex-1 h-8 rounded-lg text-xs font-medium before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: 'none',
                   background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
@@ -423,12 +435,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               <button
                 type="button"
                 onClick={() => setVehicleId(null)}
-                className="h-chip px-3.5 rounded-chip text-sm"
+                className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: vehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: vehicleId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                   color: vehicleId === null ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: vehicleId === null ? 600 : 500,
+                  fontWeight: 500,
                 }}
               >
                 {ts.insurance.noLink}
@@ -438,12 +450,12 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={car.id}
                   type="button"
                   onClick={() => setVehicleId(car.id)}
-                  className="h-chip px-3.5 rounded-chip text-sm"
+                  className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                   style={{
                     border: vehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                     background: vehicleId === car.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                     color: vehicleId === car.id ? 'var(--ink)' : 'var(--ink-2)',
-                    fontWeight: vehicleId === car.id ? 600 : 500,
+                    fontWeight: 500,
                   }}
                 >
                   {car.name}

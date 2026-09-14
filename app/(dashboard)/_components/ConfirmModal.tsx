@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useTranslations } from '@/lib/i18n/client'
 import { useFocusTrap } from './useFocusTrap'
@@ -23,9 +24,21 @@ interface Props {
   onConfirm: () => void
 }
 
+const noopSubscribe = () => () => {}
+
 /**
  * Brand-styled replacement for native `confirm()`. Use for destructive actions
  * (delete a record, log out) where users should pause-and-confirm.
+ *
+ * Portalled to `document.body`, so where a caller renders it in the JSX tree
+ * doesn't matter. It used to render in place, and both placements were
+ * broken: inside a SheetFrame panel, the panel's `transform` (even
+ * `translateY(0)` computes to a matrix, not `none`) becomes the containing
+ * block for `position: fixed`, so the modal centred on the sheet instead of
+ * the viewport — the logout confirm opened at y=1141 on an 844px screen with
+ * focus already inside it (#1204). As a sibling of the sheet, the two focus
+ * traps fought over Tab (#1171 F1) — that half is fixed by the trap stack in
+ * useFocusTrap, not by the portal.
  */
 export function ConfirmModal({
   open,
@@ -47,19 +60,26 @@ export function ConfirmModal({
   const panelRef = useRef<HTMLDivElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
+  // `document.body` only exists on the client. The server snapshot (also used
+  // for the hydration render) is false, so SSR and hydration both render
+  // nothing and the portal appears on the following client render. Every
+  // effect below keys off `shown` rather than `open` so a modal mounted
+  // already-open still gets its trap and initial focus once the panel exists.
+  const isClient = useSyncExternalStore(noopSubscribe, () => true, () => false)
+  const shown = open && isClient
+
   // Traps Tab inside the panel while open, and restores focus to the trigger
-  // on close (see useFocusTrap.ts). Declared before the focus-on-open effect
-  // below so its effect runs first and captures `previouslyFocused` while
-  // focus is still on the trigger — the effect after this one is the thing
-  // that moves focus away from it.
-  useFocusTrap(open, panelRef)
+  // on close (see useFocusTrap.ts). The trap reads its restore target in a
+  // layout effect, so it runs before the passive focus-on-open effect below
+  // moves focus away from the trigger regardless of declaration order.
+  useFocusTrap(shown, panelRef)
 
   // Move focus into the panel on open. Focuses Cancel (not Confirm) so a
   // stray Enter from a fast typist can't fire the destructive action.
   useEffect(() => {
-    if (!open) return
+    if (!shown) return
     cancelRef.current?.focus()
-  }, [open])
+  }, [shown])
 
   // Drives the fade-in. The panel isn't in the DOM at all while closed (see
   // below), so on open it first renders at opacity 0, then flips to 1 on the
@@ -67,18 +87,20 @@ export function ConfirmModal({
   // Skipping straight to opacity 1 would skip the fade entirely.
   const [visible, setVisible] = useState(false)
   useEffect(() => {
-    if (!open) {
+    if (!shown) {
       setVisible(false)
       return
     }
     const raf = requestAnimationFrame(() => setVisible(true))
     return () => cancelAnimationFrame(raf)
-  }, [open])
+  }, [shown])
 
-  return (
+  if (!isClient) return null
+
+  return createPortal(
     <>
-      <SheetBackdrop open={open} onClick={onCancel} />
-      {open && (
+      <SheetBackdrop open={shown} onClick={onCancel} />
+      {shown && (
         <div
           ref={panelRef}
           role="dialog"
@@ -107,13 +129,17 @@ export function ConfirmModal({
               {description}
             </p>
           )}
+          {/* `oik-btn` is the design system's keyboard focus ring (2px
+              --focus-ring-color, globals.css). Without it these two fall back
+              to the engine default — a 1px blue outline that belongs to no
+              palette here, and is the only such ring left in the app (#1256). */}
           <div className="flex gap-2 mt-2">
             <button
               ref={cancelRef}
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+              className="oik-btn flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
               style={{
                 background: 'transparent',
                 color: 'var(--ink-2)',
@@ -126,7 +152,7 @@ export function ConfirmModal({
               type="button"
               onClick={onConfirm}
               disabled={pending}
-              className="flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+              className="oik-btn flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
               style={{
                 background: destructive ? 'var(--btn-destructive-bg)' : 'var(--btn-primary-bg)',
                 color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
@@ -137,6 +163,7 @@ export function ConfirmModal({
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body,
   )
 }

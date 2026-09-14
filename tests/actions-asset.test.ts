@@ -38,7 +38,7 @@ describe('createCar', () => {
   })
 
   it('throws on empty plate', async () => {
-    await expect(createCar({ name: '車', plate: '   ' })).rejects.toThrow(/車牌/)
+    await expect(createCar({ name: '車', plate: '   ' })).rejects.toThrow('plate_empty')
   })
 
   it('throws when group not found', async () => {
@@ -70,7 +70,7 @@ describe('editCar', () => {
     await expect(editCar({
       id: 'missing', name: '車', plate: 'A1',
       purchasedAt: null, purchasePrice: null,
-    })).rejects.toThrow(/找不到/)
+    })).rejects.toThrow('asset_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -348,7 +348,7 @@ describe('softDeleteCar', () => {
   it('throws if not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteCar('missing')).rejects.toThrow(/找不到/)
+    await expect(softDeleteCar('missing')).rejects.toThrow('asset_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -403,7 +403,7 @@ describe('editLifeEntity', () => {
   it('throws when asset not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // update returns empty = not found / wrong group
-    await expect(editLifeEntity({ id: 'nope', name: '名' })).rejects.toThrow('找不到')
+    await expect(editLifeEntity({ id: 'nope', name: '名' })).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -433,7 +433,7 @@ describe('softDeleteAsset', () => {
   it('throws when asset not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteAsset('nope')).rejects.toThrow('找不到')
+    await expect(softDeleteAsset('nope')).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {

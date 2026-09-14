@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
+import { TextInput } from '@/components/ui/TextInput'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { AssetGroupSection, Chip, Section } from './FilterSheetChrome'
 import { PICKABLE_CATEGORIES, type CategoryId } from '@/lib/categories'
@@ -407,30 +408,20 @@ export function FilterSheet({
           )}
           {!liteMode && dateMode === 'custom' && (
             <div className="flex items-center gap-2 -mt-2">
-              <input
+              <TextInput
                 type="date"
                 value={customStart}
                 onChange={(e) => updateForm({ customStart: e.target.value })}
                 aria-label={t.filterSheet.dateCustomStart}
-                className="h-9 px-2 rounded-lg text-sm flex-1"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                }}
+                className="flex-1 min-w-0"
               />
               <span style={{ color: 'var(--ink-3)' }}>→</span>
-              <input
+              <TextInput
                 type="date"
                 value={customEnd}
                 onChange={(e) => updateForm({ customEnd: e.target.value })}
                 aria-label={t.filterSheet.dateCustomEnd}
-                className="h-9 px-2 rounded-lg text-sm flex-1"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                }}
+                className="flex-1 min-w-0"
               />
             </div>
           )}
@@ -530,7 +521,7 @@ export function FilterSheet({
               (cash / settlement / income), so it stays visible in lite mode. */}
           <Section title={t.filterSheet.amountSection}>
             <div className="flex items-center gap-2 w-full">
-              <input
+              <TextInput
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -538,15 +529,10 @@ export function FilterSheet({
                 onChange={(e) => updateForm({ amountMinText: e.target.value })}
                 placeholder={t.filterSheet.amountMinPlaceholder}
                 aria-label={t.filterSheet.amountMinLabel}
-                className="h-9 px-2 rounded-lg text-sm flex-1 min-w-0"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                }}
+                className="flex-1 min-w-0"
               />
               <span style={{ color: 'var(--ink-3)' }}>→</span>
-              <input
+              <TextInput
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -554,12 +540,7 @@ export function FilterSheet({
                 onChange={(e) => updateForm({ amountMaxText: e.target.value })}
                 placeholder={t.filterSheet.amountMaxPlaceholder}
                 aria-label={t.filterSheet.amountMaxLabel}
-                className="h-9 px-2 rounded-lg text-sm flex-1 min-w-0"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                }}
+                className="flex-1 min-w-0"
               />
             </div>
           </Section>
@@ -629,7 +610,7 @@ export function FilterSheet({
                   border: '1px solid var(--hairline)',
                 }}
               >
-                <span aria-hidden style={{ fontSize: 14 }}>↗</span>
+                <span aria-hidden className="text-sm">↗</span>
                 {t.filterSheet.shareLink}
               </button>
               {shareToast && (

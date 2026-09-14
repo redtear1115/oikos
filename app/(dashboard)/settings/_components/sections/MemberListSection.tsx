@@ -44,7 +44,7 @@ export function MemberListSection({ viewer, partner }: Props) {
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)
         inviteToastTimerRef.current = setTimeout(() => setInviteToast(null), 2000)
       } catch (e) {
-        setInviteError(describeError(e, t.common.error, t.common.offlineError))
+        setInviteError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -80,7 +80,7 @@ export function MemberListSection({ viewer, partner }: Props) {
             </div>
           )}
           {inviteError && (
-            <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--debit)' }}>
+            <div className="text-xs mt-2 px-1 text-center" style={{ color: 'var(--debit-text)' }}>
               {inviteError}
             </div>
           )}

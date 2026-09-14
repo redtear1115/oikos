@@ -49,7 +49,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
         // Snap the slider back to where it actually persisted.
         setConfirmed(prev)
         setMeShare(prev)
-        setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
+        setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -74,6 +74,11 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
         onPointerUp={() => commit(meShare)}
         onTouchEnd={() => commit(meShare)}
         onKeyUp={() => commit(meShare)}
+        // Without these the slider announced only a bare percentage — not
+        // what it sets, nor whose share the number is (#1172). The value text
+        // repeats the visible readout above so both people's shares are read.
+        aria-label={t.splitRatioSection.ariaLabel}
+        aria-valuetext={`${viewerName}${t.splitRatioSection.meSuffix}${meShare}%, ${partnerName}${t.splitRatioSection.partnerSuffix}${100 - meShare}%`}
         aria-busy={pending}
         className="w-full accent-[var(--ink)]"
       />
@@ -82,7 +87,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
           <option key={v} value={v} label={`${v}`} />
         ))}
       </datalist>
-      {error && <p className="text-xs" style={{ color: 'var(--debit)' }} role="alert">{error}</p>}
+      {error && <p className="text-xs" style={{ color: 'var(--debit-text)' }} role="alert">{error}</p>}
     </section>
   )
 }

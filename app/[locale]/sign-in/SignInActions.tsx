@@ -53,15 +53,17 @@ function WaitingCurtain({ label }: { label: string }) {
       role="status"
       aria-live="polite"
       className="fixed inset-0 z-modal flex flex-col items-center justify-center gap-3 px-6"
-      style={{ background: 'var(--bg)' }}
+      // Committed ground, same as the sign-in page root (#1161). The curtain
+      // speaks in the brand voice — the Fraunces wordmark — so under DESIGN.md
+      // §2 The Two-Grounds Rule it belongs on --bg-committed. It used to be
+      // --bg, which read as "an app screen wearing the serif". Inline because
+      // --bg-committed has no --color-* utility twin (see page.tsx).
+      style={{ background: 'var(--bg-committed)' }}
     >
-      <p
-        className="text-page leading-none tracking-[-1px] m-0"
-        style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
-      >
+      <p className="font-serif font-medium text-ink text-page leading-none tracking-[-1px] m-0">
         Futari
       </p>
-      <p className="text-sm tracking-[3px] m-0" style={{ color: 'var(--ink-2)' }}>
+      <p className="text-sm text-ink-2 tracking-[3px] m-0">
         ふたり
       </p>
 
@@ -73,13 +75,13 @@ function WaitingCurtain({ label }: { label: string }) {
         {[0, 200, 400].map((delay) => (
           <span
             key={delay}
-            className="w-2 h-2 rounded-full motion-safe:animate-pulse"
-            style={{ background: 'var(--accent)', animationDelay: `${delay}ms` }}
+            className="w-2 h-2 rounded-full bg-accent motion-safe:animate-pulse"
+            style={{ animationDelay: `${delay}ms` }}
           />
         ))}
       </span>
 
-      <p className="mt-2 text-base m-0" style={{ color: 'var(--ink-2)' }}>
+      <p className="mt-2 text-base text-ink-2 m-0">
         {label}
       </p>
     </div>

@@ -72,6 +72,10 @@ export function PastTimesList({
 
       <div className="px-5 pt-6 pb-3">
         <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{t.intro}</p>
+        {/* #1190 — the read-only stance, said once where every pinned visit
+            starts (this page is the only way into a past chapter). Product
+            philosophy, not a limit: epoch-readonly-design.md. */}
+        <p className="text-sm mt-2 text-ink-3">{t.readOnlyNote}</p>
       </div>
 
       {epochs.length === 0 ? (

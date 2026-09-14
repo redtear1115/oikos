@@ -102,8 +102,15 @@ function ensurePopStateListener(): void {
  * Nested sheets unwind one layer per Back/Esc press in both paths:
  *  - CloseWatcher: the browser maintains a built-in stack per browsing context.
  *  - History API fallback: we maintain our own module-level stack.
+ *
+ * Declining a close: `onClose` may return `false` to say "I didn't close" —
+ * e.g. a sheet with unsaved input that asks for confirmation instead (#1183).
+ * A Back press or a CloseWatcher close has already consumed this sheet's
+ * listener by then, so the hook re-arms a fresh one. Symptom if the re-arm
+ * breaks: after choosing "keep editing" once, Esc no longer reaches the sheet
+ * and Android Back leaves the page instead of closing it.
  */
-export function useEscapeToClose(open: boolean, onClose: () => void): void {
+export function useEscapeToClose(open: boolean, onClose: () => void | boolean): void {
   // Hold the latest onClose in a ref so we don't re-bind listeners every render
   // — parent callbacks are often inline arrows that change identity each pass.
   const onCloseRef = useRef(onClose)
@@ -128,10 +135,17 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
     // CloseWatcher path (Chrome 120+, Android)
     // ------------------------------------------------------------------
     if (typeof CloseWatcher !== 'undefined') {
-      const watcher = new CloseWatcher()
-      // `close` fires on Back, Esc, or any platform close gesture. The browser
-      // ensures only the topmost watcher fires — nested sheets just work.
-      watcher.onclose = () => onCloseRef.current()
+      let watcher: CloseWatcher
+      const arm = () => {
+        watcher = new CloseWatcher()
+        // `close` fires on Back, Esc, or any platform close gesture. The
+        // browser ensures only the topmost watcher fires — nested sheets just
+        // work. A fired watcher is spent, so re-arm when the host declined.
+        watcher.onclose = () => {
+          if (onCloseRef.current() === false) arm()
+        }
+      }
+      arm()
       return () => {
         // Sheet closed by backdrop / X / save — remove from the browser's
         // close-watcher stack without triggering `onclose`.
@@ -142,17 +156,30 @@ export function useEscapeToClose(open: boolean, onClose: () => void): void {
     // ------------------------------------------------------------------
     // History API fallback (Safari + older browsers)
     // ------------------------------------------------------------------
-    const entry: SheetEntry = { close: () => onCloseRef.current(), poppedByBack: false }
-    stack.push(entry)
+    let entry: SheetEntry
+    const arm = () => {
+      const armed: SheetEntry = {
+        close: () => {
+          const declined = onCloseRef.current() === false
+          // Esc leaves the entry in place; only a consumed Back needs a new
+          // one. Pushing here (inside popstate, no self-pop pending) can't race.
+          if (declined && armed.poppedByBack) arm()
+        },
+        poppedByBack: false,
+      }
+      entry = armed
+      stack.push(armed)
 
-    // Push a synthetic history entry that Back will consume. `pushState(null)`
-    // lets Next.js's patched history merge its internal router state into the
-    // entry (so the later `popstate` stays a no-op route restore rather than a
-    // full reload); omitting the URL keeps the address bar unchanged and avoids
-    // triggering a router transition. See node_modules/next/dist/client/
-    // components/app-router.js (copyNextJsInternalHistoryState / onPopState).
+      // Push a synthetic history entry that Back will consume. `pushState(null)`
+      // lets Next.js's patched history merge its internal router state into the
+      // entry (so the later `popstate` stays a no-op route restore rather than a
+      // full reload); omitting the URL keeps the address bar unchanged and avoids
+      // triggering a router transition. See node_modules/next/dist/client/
+      // components/app-router.js (copyNextJsInternalHistoryState / onPopState).
+      window.history.pushState(null, '')
+    }
     ensurePopStateListener()
-    window.history.pushState(null, '')
+    arm()
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return

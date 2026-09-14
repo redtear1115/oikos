@@ -30,6 +30,7 @@ vi.mock('@/lib/incomeFeedRow', () => ({ makeIncomeLoader: () => async () => [], 
 vi.mock('@/actions/transaction', () => ({
   loadMoreFeedAll: vi.fn(async () => []),
   loadMoreTransactions: vi.fn(async () => []),
+  loadRecordsMonthSummaries: vi.fn(async () => []),
 }))
 
 // Spy TransactionFeed: count mounts and expose the `initial` it received.
@@ -103,6 +104,7 @@ function renderRecords(initial: PagedTxnRow[]) {
         <RecordsList
           initial={initial}
           pageSize={20}
+          monthSummaries={[]}
           monthKey="2026-05"
           maxMonthKey="2026-05"
           dateRange={monthRange}
@@ -136,6 +138,7 @@ describe('RecordsList — payer filter syncs the list (#745)', () => {
           <RecordsList
             initial={MINE_ROWS}
             pageSize={20}
+            monthSummaries={[]}
             monthKey="2026-05"
             maxMonthKey="2026-05"
             dateRange={monthRange}

@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusTrap } from './useFocusTrap'
+import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 
 interface SheetFrameProps {
   open: boolean
@@ -38,12 +39,19 @@ interface SheetFrameProps {
   /** Optional ref forwarded to the panel for callers that need to attach
    *  their own effects. */
   panelRef?: React.RefObject<HTMLDivElement | null>
+  /** Form sheets: return true when the form holds unsaved input (build it with
+   *  `useDirtyCheck`). Backdrop tap / Escape / system Back then ask before
+   *  discarding instead of closing (#1183). Omit for non-form sheets — the
+   *  close behaviour is then unchanged. Buttons that call `onClose` directly
+   *  (取消, save) are never intercepted. */
+  isDirty?: () => boolean
   children: ReactNode
 }
 
 /**
  * The shared bottom-sheet chrome: backdrop, slide-up panel, grabber, and
- * dialog semantics (`role="dialog"`, `aria-modal`, focus trap). Callers
+ * dialog semantics (`role="dialog"`, `aria-modal`, focus trap — all only
+ * while open; the closed panel is `inert`). Callers
  * own the header / body / footer inside `children` — this primitive is
  * deliberately unopinionated about content shape so it can host the
  * AddSheet / IncomeSheet / NewFuelLog / RecurringRuleSheet variants
@@ -64,11 +72,13 @@ export function SheetFrame({
   zIndex = 100,
   noBackdrop = false,
   panelRef,
+  isDirty,
   children,
 }: SheetFrameProps) {
   const fallbackRef = useRef<HTMLDivElement>(null)
   const ref = panelRef ?? fallbackRef
   useFocusTrap(open, ref)
+  const { requestClose, confirm } = useUnsavedChangesGuard(open, onClose, isDirty)
 
   // Dismiss the iOS soft keyboard when the sheet closes. `useFocusTrap`
   // restores focus to `previouslyFocused`, but on iOS that's often `document
@@ -91,6 +101,12 @@ export function SheetFrame({
   const labelAttrs = labelledBy
     ? { 'aria-labelledby': labelledBy }
     : { 'aria-label': ariaLabel ?? fallbackId }
+  // Dialog semantics only while open. A permanently-mounted
+  // `aria-modal="true"` reads to assistive tech as a modal that is always
+  // open — some screen readers confine the virtual cursor to it (#1176).
+  const dialogAttrs = open
+    ? { role: 'dialog', 'aria-modal': true as const, ...labelAttrs }
+    : {}
 
   const panelStyle: CSSProperties = {
     background,
@@ -108,12 +124,19 @@ export function SheetFrame({
 
   return (
     <>
-      {!noBackdrop && <SheetBackdrop open={open} onClick={onClose} />}
+      {!noBackdrop && <SheetBackdrop open={open} onClick={requestClose} />}
+      {/* The panel stays mounted while closed — unmounting would replace the
+          0.32s slide-down with a pop and throw away in-sheet form state. What
+          keeps the closed panel out of reach is `inert`: `translateY(100%)`
+          only moves it off-screen and `pointer-events: none` only stops the
+          mouse, so without it every field and button (save, delete) stayed
+          in the Tab order and in the accessibility tree (#1176).
+          If this regresses, nothing looks wrong: Tab from the page just lands
+          on invisible controls below the viewport. */}
       <div
         ref={ref}
-        role="dialog"
-        aria-modal="true"
-        {...labelAttrs}
+        {...dialogAttrs}
+        inert={!open}
         className="fixed left-1/2 bottom-0 w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={panelStyle}
       >
@@ -131,6 +154,7 @@ export function SheetFrame({
         )}
         {children}
       </div>
+      {confirm}
     </>
   )
 }

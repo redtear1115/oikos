@@ -81,7 +81,7 @@ describe('createSettlement', () => {
     queueDbResult([OPEN_EPOCH])
     await expect(createSettlement({
       amount: 50, payerId: 'user-stranger', settledAt: '2026-05-16',
-    })).rejects.toThrow('付款人不在家計簿內')
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   it('throws when group not found', async () => {
@@ -126,7 +126,7 @@ describe('softDeleteSettlement', () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
-    await expect(softDeleteSettlement('missing')).rejects.toThrow('找不到該筆紀錄')
+    await expect(softDeleteSettlement('missing')).rejects.toThrow('record_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -167,7 +167,7 @@ describe('editSettlement', () => {
     queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
     await expect(editSettlement({
       oldId: 'set-missing', amount: 75, payerId: 'user-a', settledAt: '2026-05-16',
-    })).rejects.toThrow('找不到該筆紀錄')
+    })).rejects.toThrow('record_not_found')
   })
 
   it('throws if payer not in group', async () => {
@@ -175,7 +175,7 @@ describe('editSettlement', () => {
     queueDbResult([OPEN_EPOCH])
     await expect(editSettlement({
       oldId: 'set-1', amount: 75, payerId: 'user-stranger', settledAt: '2026-05-16',
-    })).rejects.toThrow('付款人不在家計簿內')
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   it('throws unauthorized when no user', async () => {

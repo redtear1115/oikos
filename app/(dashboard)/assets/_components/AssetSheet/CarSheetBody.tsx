@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
 import { createCar, editCar } from '@/actions/asset'
+import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -129,6 +131,11 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.car) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, plate, wantClearPlate, purchasedAt, purchasePrice, fuelType,
+    primaryUserId, color, year, brand, model, initialOdometer,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -139,6 +146,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 
@@ -159,7 +167,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
                 key={c.key}
                 type="button"
                 onClick={() => setColor(c.hex)}
-                className="w-9 h-9 rounded-full transition-all"
+                className="relative w-9 h-9 rounded-full transition-all before:absolute before:-inset-1 before:content-['']"
                 style={{
                   background: c.hex,
                   border: sel ? '3px solid var(--ink)' : `2px solid ${c.border}`,
@@ -173,7 +181,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
           <button
             type="button"
             onClick={() => setColor(null)}
-            className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs"
+            className="relative w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs before:absolute before:-inset-1 before:content-['']"
             style={{
               border: color === null ? '3px solid var(--ink)' : '1.5px solid var(--hairline)',
               background: 'transparent',
@@ -193,7 +201,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       <Field label={ts.car.plate}>
         {id => (
           <div className="flex items-center gap-2">
-            <input
+            <TextInput
               id={id}
               value={plate}
               onChange={e => {
@@ -205,14 +213,14 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
                   ? ts.child.pendingClearHint
                   : (isEdit && hasPlate ? ts.child.encryptedHint : ts.car.platePlaceholder)
               }
-              className="flex-1 bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+              className="flex-1"
+              inputClassName="font-numeric"
             />
             {isEdit && hasPlate && !wantClearPlate && plate.trim() === '' && (
               <button
                 type="button"
                 onClick={() => setWantClearPlate(true)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
               >
                 {ts.child.clear}
@@ -222,7 +230,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
               <button
                 type="button"
                 onClick={() => setWantClearPlate(false)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
               >
                 {ts.child.cancelClear}
@@ -234,41 +242,35 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
       <Field label={ts.car.year}>
         {id => (
-          <input
+          <TextInput
             id={id}
             value={year}
             onChange={e => setYear(e.target.value.slice(0, 4))}
             type="number"
             inputMode="numeric"
             placeholder={ts.car.yearPlaceholder}
-            className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }}
           />
         )}
       </Field>
 
       <Field label={ts.car.brand}>
         {id => (
-          <input
+          <TextInput
             id={id}
             value={brand}
             onChange={e => setBrand(e.target.value.slice(0, 32))}
             placeholder={ts.car.brandPlaceholder}
-            className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }}
           />
         )}
       </Field>
 
       <Field label={ts.car.model}>
         {id => (
-          <input
+          <TextInput
             id={id}
             value={model}
             onChange={e => setModel(e.target.value.slice(0, 32))}
             placeholder={ts.car.modelPlaceholder}
-            className="w-full bg-transparent border-0 outline-none text-base"
-            style={{ color: 'var(--ink)' }}
           />
         )}
       </Field>
@@ -282,36 +284,30 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
       <Field label={ts.car.purchasePrice}>
         {id => (
-          <div className="flex items-center gap-1">
-            <span className="text-sm" style={{ color: 'var(--ink-3)' }}>NT$</span>
-            <input
-              id={id}
-              value={purchasePrice}
-              onChange={e => setPurchasePrice(e.target.value.replace(/\D/g, '').slice(0, 9))}
-              placeholder="0"
-              inputMode="numeric"
-              className="flex-1 bg-transparent border-0 outline-none text-base tnum"
-              style={{ color: 'var(--ink)' }}
-            />
-          </div>
+          <TextInput
+            id={id}
+            value={purchasePrice}
+            onChange={e => setPurchasePrice(e.target.value.replace(/\D/g, '').slice(0, 9))}
+            placeholder="0"
+            inputMode="numeric"
+            inputClassName="tnum"
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>}
+          />
         )}
       </Field>
 
       <Field label={ts.car.initialOdometer}>
         {id => (
-          <div className="flex items-center gap-1">
-            <input
-              id={id}
-              value={initialOdometer}
-              onChange={e => setInitialOdometer(e.target.value)}
-              type="number"
-              inputMode="numeric"
-              placeholder={ts.car.initialOdometerPlaceholder}
-              className="flex-1 bg-transparent border-0 outline-none text-base"
-              style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-            />
-            <span className="text-sm" style={{ color: 'var(--ink-3)' }}>km</span>
-          </div>
+          <TextInput
+            id={id}
+            value={initialOdometer}
+            onChange={e => setInitialOdometer(e.target.value)}
+            type="number"
+            inputMode="numeric"
+            placeholder={ts.car.initialOdometerPlaceholder}
+            inputClassName="font-numeric"
+            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>km</span>}
+          />
         )}
       </Field>
 

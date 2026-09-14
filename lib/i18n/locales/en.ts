@@ -74,6 +74,8 @@ export const en: Translations = {
     srTagline: " · A shared ledger for couples · Two-person finance PWA",
     srDescription:
       'A shared finance app built for couples. Track daily spending together, auto-split costs and settle monthly, manage household budget, assets, insurance, and fuel logs side by side.',
+    aboutLabel: 'About Futari',
+    featuresLabel: 'What Futari does',
     installHint: {
       cta: 'Or add to your home screen first',
       iosStep1: 'Tap the Share button at the bottom centre',
@@ -88,14 +90,14 @@ export const en: Translations = {
     cta: 'Begin together',
     ctaHint: 'Free · Try without signing up · For two',
     alreadyHaveAccount: 'I already have an account',
-    trustEncrypted: 'End-to-end encrypted',
+    trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: 'Your records belong only to the two of you. No ads, no data selling.',
       encryption: {
-        title: 'End-to-end encrypted',
-        body: 'Your data is encrypted in transit and at rest. Not even we can read it.',
+        title: 'Open only to you two',
+        body: "Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details like a child's legal name or ID number get an extra layer of encryption before they're stored.",
       },
       portability: {
         title: 'Take it with you',
@@ -141,7 +143,7 @@ export const en: Translations = {
       cwmoneyBody: 'An Excel → CSV template ships with it. Takes a few minutes.',
       seeAll: 'See all migration guides',
     },
-    footerTrust: 'End-to-end encrypted · Your data stays between the two of you',
+    footerTrust: 'Open only to you two · Your data stays between the two of you',
     jsonLdAppName: 'Futari',
     jsonLdAlternateNames: ["Futari · couple's ledger", 'Futari shared finance app', '兩個人的家計簿', 'ふたり 家計簿'],
     jsonLdAppDescription:
@@ -169,7 +171,7 @@ export const en: Translations = {
       {
         question: 'Is my data safe?',
         answer:
-          "All data is stored in an encrypted Supabase database, accessible only to you and your partner. We don't share or sell your ledger content.",
+          "Your ledger is open only to you and your partner. Connections are encrypted over HTTPS, and sensitive fields such as a child's legal name, ID number, health insurance number, licence plate, and home address are encrypted before they're written to the database. We don't share or sell your ledger content.",
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -213,6 +215,12 @@ export const en: Translations = {
       confirm: 'Confirm',
       cancel: 'Cancel',
       retry: 'Retry',
+    },
+    unsavedChanges: {
+      title: 'Your changes aren’t saved yet',
+      description: 'If you leave now, what you entered won’t be kept.',
+      discard: 'Discard',
+      keepEditing: 'Keep editing',
     },
   },
 
@@ -289,6 +297,8 @@ export const en: Translations = {
     filterAriaLabel: 'Open filter',
     burdenMe: 'Mine',
     burdenPartner: "Partner's",
+    payerFilterAriaLabel: 'Filter by who paid',
+    burdenFilterAriaLabel: 'Filter by whose share',
     headerHint: {
       trip: 'Trip',
       settings: 'Settings',
@@ -325,6 +335,8 @@ export const en: Translations = {
     modeSettledLabel: 'Now',
     modeIncludePendingLabel: 'After settle',
     modeToggleAriaLabel: 'Toggle between current and after-settle balance',
+    expandAriaLabel: 'Expand summary card',
+    collapseAriaLabel: 'Collapse summary card',
   },
 
   soloBanner: {
@@ -478,6 +490,7 @@ export const en: Translations = {
   splitRatioSection: {
     meSuffix: ' (me)',
     partnerSuffix: ' (partner)',
+    ariaLabel: 'Default split ratio',
   },
 
   errorPage: {
@@ -495,6 +508,12 @@ export const en: Translations = {
   assetListItem: {
     savingsBadge: 'Savings',
     thisMonth: 'This month',
+    plateMaskedAriaLabel: 'Plate hidden',
+    lastRefuel: 'Last refuel {date}',
+    childAge: '{years} yr {months} mo',
+    petAge: '{years} yr',
+    birthdayThisMonth: '🎂 Birthday this month',
+    plantCompanionDays: '{days} days together',
     insuranceGroups: {
       shortTermProtection: 'Term Protection',
       longTermProtection: 'Whole / Long-term Protection',
@@ -541,6 +560,7 @@ export const en: Translations = {
     addCustomCta: '+ Custom currency',
     footerNote: 'Expenses recorded during this trip will be tagged here automatically.',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: 'Exchange rate for {code} to {baseCode}',
     basePill: 'Base',
     usedCountNote: '{n} record(s) so far; editing the rate keeps them unchanged',
     customRow: {
@@ -638,6 +658,7 @@ export const en: Translations = {
     loadFailed: 'Failed to load',
     emptyAibutsu: 'No aibutsu yet. Add one from the Aibutsu tab first.',
     emptyGuardian: 'No policies yet. Add one from Aibutsu > Guardian first.',
+    deletedSuffix: '(deleted)',
   },
 
   records: {
@@ -682,6 +703,7 @@ export const en: Translations = {
       trendIncome: 'Income',
       trendNet: 'Cumulative net',
       trendChartLabel: 'Daily income and spending trend',
+      pieChartLabel: 'Breakdown chart, {count} segments',
     },
   },
 
@@ -973,6 +995,7 @@ export const en: Translations = {
     title: 'Past chapters',
     back: 'Back',
     intro: 'This ledger has lived through several chapters. Each one is what the two of you wrote then.',
+    readOnlyNote: 'Chapters you have turned past stay just as they were. You can come back to look, but they no longer change.',
     currentChapter: 'Now · with {partner}',
     currentChapterSolo: 'Now · on your own',
     chapterRange: '{start} – {end}',
@@ -1057,6 +1080,19 @@ export const en: Translations = {
       lapseTitle: 'Stop this policy?',
       lapseDescription: 'It will be removed from the list. Still recoverable from the detail page.',
       lapseConfirm: 'Stop',
+      insuredShort: 'Insured: {name}',
+      annualLabel: 'Annual',
+      timelineStarts: 'Effective',
+      timelineEnds: 'Expires',
+      timelinePaid: 'Paid',
+      timelinePaidYears: '{paid} / {term} yrs',
+      timelineSumInsured: 'Sum insured',
+      timelineInvested: 'Paid in',
+      timelineTarget: 'Target',
+      summaryAnnualPremium: 'Annual premiums',
+      summaryPolicyCount: '{count} policies',
+      summaryNextRenewal: 'Next renewal',
+      summaryDaysUntil: 'in {days} days',
     },
   },
 
@@ -1075,6 +1111,7 @@ export const en: Translations = {
       intervalEveryYear: 'Yearly',
       intervalEveryNMonths: 'Every {n} months',
       dayLabel: 'Day {day}',
+      nextDate: 'Next {date}',
     },
     pending: {
       sectionLabel: 'A few here for you',
@@ -1106,7 +1143,8 @@ export const en: Translations = {
       resumeAction: 'Resume',
       deleteRuleAction: 'Delete rule',
       deleteConfirmTitle: 'Delete this recurring rule?',
-      deleteConfirmDescription: "Existing pending cards will also be cleared. This can't be undone.",
+      deleteConfirmDescription: "Pending cards you haven't handled yet will be removed. Records already saved stay. This can't be undone.",
+      editEffectHint: 'Changes apply from the next cycle. Pending cards already created keep their amount and date.',
     },
     errors: {
       amountRequired: 'Enter an amount',
@@ -1123,22 +1161,21 @@ export const en: Translations = {
     pageHeading: 'Your records belong to the two of you',
     pageSubtitle: 'Our promises, written down here.',
     encryption: {
-      heading: 'Only the two of you can read it',
-      body: 'We encrypt your records with AES-256-GCM. We can\'t read them either.',
+      heading: 'Open only to the two of you',
+      body: "Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details like a child's legal name, ID number, licence plate, and address get an extra layer of encryption before we store them.",
     },
     portability: {
       heading: 'Take it all with you, anytime',
       body: 'We won\'t lock you in. If you ever want to leave, you can take everything with you.',
-      comingSoonHint: 'Export coming soon',
     },
     backup: {
-      heading: 'We hold them safe for you',
-      body: 'We back up every record we keep for you. Even if you forget, we won\'t.',
+      heading: 'Every entry, kept',
+      body: "As long as your account is here, every entry you've recorded stays here.",
     },
     onboarding: {
       line1: 'Your records, only yours',
       line2: 'Take it all with you, anytime',
-      line3: 'Every entry, held safe by us',
+      line3: 'Every entry, kept',
     },
     bilateral: {
       inviter: {
@@ -1155,8 +1192,53 @@ export const en: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review. (#1163)
+  onboarding: {
+    heading: 'Five ideas behind Futari',
+    skip: 'Skip',
+    next: 'Continue',
+    start: 'Record the first entry',
+    progress: 'Card {current} of {total}',
+    paydayMark: '05 / mo',
+    cards: [
+      {
+        eyebrow: 'Idea',
+        quote: ['Futari won’t ask', 'who spent more.'],
+        subtitle: 'We only note what happened. Whoever paid first was simply the one it was easier for.',
+      },
+      {
+        eyebrow: 'Together',
+        quote: ['What comes into Futari', 'is *ours*.'],
+        subtitle: 'This isn’t a bill-splitting book. It’s a household ledger the two of you share — one entry goes in, and you both see it.',
+      },
+      {
+        eyebrow: 'Ritual',
+        quote: ['Payday is', 'a moment the two of you', 'feel together.'],
+        subtitle: 'So recurring income shows up as a card on that day — a reminder, confirmed together.',
+      },
+      {
+        eyebrow: 'Care',
+        quote: ['Insurance isn’t a cost —', 'it’s a promise you keep', 'with each other.'],
+        subtitle: 'That’s why it lives in Aibutsu, not in expenses. Every payment makes that promise once more.',
+      },
+      {
+        eyebrow: 'Begin',
+        quote: ['Ready?', 'Start with the first entry,', 'one step at a time.'],
+        subtitle: 'No need to wait for the perfect moment — the ledger will grow along with you.',
+      },
+    ],
+  },
+
   // TODO: unconfirmed translation — needs native review.
   setup: {
+    name: {
+      heading: 'Give your ledger a name',
+      subtitle: 'You can change it anytime. Short names are easier to remember.',
+      suggestions: ['Us two', 'Home', 'Our place', 'Day by day', 'Together'],
+      next: 'Next',
+      required: 'Please enter a name',
+      failed: 'Something went wrong',
+    },
     invite: {
       heading: 'Your ledger is ready — bring your partner in',
       subtitle: 'Once they join, you can track "{name}" together.',
@@ -1386,6 +1468,7 @@ export const en: Translations = {
     switcher: {
       emptyGroup: '(none)',
       currentLabel: 'Current',
+      carGroup: 'Vehicles',
     },
     notesSection: 'Notes',
     recentExpenses: 'Recent expenses',
@@ -1440,6 +1523,25 @@ export const en: Translations = {
       avgEconRecent: 'Last 6 months',
       plate: 'Plate',
       plateSection: 'Vehicle',
+    },
+    fuelLog: {
+      titleNew: 'Refuel',
+      titleEdit: 'Edit refuel',
+      closeAriaLabel: 'Close',
+      econLabel: 'This fill-up',
+      firstRefuelHint: 'First refuel · economy shows from the next one',
+      autoCalcHint: 'Enter odometer and fuel to calculate',
+      liters: 'Fuel',
+      litersUnit: 'L',
+      odometer: 'Odometer',
+      lastOdometer: 'Last {km} km',
+      cost: 'Amount',
+      date: 'Date',
+      pickDate: 'Pick a date',
+      splitLabel: 'Split',
+      submit: 'Log it',
+      deleteTitle: 'Delete this refuel?',
+      deleteDescription: 'This can\'t be undone. Your other expenses stay as they are.',
     },
     child: {
       sectionId: 'ID documents',
@@ -1591,6 +1693,7 @@ export const en: Translations = {
       intervalEveryYear: 'Yearly',
       intervalEveryNMonths: 'Every {n} months',
       dayLabel: 'Day {day}',
+      nextDate: 'Next {date}',
     },
     pending: {
       sectionLabel: 'A few here for you',
@@ -1624,7 +1727,8 @@ export const en: Translations = {
       resumeAction: 'Resume',
       deleteRuleAction: 'Delete rule',
       deleteConfirmTitle: 'Delete this recurring rule?',
-      deleteConfirmDescription: "Existing pending cards will also be cleared. This can't be undone.",
+      deleteConfirmDescription: "Pending cards you haven't handled yet will be removed. Records already saved stay. This can't be undone.",
+      editEffectHint: 'Changes apply from the next cycle. Pending cards already created keep their amount, date, and split.',
     },
     errors: {
       amountRequired: 'Enter an amount',
@@ -1675,6 +1779,7 @@ export const en: Translations = {
 
   offlineBanner: {
     text: "Offline · showing your last connection's data",
+    textNoCache: 'Offline · will update once you reconnect',
   },
 
   offlinePage: {
@@ -1751,7 +1856,8 @@ export const en: Translations = {
   },
 
   monthlyReview: {
-    pageTitle: '{month} {year} · Our monthly review',
+    // {monthName}, not {month}: CJK templates read `{month} 月`, en needs a name (#1178).
+    pageTitle: '{monthName} {year} · Our monthly review',
     backAriaLabel: 'Back',
     closeAriaLabel: 'Close',
     bannerHeading: 'In {month} you wrote:',
@@ -1784,6 +1890,7 @@ export const en: Translations = {
     emptyRecurring: 'No recurring events this month',
     emptyAssetBreakdown: 'No spending tagged to any aibutsu this month',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: 'Monthly review cards',
     incomeLabel: 'In',
     expenseLabel: 'Out',
     snapshotNotReady: "This month's review is still being prepared. Check back in a moment.",
@@ -1961,12 +2068,50 @@ export const en: Translations = {
     // TODO(#599): en copy below pending native review
     faqHeading: 'Frequently asked',
     comparisonHeading: 'Futari vs {other}',
+    comparisonText: {
+      interfaceLanguage: 'Interface language',
+      fourLanguages: '✓ English, Japanese & Chinese',
+      notStated: 'Not stated',
+      basicHalfSplit: '△ 50/50 only',
+      updatesSlowed: '△ Slower updates',
+      paidUnlock: '△ Paid unlock',
+      paidPlanOnly: '△ Paid plan only',
+      basicPlanLimited: '△ Limited free plan',
+      manualCleanup: 'Needs manual cleanup',
+      requiresVip: '△ Requires VIP',
+      vipUnlock: '△ VIP unlock',
+      requiresSubscription: '△ Requires subscription',
+      manualBackup: '△ Manual backup',
+      adsOrPaidPlan: '△ Ads or paid plan',
+      mostlyEnglish: '△ Mostly English',
+      advancedNeedsSubscription: '△ Premium needs subscription',
+      sharingSetupRequired: '△ Sharing needs setup',
+      premiumOnly: '△ Premium only',
+      someFeaturesPaid: '△ Some features paid',
+      viewOnly: '△ View only',
+      dependsOnVersion: '△ Depends on version',
+      advancedSubscription: '△ Premium subscription',
+      vipOnly: '△ VIP only',
+      dependsOnAccount: '△ Depends on account',
+      inAppPurchases: '△ In-app purchases',
+      subscriptionOnly: '△ Subscription only',
+      mostlyLocal: '△ Mostly on-device',
+      advancedPaid: '△ Premium is paid',
+      partialExport: '△ Partial export',
+      iosOnly: '△ iOS only',
+      freePlanFourPerDay: '△ Free plan: 4 expenses a day',
+      conversionNeedsPro: '△ Conversion needs Pro',
+      sharedLedgerSetupRequired: '△ Shared book needs setup',
+      adsOrMembership: '△ Ads or membership',
+      requiresMembership: '△ Requires membership',
+    },
+    howToStepName: 'Step {n}',
     trust: {
       heading: 'Why this is safe to do',
       items: [
         {
-          title: 'End-to-end encrypted',
-          body: 'Nobody outside the two of you can read what is in this ledger.',
+          title: 'Open only to you two',
+          body: 'Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details are stored encrypted.',
         },
         {
           title: 'Yours to take back',
@@ -1978,7 +2123,7 @@ export const en: Translations = {
         },
       ],
     },
-    footerTrust: 'End-to-end encrypted · this ledger belongs to the two of you',
+    footerTrust: 'Open only to you two · this ledger belongs to the two of you',
     // TODO(#612): en copy below pending native review
     otherSources: {
       heading: 'Coming from another app?',
@@ -2088,7 +2233,7 @@ I will upload the screenshots once you confirm.`,
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Your Honeydue history can come with you',
         heroSubtitle: 'Move from Honeydue to Futari in about three minutes: upload your CSV and keep years of shared budgeting intact.',
-        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home: free, ad-free, and end-to-end encrypted.",
+        intro: "Honeydue changed hands in 2024. Updates have slowed and support is harder to reach. If you're looking for a couple's budgeting app that's still actively maintained, Futari is a natural next home: free, ad-free, and open only to the two of you.",
         differentiators: [
           {
             title: 'Still actively shipping',
@@ -2745,7 +2890,7 @@ I will upload the screenshots once you confirm.`,
     migrate: {
       honeydue: {
         title: 'Import from Honeydue to Futari',
-        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples: Futari is an ad-free, end-to-end encrypted ledger. Move your data in 3 minutes.',
+        description: 'Honeydue updates have slowed. The free Honeydue alternative for couples: Futari is an ad-free ledger just for the two of you. Move your data in 3 minutes.',
         ogDescription: 'Where Honeydue users go next: Futari, a shared ledger built for two.',
       },
       spendee: {
@@ -2761,22 +2906,22 @@ I will upload the screenshots once you confirm.`,
       // TODO(#839): en copy below pending native review
       moneybook: {
         title: 'Import from Moneybook to Futari · CSV guide',
-        description: 'Moving Moneybook data to a shared ledger? Export CSV and import into Futari, built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Moneybook data to a shared ledger? Export CSV and import into Futari, built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where Moneybook users go next: export CSV and import into Futari.',
       },
       andromoney: {
         title: 'Import from AndroMoney to Futari · CSV guide',
-        description: 'Moving AndroMoney data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving AndroMoney data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where AndroMoney users go next: export CSV and import into Futari.',
       },
       mobills: {
         title: 'Import from Mobills to Futari · CSV guide',
-        description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Mobills data to a two-person ledger? Import your CSV into Futari, the shared ledger built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where Mobills users go next: export CSV and import into Futari.',
       },
       manebo: {
         title: 'Import from Manebo to Futari · Couple budgeting',
-        description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, end-to-end encrypted.',
+        description: 'Moving Manebo data to a shared ledger? Import your CSV into Futari, the budgeting app built for couples. Free, ad-free, just for you two.',
         ogDescription: 'Where Manebo users go next: export CSV and import into Futari.',
       },
       'simple-daily-money': {
@@ -2792,12 +2937,12 @@ I will upload the screenshots once you confirm.`,
       },
       cashman: {
         title: 'Move from CashMan to Futari · screenshot to CSV',
-        description: 'No CSV export? Screenshot CashMan, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        description: 'No CSV export? Screenshot CashMan, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, just for you two.',
         ogDescription: 'CashMan has no export — screenshot → ChatGPT → CSV → Futari.',
       },
       '1money': {
         title: 'Move from 1Money to Futari · screenshot to CSV',
-        description: 'No full export? Screenshot 1Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, encrypted.',
+        description: 'No full export? Screenshot 1Money, have ChatGPT convert to CSV, and import into Futari, the shared ledger for couples. Free, ad-free, just for you two.',
         ogDescription: '1Money to a two-person ledger — screenshot → ChatGPT → CSV → Futari.',
       },
       icost: {
@@ -2824,12 +2969,12 @@ I will upload the screenshots once you confirm.`,
     useCaseHub: {
       title: 'Ten ways two people share a ledger · cohabiting, newlyweds, travel, pets | Futari',
       description: 'Rent after moving in, a first married budget, a trip to settle, a cat with vet bills — ten ways two people share a ledger. Pick the closest one.',
-      ogDescription: 'Ten situations, one shared ledger. Pick the one closest to your life — Futari is free, ad-free and end-to-end encrypted.',
+      ogDescription: 'Ten situations, one shared ledger. Pick the one closest to your life — Futari is free, ad-free and just for the two of you.',
     },
     useCase: {
       cohabitation: {
         title: 'Cohabitation budgeting · splitting living costs as a couple | Futari',
-        description: 'Splitting living costs after moving in together? Futari is a shared ledger for two — split 50/50, by income, or however suits you. Free and encrypted.',
+        description: 'Splitting living costs after moving in together? Futari is a shared ledger for two — split 50/50, by income, or however suits you. Free, just for you two.',
         ogDescription: 'The shared ledger for cohabiting couples — split costs fairly, see the balance clearly.',
       },
       newlyweds: {
@@ -2902,8 +3047,8 @@ I will upload the screenshots once you confirm.`,
         body: 'One person records something and the other sees it instantly. The ledger is the conversation.',
       },
       encrypt: {
-        title: 'End-to-end encryption',
-        body: 'Your ledger is visible only to the two of you. The server never decrypts what you record.',
+        title: 'Open only to you two',
+        body: "Only your two accounts can open the ledger. Connections are encrypted over HTTPS, and sensitive details like a child's legal name or ID number are encrypted again before they're stored.",
       },
       history: {
         title: 'Chapter-based history',
@@ -2985,7 +3130,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: 'What\'s the best app for splitting costs when living together?',
-            answer: 'Futari is a shared ledger designed for two people from the ground up. It supports multiple split modes, real-time sync, and end-to-end encryption — without having to retrofit a personal finance app.',
+            answer: 'Futari is a shared ledger designed for two people from the ground up. It supports multiple split modes and real-time sync, and the ledger is open only to the two of you — without having to retrofit a personal finance app.',
           },
           {
             question: 'How do we track who owes what when cohabiting?',
@@ -2993,7 +3138,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3117,7 +3262,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: 'What\'s a good app for splitting costs with a roommate?',
-            answer: 'Futari is a shared ledger built for two people. It supports multiple split modes, real-time sync, and end-to-end encryption — so shared living costs are always visible to both without needing group chat reconciliation.',
+            answer: 'Futari is a shared ledger built for two people. It supports multiple split modes and real-time sync — so shared living costs are always visible to both without needing group chat reconciliation.',
           },
           {
             question: 'How do we track who owes what for shared bills?',
@@ -3125,7 +3270,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3158,7 +3303,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3191,7 +3336,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3224,7 +3369,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3257,7 +3402,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
@@ -3290,10 +3435,97 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Is Futari free?',
-            answer: 'Yes — the shared ledger, split modes, real-time sync, and encryption are all free.',
+            answer: 'Yes — the shared ledger, split modes, and real-time sync are all free.',
           },
         ],
       },
+    },
+  },
+
+  errors: {
+    actions: {
+      group_not_found: 'Ledger not found',
+      payer_not_in_group: 'The payer isn\'t part of this ledger',
+      payer_not_in_trip_ledger: 'The payer isn\'t part of this ledger',
+      recipient_not_in_group: 'The income recipient isn\'t part of this ledger',
+      record_not_found: 'Record not found',
+      record_deleted_or_missing: 'This record was deleted or doesn\'t exist',
+      amount_not_positive: 'Amount must be greater than 0',
+      category_empty: 'Category is empty',
+      split_ratio_required: 'A ratio split needs a ratio',
+      split_ratio_out_of_range: 'Ratio must be between 0 and 100',
+      split_ratio_not_applicable: 'split_ratio only applies to ratio splits',
+      split_ratio_invalid: 'Split ratio must be a whole number from 1 to 99',
+      split_type_invalid: 'Invalid split method',
+      profile_not_found: 'Profile not found',
+      fx_rate_not_set: 'No {from} → {to} exchange rate set',
+      fx_rate_not_positive: 'Exchange rate must be a positive number',
+      currency_unsupported: 'Unsupported currency',
+      currency_pair_same: 'Source and target currency can\'t be the same',
+      base_currency_locked: 'The current chapter already has records, so the base currency can\'t be changed',
+      current_epoch_not_found: 'Current chapter not found',
+      leave_active_trip: 'End the trip before leaving this chapter',
+      trip_not_found: 'Trip not found',
+      trip_missing: 'This trip doesn\'t exist',
+      active_trip_not_found: 'No trip in progress',
+      trip_ended: 'This trip has ended, so its records can\'t be changed',
+      trip_rate_missing: 'This trip has no exchange rate for {currency}',
+      trip_name_empty: 'Trip name is empty',
+      trip_name_too_long: 'Trip name is too long',
+      trip_in_past_epoch: 'A trip can\'t be created in a past chapter',
+      trip_move_to_past_epoch: 'A trip can\'t be moved into a past chapter',
+      trip_end_before_start: 'End date can\'t be before the start date',
+      income_not_found: 'Income entry not found',
+      recurring_rule_not_found: 'Recurring rule not found',
+      pending_expense_not_found: 'This pending expense was already handled or can\'t be found',
+      pending_expense_handled_elsewhere: 'This pending expense was handled on another device',
+      pending_expense_partner_handled: 'Your partner just handled this one',
+      pending_income_not_found: 'This pending income was already handled or can\'t be found',
+      pending_income_handled_elsewhere: 'This pending income was handled on another device',
+      review_month_locked: 'This month\'s note is locked and can\'t be changed',
+      review_message_locked: 'This note is locked and can\'t be changed',
+      asset_not_found: 'Aibutsu not found',
+      aibutsu_not_found: 'Aibutsu not found',
+      linked_asset_not_in_group: 'The linked aibutsu isn\'t in this ledger',
+      linked_asset_deleted: 'The linked aibutsu has been deleted',
+      linked_vehicle_invalid: 'Invalid linked vehicle',
+      plate_empty: 'License plate can\'t be empty',
+      field_not_filled: 'This field hasn\'t been filled in',
+      template_unknown: 'Unknown template',
+      policy_not_found: 'Policy not found',
+      policy_expiry_unset: 'This policy has no expiry date yet',
+      policyholder_not_member: 'The policyholder must be a member of this ledger',
+      insured_not_member: 'The insured must be a member of this ledger',
+      insured_child_invalid: 'Invalid insured child',
+      fuel_log_deleted_or_missing: 'This fuel log was deleted or doesn\'t exist',
+      fuel_transaction_not_found: 'Fuel transaction not found',
+      import_source_unsupported: 'Unsupported import source: {source}',
+      import_row_invalid_type: 'Row {row}: invalid transaction type',
+      import_row_invalid_amount: 'Row {row}: invalid amount',
+      import_row_invalid_split_type: 'Row {row}: invalid split method',
+      import_row_invalid_payer: 'Row {row}: invalid payer',
+      import_row_invalid_split_ratio: 'Row {row}: a ratio split needs a ratio from 0 to 100',
+      import_row_incomplete_fx: 'Row {row}: foreign currency details are incomplete',
+      import_row_invalid_date: 'Row {row}: invalid date',
+      import_filename_invalid: 'Invalid file name',
+      import_total_invalid: 'Invalid total row count',
+      import_empty: 'Nothing to import',
+      import_batch_create_failed: 'Couldn\'t create the import record',
+      import_batch_id_invalid: 'Invalid batch ID',
+      import_batch_not_found: 'Import record not found',
+      import_rollback_forbidden: 'You can\'t roll back this import',
+      import_already_rolled_back: 'This import has already been rolled back',
+      invoice_mof_code_invalid: 'The barcode or verification code is incorrect. Please check it',
+      invoice_mof_unavailable: 'The service is temporarily unavailable. Try again later',
+      invoice_mof_verify_failed: 'Verification failed ({code})',
+      invoice_barcode_already_bound: 'This barcode is already linked',
+      invoice_nickname_too_long: 'Nickname can be up to 16 characters',
+      invoice_carrier_not_found: 'Carrier not found',
+      quiz_answers_malformed: 'The answers are in an invalid format',
+      quiz_answers_incomplete: 'Answer all 3 questions at once',
+      quiz_question_out_of_range: 'That question isn\'t part of this round',
+      quiz_choice_out_of_range: 'That choice isn\'t part of this question',
+      quiz_question_duplicate: 'Each question can only be answered once',
     },
   },
 }

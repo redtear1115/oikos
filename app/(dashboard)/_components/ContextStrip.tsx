@@ -17,7 +17,9 @@ interface Props {
 
 /**
  * Unified contextual strip — renders at most one banner variant in priority order:
- *   1. offline   — device is offline AND offline-pref is on
+ *   1. offline   — device is offline, for everyone (#1206). The offline-pref
+ *      only picks the copy: with it on the page may be the cached snapshot;
+ *      with it off nothing is cached, so the cache wording would be false.
  *   2. past-epoch — viewer is pinned to a past chapter; the band itself moved to
  *      the shell top stack (`PastChapterBar`, #1037), only the suppression of
  *      everything below it is still decided here
@@ -60,7 +62,10 @@ export function ContextStrip({
   }
 
   // ─── Priority 1: offline ─────────────────────────────────────────────────
-  if (offlinePrefOn && !isOnline) {
+  // Used to be gated on offlinePrefOn, because the only copy described the
+  // cache. That left everyone who never opened Settings with no signal at all
+  // until a write failed (#1206).
+  if (!isOnline) {
     return (
       <div
         role="status"
@@ -68,7 +73,7 @@ export function ContextStrip({
         className="px-5 py-2 text-sm"
         style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
       >
-        {t.offlineBanner.text}
+        {offlinePrefOn ? t.offlineBanner.text : t.offlineBanner.textNoCache}
       </div>
     )
   }
@@ -116,7 +121,9 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.expandAriaLabel}
-            className="text-base leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            // Bare glyph, ~16px. The ::before pads the hit area to ~44px tall;
+            // sideways it reaches only as far as the gap-3 / px-4 around it (#1197).
+            className="relative text-base leading-none shrink-0 cursor-pointer bg-transparent border-none before:absolute before:-inset-y-3.5 before:-inset-x-3 before:content-['']"
             style={{ color: 'var(--ink-2)' }}
           >
             ›
@@ -149,7 +156,8 @@ export function ContextStrip({
             type="button"
             onClick={handleTripToggle}
             aria-label={t.dashboard.activeTripBanner.collapseAriaLabel}
-            className="text-lg leading-none shrink-0 cursor-pointer bg-transparent border-none"
+            // Bare glyph, ~18px; ::before pads the hit area to ≥44px (#1197).
+            className="relative text-lg leading-none shrink-0 cursor-pointer bg-transparent border-none before:absolute before:-inset-y-3.5 before:-inset-x-3 before:content-['']"
             style={{ color: 'var(--ink-3)' }}
           >
             −

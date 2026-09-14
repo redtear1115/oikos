@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose'
+import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
 import { Button } from '@/components/ui/Button'
@@ -34,12 +35,22 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     setTab('aibutsu')
     loadAssetsForPicker()
       .then(setAssets)
-      .catch((e) => setLoadError(describeError(e, t.assetPickerSheet.loadFailed, t.common.offlineError)))
+      .catch((e) => setLoadError(describeError(e, t.assetPickerSheet.loadFailed, t.common.offlineError, t.errors.actions)))
   }, [open, t])
 
   // Escape closes — picker uses its own inline backdrop (z-112) instead of
   // SheetBackdrop, so the hook is wired here explicitly.
   useEscapeToClose(open, onClose)
+
+  // This picker hand-rolls its chrome instead of using SheetFrame (it needs
+  // the nested z-layer and 70dvh cap), so it has to opt into the same closed-
+  // state and dialog rules itself: trap Tab while open, `inert` while closed,
+  // dialog semantics only while open (#1186, mirrors SheetFrame #1176). It is
+  // always mounted inside AddSheet, so without this the closed picker's
+  // cancel button, tabs and rows sat in AddSheet's Tab order off-screen.
+  const panelRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useFocusTrap(open, panelRef)
 
   const filteredAssets = useMemo(() => {
     if (!assets) return null
@@ -65,9 +76,13 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
           pointerEvents: open ? 'auto' : 'none',
         }}
       />
-      {/* Sheet sits at z-115 — must be ABOVE AddSheet's error toast (z-110) so a
-          mid-picker error doesn't render in front of the asset list. */}
+      {/* Sheet sits at z-115, above the z-sheet (100) layer AddSheet's panel —
+          and the error banner inside it — lives in, so a mid-picker error
+          doesn't render in front of the asset list. */}
       <div
+        ref={panelRef}
+        {...(open ? { role: 'dialog', 'aria-modal': true as const, 'aria-labelledby': titleId } : {})}
+        inert={!open}
         className="fixed left-1/2 bottom-0 z-nested-sheet w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
@@ -85,10 +100,10 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
         </div>
 
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <Button variant="ghost" size="sm" onClick={onClose} className="px-2">
+          <Button variant="ghost" size="sm" onClick={onClose} className="relative px-2 before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']">
             {t.common.cancel}
           </Button>
-          <div className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
+          <div id={titleId} className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
             {t.assetPickerSheet.title}
           </div>
           <div className="w-10" />  {/* spacer for symmetry */}
@@ -112,14 +127,16 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
                     role="tab"
                     aria-selected={active}
                     onClick={() => setTab(id)}
-                    className="flex-1 rounded-full transition-colors"
+                    // ~40px visible; ::before adds 2px above and below (inside
+                    // the track's p-1) for a 44px tap area (#1186).
+                    className="relative flex-1 rounded-full transition-colors before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']"
                     style={{
                       padding: '8px 12px',
                       background: active ? 'var(--ink)' : 'transparent',
                       color: active ? 'var(--on-fill)' : 'var(--ink-2)',
                       fontFamily: 'inherit',
                       fontSize: 'var(--fs-base)',
-                      fontWeight: active ? 600 : 500,
+                      fontWeight: 500,
                       border: 'none',
                       cursor: 'pointer',
                       letterSpacing: '0.2px',
@@ -145,7 +162,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
           />
 
           {loadError && (
-            <div className="text-sm py-3 px-3" style={{ color: 'var(--debit)' }}>
+            <div className="text-sm py-3 px-3" style={{ color: 'var(--debit-text)' }}>
               {loadError}
             </div>
           )}

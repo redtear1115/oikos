@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
 import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
@@ -154,7 +155,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
     const { bg, fg } = TONES[tone]
     return (
       <span
-        className="shrink-0 px-1.5 py-px rounded-[4px] leading-none font-mono"
+        className="shrink-0 px-1.5 py-px rounded leading-none font-mono"
         style={{ fontSize: 12, background: bg, color: fg }}
       >
         {label}
@@ -279,7 +280,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                         background: 'var(--ink-3)', flexShrink: 0,
                       }}
                     />
-                    <span>保 {insuredName}</span>
+                    <span>{i.insuredShort.replace('{name}', insuredName)}</span>
                   </>
                 )}
               </div>
@@ -293,7 +294,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
                   className="font-mono"
                   style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
                 >
-                  年繳
+                  {i.annualLabel}
                 </div>
                 <div
                   className="tnum"
@@ -311,9 +312,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
               <TimelineBar
                 pct={singleYearPct}
                 fillColor={singleYearBarColor}
-                leftLabel="生效"
+                leftLabel={i.timelineStarts}
                 leftValue={data.startsAt ?? '—'}
-                rightLabel="到期"
+                rightLabel={i.timelineEnds}
                 rightValue={data.expiryDate ?? '—'}
               />
             )}
@@ -321,9 +322,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
               <TimelineBar
                 pct={Math.min(100, Math.round((yearsPassed / termYears) * 100))}
                 fillColor="var(--asset-color-insurance)"
-                leftLabel="已繳"
-                leftValue={`${yearsPassed} / ${termYears} 年`}
-                rightLabel="保額"
+                leftLabel={i.timelinePaid}
+                leftValue={i.timelinePaidYears.replace('{paid}', String(yearsPassed)).replace('{term}', String(termYears))}
+                rightLabel={i.timelineSumInsured}
                 rightValue={data.sumInsured ? `NT$ ${fmtNT(data.sumInsured)}` : '—'}
               />
             )}
@@ -331,9 +332,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
               <TimelineBar
                 pct={Math.min(100, Math.round((cumulativePaid / targetAmount) * 100))}
                 fillColor="var(--saving)"
-                leftLabel="已投入"
+                leftLabel={i.timelineInvested}
                 leftValue={`NT$ ${fmtNT(cumulativePaid)}`}
-                rightLabel="目標"
+                rightLabel={i.timelineTarget}
                 rightValue={`NT$ ${fmtNT(targetAmount)}`}
               />
             )}
@@ -402,17 +403,13 @@ export function InsuranceListItem({ id, name, data }: Props) {
         <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-3)' }}>
           {i.renewPolicyNoLabel}
         </label>
-        <input
+        <TextInput
           type="text"
           value={renewPolicyNo}
           onChange={(e) => setRenewPolicyNo(e.target.value)}
           placeholder={i.renewPolicyNoPlaceholder}
           disabled={pending}
-          className="w-full h-11 px-3 rounded-chip text-sm mb-5 disabled:opacity-50"
-          style={{
-            background: 'var(--surface)', color: 'var(--ink)',
-            border: '1px solid var(--hairline)', outline: 'none',
-          }}
+          className="mb-5"
         />
         <div className="flex gap-2">
           <button
@@ -441,7 +438,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
         title={i.lapseTitle}
         description={i.lapseDescription}
         confirmLabel={i.lapseConfirm}
-        cancelLabel={t.common.cancel ?? '取消'}
+        cancelLabel={t.common.cancel}
         destructive
         pending={pending}
         onCancel={() => setLapseOpen(false)}

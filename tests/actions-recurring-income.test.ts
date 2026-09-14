@@ -54,7 +54,7 @@ describe('createRule', () => {
     await expect(createRule({
       amount: 1, category: 'other', recipientId: 'stranger',
       intervalMonths: 1, dayOfMonth: 1, startsOn: '2026-05-07', endsOn: null,
-    })).rejects.toThrow(/家計簿/)
+    })).rejects.toThrow('recipient_not_in_group')
   })
 
   it('rejects when assetId not in group', async () => {
@@ -102,7 +102,7 @@ describe('updateRule', () => {
     await expect(updateRule({
       id: 'rule-x', amount: 1, category: 'other', recipientId: 'user-a',
       intervalMonths: 1, dayOfMonth: 1, startsOn: '2026-05-01', endsOn: null,
-    })).rejects.toThrow(/找不到/)
+    })).rejects.toThrow('recurring_rule_not_found')
   })
 })
 
@@ -162,7 +162,7 @@ describe('softDeleteRule', () => {
   it('throws when rule not in viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteRule('rule-x')).rejects.toThrow(/找不到/)
+    await expect(softDeleteRule('rule-x')).rejects.toThrow('recurring_rule_not_found')
   })
 })
 
@@ -187,7 +187,7 @@ describe('confirmPending', () => {
   it('throws when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(confirmPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
+    await expect(confirmPending('pend-x')).rejects.toThrow('pending_income_not_found')
   })
 })
 
@@ -228,6 +228,6 @@ describe('skipPending', () => {
   it('throws when already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(skipPending('pend-x')).rejects.toThrow(/已被處理|找不到/)
+    await expect(skipPending('pend-x')).rejects.toThrow('pending_income_not_found')
   })
 })

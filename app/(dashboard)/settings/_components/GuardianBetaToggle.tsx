@@ -30,7 +30,7 @@ export function GuardianBetaToggle({ enabled }: Props) {
         router.refresh()
       } catch (e) {
         setOptimistic(enabled)
-        setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
+        setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -57,7 +57,7 @@ export function GuardianBetaToggle({ enabled }: Props) {
         />
       </div>
       {error && (
-        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
+        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit-text)' }}>
           {error}
         </div>
       )}

@@ -3,6 +3,9 @@
 import { useState, useEffect, useId, useRef, useTransition } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
+import { useFocusTrap } from './useFocusTrap'
+import { useDirtyCheck, useUnsavedChangesGuard } from './useUnsavedChangesGuard'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -33,6 +36,7 @@ export function EditTextSheet({
   const [pending, startTransition] = useTransition()
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
 
   useEffect(() => {
@@ -41,7 +45,34 @@ export function EditTextSheet({
     setError('')
   }, [open, initialValue])
 
+  // This sheet hand-rolls its panel instead of using SheetFrame because it
+  // rides the soft keyboard (`bottom: keyboardOffset`), which SheetFrame's
+  // fixed `bottom-0` can't express. So it opts into SheetFrame's dialog rules
+  // itself: trap Tab while open, restore focus to the trigger on close, and
+  // `inert` + no dialog role while closed (#1197, mirrors SheetFrame #1176).
+  // Symptom if this goes: nothing errors, but Tab walks out of the open sheet
+  // onto the settings page behind it, and after 完成 / 取消 / Escape focus
+  // lands on <body> instead of the row that opened the sheet.
+  useFocusTrap(open, panelRef)
+
   useFocusAndSelectOnOpen(open, inputRef)
+
+  // Backdrop / Escape / Back ask before dropping an edited value (#1183);
+  // 取消 still closes straight away.
+  const isDirty = useDirtyCheck(open, value)
+  const { requestClose, confirm } = useUnsavedChangesGuard(open, onClose, isDirty)
+
+  // Dismiss the iOS soft keyboard on close — same reason as SheetFrame: the
+  // focus restore alone doesn't reliably blur the input on iOS.
+  useEffect(() => {
+    if (open) return
+    const panel = panelRef.current
+    if (!panel) return
+    const active = document.activeElement
+    if (active instanceof HTMLElement && panel.contains(active)) {
+      active.blur()
+    }
+  }, [open])
 
   // Push sheet up when the soft keyboard appears
   useEffect(() => {
@@ -67,18 +98,21 @@ export function EditTextSheet({
         await onSubmit(trimmed)
         onClose()
       } catch (e) {
-        setError(describeError(e, t.editTextSheet.saveFailed, t.common.offlineError))
+        setError(describeError(e, t.editTextSheet.saveFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }
 
   return (
     <>
-      <SheetBackdrop open={open} onClick={pending ? () => {} : onClose} />
+      <SheetBackdrop open={open} onClick={pending ? () => false : requestClose} />
+      {confirm}
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
+        ref={panelRef}
+        // Dialog semantics only while open; the closed panel stays mounted for
+        // the slide-down and is kept out of Tab order / the a11y tree by inert.
+        {...(open ? { role: 'dialog', 'aria-modal': true as const, 'aria-labelledby': titleId } : {})}
+        inert={!open}
         className="fixed left-1/2 -translate-x-1/2 w-full max-w-md z-sheet flex flex-col overflow-hidden"
         style={{
           background: 'var(--bg)',
@@ -121,7 +155,7 @@ export function EditTextSheet({
 
         {/* Input + error + char count */}
         <div className="px-5 pb-6">
-          <input
+          <TextInput
             ref={inputRef}
             type="text"
             value={value}
@@ -132,16 +166,9 @@ export function EditTextSheet({
               if (e.key === 'Enter' && !pending) { e.preventDefault(); handleConfirm() }
             }}
             placeholder={placeholder ?? title}
-            className="w-full h-12 px-3 rounded-xl outline-none text-base"
-            style={{
-              border: '1px solid var(--hairline)',
-              color: 'var(--ink)',
-              background: 'var(--surface)',
-              fontFamily: 'inherit',
-            }}
           />
           {error && (
-            <div className="text-xs mt-2" style={{ color: 'var(--debit)' }}>{error}</div>
+            <div className="text-xs mt-2" style={{ color: 'var(--debit-text)' }}>{error}</div>
           )}
           <div className="text-xs mt-1.5 text-right" style={{ color: 'var(--ink-3)' }}>
             {value.length} / {maxLength}

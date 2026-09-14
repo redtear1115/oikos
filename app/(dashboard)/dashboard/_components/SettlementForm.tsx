@@ -71,7 +71,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         onMutated({ savedAmount: parsed })
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -134,8 +134,12 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
               return (
                 <button
                   key={c.label}
+                  type="button"
                   onClick={() => setAmount(String(c.value))}
-                  className="h-8 px-3 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                  aria-pressed={isActive}
+                  // Visible chip stays 32px; the ::before extends the hit area
+                  // 6px up and down to 44px (same pattern as SettleButton, #147).
+                  className="relative h-8 px-3 rounded-full text-xs font-medium cursor-pointer transition-colors before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                   style={{
                     background: isActive ? 'var(--ink)' : 'var(--bg)',
                     color: isActive ? 'var(--on-fill)' : 'var(--ink-2)',
@@ -180,8 +184,11 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
             <button
               onClick={handleConfirm}
               disabled={!parsed || pending}
-              className="flex-1 h-[46px] rounded-xl border-0 text-white font-medium text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
-              style={{ background: 'var(--accent)' }}
+              // Primary commit = cocoa-ink fill (DESIGN.md § Buttons). It was
+              // white on --accent: 2.68:1, failing AA for 14px text, and a
+              // second ember competing with the FAB (One Ember Rule).
+              // --btn-primary-text on --btn-primary-bg is ~14.5:1 (#1197).
+              className="flex-1 h-[46px] rounded-xl border-0 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-medium text-sm tracking-[0.3px] cursor-pointer disabled:opacity-50"
             >
               {pending ? t.common.processing : `${primaryText} ${formatAmount(parsed, 'twd')}`}
             </button>
@@ -201,7 +208,7 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
         </div>
 
         {error && (
-          <div className="mt-3 text-xs" style={{ color: 'var(--debit)' }}>
+          <div role="alert" className="mt-3 text-xs" style={{ color: 'var(--debit-text)' }}>
             {error}
           </div>
         )}

@@ -189,13 +189,13 @@ function Bar({
                 row functions as the chart's legend. */}
             <span
               aria-hidden
-              className="inline-block rounded-full shrink-0"
-              style={{ width: 10, height: 10, background: chart }}
+              className="inline-block size-2.5 rounded-full shrink-0"
+              style={{ background: chart }}
             />
             <span
               style={{
                 color: 'var(--ink)',
-                fontWeight: active ? 600 : 400,
+                fontWeight: active ? 500 : 400,
               }}
               className="truncate"
             >

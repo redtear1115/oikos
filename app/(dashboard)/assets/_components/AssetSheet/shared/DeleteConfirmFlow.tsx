@@ -12,18 +12,14 @@ interface Props {
 // Used by every *SheetBody in edit mode. Renders the bottom delete button
 // plus its confirm modal.
 //
-// Position in the JSX tree MATTERS — there is no portal (ConfirmModal has no
-// createPortal). This component must stay INSIDE the SheetFrame panel, and
-// something focusable must still follow it in DOM order (today: SheetShell's
-// bottom save button). Both conditions are what keep keyboard focus working:
-// SheetFrame's useFocusTrap then sees the modal's buttons as inside its own
-// panel and leaves them alone, so ConfirmModal's own trap does the cycling.
-//
-// Move this outside the panel and it becomes a sibling of </SheetFrame>, which
-// puts two focus traps on window fighting over every Tab — the failure mode
-// AddSheet / IncomeSheet / SettlementSheet / RecurringRuleSheet / NewFuelLog
-// are in today: Tab is swallowed and the Confirm button is pointer-only.
-// See #1171 (verifier F1) and #1176.
+// Position in the JSX tree no longer matters. This comment used to require
+// the component to stay inside the SheetFrame panel, on the reasoning that
+// SheetFrame's focus trap would then leave the modal's buttons alone. That
+// reasoning is retracted: inside the panel, the panel's `transform` became
+// the containing block for the modal's `position: fixed`, so the modal centred
+// on the sheet rather than the viewport (#1204). ConfirmModal now portals to
+// `document.body`, and useFocusTrap keeps a stack so only the topmost trap
+// handles Tab (#1176) — both placements are safe.
 export function DeleteConfirmFlow({ pending, onDelete }: Props) {
   const t = useTranslations()
   const ts = t.assetSheet

@@ -1,4 +1,5 @@
 import { describeError } from './errors'
+import type { ActionErrorMessages } from './action-errors'
 import type { Translations } from './i18n/locales/zh-TW'
 
 /**
@@ -18,6 +19,7 @@ export function describeQuizError(
   e: unknown,
   t: Translations['quiz'],
   offlineMessage: string,
+  actionErrors: ActionErrorMessages,
 ): string {
   if (e instanceof Error) {
     switch (e.message) {
@@ -28,5 +30,5 @@ export function describeQuizError(
       case 'wrong_group':       return t.errors.wrongGroup
     }
   }
-  return describeError(e, t.errors.submitFailed, offlineMessage)
+  return describeError(e, t.errors.submitFailed, offlineMessage, actionErrors)
 }

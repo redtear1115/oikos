@@ -21,9 +21,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://futari.southern-ligh
 // static pages below still carry their date manually in this file. (#669, #1004)
 const PATHS = [
   // Landing copy / hero / migrate cross-link section
-  { path: '/', changeFrequency: 'weekly' as const, priority: 1.0, lastModified: '2026-06-16' },
+  { path: '/', changeFrequency: 'weekly' as const, priority: 1.0, lastModified: '2026-09-15' },
   // migrate hub/index — lists every source, 1 click from each guide (#939)
-  { path: '/migrate', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-06-16' },
+  { path: '/migrate', changeFrequency: 'monthly' as const, priority: 0.8, lastModified: '2026-09-15' },
   // migrate pages — auto-derived from MIGRATE_SOURCES (#852)
   ...Object.values(MIGRATE_SOURCES).map((source) => ({
     path: `/migrate/${source.slug}`,
@@ -32,7 +32,7 @@ const PATHS = [
     lastModified: source.contentUpdatedAt,
   })),
   // use-case hub/index — lists every situation, 1 click from each page (#1057)
-  { path: '/use-case', changeFrequency: 'monthly' as const, priority: 0.7, lastModified: '2026-09-12' },
+  { path: '/use-case', changeFrequency: 'monthly' as const, priority: 0.7, lastModified: '2026-09-15' },
   // use-case pages — auto-derived from USE_CASES (#851)
   ...Object.values(USE_CASES).map((useCase) => ({
     path: `/use-case/${useCase.slug}`,

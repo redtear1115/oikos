@@ -103,7 +103,8 @@ export function WelcomeSoloCard({ epochId }: Props) {
           type="button"
           onClick={handleDismiss}
           aria-label={t.postLeave.dismissAria}
-          className="text-sm leading-none cursor-pointer self-start"
+          // Bare ✕ glyph, ~14px; ::before pads the hit area to ~46px (#1197).
+          className="relative text-sm leading-none cursor-pointer self-start before:absolute before:-inset-4 before:content-['']"
           style={{ background: 'transparent', border: 'none', color: 'var(--ink-3)' }}
         >
           ✕

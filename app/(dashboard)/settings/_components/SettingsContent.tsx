@@ -39,12 +39,14 @@ export async function SettingsContent({
   return (
     <>
       <div className="px-5 pt-[max(var(--safe-top),24px)] pb-4">
-        <div
+        {/* The page's only h1 — sibling subroutes (trust / import / currency)
+          * already have one; this was a styled div (#1172). */}
+        <h1
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {t.settings.title}
-        </div>
+        </h1>
         <div className="text-sm mt-0.5" style={{ color: 'var(--ink-3)' }}>
           {t.settings.subtitle}
         </div>

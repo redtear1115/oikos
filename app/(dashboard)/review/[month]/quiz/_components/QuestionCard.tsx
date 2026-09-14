@@ -81,7 +81,7 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           router.refresh()
         }
       } catch (err) {
-        setError(describeQuizError(err, tq, t.common.offlineError))
+        setError(describeQuizError(err, tq, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -172,12 +172,11 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
                 <button
                   type="button"
                   onClick={() => selectChoice(choice)}
-                  className="w-full text-left px-5 py-4 rounded-2xl transition-all"
+                  className="w-full text-left px-5 py-4 rounded-2xl transition-all text-base"
                   style={{
                     background: isSelected ? 'var(--accent-soft)' : 'var(--surface)',
                     border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--hairline)'}`,
                     color: 'var(--ink)',
-                    fontSize: 'var(--fs-md, 15px)',
                     lineHeight: 1.5,
                   }}
                   aria-pressed={isSelected}

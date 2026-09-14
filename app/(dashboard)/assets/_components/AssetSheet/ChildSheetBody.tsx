@@ -8,6 +8,7 @@ import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -135,6 +136,11 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.child) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, nickname, gender, birthday, nationalId, wantClearNationalId, nhiNo,
+    wantClearNhiNo, fullName, wantClearFullName, bloodType, hospital, heightCm, weightKg,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -145,6 +151,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 
@@ -188,7 +195,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearFullName(true)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
               >
                 {ts.child.clear}
@@ -198,7 +205,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearFullName(false)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
               >
                 {ts.child.cancelClear}
@@ -214,7 +221,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             const sel = gender === o.v
             return (
               <button key={o.v} type="button" onClick={() => setGender(o.v)}
-                className="oik-segment flex-1 h-9 rounded-[9px] text-sm font-medium"
+                className="oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
                 style={{
                   border: 'none',
                   background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
@@ -264,7 +271,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             <button
               type="button"
               onClick={() => setWantClearNationalId(true)}
-              className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
               style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
             >
               {ts.child.clear}
@@ -274,7 +281,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             <button
               type="button"
               onClick={() => setWantClearNationalId(false)}
-              className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
               style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
             >
               {ts.child.cancelClear}
@@ -310,7 +317,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             <button
               type="button"
               onClick={() => setWantClearNhiNo(true)}
-              className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
               style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
             >
               {ts.child.clear}
@@ -320,7 +327,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             <button
               type="button"
               onClick={() => setWantClearNhiNo(false)}
-              className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
               style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
             >
               {ts.child.cancelClear}
@@ -334,7 +341,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex gap-1.5">
           {(['A', 'B', 'O', 'AB'] as const).map(b => (
             <button key={b} type="button" onClick={() => setBloodType(b)}
-              className="flex-1 h-9 rounded-chip text-sm font-medium"
+              className="relative flex-1 h-9 rounded-chip text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
               style={{
                 border: bloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: bloodType === b ? 'rgba(58,36,25,0.04)' : 'var(--surface)',

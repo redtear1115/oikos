@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
@@ -9,9 +9,11 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { Button } from '@/components/ui/Button'
+import { TextArea } from '@/components/ui/TextArea'
 import { IncomeChip } from './IncomeChip'
 import { createIncome, editIncome, softDeleteIncome, getInsuranceAssets } from '@/actions/income'
 import { editAndConfirmPending } from '@/actions/recurringIncome'
@@ -21,6 +23,7 @@ import { MAX_AMOUNT } from '@/lib/validators'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
+import { isActionError } from '@/lib/action-errors'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
 
@@ -161,6 +164,9 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   // Focus + select amount input after sheet slides up
   useFocusAndSelectOnOpen(open, amountInputRef)
 
+  const isDirty = useDirtyCheck(open, { amount, category, recipientWho, date, note, assetId })
+  const noteId = useId()
+
   const recipientId = isSolo
     ? viewer.id
     : recipientWho === 'M' ? viewer.id : partner!.id
@@ -214,12 +220,12 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           onMutated?.({ savedAmount: n, edit: isEdit || isPending })
           onClose()
         },
-        onError: (msg) => {
+        onError: (_msg, e) => {
           // Race: partner confirmed/skipped this pending in another tab/device
-          // before our edit-confirm landed. The error messages from
-          // editAndConfirmPending in that case are: '待確認收入已被處理或找不到'
-          // (pre-check) or '待確認收入已被其他裝置處理' (in-tx guard).
-          if (isPending && msg.includes('待確認收入')) {
+          // before our edit-confirm landed: `pending_income_not_found` (pre-check)
+          // or `pending_income_handled_elsewhere` (in-tx guard). Matched by code,
+          // not by the localized message, so it works in every locale (#1156).
+          if (isPending && isActionError(e, 'pending_income_not_found', 'pending_income_handled_elsewhere')) {
             onMutated?.()
             onClose()
             onRaceResolved?.(t.recurringIncome.raceMessage)
@@ -250,6 +256,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       <SheetFrame
         open={open}
         onClose={onClose}
+        isDirty={isDirty}
         ariaLabel={isEdit ? t.incomeSheet.titleEdit : t.incomeSheet.title}
         background={P.sheetBg}
         boxShadow="0 -10px 40px rgba(58,36,25,0.18)"
@@ -476,20 +483,20 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
 
           {/* Note */}
           <div className="px-5 pt-3 pb-6 border-t border-hairline">
-            <div
-              className="text-xs tracking-[0.6px] px-1 py-3"
+            <label
+              htmlFor={noteId}
+              className="block text-xs tracking-[0.6px] px-1 py-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.noteLabel}
-            </div>
-            <textarea
+            </label>
+            <TextArea
+              id={noteId}
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder={t.incomeSheet.notePlaceholder}
               maxLength={2000}
               rows={3}
-              className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
-              style={{ color: 'var(--ink)' }}
             />
           </div>
 

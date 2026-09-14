@@ -38,9 +38,13 @@ export interface SegmentedToggleProps {
 
 // Heights + horizontal padding per size. Text steps with the size so the dense
 // L3 row reads a notch smaller than the prominent mode toggle.
+// The ::before (see the button className) extends each segment's hit area
+// vertically to 44px without changing the visible pill: 28 + 8×2 for sm,
+// 32 + 6×2 for md. Sideways it stays flush — segments sit 2px apart, so any
+// horizontal bleed would overlap the neighbour's target (#1197, #147).
 const segmentSize: Record<SegmentedToggleSize, string> = {
-  sm: 'h-7 px-2.5 text-xs',
-  md: 'h-8 px-3.5 text-sm',
+  sm: 'h-7 px-2.5 text-xs before:-inset-y-2',
+  md: 'h-8 px-3.5 text-sm before:-inset-y-1.5',
 }
 
 /**
@@ -71,7 +75,7 @@ export function SegmentedToggle({
           onClick={o.onClick}
           aria-pressed={o.active}
           aria-label={o.ariaLabel}
-          className={`oik-segment inline-flex items-center justify-center gap-1.5 cursor-pointer rounded-full border-0 font-medium transition-colors duration-150 ${segmentSize[size]}`}
+          className={`oik-segment relative before:absolute before:inset-x-0 before:content-[''] inline-flex items-center justify-center gap-1.5 cursor-pointer rounded-full border-0 font-medium transition-colors duration-150 ${segmentSize[size]}`}
           style={{
             background: o.active ? (o.fillColor ?? 'var(--toggle-active-bg)') : 'transparent',
             color: o.active ? (o.activeTextColor ?? 'var(--toggle-active-text)') : 'var(--toggle-inactive-text)',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { formatDateAbsolute } from '@/lib/format-date'
@@ -82,7 +82,7 @@ export function MessageEditor({
       setSavedValue(next)
       setState({ kind: 'saved' })
     } catch (err) {
-      const message = describeError(err, tr.errors.saveFailed, t.common.offlineError)
+      const message = describeError(err, tr.errors.saveFailed, t.common.offlineError, t.errors.actions)
       setState({ kind: 'error', message })
     }
   }
@@ -97,6 +97,7 @@ export function MessageEditor({
     scheduleSave(truncated)
   }
 
+  const counterId = useId()
   const counter = tr.editorCounter
     .replace('{n}', String(codepointLength(value)))
     .replace('{max}', String(MONTHLY_REVIEW_MESSAGE_MAX_CODEPOINTS))
@@ -139,6 +140,7 @@ export function MessageEditor({
             opacity: locked ? 0.7 : 1,
           }}
           aria-label={isSolo ? tr.editorTitleSolo : tr.editorTitle}
+          aria-describedby={counterId}
         />
         <div
           className="mt-2 flex items-center justify-between text-xs"
@@ -155,7 +157,7 @@ export function MessageEditor({
                     ? tr.errorFooter.replace('{message}', state.message)
                     : ' '}
           </span>
-          <span className="tabular-nums">{counter}</span>
+          <span id={counterId} className="tabular-nums">{counter}</span>
         </div>
       </div>
 

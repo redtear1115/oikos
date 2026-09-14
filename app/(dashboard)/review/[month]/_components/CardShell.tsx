@@ -19,7 +19,7 @@ export function CardShell({
 }) {
   return (
     <div
-      className="rounded-[24px] overflow-hidden flex flex-col"
+      className="rounded-card overflow-hidden flex flex-col"
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--hairline)',
@@ -52,20 +52,16 @@ export function CardEmpty({
 }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
-      <div
-        className="text-[40px] font-medium"
-        style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink-3)' }}
-      >
-        ok
-      </div>
-      <p className="text-sm mt-3" style={{ color: 'var(--ink-2)' }}>
+      {/* The decorative 40px "ok" glyph that used to sit here was hard-coded
+          English on every locale and off the type scale; removed (#1178). */}
+      <p className="text-sm" style={{ color: 'var(--ink-2)' }}>
         {body}
       </p>
       {cta && onCta && (
         <button
           type="button"
           onClick={onCta}
-          className="mt-4 text-sm font-medium underline bg-transparent border-0 cursor-pointer"
+          className="mt-2 min-h-11 px-2 text-sm font-medium underline bg-transparent border-0 cursor-pointer"
           style={{ color: 'var(--ink-2)' }}
         >
           {cta}

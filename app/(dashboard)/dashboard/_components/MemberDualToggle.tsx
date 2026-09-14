@@ -16,6 +16,9 @@ interface MemberDualToggleProps {
   viewerIsA: boolean
   leftLabel: string
   rightLabel: string
+  /** Accessible name for the `role="group"` wrapper — without it both L3
+   *  toggles are anonymous groups to a screen reader (#1197). */
+  groupAriaLabel: string
 }
 
 /**
@@ -32,6 +35,7 @@ function MemberDualToggle({
   viewerIsA,
   leftLabel,
   rightLabel,
+  groupAriaLabel,
 }: MemberDualToggleProps) {
   const toggle = (side: Side) => {
     const next = new Set(selected)
@@ -51,7 +55,7 @@ function MemberDualToggle({
     { id: 'left', label: leftLabel, active: selected.has('left'), onClick: () => toggle('left'), fillColor: viewerColor },
     { id: 'right', label: rightLabel, active: selected.has('right'), onClick: () => toggle('right'), fillColor: partnerColor },
   ]
-  return <SegmentedToggle options={options} size="sm" />
+  return <SegmentedToggle options={options} size="sm" ariaLabel={groupAriaLabel} />
 }
 
 interface PayerDualToggleProps {
@@ -78,6 +82,7 @@ export function PayerDualToggle({ value, onChange, viewerIsA, t }: PayerDualTogg
       viewerIsA={viewerIsA}
       leftLabel={t.common.me}
       rightLabel={t.common.partner}
+      groupAriaLabel={t.dashboard.payerFilterAriaLabel}
     />
   )
 }
@@ -112,6 +117,7 @@ export function SplitDualToggle({ value, onChange, viewerIsA, t }: SplitDualTogg
       viewerIsA={viewerIsA}
       leftLabel={t.dashboard.burdenMe}
       rightLabel={t.dashboard.burdenPartner}
+      groupAriaLabel={t.dashboard.burdenFilterAriaLabel}
     />
   )
 }

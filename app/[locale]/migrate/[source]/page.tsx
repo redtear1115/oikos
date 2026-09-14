@@ -4,7 +4,7 @@ import { SUPPORTED_LOCALES, isLocale, type Locale } from '@/lib/i18n/locales-met
 import { dictionaries } from '@/lib/i18n/t'
 import { buildAlternates, ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedHref } from '@/lib/i18n/path'
-import { MIGRATE_SOURCES, type MigrateSlug, type SourceDef } from '@/lib/migrate/sources'
+import { MIGRATE_SOURCES, resolveComparisonRows, type MigrateSlug, type SourceDef } from '@/lib/migrate/sources'
 import { MigrateTool } from '../_components/MigrateTool'
 import { MigrateHero, MigrateSteps } from '../_components/MigrateSteps'
 import { MigrateIntroCallout } from '../_components/MigrateIntroCallout'
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: t.title,
       description: t.ogDescription,
       url: localizedHref(path, locale),
-      siteName: 'Futari · 雙人記帳',
+      siteName: dictionaries[locale].landing.jsonLdAppName,
       type: 'website',
       locale: ogLocale(locale),
       alternateLocale: alternateOgLocales(locale),
@@ -88,7 +88,9 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
           >
             {page.formatHintHeaders}
           </code>
-          <p className="text-xs mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
+          {/* --ink-2 not --ink-3: the step list has no card, so this note sits
+              straight on --bg-committed, where --ink-3 is 4.03:1 (#1184). */}
+          <p className="text-xs mt-1.5 m-0" style={{ color: 'var(--ink-2)' }}>
             {page.formatHintNote}
           </p>
         </div>
@@ -116,7 +118,8 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
           <span aria-hidden>↓</span>
           <span>{page.templateDownloadLabel}</span>
         </a>
-        <p className="text-xs mt-1.5 m-0" style={{ color: 'var(--ink-3)' }}>
+        {/* Same ground as formatHintNote above — --ink-3 would be 4.03:1 (#1184). */}
+        <p className="text-xs mt-1.5 m-0" style={{ color: 'var(--ink-2)' }}>
           {page.templateNote}
         </p>
       </>
@@ -133,6 +136,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
         name={page.heroTitle}
         description={page.heroSubtitle}
         steps={[page.step1, page.step2, page.step3]}
+        stepName={t.howToStepName}
       />
       <MigrateHero kicker={page.heroKicker} title={page.heroTitle} subtitle={page.heroSubtitle} />
 
@@ -166,7 +170,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
         heading={t.comparisonHeading.replace('{other}', def.name)}
         futariLabel="Futari"
         otherLabel={def.name}
-        rows={def.comparison.rows}
+        rows={resolveComparisonRows(def.comparison.rows, t.comparisonText)}
       />
 
       <MigrateFaq locale={locale} heading={t.faqHeading} items={page.faq} />

@@ -14,7 +14,7 @@ export interface PendingIncomeCardProps {
 export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
   const t = useTranslations()
   const cat = getIncomeCategory(pending.category)
-  const title = pending.source ?? cat.label
+  const title = pending.source ?? t.incomeCategory[cat.id] ?? cat.label
 
   return (
     <PendingCard

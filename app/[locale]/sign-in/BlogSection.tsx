@@ -35,8 +35,7 @@ export function BlogSection({
     >
       <h2
         id="blog-section-heading"
-        className="mb-6 text-sm tracking-[2px] uppercase"
-        style={{ color: 'var(--ink-2)' }}
+        className="mb-6 text-sm text-ink-2 tracking-[2px] uppercase"
       >
         {t.signIn.blog.heading}
       </h2>
@@ -47,15 +46,14 @@ export function BlogSection({
               href={withUtm(post.link, { source: 'futari_landing', medium: 'blog_section' })}
               target="_blank"
               rel="noopener noreferrer"
-              className="block h-full rounded-lg border p-4 transition-opacity hover:opacity-80"
-              style={{ borderColor: 'var(--ink-3)' }}
+              className="block h-full rounded-lg border border-ink-3 p-4 transition-opacity hover:opacity-80 focus-visible:oik-focus-ring"
             >
               {post.pubDate && (
-                <div className="mb-2 text-xs" style={{ color: 'var(--ink-3)' }}>
+                <div className="mb-2 text-xs text-ink-2">
                   {dateFmt.format(new Date(post.pubDate))}
                 </div>
               )}
-              <div className="text-sm leading-relaxed" style={{ color: 'var(--ink)' }}>
+              <div className="text-sm text-ink leading-relaxed">
                 {post.title}
               </div>
             </a>

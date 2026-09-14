@@ -4,6 +4,7 @@ import type { SplitType } from '@/lib/balance'
 import { SplitGlyph } from './SplitGlyph'
 import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 
 interface SplitTypeSelectorProps {
@@ -58,6 +59,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
   const weightedLabel = splitRatioA === 50 ? t.splitType.even : t.splitType.weighted
   const isWeighted = value === 'weighted' || value === 'half'
   const hasDriftedFromDefault = splitRatioA !== defaultViewerShare
+  const anyChecked = isWeighted || value === 'all_mine' || value === 'all_theirs'
 
   const staticOptions = [
     { id: 'all_mine'   as const, label: t.splitType.allMine,     sub: splitSub(sts, 'all_mine',   payerWho, amount) },
@@ -65,7 +67,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
   ]
 
   return (
-    <div role="radiogroup" aria-label={sts.groupAriaLabel} className="flex flex-col gap-2">
+    <div role="radiogroup" aria-label={sts.groupAriaLabel} onKeyDown={onRadioGroupKeyDown} className="flex flex-col gap-2">
       {/* Weighted option (replaces half). The card wraps a radio button + an
           optional sibling slider — keeps the same visual but flattens the
           previously nested button > range into siblings (issue #385). */}
@@ -80,6 +82,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
           type="button"
           role="radio"
           aria-checked={isWeighted}
+          tabIndex={rovingTabIndex(isWeighted, true, anyChecked)}
           onClick={() => onChange('weighted')}
           className="flex items-center gap-3 w-full text-left bg-transparent border-0 p-0 cursor-pointer transition-all duration-150"
         >
@@ -116,10 +119,14 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
               className="w-full accent-[var(--ink)]"
             />
             {hasDriftedFromDefault && (
+              // Tap area extends sideways and down into the card's bottom
+              // padding only — extending upward would overlap the range
+              // slider directly above and steal drags from it. That caps it
+              // below 44px without a layout change (#1186).
               <button
                 type="button"
                 onClick={() => onSplitRatioAChange(defaultViewerShare)}
-                className="self-end text-xs underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
+                className="relative before:absolute before:-inset-x-3 before:top-0 before:-bottom-3 before:content-[''] self-end text-xs underline underline-offset-2 mt-0.5 px-1 py-0.5 bg-transparent border-0 cursor-pointer transition-colors duration-150"
                 style={{ color: 'var(--ink-3)' }}
               >
                 {sts.resetToDefault}
@@ -138,6 +145,7 @@ export function SplitTypeSelector({ value, splitRatioA, onSplitRatioAChange, onC
             type="button"
             role="radio"
             aria-checked={sel}
+            tabIndex={rovingTabIndex(sel, false, anyChecked)}
             onClick={() => onChange(s.id)}
             className="flex items-center gap-3 px-3.5 py-3 rounded-bubble cursor-pointer text-left transition-all duration-150"
             style={{

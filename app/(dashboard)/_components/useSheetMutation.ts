@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useTransition } from 'react'
 import { describeError } from '@/lib/errors'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface RunMutationOptions {
   /** Fallback message when `describeError` can't resolve a specific one. */
@@ -16,8 +17,12 @@ interface RunMutationOptions {
    * differently (e.g. AddSheet / IncomeSheet `editAndConfirmPending`:
    * "partner already confirmed this pending" → close sheet + toast instead
    * of surfacing an inline error).
+   *
+   * Branch on `e` (e.g. `isActionError(e, 'pending_expense_not_found')`), not
+   * on `msg`: `msg` is already localized, so a substring match on it only
+   * works in whichever locale the pattern was written in (#1156).
    */
-  onError?: (msg: string) => boolean | void
+  onError?: (msg: string, e: unknown) => boolean | void
 }
 
 /**
@@ -32,6 +37,8 @@ interface RunMutationOptions {
  * one consumer interface.
  */
 export function useSheetMutation() {
+  const t = useTranslations()
+  const actionErrors = t.errors.actions
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -43,13 +50,13 @@ export function useSheetMutation() {
           await op()
           opts.onSuccess?.()
         } catch (e) {
-          const msg = describeError(e, opts.fallbackMsg, opts.offlineMsg)
-          if (opts.onError?.(msg)) return
+          const msg = describeError(e, opts.fallbackMsg, opts.offlineMsg, actionErrors)
+          if (opts.onError?.(msg, e)) return
           setError(msg)
         }
       })
     },
-    [],
+    [actionErrors],
   )
 
   /**

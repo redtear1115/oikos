@@ -510,7 +510,7 @@ function RecurringRulesSection({
             <button
               type="button"
               onClick={onAdd}
-              className="h-9 px-4 rounded-full text-sm font-medium border-0 cursor-pointer"
+              className="relative h-9 px-4 rounded-full text-sm font-medium border-0 cursor-pointer before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
               style={{ background: P.ink, color: 'var(--on-fill)' }}
             >
               {translations.recurringAddCta}

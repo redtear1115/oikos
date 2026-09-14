@@ -1,13 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
 import { useTranslations } from '@/lib/i18n/client'
 import { leaveGroup, proposeSwap } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
 
 type Step = 1 | 2 | 3 | 4 | 'final' | 'swap-sent'
+
+/** Id of the dialog title. Every step renders exactly one CardTitle, so the
+ *  dialog's `aria-labelledby` always resolves to the current card's heading. */
+const TitleIdContext = createContext<string | undefined>(undefined)
 
 interface Props {
   open: boolean
@@ -43,6 +48,40 @@ export function LeaveGroupFlow({
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
+  const panelRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+
+  // Tab stays inside the panel while open; focus returns to the "leave" row
+  // on close (#1172). Call order relative to the focus effects below does not
+  // matter: the trap records its restore target in a layout effect, and every
+  // layout effect in a commit runs before every passive one, so the trigger is
+  // captured before those effects move focus (#1230).
+  useFocusTrap(open, panelRef)
+
+  // Focus the panel itself on open — the screen reader announces the dialog
+  // by the current card's title, and nothing destructive is pre-focused.
+  useEffect(() => {
+    if (open) panelRef.current?.focus()
+  }, [open])
+
+  // Step changes move focus to the new card's <h2> (#1242), the same move the
+  // import wizard makes between steps (#1182). Two failures this covers:
+  //  - the footer "next" survives the swap, so focus used to stay on it and
+  //    nothing announced the new card — a VoiceOver user pressing "next"
+  //    three times in a row walked past the step 2–3 warnings unheard;
+  //  - card 4's yes/no and the swap-sent OK unmount, which dropped focus to
+  //    <body> and restarted Tab from outside the dialog.
+  // The cost is one extra Tab back to "next" for keyboard users; the heading
+  // is what they are there to read. Skipped on open (the panel effect above
+  // owns that) and while closed (the reset below changes step too).
+  const lastStepRef = useRef(step)
+  useEffect(() => {
+    if (lastStepRef.current === step) return
+    lastStepRef.current = step
+    if (!open) return
+    panelRef.current?.querySelector<HTMLElement>('h2')?.focus()
+  }, [open, step])
+
   // Reset state when sheet closes so the next open starts fresh.
   useEffect(() => {
     if (!open) {
@@ -77,7 +116,7 @@ export function LeaveGroupFlow({
         setStep('swap-sent')
         router.refresh()
       } catch (e) {
-        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -117,7 +156,7 @@ export function LeaveGroupFlow({
         router.refresh()
         router.push('/dashboard')
       } catch (e) {
-        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -187,7 +226,14 @@ export function LeaveGroupFlow({
         }}
       >
       <div
-        className="w-full max-w-md max-h-full rounded-card flex flex-col"
+        ref={panelRef}
+        tabIndex={-1}
+        // Always mounted so the fade-out can play; `inert` is what keeps the
+        // invisible closed panel out of the tab order and the a11y tree. Dialog
+        // semantics only while open — same shape as SheetFrame (#1176, #1172).
+        inert={!open}
+        {...(open ? { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId } : {})}
+        className="w-full max-w-md max-h-full rounded-card flex flex-col focus:outline-none"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
@@ -195,9 +241,8 @@ export function LeaveGroupFlow({
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 200ms',
         }}
-        role="dialog"
-        aria-modal="true"
       >
+        <TitleIdContext.Provider value={titleId}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
             {showStepIndicator && flow.step
@@ -208,7 +253,10 @@ export function LeaveGroupFlow({
             type="button"
             onClick={handleClose}
             disabled={pending}
-            className="text-sm cursor-pointer disabled:opacity-50"
+            // 44×44 hit area (#1172). The negative margins pull the box back
+            // out so the glyph stays where it was and the header height is
+            // unchanged; it still sits inside the safe-area-padded layout box.
+            className="w-11 h-11 -mr-3 -my-3 flex items-center justify-center text-sm cursor-pointer disabled:opacity-50"
             style={{ background: 'transparent', border: 'none', color: 'var(--ink-3)' }}
             aria-label={flow.close}
           >
@@ -263,7 +311,7 @@ export function LeaveGroupFlow({
           {errorMsg && (
             <div
               className="mt-4 rounded-xl px-3 py-2 text-xs"
-              style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
+              style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
               role="alert"
             >
               {errorMsg}
@@ -311,6 +359,7 @@ export function LeaveGroupFlow({
             )}
           </div>
         )}
+        </TitleIdContext.Provider>
       </div>
       </div>
     </>
@@ -318,9 +367,13 @@ export function LeaveGroupFlow({
 }
 
 function CardTitle({ children }: { children: React.ReactNode }) {
+  const id = useContext(TitleIdContext)
   return (
     <h2
-      className="text-base mb-3 leading-tight"
+      id={id}
+      // Focus target on step change (see the step effect in LeaveGroupFlow).
+      tabIndex={-1}
+      className="text-base mb-3 leading-tight focus:outline-none"
       style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
     >
       {children}
@@ -469,12 +522,13 @@ function FinalConfirm({
   pending: boolean
 }) {
   const matched = confirmInput.trim() === t.confirmText
+  const inputId = useId()
   return (
     <>
       <CardTitle>{t.title}</CardTitle>
       {!balanceOk ? (
         <>
-          <p className="text-sm mb-4" style={{ color: 'var(--debit)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--debit-text)' }}>
             {/* TODO(v0.17 currency): i18n template has `NT$ {amount}` baked in;
                  needs digits-only mode or removing the symbol from translations. */}
             {t.balanceNotZero.replace('{amount}', balanceAbs.toLocaleString())}
@@ -491,12 +545,13 @@ function FinalConfirm({
       ) : (
         <>
           <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>{t.balanceOk}</p>
-          <label className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
+          <label htmlFor={inputId} className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
             <span>{t.typePromptPrefix}</span>
             <span className="font-medium" style={{ color: 'var(--ink)' }}>{t.confirmText}</span>
             <span>{t.typePromptSuffix}</span>
           </label>
           <input
+            id={inputId}
             type="text"
             value={confirmInput}
             onChange={(e) => onChangeInput(e.target.value)}

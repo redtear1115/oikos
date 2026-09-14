@@ -87,7 +87,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
         <div className="flex items-center gap-2">
           <FutariMark size={22} />
           <span
-            className="text-[17px] md:text-title font-medium"
+            className="text-lg md:text-title font-medium"
             style={{
               fontFamily: 'var(--font-fraunces)',
               letterSpacing: '-0.2px',
@@ -96,6 +96,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
             Futari
           </span>
           <span
+            aria-hidden="true"
             className="hidden md:inline text-xs ml-2"
             style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
@@ -108,9 +109,10 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
           signInHref={signInHref}
           dashboardHref={dashboardHref}
           ctaLocation="desktop_header"
-          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
           style={{
             background: 'var(--ink)',
+            color: 'var(--on-fill)',
             letterSpacing: '1.2px',
             textDecoration: 'none',
           }}
@@ -145,10 +147,9 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
             </p>
             {/* desktop: small kicker above title */}
             <p
-              className="hidden md:block m-0 mb-6"
+              className="hidden md:block m-0 mb-6 text-sm"
               style={{
                 fontFamily: 'var(--font-fraunces)',
-                fontSize: 13,
                 color: 'var(--ink-2)',
                 letterSpacing: '4px',
               }}
@@ -190,7 +191,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
 
             {/* body — both layouts */}
             <p
-              className="m-0 mt-5 md:mt-7 text-base md:text-[18px] leading-[1.7] md:leading-[1.7] mx-auto md:mx-0"
+              className="m-0 mt-5 md:mt-7 text-base md:text-lg leading-[1.7] mx-auto md:mx-0"
               style={{
                 color: 'var(--ink-2)',
                 maxWidth: 320,
@@ -204,12 +205,12 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
                 signInHref={signInHref}
                 dashboardHref={dashboardHref}
                 ctaLocation="hero"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-base font-medium cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-base font-medium cursor-pointer transition-opacity duration-150 ease-out hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
                 style={{
                   background: 'var(--ink)',
+                  color: 'var(--on-fill)',
                   letterSpacing: '1.8px',
                   textDecoration: 'none',
-                  boxShadow: '0 10px 24px -10px rgba(58, 36, 25, 0.4)',
                 }}
               >
                 {t.cta}
@@ -218,7 +219,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
                 href={signInHref}
                 ctaLocation="secondary"
                 target="sign_in"
-                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-sm cursor-pointer"
+                className="hidden md:inline-flex items-center justify-center h-14 px-5 rounded-bubble text-sm cursor-pointer transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
                 style={{
                   color: 'var(--ink-2)',
                   letterSpacing: '1px',
@@ -265,10 +266,9 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
           <div className="md:flex md:items-baseline md:justify-between mb-6 md:mb-9 px-1">
             <div>
               <p
-                className="m-0"
+                className="m-0 text-xs"
                 style={{
                   fontFamily: 'var(--font-fraunces)',
-                  fontSize: 12,
                   letterSpacing: '3.5px',
                   color: 'var(--ink-2)',
                 }}
@@ -276,7 +276,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
                 {t.featuresKicker}
               </p>
               <h2
-                className="m-0 mt-1.5 text-[20px] md:text-[36px]"
+                className="m-0 mt-1.5 text-xl md:text-page"
                 style={{
                   fontFamily: 'var(--font-fraunces)',
                   fontWeight: 500,
@@ -363,7 +363,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
           <div
-            className="flex items-center gap-3 text-[12px]"
+            className="flex items-center gap-3 text-xs"
             style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
           >
             <Link href={migrateHrefs.hub} className="underline">{t.migrateSection.seeAll}</Link>
@@ -427,10 +427,9 @@ function MigrateLinksSection({
         <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
           <div>
             <p
-              className="m-0"
+              className="m-0 text-xs"
               style={{
                 fontFamily: 'var(--font-fraunces)',
-                fontSize: 12,
                 letterSpacing: '3.5px',
                 color: 'var(--ink-2)',
               }}
@@ -438,7 +437,7 @@ function MigrateLinksSection({
               {t.migrateSection.kicker}
             </p>
             <h2
-              className="m-0 mt-1.5 text-[20px] md:text-[28px]"
+              className="m-0 mt-1.5 text-xl md:text-page"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontWeight: 500,
@@ -468,24 +467,19 @@ function MigrateLinksSection({
               // them — satisfying WCAG 2.5.3 Label in Name (#919). A bespoke
               // aria-label ("從 X 搬到 Futari") wouldn't contain the visible
               // "搬過來" text and failed label-content-name-mismatch.
-              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--hairline)',
-                color: 'var(--ink)',
-                textDecoration: 'none',
-              }}
+              // Migrate keeps the tile grammar: three genuinely parallel
+              // options, so three equal tiles are the honest shape (#1151).
+              // Feedback is a tonal step, not a lift — border darkens on hover,
+              // surface sinks to --surface-alt on press (#1150).
+              className="block p-5 md:p-6 rounded-tile bg-surface border border-hairline text-ink no-underline transition-colors duration-150 ease-out hover:border-ink-3 active:bg-surface-alt motion-reduce:transition-none"
             >
               <p
-                className="m-0 text-base md:text-[16px] font-medium"
-                style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
+                className="m-0 text-base font-medium text-ink"
+                style={{ letterSpacing: '-0.1px' }}
               >
                 {item.title}
               </p>
-              <p
-                className="m-0 mt-1.5 text-sm leading-[1.6]"
-                style={{ color: 'var(--ink-2)' }}
-              >
+              <p className="m-0 mt-1.5 text-sm leading-[1.6] text-ink-2">
                 {item.body}
               </p>
             </LandingCtaLink>
@@ -495,7 +489,7 @@ function MigrateLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={migrateHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-sm"
+            className="inline-flex items-center gap-1.5 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
@@ -552,10 +546,9 @@ function UseCaseLinksSection({
         <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
           <div>
             <p
-              className="m-0"
+              className="m-0 text-xs"
               style={{
                 fontFamily: 'var(--font-fraunces)',
-                fontSize: 12,
                 letterSpacing: '3.5px',
                 color: 'var(--ink-2)',
               }}
@@ -563,7 +556,7 @@ function UseCaseLinksSection({
               {t.useCaseSection.kicker}
             </p>
             <h2
-              className="m-0 mt-1.5 text-[20px] md:text-[28px]"
+              className="m-0 mt-1.5 text-xl md:text-page"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontWeight: 500,
@@ -581,37 +574,45 @@ function UseCaseLinksSection({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        {/* Use-case speaks in a different grammar from the migrate tiles below
+            (#1151): no card chrome — each situation is a hairline-topped
+            editorial entry whose serif name is the link, with a trailing
+            arrow. Migrate sells an action (bring your data); this sells
+            recognition ("is this us?"), so it reads as prose, not options. */}
+        <ul className="m-0 p-0 list-none grid grid-cols-1 md:grid-cols-3 md:gap-x-10">
           {items.map((item) => (
-            <LandingCtaLink
-              key={item.slug}
-              href={item.href}
-              ctaLocation="footer_use_case"
-              target={item.target}
-
-              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--hairline)',
-                color: 'var(--ink)',
-                textDecoration: 'none',
-              }}
-            >
-              <p
-                className="m-0 text-base md:text-[16px] font-medium"
-                style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
+            <li key={item.slug} className="border-t border-hairline">
+              <LandingCtaLink
+                href={item.href}
+                ctaLocation="footer_use_case"
+                target={item.target}
+                className="group block py-5 md:pt-6 md:pb-2 text-ink no-underline text-left transition-opacity duration-150 ease-out active:opacity-60 motion-reduce:transition-none"
               >
-                {item.title}
-              </p>
-              <p
-                className="m-0 mt-1.5 text-sm leading-[1.6]"
-                style={{ color: 'var(--ink-2)' }}
-              >
-                {item.body}
-              </p>
-            </LandingCtaLink>
+                <span
+                  className="flex items-baseline justify-between gap-3 text-xl md:text-title"
+                  style={{
+                    fontFamily: 'var(--font-fraunces)',
+                    fontWeight: 500,
+                    letterSpacing: '-0.3px',
+                  }}
+                >
+                  <span className="underline decoration-transparent underline-offset-4 transition-colors duration-150 ease-out group-hover:decoration-ink motion-reduce:transition-none">
+                    {item.title}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 text-base text-ink-3 transition-transform duration-150 ease-out group-hover:translate-x-1 motion-reduce:transition-none"
+                  >
+                    →
+                  </span>
+                </span>
+                <span className="block mt-2 text-sm leading-[1.6] text-ink-2">
+                  {item.body}
+                </span>
+              </LandingCtaLink>
+            </li>
           ))}
-        </div>
+        </ul>
 
         {/* The other seven situations live behind one link rather than as ten
             cards here — the landing section stays a sample of who this is for,
@@ -619,7 +620,7 @@ function UseCaseLinksSection({
         <div className="mt-6 md:mt-7 text-center md:text-left">
           <Link
             href={useCaseHrefs.hub}
-            className="inline-flex items-center gap-1.5 text-sm"
+            className="inline-flex items-center gap-1.5 text-sm transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
             style={{
               color: 'var(--ink)',
               textDecoration: 'underline',
@@ -665,7 +666,7 @@ function FeatureEntry({
           column on the left so titles align across entries. */}
       <span
         aria-hidden="true"
-        className="shrink-0 text-[28px] md:text-[36px] leading-none pt-1"
+        className="shrink-0 text-page leading-none pt-1"
         style={{
           fontFamily: 'var(--font-fraunces)',
           fontStyle: 'italic',
@@ -684,7 +685,7 @@ function FeatureEntry({
             {glyph}
           </span>
           <h3
-            className="m-0 text-[18px] md:text-[20px] font-medium"
+            className="m-0 text-lg md:text-xl font-medium"
             style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
           >
             {title}

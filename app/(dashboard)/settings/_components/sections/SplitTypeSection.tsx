@@ -6,6 +6,7 @@ import { updateDefaultSplitType } from '@/actions/profile'
 import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 
 interface Props {
   current: SplitType
@@ -19,14 +20,14 @@ export function SplitTypeSection({ current, isSolo }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const handleChange = (next: SplitType) => {
-    if (next === current) return
+    if (saving || next === current) return
     setError(null)
     startTransition(async () => {
       try {
         await updateDefaultSplitType(next)
         router.refresh()
       } catch (e) {
-        setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError))
+        setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -61,19 +62,28 @@ export function SplitTypeSection({ current, isSolo }: Props) {
     )
   }
 
+  // `current` can be a split type this group doesn't offer: 'weighted' is
+  // pickable per-record in AddSheet but has no row here. With nothing checked
+  // the first row has to become the group's Tab stop, or the whole group drops
+  // out of the keyboard order — it looks fine, it just can't be reached by Tab
+  // (#1242 follow-up).
+  const options = [
+    { id: 'half' as const,       label: t.splitType.even },
+    { id: 'all_mine' as const,   label: t.splitType.allMine },
+    { id: 'all_theirs' as const, label: t.splitType.allPartners },
+  ]
+  const anyChecked = options.some((opt) => opt.id === current)
+
   return (
     <div>
       <div
         role="radiogroup"
         aria-label={t.settings.defaultSplitLabel}
+        onKeyDown={onRadioGroupKeyDown}
         className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
-        {([
-          { id: 'half' as const,       label: t.splitType.even },
-          { id: 'all_mine' as const,   label: t.splitType.allMine },
-          { id: 'all_theirs' as const, label: t.splitType.allPartners },
-        ]).map((opt, i) => {
+        {options.map((opt, i) => {
           const sel = current === opt.id
           return (
             <button
@@ -81,9 +91,14 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               key={opt.id}
               role="radio"
               aria-checked={sel}
+              tabIndex={rovingTabIndex(sel, i === 0, anyChecked)}
               onClick={() => handleChange(opt.id)}
-              disabled={saving}
-              className="flex items-center justify-between px-4 py-3 text-left cursor-pointer disabled:cursor-default disabled:opacity-60"
+              // `aria-disabled`, not `disabled`, while saving (#1242): an arrow
+              // key selects and saves, and a real `disabled` would drop focus
+              // off the radio the user just moved to — the next arrow press
+              // then goes nowhere. handleChange ignores presses while saving.
+              aria-disabled={saving || undefined}
+              className="flex items-center justify-between min-h-11 px-4 py-3 text-left cursor-pointer aria-disabled:cursor-default aria-disabled:opacity-60"
               style={{
                 borderTop: i === 0 ? 'none' : '1px solid var(--hairline)',
                 background: 'transparent',
@@ -96,7 +111,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
         })}
       </div>
       {error && (
-        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>{error}</div>
+        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit-text)' }}>{error}</div>
       )}
     </div>
   )

@@ -65,7 +65,7 @@ export const zhCN: Translations = {
       c2Body: '旅行子账本独立记账，回来清楚看这趟谁多付了多少，不用再翻聊天记录对账。',
       c3Title: '这笔是帮你买的',
       c3Body: '每笔账可以留一句话。让那个「顺手帮你缴的」不只是数字，是一句记得。',
-      c4Title: '你们的账，只有你们看得到',
+      c4Title: '你们的账，只开放给你们俩',
       c4Body: '没有「我的账」跟「你的账」之分。进来的就是共同的，没有可见度分级。',
     },
     blog: {
@@ -74,6 +74,8 @@ export const zhCN: Translations = {
     srTagline: ' · 两个人的家计簿｜伴侣／夫妻共享记账 PWA',
     srDescription:
       '专为伴侣、夫妻设计的双人共享账本。一起记录日常开销、自动分摊费用与 AA 制结算，掌握家庭预算、资产盘点、保险与爱车油耗记录。',
+    aboutLabel: '关于 Futari',
+    featuresLabel: 'Futari 能做的事',
     installHint: {
       cta: '也可以先添加到主屏幕',
       iosStep1: '点底部正中间的分享按钮',
@@ -88,14 +90,14 @@ export const zhCN: Translations = {
     cta: '一起记录',
     ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
     alreadyHaveAccount: '已有账号 · 登录',
-    trustEncrypted: '端到端加密',
+    trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
       encryption: {
-        title: '端到端加密',
-        body: '数据传输与存储全程加密，连我们自己也读不到内容。',
+        title: '只开放给你们俩',
+        body: '账本只对你们两人的账号开放。连接以 HTTPS 加密；宝宝本名、身份证号这类敏感数据，会再加密一层才存进数据库。',
       },
       portability: {
         title: '随时带走',
@@ -141,7 +143,7 @@ export const zhCN: Translations = {
       cwmoneyBody: '附上 Excel → CSV 模板，几分钟就能搬完。',
       seeAll: '看全部迁移指南',
     },
-    footerTrust: '端到端加密 · 数据只属于你们两个',
+    footerTrust: '只开放给你们俩 · 数据只属于你们两个',
     jsonLdAppName: 'Futari · 双人记账',
     jsonLdAlternateNames: ['Futari 家计簿', '两个人的家计簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
@@ -169,7 +171,7 @@ export const zhCN: Translations = {
       {
         question: '数据安全吗？',
         answer:
-          '所有数据存储于 Supabase 加密数据库，仅你和伴侣两人能访问。我们不会分享或出售你的记账内容。',
+          '账本只开放给你和伴侣两人。连接以 HTTPS 加密；宝宝本名、身份证号、健保卡号、车牌、房屋地址等敏感字段，会先加密才存进数据库。我们不会分享或出售你的记账内容。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -213,6 +215,12 @@ export const zhCN: Translations = {
       confirm: '确认',
       cancel: '取消',
       retry: '重试',
+    },
+    unsavedChanges: {
+      title: '刚才填的内容还没保存',
+      description: '现在离开，这次填的内容不会保留。',
+      discard: '放弃',
+      keepEditing: '继续填写',
     },
   },
 
@@ -287,6 +295,8 @@ export const zhCN: Translations = {
     filterAriaLabel: '打开筛选',
     burdenMe: '算我的',
     burdenPartner: '算对方的',
+    payerFilterAriaLabel: '按谁付的筛选',
+    burdenFilterAriaLabel: '按算谁的筛选',
     headerHint: {
       trip: '旅行',
       settings: '设置',
@@ -322,6 +332,8 @@ export const zhCN: Translations = {
     modeSettledLabel: '现在',
     modeIncludePendingLabel: '结算后',
     modeToggleAriaLabel: '切换 显示「现在」或「结算后」金额',
+    expandAriaLabel: '展开摘要卡',
+    collapseAriaLabel: '收起摘要卡',
   },
 
   soloBanner: {
@@ -473,6 +485,7 @@ export const zhCN: Translations = {
   splitRatioSection: {
     meSuffix: '（我）',
     partnerSuffix: '（对方）',
+    ariaLabel: '默认分摊比例',
   },
 
   errorPage: {
@@ -490,6 +503,12 @@ export const zhCN: Translations = {
   assetListItem: {
     savingsBadge: '储蓄',
     thisMonth: '本月',
+    plateMaskedAriaLabel: '车牌已隐藏',
+    lastRefuel: '上次加油 {date}',
+    childAge: '{years} 岁 {months} 个月',
+    petAge: '{years} 岁',
+    birthdayThisMonth: '🎂 本月生日',
+    plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
       shortTermProtection: '保护型 · 一年期',
       longTermProtection: '保护型 · 多年期',
@@ -536,6 +555,7 @@ export const zhCN: Translations = {
     addCustomCta: '+ 自定义货币',
     footerNote: '这趟期间记录的支出，会自动挂在这次旅行底下。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: '{code} 对 {baseCode} 的汇率',
     basePill: '基础货币',
     usedCountNote: '已记过 {n} 笔；改汇率不影响旧记录',
     customRow: {
@@ -633,6 +653,7 @@ export const zhCN: Translations = {
     loadFailed: '加载失败',
     emptyAibutsu: '还没有爱物，先到「爱物」分页新增。',
     emptyGuardian: '还没有保单，先到「爱物 > 守护」分页新增。',
+    deletedSuffix: '（已删除）',
   },
 
   records: {
@@ -677,6 +698,7 @@ export const zhCN: Translations = {
       trendIncome: '收入',
       trendNet: '累计结余',
       trendChartLabel: '每日收支趋势',
+      pieChartLabel: '占比饼图，共 {count} 项',
     },
   },
 
@@ -965,6 +987,7 @@ export const zhCN: Translations = {
     title: '过去的时光',
     back: '返回',
     intro: '这本账本有过好几段时光。每一段都是当时的你们留下来的。',
+    readOnlyNote: '翻过去的章节会照当时的样子留着，可以回来看，不再修改。',
     currentChapter: '现在 · 跟 {partner}',
     currentChapterSolo: '现在 · 一个人',
     chapterRange: '{start} – {end}',
@@ -1049,6 +1072,19 @@ export const zhCN: Translations = {
       lapseTitle: '已停止这份保单？',
       lapseDescription: '保单将从列表中移除，仍可从详细页找回。',
       lapseConfirm: '已停止',
+      insuredShort: '保 {name}',
+      annualLabel: '年缴',
+      timelineStarts: '生效',
+      timelineEnds: '到期',
+      timelinePaid: '已缴',
+      timelinePaidYears: '{paid} / {term} 年',
+      timelineSumInsured: '保额',
+      timelineInvested: '已投入',
+      timelineTarget: '目标',
+      summaryAnnualPremium: '年缴保费',
+      summaryPolicyCount: '共 {count} 份保单',
+      summaryNextRenewal: '下次续约',
+      summaryDaysUntil: '{days} 天后',
     },
   },
 
@@ -1067,6 +1103,7 @@ export const zhCN: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 个月',
       dayLabel: '{day} 号',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '这几笔等你看看',
@@ -1098,7 +1135,8 @@ export const zhCN: Translations = {
       resumeAction: '恢复',
       deleteRuleAction: '删除规则',
       deleteConfirmTitle: '删除这个定期规则？',
-      deleteConfirmDescription: '已存在的待确认卡片也会一起清掉，此操作无法撤销。',
+      deleteConfirmDescription: '还没处理的待确认卡片会一起清掉，已经记下的记录会保留。此操作无法撤销。',
+      editEffectHint: '改动从下一期开始生效。已经出现的待确认卡片，金额与日期保持不变。',
     },
     errors: {
       amountRequired: '请输入金额',
@@ -1115,22 +1153,21 @@ export const zhCN: Translations = {
     pageHeading: '你们的数据，属于你们俩',
     pageSubtitle: '我们的承诺，写在这里。',
     encryption: {
-      heading: '只有你们俩能看到',
-      body: '我们用 AES-256-GCM 为你们的记录加密。连我们自己，也读不到内容。',
+      heading: '只开放给你们俩',
+      body: '账本只对你们两人的账号开放。连接以 HTTPS 加密；宝宝本名、身份证号、车牌和地址这类敏感数据，我们会再加密一层才存进数据库。',
     },
     portability: {
       heading: '随时都能整包带走',
       body: '我们不会把你们绑在这里。日后想离开，所有记录都能整批带走。',
-      comingSoonHint: '导出功能即将推出',
     },
     backup: {
-      heading: '我们替你们守着',
-      body: '每一笔记录，我们都备份保管。即使你们忘了，我们也替你们留着。',
+      heading: '每一笔，都会好好留着',
+      body: '只要账号还在，你们记下的每一笔都会留在这里。',
     },
     onboarding: {
       line1: '数据只属于你们俩',
       line2: '随时都能整包带走',
-      line3: '每一笔我们都替你们守着',
+      line3: '每一笔，都会好好留着',
     },
     bilateral: {
       inviter: {
@@ -1147,7 +1184,51 @@ export const zhCN: Translations = {
     },
   },
 
+  onboarding: {
+    heading: 'Futari 的五个想法',
+    skip: '跳过',
+    next: '继续',
+    start: '开始记第一笔',
+    progress: '第 {current} 张，共 {total} 张',
+    paydayMark: '05 / 月',
+    cards: [
+      {
+        eyebrow: '想法',
+        quote: ['Futari 不会问', '谁花得比较多。'],
+        subtitle: '我们只记下“发生了什么”。谁先掏钱，只是当下方便而已。',
+      },
+      {
+        eyebrow: '一起',
+        quote: ['进到 Futari 的，', '就是我们*共同的*。'],
+        subtitle: '这不是一本分账簿。它是两个人共有的家计簿 — 一笔进来，两个人都看得到。',
+      },
+      {
+        eyebrow: '仪式',
+        quote: ['工资到账的那天，', '是两个人一起', '感受的时刻。'],
+        subtitle: '所以定期收入会在那一天出现一张卡片 — 提醒我们、一起确认。',
+      },
+      {
+        eyebrow: '守护',
+        quote: ['保险不是开销 —', '是和对方一起', '守护的承诺。'],
+        subtitle: '所以它放在“爱物”里，不在支出里。每一期缴费，都是再说一次这个承诺。',
+      },
+      {
+        eyebrow: '开始',
+        quote: ['准备好了吗？', '就从第一笔', '慢慢开始。'],
+        subtitle: '不用等到完美的时刻 — 账本会陪着你们一起长出来。',
+      },
+    ],
+  },
+
   setup: {
+    name: {
+      heading: '给你们的家计簿取个名字',
+      subtitle: '之后可以随时改。简短一点比较好记。',
+      suggestions: ['我们俩', '○○家', '日日', 'Home', '一起'],
+      next: '下一步',
+      required: '请输入名称',
+      failed: '出错了',
+    },
     invite: {
       heading: '账本准备好了，让对方也进来',
       subtitle: '对方加入后，就能一起记「{name}」。',
@@ -1377,6 +1458,7 @@ export const zhCN: Translations = {
     switcher: {
       emptyGroup: '（无）',
       currentLabel: '当前',
+      carGroup: '车辆',
     },
     notesSection: '备注',
     recentExpenses: '近期支出',
@@ -1431,6 +1513,25 @@ export const zhCN: Translations = {
       avgEconRecent: '近 6 个月',
       plate: '车牌',
       plateSection: '车辆信息',
+    },
+    fuelLog: {
+      titleNew: '加油记录',
+      titleEdit: '编辑加油记录',
+      closeAriaLabel: '关闭',
+      econLabel: '本次油耗',
+      firstRefuelHint: '第一次加油 · 之后才能算油耗',
+      autoCalcHint: '输入里程与油量自动计算',
+      liters: '油量',
+      litersUnit: '升',
+      odometer: '加油里程',
+      lastOdometer: '上次 {km} km',
+      cost: '金额',
+      date: '日期',
+      pickDate: '选择日期',
+      splitLabel: '分摊方式',
+      submit: '记下这笔',
+      deleteTitle: '删除这笔加油记录？',
+      deleteDescription: '删除后无法恢复，但其他支出记录不受影响。',
     },
     child: {
       sectionId: '身份证件',
@@ -1582,6 +1683,7 @@ export const zhCN: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 个月',
       dayLabel: '{day} 号',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '这几笔等你看看',
@@ -1615,7 +1717,8 @@ export const zhCN: Translations = {
       resumeAction: '恢复',
       deleteRuleAction: '删除规则',
       deleteConfirmTitle: '删除这个定期规则？',
-      deleteConfirmDescription: '已存在的待确认卡片也会一起清掉，此操作无法撤销。',
+      deleteConfirmDescription: '还没处理的待确认卡片会一起清掉，已经记下的记录会保留。此操作无法撤销。',
+      editEffectHint: '改动从下一期开始生效。已经出现的待确认卡片，金额、日期与分摊保持不变。',
     },
     errors: {
       amountRequired: '请输入金额',
@@ -1664,6 +1767,7 @@ export const zhCN: Translations = {
 
   offlineBanner: {
     text: '离线中・显示最近一次连接的数据',
+    textNoCache: '离线中・恢复连接后会自动更新',
   },
 
   offlinePage: {
@@ -1773,6 +1877,7 @@ export const zhCN: Translations = {
     emptyRecurring: '本月没有定期事件',
     emptyAssetBreakdown: '本月没有为任何爱物花费',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: '本月回顾卡片',
     incomeLabel: '入',
     expenseLabel: '支',
     snapshotNotReady: '这个月的回顾还在整理中，等一下再进来看看吧。',
@@ -1944,12 +2049,50 @@ export const zhCN: Translations = {
     differentiatorsHeading: '为什么选 Futari',
     faqHeading: '常见问题',
     comparisonHeading: 'Futari vs {other}',
+    comparisonText: {
+      interfaceLanguage: '界面语言',
+      fourLanguages: '✓ 中英日四语',
+      notStated: '未说明',
+      basicHalfSplit: '△ 基本对半',
+      updatesSlowed: '△ 节奏放缓',
+      paidUnlock: '△ 需付费解锁',
+      paidPlanOnly: '△ 限付费版',
+      basicPlanLimited: '△ 基础版有限制',
+      manualCleanup: '需自行整理',
+      requiresVip: '△ 需 VIP',
+      vipUnlock: '△ VIP 解锁',
+      requiresSubscription: '△ 需订阅',
+      manualBackup: '△ 需手动备份',
+      adsOrPaidPlan: '△ 含广告／付费版',
+      mostlyEnglish: '△ 以英文为主',
+      advancedNeedsSubscription: '△ 高级功能需订阅',
+      sharingSetupRequired: '△ 需设置共享',
+      premiumOnly: '△ Premium 限定',
+      someFeaturesPaid: '△ 部分功能付费',
+      viewOnly: '△ 仅能查看',
+      dependsOnVersion: '△ 视版本',
+      advancedSubscription: '△ 高级订阅',
+      vipOnly: '△ VIP 限定',
+      dependsOnAccount: '△ 视账号',
+      inAppPurchases: '△ 含内购',
+      subscriptionOnly: '△ 订阅限定',
+      mostlyLocal: '△ 本地为主',
+      advancedPaid: '△ 高级功能付费',
+      partialExport: '△ 部分导出',
+      iosOnly: '△ iOS 限定',
+      freePlanFourPerDay: '△ 免费版每日 4 笔',
+      conversionNeedsPro: '△ 换算需 Pro',
+      sharedLedgerSetupRequired: '△ 需设共享账本',
+      adsOrMembership: '△ 含广告／会员',
+      requiresMembership: '△ 需会员',
+    },
+    howToStepName: '步骤 {n}',
     trust: {
       heading: '为什么可以放心搬过来',
       items: [
         {
-          title: '端到端加密',
-          body: '你们之外，没有人能看见这本账的内容。',
+          title: '只开放给你们俩',
+          body: '账本只对你们两人的账号开放。连接以 HTTPS 加密，敏感数据另外加密保存。',
         },
         {
           title: '随时可以带走',
@@ -1961,7 +2104,7 @@ export const zhCN: Translations = {
         },
       ],
     },
-    footerTrust: '端到端加密 · 数据只属于你们两个',
+    footerTrust: '只开放给你们俩 · 数据只属于你们两个',
     otherSources: {
       heading: '从其他工具搬过来',
       cta: '看搬迁指南',
@@ -2068,7 +2211,7 @@ export const zhCN: Translations = {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 数据，可以带走',
         heroSubtitle: '从 Honeydue 搬迁到 Futari 只要三分钟——上传 CSV，这几年的记账完整保留。',
-        intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、数据加密。',
+        intro: 'Honeydue 自 2024 年起已由原团队转手，更新节奏放缓、客服回复变慢。如果你在找一个还在持续维护的双人记账工具，Futari 是从 Honeydue 搬过来的好选择——免费、无广告、只开放给你们俩。',
         differentiators: [
           {
             title: '仍在持续迭代',
@@ -2680,7 +2823,7 @@ export const zhCN: Translations = {
     migrate: {
       honeydue: {
         title: '从 Honeydue 搬家到 Futari｜数据导入',
-        description: 'Honeydue 替代方案首选。Futari 是专为夫妻、情侣设计的共同账本，3 分钟完成搬家、继续一起记账。免费、无广告、端到端加密。',
+        description: 'Honeydue 替代方案首选。Futari 是专为夫妻、情侣设计的共同账本，3 分钟完成搬家、继续一起记账。免费、无广告、只开放给你们俩。',
         ogDescription: 'Honeydue 用户的下一站：3 分钟搬迁到 Futari，双人记账继续。',
       },
       spendee: {
@@ -2695,17 +2838,17 @@ export const zhCN: Translations = {
       },
       moneybook: {
         title: '从麻布记账搬家到 Futari｜CSV 导入',
-        description: '麻布记账数据怎么搬到双人账本？把交易明细导出成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        description: '麻布记账数据怎么搬到双人账本？把交易明细导出成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '麻布记账用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
       andromoney: {
         title: '从 AndroMoney 搬家到 Futari｜CSV 导入',
-        description: 'AndroMoney 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
+        description: 'AndroMoney 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、只开放给你们俩。',
         ogDescription: 'AndroMoney 用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
       mobills: {
         title: '从 Mobills 搬家到 Futari｜CSV 导入',
-        description: 'Mobills 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、端到端加密。',
+        description: 'Mobills 数据导出后怎么搬到双人账本？把 CSV 导入 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记账。免费、无广告、只开放给你们俩。',
         ogDescription: 'Mobills 用户的双人记账新选择：导出 CSV，搬进 Futari。',
       },
       manebo: {
@@ -2715,37 +2858,37 @@ export const zhCN: Translations = {
       },
       'simple-daily-money': {
         title: '从简单记账搬家到 Futari｜截图转 CSV',
-        description: '简单记账的 CSV 导出是 VIP 功能？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、端到端加密。',
+        description: '简单记账的 CSV 导出是 VIP 功能？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，和对方一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '简单记账用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       'fortune-city': {
         title: '从记账城市搬家到 Futari｜截图转 CSV',
-        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '记账城市的 CSV 导出要订阅？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '记账城市用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       cashman: {
         title: '从 CashMan 搬家到 Futari｜截图转 CSV',
-        description: 'CashMan 没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: 'CashMan 没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: 'CashMan 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       '1money': {
         title: '从 1Money 搬家到 Futari｜截图转 CSV',
-        description: '1Money 没有完整导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '1Money 没有完整导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '1Money 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       icost: {
         title: '从 iCost 搬家到 Futari｜截图转 CSV',
-        description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: 'iCost 只有 iOS、没有 CSV 导出？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个跨平台的双人共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: 'iCost 用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
       splitwise: {
         title: '从 Splitwise 搬家到 Futari｜导出表格、CSV 导入',
-        description: 'Splitwise 的群组与好友交易可以导出表格带走。上传到 Futari 这个为夫妻、情侣设计的共同账本，分摊、结算与日常记账都在同一本账里。免费、无广告、端到端加密。',
+        description: 'Splitwise 的群组与好友交易可以导出表格带走。上传到 Futari 这个为夫妻、情侣设计的共同账本，分摊、结算与日常记账都在同一本账里。免费、无广告、只开放给你们俩。',
         ogDescription: 'Splitwise 用户搬家指南：导出表格 → 上传 CSV → 搬进 Futari 双人记账。',
       },
       suishouji: {
         title: '从随手记搬家到 Futari｜截图转 CSV',
-        description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、端到端加密。',
+        description: '随手记想换成双人账本？截图请 ChatGPT 整理成 CSV，上传到 Futari 这个专为夫妻、情侣设计的共同账本，两个人一起接着记。免费、无广告、只开放给你们俩。',
         ogDescription: '随手记用户搬家指南：截图→ChatGPT→CSV，搬进 Futari 双人记账。',
       },
     },
@@ -2757,13 +2900,13 @@ export const zhCN: Translations = {
     useCaseHub: {
       title: '双人记账的 10 种情境｜同居、新婚、旅行、宠物 — Futari',
       description: '同居生活费怎么分、新婚夫妻的账怎么记、旅行费用怎么对、养宠物多了哪些开销——日子不同，记账的难处也不同。这里是 Futari 为 10 种双人情境写的说明，挑最接近你们的那一个。',
-      ogDescription: '10 种双人记账情境，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、端到端加密。',
+      ogDescription: '10 种双人记账情境，挑最接近你们生活的那一个——Futari 双人账本，免费、无广告、只开放给你们俩。',
     },
     useCase: {
       cohabitation: {
         title: '同居 AA 制记账｜同居生活费怎么分？Futari',
         description: '同居生活费怎么分才不伤感情？Futari 是专为情侣设计的双人账本，支援 AA 对半、按比例等多种分摊模式，轻松记下每笔同居开销。',
-        ogDescription: '同居 AA 制最适合的记账工具——Futari 双人账本，免费、无广告、端到端加密。',
+        ogDescription: '同居 AA 制最适合的记账工具——Futari 双人账本，免费、无广告、只开放给你们俩。',
       },
       newlyweds: {
         title: '新婚家计分摊｜夫妻记账怎么记？Futari',
@@ -2777,7 +2920,7 @@ export const zhCN: Translations = {
       },
       travel: {
         title: '旅行费用分摊｜出游账本怎么记？Futari',
-        description: '旅行费用怎么分才清楚？Futari 旅行子账本让出游支出跟日常账分开，回来之后一目了然谁出了多少，不用在群组里对账。免费、无广告、端到端加密。',
+        description: '旅行费用怎么分才清楚？Futari 旅行子账本让出游支出跟日常账分开，回来之后一目了然谁出了多少，不用在群组里对账。免费、无广告、只开放给你们俩。',
         ogDescription: '出游账本不再乱——Futari 旅行子账本，把这趟旅行的费用记清楚。',
       },
       roommates: {
@@ -2787,7 +2930,7 @@ export const zhCN: Translations = {
       },
       'monthly-bills': {
         title: '每月固定开销记账｜房租水电怎么一起管？Futari',
-        description: '房租、水电、网络、保险——每月固定支出怎么和伴侣一起追踪？Futari 让两个人即时看到固定账，清楚知道谁付了什么。免费、端到端加密。',
+        description: '房租、水电、网络、保险——每月固定支出怎么和伴侣一起记？Futari 让两个人即时看到固定账，清楚知道谁付了什么。免费、只开放给你们俩。',
         ogDescription: '两个人的固定开销管理——Futari，每月必要支出一起看，不再只靠其中一人记。',
       },
       'big-purchases': {
@@ -2835,8 +2978,8 @@ export const zhCN: Translations = {
         body: '其中一个人记下去，另一个人马上看得到。不需要截图传微信，账本就是对话本身。',
       },
       encrypt: {
-        title: '端到端加密',
-        body: '账本只有你们两个人看得到。服务器不解密，也不读你们记了什么。',
+        title: '只开放给你们俩',
+        body: '账本只对你们两人的账号开放。连接以 HTTPS 加密，宝宝本名、身份证号这类敏感数据，也会另外加密才存进数据库。',
       },
       history: {
         title: '章节式记忆',
@@ -2918,7 +3061,7 @@ export const zhCN: Translations = {
         faq: [
           {
             question: '同居记账 app 有哪些选择？',
-            answer: 'Futari 是专为情侣设计的双人账本，从一开始就预设两个人一起使用，支援多种分摊模式、实时同步、端到端加密。不需要把个人记账工具改造成双人版。',
+            answer: 'Futari 是专为情侣设计的双人账本，从一开始就预设两个人一起使用，支持多种分摊模式、实时同步，账本只开放给你们俩。不需要把个人记账工具改造成双人版。',
           },
           {
             question: '同居 AA 制要怎么记账比较清楚？',
@@ -2926,7 +3069,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3025,7 +3168,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3058,7 +3201,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3091,7 +3234,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3124,7 +3267,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3157,7 +3300,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3190,7 +3333,7 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
@@ -3223,10 +3366,97 @@ export const zhCN: Translations = {
           },
           {
             question: 'Futari 要收费吗？',
-            answer: '基本功能完全免费，包含双人账本、多种分摊模式、实时同步与端到端加密。',
+            answer: '基本功能完全免费，包含双人账本、多种分摊模式与实时同步。',
           },
         ],
       },
+    },
+  },
+
+  errors: {
+    actions: {
+      group_not_found: '找不到家计簿',
+      payer_not_in_group: '付款人不在家计簿内',
+      payer_not_in_trip_ledger: '付款人不在账本中',
+      recipient_not_in_group: '收入归属不在家计簿内',
+      record_not_found: '找不到该笔记录',
+      record_deleted_or_missing: '记录已被删除或不存在',
+      amount_not_positive: '金额需大于 0',
+      category_empty: '分类为空',
+      split_ratio_required: '按比例分需要指定比例',
+      split_ratio_out_of_range: '比例需在 0–100 之间',
+      split_ratio_not_applicable: 'split_ratio 仅适用于按比例分',
+      split_ratio_invalid: '分摊比例必须为 1–99 的整数',
+      split_type_invalid: '分摊方式无效',
+      profile_not_found: '找不到个人资料',
+      fx_rate_not_set: '未设置 {from} → {to} 汇率',
+      fx_rate_not_positive: '汇率必须是正数',
+      currency_unsupported: '不支持的货币',
+      currency_pair_same: '来源与目标货币不能相同',
+      base_currency_locked: '当前章节已有记录、不可修改主体货币',
+      current_epoch_not_found: '找不到当前章节',
+      leave_active_trip: '请先结束旅行再离开章节',
+      trip_not_found: '找不到旅行',
+      trip_missing: '旅行不存在',
+      active_trip_not_found: '找不到进行中的旅行',
+      trip_ended: '旅行已结束，无法修改记录',
+      trip_rate_missing: '旅行汇率缺少 {currency}',
+      trip_name_empty: '旅行名称为空',
+      trip_name_too_long: '旅行名称过长',
+      trip_in_past_epoch: '不可建在过去章节',
+      trip_move_to_past_epoch: '不可移动至过去章节',
+      trip_end_before_start: '结束日期不可早于起始日',
+      income_not_found: '找不到该笔收入',
+      recurring_rule_not_found: '找不到该定期规则',
+      pending_expense_not_found: '待确认支出已被处理或找不到',
+      pending_expense_handled_elsewhere: '待确认支出已被其他设备处理',
+      pending_expense_partner_handled: '这笔 partner 刚刚已处理',
+      pending_income_not_found: '待确认收入已被处理或找不到',
+      pending_income_handled_elsewhere: '待确认收入已被其他设备处理',
+      review_month_locked: '这个月的留言已锁定，无法再修改',
+      review_message_locked: '留言已锁定，无法再修改',
+      asset_not_found: '找不到该资产',
+      aibutsu_not_found: '找不到该爱物',
+      linked_asset_not_in_group: '关联资产不在家计簿内',
+      linked_asset_deleted: '关联资产已删除',
+      linked_vehicle_invalid: '无效的关联车辆',
+      plate_empty: '车牌不能为空',
+      field_not_filled: '尚未填写此字段',
+      template_unknown: '未知的模板',
+      policy_not_found: '找不到该保单',
+      policy_expiry_unset: '保单尚未设置到期日',
+      policyholder_not_member: '要保人必须是 group 成员',
+      insured_not_member: '被保人必须是 group 成员',
+      insured_child_invalid: '无效的被保小孩',
+      fuel_log_deleted_or_missing: '加油记录已删除或不存在',
+      fuel_transaction_not_found: '找不到该笔加油交易',
+      import_source_unsupported: '未支持的导入来源：{source}',
+      import_row_invalid_type: '第 {row} 笔：交易类型不正确',
+      import_row_invalid_amount: '第 {row} 笔：金额不正确',
+      import_row_invalid_split_type: '第 {row} 笔：分摊方式不正确',
+      import_row_invalid_payer: '第 {row} 笔：付款人不正确',
+      import_row_invalid_split_ratio: '第 {row} 笔：按比例分需要 0–100 的比例',
+      import_row_incomplete_fx: '第 {row} 笔：外币信息不完整',
+      import_row_invalid_date: '第 {row} 笔：日期不正确',
+      import_filename_invalid: '文件名不正确',
+      import_total_invalid: '总笔数不正确',
+      import_empty: '没有可导入的数据',
+      import_batch_create_failed: '创建导入记录失败',
+      import_batch_id_invalid: '批次 ID 不正确',
+      import_batch_not_found: '找不到导入记录',
+      import_rollback_forbidden: '无权限还原这次导入',
+      import_already_rolled_back: '这次导入已经还原过',
+      invoice_mof_code_invalid: '条码或验证码有误，请确认',
+      invoice_mof_unavailable: '服务暂时无法使用，稍后再试',
+      invoice_mof_verify_failed: '验证失败（{code}）',
+      invoice_barcode_already_bound: '此条码已绑定',
+      invoice_nickname_too_long: '昵称最长 16 字',
+      invoice_carrier_not_found: '找不到该载具',
+      quiz_answers_malformed: '答案格式错误',
+      quiz_answers_incomplete: '要一次答完 3 题',
+      quiz_question_out_of_range: '题目不在这次的范围内',
+      quiz_choice_out_of_range: '选项不在这题的范围内',
+      quiz_question_duplicate: '同一题不要重复作答',
     },
   },
 }

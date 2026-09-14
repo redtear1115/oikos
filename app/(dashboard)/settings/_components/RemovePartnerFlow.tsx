@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
 import { useTranslations } from '@/lib/i18n/client'
 import { removePartner } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
@@ -32,6 +33,24 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
   const [confirmInput, setConfirmInput] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+
+  const panelRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const inputId = useId()
+
+  // Tab stays inside the panel while open; focus returns to the trigger row
+  // on close (#1172). Call order relative to the focus-on-open effect below
+  // does not matter: the trap records its restore target in a layout effect,
+  // and every layout effect in a commit runs before every passive one, so the
+  // trigger is captured before that effect moves focus (#1230).
+  useFocusTrap(open, panelRef)
+
+  // Move focus onto the panel itself rather than the first control: the
+  // screen reader announces the dialog by its title, and no destructive or
+  // text-entry control is pre-focused.
+  useEffect(() => {
+    if (open) panelRef.current?.focus()
+  }, [open])
 
   useEffect(() => {
     if (!open) {
@@ -70,7 +89,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
         router.refresh()
         router.push('/dashboard')
       } catch (e) {
-        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -100,7 +119,14 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
         }}
       >
       <div
-        className="w-full max-w-md max-h-full rounded-card flex flex-col"
+        ref={panelRef}
+        tabIndex={-1}
+        // Always mounted so the fade-out can play; `inert` is what keeps the
+        // invisible closed panel out of the tab order and the a11y tree. Dialog
+        // semantics only while open — same shape as SheetFrame (#1176, #1172).
+        inert={!open}
+        {...(open ? { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId } : {})}
+        className="w-full max-w-md max-h-full rounded-card flex flex-col focus:outline-none"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
@@ -108,15 +134,16 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 200ms',
         }}
-        role="dialog"
-        aria-modal="true"
       >
         <div className="flex items-center justify-end px-5 pt-5 pb-1">
           <button
             type="button"
             onClick={handleClose}
             disabled={pending}
-            className="text-sm cursor-pointer disabled:opacity-50"
+            // 44×44 hit area (#1172). The negative margins pull the box back
+            // out so the glyph stays where it was and the header height is
+            // unchanged; it still sits inside the safe-area-padded layout box.
+            className="w-11 h-11 -mr-3 -my-3 flex items-center justify-center text-sm cursor-pointer disabled:opacity-50"
             style={{ background: 'transparent', border: 'none', color: 'var(--ink-3)' }}
             aria-label={dz.flow.close}
           >
@@ -126,6 +153,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
 
         <div className="px-6 pb-6 overflow-y-auto flex-1">
           <h2
+            id={titleId}
             className="text-base mb-3 leading-tight"
             style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
           >
@@ -140,12 +168,13 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
             ))}
           </ul>
 
-          <label className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
+          <label htmlFor={inputId} className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
             <span>{flow.typePromptPrefix}</span>
             <span className="font-medium" style={{ color: 'var(--ink)' }}>{flow.confirmText}</span>
             <span>{flow.typePromptSuffix}</span>
           </label>
           <input
+            id={inputId}
             type="text"
             value={confirmInput}
             onChange={(e) => setConfirmInput(e.target.value)}
@@ -161,7 +190,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
           {errorMsg && (
             <div
               className="mb-4 rounded-xl px-3 py-2 text-xs"
-              style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
+              style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
               role="alert"
             >
               {errorMsg}

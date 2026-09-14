@@ -40,15 +40,15 @@ function submit(source: string) {
 
 describe('importCsvBatch — source allowlist', () => {
   it.each([...DETECTED_SOURCES])('accepts %s, the label the client detector produces', async (source) => {
-    await expect(submit(source)).rejects.toThrow('檔名不正確')
+    await expect(submit(source)).rejects.toThrow('import_filename_invalid')
   })
 
   it('accepts the two non-CSV formats specifically (#1088)', async () => {
-    await expect(submit('ofx')).rejects.toThrow('檔名不正確')
-    await expect(submit('qif')).rejects.toThrow('檔名不正確')
+    await expect(submit('ofx')).rejects.toThrow('import_filename_invalid')
+    await expect(submit('qif')).rejects.toThrow('import_filename_invalid')
   })
 
   it('still rejects a label no detector can produce', async () => {
-    await expect(submit('dropbox')).rejects.toThrow('未支援的匯入來源：dropbox')
+    await expect(submit('dropbox')).rejects.toThrow('import_source_unsupported?source=dropbox')
   })
 })

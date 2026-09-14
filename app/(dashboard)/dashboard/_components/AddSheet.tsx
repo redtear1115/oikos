@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
+import { TextArea } from '@/components/ui/TextArea'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DescriptionAutocomplete } from './DescriptionAutocomplete'
 import {
@@ -32,6 +34,7 @@ import { CategoryPicker } from './CategoryPicker'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { AssetLinkField } from './AssetLinkField'
 import { PayerToggle } from './PayerToggle'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
 import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
@@ -39,6 +42,7 @@ import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
 import { loadedSplitRatioToViewerShare, toMemberAShare, toViewerShare } from '@/lib/splitRatio'
+import { isActionError } from '@/lib/action-errors'
 
 export interface AddSheetInitial {
   id: string
@@ -250,6 +254,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // the prefilled amount in edit mode (typing replaces the selection rather than
   // appending to "240" → "2405").
   useFocusAndSelectOnOpen(open, amountInputRef)
+  const statusLabelId = useId()
+  const notesId = useId()
+  const isDirty = useDirtyCheck(open, {
+    amount, desc, category, split, splitRatioA, payerWho, date, notes, status, assetId, tripId, currency,
+  })
 
   const isPending = !!pendingExpenseId
   // Edit affordance (delete button + editTransaction path) only for real tx.
@@ -280,11 +289,28 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // the weighted slider back to (#902).
   const defaultViewerShare = toViewerShare(groupDefaultRatioA ?? 50, viewerIsA)
 
+  const amountTooLargeMsg = t.addSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US'))
+
+  // The error banner is described onto the field it is about (#1242):
+  // `aria-describedby` + `aria-invalid` on the offending input, so moving back
+  // to that field re-reads the reason. Derived from the message rather than
+  // stored next to it, so a later server error can never inherit a stale
+  // field. Server / network errors aren't about one field and stay banner-only
+  // (`role="alert"` still announces them).
+  const errorBannerId = useId()
+  const errorField: 'amount' | 'description' | null = !error
+    ? null
+    : error === t.addSheet.errors.amountRequired || error === amountTooLargeMsg
+      ? 'amount'
+      : error === t.addSheet.errors.descriptionRequired
+        ? 'description'
+        : null
+
   const handleSave = () => {
     const n = parseInt(amount, 10)
     if (!n || n <= 0) { setError(t.addSheet.errors.amountRequired); return }
     if (n > MAX_AMOUNT) {
-      setError(t.addSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US')))
+      setError(amountTooLargeMsg)
       return
     }
     if (!desc.trim()) { setError(t.addSheet.errors.descriptionRequired); return }
@@ -391,11 +417,12 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           onMutated?.({ isFirstTransaction, savedAmount: n, edit: isEdit || isPending })
           onClose()
         },
-        onError: (msg) => {
+        onError: (_msg, e) => {
           // Race: partner confirmed/skipped this pending in another tab/device
-          // before our edit-confirm landed. Action errors in that case contain
-          // '待確認支出' (matches both '已被處理或找不到' and '已被其他裝置處理').
-          if (isPending && msg.includes('待確認支出')) {
+          // before our edit-confirm landed: `pending_expense_not_found` (pre-check)
+          // or `pending_expense_handled_elsewhere` (in-tx guard). Matched by code,
+          // not by the localized message, so it works in every locale (#1156).
+          if (isPending && isActionError(e, 'pending_expense_not_found', 'pending_expense_handled_elsewhere')) {
             onMutated?.()
             onClose()
             onRaceResolved?.(t.recurringExpense.raceMessage)
@@ -429,10 +456,18 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
   return (
     <>
-      <SheetFrame open={open} onClose={onClose} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
-        {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive */}
+      <SheetFrame open={open} onClose={onClose} isDirty={isDirty} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
+        {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive.
+            Both buttons stay visually `sm` (36px) so the header height doesn't
+            change; the ::before adds 4px above and below for a 44px tap area
+            (#1186, same trick as MonthSwitcher #147). */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="relative before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']"
+          >
             {t.common.cancel}
           </Button>
           <div
@@ -446,7 +481,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             size="sm"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="font-medium"
+            className="relative font-medium before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']"
             style={{ color: 'var(--accent)' }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
@@ -468,6 +503,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               symbol={currencySymbol(currency)}
               ariaLabel={t.addSheet.amount}
               inputRef={amountInputRef}
+              errorMessageId={errorField === 'amount' && open ? errorBannerId : undefined}
             />
 
             {/* Trip + currency selectors — currency is only user-pickable
@@ -491,6 +527,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     setCurrency(trip?.defaultCurrency ?? baseCurrency)
                   }}
                   noTripLabel={t.addSheet.noTrip}
+                  ariaLabel={t.addSheet.trip}
                 />
               )}
               {tripId && (() => {
@@ -506,6 +543,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     value={currency}
                     onChange={setCurrency}
                     codes={codes}
+                    ariaLabel={t.addSheet.currency}
                   />
                 )
               })()}
@@ -541,6 +579,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             suggestions={descSuggestions}
             placeholder={t.addSheet.descPlaceholder}
             listboxLabel={t.addSheet.descSuggestions}
+            errorMessageId={errorField === 'description' && open ? errorBannerId : undefined}
           />
 
           {/* Categories */}
@@ -590,10 +629,15 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 are settled by design — surfacing the toggle would lie). */}
           {!isPending && !tripId && (
             <div className="px-5 pt-1 pb-2">
-              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <div id={statusLabelId} className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.statusLabel}
               </div>
+              {/* Radio semantics so the selected state isn't carried by the
+                  thumb colour alone (#1186). */}
               <div
+                role="radiogroup"
+                aria-labelledby={statusLabelId}
+                onKeyDown={onRadioGroupKeyDown}
                 className="inline-flex rounded-full p-[3px] gap-0.5"
                 style={{ background: 'var(--toggle-segment-track)' }}
               >
@@ -603,8 +647,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     <button
                       key={s}
                       type="button"
+                      role="radio"
+                      aria-checked={sel}
+                      tabIndex={rovingTabIndex(sel, s === 'settled', true)}
                       onClick={() => setStatus(s)}
-                      className="oik-segment h-8 px-4 rounded-full border-0 text-sm font-medium cursor-pointer"
+                      className="oik-segment relative h-8 px-4 rounded-full border-0 text-sm font-medium cursor-pointer before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']"
                       style={{
                         background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
                         color: sel ? 'var(--ink)' : 'var(--ink-2)',
@@ -631,17 +678,16 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               dropped — better to omit the affordance. */}
           {!isPending && (
             <div className="px-5 pt-3 pb-6 border-t border-hairline">
-              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <label htmlFor={notesId} className="block text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.notesLabel}
-              </div>
-              <textarea
+              </label>
+              <TextArea
+                id={notesId}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={t.addSheet.notesPlaceholder}
                 maxLength={2000}
                 rows={3}
-                className="w-full bg-transparent border-0 outline-none text-sm leading-relaxed px-1 py-2 resize-none"
-                style={{ color: 'var(--ink)' }}
               />
             </div>
           )}
@@ -668,16 +714,25 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               so the last input/button isn't visually clipped on devices with a gesture bar. */}
           <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </SheetBody>
-      </SheetFrame>
 
-      {error && open && (
-        <div
-          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
-        >
-          {error}
-        </div>
-      )}
+        {/* Error banner lives inside the panel so it is part of the dialog's
+            subtree (a modal dialog hides everything outside it from assistive
+            tech), and `role="alert"` announces it. It used to render after
+            the SheetFrame: pressing save with a validation error announced
+            nothing, the sheet just seemed not to respond (#1186).
+            Positioned against the panel (the panel is `fixed`), so it sits at
+            the top of the sheet rather than the top of the viewport. */}
+        {error && open && (
+          <div
+            id={errorBannerId}
+            role="alert"
+            className="absolute left-4 right-4 top-4 z-modal px-4 py-3 rounded-xl text-sm text-white"
+            style={{ background: 'var(--debit)' }}
+          >
+            {error}
+          </div>
+        )}
+      </SheetFrame>
 
       <ConfirmModal
         open={confirmingDelete && open}

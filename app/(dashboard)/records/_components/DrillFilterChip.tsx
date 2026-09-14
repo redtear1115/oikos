@@ -64,16 +64,18 @@ export function DrillFilterChip({ drill, assetName, onClear }: Props) {
     >
       <span
         aria-hidden
-        className="inline-block rounded-full"
-        style={{ width: 8, height: 8, background: chart }}
+        className="inline-block size-2 rounded-full"
+        style={{ background: chart }}
       />
       <span>{t.records.stats.drillChipPrefix}</span>
-      <span style={{ fontWeight: 600 }}>{label}</span>
+      <span className="font-medium">{label}</span>
       <button
         type="button"
         onClick={onClear}
         aria-label={t.records.stats.drillChipClear}
-        className="oik-toggle h-6 w-6 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer"
+        // 24px visible, 44px tap area via the ::before pseudo (10px each
+        // side) — same as DateRangeChip's clear; see the note there. (#1169)
+        className="oik-toggle relative h-6 w-6 grid place-items-center rounded-full bg-transparent border-0 cursor-pointer before:absolute before:-inset-2.5 before:content-['']"
         style={{
           color: 'var(--ink-2)',
           transition: `background var(--toggle-transition), color var(--toggle-transition)`,

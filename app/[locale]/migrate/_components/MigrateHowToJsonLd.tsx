@@ -22,6 +22,7 @@ export function MigrateHowToJsonLd({
   name,
   description,
   steps,
+  stepName,
 }: {
   locale: Locale
   source: Source
@@ -31,6 +32,8 @@ export function MigrateHowToJsonLd({
   description: string
   /** Plain-text steps in order. Length must be 3 (matches MigrateSteps). */
   steps: readonly [string, string, string]
+  /** Localized HowToStep name template (`migrate.howToStepName`), contains `{n}`. */
+  stepName: string
 }) {
   const pageUrl = `${APP_URL}${localizedHref(`/migrate/${source}`, locale)}`
   const jsonLd = {
@@ -42,7 +45,7 @@ export function MigrateHowToJsonLd({
     step: steps.map((text, i) => ({
       '@type': 'HowToStep',
       position: i + 1,
-      name: `Step ${i + 1}`,
+      name: stepName.replace('{n}', String(i + 1)),
       text,
       url: `${pageUrl}#step-${i + 1}`,
     })),

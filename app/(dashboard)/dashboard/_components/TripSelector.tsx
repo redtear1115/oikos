@@ -19,12 +19,16 @@ interface Props {
   options: TripOption[]
   onChange: (next: string | null) => void
   noTripLabel: string
+  /** Accessible name. There is no visible label next to the select, and
+   *  `noTripLabel` is only the empty option's text (#1186). */
+  ariaLabel: string
 }
 
-export function TripSelector({ value, options, onChange, noTripLabel }: Props) {
+export function TripSelector({ value, options, onChange, noTripLabel, ariaLabel }: Props) {
   if (options.length === 0) return null
   return (
     <select
+      aria-label={ariaLabel}
       className="rounded-lg border px-2 py-1.5 text-sm cursor-pointer"
       style={{
         background: 'var(--surface)',

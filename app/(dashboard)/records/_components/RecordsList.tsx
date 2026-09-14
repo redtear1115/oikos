@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import type { AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
@@ -34,7 +34,8 @@ import {
   type DrillFilter,
 } from '@/lib/drill'
 import type { PagedTxnRow } from '@/actions/transaction'
-import { loadMoreFeedAll, loadMoreTransactions } from '@/actions/transaction'
+import { loadMoreFeedAll, loadMoreTransactions, loadRecordsMonthSummaries } from '@/actions/transaction'
+import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { makeIncomeLoader } from '@/lib/incomeFeedRow'
@@ -73,6 +74,14 @@ interface Props {
    * over it so paginating stays inside the same calendar month.
    */
   monthKey: string
+  /**
+   * SSR per-month aggregates for the 全部 tab, computed server-side with the
+   * exact same params as `initial` (see page.tsx). Used as the initial value
+   * for the client-owned `summaries` state and re-synced whenever this prop
+   * changes (e.g. after a `router.refresh()`); the 支出/收入 tabs (client-only
+   * L2 toggle) always fetch their own via `loadRecordsMonthSummaries` (#1208).
+   */
+  monthSummaries: FeedMonthSummary[]
   /** Upper bound for MonthSwitcher (current Taipei month). */
   maxMonthKey: string
   /**
@@ -105,6 +114,7 @@ interface Props {
 export function RecordsList({
   initial,
   pageSize,
+  monthSummaries,
   monthKey,
   maxMonthKey,
   dateRange,
@@ -142,14 +152,27 @@ export function RecordsList({
   // when the effective state flips.
   const effectiveDrill = drillAppliesToTab(drill, tab) ? drill : null
   const effectiveDrillKey = drillKey(effectiveDrill)
-  const effectiveDrillWire = effectiveDrill ? toDrillWire(effectiveDrill) : undefined
+  // Memoized (not a plain `? toDrillWire(effectiveDrill) : undefined`) so it
+  // only changes reference when `effectiveDrill` itself does. It's a
+  // dependency of the summaries-sync effect below; a fresh wire object on
+  // every render — even when nothing actually changed — would retrigger that
+  // effect every render and loop (#1208 caught this via the RecordsList
+  // filter-remount test OOMing, not via any visible symptom in the browser).
+  const effectiveDrillWire = useMemo(
+    () => (effectiveDrill ? toDrillWire(effectiveDrill) : undefined),
+    [effectiveDrill],
+  )
 
   // Structured filter — also URL-derived. Server SSR already applied it; the
   // client mirrors via useSearchParams so the FilterSheet's "current state"
   // and the loaders / realtime row predicate share one source of truth.
   const filter = useMemo<TxnFilter>(() => parseFilterFromSearchParams(searchParams), [searchParams])
   const filterActive = isFilterActive(filter)
-  const filterWire = filterActive ? toWire(filter) : undefined
+  // Same reference-stability reasoning as `effectiveDrillWire` above.
+  const filterWire = useMemo(
+    () => (filterActive ? toWire(filter) : undefined),
+    [filterActive, filter],
+  )
   // For TransactionFeed.filter — only pass when active so the empty-state
   // logic in TransactionFeed correctly distinguishes "no filter" from
   // "filter that excluded everything".
@@ -158,6 +181,18 @@ export function RecordsList({
   // initial page; the loaders need it for pagination.
   const dateRangeForLoader = dateRange.kind === 'month' ? undefined : dateRange
   const monthKeyForLoader = dateRange.kind === 'month' ? monthKey : undefined
+
+  // Date-range key — used in the feed key (and the summaries key below) so a
+  // date-range change triggers a clean remount the same way drill changes do.
+  const dateRangeKey = dateRange.kind === 'month'
+    ? `m:${dateRange.monthKey}`
+    : dateRange.kind === 'range'
+      ? `r:${dateRange.start}:${dateRange.end}`
+      : 'all'
+  // Same identity as TransactionFeed's `key` prop below — the summaries state
+  // is keyed by it too so a tab/drill/filter/date-range change and a feed
+  // remount always happen together (#1208).
+  const feedKey = `${tab}:${dateRangeKey}:${effectiveDrillKey}:${filterKey(filter)}`
 
   const handleClearDrill = () => {
     const params = new URLSearchParams(searchParams.toString())
@@ -204,10 +239,101 @@ export function RecordsList({
 
   const sheetOpen = editingTx !== null || editingSettlement !== null || adding || addingIncomeNew || filterOpen || fuel.open || editingIncome !== null
 
+  // Per-month feed-header summaries (#1208). SSR only computes them for the
+  // 全部 tab (`monthSummaries` prop, same params as `initial`); every other
+  // key — a different tab, or a drill/filter/date-range change the SSR prop
+  // hasn't caught up to yet — fetches its own via `loadRecordsMonthSummaries`.
+  // Kept as `{ key, data }` rather than bare `data` so a fetch that resolves
+  // after the key has since changed again can recognize itself as stale and
+  // no-op instead of clobbering newer state.
+  const [summaries, setSummaries] = useState<{ key: string; data: FeedMonthSummary[] }>(
+    () => ({ key: feedKey, data: monthSummaries }),
+  )
+  // When the SSR `monthSummaries` prop may be trusted as-is. It describes the
+  // 全部 view as of the moment it arrived — and only until the view moves off
+  // that key. After a tab / drill / filter change, realtime refetches can have
+  // superseded it, and a same-reference prop says nothing new; coming back to
+  // 全部 must refetch instead of restoring it. Symptom if this is dropped:
+  // switching 支出 → 全部 shows the numbers from page load, not the ones
+  // realtime had corrected since.
+  const ssrPropRef = useRef(monthSummaries)
+  const ssrKeyRef = useRef(feedKey)
+  const ssrSupersededRef = useRef(false)
+  // Mirrors `feedKey` into a ref so the debounced realtime refetch below
+  // (scheduled from one render, resolving on a later one) can tell whether
+  // it's still the current view by the time its response comes back.
+  const feedKeyRef = useRef(feedKey)
+  useEffect(() => { feedKeyRef.current = feedKey }, [feedKey])
+
+  useEffect(() => {
+    if (monthSummaries !== ssrPropRef.current) {
+      // Fresh SSR payload (navigation or `router.refresh()`), computed for the
+      // URL the view is on right now.
+      ssrPropRef.current = monthSummaries
+      ssrKeyRef.current = feedKey
+      ssrSupersededRef.current = false
+    } else if (feedKey !== ssrKeyRef.current) {
+      ssrSupersededRef.current = true
+    }
+    // 全部 tab with the URL-derived drill/filter/range IS the SSR key —
+    // `drillAppliesToTab(drill, 'all')` is always true (see lib/drill.ts),
+    // so `effectiveDrillKey` on this tab always equals the raw URL drill's
+    // key, which is exactly what `feedKey` reduces to here. No fetch needed
+    // while the prop still describes this exact view.
+    if (tab === 'all' && !ssrSupersededRef.current) {
+      setSummaries({ key: feedKey, data: monthSummaries })
+      return
+    }
+    let stale = false
+    loadRecordsMonthSummaries(tab, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
+      .then((fresh) => {
+        if (stale) return
+        setSummaries({ key: feedKey, data: fresh })
+      })
+      .catch(() => {
+        // Keep previous summaries silently — a stale header beats a broken one.
+      })
+    return () => { stale = true }
+  }, [tab, feedKey, monthSummaries, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader])
+
+  // Debounced (~300ms) refetch on any realtime event that could change a
+  // month's count/sum, so headers self-correct without depending on the
+  // TransactionFeed row-level realtime handling (which only patches the
+  // items list, not these server-aggregated totals).
+  const summaryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (summaryDebounceRef.current) clearTimeout(summaryDebounceRef.current)
+  }, [])
+
   useRealtimeEvents((event) => {
     if (event.kind === 'income-insert' || event.kind === 'income-update') {
       router.refresh()
     }
+    const affectsSummaries =
+      event.kind === 'txn-insert' || event.kind === 'txn-update' ||
+      event.kind === 'settle-insert' || event.kind === 'settle-update' ||
+      event.kind === 'income-insert' || event.kind === 'income-update' ||
+      event.kind === 'reconnect'
+    if (!affectsSummaries) return
+
+    if (summaryDebounceRef.current) clearTimeout(summaryDebounceRef.current)
+    const scheduledKey = feedKey
+    const scheduledTab = tab
+    const scheduledMonthKey = monthKeyForLoader
+    const scheduledDrillWire = effectiveDrillWire
+    const scheduledFilterWire = filterWire
+    const scheduledDateRange = dateRangeForLoader
+    summaryDebounceRef.current = setTimeout(() => {
+      loadRecordsMonthSummaries(scheduledTab, scheduledMonthKey, scheduledDrillWire, scheduledFilterWire, scheduledDateRange)
+        .then((fresh) => {
+          // Stale — the view changed since this refetch was scheduled.
+          if (feedKeyRef.current !== scheduledKey) return
+          setSummaries({ key: scheduledKey, data: fresh })
+        })
+        .catch(() => {
+          // Keep previous summaries silently.
+        })
+    }, 300)
   })
 
   const handleItemClick = (tx: PagedTxnRow) => {
@@ -335,14 +461,6 @@ export function RecordsList({
     setFilterOpen(false)
   }
 
-  // Date-range key — used in the feed key so a date-range change triggers a
-  // clean remount the same way drill changes do.
-  const dateRangeKey = dateRange.kind === 'month'
-    ? `m:${dateRange.monthKey}`
-    : dateRange.kind === 'range'
-      ? `r:${dateRange.start}:${dateRange.end}`
-      : 'all'
-
   return (
     <div className="relative min-h-dvh pb-[var(--bottom-nav-offset)]">
       {/* Sticky header — pins below the shell top stack rather than at the very
@@ -365,12 +483,12 @@ export function RecordsList({
             away, so "is there a band above me" is a static question again and
             --safe-top already answers it. */}
         <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
-          <div
+          <h1
             className="text-2xl font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
           >
             {t.records.title}
-          </div>
+          </h1>
           {/* Recurring entry — moved from the inline section card (#545 §4)
               to keep L3 focused on time/filter chips. */}
           <Link
@@ -379,7 +497,7 @@ export function RecordsList({
             style={{ color: 'var(--ink-2)' }}
           >
             {t.records.recurringShortcut}
-            <span aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>›</span>
+            <span aria-hidden className="text-sm leading-none">›</span>
           </Link>
         </div>
 
@@ -388,19 +506,19 @@ export function RecordsList({
             selected — see toggleKind for why. */}
         <div className="px-5 pb-3">
           <div
-            className="inline-flex items-center"
+            className="inline-flex items-center rounded-full p-0.75 gap-0.5"
             style={{
               background: 'var(--surface)',
               border: '0.5px solid var(--hairline)',
-              borderRadius: 999,
-              padding: 3,
-              gap: 2,
             }}
           >
+            {/* Dot colours, rendered values unchanged: the expense dot sits on
+                the ink fill, so it is the on-fill foreground at 55% (was a raw
+                rgba white); the income dot is the mint palette ink at 70%. */}
             {([
-              { kind: 'expense' as const, label: t.records.tabExpense, dotColor: 'rgba(255,255,255,0.55)' },
-              { kind: 'income' as const, label: t.records.tabIncome, dotColor: '#3F6A56' },
-            ]).map(({ kind, label, dotColor }) => {
+              { kind: 'expense' as const, label: t.records.tabExpense, dotColor: 'var(--on-fill)', dotOpacity: 'opacity-55' },
+              { kind: 'income' as const, label: t.records.tabIncome, dotColor: P.ink, dotOpacity: 'opacity-70' },
+            ]).map(({ kind, label, dotColor, dotOpacity }) => {
               const sel = selectedKinds.has(kind)
               const isIncome = kind === 'income'
               return (
@@ -408,27 +526,19 @@ export function RecordsList({
                   key={kind}
                   type="button"
                   onClick={() => toggleKind(kind)}
-                  className="h-8 inline-flex items-center gap-1.5 cursor-pointer border-0 text-sm transition-colors duration-150"
+                  className="h-8 px-3.5 rounded-full inline-flex items-center gap-1.5 cursor-pointer border-0 text-sm transition-colors duration-150"
                   style={{
-                    padding: '0 14px',
-                    borderRadius: 999,
                     background: sel ? (isIncome ? P.tint : 'var(--ink)') : 'transparent',
                     color: sel ? (isIncome ? P.ink : 'var(--on-fill)') : 'var(--ink-3)',
-                    fontWeight: sel ? 600 : 500,
+                    fontWeight: 500,
                   }}
                   aria-pressed={sel}
                 >
                   {sel && (
                     <span
                       aria-hidden
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: '50%',
-                        background: dotColor,
-                        opacity: isIncome ? 0.7 : 1,
-                        flexShrink: 0,
-                      }}
+                      className={`size-1.5 rounded-full shrink-0 ${dotOpacity}`}
+                      style={{ background: dotColor }}
                     />
                   )}
                   {label}
@@ -440,9 +550,15 @@ export function RecordsList({
 
         {/* L3: month/date chip + filter chip + drill chips — single scrolling row.
             All "narrow the view" controls live here so the mental model is unified:
-            L2 = what type of record, L3 = what time / filter / drill scope. */}
+            L2 = what type of record, L3 = what time / filter / drill scope.
+
+            `pt-1.5 -mt-1.5` is layout-neutral on purpose: `overflow-x-auto`
+            also clips overflow-y, and clipping applies to hit-testing. The h-8
+            chips extend their tap areas to 44px with ::before pseudos that
+            reach 6px above the chip; with no top padding that strip was cut
+            off and the real tap area stopped at ~38px. (#1169) */}
         <div
-          className="flex items-center gap-2 px-5 pb-3 overflow-x-auto"
+          className="flex items-center gap-2 px-5 pt-1.5 -mt-1.5 pb-3 overflow-x-auto"
           style={{ scrollbarWidth: 'none' } as React.CSSProperties}
         >
           {/* Month or date range chip */}
@@ -468,8 +584,8 @@ export function RecordsList({
             {filterActive && (
               <span
                 aria-hidden
-                className="inline-block rounded-full shrink-0"
-                style={{ width: 6, height: 6, background: 'var(--accent)' }}
+                className="inline-block size-1.5 rounded-full shrink-0"
+                style={{ background: 'var(--accent)' }}
               />
             )}
           </button>
@@ -502,7 +618,7 @@ export function RecordsList({
           the stale instance, whose items only update via the client refetch,
           out of sync with the filtered SSR rows (#745). */}
       <TransactionFeed
-        key={`${tab}:${dateRangeKey}:${effectiveDrillKey}:${filterKey(filter)}`}
+        key={feedKey}
         initial={tabInitial}
         pageSize={pageSize}
         monthKey={monthKeyForLoader}
@@ -510,6 +626,16 @@ export function RecordsList({
         filter={tab !== 'income' ? feedFilterProp : undefined}
         loader={tabLoader}
         renderRow={tab !== 'income' ? renderRow : undefined}
+        monthSummaries={{
+          mode: tab,
+          // Only summaries fetched for THIS view. While a new key's fetch is in
+          // flight — or after it failed (offline) — the previous key's numbers
+          // would otherwise sit on this tab's headers; an empty map makes each
+          // month fall back to the loaded-rows sum instead.
+          byMonth: summaries.key === feedKey
+            ? Object.fromEntries(summaries.data.map((s) => [s.monthKey, s]))
+            : {},
+        }}
         emptyState={
           tab === 'income'
             ? <IncomeEmptyState />

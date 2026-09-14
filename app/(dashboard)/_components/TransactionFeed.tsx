@@ -13,6 +13,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { TxnRowPayload } from '@/lib/realtime/event'
+import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -41,9 +42,19 @@ interface Props {
   acceptInsert?: (row: TxnRowPayload) => boolean
   /** Optional custom row renderer. Return undefined to use the default CompactRow. */
   renderRow?: (tx: PagedTxnRow) => React.ReactNode | undefined
+  /**
+   * Server-aggregated per-month summaries (#1208), keyed by 'YYYY-MM'
+   * (Asia/Taipei). When provided, each month header uses `byMonth[monthKey]`
+   * instead of the client-side sum-of-loaded-rows; a month missing from
+   * `byMonth` (e.g. a realtime row landed before the debounced refetch
+   * resolved) falls back to the legacy local computation for that group
+   * only. Omitted entirely by every caller except RecordsList — dashboard /
+   * asset-detail / insurance SavingsView keep the legacy unlabeled render.
+   */
+  monthSummaries?: { mode: 'all' | 'expense' | 'income'; byMonth: Record<string, FeedMonthSummary> }
 }
 
-export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, header, filter, loader, monthKey, acceptInsert, renderRow }: Props) {
+export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, label, header, filter, loader, monthKey, acceptInsert, renderRow, monthSummaries }: Props) {
   const t = useTranslations()
   const online = useOnlineStatus()
   const [items, setItems] = useState<PagedTxnRow[]>(initial)
@@ -74,7 +85,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }, [filter, loader, pageSize, monthKey, t])
@@ -103,7 +114,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -235,8 +246,35 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
     }
   })
 
+  // Error surface per DESIGN.md: --debit-text on --debit-soft, over an opaque
+  // --surface so the floating toast stays legible above the feed it covers
+  // (~5.2:1). Was white on --debit, 3.27:1 (#1197 / #1168). role="alert" so a
+  // failed load is announced, not just painted. Built before the empty-state
+  // return below: a filter refetch that failed while the list was empty used
+  // to leave nothing on screen and nothing announced.
+  const errorToast = error ? (
+    <div
+      role="alert"
+      className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] rounded-xl border border-hairline bg-[var(--surface)]"
+    >
+      <div className="px-4 py-3 rounded-xl text-sm flex items-center gap-3 bg-[var(--debit-soft)] text-[var(--debit-text)]">
+        <span className="flex-1">{error}</span>
+        <button
+          type="button"
+          onClick={() => setError('')}
+          aria-label={t.transactionFeed.closeAriaLabel}
+          className="bg-transparent border-0 text-[var(--debit-text)] text-base leading-none cursor-pointer p-0"
+        >
+          {/* ✕ U+2715 — close-this-surface (#1125); this dismisses the whole
+              error toast, it is not a filter-chip clear. */}
+          ✕
+        </button>
+      </div>
+    </div>
+  ) : null
+
   if (items.length === 0) {
-    return <>{emptyState}</>
+    return <>{emptyState}{errorToast}</>
   }
 
   const groups = groupByMonth(items, (i) => i.transactedAt)
@@ -247,21 +285,38 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       {header && <div className="px-4 pt-[18px] pb-2">{header(items.length)}</div>}
 
       {groups.map((g) => {
-        // Pick the primary amount based on what kinds the group contains.
-        // - All-income (income tab): sum income amounts
-        // - Otherwise (expense / all tab): sum transaction amounts only.
-        //   Settlements are transfers (not spend) and income amounts mix
-        //   dimensions, so excluding them keeps the number meaningful.
-        // The verbose "支出 X · 收入 Y · 淨 Z" surface lives in the stats
-        // card above the feed; this header just restates count + total
-        // for the group below it (unified across all three tabs).
-        const isIncomeOnly = g.items.length > 0 && g.items.every((t) => t.kind === 'income')
-        const total = isIncomeOnly
-          ? g.items.reduce((acc, t) => acc + t.amount, 0)
-          : g.items.filter((t) => t.kind === 'transaction').reduce((acc, t) => acc + t.amount, 0)
+        const serverSummary = monthSummaries?.byMonth[g.monthKey]
+        // Prefer the server aggregate (mirrors the tab's pager query exactly,
+        // so it neither drifts as more pages load nor disagrees with the
+        // stats card — #1208). Fall back to the legacy client-side sum only
+        // when this caller passed no `monthSummaries` at all, or a specific
+        // month hasn't been fetched yet (e.g. a realtime row just landed).
+        let count: number
+        let totalAmount: number | undefined
+        let summary: { mode: 'all' | 'expense' | 'income'; expenseTotal: number; incomeTotal: number } | undefined
+        if (serverSummary) {
+          count = serverSummary.count
+          summary = {
+            mode: monthSummaries!.mode,
+            expenseTotal: serverSummary.expenseTotal,
+            incomeTotal: serverSummary.incomeTotal,
+          }
+        } else {
+          // Legacy fallback: pick the primary amount based on what kinds the
+          // group contains.
+          // - All-income (income tab): sum income amounts
+          // - Otherwise (expense / all tab): sum transaction amounts only.
+          //   Settlements are transfers (not spend) and income amounts mix
+          //   dimensions, so excluding them keeps the number meaningful.
+          const isIncomeOnly = g.items.length > 0 && g.items.every((t) => t.kind === 'income')
+          totalAmount = isIncomeOnly
+            ? g.items.reduce((acc, t) => acc + t.amount, 0)
+            : g.items.filter((t) => t.kind === 'transaction').reduce((acc, t) => acc + t.amount, 0)
+          count = g.items.length
+        }
         return (
           <div key={g.monthKey}>
-            <MonthSection monthKey={g.monthKey} count={g.items.length} totalAmount={total} />
+            <MonthSection monthKey={g.monthKey} count={count} totalAmount={totalAmount} summary={summary} />
             <div
               className="mx-4 rounded-tile overflow-hidden"
               style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
@@ -315,24 +370,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         )}
       </div>
 
-      {error && (
-        <div
-          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white flex items-center gap-3"
-          style={{ background: 'var(--debit)' }}
-        >
-          <span className="flex-1">{error}</span>
-          <button
-            type="button"
-            onClick={() => setError('')}
-            aria-label={t.transactionFeed.closeAriaLabel}
-            className="bg-transparent border-0 text-white text-base leading-none cursor-pointer p-0"
-          >
-            {/* ✕ U+2715 — close-this-surface (#1125); this dismisses the whole
-                error toast, it is not a filter-chip clear. */}
-            ✕
-          </button>
-        </div>
-      )}
+      {errorToast}
     </>
   )
 }

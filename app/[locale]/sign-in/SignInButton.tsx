@@ -6,9 +6,16 @@ import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attr
 import { recordNativeAuthConversion } from '@/actions/auth'
 import { generateNonce, sha256Hex } from '@/lib/auth/nonce'
 import { isUserCancelled } from '@/lib/auth/appleSignInError'
+import { nativeCallbackUrl, safeSameOriginUrl } from '@/lib/auth/nativeRedirect'
 
 // Deep link scheme registered in AndroidManifest.xml / capacitor.config.ts
 const CAPACITOR_SCHEME = 'dev.southernlight.futari'
+// Only the Apple `redirectURI` — the return URL registered on the Apple Services
+// ID, so it is intentionally prod. NOT for navigation: navigation uses
+// window.location.origin so a shell overridden via CAP_SERVER_URL (localhost /
+// Vercel preview, runbook §J, #1214) can complete sign-in. Navigating to this
+// constant instead leaves such a shell stuck on the "正在帶你進去" curtain with
+// no error.
 const APP_ORIGIN = 'https://futari.southern-light.dev'
 
 type Provider = 'google' | 'apple'
@@ -84,7 +91,9 @@ async function appleNativeSignIn(
   // is still the sign-in form, which is exactly why the curtain covers it.
   await recordNativeAuthConversion({ from: ctx.from, anonId: getAnonId() })
 
-  window.location.href = `${APP_ORIGIN}${ctx.next}`
+  // `next` comes from the query string — safeSameOriginUrl refuses anything
+  // that would leave this origin (e.g. `@evil.com`, `//evil.com`).
+  window.location.href = safeSameOriginUrl(window.location.origin, ctx.next)
   return 'navigating'
 }
 
@@ -136,10 +145,13 @@ async function browserOAuthSignIn(
     await App.addListener('appUrlOpen', async ({ url }) => {
       if (!url.startsWith(`${CAPACITOR_SCHEME}://`)) return
       if (done) return
-      const callbackUrl = url.replace(`${CAPACITOR_SCHEME}://login-callback`, '')
+      // Not our OAuth callback (or shaped to escape this origin): ignore it
+      // rather than finishing — a stray link must not tear down a live attempt.
+      const target = nativeCallbackUrl(window.location.origin, url, CAPACITOR_SCHEME)
+      if (target === null) return
       await finish('navigating')
       await Browser.close()
-      window.location.href = `${APP_ORIGIN}${callbackUrl}`
+      window.location.href = target
     }),
   )
 
@@ -253,8 +265,17 @@ export function SignInButton({
       onClick={handleSignIn}
       disabled={pending}
       aria-busy={pending}
-      className="w-full h-12 rounded-xl border-0 text-sm font-medium cursor-pointer flex items-center justify-center gap-2 disabled:cursor-default"
+      // Height and radius follow DESIGN.md's button spec (#1161): `rounded-bubble`
+      // (14px) and `h-control-lg` (52px, the hero-CTA control height). `oik-btn`
+      // brings the shared ember focus-visible ring and nothing else.
+      className="oik-btn w-full h-control-lg rounded-bubble border-0 text-sm font-medium cursor-pointer flex items-center justify-center gap-2 disabled:cursor-default"
       style={
+        // Sign in with Apple 的按鈕外觀由 Apple 品牌規範（HIG）強制：只允許
+        // 純黑／純白／白底描邊，不得換成產品色。這裡的 #000/#fff 是刻意繞過
+        // DESIGN.md §2 的 Pure-Black-and-White Ban，不是疏漏。(#1159)
+        // 改成 var(--ink) 不會被 CI、type check 或 build 擋下來，也不會在送審時
+        // 被發現——會直接出貨，代價落在下一次 App Store 審查。
+        // 本檔是 CLAUDE.md 列的原生契約面：改動即時打到所有已安裝的殼。
         isApple
           ? { background: '#000', color: '#fff' }
           : { background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }

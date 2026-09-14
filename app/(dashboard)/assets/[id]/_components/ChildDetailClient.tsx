@@ -62,7 +62,7 @@ function RevealableRow({
         setRevealed(value)
         setError(null)
       } catch (e) {
-        setError(describeError(e, t.assetDetail.child.revealError, t.common.offlineError))
+        setError(describeError(e, t.assetDetail.child.revealError, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -87,7 +87,7 @@ function RevealableRow({
         type="button"
         onClick={onToggle}
         disabled={pending}
-        className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 disabled:cursor-default"
+        className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 disabled:cursor-default before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
         style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
       >
         {pending ? t.assetDetail.child.revealLoading : (revealed !== null ? t.assetDetail.child.revealHide : t.assetDetail.child.revealShow)}

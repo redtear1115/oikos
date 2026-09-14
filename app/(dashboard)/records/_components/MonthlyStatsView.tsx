@@ -384,7 +384,7 @@ function SummaryText({
       <span className="mx-1.5" style={{ color: 'var(--ink-3)' }}>·</span>
       <span>{incomeStr}</span>
       <span className="mx-1.5" style={{ color: 'var(--ink-3)' }}>·</span>
-      <span style={{ fontWeight: 500 }}>{netStr}</span>
+      <span className="font-medium">{netStr}</span>
       {/* One currency mark per line, at the end (per spec). The three numbers
           above are bare; this NT$ anchors them all. */}
       <span className="ml-1.5" style={{ color: 'var(--ink-3)' }}>NT$</span>

@@ -150,20 +150,13 @@ export default async function SignInPage({
           lg:px-12 lg:py-16
         "
       >
-        {/* Left column: about narrative (#416). 7 sections, each with an SEO
-            long-tail H2 + 2–4 body paragraphs. s5's last paragraph is a short
-            standalone punchline (Fraunces, italic, larger spacing). Only one
-            section is visually featured per request — see AboutNarrative. */}
-        <section
-          className="order-2 flex flex-col lg:order-1"
-          aria-label="About"
-          data-shell-slot="left"
-        >
-          <AboutNarrative
-            about={t.signIn.about}
-            featuredIndex={pickFeaturedIndex()}
-          />
-        </section>
+        {/* DOM order is center → about → features on purpose (#1161): the h1
+            lives in the center column, so it must come first in the document
+            for screen readers and heading navigation, which follow the DOM, not
+            the visual order. The `order-*` classes alone place the columns —
+            about on the left at lg, center first on mobile. Moving the about
+            section back above this one reintroduces "the first heading a
+            screen reader meets is an h2", and nothing visible changes. */}
 
         {/* Center column: existing brand mark + tagline + CTA. */}
         <section
@@ -171,20 +164,14 @@ export default async function SignInPage({
           data-shell-slot="center"
         >
           <div className="flex flex-col items-center text-center gap-3">
-            <h1
-              className="text-amount-md leading-none tracking-[-1px] m-0"
-              style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
-            >
+            <h1 className="font-serif font-medium text-ink text-amount-md leading-none tracking-[-1px] m-0">
               Futari
               <span className="sr-only">{t.signIn.srTagline}</span>
             </h1>
-            <p className="text-sm tracking-[3px] m-0" style={{ color: 'var(--ink-2)' }}>
+            <p className="text-sm text-ink-2 tracking-[3px] m-0">
               ふたり
             </p>
-            <p
-              className="mt-6 text-base leading-relaxed"
-              style={{ color: 'var(--ink-2)', maxWidth: 280 }}
-            >
+            <p className="mt-6 max-w-70 text-base text-ink-2 leading-relaxed">
               {t.signIn.tagline}
             </p>
             <p className="sr-only">{t.signIn.srDescription}</p>
@@ -206,20 +193,35 @@ export default async function SignInPage({
               pendingLabel={t.signIn.signingIn}
             />
             <InstallHint t={t.signIn.installHint} />
-            <p className="text-xs text-center" style={{ color: 'var(--ink-3)' }}>
+            <p className="text-xs text-ink-2 text-center">
               {t.signIn.termsPrefix}{' '}
-              <Link href={localizedHref('/terms', locale)} className="underline">{t.signIn.termsLink}</Link>
+              <Link href={localizedHref('/terms', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.termsLink}</Link>
               {' '}{t.signIn.termsAnd}{' '}
-              <Link href={localizedHref('/privacy', locale)} className="underline">{t.signIn.privacyLink}</Link>
+              <Link href={localizedHref('/privacy', locale)} className="underline focus-visible:oik-focus-ring">{t.signIn.privacyLink}</Link>
               {t.signIn.termsSuffix}
             </p>
           </div>
         </section>
 
+        {/* Left column: about narrative (#416). 7 sections, each with an SEO
+            long-tail H2 + 2–4 body paragraphs. s5's last paragraph is a short
+            standalone punchline (Fraunces, italic, larger spacing). Only one
+            section is visually featured per request — see AboutNarrative. */}
+        <section
+          className="order-2 flex flex-col lg:order-1"
+          aria-label={t.signIn.aboutLabel}
+          data-shell-slot="left"
+        >
+          <AboutNarrative
+            about={t.signIn.about}
+            featuredIndex={pickFeaturedIndex()}
+          />
+        </section>
+
         {/* Right column: 4 scene-style feature cards (#417). */}
         <section
           className="order-3 flex flex-col"
-          aria-label="Features"
+          aria-label={t.signIn.featuresLabel}
           data-shell-slot="right"
         >
           <FeatureCards t={t.signIn.features} />
@@ -263,15 +265,11 @@ function AboutNarrative({
   return (
     <div className="flex flex-col gap-10 lg:gap-12">
       <article className="about-article flex flex-col gap-4">
-        <h2
-          className="m-0 text-[19px] lg:text-title leading-snug"
-          style={{
-            fontFamily: 'var(--font-fraunces)',
-            fontWeight: 500,
-            color: 'var(--ink)',
-            letterSpacing: '-0.3px',
-          }}
-        >
+        {/* Letter-spacing is an arbitrary `tracking-[…]` class, not a
+            `--tracking-*` token: each value here appears once on this surface,
+            the same reasoning DESIGN.md §3 gives for the landing page's
+            one-offs. -0.3px is the Display tier's documented tracking. (#1160) */}
+        <h2 className="m-0 font-serif font-medium text-ink text-lg lg:text-title leading-snug tracking-[-0.3px]">
           {featured.heading}
         </h2>
         {featured.body.map((p, j) => {
@@ -280,13 +278,7 @@ function AboutNarrative({
             return (
               <p
                 key={j}
-                className="m-0 mt-2 text-[17px] lg:text-[19px] leading-relaxed italic"
-                style={{
-                  fontFamily: 'var(--font-fraunces)',
-                  fontWeight: 400,
-                  color: 'var(--ink)',
-                  letterSpacing: '-0.1px',
-                }}
+                className="m-0 mt-2 font-serif font-normal text-ink text-base lg:text-lg leading-relaxed italic tracking-[-0.1px]"
               >
                 {p}
               </p>
@@ -295,22 +287,13 @@ function AboutNarrative({
           return (
             <p
               key={j}
-              className="m-0 text-sm lg:text-base leading-[1.85]"
-              style={{ color: 'var(--ink-2)' }}
+              className="m-0 text-sm text-ink-2 lg:text-base leading-[1.85]"
             >
               {p}
             </p>
           )
         })}
-        <p
-          className="m-0 mt-4 text-sm lg:text-sm leading-relaxed italic"
-          style={{
-            fontFamily: 'var(--font-fraunces)',
-            fontWeight: 400,
-            color: 'var(--ink-3)',
-            letterSpacing: '-0.05px',
-          }}
-        >
+        <p className="m-0 mt-4 font-serif font-normal text-ink-2 text-sm leading-relaxed italic tracking-[-0.05px]">
           {about.moreStoriesHint}
         </p>
       </article>

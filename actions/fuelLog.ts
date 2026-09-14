@@ -10,6 +10,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { FuelType } from '@/lib/fuel'
+import { actionError } from '@/lib/action-errors'
 
 /**
  * Atomic dual-write for a new fuel-up event:
@@ -34,12 +35,12 @@ export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: strin
       eq(assets.type, 'car'),
     ))
     .limit(1)
-  if (!asset) throw new Error('關聯資產不在家計簿內')
-  if (asset.deletedAt) throw new Error('關聯資產已刪除')
+  if (!asset) throw actionError('linked_asset_not_in_group')
+  if (asset.deletedAt) throw actionError('linked_asset_deleted')
 
   // Payer must be a current group member.
   if (validated.paidBy !== group.memberA && validated.paidBy !== group.memberB) {
-    throw new Error('付款人不在家計簿內')
+    throw actionError('payer_not_in_group')
   }
 
   const description = validated.station ? `加油 · ${validated.station}` : '加油'
@@ -118,7 +119,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
     .where(eq(fuelLogs.id, input.id))
     .limit(1)
   if (!existingLog || existingLog.deletedAt) {
-    throw new Error('加油記錄已刪除或不存在')
+    throw actionError('fuel_log_deleted_or_missing')
   }
 
   // #1032 — the row being edited must itself belong to viewer's group. The
@@ -137,7 +138,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
       eq(assets.type, 'car'),
     ))
     .limit(1)
-  if (!existingAsset) throw new Error('關聯資產不在家計簿內')
+  if (!existingAsset) throw actionError('linked_asset_not_in_group')
 
   // Verify the (possibly newly-assigned) asset belongs to viewer's group and is not soft-deleted.
   const [asset] = await db
@@ -149,12 +150,12 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
       eq(assets.type, 'car'),
     ))
     .limit(1)
-  if (!asset) throw new Error('關聯資產不在家計簿內')
-  if (asset.deletedAt) throw new Error('關聯資產已刪除')
+  if (!asset) throw actionError('linked_asset_not_in_group')
+  if (asset.deletedAt) throw actionError('linked_asset_deleted')
 
   // Payer must be a current group member.
   if (validated.paidBy !== group.memberA && validated.paidBy !== group.memberB) {
-    throw new Error('付款人不在家計簿內')
+    throw actionError('payer_not_in_group')
   }
 
   // Find the active linked CashTransaction (one per fuel log under normal flow).
@@ -196,7 +197,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
           isNull(cashTransactions.deletedAt),
         ))
         .returning({ id: cashTransactions.id })
-      if (deleted.length === 0) throw new Error('找不到該筆加油交易')
+      if (deleted.length === 0) throw actionError('fuel_transaction_not_found')
     }
 
     const [newTxn] = await tx
@@ -247,7 +248,7 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
     .where(eq(fuelLogs.id, fuelLogId))
     .limit(1)
   if (!existingLog || existingLog.deletedAt) {
-    throw new Error('加油記錄已刪除或不存在')
+    throw actionError('fuel_log_deleted_or_missing')
   }
 
   // Verify the fuel log's asset belongs to viewer's group (ownership check).
@@ -260,7 +261,7 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
       eq(assets.type, 'car'),
     ))
     .limit(1)
-  if (!asset) throw new Error('關聯資產不在家計簿內')
+  if (!asset) throw actionError('linked_asset_not_in_group')
 
   await db.transaction(async (tx) => {
     const now = new Date()
@@ -275,7 +276,7 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
         isNull(fuelLogs.deletedAt),
       ))
       .returning({ id: fuelLogs.id })
-    if (deletedLog.length === 0) throw new Error('加油記錄已刪除或不存在')
+    if (deletedLog.length === 0) throw actionError('fuel_log_deleted_or_missing')
 
     // 2. Soft-delete the linked CashTransaction(s). Under normal flow there's
     //    exactly one active row per fuelLogId, but matching `deleted_at IS NULL`

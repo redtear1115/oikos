@@ -7,6 +7,7 @@ import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -82,6 +83,10 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.pet) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, species, breed, sex, birthDate, adoptedDate, cost, weightKg, chipNo, vet,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -92,6 +97,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 
@@ -107,12 +113,12 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         <div className="flex flex-wrap gap-1.5">
           {[{v: 'cat', label: ts.pet.speciesCat},{v: 'dog', label: ts.pet.speciesDog},{v: 'rabbit', label: ts.pet.speciesRabbit},{v: 'bird', label: ts.pet.speciesBird},{v: 'fish', label: ts.pet.speciesFish},{v: 'other', label: ts.pet.speciesOther}].map(o => (
             <button key={o.v} type="button" onClick={() => setSpecies(o.v)}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: species === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: species === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: species === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: species === o.v ? 600 : 500,
+                fontWeight: 500,
               }}>{o.label}</button>
           ))}
         </div>
@@ -131,7 +137,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             const sel = sex === o.v
             return (
               <button key={o.v} type="button" onClick={() => setSex(o.v)}
-                className="oik-segment flex-1 h-9 rounded-[9px] text-sm font-medium"
+                className="oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
                 style={{
                   border: 'none',
                   background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',

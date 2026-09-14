@@ -54,7 +54,7 @@ export default async function PrivacyPage({ params }: { params: Params }) {
         >
           {t.privacyPage.heading}
         </h1>
-        <p className="text-xs mb-8" style={{ color: 'var(--ink-3)' }}>
+        <p className="text-xs mb-8" style={{ color: 'var(--ink-2)' }}>
           {t.privacyPage.lastUpdated}
         </p>
 

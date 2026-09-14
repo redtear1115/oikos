@@ -159,7 +159,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             }}
             className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent w-fit cursor-pointer"
             style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)', border: 'none' }}
-            aria-label="返回旅行列表"
+            aria-label={t.tripList.backAriaLabel}
           >
             <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
               <path
@@ -170,7 +170,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 strokeLinejoin="round"
               />
             </svg>
-            <span>旅行</span>
+            <span>{t.tripList.title}</span>
           </button>
           {!isPast && !isEnded ? (
             <button
@@ -208,7 +208,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
         <div className="mt-1 flex items-baseline justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1
-              className="text-2xl font-medium tracking-tight truncate"
+              className="text-page font-medium tracking-tight truncate"
               style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
             >
               {trip.name}
@@ -216,7 +216,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
             <p className="mt-0.5 text-xs" style={{ color: 'var(--ink-3)' }}>
               {trip.endDate
                 ? `${trip.startDate} – ${trip.endDate}`
-                : `${trip.startDate} 起,進行中`}
+                : t.tripList.dateRangeActive.replace('{startDate}', trip.startDate)}
             </p>
           </div>
           {isEnded && (
@@ -227,7 +227,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 color: 'var(--ink-2)',
               }}
             >
-              已結束
+              {t.tripList.endedTag}
             </span>
           )}
         </div>
@@ -247,7 +247,7 @@ export function TripDetailClient({ trip, records, baseCurrency, groupDefaultRati
                 {t.tripDetail.totalLabel}
               </p>
               <p
-                className="mt-1 text-3xl font-medium tnum tracking-[-0.5px]"
+                className="mt-1 text-page font-medium tnum tracking-[-0.5px]"
                 style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
               >
                 {formatAmount(totalBase, baseCurrency)}

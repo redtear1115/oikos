@@ -11,6 +11,7 @@ import {
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 
@@ -72,7 +73,7 @@ export function TemplateSheetBody({
         onMutated?.('saved')
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -85,7 +86,7 @@ export function TemplateSheetBody({
         onMutated?.('deleted')
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -93,6 +94,8 @@ export function TemplateSheetBody({
   const title = isEdit
     ? t.assetSheet.titleEdit.replace('{type}', t.assetSheet.type.item)
     : t.assetSheet.titleNew
+
+  const isDirty = useDirtyCheck(open, { name, notes })
 
   return (
     <SheetShell
@@ -104,6 +107,7 @@ export function TemplateSheetBody({
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 

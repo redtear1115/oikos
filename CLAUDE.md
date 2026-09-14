@@ -15,7 +15,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.5.13** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
+**Latest released: v1.5.14** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
 
 ## Backlog / 未釋出版本
 
@@ -181,7 +181,8 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 - **Hero copy 不放功能列表**：「記帳 / 分攤 / 圖表」不是 hero 要說的事，hero 要說的是「為什麼這兩個人要一起記帳」
 - `heroKicker` 不放 SEO 語法（`·` / 斜線關鍵字），交給 `<meta>`
-- Trust row 排序：免費 → 裝置 → 加密（加密是最強 claim，放最後）
+- Trust row 排序：免費 → 裝置 → 隱私（「只開放給你們倆」，最強 claim 放最後）
+  - **撤回紀錄（#1191）**：這格原本是「端對端加密」，已撤回。寫成「端對端加密」「連我們也讀不到」看起來更有說服力，但實作是 server 持鑰的欄位級靜態加密（`lib/crypto.ts`，只涵蓋寶寶本名、身分證字號等少數欄位），交易內容是明文，宣稱不成立。失效的樣子不是哪裡報錯，是一句順口的信任文案被複製進 landing、SEO description、FAQ JSON-LD、比較表，一路擴散到幾十個站點。提加密時只說成立的部分：連線以 HTTPS 加密、機敏欄位加密後保存；不寫「全程」「端對端」「讀不到」。
 - 情境感 > 功能感：「回頭看會很暖」比「追蹤花費」更對
 
 ### Sign-in — 寫作規則
@@ -246,9 +247,10 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ## 專案內建 skill
 
-`.claude/skills/` 有四個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
+`.claude/skills/` 有五個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
 
 - [`run-oikos`](.claude/skills/run-oikos/SKILL.md) — 啟動並 smoke test dev server（`npm install` + `npm run dev` + curl），收錄冷機啟動會踩的雷（缺 `@next/bundle-analyzer`、缺 `.env.local`、port 3000 佔用、Turbopack lazy-compile 404）。
 - [`ja-i18n`](.claude/skills/ja-i18n/SKILL.md) — 維護 `lib/i18n/locales/ja.ts`：偵測未翻譯 key、辨識合法漢字的假陽性、更新漢字白名單。
 - [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描與收尾 checklist；不 push、不碰 protected branch。
 - [`ship-native`](.claude/skills/ship-native/SKILL.md) — 原生殼重送（版本計數 +1 → iOS archive/export/upload、Android AAB + 驗簽 → 實機驗證 checklist）；build 可自動跑，上傳前必停下來確認。
+- [`ship-issue`](.claude/skills/ship-issue/SKILL.md) — 協調者模式：issue → 查證 → 關卡 ① intent → 關卡 ② 方案 → executor 實作 + verifier 驗收 → 開 PR → 關卡 ③ 驗收；使用者只做選擇，做到開好 PR 就停、不 merge。§8 批次驗證多條 PR（依 milestone 分組 → 整合試合 → 依風險派 agent → 依裝置分組的人工清單 → merge 後比對 head sha）。

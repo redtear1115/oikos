@@ -33,6 +33,14 @@ export type MigrateBasePageCopy = {
   ]
 }
 
+/** One `/onboarding` philosophy card (#1163). */
+export type OnboardingCardCopy = {
+  /** Card label after the `01 / 05 ·` counter. */
+  eyebrow: string
+  quote: readonly string[]
+  subtitle: string
+}
+
 export type Translations = {
   signIn: {
     tagline: string
@@ -101,6 +109,11 @@ export type Translations = {
     srTagline: string
     /** sr-only paragraph below the visible tagline describing the app (#467). */
     srDescription: string
+    /** Accessible names (`aria-label`) for the about and feature-card
+     *  landmark sections on /sign-in. Read aloud by screen readers, never
+     *  rendered — they used to be hard-coded English in every locale. (#1161) */
+    aboutLabel: string
+    featuresLabel: string
     /** Quiet secondary entry below the OAuth button on /sign-in that lets
      *  unauthenticated visitors add Futari to their home screen (#540).
      *  Android taps `cta` → fires the captured beforeinstallprompt; iOS
@@ -271,6 +284,15 @@ export type Translations = {
       cancel: string
       retry: string
     }
+    /** Discard confirmation shown when a form sheet with unsaved input is
+     *  dismissed by backdrop tap / Escape / system Back (#1183). The sheet's
+     *  own 取消 button closes without asking. */
+    unsavedChanges: {
+      title: string
+      description: string
+      discard: string
+      keepEditing: string
+    }
   }
 
   splitType: {
@@ -349,6 +371,9 @@ export type Translations = {
      *  actually bears the cost), NOT raw split_type. */
     burdenMe: string
     burdenPartner: string
+    /** `role="group"` names for the L3 payer / burden dual-toggles (#1197). */
+    payerFilterAriaLabel: string
+    burdenFilterAriaLabel: string
     /** Issue #367 — contextual surface shown when there's an active trip. */
     /** First-use floating label hints below the BrandHeader icon buttons (#765).
      *  Shown once per device (localStorage), auto-dismiss after 3.5 s. */
@@ -407,6 +432,9 @@ export type Translations = {
     modeIncludePendingLabel: string
     /** Aria label for the settled/include-pending toggle. */
     modeToggleAriaLabel: string
+    /** Aria labels for the hero's +/− collapse toggle (#1197). */
+    expandAriaLabel: string
+    collapseAriaLabel: string
   }
 
   /** Invite-link sharing strings. Named for the dashboard banner that used to
@@ -639,6 +667,8 @@ export type Translations = {
     meSuffix: string
     /** Inline label suffix for partner. `{name}` replaced with displayName. */
     partnerSuffix: string
+    /** Accessible name for the default split-ratio slider (#1172). */
+    ariaLabel: string
   }
 
   errorPage: {
@@ -667,6 +697,17 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** #1174 — accessible name for the masked plate chip (the ●●● glyphs are not a name). */
+    plateMaskedAriaLabel: string
+    /** #1173 — Template with `{date}`. */
+    lastRefuel: string
+    /** #1173 — Template with `{years}` and `{months}`. */
+    childAge: string
+    /** #1173 — Template with `{years}`. */
+    petAge: string
+    birthdayThisMonth: string
+    /** #1173 — Template with `{days}` (rendered emphasised, so keep it a standalone token). */
+    plantCompanionDays: string
     /** Section / switcher group labels for insurance assets by kind. */
     insuranceGroups: {
       shortTermProtection: string
@@ -748,6 +789,11 @@ export type Translations = {
     /** Inline hint under the rate input showing the inverse direction.
      *  `{default}` is the base currency code. */
     rateInverseFormat: string
+    /** Accessible name on the rate `<input type="number">` (visually the field
+     *  has no standalone label, just the "1 {code} =" / "{baseCode}" chrome
+     *  around it). `{code}` is the row's currency, `{baseCode}` the trip's
+     *  base currency. */
+    rateAriaLabel: string
     /** Pill on the base currency's header row — base is always present and
      *  is the trip's reference currency (no longer user-switchable). */
     basePill: string
@@ -903,6 +949,9 @@ export type Translations = {
     emptyAibutsu: string
     /** Empty-state copy when the 守護 tab has no insurance assets. */
     emptyGuardian: string
+    /** Suffix after a linked asset's name in AssetLinkField when that asset
+     *  has been soft-deleted. Carries its own brackets / spacing per locale. */
+    deletedSuffix: string
   }
 
   records: {
@@ -951,6 +1000,8 @@ export type Translations = {
       trendIncome: string
       trendNet: string
       trendChartLabel: string
+      /** Donut chart a11y label (#1169). `{count}` = number of non-zero slices. */
+      pieChartLabel: string
     }
   }
 
@@ -1260,6 +1311,9 @@ export type Translations = {
     withPartner: string
     soloLabel: string
     enterCta: string
+    /** Why a past chapter can be opened but not changed (#1190). Product
+     *  stance, not a technical limit — see epoch-readonly-design.md. */
+    readOnlyNote: string
     /** Banner copy across the top of dashboard / records when a past epoch is pinned. */
     bannerHeading: string
     bannerExitCta: string
@@ -1368,6 +1422,22 @@ export type Translations = {
       lapseTitle: string
       lapseDescription: string
       lapseConfirm: string
+      insuredShort: string
+      annualLabel: string
+      timelineStarts: string
+      timelineEnds: string
+      timelinePaid: string
+      /** #1173 — Template with `{paid}` and `{term}`. */
+      timelinePaidYears: string
+      timelineSumInsured: string
+      timelineInvested: string
+      timelineTarget: string
+      summaryAnnualPremium: string
+      /** #1173 — Template with `{count}` (rendered emphasised, so keep it a standalone token). */
+      summaryPolicyCount: string
+      summaryNextRenewal: string
+      /** #1173 — Template with `{days}`. */
+      summaryDaysUntil: string
     }
   }
 
@@ -1388,6 +1458,8 @@ export type Translations = {
       intervalEveryNMonths: string
       /** Template with `{day}` placeholder. */
       dayLabel: string
+      /** #1187 — list row next-run date. Template with `{date}`. */
+      nextDate: string
     }
     pending: {
       sectionLabel: string
@@ -1423,6 +1495,8 @@ export type Translations = {
       deleteRuleAction: string
       deleteConfirmTitle: string
       deleteConfirmDescription: string
+      /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
+      editEffectHint: string
     }
     errors: {
       amountRequired: string
@@ -1445,7 +1519,6 @@ export type Translations = {
     portability: {
       heading: string
       body: string
-      comingSoonHint: string
     }
     backup: {
       heading: string
@@ -1472,9 +1545,40 @@ export type Translations = {
     }
   }
 
+  /** `/onboarding` philosophy cards (#1163) — the five full-screen cards shown
+   *  after sign-in, before a ledger exists. Not the same thing as
+   *  `trust.onboarding`, which is the three-line trust summary. */
+  onboarding: {
+    /** Screen-reader-only page heading above the cards (#1165). */
+    heading: string
+    skip: string
+    next: string
+    /** CTA on the last card. */
+    start: string
+    /** Screen-reader announcement when the card changes (#1165).
+     *  `{current}` / `{total}` are replaced. */
+    progress: string
+    /** Decorative payday mark inside card 03's motif. */
+    paydayMark: string
+    /** Exactly five cards, in order. In `quote`, each string is one line;
+     *  wrap a phrase in `*asterisks*` to set it in italic accent. */
+    cards: [OnboardingCardCopy, OnboardingCardCopy, OnboardingCardCopy, OnboardingCardCopy, OnboardingCardCopy]
+  }
+
   /** Setup flow's invite step (#1017) — face-to-face QR path alongside the
    *  existing link-share path. */
   setup: {
+    /** Step 1 — naming the ledger (#1166). */
+    name: {
+      heading: string
+      subtitle: string
+      /** Tap-to-fill examples. Localised, not translated — each locale picks
+       *  names that feel natural there. */
+      suggestions: readonly string[]
+      next: string
+      required: string
+      failed: string
+    }
     invite: {
       heading: string
       /** Template with `{name}` placeholder for the group name. */
@@ -1714,6 +1818,8 @@ export type Translations = {
     switcher: {
       emptyGroup: string
       currentLabel: string
+      /** #1173 — label of the car group in the car detail switcher. */
+      carGroup: string
     }
     notesSection: string
     recentExpenses: string
@@ -1776,6 +1882,27 @@ export type Translations = {
       plate: string
       /** #826 — section header above the masked plate reveal row. */
       plateSection: string
+    }
+    /** #1173 — NewFuelLog sheet (car detail → 加油). */
+    fuelLog: {
+      titleNew: string
+      titleEdit: string
+      closeAriaLabel: string
+      econLabel: string
+      firstRefuelHint: string
+      autoCalcHint: string
+      liters: string
+      litersUnit: string
+      odometer: string
+      /** Template with `{km}`. */
+      lastOdometer: string
+      cost: string
+      date: string
+      pickDate: string
+      splitLabel: string
+      submit: string
+      deleteTitle: string
+      deleteDescription: string
     }
     child: {
       sectionId: string
@@ -1954,6 +2081,8 @@ export type Translations = {
       intervalEveryYear: string
       intervalEveryNMonths: string
       dayLabel: string
+      /** #1187 — list row next-run date. Template with `{date}`. */
+      nextDate: string
     }
     pending: {
       sectionLabel: string
@@ -1989,6 +2118,8 @@ export type Translations = {
       deleteRuleAction: string
       deleteConfirmTitle: string
       deleteConfirmDescription: string
+      /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
+      editEffectHint: string
     }
     errors: {
       amountRequired: string
@@ -2052,7 +2183,10 @@ export type Translations = {
   }
 
   offlineBanner: {
+    /** Offline browsing on: the page may be the cached snapshot. */
     text: string
+    /** Offline browsing off: nothing is cached, only the page already on screen stays. */
+    textNoCache: string
   }
 
   offlinePage: {
@@ -2175,6 +2309,7 @@ export type Translations = {
     emptyAssetBreakdown: string
     /** Carousel page indicator template with `{current}` `{total}`. */
     carouselIndicator: string
+    carouselAriaLabel: string
     /** Direction label for income events in card 3. */
     incomeLabel: string
     /** Direction label for expense events in card 3. */
@@ -2396,6 +2531,13 @@ export type Translations = {
     /** Heading template for the comparison table. Contains `{other}` —
      *  replaced with the source brand name per page. e.g. "Futari vs {other}". */
     comparisonHeading: string
+    /** Comparison-table cells that carry a condition or specific claim (#1185).
+     *  Verdict-only labels (✓ 支援 / ✕ 無) stay as literals in
+     *  lib/migrate/sources.ts; see docs/superpowers/specs/migrate-pages-design.md.
+     *  Values keep their leading glyph (△ / ✓) as part of the string. */
+    comparisonText: Record<import('@/lib/migrate/sources').ComparisonTextKey, string>
+    /** HowToStep `name` in the HowTo JSON-LD (not rendered). Contains `{n}`. */
+    howToStepName: string
     /** Closing trust block — narrative + 3 items, mounted between
      *  steps and footer on every /migrate/<source> page (#578). */
     trust: {
@@ -2583,6 +2725,98 @@ export type Translations = {
       ]
     }>
   }
+
+  /** #1156 — localized server-action errors, resolved by `describeError`.
+   *  Keys are the wire codes thrown via `actionError()` (lib/action-errors.ts),
+   *  so they stay snake_case on purpose. `{name}` placeholders are filled from
+   *  the params encoded after the code. Kept in its own top-level namespace so
+   *  unrelated locale edits don't collide with it. */
+  errors: {
+    actions: {
+      group_not_found: string
+      payer_not_in_group: string
+      payer_not_in_trip_ledger: string
+      recipient_not_in_group: string
+      record_not_found: string
+      record_deleted_or_missing: string
+      amount_not_positive: string
+      category_empty: string
+      split_ratio_required: string
+      split_ratio_out_of_range: string
+      split_ratio_not_applicable: string
+      split_ratio_invalid: string
+      split_type_invalid: string
+      profile_not_found: string
+      fx_rate_not_set: string
+      fx_rate_not_positive: string
+      currency_unsupported: string
+      currency_pair_same: string
+      base_currency_locked: string
+      current_epoch_not_found: string
+      leave_active_trip: string
+      trip_not_found: string
+      trip_missing: string
+      active_trip_not_found: string
+      trip_ended: string
+      trip_rate_missing: string
+      trip_name_empty: string
+      trip_name_too_long: string
+      trip_in_past_epoch: string
+      trip_move_to_past_epoch: string
+      trip_end_before_start: string
+      income_not_found: string
+      recurring_rule_not_found: string
+      pending_expense_not_found: string
+      pending_expense_handled_elsewhere: string
+      pending_expense_partner_handled: string
+      pending_income_not_found: string
+      pending_income_handled_elsewhere: string
+      review_month_locked: string
+      review_message_locked: string
+      asset_not_found: string
+      aibutsu_not_found: string
+      linked_asset_not_in_group: string
+      linked_asset_deleted: string
+      linked_vehicle_invalid: string
+      plate_empty: string
+      field_not_filled: string
+      template_unknown: string
+      policy_not_found: string
+      policy_expiry_unset: string
+      policyholder_not_member: string
+      insured_not_member: string
+      insured_child_invalid: string
+      fuel_log_deleted_or_missing: string
+      fuel_transaction_not_found: string
+      import_source_unsupported: string
+      import_row_invalid_type: string
+      import_row_invalid_amount: string
+      import_row_invalid_split_type: string
+      import_row_invalid_payer: string
+      import_row_invalid_split_ratio: string
+      import_row_incomplete_fx: string
+      import_row_invalid_date: string
+      import_filename_invalid: string
+      import_total_invalid: string
+      import_empty: string
+      import_batch_create_failed: string
+      import_batch_id_invalid: string
+      import_batch_not_found: string
+      import_rollback_forbidden: string
+      import_already_rolled_back: string
+      invoice_mof_code_invalid: string
+      invoice_mof_unavailable: string
+      invoice_mof_verify_failed: string
+      invoice_barcode_already_bound: string
+      invoice_nickname_too_long: string
+      invoice_carrier_not_found: string
+      quiz_answers_malformed: string
+      quiz_answers_incomplete: string
+      quiz_question_out_of_range: string
+      quiz_choice_out_of_range: string
+      quiz_question_duplicate: string
+    }
+  }
 }
 
 export const zhTW: Translations = {
@@ -2650,7 +2884,7 @@ export const zhTW: Translations = {
       c2Body: '旅行子帳本獨立記帳，回來清楚看這趟誰多付了多少，不用再翻聊天記錄對帳。',
       c3Title: '這筆是幫你買的',
       c3Body: '每筆帳可以留一句話。讓那個「順手幫你繳的」不只是數字，是一句記得。',
-      c4Title: '你們的帳，只有你們看得到',
+      c4Title: '你們的帳，只開放給你們倆',
       c4Body: '沒有「我的帳」跟「你的帳」之分。進來的就是共同的，沒有能見度分級。',
     },
     blog: {
@@ -2659,6 +2893,8 @@ export const zhTW: Translations = {
     srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
     srDescription:
       '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
+    aboutLabel: '關於 Futari',
+    featuresLabel: 'Futari 能做的事',
     installHint: {
       cta: '也可以先加到主畫面',
       iosStep1: '點底部正中間的分享按鈕',
@@ -2673,14 +2909,14 @@ export const zhTW: Translations = {
     cta: '一起記錄',
     ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
     alreadyHaveAccount: '已經有帳號 · 登入',
-    trustEncrypted: '端對端加密',
+    trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
       encryption: {
-        title: '端對端加密',
-        body: '資料傳輸與儲存全程加密，連我們自己也讀不到內容。',
+        title: '只開放給你們倆',
+        body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密；寶寶本名、身分證字號這類機敏資料，會再加密一層才存進資料庫。',
       },
       portability: {
         title: '隨時帶走',
@@ -2726,7 +2962,7 @@ export const zhTW: Translations = {
       cwmoneyBody: '附上 Excel → CSV 範本，幾分鐘就能搬完。',
       seeAll: '看全部搬遷指南',
     },
-    footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    footerTrust: '只開放給你們倆 · 資料只屬於你們兩個',
     jsonLdAppName: 'Futari · 雙人記帳',
     jsonLdAlternateNames: ['Futari 家計簿', '情侶記帳 app', '夫妻記帳', '兩個人的家計簿', 'ふたり 家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
@@ -2754,7 +2990,7 @@ export const zhTW: Translations = {
       {
         question: '資料安全嗎？',
         answer:
-          '所有資料儲存於 Supabase 加密資料庫，僅你和伴侶兩人能存取。我們不會分享或販售你的記帳內容。',
+          '帳本只開放給你和伴侶兩人。連線以 HTTPS 加密；寶寶本名、身分證字號、健保卡號、車牌、房屋地址等機敏欄位，會先加密才存進資料庫。我們不會分享或販售你的記帳內容。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -2798,6 +3034,12 @@ export const zhTW: Translations = {
       confirm: '確認',
       cancel: '取消',
       retry: '重試',
+    },
+    unsavedChanges: {
+      title: '剛剛填的內容還沒儲存',
+      description: '現在離開，這次填的內容不會留下來。',
+      discard: '捨棄',
+      keepEditing: '繼續填寫',
     },
   },
 
@@ -2872,6 +3114,8 @@ export const zhTW: Translations = {
     filterAriaLabel: '開啟篩選',
     burdenMe: '算我的',
     burdenPartner: '算對方的',
+    payerFilterAriaLabel: '依誰付的篩選',
+    burdenFilterAriaLabel: '依算誰的篩選',
     headerHint: {
       trip: '旅行',
       settings: '設定',
@@ -2907,6 +3151,8 @@ export const zhTW: Translations = {
     modeSettledLabel: '現在',
     modeIncludePendingLabel: '結算後',
     modeToggleAriaLabel: '切換 顯示「現在」或「結算後」金額',
+    expandAriaLabel: '展開摘要卡',
+    collapseAriaLabel: '收合摘要卡',
   },
 
   soloBanner: {
@@ -3058,6 +3304,7 @@ export const zhTW: Translations = {
   splitRatioSection: {
     meSuffix: '（我）',
     partnerSuffix: '（對方）',
+    ariaLabel: '預設分攤比例',
   },
 
   errorPage: {
@@ -3075,6 +3322,12 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    plateMaskedAriaLabel: '車牌已隱藏',
+    lastRefuel: '上次加油 {date}',
+    childAge: '{years} 歲 {months} 個月',
+    petAge: '{years} 歲',
+    birthdayThisMonth: '🎂 本月生日',
+    plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
       shortTermProtection: '保護型 · 一年期',
       longTermProtection: '保護型 · 多年期',
@@ -3121,6 +3374,7 @@ export const zhTW: Translations = {
     addCustomCta: '+ 自訂幣別',
     footerNote: '這趟期間記錄的支出，會自動掛在這次旅行底下。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: '{code} 對 {baseCode} 的匯率',
     basePill: '基礎貨幣',
     usedCountNote: '已記過 {n} 筆；改匯率不影響舊紀錄',
     customRow: {
@@ -3218,6 +3472,7 @@ export const zhTW: Translations = {
     loadFailed: '載入失敗',
     emptyAibutsu: '還沒有愛物，先到「愛物」分頁新增。',
     emptyGuardian: '還沒有保單，先到「愛物 > 守護」分頁新增。',
+    deletedSuffix: '（已刪除）',
   },
 
   records: {
@@ -3262,6 +3517,7 @@ export const zhTW: Translations = {
       trendIncome: '收入',
       trendNet: '累計結餘',
       trendChartLabel: '每日收支趨勢',
+      pieChartLabel: '占比圓餅圖，共 {count} 項',
     },
   },
 
@@ -3550,6 +3806,7 @@ export const zhTW: Translations = {
     title: '過去的時光',
     back: '返回',
     intro: '這本帳本有過好幾段時光。每一段都是當時的你們留下來的。',
+    readOnlyNote: '翻過去的章節會照當時的樣子留著，可以回來看，不再修改。',
     currentChapter: '現在 · 跟 {partner}',
     currentChapterSolo: '現在 · 一個人',
     chapterRange: '{start} – {end}',
@@ -3634,6 +3891,19 @@ export const zhTW: Translations = {
       lapseTitle: '已停止這份保單？',
       lapseDescription: '保單將從列表中移除，仍可從詳細頁找回。',
       lapseConfirm: '已停止',
+      insuredShort: '保 {name}',
+      annualLabel: '年繳',
+      timelineStarts: '生效',
+      timelineEnds: '到期',
+      timelinePaid: '已繳',
+      timelinePaidYears: '{paid} / {term} 年',
+      timelineSumInsured: '保額',
+      timelineInvested: '已投入',
+      timelineTarget: '目標',
+      summaryAnnualPremium: '年繳保費',
+      summaryPolicyCount: '共 {count} 張保單',
+      summaryNextRenewal: '下次續約',
+      summaryDaysUntil: '{days} 天後',
     },
   },
 
@@ -3652,6 +3922,7 @@ export const zhTW: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 個月',
       dayLabel: '{day} 號',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '這幾筆等你看看',
@@ -3683,7 +3954,8 @@ export const zhTW: Translations = {
       resumeAction: '恢復',
       deleteRuleAction: '刪除規則',
       deleteConfirmTitle: '刪除這個定期規則？',
-      deleteConfirmDescription: '已存在的待確認卡片也會一起清掉，此動作無法復原。',
+      deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
+      editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -3700,22 +3972,21 @@ export const zhTW: Translations = {
     pageHeading: '你們的資料，屬於你們倆',
     pageSubtitle: '我們的承諾，寫在這裡。',
     encryption: {
-      heading: '只有你們倆能看到',
-      body: '我們用 AES-256-GCM 為你們的紀錄加密。連我們自己，也讀不到內容。',
+      heading: '只開放給你們倆',
+      body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密；寶寶本名、身分證字號、車牌和地址這類機敏資料，我們會再加密一層才存進資料庫。',
     },
     portability: {
       heading: '隨時都能整包帶走',
       body: '我們不會把你們綁在這裡。日後想離開，所有紀錄都能整批帶走。',
-      comingSoonHint: '匯出功能即將推出',
     },
     backup: {
-      heading: '我們替你們守著',
-      body: '每一筆紀錄，我們都備份保管。即使你們忘了，我們也替你們留著。',
+      heading: '每一筆，都會好好留著',
+      body: '只要帳號還在，你們記下的每一筆都會留在這裡。',
     },
     onboarding: {
       line1: '資料只屬於你們倆',
       line2: '隨時都能整包帶走',
-      line3: '每一筆我們都替你們守著',
+      line3: '每一筆，都會好好留著',
     },
     bilateral: {
       inviter: {
@@ -3732,7 +4003,51 @@ export const zhTW: Translations = {
     },
   },
 
+  onboarding: {
+    heading: 'Futari 的五個想法',
+    skip: '跳過',
+    next: '繼續',
+    start: '開始記第一筆',
+    progress: '第 {current} 張，共 {total} 張',
+    paydayMark: '05 / 月',
+    cards: [
+      {
+        eyebrow: '想法',
+        quote: ['Futari 不會問', '誰花得比較多。'],
+        subtitle: '我們只記下「發生了什麼」。誰先掏錢，是當下方便而已。',
+      },
+      {
+        eyebrow: '一起',
+        quote: ['進到 Futari 的，', '就是我們*共同的*。'],
+        subtitle: '這不是一本分帳簿。它是兩個人共有的家計簿 — 一筆進來，兩個人都看得到。',
+      },
+      {
+        eyebrow: '儀式',
+        quote: ['薪水進來的那天，', '是兩個人一起', '感受的時刻。'],
+        subtitle: '所以定期收入會在那一天出現一張卡 — 提醒我們、被一起確認。',
+      },
+      {
+        eyebrow: '守護',
+        quote: ['保險不是費用 —', '是和對方一起', '守護的承諾。'],
+        subtitle: '所以它放在「愛物」，不在支出裡。每一期繳費，都是再講一次這個承諾。',
+      },
+      {
+        eyebrow: '開始',
+        quote: ['準備好了嗎？', '就從第一筆', '慢慢開始。'],
+        subtitle: '不用等到完美的時刻 — 帳本會陪著你們一起長出來。',
+      },
+    ],
+  },
+
   setup: {
+    name: {
+      heading: '幫你們的家計簿取個名字',
+      subtitle: '之後可以隨時改。簡短一點比較好記。',
+      suggestions: ['我們倆', '○○家', '日日', 'Home', '一起'],
+      next: '下一步',
+      required: '請輸入名稱',
+      failed: '發生錯誤',
+    },
     invite: {
       heading: '帳本準備好了，讓對方也進來',
       subtitle: '對方加入後，就能一起記「{name}」。',
@@ -3962,6 +4277,7 @@ export const zhTW: Translations = {
     switcher: {
       emptyGroup: '（無）',
       currentLabel: '目前',
+      carGroup: '車輛',
     },
     notesSection: '備註',
     recentExpenses: '近期支出',
@@ -4016,6 +4332,25 @@ export const zhTW: Translations = {
       avgEconRecent: '近 6 個月',
       plate: '車牌',
       plateSection: '車輛資訊',
+    },
+    fuelLog: {
+      titleNew: '加油記錄',
+      titleEdit: '編輯加油記錄',
+      closeAriaLabel: '關閉',
+      econLabel: '本次油耗',
+      firstRefuelHint: '第一次加油 · 之後才能算油耗',
+      autoCalcHint: '輸入里程與油量自動計算',
+      liters: '油量',
+      litersUnit: '公升',
+      odometer: '加油里程',
+      lastOdometer: '上次 {km} km',
+      cost: '金額',
+      date: '日期',
+      pickDate: '選擇日期',
+      splitLabel: '分攤方式',
+      submit: '記下這筆',
+      deleteTitle: '刪除這筆加油記錄？',
+      deleteDescription: '刪除後無法復原，但其他支出紀錄不受影響。',
     },
     child: {
       sectionId: '身分證件',
@@ -4167,6 +4502,7 @@ export const zhTW: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 個月',
       dayLabel: '{day} 號',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '這幾筆等你看看',
@@ -4200,7 +4536,8 @@ export const zhTW: Translations = {
       resumeAction: '恢復',
       deleteRuleAction: '刪除規則',
       deleteConfirmTitle: '刪除這個定期規則？',
-      deleteConfirmDescription: '已存在的待確認卡片也會一起清掉，此動作無法復原。',
+      deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
+      editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -4249,6 +4586,7 @@ export const zhTW: Translations = {
 
   offlineBanner: {
     text: '離線中・顯示最近一次連線的資料',
+    textNoCache: '離線中・恢復連線後會自動更新',
   },
 
   offlinePage: {
@@ -4358,6 +4696,7 @@ export const zhTW: Translations = {
     emptyRecurring: '本月沒有定期事件',
     emptyAssetBreakdown: '本月沒有為任何愛物花費',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: '本月回顧卡片',
     incomeLabel: '進',
     expenseLabel: '支',
     snapshotNotReady: '這個月的回顧還在整理中，等一下再進來看看吧。',
@@ -4529,12 +4868,50 @@ export const zhTW: Translations = {
     differentiatorsHeading: '為什麼選 Futari',
     faqHeading: '常見問題',
     comparisonHeading: 'Futari vs {other}',
+    comparisonText: {
+      interfaceLanguage: '介面語言',
+      fourLanguages: '✓ 中英日四語',
+      notStated: '未說明',
+      basicHalfSplit: '△ 基本對半',
+      updatesSlowed: '△ 節奏放緩',
+      paidUnlock: '△ 需付費解鎖',
+      paidPlanOnly: '△ 限付費版',
+      basicPlanLimited: '△ 基本版有限制',
+      manualCleanup: '需自行整理',
+      requiresVip: '△ 需 VIP',
+      vipUnlock: '△ VIP 解鎖',
+      requiresSubscription: '△ 需訂閱',
+      manualBackup: '△ 需手動備份',
+      adsOrPaidPlan: '△ 含廣告／付費版',
+      mostlyEnglish: '△ 以英文為主',
+      advancedNeedsSubscription: '△ 進階需訂閱',
+      sharingSetupRequired: '△ 需設定共享',
+      premiumOnly: '△ Premium 限定',
+      someFeaturesPaid: '△ 部分功能付費',
+      viewOnly: '△ 僅能查看',
+      dependsOnVersion: '△ 視版本',
+      advancedSubscription: '△ 進階訂閱',
+      vipOnly: '△ VIP 限定',
+      dependsOnAccount: '△ 視帳號',
+      inAppPurchases: '△ 含內購',
+      subscriptionOnly: '△ 訂閱限定',
+      mostlyLocal: '△ 本機為主',
+      advancedPaid: '△ 進階付費',
+      partialExport: '△ 部分匯出',
+      iosOnly: '△ iOS 限定',
+      freePlanFourPerDay: '△ 免費版每日 4 筆',
+      conversionNeedsPro: '△ 換算需 Pro',
+      sharedLedgerSetupRequired: '△ 需設共享帳本',
+      adsOrMembership: '△ 含廣告／會員',
+      requiresMembership: '△ 需會員',
+    },
+    howToStepName: '步驟 {n}',
     trust: {
       heading: '為什麼可以放心搬過來',
       items: [
         {
-          title: '端對端加密',
-          body: '你們之外，沒有人能看見這本帳的內容。',
+          title: '只開放給你們倆',
+          body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密，機敏資料另外加密保存。',
         },
         {
           title: '隨時可以帶走',
@@ -4546,7 +4923,7 @@ export const zhTW: Translations = {
         },
       ],
     },
-    footerTrust: '端對端加密 · 資料只屬於你們兩個',
+    footerTrust: '只開放給你們倆 · 資料只屬於你們兩個',
     otherSources: {
       heading: '從其他工具搬過來',
       cta: '看搬遷指南',
@@ -4653,7 +5030,7 @@ export const zhTW: Translations = {
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: '你的 Honeydue 資料，可以帶走',
         heroSubtitle: '從 Honeydue 搬遷到 Futari 只要三分鐘——上傳 CSV，這幾年的記帳完整保留。',
-        intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、資料加密。',
+        intro: 'Honeydue 自 2024 年起已由原團隊轉手，更新節奏放緩、客服回覆變慢。如果你在找一個還在持續維護的雙人記帳工具，Futari 是從 Honeydue 搬過來的好選擇——免費、無廣告、只開放給你們倆。',
         differentiators: [
           {
             title: '仍在持續迭代',
@@ -5266,7 +5643,7 @@ export const zhTW: Translations = {
     migrate: {
       honeydue: {
         title: '從 Honeydue 搬家到 Futari｜資料匯入',
-        description: 'Honeydue 替代方案首選。Futari 是專為夫妻、伴侶設計的共同帳本，3 分鐘完成搬家、繼續一起記帳。免費、無廣告、端對端加密。',
+        description: 'Honeydue 替代方案首選。Futari 是專為夫妻、伴侶設計的共同帳本，3 分鐘完成搬家、繼續一起記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: 'Honeydue 用戶的下一站：3 分鐘搬遷到 Futari，雙人記帳繼續。',
       },
       spendee: {
@@ -5281,17 +5658,17 @@ export const zhTW: Translations = {
       },
       moneybook: {
         title: '從麻布記帳搬家到 Futari｜CSV 匯入',
-        description: '麻布記帳資料怎麼搬到雙人帳本？把交易明細匯出成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        description: '麻布記帳資料怎麼搬到雙人帳本？把交易明細匯出成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '麻布記帳用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
       andromoney: {
         title: '從 AndroMoney 搬家到 Futari｜CSV 匯入',
-        description: 'AndroMoney 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
+        description: 'AndroMoney 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: 'AndroMoney 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
       mobills: {
         title: '從 Mobills 搬家到 Futari｜CSV 匯入',
-        description: 'Mobills 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、端對端加密。',
+        description: 'Mobills 資料匯出後怎麼搬到雙人帳本？把 CSV 匯入 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記帳。免費、無廣告、只開放給你們倆。',
         ogDescription: 'Mobills 用戶的雙人記帳新選擇：匯出 CSV，搬進 Futari。',
       },
       manebo: {
@@ -5301,37 +5678,37 @@ export const zhTW: Translations = {
       },
       'simple-daily-money': {
         title: '從簡單記帳搬家到 Futari｜截圖轉 CSV',
-        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、端對端加密。',
+        description: '簡單記帳的 CSV 匯出是 VIP 功能？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，和對方一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '簡單記帳用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       'fortune-city': {
         title: '從記帳城市搬家到 Futari｜截圖轉 CSV',
-        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '記帳城市的 CSV 匯出要訂閱？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '記帳城市用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       cashman: {
         title: '從 CashMan 搬家到 Futari｜截圖轉 CSV',
-        description: 'CashMan 沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: 'CashMan 沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: 'CashMan 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       '1money': {
         title: '從 1Money 搬家到 Futari｜截圖轉 CSV',
-        description: '1Money 沒有完整匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '1Money 沒有完整匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '1Money 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       icost: {
         title: '從 iCost 搬家到 Futari｜截圖轉 CSV',
-        description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: 'iCost 只有 iOS、沒有 CSV 匯出？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個跨平台的雙人共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: 'iCost 用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
       splitwise: {
         title: '從 Splitwise 搬家到 Futari｜匯出試算表、CSV 匯入',
-        description: 'Splitwise 的群組與好友交易可以匯出試算表帶走。上傳到 Futari 這個為夫妻、伴侶設計的共同帳本，分攤、結算與日常記帳都在同一本帳裡。免費、無廣告、端對端加密。',
+        description: 'Splitwise 的群組與好友交易可以匯出試算表帶走。上傳到 Futari 這個為夫妻、伴侶設計的共同帳本，分攤、結算與日常記帳都在同一本帳裡。免費、無廣告、只開放給你們倆。',
         ogDescription: 'Splitwise 用戶搬家指南：匯出試算表 → 上傳 CSV → 搬進 Futari 雙人記帳。',
       },
       suishouji: {
         title: '從隨手記搬家到 Futari｜截圖轉 CSV',
-        description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、端對端加密。',
+        description: '隨手記想換成雙人帳本？截圖請 ChatGPT 整理成 CSV，上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，兩個人一起接著記。免費、無廣告、只開放給你們倆。',
         ogDescription: '隨手記用戶搬家指南：截圖→ChatGPT→CSV，搬進 Futari 雙人記帳。',
       },
     },
@@ -5343,13 +5720,13 @@ export const zhTW: Translations = {
     useCaseHub: {
       title: '雙人記帳的 10 種情境｜同居、新婚、旅行、寵物 — Futari',
       description: '同居生活費怎麼分、新婚夫妻的帳怎麼記、旅行費用怎麼對、養寵物多了哪些開銷——不同的日子，記帳的難處不一樣。這裡是 Futari 為 10 種雙人情境寫的說明，挑最接近你們的那一個。',
-      ogDescription: '10 種雙人記帳情境，挑最接近你們生活的那一個——Futari 雙人帳本，免費、無廣告、端對端加密。',
+      ogDescription: '10 種雙人記帳情境，挑最接近你們生活的那一個——Futari 雙人帳本，免費、無廣告、只開放給你們倆。',
     },
     useCase: {
       cohabitation: {
         title: '同居 AA 制記帳｜同居生活費怎麼分？Futari',
         description: '同居生活費怎麼分才不傷感情？Futari 是專為伴侶設計的雙人帳本，支援 AA 對半、按比例、全額等多種分攤模式，輕鬆記下每筆同居開銷，清楚看見兩個人的生活。',
-        ogDescription: '同居 AA 制最適合的記帳工具——Futari 雙人帳本，免費、無廣告、端對端加密。',
+        ogDescription: '同居 AA 制最適合的記帳工具——Futari 雙人帳本，免費、無廣告、只開放給你們倆。',
       },
       newlyweds: {
         title: '新婚家計分攤｜夫妻記帳怎麼記？Futari',
@@ -5363,7 +5740,7 @@ export const zhTW: Translations = {
       },
       travel: {
         title: '旅行費用分攤｜出遊帳本怎麼記？Futari',
-        description: '旅行費用怎麼分才清楚？Futari 旅行子帳本讓出遊支出跟日常帳分開，回來之後一目瞭然誰出了多少，不用在群組裡對帳。免費、無廣告、端對端加密。',
+        description: '旅行費用怎麼分才清楚？Futari 旅行子帳本讓出遊支出跟日常帳分開，回來之後一目瞭然誰出了多少，不用在群組裡對帳。免費、無廣告、只開放給你們倆。',
         ogDescription: '出遊帳本不再亂——Futari 旅行子帳本，把這趟旅行的費用記清楚。',
       },
       roommates: {
@@ -5373,27 +5750,27 @@ export const zhTW: Translations = {
       },
       'monthly-bills': {
         title: '每月固定開銷記帳｜房租水電怎麼一起管？Futari',
-        description: '房租、水電、網路、保險——每月固定支出怎麼和伴侶一起追蹤？Futari 讓兩個人即時看到固定帳，清楚知道誰付了什麼、餘額怎麼走。免費、端對端加密。',
+        description: '房租、水電、網路、保險——每月固定支出怎麼和伴侶一起記？Futari 讓兩個人即時看到固定帳，清楚知道誰付了什麼、餘額怎麼走。免費、只開放給你們倆。',
         ogDescription: '兩個人的固定開銷管理——Futari，每月必要支出一起看，不再只靠其中一人記。',
       },
       'big-purchases': {
         title: '大筆支出計畫｜購車換機怎麼和伴侶一起追蹤？Futari',
-        description: '購車、換電腦、旅遊基金——大筆支出怎麼和伴侶一起規劃記帳？Futari 讓每筆大額費用關聯到對應愛物，清楚看見這項支出的完整樣貌。免費、端對端加密。',
+        description: '購車、換電腦、旅遊基金——大筆支出怎麼和伴侶一起規劃記帳？Futari 讓每筆大額費用關聯到對應愛物，清楚看見這項支出的完整樣貌。免費、只開放給你們倆。',
         ogDescription: '大筆支出不再說不清——Futari，把每項重要花費記清楚、兩個人一起看到。',
       },
       dining: {
         title: '外食費用記帳｜吃飯開銷怎麼和另一半一起追蹤？Futari',
-        description: '每天吃飯、外送、咖啡——飲食開銷最容易不知不覺累積。Futari 讓兩個人的外食費用一起記、一起看，輕鬆知道這個月吃了多少。免費、無廣告、端對端加密。',
+        description: '每天吃飯、外送、咖啡——飲食開銷最容易不知不覺累積。Futari 讓兩個人的外食費用一起記、一起看，輕鬆知道這個月吃了多少。免費、無廣告、只開放給你們倆。',
         ogDescription: '外食帳不再算不清——Futari，把兩個人的飲食開銷一起記清楚。',
       },
       parenting: {
         title: '育兒費用記帳｜寶寶花費怎麼和另一半一起追蹤？Futari',
-        description: '奶粉、尿布、回診、保險——育兒開銷零碎又頻繁，兩個人一起記才不漏。Futari 讓每筆育兒費用關聯到小孩，清楚看見寶貝的每一筆支出。免費、端對端加密。',
+        description: '奶粉、尿布、回診、保險——育兒開銷零碎又頻繁，兩個人一起記才不漏。Futari 讓每筆育兒費用關聯到小孩，清楚看見寶貝的每一筆支出。免費、只開放給你們倆。',
         ogDescription: '育兒記帳首選——Futari，把每筆寶寶費用記下來，兩個人一起看見。',
       },
       'aa-split': {
         title: 'AA 制記帳｜輪流付帳怎麼算清楚？Futari',
-        description: 'AA 制、輪流付、各負擔一類費用——不管你們怎麼分，Futari 都能記清楚。雙人記帳專為兩個人設計，餘額自動計算，誰欠誰多少一眼就知道。免費、端對端加密。',
+        description: 'AA 制、輪流付、各負擔一類費用——不管你們怎麼分，Futari 都能記清楚。雙人記帳專為兩個人設計，餘額自動計算，誰欠誰多少一眼就知道。免費、只開放給你們倆。',
         ogDescription: 'AA 制記帳最清楚的工具——Futari，選好分法，帳就自動算好。',
       },
     },
@@ -5421,8 +5798,8 @@ export const zhTW: Translations = {
         body: '其中一個人記下去，另一個人馬上看得到。不需要截圖傳 LINE，帳本就是對話本身。',
       },
       encrypt: {
-        title: '端對端加密',
-        body: '帳本只有你們兩個人看得到。伺服器不解密，也不讀你們記了什麼。',
+        title: '只開放給你們倆',
+        body: '帳本只對你們兩人的帳號開放。連線以 HTTPS 加密，寶寶本名、身分證字號這類機敏資料，也會另外加密才存進資料庫。',
       },
       history: {
         title: '章節式記憶',
@@ -5504,7 +5881,7 @@ export const zhTW: Translations = {
         faq: [
           {
             question: '同居記帳 app 有哪些選擇？',
-            answer: 'Futari 是專為伴侶設計的雙人帳本，從一開始就預設兩個人一起使用，支援多種分攤模式、即時同步、端對端加密。不需要把個人記帳工具改造成雙人版。',
+            answer: 'Futari 是專為伴侶設計的雙人帳本，從一開始就預設兩個人一起使用，支援多種分攤模式、即時同步，帳本只開放給你們倆。不需要把個人記帳工具改造成雙人版。',
           },
           {
             question: '同居 AA 制要怎麼記帳比較清楚？',
@@ -5512,7 +5889,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -5644,7 +6021,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -5677,7 +6054,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -5710,7 +6087,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -5743,7 +6120,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -5776,7 +6153,7 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
@@ -5809,10 +6186,97 @@ export const zhTW: Translations = {
           },
           {
             question: 'Futari 要收費嗎？',
-            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式、即時同步與端對端加密。',
+            answer: '基本功能完全免費，包含雙人帳本、多種分攤模式與即時同步。',
           },
         ],
       },
+    },
+  },
+
+  errors: {
+    actions: {
+      group_not_found: '找不到家計簿',
+      payer_not_in_group: '付款人不在家計簿內',
+      payer_not_in_trip_ledger: '付款人不在帳本中',
+      recipient_not_in_group: '收入歸屬不在家計簿內',
+      record_not_found: '找不到該筆紀錄',
+      record_deleted_or_missing: '紀錄已被刪除或不存在',
+      amount_not_positive: '金額需大於 0',
+      category_empty: '分類為空',
+      split_ratio_required: '依比例分需要指定比例',
+      split_ratio_out_of_range: '比例需在 0–100 之間',
+      split_ratio_not_applicable: 'split_ratio 僅適用於依比例分',
+      split_ratio_invalid: '分攤比例必須為 1–99 的整數',
+      split_type_invalid: '分攤方式無效',
+      profile_not_found: '找不到個人資料',
+      fx_rate_not_set: '未設定 {from} → {to} 匯率',
+      fx_rate_not_positive: '匯率必須是正數',
+      currency_unsupported: '不支援的幣別',
+      currency_pair_same: '來源與目標幣別不能相同',
+      base_currency_locked: '當前章節已有紀錄、不可修改主體幣別',
+      current_epoch_not_found: '找不到當前章節',
+      leave_active_trip: '請先結束旅行再離開章節',
+      trip_not_found: '找不到旅行',
+      trip_missing: '旅行不存在',
+      active_trip_not_found: '找不到進行中的旅行',
+      trip_ended: '旅行已結束，無法修改紀錄',
+      trip_rate_missing: '旅行匯率缺少 {currency}',
+      trip_name_empty: '旅行名稱為空',
+      trip_name_too_long: '旅行名稱過長',
+      trip_in_past_epoch: '不可建在過去章節',
+      trip_move_to_past_epoch: '不可移動至過去章節',
+      trip_end_before_start: '結束日期不可早於起始日',
+      income_not_found: '找不到該筆收入',
+      recurring_rule_not_found: '找不到該定期規則',
+      pending_expense_not_found: '待確認支出已被處理或找不到',
+      pending_expense_handled_elsewhere: '待確認支出已被其他裝置處理',
+      pending_expense_partner_handled: '這筆 partner 剛剛已處理',
+      pending_income_not_found: '待確認收入已被處理或找不到',
+      pending_income_handled_elsewhere: '待確認收入已被其他裝置處理',
+      review_month_locked: '這個月的留言已鎖定，無法再修改',
+      review_message_locked: '留言已鎖定，無法再修改',
+      asset_not_found: '找不到該資產',
+      aibutsu_not_found: '找不到該愛物',
+      linked_asset_not_in_group: '關聯資產不在家計簿內',
+      linked_asset_deleted: '關聯資產已刪除',
+      linked_vehicle_invalid: '無效的關聯車輛',
+      plate_empty: '車牌不能為空',
+      field_not_filled: '尚未填寫此欄位',
+      template_unknown: '未知的模板',
+      policy_not_found: '找不到該保單',
+      policy_expiry_unset: '保單尚未設定到期日',
+      policyholder_not_member: '要保人必須是 group 成員',
+      insured_not_member: '被保人必須是 group 成員',
+      insured_child_invalid: '無效的被保小孩',
+      fuel_log_deleted_or_missing: '加油記錄已刪除或不存在',
+      fuel_transaction_not_found: '找不到該筆加油交易',
+      import_source_unsupported: '未支援的匯入來源：{source}',
+      import_row_invalid_type: '第 {row} 筆：交易類型不正確',
+      import_row_invalid_amount: '第 {row} 筆：金額不正確',
+      import_row_invalid_split_type: '第 {row} 筆：分攤方式不正確',
+      import_row_invalid_payer: '第 {row} 筆：付款人不正確',
+      import_row_invalid_split_ratio: '第 {row} 筆：依比例分需要 0–100 的比例',
+      import_row_incomplete_fx: '第 {row} 筆：外幣資訊不完整',
+      import_row_invalid_date: '第 {row} 筆：日期不正確',
+      import_filename_invalid: '檔名不正確',
+      import_total_invalid: '總筆數不正確',
+      import_empty: '沒有可匯入的資料',
+      import_batch_create_failed: '建立匯入紀錄失敗',
+      import_batch_id_invalid: '批次 ID 不正確',
+      import_batch_not_found: '找不到匯入紀錄',
+      import_rollback_forbidden: '無權限復原這次匯入',
+      import_already_rolled_back: '這次匯入已經復原過',
+      invoice_mof_code_invalid: '條碼或驗證碼有誤，請確認',
+      invoice_mof_unavailable: '服務暫時無法使用，稍後再試',
+      invoice_mof_verify_failed: '驗證失敗（{code}）',
+      invoice_barcode_already_bound: '此條碼已綁定',
+      invoice_nickname_too_long: '暱稱最長 16 字',
+      invoice_carrier_not_found: '找不到該載具',
+      quiz_answers_malformed: '答案格式錯誤',
+      quiz_answers_incomplete: '要一次答完 3 題',
+      quiz_question_out_of_range: '題目不在這次的範圍內',
+      quiz_choice_out_of_range: '選項不在這題的範圍內',
+      quiz_question_duplicate: '同一題不要重複作答',
     },
   },
 }

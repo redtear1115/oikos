@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: t.title,
       description: t.ogDescription,
       url: localizedHref(path, locale),
-      siteName: 'Futari · 雙人記帳',
+      siteName: dictionaries[locale].landing.jsonLdAppName,
       type: 'website',
       locale: ogLocale(locale),
       alternateLocale: alternateOgLocales(locale),
@@ -82,7 +82,12 @@ export default async function UseCasePage({ params }: { params: Params }) {
 
       <UseCaseFaq locale={locale} heading={t.faqHeading} items={page.faq} />
 
-      <UseCaseOtherCases locale={locale} currentSlug={useCaseSlug} copy={t.otherCases} />
+      <UseCaseOtherCases
+        locale={locale}
+        currentSlug={useCaseSlug}
+        copy={t.otherCases}
+        names={t.hub.items}
+      />
     </div>
   )
 }

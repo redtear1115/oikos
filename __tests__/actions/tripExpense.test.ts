@@ -290,7 +290,7 @@ describe('createTripExpense — rejections', () => {
       amount: 100,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('旅行已結束')
+    })).rejects.toThrow('trip_ended')
   })
 
   it('rejects when paidBy is not a group member', async () => {
@@ -306,7 +306,7 @@ describe('createTripExpense — rejections', () => {
       amount: 100,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('付款人不在帳本中')
+    })).rejects.toThrow('payer_not_in_trip_ledger')
   })
 
   it('rejects when amount <= 0', async () => {
@@ -322,7 +322,7 @@ describe('createTripExpense — rejections', () => {
       amount: 0,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('金額需大於 0')
+    })).rejects.toThrow('amount_not_positive')
   })
 
   it('rejects weighted without splitRatio', async () => {
@@ -338,7 +338,7 @@ describe('createTripExpense — rejections', () => {
       amount: 100,
       category: '食',
       splitType: 'weighted',
-    })).rejects.toThrow('依比例分需要指定比例')
+    })).rejects.toThrow('split_ratio_required')
   })
 
   it('rejects splitRatio on non-weighted split', async () => {
@@ -355,7 +355,7 @@ describe('createTripExpense — rejections', () => {
       category: '食',
       splitType: 'half',
       splitRatio: 60,
-    })).rejects.toThrow('split_ratio 僅適用於依比例分')
+    })).rejects.toThrow('split_ratio_not_applicable')
   })
 
   it('rejects splitRatio outside [0,100]', async () => {
@@ -372,7 +372,7 @@ describe('createTripExpense — rejections', () => {
       category: '食',
       splitType: 'weighted',
       splitRatio: 150,
-    })).rejects.toThrow('比例需在 0–100 之間')
+    })).rejects.toThrow('split_ratio_out_of_range')
   })
 })
 
@@ -439,7 +439,7 @@ describe('editTripExpense', () => {
       amount: 999,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('紀錄已被刪除或不存在')
+    })).rejects.toThrow('record_deleted_or_missing')
   })
 })
 

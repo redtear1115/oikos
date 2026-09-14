@@ -2,7 +2,9 @@ import type { Translations } from './zh-TW'
 
 export const ja: Translations = {
   signIn: {
-    tagline: '家計簿の準備はできました。ふたりで始めましょう。',
+    // zh-TW「帳本準備好了，邀請對方一起。」に合わせた「状態 + 招待」の形。
+    // 「始めましょう」は Sign-in 規則が禁じる conversion 語（勧誘形）なので使わない。(#1158)
+    tagline: '家計簿の準備はできました。お相手を招いて、ふたりで。',
     continueWithGoogle: 'Google アカウントで続ける',
     authFailedNotice: 'ログインが完了しませんでした。もう一度お試しください。',
     signingIn: 'サインインしています',
@@ -73,6 +75,8 @@ export const ja: Translations = {
     srTagline: ' · ふたりの家計簿｜カップル・夫婦のための共有家計 PWA',
     srDescription:
       'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
+    aboutLabel: 'Futari について',
+    featuresLabel: 'Futari でできること',
     installHint: {
       cta: 'ホーム画面に追加することもできます',
       iosStep1: '画面下中央の共有ボタンをタップ',
@@ -87,14 +91,14 @@ export const ja: Translations = {
     cta: 'ふたりではじめる',
     ctaHint: '無料 · 登録なしで試せる · ふたりで使う',
     alreadyHaveAccount: 'アカウントをお持ちの方',
-    trustEncrypted: 'エンドツーエンド暗号化',
+    trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
     trustPwa: 'iOS / Android / Web PWA',
     trust: {
       narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
       encryption: {
-        title: 'エンドツーエンド暗号化',
-        body: 'データは送信時も保存時も常に暗号化。私たちにも中身は読めません。',
+        title: 'ふたりだけに開放',
+        body: '家計簿を開けるのは、ふたりのアカウントだけです。通信は HTTPS で暗号化され、お子さまの本名やマイナンバーなどの機微な情報は、さらに暗号化してから保存します。',
       },
       portability: {
         title: 'いつでも持ち出せる',
@@ -140,7 +144,7 @@ export const ja: Translations = {
       cwmoneyBody: 'Excel → CSV テンプレート付き。数分で移し替えられます。',
       seeAll: 'すべての移行ガイドを見る',
     },
-    footerTrust: 'エンドツーエンド暗号化 · データはふたりだけのもの',
+    footerTrust: 'ふたりだけに開放 · データはふたりだけのもの',
     jsonLdAppName: 'Futari · ふたり',
     jsonLdAlternateNames: ['ふたり 家計簿', 'Futari 家計簿', '二人の家計簿', "Futari · couple's ledger"],
     jsonLdAppDescription:
@@ -168,7 +172,7 @@ export const ja: Translations = {
       {
         question: 'データは安全ですか？',
         answer:
-          'すべてのデータはSupabaseの暗号化データベースに保存され、あなたとパートナーだけがアクセスできます。家計の内容を共有・販売することはありません。',
+          '家計簿はあなたとパートナーのふたりだけに開放しています。通信は HTTPS で暗号化され、お子さまの本名・マイナンバー・健康保険証番号・ナンバープレート・住所などの機微な項目は、データベースに書き込む前に暗号化します。家計の内容を共有・販売することはありません。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -212,6 +216,12 @@ export const ja: Translations = {
       confirm: '確認',
       cancel: 'キャンセル',
       retry: '再試行',
+    },
+    unsavedChanges: {
+      title: '入力した内容はまだ保存されていません',
+      description: 'このまま閉じると、入力した内容は残りません。',
+      discard: '破棄する',
+      keepEditing: '入力を続ける',
     },
   },
 
@@ -288,6 +298,8 @@ export const ja: Translations = {
     filterAriaLabel: '絞り込みを開く',
     burdenMe: '自分の分',
     burdenPartner: '相手の分',
+    payerFilterAriaLabel: '支払い者で絞り込み',
+    burdenFilterAriaLabel: '負担者で絞り込み',
     headerHint: {
       trip: '旅行',
       settings: '設定',
@@ -323,6 +335,8 @@ export const ja: Translations = {
     modeSettledLabel: '現在',
     modeIncludePendingLabel: '精算後',
     modeToggleAriaLabel: '「現在」と「精算後」の残高を切り替え',
+    expandAriaLabel: 'サマリーカードを開く',
+    collapseAriaLabel: 'サマリーカードを折りたたむ',
   },
 
   soloBanner: {
@@ -476,6 +490,7 @@ export const ja: Translations = {
   splitRatioSection: {
     meSuffix: '（自分）',
     partnerSuffix: '（相手）',
+    ariaLabel: 'デフォルトの分担比率',
   },
 
   errorPage: {
@@ -493,6 +508,12 @@ export const ja: Translations = {
   assetListItem: {
     savingsBadge: '貯蓄',
     thisMonth: '今月',
+    plateMaskedAriaLabel: 'ナンバーは非表示',
+    lastRefuel: '前回の給油 {date}',
+    childAge: '{years}歳{months}ヶ月',
+    petAge: '{years}歳',
+    birthdayThisMonth: '🎂 今月が誕生日',
+    plantCompanionDays: '一緒に {days} 日',
     insuranceGroups: {
       shortTermProtection: '保障型（定期）',
       longTermProtection: '保障型（長期）',
@@ -539,6 +560,7 @@ export const ja: Translations = {
     addCustomCta: '+ 通貨を追加',
     footerNote: 'この旅の期間に記録した支出は、自動的にこの旅にひも付きます。',
     rateInverseFormat: '≈ 1 {default} = {inverse} {code}',
+    rateAriaLabel: '{code} の {baseCode} に対する為替レート',
     basePill: '基準',
     usedCountNote: '{n} 件の記録あり。レートを変えても既存の金額は変わりません',
     customRow: {
@@ -636,6 +658,7 @@ export const ja: Translations = {
     loadFailed: '読み込みに失敗しました',
     emptyAibutsu: 'まだ愛物がありません。まず「愛物」タブから追加してください。',
     emptyGuardian: 'まだ保険がありません。まず「愛物 > 守護」から追加してください。',
+    deletedSuffix: '（削除済み）',
   },
 
   records: {
@@ -680,6 +703,7 @@ export const ja: Translations = {
       trendIncome: '収入',
       trendNet: '累計収支',
       trendChartLabel: '日次の収支推移',
+      pieChartLabel: '内訳の円グラフ（{count}項目）',
     },
   },
 
@@ -971,6 +995,7 @@ export const ja: Translations = {
     title: '過ぎた時間',
     back: '戻る',
     intro: 'この家計簿には、いくつもの時間が積もっています。どれもその時のふたりの記録です。',
+    readOnlyNote: '過ぎた時間は、その時のまま残ります。見返すことはできますが、書き換えることはありません。',
     currentChapter: 'いま · {partner} と',
     currentChapterSolo: 'いま · ひとりで',
     chapterRange: '{start} – {end}',
@@ -1055,6 +1080,19 @@ export const ja: Translations = {
       lapseTitle: 'この保険を停止しますか？',
       lapseDescription: 'リストから外れますが、詳細ページから復帰できます。',
       lapseConfirm: '停止',
+      insuredShort: '被保険者 {name}',
+      annualLabel: '年払い',
+      timelineStarts: '始期',
+      timelineEnds: '満期',
+      timelinePaid: '払込済',
+      timelinePaidYears: '{paid} / {term} 年',
+      timelineSumInsured: '保険金額',
+      timelineInvested: '払込累計',
+      timelineTarget: '目標',
+      summaryAnnualPremium: '年間保険料',
+      summaryPolicyCount: '保険 {count} 件',
+      summaryNextRenewal: '次回更新',
+      summaryDaysUntil: 'あと {days} 日',
     },
   },
 
@@ -1073,6 +1111,7 @@ export const ja: Translations = {
       intervalEveryYear: '毎年',
       intervalEveryNMonths: '{n} ヶ月ごと',
       dayLabel: '{day} 日',
+      nextDate: '次回 {date}',
     },
     pending: {
       sectionLabel: 'これらを確認してください',
@@ -1104,7 +1143,8 @@ export const ja: Translations = {
       resumeAction: '再開',
       deleteRuleAction: 'ルールを削除',
       deleteConfirmTitle: 'この定期ルールを削除しますか？',
-      deleteConfirmDescription: '確認待ちカードも一緒に消去されます。この操作は取り消せません。',
+      deleteConfirmDescription: 'まだ対応していない確認待ちカードは一緒に削除されます。記録済みの内容は残ります。この操作は取り消せません。',
+      editEffectHint: '変更は次回分から反映されます。すでに表示中の確認待ちカードは、金額と日付がそのままです。',
     },
     errors: {
       amountRequired: '金額を入力してください',
@@ -1121,22 +1161,21 @@ export const ja: Translations = {
     pageHeading: 'お二人の記録は、お二人のもの',
     pageSubtitle: '私たちのお約束を、ここに。',
     encryption: {
-      heading: 'お二人だけが見られます',
-      body: '記録は AES-256-GCM で暗号化しています。私たちにも、中身は読めません。',
+      heading: 'お二人だけに開かれています',
+      body: 'この家計簿を開けるのは、お二人のアカウントだけです。通信は HTTPS で暗号化され、お子さまの本名・マイナンバー・ナンバープレート・住所などの機微な情報は、さらに暗号化してから保存しています。',
     },
     portability: {
       heading: 'いつでも、まるごと持ち出せます',
       body: 'お二人を縛りつけることはありません。離れる時も、すべて持っていけます。',
-      comingSoonHint: 'エクスポート機能、近日公開',
     },
     backup: {
-      heading: '私たちが、お預かりします',
-      body: '一つひとつの記録を、しっかり保管しています。お二人が忘れても、ちゃんと守っています。',
+      heading: '一つひとつ、ちゃんと残ります',
+      body: 'アカウントがある限り、記録したものはすべてここに残ります。',
     },
     onboarding: {
       line1: '記録は、お二人だけのもの',
       line2: 'いつでも、まるごと持ち出せます',
-      line3: '一つひとつ、私たちが守ります',
+      line3: '一つひとつ、ちゃんと残ります',
     },
     bilateral: {
       inviter: {
@@ -1153,8 +1192,53 @@ export const ja: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review. (#1163)
+  onboarding: {
+    heading: 'Futari の5つの考え方',
+    skip: 'スキップ',
+    next: '次へ',
+    start: '最初の1件を記録',
+    progress: '{total} 枚中 {current} 枚目',
+    paydayMark: '05 / 月',
+    cards: [
+      {
+        eyebrow: '考え方',
+        quote: ['Futari は、', 'どちらが多く使ったかを', '聞きません。'],
+        subtitle: '記録するのは「何があったか」だけ。先に払ったのは、そのとき都合がよかったから。',
+      },
+      {
+        eyebrow: 'ふたりで',
+        quote: ['Futari に入ったものは、', 'ふたりの*共有のもの*。'],
+        subtitle: 'これは割り勘の帳簿ではありません。ふたりで共有する家計簿です — 1件入れば、ふたりとも見られます。',
+      },
+      {
+        eyebrow: 'ならわし',
+        quote: ['お給料が入る日は、', 'ふたりで一緒に', '感じる瞬間。'],
+        subtitle: 'だから定期収入は、その日にカードとして届きます — 知らせて、一緒に確認するために。',
+      },
+      {
+        eyebrow: 'まもる',
+        quote: ['保険は費用ではなく —', 'パートナーと一緒に', '守る約束。'],
+        subtitle: 'だから保険は支出ではなく「愛物」に置いています。毎回の支払いは、その約束をもう一度交わすこと。',
+      },
+      {
+        eyebrow: 'はじめる',
+        quote: ['準備はいいですか？', '最初の1件から、', 'ゆっくり始めましょう。'],
+        subtitle: '完璧なタイミングを待たなくて大丈夫 — 家計簿はふたりと一緒に育っていきます。',
+      },
+    ],
+  },
+
   // TODO: unconfirmed translation — needs native review.
   setup: {
+    name: {
+      heading: '家計簿に名前をつけましょう',
+      subtitle: 'あとからいつでも変えられます。短いほうが覚えやすいです。',
+      suggestions: ['ふたり', '○○家', 'わが家', 'Home', 'いっしょ'],
+      next: '次へ',
+      required: '名前を入力してください',
+      failed: 'エラーが発生しました',
+    },
     invite: {
       heading: '家計簿の準備はできました。ふたりで始めましょう',
       subtitle: '相手が参加すると、「{name}」をふたりで記録できます。',
@@ -1384,6 +1468,7 @@ export const ja: Translations = {
     switcher: {
       emptyGroup: '（なし）',
       currentLabel: '現在',
+      carGroup: '車両',
     },
     notesSection: 'メモ',
     recentExpenses: '最近の支出',
@@ -1438,6 +1523,25 @@ export const ja: Translations = {
       avgEconRecent: '直近 6 ヶ月',
       plate: 'ナンバー',
       plateSection: '車両情報',
+    },
+    fuelLog: {
+      titleNew: '給油記録',
+      titleEdit: '給油記録を編集',
+      closeAriaLabel: '閉じる',
+      econLabel: '今回の燃費',
+      firstRefuelHint: '初回の給油 · 燃費は次回から計算されます',
+      autoCalcHint: '走行距離と給油量を入力すると自動で計算されます',
+      liters: '給油量',
+      litersUnit: 'L',
+      odometer: '給油時の走行距離',
+      lastOdometer: '前回 {km} km',
+      cost: '金額',
+      date: '日付',
+      pickDate: '日付を選択',
+      splitLabel: '分担方法',
+      submit: '記録する',
+      deleteTitle: 'この給油記録を削除しますか？',
+      deleteDescription: '削除すると元に戻せませんが、他の支出記録には影響しません。',
     },
     child: {
       sectionId: '身分証明',
@@ -1589,6 +1693,7 @@ export const ja: Translations = {
       intervalEveryYear: '毎年',
       intervalEveryNMonths: '{n} ヶ月ごと',
       dayLabel: '{day} 日',
+      nextDate: '次回 {date}',
     },
     pending: {
       sectionLabel: 'これらを確認してください',
@@ -1622,7 +1727,8 @@ export const ja: Translations = {
       resumeAction: '再開',
       deleteRuleAction: 'ルールを削除',
       deleteConfirmTitle: 'この定期ルールを削除しますか？',
-      deleteConfirmDescription: '確認待ちカードも一緒に消去されます。この操作は取り消せません。',
+      deleteConfirmDescription: 'まだ対応していない確認待ちカードは一緒に削除されます。記録済みの内容は残ります。この操作は取り消せません。',
+      editEffectHint: '変更は次回分から反映されます。すでに表示中の確認待ちカードは、金額・日付・分担がそのままです。',
     },
     errors: {
       amountRequired: '金額を入力してください',
@@ -1673,6 +1779,7 @@ export const ja: Translations = {
 
   offlineBanner: {
     text: 'オフライン中・最後の接続時のデータを表示しています',
+    textNoCache: 'オフライン中・再接続すると自動で更新されます',
   },
 
   offlinePage: {
@@ -1782,6 +1889,7 @@ export const ja: Translations = {
     emptyRecurring: '今月は定期の出来事がありません',
     emptyAssetBreakdown: '今月は愛物への支出がありません',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: '今月の振り返りカード',
     incomeLabel: '入',
     expenseLabel: '出',
     snapshotNotReady: '今月の振り返りはまだ準備中です。少し経ってからまた見てください。',
@@ -1959,12 +2067,50 @@ export const ja: Translations = {
     // TODO(#599): ja copy below pending native review
     faqHeading: 'よくある質問',
     comparisonHeading: 'Futari と {other} の比較',
+    comparisonText: {
+      interfaceLanguage: '表示言語',
+      fourLanguages: '✓ 日英中の4言語',
+      notStated: '記載なし',
+      basicHalfSplit: '△ 基本は折半のみ',
+      updatesSlowed: '△ 更新が緩やか',
+      paidUnlock: '△ 有料で解放',
+      paidPlanOnly: '△ 有料版のみ',
+      basicPlanLimited: '△ 無料版は制限あり',
+      manualCleanup: '手作業での整形が必要',
+      requiresVip: '△ VIP が必要',
+      vipUnlock: '△ VIP で解放',
+      requiresSubscription: '△ サブスクが必要',
+      manualBackup: '△ 手動バックアップ',
+      adsOrPaidPlan: '△ 広告あり／有料版',
+      mostlyEnglish: '△ 英語が中心',
+      advancedNeedsSubscription: '△ 上位機能はサブスク',
+      sharingSetupRequired: '△ 共有の設定が必要',
+      premiumOnly: '△ Premium 限定',
+      someFeaturesPaid: '△ 一部機能が有料',
+      viewOnly: '△ 閲覧のみ',
+      dependsOnVersion: '△ バージョンによる',
+      advancedSubscription: '△ 上位プランはサブスク',
+      vipOnly: '△ VIP 限定',
+      dependsOnAccount: '△ アカウントによる',
+      inAppPurchases: '△ アプリ内課金あり',
+      subscriptionOnly: '△ サブスク限定',
+      mostlyLocal: '△ 端末内保存が中心',
+      advancedPaid: '△ 上位機能は有料',
+      partialExport: '△ 一部のみ書き出し',
+      iosOnly: '△ iOS のみ',
+      freePlanFourPerDay: '△ 無料版は1日4件まで',
+      conversionNeedsPro: '△ 換算は Pro が必要',
+      sharedLedgerSetupRequired: '△ 共有家計簿の設定が必要',
+      adsOrMembership: '△ 広告あり／会員制',
+      requiresMembership: '△ 会員登録が必要',
+    },
+    howToStepName: 'ステップ {n}',
     trust: {
       heading: '安心して引っ越せる理由',
       items: [
         {
-          title: 'エンドツーエンド暗号化',
-          body: 'ふたり以外、誰もこの家計簿の中身を見られません。',
+          title: 'ふたりだけに開放',
+          body: '家計簿を開けるのは、ふたりのアカウントだけ。通信は HTTPS で暗号化され、機微な情報は暗号化して保存します。',
         },
         {
           title: 'いつでも持ち出せる',
@@ -1976,7 +2122,7 @@ export const ja: Translations = {
         },
       ],
     },
-    footerTrust: 'エンドツーエンド暗号化 · この家計簿はふたりだけのもの',
+    footerTrust: 'ふたりだけに開放 · この家計簿はふたりだけのもの',
     // TODO(#612): ja copy below pending native review
     otherSources: {
       heading: 'ほかのアプリから引っ越す',
@@ -2085,7 +2231,7 @@ I will upload the screenshots once you confirm.`,
         heroKicker: 'HONEYDUE → FUTARI',
         heroTitle: 'Honeydue のデータは、そのまま連れていけます',
         heroSubtitle: 'Honeydue から Futari への引っ越しは約 3 分。CSV をアップロードして、これまでの記録をそのまま残せます。',
-        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります。無料、広告なし、エンドツーエンド暗号化。',
+        intro: 'Honeydue は 2024 年に運営が変わり、更新ペースが落ち、サポートの返信も遅くなっています。今もきちんとメンテナンスされているふたり向け家計簿を探しているなら、Futari がその次の住みかになります。無料、広告なし、ふたりだけに開放。',
         differentiators: [
           {
             title: '今もアップデートが続いています',
@@ -2742,7 +2888,7 @@ I will upload the screenshots once you confirm.`,
     migrate: {
       honeydue: {
         title: 'Honeydue から Futari へ｜移行ガイド',
-        description: 'Honeydue の代替に。カップル・夫婦の共同家計簿 Futari なら、3 分でデータを引っ越して、無料・広告なし・エンドツーエンド暗号化で続けられます。',
+        description: 'Honeydue の代替に。カップル・夫婦の共同家計簿 Futari なら、3 分でデータを引っ越して、無料・広告なし、ふたりだけの家計簿として続けられます。',
         ogDescription: 'Honeydue ユーザーの次の住みか。Futari でふたりの家計をそのまま続ける。',
       },
       spendee: {
@@ -2758,42 +2904,42 @@ I will upload the screenshots once you confirm.`,
       // TODO(#839): ja copy below pending native review
       moneybook: {
         title: 'Moneybook から Futari へ｜CSV 取り込み',
-        description: 'Moneybook のデータをふたりの家計簿へ。取引明細を CSV で書き出し、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'Moneybook のデータをふたりの家計簿へ。取引明細を CSV で書き出し、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Moneybook ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       andromoney: {
         title: 'AndroMoney から Futari へ｜CSV 取り込み',
-        description: 'AndroMoney のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'AndroMoney のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'AndroMoney ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       mobills: {
         title: 'Mobills から Futari へ｜CSV 取り込み',
-        description: 'Mobills のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'Mobills のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Mobills ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       manebo: {
         title: 'Manebo から Futari へ｜カップル共同家計簿',
-        description: 'Manebo のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'Manebo のデータをふたりの家計簿へ。CSV をカップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Manebo ユーザーの次の住みか。CSV を書き出して Futari へ。',
       },
       'simple-daily-money': {
         title: '簡単家計簿から Futari へ｜スクショを CSV に',
-        description: '簡単家計簿の CSV 書き出しは VIP 機能？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: '簡単家計簿の CSV 書き出しは VIP 機能？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '簡単家計簿からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       'fortune-city': {
         title: '記帳城市から Futari へ｜スクショを CSV に',
-        description: '記帳城市の CSV 書き出しはサブスク限定？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: '記帳城市の CSV 書き出しはサブスク限定？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '記帳城市からのお引っ越し——スクショ→ChatGPT→CSV→Futari。',
       },
       cashman: {
         title: 'CashMan から Futari へ｜スクショを CSV に',
-        description: 'CashMan に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: 'CashMan に CSV 書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'CashMan は書き出し非対応——スクショ→ChatGPT→CSV→Futari。',
       },
       '1money': {
         title: '1Money から Futari へ｜スクショを CSV に',
-        description: '1Money に完全な書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・エンドツーエンド暗号化。',
+        description: '1Money に完全な書き出しがない？スクショを ChatGPT で CSV に整え、カップル・夫婦の共同家計簿 Futari に取り込むだけ。無料・広告なし・ふたりだけに開放。',
         ogDescription: '1Money からふたりの家計簿へ——スクショ→ChatGPT→CSV→Futari。',
       },
       icost: {
@@ -2803,7 +2949,7 @@ I will upload the screenshots once you confirm.`,
       },
       splitwise: {
         title: 'Splitwise から Futari へ｜書き出した CSV を取り込む',
-        description: 'Splitwise のグループやフレンドの明細はスプレッドシートに書き出せます。カップル・夫婦の共同家計簿 Futari に取り込めば、割り勘も精算も日々の記録もひとつの家計簿に。無料・広告なし・暗号化。',
+        description: 'Splitwise のグループやフレンドの明細はスプレッドシートに書き出せます。カップル・夫婦の共同家計簿 Futari に取り込めば、割り勘も精算も日々の記録もひとつの家計簿に。無料・広告なし・ふたりだけに開放。',
         ogDescription: 'Splitwise からの移行ガイド：スプレッドシートを書き出し、CSV を Futari に取り込む。',
       },
       suishouji: {
@@ -2820,12 +2966,12 @@ I will upload the screenshots once you confirm.`,
     useCaseHub: {
       title: 'ふたりの家計簿・10 のシーン｜同棲・新婚・旅行・ペット | Futari',
       description: '同棲の生活費の分け方、新婚のお金のまとめ方、旅行費の精算、ペットと暮らす分の出費——暮らし方が違えば、家計簿の悩みも違います。ふたり向けに書いた 10 のシーンから、いちばん近いものをどうぞ。',
-      ogDescription: 'ふたりの家計簿、10 のシーン。いちばん近いものを選んでください——Futari は無料・広告なし・エンドツーエンド暗号化。',
+      ogDescription: 'ふたりの家計簿、10 のシーン。いちばん近いものを選んでください——Futari は無料・広告なし・ふたりだけに開放。',
     },
     useCase: {
       cohabitation: {
         title: '同棲の生活費折半｜カップルの共同家計管理 | Futari',
-        description: '同棲の生活費ってどう分ける？Futari はカップル向けに設計されたふたりの家計簿。折半・収入比・片方負担など複数の分担モードに対応。無料・広告なし・暗号化済み。',
+        description: '同棲の生活費ってどう分ける？Futari はカップル向けに設計されたふたりの家計簿。折半・収入比・片方負担など複数の分担モードに対応。無料・広告なし・ふたりだけに開放。',
         ogDescription: '同棲カップルの生活費管理なら Futari——折半・比率・どんな分け方にも対応。',
       },
       newlyweds: {
@@ -2840,12 +2986,12 @@ I will upload the screenshots once you confirm.`,
       },
       travel: {
         title: '旅行費用の分担｜旅先の支出をふたりで記録 | Futari',
-        description: '旅行の費用ってどう分ける？Futari の旅行サブ帳簿で日常費と分けて記録。帰宅後すぐ誰がいくら払ったかわかります。無料・広告なし・エンドツーエンド暗号化。',
+        description: '旅行の費用ってどう分ける？Futari の旅行サブ帳簿で日常費と分けて記録。帰宅後すぐ誰がいくら払ったかわかります。無料・広告なし・ふたりだけに開放。',
         ogDescription: '旅行費をすっきり管理——Futari の旅行サブ帳簿で、帰ったらすぐ精算。',
       },
       roommates: {
         title: 'ルームメイトとの費用分担｜同居の生活費を透明に | Futari',
-        description: '家賃・光熱費・日用品などのルームメイト費用をスマートに分担。Futari はふたりの支出をひとつの帳簿にまとめ、残高をいつでも確認できます。無料・暗号化済み。',
+        description: '家賃・光熱費・日用品などのルームメイト費用をスマートに分担。Futari はふたりの支出をひとつの帳簿にまとめ、残高をいつでも確認できます。無料・ふたりだけに開放。',
         ogDescription: '同居費用を透明に——Futari で毎回の支出を記録し、残高を自動管理。',
       },
       'monthly-bills': {
@@ -2855,7 +3001,7 @@ I will upload the screenshots once you confirm.`,
       },
       'big-purchases': {
         title: '大きな買い物の管理｜車・家電の費用をふたりで追跡 | Futari',
-        description: '車・家電・旅行積立など、大きな支出はふたりで記録して管理しませんか。Futari では支出を愛するものに紐づけ、費用全体をひと目で把握できます。無料・暗号化済み。',
+        description: '車・家電・旅行積立など、大きな支出はふたりで記録してみませんか。Futari では支出を愛するものに紐づけ、費用全体をひと目で把握できます。無料・ふたりだけに開放。',
         ogDescription: '大きな支出をふたりで透明に——Futari で愛するものに紐づけて全体を把握。',
       },
       dining: {
@@ -2865,7 +3011,7 @@ I will upload the screenshots once you confirm.`,
       },
       parenting: {
         title: '育児費用の記録｜赤ちゃんの支出をふたりで管理 | Futari',
-        description: 'ミルク・おむつ・健診・習い事——育児の支出は多くて細かい。Futari ではすべての費用を子どもに紐づけて記録できるので、ふたりで全体を把握できます。無料・暗号化済み。',
+        description: 'ミルク・おむつ・健診・習い事——育児の支出は多くて細かい。Futari ではすべての費用を子どもに紐づけて記録できるので、ふたりで全体を把握できます。無料・ふたりだけに開放。',
         ogDescription: '育児費をふたりで管理——Futari で子どもへの支出をひとつにまとめて。',
       },
       'aa-split': {
@@ -2898,8 +3044,8 @@ I will upload the screenshots once you confirm.`,
         body: '片方が記録したら、もう片方にすぐ届きます。LINEでスクショを送らなくていい。',
       },
       encrypt: {
-        title: 'エンドツーエンド暗号化',
-        body: '帳簿はふたりだけが見られます。サーバーは復号せず、何を記録したかを読みません。',
+        title: 'ふたりだけに開放',
+        body: '帳簿を開けるのは、ふたりのアカウントだけ。通信は HTTPS で暗号化され、お子さまの本名やマイナンバーなどの機微な情報は、さらに暗号化してから保存します。',
       },
       history: {
         title: 'チャプター式の記録',
@@ -2981,7 +3127,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: '同棲カップルにおすすめの家計管理アプリは？',
-            answer: 'Futari は最初からふたりで使うことを前提に設計された共同家計簿です。複数の分担モード・リアルタイム同期・エンドツーエンド暗号化に対応しています。',
+            answer: 'Futari は最初からふたりで使うことを前提に設計された共同家計簿です。複数の分担モードとリアルタイム同期に対応し、家計簿はふたりだけに開放しています。',
           },
           {
             question: '同棲の生活費をわかりやすく管理するには？',
@@ -2989,7 +3135,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3113,7 +3259,7 @@ I will upload the screenshots once you confirm.`,
         faq: [
           {
             question: 'ルームメイトとの費用分担に使えるアプリは？',
-            answer: 'Futari はふたりで使うことを前提に設計された共同家計簿です。複数の分担モード・リアルタイム同期・暗号化に対応し、LINEで追いかけなくても費用を把握できます。',
+            answer: 'Futari はふたりで使うことを前提に設計された共同家計簿です。複数の分担モードとリアルタイム同期に対応し、LINEで追いかけなくても費用を把握できます。',
           },
           {
             question: '同居費用をわかりやすく管理するには？',
@@ -3121,7 +3267,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3154,7 +3300,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3187,7 +3333,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3220,7 +3366,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3253,7 +3399,7 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
@@ -3286,10 +3432,97 @@ I will upload the screenshots once you confirm.`,
           },
           {
             question: 'Futari は有料ですか？',
-            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期・暗号化がすべて含まれています。',
+            answer: '基本機能は完全無料です。共同家計簿・複数の分担モード・リアルタイム同期がすべて含まれています。',
           },
         ],
       },
+    },
+  },
+
+  errors: {
+    actions: {
+      group_not_found: '家計簿が見つかりません',
+      payer_not_in_group: '支払者がこの家計簿のメンバーではありません',
+      payer_not_in_trip_ledger: '支払者がこの帳簿のメンバーではありません',
+      recipient_not_in_group: '収入の受取人がこの家計簿のメンバーではありません',
+      record_not_found: '記録が見つかりません',
+      record_deleted_or_missing: 'この記録は削除されたか、存在しません',
+      amount_not_positive: '金額は 0 より大きくしてください',
+      category_empty: 'カテゴリが空です',
+      split_ratio_required: '比率で分けるには比率を指定してください',
+      split_ratio_out_of_range: '比率は 0〜100 の範囲で指定してください',
+      split_ratio_not_applicable: 'split_ratio は比率での分担にのみ使えます',
+      split_ratio_invalid: '分担比率は 1〜99 の整数にしてください',
+      split_type_invalid: '分担方法が無効です',
+      profile_not_found: 'プロフィールが見つかりません',
+      fx_rate_not_set: '{from} → {to} のレートが設定されていません',
+      fx_rate_not_positive: 'レートは正の数で入力してください',
+      currency_unsupported: '対応していない通貨です',
+      currency_pair_same: '変換元と変換先の通貨を同じにはできません',
+      base_currency_locked: '現在の章にはすでに記録があるため、基準通貨は変更できません',
+      current_epoch_not_found: '現在の章が見つかりません',
+      leave_active_trip: '旅行を終了してから章を離れてください',
+      trip_not_found: '旅行が見つかりません',
+      trip_missing: '旅行が存在しません',
+      active_trip_not_found: '進行中の旅行が見つかりません',
+      trip_ended: '旅行は終了しているため、記録を変更できません',
+      trip_rate_missing: '旅行のレートに {currency} がありません',
+      trip_name_empty: '旅行名が空です',
+      trip_name_too_long: '旅行名が長すぎます',
+      trip_in_past_epoch: '過去の章には作成できません',
+      trip_move_to_past_epoch: '過去の章には移動できません',
+      trip_end_before_start: '終了日は開始日より前にできません',
+      income_not_found: '収入の記録が見つかりません',
+      recurring_rule_not_found: '定期ルールが見つかりません',
+      pending_expense_not_found: '確認待ちの支出はすでに処理済みか、見つかりません',
+      pending_expense_handled_elsewhere: '確認待ちの支出は別の端末で処理されました',
+      pending_expense_partner_handled: 'この支出は相手がたった今処理しました',
+      pending_income_not_found: '確認待ちの収入はすでに処理済みか、見つかりません',
+      pending_income_handled_elsewhere: '確認待ちの収入は別の端末で処理されました',
+      review_month_locked: '今月のメッセージはロック済みのため、変更できません',
+      review_message_locked: 'メッセージはロック済みのため、変更できません',
+      asset_not_found: '愛物が見つかりません',
+      aibutsu_not_found: '愛物が見つかりません',
+      linked_asset_not_in_group: '関連する愛物がこの家計簿にありません',
+      linked_asset_deleted: '関連する愛物は削除されています',
+      linked_vehicle_invalid: '関連する車両が無効です',
+      plate_empty: 'ナンバーを入力してください',
+      field_not_filled: 'この項目はまだ入力されていません',
+      template_unknown: '不明なテンプレートです',
+      policy_not_found: '保険契約が見つかりません',
+      policy_expiry_unset: 'この保険契約には満期日が設定されていません',
+      policyholder_not_member: '契約者はこの家計簿のメンバーである必要があります',
+      insured_not_member: '被保険者はこの家計簿のメンバーである必要があります',
+      insured_child_invalid: '被保険者の子どもが無効です',
+      fuel_log_deleted_or_missing: 'この給油記録は削除されたか、存在しません',
+      fuel_transaction_not_found: '給油の取引が見つかりません',
+      import_source_unsupported: '対応していない取り込み元です：{source}',
+      import_row_invalid_type: '{row} 件目：取引の種類が正しくありません',
+      import_row_invalid_amount: '{row} 件目：金額が正しくありません',
+      import_row_invalid_split_type: '{row} 件目：分担方法が正しくありません',
+      import_row_invalid_payer: '{row} 件目：支払者が正しくありません',
+      import_row_invalid_split_ratio: '{row} 件目：比率で分けるには 0〜100 の比率が必要です',
+      import_row_incomplete_fx: '{row} 件目：外貨の情報が足りません',
+      import_row_invalid_date: '{row} 件目：日付が正しくありません',
+      import_filename_invalid: 'ファイル名が正しくありません',
+      import_total_invalid: '合計件数が正しくありません',
+      import_empty: '取り込めるデータがありません',
+      import_batch_create_failed: '取り込み記録を作成できませんでした',
+      import_batch_id_invalid: 'バッチ ID が正しくありません',
+      import_batch_not_found: '取り込み記録が見つかりません',
+      import_rollback_forbidden: 'この取り込みを取り消す権限がありません',
+      import_already_rolled_back: 'この取り込みはすでに取り消されています',
+      invoice_mof_code_invalid: 'バーコードまたは認証コードが正しくありません。ご確認ください',
+      invoice_mof_unavailable: 'サービスが一時的に利用できません。しばらくしてからお試しください',
+      invoice_mof_verify_failed: '認証に失敗しました（{code}）',
+      invoice_barcode_already_bound: 'このバーコードはすでに登録されています',
+      invoice_nickname_too_long: 'ニックネームは 16 文字までです',
+      invoice_carrier_not_found: 'キャリアが見つかりません',
+      quiz_answers_malformed: '回答の形式が正しくありません',
+      quiz_answers_incomplete: '3 問すべてに一度に答えてください',
+      quiz_question_out_of_range: 'この質問は今回の範囲に含まれていません',
+      quiz_choice_out_of_range: 'この選択肢はこの質問の範囲に含まれていません',
+      quiz_question_duplicate: '同じ質問に重複して答えないでください',
     },
   },
 }

@@ -7,6 +7,7 @@ import { CalIcon, Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { PayerToggle } from './PayerToggle'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { SheetBody, SheetFooter } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
@@ -56,6 +57,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
   }, [open, initial, viewer.id])
 
   useFocusAndSelectOnOpen(open, amountInputRef)
+  const isDirty = useDirtyCheck(open, { amount, payerWho, date })
 
   const handleSave = () => {
     if (!initial) return
@@ -74,7 +76,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.({ savedAmount: n, edit: true })
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -89,14 +91,14 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         onMutated?.({ deleted: true })
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
 
   return (
     <>
-      <SheetFrame open={open} onClose={onClose} ariaLabel={t.settlement.editTitle}>
+      <SheetFrame open={open} onClose={onClose} isDirty={isDirty} ariaLabel={t.settlement.editTitle}>
         {/* 3-column header (cancel | title | save) — SheetHeader primitive is
             2-column (title + single trailing), so we keep a custom wrapper
             and use Button primitives for the actions. Mirrors the pilot
@@ -190,11 +192,16 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
       </SheetFrame>
 
       {error && open && (
+        // Error surface per DESIGN.md: --debit-text on --debit-soft, over an
+        // opaque --surface so the floating toast stays legible above whatever
+        // it covers (~5.2:1). Was white on --debit, 3.27:1 (#1197).
         <div
-          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
+          role="alert"
+          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] rounded-xl border border-hairline bg-[var(--surface)]"
         >
-          {error}
+          <div className="px-4 py-3 rounded-xl text-sm bg-[var(--debit-soft)] text-[var(--debit-text)]">
+            {error}
+          </div>
         </div>
       )}
 

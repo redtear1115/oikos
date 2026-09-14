@@ -220,7 +220,7 @@ export function BalanceHero({
             </div>
             <ToggleButton
               onClick={toggleCollapsed}
-              ariaLabel={heroCollapsed ? 'expand' : 'collapse'}
+              ariaLabel={heroCollapsed ? t.balanceHero.expandAriaLabel : t.balanceHero.collapseAriaLabel}
               expanded={!heroCollapsed}
             >
               {heroCollapsed ? '+' : '−'}
@@ -246,7 +246,7 @@ export function BalanceHero({
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', letterSpacing: 1 }}>{t.balanceHero.countLabel}</div>
                   <div style={{
-                    fontSize: 'var(--fs-base)', fontWeight: 600, color: 'var(--ink)', marginTop: 2,
+                    fontSize: 'var(--fs-base)', fontWeight: 500, color: 'var(--ink)', marginTop: 2,
                     fontFeatureSettings: '"tnum"',
                   }}>{incomeMonthCount}{t.balanceHero.countSuffix && ` ${t.balanceHero.countSuffix}`}</div>
                 </div>
@@ -283,7 +283,7 @@ export function BalanceHero({
             <div className="flex items-center gap-2">
               <Avatar memberRole={owedByRole} initial={showInitial} src={showAvatar} size={32} />
               <div className="flex-1 min-w-0 truncate transition-opacity duration-150" style={{ opacity: fading ? 0 : 1 }}>
-                <span style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 'var(--fs-base)' }}>{subjectName}</span>{' '}
+                <span style={{ fontWeight: 500, color: 'var(--ink)', fontSize: 'var(--fs-base)' }}>{subjectName}</span>{' '}
                 <span style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-base)' }}>{verb}</span>{' '}
                 <span
                   className="tnum"
@@ -300,7 +300,7 @@ export function BalanceHero({
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {canSettle && <SettleButton settleOpen={settleOpen} onToggle={() => setSettleOpen(v => !v)} ariaLabel={t.balanceHero.settleAriaLabel} label={t.balanceHero.settleLabel} />}
-                <ToggleButton onClick={toggleCollapsed} ariaLabel="expand" expanded={false}>+</ToggleButton>
+                <ToggleButton onClick={toggleCollapsed} ariaLabel={t.balanceHero.expandAriaLabel} expanded={false}>+</ToggleButton>
               </div>
             </div>
           ) : (
@@ -315,7 +315,7 @@ export function BalanceHero({
                   <span className="font-medium" style={{ color: 'var(--ink)' }}>{subjectName}</span>{' '}
                   <span>{verb}</span>
                 </div>
-                <ToggleButton onClick={toggleCollapsed} ariaLabel="collapse" expanded={true}>−</ToggleButton>
+                <ToggleButton onClick={toggleCollapsed} ariaLabel={t.balanceHero.collapseAriaLabel} expanded={true}>−</ToggleButton>
               </div>
 
               <div

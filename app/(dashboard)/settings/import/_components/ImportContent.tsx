@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/lib/i18n/client'
 import { useWizardSteps } from '@/lib/hooks/useWizardSteps'
@@ -72,6 +72,19 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [result, setResult] = useState<ResultState | null>(null)
   const [localHistory, setLocalHistory] = useState(history)
+
+  // #1182 — moving between steps swaps the whole step body, so the button the
+  // user just pressed unmounts and focus falls to <body>: a screen reader hears
+  // nothing and the next Tab restarts from the page header. Move focus to the
+  // new step's <h2> (SectionCard) instead. Skipped on first render so landing
+  // on the page doesn't steal focus.
+  const stepRootRef = useRef<HTMLDivElement>(null)
+  const lastStepRef = useRef(wizard.currentStep)
+  useEffect(() => {
+    if (lastStepRef.current === wizard.currentStep) return
+    lastStepRef.current = wizard.currentStep
+    stepRootRef.current?.querySelector<HTMLElement>('h2')?.focus()
+  }, [wizard.currentStep])
 
   async function handleFile(file: File, requestedSource: ImportSource) {
     setParseError(null)
@@ -232,6 +245,24 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
         </p>
       </div>
 
+      {/* Rendered above both branches: a rollback started from the result
+          screen fails *while* `result` is still set, and used to be silent. */}
+      {submitError && (
+        <div className="px-4 pt-4">
+          <div
+            role="alert"
+            className="text-xs px-4 py-3 rounded-xl"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--hairline)',
+              color: 'var(--debit-text)',
+            }}
+          >
+            {submitError}
+          </div>
+        </div>
+      )}
+
       {result ? (
         <ImportResult
           result={result}
@@ -241,21 +272,8 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
           rollbacking={submitting}
         />
       ) : (
-        <div className="px-4 pt-4 pb-6">
+        <div ref={stepRootRef} className="px-4 pt-4 pb-6">
           <StepIndicator current={wizard.progress} total={wizard.totalSteps} />
-
-          {submitError && (
-            <div
-              className="text-xs px-4 py-3 rounded-xl mb-4"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--hairline)',
-                color: 'var(--debit)',
-              }}
-            >
-              {submitError}
-            </div>
-          )}
 
           {wizard.currentStep === 'source' && (
             <StepSource

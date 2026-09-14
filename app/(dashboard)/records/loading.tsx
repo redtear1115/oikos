@@ -23,7 +23,7 @@ export default function Loading() {
       </div>
 
       {/* Stats bar skeleton */}
-      <div className="mx-4 mb-4 rounded-tile overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', height: 80 }}>
+      <div className="mx-4 mb-4 h-20 rounded-tile overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
         <div className="h-full animate-pulse" style={{ background: 'var(--surface)', opacity: 0.6 }} />
       </div>
 
