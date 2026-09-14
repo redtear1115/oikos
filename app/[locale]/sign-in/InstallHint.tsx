@@ -42,8 +42,7 @@ export function InstallHint({ t }: Props) {
       <button
         type="button"
         onClick={handleClick}
-        className="bg-transparent border-0 p-1 text-xs cursor-pointer inline-flex items-center gap-1"
-        style={{ color: 'var(--ink-3)' }}
+        className="oik-btn bg-transparent border-0 p-1 text-xs text-ink-3 cursor-pointer inline-flex items-center gap-1"
         aria-expanded={isIos ? iosExpanded : undefined}
       >
         <span>{t.cta}</span>
@@ -52,8 +51,7 @@ export function InstallHint({ t }: Props) {
 
       {isIos && iosExpanded && (
         <div
-          className="w-full rounded-2xl px-4 py-3 flex flex-col gap-2.5"
-          style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+          className="w-full rounded-2xl px-4 py-3 flex flex-col gap-2.5 bg-surface border border-hairline"
         >
           <IosStep n={1} text={t.iosStep1} icon={<ShareIcon />} />
           <IosStep n={2} text={t.iosStep2} icon={<HomeIcon />} />
@@ -65,15 +63,12 @@ export function InstallHint({ t }: Props) {
 
 function IosStep({ n, text, icon }: { n: number; text: string; icon: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 text-xs leading-snug" style={{ color: 'var(--ink-2)' }}>
-      <span
-        className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center text-mini font-medium tnum"
-        style={{ background: 'var(--accent-soft)', color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
-      >
+    <div className="flex items-center gap-2.5 text-xs text-ink-2 leading-snug">
+      <span className="shrink-0 w-5 h-5 rounded-full inline-flex items-center justify-center bg-accent-soft text-ink font-numeric text-mini font-medium tnum">
         {n}
       </span>
       <span className="flex-1">{text}</span>
-      <span aria-hidden="true" style={{ color: 'var(--ink-3)' }}>{icon}</span>
+      <span aria-hidden="true" className="text-ink-3">{icon}</span>
     </div>
   )
 }

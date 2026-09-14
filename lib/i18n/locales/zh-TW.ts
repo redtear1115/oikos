@@ -101,6 +101,11 @@ export type Translations = {
     srTagline: string
     /** sr-only paragraph below the visible tagline describing the app (#467). */
     srDescription: string
+    /** Accessible names (`aria-label`) for the about and feature-card
+     *  landmark sections on /sign-in. Read aloud by screen readers, never
+     *  rendered — they used to be hard-coded English in every locale. (#1161) */
+    aboutLabel: string
+    featuresLabel: string
     /** Quiet secondary entry below the OAuth button on /sign-in that lets
      *  unauthenticated visitors add Futari to their home screen (#540).
      *  Android taps `cta` → fires the captured beforeinstallprompt; iOS
@@ -2659,6 +2664,8 @@ export const zhTW: Translations = {
     srTagline: ' · 兩個人的家計簿｜伴侶／夫妻共享記帳 PWA',
     srDescription:
       '專為伴侶、夫妻設計的雙人共享帳本。一起記錄日常開銷、自動分攤費用與 AA 制結算，掌握家庭預算、資產盤點、保險與愛車油耗紀錄。',
+    aboutLabel: '關於 Futari',
+    featuresLabel: 'Futari 能做的事',
     installHint: {
       cta: '也可以先加到主畫面',
       iosStep1: '點底部正中間的分享按鈕',

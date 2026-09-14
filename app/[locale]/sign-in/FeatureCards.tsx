@@ -76,15 +76,16 @@ function SceneCard({
       className="
         flex gap-4 items-start
         rounded-tile p-5
+        bg-surface border-b border-hairline
         opacity-0
         [animation:scene-card-in_520ms_cubic-bezier(0.22,0.61,0.36,1)_forwards]
         motion-reduce:opacity-100 motion-reduce:[animation:none]
       "
-      style={{
-        background: 'var(--surface)',
-        boxShadow: '0 1px 0 var(--hairline)',
-        animationDelay: `${delay}ms`,
-      }}
+      // The bottom hairline used to be `box-shadow: 0 1px 0 var(--hairline)` —
+      // a 1px rule drawn with a shadow, not an elevation. Written as a border
+      // it says what it is and stops reading as a Flat-By-Default violation.
+      // Only the stagger delay is computed, so only it stays inline. (#1160)
+      style={{ animationDelay: `${delay}ms` }}
     >
       <div
         className="flex items-center justify-center w-11 h-11 rounded-bubble shrink-0"
@@ -95,28 +96,14 @@ function SceneCard({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-3 mb-1.5">
-          <p
-            className="m-0 text-base font-medium leading-snug"
-            style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
-          >
+          <p className="m-0 text-base font-medium text-ink leading-snug tracking-[-0.2px]">
             {title}
           </p>
-          <span
-            className="shrink-0 text-sm"
-            style={{
-              fontFamily: 'var(--font-fraunces)',
-              fontStyle: 'italic',
-              color: 'var(--ink-3)',
-              letterSpacing: '0.5px',
-            }}
-          >
+          <span className="shrink-0 font-serif italic text-sm text-ink-3 tracking-[0.5px]">
             {kicker}
           </span>
         </div>
-        <p
-          className="m-0 text-sm leading-[1.65]"
-          style={{ color: 'var(--ink-2)' }}
-        >
+        <p className="m-0 text-sm text-ink-2 leading-[1.65]">
           {body}
         </p>
       </div>
