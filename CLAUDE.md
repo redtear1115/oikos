@@ -246,9 +246,10 @@ Branch 架構與 Vercel 對應見 [README.md](README.md)。
 
 ## 專案內建 skill
 
-`.claude/skills/` 有四個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
+`.claude/skills/` 有五個進版控的 repo-scoped skill，換機器 / cloud session / worktree subagent 都帶得走：
 
 - [`run-oikos`](.claude/skills/run-oikos/SKILL.md) — 啟動並 smoke test dev server（`npm install` + `npm run dev` + curl），收錄冷機啟動會踩的雷（缺 `@next/bundle-analyzer`、缺 `.env.local`、port 3000 佔用、Turbopack lazy-compile 404）。
 - [`ja-i18n`](.claude/skills/ja-i18n/SKILL.md) — 維護 `lib/i18n/locales/ja.ts`：偵測未翻譯 key、辨識合法漢字的假陽性、更新漢字白名單。
 - [`release`](.claude/skills/release/SKILL.md) — 發版（bump version + CHANGELOG + CLAUDE.md + README + 本地 tag），附原生影響掃描與收尾 checklist；不 push、不碰 protected branch。
 - [`ship-native`](.claude/skills/ship-native/SKILL.md) — 原生殼重送（版本計數 +1 → iOS archive/export/upload、Android AAB + 驗簽 → 實機驗證 checklist）；build 可自動跑，上傳前必停下來確認。
+- [`ship-issue`](.claude/skills/ship-issue/SKILL.md) — 協調者模式：issue → 查證 → 關卡 ① intent → 關卡 ② 方案 → executor 實作 + verifier 驗收 → 開 PR → 關卡 ③ 驗收；使用者只做選擇，做到開好 PR 就停、不 merge。
