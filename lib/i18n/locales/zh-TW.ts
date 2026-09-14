@@ -33,6 +33,14 @@ export type MigrateBasePageCopy = {
   ]
 }
 
+/** One `/onboarding` philosophy card (#1163). */
+export type OnboardingCardCopy = {
+  /** Card label after the `01 / 05 ·` counter. */
+  eyebrow: string
+  quote: readonly string[]
+  subtitle: string
+}
+
 export type Translations = {
   signIn: {
     tagline: string
@@ -1472,6 +1480,26 @@ export type Translations = {
         confirming: string
       }
     }
+  }
+
+  /** `/onboarding` philosophy cards (#1163) — the five full-screen cards shown
+   *  after sign-in, before a ledger exists. Not the same thing as
+   *  `trust.onboarding`, which is the three-line trust summary. */
+  onboarding: {
+    /** Screen-reader-only page heading above the cards (#1165). */
+    heading: string
+    skip: string
+    next: string
+    /** CTA on the last card. */
+    start: string
+    /** Screen-reader announcement when the card changes (#1165).
+     *  `{current}` / `{total}` are replaced. */
+    progress: string
+    /** Decorative payday mark inside card 03's motif. */
+    paydayMark: string
+    /** Exactly five cards, in order. In `quote`, each string is one line;
+     *  wrap a phrase in `*asterisks*` to set it in italic accent. */
+    cards: [OnboardingCardCopy, OnboardingCardCopy, OnboardingCardCopy, OnboardingCardCopy, OnboardingCardCopy]
   }
 
   /** Setup flow's invite step (#1017) — face-to-face QR path alongside the
@@ -3750,6 +3778,42 @@ export const zhTW: Translations = {
         confirming: '正在加入…',
       },
     },
+  },
+
+  onboarding: {
+    heading: 'Futari 的五個想法',
+    skip: '跳過',
+    next: '繼續',
+    start: '開始記第一筆',
+    progress: '第 {current} 張，共 {total} 張',
+    paydayMark: '05 / 月',
+    cards: [
+      {
+        eyebrow: '想法',
+        quote: ['Futari 不會問', '誰花得比較多。'],
+        subtitle: '我們只記下「發生了什麼」。誰先掏錢，是當下方便而已。',
+      },
+      {
+        eyebrow: '一起',
+        quote: ['進到 Futari 的，', '就是我們*共同的*。'],
+        subtitle: '這不是一本分帳簿。它是兩個人共有的家計簿 — 一筆進來，兩個人都看得到。',
+      },
+      {
+        eyebrow: '儀式',
+        quote: ['薪水進來的那天，', '是兩個人一起', '感受的時刻。'],
+        subtitle: '所以定期收入會在那一天出現一張卡 — 提醒我們、被一起確認。',
+      },
+      {
+        eyebrow: '守護',
+        quote: ['保險不是費用 —', '是和對方一起', '守護的承諾。'],
+        subtitle: '所以它放在「愛物」，不在支出裡。每一期繳費，都是再講一次這個承諾。',
+      },
+      {
+        eyebrow: '開始',
+        quote: ['準備好了嗎？', '就從第一筆', '慢慢開始。'],
+        subtitle: '不用等到完美的時刻 — 帳本會陪著你們一起長出來。',
+      },
+    ],
   },
 
   setup: {

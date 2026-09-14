@@ -1147,6 +1147,42 @@ export const zhCN: Translations = {
     },
   },
 
+  onboarding: {
+    heading: 'Futari 的五个想法',
+    skip: '跳过',
+    next: '继续',
+    start: '开始记第一笔',
+    progress: '第 {current} 张，共 {total} 张',
+    paydayMark: '05 / 月',
+    cards: [
+      {
+        eyebrow: '想法',
+        quote: ['Futari 不会问', '谁花得比较多。'],
+        subtitle: '我们只记下“发生了什么”。谁先掏钱，只是当下方便而已。',
+      },
+      {
+        eyebrow: '一起',
+        quote: ['进到 Futari 的，', '就是我们*共同的*。'],
+        subtitle: '这不是一本分账簿。它是两个人共有的家计簿 — 一笔进来，两个人都看得到。',
+      },
+      {
+        eyebrow: '仪式',
+        quote: ['工资到账的那天，', '是两个人一起', '感受的时刻。'],
+        subtitle: '所以定期收入会在那一天出现一张卡片 — 提醒我们、一起确认。',
+      },
+      {
+        eyebrow: '守护',
+        quote: ['保险不是开销 —', '是和对方一起', '守护的承诺。'],
+        subtitle: '所以它放在“爱物”里，不在支出里。每一期缴费，都是再说一次这个承诺。',
+      },
+      {
+        eyebrow: '开始',
+        quote: ['准备好了吗？', '就从第一笔', '慢慢开始。'],
+        subtitle: '不用等到完美的时刻 — 账本会陪着你们一起长出来。',
+      },
+    ],
+  },
+
   setup: {
     name: {
       heading: '给你们的家计簿取个名字',

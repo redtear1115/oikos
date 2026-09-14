@@ -1155,6 +1155,43 @@ export const en: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review. (#1163)
+  onboarding: {
+    heading: 'Five ideas behind Futari',
+    skip: 'Skip',
+    next: 'Continue',
+    start: 'Record the first entry',
+    progress: 'Card {current} of {total}',
+    paydayMark: '05 / mo',
+    cards: [
+      {
+        eyebrow: 'Idea',
+        quote: ['Futari won’t ask', 'who spent more.'],
+        subtitle: 'We only note what happened. Whoever paid first was simply the one it was easier for.',
+      },
+      {
+        eyebrow: 'Together',
+        quote: ['What comes into Futari', 'is *ours*.'],
+        subtitle: 'This isn’t a bill-splitting book. It’s a household ledger the two of you share — one entry goes in, and you both see it.',
+      },
+      {
+        eyebrow: 'Ritual',
+        quote: ['Payday is', 'a moment the two of you', 'feel together.'],
+        subtitle: 'So recurring income shows up as a card on that day — a reminder, confirmed together.',
+      },
+      {
+        eyebrow: 'Care',
+        quote: ['Insurance isn’t a cost —', 'it’s a promise you keep', 'with each other.'],
+        subtitle: 'That’s why it lives in Aibutsu, not in expenses. Every payment makes that promise once more.',
+      },
+      {
+        eyebrow: 'Begin',
+        quote: ['Ready?', 'Start with the first entry,', 'one step at a time.'],
+        subtitle: 'No need to wait for the perfect moment — the ledger will grow along with you.',
+      },
+    ],
+  },
+
   // TODO: unconfirmed translation — needs native review.
   setup: {
     name: {
