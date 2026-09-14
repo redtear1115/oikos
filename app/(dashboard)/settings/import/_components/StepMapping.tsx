@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
-import { PICKABLE_CATEGORIES } from '@/lib/categories'
+import { PICKABLE_CATEGORIES, isValidCategoryId, type CategoryId } from '@/lib/categories'
 import type { ImportRow } from '@/lib/csvImport'
 import { SectionCard } from './SectionCard'
 import { WizardNavButtons } from './WizardNavButtons'
@@ -36,6 +36,15 @@ export function StepMapping({ rows, categoryMap, onChange, onBack, onNext }: Pro
       .map(([key, count]) => ({ key, count }))
   }, [rows])
 
+  // The parser has already folded each source string into a Futari category id
+  // (lib/csvImport/mapper.ts#mapCategory), so the left column is an id too.
+  // Display-only translation, same `t.category[id] ?? fallback` shape as the
+  // rest of the app; anything that is not a known id is shown as-is.
+  function sourceLabel(key: string): string {
+    if (!key) return tImport.keepOriginal
+    return isValidCategoryId(key) ? t.category[key as CategoryId] ?? key : key
+  }
+
   function setMap(sourceKey: string, target: string) {
     onChange({ ...categoryMap, [sourceKey]: target })
   }
@@ -57,16 +66,17 @@ export function StepMapping({ rows, categoryMap, onChange, onBack, onNext }: Pro
             {groups.map(({ key, count }) => (
               <div key={key} className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center">
                 <div className="text-sm" style={{ color: 'var(--ink)' }}>
-                  <div>{key || tImport.keepOriginal}</div>
+                  <div>{sourceLabel(key)}</div>
                   <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
                     {tImport.rowCount.replace('{count}', String(count))}
                   </div>
                 </div>
                 <div className="text-sm" style={{ color: 'var(--ink-3)' }} aria-hidden="true">›</div>
                 <select
+                  aria-label={`${sourceLabel(key)} ${tImport.targetColumn}`}
                   value={categoryMap[key] ?? key}
                   onChange={(e) => setMap(key, e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg text-sm cursor-pointer"
+                  className="w-full h-11 px-3 rounded-lg text-sm cursor-pointer"
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--hairline)',
@@ -75,7 +85,7 @@ export function StepMapping({ rows, categoryMap, onChange, onBack, onNext }: Pro
                 >
                   {PICKABLE_CATEGORIES.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.label}
+                      {t.category[c.id] ?? c.label}
                     </option>
                   ))}
                 </select>

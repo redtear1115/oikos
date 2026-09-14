@@ -33,8 +33,11 @@ const SOURCE_OPTIONS = ['honeydue', 'spendee', 'cwmoney', 'generic'] as const sa
  * file is recognised inside `processFile`, #1094), so echoing the button the
  * user just pressed is both truthful and free of a new string. The raw
  * fallback would have shown "FUTARI_GENERIC" — an internal identifier.
+ *
+ * Also used by ImportHistory (#1182), whose `batch.source` is the stored DB
+ * string — hence the `| string` widening.
  */
-function sourceLabel(source: DetectedSource, labels: Record<string, string | undefined>): string {
+export function sourceLabel(source: DetectedSource | string, labels: Record<string, string | undefined>): string {
   if (source === 'futari_generic') return labels.generic ?? source.toUpperCase()
   return labels[source] ?? source.toUpperCase()
 }

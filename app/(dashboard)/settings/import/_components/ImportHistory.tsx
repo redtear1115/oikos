@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import type { ImportBatchSummary } from '@/actions/import'
+import { sourceLabel } from './StepSource'
 
 interface Props {
   history: ImportBatchSummary[]
@@ -52,7 +53,7 @@ export function ImportHistory({ history, onRollback, rollbacking }: Props) {
                     {batch.fileName}
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
-                    {batch.source} · {formatDate(batch.createdAt)} · {batch.importedCount}
+                    {sourceLabel(batch.source, t.settings.import.step1.sources)} · {formatDate(batch.createdAt)} · {batch.importedCount}
                   </div>
                 </div>
                 <span
@@ -79,7 +80,7 @@ export function ImportHistory({ history, onRollback, rollbacking }: Props) {
                       type="button"
                       onClick={() => setConfirmId(null)}
                       disabled={rollbacking}
-                      className="flex-1 h-9 rounded-lg text-xs cursor-pointer disabled:opacity-50"
+                      className="flex-1 h-11 rounded-lg text-xs cursor-pointer disabled:opacity-50"
                       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
                     >
                       {t.common.cancel}
@@ -88,7 +89,7 @@ export function ImportHistory({ history, onRollback, rollbacking }: Props) {
                       type="button"
                       onClick={() => onRollback(batch.id)}
                       disabled={rollbacking}
-                      className="flex-1 h-9 rounded-lg text-xs cursor-pointer disabled:opacity-50"
+                      className="flex-1 h-11 rounded-lg text-xs cursor-pointer disabled:opacity-50"
                       style={{ background: 'var(--surface)', border: '1px solid var(--debit)', color: 'var(--debit-text)' }}
                     >
                       {rollbacking ? t.settings.import.result.rollbacking : t.settings.import.result.rollbackCta}
@@ -98,7 +99,7 @@ export function ImportHistory({ history, onRollback, rollbacking }: Props) {
                   <button
                     type="button"
                     onClick={() => setConfirmId(batch.id)}
-                    className="mt-3 text-xs underline cursor-pointer"
+                    className="mt-1 min-h-11 inline-flex items-center text-xs underline cursor-pointer"
                     style={{ color: 'var(--ink-2)' }}
                   >
                     {t.settings.import.result.rollbackCta}

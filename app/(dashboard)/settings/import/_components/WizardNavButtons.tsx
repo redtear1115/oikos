@@ -41,8 +41,8 @@ export function WizardNavButtons({
           type="button"
           onClick={onNext}
           disabled={loading || disabled}
-          className="flex-[1.4] h-11 rounded-xl text-sm text-white cursor-pointer disabled:cursor-default disabled:opacity-50"
-          style={{ background: 'var(--btn-primary-bg)' }}
+          className="flex-[1.4] h-11 rounded-xl text-sm cursor-pointer disabled:cursor-default disabled:opacity-50"
+          style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
           {nextLabel}
         </button>
