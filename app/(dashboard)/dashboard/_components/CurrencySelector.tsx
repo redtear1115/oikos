@@ -13,9 +13,11 @@ interface Props {
    */
   codes?: string[]
   disabled?: boolean
+  /** Accessible name — the select has no visible label (#1186). */
+  ariaLabel: string
 }
 
-export function CurrencySelector({ value, onChange, codes, disabled }: Props) {
+export function CurrencySelector({ value, onChange, codes, disabled, ariaLabel }: Props) {
   const options = codes && codes.length > 0
     ? codes
     : CURRENCIES.map((c) => c.toUpperCase())
@@ -28,6 +30,7 @@ export function CurrencySelector({ value, onChange, codes, disabled }: Props) {
 
   return (
     <select
+      aria-label={ariaLabel}
       className="rounded-lg border px-2 py-1.5 text-sm disabled:opacity-50 cursor-pointer"
       style={{
         background: 'var(--surface)',

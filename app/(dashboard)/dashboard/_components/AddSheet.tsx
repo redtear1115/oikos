@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 import { useScrollToTopOnOpen } from '@/app/(dashboard)/_components/useScrollToTopOnOpen'
 import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation'
@@ -251,6 +251,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // the prefilled amount in edit mode (typing replaces the selection rather than
   // appending to "240" → "2405").
   useFocusAndSelectOnOpen(open, amountInputRef)
+  const statusLabelId = useId()
 
   const isPending = !!pendingExpenseId
   // Edit affordance (delete button + editTransaction path) only for real tx.
@@ -432,9 +433,17 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   return (
     <>
       <SheetFrame open={open} onClose={onClose} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
-        {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive */}
+        {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive.
+            Both buttons stay visually `sm` (36px) so the header height doesn't
+            change; the ::before adds 4px above and below for a 44px tap area
+            (#1186, same trick as MonthSwitcher #147). */}
         <div className="flex items-center justify-between px-5 pt-3 pb-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="relative before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']"
+          >
             {t.common.cancel}
           </Button>
           <div
@@ -448,7 +457,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             size="sm"
             onClick={handleSave}
             disabled={!amount || pending}
-            className="font-medium"
+            className="relative font-medium before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']"
             style={{ color: 'var(--accent)' }}
           >
             {pending ? t.common.saving : isEdit ? t.common.update : t.common.save}
@@ -493,6 +502,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     setCurrency(trip?.defaultCurrency ?? baseCurrency)
                   }}
                   noTripLabel={t.addSheet.noTrip}
+                  ariaLabel={t.addSheet.trip}
                 />
               )}
               {tripId && (() => {
@@ -508,6 +518,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     value={currency}
                     onChange={setCurrency}
                     codes={codes}
+                    ariaLabel={t.addSheet.currency}
                   />
                 )
               })()}
@@ -592,10 +603,14 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 are settled by design — surfacing the toggle would lie). */}
           {!isPending && !tripId && (
             <div className="px-5 pt-1 pb-2">
-              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <div id={statusLabelId} className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.statusLabel}
               </div>
+              {/* Radio semantics so the selected state isn't carried by the
+                  thumb colour alone (#1186). */}
               <div
+                role="radiogroup"
+                aria-labelledby={statusLabelId}
                 className="inline-flex rounded-full p-[3px] gap-0.5"
                 style={{ background: 'var(--toggle-segment-track)' }}
               >
@@ -605,8 +620,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                     <button
                       key={s}
                       type="button"
+                      role="radio"
+                      aria-checked={sel}
                       onClick={() => setStatus(s)}
-                      className="oik-segment h-8 px-4 rounded-full border-0 text-sm font-medium cursor-pointer"
+                      className="oik-segment relative h-8 px-4 rounded-full border-0 text-sm font-medium cursor-pointer before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']"
                       style={{
                         background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
                         color: sel ? 'var(--ink)' : 'var(--ink-2)',
@@ -670,16 +687,24 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               so the last input/button isn't visually clipped on devices with a gesture bar. */}
           <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </SheetBody>
-      </SheetFrame>
 
-      {error && open && (
-        <div
-          className="fixed left-1/2 top-4 z-modal -translate-x-1/2 w-[calc(100%-32px)] max-w-[calc(28rem-32px)] px-4 py-3 rounded-xl text-sm text-white"
-          style={{ background: 'var(--debit)' }}
-        >
-          {error}
-        </div>
-      )}
+        {/* Error banner lives inside the panel so it is part of the dialog's
+            subtree (a modal dialog hides everything outside it from assistive
+            tech), and `role="alert"` announces it. It used to render after
+            the SheetFrame: pressing save with a validation error announced
+            nothing, the sheet just seemed not to respond (#1186).
+            Positioned against the panel (the panel is `fixed`), so it sits at
+            the top of the sheet rather than the top of the viewport. */}
+        {error && open && (
+          <div
+            role="alert"
+            className="absolute left-4 right-4 top-4 z-modal px-4 py-3 rounded-xl text-sm text-white"
+            style={{ background: 'var(--debit)' }}
+          >
+            {error}
+          </div>
+        )}
+      </SheetFrame>
 
       <ConfirmModal
         open={confirmingDelete && open}
