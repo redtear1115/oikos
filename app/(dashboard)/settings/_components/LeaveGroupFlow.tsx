@@ -263,7 +263,7 @@ export function LeaveGroupFlow({
           {errorMsg && (
             <div
               className="mt-4 rounded-xl px-3 py-2 text-xs"
-              style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
+              style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
               role="alert"
             >
               {errorMsg}
@@ -474,7 +474,7 @@ function FinalConfirm({
       <CardTitle>{t.title}</CardTitle>
       {!balanceOk ? (
         <>
-          <p className="text-sm mb-4" style={{ color: 'var(--debit)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--debit-text)' }}>
             {/* TODO(v0.17 currency): i18n template has `NT$ {amount}` baked in;
                  needs digits-only mode or removing the symbol from translations. */}
             {t.balanceNotZero.replace('{amount}', balanceAbs.toLocaleString())}

@@ -161,7 +161,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
           {errorMsg && (
             <div
               className="mb-4 rounded-xl px-3 py-2 text-xs"
-              style={{ background: 'var(--debit-soft)', color: 'var(--debit)' }}
+              style={{ background: 'var(--debit-soft)', color: 'var(--debit-text)' }}
               role="alert"
             >
               {errorMsg}

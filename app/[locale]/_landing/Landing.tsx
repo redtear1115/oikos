@@ -96,6 +96,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
             Futari
           </span>
           <span
+            aria-hidden="true"
             className="hidden md:inline text-xs ml-2"
             style={{ color: 'var(--ink-2)', letterSpacing: '3px' }}
           >
@@ -108,9 +109,10 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
           signInHref={signInHref}
           dashboardHref={dashboardHref}
           ctaLocation="desktop_header"
-          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-white text-sm font-medium cursor-pointer"
+          className="hidden md:inline-flex items-center justify-center h-11 px-5 rounded-xl text-sm font-medium cursor-pointer"
           style={{
             background: 'var(--ink)',
+            color: 'var(--on-fill)',
             letterSpacing: '1.2px',
             textDecoration: 'none',
           }}
@@ -204,12 +206,12 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
                 signInHref={signInHref}
                 dashboardHref={dashboardHref}
                 ctaLocation="hero"
-                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-white text-base font-medium cursor-pointer"
+                className="flex items-center justify-center w-full md:w-auto md:px-8 h-[54px] md:h-14 rounded-2xl md:rounded-bubble text-base font-medium cursor-pointer"
                 style={{
                   background: 'var(--ink)',
+                  color: 'var(--on-fill)',
                   letterSpacing: '1.8px',
                   textDecoration: 'none',
-                  boxShadow: '0 10px 24px -10px rgba(58, 36, 25, 0.4)',
                 }}
               >
                 {t.cta}
@@ -265,10 +267,9 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
           <div className="md:flex md:items-baseline md:justify-between mb-6 md:mb-9 px-1">
             <div>
               <p
-                className="m-0"
+                className="m-0 text-xs"
                 style={{
                   fontFamily: 'var(--font-fraunces)',
-                  fontSize: 12,
                   letterSpacing: '3.5px',
                   color: 'var(--ink-2)',
                 }}
@@ -427,10 +428,9 @@ function MigrateLinksSection({
         <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
           <div>
             <p
-              className="m-0"
+              className="m-0 text-xs"
               style={{
                 fontFamily: 'var(--font-fraunces)',
-                fontSize: 12,
                 letterSpacing: '3.5px',
                 color: 'var(--ink-2)',
               }}
@@ -468,7 +468,7 @@ function MigrateLinksSection({
               // them — satisfying WCAG 2.5.3 Label in Name (#919). A bespoke
               // aria-label ("從 X 搬到 Futari") wouldn't contain the visible
               // "搬過來" text and failed label-content-name-mismatch.
-              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
+              className="block p-5 md:p-6 rounded-tile transition-colors"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',
@@ -477,7 +477,7 @@ function MigrateLinksSection({
               }}
             >
               <p
-                className="m-0 text-base md:text-[16px] font-medium"
+                className="m-0 text-base font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}
@@ -552,10 +552,9 @@ function UseCaseLinksSection({
         <div className="text-center md:text-left md:flex md:items-baseline md:justify-between md:gap-10 mb-7 md:mb-9">
           <div>
             <p
-              className="m-0"
+              className="m-0 text-xs"
               style={{
                 fontFamily: 'var(--font-fraunces)',
-                fontSize: 12,
                 letterSpacing: '3.5px',
                 color: 'var(--ink-2)',
               }}
@@ -589,7 +588,7 @@ function UseCaseLinksSection({
               ctaLocation="footer_use_case"
               target={item.target}
 
-              className="block p-5 md:p-6 rounded-tile md:rounded-[18px] transition-colors"
+              className="block p-5 md:p-6 rounded-tile transition-colors"
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',
@@ -598,7 +597,7 @@ function UseCaseLinksSection({
               }}
             >
               <p
-                className="m-0 text-base md:text-[16px] font-medium"
+                className="m-0 text-base font-medium"
                 style={{ color: 'var(--ink)', letterSpacing: '-0.1px' }}
               >
                 {item.title}

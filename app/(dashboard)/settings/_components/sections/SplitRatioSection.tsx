@@ -82,7 +82,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
           <option key={v} value={v} label={`${v}`} />
         ))}
       </datalist>
-      {error && <p className="text-xs" style={{ color: 'var(--debit)' }} role="alert">{error}</p>}
+      {error && <p className="text-xs" style={{ color: 'var(--debit-text)' }} role="alert">{error}</p>}
     </section>
   )
 }
