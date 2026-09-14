@@ -2396,6 +2396,13 @@ export type Translations = {
     /** Heading template for the comparison table. Contains `{other}` —
      *  replaced with the source brand name per page. e.g. "Futari vs {other}". */
     comparisonHeading: string
+    /** Comparison-table cells that carry a condition or specific claim (#1185).
+     *  Verdict-only labels (✓ 支援 / ✕ 無) stay as literals in
+     *  lib/migrate/sources.ts; see docs/superpowers/specs/migrate-pages-design.md.
+     *  Values keep their leading glyph (△ / ✓) as part of the string. */
+    comparisonText: Record<import('@/lib/migrate/sources').ComparisonTextKey, string>
+    /** HowToStep `name` in the HowTo JSON-LD (not rendered). Contains `{n}`. */
+    howToStepName: string
     /** Closing trust block — narrative + 3 items, mounted between
      *  steps and footer on every /migrate/<source> page (#578). */
     trust: {
@@ -4529,6 +4536,44 @@ export const zhTW: Translations = {
     differentiatorsHeading: '為什麼選 Futari',
     faqHeading: '常見問題',
     comparisonHeading: 'Futari vs {other}',
+    comparisonText: {
+      interfaceLanguage: '介面語言',
+      fourLanguages: '✓ 中英日四語',
+      notStated: '未說明',
+      basicHalfSplit: '△ 基本對半',
+      updatesSlowed: '△ 節奏放緩',
+      paidUnlock: '△ 需付費解鎖',
+      paidPlanOnly: '△ 限付費版',
+      basicPlanLimited: '△ 基本版有限制',
+      manualCleanup: '需自行整理',
+      requiresVip: '△ 需 VIP',
+      vipUnlock: '△ VIP 解鎖',
+      requiresSubscription: '△ 需訂閱',
+      manualBackup: '△ 需手動備份',
+      adsOrPaidPlan: '△ 含廣告／付費版',
+      mostlyEnglish: '△ 以英文為主',
+      advancedNeedsSubscription: '△ 進階需訂閱',
+      sharingSetupRequired: '△ 需設定共享',
+      premiumOnly: '△ Premium 限定',
+      someFeaturesPaid: '△ 部分功能付費',
+      viewOnly: '△ 僅能查看',
+      dependsOnVersion: '△ 視版本',
+      advancedSubscription: '△ 進階訂閱',
+      vipOnly: '△ VIP 限定',
+      dependsOnAccount: '△ 視帳號',
+      inAppPurchases: '△ 含內購',
+      subscriptionOnly: '△ 訂閱限定',
+      mostlyLocal: '△ 本機為主',
+      advancedPaid: '△ 進階付費',
+      partialExport: '△ 部分匯出',
+      iosOnly: '△ iOS 限定',
+      freePlanFourPerDay: '△ 免費版每日 4 筆',
+      conversionNeedsPro: '△ 換算需 Pro',
+      sharedLedgerSetupRequired: '△ 需設共享帳本',
+      adsOrMembership: '△ 含廣告／會員',
+      requiresMembership: '△ 需會員',
+    },
+    howToStepName: '步驟 {n}',
     trust: {
       heading: '為什麼可以放心搬過來',
       items: [

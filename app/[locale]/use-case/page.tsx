@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: t.title,
       description: t.ogDescription,
       url: localizedHref(PATH, locale),
-      siteName: 'Futari · 雙人記帳',
+      siteName: dictionaries[locale].landing.jsonLdAppName,
       type: 'website',
       locale: ogLocale(locale),
       alternateLocale: alternateOgLocales(locale),

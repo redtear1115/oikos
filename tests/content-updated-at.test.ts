@@ -16,7 +16,7 @@ import { describe, it, expect } from 'vitest'
 import { createHash } from 'crypto'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
-import { MIGRATE_SOURCES, type SourceDef } from '@/lib/migrate/sources'
+import { MIGRATE_SOURCES, resolveComparisonRows, type SourceDef } from '@/lib/migrate/sources'
 import { USE_CASES } from '@/lib/use-case/cases'
 import { zhTW } from '@/lib/i18n/locales/zh-TW'
 import { en } from '@/lib/i18n/locales/en'
@@ -32,6 +32,17 @@ function collectMigrateI18n(slug: string) {
   const result: Record<string, unknown> = {}
   for (const [localeKey, locale] of Object.entries(LOCALES)) {
     result[localeKey] = (locale.migrate.pages as Record<string, unknown>)[slug]
+  }
+  return result
+}
+
+/** 比較表的 cell 有一部分是 `{ i18n }` 參照（#1185），真正的字串在 4 個 locale
+ *  的 migrate.comparisonText。hash 解析後的 per-locale 表格，這樣改譯文也會
+ *  觸發護欄——只 hash sources.ts 裡的 key 參照會漏掉這種變更。 */
+function collectComparisonRows(rows: SourceDef['comparison']['rows']) {
+  const result: Record<string, unknown> = {}
+  for (const [localeKey, locale] of Object.entries(LOCALES)) {
+    result[localeKey] = resolveComparisonRows(rows, locale.migrate.comparisonText)
   }
   return result
 }
@@ -92,7 +103,7 @@ describe('contentUpdatedAt 護欄 (#1005)', () => {
         // 自我滿足（bump 日期本身就會讓 hash 對不上，測不出真正的漏更）。
         const contentOnly = {
           name: source.name,
-          comparisonRows: source.comparison.rows,
+          comparisonRows: collectComparisonRows(source.comparison.rows),
           templateDownload: source.templateDownload ?? null,
           screenshotWorkflow: source.screenshotWorkflow ?? false,
           i18n: collectMigrateI18n(key),
