@@ -1,13 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
 import { useTranslations } from '@/lib/i18n/client'
 import { leaveGroup, proposeSwap } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
 
 type Step = 1 | 2 | 3 | 4 | 'final' | 'swap-sent'
+
+/** Id of the dialog title. Every step renders exactly one CardTitle, so the
+ *  dialog's `aria-labelledby` always resolves to the current card's heading. */
+const TitleIdContext = createContext<string | undefined>(undefined)
 
 interface Props {
   open: boolean
@@ -42,6 +47,31 @@ export function LeaveGroupFlow({
   const [confirmInput, setConfirmInput] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+
+  const panelRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+
+  // Tab stays inside the panel while open; focus returns to the "leave" row
+  // on close (#1172). Declared before the focus effects below so the trap
+  // captures the trigger as its restore target before focus moves.
+  useFocusTrap(open, panelRef)
+
+  // Focus the panel itself on open — the screen reader announces the dialog
+  // by the current card's title, and nothing destructive is pre-focused.
+  useEffect(() => {
+    if (open) panelRef.current?.focus()
+  }, [open])
+
+  // Step changes swap the card body, which can unmount the focused control
+  // (card 4's yes/no, the swap-sent OK). Without this, focus falls to <body>
+  // and the next Tab starts from outside the dialog. Only recovers lost
+  // focus: if the control survived (the footer "next"), leave it alone so a
+  // keyboard user can keep pressing it.
+  useEffect(() => {
+    if (!open) return
+    const panel = panelRef.current
+    if (panel && !panel.contains(document.activeElement)) panel.focus()
+  }, [open, step])
 
   // Reset state when sheet closes so the next open starts fresh.
   useEffect(() => {
@@ -187,7 +217,14 @@ export function LeaveGroupFlow({
         }}
       >
       <div
-        className="w-full max-w-md max-h-full rounded-card flex flex-col"
+        ref={panelRef}
+        tabIndex={-1}
+        // Always mounted so the fade-out can play; `inert` is what keeps the
+        // invisible closed panel out of the tab order and the a11y tree. Dialog
+        // semantics only while open — same shape as SheetFrame (#1176, #1172).
+        inert={!open}
+        {...(open ? { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId } : {})}
+        className="w-full max-w-md max-h-full rounded-card flex flex-col focus:outline-none"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--hairline)',
@@ -195,9 +232,8 @@ export function LeaveGroupFlow({
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 200ms',
         }}
-        role="dialog"
-        aria-modal="true"
       >
+        <TitleIdContext.Provider value={titleId}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="text-xs" style={{ color: 'var(--ink-3)' }}>
             {showStepIndicator && flow.step
@@ -208,7 +244,10 @@ export function LeaveGroupFlow({
             type="button"
             onClick={handleClose}
             disabled={pending}
-            className="text-sm cursor-pointer disabled:opacity-50"
+            // 44×44 hit area (#1172). The negative margins pull the box back
+            // out so the glyph stays where it was and the header height is
+            // unchanged; it still sits inside the safe-area-padded layout box.
+            className="w-11 h-11 -mr-3 -my-3 flex items-center justify-center text-sm cursor-pointer disabled:opacity-50"
             style={{ background: 'transparent', border: 'none', color: 'var(--ink-3)' }}
             aria-label={flow.close}
           >
@@ -311,6 +350,7 @@ export function LeaveGroupFlow({
             )}
           </div>
         )}
+        </TitleIdContext.Provider>
       </div>
       </div>
     </>
@@ -318,8 +358,10 @@ export function LeaveGroupFlow({
 }
 
 function CardTitle({ children }: { children: React.ReactNode }) {
+  const id = useContext(TitleIdContext)
   return (
     <h2
+      id={id}
       className="text-base mb-3 leading-tight"
       style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
     >
@@ -469,6 +511,7 @@ function FinalConfirm({
   pending: boolean
 }) {
   const matched = confirmInput.trim() === t.confirmText
+  const inputId = useId()
   return (
     <>
       <CardTitle>{t.title}</CardTitle>
@@ -491,12 +534,13 @@ function FinalConfirm({
       ) : (
         <>
           <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>{t.balanceOk}</p>
-          <label className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
+          <label htmlFor={inputId} className="block text-xs mb-2" style={{ color: 'var(--ink-3)' }}>
             <span>{t.typePromptPrefix}</span>
             <span className="font-medium" style={{ color: 'var(--ink)' }}>{t.confirmText}</span>
             <span>{t.typePromptSuffix}</span>
           </label>
           <input
+            id={inputId}
             type="text"
             value={confirmInput}
             onChange={(e) => onChangeInput(e.target.value)}

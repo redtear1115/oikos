@@ -480,6 +480,7 @@ export const ja: Translations = {
   splitRatioSection: {
     meSuffix: '（自分）',
     partnerSuffix: '（相手）',
+    ariaLabel: 'デフォルトの分担比率',
   },
 
   errorPage: {

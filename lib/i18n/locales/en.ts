@@ -480,6 +480,7 @@ export const en: Translations = {
   splitRatioSection: {
     meSuffix: ' (me)',
     partnerSuffix: ' (partner)',
+    ariaLabel: 'Default split ratio',
   },
 
   errorPage: {

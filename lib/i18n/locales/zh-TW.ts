@@ -652,6 +652,8 @@ export type Translations = {
     meSuffix: string
     /** Inline label suffix for partner. `{name}` replaced with displayName. */
     partnerSuffix: string
+    /** Accessible name for the default split-ratio slider (#1172). */
+    ariaLabel: string
   }
 
   errorPage: {
@@ -3211,6 +3213,7 @@ export const zhTW: Translations = {
   splitRatioSection: {
     meSuffix: '（我）',
     partnerSuffix: '（對方）',
+    ariaLabel: '預設分攤比例',
   },
 
   errorPage: {
