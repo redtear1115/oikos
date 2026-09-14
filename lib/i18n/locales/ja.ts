@@ -1782,6 +1782,7 @@ export const ja: Translations = {
     emptyRecurring: '今月は定期の出来事がありません',
     emptyAssetBreakdown: '今月は愛物への支出がありません',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: '今月の振り返りカード',
     incomeLabel: '入',
     expenseLabel: '出',
     snapshotNotReady: '今月の振り返りはまだ準備中です。少し経ってからまた見てください。',

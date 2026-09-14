@@ -92,8 +92,7 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
       })
     : null
   const quizRevealPreview = quizSession && quizStatus === 'revealed'
-    ? quizSession.questionKeys
-        .filter((k): k is string => typeof k === 'string' && isPartnerQuizQuestionKey(k))
+    ? quizSession.questionKeys.filter(isPartnerQuizQuestionKey)
     : []
 
   // Snapshot may be missing for the current (still-in-progress) month or for

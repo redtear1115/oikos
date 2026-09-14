@@ -37,10 +37,23 @@ export function Carousel({ children }: { children: ReactNode }) {
     }
   }, [total])
 
+  const indicator = (i: number) => tr.carouselIndicator
+    .replace('{current}', String(i + 1))
+    .replace('{total}', String(total))
+
+  // Keyboard reach (#1178): the cards hold no focusable children, so the
+  // scroller itself takes focus (arrow keys then scroll it natively) and is
+  // named as a carousel region. Slides are role="group" so ARIA honours
+  // their roledescription; the position is announced from a visually hidden
+  // live span, since the dots below are all aria-hidden.
   return (
     <div>
       <div
         ref={scrollerRef}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={tr.carouselAriaLabel}
+        tabIndex={0}
         className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
         style={{
           scrollbarWidth: 'none',
@@ -51,20 +64,19 @@ export function Carousel({ children }: { children: ReactNode }) {
           <div
             key={i}
             className="snap-start shrink-0 w-full px-3"
+            role="group"
             aria-roledescription="slide"
-            aria-label={tr.carouselIndicator
-              .replace('{current}', String(i + 1))
-              .replace('{total}', String(total))}
+            aria-label={indicator(i)}
           >
             {slide}
           </div>
         ))}
       </div>
 
-      <div
-        className="mt-3 flex items-center justify-center gap-1.5"
-        aria-live="polite"
-      >
+      <span className="sr-only" aria-live="polite">
+        {indicator(activeIndex)}
+      </span>
+      <div className="mt-3 flex items-center justify-center gap-1.5">
         {slides.map((_, i) => (
           <span
             key={i}

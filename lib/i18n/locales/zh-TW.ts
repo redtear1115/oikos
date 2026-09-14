@@ -2175,6 +2175,7 @@ export type Translations = {
     emptyAssetBreakdown: string
     /** Carousel page indicator template with `{current}` `{total}`. */
     carouselIndicator: string
+    carouselAriaLabel: string
     /** Direction label for income events in card 3. */
     incomeLabel: string
     /** Direction label for expense events in card 3. */
@@ -4358,6 +4359,7 @@ export const zhTW: Translations = {
     emptyRecurring: '本月沒有定期事件',
     emptyAssetBreakdown: '本月沒有為任何愛物花費',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: '本月回顧卡片',
     incomeLabel: '進',
     expenseLabel: '支',
     snapshotNotReady: '這個月的回顧還在整理中，等一下再進來看看吧。',

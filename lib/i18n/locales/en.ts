@@ -1751,7 +1751,8 @@ export const en: Translations = {
   },
 
   monthlyReview: {
-    pageTitle: '{month} {year} · Our monthly review',
+    // {monthName}, not {month}: CJK templates read `{month} 月`, en needs a name (#1178).
+    pageTitle: '{monthName} {year} · Our monthly review',
     backAriaLabel: 'Back',
     closeAriaLabel: 'Close',
     bannerHeading: 'In {month} you wrote:',
@@ -1784,6 +1785,7 @@ export const en: Translations = {
     emptyRecurring: 'No recurring events this month',
     emptyAssetBreakdown: 'No spending tagged to any aibutsu this month',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: 'Monthly review cards',
     incomeLabel: 'In',
     expenseLabel: 'Out',
     snapshotNotReady: "This month's review is still being prepared. Check back in a moment.",
