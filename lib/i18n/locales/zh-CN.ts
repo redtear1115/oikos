@@ -1818,6 +1818,7 @@ export const zhCN: Translations = {
     emptyRecurring: '本月没有定期事件',
     emptyAssetBreakdown: '本月没有为任何爱物花费',
     carouselIndicator: '{current} / {total}',
+    carouselAriaLabel: '本月回顾卡片',
     incomeLabel: '入',
     expenseLabel: '支',
     snapshotNotReady: '这个月的回顾还在整理中，等一下再进来看看吧。',

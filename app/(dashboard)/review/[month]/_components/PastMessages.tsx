@@ -26,7 +26,7 @@ export function PastMessages({
 
   return (
     <div className="px-4 pt-4">
-      <h3 className="text-xs font-medium tracking-[0.5px] mb-2 px-2" style={{ color: 'var(--ink-3)' }}>
+      <h3 className="text-xs font-medium tracking-label mb-2 px-2" style={{ color: 'var(--ink-3)' }}>
         {tr.pastMessagesTitle}
       </h3>
       <div className="space-y-3">

@@ -2,15 +2,19 @@
 
 import Link from 'next/link'
 import { useTranslations } from '@/lib/i18n/client'
-import type { PartnerQuizStatus } from '@/lib/partnerQuiz'
+import type { PartnerQuizQuestionKey, PartnerQuizStatus } from '@/lib/partnerQuiz'
 
+// bgRevealed / ink / ink2 / accent point at the live tokens they used to
+// duplicate as hex (#1179). bgWaiting / hairline stay literal: their alphas
+// (0.06 / 0.12) have no token equivalent, and swapping in --hairline (0.10)
+// would be a silent visual change.
 const C = {
   bg: 'var(--surface)',
   bgWaiting: 'rgba(122,88,72,0.06)',
-  bgRevealed: '#FBEDE0',
-  ink: '#3A2419',
-  ink2: '#7A5848',
-  accent: '#E08856',
+  bgRevealed: 'var(--bg)',
+  ink: 'var(--ink)',
+  ink2: 'var(--ink-2)',
+  accent: 'var(--accent)',
   hairline: 'rgba(58,36,25,0.12)',
 }
 
@@ -18,8 +22,9 @@ export interface PartnerQuizCardProps {
   reviewedMonth: { year: number; month: number }
   status: PartnerQuizStatus
   partnerName: string
-  /** When status === 'revealed', a tiny preview of the question prompts. */
-  revealPreview?: string[]
+  /** When status === 'revealed', the session's question keys — rendered as
+   *  their localized prompts, never as the raw identifiers (#1178). */
+  revealPreview?: PartnerQuizQuestionKey[]
 }
 
 export function PartnerQuizCard({
@@ -84,13 +89,13 @@ export function PartnerQuizCard({
         </p>
         {revealPreview && revealPreview.length > 0 && (
           <ul className="my-2 flex flex-col gap-1">
-            {revealPreview.slice(0, 3).map((line, i) => (
+            {revealPreview.slice(0, 3).map((key) => (
               <li
-                key={i}
+                key={key}
                 className="text-xs truncate"
                 style={{ color: C.ink2 }}
               >
-                · {line}
+                · {tq.questions[key].prompt}
               </li>
             ))}
           </ul>
