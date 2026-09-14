@@ -21,6 +21,7 @@ import { MAX_AMOUNT } from '@/lib/validators'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
+import { isActionError } from '@/lib/action-errors'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
 
@@ -214,12 +215,12 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           onMutated?.({ savedAmount: n, edit: isEdit || isPending })
           onClose()
         },
-        onError: (msg) => {
+        onError: (_msg, e) => {
           // Race: partner confirmed/skipped this pending in another tab/device
-          // before our edit-confirm landed. The error messages from
-          // editAndConfirmPending in that case are: '待確認收入已被處理或找不到'
-          // (pre-check) or '待確認收入已被其他裝置處理' (in-tx guard).
-          if (isPending && msg.includes('待確認收入')) {
+          // before our edit-confirm landed: `pending_income_not_found` (pre-check)
+          // or `pending_income_handled_elsewhere` (in-tx guard). Matched by code,
+          // not by the localized message, so it works in every locale (#1156).
+          if (isPending && isActionError(e, 'pending_income_not_found', 'pending_income_handled_elsewhere')) {
             onMutated?.()
             onClose()
             onRaceResolved?.(t.recurringIncome.raceMessage)

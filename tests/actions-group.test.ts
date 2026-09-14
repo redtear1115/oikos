@@ -106,7 +106,7 @@ describe('updateDisplayName', () => {
 
   it('throws if profile not found', async () => {
     queueDbResult([])
-    await expect(updateDisplayName('Coco')).rejects.toThrow('找不到個人資料')
+    await expect(updateDisplayName('Coco')).rejects.toThrow('profile_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -136,12 +136,12 @@ describe('updateDefaultSplitType', () => {
 
   it('rejects invalid split type', async () => {
     // @ts-expect-error testing runtime validation
-    await expect(updateDefaultSplitType('invalid')).rejects.toThrow(/分攤方式無效/)
+    await expect(updateDefaultSplitType('invalid')).rejects.toThrow('split_type_invalid')
   })
 
   it('throws if profile not found', async () => {
     queueDbResult([])  // update returning nothing
-    await expect(updateDefaultSplitType('half')).rejects.toThrow('找不到個人資料')
+    await expect(updateDefaultSplitType('half')).rejects.toThrow('profile_not_found')
   })
 
   it('throws unauthorized when no user', async () => {

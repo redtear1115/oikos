@@ -37,12 +37,13 @@ import {
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 function assertPaidByInGroup(
   paidById: string,
   group: { memberA: string; memberB: string | null },
 ) {
-  assertMemberInGroup(paidById, group, '付款人不在家計簿內')
+  assertMemberInGroup(paidById, group, 'payer_not_in_group')
 }
 
 export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id: string }> {
@@ -105,7 +106,7 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
       isNull(recurringExpenseRules.deletedAt),
     ))
     .limit(1)
-  if (!existing) throw new Error('找不到該定期規則')
+  if (!existing) throw actionError('recurring_rule_not_found')
 
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
@@ -147,7 +148,7 @@ export async function pauseRule(id: string): Promise<void> {
       isNull(recurringExpenseRules.deletedAt),
     ))
     .returning({ id: recurringExpenseRules.id })
-  if (!updated) throw new Error('找不到該定期規則')
+  if (!updated) throw actionError('recurring_rule_not_found')
   revalidateAfterRecurringExpenseRuleMutation()
 }
 
@@ -167,7 +168,7 @@ export async function resumeRule(id: string): Promise<void> {
       isNull(recurringExpenseRules.deletedAt),
     ))
     .limit(1)
-  if (!rule) throw new Error('找不到該定期規則')
+  if (!rule) throw actionError('recurring_rule_not_found')
 
   const today = new Date().toISOString().slice(0, 10)
   const snapped = rule.nextOccurrenceAt > today
@@ -196,7 +197,7 @@ export async function softDeleteRule(id: string): Promise<void> {
         isNull(recurringExpenseRules.deletedAt),
       ))
       .returning({ id: recurringExpenseRules.id })
-    if (!updated) throw new Error('找不到該定期規則')
+    if (!updated) throw actionError('recurring_rule_not_found')
 
     await tx
       .delete(pendingExpenseOccurrences)
@@ -234,13 +235,13 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
       isNull(pendingExpenseOccurrences.resolvedTxId),
     ))
     .limit(1)
-  if (!row) throw new Error('待確認支出已被處理或找不到')
+  if (!row) throw actionError('pending_expense_not_found')
 
   // Race guard: snapshot's paidBy may have left the group between cron generation
   // and confirmation. Surfacing this as a race message lets the UI prompt the user
   // to re-pick a payer via 「改一下」 instead of inserting an orphan.
   if (row.proposedPaidBy !== group.memberA && row.proposedPaidBy !== group.memberB) {
-    throw new Error('這筆 partner 剛剛已處理')
+    throw actionError('pending_expense_partner_handled')
   }
 
   const result = await db.transaction(async (tx) => {
@@ -266,7 +267,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
         isNull(pendingExpenseOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingExpenseOccurrences.id })
-    if (!resolved) throw new Error('待確認支出已被其他裝置處理')
+    if (!resolved) throw actionError('pending_expense_handled_elsewhere')
 
     await recalcGroupBalance(group.id, tx)
     const firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
@@ -318,7 +319,7 @@ export async function editAndConfirmPending(
       isNull(pendingExpenseOccurrences.resolvedTxId),
     ))
     .limit(1)
-  if (!row) throw new Error('待確認支出已被處理或找不到')
+  if (!row) throw actionError('pending_expense_not_found')
 
   const finalPaidBy = overrides.paidBy ?? row.proposedPaidBy
   assertPaidByInGroup(finalPaidBy, group)
@@ -359,7 +360,7 @@ export async function editAndConfirmPending(
         isNull(pendingExpenseOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingExpenseOccurrences.id })
-    if (!resolved) throw new Error('待確認支出已被其他裝置處理')
+    if (!resolved) throw actionError('pending_expense_handled_elsewhere')
 
     await recalcGroupBalance(group.id, tx)
     const firstRecord = await isUserFirstNonDeletedRecord(tx, user.id, group.id)
@@ -386,6 +387,6 @@ export async function skipPending(pendingId: string): Promise<void> {
       isNull(pendingExpenseOccurrences.resolvedTxId),
     ))
     .returning({ id: pendingExpenseOccurrences.id })
-  if (!updated) throw new Error('待確認支出已被處理或找不到')
+  if (!updated) throw actionError('pending_expense_not_found')
   revalidatePath('/dashboard')
 }

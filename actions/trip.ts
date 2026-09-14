@@ -12,6 +12,7 @@ import {
 } from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 /**
  * Build the rate_snapshot for a fresh trip. The default currency is always the
@@ -47,15 +48,15 @@ export async function createTrip(input: CreateTripInput) {
   const { user, group } = await requireViewerGroup()
 
   const name = input.name.trim()
-  if (!name) throw new Error('旅行名稱為空')
-  if (name.length > 100) throw new Error('旅行名稱過長')
+  if (!name) throw actionError('trip_name_empty')
+  if (name.length > 100) throw actionError('trip_name_too_long')
 
   const epochStartDate = group.currentEpochStartedAt.toISOString().slice(0, 10)
   if (input.startDate < epochStartDate) {
-    throw new Error('不可建在過去章節')
+    throw actionError('trip_in_past_epoch')
   }
   if (input.endDate && input.endDate < input.startDate) {
-    throw new Error('結束日期不可早於起始日')
+    throw actionError('trip_end_before_start')
   }
 
   const [currentEpoch] = await db
@@ -63,7 +64,7 @@ export async function createTrip(input: CreateTripInput) {
     .from(groupEpochs)
     .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
     .limit(1)
-  if (!currentEpoch) throw new Error('找不到當前章節')
+  if (!currentEpoch) throw actionError('current_epoch_not_found')
 
   const rateSnapshot = resolveRateSnapshot(group.baseCurrency, input.currencies)
 
@@ -117,7 +118,7 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
       // Either trip doesn't exist in this group, or it's already 'ended'.
       // Surface a single error string — the caller can decide whether the
       // trip is missing or just already closed by checking on the client.
-      throw new Error('找不到進行中的旅行')
+      throw actionError('active_trip_not_found')
     }
 
     // Fold the isolated trip ledger into the main ledger via 0–2 summary
@@ -207,7 +208,7 @@ export async function updateTrip(input: {
   const { group } = await requireViewerGroup()
   const epochStartDate = group.currentEpochStartedAt.toISOString().slice(0, 10)
   if (input.startDate && input.startDate < epochStartDate) {
-    throw new Error('不可移動至過去章節')
+    throw actionError('trip_move_to_past_epoch')
   }
 
   const [existing] = await db
@@ -215,7 +216,7 @@ export async function updateTrip(input: {
     .from(trips)
     .where(and(eq(trips.id, input.tripId), eq(trips.groupId, group.id)))
     .limit(1)
-  if (!existing) throw new Error('找不到旅行')
+  if (!existing) throw actionError('trip_not_found')
 
   const { tripId, budgetCurrency, currencies, ...rest } = input
   const patch: Record<string, unknown> = { ...rest }
@@ -238,7 +239,7 @@ export async function updateTrip(input: {
     .set(patch)
     .where(and(eq(trips.id, tripId), eq(trips.groupId, group.id)))
     .returning()
-  if (!updated) throw new Error('找不到旅行')
+  if (!updated) throw actionError('trip_not_found')
   revalidatePath('/trips')
   revalidatePath(`/trips/${tripId}`)
   return updated

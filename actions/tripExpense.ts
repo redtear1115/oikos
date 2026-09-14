@@ -8,6 +8,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidatePath } from 'next/cache'
 import { convertAmount } from '@/lib/currency'
 import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
+import { actionError } from '@/lib/action-errors'
 
 /**
  * v0.17.2 #42 — Trip sub-ledger actions.
@@ -46,8 +47,8 @@ async function loadActiveTripForViewer(tripId: string, groupId: string) {
       isNull(trips.deletedAt),
     ))
     .limit(1)
-  if (!trip) throw new Error('找不到旅行')
-  if (trip.status !== 'active') throw new Error('旅行已結束，無法修改紀錄')
+  if (!trip) throw actionError('trip_not_found')
+  if (trip.status !== 'active') throw actionError('trip_ended')
   return trip
 }
 
@@ -83,7 +84,7 @@ function normalizeAmount(
 
   // input → snapshot.default
   const inputRate = findRate(snapshot, inputCode)
-  if (inputRate == null) throw new Error(`旅行匯率缺少 ${inputCode}`)
+  if (inputRate == null) throw actionError('trip_rate_missing', { currency: inputCode })
   const inDefaultUnits = convertAmount({
     amount: input.amount,
     from: inputCode,
@@ -100,7 +101,7 @@ function normalizeAmount(
     }
   }
   const baseRate = findRate(snapshot, baseUpper)
-  if (baseRate == null) throw new Error(`旅行匯率缺少 ${baseUpper}`)
+  if (baseRate == null) throw actionError('trip_rate_missing', { currency: baseUpper })
   // entries store `1 unit of code = rate units of default`, so to go from
   // default → base we invert base's rate.
   const baseFromDefault = convertAmount({
@@ -117,18 +118,18 @@ function normalizeAmount(
 }
 
 function validateCommon(input: CreateTripExpenseInput, group: { memberA: string; memberB: string | null }) {
-  assertMemberInGroup(input.paidBy, group, '付款人不在帳本中')
+  assertMemberInGroup(input.paidBy, group, 'payer_not_in_trip_ledger')
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
-    throw new Error('金額需大於 0')
+    throw actionError('amount_not_positive')
   }
   if (!input.category.trim()) {
-    throw new Error('分類為空')
+    throw actionError('category_empty')
   }
   if (input.splitType === 'weighted') {
-    if (input.splitRatio == null) throw new Error('依比例分需要指定比例')
-    if (input.splitRatio < 0 || input.splitRatio > 100) throw new Error('比例需在 0–100 之間')
+    if (input.splitRatio == null) throw actionError('split_ratio_required')
+    if (input.splitRatio < 0 || input.splitRatio > 100) throw actionError('split_ratio_out_of_range')
   } else if (input.splitRatio != null) {
-    throw new Error('split_ratio 僅適用於依比例分')
+    throw actionError('split_ratio_not_applicable')
   }
 }
 
@@ -187,7 +188,7 @@ export async function editTripExpense(input: EditTripExpenseInput) {
       ))
       .returning({ id: tripExpenses.id })
     if (deleted.length === 0) {
-      throw new Error('紀錄已被刪除或不存在')
+      throw actionError('record_deleted_or_missing')
     }
 
     const [row] = await tx
@@ -225,7 +226,7 @@ export async function softDeleteTripExpense(input: { id: string; tripId: string 
       isNull(tripExpenses.deletedAt),
     ))
     .returning({ id: tripExpenses.id })
-  if (deleted.length === 0) throw new Error('紀錄已被刪除或不存在')
+  if (deleted.length === 0) throw actionError('record_deleted_or_missing')
 
   revalidatePath(`/trips/${trip.id}`)
 }

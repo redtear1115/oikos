@@ -55,7 +55,7 @@ describe('upsertMonthlyReviewMessage', () => {
 
     await expect(upsertMonthlyReviewMessage({
       year: 2026, month: 6, body: '想改但鎖了',
-    })).rejects.toThrow(/鎖定/)
+    })).rejects.toThrow('review_month_locked')
   })
 
   it('rejects empty body before touching the DB', async () => {

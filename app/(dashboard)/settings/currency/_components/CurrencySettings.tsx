@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { setBaseCurrency } from '@/actions/currency'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
@@ -43,7 +44,7 @@ export function CurrencySettings(props: {
       try {
         await setBaseCurrency({ currency: next })
       } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : tc.errors.baseChangeFailed
+        const message = describeError(e, tc.errors.baseChangeFailed, t.common.offlineError, t.errors.actions)
         setBaseError(message)
         setBase(props.baseCurrency)
       }

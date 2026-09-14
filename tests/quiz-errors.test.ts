@@ -32,7 +32,7 @@ describe('describeQuizError', () => {
   for (const [code, pick] of CODES) {
     for (const [name, dict] of Object.entries(locales)) {
       it(`maps ${code} to the ${name} dictionary entry`, () => {
-        const out = describeQuizError(new Error(code), dict.quiz, OFFLINE)
+        const out = describeQuizError(new Error(code), dict.quiz, OFFLINE, dict.errors.actions)
         expect(out).toBe(pick(dict.quiz))
         // Never leak the wire code to the screen.
         expect(out).not.toContain(code)
@@ -42,7 +42,7 @@ describe('describeQuizError', () => {
 
   it('resolves already_answered to a different string per locale', () => {
     const seen = Object.values(locales).map((d) =>
-      describeQuizError(new Error('already_answered'), d.quiz, OFFLINE),
+      describeQuizError(new Error('already_answered'), d.quiz, OFFLINE, d.errors.actions),
     )
     // en and ja must not be the zh-TW sentence — that was the whole bug.
     expect(seen[2]).toBe(en.quiz.errors.alreadyAnswered)
@@ -51,22 +51,26 @@ describe('describeQuizError', () => {
     expect(seen[3]).not.toBe(zhTW.quiz.errors.alreadyAnswered)
   })
 
-  // Documenting the seam rather than asserting a wish: `describeError` returns
-  // `e.message` for any Error that has one, and only falls back for empty /
-  // non-Error rejections. So an unmapped code does NOT become `submitFailed` —
-  // it lands on screen verbatim. That is why every `throw` on this path has to
-  // be a code: adding a case here is the only thing that localizes it.
-  it('passes an unmapped Error message straight through (the leak this file closes)', () => {
-    expect(describeQuizError(new Error('boom'), en.quiz, OFFLINE)).toBe('boom')
+  // #1156 closed the seam this used to document: `describeError` no longer
+  // returns `e.message`, so an unmapped message becomes `submitFailed` instead
+  // of landing on screen verbatim.
+  it('falls back to submitFailed for an unmapped Error message', () => {
+    expect(describeQuizError(new Error('boom'), en.quiz, OFFLINE, en.errors.actions))
+      .toBe(en.quiz.errors.submitFailed)
+  })
+
+  it('localizes validateAnswersBatch codes through the shared action dictionary', () => {
+    expect(describeQuizError(new Error('quiz_answers_incomplete'), ja.quiz, OFFLINE, ja.errors.actions))
+      .toBe(ja.errors.actions.quiz_answers_incomplete)
   })
 
   it('falls back to submitFailed for an Error with no message', () => {
-    expect(describeQuizError(new Error(''), en.quiz, OFFLINE))
+    expect(describeQuizError(new Error(''), en.quiz, OFFLINE, en.errors.actions))
       .toBe(en.quiz.errors.submitFailed)
   })
 
   it('falls back to submitFailed for a non-Error rejection', () => {
-    expect(describeQuizError('nope', ja.quiz, OFFLINE))
+    expect(describeQuizError('nope', ja.quiz, OFFLINE, ja.errors.actions))
       .toBe(ja.quiz.errors.submitFailed)
   })
 })

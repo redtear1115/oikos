@@ -138,7 +138,7 @@ describe('createFuelLog', () => {
       station: null,
       paidBy: 'user-a',
       splitType: 'all_mine',
-    })).rejects.toThrow(/不在家計簿內/)
+    })).rejects.toThrow('linked_asset_not_in_group')
   })
 
   it('auto-generates description "加油" when station is null', async () => {
@@ -182,7 +182,7 @@ describe('createFuelLog', () => {
       assetId: 'asset-1', liters: 30, odometer: 1000, cost: 500,
       fuelType: '95', loggedAt: '2026-05-05', station: null,
       paidBy: 'user-stranger', splitType: 'all_mine',
-    })).rejects.toThrow('付款人不在家計簿內')
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   it('throws when asset is soft-deleted', async () => {
@@ -193,7 +193,7 @@ describe('createFuelLog', () => {
       assetId: 'asset-1', liters: 30, odometer: 1000, cost: 500,
       fuelType: '95', loggedAt: '2026-05-05', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow(/已刪除/)
+    })).rejects.toThrow('linked_asset_deleted')
   })
 
   it('rejects when viewer is pinned to a past epoch', async () => {
@@ -292,7 +292,7 @@ describe('editFuelLog', () => {
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow(/已刪除|不存在/)
+    })).rejects.toThrow('fuel_log_deleted_or_missing')
   })
 
   it('rejects edit when fuel log is not found', async () => {
@@ -306,7 +306,7 @@ describe('editFuelLog', () => {
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow(/已刪除|不存在/)
+    })).rejects.toThrow('fuel_log_deleted_or_missing')
   })
 
   it('rejects edit when fuel log asset is not in viewer group', async () => {
@@ -321,7 +321,7 @@ describe('editFuelLog', () => {
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow(/不在家計簿內/)
+    })).rejects.toThrow('linked_asset_not_in_group')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -348,7 +348,7 @@ describe('editFuelLog', () => {
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-stranger', splitType: 'all_mine',
-    })).rejects.toThrow('付款人不在家計簿內')
+    })).rejects.toThrow('payer_not_in_group')
   })
 
   // ─── Regression for #1032 ───────────────────────────────────────────────
@@ -403,7 +403,7 @@ describe('editFuelLog', () => {
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow('關聯資產不在家計簿內')
+    })).rejects.toThrow('linked_asset_not_in_group')
 
     // Nothing was written: no transaction, no soft-delete of the victim's txn.
     expect(mockDb.transaction).not.toHaveBeenCalled()
@@ -463,7 +463,7 @@ describe('softDeleteFuelLog', () => {
     queueDbResult([OPEN_EPOCH])                                                               // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: new Date() }])         // fuel log soft-deleted
 
-    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow(/已刪除|不存在/)
+    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('fuel_log_deleted_or_missing')
     // Should not enter the transaction at all
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
@@ -473,7 +473,7 @@ describe('softDeleteFuelLog', () => {
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // no fuel log row
 
-    await expect(softDeleteFuelLog('missing-id')).rejects.toThrow(/已刪除|不存在/)
+    await expect(softDeleteFuelLog('missing-id')).rejects.toThrow('fuel_log_deleted_or_missing')
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 
@@ -483,7 +483,7 @@ describe('softDeleteFuelLog', () => {
     queueDbResult([{ id: 'fuel-log-id', assetId: 'foreign-asset', deletedAt: null }])
     queueDbResult([])  // asset lookup empty (asset not in this group)
 
-    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow(/不在家計簿內/)
+    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('linked_asset_not_in_group')
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 

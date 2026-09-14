@@ -77,7 +77,7 @@ export function LeaveGroupFlow({
         setStep('swap-sent')
         router.refresh()
       } catch (e) {
-        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -117,7 +117,7 @@ export function LeaveGroupFlow({
         router.refresh()
         router.push('/dashboard')
       } catch (e) {
-        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError))
+        setErrorMsg(describeMembershipError(e, dz.errors, t.common.offlineError, t.errors.actions))
       }
     })
   }

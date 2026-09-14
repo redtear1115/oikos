@@ -72,7 +72,7 @@ export function TemplateSheetBody({
         onMutated?.('saved')
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -85,7 +85,7 @@ export function TemplateSheetBody({
         onMutated?.('deleted')
         onClose()
       } catch (e) {
-        setError(describeError(e, t.common.error, t.common.offlineError))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

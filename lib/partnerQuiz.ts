@@ -8,6 +8,10 @@
 // never rename or drop a key, otherwise existing rows in
 // `PartnerQuizSessions.question_keys` lose their pointer.
 
+// Only dependency: the error-code builder (itself dependency-free), so batch
+// validation failures localize instead of rendering zh-TW prose (#1156).
+import { actionError } from '@/lib/action-errors'
+
 export const PARTNER_QUIZ_QUESTION_KEYS = [
   'impulse',
   'risk',
@@ -68,29 +72,29 @@ export function validateAnswersBatch(
   input: PartnerQuizAnswerInput[],
 ): ValidatedPartnerQuizAnswers {
   if (!Array.isArray(input)) {
-    throw new Error('答案格式錯誤')
+    throw actionError('quiz_answers_malformed')
   }
   if (input.length !== sessionQuestionKeys.length) {
-    throw new Error('要一次答完 3 題')
+    throw actionError('quiz_answers_incomplete')
   }
 
   const seen = new Set<string>()
   const out: ValidatedPartnerQuizAnswers['answers'] = []
   for (const row of input) {
     if (!row || typeof row !== 'object') {
-      throw new Error('答案格式錯誤')
+      throw actionError('quiz_answers_malformed')
     }
     if (!isPartnerQuizQuestionKey(row.questionKey)) {
-      throw new Error('題目不在這次的範圍內')
+      throw actionError('quiz_question_out_of_range')
     }
     if (!isPartnerQuizChoiceKey(row.choiceKey)) {
-      throw new Error('選項不在這題的範圍內')
+      throw actionError('quiz_choice_out_of_range')
     }
     if (!sessionQuestionKeys.includes(row.questionKey)) {
-      throw new Error('題目不在這次的範圍內')
+      throw actionError('quiz_question_out_of_range')
     }
     if (seen.has(row.questionKey)) {
-      throw new Error('同一題不要重複作答')
+      throw actionError('quiz_question_duplicate')
     }
     seen.add(row.questionKey)
     out.push({ questionKey: row.questionKey, choiceKey: row.choiceKey })

@@ -67,7 +67,7 @@ export function EditTextSheet({
         await onSubmit(trimmed)
         onClose()
       } catch (e) {
-        setError(describeError(e, t.editTextSheet.saveFailed, t.common.offlineError))
+        setError(describeError(e, t.editTextSheet.saveFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }

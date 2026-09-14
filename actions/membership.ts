@@ -25,6 +25,7 @@ import {
 } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -221,7 +222,7 @@ export async function leaveGroup(): Promise<{ groupId: string; epochId: string }
     .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
     .limit(1)
   if (currentEpochRow && await hasActiveTrip(group.id, currentEpochRow.id)) {
-    throw new Error('請先結束旅行再離開章節')
+    throw actionError('leave_active_trip')
   }
 
   const leaver = user.id

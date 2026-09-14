@@ -34,7 +34,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     setTab('aibutsu')
     loadAssetsForPicker()
       .then(setAssets)
-      .catch((e) => setLoadError(describeError(e, t.assetPickerSheet.loadFailed, t.common.offlineError)))
+      .catch((e) => setLoadError(describeError(e, t.assetPickerSheet.loadFailed, t.common.offlineError, t.errors.actions)))
   }, [open, t])
 
   // Escape closes — picker uses its own inline backdrop (z-112) instead of

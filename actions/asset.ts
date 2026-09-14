@@ -15,13 +15,14 @@ import { canAccessGuardian } from '@/lib/guardian'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
+import { actionError } from '@/lib/action-errors'
 
 function assertPolicyHolderInGroup(
   userId: string,
   group: { memberA: string; memberB: string | null },
 ): void {
   if (userId !== group.memberA && userId !== group.memberB) {
-    throw new Error('要保人必須是 group 成員')
+    throw actionError('policyholder_not_member')
   }
 }
 
@@ -33,7 +34,7 @@ function assertInsuredUserInGroup(
   group: { memberA: string; memberB: string | null },
 ): void {
   if (userId !== group.memberA && userId !== group.memberB) {
-    throw new Error('被保人必須是 group 成員')
+    throw actionError('insured_not_member')
   }
 }
 
@@ -71,7 +72,7 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
   // Checked before auth so a blank plate fails fast, matching the old
   // validate-then-reject ordering. Captured into a local so the narrowing
   // survives into the transaction closure below.
-  if (typeof validated.plate !== 'string') throw new Error('車牌不能為空')
+  if (typeof validated.plate !== 'string') throw actionError('plate_empty')
   const plate = validated.plate
 
   const { user: viewer, group } = await requireViewerGroup()
@@ -184,7 +185,7 @@ export async function editCar(input: EditCarInput): Promise<void> {
         isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
-    if (updated.length === 0) throw new Error('找不到該資產')
+    if (updated.length === 0) throw actionError('asset_not_found')
 
     // #837 — plate trinary: only touch plate_encrypted when the form supplied a
     // value (string = encrypt+set, null = clear). undefined leaves it intact —
@@ -243,7 +244,7 @@ export async function softDeleteCar(id: string): Promise<void> {
       isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
-  if (updated.length === 0) throw new Error('找不到該資產')
+  if (updated.length === 0) throw actionError('asset_not_found')
 
   // Defense-in-depth: a partner viewing the detail page primarily redirects
   // via the realtime asset-changed event, but if the WebSocket dropped, the
@@ -293,7 +294,7 @@ export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> 
       isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
-  if (updated.length === 0) throw new Error('找不到該愛物')
+  if (updated.length === 0) throw actionError('aibutsu_not_found')
 
   revalidateAfterAssetMutation(input.id)
 }
@@ -310,7 +311,7 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
       isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
-  if (updated.length === 0) throw new Error('找不到該愛物')
+  if (updated.length === 0) throw actionError('aibutsu_not_found')
 
   revalidateAfterAssetMutation(assetId, { affectsRecords: true })
 }
@@ -507,7 +508,7 @@ export async function editChild(input: EditChildInput): Promise<void> {
         isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
-    if (updated.length === 0) throw new Error('找不到該愛物')
+    if (updated.length === 0) throw actionError('aibutsu_not_found')
 
     // INSERT path runs only when no row exists yet — same encryption rules as
     // createChild (undefined / null → NULL column; string → encrypted).
@@ -571,11 +572,11 @@ export async function revealChildPii(
     .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'child') {
-    throw new Error('找不到該愛物')
+    throw actionError('aibutsu_not_found')
   }
 
   const ciphertext = field === 'nationalId' ? row.idNumberEncrypted : row.insuranceIdEncrypted
-  if (!ciphertext) throw new Error('尚未填寫此欄位')
+  if (!ciphertext) throw actionError('field_not_filled')
 
   return decrypt(ciphertext)
 }
@@ -602,9 +603,9 @@ export async function revealChildName(assetId: string): Promise<string> {
     .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'child') {
-    throw new Error('找不到該愛物')
+    throw actionError('aibutsu_not_found')
   }
-  if (!row.nameEncrypted) throw new Error('尚未填寫此欄位')
+  if (!row.nameEncrypted) throw actionError('field_not_filled')
   return decrypt(row.nameEncrypted)
 }
 
@@ -630,10 +631,10 @@ export async function revealCarPlate(assetId: string): Promise<string> {
     .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'car') {
-    throw new Error('找不到該愛物')
+    throw actionError('aibutsu_not_found')
   }
 
-  if (!row.plateEncrypted) throw new Error('尚未填寫此欄位')
+  if (!row.plateEncrypted) throw actionError('field_not_filled')
   return decrypt(row.plateEncrypted)
 }
 
@@ -657,10 +658,10 @@ export async function revealHouseAddress(assetId: string): Promise<string> {
     .where(and(eq(assets.id, assetId), eq(assets.groupId, group.id)))
     .limit(1)
   if (!row || row.assetDeletedAt || row.assetType !== 'house') {
-    throw new Error('找不到該愛物')
+    throw actionError('aibutsu_not_found')
   }
 
-  if (!row.addressEncrypted) throw new Error('尚未填寫此欄位')
+  if (!row.addressEncrypted) throw actionError('field_not_filled')
   return decrypt(row.addressEncrypted)
 }
 
@@ -730,7 +731,7 @@ export async function editPet(input: EditPetInput): Promise<void> {
         isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
-    if (updated.length === 0) throw new Error('找不到該愛物')
+    if (updated.length === 0) throw actionError('aibutsu_not_found')
 
     await tx
       .insert(petDetails)
@@ -823,7 +824,7 @@ export async function editPlant(input: EditPlantInput): Promise<void> {
         isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
-    if (updated.length === 0) throw new Error('找不到該愛物')
+    if (updated.length === 0) throw actionError('aibutsu_not_found')
 
     await tx
       .insert(plantDetails)
@@ -889,7 +890,7 @@ async function assertInsuredChildInGroup(childId: string, groupId: string): Prom
     .where(and(eq(assets.id, childId), eq(assets.groupId, groupId)))
     .limit(1)
   if (!child || child.type !== 'child' || child.deletedAt) {
-    throw new Error('無效的被保小孩')
+    throw actionError('insured_child_invalid')
   }
 }
 
@@ -937,7 +938,7 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
       .where(and(eq(assets.id, input.vehicleId), eq(assets.groupId, group.id)))
       .limit(1)
     if (!vehicle || vehicle.type !== 'car' || vehicle.deletedAt) {
-      throw new Error('無效的關聯車輛')
+      throw actionError('linked_vehicle_invalid')
     }
   }
 
@@ -1004,7 +1005,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
       .where(and(eq(assets.id, input.vehicleId), eq(assets.groupId, group.id)))
       .limit(1)
     if (!vehicle || vehicle.type !== 'car' || vehicle.deletedAt) {
-      throw new Error('無效的關聯車輛')
+      throw actionError('linked_vehicle_invalid')
     }
   }
 
@@ -1032,7 +1033,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
         isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
-    if (updated.length === 0) throw new Error('找不到該愛物')
+    if (updated.length === 0) throw actionError('aibutsu_not_found')
 
     await tx
       .insert(insuranceDetails)
@@ -1112,14 +1113,14 @@ export async function renewInsurance(input: {
       isNull(assets.deletedAt),
     ))
     .limit(1)
-  if (!asset) throw new Error('找不到該保單')
+  if (!asset) throw actionError('policy_not_found')
 
   const [details] = await db
     .select({ expiryDate: insuranceDetails.expiryDate })
     .from(insuranceDetails)
     .where(eq(insuranceDetails.assetId, input.id))
     .limit(1)
-  if (!details?.expiryDate) throw new Error('保單尚未設定到期日')
+  if (!details?.expiryDate) throw actionError('policy_expiry_unset')
 
   const next = new Date(`${details.expiryDate}T00:00:00`)
   next.setFullYear(next.getFullYear() + 1)
@@ -1159,7 +1160,7 @@ export async function lapseInsurance(input: { id: string }): Promise<void> {
       isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
-  if (result.length === 0) throw new Error('找不到該保單')
+  if (result.length === 0) throw actionError('policy_not_found')
 
   revalidateAfterAssetMutation(input.id)
 }
@@ -1263,7 +1264,7 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
         isNull(assets.deletedAt),
       ))
       .returning({ id: assets.id })
-    if (updated.length === 0) throw new Error('找不到該愛物')
+    if (updated.length === 0) throw actionError('aibutsu_not_found')
 
     // #837 — address trinary: only touch address_encrypted when the form
     // supplied a value (string = encrypt+set, null = clear). undefined leaves
@@ -1312,7 +1313,7 @@ export interface CreateTemplateAssetInput {
  */
 export async function createTemplateAsset(input: CreateTemplateAssetInput): Promise<{ id: string }> {
   if (!isAssetTemplateKey(input.templateKey)) {
-    throw new Error('未知的模板')
+    throw actionError('template_unknown')
   }
   const name = validateName(input.name, '名稱')
   const notes = validateNotes(input.notes)
@@ -1351,7 +1352,7 @@ export interface EditTemplateAssetInput extends CreateTemplateAssetInput {
  */
 export async function editTemplateAsset(input: EditTemplateAssetInput): Promise<void> {
   if (!isAssetTemplateKey(input.templateKey)) {
-    throw new Error('未知的模板')
+    throw actionError('template_unknown')
   }
   const name = validateName(input.name, '名稱')
   const notes = validateNotes(input.notes)
@@ -1373,7 +1374,7 @@ export async function editTemplateAsset(input: EditTemplateAssetInput): Promise<
       isNull(assets.deletedAt),
     ))
     .returning({ id: assets.id })
-  if (updated.length === 0) throw new Error('找不到該愛物')
+  if (updated.length === 0) throw actionError('aibutsu_not_found')
 
   revalidateAfterAssetMutation(input.id)
 }

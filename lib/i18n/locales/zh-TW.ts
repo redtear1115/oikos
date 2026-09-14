@@ -2583,6 +2583,98 @@ export type Translations = {
       ]
     }>
   }
+
+  /** #1156 — localized server-action errors, resolved by `describeError`.
+   *  Keys are the wire codes thrown via `actionError()` (lib/action-errors.ts),
+   *  so they stay snake_case on purpose. `{name}` placeholders are filled from
+   *  the params encoded after the code. Kept in its own top-level namespace so
+   *  unrelated locale edits don't collide with it. */
+  errors: {
+    actions: {
+      group_not_found: string
+      payer_not_in_group: string
+      payer_not_in_trip_ledger: string
+      recipient_not_in_group: string
+      record_not_found: string
+      record_deleted_or_missing: string
+      amount_not_positive: string
+      category_empty: string
+      split_ratio_required: string
+      split_ratio_out_of_range: string
+      split_ratio_not_applicable: string
+      split_ratio_invalid: string
+      split_type_invalid: string
+      profile_not_found: string
+      fx_rate_not_set: string
+      fx_rate_not_positive: string
+      currency_unsupported: string
+      currency_pair_same: string
+      base_currency_locked: string
+      current_epoch_not_found: string
+      leave_active_trip: string
+      trip_not_found: string
+      trip_missing: string
+      active_trip_not_found: string
+      trip_ended: string
+      trip_rate_missing: string
+      trip_name_empty: string
+      trip_name_too_long: string
+      trip_in_past_epoch: string
+      trip_move_to_past_epoch: string
+      trip_end_before_start: string
+      income_not_found: string
+      recurring_rule_not_found: string
+      pending_expense_not_found: string
+      pending_expense_handled_elsewhere: string
+      pending_expense_partner_handled: string
+      pending_income_not_found: string
+      pending_income_handled_elsewhere: string
+      review_month_locked: string
+      review_message_locked: string
+      asset_not_found: string
+      aibutsu_not_found: string
+      linked_asset_not_in_group: string
+      linked_asset_deleted: string
+      linked_vehicle_invalid: string
+      plate_empty: string
+      field_not_filled: string
+      template_unknown: string
+      policy_not_found: string
+      policy_expiry_unset: string
+      policyholder_not_member: string
+      insured_not_member: string
+      insured_child_invalid: string
+      fuel_log_deleted_or_missing: string
+      fuel_transaction_not_found: string
+      import_source_unsupported: string
+      import_row_invalid_type: string
+      import_row_invalid_amount: string
+      import_row_invalid_split_type: string
+      import_row_invalid_payer: string
+      import_row_invalid_split_ratio: string
+      import_row_incomplete_fx: string
+      import_row_invalid_date: string
+      import_filename_invalid: string
+      import_total_invalid: string
+      import_empty: string
+      import_batch_create_failed: string
+      import_batch_id_invalid: string
+      import_batch_not_found: string
+      import_rollback_forbidden: string
+      import_already_rolled_back: string
+      invoice_mof_code_invalid: string
+      invoice_mof_unavailable: string
+      invoice_mof_verify_failed: string
+      invoice_barcode_already_bound: string
+      invoice_nickname_too_long: string
+      invoice_carrier_not_found: string
+      quiz_answers_malformed: string
+      quiz_answers_incomplete: string
+      quiz_question_out_of_range: string
+      quiz_choice_out_of_range: string
+      quiz_question_duplicate: string
+    }
+  }
 }
 
 export const zhTW: Translations = {
@@ -5813,6 +5905,93 @@ export const zhTW: Translations = {
           },
         ],
       },
+    },
+  },
+
+  errors: {
+    actions: {
+      group_not_found: '找不到家計簿',
+      payer_not_in_group: '付款人不在家計簿內',
+      payer_not_in_trip_ledger: '付款人不在帳本中',
+      recipient_not_in_group: '收入歸屬不在家計簿內',
+      record_not_found: '找不到該筆紀錄',
+      record_deleted_or_missing: '紀錄已被刪除或不存在',
+      amount_not_positive: '金額需大於 0',
+      category_empty: '分類為空',
+      split_ratio_required: '依比例分需要指定比例',
+      split_ratio_out_of_range: '比例需在 0–100 之間',
+      split_ratio_not_applicable: 'split_ratio 僅適用於依比例分',
+      split_ratio_invalid: '分攤比例必須為 1–99 的整數',
+      split_type_invalid: '分攤方式無效',
+      profile_not_found: '找不到個人資料',
+      fx_rate_not_set: '未設定 {from} → {to} 匯率',
+      fx_rate_not_positive: '匯率必須是正數',
+      currency_unsupported: '不支援的幣別',
+      currency_pair_same: '來源與目標幣別不能相同',
+      base_currency_locked: '當前章節已有紀錄、不可修改主體幣別',
+      current_epoch_not_found: '找不到當前章節',
+      leave_active_trip: '請先結束旅行再離開章節',
+      trip_not_found: '找不到旅行',
+      trip_missing: '旅行不存在',
+      active_trip_not_found: '找不到進行中的旅行',
+      trip_ended: '旅行已結束，無法修改紀錄',
+      trip_rate_missing: '旅行匯率缺少 {currency}',
+      trip_name_empty: '旅行名稱為空',
+      trip_name_too_long: '旅行名稱過長',
+      trip_in_past_epoch: '不可建在過去章節',
+      trip_move_to_past_epoch: '不可移動至過去章節',
+      trip_end_before_start: '結束日期不可早於起始日',
+      income_not_found: '找不到該筆收入',
+      recurring_rule_not_found: '找不到該定期規則',
+      pending_expense_not_found: '待確認支出已被處理或找不到',
+      pending_expense_handled_elsewhere: '待確認支出已被其他裝置處理',
+      pending_expense_partner_handled: '這筆 partner 剛剛已處理',
+      pending_income_not_found: '待確認收入已被處理或找不到',
+      pending_income_handled_elsewhere: '待確認收入已被其他裝置處理',
+      review_month_locked: '這個月的留言已鎖定，無法再修改',
+      review_message_locked: '留言已鎖定，無法再修改',
+      asset_not_found: '找不到該資產',
+      aibutsu_not_found: '找不到該愛物',
+      linked_asset_not_in_group: '關聯資產不在家計簿內',
+      linked_asset_deleted: '關聯資產已刪除',
+      linked_vehicle_invalid: '無效的關聯車輛',
+      plate_empty: '車牌不能為空',
+      field_not_filled: '尚未填寫此欄位',
+      template_unknown: '未知的模板',
+      policy_not_found: '找不到該保單',
+      policy_expiry_unset: '保單尚未設定到期日',
+      policyholder_not_member: '要保人必須是 group 成員',
+      insured_not_member: '被保人必須是 group 成員',
+      insured_child_invalid: '無效的被保小孩',
+      fuel_log_deleted_or_missing: '加油記錄已刪除或不存在',
+      fuel_transaction_not_found: '找不到該筆加油交易',
+      import_source_unsupported: '未支援的匯入來源：{source}',
+      import_row_invalid_type: '第 {row} 筆：交易類型不正確',
+      import_row_invalid_amount: '第 {row} 筆：金額不正確',
+      import_row_invalid_split_type: '第 {row} 筆：分攤方式不正確',
+      import_row_invalid_payer: '第 {row} 筆：付款人不正確',
+      import_row_invalid_split_ratio: '第 {row} 筆：依比例分需要 0–100 的比例',
+      import_row_incomplete_fx: '第 {row} 筆：外幣資訊不完整',
+      import_row_invalid_date: '第 {row} 筆：日期不正確',
+      import_filename_invalid: '檔名不正確',
+      import_total_invalid: '總筆數不正確',
+      import_empty: '沒有可匯入的資料',
+      import_batch_create_failed: '建立匯入紀錄失敗',
+      import_batch_id_invalid: '批次 ID 不正確',
+      import_batch_not_found: '找不到匯入紀錄',
+      import_rollback_forbidden: '無權限復原這次匯入',
+      import_already_rolled_back: '這次匯入已經復原過',
+      invoice_mof_code_invalid: '條碼或驗證碼有誤，請確認',
+      invoice_mof_unavailable: '服務暫時無法使用，稍後再試',
+      invoice_mof_verify_failed: '驗證失敗（{code}）',
+      invoice_barcode_already_bound: '此條碼已綁定',
+      invoice_nickname_too_long: '暱稱最長 16 字',
+      invoice_carrier_not_found: '找不到該載具',
+      quiz_answers_malformed: '答案格式錯誤',
+      quiz_answers_incomplete: '要一次答完 3 題',
+      quiz_question_out_of_range: '題目不在這次的範圍內',
+      quiz_choice_out_of_range: '選項不在這題的範圍內',
+      quiz_question_duplicate: '同一題不要重複作答',
     },
   },
 }

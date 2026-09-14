@@ -84,7 +84,7 @@ export function PendingCard({
       setFading(true)
       refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
     } catch (e) {
-      setError(describeError(e, confirmErrorFallback, t.common.offlineError))
+      setError(describeError(e, confirmErrorFallback, t.common.offlineError, t.errors.actions))
     }
   })
 
@@ -96,7 +96,7 @@ export function PendingCard({
         setFading(true)
         refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
       } catch (e) {
-        setError(describeError(e, skipErrorFallback, t.common.offlineError))
+        setError(describeError(e, skipErrorFallback, t.common.offlineError, t.errors.actions))
       }
     })
   }

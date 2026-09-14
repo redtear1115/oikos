@@ -264,7 +264,7 @@ describe('editAndConfirmPending', () => {
       occurredAt: '2026-05-01',
       source: null,
       assetId: null,
-    })).rejects.toThrow(/找不到|處理/)
+    })).rejects.toThrow('pending_income_not_found')
 
     // userB cannot resolve their pending against userA's group either —
     // and resolving their *own* pending here is unrelated; the assertion
@@ -302,7 +302,7 @@ describe('editAndConfirmPending', () => {
         occurredAt: '2026-07-02',
         source: null,
         assetId: null,
-      })).rejects.toThrow(/已被處理|找不到/)
+      })).rejects.toThrow('pending_income_not_found')
 
       // Resolved id stays as the first tx — race did not double-write.
       const [row] = await db.select().from(pendingIncomeOccurrences)
@@ -362,7 +362,7 @@ describe('editAndConfirmPending', () => {
         occurredAt: '2026-09-01',
         source: null,
         assetId: null,
-      })).rejects.toThrow(/收入歸屬不在/)
+      })).rejects.toThrow('recipient_not_in_group')
 
       const [row] = await db.select().from(pendingIncomeOccurrences)
         .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
@@ -418,7 +418,7 @@ describe('editAndConfirmPending', () => {
         occurredAt: '2026-11-01',
         source: null,
         assetId: null,
-      })).rejects.toThrow(/已被處理|找不到/)
+      })).rejects.toThrow('pending_income_not_found')
 
       const [row] = await db.select().from(pendingIncomeOccurrences)
         .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)

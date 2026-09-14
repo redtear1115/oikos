@@ -90,7 +90,7 @@ describe('createInvoiceCredential', () => {
     await expect(createInvoiceCredential({
       barcode: '/AB12CD3',
       verificationCode: 'A1B2C3D4',
-    })).rejects.toThrow(/已綁定/)
+    })).rejects.toThrow('invoice_barcode_already_bound')
   })
 
   it('surfaces 919 from API as user-readable error', async () => {
@@ -101,7 +101,7 @@ describe('createInvoiceCredential', () => {
     await expect(createInvoiceCredential({
       barcode: '/AB12CD3',
       verificationCode: 'FAIL919X',
-    })).rejects.toThrow(/條碼或驗證碼/)
+    })).rejects.toThrow('invoice_mof_code_invalid')
   })
 
   it('surfaces 998 (system busy) as a soft retry message', async () => {
@@ -111,7 +111,7 @@ describe('createInvoiceCredential', () => {
     await expect(createInvoiceCredential({
       barcode: '/AB12CD3',
       verificationCode: 'FAIL998X',
-    })).rejects.toThrow(/服務暫時無法使用/)
+    })).rejects.toThrow('invoice_mof_unavailable')
   })
 
   it('rejects when viewer has no group', async () => {
@@ -151,14 +151,14 @@ describe('renameInvoiceCredential', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // no row updated
 
-    await expect(renameInvoiceCredential('cred-x', '別人的')).rejects.toThrow(/找不到/)
+    await expect(renameInvoiceCredential('cred-x', '別人的')).rejects.toThrow('invoice_carrier_not_found')
   })
 
   it('rejects nickname over 16 chars', async () => {
     queueDbResult([GROUP])
     await expect(
       renameInvoiceCredential('cred-1', '這個暱稱真的有夠長到超過十六個字符限制'),
-    ).rejects.toThrow(/暱稱最長/)
+    ).rejects.toThrow('invoice_nickname_too_long')
   })
 })
 
@@ -199,7 +199,7 @@ describe('refreshInvoiceCredential', () => {
 
     await expect(
       refreshInvoiceCredential('cred-x', 'NEWCODEZ'),
-    ).rejects.toThrow(/找不到/)
+    ).rejects.toThrow('invoice_carrier_not_found')
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     // No write should have been attempted (soft-delete / insert never reached).
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -214,7 +214,7 @@ describe('refreshInvoiceCredential', () => {
 
     await expect(
       refreshInvoiceCredential('cred-1', 'FAIL919X'),
-    ).rejects.toThrow(/條碼或驗證碼/)
+    ).rejects.toThrow('invoice_mof_code_invalid')
     // verify ran inside tx; soft-delete/insert never reached because verify threw.
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -253,7 +253,7 @@ describe('deleteInvoiceCredential', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // no row
 
-    await expect(deleteInvoiceCredential('cred-other-group')).rejects.toThrow(/找不到/)
+    await expect(deleteInvoiceCredential('cred-other-group')).rejects.toThrow('invoice_carrier_not_found')
   })
 })
 

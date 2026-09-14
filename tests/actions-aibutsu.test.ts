@@ -135,7 +135,7 @@ describe('editChild', () => {
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editChild({ id: 'missing', name: '小元' })).rejects.toThrow(/找不到/)
+    await expect(editChild({ id: 'missing', name: '小元' })).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -223,7 +223,7 @@ describe('revealChildPii', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // join returns no rows — assetId is in another group
 
-    await expect(revealChildPii('asset-x', 'nationalId')).rejects.toThrow(/找不到/)
+    await expect(revealChildPii('asset-x', 'nationalId')).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws when asset is soft-deleted', async () => {
@@ -235,7 +235,7 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow(/找不到/)
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws when asset type is not child (e.g. car)', async () => {
@@ -247,7 +247,7 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow(/找不到/)
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws when ciphertext column is null (nothing stored)', async () => {
@@ -259,7 +259,7 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow(/尚未填寫/)
+    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('field_not_filled')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -343,7 +343,7 @@ describe('editPet', () => {
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editPet({ id: 'missing', name: '米嚕' })).rejects.toThrow(/找不到/)
+    await expect(editPet({ id: 'missing', name: '米嚕' })).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -424,7 +424,7 @@ describe('editPlant', () => {
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editPlant({ id: 'missing', name: '阿龜' })).rejects.toThrow(/找不到/)
+    await expect(editPlant({ id: 'missing', name: '阿龜' })).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -491,7 +491,7 @@ describe('createInsurance', () => {
 
     await expect(
       createInsurance({ name: '醫療險', insuredChildId: NOT_CHILD }),
-    ).rejects.toThrow(/被保小孩/)
+    ).rejects.toThrow('insured_child_invalid')
   })
 
   it('rejects insuredChildId that does not exist in the group', async () => {
@@ -501,7 +501,7 @@ describe('createInsurance', () => {
 
     await expect(
       createInsurance({ name: '醫療險', insuredChildId: MISSING }),
-    ).rejects.toThrow(/被保小孩/)
+    ).rejects.toThrow('insured_child_invalid')
   })
 
   it('passes all insuranceDetails fields to insert', async () => {
@@ -577,7 +577,7 @@ describe('editInsurance', () => {
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editInsurance({ id: 'missing', name: '壽險A' })).rejects.toThrow(/找不到/)
+    await expect(editInsurance({ id: 'missing', name: '壽險A' })).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {
@@ -676,7 +676,7 @@ describe('editHouse', () => {
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(editHouse({ id: 'missing', name: '我們家' })).rejects.toThrow(/找不到/)
+    await expect(editHouse({ id: 'missing', name: '我們家' })).rejects.toThrow('aibutsu_not_found')
   })
 
   it('throws unauthorized when no user', async () => {

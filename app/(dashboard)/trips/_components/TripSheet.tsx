@@ -6,6 +6,7 @@ import { createTrip, updateTrip } from '@/actions/trip'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import type { TripCurrencyEntry, TripCurrencySnapshot } from '@/lib/trip-currency'
 import { useTranslations } from '@/lib/i18n/client'
+import { describeError } from '@/lib/errors'
 
 const PRESET_CURRENCIES = CURRENCIES.map(c => c.toUpperCase())
 const MAX_ENTRIES = 5
@@ -216,7 +217,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
         onSaved?.()
         onClose()
       } catch (e: unknown) {
-        setErr(e instanceof Error ? e.message : editing ? ts.errors.updateFailed : ts.errors.createFailed)
+        setErr(describeError(e, editing ? ts.errors.updateFailed : ts.errors.createFailed, t.common.offlineError, t.errors.actions))
       }
     })
   }

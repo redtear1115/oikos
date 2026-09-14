@@ -16,6 +16,7 @@ import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 import { MAX_AMOUNT } from '@/lib/validators'
 import { DETECTED_SOURCES, type DetectedSource } from '@/lib/csvImport/detector'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 /**
  * #607 — Server-side CSV import.
@@ -94,13 +95,13 @@ export interface ImportBatchResult {
 
 function assertSource(source: string): asserts source is ImportSource {
   if (!(VALID_SOURCES as readonly string[]).includes(source)) {
-    throw new Error(`未支援的匯入來源：${source}`)
+    throw actionError('import_source_unsupported', { source })
   }
 }
 
 function validateRow(row: ImportBatchInputRow, index: number): void {
   if (!(VALID_ROW_TYPES as readonly string[]).includes(row.type)) {
-    throw new Error(`第 ${index + 1} 筆：交易類型不正確`)
+    throw actionError('import_row_invalid_type', { row: index + 1 })
   }
   if (
     !Number.isFinite(row.amount)
@@ -108,13 +109,13 @@ function validateRow(row: ImportBatchInputRow, index: number): void {
     || row.amount <= 0
     || row.amount > MAX_AMOUNT
   ) {
-    throw new Error(`第 ${index + 1} 筆：金額不正確`)
+    throw actionError('import_row_invalid_amount', { row: index + 1 })
   }
   if (!(VALID_SPLIT_TYPES as readonly string[]).includes(row.splitType)) {
-    throw new Error(`第 ${index + 1} 筆：分攤方式不正確`)
+    throw actionError('import_row_invalid_split_type', { row: index + 1 })
   }
   if (!(VALID_PAYERS as readonly string[]).includes(row.paidBy)) {
-    throw new Error(`第 ${index + 1} 筆：付款人不正確`)
+    throw actionError('import_row_invalid_payer', { row: index + 1 })
   }
   if (row.splitType === 'weighted') {
     if (
@@ -124,19 +125,19 @@ function validateRow(row: ImportBatchInputRow, index: number): void {
       || row.splitRatioA < 0
       || row.splitRatioA > 100
     ) {
-      throw new Error(`第 ${index + 1} 筆：依比例分需要 0–100 的比例`)
+      throw actionError('import_row_invalid_split_ratio', { row: index + 1 })
     }
   }
   // Multi-currency tuple: all-or-nothing
   const hasCurrency = !!row.originalCurrency
   const hasOrigAmount = row.originalAmount !== undefined && row.originalAmount !== null
   if (hasCurrency !== hasOrigAmount) {
-    throw new Error(`第 ${index + 1} 筆：外幣資訊不完整`)
+    throw actionError('import_row_incomplete_fx', { row: index + 1 })
   }
   // Date format: YYYY-MM-DD or any string Date can parse
   const parsed = new Date(row.date)
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error(`第 ${index + 1} 筆：日期不正確`)
+    throw actionError('import_row_invalid_date', { row: index + 1 })
   }
 }
 
@@ -175,13 +176,13 @@ export async function importCsvBatch(
 ): Promise<ImportBatchResult> {
   assertSource(input.source)
   if (!input.fileName || input.fileName.length > 255) {
-    throw new Error('檔名不正確')
+    throw actionError('import_filename_invalid')
   }
   if (!Number.isInteger(input.totalRows) || input.totalRows < 0) {
-    throw new Error('總筆數不正確')
+    throw actionError('import_total_invalid')
   }
   if (input.rows.length === 0 && input.errors.length === 0) {
-    throw new Error('沒有可匯入的資料')
+    throw actionError('import_empty')
   }
 
   input.rows.forEach((r, i) => validateRow(r, i))
@@ -205,7 +206,7 @@ export async function importCsvBatch(
       })
       .returning({ id: importBatches.id })
 
-    if (!batch) throw new Error('建立匯入紀錄失敗')
+    if (!batch) throw actionError('import_batch_create_failed')
 
     const cashRows = input.rows.filter((r) => r.type === 'expense')
     const incomeRows = input.rows.filter((r) => r.type === 'income')
@@ -293,7 +294,7 @@ export async function importCsvBatch(
 
 export async function rollbackImportBatch(batchId: string): Promise<void> {
   if (!batchId || typeof batchId !== 'string') {
-    throw new Error('批次 ID 不正確')
+    throw actionError('import_batch_id_invalid')
   }
 
   const { group } = await getViewerWriteContext()
@@ -310,10 +311,10 @@ export async function rollbackImportBatch(batchId: string): Promise<void> {
       .where(eq(importBatches.id, batchId))
       .limit(1)
 
-    if (!batch) throw new Error('找不到匯入紀錄')
-    if (batch.groupId !== group.id) throw new Error('無權限復原這次匯入')
+    if (!batch) throw actionError('import_batch_not_found')
+    if (batch.groupId !== group.id) throw actionError('import_rollback_forbidden')
     if (batch.status === 'rolled_back' || batch.rolledBackAt !== null) {
-      throw new Error('這次匯入已經復原過')
+      throw actionError('import_already_rolled_back')
     }
 
     const now = new Date()

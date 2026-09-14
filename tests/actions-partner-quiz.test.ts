@@ -150,7 +150,7 @@ describe('submitPartnerQuizAnswers', () => {
         { questionKey: 'risk', choiceKey: 'b' },
         { questionKey: 'transparency', choiceKey: 'c' },
       ],
-    })).rejects.toThrow(/範圍/)
+    })).rejects.toThrow('quiz_question_out_of_range')
   })
 
   // #1123 / #1140 — QuestionCard renders whatever this action throws. A prose

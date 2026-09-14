@@ -80,7 +80,7 @@ describe('createIncome', () => {
     await expect(createIncome({
       amount: 1, category: 'other', recipientId: 'stranger',
       occurredAt: '2026-05-01',
-    })).rejects.toThrow(/家計簿/)
+    })).rejects.toThrow('recipient_not_in_group')
   })
 
   it('rejects when assetId belongs to a different group', async () => {
@@ -138,7 +138,7 @@ describe('editIncome', () => {
       category: 'salary',
       recipientId: 'user-a',
       occurredAt: '2026-05-01',
-    })).rejects.toThrow(/找不到/)
+    })).rejects.toThrow('income_not_found')
   })
 
   it('rejects when viewer is pinned to a past epoch', async () => {

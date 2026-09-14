@@ -35,12 +35,13 @@ import {
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 function assertRecipientInGroup(
   recipientId: string,
   group: { memberA: string; memberB: string | null },
 ) {
-  assertMemberInGroup(recipientId, group, '收入歸屬不在家計簿內')
+  assertMemberInGroup(recipientId, group, 'recipient_not_in_group')
 }
 
 export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id: string }> {
@@ -101,7 +102,7 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
       isNull(recurringIncomeRules.deletedAt),
     ))
     .limit(1)
-  if (!existing) throw new Error('找不到該定期規則')
+  if (!existing) throw actionError('recurring_rule_not_found')
 
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
@@ -141,7 +142,7 @@ export async function pauseRule(id: string): Promise<void> {
       isNull(recurringIncomeRules.deletedAt),
     ))
     .returning({ id: recurringIncomeRules.id })
-  if (!updated) throw new Error('找不到該定期規則')
+  if (!updated) throw actionError('recurring_rule_not_found')
   revalidateAfterRecurringIncomeRuleMutation()
 }
 
@@ -161,7 +162,7 @@ export async function resumeRule(id: string): Promise<void> {
       isNull(recurringIncomeRules.deletedAt),
     ))
     .limit(1)
-  if (!rule) throw new Error('找不到該定期規則')
+  if (!rule) throw actionError('recurring_rule_not_found')
 
   const today = new Date().toISOString().slice(0, 10)
   const snapped = rule.nextOccurrenceAt > today
@@ -200,7 +201,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
       isNull(pendingIncomeOccurrences.resolvedTxId),
     ))
     .limit(1)
-  if (!row) throw new Error('待確認收入已被處理或找不到')
+  if (!row) throw actionError('pending_income_not_found')
 
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
@@ -224,7 +225,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
         isNull(pendingIncomeOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingIncomeOccurrences.id })
-    if (!resolved) throw new Error('待確認收入已被其他裝置處理')
+    if (!resolved) throw actionError('pending_income_handled_elsewhere')
 
     return { txId: created.id }
   })
@@ -272,7 +273,7 @@ export async function editAndConfirmPending(
       isNull(pendingIncomeOccurrences.resolvedTxId),
     ))
     .limit(1)
-  if (!pending) throw new Error('待確認收入已被處理或找不到')
+  if (!pending) throw actionError('pending_income_not_found')
 
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
@@ -296,7 +297,7 @@ export async function editAndConfirmPending(
         isNull(pendingIncomeOccurrences.resolvedTxId),
       ))
       .returning({ id: pendingIncomeOccurrences.id })
-    if (!resolved) throw new Error('待確認收入已被其他裝置處理')
+    if (!resolved) throw actionError('pending_income_handled_elsewhere')
 
     return { txId: created.id }
   })
@@ -318,7 +319,7 @@ export async function softDeleteRule(id: string): Promise<void> {
         isNull(recurringIncomeRules.deletedAt),
       ))
       .returning({ id: recurringIncomeRules.id })
-    if (!updated) throw new Error('找不到該定期規則')
+    if (!updated) throw actionError('recurring_rule_not_found')
 
     await tx
       .delete(pendingIncomeOccurrences)
@@ -344,6 +345,6 @@ export async function skipPending(pendingId: string): Promise<void> {
       isNull(pendingIncomeOccurrences.resolvedTxId),
     ))
     .returning({ id: pendingIncomeOccurrences.id })
-  if (!updated) throw new Error('待確認收入已被處理或找不到')
+  if (!updated) throw actionError('pending_income_not_found')
   revalidatePath('/dashboard')
 }

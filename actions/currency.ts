@@ -9,11 +9,12 @@ import { currentEpochHasRecords } from '@/lib/db/queries/epoch'
 import { upsertRate } from '@/lib/db/queries/currencyRates'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
+import { actionError } from '@/lib/action-errors'
 
 export async function setBaseCurrency(input: { currency: CurrencyCode }) {
   const { user, group } = await requireViewerGroup()
   if (!CURRENCIES.includes(input.currency)) {
-    throw new Error('不支援的幣別')
+    throw actionError('currency_unsupported')
   }
   if (input.currency === group.baseCurrency) {
     return  // no-op
@@ -23,7 +24,7 @@ export async function setBaseCurrency(input: { currency: CurrencyCode }) {
   // belongs to the chapter it was recorded in. Shared with the settings page so
   // the disabled selector and this guard can't drift apart again (#1106).
   if (await currentEpochHasRecords(group)) {
-    throw new Error('當前章節已有紀錄、不可修改主體幣別')
+    throw actionError('base_currency_locked')
   }
 
   const fromCurrency = group.baseCurrency
@@ -48,9 +49,9 @@ export async function setRate(input: {
   rate: string
 }) {
   const { group } = await requireViewerGroup()
-  if (input.fromCurrency === input.toCurrency) throw new Error('來源與目標幣別不能相同')
+  if (input.fromCurrency === input.toCurrency) throw actionError('currency_pair_same')
   const parsed = parseFloat(input.rate)
-  if (!Number.isFinite(parsed) || parsed <= 0) throw new Error('匯率必須是正數')
+  if (!Number.isFinite(parsed) || parsed <= 0) throw actionError('fx_rate_not_positive')
   await upsertRate({
     groupId: group.id,
     fromCurrency: input.fromCurrency,

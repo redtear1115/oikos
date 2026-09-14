@@ -144,7 +144,7 @@ describe('leaveGroup — active-trip guard', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    await expect(leaveGroup()).rejects.toThrow('請先結束旅行')
+    await expect(leaveGroup()).rejects.toThrow('leave_active_trip')
   })
 
   it('succeeds when all trips are ended (no active trips)', async () => {
