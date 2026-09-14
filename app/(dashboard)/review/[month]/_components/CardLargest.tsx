@@ -15,7 +15,7 @@ export function CardLargest({ snapshot }: { snapshot: MonthlyReviewSnapshotRow }
   const category = snapshot.largestExpenseCategory
     ? getCategory(snapshot.largestExpenseCategory)
     : null
-  const tint = category?.tint ?? 'var(--surface-2, var(--hairline))'
+  const tint = category?.tint ?? 'var(--hairline)'
 
   const localizedCategory = category
     ? (t.category[category.id as keyof typeof t.category] ?? category.label)

@@ -125,7 +125,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               }}
               maxLength={80}
               className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}
+              style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--hairline)' }}
             />
             {isEdit && hasAddress && !wantClearAddress && address.trim() === '' && (
               <button
@@ -158,7 +158,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             type="button"
             onClick={() => setShowCal(c => !c)}
             className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
-            style={{ background: 'var(--surface)', color: purchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--border)' }}
+            style={{ background: 'var(--surface)', color: purchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--hairline)' }}
           >
             <span>{purchasedAt ? formatDateAbsolute(purchasedAt, locale) : ts.house.pickDate}</span>
             <CalIcon size={16} />
@@ -182,7 +182,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             value={purchasePrice}
             onChange={e => setPurchasePrice(e.target.value)}
             className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-            style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--border)' }}
+            style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--hairline)' }}
           />
         </div>
       </div>
