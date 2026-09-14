@@ -1,7 +1,8 @@
 'use client'
 
 import { getCategory } from '@/lib/categories'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringExpenseRuleRow } from '@/lib/db/queries/recurringExpense'
@@ -28,6 +29,7 @@ function splitLabel(
 
 export function RuleListItem({ rule, onEdit }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const { viewer, partner, viewerIsA, isSolo } = useMember()
   const cat = getCategory(rule.category)
   const isPaused = !!rule.pausedAt
@@ -49,6 +51,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
     intervalLabel[rule.intervalMonths] ??
     t.recurringExpense.rule.intervalEveryNMonths.replace('{n}', String(rule.intervalMonths))
   const dayText = t.recurringExpense.rule.dayLabel.replace('{day}', String(rule.dayOfMonth))
+  const nextDateText = ruleNextDateText(rule, t.recurringExpense.rule.nextDate, locale)
 
   return (
     <li>
@@ -97,6 +100,11 @@ export function RuleListItem({ rule, onEdit }: Props) {
               {' · '}{dayText}
               {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
+            {nextDateText && (
+              <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                {nextDateText}
+              </div>
+            )}
             {!isSolo && (
               <div
                 className="text-xs mt-1 flex items-center gap-1.5 flex-wrap"

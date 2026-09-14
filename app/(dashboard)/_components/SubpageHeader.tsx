@@ -8,6 +8,10 @@ interface Props {
   /** Override the default `router.back()` behavior, e.g. to force a specific
    *  destination via `router.push('/settings')`. */
   onBack?: () => void
+  /** Render the title as the page's `<h1>`. Opt-in because some subpages
+   *  (trust / import / currency) already carry their own h1 below this strip;
+   *  pages whose only title is this one should pass `'h1'` (#1189). */
+  titleAs?: 'div' | 'h1'
 }
 
 /**
@@ -18,7 +22,7 @@ interface Props {
  * Per-page big serif `pageHeading` (Fraunces) sits in its own section below
  * this strip — it's not part of the header to keep both visual roles distinct.
  */
-export function SubpageHeader({ title, backLabel, onBack }: Props) {
+export function SubpageHeader({ title, backLabel, onBack, titleAs: Title = 'div' }: Props) {
   const router = useRouter()
   return (
     <div
@@ -43,9 +47,9 @@ export function SubpageHeader({ title, backLabel, onBack }: Props) {
         {backLabel}
       </button>
 
-      <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
+      <Title className="text-base font-medium" style={{ color: 'var(--ink)' }}>
         {title}
-      </div>
+      </Title>
 
       <div className="w-[64px]" aria-hidden="true" />
     </div>

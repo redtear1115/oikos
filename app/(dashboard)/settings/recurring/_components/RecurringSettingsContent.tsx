@@ -45,6 +45,7 @@ export function RecurringSettingsContent({
       <SubpageHeader
         title={t.settings.recurringSettings}
         backLabel={t.recurringIncome.back}
+        titleAs="h1"
       />
 
       <div
