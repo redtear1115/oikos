@@ -94,6 +94,10 @@ export function MigrateFooter({
           <span aria-hidden="true" style={{ color: 'var(--hairline)' }}>·</span>
           <Link href={legalLinks.privacyHref} className="underline">{legalLinks.privacyLabel}</Link>
         </div>
+        {/* Deliberately not translated (#1185): an origin mark set as a
+            tracked-caps badge, identical on all 4 locales and on the Landing
+            footer (_landing/Landing.tsx). Translating it here alone would make
+            the two brand footers disagree. */}
         <span
           className="text-xs"
           style={{ color: 'var(--ink-2)', letterSpacing: '2px' }}
