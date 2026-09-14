@@ -58,7 +58,7 @@ const VARIANTS: Record<'sm' | 'md', Variant> = {
     errorStyle: {
       background: 'var(--surface)',
       border: '1px solid var(--hairline)',
-      color: 'var(--debit)',
+      color: 'var(--debit-text)',
     },
     errorRetry: 'mt-2 underline cursor-pointer text-xs',
   },

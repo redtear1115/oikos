@@ -141,7 +141,7 @@ export function EditTextSheet({
             }}
           />
           {error && (
-            <div className="text-xs mt-2" style={{ color: 'var(--debit)' }}>{error}</div>
+            <div className="text-xs mt-2" style={{ color: 'var(--debit-text)' }}>{error}</div>
           )}
           <div className="text-xs mt-1.5 text-right" style={{ color: 'var(--ink-3)' }}>
             {value.length} / {maxLength}

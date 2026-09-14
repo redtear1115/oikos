@@ -250,7 +250,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
               style={{
                 background: 'var(--surface)',
                 border: '1px solid var(--hairline)',
-                color: 'var(--debit)',
+                color: 'var(--debit-text)',
               }}
             >
               {submitError}

@@ -112,7 +112,7 @@ export function OfflineBrowsingToggle() {
         />
       </div>
       {error && (
-        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit)' }}>
+        <div className="text-xs mt-2 px-1" style={{ color: 'var(--debit-text)' }}>
           {error}
         </div>
       )}

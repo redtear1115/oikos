@@ -145,7 +145,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
           />
 
           {loadError && (
-            <div className="text-sm py-3 px-3" style={{ color: 'var(--debit)' }}>
+            <div className="text-sm py-3 px-3" style={{ color: 'var(--debit-text)' }}>
               {loadError}
             </div>
           )}
