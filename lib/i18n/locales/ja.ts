@@ -2,7 +2,9 @@ import type { Translations } from './zh-TW'
 
 export const ja: Translations = {
   signIn: {
-    tagline: '家計簿の準備はできました。ふたりで始めましょう。',
+    // zh-TW「帳本準備好了，邀請對方一起。」に合わせた「状態 + 招待」の形。
+    // 「始めましょう」は Sign-in 規則が禁じる conversion 語（勧誘形）なので使わない。(#1158)
+    tagline: '家計簿の準備はできました。お相手を招いて、ふたりで。',
     continueWithGoogle: 'Google アカウントで続ける',
     authFailedNotice: 'ログインが完了しませんでした。もう一度お試しください。',
     signingIn: 'サインインしています',
@@ -73,6 +75,8 @@ export const ja: Translations = {
     srTagline: ' · ふたりの家計簿｜カップル・夫婦のための共有家計 PWA',
     srDescription:
       'カップル・夫婦のためにつくられた共有家計簿。日々の支出を一緒に記録、自動で割り勘・月次精算、家計予算・資産・保険・愛車の給油まで一画面で管理できます。',
+    aboutLabel: 'Futari について',
+    featuresLabel: 'Futari でできること',
     installHint: {
       cta: 'ホーム画面に追加することもできます',
       iosStep1: '画面下中央の共有ボタンをタップ',

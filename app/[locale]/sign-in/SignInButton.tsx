@@ -253,8 +253,17 @@ export function SignInButton({
       onClick={handleSignIn}
       disabled={pending}
       aria-busy={pending}
-      className="w-full h-12 rounded-xl border-0 text-sm font-medium cursor-pointer flex items-center justify-center gap-2 disabled:cursor-default"
+      // Height and radius follow DESIGN.md's button spec (#1161): `rounded-bubble`
+      // (14px) and `h-control-lg` (52px, the hero-CTA control height). `oik-btn`
+      // brings the shared ember focus-visible ring and nothing else.
+      className="oik-btn w-full h-control-lg rounded-bubble border-0 text-sm font-medium cursor-pointer flex items-center justify-center gap-2 disabled:cursor-default"
       style={
+        // Sign in with Apple 的按鈕外觀由 Apple 品牌規範（HIG）強制：只允許
+        // 純黑／純白／白底描邊，不得換成產品色。這裡的 #000/#fff 是刻意繞過
+        // DESIGN.md §2 的 Pure-Black-and-White Ban，不是疏漏。(#1159)
+        // 改成 var(--ink) 不會被 CI、type check 或 build 擋下來，也不會在送審時
+        // 被發現——會直接出貨，代價落在下一次 App Store 審查。
+        // 本檔是 CLAUDE.md 列的原生契約面：改動即時打到所有已安裝的殼。
         isApple
           ? { background: '#000', color: '#fff' }
           : { background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }
