@@ -438,7 +438,7 @@ export async function loadRecordsMonthSummaries(
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
-  if (!context) throw new Error('找不到家計簿')
+  if (!context) throw actionError('group_not_found')
   const { group, window: epochWindow } = context
 
   const drill = drillWire ? fromDrillWire(drillWire) : undefined

@@ -596,7 +596,7 @@ function UseCaseLinksSection({
                     letterSpacing: '-0.3px',
                   }}
                 >
-                  <span className="underline decoration-transparent underline-offset-4 transition-colors duration-150 ease-out group-hover:decoration-accent motion-reduce:transition-none">
+                  <span className="underline decoration-transparent underline-offset-4 transition-colors duration-150 ease-out group-hover:decoration-ink motion-reduce:transition-none">
                     {item.title}
                   </span>
                   <span
