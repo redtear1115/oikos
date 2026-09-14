@@ -680,6 +680,7 @@ export const zhCN: Translations = {
       trendIncome: '收入',
       trendNet: '累计结余',
       trendChartLabel: '每日收支趋势',
+      pieChartLabel: '占比饼图，共 {count} 项',
     },
   },
 

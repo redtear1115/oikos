@@ -21,6 +21,8 @@
  * revolution. The exact percentages remain readable in the legend below.
  */
 
+import { useTranslations } from '@/lib/i18n/client'
+
 const MIN_FRACTION = 3 / 360  // ~3° minimum arc — enough to register colour
 
 export function MonthlyStatsPieChart<R extends { total: number }>({
@@ -47,9 +49,12 @@ export function MonthlyStatsPieChart<R extends { total: number }>({
   size?: number
   innerRatio?: number
 }) {
+  // Called before the early returns so hook order stays stable.
+  const t = useTranslations()
   if (total <= 0) return null
   const valued = rows.filter((r) => r.total > 0)
   if (valued.length === 0) return null
+  const ariaLabel = t.records.stats.pieChartLabel.replace('{count}', String(valued.length))
 
   const cx = size / 2
   const cy = size / 2
@@ -66,7 +71,7 @@ export function MonthlyStatsPieChart<R extends { total: number }>({
     const chart = getSliceColor(valued[0], 0)
     const onClick = onSliceClick ? () => onSliceClick(valued[0], 0) : undefined
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="pie chart">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={ariaLabel}>
         <circle
           cx={cx}
           cy={cy}
@@ -153,7 +158,7 @@ export function MonthlyStatsPieChart<R extends { total: number }>({
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       role="img"
-      aria-label={`Pie chart of ${valued.length} segments`}
+      aria-label={ariaLabel}
     >
       {slices}
       {renderCenter()}
@@ -185,12 +190,12 @@ function CenterText({
         x={cx}
         y={cy - 4}
         textAnchor="middle"
+        // Type scale classes work on SVG <text>: CSS font-size is honoured
+        // there, in the same user units the old inline px value used.
+        className="text-lg font-medium tnum"
         style={{
           fontFamily: 'var(--font-serif)',
-          fontSize: 18,
-          fontWeight: 500,
           fill: 'var(--ink)',
-          fontVariantNumeric: 'tabular-nums',
         }}
       >
         {amount.toLocaleString('en-US')}
@@ -199,10 +204,8 @@ function CenterText({
         x={cx}
         y={cy + 14}
         textAnchor="middle"
-        style={{
-          fontSize: 12,
-          fill: 'var(--ink-3)',
-        }}
+        className="text-xs"
+        style={{ fill: 'var(--ink-3)' }}
       >
         {label}
       </text>

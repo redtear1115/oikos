@@ -685,6 +685,7 @@ export const ja: Translations = {
       trendIncome: '収入',
       trendNet: '累計収支',
       trendChartLabel: '日次の収支推移',
+      pieChartLabel: '内訳の円グラフ（{count}項目）',
     },
   },
 
