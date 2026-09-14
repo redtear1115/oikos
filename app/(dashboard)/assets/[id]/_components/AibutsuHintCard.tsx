@@ -56,7 +56,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
       <button
         type="button"
         onClick={onCtaPress}
-        className="w-full h-9 rounded-chip text-sm font-medium text-white cursor-pointer"
+        className="relative w-full h-9 rounded-chip text-sm font-medium text-white cursor-pointer before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
         style={{
           background: 'var(--accent)',
           boxShadow: '0 2px 6px rgba(224,136,86,0.3)',

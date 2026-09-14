@@ -67,6 +67,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
   const [error, setError] = useState<string | null>(null)
   const [showCal, setShowCal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const tf = t.assetDetail.fuelLog
 
   // Default payer/split derived from car's primary user
   const defaultPayerWho = useMemo<'M' | 'T'>(() => {
@@ -191,18 +192,19 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
       <SheetFrame
         open={open}
         onClose={onClose}
-        ariaLabel={mode === 'edit' ? '編輯加油記錄' : '加油記錄'}
+        ariaLabel={mode === 'edit' ? tf.titleEdit : tf.titleNew}
         topRadius={28}
         heightDvh={94}
       >
         {/* Header */}
         <div className="px-4 pt-3 pb-2 flex items-center gap-3 shrink-0">
+          {/* #1174 — 32px visual, 44px hit area via a transparent ::before. */}
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-chip flex items-center justify-center"
+            className="relative w-8 h-8 rounded-chip flex items-center justify-center before:absolute before:-inset-1.5 before:content-['']"
             style={{ background: 'rgba(58,36,25,0.06)' }}
-            aria-label="關閉"
+            aria-label={tf.closeAriaLabel}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M9 2l-5 5 5 5" stroke="var(--ink)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -210,7 +212,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           </button>
           <div className="flex-1">
             <div className="text-title font-medium text-[var(--ink)]" style={{ fontFamily: 'var(--font-serif)' }}>
-              {mode === 'edit' ? '編輯加油記錄' : '加油記錄'}
+              {mode === 'edit' ? tf.titleEdit : tf.titleNew}
             </div>
             <div className="text-xs text-[var(--ink-3)]">{car.name}</div>
           </div>
@@ -219,9 +221,9 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="w-8 h-8 rounded-chip flex items-center justify-center"
+              className="relative w-8 h-8 rounded-chip flex items-center justify-center before:absolute before:-inset-1.5 before:content-['']"
               style={{ background: 'rgba(58,36,25,0.06)' }}
-              aria-label="刪除"
+              aria-label={t.common.delete}
             >
               <span className="text-base leading-none text-[var(--ink)]">⋯</span>
             </button>
@@ -233,7 +235,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           className="mx-4 mt-1 p-5 rounded-tile text-center shrink-0"
           style={{ background: 'linear-gradient(180deg, var(--bg) 0%, var(--bg-page) 100%)' }}
         >
-          <div className="text-micro text-[var(--ink-3)] tracking-[1.4px] font-mono uppercase">本次油耗</div>
+          <div className="text-micro text-[var(--ink-3)] tracking-[1.4px] font-mono uppercase">{tf.econLabel}</div>
           <div className="mt-1.5 inline-flex items-baseline gap-1.5">
             <span
               className="text-amount-lg font-medium text-[var(--ink)] leading-none tabular-nums"
@@ -243,10 +245,10 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           </div>
           <div className="mt-1.5 text-micro text-[var(--ink-3)] font-mono">
             {lastOdometer === null
-              ? '第一次加油 · 之後才能算油耗'
+              ? tf.firstRefuelHint
               : dist !== null && dist > 0
               ? `${dist} km · ${liters || '0'}L`
-              : '輸入里程與油量自動計算'}
+              : tf.autoCalcHint}
           </div>
         </div>
 
@@ -257,7 +259,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
 
         {/* Form */}
         <div className="overflow-auto flex-1 px-4 pt-4 pb-3 flex flex-col gap-2.5">
-          <FormRow label="油量" unit="公升">
+          <FormRow label={tf.liters} unit={tf.litersUnit}>
             <input
               value={liters}
               onChange={e => setLiters(e.target.value)}
@@ -271,9 +273,9 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           </FormRow>
 
           <FormRow
-            label="加油里程"
+            label={tf.odometer}
             unit="km"
-            hint={lastOdometer !== null ? `上次 ${lastOdometer.toLocaleString()} km` : undefined}
+            hint={lastOdometer !== null ? tf.lastOdometer.replace('{km}', lastOdometer.toLocaleString()) : undefined}
           >
             <input
               value={odometer}
@@ -286,7 +288,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             />
           </FormRow>
 
-          <FormRow label="金額" unit="NT$">
+          <FormRow label={tf.cost} unit="NT$">
             <input
               value={cost}
               onChange={e => setCost(e.target.value)}
@@ -298,14 +300,14 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             />
           </FormRow>
 
-          <FormRow label="日期">
+          <FormRow label={tf.date}>
             <button
               type="button"
               onClick={() => setShowCal(v => !v)}
               className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-base text-left flex items-center"
               style={{ color: 'var(--ink)' }}
             >
-              {date ? formatDateAbsolute(date, locale) : '選擇日期'}
+              {date ? formatDateAbsolute(date, locale) : tf.pickDate}
             </button>
             {showCal && (
               <div className="mt-2">
@@ -320,7 +322,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           {/* 分攤方式 — only when there's a partner */}
           {partner && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-[var(--ink-2)] tracking-[0.4px]">分攤方式</span>
+              <span className="text-xs text-[var(--ink-2)] tracking-[0.4px]">{tf.splitLabel}</span>
               <SplitTypeSelector
                 value={split}
                 onChange={(s) => { if (s !== 'weighted') setSplit(s) }}
@@ -361,7 +363,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
                 cursor: canSubmit ? 'pointer' : 'default',
               }}
             >
-              {pending ? '儲存中…' : mode === 'edit' ? t.common.update : '記下這筆'}
+              {pending ? t.common.saving : mode === 'edit' ? t.common.update : tf.submit}
             </button>
           </div>
         )}
@@ -369,9 +371,9 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
 
       <ConfirmModal
         open={confirmDelete}
-        title="刪除這筆加油記錄？"
-        description="刪除後無法復原，但其他支出紀錄不受影響。"
-        confirmLabel="刪除"
+        title={tf.deleteTitle}
+        description={tf.deleteDescription}
+        confirmLabel={t.common.delete}
         pending={pending}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={handleDelete}

@@ -196,16 +196,18 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
           </svg>
           <span>{t.assetDetail.backAriaLabel}</span>
         </Link>
-        <div
+        {/* #1174 — every /assets/[id] variant renders this header, so the
+            asset name is the page's one h1. */}
+        <h1
           className="flex-1 text-lg font-medium tracking-tight truncate min-w-0 text-center"
           style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}
         >
           {name}
-        </div>
+        </h1>
         {onEditClick ? (
           <button
             onClick={onEditClick}
-            className="w-[30px] h-[30px] rounded-chip shrink-0 flex items-center justify-center"
+            className="relative w-[30px] h-[30px] rounded-chip shrink-0 flex items-center justify-center before:absolute before:-inset-[7px] before:content-['']"
             style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
             aria-label={t.assetDetail.editAriaLabel}
           >

@@ -159,7 +159,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
                 key={c.key}
                 type="button"
                 onClick={() => setColor(c.hex)}
-                className="w-9 h-9 rounded-full transition-all"
+                className="relative w-9 h-9 rounded-full transition-all before:absolute before:-inset-1 before:content-['']"
                 style={{
                   background: c.hex,
                   border: sel ? '3px solid var(--ink)' : `2px solid ${c.border}`,
@@ -173,7 +173,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
           <button
             type="button"
             onClick={() => setColor(null)}
-            className="w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs"
+            className="relative w-9 h-9 rounded-full transition-all flex items-center justify-center text-xs before:absolute before:-inset-1 before:content-['']"
             style={{
               border: color === null ? '3px solid var(--ink)' : '1.5px solid var(--hairline)',
               background: 'transparent',
@@ -212,7 +212,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
               <button
                 type="button"
                 onClick={() => setWantClearPlate(true)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
               >
                 {ts.child.clear}
@@ -222,7 +222,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
               <button
                 type="button"
                 onClick={() => setWantClearPlate(false)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
               >
                 {ts.child.cancelClear}

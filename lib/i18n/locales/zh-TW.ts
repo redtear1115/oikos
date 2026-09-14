@@ -688,6 +688,17 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** #1174 — accessible name for the masked plate chip (the ●●● glyphs are not a name). */
+    plateMaskedAriaLabel: string
+    /** #1173 — Template with `{date}`. */
+    lastRefuel: string
+    /** #1173 — Template with `{years}` and `{months}`. */
+    childAge: string
+    /** #1173 — Template with `{years}`. */
+    petAge: string
+    birthdayThisMonth: string
+    /** #1173 — Template with `{days}` (rendered emphasised, so keep it a standalone token). */
+    plantCompanionDays: string
     /** Section / switcher group labels for insurance assets by kind. */
     insuranceGroups: {
       shortTermProtection: string
@@ -1399,6 +1410,22 @@ export type Translations = {
       lapseTitle: string
       lapseDescription: string
       lapseConfirm: string
+      insuredShort: string
+      annualLabel: string
+      timelineStarts: string
+      timelineEnds: string
+      timelinePaid: string
+      /** #1173 — Template with `{paid}` and `{term}`. */
+      timelinePaidYears: string
+      timelineSumInsured: string
+      timelineInvested: string
+      timelineTarget: string
+      summaryAnnualPremium: string
+      /** #1173 — Template with `{count}` (rendered emphasised, so keep it a standalone token). */
+      summaryPolicyCount: string
+      summaryNextRenewal: string
+      /** #1173 — Template with `{days}`. */
+      summaryDaysUntil: string
     }
   }
 
@@ -1775,6 +1802,8 @@ export type Translations = {
     switcher: {
       emptyGroup: string
       currentLabel: string
+      /** #1173 — label of the car group in the car detail switcher. */
+      carGroup: string
     }
     notesSection: string
     recentExpenses: string
@@ -1837,6 +1866,27 @@ export type Translations = {
       plate: string
       /** #826 — section header above the masked plate reveal row. */
       plateSection: string
+    }
+    /** #1173 — NewFuelLog sheet (car detail → 加油). */
+    fuelLog: {
+      titleNew: string
+      titleEdit: string
+      closeAriaLabel: string
+      econLabel: string
+      firstRefuelHint: string
+      autoCalcHint: string
+      liters: string
+      litersUnit: string
+      odometer: string
+      /** Template with `{km}`. */
+      lastOdometer: string
+      cost: string
+      date: string
+      pickDate: string
+      splitLabel: string
+      submit: string
+      deleteTitle: string
+      deleteDescription: string
     }
     child: {
       sectionId: string
@@ -3243,6 +3293,12 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    plateMaskedAriaLabel: '車牌已隱藏',
+    lastRefuel: '上次加油 {date}',
+    childAge: '{years} 歲 {months} 個月',
+    petAge: '{years} 歲',
+    birthdayThisMonth: '🎂 本月生日',
+    plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
       shortTermProtection: '保護型 · 一年期',
       longTermProtection: '保護型 · 多年期',
@@ -3805,6 +3861,19 @@ export const zhTW: Translations = {
       lapseTitle: '已停止這份保單？',
       lapseDescription: '保單將從列表中移除，仍可從詳細頁找回。',
       lapseConfirm: '已停止',
+      insuredShort: '保 {name}',
+      annualLabel: '年繳',
+      timelineStarts: '生效',
+      timelineEnds: '到期',
+      timelinePaid: '已繳',
+      timelinePaidYears: '{paid} / {term} 年',
+      timelineSumInsured: '保額',
+      timelineInvested: '已投入',
+      timelineTarget: '目標',
+      summaryAnnualPremium: '年繳保費',
+      summaryPolicyCount: '共 {count} 張保單',
+      summaryNextRenewal: '下次續約',
+      summaryDaysUntil: '{days} 天後',
     },
   },
 
@@ -4176,6 +4245,7 @@ export const zhTW: Translations = {
     switcher: {
       emptyGroup: '（無）',
       currentLabel: '目前',
+      carGroup: '車輛',
     },
     notesSection: '備註',
     recentExpenses: '近期支出',
@@ -4230,6 +4300,25 @@ export const zhTW: Translations = {
       avgEconRecent: '近 6 個月',
       plate: '車牌',
       plateSection: '車輛資訊',
+    },
+    fuelLog: {
+      titleNew: '加油記錄',
+      titleEdit: '編輯加油記錄',
+      closeAriaLabel: '關閉',
+      econLabel: '本次油耗',
+      firstRefuelHint: '第一次加油 · 之後才能算油耗',
+      autoCalcHint: '輸入里程與油量自動計算',
+      liters: '油量',
+      litersUnit: '公升',
+      odometer: '加油里程',
+      lastOdometer: '上次 {km} km',
+      cost: '金額',
+      date: '日期',
+      pickDate: '選擇日期',
+      splitLabel: '分攤方式',
+      submit: '記下這筆',
+      deleteTitle: '刪除這筆加油記錄？',
+      deleteDescription: '刪除後無法復原，但其他支出紀錄不受影響。',
     },
     child: {
       sectionId: '身分證件',

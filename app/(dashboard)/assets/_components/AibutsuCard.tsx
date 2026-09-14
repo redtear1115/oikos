@@ -126,6 +126,7 @@ export function ChildCard({
   childHeightCm,
   childWeightG,
 }: ChildCardProps) {
+  const t = useTranslations()
   const age = computeAge(childBirthday)
   const birthdayThisMonth = isBirthdayThisMonth(childBirthday)
   const displayName = nickname || name
@@ -191,7 +192,9 @@ export function ChildCard({
             >
               {age && (
                 <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>
-                  {age.years} 歲 {age.months} 個月
+                  {t.assetListItem.childAge
+                    .replace('{years}', String(age.years))
+                    .replace('{months}', String(age.months))}
                 </span>
               )}
               {age && bodyStr && <Dot />}
@@ -207,7 +210,7 @@ export function ChildCard({
                     fontWeight: 500,
                   }}
                 >
-                  🎂 本月生日
+                  {t.assetListItem.birthdayThisMonth}
                 </span>
               )}
             </div>
@@ -240,6 +243,7 @@ export function PetCard({
   petBirthDate,
   petWeightG,
 }: PetCardProps) {
+  const t = useTranslations()
   const age = computeAge(petBirthDate)
   const speciesBreed = [petSpecies, petBreed].filter(Boolean).join('·')
   const weightKg = petWeightG != null ? `${(petWeightG / 1000).toFixed(1)} kg` : null
@@ -291,7 +295,7 @@ export function PetCard({
                 <span style={{ color: 'var(--ink-2)' }}>{speciesBreed}</span>
               )}
               {(age || weightKg) && speciesBreed && <Dot />}
-              {age && <span>{age.years} 歲</span>}
+              {age && <span>{t.assetListItem.petAge.replace('{years}', String(age.years))}</span>}
               {age && weightKg && <span>{weightKg}</span>}
               {!age && weightKg && <span>{weightKg}</span>}
             </div>
@@ -321,7 +325,10 @@ export function PlantCard({
   plantLocation,
   plantSproutedAt,
 }: PlantCardProps) {
+  const t = useTranslations()
   const days = companionDays(plantSproutedAt)
+  // `{days}` is rendered emphasised — split the template around it.
+  const [daysBefore, daysAfter = ''] = t.assetListItem.plantCompanionDays.split('{days}')
 
   return (
     <Link
@@ -367,9 +374,9 @@ export function PlantCard({
             >
               {days != null && (
                 <span>
-                  陪伴{' '}
+                  {daysBefore}
                   <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{days}</span>
-                  {' '}天
+                  {daysAfter}
                 </span>
               )}
               {days != null && plantLocation && <Dot />}

@@ -138,8 +138,11 @@ export function CarHeroCard({
               // chip shape so the row's visual rhythm doesn't shift; only
               // the characters become opaque.
               <span
+                // #1174 — the bullets are not a name; role="img" lets the
+                // localized label replace them for screen readers.
                 className="shrink-0"
-                aria-label="●●●●●●"
+                role="img"
+                aria-label={t.assetListItem.plateMaskedAriaLabel}
                 style={{
                   fontSize: 'var(--fs-xs)',
                   color: 'var(--ink-3)',
@@ -180,7 +183,7 @@ export function CarHeroCard({
           }}
         >
           {avgFuelEcon != null && <FactChip label={`${avgFuelEcon.toFixed(1)} km/L`} />}
-          {lastFuelDate != null && <FactChip label={`上次加油 ${lastFuelDate}`} />}
+          {lastFuelDate != null && <FactChip label={t.assetListItem.lastRefuel.replace('{date}', lastFuelDate)} />}
         </div>
       )}
     </Link>

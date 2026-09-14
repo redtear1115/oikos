@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import {
   createInsurance,
@@ -36,6 +36,10 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
   // Defaults to viewer.id on create. In solo mode the toggle is hidden because
   // there's only one possible value.
   const { viewer, partner } = useMember()
+  // #1174 — the 被保人 Field wraps a chip row plus a conditional text input,
+  // so it can't use Field's render-prop id. Pass our own id through `htmlFor`
+  // so the freeform input gets the Field label as its accessible name.
+  const insuredInputId = useId()
 
   const [kind, setKind] = useState(initial?.insKind ?? 'medical')
   const [insured, setInsured] = useState(initial?.insInsured ?? '')
@@ -168,7 +172,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         <div className="flex flex-wrap gap-1.5">
           {[{v:'medical',label:ts.insurance.kindMedical},{v:'life',label:ts.insurance.kindLife},{v:'accident',label:ts.insurance.kindAccident},{v:'cancer',label:ts.insurance.kindCancer},{v:'illness',label:ts.insurance.kindIllness},{v:'car',label:ts.insurance.kindCar},{v:'savings',label:ts.insurance.kindSavings}].map(o => (
             <button key={o.v} type="button" onClick={() => setKind(o.v)}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: kind === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: kind === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -195,7 +199,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={opt.id}
                   type="button"
                   onClick={() => setPolicyHolderUserId(opt.id)}
-                  className={`oik-segment flex-1 h-9 rounded-lg text-sm font-medium ${
+                  className={`oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] ${
                     active ? 'font-medium' : ''
                   }`}
                   style={{
@@ -218,7 +222,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
           row always renders since 「我」is always an option; 「對方」 is hidden
           in solo mode. Picking a member or child clears the freeform text;
           picking 自行輸入 reveals the text input. */}
-      <Field label={ts.insurance.insured}>
+      <Field label={ts.insurance.insured} htmlFor={insuredInputId}>
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-1.5">
             <button
@@ -228,7 +232,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredChildId(null)
                 setInsured('')
               }}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: insuredUserId === viewer.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === viewer.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -246,7 +250,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredChildId(null)
                   setInsured('')
                 }}
-                className="h-chip px-3.5 rounded-chip text-sm"
+                className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: insuredUserId === partner.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredUserId === partner.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -266,7 +270,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   setInsuredUserId(null)
                   setInsured('')
                 }}
-                className="h-chip px-3.5 rounded-chip text-sm"
+                className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: insuredChildId === child.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: insuredChildId === child.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -283,7 +287,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                 setInsuredUserId(null)
                 setInsuredChildId(null)
               }}
-              className="h-chip px-3.5 rounded-chip text-sm"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 border: insuredUserId === null && insuredChildId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: insuredUserId === null && insuredChildId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -295,7 +299,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
             </button>
           </div>
           {insuredUserId === null && insuredChildId === null && (
-            <TextInput value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
+            <TextInput id={insuredInputId} value={insured} onChange={e => setInsured(e.target.value.slice(0, 32))}
               placeholder={ts.insurance.insuredPlaceholder} />
           )}
         </div>
@@ -374,7 +378,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
             const sel = payCycle === o.v
             return (
               <button key={o.v} type="button" onClick={() => setPayCycle(o.v)}
-                className="oik-segment flex-1 h-8 rounded-[9px] text-xs font-medium"
+                className="oik-segment relative flex-1 h-8 rounded-lg text-xs font-medium before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: 'none',
                   background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
@@ -423,7 +427,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
               <button
                 type="button"
                 onClick={() => setVehicleId(null)}
-                className="h-chip px-3.5 rounded-chip text-sm"
+                className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                 style={{
                   border: vehicleId === null ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                   background: vehicleId === null ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
@@ -438,7 +442,7 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
                   key={car.id}
                   type="button"
                   onClick={() => setVehicleId(car.id)}
-                  className="h-chip px-3.5 rounded-chip text-sm"
+                  className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
                   style={{
                     border: vehicleId === car.id ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                     background: vehicleId === car.id ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
