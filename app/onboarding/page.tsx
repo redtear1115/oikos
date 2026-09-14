@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { oikosGroups } from '@/lib/db/schema'
 import { eq, or } from 'drizzle-orm'
+import { getTranslations } from '@/lib/i18n/t'
 import PhilosophyCards from './PhilosophyCards'
 
 // Auth-walled, transient flow — keep crawlers out (#391). robots.ts also
@@ -27,5 +28,8 @@ export default async function OnboardingPage() {
 
   if (group) redirect('/dashboard')
 
-  return <PhilosophyCards />
+  // Outside the (dashboard) layout, so there is no TranslationsProvider here —
+  // hand the cards their copy directly, the same way /setup does (#1163).
+  const t = await getTranslations()
+  return <PhilosophyCards copy={t.onboarding} />
 }

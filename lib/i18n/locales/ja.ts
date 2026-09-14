@@ -1153,6 +1153,43 @@ export const ja: Translations = {
     },
   },
 
+  // TODO: unconfirmed translation — needs native review. (#1163)
+  onboarding: {
+    heading: 'Futari の5つの考え方',
+    skip: 'スキップ',
+    next: '次へ',
+    start: '最初の1件を記録',
+    progress: '{total} 枚中 {current} 枚目',
+    paydayMark: '05 / 月',
+    cards: [
+      {
+        eyebrow: '考え方',
+        quote: ['Futari は、', 'どちらが多く使ったかを', '聞きません。'],
+        subtitle: '記録するのは「何があったか」だけ。先に払ったのは、そのとき都合がよかったから。',
+      },
+      {
+        eyebrow: 'ふたりで',
+        quote: ['Futari に入ったものは、', 'ふたりの*共有のもの*。'],
+        subtitle: 'これは割り勘の帳簿ではありません。ふたりで共有する家計簿です — 1件入れば、ふたりとも見られます。',
+      },
+      {
+        eyebrow: 'ならわし',
+        quote: ['お給料が入る日は、', 'ふたりで一緒に', '感じる瞬間。'],
+        subtitle: 'だから定期収入は、その日にカードとして届きます — 知らせて、一緒に確認するために。',
+      },
+      {
+        eyebrow: 'まもる',
+        quote: ['保険は費用ではなく —', 'パートナーと一緒に', '守る約束。'],
+        subtitle: 'だから保険は支出ではなく「愛物」に置いています。毎回の支払いは、その約束をもう一度交わすこと。',
+      },
+      {
+        eyebrow: 'はじめる',
+        quote: ['準備はいいですか？', '最初の1件から、', 'ゆっくり始めましょう。'],
+        subtitle: '完璧なタイミングを待たなくて大丈夫 — 家計簿はふたりと一緒に育っていきます。',
+      },
+    ],
+  },
+
   // TODO: unconfirmed translation — needs native review.
   setup: {
     invite: {
