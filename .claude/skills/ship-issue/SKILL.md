@@ -6,12 +6,13 @@ description: >
   選項與建議；其餘由 pilotfish executor / verifier 自主完成。Use when the user says
   "/ship-issue 1177", "做 #1234", "把這張 issue 做掉", "ship issue", "處理 issue",
   or asks the agent to autonomously take an issue to a PR. Stops at PR open —
-  never merges.
+  never merges. §8 also covers batch-verifying many open PRs before the user
+  merges them ("驗證這些 PR", "10 多條 PR 等著 merge", "verify PRs").
 ---
 
 # ship-issue
 
-協調者 driver。第一版由 #1177 試跑（→ PR #1215）歸納而來；下面每一條「為什麼」都是那次實際踩到的。
+協調者 driver。第一版由 #1177 試跑（→ PR #1215）歸納而來；§8 批次驗證由 2026-09-14 驗證 v1.5.14 的 13 條 PR 歸納而來。下面每一條「為什麼」都是實際踩到的。
 
 **使用者的角色是做選擇，不是做研究。** 協調者要把查證做完、把選項整理好、把建議放第一個，再用 `AskUserQuestion` 問。
 
@@ -101,6 +102,11 @@ ln -s "$PWD/node_modules" .claude/worktrees/<n>-<slug>/node_modules
 
 用 symlink 的 `node_modules` 在 #1177 跑 tsc、lint、test、build 都沒問題。如果 build 真的因為 symlink 失敗，才改成在 worktree 裡跑 `npm ci`。
 
+**`.env.local` 不能省。** 就算只是跑測試也要：`__tests__/queries-*` 這類 DB integration suite 需要 `DATABASE_URL`。
+- **失效的樣子**：vitest 回報 3 個左右的 suite `FAIL`，錯誤訊息是 `DATABASE_URL not set; cannot run integration test`。這很容易被誤判成 PR 弄壞了測試。
+
+**例外：** 如果 PR 動到 `patches/**`，就不能 symlink `node_modules`。主 checkout 的 `node_modules` 裝的是舊 patch，build 出來驗證的會是錯的程式碼。這種情況要在 worktree 裡跑 `npm ci`，或把該套件 `npm pack` 到沙盒裡驗。#1209 就是這樣。
+
 ### 4b. 派 `pilotfish:executor`
 
 有判斷成分的工作派 executor；純機械、規格完全寫死的派 `mech-executor`。brief 必須包含以下各段，缺一段 executor 就會自己猜：
@@ -128,6 +134,11 @@ git -C <worktree> diff HEAD~1 -- <主要檔案>
 brief 要給：worktree、candidate commit、base（註明 base 上的改動**不屬於**這次的 claim）、逐條編號的 claim、要對照的專案規則，以及想要它特別探查的邊界。
 
 **登入後才看得到的頁面**：agent 沒有 session，**不要嘗試登入**。請 verifier 在 repo 外寫一份 vitest + jsdom 設定，直接 render 元件（server actions 用 mock），檢查可及名稱、`aria-describedby`、class 等。#1177 用這個方法驗證了 `TripSheet`。
+
+**dev 和 production 行為不同的地方，要叫 verifier 明確檢查。** test 和 `npm run dev` 都跑在 development 模式，有一類 bug 只在 production build 出現：
+- **server action 丟出的錯誤**：production 會把 `Error.message` 拿掉，只留 digest。任何「server throw 帶資訊 → client 讀 `e.message`」的設計，在 prod 都拿不到那個資訊。#1213 的 82 個錯誤碼就是這樣，後續由 #1223 追蹤。
+- **失效的樣子**：test 全過、dev 顯示正確，prod 使用者永遠只看到通用 fallback，沒有任何錯誤或警告。
+- **驗證方式**：請 verifier 讀 `node_modules/next/dist/docs/` 和 react-server-dom 的 production runtime，或直接用 production 序列化路徑重現。只有在 Vercel preview 上觸發才算真正確認。
 
 判定結果的處理：
 
@@ -166,5 +177,81 @@ PR body 的段落（以 #1215 為範本）：
 ## 7. 收尾（使用者 merge 之後，或下次被叫回來時）
 
 - **stacked PR**：base PR merge 之後，`gh pr edit <n> --base main`，確認 `files` 數量沒變，再更新 PR body 裡 stacked 的說明。GitHub 只在 base branch 被刪除時才會自動 retarget，branch 還在的話，PR 會停在舊的 base 上。
+- **比對 merge 進去的 head。** `gh pr view <n> --json headRefOid,mergeCommit` 查出的 head，要等於驗證過的 sha。
+  - **失效的樣子**：修正 commit 在 PR merge **之後**才 push 到 branch，就被孤立在已經 merge 的 branch 上。GitHub 不會提示，PR 顯示 merged，main 卻少了那個修正。
+  - 2026-09-14 一次踩到三個：#1213 的 rebase 修正沒進去，main 測試因此紅燈；#1216 的 hover 修正、#1221 的 NUL byte 修正也都沒進去。最後靠 #1224 補回。
+  - 補救：從 main 開一條新 PR，把遺漏的 commit cherry-pick 進去。**不要**再 push 到已經 merge 的 branch。
+- 轉交修正給其他 session 時，要同時提醒使用者「等那條 PR 的 head 更新之後再 merge」。
 - PR merge 之後：`git worktree remove .claude/worktrees/<n>-<slug>`，並刪除 branch。
 - 這次如果有新的摩擦，回頭更新本檔。
+
+## 8. 批次驗證多條 PR（使用者要 merge 一批 PR 之前）
+
+情境：一個 milestone 累積了很多條 open PR，每條的 CI 都是綠燈，使用者要逐條 merge。**CI 綠燈不等於能 merge。** 驗證分四層，越前面越便宜、越能自動化，使用者只看最後一層。
+
+**角色**：如果已經有其他 session 在協調這個 milestone 的開發，本 session 只做**唯讀驗證**，不改任何 PR branch、不 push。需要修的地方轉交給 PR 的 owner session。先用 `ListAgents` 查，並跟對方講清楚分工。
+
+### 8a. 盤點
+
+```bash
+gh pr list --state open --json number,title,headRefName,baseRefName,milestone,mergeable,statusCheckRollup,files
+```
+
+- **依 milestone 分組。** 先收完當前 milestone，下一個 milestone 的 PR 整批排在後面，**不要依衝突或風險穿插**。跨 milestone 的衝突，交給後面那個 milestone 的 PR 去 rebase。
+- 算出兩兩 PR 之間的檔案重疊（排除 locale 檔另外看）。有重疊的組合就是 merge 順序的約束。
+- 檢查每條 PR 的 check 數量是否一致。retarget 或 base 改過的 PR，CI 可能沒重跑（#1215 只跑了 2 個，其他 PR 都是 3 個）。
+
+### 8b. 第 1 層：整合試合（自動，main 自己跑）
+
+開一個暫時 worktree（`.claude/worktrees/verify-integration`，要 symlink `.env.local` 和 `node_modules`），在本機暫時 branch 上依建議順序 `git merge --no-ff refs/remotes/pr/<n>`（先 `git fetch origin pull/<n>/head:refs/remotes/pr/<n>`）：
+- 每合一條就跑 `tsc --noEmit` 和 `vitest run`
+- 全部合完再跑 `lint` 和 `build`
+- 遇到衝突就 `merge --abort` 並記錄，繼續下一條
+
+這一層抓的是**單條 PR 的 CI 看不到的語意衝突**：兩條各自都綠，合在一起就壞。#1210 新加了一行中文 throw，#1213 的測試禁止中文 throw，兩條合在一起 test 就 FAIL。整條跑完大約 30～40 分鐘，用 `run_in_background` 跑，不要 detach。
+
+### 8c. 第 2 層：依風險派 agent（自動，平行）
+
+每條高、中風險 PR 各開一個 detached worktree，把 diff 和 PR body 匯出成檔案，再平行派出：
+
+| 風險 | 典型 PR | 派誰 |
+|---|---|---|
+| 高 | auth、redirect、原生契約面 | `pilotfish:security-reviewer`（它沒有 Bash，要給 diff 檔） |
+| 高 | 大範圍重構（幾十個檔案） | `pilotfish:verifier`，並指定查 dev 和 prod 的差異 |
+| 中 | 資料聚合、金額、查詢 | `pilotfish:verifier`，對照新舊查詢條件；DB 只准 `BEGIN READ ONLY`，不讀真實資料 |
+| 中 | 全域元件（sheet、focus trap） | `pilotfish:verifier`，在 repo 外寫 jsdom 測試，並拿同一組測試回 main 跑，確認抓得到舊 bug |
+| 中 | 原生 build | `pilotfish:verifier`，本機 build；超過 10 分鐘就回報指令，由 main 執行 |
+| 低 | UI／i18n 小修 | 不派 agent，main 做機械檢查（見下） |
+
+請 verifier **不要跑 `npm run build`**，第 1 層已經跑過了，機器也在同時跑整合試合。
+
+**機械檢查**（只看 PR 新增的行）：
+- 跑出階梯的字級（`text-2xl`、`text-3xl`、`text-[Npx]`、`fontSize:`）
+- inline style 寫了 token 已涵蓋的靜態值
+- 色值字面量（hex、rgba）。注意：hex regex 會把註解裡的 `#1234` issue 編號誤判成色值，要排除
+- locale 新增行裡的驚嘆號、禁用詞（管理、追蹤、監控，含簡體）、空字串
+
+**GitHub 看不看得到 diff。** diff 裡出現 `Binary files … differ` 的文字檔，reviewer 就看不到內容。#1221 的測試檔含一個字面 NUL byte，整個測試檔在 PR 上都看不到。
+
+### 8d. 第 3 層：人工清單（自動彙整）
+
+從每條 PR body 抓出沒勾的 checkbox，以及「沒驗到」「待確認」「真機」「實機」段落，再加上各 verifier 列出的人工檢查項目，**依裝置和畫面分組**，合成一張清單，讓使用者一次看完：
+
+- 🌐 網頁，不用登入（landing、sign-in、migrate）
+- 🔑 網頁，要登入（建議 en 和 ja 各看一輪）
+- 📱 iOS 殼、🤖 Android 殼
+- 🗣 VoiceOver／TalkBack
+- 📝 譯文待確認（標出份量最重的 PR）
+
+### 8e. 報告與轉交
+
+給使用者一份報告：
+- PR 狀態總表：驗證結果、可以 merge／先修／等決定
+- 建議的 merge 順序（依 milestone 分組）
+- 人工清單
+
+需要產品取捨的 finding（例如 #1213 要不要改成 return），用 `AskUserQuestion` 問。
+
+修正項目轉交給 owner session 時要寫清楚：PR 編號、file:line、症狀、建議修法。**使用者的決定可以轉述，但對方應該向使用者本人再確認一次**，這是對的，不要催。
+
+使用者 merge 之後，照第 7 步比對每條 merge 進去的 head，再到 main 上實跑受影響的測試。整批驗證用過的暫時 worktree 和整合 branch 全部清掉。
