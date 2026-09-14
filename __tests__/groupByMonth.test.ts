@@ -32,12 +32,28 @@ describe('groupByMonth', () => {
     expect(groups[0].items.map((i) => i.id)).toEqual(['z', 'y', 'x'])
   })
 
-  it('handles boundary day (UTC vs local TZ note)', () => {
+  it('groups by Asia/Taipei calendar day, not the UTC day', () => {
+    // 2026-05-01T00:00:00Z is 2026-05-01 08:00 in Taipei — still May either way,
+    // so this alone wouldn't catch a UTC-vs-Taipei regression (see the boundary
+    // test below for that).
     const items: T[] = [
       { id: 'a', transactedAt: '2026-05-01T00:00:00Z', amount: 1 },
     ]
     const groups = groupByMonth(items, (t) => t.transactedAt)
     expect(groups[0].monthKey).toBe('2026-05')
+  })
+
+  it('rolls a late-UTC timestamp into the next Taipei month at the boundary', () => {
+    // 2026-08-31T16:30:00.000Z + 8h (Asia/Taipei) = 2026-09-01T00:30 local —
+    // already September in Taipei even though the ISO string still reads
+    // 08-31. A `.slice(0, 7)`-on-UTC implementation would bucket this into
+    // '2026-08', one calendar day too early for every Taipei-scoped
+    // consumer (the stats card, the SQL month-scoping queries, #1208).
+    const items: T[] = [
+      { id: 'a', transactedAt: '2026-08-31T16:30:00.000Z', amount: 1 },
+    ]
+    const groups = groupByMonth(items, (t) => t.transactedAt)
+    expect(groups[0].monthKey).toBe('2026-09')
   })
 })
 

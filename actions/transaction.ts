@@ -6,11 +6,23 @@ import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { validateTransactionInput, type RecordStatus } from '@/lib/validators'
-import { listTransactionsPaged, listFeedAllPaged, listDescriptionSuggestions, type FeedRow, type TxnCursor, type ResolvedTxnFilter, type FeedKind } from '@/lib/db/queries/transactions'
+import {
+  listTransactionsPaged,
+  listFeedAllPaged,
+  listTransactionsMonthSummaries,
+  listFeedAllMonthSummaries,
+  listDescriptionSuggestions,
+  type FeedRow,
+  type TxnCursor,
+  type ResolvedTxnFilter,
+  type FeedKind,
+} from '@/lib/db/queries/transactions'
 import { listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
+import { listIncomesMonthSummaries } from '@/lib/db/queries/incomes'
+import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import { fromWire, type DateRange, type TxnFilterWire } from '@/lib/filter'
-import { resolveTxnFilter } from '@/lib/resolveTxnFilter'
+import { resolveTxnFilter, resolveIncomeFilter } from '@/lib/resolveTxnFilter'
 import { fromDrillWire, type DrillFilterWire } from '@/lib/drill'
 import { eq, and, isNull } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
@@ -403,6 +415,45 @@ export async function loadMoreFeedAll(
     epochWindow,
   })
   return rows.map(toPagedTxnRow)
+}
+
+/**
+ * Per-Asia/Taipei-month aggregates (count + expense/income sums) for one
+ * records-feed tab, using the exact same row-producing conditions as that
+ * tab's pager (`listTransactionsPaged` / `listFeedAllPaged` /
+ * `listIncomesPaged`) so the feed's month headers never disagree with the
+ * rows loaded underneath them (#1208). Takes exactly the params the tab's
+ * loader in `RecordsList.tsx` (`tabLoader`) closes over, so callers can pass
+ * the same `monthKey` / `drillWire` / `filterWire` / `dateRange` through
+ * unchanged.
+ */
+export async function loadRecordsMonthSummaries(
+  tab: 'all' | 'expense' | 'income',
+  monthKey?: string,
+  drillWire?: DrillFilterWire,
+  filterWire?: TxnFilterWire,
+  dateRange?: DateRange,
+): Promise<FeedMonthSummary[]> {
+  const { user } = await requireViewer()
+
+  const context = await resolveViewerEpochContext(user.id)
+  if (!context) throw new Error('找不到家計簿')
+  const { group, window: epochWindow } = context
+
+  const drill = drillWire ? fromDrillWire(drillWire) : undefined
+
+  if (tab === 'income') {
+    const incomeFilter = filterWire
+      ? resolveIncomeFilter(fromWire(filterWire), user.id, group)
+      : undefined
+    return listIncomesMonthSummaries(group.id, monthKey, drill, incomeFilter, dateRange, epochWindow)
+  }
+
+  const resolved = resolveWireFilter(filterWire, user.id, group)
+  const opts = { groupId: group.id, filter: resolved, monthKey, drill, dateRange, epochWindow }
+  return tab === 'expense'
+    ? listTransactionsMonthSummaries(opts)
+    : listFeedAllMonthSummaries(opts)
 }
 
 /**

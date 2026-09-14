@@ -9,6 +9,7 @@ import { type DateRange } from '@/lib/filter'
 import { daysInMonth } from '@/lib/monthKey'
 import type { EpochWindow } from './epoch'
 import type { ResolvedIncomeFilter } from './incomes'
+import type { FeedMonthSummary } from './feedMonthSummary'
 import {
   amountClause,
   andClause,
@@ -176,28 +177,23 @@ export interface ListPagedOptions {
 }
 
 /**
- * Page through active transactions + settlements (newest first) using a composite
- * (transactedAt/settledAt, createdAt) cursor. Pass `cursor=null` for the first page.
+ * Row-producing WHERE conditions for the 支出 (expense) tab feed —
+ * everything except the cursor / ORDER BY / LIMIT that only the pager needs.
+ * Shared by `listTransactionsPaged` (adds cursor + paging) and
+ * `listTransactionsMonthSummaries` (adds a `GROUP BY` month instead) so the
+ * two can never drift (#1208 — that drift is exactly what produced the
+ * mismatched month-header totals this shared builder exists to prevent).
  *
- * Settlements are normalized into the same row shape as transactions: settledAt → transactedAt,
- * COALESCE(note,'還款') → description, 'settle' → category, NULL → splitType.
+ * Returns `settlements: null` when the settlements branch should be dropped
+ * entirely (a 分攤/分類/愛物 dim or any drill-down is active) — callers omit
+ * the `UNION ALL` in that case rather than rendering an always-false clause.
  */
-export async function listTransactionsPaged(opts: ListPagedOptions): Promise<FeedRow[]> {
-  const { groupId, cursor, limit = 20, filter, monthKey, drill, dateRange, epochWindow } = opts
-
-  // Income-kind drill on a cash-transaction query: short-circuit to empty
-  // rather than returning unrelated cash rows. The page-1 refetch on this
-  // tab will see zero results, which matches the "this drill has no rows
-  // for this tab" contract.
-  if (drill?.kind === 'income') return []
-  // Same short-circuit for an income-only structured filter (e.g. user
-  // picked an income category but no expense category — they're saying
-  // "show me income only", so no cash rows should pass).
-  if (filter?.cutAll) return []
+function buildExpenseFeedFilters(
+  opts: Omit<ListPagedOptions, 'cursor' | 'limit'>,
+): { tx: SQL; settlements: SQL | null } {
+  const { filter, monthKey, drill, dateRange, epochWindow } = opts
 
   const epoch = andClause(epochClause('created_at', epochWindow))
-  const txCursor = andClause(cursorClause('transacted_at', 'created_at', cursor))
-  const setCursor = andClause(cursorClause('settled_at', 'created_at', cursor))
 
   // Per-branch filter clauses
   const txPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
@@ -209,7 +205,7 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
   const txStatus = andClause(filter ? statusClause(filter.status) : undefined)
 
   // Drill-down clauses (mutually exclusive with one another). Income drill is
-  // handled by the short-circuit above.
+  // handled by the caller's early short-circuit (`drill?.kind === 'income'`).
   const txDrillCategory = drill?.kind === 'category'
     ? sql`AND category = ${drill.categoryId}`
     : sql``
@@ -222,22 +218,62 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
   // asset_id, so a drill row would never match them anyway.
   const drillExcludesSettlements = drill !== undefined && drill !== null
 
-  const setPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
-  // Settlements carry amount but no status / split / category / asset — only
-  // amount range is meaningful for them. status='pending' already drops the
-  // entire settlements branch via excludeSettlements.
-  const setAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
-
   // Page-level date scope: feed shows only the selected window. Custom range
   // (from FilterSheet) takes precedence over the legacy single-month param.
   const txMonth = andClause(dateRangeClause('transacted_at', monthKey, dateRange))
   const setMonth = andClause(dateRangeClause('settled_at', monthKey, dateRange))
 
+  // Each fragment is either `sql\`\`` (empty) or `AND <cond>` — a space
+  // between every pair is required even when both sides are non-empty:
+  // template placeholders with no literal text between them concatenate
+  // with zero separation (`AND paid_by = $2AND created_at >= $3`, a SQL
+  // syntax error), not the newline the original inline-template version of
+  // this query had for free between each `${...}` line.
+  const tx = sql`${txPayer} ${txSplit} ${txBurden} ${txCategory} ${txAssetIds} ${txAmount} ${txStatus} ${txDrillCategory} ${txDrillAsset} ${txMonth} ${epoch}`
+
   // Drop the settlements branch entirely when 分攤 / 分類 / 愛物 dims are active
   // OR when a drill-down is active (a category/asset drill never matches a
   // settlement, and an income drill renders this query irrelevant — but we
   // still want zero settlements showing through alongside it).
-  const settlementsBranch = filter?.excludeSettlements || drillExcludesSettlements
+  if (filter?.excludeSettlements || drillExcludesSettlements) {
+    return { tx, settlements: null }
+  }
+
+  const setPayer = andClause(eqValueClause('paid_by', filter?.paidBy))
+  // Settlements carry amount but no status / split / category / asset — only
+  // amount range is meaningful for them. status='pending' already drops the
+  // entire settlements branch via excludeSettlements.
+  const setAmount = andClause(filter ? amountClause(filter.amountMin, filter.amountMax) : undefined)
+  const settlements = sql`${setPayer} ${setAmount} ${setMonth} ${epoch}`
+
+  return { tx, settlements }
+}
+
+/**
+ * Page through active transactions + settlements (newest first) using a composite
+ * (transactedAt/settledAt, createdAt) cursor. Pass `cursor=null` for the first page.
+ *
+ * Settlements are normalized into the same row shape as transactions: settledAt → transactedAt,
+ * COALESCE(note,'還款') → description, 'settle' → category, NULL → splitType.
+ */
+export async function listTransactionsPaged(opts: ListPagedOptions): Promise<FeedRow[]> {
+  const { groupId, cursor, limit = 20, filter, drill } = opts
+
+  // Income-kind drill on a cash-transaction query: short-circuit to empty
+  // rather than returning unrelated cash rows. The page-1 refetch on this
+  // tab will see zero results, which matches the "this drill has no rows
+  // for this tab" contract.
+  if (drill?.kind === 'income') return []
+  // Same short-circuit for an income-only structured filter (e.g. user
+  // picked an income category but no expense category — they're saying
+  // "show me income only", so no cash rows should pass).
+  if (filter?.cutAll) return []
+
+  const { tx, settlements } = buildExpenseFeedFilters(opts)
+  const txCursor = andClause(cursorClause('transacted_at', 'created_at', cursor))
+  const setCursor = andClause(cursorClause('settled_at', 'created_at', cursor))
+
+  const settlementsBranch = settlements === null
     ? sql``
     : sql`
       UNION ALL
@@ -263,10 +299,7 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
       FROM "Settlements"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${setCursor}
-      ${setPayer}
-      ${setAmount}
-      ${setMonth}
-      ${epoch}
+      ${settlements}
     `
 
   const rows = await db.execute<{
@@ -298,17 +331,7 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
       ${txCursor}
-      ${txPayer}
-      ${txSplit}
-      ${txBurden}
-      ${txCategory}
-      ${txAssetIds}
-      ${txAmount}
-      ${txStatus}
-      ${txDrillCategory}
-      ${txDrillAsset}
-      ${txMonth}
-      ${epoch}
+      ${tx}
       ${settlementsBranch}
     ) AS feed
     ORDER BY transacted_at DESC, created_at DESC
@@ -319,17 +342,89 @@ export async function listTransactionsPaged(opts: ListPagedOptions): Promise<Fee
 }
 
 /**
- * Records 'all' tab feed: UNION CashTransactions + Settlements + IncomeTransactions
- * (active only). Cursor uses (transactedAt, createdAt) where IncomeTransactions
- * maps occurred_at → transacted_at (cast to timestamptz at midnight local UTC).
- *
- * Income rows have null splitType, kind='income'.
+ * Per-month aggregate for the 支出 tab, using the exact same row-producing
+ * conditions as `listTransactionsPaged` (via `buildExpenseFeedFilters`) but
+ * grouped by Asia/Taipei calendar month instead of paged. Powers the
+ * records-feed month headers so they read the same number regardless of how
+ * many pages have loaded (#1208).
  */
-export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[]> {
-  const { groupId, cursor, limit = 20, filter, monthKey, drill, dateRange, epochWindow } = opts
+export async function listTransactionsMonthSummaries(
+  opts: Omit<ListPagedOptions, 'cursor' | 'limit'>,
+): Promise<FeedMonthSummary[]> {
+  const { groupId, filter, drill } = opts
+
+  // Same short-circuits as the pager — see listTransactionsPaged above.
+  if (drill?.kind === 'income') return []
+  if (filter?.cutAll) return []
+
+  const { tx, settlements } = buildExpenseFeedFilters(opts)
+
+  const settlementsBranch = settlements === null
+    ? sql``
+    : sql`
+      UNION ALL
+
+      SELECT
+        amount,
+        to_char(settled_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM') AS month,
+        'settlement'::text AS kind
+      FROM "Settlements"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${settlements}
+    `
+
+  const rows = await db.execute<{
+    month: string
+    count: number
+    expense_total: number
+    income_total: number
+  }>(sql`
+    SELECT
+      month,
+      COUNT(*)::int AS count,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'transaction'), 0)::int AS expense_total,
+      0::int AS income_total
+    FROM (
+      SELECT
+        amount,
+        to_char(transacted_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM') AS month,
+        'transaction'::text AS kind
+      FROM "CashTransactions"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${tx}
+      ${settlementsBranch}
+    ) AS feed
+    GROUP BY month
+  `)
+
+  return rows.map((r) => ({
+    monthKey: r.month,
+    count: r.count,
+    expenseTotal: r.expense_total,
+    incomeTotal: r.income_total,
+  }))
+}
+
+/**
+ * Row-producing WHERE conditions for the 全部 (all) tab feed's three
+ * branches — everything except the cursor / ORDER BY / LIMIT that only the
+ * pager needs. Shared by `listFeedAllPaged` (adds cursor + paging) and
+ * `listFeedAllMonthSummaries` (adds a `GROUP BY` month instead) so the two
+ * can never drift (#1208).
+ *
+ * `settlements: null` means the branch is dropped entirely (mirrors
+ * `buildExpenseFeedFilters`); the tx/income branches are never dropped
+ * wholesale — an incompatible drill/filter narrows them to zero rows via an
+ * `AND FALSE` clause instead, matching the original inline shape of this
+ * query (cross-kind cuts are expressed per-row, not per-branch, because both
+ * branches always need to appear in the UNION for the other kind's rows).
+ */
+function buildAllFeedFilters(
+  opts: Omit<ListPagedOptions, 'cursor' | 'limit'>,
+): { tx: SQL; settlements: SQL | null; income: SQL } {
+  const { filter, monthKey, drill, dateRange, epochWindow } = opts
 
   const epoch = andClause(epochClause('created_at', epochWindow))
-  const cur = andClause(cursorClause('sort_at', 'sort_created', cursor))
 
   // Page-level date scope. CashTransactions/Settlements use timestamptz
   // (Asia/Taipei conversion); IncomeTransactions uses a date column.
@@ -397,7 +492,34 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
   // branch is dropped wholesale.
   const incFilterStatusCut = filter?.status === 'pending' ? sql`AND FALSE` : sql``
 
-  const settlementsBranch = filter?.excludeSettlements
+  // See the comment in `buildExpenseFeedFilters` above — a space between
+  // every pair of fragments is required, not optional, even when the
+  // fragments on both sides are non-empty `AND ...` clauses.
+  const tx = sql`${txMonth} ${txDrill} ${txFilterPayer} ${txFilterSplit} ${txFilterBurden} ${txFilterCategory} ${txFilterAssets} ${txFilterAmount} ${txFilterStatus} ${txFilterCutByIncomeOnly} ${epoch}`
+
+  const settlements = filter?.excludeSettlements
+    ? null
+    : sql`${setMonth} ${setDrill} ${setFilterPayer} ${setFilterAmount} ${epoch}`
+
+  const income = sql`${incMonth} ${incDrill} ${incFilterRecipient} ${incFilterAssets} ${incFilterAmount} ${incFilterIncomeCats} ${incFilterCategoryCut} ${incFilterSplitCut} ${incFilterBurdenCut} ${incFilterStatusCut} ${epoch}`
+
+  return { tx, settlements, income }
+}
+
+/**
+ * Records 'all' tab feed: UNION CashTransactions + Settlements + IncomeTransactions
+ * (active only). Cursor uses (transactedAt, createdAt) where IncomeTransactions
+ * maps occurred_at → transacted_at (cast to timestamptz at midnight local UTC).
+ *
+ * Income rows have null splitType, kind='income'.
+ */
+export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[]> {
+  const { groupId, cursor, limit = 20 } = opts
+
+  const { tx, settlements, income } = buildAllFeedFilters(opts)
+  const cur = andClause(cursorClause('sort_at', 'sort_created', cursor))
+
+  const settlementsBranch = settlements === null
     ? sql``
     : sql`
       UNION ALL
@@ -414,11 +536,7 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
         NULL::uuid AS trip_id
       FROM "Settlements"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
-      ${setMonth}
-      ${setDrill}
-      ${setFilterPayer}
-      ${setFilterAmount}
-      ${epoch}
+      ${settlements}
     `
 
   const rows = await db.execute<{
@@ -450,17 +568,7 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
         original_currency, original_amount, rate_snapshot, trip_id
       FROM "CashTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
-      ${txMonth}
-      ${txDrill}
-      ${txFilterPayer}
-      ${txFilterSplit}
-      ${txFilterBurden}
-      ${txFilterCategory}
-      ${txFilterAssets}
-      ${txFilterAmount}
-      ${txFilterStatus}
-      ${txFilterCutByIncomeOnly}
-      ${epoch}
+      ${tx}
 
       ${settlementsBranch}
 
@@ -478,17 +586,7 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
         NULL::uuid AS trip_id
       FROM "IncomeTransactions"
       WHERE group_id = ${groupId} AND deleted_at IS NULL
-      ${incMonth}
-      ${incDrill}
-      ${incFilterRecipient}
-      ${incFilterAssets}
-      ${incFilterAmount}
-      ${incFilterIncomeCats}
-      ${incFilterCategoryCut}
-      ${incFilterSplitCut}
-      ${incFilterBurdenCut}
-      ${incFilterStatusCut}
-      ${epoch}
+      ${income}
     ) AS feed
     WHERE TRUE ${cur}
     ORDER BY sort_at DESC, sort_created DESC
@@ -496,6 +594,79 @@ export async function listFeedAllPaged(opts: ListPagedOptions): Promise<FeedRow[
   `)
 
   return rows.map(rowToFeedRow)
+}
+
+/**
+ * Per-month aggregate for the 全部 tab, using the exact same row-producing
+ * conditions as `listFeedAllPaged` (via `buildAllFeedFilters`) but grouped by
+ * Asia/Taipei calendar month instead of paged (#1208). Income rows are keyed
+ * to their own `occurred_at` calendar month (no tz conversion — it's a date
+ * column already, same as `dateColumnClause`), NOT the tz-shifted
+ * `sort_at::timestamptz` the pager uses for ordering — a date-only column
+ * cast to timestamptz-at-midnight-UTC can land on the wrong Taipei day, which
+ * is exactly the kind of drift this aggregate exists to avoid.
+ */
+export async function listFeedAllMonthSummaries(
+  opts: Omit<ListPagedOptions, 'cursor' | 'limit'>,
+): Promise<FeedMonthSummary[]> {
+  const { groupId } = opts
+  const { tx, settlements, income } = buildAllFeedFilters(opts)
+
+  const settlementsBranch = settlements === null
+    ? sql``
+    : sql`
+      UNION ALL
+
+      SELECT
+        amount,
+        to_char(settled_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM') AS month,
+        'settlement'::text AS kind
+      FROM "Settlements"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${settlements}
+    `
+
+  const rows = await db.execute<{
+    month: string
+    count: number
+    expense_total: number
+    income_total: number
+  }>(sql`
+    SELECT
+      month,
+      COUNT(*)::int AS count,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'transaction'), 0)::int AS expense_total,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'income'), 0)::int AS income_total
+    FROM (
+      SELECT
+        amount,
+        to_char(transacted_at AT TIME ZONE 'Asia/Taipei', 'YYYY-MM') AS month,
+        'transaction'::text AS kind
+      FROM "CashTransactions"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${tx}
+
+      ${settlementsBranch}
+
+      UNION ALL
+
+      SELECT
+        amount,
+        to_char(occurred_at, 'YYYY-MM') AS month,
+        'income'::text AS kind
+      FROM "IncomeTransactions"
+      WHERE group_id = ${groupId} AND deleted_at IS NULL
+      ${income}
+    ) AS feed
+    GROUP BY month
+  `)
+
+  return rows.map((r) => ({
+    monthKey: r.month,
+    count: r.count,
+    expenseTotal: r.expense_total,
+    incomeTotal: r.income_total,
+  }))
 }
 
 /**
