@@ -34,6 +34,7 @@ import { CategoryPicker } from './CategoryPicker'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { AssetLinkField } from './AssetLinkField'
 import { PayerToggle } from './PayerToggle'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 import { SplitTypeSelector } from './SplitTypeSelector'
 import { useTranslations } from '@/lib/i18n/client'
 import { currencySymbol, formatAmount, type CurrencyCode } from '@/lib/currency'
@@ -288,11 +289,28 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // the weighted slider back to (#902).
   const defaultViewerShare = toViewerShare(groupDefaultRatioA ?? 50, viewerIsA)
 
+  const amountTooLargeMsg = t.addSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US'))
+
+  // The error banner is described onto the field it is about (#1242):
+  // `aria-describedby` + `aria-invalid` on the offending input, so moving back
+  // to that field re-reads the reason. Derived from the message rather than
+  // stored next to it, so a later server error can never inherit a stale
+  // field. Server / network errors aren't about one field and stay banner-only
+  // (`role="alert"` still announces them).
+  const errorBannerId = useId()
+  const errorField: 'amount' | 'description' | null = !error
+    ? null
+    : error === t.addSheet.errors.amountRequired || error === amountTooLargeMsg
+      ? 'amount'
+      : error === t.addSheet.errors.descriptionRequired
+        ? 'description'
+        : null
+
   const handleSave = () => {
     const n = parseInt(amount, 10)
     if (!n || n <= 0) { setError(t.addSheet.errors.amountRequired); return }
     if (n > MAX_AMOUNT) {
-      setError(t.addSheet.errors.amountTooLarge.replace('{max}', MAX_AMOUNT.toLocaleString('en-US')))
+      setError(amountTooLargeMsg)
       return
     }
     if (!desc.trim()) { setError(t.addSheet.errors.descriptionRequired); return }
@@ -485,6 +503,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               symbol={currencySymbol(currency)}
               ariaLabel={t.addSheet.amount}
               inputRef={amountInputRef}
+              errorMessageId={errorField === 'amount' && open ? errorBannerId : undefined}
             />
 
             {/* Trip + currency selectors — currency is only user-pickable
@@ -560,6 +579,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             suggestions={descSuggestions}
             placeholder={t.addSheet.descPlaceholder}
             listboxLabel={t.addSheet.descSuggestions}
+            errorMessageId={errorField === 'description' && open ? errorBannerId : undefined}
           />
 
           {/* Categories */}
@@ -617,6 +637,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               <div
                 role="radiogroup"
                 aria-labelledby={statusLabelId}
+                onKeyDown={onRadioGroupKeyDown}
                 className="inline-flex rounded-full p-[3px] gap-0.5"
                 style={{ background: 'var(--toggle-segment-track)' }}
               >
@@ -628,6 +649,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                       type="button"
                       role="radio"
                       aria-checked={sel}
+                      tabIndex={rovingTabIndex(sel, s === 'settled', true)}
                       onClick={() => setStatus(s)}
                       className="oik-segment relative h-8 px-4 rounded-full border-0 text-sm font-medium cursor-pointer before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-['']"
                       style={{
@@ -702,6 +724,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             the top of the sheet rather than the top of the viewport. */}
         {error && open && (
           <div
+            id={errorBannerId}
             role="alert"
             className="absolute left-4 right-4 top-4 z-modal px-4 py-3 rounded-xl text-sm text-white"
             style={{ background: 'var(--debit)' }}

@@ -11,6 +11,9 @@ interface Props {
   placeholder: string
   /** Aria label for the suggestion listbox. */
   listboxLabel: string
+  /** Id of an error message about the description. When set, the input is
+   *  marked `aria-invalid` and described by it. */
+  errorMessageId?: string
 }
 
 const MAX_VISIBLE = 6
@@ -41,6 +44,7 @@ export function DescriptionAutocomplete({
   suggestions,
   placeholder,
   listboxLabel,
+  errorMessageId,
 }: Props) {
   const [focused, setFocused] = useState(false)
   const [active, setActive] = useState(0)
@@ -106,6 +110,8 @@ export function DescriptionAutocomplete({
           role="combobox"
           aria-expanded={open}
           aria-autocomplete="list"
+          aria-invalid={errorMessageId ? true : undefined}
+          aria-describedby={errorMessageId}
           aria-controls={listboxId}
           aria-activedescendant={open && filtered[active] !== undefined ? optionId(active) : undefined}
           autoComplete="off"

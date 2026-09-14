@@ -4,6 +4,7 @@ import { useId } from 'react'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { useTranslations } from '@/lib/i18n/client'
+import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
 
 interface PayerToggleProps {
   value: 'M' | 'T'
@@ -28,6 +29,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
       <div
         role="radiogroup"
         aria-labelledby={labelId}
+        onKeyDown={onRadioGroupKeyDown}
         className="inline-flex rounded-full p-[3px] gap-0.5"
         style={{ background: 'var(--toggle-segment-track)' }}
       >
@@ -40,6 +42,7 @@ export function PayerToggle({ value, onChange }: PayerToggleProps) {
             type="button"
             role="radio"
             aria-checked={value === w}
+            tabIndex={rovingTabIndex(value === w, w === 'M', true)}
             onClick={() => onChange(w)}
             className="oik-segment relative h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
             style={{

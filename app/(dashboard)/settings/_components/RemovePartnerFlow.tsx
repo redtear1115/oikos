@@ -39,8 +39,10 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
   const inputId = useId()
 
   // Tab stays inside the panel while open; focus returns to the trigger row
-  // on close (#1172). Declared before the focus-on-open effect so the trap
-  // captures the trigger as its restore target before focus moves.
+  // on close (#1172). Call order relative to the focus-on-open effect below
+  // does not matter: the trap records its restore target in a layout effect,
+  // and every layout effect in a commit runs before every passive one, so the
+  // trigger is captured before that effect moves focus (#1230).
   useFocusTrap(open, panelRef)
 
   // Move focus onto the panel itself rather than the first control: the

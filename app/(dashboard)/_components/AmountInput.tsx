@@ -43,6 +43,9 @@ interface AmountInputProps {
   /** Optional ref to the inner input — passed to `useFocusAndSelectOnOpen`
    *  by callers that want type-to-replace on sheet open. */
   inputRef?: RefObject<HTMLInputElement | null>
+  /** Id of an error message about this amount. When set, the input is marked
+   *  `aria-invalid` and described by it. */
+  errorMessageId?: string
 }
 
 /**
@@ -63,6 +66,7 @@ export function AmountInput({
   caretColor = 'var(--accent)',
   maxDigits = 7,
   inputRef,
+  errorMessageId,
 }: AmountInputProps) {
   const fallbackRef = useRef<HTMLInputElement>(null)
   const ref = inputRef ?? fallbackRef
@@ -123,6 +127,8 @@ export function AmountInput({
         }}
         placeholder="0"
         aria-label={ariaLabel}
+        aria-invalid={errorMessageId ? true : undefined}
+        aria-describedby={errorMessageId}
         className="tnum tracking-[-2px] leading-none bg-transparent border-0 outline-none text-center"
         style={{
           fontFamily: 'var(--font-numeric)',
