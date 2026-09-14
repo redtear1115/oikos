@@ -7,6 +7,7 @@ import { localTodayISO } from '@/lib/local-date'
 import { formatDateAbsolute } from '@/lib/format-date'
 import { useLocale } from '@/lib/i18n/client'
 import { createHouse, editHouse } from '@/actions/asset'
+import { TextInput } from '@/components/ui/TextInput'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
@@ -116,7 +117,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex flex-col gap-1">
           <label htmlFor={addressId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
           <div className="flex items-center gap-2">
-            <input
+            <TextInput
               id={addressId}
               type="text"
               placeholder={
@@ -130,8 +131,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
                 if (wantClearAddress) setWantClearAddress(false)
               }}
               maxLength={80}
-              className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--hairline)' }}
+              className="flex-1"
             />
             {isEdit && hasAddress && !wantClearAddress && address.trim() === '' && (
               <button
@@ -180,15 +180,13 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         {/* Purchase price */}
         <div className="flex flex-col gap-1">
           <label htmlFor={purchasePriceId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
-          <input
+          <TextInput
             id={purchasePriceId}
             type="number"
             inputMode="numeric"
             placeholder={ts.house.purchasePricePlaceholder}
             value={purchasePrice}
             onChange={e => setPurchasePrice(e.target.value)}
-            className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-            style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--hairline)' }}
           />
         </div>
       </div>

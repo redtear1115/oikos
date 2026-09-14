@@ -5,6 +5,7 @@ import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBack
 import { useFocusAndSelectOnOpen } from './useFocusAndSelectOnOpen'
 import { useFocusTrap } from './useFocusTrap'
 import { useDirtyCheck, useUnsavedChangesGuard } from './useUnsavedChangesGuard'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 
@@ -154,7 +155,7 @@ export function EditTextSheet({
 
         {/* Input + error + char count */}
         <div className="px-5 pb-6">
-          <input
+          <TextInput
             ref={inputRef}
             type="text"
             value={value}
@@ -165,13 +166,6 @@ export function EditTextSheet({
               if (e.key === 'Enter' && !pending) { e.preventDefault(); handleConfirm() }
             }}
             placeholder={placeholder ?? title}
-            className="w-full h-12 px-3 rounded-xl outline-none text-base"
-            style={{
-              border: '1px solid var(--hairline)',
-              color: 'var(--ink)',
-              background: 'var(--surface)',
-              fontFamily: 'inherit',
-            }}
           />
           {error && (
             <div className="text-xs mt-2" style={{ color: 'var(--debit-text)' }}>{error}</div>

@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './Field'
 
 interface Props {
@@ -16,14 +17,12 @@ export const NameField = forwardRef<HTMLInputElement, Props>(function NameField(
   return (
     <Field label={label}>
       {id => (
-        <input
+        <TextInput
           id={id}
           ref={ref}
           value={value}
           onChange={e => onChange(e.target.value.slice(0, maxLength))}
           placeholder={placeholder}
-          className="w-full bg-transparent border-0 outline-none text-base"
-          style={{ color: 'var(--ink)' }}
         />
       )}
     </Field>

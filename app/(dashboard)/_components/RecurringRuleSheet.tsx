@@ -535,32 +535,20 @@ export function RecurringRuleSheet(props: Props) {
               <div className="text-xs text-ink-3 tracking-label mb-2">
                 {tNs.sheet.startsOnLabel}
               </div>
-              <input
+              <TextInput
                 type="date"
                 value={startsOn}
                 onChange={(e) => setStartsOn(e.target.value)}
-                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-sm"
-                style={{
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                  fontFamily: 'inherit',
-                }}
               />
             </label>
             <label>
               <div className="text-xs text-ink-3 tracking-label mb-2">
                 {tNs.sheet.endsOnLabel}
               </div>
-              <input
+              <TextInput
                 type="date"
                 value={endsOn}
                 onChange={(e) => setEndsOn(e.target.value)}
-                className="w-full bg-transparent outline-none rounded-chip px-2.5 py-2 text-sm"
-                style={{
-                  border: '1px solid var(--hairline)',
-                  color: 'var(--ink)',
-                  fontFamily: 'inherit',
-                }}
               />
             </label>
           </div>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
 import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
@@ -402,17 +403,13 @@ export function InsuranceListItem({ id, name, data }: Props) {
         <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-3)' }}>
           {i.renewPolicyNoLabel}
         </label>
-        <input
+        <TextInput
           type="text"
           value={renewPolicyNo}
           onChange={(e) => setRenewPolicyNo(e.target.value)}
           placeholder={i.renewPolicyNoPlaceholder}
           disabled={pending}
-          className="w-full h-11 px-3 rounded-chip text-sm mb-5 disabled:opacity-50"
-          style={{
-            background: 'var(--surface)', color: 'var(--ink)',
-            border: '1px solid var(--hairline)', outline: 'none',
-          }}
+          className="mb-5"
         />
         <div className="flex gap-2">
           <button

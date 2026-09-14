@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useState, useTransition } from 'react'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { createTrip, updateTrip } from '@/actions/trip'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
+import { TextInput } from '@/components/ui/TextInput'
 import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import type { TripCurrencyEntry, TripCurrencySnapshot } from '@/lib/trip-currency'
 import { useTranslations } from '@/lib/i18n/client'
@@ -247,13 +248,8 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
       <div className="flex flex-col gap-4">
         <label className="block">
           <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.nameLabel}</span>
-          <input
-            className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--hairline)',
-              color: 'var(--ink)',
-            }}
+          <TextInput
+            className="mt-1.5"
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder={ts.namePlaceholder}
@@ -264,28 +260,20 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
             <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.startDateLabel}</span>
-            <input
+            <TextInput
               type="date"
-              className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--hairline)',
-                color: 'var(--ink)',
-              }}
+              className="mt-1.5"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
             />
           </label>
           <label className="block">
             <span className="text-sm" style={{ color: 'var(--ink-2)' }}>{ts.endDateLabel}</span>
-            <input
+            <TextInput
               type="date"
-              className="mt-1.5 w-full h-[var(--control-md)] rounded-xl px-3 text-sm"
-              style={{
-                background: 'var(--surface)',
-                border: dateInvalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
-                color: 'var(--ink)',
-              }}
+              className="mt-1.5"
+              error={dateInvalid}
+              aria-invalid={dateInvalid}
               value={endDate}
               min={startDate || undefined}
               onChange={e => setEndDate(e.target.value)}
@@ -474,33 +462,24 @@ function CustomCurrencyRow(props: {
       {/* Custom row header: code + label inputs + remove. The remove button
           is a separate 44pt target since the inputs themselves are also 44px tall. */}
       <div className="flex items-center gap-2 px-3 pt-3">
-        <input
+        <TextInput
           type="text"
           value={code}
           onChange={e => props.onCodeChange(e.target.value)}
           placeholder={tsRow.codePlaceholder}
           maxLength={16}
           aria-label={tsRow.codeAriaLabel}
-          className="w-20 h-[var(--control-md)] rounded-lg px-2 text-sm uppercase"
-          style={{
-            background: 'var(--bg)',
-            border: '1px solid var(--hairline)',
-            color: 'var(--ink)',
-          }}
+          className="w-20 shrink-0"
+          inputClassName="uppercase"
         />
-        <input
+        <TextInput
           type="text"
           value={label}
           onChange={e => props.onLabelChange(e.target.value)}
           placeholder={tsRow.labelPlaceholder}
           maxLength={32}
           aria-label={tsRow.labelAriaLabel}
-          className="flex-1 min-w-0 h-[var(--control-md)] rounded-lg px-2 text-sm"
-          style={{
-            background: 'var(--bg)',
-            border: '1px solid var(--hairline)',
-            color: 'var(--ink)',
-          }}
+          className="flex-1 min-w-0"
         />
         <button
           type="button"
@@ -590,22 +569,18 @@ function RateRow(props: {
         <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
           1 {code} =
         </span>
-        <input
+        <TextInput
           type="number"
           inputMode="decimal"
           step="any"
           min="0"
           value={rate || ''}
           onChange={e => props.onRateChange(e.target.value)}
+          error={invalid}
           aria-invalid={invalid}
           aria-label={ts.rateAriaLabel.replace('{code}', code).replace('{baseCode}', baseCode)}
           aria-describedby={invalid ? errorId : undefined}
-          className="flex-1 min-w-0 h-[var(--control-md)] rounded-lg px-2.5 text-sm"
-          style={{
-            background: 'var(--bg)',
-            border: invalid ? '1px solid var(--debit)' : '1px solid var(--hairline)',
-            color: 'var(--ink)',
-          }}
+          className="flex-1 min-w-0"
         />
         <span className="text-xs whitespace-nowrap" style={{ color: 'var(--ink-3)' }}>
           {baseCode}
