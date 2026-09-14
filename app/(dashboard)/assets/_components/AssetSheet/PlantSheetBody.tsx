@@ -7,6 +7,7 @@ import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -69,6 +70,8 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.plant) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, { name, notes, species, location, sproutedAt, cost, waterEvery })
+
   return (
     <SheetShell
       open={open}
@@ -79,6 +82,7 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 

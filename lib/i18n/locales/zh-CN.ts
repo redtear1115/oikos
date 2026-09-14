@@ -216,6 +216,12 @@ export const zhCN: Translations = {
       cancel: '取消',
       retry: '重试',
     },
+    unsavedChanges: {
+      title: '刚才填的内容还没保存',
+      description: '现在离开，这次填的内容不会保留。',
+      discard: '放弃',
+      keepEditing: '继续填写',
+    },
   },
 
   splitType: {

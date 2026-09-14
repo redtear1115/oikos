@@ -10,6 +10,7 @@ import { createHouse, editHouse } from '@/actions/asset'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -82,6 +83,10 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.house) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, address, wantClearAddress, purchasedAt, purchasePrice,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -92,6 +97,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 

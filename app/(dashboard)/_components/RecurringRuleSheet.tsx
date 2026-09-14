@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
+import { useDirtyCheck } from './useUnsavedChangesGuard'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
@@ -231,6 +232,14 @@ export function RecurringRuleSheet(props: Props) {
   const intervalLabelId = useId()
   const assetSelectId = useId()
 
+  // Only the active variant's fields count; the other side is inert state.
+  const isDirty = useDirtyCheck(open, {
+    amount, intervalMonths, dayOfMonth, startsOn, endsOn,
+    ...(isIncome
+      ? { incomeCategory, recipientWho, source, incomeAssetId }
+      : { expenseCategory, payerWho, splitType, splitRatioA, description, expenseAssetId }),
+  })
+
   const saveColor = isIncome ? P.ink : 'var(--accent)'
   const saveDisabled = !amount || pending
 
@@ -239,6 +248,7 @@ export function RecurringRuleSheet(props: Props) {
       <SheetFrame
         open={open}
         onClose={onClose}
+        isDirty={isDirty}
         ariaLabel={isEdit ? tNs.sheet.titleEdit : tNs.sheet.titleNew}
         background={isIncome ? P.sheetBg : undefined}
         boxShadow={isIncome ? '0 -10px 40px rgba(58,36,25,0.18)' : undefined}

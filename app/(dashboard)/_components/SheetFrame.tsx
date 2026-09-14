@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusTrap } from './useFocusTrap'
+import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 
 interface SheetFrameProps {
   open: boolean
@@ -38,6 +39,12 @@ interface SheetFrameProps {
   /** Optional ref forwarded to the panel for callers that need to attach
    *  their own effects. */
   panelRef?: React.RefObject<HTMLDivElement | null>
+  /** Form sheets: return true when the form holds unsaved input (build it with
+   *  `useDirtyCheck`). Backdrop tap / Escape / system Back then ask before
+   *  discarding instead of closing (#1183). Omit for non-form sheets — the
+   *  close behaviour is then unchanged. Buttons that call `onClose` directly
+   *  (取消, save) are never intercepted. */
+  isDirty?: () => boolean
   children: ReactNode
 }
 
@@ -65,11 +72,13 @@ export function SheetFrame({
   zIndex = 100,
   noBackdrop = false,
   panelRef,
+  isDirty,
   children,
 }: SheetFrameProps) {
   const fallbackRef = useRef<HTMLDivElement>(null)
   const ref = panelRef ?? fallbackRef
   useFocusTrap(open, ref)
+  const { requestClose, confirm } = useUnsavedChangesGuard(open, onClose, isDirty)
 
   // Dismiss the iOS soft keyboard when the sheet closes. `useFocusTrap`
   // restores focus to `previouslyFocused`, but on iOS that's often `document
@@ -115,7 +124,7 @@ export function SheetFrame({
 
   return (
     <>
-      {!noBackdrop && <SheetBackdrop open={open} onClick={onClose} />}
+      {!noBackdrop && <SheetBackdrop open={open} onClick={requestClose} />}
       {/* The panel stays mounted while closed — unmounting would replace the
           0.32s slide-down with a pop and throw away in-sheet form state. What
           keeps the closed panel out of reach is `inert`: `translateY(100%)`
@@ -145,6 +154,7 @@ export function SheetFrame({
         )}
         {children}
       </div>
+      {confirm}
     </>
   )
 }

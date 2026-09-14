@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { endTrip } from '@/actions/trip'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -36,6 +37,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
     setErr(null)
   }, [open, suggestedEndDate])
 
+  const isDirty = useDirtyCheck(open, { endDate })
   const dateInvalid = endDate < startDate
   const canSave = !dateInvalid && !pending
 
@@ -63,6 +65,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
       error={err ?? ''}
       onClose={onClose}
       onSave={submit}
+      isDirty={isDirty}
       destructive
     >
       <div className="flex flex-col gap-3">

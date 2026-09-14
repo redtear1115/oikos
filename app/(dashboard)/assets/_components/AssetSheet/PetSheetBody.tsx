@@ -7,6 +7,7 @@ import { Field } from './shared/Field'
 import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -82,6 +83,10 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.pet) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, species, breed, sex, birthDate, adoptedDate, cost, weightKg, chipNo, vet,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -92,6 +97,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 

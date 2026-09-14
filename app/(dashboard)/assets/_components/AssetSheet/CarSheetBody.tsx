@@ -9,6 +9,7 @@ import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { SheetShell } from './shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
@@ -129,6 +130,11 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
 
   const title = isEdit ? ts.titleEdit.replace('{type}', ts.type.car) : ts.titleNew
 
+  const isDirty = useDirtyCheck(open, {
+    name, notes, plate, wantClearPlate, purchasedAt, purchasePrice, fuelType,
+    primaryUserId, color, year, brand, model, initialOdometer,
+  })
+
   return (
     <SheetShell
       open={open}
@@ -139,6 +145,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       error={error}
       onClose={onClose}
       onSave={handleSave}
+      isDirty={isDirty}
     >
       {typePickerSlot}
 

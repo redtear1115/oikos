@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useTransition } from 'react'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
@@ -185,6 +186,8 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     })
   }
 
+  const isDirty = useDirtyCheck(open, { liters, odometer, cost, fuelType, payerWho, split, date })
+
   if (!open) return null
 
   return (
@@ -192,6 +195,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
       <SheetFrame
         open={open}
         onClose={onClose}
+        isDirty={isDirty}
         ariaLabel={mode === 'edit' ? tf.titleEdit : tf.titleNew}
         topRadius={28}
         heightDvh={94}

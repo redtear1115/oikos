@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useState, useTransition } from 'react'
 import { CURRENCIES, type CurrencyCode } from '@/lib/currency'
 import { createTrip, updateTrip } from '@/actions/trip'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import type { TripCurrencyEntry, TripCurrencySnapshot } from '@/lib/trip-currency'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
@@ -226,6 +227,11 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
   const customRows = entries.filter(e => !e.preset)
   const presetIncluded = (code: string) => entries.find(e => e.code === code)
 
+  const isDirty = useDirtyCheck(open, {
+    name, startDate, endDate,
+    entries: entries.map(e => ({ code: e.code, label: e.label, rate: e.rate })),
+  })
+
   return (
     <SheetShell
       open={open}
@@ -236,6 +242,7 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
       error={formError ?? ''}
       onClose={onClose}
       onSave={submit}
+      isDirty={isDirty}
     >
       <div className="flex flex-col gap-4">
         <label className="block">

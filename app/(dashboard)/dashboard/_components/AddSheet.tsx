@@ -7,6 +7,7 @@ import { useSheetMutation } from '@/app/(dashboard)/_components/useSheetMutation
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
@@ -252,6 +253,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   // appending to "240" → "2405").
   useFocusAndSelectOnOpen(open, amountInputRef)
   const statusLabelId = useId()
+  const isDirty = useDirtyCheck(open, {
+    amount, desc, category, split, splitRatioA, payerWho, date, notes, status, assetId, tripId, currency,
+  })
 
   const isPending = !!pendingExpenseId
   // Edit affordance (delete button + editTransaction path) only for real tx.
@@ -432,7 +436,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
   return (
     <>
-      <SheetFrame open={open} onClose={onClose} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
+      <SheetFrame open={open} onClose={onClose} isDirty={isDirty} ariaLabel={isEdit ? t.addSheet.titleEdit : t.addSheet.title}>
         {/* Header — 3-column layout (cancel | centred title | save); non-standard for SheetHeader primitive.
             Both buttons stay visually `sm` (36px) so the header height doesn't
             change; the ::before adds 4px above and below for a 44px tap area

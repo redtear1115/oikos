@@ -5,7 +5,9 @@ import { useEscapeToClose } from '@/app/(dashboard)/_components/useEscapeToClose
 
 interface Props {
   open: boolean
-  onClick: () => void
+  /** Close request. Return `false` when the host declined to close (e.g. it
+   *  is asking to confirm discarding unsaved input) — see useEscapeToClose. */
+  onClick: () => void | boolean
 }
 
 // Slide-down transition on consuming sheets is ~320ms; iOS Safari may fire a
@@ -35,7 +37,7 @@ export function SheetBackdrop({ open, onClick }: Props) {
     <div
       // While closing the backdrop swallows pointer events but must not
       // re-invoke the close handler — the host already called it.
-      onClick={open ? onClick : undefined}
+      onClick={open ? () => { onClick() } : undefined}
       className="fixed inset-0 z-sheet-backdrop transition-opacity duration-[250ms]"
       style={{
         background: 'rgba(31,27,22,0.35)',

@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import { ScrollFadeRow } from '@/app/(dashboard)/_components/ScrollFadeRow'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { AmountInput } from '@/app/(dashboard)/_components/AmountInput'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { Button } from '@/components/ui/Button'
@@ -162,6 +163,8 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   // Focus + select amount input after sheet slides up
   useFocusAndSelectOnOpen(open, amountInputRef)
 
+  const isDirty = useDirtyCheck(open, { amount, category, recipientWho, date, note, assetId })
+
   const recipientId = isSolo
     ? viewer.id
     : recipientWho === 'M' ? viewer.id : partner!.id
@@ -251,6 +254,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       <SheetFrame
         open={open}
         onClose={onClose}
+        isDirty={isDirty}
         ariaLabel={isEdit ? t.incomeSheet.titleEdit : t.incomeSheet.title}
         background={P.sheetBg}
         boxShadow="0 -10px 40px rgba(58,36,25,0.18)"

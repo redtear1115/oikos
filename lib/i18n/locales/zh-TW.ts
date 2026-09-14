@@ -284,6 +284,15 @@ export type Translations = {
       cancel: string
       retry: string
     }
+    /** Discard confirmation shown when a form sheet with unsaved input is
+     *  dismissed by backdrop tap / Escape / system Back (#1183). The sheet's
+     *  own 取消 button closes without asking. */
+    unsavedChanges: {
+      title: string
+      description: string
+      discard: string
+      keepEditing: string
+    }
   }
 
   splitType: {
@@ -3025,6 +3034,12 @@ export const zhTW: Translations = {
       confirm: '確認',
       cancel: '取消',
       retry: '重試',
+    },
+    unsavedChanges: {
+      title: '剛剛填的內容還沒儲存',
+      description: '現在離開，這次填的內容不會留下來。',
+      discard: '捨棄',
+      keepEditing: '繼續填寫',
     },
   },
 
