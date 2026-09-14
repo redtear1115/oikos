@@ -153,10 +153,11 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
     <div>
       <div className="text-xs tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
       <div
-        className="tnum tracking-[-1px] leading-none"
+        // #1174 — 32 was off the type scale; the secondary stat drops to the
+        // nearest static tier below (text-page, 26). 40 is only a clamp() floor.
+        className={`tnum tracking-[-1px] leading-none ${accent ? 'text-amount-md' : 'text-page'}`}
         style={{
           fontFamily: 'var(--font-numeric)',
-          fontSize: accent ? 44 : 32,
           fontWeight: 500,
           color: dim ? 'var(--ink-3)' : 'var(--ink)',
         }}

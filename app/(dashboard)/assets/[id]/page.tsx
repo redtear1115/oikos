@@ -477,7 +477,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
   const carGroups: SwitcherGroup[] = [
     {
-      label: '車輛',
+      label: t.assetDetail.switcher.carGroup,
       items: allAssetsData
         .filter(a => a.type === 'car')
         .map(a => ({

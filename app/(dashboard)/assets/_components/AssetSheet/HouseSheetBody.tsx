@@ -131,7 +131,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearAddress(true)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
               >
                 {ts.child.clear}
@@ -141,7 +141,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearAddress(false)}
-                className="text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0"
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
                 style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
               >
                 {ts.child.cancelClear}

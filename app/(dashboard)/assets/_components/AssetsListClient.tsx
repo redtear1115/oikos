@@ -111,9 +111,14 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
 
 /** Guardian summary card — totals + next renewal */
 function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
+  const t = useTranslations()
+  const i = t.assets.insuranceList
   const today = todayLocalDate()
   const totalAnnual = insurances.reduce((sum, a) => sum + (a.insurance?.annualPremium ?? 0), 0)
   const count = insurances.length
+  // `{count}` is rendered emphasised, so split the template around it rather
+  // than string-replacing — word order differs per locale.
+  const [countBefore, countAfter = ''] = i.summaryPolicyCount.split('{count}')
 
   // Next renewal: single-year policies with future expiry, min expiryDate
   const singleYears = insurances.filter((a) => {
@@ -146,7 +151,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
           className="font-mono"
           style={{ fontSize: 10, letterSpacing: 1.2, color: 'var(--ink-3)' }}
         >
-          年繳保費
+          {i.summaryAnnualPremium}
         </div>
         <div
           className="tnum"
@@ -155,9 +160,9 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
           NT$ {totalAnnual.toLocaleString('en-US')}
         </div>
         <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-3)' }}>
-          共{' '}
+          {countBefore}
           <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{count}</span>
-          {' '}張保單
+          {countAfter}
         </div>
       </div>
       <div
@@ -169,7 +174,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
           className="font-mono"
           style={{ fontSize: 10, letterSpacing: 1.2, color: 'var(--ink-3)' }}
         >
-          下次續約
+          {i.summaryNextRenewal}
         </div>
         {upcoming ? (
           <>
@@ -180,7 +185,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
               {upcoming.a.insurance?.expiryDate ?? '—'}
             </div>
             <div style={{ marginTop: 4, fontSize: 12, color: 'var(--ink-3)' }}>
-              {upcoming.a.name} · {upcoming.days} 天後
+              {upcoming.a.name} · {i.summaryDaysUntil.replace('{days}', String(upcoming.days))}
             </div>
           </>
         ) : (
@@ -459,7 +464,7 @@ export function AssetsListClient({ items }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm transition-colors duration-150"
+              className="relative h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
                 borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
@@ -653,12 +658,12 @@ export function AssetsListClient({ items }: Props) {
     <div className="relative min-h-screen pb-[var(--bottom-nav-offset)]">
       {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
       <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
-        <div
+        <h1
           className="text-2xl font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {t.assets.title}
-        </div>
+        </h1>
       </div>
 
       {guardianVisible && TabBar}
