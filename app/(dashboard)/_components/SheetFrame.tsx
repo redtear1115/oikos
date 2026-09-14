@@ -43,7 +43,8 @@ interface SheetFrameProps {
 
 /**
  * The shared bottom-sheet chrome: backdrop, slide-up panel, grabber, and
- * dialog semantics (`role="dialog"`, `aria-modal`, focus trap). Callers
+ * dialog semantics (`role="dialog"`, `aria-modal`, focus trap — all only
+ * while open; the closed panel is `inert`). Callers
  * own the header / body / footer inside `children` — this primitive is
  * deliberately unopinionated about content shape so it can host the
  * AddSheet / IncomeSheet / NewFuelLog / RecurringRuleSheet variants
@@ -91,6 +92,12 @@ export function SheetFrame({
   const labelAttrs = labelledBy
     ? { 'aria-labelledby': labelledBy }
     : { 'aria-label': ariaLabel ?? fallbackId }
+  // Dialog semantics only while open. A permanently-mounted
+  // `aria-modal="true"` reads to assistive tech as a modal that is always
+  // open — some screen readers confine the virtual cursor to it (#1176).
+  const dialogAttrs = open
+    ? { role: 'dialog', 'aria-modal': true as const, ...labelAttrs }
+    : {}
 
   const panelStyle: CSSProperties = {
     background,
@@ -109,11 +116,18 @@ export function SheetFrame({
   return (
     <>
       {!noBackdrop && <SheetBackdrop open={open} onClick={onClose} />}
+      {/* The panel stays mounted while closed — unmounting would replace the
+          0.32s slide-down with a pop and throw away in-sheet form state. What
+          keeps the closed panel out of reach is `inert`: `translateY(100%)`
+          only moves it off-screen and `pointer-events: none` only stops the
+          mouse, so without it every field and button (save, delete) stayed
+          in the Tab order and in the accessibility tree (#1176).
+          If this regresses, nothing looks wrong: Tab from the page just lands
+          on invisible controls below the viewport. */}
       <div
         ref={ref}
-        role="dialog"
-        aria-modal="true"
-        {...labelAttrs}
+        {...dialogAttrs}
+        inert={!open}
         className="fixed left-1/2 bottom-0 w-full max-w-md -translate-x-1/2 flex flex-col overflow-hidden"
         style={panelStyle}
       >
