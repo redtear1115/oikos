@@ -62,6 +62,18 @@ export function SplitTypeSection({ current, isSolo }: Props) {
     )
   }
 
+  // `current` can be a split type this group doesn't offer: 'weighted' is
+  // pickable per-record in AddSheet but has no row here. With nothing checked
+  // the first row has to become the group's Tab stop, or the whole group drops
+  // out of the keyboard order — it looks fine, it just can't be reached by Tab
+  // (#1242 follow-up).
+  const options = [
+    { id: 'half' as const,       label: t.splitType.even },
+    { id: 'all_mine' as const,   label: t.splitType.allMine },
+    { id: 'all_theirs' as const, label: t.splitType.allPartners },
+  ]
+  const anyChecked = options.some((opt) => opt.id === current)
+
   return (
     <div>
       <div
@@ -71,11 +83,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
         className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
       >
-        {([
-          { id: 'half' as const,       label: t.splitType.even },
-          { id: 'all_mine' as const,   label: t.splitType.allMine },
-          { id: 'all_theirs' as const, label: t.splitType.allPartners },
-        ]).map((opt, i) => {
+        {options.map((opt, i) => {
           const sel = current === opt.id
           return (
             <button
@@ -83,7 +91,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
               key={opt.id}
               role="radio"
               aria-checked={sel}
-              tabIndex={rovingTabIndex(sel, i === 0, true)}
+              tabIndex={rovingTabIndex(sel, i === 0, anyChecked)}
               onClick={() => handleChange(opt.id)}
               // `aria-disabled`, not `disabled`, while saving (#1242): an arrow
               // key selects and saves, and a real `disabled` would drop focus

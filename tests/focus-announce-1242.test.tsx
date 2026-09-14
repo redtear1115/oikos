@@ -175,6 +175,26 @@ describe('radiogroup arrow keys + roving tabindex (#1242 §3)', () => {
     expect(radios[1]).toHaveAttribute('aria-checked', 'true')
   })
 
+  it.each([
+    ['half' as const, 0],
+    ['all_theirs' as const, 2],
+    // 'weighted' is pickable per record but has no row in settings, so nothing
+    // in the group is checked. Without a fallback Tab stop the whole group is
+    // unreachable by keyboard — it looks completely normal (#1242 follow-up).
+    ['weighted' as const, 0],
+  ])('keeps exactly one Tab stop in the settings split group when current=%s', (current, expectedIndex) => {
+    render(
+      <I18nWrapper>
+        <SplitTypeSection current={current} isSolo={false} />
+      </I18nWrapper>,
+    )
+    const radios = screen.getAllByRole('radio')
+    const tabStops = radios.filter((r) => r.getAttribute('tabindex') === '0')
+    expect(tabStops).toHaveLength(1)
+    expect(tabStops[0]).toBe(radios[expectedIndex])
+    expect(screen.queryAllByRole('radio', { checked: true })).toHaveLength(current === 'weighted' ? 0 : 1)
+  })
+
   it('keeps focus on the settings radio while its save runs (aria-disabled, not disabled)', async () => {
     let resolveSave: () => void = () => {}
     updateDefaultSplitType.mockImplementation(() => new Promise<void>((r) => { resolveSave = r }))
