@@ -189,7 +189,7 @@ export default function SetupForm({ t }: { t: Translations }) {
           <TrustCommitments t={trust} />
 
           {error && (
-            <p className="text-sm" style={{ color: 'var(--debit)' }}>{error}</p>
+            <p className="text-sm" style={{ color: 'var(--debit-text)' }}>{error}</p>
           )}
 
           <button
@@ -371,7 +371,7 @@ export default function SetupForm({ t }: { t: Translations }) {
         </div>
 
         {error && (
-          <p className="text-sm" style={{ color: 'var(--debit)' }}>{error}</p>
+          <p className="text-sm" style={{ color: 'var(--debit-text)' }}>{error}</p>
         )}
 
         <button

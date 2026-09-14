@@ -89,7 +89,7 @@ export function ImportHistory({ history, onRollback, rollbacking }: Props) {
                       onClick={() => onRollback(batch.id)}
                       disabled={rollbacking}
                       className="flex-1 h-9 rounded-lg text-xs cursor-pointer disabled:opacity-50"
-                      style={{ background: 'var(--surface)', border: '1px solid var(--debit)', color: 'var(--debit)' }}
+                      style={{ background: 'var(--surface)', border: '1px solid var(--debit)', color: 'var(--debit-text)' }}
                     >
                       {rollbacking ? t.settings.import.result.rollbacking : t.settings.import.result.rollbackCta}
                     </button>

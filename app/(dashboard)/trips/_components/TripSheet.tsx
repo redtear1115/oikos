@@ -601,7 +601,7 @@ function RateRow(props: {
         </span>
       </div>
       {invalid ? (
-        <p className="text-xs" style={{ color: 'var(--debit)' }} role="alert">
+        <p className="text-xs" style={{ color: 'var(--debit-text)' }} role="alert">
           {ts.errors.rateInvalidInline}
         </p>
       ) : rate > 0 ? (
