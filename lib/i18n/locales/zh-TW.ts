@@ -2103,7 +2103,10 @@ export type Translations = {
   }
 
   offlineBanner: {
+    /** Offline browsing on: the page may be the cached snapshot. */
     text: string
+    /** Offline browsing off: nothing is cached, only the page already on screen stays. */
+    textNoCache: string
   }
 
   offlinePage: {
@@ -4447,6 +4450,7 @@ export const zhTW: Translations = {
 
   offlineBanner: {
     text: '離線中・顯示最近一次連線的資料',
+    textNoCache: '離線中・恢復連線後會自動更新',
   },
 
   offlinePage: {

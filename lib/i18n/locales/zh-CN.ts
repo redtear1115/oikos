@@ -1711,6 +1711,7 @@ export const zhCN: Translations = {
 
   offlineBanner: {
     text: '离线中・显示最近一次连接的数据',
+    textNoCache: '离线中・恢复连接后会自动更新',
   },
 
   offlinePage: {

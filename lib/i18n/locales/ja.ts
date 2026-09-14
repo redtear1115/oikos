@@ -1723,6 +1723,7 @@ export const ja: Translations = {
 
   offlineBanner: {
     text: 'オフライン中・最後の接続時のデータを表示しています',
+    textNoCache: 'オフライン中・再接続すると自動で更新されます',
   },
 
   offlinePage: {
