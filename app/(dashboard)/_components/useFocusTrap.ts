@@ -21,6 +21,14 @@ interface TrapEntry {
   /** Where focus goes back to when this trap is released. Mutable: see the
    *  hand-off in the cleanup below. */
   restoreTo: HTMLElement | null
+  /** The trigger's `id` at activation, `''` when it had none. A node
+   *  reference alone is not a durable identity: the trigger can be unmounted
+   *  and re-mounted as a *different* element while the trap is open — every
+   *  dashboard surface renders the FAB as `{!hideFab && <button…>}` with
+   *  `hideFab` tied to the sheet's own open state, so opening the sheet
+   *  destroys the button that opened it (#1256). Mutable alongside
+   *  `restoreTo`; the two are always handed off together. */
+  restoreToId: string
   /** The panel element captured at activation. Refs are already detached by
    *  the time a passive-effect cleanup runs on unmount, so the cleanup can't
    *  read `panelRef.current` to ask "was this node inside me". */
@@ -38,6 +46,76 @@ interface TrapEntry {
 const stack: TrapEntry[] = []
 
 /**
+ * Last element that genuinely held focus, kept alive past its own removal.
+ *
+ * A trap records its restore target from `document.activeElement` in a layout
+ * effect, which runs *after* React's mutation phase. When the trigger is
+ * unmounted by the very state change that opens the sheet — `{!hideFab &&
+ * <button…>}` with `hideFab={sheetOpen}`, the shape of every dashboard
+ * surface — the browser has already moved focus to `<body>` by then, so the
+ * trap records `<body>` and restores to `<body>` (#1256). This listener is
+ * the only place that still remembers which element it was.
+ *
+ * Capture phase, `focusin` (not `focus`) so it sees every control, and the
+ * listener outlives individual traps: it is installed by the first trap
+ * mounted on the page and never removed. SheetFrame panels stay mounted while
+ * closed, so it is listening long before anything opens.
+ */
+let lastFocused: HTMLElement | null = null
+let tracking = false
+function trackLastFocused(): void {
+  if (tracking || typeof document === 'undefined') return
+  tracking = true
+  document.addEventListener(
+    'focusin',
+    (e) => {
+      const el = e.target
+      if (el instanceof HTMLElement && el !== document.body) lastFocused = el
+    },
+    true,
+  )
+}
+
+/**
+ * The element focus was on immediately before this commit removed it, or null.
+ *
+ * Deliberately narrow: only a *detached* `lastFocused` counts. Focus sitting
+ * on `<body>` while the last-focused element is still in the document means
+ * the user left it there on purpose — on iOS a touch on a button doesn't set
+ * focus at all — and reviving a stale trigger then would move focus somewhere
+ * the user never was.
+ */
+function removedTrigger(): HTMLElement | null {
+  return lastFocused && !lastFocused.isConnected ? lastFocused : null
+}
+
+/**
+ * Resolve the recorded trigger to a node that can actually take focus now.
+ *
+ * Two ways the recorded node stops being usable:
+ *
+ * 1. It is gone for good — deleting a record from its sheet removes the very
+ *    row that opened it. Nothing to resolve; the caller falls back.
+ * 2. It was *replaced* while the trap was open. The FAB is conditionally
+ *    rendered on the sheet's own open state, so closing the sheet mounts a
+ *    fresh button and the recorded one is detached (#1256). An `id` survives
+ *    that round trip where a node reference cannot, so re-query by it.
+ *
+ * Only an explicit, author-assigned `id` participates: unlabelled triggers
+ * resolve to null and keep the #1242 behaviour exactly. `getElementById`
+ * already implies "in the document", but a re-found node can still be parked
+ * inside a closed (`inert`) sheet — focusing that is a no-op in a real engine
+ * and would read as "focus vanished", so treat it as unresolved too.
+ */
+function resolveRestoreTarget(target: HTMLElement | null, id: string): HTMLElement | null {
+  if (target?.isConnected) return target
+  if (!id) return null
+  const again = document.getElementById(id)
+  if (!again || again.closest('[inert]')) return null
+  return again
+}
+
+/**
  * Put focus back after the topmost trap closes (#1242).
  *
  * `preventScroll`: the trigger is often a list row far down a scrolled page.
@@ -46,12 +124,11 @@ const stack: TrapEntry[] = []
  * iOS 15.0); older engines ignore the options object and still focus, they
  * just keep the old scrolling behaviour.
  *
- * Detached trigger: the element that opened the trap can be gone by now —
- * deleting a record from its sheet removes the very row that opened it.
- * focus() on a detached node silently does nothing and focus is left on
- * <body>, so the next Tab restarts from the top of the document. Fall back to
- * the trap that is now on top (a sheet under a closing modal): its panel if
- * the panel is itself focusable, else its first control.
+ * Unresolvable trigger (see resolveRestoreTarget): focus() on a detached node
+ * silently does nothing and focus is left on <body>, so the next Tab restarts
+ * from the top of the document. Fall back to the trap that is now on top (a
+ * sheet under a closing modal): its panel if the panel is itself focusable,
+ * else its first control.
  *
  * With no trap left underneath there is no fallback on purpose: the dashboard
  * has no focusable <main> landmark, and guessing at "the next row" could land
@@ -59,8 +136,9 @@ const stack: TrapEntry[] = []
  * Symptom of that case, so it isn't mistaken for a regression: after deleting
  * a record from its sheet, the next Tab starts from the page header.
  */
-function restoreFocus(target: HTMLElement | null, below: TrapEntry | undefined): void {
-  if (target?.isConnected) {
+function restoreFocus(entry: TrapEntry, below: TrapEntry | undefined): void {
+  const target = resolveRestoreTarget(entry.restoreTo, entry.restoreToId)
+  if (target) {
     target.focus({ preventScroll: true })
     return
   }
@@ -100,15 +178,29 @@ export function useFocusTrap(open: boolean, panelRef: RefObject<HTMLElement | nu
   // instead of the button that opened the sheet. Same symptom if a
   // focus-on-open ever moves *below* SheetFrame (into its `children`), since
   // that child layout effect would then run first.
+  // Install once per page, from the first trap that mounts — not from the
+  // `open` effect below, which would start listening only after the trigger
+  // that opened the sheet is already gone.
+  useEffect(trackLastFocused, [])
+
   const restoreToRef = useRef<HTMLElement | null>(null)
+  const restoreToIdRef = useRef('')
   useLayoutEffect(() => {
-    if (open) restoreToRef.current = document.activeElement as HTMLElement | null
+    if (!open) return
+    const active = document.activeElement as HTMLElement | null
+    // `<body>` means either "the trigger was just unmounted" (recover it from
+    // the focus tracker) or "focus was genuinely nowhere" (keep recording
+    // `<body>`, which restores to nothing, exactly as before #1256).
+    const trigger = active && active !== document.body ? active : (removedTrigger() ?? active)
+    restoreToRef.current = trigger
+    restoreToIdRef.current = trigger?.id ?? ''
   }, [open])
 
   useEffect(() => {
     if (!open) return
     const entry: TrapEntry = {
       restoreTo: restoreToRef.current,
+      restoreToId: restoreToIdRef.current,
       panel: panelRef.current,
     }
     stack.push(entry)
@@ -160,11 +252,12 @@ export function useFocusTrap(open: boolean, panelRef: RefObject<HTMLElement | nu
         const above = stack[i]
         if (above?.restoreTo && entry.panel?.contains(above.restoreTo)) {
           above.restoreTo = entry.restoreTo
+          above.restoreToId = entry.restoreToId
         }
         return
       }
 
-      restoreFocus(entry.restoreTo, stack[stack.length - 1])
+      restoreFocus(entry, stack[stack.length - 1])
     }
   // panelRef is stable; intentionally omitted
   // eslint-disable-next-line react-hooks/exhaustive-deps

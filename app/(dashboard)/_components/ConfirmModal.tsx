@@ -129,13 +129,17 @@ export function ConfirmModal({
               {description}
             </p>
           )}
+          {/* `oik-btn` is the design system's keyboard focus ring (2px
+              --focus-ring-color, globals.css). Without it these two fall back
+              to the engine default — a 1px blue outline that belongs to no
+              palette here, and is the only such ring left in the app (#1256). */}
           <div className="flex gap-2 mt-2">
             <button
               ref={cancelRef}
               type="button"
               onClick={onCancel}
               disabled={pending}
-              className="flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+              className="oik-btn flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
               style={{
                 background: 'transparent',
                 color: 'var(--ink-2)',
@@ -148,7 +152,7 @@ export function ConfirmModal({
               type="button"
               onClick={onConfirm}
               disabled={pending}
-              className="flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
+              className="oik-btn flex-1 h-11 rounded-xl border-0 cursor-pointer text-sm font-medium disabled:opacity-50"
               style={{
                 background: destructive ? 'var(--btn-destructive-bg)' : 'var(--btn-primary-bg)',
                 color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',

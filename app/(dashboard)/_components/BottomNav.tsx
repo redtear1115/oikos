@@ -18,6 +18,22 @@ interface Props {
   fabContent?: React.ReactNode
 }
 
+/**
+ * Stable id on the FAB, read by `useFocusTrap`'s restore path (#1256).
+ *
+ * `hideFab` is wired to the host page's sheet-open state everywhere it is
+ * used, so opening a sheet *unmounts* the button that opened it and closing
+ * the sheet mounts a new one. The trap records the trigger as a node
+ * reference, which is detached by the time it restores — an id is the only
+ * identity that survives the round trip. At most one of the two FAB variants
+ * renders at a time, so the id stays unique.
+ *
+ * If this is dropped, nothing errors and nothing looks wrong: keyboard users
+ * just land on <body> after every Escape, and the next Tab restarts from the
+ * page header.
+ */
+export const FAB_ID = 'oik-fab'
+
 function fabBg(variant: 'primary' | 'accent' | 'income'): string {
   if (variant === 'accent') return 'var(--accent)'
   if (variant === 'income') return DEFAULT_INCOME_PALETTE.ink
@@ -87,6 +103,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
 
       {!hideFab && !fabContent && (
         <button
+          id={FAB_ID}
           onClick={onAddClick}
           aria-label={t.bottomNav.addAriaLabel}
           className="fixed left-1/2 z-[85] -translate-x-1/2 w-[60px] h-[60px] rounded-full border-0 flex items-center justify-center cursor-pointer"
@@ -102,6 +119,7 @@ export function BottomNav({ onAddClick, hideFab = false, fabVariant = 'primary',
 
       {!hideFab && fabContent && (
         <button
+          id={FAB_ID}
           onClick={onAddClick}
           className="fixed left-1/2 z-[85] -translate-x-1/2 h-[60px] rounded-full border-0 inline-flex items-center justify-center gap-2 px-5 cursor-pointer text-sm font-medium tracking-[0.5px]"
           style={{
