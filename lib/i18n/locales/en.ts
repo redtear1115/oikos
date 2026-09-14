@@ -1104,6 +1104,7 @@ export const en: Translations = {
       intervalEveryYear: 'Yearly',
       intervalEveryNMonths: 'Every {n} months',
       dayLabel: 'Day {day}',
+      nextDate: 'Next {date}',
     },
     pending: {
       sectionLabel: 'A few here for you',
@@ -1135,7 +1136,8 @@ export const en: Translations = {
       resumeAction: 'Resume',
       deleteRuleAction: 'Delete rule',
       deleteConfirmTitle: 'Delete this recurring rule?',
-      deleteConfirmDescription: "Existing pending cards will also be cleared. This can't be undone.",
+      deleteConfirmDescription: "Pending cards you haven't handled yet will be removed. Records already saved stay. This can't be undone.",
+      editEffectHint: 'Changes apply from the next cycle. Pending cards already created keep their amount and date.',
     },
     errors: {
       amountRequired: 'Enter an amount',
@@ -1684,6 +1686,7 @@ export const en: Translations = {
       intervalEveryYear: 'Yearly',
       intervalEveryNMonths: 'Every {n} months',
       dayLabel: 'Day {day}',
+      nextDate: 'Next {date}',
     },
     pending: {
       sectionLabel: 'A few here for you',
@@ -1717,7 +1720,8 @@ export const en: Translations = {
       resumeAction: 'Resume',
       deleteRuleAction: 'Delete rule',
       deleteConfirmTitle: 'Delete this recurring rule?',
-      deleteConfirmDescription: "Existing pending cards will also be cleared. This can't be undone.",
+      deleteConfirmDescription: "Pending cards you haven't handled yet will be removed. Records already saved stay. This can't be undone.",
+      editEffectHint: 'Changes apply from the next cycle. Pending cards already created keep their amount, date, and split.',
     },
     errors: {
       amountRequired: 'Enter an amount',

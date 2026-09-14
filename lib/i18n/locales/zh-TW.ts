@@ -1446,6 +1446,8 @@ export type Translations = {
       intervalEveryNMonths: string
       /** Template with `{day}` placeholder. */
       dayLabel: string
+      /** #1187 — list row next-run date. Template with `{date}`. */
+      nextDate: string
     }
     pending: {
       sectionLabel: string
@@ -1481,6 +1483,8 @@ export type Translations = {
       deleteRuleAction: string
       deleteConfirmTitle: string
       deleteConfirmDescription: string
+      /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
+      editEffectHint: string
     }
     errors: {
       amountRequired: string
@@ -2065,6 +2069,8 @@ export type Translations = {
       intervalEveryYear: string
       intervalEveryNMonths: string
       dayLabel: string
+      /** #1187 — list row next-run date. Template with `{date}`. */
+      nextDate: string
     }
     pending: {
       sectionLabel: string
@@ -2100,6 +2106,8 @@ export type Translations = {
       deleteRuleAction: string
       deleteConfirmTitle: string
       deleteConfirmDescription: string
+      /** #1187 — edit-mode note: pending cards already generated keep their snapshot. */
+      editEffectHint: string
     }
     errors: {
       amountRequired: string
@@ -3895,6 +3903,7 @@ export const zhTW: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 個月',
       dayLabel: '{day} 號',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '這幾筆等你看看',
@@ -3926,7 +3935,8 @@ export const zhTW: Translations = {
       resumeAction: '恢復',
       deleteRuleAction: '刪除規則',
       deleteConfirmTitle: '刪除這個定期規則？',
-      deleteConfirmDescription: '已存在的待確認卡片也會一起清掉，此動作無法復原。',
+      deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
+      editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額與日期維持原樣。',
     },
     errors: {
       amountRequired: '請輸入金額',
@@ -4473,6 +4483,7 @@ export const zhTW: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 個月',
       dayLabel: '{day} 號',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '這幾筆等你看看',
@@ -4506,7 +4517,8 @@ export const zhTW: Translations = {
       resumeAction: '恢復',
       deleteRuleAction: '刪除規則',
       deleteConfirmTitle: '刪除這個定期規則？',
-      deleteConfirmDescription: '已存在的待確認卡片也會一起清掉，此動作無法復原。',
+      deleteConfirmDescription: '還沒處理的待確認卡片會一起移除，已經記下的紀錄會留著。此動作無法復原。',
+      editEffectHint: '改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣。',
     },
     errors: {
       amountRequired: '請輸入金額',

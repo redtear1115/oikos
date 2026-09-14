@@ -1096,6 +1096,7 @@ export const zhCN: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 个月',
       dayLabel: '{day} 号',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '这几笔等你看看',
@@ -1127,7 +1128,8 @@ export const zhCN: Translations = {
       resumeAction: '恢复',
       deleteRuleAction: '删除规则',
       deleteConfirmTitle: '删除这个定期规则？',
-      deleteConfirmDescription: '已存在的待确认卡片也会一起清掉，此操作无法撤销。',
+      deleteConfirmDescription: '还没处理的待确认卡片会一起清掉，已经记下的记录会保留。此操作无法撤销。',
+      editEffectHint: '改动从下一期开始生效。已经出现的待确认卡片，金额与日期保持不变。',
     },
     errors: {
       amountRequired: '请输入金额',
@@ -1674,6 +1676,7 @@ export const zhCN: Translations = {
       intervalEveryYear: '每年',
       intervalEveryNMonths: '每 {n} 个月',
       dayLabel: '{day} 号',
+      nextDate: '下次 {date}',
     },
     pending: {
       sectionLabel: '这几笔等你看看',
@@ -1707,7 +1710,8 @@ export const zhCN: Translations = {
       resumeAction: '恢复',
       deleteRuleAction: '删除规则',
       deleteConfirmTitle: '删除这个定期规则？',
-      deleteConfirmDescription: '已存在的待确认卡片也会一起清掉，此操作无法撤销。',
+      deleteConfirmDescription: '还没处理的待确认卡片会一起清掉，已经记下的记录会保留。此操作无法撤销。',
+      editEffectHint: '改动从下一期开始生效。已经出现的待确认卡片，金额、日期与分摊保持不变。',
     },
     errors: {
       amountRequired: '请输入金额',

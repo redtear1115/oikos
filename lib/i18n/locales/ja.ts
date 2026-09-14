@@ -1104,6 +1104,7 @@ export const ja: Translations = {
       intervalEveryYear: '毎年',
       intervalEveryNMonths: '{n} ヶ月ごと',
       dayLabel: '{day} 日',
+      nextDate: '次回 {date}',
     },
     pending: {
       sectionLabel: 'これらを確認してください',
@@ -1135,7 +1136,8 @@ export const ja: Translations = {
       resumeAction: '再開',
       deleteRuleAction: 'ルールを削除',
       deleteConfirmTitle: 'この定期ルールを削除しますか？',
-      deleteConfirmDescription: '確認待ちカードも一緒に消去されます。この操作は取り消せません。',
+      deleteConfirmDescription: 'まだ対応していない確認待ちカードは一緒に削除されます。記録済みの内容は残ります。この操作は取り消せません。',
+      editEffectHint: '変更は次回分から反映されます。すでに表示中の確認待ちカードは、金額と日付がそのままです。',
     },
     errors: {
       amountRequired: '金額を入力してください',
@@ -1684,6 +1686,7 @@ export const ja: Translations = {
       intervalEveryYear: '毎年',
       intervalEveryNMonths: '{n} ヶ月ごと',
       dayLabel: '{day} 日',
+      nextDate: '次回 {date}',
     },
     pending: {
       sectionLabel: 'これらを確認してください',
@@ -1717,7 +1720,8 @@ export const ja: Translations = {
       resumeAction: '再開',
       deleteRuleAction: 'ルールを削除',
       deleteConfirmTitle: 'この定期ルールを削除しますか？',
-      deleteConfirmDescription: '確認待ちカードも一緒に消去されます。この操作は取り消せません。',
+      deleteConfirmDescription: 'まだ対応していない確認待ちカードは一緒に削除されます。記録済みの内容は残ります。この操作は取り消せません。',
+      editEffectHint: '変更は次回分から反映されます。すでに表示中の確認待ちカードは、金額・日付・分担がそのままです。',
     },
     errors: {
       amountRequired: '金額を入力してください',

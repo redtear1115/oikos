@@ -2,6 +2,7 @@
 
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import type { IncomeCategory } from '@/lib/incomeCategories'
+import { useTranslations } from '@/lib/i18n/client'
 
 interface IncomeChipProps {
   cat: IncomeCategory
@@ -19,9 +20,15 @@ interface IncomeChipProps {
  */
 export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
   const P = DEFAULT_INCOME_PALETTE
+  const t = useTranslations()
   return (
+    // aria-pressed: selection was colour-only (#1189). A standalone toggle
+    // state rather than role="radio" because callers (IncomeSheet,
+    // RecurringRuleSheet) don't wrap the chips in a radiogroup — same choice
+    // as DayPicker.
     <button
       type="button"
+      aria-pressed={selected}
       onClick={onClick}
       className="oik-chip h-8 pl-1.5 pr-3 rounded-full text-sm font-medium cursor-pointer inline-flex items-center gap-2 shrink-0"
       style={{
@@ -48,7 +55,7 @@ export function IncomeChip({ cat, selected, onClick }: IncomeChipProps) {
       >
         {cat.mono}
       </span>
-      {cat.label}
+      {t.incomeCategory[cat.id] ?? cat.label}
     </button>
   )
 }

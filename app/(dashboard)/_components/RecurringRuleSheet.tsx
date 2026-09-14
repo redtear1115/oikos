@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { SheetFrame } from './SheetFrame'
 import { SheetBody } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
@@ -226,6 +226,11 @@ export function RecurringRuleSheet(props: Props) {
     )
   }
 
+  const recipientLabelId = useId()
+  const categoryLabelId = useId()
+  const intervalLabelId = useId()
+  const assetSelectId = useId()
+
   const saveColor = isIncome ? P.ink : 'var(--accent)'
   const saveDisabled = !amount || pending
 
@@ -256,9 +261,9 @@ export function RecurringRuleSheet(props: Props) {
           <Button variant="ghost" size="sm" onClick={onClose}>
             {t.common.cancel}
           </Button>
-          <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>
+          <h2 className="text-base font-medium" style={{ color: 'var(--ink)' }}>
             {isEdit ? tNs.sheet.titleEdit : tNs.sheet.titleNew}
-          </div>
+          </h2>
           <Button
             variant="ghost"
             size="sm"
@@ -284,6 +289,17 @@ export function RecurringRuleSheet(props: Props) {
             </div>
           )}
 
+          {/* #1187 — editing never rewrites pending cards that already exist:
+              they snapshot amount/date (and, for expense, description/payer/
+              split) at generation time (recurring-design.md「Snapshot vs Live」).
+              Without this line a user who just changed the amount sees the old
+              figure on the dashboard and reasonably concludes the edit failed. */}
+          {isEdit && (
+            <p className="px-6 pt-3 text-xs text-center text-ink-3">
+              {tNs.sheet.editEffectHint}
+            </p>
+          )}
+
           {/* Amount */}
           <div className="text-center px-6 pt-6 pb-5">
             <div className="text-xs text-ink-3 tracking-label mb-3">
@@ -306,8 +322,12 @@ export function RecurringRuleSheet(props: Props) {
                   className="flex items-center justify-center gap-2.5 text-sm"
                   style={{ marginTop: 18, color: 'var(--ink-2)' }}
                 >
-                  <span>{t.recurringIncome.sheet.recipientPrompt}</span>
+                  <span id={recipientLabelId}>{t.recurringIncome.sheet.recipientPrompt}</span>
+                  {/* Radio semantics + 44px ::before tap area mirror PayerToggle
+                      (#1186); selection used to be colour-only (#1189). */}
                   <div
+                    role="radiogroup"
+                    aria-labelledby={recipientLabelId}
                     className="inline-flex rounded-full p-[3px] gap-0.5"
                     style={{ background: 'var(--toggle-segment-track)' }}
                   >
@@ -315,8 +335,10 @@ export function RecurringRuleSheet(props: Props) {
                       <button
                         key={w}
                         type="button"
+                        role="radio"
+                        aria-checked={recipientWho === w}
                         onClick={() => setRecipientWho(w)}
-                        className="oik-segment h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5"
+                        className="oik-segment relative h-7 px-3.5 rounded-full border-0 text-sm font-medium cursor-pointer flex items-center gap-1.5 before:absolute before:inset-x-0 before:-inset-y-2 before:content-['']"
                         style={{
                           background: recipientWho === w ? 'var(--toggle-segment-thumb)' : 'transparent',
                           color: recipientWho === w ? 'var(--ink)' : 'var(--ink-2)',
@@ -327,12 +349,14 @@ export function RecurringRuleSheet(props: Props) {
                           transition: `background var(--toggle-transition), color var(--toggle-transition), box-shadow var(--toggle-transition)`,
                         }}
                       >
-                        <Avatar
-                          memberRole={whoToMemberRole(w, viewerIsA)}
-                          initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
-                          src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
-                          size={18}
-                        />
+                        <span aria-hidden="true" className="contents">
+                          <Avatar
+                            memberRole={whoToMemberRole(w, viewerIsA)}
+                            initial={w === 'M' ? viewer.initial : partner?.initial ?? '?'}
+                            src={w === 'M' ? viewer.avatarUrl : partner?.avatarUrl ?? null}
+                            size={18}
+                          />
+                        </span>
                         {w === 'M' ? t.common.me : t.common.partner}
                       </button>
                     ))}
@@ -364,8 +388,8 @@ export function RecurringRuleSheet(props: Props) {
           )}
 
           {/* Category */}
-          <div className="pt-[18px] pb-4">
-            <div className="text-xs text-ink-3 tracking-label px-5 pb-3">
+          <div role="group" aria-labelledby={categoryLabelId} className="pt-[18px] pb-4">
+            <div id={categoryLabelId} className="text-xs text-ink-3 tracking-label px-5 pb-3">
               {tNs.sheet.categoryLabel}
             </div>
             {isIncome ? (
@@ -387,6 +411,7 @@ export function RecurringRuleSheet(props: Props) {
                     <button
                       key={c.id}
                       type="button"
+                      aria-pressed={sel}
                       onClick={() => setExpenseCategory(c.id)}
                       className="h-[38px] pl-2 pr-3 rounded-full text-sm font-medium inline-flex items-center gap-2 cursor-pointer shrink-0 transition-all duration-150"
                       style={{
@@ -435,14 +460,15 @@ export function RecurringRuleSheet(props: Props) {
 
           {/* Interval */}
           <div className="px-5 pt-[18px] pb-4">
-            <div className="text-xs text-ink-3 tracking-label mb-3">
+            <div id={intervalLabelId} className="text-xs text-ink-3 tracking-label mb-3">
               {tNs.sheet.intervalLabel}
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div role="group" aria-labelledby={intervalLabelId} className="grid grid-cols-4 gap-2">
               {INTERVAL_VALUES.map((v) => (
                 <button
                   key={v}
                   type="button"
+                  aria-pressed={intervalMonths === v}
                   onClick={() => setIntervalMonths(v)}
                   className="rounded-full py-2 text-sm"
                   style={{
@@ -477,7 +503,7 @@ export function RecurringRuleSheet(props: Props) {
             )}
           </div>
 
-          <div style={{ height: 1, margin: '0 20px', background: 'var(--hairline)' }} />
+          <div className="oik-hairline" />
 
           {/* Source (income only) */}
           {isIncome && (
@@ -535,10 +561,11 @@ export function RecurringRuleSheet(props: Props) {
               <>
                 <div className="oik-hairline" />
                 <div className="px-5 pt-3.5 pb-4">
-                  <div className="text-xs text-ink-3 tracking-label mb-2">
+                  <label htmlFor={assetSelectId} className="block text-xs text-ink-3 tracking-label mb-2">
                     {t.recurringIncome.sheet.assetLabel}
-                  </div>
+                  </label>
                   <select
+                    id={assetSelectId}
                     value={incomeAssetId}
                     onChange={(e) => setIncomeAssetId(e.target.value)}
                     className="w-full bg-transparent rounded-chip px-2.5 py-2 text-sm"

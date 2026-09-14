@@ -1,7 +1,8 @@
 'use client'
 
 import { getIncomeCategory } from '@/lib/incomeCategories'
-import { useTranslations } from '@/lib/i18n/client'
+import { useLocale, useTranslations } from '@/lib/i18n/client'
+import { ruleNextDateText } from '@/lib/recurringNextDate'
 import { useMember, whoToMemberRole } from '@/app/(dashboard)/_components/MemberContext'
 import { Avatar } from '@/app/(dashboard)/_components/Avatar'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
@@ -14,8 +15,12 @@ interface Props {
 
 export function RuleListItem({ rule, onEdit }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const { viewer, partner, viewerIsA, isSolo } = useMember()
   const cat = getIncomeCategory(rule.category)
+  // `cat.label` is the zh-TW source string; the display name comes from the
+  // locale table like every other income-category surface (#1189).
+  const catLabel = t.incomeCategory[cat.id] ?? cat.label
   const isPaused = !!rule.pausedAt
 
   const recipientIsViewer = rule.recipientId === viewer.id
@@ -34,6 +39,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
     intervalLabel[rule.intervalMonths] ??
     t.recurringIncome.rule.intervalEveryNMonths.replace('{n}', String(rule.intervalMonths))
   const dayText = t.recurringIncome.rule.dayLabel.replace('{day}', String(rule.dayOfMonth))
+  const nextDateText = ruleNextDateText(rule, t.recurringIncome.rule.nextDate, locale)
 
   return (
     <li>
@@ -67,7 +73,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 min-w-0">
               <div className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
-                {rule.source ?? cat.label}
+                {rule.source ?? catLabel}
               </div>
               {isPaused && (
                 <span
@@ -83,6 +89,11 @@ export function RuleListItem({ rule, onEdit }: Props) {
               {' · '}{dayText}
               {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
+            {nextDateText && (
+              <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                {nextDateText}
+              </div>
+            )}
             {!isSolo && (
               <div
                 className="text-xs mt-1 flex items-center gap-1.5 flex-wrap"
