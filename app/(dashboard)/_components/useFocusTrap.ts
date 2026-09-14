@@ -1,6 +1,6 @@
 'use client'
 
-import { type RefObject, useEffect } from 'react'
+import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react'
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -50,10 +50,32 @@ const stack: TrapEntry[] = []
  * still sit above the sheet that opened it.
  */
 export function useFocusTrap(open: boolean, panelRef: RefObject<HTMLElement | null>): void {
+  // The restore target is read in a layout effect, the rest of the trap runs
+  // in a passive one. useFocusAndSelectOnOpen moves focus into the sheet from
+  // a layout effect, and every layout effect in a commit runs before every
+  // passive one — so a passive read recorded the sheet's own amount input as
+  // the restore target. Layout effects run child-first, which lets SheetFrame
+  // (rendered *by* the sheet that calls useFocusAndSelectOnOpen) read before
+  // its parent moves focus.
+  //
+  // The restore itself must stay in the passive cleanup: a focus() call made
+  // during React's mutation phase (where layout cleanups run on update) is
+  // undone by React's own focus/selection restore at the end of the commit.
+  //
+  // Symptom if either half regresses: nothing errors and the sheet opens and
+  // closes normally, but after Escape / save / delete focus lands on <body>
+  // instead of the button that opened the sheet. Same symptom if a
+  // focus-on-open ever moves *below* SheetFrame (into its `children`), since
+  // that child layout effect would then run first.
+  const restoreToRef = useRef<HTMLElement | null>(null)
+  useLayoutEffect(() => {
+    if (open) restoreToRef.current = document.activeElement as HTMLElement | null
+  }, [open])
+
   useEffect(() => {
     if (!open) return
     const entry: TrapEntry = {
-      restoreTo: document.activeElement as HTMLElement | null,
+      restoreTo: restoreToRef.current,
       panel: panelRef.current,
     }
     stack.push(entry)

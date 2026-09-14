@@ -69,10 +69,9 @@ export function ConfirmModal({
   const shown = open && isClient
 
   // Traps Tab inside the panel while open, and restores focus to the trigger
-  // on close (see useFocusTrap.ts). Declared before the focus-on-open effect
-  // below so its effect runs first and captures `previouslyFocused` while
-  // focus is still on the trigger — the effect after this one is the thing
-  // that moves focus away from it.
+  // on close (see useFocusTrap.ts). The trap reads its restore target in a
+  // layout effect, so it runs before the passive focus-on-open effect below
+  // moves focus away from the trigger regardless of declaration order.
   useFocusTrap(shown, panelRef)
 
   // Move focus into the panel on open. Focuses Cancel (not Confirm) so a

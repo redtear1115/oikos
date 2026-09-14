@@ -5,6 +5,7 @@ import { I18nWrapper } from './_mocks/i18n'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
+import { useFocusAndSelectOnOpen } from '@/app/(dashboard)/_components/useFocusAndSelectOnOpen'
 
 // #1176 / #1204 — closed SheetFrame out of reach, nested focus traps stack,
 // ConfirmModal escapes the sheet's transform containing block.
@@ -235,5 +236,65 @@ describe('ConfirmModal inside an open SheetFrame (#1204)', () => {
     expect(screen.queryByRole('dialog', { name: '登出 Futari？' })).toBeNull()
     expect(onSheetClose).not.toHaveBeenCalled()
     expect(document.activeElement).toBe(trigger)
+  })
+})
+
+// A sheet that moves focus into its amount input on open — the AddSheet /
+// IncomeSheet / SettlementSheet shape. useFocusAndSelectOnOpen is a layout
+// effect, so it ran before the trap's passive effect recorded the restore
+// target: the trap recorded the input inside its own panel, and closing the
+// sheet dropped focus on <body> instead of the trigger.
+describe('restore target when the sheet focuses a field on open', () => {
+  function AmountSheet({
+    open,
+    confirming = false,
+    onDeleteRequest,
+  }: {
+    open: boolean
+    confirming?: boolean
+    onDeleteRequest?: () => void
+  }) {
+    const inputRef = useRef<HTMLInputElement>(null)
+    useFocusAndSelectOnOpen(open, inputRef)
+    return (
+      <I18nWrapper>
+        <button type="button">fab</button>
+        <SheetFrame open={open} onClose={() => {}} ariaLabel="記一筆">
+          <input ref={inputRef} aria-label="金額" />
+          <button type="button" onClick={onDeleteRequest}>
+            刪除
+          </button>
+        </SheetFrame>
+        <ConfirmModal
+          open={confirming}
+          title="刪除這筆？"
+          confirmLabel="確認刪除"
+          onCancel={() => {}}
+          onConfirm={() => {}}
+        />
+      </I18nWrapper>
+    )
+  }
+
+  it('returns focus to the trigger, not <body>, after close', () => {
+    const { rerender } = render(<AmountSheet open={false} />)
+    act(() => screen.getByText('fab').focus())
+    rerender(<AmountSheet open />)
+    expect(document.activeElement).toBe(screen.getByLabelText('金額'))
+
+    rerender(<AmountSheet open={false} />)
+    expect(document.activeElement).toBe(screen.getByText('fab'))
+  })
+
+  it('returns focus to the trigger when delete-confirm closes modal and sheet together', () => {
+    const { rerender } = render(<AmountSheet open={false} />)
+    act(() => screen.getByText('fab').focus())
+    rerender(<AmountSheet open />)
+    act(() => screen.getByText('刪除').focus())
+    rerender(<AmountSheet open confirming />)
+    expect(document.activeElement).toBe(screen.getByText('取消'))
+
+    rerender(<AmountSheet open={false} confirming={false} />)
+    expect(document.activeElement).toBe(screen.getByText('fab'))
   })
 })
