@@ -465,6 +465,24 @@ body {
   overflow: hidden;
 }
 
+/* ContextStrip's offline band leaving on reconnect (#1244). Same collapse
+ * shape as `.rt-fading`, deliberately not the same class: the realtime pair is
+ * the signature for "the other person just moved", and this is the shell
+ * reporting on the network. Reusing `.rt-fading` here would quietly make
+ * DESIGN.md's "the only place the system animates something the user did not
+ * do" read as two different things.
+ *
+ * 48px is just over the band's own height (~36px at px-5 py-2 text-sm); the
+ * ceiling only has to clear it for the collapse to be the visible part. */
+@keyframes strip-fade-out {
+  0%   { opacity: 1; max-height: 48px; }
+  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+}
+.strip-fading {
+  animation: strip-fade-out 0.5s ease-out forwards;
+  overflow: hidden;
+}
+
 /* Reduced motion for the realtime pair + the amount caret (#1022).
  *
  * `.rt-flash` is the product's signature beat — "the other person isn't here,
@@ -489,6 +507,15 @@ body {
   .rt-fading {
     animation: none;
     opacity: 0.45;
+  }
+  /* Opposite call to `.rt-fading` above, because the message is opposite. A
+   * removed row has to keep a visible cause; a reconnected band has nothing
+   * left to say, and the strip is already the thing being dismissed. Holding
+   * it dimmed for 500ms would only move the layout jump 500ms later, so it
+   * simply goes — the pre-#1244 behaviour, which is exactly "no motion". */
+  .strip-fading {
+    animation: none;
+    display: none;
   }
   /* The only `infinite` animation in the app, and the one most likely to bother
    * a vestibular-sensitive reader. The caret rests in its visible state so the

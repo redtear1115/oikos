@@ -46,6 +46,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **Android 工具鏈升到 Gradle 9.5.1 / AGP 9.2.1，恢復在 JDK 25 上建置（#1207）**：Android Studio 內附 JBR 漂到 JDK 25 後，Gradle 8.14.3 連 build script 都編不起來（`Unsupported class file major version 69`），原生包打不出來。AGP 9 移除了 `proguard-android.txt`，app 與 `@capacitor-community/apple-sign-in` 改用 `proguard-android-optimize.txt`（後者經既有 patch 延伸，順手把已棄用的 `lintOptions` 換成 `lint`——9.2.1 下舊寫法仍可建置，不是必要改動）。merge 後既有 checkout 要 `rm -rf node_modules && npm ci`：對已套過舊 patch 的 `node_modules` 套新 patch 會失敗，而 postinstall 是 fail-soft，症狀是 build 撞 `proguard-android.txt is no longer supported`。未升 `@capacitor/*`，iOS SPM 的 8.3.4 pin 不受影響。同時撤回 CLAUDE.md 裡「JDK 25 + Gradle 8.14.3 實測可建置」的錯誤敘述。
 
+### 使用者可見變化
+
+- **起始日填過去的定期收支，不會再顯示一個已經過去的「下次」日期（#1244）**：把定期規則的起始日往回填（例如房租其實從去年 11 月就開始繳），建立完成後列表上的「下次 {日期}」是那個早就過掉的日子。同一筆規則只要進去編輯、按一次儲存就會變正常——新建和編輯對同一個欄位算出不同答案。現在兩條路徑一致，建立完就直接顯示未來最近的那一期。已經建立、日期停在過去的舊規則不會被動到：每晚的排程本來就會一期一期推進，那些待確認卡片是對真實期別的提案，留給你自己決定要確認還是跳過。
+- **切換 Wi-Fi 和行動網路時，離線提示不會再閃一下（#1244）**：走出門、Wi-Fi 換成行動網路的那一兩秒，畫面上方的「離線中」會閃現又消失。現在斷線要持續兩秒才會出現提示，恢復連線時則是收合淡出，不會突然把下面的內容往上彈。
+
+### 技術變更
+
+- `createRule`（expense / income 兩側）補上 `snapToFuture`，與 `updateRule` / `resumeRule` 用同一個運算式。`firstAnchorFromStart` 只負責把錨點對齊 `day_of_month`，起始日在過去時那個錨點本身就在過去。連帶效果：錨點剛好等於今天（表單預設 `dayOfMonth = 今天`）時，第一期改成下一期而不是今晚——`snapToFuture` 的條件是 `curr <= today`，這是從既有兩條路徑原封不動繼承的語義。**不做 data migration**：舊資料不是凍住的，cron 每晚推進一期並產一張 pending，會自己追上；`(rule_id, period_start)` 是 unique，批次 snap 只能砍掉「還沒產出」的期別，等於替使用者決定那些月份不要記。`tests/actions-recurring-expense.test.ts` 跟進 income 側的 fake-timer 慣例，斷言落在「同一系列的第一個未來期別」而不是「不等於起始日」。
+- 離線提示的門檻是 `OFFLINE_ANNOUNCE_DELAY_MS = 2000`（`lib/hooks/useOnlineStatus.ts`），上下界都有依據但值本身還沒實測校正：下界是換網的重連耗時，上界是 `app/sw.ts` 的 `networkTimeoutSeconds: 3`——App 放棄等網路改讀 cache 的時間點，提示必須在那之前就位。只延後「斷線」那一邊；`useOnlineStatus` 原樣保留給 `TransactionFeed`（它在換頁失敗的當下讀連線狀態，用兩秒前的值會說錯話）。fade out 則是 spec 從 v0.14.0 就寫著、實作一直沒有的東西，不是回歸——新增 `.strip-fading`（0.5s 收合，`prefers-reduced-motion` 下直接移除），沒有沿用 realtime 的 `.rt-fading`，那是給「對方剛剛動了」的簽名動態。
+
 ## [1.5.14] - 2026-09-15
 
 主題：**看起來正常，不等於成立**——這一版把一批「畫面沒破、測試全綠、review 會過」的東西成批打開來看：對外宣稱的端對端加密其實是 server 持鑰的欄位級加密、四個 CSS 變數從來沒有定義過、關起來的 sheet 一直待在 Tab 順序裡、五張理念卡只有中文。每一項的共同點都是它不會報錯，所以沒有人回報過。
