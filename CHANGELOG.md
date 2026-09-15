@@ -36,6 +36,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **定期收支的待確認卡片會在當天出現（#1262）**：設在每月 5 號的定期支出，卡片要到 6 號凌晨才冒出來，推播也跟著晚一天。產卡的排程本來就在台北 00:00 跑，但它問「今天幾號」的時候用的是 UTC，那個時刻的 UTC 還停在前一天。prod 上最近 21 張卡片全部晚一天，沒有例外。現在產卡和推播都改看台北日期，5 號的規則在 5 號 00:00 就會出現。改版當晚，當天到期的那一期會提前一天產出——那一期本來就該在那天出現，不會重複產、也不會少一期。
 
+- **瀏覽器分頁與主畫面上的圖示，終於跟 App 裡的是同一個（#1239 #1283）**：從 App Store 裝的 Futari 是一盞提燈，但從瀏覽器開、加到主畫面、或把連結分享出去時看到的卻是另一個沒有燈的圖案——同一個產品，兩個不相干的標誌。現在全部統一成提燈。分頁圖示另外畫了小尺寸的簡化版，因為母檔直接縮到 16px 會糊成一團。
+
 ### 技術變更
 
 - **法律頁的宣稱一律附程式碼依據（#1251，接續 #1191 / #1246）**：`privacyPage.sectionStorageBody` 的加密範圍改成從 `lib/crypto.ts` 的 9 個呼叫點反推（`actions/asset.ts:88,217,442,484,487,497,1281`、`actions/invoice.ts:102,204`，對應 `lib/db/schema.ts` 的 6 個 `*_encrypted` 欄位）；`sectionRetentionBody` 改成從 `drizzle/0058_account_deletion_processor.sql:64-127` 反推——solo 群組走 `_delete_group_cascade()`，配對群組只 `DELETE FROM auth.users` 並把 `Profiles.display_name` 換成 tombstone，交易只翻 `split_ratio_a`。新增 `privacyPage.sectionRetentionItems`（四語）把兩種結果拆成清單，因為塞進單一段落讀不出「兩個人的帳本刪不掉對方那份」這件事。`docs/app-store-listing.md` 的 data-safety 對照同步，並標注「使用者可否要求刪除資料」仍填是。
@@ -72,6 +74,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   - **失效的樣子**：把遮罩拿掉不會有任何徵兆——事件照送、圖表照畫，只是 `$el_text` 又開始帶帳本內容。`tests/posthog-ledger-masking.test.tsx` 是護欄：用真的 `PostHog` 實例 + 真的 `CompactRow` 跑三種點擊（整列 / 說明 / 金額），斷言 payload 裡沒有那兩個字串；同一支測試附一組**未遮罩對照組**，如果對照組也不漏，代表 harness 壞了而不是程式安全了。另一半是原始碼掃描：provider 必須展開那個常數、不得自行寫同名 key、全樹只能有一個 `posthog.init()`、不得出現 `set_config()` / `startSessionRecording()` / `capture_copied_text`。
   - ⚠️ 未處理：`$current_url` 永遠不被任何遮罩選項涵蓋，而 `/records` 的篩選器會把 `fAmtMin` / `fAmtMax` 寫進 query string。那是使用者自己設的金額門檻，不是交易紀錄，但仍是關於其花費規模的資料。修法與 gclid 歸因有取捨，另案處理。
 
+
+- **標誌收斂成單一來源（#1283，接續 #1239）**：那個扁平雙色心的 SVG path 在 repo 裡手寫重複了 5 份（`public/favicon.svg`、`app/[locale]/_landing/FutariMark.tsx`、`app/(dashboard)/_components/FutariMark.tsx`、`components/FutariMark.tsx`、`scripts/og/` 的兩份模板），改一處不會同步其餘四處——這正是它和原生殼的提燈分岔了三個月沒人發現的原因。現在收成一個來源，og 與 store 圖由 `scripts/og/` 重新生成。`illustration-hero.png` 的檯燈刻意不動：`brand-register-design.md:52` 記載那是刻意選的畫風。
 ## [1.5.14] - 2026-09-15
 
 主題：**看起來正常，不等於成立**——這一版把一批「畫面沒破、測試全綠、review 會過」的東西成批打開來看：對外宣稱的端對端加密其實是 server 持鑰的欄位級加密、四個 CSS 變數從來沒有定義過、關起來的 sheet 一直待在 Tab 順序裡、五張理念卡只有中文。每一項的共同點都是它不會報錯，所以沒有人回報過。
