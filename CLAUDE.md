@@ -114,8 +114,11 @@ Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.
 
 ### 原生 build 雷點
 
-- Android 需 JDK 21：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
-  - 「21」是 Capacitor 8 `sourceCompatibility` 的**下限，不是上限**。Android Studio 內附的 JBR 會隨 Studio 更新往上漂，看到它比 21 新不代表這行過期——2026-09-13 實測 JBR 已是 JDK 25，Gradle 8.14.3 + AGP 8.13 下 `assembleDebug` 245 個 task 全過。**不要為了湊「21」另外裝 JDK**（Gradle 官方支援矩陣只寫到 24，照著推會得出「JBR 太新不能用」的錯誤結論，實際不會發生）。
+- Android 用 Android Studio 內附 JBR 建置：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`（現為 JDK 25；工具鏈 Gradle 9.5.1 + AGP 9.2.1，#1207）
+  - **Gradle 版本決定 JBR 能不能用，不是 Capacitor。** Capacitor 8 的 `sourceCompatibility` 21 只是下限；真正的上限是「Gradle 能在哪個 Java 上執行」——Java 25 要 Gradle 9.1.0+、Java 26 要 9.4.0+（[相容表](https://docs.gradle.org/current/userguide/compatibility.html)）。JBR 隨 Studio 更新往上漂，漂過 Gradle 支援的版本就會壞。
+  - **失效的樣子**：`cap sync` 正常、web 全綠，只有打原生包那一刻炸 `BUG! exception in phase 'semantic analysis' ... Unsupported class file major version 69`（69 = Java 25、70 = Java 26），錯誤訊息完全不提 JDK。修法是升 Gradle wrapper（連帶 AGP），不是另裝舊 JDK。
+  - **撤回**：本段原本寫「2026-09-13 實測 JDK 25 + Gradle 8.14.3 + AGP 8.13 下 `assembleDebug` 245 個 task 全過，不要為了湊 21 另外裝 JDK」。那是錯的——當天 daemon log 只跑了無 task 的 `gradlew`，沒有編譯任何 build script；2026-09-14 實跑 `bundleRelease` 即炸上述錯誤。推論路徑的錯在於把「daemon 起得來」當成「能建置」。
+  - PATH 上的 `jarsigner` / `keytool` 可能是 macOS 的 stub（回 `Unable to locate a Java Runtime`），簽章驗證用 `"$JAVA_HOME/bin/jarsigner"` / `"$JAVA_HOME/bin/keytool"`。
 - 乾淨 checkout / worktree 做 iOS 工作前先 `mkdir -p out && npx cap sync ios`
 
 ---

@@ -18,7 +18,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 技術變更
+
+- **Android 工具鏈升到 Gradle 9.5.1 / AGP 9.2.1，恢復在 JDK 25 上建置（#1207）**：Android Studio 內附 JBR 漂到 JDK 25 後，Gradle 8.14.3 連 build script 都編不起來（`Unsupported class file major version 69`），原生包打不出來。AGP 9 移除了 `proguard-android.txt`，app 與 `@capacitor-community/apple-sign-in` 改用 `proguard-android-optimize.txt`（後者經既有 patch 延伸，順手把已棄用的 `lintOptions` 換成 `lint`——9.2.1 下舊寫法仍可建置，不是必要改動）。merge 後既有 checkout 要 `rm -rf node_modules && npm ci`：對已套過舊 patch 的 `node_modules` 套新 patch 會失敗，而 postinstall 是 fail-soft，症狀是 build 撞 `proguard-android.txt is no longer supported`。未升 `@capacitor/*`，iOS SPM 的 8.3.4 pin 不受影響。同時撤回 CLAUDE.md 裡「JDK 25 + Gradle 8.14.3 實測可建置」的錯誤敘述。
 
 ## [1.5.14] - 2026-09-15
 
