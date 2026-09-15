@@ -171,7 +171,7 @@ export const en: Translations = {
       {
         question: 'Is my data safe?',
         answer:
-          "Your ledger is open only to you and your partner. Connections are encrypted over HTTPS, and sensitive fields such as a child's legal name, ID number, health insurance number, licence plate, and home address are encrypted before they're written to the database. We don't share or sell your ledger content.",
+          "Your ledger is open only to you and your partner, over HTTPS. Sensitive fields like ID numbers, licence plates and addresses are encrypted at rest. We don't share or sell your ledger content.",
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -1801,14 +1801,14 @@ export const en: Translations = {
 
   termsPage: {
     heading: 'Terms of Service',
-    lastUpdated: 'Last updated: May 31, 2026',
+    lastUpdated: 'Last updated: September 16, 2026',
     intro: 'By using Futari (the "Service"), you agree to the following terms. Please read them before using the Service.',
     bullets: [
       'The Service provides a shared expense tracker for two people, including transaction records, settlements, and shared asset management. All settlement results are for your own reference; the Service is not responsible for their accuracy.',
       'Your data belongs to you. The Service uses your data solely to display your ledger and calculate balances — it will never be sold or shared with third parties.',
       'Please do not record highly sensitive personal information (such as national ID numbers or credit card numbers). The Service is designed for budgeting, not confidential document storage.',
       'By signing in with Google, you agree that Google will share your basic account information (name, avatar, email) with the Service for account identification purposes.',
-      'You may sign out or delete your account at any time from the settings page. Following deletion, all related data will be removed from our servers within 14 business days.',
+      'You may sign out or delete your account at any time from the settings page. A deletion request has a 14-day grace period and can be cancelled during it. After that, a solo ledger is deleted in full, while a ledger shared with a partner stays with them — the records the two of you wrote together are not removed. See “Data retention” in the privacy policy for details.',
       'The Service reserves the right to suspend or adjust the Service for maintenance, security, or system requirements, and will provide advance notice where possible.',
       'These Terms are governed by the laws of the Republic of China (Taiwan). Any disputes shall be submitted to the Taipei District Court as the court of first instance.',
     ],
@@ -1821,11 +1821,11 @@ export const en: Translations = {
 
   privacyPage: {
     heading: 'Privacy Policy',
-    lastUpdated: 'Last updated: May 31, 2026',
+    lastUpdated: 'Last updated: September 16, 2026',
     intro: 'This page explains how Futari collects, uses, and protects your personal data.',
     sectionCollectTitle: 'Data we collect',
     sectionCollectItems: [
-      'Basic account information from Google OAuth: name, avatar, and email address.',
+      'Basic account information from Google or Apple sign-in: name, avatar, and email address.',
       'Expense data you enter manually, including transactions, settlements, split preferences, and shared asset records.',
       'Invite links and acceptance times (used to link the two accounts).',
       'Usage behavior and error information (used to improve the Service — see Third-party services below).',
@@ -1838,9 +1838,14 @@ export const en: Translations = {
       'To analyze feature usage and improve the product experience (via PostHog, with no personally identifiable information).',
     ],
     sectionStorageTitle: 'Where data is stored',
-    sectionStorageBody: "Data is stored on Supabase servers in the Tokyo, Japan region, protected by encrypted connections and access controls. Sensitive fields within your aibutsu records — including a child's full name, national ID number, health insurance card number, a car's licence plate, and a home address — are encrypted with AES-256-GCM before being written to the database. The database never holds plaintext; decryption only occurs through the application itself.",
+    sectionStorageBody: "Data is stored on servers hosted by Supabase, transmitted over encrypted connections and protected by access controls. These fields are encrypted with AES-256-GCM before they are written to the database: a child's full name, national ID number, health insurance card number, a vehicle licence plate, a home address, and the verification code for an e-invoice carrier. Everything else you record — transaction descriptions, amounts, categories, settlement notes — is stored as plain text. Both encryption and decryption happen on our servers and we hold the key, so this is encryption at rest, not end-to-end encryption.",
     sectionRetentionTitle: 'Data retention',
-    sectionRetentionBody: 'Your account data is retained for as long as your account remains active. Deleted transactions are kept as soft-deleted records for up to one year before being permanently removed by an automated process. Following account deletion, all related data will be removed from our servers within 14 business days.',
+    sectionRetentionBody: 'Your account data is retained for as long as your account remains active. Transactions you delete are kept as soft-deleted records for about a year, then cleared automatically. When you request account deletion from the settings page there is a 14-day grace period (calendar days, not business days) during which you can cancel at any time; after that it runs automatically. What happens then depends on whether the ledger is yours alone or shared with a partner:',
+    sectionRetentionItems: [
+      'A solo ledger: the whole ledger goes — transactions, settlements, recurring rules, aibutsu and trip records are all removed, along with your profile (name, avatar, email).',
+      "A shared ledger: the ledger stays with your partner. The transactions, settlements and aibutsu records the two of you wrote together remain in their ledger; we do not remove them on your behalf, because those records are theirs as well. Your sign-in identity is deleted (Google / Apple account link, email, avatar, push devices), and your name appears in their ledger as “a partner who left”.",
+      'If you would like the content in a shared ledger removed as well, talk it over with your partner before deleting your account, or write to us first.',
+    ],
     sectionThirdPartyTitle: 'Third-party services',
     sectionThirdPartyItems: [
       'Google (OAuth sign-in)',

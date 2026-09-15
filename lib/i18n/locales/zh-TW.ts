@@ -2248,6 +2248,12 @@ export type Translations = {
     sectionStorageBody: string
     sectionRetentionTitle: string
     sectionRetentionBody: string
+    /** Account-deletion outcomes, split solo vs paired ledger (#1251). The two
+     *  branches differ materially — `process_account_deletions()` (migration
+     *  0058) cascades a solo group away but leaves a paired ledger with the
+     *  remaining partner — so they are listed rather than folded into one
+     *  paragraph. */
+    sectionRetentionItems: readonly string[]
     sectionThirdPartyTitle: string
     sectionThirdPartyItems: readonly string[]
     sectionRightsTitle: string
@@ -3010,7 +3016,7 @@ export const zhTW: Translations = {
       {
         question: '資料安全嗎？',
         answer:
-          '帳本只開放給你和伴侶兩人。連線以 HTTPS 加密；寶寶本名、身分證字號、健保卡號、車牌、房屋地址等機敏欄位，會先加密才存進資料庫。我們不會分享或販售你的記帳內容。',
+          '帳本只開放給你和伴侶兩人，連線以 HTTPS 加密。身分證字號、車牌、住址等機敏欄位會加密儲存，記帳內容不分享、不販售。',
       },
     ],
     phoneMockBalanceCaption: 'YOU OWE T',
@@ -4628,14 +4634,14 @@ export const zhTW: Translations = {
 
   termsPage: {
     heading: '服務條款',
-    lastUpdated: '最後更新：2026 年 5 月 31 日',
+    lastUpdated: '最後更新：2026 年 9 月 16 日',
     intro: '使用 Futari（以下簡稱「本服務」）即表示您同意以下條款。請在使用前詳閱。',
     bullets: [
       '本服務提供雙人共用記帳功能，包含交易紀錄、結算與共同財物管理。所有結算結果僅供使用者自行參考，本服務不對其正確性負責。',
       '您的資料屬於您。本服務僅為顯示與計算目的使用您輸入的資料，不會出售或對外分享您的個人資料。',
       '請勿記錄高度敏感的身分資訊（例如身分證字號、信用卡號等）。本服務的設計目的是記帳，不是機密文件保存。',
       '使用 Google 登入即表示您同意 Google 將您的基本帳號資訊（姓名、頭像、Email）提供給本服務，作為帳號識別之用。',
-      '您可隨時透過設定頁登出或刪除帳號。帳號刪除後，所有相關資料將於 14 個工作天內從伺服器移除。',
+      '您可隨時透過設定頁登出或刪除帳號。提出刪除後有 14 天緩衝期，期間可以取消；期滿後，只有您一個人的帳本會整本刪除，與伴侶共用的帳本則會留給對方，您和對方共同記下的紀錄不會一起移除。詳見隱私權政策的「資料保留期限」。',
       '本服務保留因維護、安全或系統需求暫停或調整服務的權利，並將在可能的情況下提前告知。',
       '本服務條款適用中華民國法律，如有爭議以臺灣臺北地方法院為第一審管轄法院。',
     ],
@@ -4648,11 +4654,11 @@ export const zhTW: Translations = {
 
   privacyPage: {
     heading: '隱私權政策',
-    lastUpdated: '最後更新：2026 年 5 月 31 日',
+    lastUpdated: '最後更新：2026 年 9 月 16 日',
     intro: '本頁說明 Futari 如何蒐集、使用與保護您的個人資料。',
     sectionCollectTitle: '蒐集的資料',
     sectionCollectItems: [
-      'Google OAuth 提供的基本帳號資訊：姓名、頭像、Email 地址。',
+      'Google 或 Apple 登入提供的基本帳號資訊：姓名、頭像、Email 地址。',
       '您手動輸入的記帳資料，包含交易紀錄、結算紀錄、分攤偏好、共同財物資訊等。',
       '邀請連結與接受時間（用於連結雙方帳號）。',
       '操作行為與錯誤資訊（用於改善服務品質，詳見第三方服務說明）。',
@@ -4665,9 +4671,14 @@ export const zhTW: Translations = {
       '分析功能使用情況以改善產品體驗（透過 PostHog，不含個人識別資訊）。',
     ],
     sectionStorageTitle: '資料儲存',
-    sectionStorageBody: '資料儲存於 Supabase 的伺服器，位於日本東京區，採加密傳輸與存取控制保護。愛物中的機敏欄位（寶寶本名、身分證字號、健保卡號、車牌號碼、房屋地址）在寫入資料庫前以 AES-256-GCM 加密，資料庫中不存明文，唯有透過應用程式操作才能解密讀取。',
+    sectionStorageBody: '資料儲存於 Supabase 託管的伺服器，以加密連線傳輸，並以存取控制保護。以下欄位在寫入資料庫前會先以 AES-256-GCM 加密：孩子的本名、身分證字號、健保卡號、車牌號碼、房屋地址，以及電子發票載具的驗證碼。這些欄位以外的記帳內容——交易說明、金額、分類、結算備註等——以明文儲存。加密與解密都在本服務的伺服器端進行，金鑰由我們保管；這是儲存時加密，不是端對端加密。',
     sectionRetentionTitle: '資料保留期限',
-    sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記最多 1 年，之後由系統自動物理刪除。帳號刪除後，所有相關資料將於 14 個工作天內從伺服器移除。',
+    sectionRetentionBody: '您的帳號資料在帳號存續期間持續保存。您刪除的交易紀錄會保留軟刪除標記約 1 年，之後由系統自動清除。在設定頁提出刪除帳號後，有 14 天的緩衝期（日曆天，不是工作天），期間隨時可以取消；期滿由系統自動執行。執行時會發生什麼，取決於這本帳本是您一個人的，還是和伴侶共用的：',
+    sectionRetentionItems: [
+      '一個人的帳本：整本一起刪除——交易、結算、定期收支規則、愛物與旅行紀錄都會移除，您的個人資料（姓名、頭像、Email）也一併刪除。',
+      '兩人共用的帳本：帳本會留給對方。你們一起記下的交易、結算與愛物紀錄會留在對方的帳本裡，我們不會單方面替您刪掉——那些紀錄同時也是對方的。您的登入身分會刪除（Google／Apple 帳號連結、Email、頭像、推播裝置），您的名字在對方的帳本裡會顯示為「已離開的夥伴」。',
+      '如果您希望共用帳本裡的內容也一併移除，請在刪除帳號前與伴侶談過，或先寫信告訴我們。',
+    ],
     sectionThirdPartyTitle: '第三方服務',
     sectionThirdPartyItems: [
       'Google（OAuth 登入）',

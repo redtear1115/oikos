@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-11
+last_updated: 2026-09-16
 ---
 
 # App Store / Play Store — 上架文案與表單填寫 (v1.5.5)
@@ -8,7 +8,7 @@ last_updated: 2026-09-11
 > **Data safety / App Privacy 申報對照**、**Review Notes 模板**。
 > 文案套品牌準則（landing tier：「有溫度的清醒」），避免感嘆號、避免「管理／追蹤／監控」。
 > zh-TW 為主稿；zh-CN 保留繁簡差異；**en / ja 為建議譯文，送審前待 native reviewer 確認**。
-> 資料申報以 `/privacy`（最後更新 2026-05-31）為單一真相，兩商店與隱私頁必須一致。
+> 資料申報以 `/privacy`（最後更新 2026-09-16）為單一真相，兩商店與隱私頁必須一致。
 
 ---
 
@@ -205,10 +205,10 @@ Futari は、ふたりのための共有家計簿です。
 - **是否用於追蹤（App Store「Tracking」定義：跨 App/網站關聯身分）？** 否 → App Privacy 的「Used to Track You」全部不勾。
 - **傳輸是否加密？** 是。
 - **使用者可否要求刪除資料？** 是 → 設定頁「刪除帳號」；web 刪除說明 URL：`https://futari.southern-light.dev/zh-TW/privacy`。
-- **資料保留**：帳號存續期間保存；軟刪除交易留標記至多 1 年後物理刪除；帳號刪除後 14 個工作天內移除。
+- **資料保留**：帳號存續期間保存；軟刪除交易留標記約 1 年後物理刪除；帳號刪除申請有 14 天（日曆天）緩衝期，期滿由排程執行。
+  - **刪除結果依帳本形態分兩種**（`drizzle/0058_account_deletion_processor.sql`）：solo 帳本整組 cascade 刪除；配對帳本保留給對方，只刪 `auth.users`，`Profiles` 留 tombstone（顯示為「已離開的夥伴」），共同交易紀錄不刪。申報「使用者可否要求刪除資料」仍填**是**——使用者自身的帳號與個資確實刪除；共用帳本的內容屬於雙方，不因單方請求移除。隱私頁「資料保留期限」已逐條寫明。
 
-> ⚠️ Apple Sign In 也會收 Email / Name（與 Google OAuth 同類），申報已涵蓋。`/privacy` 目前文字僅列 Google OAuth；
-> 建議下次 copy PR 把「Apple（OAuth 登入）」補進 `sectionThirdPartyItems`（4 語），讓隱私頁與實作一致（非送審 blocker，但審核員可能比對）。
+> Apple Sign In 也會收 Email / Name（與 Google OAuth 同類），申報已涵蓋。`/privacy` 的 `sectionThirdPartyItems` 與 `sectionCollectItems` 四語都已列出 Apple（#1251）。
 
 ---
 
