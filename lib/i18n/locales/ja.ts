@@ -1795,7 +1795,7 @@ export const ja: Translations = {
   nativeOfflinePage: {
     documentTitle: 'オフライン · Futari',
     title: '今はオフラインです',
-    body: 'オンラインに戻ると、ふたりの家計簿がここに戻ります。',
+    body: 'オンラインに戻れば、ふたりの家計簿はここにあります。',
     retry: 'もう一度ひらく',
   },
 
