@@ -20,9 +20,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **隱私權政策與服務條款的兩句更正（#1251）**：⚠️ 這是對外資料處理聲明的更正。隱私頁原本寫「資料庫中不存明文」，實際上只有孩子本名、身分證字號、健保卡號、車牌、房屋地址與發票載具驗證碼六個欄位加密，交易說明、金額、分類是明文；現在逐項寫清楚哪些加密、哪些不加密，並說明金鑰由我們保管、這是儲存時加密而非端對端加密。隱私頁與服務條款原本都寫「帳號刪除後所有相關資料將於 14 個工作天內移除」，實際上只有一個人的帳本會整本刪除，兩人共用的帳本會留給對方、共同記下的紀錄不會移除；現在分成兩種情形逐條寫明。同一批順手更正：移除無法佐證的「日本東京區」機房敘述，蒐集項目補上 Apple 登入，兩頁的最後更新日期改為 2026-09-16。
+
 - **定期支出的「按比例分」會照規則的比例落帳（#1243）**：設成 30 / 70 的定期支出規則，每期產生的待確認卡片沒有帶到那個比例，確認之後那一筆就變成平分。卡片會出現、確認會成功、沒有任何錯誤訊息，只有分攤金額和你設的不一樣。現在產卡會帶上規則當下的比例，確認後落帳的比例就是你設的比例；卡片上原本把「按比例分」寫成「平分」也一併更正。手上還沒確認的卡片會在這次補回比例；已經確認過的紀錄維持原樣，需要的話可以自己重記一筆。
 
 ### 技術變更
+
+- **法律頁的宣稱一律附程式碼依據（#1251，接續 #1191 / #1246）**：`privacyPage.sectionStorageBody` 的加密範圍改成從 `lib/crypto.ts` 的 9 個呼叫點反推（`actions/asset.ts:88,217,442,484,487,497,1281`、`actions/invoice.ts:102,204`，對應 `lib/db/schema.ts` 的 6 個 `*_encrypted` 欄位）；`sectionRetentionBody` 改成從 `drizzle/0058_account_deletion_processor.sql:64-127` 反推——solo 群組走 `_delete_group_cascade()`，配對群組只 `DELETE FROM auth.users` 並把 `Profiles.display_name` 換成 tombstone，交易只翻 `split_ratio_a`。新增 `privacyPage.sectionRetentionItems`（四語）把兩種結果拆成清單，因為塞進單一段落讀不出「兩個人的帳本刪不掉對方那份」這件事。`docs/app-store-listing.md` 的 data-safety 對照同步，並標注「使用者可否要求刪除資料」仍填是。
+  - **失效的樣子**：不成立的法律宣稱不會讓任何測試變紅、也不會有人回報——它只是靜靜掛在頁面上，直到有人拿它去比對實作。所以這類 key 的註解一律寫出依據的檔案與行號，而不只是寫「機敏欄位」。
 
 - `drizzle/0063_recurring_expense_split_ratio.sql`：重排 `generate-pending-expense` cron，INSERT 補上 `proposed_split_ratio_a ← r.split_ratio_a`。欄位是 0027 加的，cron body 留在 0021 沒有跟著改，所以 weighted 規則產的 pending 比例一直是 NULL。落帳後同一筆被三個地方讀成三種意思，而且都不報錯：`lib/balance.ts` 當 50/50、`CompactRow` 因為 `splitRatioA != null` 不成立而顯示分攤 0（看起來像全部付款人出）、`recalcGroupBalance` 的 CASE 算出 NULL 被 SUM 直接略過（對 balance 貢獻 0）。同一份 migration 回填未處理 pending 的比例；已 resolved 的 pending 與其 CashTransaction 不動（改已落帳的紀錄會在使用者不知情下移動 balance）。`confirmPending` 與 `listActivePendings` 一併帶上比例。新測試直接從 drizzle/ 解析 cron 的 INSERT 欄位／SELECT 運算式配對，欄位清單與值清單再度對不上就會失敗。
 - **錯誤訊息終於會說你的語言（#1223）**：v1.5.14 花一整批工把 82 句 server 錯誤翻成四語，實際上線後一句都沒送到——en / ja / zh-CN 使用者按下儲存、遇到「這個章節已經有紀錄了，不能改幣別」這類狀況時，看到的還是「發生錯誤」。現在幣別鎖定、旅行結束日早於出發日、兩台裝置同時處理同一筆待確認支出等情況，都會顯示該語言的具體說明。
@@ -50,11 +55,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **起始日填過去的定期收支，不會再顯示一個已經過去的「下次」日期（#1244）**：把定期規則的起始日往回填（例如房租其實從去年 11 月就開始繳），建立完成後列表上的「下次 {日期}」是那個早就過掉的日子。同一筆規則只要進去編輯、按一次儲存就會變正常——新建和編輯對同一個欄位算出不同答案。現在建立完就直接顯示最近的那一期。今天就是你設的那一號時，新建會把今天算進去（今晚就會出現待確認卡），而且起始日是填今天還是往回填都一樣——起始日說的是「這個系列從哪期開始算」，不是「第一張卡什麼時候出現」。編輯則維持「改動從下一期開始套用」，跟編輯畫面上那句說明一致。已經建立、日期停在過去的舊規則不會被動到：每晚的排程本來就會一期一期推進，那些待確認卡片是對真實期別的提案，留給你自己決定要確認還是跳過。
 - **切換 Wi-Fi 和行動網路時，離線提示不會再閃一下（#1244）**：走出門、Wi-Fi 換成行動網路的那一兩秒，畫面上方的「離線中」會閃現又消失。現在斷線要持續兩秒才會出現提示，恢復連線時則是收合淡出，不會突然把下面的內容往上彈。
+- **分析工具不再收到你的交易描述與金額（#1267）**：PostHog 的 autocapture 預設是開的，而且預設會把你點到的那個元素的文字一起送出。Dashboard 的交易列整列可點，說明在一個 `<span>` 裡、金額在同一顆按鈕裡的 `<div>` 裡——所以點一筆交易，就可能把「晚餐」和「NT$450」送到第三方。畫面上不會有任何異狀，錯誤訊息、警告、載入速度全都正常，只有第三方後台的一個沒人會打開的欄位裡有東西。現在送出的事件只剩「有人點了這個位置的這種元素」，文字與屬性一律遮罩；Session Replay（會錄下整個畫面）也在前端鎖成關閉。
 
 ### 技術變更
 
 - `createRule`（expense / income 兩側）補上 `snapToFuture`。`firstAnchorFromStart` 只負責把錨點對齊 `day_of_month`，起始日在過去時那個錨點本身就在過去。**建立含今天、編輯與 resume 不含，這個不對稱是刻意的**：建立時使用者剛說「每月 N 號」，今天就是 N 號時這個月該算進去，而且起始日怎麼填不該改變答案（`startsOn` 說的是系列從哪期起算，不是第一張卡何時出現）；編輯時 `sheet.editEffectHint` 正顯示在畫面上承諾「改動從下一期開始套用」，把今天拉進來等於違背一句使用者正在讀的話。機制是 `createRule` 把 `snapToFuture` 的 cutoff 傳成**今天的前一天**，`snapToFuture` 本體不動（與 `updateRule` / `resumeRule` 共用）。那個「前一天」走新增的 `lib/local-date.ts › previousDay`，內部用 `ymdToUTCNoon` 留 12 小時餘裕——`new Date(ymd)` 加 `getDate() - 1` 在 UTC 以西會早一天，而且不會報錯（這個 repo 為此踩過 #1130、#1262）；`__tests__/previousDay.test.ts` 直接切五個時區驗，含跨月、跨年、閏日。`today` 仍由 UTC 推導，因為它要回答的是「今晚的 cron 會不會撈到」，而 cron 比的是 Postgres `CURRENT_DATE`。兩側程式註解都寫了為什麼必須不同並互相指路；測試把「今天建立／今天編輯」與「回填建立／回填編輯」兩對並排放著，統一 guard 時剛好紅。**不做 data migration**：舊資料不是凍住的，cron 每晚推進一期並產一張 pending，會自己追上；`(rule_id, period_start)` 是 unique，批次 snap 只能砍掉「還沒產出」的期別，等於替使用者決定那些月份不要記。`tests/actions-recurring-expense.test.ts` 跟進 income 側的 fake-timer 慣例，斷言落在「同一系列的第一個未來期別」而不是「不等於起始日」。
 - 離線提示的門檻是 `OFFLINE_ANNOUNCE_DELAY_MS = 2000`（`lib/hooks/useOnlineStatus.ts`），上下界都有依據但值本身還沒實測校正：下界是換網的重連耗時，上界是 `app/sw.ts` 的 `networkTimeoutSeconds: 3`——App 放棄等網路改讀 cache 的時間點，提示必須在那之前就位。只延後「斷線」那一邊；`useOnlineStatus` 原樣保留給 `TransactionFeed`（它在換頁失敗的當下讀連線狀態，用兩秒前的值會說錯話）。fade out 則是 spec 從 v0.14.0 就寫著、實作一直沒有的東西，不是回歸——新增 `.strip-fading`（0.5s 收合，`prefers-reduced-motion` 下直接移除），沒有沿用 realtime 的 `.rt-fading`，那是給「對方剛剛動了」的簽名動態。
+- **PostHog autocapture 遮罩（#1267）**：`lib/analytics/posthogPrivacy.ts` 集中 `autocapture` / `mask_all_text` / `mask_all_element_attributes` / `disable_session_recording`，由 `app/providers.tsx` 在 `init()` 最後展開。選遮罩而不是逐元素加 `ph-no-capture`：後者要先窮舉所有「渲染金額或說明的可點擊元素」，而那份清單靜態掃不出來——`CompactRow` 把內容放在 `const inner` 再塞進 `<button>`，任何以標籤範圍為單位的 scanner 都會漏掉它，新元件更是預設會漏。遮罩是全域的，明年新增的元件自動涵蓋。保留下來的是互動骨架（tag、classes、`$elements_chain` 位置、`$current_url`、連結的 `attr__href`）；`mask_all_text` 只被 autocapture 與 dead-click autocapture 讀取，18 個具名 `track()` 事件與手動 `$pageview` 不受影響——自 #1015 起分析本來就走具名事件，不靠 `$el_text`。
+  - `person_profiles: 'identified_only'` + `persistence: 'memory'` 擋的是 person 層級識別，跟事件 payload 無關，所以擋不到這件事。
+  - **失效的樣子**：把遮罩拿掉不會有任何徵兆——事件照送、圖表照畫，只是 `$el_text` 又開始帶帳本內容。`tests/posthog-ledger-masking.test.tsx` 是護欄：用真的 `PostHog` 實例 + 真的 `CompactRow` 跑三種點擊（整列 / 說明 / 金額），斷言 payload 裡沒有那兩個字串；同一支測試附一組**未遮罩對照組**，如果對照組也不漏，代表 harness 壞了而不是程式安全了。另一半是原始碼掃描：provider 必須展開那個常數、不得自行寫同名 key、全樹只能有一個 `posthog.init()`、不得出現 `set_config()` / `startSessionRecording()` / `capture_copied_text`。
+  - ⚠️ 未處理：`$current_url` 永遠不被任何遮罩選項涵蓋，而 `/records` 的篩選器會把 `fAmtMin` / `fAmtMax` 寫進 query string。那是使用者自己設的金額門檻，不是交易紀錄，但仍是關於其花費規模的資料。修法與 gclid 歸因有取捨，另案處理。
 
 ## [1.5.14] - 2026-09-15
 
