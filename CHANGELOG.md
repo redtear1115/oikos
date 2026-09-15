@@ -20,9 +20,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **隱私權政策與服務條款的兩句更正（#1251）**：⚠️ 這是對外資料處理聲明的更正。隱私頁原本寫「資料庫中不存明文」，實際上只有孩子本名、身分證字號、健保卡號、車牌、房屋地址與發票載具驗證碼六個欄位加密，交易說明、金額、分類是明文；現在逐項寫清楚哪些加密、哪些不加密，並說明金鑰由我們保管、這是儲存時加密而非端對端加密。隱私頁與服務條款原本都寫「帳號刪除後所有相關資料將於 14 個工作天內移除」，實際上只有一個人的帳本會整本刪除，兩人共用的帳本會留給對方、共同記下的紀錄不會移除；現在分成兩種情形逐條寫明。同一批順手更正：移除無法佐證的「日本東京區」機房敘述，蒐集項目補上 Apple 登入，兩頁的最後更新日期改為 2026-09-16。
+
 - **定期支出的「按比例分」會照規則的比例落帳（#1243）**：設成 30 / 70 的定期支出規則，每期產生的待確認卡片沒有帶到那個比例，確認之後那一筆就變成平分。卡片會出現、確認會成功、沒有任何錯誤訊息，只有分攤金額和你設的不一樣。現在產卡會帶上規則當下的比例，確認後落帳的比例就是你設的比例；卡片上原本把「按比例分」寫成「平分」也一併更正。手上還沒確認的卡片會在這次補回比例；已經確認過的紀錄維持原樣，需要的話可以自己重記一筆。
 
 ### 技術變更
+
+- **法律頁的宣稱一律附程式碼依據（#1251，接續 #1191 / #1246）**：`privacyPage.sectionStorageBody` 的加密範圍改成從 `lib/crypto.ts` 的 9 個呼叫點反推（`actions/asset.ts:88,217,442,484,487,497,1281`、`actions/invoice.ts:102,204`，對應 `lib/db/schema.ts` 的 6 個 `*_encrypted` 欄位）；`sectionRetentionBody` 改成從 `drizzle/0058_account_deletion_processor.sql:64-127` 反推——solo 群組走 `_delete_group_cascade()`，配對群組只 `DELETE FROM auth.users` 並把 `Profiles.display_name` 換成 tombstone，交易只翻 `split_ratio_a`。新增 `privacyPage.sectionRetentionItems`（四語）把兩種結果拆成清單，因為塞進單一段落讀不出「兩個人的帳本刪不掉對方那份」這件事。`docs/app-store-listing.md` 的 data-safety 對照同步，並標注「使用者可否要求刪除資料」仍填是。
+  - **失效的樣子**：不成立的法律宣稱不會讓任何測試變紅、也不會有人回報——它只是靜靜掛在頁面上，直到有人拿它去比對實作。所以這類 key 的註解一律寫出依據的檔案與行號，而不只是寫「機敏欄位」。
 
 - `drizzle/0063_recurring_expense_split_ratio.sql`：重排 `generate-pending-expense` cron，INSERT 補上 `proposed_split_ratio_a ← r.split_ratio_a`。欄位是 0027 加的，cron body 留在 0021 沒有跟著改，所以 weighted 規則產的 pending 比例一直是 NULL。落帳後同一筆被三個地方讀成三種意思，而且都不報錯：`lib/balance.ts` 當 50/50、`CompactRow` 因為 `splitRatioA != null` 不成立而顯示分攤 0（看起來像全部付款人出）、`recalcGroupBalance` 的 CASE 算出 NULL 被 SUM 直接略過（對 balance 貢獻 0）。同一份 migration 回填未處理 pending 的比例；已 resolved 的 pending 與其 CashTransaction 不動（改已落帳的紀錄會在使用者不知情下移動 balance）。`confirmPending` 與 `listActivePendings` 一併帶上比例。新測試直接從 drizzle/ 解析 cron 的 INSERT 欄位／SELECT 運算式配對，欄位清單與值清單再度對不上就會失敗。
 - **錯誤訊息終於會說你的語言（#1223）**：v1.5.14 花一整批工把 82 句 server 錯誤翻成四語，實際上線後一句都沒送到——en / ja / zh-CN 使用者按下儲存、遇到「這個章節已經有紀錄了，不能改幣別」這類狀況時，看到的還是「發生錯誤」。現在幣別鎖定、旅行結束日早於出發日、兩台裝置同時處理同一筆待確認支出等情況，都會顯示該語言的具體說明。
