@@ -63,11 +63,17 @@ jobs:
 
       # `out/`、`ios/App/App/public`、`capacitor.config.json` 都是 gitignore 的 cap sync 產物，
       # 乾淨 checkout 一定要先補，否則 archive 會失敗在 "The file public couldn't be opened"。
-      # server.url 架構下 out/ 是空的沒關係，bundled 內容根本不會被用到。
+      # `out/` 不再需要手動 mkdir：`capacitor:copy:before` hook（package.json）會建目錄
+      # 並產生殼內離線頁 out/offline.html（#1225，server.errorPath 指向它）。
       - name: Capacitor sync（iOS）
+        run: npx cap sync ios
+
+      # #1225：離線頁是唯一會被打包進殼的 web 檔，而它只有在真機斷網冷啟動時才讀得到——
+      # 所以 sync 完明確驗一次它有沒有落地，否則只會在使用者手上以「空白畫面」呈現。
+      - name: 確認殼內離線頁有被帶進 iOS bundle
         run: |
-          mkdir -p out
-          npx cap sync ios
+          test -f ios/App/App/public/offline.html \
+            || { echo "::error::ios/App/App/public/offline.html 不存在（#1225 server.errorPath 會指到 404）"; exit 1; }
 
       # derivedData 與 SPM clone 都指到全新目錄：Package.resolved 已 pin exact 8.3.4，
       # 吃到舊的解析快取就驗不出 patch 是否真的有效（runbook §G 驗收步驟 2）。
@@ -109,10 +115,15 @@ jobs:
 
       # android/capacitor-cordova-android-plugins/ 與 assets/ 下的 config 都是 gitignore 的
       # cap sync 產物，沒先 sync 的話 settings.gradle 會找不到 plugin 專案。
+      # `out/` 由 `capacitor:copy:before` hook 自己建（#1225），不必先 mkdir。
       - name: Capacitor sync（Android）
+        run: npx cap sync android
+
+      # 同 iOS：#1225 的離線頁只有在真機斷網冷啟動時才讀得到，缺檔不會有任何報錯。
+      - name: 確認殼內離線頁有被帶進 Android assets
         run: |
-          mkdir -p out
-          npx cap sync android
+          test -f android/app/src/main/assets/public/offline.html \
+            || { echo "::error::android/app/src/main/assets/public/offline.html 不存在（#1225 server.errorPath 會指到 404）"; exit 1; }
 
       # 用 assembleDebug：debug 走 Android 自動產生的 debug keystore，不需要任何 secret。
       # release 變體的 signingConfig 從 KEYSTORE_PATH / KEYSTORE_PASSWORD 等環境變數讀

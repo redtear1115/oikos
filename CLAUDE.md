@@ -74,7 +74,8 @@ Entity 目錄、Entity 關係、Balance 計算規則、分類色 token 見 [doma
 - 工作模式不變：在本 session 依序做（一次一個任務）；平行背景 agent 只在明確要求時用，且各自有自己的 worktree。委派與否依全域 Orchestration 政策。
 - **兩套 worktree 各管各的情境**：主 session 的任務 worktree 用上述 `.claude/worktrees/{issue_no}-{slug}/` 手動慣例；平行 subagent 的隔離交給 harness 的 `isolation: "worktree"`（自動建立與回收，不落在此路徑）。
 - Worktree 缺 `.env.local` 時從 main checkout `ln -s`，不要 copy（copy 會在 key 輪替後 silently drift）。
-- 做 iOS 原生工作的 worktree，開完先 `mkdir -p out && npx cap sync ios`（`cap sync` 產物沒進版控，乾淨 checkout 缺這步 Xcode 會開不起來）。
+- 做 iOS 原生工作的 worktree，開完先 `npx cap sync ios`（`cap sync` 產物沒進版控，乾淨 checkout 缺這步 Xcode 會開不起來）。`out/` 不必手動建——`capacitor:copy:before` hook 會建目錄並產生殼內離線頁（見下方「原生 build 雷點」）。
+  - **在 worktree 裡跑 `cap sync` 會弄髒兩個有進版控的檔**：`android/capacitor.settings.gradle` 與 `ios/App/CapApp-SPM/Package.swift` 會被改寫成 worktree 深度的相對路徑（`../../../` → `../../../../../../`），因為 `node_modules` 是 symlink、Capacitor 解到 main checkout 的實體路徑。**commit 前一定要 `git checkout --` 這兩個檔**。失效的樣子不是哪裡報錯，是這兩行被 merge 進 main 之後，別人的 Xcode / Gradle 解不到 plugin 專案，而錯誤訊息只會說某個 package 找不到。
 - Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
 
 ---
@@ -116,7 +117,9 @@ Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.
 
 - Android 需 JDK 21：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
   - 「21」是 Capacitor 8 `sourceCompatibility` 的**下限，不是上限**。Android Studio 內附的 JBR 會隨 Studio 更新往上漂，看到它比 21 新不代表這行過期——2026-09-13 實測 JBR 已是 JDK 25，Gradle 8.14.3 + AGP 8.13 下 `assembleDebug` 245 個 task 全過。**不要為了湊「21」另外裝 JDK**（Gradle 官方支援矩陣只寫到 24，照著推會得出「JBR 太新不能用」的錯誤結論，實際不會發生）。
-- 乾淨 checkout / worktree 做 iOS 工作前先 `mkdir -p out && npx cap sync ios`
+- 乾淨 checkout / worktree 做 iOS 工作前先 `npx cap sync ios`
+- **`webDir`（`out/`）現在有一個檔案：殼內離線頁 `offline.html`（#1225）。** `server.url` 架構下沒網路就載不到網站，所以 `server.errorPath` 指向這份打包進殼的靜態頁。它由 `scripts/build-native-offline-page.ts` 在 `capacitor:copy:before` hook 產生（文案來源 `lib/i18n/locales/*.ts › nativeOfflinePage`，四語烤在同一個檔、靠 `navigator.language` 選）。
+  - **失效的樣子**：什麼紅燈都沒有。`cap sync` 成功、archive 成功、web 部署全綠——只有真機斷網冷啟動時是一片空白，而且 Sentry 收不到（那個情境沒有任何 JS 在跑）。護欄在 `__tests__/nativeOfflinePage.test.ts` 與 native-smoke 的檔案存在檢查，不在 build log。
 
 ---
 

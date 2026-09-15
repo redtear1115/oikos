@@ -1792,6 +1792,13 @@ export const ja: Translations = {
     metadataTitle: 'オフライン · Futari',
   },
 
+  nativeOfflinePage: {
+    documentTitle: 'オフライン · Futari',
+    title: '今はオフラインです',
+    body: 'オンラインに戻ると、ふたりの家計簿がここに戻ります。',
+    retry: 'もう一度ひらく',
+  },
+
   termsPage: {
     heading: '利用規約',
     lastUpdated: '最終更新：2026年5月31日',

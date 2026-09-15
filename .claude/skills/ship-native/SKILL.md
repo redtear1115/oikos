@@ -77,13 +77,20 @@ git log --oneline -20 -- ios/ android/ capacitor.config.ts patches/ package.json
 ### 1. 前置：cap sync（乾淨 checkout / 新 worktree 必做）
 
 ```bash
-mkdir -p out && npx cap sync ios      # 或 android / 兩個都跑
+npx cap sync ios      # 或 android / 兩個都跑
 ```
 
 `public/` · `config.xml` · `capacitor.config.json` 是 `cap sync` 產物且被 gitignore，
 不在版控裡。少了它們 archive 會失敗於 `The file "public" couldn't be opened`。
-`webDir` 是 `out`，而 `/out/` 也被 ignore，所以要先 `mkdir -p out`——
-server.url 架構下裡面是空的沒關係，bundled 內容根本不會被用到。
+`webDir`（`out/`）也被 ignore，但**不必手動 `mkdir`**：`capacitor:copy:before` hook
+（package.json → `scripts/build-native-offline-page.ts`）會建目錄並產生殼內離線頁
+`offline.html`（#1225，`server.errorPath` 指向它）。
+
+sync 完順手確認離線頁有落地——它只有在真機斷網冷啟動時才讀得到，缺檔沒有任何報錯：
+
+```bash
+ls -l ios/App/App/public/offline.html android/app/src/main/assets/public/offline.html
+```
 
 `cap sync` **不會**改動已 commit 的 `ios/App/CapApp-SPM/Package.swift`（實測 byte-identical），
 所以這步不會洗掉 patch 需求。
@@ -254,7 +261,8 @@ unzip -p "$AAB" META-INF/FUTARI.RSA | keytool -printcert | grep SHA256
 
 | 症狀 | 原因 | 解 |
 |---|---|---|
-| `The file "public" / "config.xml" / "capacitor.config.json" couldn't be opened` | 乾淨 checkout / 新 worktree 沒跑 `cap sync`；這些是 gitignored 的產物 | `mkdir -p out && npx cap sync ios` |
+| `The file "public" / "config.xml" / "capacitor.config.json" couldn't be opened` | 乾淨 checkout / 新 worktree 沒跑 `cap sync`；這些是 gitignored 的產物 | `npx cap sync ios` |
+| 真機斷網冷啟動看到空白畫面／系統錯誤頁 | 殼裡缺 `public/offline.html`（`server.errorPath` 的目標），通常是繞過 `cap copy` 手動塞檔 | 重跑 `npx cap sync`，確認 hook 有輸出 `[native-offline-page] wrote out/offline.html` |
 | `Failed to resolve dependencies ... 'apple-sign-in' depends on capacitor-swift-pm 7.0.0..<8.0.0 and 'push-notifications' depends on 8.0.0..<9.0.0` | `@capacitor-community/apple-sign-in` 停在 7.1.0，宣告 `from: "7.0.0"`；`CapApp-SPM/Package.swift` pin `exact: "8.3.4"` | `patches/@capacitor-community+apple-sign-in+7.1.0.patch` 放寬到 `<"9.0.0"`。patch 沒套上就重跑 `npm ci` 並確認輸出 |
 | `exportArchive Cloud signing permission error` / `No signing certificate "iOS Distribution" found` | 用了 App 管理角色的 key 跑 export；雲端簽章要 Admin | 換 `795L42Z42U`。ASC 的 key 建立後權限**不能改**，只能另建一把 |
 | `invalid source release: 21` | PATH 上的 JDK 是 18 | `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` |
@@ -270,7 +278,7 @@ unzip -p "$AAB" META-INF/FUTARI.RSA | keytool -printcert | grep SHA256
 ```bash
 # 1. clean room — 不能靠既有 node_modules
 rm -rf node_modules && npm ci        # 輸出要有 patch-package 套用 apple-sign-in 的成功行
-mkdir -p out && npx cap sync ios
+npx cap sync ios
 
 # 2. archive 要從全新的 SPM 解析開始，不能吃快取
 #    （Package.resolved 已 pin 8.3.4，不指定新目錄就會重用舊解析結果）

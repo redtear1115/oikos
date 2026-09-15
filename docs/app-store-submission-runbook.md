@@ -302,7 +302,7 @@ plugin 的 `Plugin.swift` 只有一個檔案、用的都是 Capacitor 6+ 就穩�
 rm -rf node_modules && npm ci     # 輸出要有 patch-package 套用 apple-sign-in 的成功行
 
 # 1b. 乾淨 checkout 必做：cap sync 的產物沒進版控（見下方註）
-mkdir -p out && npx cap sync ios
+npx cap sync ios
 
 # 2. archive 要從全新的 SPM 解析開始，不能吃快取
 #    （Package.resolved 已 pin 8.3.4，不指定就會重用舊解析結果）
@@ -317,8 +317,11 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
 
 > ⚠️ **乾淨 checkout / 新 worktree 一定要先 `npx cap sync ios`**，否則 archive 會失敗於
 > `The file "public" / "config.xml" / "capacitor.config.json" couldn't be opened`。
-> 這三個是 `cap sync` 產物且被 gitignore，不在版控裡。`webDir` 是 `out`，而 `/out/` 也被 ignore，
-> 所以還要先 `mkdir -p out`（server.url 架構下裡面是空的沒關係，bundled 內容根本不會被用到）。
+> 這三個是 `cap sync` 產物且被 gitignore，不在版控裡。`webDir`（`out/`）也被 ignore，但
+> **不必手動 `mkdir`**：`capacitor:copy:before` hook 會建目錄並產生 `out/offline.html`
+> ——殼內離線頁，`server.errorPath` 指向它（#1225）。沒網路時 WebView 載不到 `server.url`，
+> 這是唯一會被打包進殼、而且真的會被讀到的 web 檔。缺了它使用者看到的是空白畫面，
+> 而且不會有任何錯誤回報，所以 archive 前順手 `ls -l ios/App/App/public/offline.html`。
 > 實測 `cap sync` **不會**改動已 commit 的 `CapApp-SPM/Package.swift`（內容 byte-identical），
 > 所以這步不會把 patch 需求洗掉——它依然寫 `exact: "8.3.4"`。
 
