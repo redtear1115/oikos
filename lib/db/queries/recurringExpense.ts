@@ -57,6 +57,7 @@ export interface PendingExpenseRow {
   proposedDescription: string
   proposedPaidBy: string
   proposedSplitType: SplitType
+  proposedSplitRatioA: number | null
   category: string
   assetId: string | null
 }
@@ -71,6 +72,7 @@ export async function listActivePendings(groupId: string): Promise<PendingExpens
       proposedDescription: pendingExpenseOccurrences.proposedDescription,
       proposedPaidBy: pendingExpenseOccurrences.proposedPaidBy,
       proposedSplitType: pendingExpenseOccurrences.proposedSplitType,
+      proposedSplitRatioA: pendingExpenseOccurrences.proposedSplitRatioA,
       category: recurringExpenseRules.category,
       assetId: recurringExpenseRules.assetId,
     })

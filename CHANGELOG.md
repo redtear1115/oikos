@@ -18,7 +18,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-_Nothing unreleased yet._
+### 使用者可見變化
+
+- **定期支出的「按比例分」會照規則的比例落帳（#1243）**：設成 30 / 70 的定期支出規則，每期產生的待確認卡片沒有帶到那個比例，確認之後那一筆就變成平分。卡片會出現、確認會成功、沒有任何錯誤訊息，只有分攤金額和你設的不一樣。現在產卡會帶上規則當下的比例，確認後落帳的比例就是你設的比例；卡片上原本把「按比例分」寫成「平分」也一併更正。手上還沒確認的卡片會在這次補回比例；已經確認過的紀錄維持原樣，需要的話可以自己重記一筆。
+
+### 技術變更
+
+- `drizzle/0063_recurring_expense_split_ratio.sql`：重排 `generate-pending-expense` cron，INSERT 補上 `proposed_split_ratio_a ← r.split_ratio_a`。欄位是 0027 加的，cron body 留在 0021 沒有跟著改，所以 weighted 規則產的 pending 比例一直是 NULL。落帳後同一筆被三個地方讀成三種意思，而且都不報錯：`lib/balance.ts` 當 50/50、`CompactRow` 因為 `splitRatioA != null` 不成立而顯示分攤 0（看起來像全部付款人出）、`recalcGroupBalance` 的 CASE 算出 NULL 被 SUM 直接略過（對 balance 貢獻 0）。同一份 migration 回填未處理 pending 的比例；已 resolved 的 pending 與其 CashTransaction 不動（改已落帳的紀錄會在使用者不知情下移動 balance）。`confirmPending` 與 `listActivePendings` 一併帶上比例。新測試直接從 drizzle/ 解析 cron 的 INSERT 欄位／SELECT 運算式配對，欄位清單與值清單再度對不上就會失敗。
 
 ## [1.5.14] - 2026-09-15
 

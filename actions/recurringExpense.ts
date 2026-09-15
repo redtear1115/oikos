@@ -223,6 +223,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
       proposedDescription: pendingExpenseOccurrences.proposedDescription,
       proposedPaidBy: pendingExpenseOccurrences.proposedPaidBy,
       proposedSplitType: pendingExpenseOccurrences.proposedSplitType,
+      proposedSplitRatioA: pendingExpenseOccurrences.proposedSplitRatioA,
       category: recurringExpenseRules.category,
       assetId: recurringExpenseRules.assetId,
     })
@@ -252,6 +253,12 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
         paidBy: row.proposedPaidBy,
         amount: row.proposedAmount,
         splitType: row.proposedSplitType,
+        // #1243 — carry the snapshotted weighted ratio onto the record. A
+        // 'weighted' CashTransaction with split_ratio_a NULL is read three
+        // different ways and none of them errors: 50/50 by lib/balance.ts,
+        // all-payer's by CompactRow, and dropped from the SUM entirely by
+        // recalcGroupBalance.
+        splitRatioA: row.proposedSplitRatioA,
         description: row.proposedDescription,
         category: row.category,
         assetId: row.assetId,

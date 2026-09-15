@@ -366,7 +366,7 @@ export function Dashboard({
                   description: p.proposedDescription,
                   category: p.category,
                   splitType: p.proposedSplitType,
-                  splitRatioA: (p as { proposedSplitRatioA?: number | null }).proposedSplitRatioA ?? null,
+                  splitRatioA: p.proposedSplitRatioA,
                   payerId: p.proposedPaidBy,
                   // Construct as local midnight so AddSheet's getFullYear/Month/Date
                   // round-trip yields the original YYYY-MM-DD regardless of timezone.

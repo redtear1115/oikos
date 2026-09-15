@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-15
 status: shipped
 first_shipped_in: v0.8.0
 updates:
@@ -7,8 +7,9 @@ updates:
   - v0.8.1: polish + helpers shared
   - v0.13.0: Expense mirror — actions / queries / Settings 子頁 + Dashboard PendingExpenseStack + AddSheet 改一下 + Records 入口（PRs #76 #77 #78，closes #18）
   - v0.15.3: `source_type` / `source_ref_id` 跨 feature 來源欄位（給 [savings-view](savings-view-design.md) 自動化用，#166）
+  - v1.5.15: weighted 分攤比例納入支出 pending snapshot（#1243）
 related_specs: [income, transactions, inbox-layer, savings-view, insurance, solo-mode]
-related_issues: ["#18", "#166"]
+related_issues: ["#18", "#166", "#1243"]
 ---
 
 # 自訂定期收支
@@ -80,14 +81,15 @@ related_issues: ["#18", "#166"]
 | 雙人模式 paid_by/recipient | recipient 預設建立者 | `paid_by` 預設建立者，picker 可選 partner |
 | Asset 關聯 | 限 `type='insurance'`（連保單用） | **選填，不限 asset type** |
 | Asset 已軟刪除的規則 | （無對應） | 規則自動 `paused_at`（cron 跑前 join 檢查） |
-| Pending snapshot 欄位 | `proposed_amount` / `proposed_date` | + `proposed_description` / `proposed_paid_by` / `proposed_split_type` |
+| Pending snapshot 欄位 | `proposed_amount` / `proposed_date` | + `proposed_description` / `proposed_paid_by` / `proposed_split_type` / `proposed_split_ratio_a` |
 | 編輯 sheet | IncomeSheet | AddSheet（含 `pendingExpenseId` 模式） |
 | Balance 影響 | 無 | 有（confirm 時 balance 重算，與 [transactions](transactions-design.md) 同 hook） |
 
 設計動機差異說明：
 
 - **`description` 為 NOT NULL on expense**：對齊 `CashTransactions.description` NOT NULL；income 的 `source` 是選填自由 metadata（不會破 ledger invariant）
-- **Snapshot 範圍**：expense 走全 snapshot（`proposed_paid_by` / `proposed_split_type` 都 freeze 在 pending），不從 rule 動態 join。理由：rule 之後若改 paid_by / split_type，已產的 pending 應反映「當時規則狀態」（與 amount snapshot 邏輯一致）
+- **Snapshot 範圍**：expense 走全 snapshot（`proposed_paid_by` / `proposed_split_type` / `proposed_split_ratio_a` 都 freeze 在 pending），不從 rule 動態 join。理由：rule 之後若改 paid_by / split_type，已產的 pending 應反映「當時規則狀態」（與 amount snapshot 邏輯一致）
+  - **漏一欄的樣子（#1243）**：`weighted` 的比例欄位是 0027 才加的，而 cron 的 INSERT 欄位清單留在 0021，於是 weighted 規則產的 pending 比例一直是 NULL。沒有任何錯誤——卡片照出、確認照成功，只是落帳的那筆變成 50/50，而且 balance 匯總會直接把它從 SUM 裡漏掉。加欄位時，cron 的欄位清單不會自己跟上。
 - **Asset 不限 type on expense**：任何愛物都可能是定期支出對象（房租→house、房貸→house、保費→insurance、車貸/月票→car、學費→child、寵物保險→pet）；過早限制 type 會不必要地排除合理 use case
 - **Asset 軟刪除 → 規則 paused on expense**：cron 跑前 join 檢查 `assets.deleted_at IS NULL`，asset 失效則 set paused_at；不強迫用戶刪規則，settings 列表頁的 paused 狀態文案明確「已暫停（關聯愛物已刪除）」
 
@@ -121,7 +123,7 @@ related_issues: ["#18", "#166"]
 - `period_start`（錨日，UNIQUE 鍵之一）
 - `proposed_amount` / `proposed_date` — snapshot at generate-time（不跟著規則改動）
 - 收入: `proposed_*` 簡版
-- 支出: 多 `proposed_description` / `proposed_paid_by` / `proposed_split_type`
+- 支出: 多 `proposed_description` / `proposed_paid_by` / `proposed_split_type` / `proposed_split_ratio_a`
 - `skipped_at` / `resolved_tx_id` — 狀態旗標
 - `UNIQUE (rule_id, period_start)` 保證 idempotency
 
