@@ -16,7 +16,54 @@
     </style>
 
 
+    <!--
+      Launch theme. Read this before changing anything here — what actually
+      paints the launch screen is not obvious from the Capacitor template.
+
+      `Theme.SplashScreen` (androidx core-splashscreen) is what decides it, and
+      it resolves differently per API level:
+
+        API 24-30  the library's values/ theme sets android:windowBackground to
+                   @drawable/compat_splash_screen_no_icon_background, a
+                   layer-list of ?windowSplashScreenBackground plus
+                   ?windowSplashScreenAnimatedIcon drawn in a 288dp box and
+                   masked to a 192dp circle.
+        API 31+    the library's values-v31/ theme maps those same two attrs
+                   onto android:windowSplashScreenBackground and
+                   android:windowSplashScreenAnimatedIcon, i.e. the platform's
+                   system splash screen, which targetSdk 31+ cannot opt out of.
+
+      So both paths read the same two attributes, and setting them here covers
+      every supported API level. A values-v31/ copy is not needed and would
+      only be a second place to drift.
+
+      Leaving them unset is what shipped up to v1.5.14, and it fails silently:
+      below API 31 the library falls back to @android:drawable/sym_def_app_icon
+      on ?android:colorBackground, and from 31 up the attrs resolve to nothing
+      so the platform substitutes the launcher icon on its own default ground.
+      Nothing errors; the cold start simply is not ours.
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <!--
+          Kept from the Capacitor template, and deliberately not removed, but
+          be aware that nothing appears to read it: `android:background` is a
+          View attribute, whereas the window is painted from
+          `android:windowBackground`, which Theme.SplashScreen.Common already
+          claims above. @drawable/splash and its 10 density variants are still
+          in the tree; treat them as unverified rather than load-bearing.
+        -->
         <item name="android:background">@drawable/splash</item>
+
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+
+        <!--
+          The contract androidx documents for Theme.SplashScreen. It is inert
+          today: the only reader is SplashScreen.installSplashScreen(), and
+          nothing calls it — Capacitor's BridgeActivity.onCreate() does the
+          swap itself with setTheme(R.style.AppTheme_NoActionBar). Kept so the
+          theme is still correct if @capacitor/splash-screen is ever added.
+        -->
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
