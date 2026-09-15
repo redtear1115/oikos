@@ -18,6 +18,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.5.15] - 2026-09-16
+
+主題：**上線了，不等於送到了**——這一版把一批「已經出貨、畫面正常、CI 全綠」的東西拿到 prod 上實際量一次，結果多數根本沒送達使用者：v1.5.14 翻好的 82 句錯誤訊息被 production 序列化剝成 digest、一句都沒到過 client；weighted 分攤比例每期落帳都是 null；最近 21 張待確認卡片全部晚一天出現；帳本描述與金額隨著每一次點擊送進第三方分析；隱私頁掛著一句程式碼不支持的宣稱。共同點是它們都不會報錯——要發現只能去量 prod 本身。
+完整 diff：[v1.5.14...v1.5.15](https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15)
+
 ### 使用者可見變化
 
 - **隱私權政策與服務條款的兩句更正（#1251）**：⚠️ 這是對外資料處理聲明的更正。隱私頁原本寫「資料庫中不存明文」，實際上只有孩子本名、身分證字號、健保卡號、車牌、房屋地址與發票載具驗證碼六個欄位加密，交易說明、金額、分類是明文；現在逐項寫清楚哪些加密、哪些不加密，並說明金鑰由我們保管、這是儲存時加密而非端對端加密。隱私頁與服務條款原本都寫「帳號刪除後所有相關資料將於 14 個工作天內移除」，實際上只有一個人的帳本會整本刪除，兩人共用的帳本會留給對方、共同記下的紀錄不會移除；現在分成兩種情形逐條寫明。同一批順手更正：移除無法佐證的「日本東京區」機房敘述，蒐集項目補上 Apple 登入，兩頁的最後更新日期改為 2026-09-16。
@@ -76,6 +83,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 
 - **標誌收斂成單一來源（#1283，接續 #1239）**：那個扁平雙色心的 SVG path 在 repo 裡手寫重複了 5 份（`public/favicon.svg`、`app/[locale]/_landing/FutariMark.tsx`、`app/(dashboard)/_components/FutariMark.tsx`、`components/FutariMark.tsx`、`scripts/og/` 的兩份模板），改一處不會同步其餘四處——這正是它和原生殼的提燈分岔了三個月沒人發現的原因。現在收成一個來源，og 與 store 圖由 `scripts/og/` 重新生成。`illustration-hero.png` 的檯燈刻意不動：`brand-register-design.md:52` 記載那是刻意選的畫風。
+
 ## [1.5.14] - 2026-09-15
 
 主題：**看起來正常，不等於成立**——這一版把一批「畫面沒破、測試全綠、review 會過」的東西成批打開來看：對外宣稱的端對端加密其實是 server 持鑰的欄位級加密、四個 CSS 變數從來沒有定義過、關起來的 sheet 一直待在 Tab 順序裡、五張理念卡只有中文。每一項的共同點都是它不會報錯，所以沒有人回報過。
@@ -1010,7 +1018,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.14...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.15...HEAD
+[1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15
 [1.5.14]: https://github.com/redtear1115/oikos/compare/v1.5.13...v1.5.14
 [1.5.13]: https://github.com/redtear1115/oikos/compare/v1.5.12...v1.5.13
 [1.5.12]: https://github.com/redtear1115/oikos/compare/v1.5.11...v1.5.12
