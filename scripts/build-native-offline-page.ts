@@ -98,11 +98,15 @@ function toJsLiteral(value: unknown): string {
 
 /** 每一語一份節點，靠 `<html lang>` + CSS 決定哪一份可見。四份都在 DOM 裡是
  *  刻意的：切換語言不需要 JS 寫入文字，所以不會有閃動。 */
-function localizedBlock(tag: 'h1' | 'p' | 'span', key: 'title' | 'body' | 'retry'): string {
+function localizedBlock(
+  tag: 'h1' | 'p' | 'span',
+  key: 'title' | 'body' | 'retry',
+  indent: string,
+): string {
   return LOCALE_ORDER.map(
     (locale) =>
       `<${tag} lang="${locale}" data-l="${locale}">${escapeHtml(COPY[locale][key])}</${tag}>`,
-  ).join('\n        ')
+  ).join(`\n${indent}`)
 }
 
 export function renderOfflinePage(serverUrl: string): string {
@@ -153,16 +157,14 @@ export function renderOfflinePage(serverUrl: string): string {
 })();
 </script>
 <style>
-  /* 色票取自 app/globals.css（--bg / --ink / --ink-2 / --surface / --hairline /
-     --btn-primary-*）。這頁在 Tailwind 與 CSS 變數之外，值只能寫死；改色票時
-     連這裡一起改。字體同理：Fraunces / Noto Sans TC 是網路字體，離線時拿不到，
-     所以只用系統字。 */
+  /* 色票取自 app/globals.css（--bg / --ink / --ink-2 / --btn-primary-* 的 ink 填
+     色 + --on-fill）。這頁在 Tailwind 與 CSS 變數之外，值只能寫死；改色票時連這裡
+     一起改。字體同理：Fraunces / Noto Sans TC 是網路字體，離線時拿不到，所以只用
+     系統字。 */
   :root {
     --bg: #FBEDE0;
-    --surface: #FFFFFF;
     --ink: #3A2419;
     --ink-2: #7A5848;
-    --hairline: rgba(58, 36, 25, 0.10);
     --on-fill: #FFFFFF;
   }
   * { box-sizing: border-box; }
@@ -241,10 +243,10 @@ export function renderOfflinePage(serverUrl: string): string {
       <path d="M16 40 H32" stroke="#7A5848" stroke-width="2" stroke-linecap="round"/>
       <path d="M24 33 L18 40 M24 33 L30 40" stroke="#7A5848" stroke-width="2" stroke-linecap="round"/>
     </svg>
-    ${localizedBlock('h1', 'title')}
-    ${localizedBlock('p', 'body')}
+    ${localizedBlock('h1', 'title', '    ')}
+    ${localizedBlock('p', 'body', '    ')}
     <a class="retry" href="${escapeHtml(serverUrl)}">
-      ${localizedBlock('span', 'retry')}
+      ${localizedBlock('span', 'retry', '      ')}
     </a>
   </main>
 </body>
