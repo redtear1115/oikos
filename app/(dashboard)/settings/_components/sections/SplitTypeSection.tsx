@@ -79,6 +79,10 @@ export function SplitTypeSection({ current, isSolo }: Props) {
       <div
         role="radiogroup"
         aria-label={t.settings.defaultSplitLabel}
+        // Marks the whole group in-flight rather than unavailable: it is what
+        // lets the arrow keys keep moving focus while every radio is
+        // `aria-disabled` during the save (#1252, see radioGroup.ts).
+        aria-busy={saving || undefined}
         onKeyDown={onRadioGroupKeyDown}
         className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
