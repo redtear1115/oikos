@@ -36,10 +36,9 @@ export function MaturedAwaitingPrompt({
       <div className="mt-3 inline-flex items-baseline gap-1.5">
         <span className="text-base font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
         <span
-          className="tabular-nums leading-none"
+          className="tabular-nums leading-none text-amount-lg"
           style={{
             fontFamily: 'var(--font-numeric)',
-            fontSize: 'var(--fs-amount-lg)',
             fontWeight: 500,
             color: 'var(--ink)',
             letterSpacing: -1.5,

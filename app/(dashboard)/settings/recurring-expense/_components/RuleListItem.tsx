@@ -101,7 +101,7 @@ export function RuleListItem({ rule, onEdit }: Props) {
               {' · '}{formatAmount(rule.amount, 'twd')}
             </div>
             {nextDateText && (
-              <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+              <div className="text-xs mt-0.5 text-ink-3">
                 {nextDateText}
               </div>
             )}

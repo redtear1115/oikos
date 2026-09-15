@@ -1,12 +1,13 @@
 ---
-last_updated: 2026-09-15
+last_updated: 2026-09-16
 status: shipped
 first_shipped_in: v0.14.0
 updates:
   - v0.15.0: 重新上線 / PWA 回前景自動 refresh（解 iOS PWA standalone 沒下拉刷新、弱網後 NetworkFirst 卡舊資料的問題，closes #126）
   - v1.5.14: 使用中斷線提示與 toggle 脫鉤，對所有人顯示；toggle 只決定文案（#1206）
+  - v1.5.15: 斷線提示加顯示門檻（換網不再閃一下），並補上 spec 從 v0.14.0 就寫著、實作一直沒有的 fade out（#1244）
 related_specs: [realtime, product]
-related_issues: ["#19", "#126", "#1206", "#1225"]
+related_issues: ["#19", "#126", "#1206", "#1225", "#1244"]
 ---
 
 # 離線瀏覽 / PWA Cache
@@ -122,7 +123,7 @@ L2 · Dynamic HTML（runtime, network-first）
 ### Offline banner
 
 - 位置：dashboard 的 `ContextStrip` 最高優先分支（不擋內容；目前只在 `/dashboard` 渲染，不是全站）
-- 顯示條件：`navigator.onLine === false`，**不論 toggle 開關**（v1.5.14，#1206）
+- 顯示條件：`navigator.onLine === false` **且已持續 2s**，**不論 toggle 開關**（v1.5.14 #1206；2s 門檻 v1.5.15 #1244，見下）
 - 文案依 toggle 分兩種：
   - toggle 開：「離線中・顯示最近一次連線的資料」（`offlineBanner.text`）
   - toggle 關：「離線中・恢復連線後會自動更新」（`offlineBanner.textNoCache`）——沒有 SW、沒有 cache，畫面上只是斷線前已載入的頁面，「顯示快取」的說法不成立；「會自動更新」由 `ReconnectRefresh` 的 online 事件無條件 `router.refresh()` 兌現
@@ -133,7 +134,12 @@ L2 · Dynamic HTML（runtime, network-first）
 **失效的樣子**：dev server / Vercel preview 永遠有網路，測不到；要在瀏覽器 DevTools 切 Offline 或殼內開飛航模式，而且要在**已載入 dashboard 之後**才斷線。冷啟動就沒網路是另一回事——web 程式碼根本不會執行，banner 無從出現，那屬於原生殼的 `server.errorPath`（#1225），不是本 spec。
 
 - 顏色：中性 muted（不要紅 / 警告色，銀行 app 風格不符 Futari「陪伴」基調）
-- 重新上線時 fade out（不刷新整頁，避免使用者正在看的東西消失）
+- **顯示前先等 `OFFLINE_ANNOUNCE_DELAY_MS`（現為 2s，`lib/hooks/useOnlineStatus.ts`）**：Wi-Fi → 行動網路切換時 `offline` / `online` 大約隔一秒接連觸發，沒有門檻的話每次換網所有人都會看到 banner 閃一下（#1244）。門檻的兩端都有依據——下界是換網本身的耗時，上界是 `app/sw.ts` 的 `networkTimeoutSeconds: 3`（App 自己放棄等網路、改讀 cache 的時間點，banner 必須在那之前就位）。**2s 是初始值，repo 內沒有任何實測換網耗時的資料**，要用真機在弱訊號邊緣校正過才算定案。
+  - 只延後「斷線」那一邊，「恢復」立刻反映：blip 永遠不被播報，復原永遠不被拖延。
+  - 這個延遲只給 banner 用（`useDelayedOnlineStatus`）。`TransactionFeed` 仍讀未延遲的 `useOnlineStatus`——它是在換頁請求失敗的當下讀連線狀態來決定要不要說「再多紀錄需連線取得」，用兩秒前的狀態解釋眼前的失敗會說錯話。
+- 重新上線時 fade out（0.5s 收合，`.strip-fading`；`prefers-reduced-motion` 下直接移除，不做「留著淡掉」那套——banner 收掉時已經沒有訊息要傳達，留 500ms 只是把版面跳動延後 500ms）。收合期間 ContextStrip 不讓下一順位的 banner 進場，維持「一次只有一條」
+  - v0.14.0 寫下這行時的括號是「不刷新整頁，避免使用者正在看的東西消失」。前半段已被 v0.15.0 的 `ReconnectRefresh` 取代（重新上線無條件 `router.refresh()`，是 soft refresh 不是整頁重載）；留下來的意思是後半段：banner 不要用瞬間消失去撞下面的內容。
+  - **這行從 v0.14.0 寫到 v1.5.14 都沒有對應實作**（當時的 `OfflineBanner`、以及併入 ContextStrip 之後都是直接 unmount），#1244 才補上。不是回歸，是一直沒做。
 
 ### Cached 頁面上的寫入互動
 
@@ -185,7 +191,8 @@ Precache（L1）保留——靜態資源不含 PII，下個使用者用同一裝
 | 任意平台 | Settings 關閉 toggle | SW unregister；所有 cache 清空 |
 | 任意平台 | 切換進行中連點 | 第二次點擊被 disable，無中間態殘留 |
 | 任意平台 | 手動清 localStorage 後進 settings 頁 | UI 校準為實際 SW 狀態 |
-| 任意平台 | toggle 關、已開 dashboard 後斷線 | 顯示「離線中・恢復連線後會自動更新」；恢復連線後 banner 消失並 refresh |
+| 任意平台 | toggle 關、已開 dashboard 後斷線 | 顯示「離線中・恢復連線後會自動更新」；恢復連線後 banner 收合消失並 refresh |
+| 任意平台 | 斷線不到 2s 就恢復（Wi-Fi ↔ 行動網路切換） | banner 完全不出現 |
 | Chrome desktop | toggle 開、飛航模式開已 cache 頁 | 顯示 cache + offline banner |
 | Chrome desktop | toggle 開、飛航模式開未 cache 頁 | 顯示 empty state |
 | iOS 16.4+ Safari（standalone） | toggle 開、飛航模式開 dashboard | 顯示 cache + offline banner |

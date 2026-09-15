@@ -24,6 +24,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **定期支出的「按比例分」會照規則的比例落帳（#1243）**：設成 30 / 70 的定期支出規則，每期產生的待確認卡片沒有帶到那個比例，確認之後那一筆就變成平分。卡片會出現、確認會成功、沒有任何錯誤訊息，只有分攤金額和你設的不一樣。現在產卡會帶上規則當下的比例，確認後落帳的比例就是你設的比例；卡片上原本把「按比例分」寫成「平分」也一併更正。手上還沒確認的卡片會在這次補回比例；已經確認過的紀錄維持原樣，需要的話可以自己重記一筆。
 
+- **錯誤訊息終於會說你的語言（#1223）**：v1.5.14 花一整批工把 82 句 server 錯誤翻成四語，實際上線後一句都沒送到——en / ja / zh-CN 使用者按下儲存、遇到「這個章節已經有紀錄了，不能改幣別」這類狀況時，看到的還是「發生錯誤」。現在幣別鎖定、旅行結束日早於出發日、兩台裝置同時處理同一筆待確認支出等情況，都會顯示該語言的具體說明。
+
+- **沒網路時打開 App，會看到 Futari 的離線頁而不是空白畫面（#1225）**：原生殼只是載入線上網站的 WebView，所以沒網路冷啟動時連第一個 byte 都拿不到——使用者看到的是系統的 WebView 錯誤頁或整片空白，沒有任何提示說「需要連線」。現在殼裡打包了一份離線頁（`server.errorPath`），載入失敗時改顯示它：暖色底、一句「現在沒有網路」、一個回到 App 的按鈕，四語依裝置語系顯示。
+
+- **起始日填過去的定期收支，不會再顯示一個已經過去的「下次」日期（#1244）**：把定期規則的起始日往回填（例如房租其實從去年 11 月就開始繳），建立完成後列表上的「下次 {日期}」是那個早就過掉的日子。同一筆規則只要進去編輯、按一次儲存就會變正常——新建和編輯對同一個欄位算出不同答案。現在建立完就直接顯示最近的那一期。今天就是你設的那一號時，新建會把今天算進去（今晚就會出現待確認卡），而且起始日是填今天還是往回填都一樣——起始日說的是「這個系列從哪期開始算」，不是「第一張卡什麼時候出現」。編輯則維持「改動從下一期開始套用」，跟編輯畫面上那句說明一致。已經建立、日期停在過去的舊規則不會被動到：每晚的排程本來就會一期一期推進，那些待確認卡片是對真實期別的提案，留給你自己決定要確認還是跳過。
+
+- **切換 Wi-Fi 和行動網路時，離線提示不會再閃一下（#1244）**：走出門、Wi-Fi 換成行動網路的那一兩秒，畫面上方的「離線中」會閃現又消失。現在斷線要持續兩秒才會出現提示，恢復連線時則是收合淡出，不會突然把下面的內容往上彈。
+
+- **分析工具不再收到你的交易描述與金額（#1267）**：PostHog 的 autocapture 預設是開的，而且預設會把你點到的那個元素的文字一起送出。Dashboard 的交易列整列可點，說明在一個 `<span>` 裡、金額在同一顆按鈕裡的 `<div>` 裡——所以點一筆交易，就可能把「晚餐」和「NT$450」送到第三方。畫面上不會有任何異狀，錯誤訊息、警告、載入速度全都正常，只有第三方後台的一個沒人會打開的欄位裡有東西。現在送出的事件只剩「有人點了這個位置的這種元素」，文字與屬性一律遮罩；Session Replay（會錄下整個畫面）也在前端鎖成關閉。
+
 - **定期收支的待確認卡片會在當天出現（#1262）**：設在每月 5 號的定期支出，卡片要到 6 號凌晨才冒出來，推播也跟著晚一天。產卡的排程本來就在台北 00:00 跑，但它問「今天幾號」的時候用的是 UTC，那個時刻的 UTC 還停在前一天。prod 上最近 21 張卡片全部晚一天，沒有例外。現在產卡和推播都改看台北日期，5 號的規則在 5 號 00:00 就會出現。改版當晚，當天到期的那一期會提前一天產出——那一期本來就該在那天出現，不會重複產、也不會少一期。
 
 ### 技術變更
@@ -34,32 +44,28 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **兩個定期產卡 cron 的日期基準改成台北（#1262）**：`drizzle/0064_recurring_cron_taipei_date.sql` 以 `(NOW() AT TIME ZONE 'Asia/Taipei')::date` 重排 `generate-pending-income` 與 `generate-pending-expense`（寫法同 0026 / 0061），排程字串 `'0 16 * * *'` 不動——00:00 台北本來就是預期的觸發時刻，錯的只有 body 裡的日期基準。expense 的 body 從 0063（實際生效那份，帶著 #1243 的 `proposed_split_ratio_a`）往下改，不是從 0021。同一批把 `supabase/functions/send-recurring-push/index.ts` 的 `new Date().toISOString().slice(0, 10)` 換成新的 `taipeiDateISO()`（獨立模組，因為 Deno entrypoint 進不了 vitest）：推播排在產卡後 10 分鐘、同一個 UTC 基準，只改 SQL 會讓卡片準時出現、推播卻晚一晚。migration 要在 dev 與 prod 兩個 Supabase project 各跑一次。
   - **失效的樣子**：不會報錯、不會有人說「壞了」。卡片照樣出現、推播照樣送達，只是永遠差一個台北日；要看出來得去比對 `created_at` 的台北日與 `period_start`（prod 實測 `lag_days` 分布 `{"1": 21}`）。每個 job 內的兩個日期條件也必須一起改：只動 UPDATE 會整期消失，只動 INSERT 會每晚重試同一期、被 `ON CONFLICT DO NOTHING` 吞掉。`tests/recurring-cron-taipei-date.test.ts` 從 drizzle/ 解析「實際生效」的那份 body 斷言沒有裸 `CURRENT_DATE`、台北運算式剛好出現兩次。
 - `drizzle/0063_recurring_expense_split_ratio.sql`：重排 `generate-pending-expense` cron，INSERT 補上 `proposed_split_ratio_a ← r.split_ratio_a`。欄位是 0027 加的，cron body 留在 0021 沒有跟著改，所以 weighted 規則產的 pending 比例一直是 NULL。落帳後同一筆被三個地方讀成三種意思，而且都不報錯：`lib/balance.ts` 當 50/50、`CompactRow` 因為 `splitRatioA != null` 不成立而顯示分攤 0（看起來像全部付款人出）、`recalcGroupBalance` 的 CASE 算出 NULL 被 SUM 直接略過（對 balance 貢獻 0）。同一份 migration 回填未處理 pending 的比例；已 resolved 的 pending 與其 CashTransaction 不動（改已落帳的紀錄會在使用者不知情下移動 balance）。`confirmPending` 與 `listActivePendings` 一併帶上比例。新測試直接從 drizzle/ 解析 cron 的 INSERT 欄位／SELECT 運算式配對，欄位清單與值清單再度對不上就會失敗。
-- **錯誤訊息終於會說你的語言（#1223）**：v1.5.14 花一整批工把 82 句 server 錯誤翻成四語，實際上線後一句都沒送到——en / ja / zh-CN 使用者按下儲存、遇到「這個章節已經有紀錄了，不能改幣別」這類狀況時，看到的還是「發生錯誤」。現在幣別鎖定、旅行結束日早於出發日、兩台裝置同時處理同一筆待確認支出等情況，都會顯示該語言的具體說明。
-
-### 技術變更
 
 - **server action 的預期錯誤改為回傳值（#1223）**：Next.js 的 production RSC 序列化會把 server action 丟出的 `Error.message` 換成 digest，client 只收得到一句通用的 "The specific message is omitted in production builds…"。所以 #1213 的 `throw actionError('code')` 在 dev 正常、測試全綠、prod 全滅。`actions/` 的 108 個 export 現在一律包在 `action()` 裡，預期錯誤以 `{ ok: false, code, params? }` 回傳；action 內部仍然 `throw`（那是唯一能正確中止 `db.transaction` 與巢狀 helper 的方式），由 wrapper 在邊界轉成回傳值。非預期錯誤（`Unauthorized`、validator 中文句、DB driver 訊息、`redirect()` 的 `NEXT_REDIRECT`）維持 throw，仍走 error boundary 與 Sentry。
   - client 端 `unwrapAction()` 會把回傳的 failure 再丟成 `ActionError`，所以既有的 `try` / `catch` + `describeError` 全部不動——它們本來就不能拿掉，離線與非預期錯誤仍然是 exception。需要用「哪個 code」決定流程的地方（`AddSheet` / `IncomeSheet` 的待確認競態）直接讀回傳值，不 unwrap。
   - **失效的樣子**：漏掉 `unwrapAction` 的 `Promise<ActionResult<void>>` 呼叫點，`tsc` 看不出來——sheet 照樣關閉、沒有任何錯誤，但什麼都沒寫進去。`tests/action-result-wire.test.ts` 用 grep 補這一刀。
-- **測試實際跑 production 序列化路徑（#1223）**：`tests/action-result-wire.test.ts` 把真實 action 的回傳值送進 `react-server-dom-webpack-server.edge.production.js`（子行程，`--conditions=react-server`）、再用對應的 production client 解回來，然後才問 `describeError` 要 en / ja 句子。同一支測試也記錄了對照組：同樣的 code 用 throw 送，解回來只剩 digest。這一類 bug 之前抓不到，就是因為整個 suite 沒有任何地方碰過那支 encoder。
-- **沒網路時打開 App，會看到 Futari 的離線頁而不是空白畫面（#1225）**：原生殼只是載入線上網站的 WebView，所以沒網路冷啟動時連第一個 byte 都拿不到——使用者看到的是系統的 WebView 錯誤頁或整片空白，沒有任何提示說「需要連線」。現在殼裡打包了一份離線頁（`server.errorPath`），載入失敗時改顯示它：暖色底、一句「現在沒有網路」、一個回到 App 的按鈕，四語依裝置語系顯示。
 
-### 技術變更
+- **測試實際跑 production 序列化路徑（#1223）**：`tests/action-result-wire.test.ts` 把真實 action 的回傳值送進 `react-server-dom-webpack-server.edge.production.js`（子行程，`--conditions=react-server`）、再用對應的 production client 解回來，然後才問 `describeError` 要 en / ja 句子。同一支測試也記錄了對照組：同樣的 code 用 throw 送，解回來只剩 digest。這一類 bug 之前抓不到，就是因為整個 suite 沒有任何地方碰過那支 encoder。
 
 - `capacitor.config.ts` 設 `server.errorPath: 'offline.html'`。離線頁由 `scripts/build-native-offline-page.ts` 產生，掛在 Capacitor 的 `capacitor:copy:before` hook——`cap copy` 每次都會砍掉重建原生的 `public/`，所以檔案必須「每次 copy 之前重新產生」，而不是「存在一次」。`out/` 因此不再需要手動 `mkdir`（CLAUDE.md / runbook / ship-native skill 的指令已更新）。
+
 - 文案來源仍是 `lib/i18n/locales/*.ts › nativeOfflinePage`，四語同步由 `Translations` interface 的 type check 把關；產生器把四語全部烤進同一份靜態 HTML，inline script 依 `navigator.language` 選一份。離線頁的 origin（`capacitor://localhost` / `https://localhost`）與網站不同，讀不到使用者在 app 裡選的語言，裝置語系是唯一可用的訊號。
+
 - `tsconfig.json` 開啟 `allowImportingTsExtensions`：產生器直接用 Node 原生 type stripping 執行 `.ts`，Node 的 ESM resolver 需要完整副檔名。
+
 - native-smoke workflow 在 `cap sync` 後明確檢查 `offline.html` 有沒有進到 iOS / Android bundle——這個檔缺席不會讓任何 build 變紅。
+
 - ⚠️ 動到 `capacitor.config.ts` → iOS / Android 都要重送商店。依 #1225 與 #1207（PR #1209）合併送審，只送一次。
-### 技術變更
 
 - **Android 工具鏈升到 Gradle 9.5.1 / AGP 9.2.1，恢復在 JDK 25 上建置（#1207）**：Android Studio 內附 JBR 漂到 JDK 25 後，Gradle 8.14.3 連 build script 都編不起來（`Unsupported class file major version 69`），原生包打不出來。AGP 9 移除了 `proguard-android.txt`，app 與 `@capacitor-community/apple-sign-in` 改用 `proguard-android-optimize.txt`（後者經既有 patch 延伸，順手把已棄用的 `lintOptions` 換成 `lint`——9.2.1 下舊寫法仍可建置，不是必要改動）。merge 後既有 checkout 要 `rm -rf node_modules && npm ci`：對已套過舊 patch 的 `node_modules` 套新 patch 會失敗，而 postinstall 是 fail-soft，症狀是 build 撞 `proguard-android.txt is no longer supported`。未升 `@capacitor/*`，iOS SPM 的 8.3.4 pin 不受影響。同時撤回 CLAUDE.md 裡「JDK 25 + Gradle 8.14.3 實測可建置」的錯誤敘述。
 
-### 使用者可見變化
+- `createRule`（expense / income 兩側）補上 `snapToFuture`。`firstAnchorFromStart` 只負責把錨點對齊 `day_of_month`，起始日在過去時那個錨點本身就在過去。**建立含今天、編輯與 resume 不含，這個不對稱是刻意的**：建立時使用者剛說「每月 N 號」，今天就是 N 號時這個月該算進去，而且起始日怎麼填不該改變答案（`startsOn` 說的是系列從哪期起算，不是第一張卡何時出現）；編輯時 `sheet.editEffectHint` 正顯示在畫面上承諾「改動從下一期開始套用」，把今天拉進來等於違背一句使用者正在讀的話。機制是 `createRule` 把 `snapToFuture` 的 cutoff 傳成**今天的前一天**，`snapToFuture` 本體不動（與 `updateRule` / `resumeRule` 共用）。那個「前一天」走新增的 `lib/local-date.ts › previousDay`，內部用 `ymdToUTCNoon` 留 12 小時餘裕——`new Date(ymd)` 加 `getDate() - 1` 在 UTC 以西會早一天，而且不會報錯（這個 repo 為此踩過 #1130、#1262）；`__tests__/previousDay.test.ts` 直接切五個時區驗，含跨月、跨年、閏日。`today` 仍由 UTC 推導，因為它要回答的是「今晚的 cron 會不會撈到」，而 cron 比的是 Postgres `CURRENT_DATE`。兩側程式註解都寫了為什麼必須不同並互相指路；測試把「今天建立／今天編輯」與「回填建立／回填編輯」兩對並排放著，統一 guard 時剛好紅。**不做 data migration**：舊資料不是凍住的，cron 每晚推進一期並產一張 pending，會自己追上；`(rule_id, period_start)` 是 unique，批次 snap 只能砍掉「還沒產出」的期別，等於替使用者決定那些月份不要記。`tests/actions-recurring-expense.test.ts` 跟進 income 側的 fake-timer 慣例，斷言落在「同一系列的第一個未來期別」而不是「不等於起始日」。
 
-- **分析工具不再收到你的交易描述與金額（#1267）**：PostHog 的 autocapture 預設是開的，而且預設會把你點到的那個元素的文字一起送出。Dashboard 的交易列整列可點，說明在一個 `<span>` 裡、金額在同一顆按鈕裡的 `<div>` 裡——所以點一筆交易，就可能把「晚餐」和「NT$450」送到第三方。畫面上不會有任何異狀，錯誤訊息、警告、載入速度全都正常，只有第三方後台的一個沒人會打開的欄位裡有東西。現在送出的事件只剩「有人點了這個位置的這種元素」，文字與屬性一律遮罩；Session Replay（會錄下整個畫面）也在前端鎖成關閉。
-
-### 技術變更
+- 離線提示的門檻是 `OFFLINE_ANNOUNCE_DELAY_MS = 2000`（`lib/hooks/useOnlineStatus.ts`），上下界都有依據但值本身還沒實測校正：下界是換網的重連耗時，上界是 `app/sw.ts` 的 `networkTimeoutSeconds: 3`——App 放棄等網路改讀 cache 的時間點，提示必須在那之前就位。只延後「斷線」那一邊；`useOnlineStatus` 原樣保留給 `TransactionFeed`（它在換頁失敗的當下讀連線狀態，用兩秒前的值會說錯話）。fade out 則是 spec 從 v0.14.0 就寫著、實作一直沒有的東西，不是回歸——新增 `.strip-fading`（0.5s 收合，`prefers-reduced-motion` 下直接移除），沒有沿用 realtime 的 `.rt-fading`，那是給「對方剛剛動了」的簽名動態。
 
 - **PostHog autocapture 遮罩（#1267）**：`lib/analytics/posthogPrivacy.ts` 集中 `autocapture` / `mask_all_text` / `mask_all_element_attributes` / `disable_session_recording`，由 `app/providers.tsx` 在 `init()` 最後展開。選遮罩而不是逐元素加 `ph-no-capture`：後者要先窮舉所有「渲染金額或說明的可點擊元素」，而那份清單靜態掃不出來——`CompactRow` 把內容放在 `const inner` 再塞進 `<button>`，任何以標籤範圍為單位的 scanner 都會漏掉它，新元件更是預設會漏。遮罩是全域的，明年新增的元件自動涵蓋。保留下來的是互動骨架（tag、classes、`$elements_chain` 位置、`$current_url`、連結的 `attr__href`）；`mask_all_text` 只被 autocapture 與 dead-click autocapture 讀取，18 個具名 `track()` 事件與手動 `$pageview` 不受影響——自 #1015 起分析本來就走具名事件，不靠 `$el_text`。
   - `person_profiles: 'identified_only'` + `persistence: 'memory'` 擋的是 person 層級識別，跟事件 payload 無關，所以擋不到這件事。

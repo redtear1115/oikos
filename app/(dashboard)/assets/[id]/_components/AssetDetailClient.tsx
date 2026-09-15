@@ -226,7 +226,7 @@ export function AssetDetailClient({
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium"
+                className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
                 style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
               >
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -268,16 +268,15 @@ export function AssetDetailClient({
               <Link
                 key={ins.id}
                 href={`/assets/${ins.id}`}
-                className="flex items-center gap-3 text-sm font-medium"
+                className={`flex items-center gap-3 text-sm font-medium ${i > 0 ? 'pt-3' : 'pt-0'}`}
                 style={{
                   color: 'var(--ink)',
-                  paddingTop: i > 0 ? 12 : 0,
                   borderTop: i > 0 ? '1px solid var(--hairline)' : 'none',
                 }}
               >
                 <span>🛡</span>
                 <span>{ins.name}</span>
-                <span style={{ color: 'var(--ink-3)', marginLeft: 'auto' }}>›</span>
+                <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
               </Link>
             ))}
           </div>

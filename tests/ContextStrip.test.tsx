@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { I18nWrapper } from './_mocks/i18n'
 import { MemberProvider, type MemberContextValue } from '@/app/(dashboard)/_components/MemberContext'
@@ -11,8 +11,11 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }))
 
+// ContextStrip reads the *delayed* flag (#1244) — the raw one stays exported
+// for TransactionFeed. Mocking only the delayed export keeps these tests about
+// which band renders; the delay itself is covered in useDelayedOnlineStatus.test.tsx.
 vi.mock('@/lib/hooks/useOnlineStatus', () => ({
-  useOnlineStatus: vi.fn(() => true),
+  useDelayedOnlineStatus: vi.fn(() => true),
 }))
 
 vi.mock('@/lib/offline/preference', () => ({
@@ -23,7 +26,7 @@ vi.mock('@/actions/epoch-view', () => ({
   exitPastEpoch: vi.fn().mockResolvedValue(undefined),
 }))
 
-import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
+import { useDelayedOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { getOfflinePref } from '@/lib/offline/preference'
 import { ContextStrip } from '@/app/(dashboard)/_components/ContextStrip'
 
@@ -99,7 +102,7 @@ function renderStrip(
 
 beforeEach(() => {
   localStorage.clear()
-  vi.mocked(useOnlineStatus).mockReturnValue(true)
+  vi.mocked(useDelayedOnlineStatus).mockReturnValue(true)
   vi.mocked(getOfflinePref).mockReturnValue(false)
 })
 
@@ -110,7 +113,7 @@ describe('ContextStrip', () => {
   })
 
   it('renders offline banner at highest priority', () => {
-    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    vi.mocked(useDelayedOnlineStatus).mockReturnValue(false)
     vi.mocked(getOfflinePref).mockReturnValue(true)
 
     const pastMember: MemberContextValue = {
@@ -133,7 +136,7 @@ describe('ContextStrip', () => {
   // pref only chooses the copy — without it nothing is cached, so the
   // "showing last connection's data" wording would not be true.
   it('renders the no-cache offline notice when offline browsing is off', () => {
-    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    vi.mocked(useDelayedOnlineStatus).mockReturnValue(false)
     vi.mocked(getOfflinePref).mockReturnValue(false)
 
     const { container } = renderStrip()
@@ -146,7 +149,7 @@ describe('ContextStrip', () => {
   })
 
   it('renders the cached-data notice when offline browsing is on', () => {
-    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    vi.mocked(useDelayedOnlineStatus).mockReturnValue(false)
     vi.mocked(getOfflinePref).mockReturnValue(true)
 
     renderStrip()
@@ -155,16 +158,36 @@ describe('ContextStrip', () => {
     expect(screen.queryByText('離線中・恢復連線後會自動更新')).toBeNull()
   })
 
-  it('removes the offline notice once back online', () => {
-    vi.mocked(useOnlineStatus).mockReturnValue(false)
-    const { container, rerender } = renderStrip({ activeTrips: [tokyoTrip] })
-    expect(screen.getByRole('status')).toBeTruthy()
+  // #1244: the band no longer disappears in the same frame the network comes
+  // back — it collapses for half a second first, so the content below it does
+  // not jump up under the reader's eyes.
+  it('collapses the offline notice away, then removes it, once back online', () => {
+    vi.useFakeTimers()
+    try {
+      vi.mocked(useDelayedOnlineStatus).mockReturnValue(false)
+      const { container, rerender } = renderStrip({ activeTrips: [tokyoTrip] })
+      expect(screen.getByRole('status')).toBeTruthy()
+      expect(screen.getByRole('status').className).not.toContain('strip-fading')
 
-    vi.mocked(useOnlineStatus).mockReturnValue(true)
-    rerender(<ContextStrip activeTrips={[tokyoTrip]} initialTripCollapsed />)
+      vi.mocked(useDelayedOnlineStatus).mockReturnValue(true)
+      act(() => {
+        rerender(<ContextStrip activeTrips={[tokyoTrip]} initialTripCollapsed />)
+      })
 
-    expect(container.querySelector('[role="status"]')).toBeNull()
-    expect(screen.getByText('Tokyo')).toBeTruthy()
+      // Still mounted, now collapsing; the trip band waits rather than sliding
+      // in underneath a band that is still on screen.
+      const exiting = container.querySelector('[role="status"]')
+      expect(exiting).not.toBeNull()
+      expect(exiting?.className).toContain('strip-fading')
+      expect(screen.queryByText('Tokyo')).toBeNull()
+
+      act(() => { vi.advanceTimersByTime(500) })
+
+      expect(container.querySelector('[role="status"]')).toBeNull()
+      expect(screen.getByText('Tokyo')).toBeTruthy()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('leaves the past-chapter band to the shell top stack', () => {

@@ -97,8 +97,8 @@ export function ReviewClient({
 
       <div className="px-5 pt-4 pb-6">
         <h1
-          className="text-page leading-tight"
-          style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
+          className="text-page leading-tight font-serif"
+          style={{ color: 'var(--ink)', fontWeight: 500 }}
         >
           {/* CJK templates read `{month} 月`, so they take the number; en needs
               a month name — its template uses `{monthName}` instead (#1178). */}

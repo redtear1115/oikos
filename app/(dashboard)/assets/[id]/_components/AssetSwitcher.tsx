@@ -116,10 +116,9 @@ export function AssetSwitcher({
         ? groups.map((group) => (
             <div key={group.label}>
               <div
+                className="pt-2 px-3.5 pb-1 text-mini"
                 style={{
-                  padding: '8px 14px 4px',
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 10,
                   letterSpacing: '1.2px',
                   color: 'var(--ink-3)',
                   textTransform: 'uppercase',
@@ -157,13 +156,19 @@ export function AssetSwitcher({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-chip pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
+        className="relative inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-chip pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90 before:absolute before:-inset-y-[7px] before:inset-x-0 before:content-['']"
         style={{ background: open ? 'rgba(255,255,255,0.75)' : triggerBg }}
-        aria-label={t.assetDetail.switcherAriaLabel}
+        // #1249 — no `aria-label` here on purpose. This trigger is rendered
+        // inside the page's `<h1>` (AibutsuHeader `name`), and an aria-label
+        // would override the visible asset name for BOTH the button and the
+        // heading — the page would announce as "切換保單", never as the policy.
+        // The name now comes from the visible text, with the affordance in a
+        // visually-hidden suffix plus the implicit button role / haspopup.
         aria-haspopup="listbox"
         aria-expanded={open}
       >
         <span className="truncate min-w-0">{children}</span>
+        <span className="sr-only">{t.assetDetail.switcherAriaLabel}</span>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0 opacity-70">
           <path d="M3 4.5l3 3 3-3" stroke={chevronInk} strokeWidth="1.8"
             strokeLinecap="round" strokeLinejoin="round"/>
@@ -193,9 +198,8 @@ function SwitcherRow({
       role="option"
       aria-selected={isCurrent}
       onClick={() => onSelect(item.id)}
-      className="w-full flex items-center gap-2.5 border-0 cursor-pointer text-left"
+      className="w-full flex items-center gap-2.5 border-0 cursor-pointer text-left px-3.5 py-2.5"
       style={{
-        padding: '10px 14px',
         background: isCurrent ? 'rgba(58,36,25,0.05)' : 'transparent',
       }}
       onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(58,36,25,0.04)' }}
@@ -203,10 +207,10 @@ function SwitcherRow({
     >
       {/* Type icon square */}
       <div
+        className="rounded-md"
         style={{
           width: 24,
           height: 24,
-          borderRadius: 7,
           background: `var(--asset-tint-${item.type})`,
           display: 'flex',
           alignItems: 'center',
@@ -220,9 +224,8 @@ function SwitcherRow({
       {/* Name + subtitle */}
       <div className="flex-1 flex flex-col min-w-0">
         <span
-          className="truncate"
+          className="truncate text-sm"
           style={{
-            fontSize: 14,
             fontWeight: isCurrent ? 500 : 400,
             color: 'var(--ink)',
             lineHeight: 1.3,
@@ -232,10 +235,9 @@ function SwitcherRow({
         </span>
         {item.subtitle && (
           <span
-            className="truncate"
+            className="truncate text-mini"
             style={{
               fontFamily: 'var(--font-numeric)',
-              fontSize: 10,
               color: 'var(--ink-3)',
               lineHeight: 1.4,
             }}
@@ -248,11 +250,9 @@ function SwitcherRow({
       {/* Status badge */}
       {item.badge && badgeStyle && (
         <span
+          className="text-mini px-1.5 py-px rounded-sm"
           style={{
             fontFamily: 'var(--font-numeric)',
-            fontSize: 10,
-            padding: '1px 6px',
-            borderRadius: 4,
             background: badgeStyle.bg,
             color: badgeStyle.fg,
             flexShrink: 0,

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
@@ -15,9 +15,23 @@ import {
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
 
+// Pin "today" the same way `tests/actions-recurring-income.test.ts` does, and
+// for the same reason: createRule / updateRule / resumeRule all derive `today`
+// from `new Date()` and snap past anchors forward (lib/recurring#snapToFuture),
+// so any assertion on `next_occurrence_at` silently changes meaning as the real
+// calendar moves. Fake only Date so the async db mocks keep real microtask
+// timing.
+const FIXED_NOW = new Date('2026-05-07T12:00:00Z') // → today = 2026-05-07
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(FIXED_NOW)
   resetDbMocks()
   setMockUser(VIEWER)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('createRule', () => {
@@ -46,6 +60,108 @@ describe('createRule', () => {
     expect(values.splitType).toBe('half')
     expect(values.description).toBe('房租')
     expect(values.nextOccurrenceAt).toBe('2026-06-01')
+  })
+
+  // #1244: createRule used to stop at `firstAnchorFromStart`, so a back-dated
+  // startsOn produced a rule whose "下次 {date}" was already in the past —
+  // while updateRule on the very same input snapped it forward.
+  it('snaps a back-dated quarterly rule to the first future period of its own series', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 25000,
+      category: 'housing',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '管理費',
+      intervalMonths: 3,
+      dayOfMonth: 10,
+      startsOn: '2025-11-10',
+      endsOn: null,
+      assetId: null,
+    })
+
+    // Series from the 2025-11-10 anchor: 11-10 → 2026-02-10 → 2026-05-10.
+    // today is 2026-05-07, so 2026-05-10 is the first period still ahead —
+    // on the 3-month grid, not merely "some future date".
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-10')
+    expect(values.startsOn).toBe('2025-11-10')  // the rule still records when it began
+  })
+
+  it('snaps a long back-dated monthly rule to this month, not to startsOn', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 1200,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '訂閱',
+      intervalMonths: 1,
+      dayOfMonth: 15,
+      startsOn: '2024-01-15',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-15')
+  })
+
+  // Half of the create/edit asymmetry (#1244); the other half is the updateRule
+  // test below, and the two only mean something read together. Creating
+  // "starting today, the 7th" on the 7th keeps today, so tonight's cron
+  // materialises this period. This is the form's default path —
+  // `useRecurringRuleForm` seeds dayOfMonth = today's date and startsOn = today.
+  it('keeps an anchor that lands on today, so this period still counts', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '今天建立',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2026-05-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-07')
+  })
+
+  // The pair that locks in the second half of the decision (#1244). Identical
+  // to the test above in every field *except* `startsOn` — and the answer has
+  // to be identical too. That is the whole content of the decision: `startsOn`
+  // says which period the series counts from, not when the first card appears,
+  // so "the 7th, backdated to last November" and "the 7th, starting today"
+  // cannot disagree about today. Its updateRule counterpart is below.
+  it('keeps today for a back-dated series that lands on today', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '回填起始日',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2025-11-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-07')
   })
 
   it('rejects when paidBy not in viewer group', async () => {
@@ -79,6 +195,60 @@ describe('createRule', () => {
 })
 
 describe('updateRule', () => {
+  // The other half of the create/edit asymmetry (#1244). Same input as the
+  // createRule test above ("the 7th", today is the 7th) and a deliberately
+  // different answer: editing must skip today, because `sheet.editEffectHint`
+  // is on screen while the user saves, promising 改動從下一期開始套用. If
+  // someone ever harmonises the two `>`/`>=` guards, exactly one of this pair
+  // goes red — which is the point of writing them next to each other.
+  it('still skips today when editing, unlike createRule', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await updateRule({
+      id: 'rule-1',
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '今天編輯',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2026-05-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
+  // Counterpart to createRule's back-dated case: same input, still skips today.
+  // Editing is bound by `editEffectHint` no matter how `startsOn` reads.
+  it('still skips today for a back-dated series that lands on today', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await updateRule({
+      id: 'rule-1',
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '回填起始日',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2025-11-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
   it('updates fields and recomputes next_occurrence_at when schedule changes', async () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])

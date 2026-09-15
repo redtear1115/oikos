@@ -106,8 +106,8 @@ export function MessageEditor({
   return (
     <section>
       <h3
-        className="text-base font-medium px-2 mb-3"
-        style={{ color: 'var(--ink)', fontFamily: 'var(--font-fraunces)' }}
+        className="text-base font-medium px-2 mb-3 font-serif"
+        style={{ color: 'var(--ink)' }}
       >
         {isSolo ? tr.editorTitleSolo : tr.editorTitle}
       </h3>

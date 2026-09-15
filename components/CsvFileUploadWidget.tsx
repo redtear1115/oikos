@@ -24,7 +24,11 @@ interface CsvFileUploadWidgetProps {
   promptText: string
   buttonText: string
   loadingText?: string
-  retryText?: string
+  /** Required whenever `onRetry` is set — the retry button lives inside a
+   *  `role="alert"` region, so an untranslated fallback here would be read
+   *  out on every locale. Kept required so tsc catches a missing one (#1249).
+   *  Both callers already pass it; the old `?? 'Retry'` was never reached. */
+  retryText: string
   icon?: ReactNode
   hint?: ReactNode
   size?: 'sm' | 'md'
@@ -165,7 +169,7 @@ export function CsvFileUploadWidget({
               className={v.errorRetry}
               style={{ color: 'var(--ink-2)' }}
             >
-              {retryText ?? 'Retry'}
+              {retryText}
             </button>
           )}
         </div>

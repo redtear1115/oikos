@@ -31,7 +31,7 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
     <button
       type="button"
       onClick={onClick}
-      className="w-[30px] h-[30px] rounded-chip shrink-0 inline-flex items-center justify-center align-middle ml-1.5"
+      className="relative w-[30px] h-[30px] rounded-chip shrink-0 inline-flex items-center justify-center align-middle ml-1.5 before:absolute before:-inset-[7px] before:content-['']"
       style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
       aria-label={ariaLabel}
     >
@@ -85,13 +85,12 @@ export function AssetHero({
    */
   const FRAME_STYLE: React.CSSProperties = {
     border: `2.5px solid ${swatch}`,
-    borderRadius: 24,
   }
 
   if (isElectric) {
     return (
       <div className="px-3 pt-4 pb-3">
-        <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
+        <div className="px-5 pt-5 pb-5 rounded-3xl" style={FRAME_STYLE}>
           {name && header}
           {name && subtitle}
           <div className={`flex items-baseline gap-7 ${name ? 'mt-6' : ''}`}>
@@ -106,7 +105,7 @@ export function AssetHero({
 
   return (
     <div className="px-3 pt-4 pb-3">
-      <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
+      <div className="px-5 pt-5 pb-5 rounded-3xl" style={FRAME_STYLE}>
         {name && header}
         {name && subtitle}
 
@@ -151,7 +150,7 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
   const dim = amount === 0
   return (
     <div>
-      <div className="text-xs tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-xs tracking-label mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
       <div
         // #1174 — 32 was off the type scale; the secondary stat drops to the
         // nearest static tier below (text-page, 26). 40 is only a clamp() floor.

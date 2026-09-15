@@ -494,7 +494,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Amount + payer toggle */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div
-              className="text-xs tracking-[0.6px] mb-3"
+              className="text-xs tracking-label mb-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.addSheet.amount}
@@ -586,7 +586,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {/* Categories */}
           <div className="pt-5 pb-[18px]">
-            <div className="text-xs tracking-[0.6px] px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.category}
             </div>
             <CategoryPicker value={category} onChange={setCategory} />
@@ -594,7 +594,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {/* Asset link (visible in both solo and dual mode) */}
           <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.assetLink}
             </div>
             <AssetLinkField value={assetId} onChange={setAssetId} open={open} />
@@ -602,7 +602,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {!isSolo && (
             <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
-              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.splitMethod}
               </div>
               <SplitTypeSelector
@@ -619,7 +619,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {/* Date */}
           <div className="px-5 pt-1 pb-2">
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.date}
             </div>
             <DateField value={date} onChange={setDate} open={open} />
@@ -631,7 +631,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 are settled by design — surfacing the toggle would lie). */}
           {!isPending && !tripId && (
             <div className="px-5 pt-1 pb-2">
-              <div id={statusLabelId} className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <div id={statusLabelId} className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.statusLabel}
               </div>
               {/* Radio semantics so the selected state isn't carried by the
@@ -680,7 +680,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               dropped — better to omit the affordance. */}
           {!isPending && (
             <div className="px-5 pt-3 pb-6 border-t border-hairline">
-              <label htmlFor={notesId} className="block text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <label htmlFor={notesId} className="block text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.notesLabel}
               </label>
               <TextArea

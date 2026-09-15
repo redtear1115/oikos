@@ -45,16 +45,12 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
     <div
       role="tablist"
       aria-label={t.assetDetail.siblingRailAriaLabel}
-      className="flex gap-2 pb-0.5 mt-3.5"
+      className="flex gap-2 pb-0.5 mt-3.5 -mx-4 px-4"
       style={{
         overflowX: 'auto',
         scrollSnapType: 'x proximity',
         msOverflowStyle: 'none',
         scrollbarWidth: 'none',
-        marginLeft: -16,
-        marginRight: -16,
-        paddingLeft: 16,
-        paddingRight: 16,
       }}
     >
       {siblings.map((s) => {
@@ -67,14 +63,9 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             role="tab"
             aria-selected={isCurrent}
             onClick={() => router.push(`/assets/${s.id}`)}
-            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity"
+            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pl-2 pr-3 py-1.5 rounded-full"
             style={{
               height: 36,
-              paddingLeft: 7,
-              paddingRight: 12,
-              paddingTop: 6,
-              paddingBottom: 6,
-              borderRadius: 999,
               background: isCurrent ? 'var(--ink)' : 'rgba(255,255,255,0.55)',
               border: isCurrent ? 'none' : '1px solid rgba(58,36,25,0.08)',
               scrollSnapAlign: 'start',
@@ -91,10 +82,10 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
           >
             {/* Type icon square */}
             <div
+              className="rounded-md"
               style={{
                 width: 24,
                 height: 24,
-                borderRadius: 7,
                 background: isCurrent ? 'rgba(255,255,255,0.18)' : `var(--asset-tint-${s.type})`,
                 display: 'flex',
                 alignItems: 'center',
@@ -111,8 +102,8 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
 
             {/* Name */}
             <span
+              className="text-xs"
               style={{
-                fontSize: 12,
                 fontWeight: isCurrent ? 500 : 400,
                 color: isCurrent ? '#FBEDE0' : 'var(--ink)',
                 maxWidth: 120,
@@ -127,11 +118,9 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             {/* Status badge — only on non-current chips */}
             {!isCurrent && s.badge && badgeStyle && (
               <span
+                className="text-mini px-1.5 py-px rounded-sm"
                 style={{
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 10,
-                  padding: '1px 6px',
-                  borderRadius: 4,
                   background: badgeStyle.bg,
                   color: badgeStyle.fg,
                   flexShrink: 0,
@@ -178,17 +167,14 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
        so `--safe-top` answers it: the real inset when the stack is empty, zero
        when it isn't. */
     <div
-      className="sticky top-[var(--top-stack-h)] z-20 px-4 pt-[max(var(--safe-top),48px)]"
-      style={{
-        background: tint.bg,
-        paddingBottom: hasSiblings ? 10 : 12,
-      }}
+      className={`sticky top-[var(--top-stack-h)] z-20 px-4 pt-[max(var(--safe-top),48px)] ${hasSiblings ? 'pb-2.5' : 'pb-3'}`}
+      style={{ background: tint.bg }}
     >
       <div className="flex items-center justify-between gap-2">
         <Link
           href="/assets"
-          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent shrink-0"
-          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
+          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent shrink-0 text-sm"
+          style={{ color: 'var(--ink-2)' }}
         >
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
             <path d="M6.5 1.5L1.5 6.5L6.5 11.5" stroke="currentColor" strokeWidth="1.6"
@@ -198,11 +184,17 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
         </Link>
         {/* #1174 — every /assets/[id] variant renders this header, so the
             asset name is the page's one h1. */}
+        {/* #1249 — `truncate` used to sit on the h1 itself. That is fine for a
+            plain string, but insurance passes an <AssetSwitcher> button as the
+            name, and `overflow: hidden` clipped the button's ::before hit-area
+            back down to its 30px box. The clipping is invisible: the pill looks
+            identical, it just stops responding 7px outside itself. Truncation
+            now lives on an inner span for the string case only. */}
         <h1
-          className="flex-1 text-lg font-medium tracking-tight truncate min-w-0 text-center"
+          className="flex-1 text-lg font-medium tracking-tight min-w-0 text-center"
           style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}
         >
-          {name}
+          {typeof name === 'string' ? <span className="block truncate">{name}</span> : name}
         </h1>
         {onEditClick ? (
           <button

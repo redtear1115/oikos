@@ -134,7 +134,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         <SheetBody noPadding>
           {/* Amount + payer */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
-            <div className="text-xs tracking-[0.6px] mb-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label mb-3" style={{ color: 'var(--ink-3)' }}>
               {t.settlement.amountLabel}
             </div>
             <AmountInput
@@ -150,7 +150,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
 
           {/* Date */}
           <div className="px-5 pt-1 pb-6">
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.settlement.dateLabel}
             </div>
             <button onClick={() => setShowCal(v => !v)}

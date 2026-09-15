@@ -174,7 +174,10 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
                   border: sel ? '3px solid var(--ink)' : `2px solid ${c.border}`,
                   boxShadow: sel ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
                 }}
-                aria-label={c.key}
+                // #1249 — the stored key (`dark_gray`) is an identifier, not a
+                // name: a screen reader announced it verbatim, in English, on
+                // every locale. `colorNames` is the localized swatch name.
+                aria-label={ts.car.colorNames[c.key]}
               />
             )
           })}

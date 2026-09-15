@@ -25,6 +25,7 @@ import {
 } from '@/lib/validators'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
+import { previousDay } from '@/lib/local-date'
 import {
   assertMemberInGroup,
   assertAssetInGroup,
@@ -52,7 +53,41 @@ export const createRule = action(async (input: RecurringExpenseRuleInput): Promi
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  const nextOccurrenceAt = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  // Snap the anchor forward so a back-dated `startsOn` cannot leave the rule
+  // showing a "next run" date that has already been and gone (#1244).
+  // `firstAnchorFromStart` only aligns the anchor to `dayOfMonth`; with a
+  // back-dated start that anchor is itself in the past.
+  //
+  // **Creating includes today; editing and resuming do not. The asymmetry is
+  // the decision, not a typo — do not "fix" it into agreement.** The two
+  // answer different questions:
+  //
+  //  - Creating, the user has just said "the Nth of every month". When today
+  //    *is* the Nth they mean this month, so today's anchor is kept and
+  //    tonight's cron materialises it. And **how they filled `startsOn` must
+  //    not change that answer**: `startsOn` says which period the series is
+  //    counted from, not when the first card shows up. Back-dating a rule to
+  //    last November and starting it today are the same intent once the
+  //    series lands on today, so they get the same first period.
+  //  - Editing, `sheet.editEffectHint` is on screen while they save, and it
+  //    promises 改動從下一期開始套用 / 已經出現的待確認卡片…維持原樣. Pulling
+  //    today in would break a promise the user is reading as they act.
+  //
+  // Mechanically: `snapToFuture` walks while `curr <= cutoff`, so passing the
+  // day *before* today makes today the earliest period it will settle on —
+  // both for the anchor-is-today case and for a back-dated series that lands
+  // on today. `snapToFuture` itself is left alone; it is shared with
+  // `updateRule` / `resumeRule`, whose semantics do not change.
+  //
+  // `today` stays UTC-derived (as in `updateRule` / `resumeRule`) because the
+  // question it answers is "will tonight's cron pick this up", and the cron
+  // compares against Postgres `CURRENT_DATE`, also UTC. Whether both should
+  // move to Asia/Taipei is #1262, not this change.
+  const today = new Date().toISOString().slice(0, 10)
+  const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  const nextOccurrenceAt = firstAnchor >= today
+    ? firstAnchor
+    : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, previousDay(today))
 
   const [created] = await db
     .insert(recurringExpenseRules)
@@ -108,6 +143,9 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .limit(1)
   if (!existing) throw actionError('recurring_rule_not_found')
 
+  // `>` and not `>=`, unlike `createRule` (#1244): `sheet.editEffectHint` is on
+  // screen while the user saves, promising the change applies from the *next*
+  // period. Today stays out. See the long comment in `createRule` above.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
   const nextOccurrenceAt = firstAnchor > today

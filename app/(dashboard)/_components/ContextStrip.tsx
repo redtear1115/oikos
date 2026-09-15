@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
-import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
+import { useDelayedOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { getOfflinePref } from '@/lib/offline/preference'
 import { useTranslations } from '@/lib/i18n/client'
 import type { ActiveTripBannerTrip } from '@/app/(dashboard)/dashboard/_components/ActiveTripBanner'
@@ -15,11 +15,19 @@ interface Props {
   initialTripCollapsed: boolean
 }
 
+/** How long the band stays on screen while it collapses away. Must match the
+ *  0.5s of `.strip-fading` in globals.css — JS owns the unmount, CSS owns the
+ *  motion, and if they drift the band either snaps out mid-collapse or leaves
+ *  a collapsed 0px box behind. */
+const OFFLINE_EXIT_MS = 500
+
 /**
  * Unified contextual strip — renders at most one banner variant in priority order:
  *   1. offline   — device is offline, for everyone (#1206). The offline-pref
  *      only picks the copy: with it on the page may be the cached snapshot;
  *      with it off nothing is cached, so the cache wording would be false.
+ *      Both edges are smoothed (#1244): the band waits out a short drop before
+ *      appearing, and collapses rather than vanishing when the network returns.
  *   2. past-epoch — viewer is pinned to a past chapter; the band itself moved to
  *      the shell top stack (`PastChapterBar`, #1037), only the suppression of
  *      everything below it is still decided here
@@ -47,13 +55,34 @@ export function ContextStrip({
 }: Props) {
   const t = useTranslations()
   const { isPast } = useMember()
-  const isOnline = useOnlineStatus()
+  const isOnline = useDelayedOnlineStatus()
 
   // getOfflinePref reads localStorage, which is safe here because this is a
   // client component; we wrap in useState to avoid SSR mismatch.
   const [offlinePrefOn] = useState(() => getOfflinePref())
 
   const [tripCollapsed, setTripCollapsed] = useState(initialTripCollapsed)
+
+  // Keep the offline band mounted for one collapse after the network returns,
+  // so it folds away instead of popping the content below it upwards (#1244).
+  // The lower-priority variants wait out that half second rather than sliding
+  // in underneath a band that is still on screen — this strip renders one thing
+  // at a time, and a reconnect is not the moment to break that.
+  const [offlineExiting, setOfflineExiting] = useState(false)
+  const wasOffline = useRef(false)
+
+  useEffect(() => {
+    if (!isOnline) {
+      wasOffline.current = true
+      setOfflineExiting(false)
+      return
+    }
+    if (!wasOffline.current) return
+    wasOffline.current = false
+    setOfflineExiting(true)
+    const exitTimer = setTimeout(() => setOfflineExiting(false), OFFLINE_EXIT_MS)
+    return () => clearTimeout(exitTimer)
+  }, [isOnline])
 
   const handleTripToggle = () => {
     const next = !tripCollapsed
@@ -65,12 +94,12 @@ export function ContextStrip({
   // Used to be gated on offlinePrefOn, because the only copy described the
   // cache. That left everyone who never opened Settings with no signal at all
   // until a write failed (#1206).
-  if (!isOnline) {
+  if (!isOnline || offlineExiting) {
     return (
       <div
         role="status"
         aria-live="polite"
-        className="px-5 py-2 text-sm"
+        className={`px-5 py-2 text-sm${offlineExiting ? ' strip-fading' : ''}`}
         style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
       >
         {offlinePrefOn ? t.offlineBanner.text : t.offlineBanner.textNoCache}
