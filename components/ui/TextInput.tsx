@@ -42,6 +42,13 @@ export function TextInput({
           ? 'border-[var(--destructive)]'
           : 'border-[var(--hairline)]',
         'bg-[var(--input-bg)]',
+        // Fade the whole field, not just the text. `disabled:opacity-50` on
+        // the `<input>` alone left the border and the addons at full strength,
+        // so a disabled field (the renewal sheet's policy number while the
+        // save runs, InsuranceListItem) read as an active input whose text had
+        // simply gone faint. TextArea is one element, so its own
+        // `disabled:opacity-50` already covers its border.
+        rest.disabled ? 'opacity-50' : '',
         className,
       ].filter(Boolean).join(' ')}
     >
@@ -56,7 +63,7 @@ export function TextInput({
           'px-3.5 text-base text-ink',
           'border-0 outline-none',
           'placeholder:text-ink-3',
-          'disabled:opacity-50 disabled:cursor-default',
+          'disabled:cursor-default',
           inputClassName,
         ].filter(Boolean).join(' ')}
         {...rest}
