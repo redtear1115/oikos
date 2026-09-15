@@ -18,6 +18,7 @@ import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGu
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
+import { unwrapAction } from '@/lib/action-errors'
 
 export type InsuranceInitial = Pick<
   AssetSheetInitial,
@@ -97,8 +98,8 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       // Data loads — only fire on open, not every render. Errors swallowed so
       // a network blip doesn't prevent the sheet from opening (lists fall back
       // to empty arrays from initial state).
-      getCarAssets().then(setCarAssets).catch(() => {})
-      getChildAssets().then(setChildAssets).catch(() => {})
+      getCarAssets().then((r) => setCarAssets(unwrapAction(r))).catch(() => {})
+      getChildAssets().then((r) => setChildAssets(unwrapAction(r))).catch(() => {})
     },
   })
 
@@ -137,9 +138,9 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
     runMutation(
       async () => {
         if (isEdit) {
-          await editInsurance({ id: initial!.id, ...payload })
+          unwrapAction(await editInsurance({ id: initial!.id, ...payload }))
         } else {
-          await createInsurance(payload)
+          unwrapAction(await createInsurance(payload))
         }
       },
       () => { onMutated?.('saved'); onClose() },

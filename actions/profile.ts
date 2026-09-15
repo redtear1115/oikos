@@ -7,9 +7,9 @@ import { requireViewer } from '@/lib/auth/viewer'
 import { revalidateAfterProfileMutation } from '@/lib/revalidate'
 import { validateName } from '@/lib/validators'
 import type { SplitType } from '@/lib/balance'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
-export async function updateDisplayName(name: string): Promise<{ ok: true }> {
+export const updateDisplayName = action(async (name: string): Promise<{ ok: true }> => {
   const { user } = await requireViewer()
 
   const trimmed = validateName(name, '顯示名稱')
@@ -25,11 +25,11 @@ export async function updateDisplayName(name: string): Promise<{ ok: true }> {
   // Display name shows in headers / rows across the app.
   revalidateAfterProfileMutation()
   return { ok: true }
-}
+})
 
 const VALID_SPLIT_TYPES: ReadonlyArray<SplitType> = ['all_mine', 'all_theirs', 'half']
 
-export async function updateDefaultSplitType(splitType: SplitType): Promise<{ ok: true }> {
+export const updateDefaultSplitType = action(async (splitType: SplitType): Promise<{ ok: true }> => {
   const { user } = await requireViewer()
 
   if (!VALID_SPLIT_TYPES.includes(splitType)) {
@@ -46,4 +46,4 @@ export async function updateDefaultSplitType(splitType: SplitType): Promise<{ ok
 
   revalidateAfterProfileMutation()
   return { ok: true }
-}
+})

@@ -75,6 +75,7 @@ const { setRate } = await import('@/actions/currency')
 const { createTransaction } = await import('@/actions/transaction')
 const { getTripById, hasActiveTrip } = await import('@/lib/db/queries/trips')
 const { eq, inArray, isNull } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -153,10 +154,10 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     mockUserId = refs.userId
 
     // 1. Create a trip
-    const tripResult = await createTrip({
+    const tripResult = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-14',
-    })
+    }))
     expect(tripResult.id).toBeTruthy()
     refs.tripIds.push(tripResult.id)
 
@@ -168,7 +169,7 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     expect(trip?.defaultCurrency).toBe('TWD')
 
     // 2. Set JPY → TWD rate
-    await setRate({ fromCurrency: 'jpy', toCurrency: 'twd', rate: '0.220' })
+    unwrapAction(await setRate({ fromCurrency: 'jpy', toCurrency: 'twd', rate: '0.220' }))
 
     // Verify rate was stored
     const [storedRate] = await db
@@ -181,7 +182,7 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     expect(storedRate.rate).toBe('0.220')
 
     // 3. Record a 500 JPY expense tagged to the trip
-    const txResult = await createTransaction({
+    const txResult = unwrapAction(await createTransaction({
       amount: 500,
       currency: 'jpy',
       tripId: tripResult.id,
@@ -190,7 +191,7 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
       splitType: 'all_mine',
       payerId: refs.userId,
       transactedAt: '2026-05-14',
-    })
+    }))
     expect(txResult.id).toBeTruthy()
     refs.txIds.push(txResult.id)
 
@@ -224,7 +225,7 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
 
     // 6. End the trip
     const today = '2026-05-14'
-    await endTrip({ tripId: tripResult.id, endDate: today })
+    unwrapAction(await endTrip({ tripId: tripResult.id, endDate: today }))
 
     const endedTrip = await getTripById(tripResult.id)
     expect(endedTrip?.status).toBe('ended')
@@ -234,7 +235,7 @@ describe('E2E golden path: multi-currency × trip (#68 #42)', () => {
     expect(stillActive).toBe(false)
 
     // 8. softDeleteTrip → getTripById returns null
-    await softDeleteTrip({ tripId: tripResult.id })
+    unwrapAction(await softDeleteTrip({ tripId: tripResult.id }))
     const deleted = await getTripById(tripResult.id)
     expect(deleted).toBeNull()
   })

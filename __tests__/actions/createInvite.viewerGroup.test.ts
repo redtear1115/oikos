@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import type { ActionResult } from '@/lib/action-errors'
 
 // ─── Regression for #1031 (behaviour layer) ───────────────────────────────
 //
@@ -60,13 +61,14 @@ const { profiles, oikosGroups, groupBalance, groupEpochs, groupInvites } =
 const inviteActions = await import('@/actions/invite')
 const { createGroup } = await import('@/actions/group')
 const { eq, inArray } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 // Post-fix `createInvite()` takes no arguments. The cast lets the test pass one
 // anyway, which is the whole point: it reproduces the attacker's call verbatim
 // and asserts the argument no longer steers anything.
 const createInviteWithGroupId = inviteActions.createInvite as unknown as (
   groupId: string,
-) => Promise<string>
+) => Promise<ActionResult<string>>
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -124,7 +126,7 @@ describe('createInvite — group comes from the viewer, never the caller (#1031)
     })
 
     mockUserId = ids.attacker
-    await createInviteWithGroupId(victimGroup.id)
+    unwrapAction(await createInviteWithGroupId(victimGroup.id))
 
     // Nothing may be minted against the victim's ledger. Pre-fix this is
     // exactly where the invite landed.
@@ -176,10 +178,10 @@ describe('createInvite — group comes from the viewer, never the caller (#1031)
     mockUserId = ids.attacker
     await db.insert(profiles).values([{ id: ids.attacker, displayName: 'TEST_1031_setup' }])
 
-    const created = await createGroup('TEST_1031_setup_group')
+    const created = unwrapAction(await createGroup('TEST_1031_setup_group'))
     ids.attackerGroup = created.id
 
-    const url = await inviteActions.createInvite()
+    const url = unwrapAction(await inviteActions.createInvite())
     expect(url).toContain('/invite/')
 
     const minted = await db.select().from(groupInvites)

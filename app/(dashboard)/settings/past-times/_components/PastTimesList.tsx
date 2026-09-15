@@ -6,6 +6,7 @@ import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { enterPastEpoch, exitPastEpoch } from '@/actions/epoch-view'
 import { formatDateShort } from '@/lib/format-date'
 import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
+import { unwrapAction } from '@/lib/action-errors'
 
 export interface EpochListEntry {
   id: string
@@ -41,14 +42,14 @@ export function PastTimesList({
 
   const handleEnter = (epochId: string) => {
     startTransition(async () => {
-      await enterPastEpoch(epochId)
+      unwrapAction(await enterPastEpoch(epochId))
       router.push('/dashboard')
     })
   }
 
   const handleExit = () => {
     startTransition(async () => {
-      await exitPastEpoch()
+      unwrapAction(await exitPastEpoch())
       router.push('/dashboard')
     })
   }

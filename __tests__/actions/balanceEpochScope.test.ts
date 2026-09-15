@@ -90,6 +90,7 @@ const { createTransaction } = await import('@/actions/transaction')
 const { createSettlement } = await import('@/actions/settlement')
 const { getGroupBalance, getGroupPendingBalanceDelta } = await import('@/lib/db/queries/balance')
 const { eq, inArray } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -213,22 +214,22 @@ describe('balance epoch scoping (#1030)', () => {
 
     // A pays 1000 'half' → +500 owed to A. B settles 500 → balance back to 0.
     mockUserId = userAId
-    const tx1 = await createTransaction({
+    const tx1 = unwrapAction(await createTransaction({
       amount: 1000,
       description: 'TEST split',
       category: 'other',
       splitType: 'half',
       payerId: userAId,
       transactedAt: '2026-01-11',
-    })
+    }))
     refs.txIds.push(tx1.id)
 
     mockUserId = userBId
-    await createSettlement({
+    unwrapAction(await createSettlement({
       amount: 500,
       payerId: userBId,
       settledAt: '2026-01-12',
-    })
+    }))
 
     expect(await getGroupBalance(oldGroupId)).toBe(0)
 
@@ -237,28 +238,28 @@ describe('balance epoch scoping (#1030)', () => {
     // 'half' leg behind on oldGroupId with nothing to net it against — the
     // exact mechanism from the issue.
     mockUserId = userBId
-    const { groupId: newGroupIdForB } = await leaveGroup()
+    const { groupId: newGroupIdForB } = unwrapAction(await leaveGroup())
     refs.newGroupIdForB = newGroupIdForB
 
     // C joins the now-solo oldGroupId via invite.
     mockUserId = userAId
-    const inviteUrl = await createInvite()
+    const inviteUrl = unwrapAction(await createInvite())
     const token = new URL(inviteUrl).pathname.split('/').pop()!
     refs.inviteToken = token
 
     mockUserId = userCId
-    await acceptInvite(token)
+    unwrapAction(await acceptInvite(token))
 
     // Any write triggers the next recalc — record C's first transaction.
     mockUserId = userAId
-    const tx2 = await createTransaction({
+    const tx2 = unwrapAction(await createTransaction({
       amount: 100,
       description: 'TEST after rejoin',
       category: 'other',
       splitType: 'all_mine',
       payerId: userAId,
       transactedAt: '2026-02-01',
-    })
+    }))
     refs.txIds.push(tx2.id)
 
     // Bug (pre-fix): balance would be +500 — A's leftover 'half' leg from
@@ -273,7 +274,7 @@ describe('balance epoch scoping (#1030)', () => {
     // A creates a PENDING 'half' transaction. Never settled, never resolved —
     // this is exactly the "leftover pending row" scenario from the issue.
     mockUserId = userAId
-    const tx1 = await createTransaction({
+    const tx1 = unwrapAction(await createTransaction({
       amount: 1000,
       description: 'TEST pending split',
       category: 'other',
@@ -281,26 +282,26 @@ describe('balance epoch scoping (#1030)', () => {
       payerId: userAId,
       transactedAt: '2026-01-11',
       status: 'pending',
-    })
+    }))
     refs.txIds.push(tx1.id)
 
     // Settled balance is 0 (nothing settled yet) — B can leave.
     expect(await getGroupBalance(oldGroupId)).toBe(0)
 
     mockUserId = userBId
-    const { groupId: newGroupIdForB } = await leaveGroup()
+    const { groupId: newGroupIdForB } = unwrapAction(await leaveGroup())
     refs.newGroupIdForB = newGroupIdForB
 
     // C joins. No write happens after this — getGroupPendingBalanceDelta is
     // computed live at read time (dashboard), so the bug would show up
     // immediately without any further mutation.
     mockUserId = userAId
-    const inviteUrl = await createInvite()
+    const inviteUrl = unwrapAction(await createInvite())
     const token = new URL(inviteUrl).pathname.split('/').pop()!
     refs.inviteToken = token
 
     mockUserId = userCId
-    await acceptInvite(token)
+    unwrapAction(await acceptInvite(token))
 
     // Bug (pre-fix): +500 — A's prior-chapter pending 'half' leg leaks into
     // C's include-pending dashboard view. Fixed: epoch scoping excludes it.
@@ -316,14 +317,14 @@ describe('balance epoch scoping (#1030)', () => {
     // a new chapter. Must still count: created_at, not transacted_at, is the
     // epoch boundary.
     mockUserId = userAId
-    const tx = await createTransaction({
+    const tx = unwrapAction(await createTransaction({
       amount: 1000,
       description: 'TEST backdated settled',
       category: 'other',
       splitType: 'half',
       payerId: userAId,
       transactedAt: yesterdayYMD(),
-    })
+    }))
     refs.txIds.push(tx.id)
 
     expect(await getGroupBalance(oldGroupId)).toBe(500)
@@ -334,7 +335,7 @@ describe('balance epoch scoping (#1030)', () => {
     const { userAId, oldGroupId } = refs
 
     mockUserId = userAId
-    const tx = await createTransaction({
+    const tx = unwrapAction(await createTransaction({
       amount: 1000,
       description: 'TEST backdated pending',
       category: 'other',
@@ -342,7 +343,7 @@ describe('balance epoch scoping (#1030)', () => {
       payerId: userAId,
       transactedAt: yesterdayYMD(),
       status: 'pending',
-    })
+    }))
     refs.txIds.push(tx.id)
 
     expect(await getGroupPendingBalanceDelta(oldGroupId)).toBe(500)
@@ -354,25 +355,25 @@ describe('balance epoch scoping (#1030)', () => {
 
     // A pays 1000 'half' today → balance +500.
     mockUserId = userAId
-    const tx = await createTransaction({
+    const tx = unwrapAction(await createTransaction({
       amount: 1000,
       description: 'TEST backdated settlement setup',
       category: 'other',
       splitType: 'half',
       payerId: userAId,
       transactedAt: new Date().toISOString().slice(0, 10),
-    })
+    }))
     refs.txIds.push(tx.id)
     expect(await getGroupBalance(oldGroupId)).toBe(500)
 
     // B settles 500 today, but the settlement is DATED yesterday (backdated,
     // same "catching up" flow). Must still net the balance to 0.
     mockUserId = userBId
-    await createSettlement({
+    unwrapAction(await createSettlement({
       amount: 500,
       payerId: userBId,
       settledAt: yesterdayYMD(),
-    })
+    }))
 
     expect(await getGroupBalance(oldGroupId)).toBe(0)
   })

@@ -11,6 +11,7 @@ import {
 } from '@/lib/partnerQuiz'
 import { submitPartnerQuizAnswers } from '@/actions/partnerQuiz'
 import { describeQuizError } from '@/lib/quiz-errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 export interface QuestionCardProps {
   sessionId: string
@@ -69,10 +70,10 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           questionKey: k,
           choiceKey: picks[k] ?? '',
         }))
-        const out = await submitPartnerQuizAnswers({
+        const out = unwrapAction(await submitPartnerQuizAnswers({
           sessionId,
           answers,
-        })
+        }))
         // Whether revealed or not, the page Server Component will re-render
         // into the right mode (waiting | reveal) on refresh.
         if (out.revealed) {

@@ -35,7 +35,7 @@ import {
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 function assertRecipientInGroup(
   recipientId: string,
@@ -44,7 +44,7 @@ function assertRecipientInGroup(
   assertMemberInGroup(recipientId, group, 'recipient_not_in_group')
 }
 
-export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id: string }> {
+export const createRule = action(async (input: RecurringIncomeRuleInput): Promise<{ id: string }> => {
   const v = validateRecurringIncomeRuleInput(input)
   const { user, group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
@@ -78,13 +78,13 @@ export async function createRule(input: RecurringIncomeRuleInput): Promise<{ id:
   })
 
   return { id: created.id }
-}
+})
 
 export interface UpdateRuleInput extends RecurringIncomeRuleInput {
   id: string
 }
 
-export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }> {
+export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string }> => {
   const v = validateRecurringIncomeRuleInput(input)
   const { group } = await requireViewerGroup()
   assertRecipientInGroup(v.recipientId, group)
@@ -129,9 +129,9 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
 
   revalidateAfterRecurringIncomeRuleMutation()
   return { id: updated.id }
-}
+})
 
-export async function pauseRule(id: string): Promise<void> {
+export const pauseRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(recurringIncomeRules)
@@ -144,9 +144,9 @@ export async function pauseRule(id: string): Promise<void> {
     .returning({ id: recurringIncomeRules.id })
   if (!updated) throw actionError('recurring_rule_not_found')
   revalidateAfterRecurringIncomeRuleMutation()
-}
+})
 
-export async function resumeRule(id: string): Promise<void> {
+export const resumeRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [rule] = await db
     .select({
@@ -176,9 +176,9 @@ export async function resumeRule(id: string): Promise<void> {
     .returning({ id: recurringIncomeRules.id })
 
   revalidateAfterRecurringIncomeRuleMutation()
-}
+})
 
-export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
+export const confirmPending = action(async (pendingId: string): Promise<{ txId: string }> => {
   const { group } = await requireViewerGroup()
 
   const [row] = await db
@@ -232,7 +232,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
 
   revalidateAfterIncomeMutation()
   return result
-}
+})
 
 export interface EditAndConfirmInput {
   pendingId: string
@@ -247,9 +247,9 @@ export interface EditAndConfirmInput {
 // Phase 2 surface: shipped + tested in Phase 1 so the Phase 2 wiring of the
 // Dashboard 「改一下」 button (IncomeSheet prefilled with pending values, submit
 // routes here) becomes mechanical. Currently no UI caller; do not remove.
-export async function editAndConfirmPending(
+export const editAndConfirmPending = action(async (
   input: EditAndConfirmInput,
-): Promise<{ txId: string }> {
+): Promise<{ txId: string }> => {
   const validated = validateIncomeInput({
     amount: input.amount,
     category: input.category,
@@ -304,9 +304,9 @@ export async function editAndConfirmPending(
 
   revalidateAfterIncomeMutation()
   return result
-}
+})
 
-export async function softDeleteRule(id: string): Promise<void> {
+export const softDeleteRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
@@ -331,9 +331,9 @@ export async function softDeleteRule(id: string): Promise<void> {
   })
 
   revalidateAfterRecurringIncomeRuleMutation()
-}
+})
 
-export async function skipPending(pendingId: string): Promise<void> {
+export const skipPending = action(async (pendingId: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(pendingIncomeOccurrences)
@@ -347,4 +347,4 @@ export async function skipPending(pendingId: string): Promise<void> {
     .returning({ id: pendingIncomeOccurrences.id })
   if (!updated) throw actionError('pending_income_not_found')
   revalidatePath('/dashboard')
-}
+})

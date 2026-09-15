@@ -13,6 +13,7 @@ import {
   type YearMonth,
 } from '@/lib/monthlyReview'
 import { upsertMonthlyReviewMessage } from '@/actions/monthlyReview'
+import { unwrapAction } from '@/lib/action-errors'
 import type {
   ReviewEditorMessage,
   ReviewMember,
@@ -74,11 +75,11 @@ export function MessageEditor({
     if (!next.trim()) return
     setState({ kind: 'saving' })
     try {
-      await upsertMonthlyReviewMessage({
+      unwrapAction(await upsertMonthlyReviewMessage({
         year: editorMonth.year,
         month: editorMonth.month,
         body: next,
-      })
+      }))
       setSavedValue(next)
       setState({ kind: 'saved' })
     } catch (err) {

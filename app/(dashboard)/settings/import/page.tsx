@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { getImportHistory } from '@/actions/import'
 import { ImportContent } from './_components/ImportContent'
+import { unwrapAction } from '@/lib/action-errors'
 
 export default async function ImportPage() {
   const { user, group } = await requireViewerGroupOrRedirect()
@@ -26,7 +27,7 @@ export default async function ImportPage() {
     partnerProfile = p ?? null
   }
 
-  const history = await getImportHistory()
+  const history = unwrapAction(await getImportHistory())
 
   const viewerIsMemberA = group.memberA === user.id
 

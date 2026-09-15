@@ -14,6 +14,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { getTemplate, type AssetTemplateKey } from '@/lib/assetTemplates'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface AssetSummary {
   monthAmount: number
@@ -145,7 +146,7 @@ export function TemplateAssetDetailClient({
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="item" onCtaPress={() => setAddOpen(true)} />}

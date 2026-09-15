@@ -10,9 +10,9 @@ import { revalidateSettings } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
 import { validateName } from '@/lib/validators'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
-export async function getMyGroup() {
+export const getMyGroup = action(async () => {
   // Read-only "is the viewer in a group?" probe used by client RTV bootstrap.
   // Returns null (rather than throwing) on no-user so the caller can render
   // the unauth state without a try/catch.
@@ -23,9 +23,9 @@ export async function getMyGroup() {
   const group = await getActiveGroupForUser(user.id)
 
   return group ?? null
-}
+})
 
-export async function createGroup(name: string) {
+export const createGroup = action(async (name: string) => {
   const { user } = await requireViewer()
 
   const existing = await getActiveGroupForUser(user.id)
@@ -72,9 +72,9 @@ export async function createGroup(name: string) {
   })
 
   return group
-}
+})
 
-export async function updateGroupName(name: string): Promise<{ ok: true }> {
+export const updateGroupName = action(async (name: string): Promise<{ ok: true }> => {
   const trimmed = validateName(name, '帳本名稱')
 
   const { group } = await requireViewerGroup()
@@ -86,9 +86,9 @@ export async function updateGroupName(name: string): Promise<{ ok: true }> {
 
   revalidateSettings()
   return { ok: true }
-}
+})
 
-export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true }> {
+export const updateGroupSplitRatio = action(async (ratioA: number): Promise<{ ok: true }> => {
   if (!Number.isInteger(ratioA) || ratioA < 1 || ratioA > 99) {
     throw actionError('split_ratio_invalid')
   }
@@ -102,7 +102,7 @@ export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true 
 
   revalidateSettings()
   return { ok: true }
-}
+})
 
 /**
  * #220 — flip Guardian (守護) beta on/off for the viewer's group.
@@ -111,7 +111,7 @@ export async function updateGroupSplitRatio(ratioA: number): Promise<{ ok: true 
  * Revalidates everywhere Guardian surfaces — settings (toggle row), assets
  * (tab visibility), dashboard (in case a future tile shows up there).
  */
-export async function toggleGuardianBeta(enabled: boolean): Promise<{ ok: true }> {
+export const toggleGuardianBeta = action(async (enabled: boolean): Promise<{ ok: true }> => {
   const { group } = await requireViewerGroup()
 
   await db
@@ -123,4 +123,4 @@ export async function toggleGuardianBeta(enabled: boolean): Promise<{ ok: true }
   revalidatePath('/assets')
   revalidatePath('/dashboard')
   return { ok: true }
-}
+})

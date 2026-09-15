@@ -55,6 +55,7 @@ const { createTrip, endTrip, updateTrip, softDeleteTrip } = await import('@/acti
 const { createTripExpense } = await import('@/actions/tripExpense')
 const { getTripById } = await import('@/lib/db/queries/trips')
 const { eq, inArray, and } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -166,10 +167,10 @@ describe('createTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const result = await createTrip({
+    const result = unwrapAction(await createTrip({
       name: '東京之旅',
       startDate: '2026-05-10',
-    })
+    }))
     refs.tripIds.push(result.id)
 
     expect(result.epochId).toBe(refs.epochId)
@@ -182,10 +183,10 @@ describe('createTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    await expect(createTrip({
+    expect(await createTrip({
       name: 'Past trip',
       startDate: '2026-05-09',  // before epoch started 2026-05-10
-    })).rejects.toThrow('trip_in_past_epoch')
+    })).toEqual({ ok: false, code: 'trip_in_past_epoch' })
   })
 
   it('rejects when name is empty', async () => {
@@ -193,10 +194,10 @@ describe('createTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    await expect(createTrip({
+    expect(await createTrip({
       name: '',
       startDate: '2026-05-10',
-    })).rejects.toThrow('trip_name_empty')
+    })).toEqual({ ok: false, code: 'trip_name_empty' })
   })
 
   it('rejects when name is whitespace only', async () => {
@@ -204,10 +205,10 @@ describe('createTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    await expect(createTrip({
+    expect(await createTrip({
       name: '   ',
       startDate: '2026-05-10',
-    })).rejects.toThrow('trip_name_empty')
+    })).toEqual({ ok: false, code: 'trip_name_empty' })
   })
 
   it('rejects when endDate < startDate', async () => {
@@ -215,11 +216,11 @@ describe('createTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    await expect(createTrip({
+    expect(await createTrip({
       name: '倒退旅行',
       startDate: '2026-05-15',
       endDate: '2026-05-14',
-    })).rejects.toThrow('trip_end_before_start')
+    })).toEqual({ ok: false, code: 'trip_end_before_start' })
   })
 })
 
@@ -238,13 +239,13 @@ describe('endTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({
+    const created = unwrapAction(await createTrip({
       name: 'End me',
       startDate: '2026-05-10',
-    })
+    }))
     refs.tripIds.push(created.id)
 
-    const result = await endTrip({ tripId: created.id, endDate: '2026-05-20' })
+    const result = unwrapAction(await endTrip({ tripId: created.id, endDate: '2026-05-20' }))
     expect(result.status).toBe('ended')
     expect(result.endDate).toBe('2026-05-20')
     expect(result.endedAt).not.toBeNull()
@@ -266,16 +267,16 @@ describe('updateTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({
+    const created = unwrapAction(await createTrip({
       name: 'Update me',
       startDate: '2026-05-10',
-    })
+    }))
     refs.tripIds.push(created.id)
 
-    await expect(updateTrip({
+    expect(await updateTrip({
       tripId: created.id,
       startDate: '2026-05-09',  // before epoch started 2026-05-10
-    })).rejects.toThrow('trip_move_to_past_epoch')
+    })).toEqual({ ok: false, code: 'trip_move_to_past_epoch' })
   })
 
   it('succeeds when startDate is on or after currentEpochStartedAt', async () => {
@@ -283,17 +284,17 @@ describe('updateTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({
+    const created = unwrapAction(await createTrip({
       name: 'Update me',
       startDate: '2026-05-10',
-    })
+    }))
     refs.tripIds.push(created.id)
 
-    const result = await updateTrip({
+    const result = unwrapAction(await updateTrip({
       tripId: created.id,
       name: 'Updated name',
       startDate: '2026-05-12',
-    })
+    }))
     expect(result.name).toBe('Updated name')
     expect(result.startDate).toBe('2026-05-12')
   })
@@ -332,10 +333,10 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({ name: 'Empty', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'Empty', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
 
     expect(await listSummaryRows(refs.groupId, trip.id)).toHaveLength(0)
     expect(await readBalance(refs.groupId)).toBe(0)
@@ -346,14 +347,14 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({ name: 'A-only', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'A-only', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.userId, amount: 1000, category: '食', splitType: 'half',
-    })
+    }))
 
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
 
     const rows = await listSummaryRows(refs.groupId, trip.id)
     expect(rows).toHaveLength(1)
@@ -370,17 +371,17 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({ name: 'Both', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'Both', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.userId, amount: 1000, category: '食', splitType: 'half',
-    })
-    await createTripExpense({
+    }))
+    unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.partnerId, amount: 600, category: '食', splitType: 'half',
-    })
+    }))
 
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
 
     const rows = await listSummaryRows(refs.groupId, trip.id)
     expect(rows).toHaveLength(2)
@@ -397,16 +398,16 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({ name: 'Weighted', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'Weighted', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
     // B paid 1000, B's share = 70%, so A's share = 30%.
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.partnerId, amount: 1000,
       category: '食', splitType: 'weighted', splitRatio: 70,
-    })
+    }))
 
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
 
     const rows = await listSummaryRows(refs.groupId, trip.id)
     expect(rows).toHaveLength(1)
@@ -423,18 +424,18 @@ describe('endTrip — summary writes (v0.17.2 phase 4)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({ name: 'Idempotent', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'Idempotent', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.userId, amount: 500, category: '食', splitType: 'half',
-    })
+    }))
 
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
     const beforeRows = await listSummaryRows(refs.groupId, trip.id)
     const beforeBalance = await readBalance(refs.groupId)
 
-    await expect(endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
-      .rejects.toThrow('active_trip_not_found')
+    expect(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
+      .toEqual({ ok: false, code: 'active_trip_not_found' })
 
     const afterRows = await listSummaryRows(refs.groupId, trip.id)
     expect(afterRows).toHaveLength(beforeRows.length)
@@ -457,13 +458,13 @@ describe('endTrip — solo group', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({ name: 'Solo', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'Solo', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id, paidBy: refs.userId, amount: 800, category: '食', splitType: 'all_mine',
-    })
+    }))
 
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
 
     const [row] = await db
       .select()
@@ -500,17 +501,17 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-10',
       currencies: {
         default: 'TWD',
         entries: [{ code: 'TWD', label: null, rate: 1 }],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
-    await updateTrip({
+    unwrapAction(await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
@@ -520,7 +521,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'VND', label: '越南盾', rate: 0.0013 },
         ],
       },
-    })
+    }))
 
     const after = await getTripById(trip.id)
     const snap = after!.rateSnapshot as { default: string; entries: Array<{ code: string; rate: number }> }
@@ -534,7 +535,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-10',
       currencies: {
@@ -544,20 +545,20 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 0.22 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
-    const tripExpense = await createTripExpense({
+    const tripExpense = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
       category: '食',
       splitType: 'all_mine',
-    })
+    }))
     const originalBaseAmount = tripExpense.amount  // 1000 * 0.22 = 220
 
-    await updateTrip({
+    unwrapAction(await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
@@ -566,7 +567,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 0.25 },  // changed
         ],
       },
-    })
+    }))
 
     const after = await getTripById(trip.id)
     const snap = after!.rateSnapshot as { entries: Array<{ code: string; rate: number }> }
@@ -586,7 +587,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-10',
       currencies: {
@@ -596,25 +597,25 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 0.22 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
       category: '食',
       splitType: 'all_mine',
-    })
+    }))
 
-    await updateTrip({
+    unwrapAction(await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
         entries: [{ code: 'TWD', label: null, rate: 1 }],
       },
-    })
+    }))
 
     const after = await getTripById(trip.id)
     const snap = after!.rateSnapshot as { entries: Array<{ code: string }> }
@@ -626,7 +627,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-10',
       currencies: {
@@ -636,10 +637,10 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 0.22 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
-    await updateTrip({
+    unwrapAction(await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'JPY',  // ignored
@@ -648,7 +649,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 1 },
         ],
       },
-    })
+    }))
 
     const after = await getTripById(trip.id)
     const snap = after!.rateSnapshot as { default: string }
@@ -661,7 +662,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-10',
       currencies: {
@@ -671,20 +672,20 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 0.22 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
       category: '食',
       splitType: 'all_mine',
-    })
+    }))
 
     // Add VND — should succeed; JPY rate untouched.
-    await updateTrip({
+    unwrapAction(await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
@@ -694,7 +695,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'VND', label: '越南盾', rate: 0.0013 },
         ],
       },
-    })
+    }))
 
     const after = await getTripById(trip.id)
     const snap = after!.rateSnapshot as { default: string; entries: Array<{ code: string }> }
@@ -706,7 +707,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
     activeRefs = refs
     mockUserId = refs.userId
 
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'Tokyo',
       startDate: '2026-05-10',
       currencies: {
@@ -717,20 +718,20 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'USD', label: null, rate: 32 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
     // Use JPY but not USD.
-    await createTripExpense({
+    unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1000,
       currency: 'JPY',
       category: '食',
       splitType: 'all_mine',
-    })
+    }))
 
-    await updateTrip({
+    unwrapAction(await updateTrip({
       tripId: trip.id,
       currencies: {
         default: 'TWD',
@@ -739,7 +740,7 @@ describe('updateTrip — currencies (#410 follow-up: rate edits allowed mid-trip
           { code: 'JPY', label: null, rate: 0.22 },
         ],
       },
-    })
+    }))
 
     const after = await getTripById(trip.id)
     const snap = after!.rateSnapshot as { default: string; entries: Array<{ code: string }> }
@@ -762,17 +763,17 @@ describe('softDeleteTrip', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({
+    const created = unwrapAction(await createTrip({
       name: 'Delete me',
       startDate: '2026-05-10',
-    })
+    }))
     refs.tripIds.push(created.id)
 
     // Verify it exists first
     const before = await getTripById(created.id)
     expect(before).not.toBeNull()
 
-    await softDeleteTrip({ tripId: created.id })
+    unwrapAction(await softDeleteTrip({ tripId: created.id }))
 
     // Now it should be gone from getTripById
     const after = await getTripById(created.id)

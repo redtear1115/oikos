@@ -15,7 +15,7 @@ import { assertAssetInGroup } from '@/lib/auth/asset'
 import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterIncomeMutation } from '@/lib/revalidate'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 export type CreateIncomeInput = IncomeInput
 
@@ -34,7 +34,7 @@ async function getViewerReadContext() {
   return { user, group: context.group, epochWindow: context.window }
 }
 
-export async function createIncome(input: CreateIncomeInput): Promise<{ id: string }> {
+export const createIncome = action(async (input: CreateIncomeInput): Promise<{ id: string }> => {
   const { user, group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
   assertMemberInGroup(validated.recipientId, group, 'recipient_not_in_group')
@@ -62,9 +62,9 @@ export async function createIncome(input: CreateIncomeInput): Promise<{ id: stri
   })
 
   return { id: created.id }
-}
+})
 
-export async function editIncome(input: EditIncomeInput): Promise<{ id: string }> {
+export const editIncome = action(async (input: EditIncomeInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
   const validated = validateIncomeInput(input)
   assertMemberInGroup(validated.recipientId, group, 'recipient_not_in_group')
@@ -98,9 +98,9 @@ export async function editIncome(input: EditIncomeInput): Promise<{ id: string }
 
   revalidateAfterIncomeMutation()
   return { id: created.id }
-}
+})
 
-export async function softDeleteIncome(id: string): Promise<void> {
+export const softDeleteIncome = action(async (id: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
   const [row] = await db
@@ -120,7 +120,7 @@ export async function softDeleteIncome(id: string): Promise<void> {
     .where(eq(incomeTransactions.id, id))
 
   revalidateAfterIncomeMutation()
-}
+})
 
 export interface PagedIncomeRow {
   id: string
@@ -139,7 +139,7 @@ export interface PagedIncomeRow {
 // recurring rules path, which always writes to the viewer's active group via
 // lib/recurringActionHelpers.ts. Past-epoch viewers can still navigate here
 // to set up future rules; the data they see should match where rules write.
-export async function getInsuranceAssets(): Promise<{ id: string; name: string }[]> {
+export const getInsuranceAssets = action(async (): Promise<{ id: string; name: string }[]> => {
   const { group } = await requireViewerGroup()
   const rows = await db
     .select({ id: assets.id, name: assets.name })
@@ -150,7 +150,7 @@ export async function getInsuranceAssets(): Promise<{ id: string; name: string }
       isNull(assets.deletedAt),
     ))
   return rows
-}
+})
 
 /**
  * Wire → ResolvedIncomeFilter conversion. Income rows have no split / no
@@ -182,14 +182,14 @@ function resolveIncomeFilter(
   }
 }
 
-export async function loadMoreIncomes(
+export const loadMoreIncomes = action(async (
   cursor: IncomeCursor | null,
-  limit = 20,
+  limit: number = 20,
   monthKey?: string,
   drillWire?: DrillFilterWire,
   filterWire?: TxnFilterWire,
   dateRange?: DateRange,
-): Promise<PagedIncomeRow[]> {
+): Promise<PagedIncomeRow[]> => {
   const { user, group, epochWindow } = await getViewerReadContext()
   const drill = drillWire ? fromDrillWire(drillWire) : undefined
   const incomeFilter = resolveIncomeFilter(filterWire, user.id, group)
@@ -205,14 +205,14 @@ export async function loadMoreIncomes(
     createdAt: r.createdAt.toISOString(),
     kind: 'income' as const,
   }))
-}
+})
 
-export async function loadMoreInsuranceReturns(
+export const loadMoreInsuranceReturns = action(async (
   assetId: string,
   categories: string[],
   cursor: IncomeCursor | null,
-  limit = 20,
-): Promise<PagedIncomeRow[]> {
+  limit: number = 20,
+): Promise<PagedIncomeRow[]> => {
   const { group, epochWindow } = await getViewerReadContext()
   const rows = await listInsuranceReturnsPaged(assetId, group.id, categories, cursor, limit, epochWindow)
   return rows.map((r) => ({
@@ -226,4 +226,4 @@ export async function loadMoreInsuranceReturns(
     createdAt: r.createdAt.toISOString(),
     kind: 'income' as const,
   }))
-}
+})

@@ -110,7 +110,7 @@ describe('LeaveGroupFlow — member_b path (can leave directly)', () => {
   })
 
   it('calls leaveGroup when the user types the magic word and confirms', async () => {
-    leaveGroup.mockResolvedValue({ groupId: 'new-grp', epochId: 'new-epoch' })
+    leaveGroup.mockResolvedValue({ ok: true, data: { groupId: 'new-grp', epochId: 'new-epoch' } })
     wrap(
       <LeaveGroupFlow
         open
@@ -140,7 +140,7 @@ describe('LeaveGroupFlow — member_b path (can leave directly)', () => {
     // moves, the card silently never appears (writer moved) or already-dismissed
     // cards come back (reader moved).
     window.localStorage.clear()
-    leaveGroup.mockResolvedValue({ groupId: 'new-grp', epochId: 'new-epoch' })
+    leaveGroup.mockResolvedValue({ ok: true, data: { groupId: 'new-grp', epochId: 'new-epoch' } })
     wrap(
       <LeaveGroupFlow
         open
@@ -168,7 +168,7 @@ describe('LeaveGroupFlow — member_b path (can leave directly)', () => {
     // Mirrors RemovePartnerFlow's guard. An empty id would build
     // `futari_just_left_` — a key shared by every group on the device.
     window.localStorage.clear()
-    leaveGroup.mockResolvedValue({ groupId: 'new-grp', epochId: '' })
+    leaveGroup.mockResolvedValue({ ok: true, data: { groupId: 'new-grp', epochId: '' } })
     wrap(
       <LeaveGroupFlow
         open
@@ -193,7 +193,7 @@ describe('LeaveGroupFlow — member_b path (can leave directly)', () => {
 
 describe('LeaveGroupFlow — member_a path (must swap first)', () => {
   it("card 4's affirmative for member_a fires proposeSwap, not leaveGroup", async () => {
-    proposeSwap.mockResolvedValue({ ok: true })
+    proposeSwap.mockResolvedValue({ ok: true, data: { ok: true } })
     wrap(
       <LeaveGroupFlow
         open
@@ -219,7 +219,8 @@ describe('LeaveGroupFlow — member_a path (must swap first)', () => {
   })
 
   it('surfaces a localized error if proposeSwap fails with a known code', async () => {
-    proposeSwap.mockRejectedValue(new Error('swap_already_pending'))
+    // #1223: an expected error is a RETURN value now, not a rejection.
+    proposeSwap.mockResolvedValue({ ok: false, code: 'swap_already_pending' })
     wrap(
       <LeaveGroupFlow
         open

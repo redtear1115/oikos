@@ -11,6 +11,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
 import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
+import { unwrapAction } from '@/lib/action-errors'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
@@ -90,7 +91,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const handleRenew = () => {
     startTransition(async () => {
       try {
-        await renewInsurance({ id, newPolicyNumber: renewPolicyNo.trim() || null })
+        unwrapAction(await renewInsurance({ id, newPolicyNumber: renewPolicyNo.trim() || null }))
         setRenewOpen(false)
         setRenewPolicyNo('')
         router.refresh()
@@ -103,7 +104,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const handleLapse = () => {
     startTransition(async () => {
       try {
-        await lapseInsurance({ id })
+        unwrapAction(await lapseInsurance({ id }))
         setLapseOpen(false)
         router.refresh()
       } catch (e) {

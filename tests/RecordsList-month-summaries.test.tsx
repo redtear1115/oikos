@@ -24,14 +24,18 @@ vi.mock('@/app/(dashboard)/records/_components/DrillFilterChip', () => ({ DrillF
 vi.mock('@/app/(dashboard)/_components/BottomNav', () => ({ BottomNav: () => null }))
 vi.mock('@/lib/incomeFeedRow', () => ({ makeIncomeLoader: () => async () => [], incomeToFeedRow: (r: unknown) => r }))
 
+// Server actions return `ActionResult` since #1223, so the deferred resolves
+// with the success envelope the component unwraps.
 type Deferred = { resolve: (v: FeedMonthSummary[]) => void; reject: (e: unknown) => void }
 const pending: Deferred[] = []
 const loadRecordsMonthSummaries = vi.fn(
-  () => new Promise<FeedMonthSummary[]>((resolve, reject) => { pending.push({ resolve, reject }) }),
+  () => new Promise<{ ok: true; data: FeedMonthSummary[] }>((resolve, reject) => {
+    pending.push({ resolve: (v) => resolve({ ok: true, data: v }), reject })
+  }),
 )
 vi.mock('@/actions/transaction', () => ({
-  loadMoreFeedAll: vi.fn(async () => []),
-  loadMoreTransactions: vi.fn(async () => []),
+  loadMoreFeedAll: vi.fn(async () => ({ ok: true, data: [] })),
+  loadMoreTransactions: vi.fn(async () => ({ ok: true, data: [] })),
   loadRecordsMonthSummaries: (...args: unknown[]) => (loadRecordsMonthSummaries as (...a: unknown[]) => unknown)(...args),
 }))
 

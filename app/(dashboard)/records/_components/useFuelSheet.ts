@@ -5,6 +5,7 @@ import { getFuelLogById } from '@/actions/fuelLog'
 import type { NewFuelLogInitial } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 import type { PagedTxnRow } from '@/actions/transaction'
 import type { FuelType } from '@/lib/fuel'
+import { unwrapAction } from '@/lib/action-errors'
 
 export type FuelCar = {
   id: string
@@ -29,7 +30,7 @@ export function useFuelSheet() {
   const openFromTx = (tx: PagedTxnRow) => {
     if (tx.fuelLogId === null) return
     startLoad(async () => {
-      const detail = await getFuelLogById(tx.fuelLogId!)
+      const detail = unwrapAction(await getFuelLogById(tx.fuelLogId!))
       if (!detail) return  // stale or unauthorized — silently skip
       setInitial({
         fuelLogId: detail.id,

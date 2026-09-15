@@ -56,6 +56,7 @@ const { db } = await import('@/lib/db/client')
 const { profiles, oikosGroups, groupBalance } = await import('@/lib/db/schema')
 const { createGroup } = await import('@/actions/group')
 const { eq } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -99,7 +100,7 @@ describe('createGroup — idempotent when viewer already has a group (#911)', ()
 
     // ── Act: a second createGroup for the already-grouped user ──
     mockUserId = uid
-    const result = await createGroup('TEST_911_second_attempt')
+    const result = unwrapAction(await createGroup('TEST_911_second_attempt'))
 
     // ── Assert: returned the SAME group, did not throw ──
     expect(result.id).toBe(existing.id)

@@ -7,6 +7,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { toViewerShare, toMemberAShare } from '@/lib/splitRatio'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   viewerName: string
@@ -43,7 +44,7 @@ export function SplitRatioSection({ viewerName, partnerName, initialRatioA }: Pr
     setConfirmed(next) // optimistic
     startTransition(async () => {
       try {
-        await updateGroupSplitRatio(toMemberAShare(next, viewerIsA))
+        unwrapAction(await updateGroupSplitRatio(toMemberAShare(next, viewerIsA)))
         router.refresh()
       } catch (e) {
         // Snap the slider back to where it actually persisted.
