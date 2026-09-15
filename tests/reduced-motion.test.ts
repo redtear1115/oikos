@@ -84,6 +84,7 @@ const ANIMATED_CLASSES = [
   '.about-article',
   '.rt-flash',
   '.rt-fading',
+  '.strip-fading',
   '.animate-blink',
 ]
 

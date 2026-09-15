@@ -23,6 +23,7 @@ import {
   type RecurringIncomeRuleInput,
 } from '@/lib/validators'
 import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
+import { previousDay } from '@/lib/local-date'
 import {
   assertMemberInGroup,
   assertAssetInGroup,
@@ -50,7 +51,21 @@ export const createRule = action(async (input: RecurringIncomeRuleInput): Promis
   assertRecipientInGroup(v.recipientId, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  const nextOccurrenceAt = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  // Snap the anchor forward so a back-dated `startsOn` cannot leave the rule
+  // showing a "next run" date already in the past (#1244).
+  //
+  // **Creating includes today; editing and resuming do not — on purpose.**
+  // Creating "the Nth" on the Nth counts this month, and how `startsOn` was
+  // filled must not change that; editing must not, because
+  // `sheet.editEffectHint` is on screen promising 改動從下一期開始套用. The
+  // `previousDay` cutoff is what makes today the earliest period `snapToFuture`
+  // will settle on. Full reasoning in the matching comment in
+  // `actions/recurringExpense.ts` — read it before making the branches agree.
+  const today = new Date().toISOString().slice(0, 10)
+  const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  const nextOccurrenceAt = firstAnchor >= today
+    ? firstAnchor
+    : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, previousDay(today))
 
   const [created] = await db
     .insert(recurringIncomeRules)
@@ -104,6 +119,9 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .limit(1)
   if (!existing) throw actionError('recurring_rule_not_found')
 
+  // `>` and not `>=`, unlike `createRule` (#1244): `sheet.editEffectHint` is on
+  // screen while the user saves, promising the change applies from the *next*
+  // period. Today stays out. See the comment in `createRule` above.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
   const nextOccurrenceAt = firstAnchor > today
