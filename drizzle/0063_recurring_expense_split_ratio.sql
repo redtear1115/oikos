@@ -40,6 +40,16 @@
 -- a UTC-session CURRENT_DATE is still the previous Taipei day), which is a
 -- different failure with a different blast radius — fixing it here would make
 -- this migration impossible to verify one behaviour at a time.
+--
+-- UPDATE (#1262, comment-only amendment — the SQL in this already-applied file
+-- is untouched): that suspicion was confirmed on prod (lag_days = 1 for 21 of
+-- 21 recent pendings) and fixed in 0064_recurring_cron_taipei_date.sql, which
+-- re-schedules BOTH generators with
+-- `(NOW() AT TIME ZONE 'Asia/Taipei')::date`. The expense body live in the
+-- database is 0064's, not the one below; 0064 carries the
+-- proposed_split_ratio_a fix forward. Anything that re-schedules
+-- `generate-pending-expense` again must start from the highest-numbered
+-- migration that owns the job, never from 0021 or from here.
 SELECT cron.schedule('generate-pending-expense', '0 16 * * *', $$
   INSERT INTO "PendingExpenseOccurrences"
     (group_id, rule_id, period_start, proposed_amount, proposed_date,
