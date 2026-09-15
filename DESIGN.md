@@ -391,6 +391,18 @@ This is 陪伴 made literal: the other person is not here, but they just moved. 
 - **Never for the user's own writes.** The user already knows what they did; flashing it back is a machine congratulating them.
 - **Never a count.** No "3 new records" badge, no unread state, no tally. It is a presence signal, not an inbox.
 
+### The Brand Mark
+
+The mark is a lantern (提燈), drawn once in `components/FutariMark.tsx`. Everything renders from there: `public/favicon.svg`, `app/favicon.ico`, the two `scripts/og/*.html` templates, and every `<FutariMark>` callsite. The two `FutariMark.tsx` files that used to hold their own copies (`app/[locale]/_landing/`, `app/(dashboard)/_components/`) are now re-exports; the landing one still owns the six inline feature glyphs, which are unrelated.
+
+**Why a lantern.** The store and app icons have been the lantern since 2026-06-08 (`b9b3da0`), but the web mark stayed on the earlier flat two-tone heart, so the same product showed two unrelated logos depending on where you met it — App Store versus browser tab. Unified 2026-09-16.
+
+**Why an outline, not a solid.** One component renders from 16px (favicon) to 420px (the migrate / use-case page mark) — a 26× range. A solid silhouette holds up better at 16px but reads heavy at 420px, nothing like the soft illustrated master the store icon comes from. The outline keeps the large end light. The cost is real: at 16px it is softer than a solid would be, and `app/favicon.ico` compensates by rendering its 16px entry at stroke 2.6 instead of 2.2 — the same drawing at a heavier optical weight, which is what per-size ICO entries exist for.
+
+**What is *not* the mark.** `public/illustration-hero.png` is a scene, not a logo: two people on a sofa under a warm floor lamp. Its lamp is a different object from the mark's lantern and that is fine — it is a deliberate brand-register choice ([brand-register-design.md](docs/superpowers/specs/brand-register-design.md)), not drift. Do not "unify" it into a lantern without revisiting that spec.
+
+**Failure mode.** Nothing errors if someone re-introduces a local copy of the path — the drawing is eleven numbers and a path string, easy to paste. It just drifts silently, which is exactly what happened to the two components before this. The control is that there is one file to change; there is no test that can tell a deliberate redraw from an accidental one.
+
 ## 6. Do's and Don'ts
 
 Each Don't carries a one-sentence audit test. Run the test on the screen; if it fails, the Don't applies.
