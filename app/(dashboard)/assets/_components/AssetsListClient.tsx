@@ -95,9 +95,9 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
         style={{ width: 8, height: 8, background: dotColor }}
       />
       <div
+        className="text-base"
         style={{
           fontFamily: 'var(--font-serif)',
-          fontSize: 'var(--fs-base)',
           fontWeight: 500,
           color: 'var(--ink)',
           letterSpacing: '-0.2px',
@@ -136,9 +136,8 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
 
   return (
     <div
+      className="px-4.5 py-4 rounded-2xl"
       style={{
-        padding: '16px 18px',
-        borderRadius: 16,
         background: 'var(--surface)',
         border: '1px solid var(--hairline)',
         display: 'flex',
@@ -148,18 +147,18 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
     >
       <div style={{ flex: 1 }}>
         <div
-          className="font-mono"
-          style={{ fontSize: 10, letterSpacing: 1.2, color: 'var(--ink-3)' }}
+          className="font-mono text-mini"
+          style={{ letterSpacing: 1.2, color: 'var(--ink-3)' }}
         >
           {i.summaryAnnualPremium}
         </div>
         <div
-          className="tnum"
-          style={{ marginTop: 4, fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}
+          className="tnum mt-1 text-title"
+          style={{ fontWeight: 500, color: 'var(--ink)' }}
         >
           NT$ {totalAnnual.toLocaleString('en-US')}
         </div>
-        <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-3)' }}>
+        <div className="mt-1.5 text-xs" style={{ color: 'var(--ink-3)' }}>
           {countBefore}
           <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{count}</span>
           {countAfter}
@@ -171,25 +170,25 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
       />
       <div style={{ flex: 1 }}>
         <div
-          className="font-mono"
-          style={{ fontSize: 10, letterSpacing: 1.2, color: 'var(--ink-3)' }}
+          className="font-mono text-mini"
+          style={{ letterSpacing: 1.2, color: 'var(--ink-3)' }}
         >
           {i.summaryNextRenewal}
         </div>
         {upcoming ? (
           <>
             <div
-              className="font-mono tnum"
-              style={{ marginTop: 4, fontSize: 16, fontWeight: 500, color: 'var(--ink)' }}
+              className="font-mono tnum mt-1 text-base"
+              style={{ fontWeight: 500, color: 'var(--ink)' }}
             >
               {upcoming.a.insurance?.expiryDate ?? '—'}
             </div>
-            <div style={{ marginTop: 4, fontSize: 12, color: 'var(--ink-3)' }}>
+            <div className="mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>
               {upcoming.a.name} · {i.summaryDaysUntil.replace('{days}', String(upcoming.days))}
             </div>
           </>
         ) : (
-          <div style={{ marginTop: 4, fontSize: 14, color: 'var(--ink-3)' }}>—</div>
+          <div className="mt-1 text-sm" style={{ color: 'var(--ink-3)' }}>—</div>
         )}
       </div>
     </div>
@@ -306,7 +305,6 @@ export function AssetsListClient({ items }: Props) {
   ): React.CSSProperties => ({
     width: 40,
     height: 40,
-    borderRadius: 10,
     background: active ? activeBg : inactiveBg,
     border: active || !inactiveBorder ? 'none' : inactiveBorder,
     display: 'inline-flex',
@@ -314,7 +312,6 @@ export function AssetsListClient({ items }: Props) {
     justifyContent: 'center',
     flexShrink: 0,
     cursor: 'pointer',
-    padding: 0,
   })
 
   const TypeFilterStrip = (
@@ -330,10 +327,10 @@ export function AssetsListClient({ items }: Props) {
           aria-label={t.assets.typeFilterAll}
           aria-pressed={typeFilter === 'all'}
           onClick={() => setTypeFilter('all')}
+          className="rounded-chip p-0"
           style={{
             width: 40,
             height: 40,
-            borderRadius: 10,
             background: 'var(--surface)',
             border: typeFilter === 'all'
               ? '1.5px solid var(--ink)'
@@ -343,7 +340,6 @@ export function AssetsListClient({ items }: Props) {
             justifyContent: 'center',
             flexShrink: 0,
             cursor: 'pointer',
-            padding: 0,
           }}
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -362,6 +358,7 @@ export function AssetsListClient({ items }: Props) {
               aria-label={label}
               aria-pressed={active}
               onClick={() => setTypeFilter(key)}
+              className="rounded-chip p-0"
               style={{
                 ...chipBaseStyle(active, color, tint, null),
                 color: active ? 'var(--on-fill)' : 'var(--ink)',
@@ -394,10 +391,9 @@ export function AssetsListClient({ items }: Props) {
     <button
       type="button"
       onClick={() => setSheetOpen(true)}
+      className="px-3.5 py-3 rounded-bubble text-sm"
       style={{
         width: '100%',
-        padding: '12px 14px',
-        borderRadius: 14,
         border: '1px dashed var(--ink-3)',
         background: 'transparent',
         display: 'flex',
@@ -406,7 +402,6 @@ export function AssetsListClient({ items }: Props) {
         gap: 8,
         color: 'var(--ink-2)',
         fontFamily: 'inherit',
-        fontSize: 'var(--fs-sm)',
         cursor: 'pointer',
       }}
     >
@@ -446,11 +441,10 @@ export function AssetsListClient({ items }: Props) {
     >
       {/* L2 — same spec as Records dual-toggle pill (#548 review #4). */}
       <div
-        className="inline-flex items-center"
+        className="inline-flex items-center rounded-full"
         style={{
           background: 'var(--surface)',
           border: '0.5px solid var(--hairline)',
-          borderRadius: 999,
           padding: 3,
           gap: 2,
         }}
@@ -464,9 +458,8 @@ export function AssetsListClient({ items }: Props) {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(id)}
-              className="relative h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
+              className="relative h-8 px-3 inline-flex items-center cursor-pointer border-0 text-sm rounded-full transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
               style={{
-                borderRadius: 999,
                 background: active ? 'var(--ink)' : 'transparent',
                 color: active ? 'var(--on-fill)' : 'var(--ink-3)',
                 fontWeight: 500,

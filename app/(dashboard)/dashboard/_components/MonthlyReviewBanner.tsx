@@ -87,11 +87,8 @@ export function MonthlyReviewBanner({
           </div>
           {quote && (
             <div
-              className="mt-1.5 text-sm leading-relaxed line-clamp-2"
-              style={{
-                color: 'var(--ink)',
-                fontFamily: 'var(--font-fraunces)',
-              }}
+              className="mt-1.5 text-sm leading-relaxed line-clamp-2 font-serif"
+              style={{ color: 'var(--ink)' }}
             >
               「{quote}」
             </div>

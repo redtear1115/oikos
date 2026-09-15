@@ -116,10 +116,9 @@ export function AssetSwitcher({
         ? groups.map((group) => (
             <div key={group.label}>
               <div
+                className="pt-2 px-3.5 pb-1 text-mini"
                 style={{
-                  padding: '8px 14px 4px',
                   fontFamily: 'var(--font-numeric)',
-                  fontSize: 10,
                   letterSpacing: '1.2px',
                   color: 'var(--ink-3)',
                   textTransform: 'uppercase',
@@ -193,9 +192,8 @@ function SwitcherRow({
       role="option"
       aria-selected={isCurrent}
       onClick={() => onSelect(item.id)}
-      className="w-full flex items-center gap-2.5 border-0 cursor-pointer text-left"
+      className="w-full flex items-center gap-2.5 border-0 cursor-pointer text-left px-3.5 py-2.5"
       style={{
-        padding: '10px 14px',
         background: isCurrent ? 'rgba(58,36,25,0.05)' : 'transparent',
       }}
       onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(58,36,25,0.04)' }}
@@ -220,9 +218,8 @@ function SwitcherRow({
       {/* Name + subtitle */}
       <div className="flex-1 flex flex-col min-w-0">
         <span
-          className="truncate"
+          className="truncate text-sm"
           style={{
-            fontSize: 14,
             fontWeight: isCurrent ? 500 : 400,
             color: 'var(--ink)',
             lineHeight: 1.3,
@@ -232,10 +229,9 @@ function SwitcherRow({
         </span>
         {item.subtitle && (
           <span
-            className="truncate"
+            className="truncate text-mini"
             style={{
               fontFamily: 'var(--font-numeric)',
-              fontSize: 10,
               color: 'var(--ink-3)',
               lineHeight: 1.4,
             }}
@@ -248,11 +244,9 @@ function SwitcherRow({
       {/* Status badge */}
       {item.badge && badgeStyle && (
         <span
+          className="text-mini px-1.5 py-px rounded-sm"
           style={{
             fontFamily: 'var(--font-numeric)',
-            fontSize: 10,
-            padding: '1px 6px',
-            borderRadius: 4,
             background: badgeStyle.bg,
             color: badgeStyle.fg,
             flexShrink: 0,

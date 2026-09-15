@@ -397,7 +397,7 @@ export function SavingsView({
             >
               <span>🚗</span>
               <span>{linkedVehicle.name}</span>
-              <span style={{ color: 'var(--ink-3)', marginLeft: 'auto' }}>›</span>
+              <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
             </Link>
           </div>
         </div>

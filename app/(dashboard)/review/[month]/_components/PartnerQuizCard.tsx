@@ -45,8 +45,8 @@ export function PartnerQuizCard({
         style={{ background: C.bgWaiting, border: `1px solid ${C.hairline}` }}
       >
         <div
-          className="text-xs uppercase tracking-[0.18em] mb-2"
-          style={{ color: C.ink2, fontFamily: 'ui-monospace, monospace' }}
+          className="text-xs uppercase tracking-[0.18em] mb-2 font-mono"
+          style={{ color: C.ink2 }}
         >
           {tq.answerEyebrow}
         </div>
@@ -72,8 +72,8 @@ export function PartnerQuizCard({
         style={{ background: C.bgRevealed, border: `1px solid ${C.accent}` }}
       >
         <div
-          className="text-xs uppercase tracking-[0.18em] mb-2"
-          style={{ color: C.accent, fontFamily: 'ui-monospace, monospace' }}
+          className="text-xs uppercase tracking-[0.18em] mb-2 font-mono"
+          style={{ color: C.accent }}
         >
           {tq.answerEyebrow}
         </div>
@@ -124,8 +124,8 @@ export function PartnerQuizCard({
       style={{ background: C.bg, border: `1px solid ${C.hairline}` }}
     >
       <div
-        className="text-xs uppercase tracking-[0.18em] mb-2"
-        style={{ color: C.ink2, fontFamily: 'ui-monospace, monospace' }}
+        className="text-xs uppercase tracking-[0.18em] mb-2 font-mono"
+        style={{ color: C.ink2 }}
       >
         {tq.answerEyebrow}
       </div>

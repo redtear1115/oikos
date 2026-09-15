@@ -34,7 +34,7 @@ function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: st
     <div className="text-center py-2">
       <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
       <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>

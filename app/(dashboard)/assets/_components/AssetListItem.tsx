@@ -60,9 +60,8 @@ export function AssetListItem({ id, type, name, nickname, plate, monthAmount, is
         <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
           {isSavings && (
             <span
-              className="font-mono shrink-0 px-1.5 py-px rounded leading-none"
+              className="font-mono shrink-0 px-1.5 py-px rounded leading-none text-xs"
               style={{
-                fontSize: 12,
                 background: 'var(--saving-soft)',
                 color: 'var(--saving)',
               }}

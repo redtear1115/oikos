@@ -85,13 +85,12 @@ export function AssetHero({
    */
   const FRAME_STYLE: React.CSSProperties = {
     border: `2.5px solid ${swatch}`,
-    borderRadius: 24,
   }
 
   if (isElectric) {
     return (
       <div className="px-3 pt-4 pb-3">
-        <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
+        <div className="px-5 pt-5 pb-5 rounded-3xl" style={FRAME_STYLE}>
           {name && header}
           {name && subtitle}
           <div className={`flex items-baseline gap-7 ${name ? 'mt-6' : ''}`}>
@@ -106,7 +105,7 @@ export function AssetHero({
 
   return (
     <div className="px-3 pt-4 pb-3">
-      <div className="px-5 pt-5 pb-5" style={FRAME_STYLE}>
+      <div className="px-5 pt-5 pb-5 rounded-3xl" style={FRAME_STYLE}>
         {name && header}
         {name && subtitle}
 
