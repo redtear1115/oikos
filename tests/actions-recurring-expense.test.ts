@@ -137,6 +137,33 @@ describe('createRule', () => {
     expect(values.nextOccurrenceAt).toBe('2026-05-07')
   })
 
+  // The pair that locks in the second half of the decision (#1244). Identical
+  // to the test above in every field *except* `startsOn` — and the answer has
+  // to be identical too. That is the whole content of the decision: `startsOn`
+  // says which period the series counts from, not when the first card appears,
+  // so "the 7th, backdated to last November" and "the 7th, starting today"
+  // cannot disagree about today. Its updateRule counterpart is below.
+  it('keeps today for a back-dated series that lands on today', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '回填起始日',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2025-11-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-07')
+  })
+
   it('rejects when paidBy not in viewer group', async () => {
     queueDbResult([GROUP])
     expect(await createRule({
@@ -189,6 +216,31 @@ describe('updateRule', () => {
       intervalMonths: 1,
       dayOfMonth: 7,
       startsOn: '2026-05-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
+  // Counterpart to createRule's back-dated case: same input, still skips today.
+  // Editing is bound by `editEffectHint` no matter how `startsOn` reads.
+  it('still skips today for a back-dated series that lands on today', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await updateRule({
+      id: 'rule-1',
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '回填起始日',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2025-11-07',
       endsOn: null,
       assetId: null,
     })

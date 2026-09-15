@@ -14,6 +14,26 @@ export function ymdToUTCNoon(ymd: string): Date {
 }
 
 /**
+ * The calendar day before `ymd`, as another YYYY-MM-DD string.
+ *
+ * Goes through `ymdToUTCNoon` rather than `new Date(ymd)` or month/day
+ * arithmetic: pinning to UTC noon leaves 12 hours of slack on both sides, so
+ * subtracting one day lands on the intended calendar date in every timezone
+ * from UTC-12 to UTC+12, and month and year rollovers (and leap days) come
+ * from the Date implementation instead of from hand-written branches.
+ *
+ * **失效的樣子**: nothing throws and nothing looks wrong. A naive
+ * `new Date(ymd)` parses as UTC midnight, `getDate() - 1` then reads in the
+ * runtime's local zone, and west of UTC the result is off by one day — which
+ * surfaces months later as a single record filed under the wrong date. This
+ * repo has been bitten twice by that shape (#1130, #1262).
+ */
+export function previousDay(ymd: string): string {
+  const DAY_MS = 86400000
+  return new Date(ymdToUTCNoon(ymd).getTime() - DAY_MS).toISOString().slice(0, 10)
+}
+
+/**
  * Today as a Date pinned to midnight in the runtime's LOCAL timezone. Useful
  * as a stable reference for day-count diffs ("how many days until X") where
  * we want to ignore the current time-of-day.

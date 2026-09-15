@@ -97,6 +97,29 @@ describe('createRule', () => {
     expect(values.nextOccurrenceAt).toBe('2026-05-07')
   })
 
+  // Identical to the test above except `startsOn`, and the answer must be
+  // identical too (#1244): `startsOn` says which period the series counts
+  // from, not when the first card appears. updateRule counterpart below.
+  it('keeps today for a back-dated series that lands on today', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 3000,
+      category: 'other',
+      recipientId: 'user-a',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2025-11-07',
+      endsOn: null,
+      source: '回填起始日',
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-07')
+  })
+
   it('rejects when recipient not in viewer group', async () => {
     queueDbResult([GROUP])
     expect(await createRule({
@@ -137,6 +160,29 @@ describe('updateRule', () => {
       startsOn: '2026-05-07',
       endsOn: null,
       source: '今天編輯',
+      assetId: null,
+    })
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
+  // Counterpart to createRule's back-dated case: same input, still skips today.
+  it('still skips today for a back-dated series that lands on today', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await updateRule({
+      id: 'rule-1',
+      amount: 3000,
+      category: 'other',
+      recipientId: 'user-a',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2025-11-07',
+      endsOn: null,
+      source: '回填起始日',
       assetId: null,
     })
 
