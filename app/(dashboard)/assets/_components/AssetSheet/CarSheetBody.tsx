@@ -292,7 +292,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             placeholder="0"
             inputMode="numeric"
             inputClassName="tnum"
-            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>}
+            rightAddon={<span className="text-xs text-ink-3">NT$</span>}
           />
         )}
       </Field>
@@ -307,7 +307,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             inputMode="numeric"
             placeholder={ts.car.initialOdometerPlaceholder}
             inputClassName="font-numeric"
-            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>km</span>}
+            rightAddon={<span className="text-xs text-ink-3">km</span>}
           />
         )}
       </Field>

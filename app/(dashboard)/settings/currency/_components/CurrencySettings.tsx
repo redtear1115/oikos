@@ -101,6 +101,9 @@ export function CurrencySettings(props: {
         <div
           role="radiogroup"
           aria-label={tc.base.sectionTitle}
+          // In-flight, not unavailable — keeps the arrow keys alive while the
+          // save marks every radio `aria-disabled` (#1252, see radioGroup.ts).
+          aria-busy={pending || undefined}
           onKeyDown={onRadioGroupKeyDown}
           className="grid gap-2"
           style={{ gridTemplateColumns: `repeat(${CURRENCIES.length}, minmax(0, 1fr))` }}

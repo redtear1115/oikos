@@ -58,6 +58,59 @@ const eslintConfig = defineConfig([
       "@next/next/no-html-link-for-pages": "off",
     },
   },
+  {
+    // #1194 moved every hand-written text field onto the `TextInput` /
+    // `TextArea` primitives (44px, `--radius-bubble`, hairline, `--input-bg`,
+    // 16px, ember focus ring). Nothing stopped the next hand-written
+    // `<input>` from appearing, and the way that migration comes undone is
+    // one field at a time, each looking fine on its own screen — the drift is
+    // only visible when two sheets are opened side by side. This rule is the
+    // ratchet (#1252).
+    //
+    // Only text-ish inputs are covered: `checkbox` / `radio` / `range` /
+    // `file` / `hidden` / `color` and the button types have no primitive, so
+    // writing them bare is correct. The `type` has to be a literal for the
+    // selector to see it; a computed `type={x}` is flagged, which is the safe
+    // side of the trade.
+    files: ["app/**/*.tsx", "components/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "JSXOpeningElement[name.name='input']:not(:has(JSXAttribute[name.name='type'][value.value=/^(checkbox|radio|range|file|hidden|color|submit|reset|button|image)$/]))",
+          message:
+            "Use <TextInput> from components/ui/TextInput instead of a bare <input> (#1194). Non-text inputs (checkbox/radio/range/file) are allowed; a genuinely special field goes in eslint.config.mjs's allow-list with a reason.",
+        },
+        {
+          selector: "JSXOpeningElement[name.name='textarea']",
+          message:
+            "Use <TextArea> from components/ui/TextArea instead of a bare <textarea> (#1194). A genuinely special field goes in eslint.config.mjs's allow-list with a reason.",
+        },
+      ],
+    },
+  },
+  {
+    // The deliberate exceptions, each for a reason the primitives can't serve:
+    // - `components/ui/TextInput.tsx` / `TextArea.tsx`: the primitives.
+    // - `AmountInput` / `SettlementForm`: the big numeric amount display —
+    //   its own type scale and chrome, nothing like a 44px field.
+    // - `DescriptionAutocomplete`: `role="combobox"` inside a popup shell that
+    //   owns the border and the focus ring; a TextInput would double them.
+    // - `MessageEditor`: borderless textarea inside an already-bordered card
+    //   (#1194 decided a TextArea there would draw a second frame).
+    files: [
+      "components/ui/TextInput.tsx",
+      "components/ui/TextArea.tsx",
+      "app/(dashboard)/_components/AmountInput.tsx",
+      "app/(dashboard)/dashboard/_components/SettlementForm.tsx",
+      "app/(dashboard)/dashboard/_components/DescriptionAutocomplete.tsx",
+      "app/(dashboard)/review/\\[month\\]/_components/MessageEditor.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
