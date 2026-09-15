@@ -6,7 +6,7 @@ import { requireViewerGroup } from '@/lib/auth/viewer'
 import { validateMessageBody, formatYearMonth } from '@/lib/monthlyReview'
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 export interface UpsertMonthlyReviewMessageInput {
   /** Message is *given to* this month (future-facing — see schema comment). */
@@ -20,9 +20,9 @@ export interface UpsertMonthlyReviewMessageInput {
  * is set on the existing row (post month-end cron); the UI defends with a
  * read-only state but the server is the authority.
  */
-export async function upsertMonthlyReviewMessage(
+export const upsertMonthlyReviewMessage = action(async (
   input: UpsertMonthlyReviewMessageInput,
-): Promise<{ id: string }> {
+): Promise<{ id: string }> => {
   const body = validateMessageBody(input.body)
   const { user, group } = await requireViewerGroup()
 
@@ -80,7 +80,7 @@ export async function upsertMonthlyReviewMessage(
   revalidatePath(`/review/${reviewSlug}`)
   revalidatePath('/dashboard')
   return { id }
-}
+})
 
 function prevMonthFor(year: number, month: number) {
   if (month === 1) return { year: year - 1, month: 12 }
@@ -102,9 +102,9 @@ export interface DismissMonthlyReviewBannerInput {
  * Auto-clicking the CTA also goes through this action (UI calls it before
  * navigating), so the partner can still see the banner once.
  */
-export async function dismissMonthlyReviewBanner(
+export const dismissMonthlyReviewBanner = action(async (
   input: DismissMonthlyReviewBannerInput,
-): Promise<void> {
+): Promise<void> => {
   const { user, group } = await requireViewerGroup()
 
   const viewerIsA = group.memberA === user.id
@@ -132,4 +132,4 @@ export async function dismissMonthlyReviewBanner(
     ))
 
   revalidatePath('/dashboard')
-}
+})

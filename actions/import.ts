@@ -16,7 +16,7 @@ import { isValidIncomeCategoryId } from '@/lib/incomeCategories'
 import { MAX_AMOUNT } from '@/lib/validators'
 import { DETECTED_SOURCES, type DetectedSource } from '@/lib/csvImport/detector'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 /**
  * #607 — Server-side CSV import.
@@ -171,9 +171,9 @@ function normaliseCategory(category: string, type: ImportRowType): string {
   return isValidIncomeCategoryId(trimmed) ? trimmed : 'other'
 }
 
-export async function importCsvBatch(
+export const importCsvBatch = action(async (
   input: ImportBatchInput,
-): Promise<ImportBatchResult> {
+): Promise<ImportBatchResult> => {
   assertSource(input.source)
   if (!input.fileName || input.fileName.length > 255) {
     throw actionError('import_filename_invalid')
@@ -290,9 +290,9 @@ export async function importCsvBatch(
     importedCount: input.rows.length,
     errorCount: input.errors.length,
   }
-}
+})
 
-export async function rollbackImportBatch(batchId: string): Promise<void> {
+export const rollbackImportBatch = action(async (batchId: string): Promise<void> => {
   if (!batchId || typeof batchId !== 'string') {
     throw actionError('import_batch_id_invalid')
   }
@@ -351,7 +351,7 @@ export async function rollbackImportBatch(batchId: string): Promise<void> {
   })
 
   revalidateAfterImportMutation()
-}
+})
 
 export interface ImportBatchSummary {
   id: string
@@ -370,7 +370,7 @@ export interface ImportBatchSummary {
 
 const ROLLBACK_WINDOW_MS = 24 * 60 * 60 * 1000
 
-export async function getImportHistory(): Promise<ImportBatchSummary[]> {
+export const getImportHistory = action(async (): Promise<ImportBatchSummary[]> => {
   const { group } = await getViewerWriteContext()
 
   const rows = await db
@@ -398,17 +398,17 @@ export async function getImportHistory(): Promise<ImportBatchSummary[]> {
       && r.status === 'completed'
       && now - r.createdAt.getTime() < ROLLBACK_WINDOW_MS,
   }))
-}
+})
 
 /**
  * Lightweight count exposed for `getImportHistory`-less surfaces (e.g. unit
  * tests). Kept here so the action file owns every import-batch query.
  */
-export async function countImportBatches(): Promise<number> {
+export const countImportBatches = action(async (): Promise<number> => {
   const { group } = await getViewerWriteContext()
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(importBatches)
     .where(eq(importBatches.groupId, group.id))
   return result[0]?.count ?? 0
-}
+})

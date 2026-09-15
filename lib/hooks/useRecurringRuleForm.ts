@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { localTodayISO } from '@/lib/local-date'
 import { describeError } from '@/lib/errors'
 import { useTranslations } from '@/lib/i18n/client'
+import { unwrapAction, type ActionResult } from '@/lib/action-errors'
 
 interface CommonInitial {
   id: string
@@ -16,9 +17,9 @@ interface CommonInitial {
 }
 
 interface RuleActions {
-  pauseRule: (id: string) => Promise<void>
-  resumeRule: (id: string) => Promise<void>
-  softDeleteRule: (id: string) => Promise<void>
+  pauseRule: (id: string) => Promise<ActionResult<void>>
+  resumeRule: (id: string) => Promise<ActionResult<void>>
+  softDeleteRule: (id: string) => Promise<ActionResult<void>>
 }
 
 interface ErrorMessages {
@@ -87,8 +88,8 @@ export function useRecurringRuleForm({
     const isPaused = !!initial.pausedAt
     startTransition(async () => {
       try {
-        if (isPaused) await actions.resumeRule(initial.id)
-        else await actions.pauseRule(initial.id)
+        if (isPaused) unwrapAction(await actions.resumeRule(initial.id))
+        else unwrapAction(await actions.pauseRule(initial.id))
         onMutated()
         onClose()
       } catch (e) {
@@ -102,7 +103,7 @@ export function useRecurringRuleForm({
     setConfirmingDelete(false)
     startTransition(async () => {
       try {
-        await actions.softDeleteRule(initial.id)
+        unwrapAction(await actions.softDeleteRule(initial.id))
         onMutated()
         onClose()
       } catch (e) {
@@ -116,10 +117,13 @@ export function useRecurringRuleForm({
    * behavior used by both sheets' handleSave. Caller builds the payload + picks
    * createRule vs updateRule inside `submitFn`.
    */
-  const runSubmit = (submitFn: () => Promise<unknown>, fallbackErrorMessage: string) => {
+  const runSubmit = (
+    submitFn: () => Promise<ActionResult<unknown>>,
+    fallbackErrorMessage: string,
+  ) => {
     startTransition(async () => {
       try {
-        await submitFn()
+        unwrapAction(await submitFn())
         onMutated()
         onClose()
       } catch (e) {

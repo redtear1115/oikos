@@ -24,7 +24,7 @@ describe('createCar', () => {
       purchasePrice: 800000,
     })
 
-    expect(result).toEqual({ id: 'asset-1' })
+    expect(result).toEqual({ ok: true, data: { id: 'asset-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -38,7 +38,7 @@ describe('createCar', () => {
   })
 
   it('throws on empty plate', async () => {
-    await expect(createCar({ name: '車', plate: '   ' })).rejects.toThrow('plate_empty')
+    expect(await createCar({ name: '車', plate: '   ' })).toEqual({ ok: false, code: 'plate_empty' })
   })
 
   it('throws when group not found', async () => {
@@ -67,10 +67,10 @@ describe('editCar', () => {
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editCar({
+    expect(await editCar({
       id: 'missing', name: '車', plate: 'A1',
       purchasedAt: null, purchasePrice: null,
-    })).rejects.toThrow('asset_not_found')
+    })).toEqual({ ok: false, code: 'asset_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -98,7 +98,7 @@ describe('createCar with auto-transaction', () => {
       fuelType: '95',
     })
 
-    expect(result).toEqual({ id: 'asset-1' })
+    expect(result).toEqual({ ok: true, data: { id: 'asset-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     // Three inserts inside the transaction: Asset + CarDetails + CashTransaction
     expect(mockDb.insert).toHaveBeenCalledTimes(3)
@@ -233,7 +233,7 @@ describe('createCar with auto-transaction', () => {
       plate: 'XYZ-9',
     })
 
-    expect(result).toEqual({ id: 'asset-6' })
+    expect(result).toEqual({ ok: true, data: { id: 'asset-6' } })
     expect(mockDb.insert).toHaveBeenCalledTimes(2)  // No auto-tx (no purchasePrice)
     const valueCalls = mockBuilder.values.mock.calls
     const carDetailsPayload = valueCalls[1][0] as Record<string, unknown>
@@ -254,7 +254,7 @@ describe('createCar with auto-transaction', () => {
       brand: 'Toyota',
       model: 'Altis',
       initialOdometer: 0,
-    })).resolves.toMatchObject({ id: 'asset-1' })
+    })).resolves.toEqual({ ok: true, data: { id: 'asset-1' } })
 
     const carDetailValues = mockBuilder.values.mock.calls
       .find(c => c[0]?.color !== undefined)?.[0]
@@ -316,7 +316,7 @@ describe('editCar with primaryUserId + fuelType', () => {
       purchasePrice: null,
       primaryUserId: null,
       fuelType: '92',
-    })).resolves.toBeUndefined()
+    })).resolves.toEqual({ ok: true, data: undefined })
   })
 
   it('omitting primaryUserId/fuelType still works (Slice 1 callers, defaults applied)', async () => {
@@ -330,7 +330,7 @@ describe('editCar with primaryUserId + fuelType', () => {
       plate: 'A1',
       purchasedAt: null,
       purchasePrice: null,
-    })).resolves.toBeUndefined()
+    })).resolves.toEqual({ ok: true, data: undefined })
   })
 })
 
@@ -348,7 +348,7 @@ describe('softDeleteCar', () => {
   it('throws if not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteCar('missing')).rejects.toThrow('asset_not_found')
+    expect(await softDeleteCar('missing')).toEqual({ ok: false, code: 'asset_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -364,7 +364,7 @@ describe('createLifeEntity', () => {
 
     const result = await createLifeEntity({ type: 'pet', name: '米嚕' })
 
-    expect(result).toEqual({ id: 'asset-2' })
+    expect(result).toEqual({ ok: true, data: { id: 'asset-2' } })
     expect(mockDb.insert).toHaveBeenCalledOnce()
     expect(mockDb.transaction).not.toHaveBeenCalled()  // 不需要 tx（只寫一張表）
   })
@@ -403,7 +403,7 @@ describe('editLifeEntity', () => {
   it('throws when asset not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // update returns empty = not found / wrong group
-    await expect(editLifeEntity({ id: 'nope', name: '名' })).rejects.toThrow('aibutsu_not_found')
+    expect(await editLifeEntity({ id: 'nope', name: '名' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -433,7 +433,7 @@ describe('softDeleteAsset', () => {
   it('throws when asset not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteAsset('nope')).rejects.toThrow('aibutsu_not_found')
+    expect(await softDeleteAsset('nope')).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {

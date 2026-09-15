@@ -15,6 +15,7 @@ import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 import type { GasFuelType } from '@/lib/fuel'
+import { unwrapAction } from '@/lib/action-errors'
 
 const CAR_COLORS = [
   { key: 'white',     hex: '#F0EDE8', border: '#D4CFC7' },
@@ -93,7 +94,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
     runMutation(
       async () => {
         if (isEdit) {
-          await editCar({
+          unwrapAction(await editCar({
             id: initial!.id,
             name: name.trim(),
             plate: editPlate,
@@ -107,9 +108,9 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             model: model.trim() || null,
             initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             notes: notesPayload,
-          })
+          }))
         } else {
-          await createCar({
+          unwrapAction(await createCar({
             name: name.trim(),
             plate: plate.trim(),
             purchasedAt: purchasedAt ?? undefined,
@@ -122,7 +123,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             model: model.trim() || null,
             initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             notes: notesPayload,
-          })
+          }))
         }
       },
       () => { onMutated?.('saved'); onClose() },

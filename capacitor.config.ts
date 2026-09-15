@@ -48,10 +48,36 @@ const cleartext = serverUrl.startsWith('http://');
 const config: CapacitorConfig = {
   appId: 'dev.southernlight.futari',
   appName: 'Futari',
-  webDir: 'out', // required by Capacitor CLI but unused — we override with server.url
+  // Was "required by the CLI but unused". Since #1225 it carries exactly one
+  // file: the bundled offline page below. `scripts/build-native-offline-page.ts`
+  // regenerates it on the `capacitor:copy:before` hook (package.json), so `out/`
+  // stays out of version control and a clean checkout no longer needs
+  // `mkdir -p out` before `cap sync`.
+  webDir: 'out',
   server: {
     url: serverUrl,
     cleartext,
+    /**
+     * #1225 — cold start with no network.
+     *
+     * The shell loads `server.url`, so with no network the WebView never gets
+     * a byte and *no web code of ours runs at all*: not the offline banner, not
+     * the Service Worker, not Sentry. The user gets the system WebView error
+     * page or a blank screen, and nothing is reported anywhere. `errorPath` is
+     * the only hook for that case: on a main-frame load failure both platforms
+     * load this path from the **bundled** copy of `webDir` instead
+     * (iOS `capacitor://localhost/offline.html` via the asset scheme handler,
+     * Android `https://localhost/offline.html` via WebViewLocalServer).
+     *
+     * The page has to be self-contained — no network means no CDN, no fonts,
+     * no JS bundle — and it cannot read the in-app language choice, because it
+     * is served from a different origin than the site. See the generator script
+     * for how the four locales and the retry target get baked in.
+     *
+     * Verifying it needs a real device in airplane mode; `npm run dev`, Vercel
+     * previews and the simulator-with-wifi all look fine either way.
+     */
+    errorPath: 'offline.html',
   },
   android: {
     backgroundColor: '#FBEDE0',

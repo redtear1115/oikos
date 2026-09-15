@@ -12,7 +12,7 @@ import {
 } from '@/lib/trip-currency'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 /**
  * Build the rate_snapshot for a fresh trip. The default currency is always the
@@ -44,7 +44,7 @@ export interface CreateTripInput {
   currencies?: TripCurrencySnapshot
 }
 
-export async function createTrip(input: CreateTripInput) {
+export const createTrip = action(async (input: CreateTripInput) => {
   const { user, group } = await requireViewerGroup()
 
   const name = input.name.trim()
@@ -92,9 +92,9 @@ export async function createTrip(input: CreateTripInput) {
   })
 
   return inserted
-}
+})
 
-export async function endTrip(input: { tripId: string; endDate: string }) {
+export const endTrip = action(async (input: { tripId: string; endDate: string }) => {
   const { user, group } = await requireViewerGroup()
 
   const txResult = await db.transaction(async (tx) => {
@@ -187,9 +187,9 @@ export async function endTrip(input: { tripId: string; endDate: string }) {
   })
 
   return updated
-}
+})
 
-export async function updateTrip(input: {
+export const updateTrip = action(async (input: {
   tripId: string
   name?: string
   startDate?: string
@@ -204,7 +204,7 @@ export async function updateTrip(input: {
    * rates only affects future records.
    */
   currencies?: TripCurrencySnapshot
-}) {
+}) => {
   const { group } = await requireViewerGroup()
   const epochStartDate = group.currentEpochStartedAt.toISOString().slice(0, 10)
   if (input.startDate && input.startDate < epochStartDate) {
@@ -243,13 +243,13 @@ export async function updateTrip(input: {
   revalidatePath('/trips')
   revalidatePath(`/trips/${tripId}`)
   return updated
-}
+})
 
-export async function softDeleteTrip(input: { tripId: string }) {
+export const softDeleteTrip = action(async (input: { tripId: string }) => {
   const { group } = await requireViewerGroup()
   await db
     .update(trips)
     .set({ deletedAt: new Date() })
     .where(and(eq(trips.id, input.tripId), eq(trips.groupId, group.id)))
   revalidatePath('/trips')
-}
+})

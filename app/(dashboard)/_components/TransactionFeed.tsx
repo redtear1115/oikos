@@ -14,6 +14,7 @@ import { describeError } from '@/lib/errors'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { TxnRowPayload } from '@/lib/realtime/event'
 import type { FeedMonthSummary } from '@/lib/db/queries/feedMonthSummary'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   initial: PagedTxnRow[]
@@ -81,7 +82,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       try {
         const fresh = loader
           ? await loader(null)
-          : await loadMoreTransactions(null, pageSize, toWire(filter), monthKey)
+          : unwrapAction(await loadMoreTransactions(null, pageSize, toWire(filter), monthKey))
         setItems(fresh)
         setHasMore(fresh.length === pageSize)
       } catch (e) {
@@ -105,12 +106,12 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
       try {
         const more = loader
           ? await loader({ transactedAt: last.transactedAt, createdAt: last.createdAt })
-          : await loadMoreTransactions(
-              { transactedAt: last.transactedAt, createdAt: last.createdAt },
-              pageSize,
-              filter ? toWire(filter) : undefined,
-              monthKey,
-            )
+          : unwrapAction(await loadMoreTransactions(
+            { transactedAt: last.transactedAt, createdAt: last.createdAt },
+            pageSize,
+            filter ? toWire(filter) : undefined,
+            monthKey,
+          ))
         setItems((cur) => [...cur, ...more])
         setHasMore(more.length === pageSize)
       } catch (e) {
@@ -128,7 +129,7 @@ export function TransactionFeed({ initial, pageSize, emptyState, onItemClick, la
         try {
           const fresh = loader
             ? await loader(null)
-            : await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined, monthKey)
+            : unwrapAction(await loadMoreTransactions(null, pageSize, filter ? toWire(filter) : undefined, monthKey))
           setItems(fresh)
           setHasMore(fresh.length === pageSize)
         } catch {

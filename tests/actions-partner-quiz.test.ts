@@ -44,7 +44,7 @@ describe('submitPartnerQuizAnswers', () => {
       sessionId: 'sess-1',
       answers: GOOD_ANSWERS,
     })
-    expect(out).toEqual({ revealed: false })
+    expect(out).toEqual({ ok: true, data: { revealed: false } })
 
     // We expect exactly one .insert() and zero .update() — reveal was NOT stamped.
     expect(mockDb.insert).toHaveBeenCalledTimes(1)
@@ -79,7 +79,7 @@ describe('submitPartnerQuizAnswers', () => {
       sessionId: 'sess-2',
       answers: GOOD_ANSWERS,
     })
-    expect(out).toEqual({ revealed: true })
+    expect(out).toEqual({ ok: true, data: { revealed: true } })
 
     expect(mockDb.update).toHaveBeenCalledTimes(1)
     const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
@@ -96,10 +96,10 @@ describe('submitPartnerQuizAnswers', () => {
     }])
     queueDbResult([{ id: 'ans-existing' }])  // existing-answers lookup non-empty
 
-    await expect(submitPartnerQuizAnswers({
+    expect(await submitPartnerQuizAnswers({
       sessionId: 'sess-3',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/^already_answered$/)
+    })).toEqual({ ok: false, code: 'already_answered' })
 
     expect(mockDb.insert).not.toHaveBeenCalled()
   })
@@ -113,10 +113,10 @@ describe('submitPartnerQuizAnswers', () => {
       revealedAt: null,
     }])
 
-    await expect(submitPartnerQuizAnswers({
+    expect(await submitPartnerQuizAnswers({
       sessionId: 'sess-x',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/^wrong_group$/)
+    })).toEqual({ ok: false, code: 'wrong_group' })
   })
 
   it('refuses when the session is already revealed', async () => {
@@ -128,10 +128,10 @@ describe('submitPartnerQuizAnswers', () => {
       revealedAt: new Date(),
     }])
 
-    await expect(submitPartnerQuizAnswers({
+    expect(await submitPartnerQuizAnswers({
       sessionId: 'sess-4',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/^already_revealed$/)
+    })).toEqual({ ok: false, code: 'already_revealed' })
   })
 
   it('rejects an answer set whose keys don’t match the session', async () => {
@@ -143,27 +143,27 @@ describe('submitPartnerQuizAnswers', () => {
       revealedAt: null,
     }])
 
-    await expect(submitPartnerQuizAnswers({
+    expect(await submitPartnerQuizAnswers({
       sessionId: 'sess-5',
       answers: [
         { questionKey: 'future', choiceKey: 'a' },
         { questionKey: 'risk', choiceKey: 'b' },
         { questionKey: 'transparency', choiceKey: 'c' },
       ],
-    })).rejects.toThrow('quiz_question_out_of_range')
+    })).toEqual({ ok: false, code: 'quiz_question_out_of_range' })
   })
 
-  // #1123 / #1140 — QuestionCard renders whatever this action throws. A prose
+  // #1123 / #1140 — QuestionCard renders whatever this action returns. A prose
   // message here would ship hard-coded zh-TW to en / ja viewers, so the contract
-  // for every rejection is an error CODE that `describeQuizError` maps to a
-  // dictionary entry. The regexes above and below are anchored on purpose: a
-  // substring match would still pass if someone reintroduced a sentence that
-  // happens to contain the code.
+  // for every rejection is an error CODE (`{ ok: false, code }`) that
+  // `describeQuizError` maps to a dictionary entry. The exact-match assertions
+  // above and below are deliberate: a loose match would still pass if someone
+  // reintroduced a prose message alongside the code.
   it('refuses in solo mode with a code, not prose', async () => {
     queueDbResult([SOLO_GROUP])
-    await expect(submitPartnerQuizAnswers({
+    expect(await submitPartnerQuizAnswers({
       sessionId: 'sess-solo',
       answers: GOOD_ANSWERS,
-    })).rejects.toThrow(/^solo_group$/)
+    })).toEqual({ ok: false, code: 'solo_group' })
   })
 })

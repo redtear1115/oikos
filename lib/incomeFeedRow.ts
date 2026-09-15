@@ -5,6 +5,7 @@ import type { TxnCursor } from '@/lib/db/queries/transactions'
 import { loadMoreIncomes } from '@/actions/income'
 import type { DrillFilterWire } from '@/lib/drill'
 import type { DateRange, TxnFilterWire } from '@/lib/filter'
+import { unwrapAction } from '@/lib/action-errors'
 
 export function incomeToFeedRow(r: PagedIncomeRow): PagedTxnRow {
   return {
@@ -40,7 +41,7 @@ export function makeIncomeLoader(
     const incomeCursor: IncomeCursor | null = cursor
       ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
       : null
-    const rows = await loadMoreIncomes(incomeCursor, limit, monthKey, drillWire, filterWire, dateRange)
+    const rows = unwrapAction(await loadMoreIncomes(incomeCursor, limit, monthKey, drillWire, filterWire, dateRange))
     return rows.map(incomeToFeedRow)
   }
 }

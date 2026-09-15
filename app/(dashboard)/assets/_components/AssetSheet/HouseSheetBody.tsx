@@ -15,6 +15,7 @@ import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGu
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
+import { unwrapAction } from '@/lib/action-errors'
 
 export type HouseInitial = Pick<
   AssetSheetInitial,
@@ -73,9 +74,9 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
     runMutation(
       async () => {
         if (isEdit) {
-          await editHouse({ id: initial!.id, ...base, address: editAddress })
+          unwrapAction(await editHouse({ id: initial!.id, ...base, address: editAddress }))
         } else {
-          await createHouse({ ...base, address: address.trim() || null })
+          unwrapAction(await createHouse({ ...base, address: address.trim() || null }))
         }
       },
       () => { onMutated?.('saved'); onClose() },

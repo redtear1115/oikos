@@ -14,12 +14,14 @@ vi.mock('next/navigation', () => ({
 const proposeSwap = vi.fn()
 vi.mock('@/actions/membership', () => ({
   proposeSwap: () => proposeSwap(),
-  leaveGroup: vi.fn(),
-  removePartner: vi.fn(),
-  cancelSwap: vi.fn(),
-  confirmSwap: vi.fn(),
+  leaveGroup: vi.fn(async () => ({ ok: true, data: undefined })),
+  removePartner: vi.fn(async () => ({ ok: true, data: undefined })),
+  cancelSwap: vi.fn(async () => ({ ok: true, data: undefined })),
+  confirmSwap: vi.fn(async () => ({ ok: true, data: undefined })),
 }))
-vi.mock('@/actions/group', () => ({ updateGroupSplitRatio: vi.fn() }))
+vi.mock('@/actions/group', () => ({
+  updateGroupSplitRatio: vi.fn(async () => ({ ok: true, data: { ok: true } })),
+}))
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
   useMember: () => ({ viewerIsA: true }),
 }))
@@ -210,7 +212,7 @@ describe('LeaveGroupFlow focus management', () => {
   })
 
   it('moves focus to the new card heading when a step change unmounts the focused control', async () => {
-    proposeSwap.mockResolvedValue(undefined)
+    proposeSwap.mockResolvedValue({ ok: true, data: { ok: true } })
     render(<LeaveHarness viewerIsMemberA />)
     openFrom('離開帳本')
     fireEvent.click(screen.getByText(flow.next))

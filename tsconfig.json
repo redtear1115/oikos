@@ -10,6 +10,12 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    // #1225 — `scripts/build-native-offline-page.ts` runs on Node directly
+    // (native TS type stripping) from a Capacitor `capacitor:copy:before` hook,
+    // and Node's ESM resolver needs the real `.ts` extension in the specifier.
+    // This only *permits* that spelling; app code keeps importing extensionless.
+    // Safe with `noEmit: true`, which TypeScript requires for this flag.
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,

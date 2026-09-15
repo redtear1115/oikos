@@ -11,7 +11,7 @@ import { zhTW } from '@/lib/i18n/locales/zh-TW'
 
 // ── module mocks ─────────────────────────────────────────────────────────────
 vi.mock('next/dynamic', () => ({ default: () => () => null }))
-vi.mock('@/actions/transaction', () => ({ loadMoreTransactions: vi.fn(async () => []) }))
+vi.mock('@/actions/transaction', () => ({ loadMoreTransactions: vi.fn(async () => ({ ok: true, data: [] })) }))
 vi.mock('@/app/(dashboard)/_components/RealtimeProvider', () => ({ useRealtimeEvents: () => {} }))
 vi.mock('@/lib/hooks/useOnlineStatus', () => ({ useOnlineStatus: () => true }))
 vi.mock('@/app/(dashboard)/_components/MemberContext', () => ({
@@ -139,7 +139,7 @@ describe('AssetLinkField copy goes through i18n', () => {
   })
 
   it('suffixes a soft-deleted asset with the localized deleted label', async () => {
-    loadAsset.mockResolvedValue({ name: 'Camera', deletedAt: '2026-09-01T00:00:00Z' })
+    loadAsset.mockResolvedValue({ ok: true, data: { name: 'Camera', deletedAt: '2026-09-01T00:00:00Z' } })
     renderEn('a1')
     expect(await screen.findByText(en.assetPickerSheet.deletedSuffix)).toBeTruthy()
     expect(document.body.textContent).not.toContain('已刪除')

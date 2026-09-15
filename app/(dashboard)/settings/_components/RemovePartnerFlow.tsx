@@ -8,6 +8,7 @@ import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { removePartner } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   open: boolean
@@ -72,7 +73,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        const { epochId } = await removePartner()
+        const { epochId } = unwrapAction(await removePartner())
         // Mark the brand-new solo epoch so `PartnerLeftCard` renders its
         // removal variant instead of "{partner} has left" (#1121). The server
         // can't tell the two apart — removal closes the duo epoch and opens a

@@ -8,6 +8,7 @@ import { TextInput } from '@/components/ui/TextInput'
 import { endTrip } from '@/actions/trip'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   open: boolean
@@ -47,7 +48,7 @@ export function EndTripSheet({ open, tripId, startDate, suggestedEndDate, onClos
     setErr(null)
     start(async () => {
       try {
-        await endTrip({ tripId, endDate })
+        unwrapAction(await endTrip({ tripId, endDate }))
         onClose()
         router.refresh()
       } catch (e: unknown) {

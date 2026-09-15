@@ -4,4 +4,11 @@
     <color name="colorPrimaryDark">#FBEDE0</color>
     <color name="colorAccent">#FBEDE0</color>
     <color name="ic_launcher_background">#FBEDE0</color>
+    <!-- Launch screen ground. Must stay equal to capacitor.config.ts
+         `android.backgroundColor`, to the `bg` custom property in
+         app/globals.css, and to the ground baked into @drawable/splash_icon
+         (see scripts/build-native-splash.py). The first two so the hand-off to
+         the WebView does not flash a different colour, the third so the icon's
+         own square does not become visible behind the mark. -->
+    <color name="splash_background">#FBEDE0</color>
 </resources>

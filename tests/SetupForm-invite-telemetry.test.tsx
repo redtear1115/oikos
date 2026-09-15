@@ -23,8 +23,8 @@ import { shareInviteLink } from '@/lib/share'
 
 /** Drives the form from the name step all the way to the invite step. */
 async function renderAtInviteStep() {
-  vi.mocked(createGroup).mockResolvedValue({ id: 'g1', name: '我們倆' } as never)
-  vi.mocked(createInvite).mockResolvedValue('https://futari.example/invite/tok123')
+  vi.mocked(createGroup).mockResolvedValue({ ok: true, data: { id: 'g1', name: '我們倆' } } as never)
+  vi.mocked(createInvite).mockResolvedValue({ ok: true, data: 'https://futari.example/invite/tok123' } as never)
 
   render(<SetupForm t={zhTW} />)
 

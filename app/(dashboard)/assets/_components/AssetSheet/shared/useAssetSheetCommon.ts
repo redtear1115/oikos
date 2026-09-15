@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { softDeleteAsset } from '@/actions/asset'
+import { unwrapAction } from '@/lib/action-errors'
 
 /**
  * Shared state + helpers for every *SheetBody under AssetSheet/ (#512 PR 5).
@@ -101,7 +102,7 @@ export function useAssetSheetCommon<I extends CommonInitial>(
     if (!isEdit || !initial) return
     runMutation(
       async () => {
-        await softDeleteAsset(initial.id)
+        unwrapAction(await softDeleteAsset(initial.id))
       },
       () => {
         onMutated?.('deleted')

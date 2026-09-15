@@ -14,6 +14,7 @@ import { SheetShell } from './shared/SheetShell'
 import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import type { AssetSheetInitial, BodySharedProps } from './types'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props extends BodySharedProps {
   initial?: AssetSheetInitial
@@ -66,9 +67,9 @@ export function TemplateSheetBody({
           fields: {},
         }
         if (isEdit) {
-          await editTemplateAsset({ id: initial!.id, ...payload })
+          unwrapAction(await editTemplateAsset({ id: initial!.id, ...payload }))
         } else {
-          await createTemplateAsset(payload)
+          unwrapAction(await createTemplateAsset(payload))
         }
         onMutated?.('saved')
         onClose()
@@ -82,7 +83,7 @@ export function TemplateSheetBody({
     if (!isEdit) return
     startTransition(async () => {
       try {
-        await softDeleteAsset(initial!.id)
+        unwrapAction(await softDeleteAsset(initial!.id))
         onMutated?.('deleted')
         onClose()
       } catch (e) {

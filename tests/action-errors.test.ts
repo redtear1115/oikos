@@ -3,10 +3,12 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describeError } from '@/lib/errors'
 import {
+  action,
   actionError,
   isActionError,
   parseActionError,
   translateActionError,
+  unwrapAction,
 } from '@/lib/action-errors'
 import { zhTW } from '@/lib/i18n/locales/zh-TW'
 import { zhCN } from '@/lib/i18n/locales/zh-CN'
@@ -14,7 +16,9 @@ import { en } from '@/lib/i18n/locales/en'
 import { ja } from '@/lib/i18n/locales/ja'
 
 /**
- * #1156 — server actions throw codes; `describeError` localizes them.
+ * #1156 — server actions raise codes; `describeError` localizes them.
+ * #1223 — those codes now cross the wire as `{ ok: false, code }` return
+ * values, because production strips the message off a thrown one.
  *
  * As with quiz-errors.test.ts, zh-TW assertions alone prove nothing: the zh-TW
  * sentence is character-for-character what the action used to throw, so a
@@ -87,6 +91,68 @@ describe('action-errors helpers', () => {
 
   it('translateActionError returns null for unknown input', () => {
     expect(translateActionError(new Error('nope'), en.errors.actions)).toBeNull()
+  })
+})
+
+describe('the return-value boundary (#1223)', () => {
+  it('action() turns a thrown code into a returned failure', async () => {
+    const run = action(async (n: number) => {
+      if (n < 0) throw actionError('trip_not_found')
+      return { n }
+    })
+    expect(await run(1)).toEqual({ ok: true, data: { n: 1 } })
+    expect(await run(-1)).toEqual({ ok: false, code: 'trip_not_found' })
+  })
+
+  it('carries params on the returned failure', async () => {
+    const run = action(async () => { throw actionError('fx_rate_not_set', { from: 'JPY', to: 'TWD' }) })
+    expect(await run()).toEqual({
+      ok: false, code: 'fx_rate_not_set', params: { from: 'JPY', to: 'TWD' },
+    })
+  })
+
+  it('still converts the pre-#1156 bare-code throws', async () => {
+    // actions/membership.ts and actions/partnerQuiz.ts throw these directly.
+    const run = action(async () => { throw new Error('balance_not_zero') })
+    expect(await run()).toEqual({ ok: false, code: 'balance_not_zero' })
+  })
+
+  it('re-throws anything that is not an expected code', async () => {
+    for (const message of ['Unauthorized', '找不到家計簿', 'duplicate key value violates']) {
+      await expect(action(async () => { throw new Error(message) })()).rejects.toThrow(message)
+    }
+  })
+
+  it("re-throws Next's control-flow errors instead of swallowing them", async () => {
+    // `redirect()` and `notFound()` travel as a throw with a `digest`. Turning
+    // one into `{ ok: false }` would make the redirect silently not happen.
+    const redirectError = Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT;replace;/;307;' })
+    await expect(action(async () => { throw redirectError })()).rejects.toBe(redirectError)
+    // Even one whose message *is* code-shaped.
+    const sneaky = Object.assign(new Error('trip_not_found'), { digest: 'NEXT_NOT_FOUND' })
+    await expect(action(async () => { throw sneaky })()).rejects.toBe(sneaky)
+  })
+
+  it('unwrapAction hands back data, or re-throws a matchable ActionError', () => {
+    expect(unwrapAction({ ok: true, data: 42 })).toBe(42)
+    try {
+      unwrapAction({ ok: false, code: 'trip_rate_missing', params: { currency: 'USD' } })
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect(isActionError(e, 'trip_rate_missing')).toBe(true)
+      expect(translateActionError(e, en.errors.actions)).toBe(
+        en.errors.actions.trip_rate_missing.replace('{currency}', 'USD'),
+      )
+    }
+  })
+
+  it('describeError reads the failure value directly, without unwrapping', () => {
+    const failure = { ok: false as const, code: 'base_currency_locked' }
+    expect(describeError(failure, FALLBACK, OFFLINE, ja.errors.actions))
+      .toBe(ja.errors.actions.base_currency_locked)
+    expect(isActionError(failure, 'base_currency_locked')).toBe(true)
+    // A success envelope is not an error.
+    expect(describeError({ ok: true, data: 1 }, FALLBACK, OFFLINE, en.errors.actions)).toBe(FALLBACK)
   })
 })
 

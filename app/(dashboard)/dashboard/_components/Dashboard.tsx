@@ -27,6 +27,7 @@ import type { TripOption } from './TripSelector'
 import { useDashboardReducer, type DashboardPayer, type DashboardSplit } from './useDashboardReducer'
 import { DashboardFilterRow } from './DashboardFilterRow'
 import { DashboardFeed, DashboardFeedSkeleton } from './DashboardFeed'
+import { unwrapAction } from '@/lib/action-errors'
 
 // Sheets are heavy and only meaningful on user interaction (FAB tap, edit-row
 // tap, ✈ button). Split into separate chunks and skip SSR so they don't bloat
@@ -215,7 +216,7 @@ export function Dashboard({
 
     if (tx.fuelLogId !== null) {
       startFuelLoad(async () => {
-        const detail = await getFuelLogById(tx.fuelLogId!)
+        const detail = unwrapAction(await getFuelLogById(tx.fuelLogId!))
         if (!detail) return
         dispatch({
           type: 'openFuelSheet',
@@ -366,7 +367,7 @@ export function Dashboard({
                   description: p.proposedDescription,
                   category: p.category,
                   splitType: p.proposedSplitType,
-                  splitRatioA: (p as { proposedSplitRatioA?: number | null }).proposedSplitRatioA ?? null,
+                  splitRatioA: p.proposedSplitRatioA,
                   payerId: p.proposedPaidBy,
                   // Construct as local midnight so AddSheet's getFullYear/Month/Date
                   // round-trip yields the original YYYY-MM-DD regardless of timezone.

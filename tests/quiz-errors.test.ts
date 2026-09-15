@@ -37,6 +37,17 @@ describe('describeQuizError', () => {
         // Never leak the wire code to the screen.
         expect(out).not.toContain(code)
       })
+
+      it(`maps the RETURNED ${code} failure to the ${name} dictionary entry`, () => {
+        // Since #1223 this is the shape the code actually arrives in: a value
+        // the action returned, not an exception. The thrown form above stays
+        // covered because `unwrapAction` re-throws it on the client.
+        const out = describeQuizError(
+          { ok: false, code }, dict.quiz, OFFLINE, dict.errors.actions,
+        )
+        expect(out).toBe(pick(dict.quiz))
+        expect(out).not.toContain(code)
+      })
     }
   }
 

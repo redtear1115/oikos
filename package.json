@@ -16,6 +16,8 @@
     "db:migrate": "node --env-file=.env.local node_modules/.bin/drizzle-kit migrate",
     "db:studio": "node --env-file=.env.local node_modules/.bin/drizzle-kit studio",
     "cap:sync": "npx cap sync",
+    "cap:offline-page": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-native-offline-page.ts",
+    "capacitor:copy:before": "npm run cap:offline-page",
     "cap:open:android": "npx cap open android",
     "cap:build:android": "npx cap build android",
     "postinstall": "patch-package || exit 0"
