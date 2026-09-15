@@ -50,12 +50,18 @@ export const createRule = action(async (input: RecurringIncomeRuleInput): Promis
   assertRecipientInGroup(v.recipientId, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  // Same snap as `updateRule` / `resumeRule` below (#1244) — see the matching
-  // comment in `actions/recurringExpense.ts`. A back-dated `startsOn` otherwise
-  // produces a rule whose "next run" date is already in the past.
+  // Snap the anchor forward so a back-dated `startsOn` cannot leave the rule
+  // showing a "next run" date already in the past (#1244).
+  //
+  // **`>=` here, `>` in `updateRule` / `resumeRule`, on purpose.** Creating
+  // "starting today, the Nth" on the Nth should count this month; editing
+  // must not, because `sheet.editEffectHint` is on screen promising 改動從下
+  // 一期開始套用. The full reasoning, and the one seam it leaves open, is in
+  // the matching comment in `actions/recurringExpense.ts` — read that before
+  // making the two branches agree.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
-  const nextOccurrenceAt = firstAnchor > today
+  const nextOccurrenceAt = firstAnchor >= today
     ? firstAnchor
     : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, today)
 
@@ -111,6 +117,9 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .limit(1)
   if (!existing) throw actionError('recurring_rule_not_found')
 
+  // `>` and not `>=`, unlike `createRule` (#1244): `sheet.editEffectHint` is on
+  // screen while the user saves, promising the change applies from the *next*
+  // period. Today stays out. See the comment in `createRule` above.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
   const nextOccurrenceAt = firstAnchor > today

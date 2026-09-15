@@ -52,14 +52,31 @@ export const createRule = action(async (input: RecurringExpenseRuleInput): Promi
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  // Same snap as `updateRule` / `resumeRule` below (#1244). `firstAnchorFromStart`
-  // only aligns the anchor to `dayOfMonth`; with a back-dated `startsOn` that
-  // anchor is itself in the past, and the rule is born showing a "next run"
-  // date that has already been and gone. Snapping walks it forward whole
-  // intervals so it lands on a real future period of the same series.
+  // Snap the anchor forward so a back-dated `startsOn` cannot leave the rule
+  // showing a "next run" date that has already been and gone (#1244).
+  // `firstAnchorFromStart` only aligns the anchor to `dayOfMonth`; with a
+  // back-dated start that anchor is itself in the past.
+  //
+  // **`>=` here, `>` in `updateRule` / `resumeRule`. The asymmetry is the
+  // decision, not a typo — do not "fix" it into agreement.** The two answer
+  // different questions:
+  //
+  //  - Creating, the user has just said "starting today, the Nth of every
+  //    month". When today *is* the Nth they almost certainly mean to count
+  //    this month, so today's anchor is kept and tonight's cron materialises
+  //    it. This is the default path, not an edge: `useRecurringRuleForm`
+  //    seeds `dayOfMonth = new Date().getDate()` and `startsOn = today`.
+  //  - Editing, `sheet.editEffectHint` is on screen while they save, and it
+  //    promises 改動從下一期開始套用 / 已經出現的待確認卡片…維持原樣. Pulling
+  //    today in would break a promise the user is reading as they act.
+  //
+  // Residual seam, deliberately left: `snapToFuture` still walks while
+  // `curr <= today`, so a *back-dated* series that happens to land on today
+  // skips today rather than keeping it. Only the anchor-is-today case is
+  // covered here, which is the one the form produces.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
-  const nextOccurrenceAt = firstAnchor > today
+  const nextOccurrenceAt = firstAnchor >= today
     ? firstAnchor
     : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, today)
 
@@ -117,6 +134,9 @@ export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: s
     .limit(1)
   if (!existing) throw actionError('recurring_rule_not_found')
 
+  // `>` and not `>=`, unlike `createRule` (#1244): `sheet.editEffectHint` is on
+  // screen while the user saves, promising the change applies from the *next*
+  // period. Today stays out. See the long comment in `createRule` above.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
   const nextOccurrenceAt = firstAnchor > today

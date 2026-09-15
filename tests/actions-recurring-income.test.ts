@@ -74,7 +74,10 @@ describe('createRule', () => {
     expect(values.startsOn).toBe('2025-11-25')
   })
 
-  it('moves an anchor that lands on today to the next period', async () => {
+  // Half of the create/edit asymmetry (#1244); see the updateRule counterpart
+  // below. Creating "starting today, the 7th" on the 7th keeps today — the
+  // form's default path seeds exactly this input.
+  it('keeps an anchor that lands on today, so this period still counts', async () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'rule-1' }])
 
@@ -91,7 +94,7 @@ describe('createRule', () => {
     })
 
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
-    expect(values.nextOccurrenceAt).toBe('2026-06-07')
+    expect(values.nextOccurrenceAt).toBe('2026-05-07')
   })
 
   it('rejects when recipient not in viewer group', async () => {
@@ -114,6 +117,33 @@ describe('createRule', () => {
 })
 
 describe('updateRule', () => {
+  // The other half of the create/edit asymmetry (#1244): same input as the
+  // createRule test above, deliberately different answer. Editing skips today
+  // because `sheet.editEffectHint` promises 改動從下一期開始套用 while the
+  // user is saving. Harmonising the `>`/`>=` guards turns exactly one of this
+  // pair red.
+  it('still skips today when editing, unlike createRule', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await updateRule({
+      id: 'rule-1',
+      amount: 3000,
+      category: 'other',
+      recipientId: 'user-a',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2026-05-07',
+      endsOn: null,
+      source: '今天編輯',
+      assetId: null,
+    })
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
   it('updates fields and recomputes next_occurrence_at when schedule changes', async () => {
     queueDbResult([GROUP])
     queueDbResult([{

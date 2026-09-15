@@ -116,7 +116,7 @@ related_issues: ["#18", "#166", "#1243", "#1244"]
 
 - `interval_months` / `day_of_month` / `starts_on` / `ends_on` / `next_occurrence_at` — 排程錨點
 - `paused_at` / `deleted_at` — soft states，cron 跑前過濾
-- `next_occurrence_at` 維護：rule 建立時由 server action 計算（`startsOn` 之後第一個落在 `day_of_month` 的錨點，**再 snap 到 today 之後的同一系列期別**）；每次 cron 產 pending 後 += `interval_months`（並對 day_of_month 做 clamp）；`startsOn` / `interval_months` / `day_of_month` 改動時由 server action 重算（同一套 snap）
+- `next_occurrence_at` 維護：rule 建立時由 server action 計算（`startsOn` 之後第一個落在 `day_of_month` 的錨點，**再 snap 到今天（含）之後的同一系列期別**）；每次 cron 產 pending 後 += `interval_months`（並對 day_of_month 做 clamp）；`startsOn` / `interval_months` / `day_of_month` 改動時由 server action 重算（**snap 到今天之後，不含今天**——差一天，理由見下方「建立含今天、編輯不含」）
 
 ### Pending（兩張表）
 
@@ -163,7 +163,11 @@ related_issues: ["#18", "#166", "#1243", "#1244"]
 - **規則暫停 N 個月後 resume**：`resumeRule` action 內，先把 `next_occurrence_at` snap 到「未來最近的 anchor」（即 `startsOn` 之後第一個 anchor > today），再清掉 `paused_at`。這樣 resume 後不會產任何補登
 - **規則建立後第一次**：`next_occurrence_at` 計算為「`startsOn` 之後第一個落在 `day_of_month` 的錨點」，再往前 snap 整數個 `interval_months` 直到 > today（同 `updateRule` / `resumeRule` 的 `snapToFuture`）。Cron 跑到那天才產 pending。**不 backfill 過去**
   - **v1.5.15 之前 create 少了 snap 這一步（#1244）**：`startsOn` 在過去的規則建立後，列表上的「下次 {date}」就是一個已經過去的日期，而同一筆規則只要進編輯存檔就會被修正——同一個欄位在「新建」與「編輯」兩條路徑上結果不同。本節上方的「不 backfill 過去」與下方 acceptance 表的「next_occurrence 從未來最近的錨日開始」一直是對的，不符的是實作。
-  - **邊界**：`snapToFuture` 的條件是 `curr <= today`，所以錨點剛好落在 today 的規則（表單預設 `dayOfMonth = 今天`、`startsOn = 今天`，最常見的一種）會推到下一期，而不是當晚就產一張 pending。這是從 `updateRule` / `resumeRule` 原封不動繼承的語義，代價是「今天這期」要自己走 AddSheet / IncomeSheet 記——與「不 backfill 過去」同一個立場。
+  - **建立含今天、編輯不含（刻意不對稱，使用者 2026-09-16 拍板）**：錨點剛好等於今天時，`createRule` 保留今天（`firstAnchor >= today`），`updateRule` / `resumeRule` 推到下一期（`firstAnchor > today`）。兩者回答的不是同一個問題——
+    - **建立**：使用者剛說「從今天開始，每月 N 號」。今天就是 N 號時，這個月幾乎一定要算進去。而且這正是表單預設值（`lib/hooks/useRecurringRuleForm.ts` 的 `dayOfMonth = new Date().getDate()`、`startsOn = localTodayISO()`），是預設路徑而不是邊角案例。
+    - **編輯**：`sheet.editEffectHint` 就顯示在使用者按儲存的當下，寫著「改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣」。讓編輯把今天拉進來，等於違背一句正在畫面上的承諾。
+    - **這個不對稱如果沒被寫下來，下一個人一定會把它「修正」成一致。** 護欄是測試：expense / income 兩支測試檔各有一對「今天建立 → 今天」「今天編輯 → 下個月」的案例並排放著，`>` / `>=` 被統一時剛好會紅一條。
+  - **仍然留著的縫**：`snapToFuture` 內部條件是 `curr <= today`，所以**起始日在過去、而系列剛好落在今天**的規則仍會跳過今天。只有「錨點本身就是今天」這條（表單產生的那條）被 `>=` 涵蓋。要不要一起收，待使用者決定。
   - **既有資料不做 migration**：`next_occurrence_at` 落在過去的舊規則不是凍住的，cron 每晚推進一期並產一張 pending，會自己追上。那些 pending 是對真實期別的提案，批次 snap 等於替使用者把它們刪掉（`(rule_id, period_start)` 是 unique，已產生的不會重複，所以 migration 只能砍掉還沒產的）。取捨留給使用者：不想要就 skip 卡片，或編輯規則一次校正。
 - **Cron 連續多天 outage 後恢復**：每天最多補 1 期，連續 N 天才追上。實務上 pg_cron outage 罕見且短，可接受
 
@@ -245,7 +249,8 @@ related_issues: ["#18", "#166", "#1243", "#1244"]
 | 規則 day_of_month=31，遇到 2 月 | clamp 到 2 月最後一天（28 或 29），產 pending 用 clamped date |
 | 規則 day_of_month=31，遇到 4/6/9/11 月 | clamp 到 30 |
 | 用戶建立規則時 startsOn 在過去 3 個月 | 不 backfill；next_occurrence 從**未來最近**的同系列錨日開始（v1.5.15 起實作才真的符合，#1244） |
-| 用戶建立規則時 day_of_month 就是今天 | 第一期是下一期，不是今晚；「今天這期」自己記 |
+| 用戶建立規則時 day_of_month 就是今天（表單預設） | 第一期就是今天，今晚的 cron 會產這一期的待確認卡 |
+| 用戶編輯規則，day_of_month 就是今天 | 第一期是下一期——`editEffectHint` 承諾「改動從下一期開始套用」 |
 | 用戶 pause 期間錯過 2 期 | resume 不補登。`resumeRule` snap next_occurrence_at 到未來最近 anchor，pending 卡片 0 張 |
 | 用戶 pause 期間有未確認 pending | pause 不影響既有 pending；用戶仍可 confirm/skip/edit 該卡片 |
 | 用戶 delete（軟刪）規則 | 同 transaction：UPDATE rule SET deleted_at + DELETE active pendings；已 resolved 的 pending 不動（指向真實 tx，留作審計）；已 skipped 的不動（90 天後 pg_cron purge） |

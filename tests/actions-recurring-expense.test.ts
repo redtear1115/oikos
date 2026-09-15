@@ -111,10 +111,12 @@ describe('createRule', () => {
     expect(values.nextOccurrenceAt).toBe('2026-05-15')
   })
 
-  // Boundary inherited verbatim from updateRule / resumeRule: snapToFuture
-  // advances while `curr <= today`, so an anchor landing on today moves to the
-  // next period rather than being materialised by tonight's cron.
-  it('moves an anchor that lands on today to the next period', async () => {
+  // Half of the create/edit asymmetry (#1244); the other half is the updateRule
+  // test below, and the two only mean something read together. Creating
+  // "starting today, the 7th" on the 7th keeps today, so tonight's cron
+  // materialises this period. This is the form's default path —
+  // `useRecurringRuleForm` seeds dayOfMonth = today's date and startsOn = today.
+  it('keeps an anchor that lands on today, so this period still counts', async () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'rule-1' }])
 
@@ -132,7 +134,7 @@ describe('createRule', () => {
     })
 
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
-    expect(values.nextOccurrenceAt).toBe('2026-06-07')
+    expect(values.nextOccurrenceAt).toBe('2026-05-07')
   })
 
   it('rejects when paidBy not in viewer group', async () => {
@@ -166,6 +168,35 @@ describe('createRule', () => {
 })
 
 describe('updateRule', () => {
+  // The other half of the create/edit asymmetry (#1244). Same input as the
+  // createRule test above ("the 7th", today is the 7th) and a deliberately
+  // different answer: editing must skip today, because `sheet.editEffectHint`
+  // is on screen while the user saves, promising 改動從下一期開始套用. If
+  // someone ever harmonises the two `>`/`>=` guards, exactly one of this pair
+  // goes red — which is the point of writing them next to each other.
+  it('still skips today when editing, unlike createRule', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await updateRule({
+      id: 'rule-1',
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '今天編輯',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2026-05-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setCall.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
   it('updates fields and recomputes next_occurrence_at when schedule changes', async () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
