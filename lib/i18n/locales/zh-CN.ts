@@ -1780,6 +1780,13 @@ export const zhCN: Translations = {
     metadataTitle: '离线中 · Futari',
   },
 
+  nativeOfflinePage: {
+    documentTitle: '离线中 · Futari',
+    title: '现在没有网络',
+    body: '连上网络之后，这里就会回到你们的账本。',
+    retry: '再试一次',
+  },
+
   termsPage: {
     heading: '服务条款',
     lastUpdated: '最后更新：2026 年 5 月 31 日',

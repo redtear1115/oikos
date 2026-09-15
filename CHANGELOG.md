@@ -18,6 +18,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### 使用者可見變化
+
+- **沒網路時打開 App，會看到 Futari 的離線頁而不是空白畫面（#1225）**：原生殼只是載入線上網站的 WebView，所以沒網路冷啟動時連第一個 byte 都拿不到——使用者看到的是系統的 WebView 錯誤頁或整片空白，沒有任何提示說「需要連線」。現在殼裡打包了一份離線頁（`server.errorPath`），載入失敗時改顯示它：暖色底、一句「現在沒有網路」、一個回到 App 的按鈕，四語依裝置語系顯示。
+
+### 技術變更
+
+- `capacitor.config.ts` 設 `server.errorPath: 'offline.html'`。離線頁由 `scripts/build-native-offline-page.ts` 產生，掛在 Capacitor 的 `capacitor:copy:before` hook——`cap copy` 每次都會砍掉重建原生的 `public/`，所以檔案必須「每次 copy 之前重新產生」，而不是「存在一次」。`out/` 因此不再需要手動 `mkdir`（CLAUDE.md / runbook / ship-native skill 的指令已更新）。
+- 文案來源仍是 `lib/i18n/locales/*.ts › nativeOfflinePage`，四語同步由 `Translations` interface 的 type check 把關；產生器把四語全部烤進同一份靜態 HTML，inline script 依 `navigator.language` 選一份。離線頁的 origin（`capacitor://localhost` / `https://localhost`）與網站不同，讀不到使用者在 app 裡選的語言，裝置語系是唯一可用的訊號。
+- `tsconfig.json` 開啟 `allowImportingTsExtensions`：產生器直接用 Node 原生 type stripping 執行 `.ts`，Node 的 ESM resolver 需要完整副檔名。
+- native-smoke workflow 在 `cap sync` 後明確檢查 `offline.html` 有沒有進到 iOS / Android bundle——這個檔缺席不會讓任何 build 變紅。
+- ⚠️ 動到 `capacitor.config.ts` → iOS / Android 都要重送商店。依 #1225 與 #1207（PR #1209）合併送審，只送一次。
 ### 技術變更
 
 - **Android 工具鏈升到 Gradle 9.5.1 / AGP 9.2.1，恢復在 JDK 25 上建置（#1207）**：Android Studio 內附 JBR 漂到 JDK 25 後，Gradle 8.14.3 連 build script 都編不起來（`Unsupported class file major version 69`），原生包打不出來。AGP 9 移除了 `proguard-android.txt`，app 與 `@capacitor-community/apple-sign-in` 改用 `proguard-android-optimize.txt`（後者經既有 patch 延伸，順手把已棄用的 `lintOptions` 換成 `lint`——9.2.1 下舊寫法仍可建置，不是必要改動）。merge 後既有 checkout 要 `rm -rf node_modules && npm ci`：對已套過舊 patch 的 `node_modules` 套新 patch 會失敗，而 postinstall 是 fail-soft，症狀是 build 撞 `proguard-android.txt is no longer supported`。未升 `@capacitor/*`，iOS SPM 的 8.3.4 pin 不受影響。同時撤回 CLAUDE.md 裡「JDK 25 + Gradle 8.14.3 實測可建置」的錯誤敘述。
