@@ -24,11 +24,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **定期支出的「按比例分」會照規則的比例落帳（#1243）**：設成 30 / 70 的定期支出規則，每期產生的待確認卡片沒有帶到那個比例，確認之後那一筆就變成平分。卡片會出現、確認會成功、沒有任何錯誤訊息，只有分攤金額和你設的不一樣。現在產卡會帶上規則當下的比例，確認後落帳的比例就是你設的比例；卡片上原本把「按比例分」寫成「平分」也一併更正。手上還沒確認的卡片會在這次補回比例；已經確認過的紀錄維持原樣，需要的話可以自己重記一筆。
 
+- **定期收支的待確認卡片會在當天出現（#1262）**：設在每月 5 號的定期支出，卡片要到 6 號凌晨才冒出來，推播也跟著晚一天。產卡的排程本來就在台北 00:00 跑，但它問「今天幾號」的時候用的是 UTC，那個時刻的 UTC 還停在前一天。prod 上最近 21 張卡片全部晚一天，沒有例外。現在產卡和推播都改看台北日期，5 號的規則在 5 號 00:00 就會出現。改版當晚，當天到期的那一期會提前一天產出——那一期本來就該在那天出現，不會重複產、也不會少一期。
+
 ### 技術變更
 
 - **法律頁的宣稱一律附程式碼依據（#1251，接續 #1191 / #1246）**：`privacyPage.sectionStorageBody` 的加密範圍改成從 `lib/crypto.ts` 的 9 個呼叫點反推（`actions/asset.ts:88,217,442,484,487,497,1281`、`actions/invoice.ts:102,204`，對應 `lib/db/schema.ts` 的 6 個 `*_encrypted` 欄位）；`sectionRetentionBody` 改成從 `drizzle/0058_account_deletion_processor.sql:64-127` 反推——solo 群組走 `_delete_group_cascade()`，配對群組只 `DELETE FROM auth.users` 並把 `Profiles.display_name` 換成 tombstone，交易只翻 `split_ratio_a`。新增 `privacyPage.sectionRetentionItems`（四語）把兩種結果拆成清單，因為塞進單一段落讀不出「兩個人的帳本刪不掉對方那份」這件事。`docs/app-store-listing.md` 的 data-safety 對照同步，並標注「使用者可否要求刪除資料」仍填是。
   - **失效的樣子**：不成立的法律宣稱不會讓任何測試變紅、也不會有人回報——它只是靜靜掛在頁面上，直到有人拿它去比對實作。所以這類 key 的註解一律寫出依據的檔案與行號，而不只是寫「機敏欄位」。
 
+- **兩個定期產卡 cron 的日期基準改成台北（#1262）**：`drizzle/0064_recurring_cron_taipei_date.sql` 以 `(NOW() AT TIME ZONE 'Asia/Taipei')::date` 重排 `generate-pending-income` 與 `generate-pending-expense`（寫法同 0026 / 0061），排程字串 `'0 16 * * *'` 不動——00:00 台北本來就是預期的觸發時刻，錯的只有 body 裡的日期基準。expense 的 body 從 0063（實際生效那份，帶著 #1243 的 `proposed_split_ratio_a`）往下改，不是從 0021。同一批把 `supabase/functions/send-recurring-push/index.ts` 的 `new Date().toISOString().slice(0, 10)` 換成新的 `taipeiDateISO()`（獨立模組，因為 Deno entrypoint 進不了 vitest）：推播排在產卡後 10 分鐘、同一個 UTC 基準，只改 SQL 會讓卡片準時出現、推播卻晚一晚。migration 要在 dev 與 prod 兩個 Supabase project 各跑一次。
+  - **失效的樣子**：不會報錯、不會有人說「壞了」。卡片照樣出現、推播照樣送達，只是永遠差一個台北日；要看出來得去比對 `created_at` 的台北日與 `period_start`（prod 實測 `lag_days` 分布 `{"1": 21}`）。每個 job 內的兩個日期條件也必須一起改：只動 UPDATE 會整期消失，只動 INSERT 會每晚重試同一期、被 `ON CONFLICT DO NOTHING` 吞掉。`tests/recurring-cron-taipei-date.test.ts` 從 drizzle/ 解析「實際生效」的那份 body 斷言沒有裸 `CURRENT_DATE`、台北運算式剛好出現兩次。
 - `drizzle/0063_recurring_expense_split_ratio.sql`：重排 `generate-pending-expense` cron，INSERT 補上 `proposed_split_ratio_a ← r.split_ratio_a`。欄位是 0027 加的，cron body 留在 0021 沒有跟著改，所以 weighted 規則產的 pending 比例一直是 NULL。落帳後同一筆被三個地方讀成三種意思，而且都不報錯：`lib/balance.ts` 當 50/50、`CompactRow` 因為 `splitRatioA != null` 不成立而顯示分攤 0（看起來像全部付款人出）、`recalcGroupBalance` 的 CASE 算出 NULL 被 SUM 直接略過（對 balance 貢獻 0）。同一份 migration 回填未處理 pending 的比例；已 resolved 的 pending 與其 CashTransaction 不動（改已落帳的紀錄會在使用者不知情下移動 balance）。`confirmPending` 與 `listActivePendings` 一併帶上比例。新測試直接從 drizzle/ 解析 cron 的 INSERT 欄位／SELECT 運算式配對，欄位清單與值清單再度對不上就會失敗。
 - **錯誤訊息終於會說你的語言（#1223）**：v1.5.14 花一整批工把 82 句 server 錯誤翻成四語，實際上線後一句都沒送到——en / ja / zh-CN 使用者按下儲存、遇到「這個章節已經有紀錄了，不能改幣別」這類狀況時，看到的還是「發生錯誤」。現在幣別鎖定、旅行結束日早於出發日、兩台裝置同時處理同一筆待確認支出等情況，都會顯示該語言的具體說明。
 

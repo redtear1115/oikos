@@ -99,7 +99,7 @@ last_updated: 2026-09-11
    > **2026-08-07 查證：Android 推播從未實作，補這個檔也不會讓它通。**
    > - `lib/pushNotifications.ts:7` — `if (Capacitor.getPlatform() !== 'ios') return`，
    >   Android 根本不註冊 push token。
-   > - `supabase/functions/send-recurring-push/index.ts:109` — `.eq('platform', 'apns')`，
+   > - `supabase/functions/send-recurring-push/index.ts:113` — `.eq('platform', 'apns')`，
    >   發送端只撈 APNs token，沒有 FCM 分支。
    > - `PushTokens.platform` 的註解雖寫 `'apns' or 'fcm'`，但 `'fcm'` 從未被寫入或讀取。
    >
