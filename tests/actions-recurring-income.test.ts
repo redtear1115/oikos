@@ -49,6 +49,51 @@ describe('createRule', () => {
     expect(values.nextOccurrenceAt).toBe('2026-05-25')
   })
 
+  // #1244, mirror of the expense side: a back-dated startsOn used to leave the
+  // rule showing a "下次 {date}" that had already passed.
+  it('snaps a back-dated quarterly rule to the first future period of its own series', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 60000,
+      category: 'salary',
+      recipientId: 'user-a',
+      intervalMonths: 3,
+      dayOfMonth: 25,
+      startsOn: '2025-11-25',
+      endsOn: null,
+      source: '季獎金',
+      assetId: null,
+    })
+
+    // 2025-11-25 → 2026-02-25 → 2026-05-25; today is 2026-05-07, so the
+    // 2026-05-25 period is the first one still ahead on the 3-month grid.
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-25')
+    expect(values.startsOn).toBe('2025-11-25')
+  })
+
+  it('moves an anchor that lands on today to the next period', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 3000,
+      category: 'other',
+      recipientId: 'user-a',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2026-05-07',
+      endsOn: null,
+      source: '今天建立',
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-06-07')
+  })
+
   it('rejects when recipient not in viewer group', async () => {
     queueDbResult([GROUP])
     expect(await createRule({

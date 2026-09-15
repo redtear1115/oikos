@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import {
@@ -15,9 +15,23 @@ import {
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
 
+// Pin "today" the same way `tests/actions-recurring-income.test.ts` does, and
+// for the same reason: createRule / updateRule / resumeRule all derive `today`
+// from `new Date()` and snap past anchors forward (lib/recurring#snapToFuture),
+// so any assertion on `next_occurrence_at` silently changes meaning as the real
+// calendar moves. Fake only Date so the async db mocks keep real microtask
+// timing.
+const FIXED_NOW = new Date('2026-05-07T12:00:00Z') // → today = 2026-05-07
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(FIXED_NOW)
   resetDbMocks()
   setMockUser(VIEWER)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('createRule', () => {
@@ -46,6 +60,79 @@ describe('createRule', () => {
     expect(values.splitType).toBe('half')
     expect(values.description).toBe('房租')
     expect(values.nextOccurrenceAt).toBe('2026-06-01')
+  })
+
+  // #1244: createRule used to stop at `firstAnchorFromStart`, so a back-dated
+  // startsOn produced a rule whose "下次 {date}" was already in the past —
+  // while updateRule on the very same input snapped it forward.
+  it('snaps a back-dated quarterly rule to the first future period of its own series', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 25000,
+      category: 'housing',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '管理費',
+      intervalMonths: 3,
+      dayOfMonth: 10,
+      startsOn: '2025-11-10',
+      endsOn: null,
+      assetId: null,
+    })
+
+    // Series from the 2025-11-10 anchor: 11-10 → 2026-02-10 → 2026-05-10.
+    // today is 2026-05-07, so 2026-05-10 is the first period still ahead —
+    // on the 3-month grid, not merely "some future date".
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-10')
+    expect(values.startsOn).toBe('2025-11-10')  // the rule still records when it began
+  })
+
+  it('snaps a long back-dated monthly rule to this month, not to startsOn', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 1200,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '訂閱',
+      intervalMonths: 1,
+      dayOfMonth: 15,
+      startsOn: '2024-01-15',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-05-15')
+  })
+
+  // Boundary inherited verbatim from updateRule / resumeRule: snapToFuture
+  // advances while `curr <= today`, so an anchor landing on today moves to the
+  // next period rather than being materialised by tonight's cron.
+  it('moves an anchor that lands on today to the next period', async () => {
+    queueDbResult([GROUP])
+    queueDbResult([{ id: 'rule-1' }])
+
+    await createRule({
+      amount: 500,
+      category: 'other',
+      paidBy: 'user-a',
+      splitType: 'half',
+      description: '今天建立',
+      intervalMonths: 1,
+      dayOfMonth: 7,
+      startsOn: '2026-05-07',
+      endsOn: null,
+      assetId: null,
+    })
+
+    const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
+    expect(values.nextOccurrenceAt).toBe('2026-06-07')
   })
 
   it('rejects when paidBy not in viewer group', async () => {

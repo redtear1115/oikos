@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-15
+last_updated: 2026-09-16
 status: shipped
 first_shipped_in: v0.8.0
 updates:
@@ -7,9 +7,9 @@ updates:
   - v0.8.1: polish + helpers shared
   - v0.13.0: Expense mirror — actions / queries / Settings 子頁 + Dashboard PendingExpenseStack + AddSheet 改一下 + Records 入口（PRs #76 #77 #78，closes #18）
   - v0.15.3: `source_type` / `source_ref_id` 跨 feature 來源欄位（給 [savings-view](savings-view-design.md) 自動化用，#166）
-  - v1.5.15: weighted 分攤比例納入支出 pending snapshot（#1243）
+  - v1.5.15: weighted 分攤比例納入支出 pending snapshot（#1243）；createRule 補上 `snapToFuture`，起始日在過去的規則不再顯示過去的「下次」日期（#1244）
 related_specs: [income, transactions, inbox-layer, savings-view, insurance, solo-mode]
-related_issues: ["#18", "#166", "#1243"]
+related_issues: ["#18", "#166", "#1243", "#1244"]
 ---
 
 # 自訂定期收支
@@ -116,7 +116,7 @@ related_issues: ["#18", "#166", "#1243"]
 
 - `interval_months` / `day_of_month` / `starts_on` / `ends_on` / `next_occurrence_at` — 排程錨點
 - `paused_at` / `deleted_at` — soft states，cron 跑前過濾
-- `next_occurrence_at` 維護：rule 建立時由 server action 計算（`startsOn` 之後第一個落在 `day_of_month` 的日期）；每次 cron 產 pending 後 += `interval_months`（並對 day_of_month 做 clamp）；`startsOn` / `interval_months` / `day_of_month` 改動時由 server action 重算
+- `next_occurrence_at` 維護：rule 建立時由 server action 計算（`startsOn` 之後第一個落在 `day_of_month` 的錨點，**再 snap 到 today 之後的同一系列期別**）；每次 cron 產 pending 後 += `interval_months`（並對 day_of_month 做 clamp）；`startsOn` / `interval_months` / `day_of_month` 改動時由 server action 重算（同一套 snap）
 
 ### Pending（兩張表）
 
@@ -161,7 +161,10 @@ related_issues: ["#18", "#166", "#1243"]
 
 - **正常每日跑**：每個規則一次前進 1 期。每天最多產一張 pending
 - **規則暫停 N 個月後 resume**：`resumeRule` action 內，先把 `next_occurrence_at` snap 到「未來最近的 anchor」（即 `startsOn` 之後第一個 anchor > today），再清掉 `paused_at`。這樣 resume 後不會產任何補登
-- **規則建立後第一次**：`next_occurrence_at` 計算為「`startsOn` 之後第一個落在 `day_of_month` 的日期」。Cron 跑到那天才產 pending。**不 backfill 過去**
+- **規則建立後第一次**：`next_occurrence_at` 計算為「`startsOn` 之後第一個落在 `day_of_month` 的錨點」，再往前 snap 整數個 `interval_months` 直到 > today（同 `updateRule` / `resumeRule` 的 `snapToFuture`）。Cron 跑到那天才產 pending。**不 backfill 過去**
+  - **v1.5.15 之前 create 少了 snap 這一步（#1244）**：`startsOn` 在過去的規則建立後，列表上的「下次 {date}」就是一個已經過去的日期，而同一筆規則只要進編輯存檔就會被修正——同一個欄位在「新建」與「編輯」兩條路徑上結果不同。本節上方的「不 backfill 過去」與下方 acceptance 表的「next_occurrence 從未來最近的錨日開始」一直是對的，不符的是實作。
+  - **邊界**：`snapToFuture` 的條件是 `curr <= today`，所以錨點剛好落在 today 的規則（表單預設 `dayOfMonth = 今天`、`startsOn = 今天`，最常見的一種）會推到下一期，而不是當晚就產一張 pending。這是從 `updateRule` / `resumeRule` 原封不動繼承的語義，代價是「今天這期」要自己走 AddSheet / IncomeSheet 記——與「不 backfill 過去」同一個立場。
+  - **既有資料不做 migration**：`next_occurrence_at` 落在過去的舊規則不是凍住的，cron 每晚推進一期並產一張 pending，會自己追上。那些 pending 是對真實期別的提案，批次 snap 等於替使用者把它們刪掉（`(rule_id, period_start)` 是 unique，已產生的不會重複，所以 migration 只能砍掉還沒產的）。取捨留給使用者：不想要就 skip 卡片，或編輯規則一次校正。
 - **Cron 連續多天 outage 後恢復**：每天最多補 1 期，連續 N 天才追上。實務上 pg_cron outage 罕見且短，可接受
 
 ---
@@ -241,7 +244,8 @@ related_issues: ["#18", "#166", "#1243"]
 |---|---|
 | 規則 day_of_month=31，遇到 2 月 | clamp 到 2 月最後一天（28 或 29），產 pending 用 clamped date |
 | 規則 day_of_month=31，遇到 4/6/9/11 月 | clamp 到 30 |
-| 用戶建立規則時 startsOn 在過去 3 個月 | 不 backfill；next_occurrence 從**未來最近**的錨日開始 |
+| 用戶建立規則時 startsOn 在過去 3 個月 | 不 backfill；next_occurrence 從**未來最近**的同系列錨日開始（v1.5.15 起實作才真的符合，#1244） |
+| 用戶建立規則時 day_of_month 就是今天 | 第一期是下一期，不是今晚；「今天這期」自己記 |
 | 用戶 pause 期間錯過 2 期 | resume 不補登。`resumeRule` snap next_occurrence_at 到未來最近 anchor，pending 卡片 0 張 |
 | 用戶 pause 期間有未確認 pending | pause 不影響既有 pending；用戶仍可 confirm/skip/edit 該卡片 |
 | 用戶 delete（軟刪）規則 | 同 transaction：UPDATE rule SET deleted_at + DELETE active pendings；已 resolved 的 pending 不動（指向真實 tx，留作審計）；已 skipped 的不動（90 天後 pg_cron purge） |

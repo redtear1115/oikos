@@ -52,7 +52,16 @@ export const createRule = action(async (input: RecurringExpenseRuleInput): Promi
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  const nextOccurrenceAt = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  // Same snap as `updateRule` / `resumeRule` below (#1244). `firstAnchorFromStart`
+  // only aligns the anchor to `dayOfMonth`; with a back-dated `startsOn` that
+  // anchor is itself in the past, and the rule is born showing a "next run"
+  // date that has already been and gone. Snapping walks it forward whole
+  // intervals so it lands on a real future period of the same series.
+  const today = new Date().toISOString().slice(0, 10)
+  const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  const nextOccurrenceAt = firstAnchor > today
+    ? firstAnchor
+    : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, today)
 
   const [created] = await db
     .insert(recurringExpenseRules)

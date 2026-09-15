@@ -50,7 +50,14 @@ export const createRule = action(async (input: RecurringIncomeRuleInput): Promis
   assertRecipientInGroup(v.recipientId, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  const nextOccurrenceAt = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  // Same snap as `updateRule` / `resumeRule` below (#1244) — see the matching
+  // comment in `actions/recurringExpense.ts`. A back-dated `startsOn` otherwise
+  // produces a rule whose "next run" date is already in the past.
+  const today = new Date().toISOString().slice(0, 10)
+  const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  const nextOccurrenceAt = firstAnchor > today
+    ? firstAnchor
+    : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, today)
 
   const [created] = await db
     .insert(recurringIncomeRules)
