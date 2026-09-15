@@ -185,11 +185,17 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
         </Link>
         {/* #1174 — every /assets/[id] variant renders this header, so the
             asset name is the page's one h1. */}
+        {/* #1249 — `truncate` used to sit on the h1 itself. That is fine for a
+            plain string, but insurance passes an <AssetSwitcher> button as the
+            name, and `overflow: hidden` clipped the button's ::before hit-area
+            back down to its 30px box. The clipping is invisible: the pill looks
+            identical, it just stops responding 7px outside itself. Truncation
+            now lives on an inner span for the string case only. */}
         <h1
-          className="flex-1 text-lg font-medium tracking-tight truncate min-w-0 text-center"
+          className="flex-1 text-lg font-medium tracking-tight min-w-0 text-center"
           style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}
         >
-          {name}
+          {typeof name === 'string' ? <span className="block truncate">{name}</span> : name}
         </h1>
         {onEditClick ? (
           <button

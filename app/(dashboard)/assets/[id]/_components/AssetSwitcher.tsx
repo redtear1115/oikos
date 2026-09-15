@@ -156,13 +156,19 @@ export function AssetSwitcher({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-chip pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90"
+        className="relative inline-flex items-center gap-1.5 min-w-0 h-[30px] border-0 cursor-pointer text-left rounded-chip pl-2 pr-1.5 -ml-2 transition-colors hover:brightness-95 active:brightness-90 before:absolute before:-inset-y-[7px] before:inset-x-0 before:content-['']"
         style={{ background: open ? 'rgba(255,255,255,0.75)' : triggerBg }}
-        aria-label={t.assetDetail.switcherAriaLabel}
+        // #1249 — no `aria-label` here on purpose. This trigger is rendered
+        // inside the page's `<h1>` (AibutsuHeader `name`), and an aria-label
+        // would override the visible asset name for BOTH the button and the
+        // heading — the page would announce as "切換保單", never as the policy.
+        // The name now comes from the visible text, with the affordance in a
+        // visually-hidden suffix plus the implicit button role / haspopup.
         aria-haspopup="listbox"
         aria-expanded={open}
       >
         <span className="truncate min-w-0">{children}</span>
+        <span className="sr-only">{t.assetDetail.switcherAriaLabel}</span>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0 opacity-70">
           <path d="M3 4.5l3 3 3-3" stroke={chevronInk} strokeWidth="1.8"
             strokeLinecap="round" strokeLinejoin="round"/>

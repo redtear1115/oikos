@@ -65,7 +65,7 @@ describe('/migrate preview file picker', () => {
 describe('CsvFileUploadWidget default', () => {
   it('defaults to CSV text only, so a new caller cannot accidentally accept .ofx', () => {
     const { container } = render(
-      <CsvFileUploadWidget onFile={vi.fn()} promptText="prompt" buttonText="button" />,
+      <CsvFileUploadWidget onFile={vi.fn()} promptText="prompt" buttonText="button" retryText="retry" />,
     )
     expect(extensionsOf(acceptOf(container)).sort()).toEqual(['.csv', '.txt'])
   })

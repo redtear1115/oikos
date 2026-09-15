@@ -9,6 +9,19 @@
  *   - category falls back to 'other' silently (warning, not error)
  *
  * Warnings don't block import; errors do.
+ *
+ * The English strings below are diagnostics, not UI copy, and are deliberately
+ * not translated (#1249). Traced end to end: `index.ts:237` collects them →
+ * `ImportContent.tsx:164` joins them into `errorDetail` → `actions/import.ts:261`
+ * writes them to `import_batches.error_detail`. There is no render path — the UI
+ * shows the *count* (`invalidCount`) and its own localized copy
+ * (`t.settings.import.errors.*`). Translating them would put four locales of
+ * copy into a column only a developer reads.
+ *
+ * What would make them user-visible, and therefore need i18n: rendering
+ * `errorDetail` (or `result.errors`) anywhere in `settings/import`. That change
+ * would not fail any test — the strings would simply appear in English on
+ * ja / en / zh-CN screens.
  */
 
 import { isValidCategoryId } from '@/lib/categories'

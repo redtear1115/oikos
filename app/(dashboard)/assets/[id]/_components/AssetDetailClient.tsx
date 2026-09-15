@@ -226,7 +226,7 @@ export function AssetDetailClient({
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium"
+                className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
                 style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
               >
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">

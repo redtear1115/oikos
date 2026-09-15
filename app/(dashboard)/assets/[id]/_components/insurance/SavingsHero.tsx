@@ -78,7 +78,10 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
           {breakdownParts.map((p, idx) => (
             <span key={p.cat}>
               {idx > 0 && ' · '}
-              {getIncomeCategory(p.cat).label} NT$ {p.amount.toLocaleString()}
+              {/* #1249 — `.label` is the hard-coded zh-TW string in
+                  lib/incomeCategories.ts; `t.incomeCategory[id]` is the
+                  localized name, same lookup as the 5 callsites on /records. */}
+              {t.incomeCategory[getIncomeCategory(p.cat).id] ?? getIncomeCategory(p.cat).label} NT$ {p.amount.toLocaleString()}
             </span>
           ))}
         </div>

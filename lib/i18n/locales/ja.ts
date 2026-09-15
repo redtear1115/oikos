@@ -1322,6 +1322,16 @@ export const ja: Translations = {
     car: {
       color: '色',
       colorNoneAriaLabel: '色を指定しない',
+      colorNames: {
+        white: 'ホワイト',
+        black: 'ブラック',
+        silver: 'シルバー',
+        dark_gray: 'ダークグレー',
+        dark_red: 'ダークレッド',
+        dark_blue: 'ダークブルー',
+        brown: 'ブラウン',
+        champagne: 'シャンパンゴールド',
+      },
       plate: 'ナンバー',
       platePlaceholder: '例: ABC-1234',
       year: '年式',

@@ -1669,6 +1669,7 @@ export type Translations = {
     car: {
       color: string
       colorNoneAriaLabel: string
+      colorNames: Record<'white' | 'black' | 'silver' | 'dark_gray' | 'dark_red' | 'dark_blue' | 'brown' | 'champagne', string>
       plate: string
       platePlaceholder: string
       year: string
@@ -4151,6 +4152,16 @@ export const zhTW: Translations = {
     car: {
       color: '顏色',
       colorNoneAriaLabel: '不指定顏色',
+      colorNames: {
+        white: '白色',
+        black: '黑色',
+        silver: '銀色',
+        dark_gray: '深灰色',
+        dark_red: '深紅色',
+        dark_blue: '深藍色',
+        brown: '棕色',
+        champagne: '香檳金',
+      },
       plate: '車牌',
       platePlaceholder: '例：ABC-1234',
       year: '年份',

@@ -1322,6 +1322,16 @@ export const en: Translations = {
     car: {
       color: 'Color',
       colorNoneAriaLabel: 'No color',
+      colorNames: {
+        white: 'White',
+        black: 'Black',
+        silver: 'Silver',
+        dark_gray: 'Dark gray',
+        dark_red: 'Dark red',
+        dark_blue: 'Dark blue',
+        brown: 'Brown',
+        champagne: 'Champagne',
+      },
       plate: 'Plate',
       platePlaceholder: 'e.g., ABC-1234',
       year: 'Year',
