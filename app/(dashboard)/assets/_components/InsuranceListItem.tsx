@@ -262,9 +262,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 {name}
               </div>
               <div
-                className="text-xs"
+                className="text-xs mt-1"
                 style={{
-                  marginTop: 3,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
@@ -470,18 +469,23 @@ function TimelineBar({
 }) {
   return (
     <div>
+      {/* #1249 — `rounded-sm` is 4px on a 6px-tall bar, so CSS corner scaling
+          clamps it straight back to 3px (4+4 > 6 → all radii × 6/8). Identical
+          render, one fewer off-scale literal. */}
       <div
+        className="rounded-sm"
         style={{
-          height: 6, borderRadius: 3,
+          height: 6,
           background: 'rgba(58,36,25,0.08)',
           position: 'relative', overflow: 'hidden',
         }}
       >
         <div
+          className="rounded-sm"
           style={{
             position: 'absolute', left: 0, top: 0, bottom: 0,
             width: `${Math.max(0, Math.min(100, pct))}%`,
-            background: fillColor, borderRadius: 3,
+            background: fillColor,
           }}
         />
       </div>

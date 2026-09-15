@@ -150,7 +150,7 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
   const dim = amount === 0
   return (
     <div>
-      <div className="text-xs tracking-[0.6px] mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-xs tracking-label mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
       <div
         // #1174 — 32 was off the type scale; the secondary stat drops to the
         // nearest static tier below (text-page, 26). 40 is only a clamp() floor.

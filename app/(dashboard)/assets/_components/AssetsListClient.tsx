@@ -441,11 +441,10 @@ export function AssetsListClient({ items }: Props) {
     >
       {/* L2 — same spec as Records dual-toggle pill (#548 review #4). */}
       <div
-        className="inline-flex items-center rounded-full"
+        className="inline-flex items-center rounded-full p-1"
         style={{
           background: 'var(--surface)',
           border: '0.5px solid var(--hairline)',
-          padding: 3,
           gap: 2,
         }}
       >
@@ -652,7 +651,7 @@ export function AssetsListClient({ items }: Props) {
       {/* L1Header — unified across Dashboard / Records / Assets (#545 §1). */}
       <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
         <h1
-          className="text-2xl font-medium tracking-tight"
+          className="text-page font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {t.assets.title}

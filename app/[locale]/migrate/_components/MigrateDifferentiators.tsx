@@ -29,12 +29,11 @@ export function MigrateDifferentiators({
             }}
           >
             <span
-              className="text-sm md:text-base"
+              className="text-sm md:text-base tracking-label"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
                 color: 'var(--ink-3)',
-                letterSpacing: '0.6px',
               }}
               aria-hidden
             >

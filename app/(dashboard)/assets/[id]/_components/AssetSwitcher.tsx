@@ -207,10 +207,10 @@ function SwitcherRow({
     >
       {/* Type icon square */}
       <div
+        className="rounded-md"
         style={{
           width: 24,
           height: 24,
-          borderRadius: 7,
           background: `var(--asset-tint-${item.type})`,
           display: 'flex',
           alignItems: 'center',

@@ -137,7 +137,7 @@ export function CarHeroCard({
               <span
                 // #1174 — the bullets are not a name; role="img" lets the
                 // localized label replace them for screen readers.
-                className="shrink-0 text-xs px-2 py-0.5"
+                className="shrink-0 text-xs px-2 py-0.5 rounded-sm"
                 role="img"
                 aria-label={t.assetListItem.plateMaskedAriaLabel}
                 style={{
@@ -145,7 +145,6 @@ export function CarHeroCard({
                   fontFamily: '"JetBrains Mono", monospace',
                   letterSpacing: 0.8,
                   background: 'rgba(58,36,25,0.06)',
-                  borderRadius: 5,
                 }}
               >
                 ●●●●●●

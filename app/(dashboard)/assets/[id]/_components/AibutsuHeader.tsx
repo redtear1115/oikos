@@ -63,10 +63,9 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             role="tab"
             aria-selected={isCurrent}
             onClick={() => router.push(`/assets/${s.id}`)}
-            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pr-3 py-1.5 rounded-full"
+            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pl-2 pr-3 py-1.5 rounded-full"
             style={{
               height: 36,
-              paddingLeft: 7,
               background: isCurrent ? 'var(--ink)' : 'rgba(255,255,255,0.55)',
               border: isCurrent ? 'none' : '1px solid rgba(58,36,25,0.08)',
               scrollSnapAlign: 'start',
@@ -83,10 +82,10 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
           >
             {/* Type icon square */}
             <div
+              className="rounded-md"
               style={{
                 width: 24,
                 height: 24,
-                borderRadius: 7,
                 background: isCurrent ? 'rgba(255,255,255,0.18)' : `var(--asset-tint-${s.type})`,
                 display: 'flex',
                 alignItems: 'center',

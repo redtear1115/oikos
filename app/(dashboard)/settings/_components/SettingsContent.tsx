@@ -42,7 +42,7 @@ export async function SettingsContent({
         {/* The page's only h1 — sibling subroutes (trust / import / currency)
           * already have one; this was a styled div (#1172). */}
         <h1
-          className="text-2xl font-medium tracking-tight"
+          className="text-page font-medium tracking-tight"
           style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
         >
           {t.settings.title}

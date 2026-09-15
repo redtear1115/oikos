@@ -295,7 +295,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {/* Amount + recipient toggle */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div
-              className="text-xs tracking-[0.6px] mb-3"
+              className="text-xs tracking-label mb-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.amountLabel}
@@ -353,7 +353,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {/* Categories */}
           <div className="pt-5 pb-[18px]">
             <div
-              className="text-xs tracking-[0.6px] px-6 pb-3"
+              className="text-xs tracking-label px-6 pb-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.categoryLabel}
@@ -374,7 +374,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {policyRelevant && (
             <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
               <div
-                className="text-xs tracking-[0.6px] px-1 py-3"
+                className="text-xs tracking-label px-1 py-3"
                 style={{ color: 'var(--ink-3)' }}
               >
                 {t.incomeSheet.policyLink}
@@ -474,7 +474,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {/* Date */}
           <div className="px-5 pt-1 pb-2">
             <div
-              className="text-xs tracking-[0.6px] px-1 py-3"
+              className="text-xs tracking-label px-1 py-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.addSheet.date}
@@ -486,7 +486,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           <div className="px-5 pt-3 pb-6 border-t border-hairline">
             <label
               htmlFor={noteId}
-              className="block text-xs tracking-[0.6px] px-1 py-3"
+              className="block text-xs tracking-label px-1 py-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.noteLabel}

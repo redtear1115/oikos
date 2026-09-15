@@ -181,9 +181,8 @@ export function ChildCard({
             </div>
             {/* Info line */}
             <div
-              className="text-xs"
+              className="text-xs mt-1"
               style={{
-                marginTop: 3,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
@@ -281,9 +280,8 @@ export function PetCard({
               {name}
             </div>
             <div
-              className="text-xs"
+              className="text-xs mt-1"
               style={{
-                marginTop: 3,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
@@ -364,9 +362,8 @@ export function PlantCard({
               {name}
             </div>
             <div
-              className="text-xs"
+              className="text-xs mt-1"
               style={{
-                marginTop: 3,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
@@ -456,9 +453,8 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
             </div>
             {notes && (
               <div
-                className="text-xs"
+                className="text-xs mt-1"
                 style={{
-                  marginTop: 3,
                   color: 'var(--ink-3)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
