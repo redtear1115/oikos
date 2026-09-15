@@ -4,9 +4,24 @@ Re-run after editing this file:
 
     python3 scripts/build-native-splash.py
 
-Writes 14 files in place — 11 Android drawables and 3 iOS Splash.imageset
-entries. Their pixel sizes are fixed by the Capacitor template and are NOT
-derived from anything here; the script only repaints them.
+Writes 19 files in place, over three separate launch surfaces:
+
+  1. `ios/.../Splash.imageset/*` (3 files) — the whole iOS launch image,
+     shown through LaunchScreen.storyboard with `scaleAspectFill`.
+  2. `android/.../drawable{,-port,-land}-*/splash.png` (11 files) — the
+     legacy Capacitor full-screen drawable.
+  3. `android/.../drawable-*dpi/splash_icon.png` (5 files) — the *icon* for
+     androidx core-splashscreen, which is what Android actually draws. It
+     feeds `windowSplashScreenAnimatedIcon` in `values/styles.xml`, which the
+     library turns into the compat window background below API 31 and maps
+     onto the platform's system splash screen from API 31 up.
+
+Surfaces 1 and 2 are full-screen compositions; surface 3 is an icon on the
+system's own geometry, so it does NOT share their proportions — see
+SPLASH_ICON_* below.
+
+Pixel sizes for surfaces 1 and 2 are fixed by the Capacitor template and are
+NOT derived from anything here; the script only repaints them.
 
 Source artwork is the warm-lamp app icon,
 `ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png` — the
@@ -70,6 +85,36 @@ IOS = [
     ('ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732.png', 2732, 2732),
     ('ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732-1.png', 2732, 2732),
     ('ios/App/App/Assets.xcassets/Splash.imageset/splash-2732x2732-2.png', 2732, 2732),
+]
+
+# --- system splash icon (androidx core-splashscreen + Android 12 system splash) ---
+#
+# This surface has its own geometry and the full-screen ratio above does not
+# apply. Both paths agree on it, so one asset serves both:
+#   - core-splashscreen `drawable-v23/compat_splash_screen_no_icon_background`
+#     draws the icon in a 288dp box, then strokes a 410dp oval with a 109dp
+#     border in the background colour — leaving a 192dp hole;
+#   - the Android 12+ system splash uses the same 288dp canvas / 192dp visible
+#     circle for an icon with no icon-background colour.
+# So the artwork has to fit a centred circle of 2/3 the canvas.
+SPLASH_ICON_CANVAS_DP = 288
+# The mark (orbit ring, sun, moon) spans 0.781 of the master square's width,
+# measured as the bounding circle of the background mask. 230dp x 0.781 =
+# 180dp, which sits inside the 192dp circle with ~6dp of clearance each side.
+SPLASH_ICON_MASTER_DP = 230
+# The icon is painted on an opaque #FBEDE0 ground rather than a transparent
+# one, on purpose: it is the same colour as `windowSplashScreenBackground`, so
+# it is invisible whether or not the platform actually applies the circular
+# mask, and it avoids alpha fringing on the soft lamp glow. The coupling is
+# the catch — change `windowSplashScreenBackground` in values/styles.xml
+# without re-running this script and a cream square (or disc) appears behind
+# the mark. Nothing fails; it just looks wrong on a cold start.
+SPLASH_ICON_DENSITIES = [
+    ('mdpi', 1.0),
+    ('hdpi', 1.5),
+    ('xhdpi', 2.0),
+    ('xxhdpi', 3.0),
+    ('xxxhdpi', 4.0),
 ]
 
 
@@ -150,6 +195,17 @@ def compose(logo, w, h, factor):
     return canvas
 
 
+def compose_icon(logo, density):
+    """The system splash icon: master square centred on a 288dp canvas."""
+    canvas_px = int(round(SPLASH_ICON_CANVAS_DP * density))
+    master_px = int(round(SPLASH_ICON_MASTER_DP * density))
+    canvas = Image.new('RGB', (canvas_px, canvas_px), TARGET_BG)
+    offset = (canvas_px - master_px) // 2
+    canvas.paste(logo.resize((master_px, master_px), Image.LANCZOS),
+                 (offset, offset))
+    return canvas
+
+
 def main():
     logo = regrounded_master(os.path.join(REPO, MASTER))
     for group, factor in ((ANDROID, ANDROID_FACTOR), (IOS, IOS_FACTOR)):
@@ -157,6 +213,14 @@ def main():
             compose(logo, w, h, factor).save(
                 os.path.join(REPO, rel), 'PNG', optimize=True)
             print(f'{rel}  {w}x{h}  logo {int(round(factor * min(w, h)))}px')
+    for bucket, density in SPLASH_ICON_DENSITIES:
+        rel = f'android/app/src/main/res/drawable-{bucket}/splash_icon.png'
+        path = os.path.join(REPO, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        icon = compose_icon(logo, density)
+        icon.save(path, 'PNG', optimize=True)
+        print(f'{rel}  {icon.width}x{icon.height}  '
+              f'mark {int(round(SPLASH_ICON_MASTER_DP * density))}px')
 
 
 if __name__ == '__main__':
