@@ -485,7 +485,7 @@ export function RecordsList({
             --safe-top already answers it. */}
         <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
           <h1
-            className="text-2xl font-medium tracking-tight"
+            className="text-page font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
           >
             {t.records.title}

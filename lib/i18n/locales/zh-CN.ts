@@ -1312,6 +1312,16 @@ export const zhCN: Translations = {
     car: {
       color: '颜色',
       colorNoneAriaLabel: '不指定颜色',
+      colorNames: {
+        white: '白色',
+        black: '黑色',
+        silver: '银色',
+        dark_gray: '深灰色',
+        dark_red: '深红色',
+        dark_blue: '深蓝色',
+        brown: '棕色',
+        champagne: '香槟金',
+      },
       plate: '车牌',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
