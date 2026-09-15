@@ -46,6 +46,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **Android 工具鏈升到 Gradle 9.5.1 / AGP 9.2.1，恢復在 JDK 25 上建置（#1207）**：Android Studio 內附 JBR 漂到 JDK 25 後，Gradle 8.14.3 連 build script 都編不起來（`Unsupported class file major version 69`），原生包打不出來。AGP 9 移除了 `proguard-android.txt`，app 與 `@capacitor-community/apple-sign-in` 改用 `proguard-android-optimize.txt`（後者經既有 patch 延伸，順手把已棄用的 `lintOptions` 換成 `lint`——9.2.1 下舊寫法仍可建置，不是必要改動）。merge 後既有 checkout 要 `rm -rf node_modules && npm ci`：對已套過舊 patch 的 `node_modules` 套新 patch 會失敗，而 postinstall 是 fail-soft，症狀是 build 撞 `proguard-android.txt is no longer supported`。未升 `@capacitor/*`，iOS SPM 的 8.3.4 pin 不受影響。同時撤回 CLAUDE.md 裡「JDK 25 + Gradle 8.14.3 實測可建置」的錯誤敘述。
 
+### 使用者可見變化
+
+- **分析工具不再收到你的交易描述與金額（#1267）**：PostHog 的 autocapture 預設是開的，而且預設會把你點到的那個元素的文字一起送出。Dashboard 的交易列整列可點，說明在一個 `<span>` 裡、金額在同一顆按鈕裡的 `<div>` 裡——所以點一筆交易，就可能把「晚餐」和「NT$450」送到第三方。畫面上不會有任何異狀，錯誤訊息、警告、載入速度全都正常，只有第三方後台的一個沒人會打開的欄位裡有東西。現在送出的事件只剩「有人點了這個位置的這種元素」，文字與屬性一律遮罩；Session Replay（會錄下整個畫面）也在前端鎖成關閉。
+
+### 技術變更
+
+- **PostHog autocapture 遮罩（#1267）**：`lib/analytics/posthogPrivacy.ts` 集中 `autocapture` / `mask_all_text` / `mask_all_element_attributes` / `disable_session_recording`，由 `app/providers.tsx` 在 `init()` 最後展開。選遮罩而不是逐元素加 `ph-no-capture`：後者要先窮舉所有「渲染金額或說明的可點擊元素」，而那份清單靜態掃不出來——`CompactRow` 把內容放在 `const inner` 再塞進 `<button>`，任何以標籤範圍為單位的 scanner 都會漏掉它，新元件更是預設會漏。遮罩是全域的，明年新增的元件自動涵蓋。保留下來的是互動骨架（tag、classes、`$elements_chain` 位置、`$current_url`、連結的 `attr__href`）；`mask_all_text` 只被 autocapture 與 dead-click autocapture 讀取，18 個具名 `track()` 事件與手動 `$pageview` 不受影響——自 #1015 起分析本來就走具名事件，不靠 `$el_text`。
+  - `person_profiles: 'identified_only'` + `persistence: 'memory'` 擋的是 person 層級識別，跟事件 payload 無關，所以擋不到這件事。
+  - **失效的樣子**：把遮罩拿掉不會有任何徵兆——事件照送、圖表照畫，只是 `$el_text` 又開始帶帳本內容。`tests/posthog-ledger-masking.test.tsx` 是護欄：用真的 `PostHog` 實例 + 真的 `CompactRow` 跑三種點擊（整列 / 說明 / 金額），斷言 payload 裡沒有那兩個字串；同一支測試附一組**未遮罩對照組**，如果對照組也不漏，代表 harness 壞了而不是程式安全了。另一半是原始碼掃描：provider 必須展開那個常數、不得自行寫同名 key、全樹只能有一個 `posthog.init()`、不得出現 `set_config()` / `startSessionRecording()` / `capture_copied_text`。
+  - ⚠️ 未處理：`$current_url` 永遠不被任何遮罩選項涵蓋，而 `/records` 的篩選器會把 `fAmtMin` / `fAmtMax` 寫進 query string。那是使用者自己設的金額門檻，不是交易紀錄，但仍是關於其花費規模的資料。修法與 gclid 歸因有取捨，另案處理。
+
 ## [1.5.14] - 2026-09-15
 
 主題：**看起來正常，不等於成立**——這一版把一批「畫面沒破、測試全綠、review 會過」的東西成批打開來看：對外宣稱的端對端加密其實是 server 持鑰的欄位級加密、四個 CSS 變數從來沒有定義過、關起來的 sheet 一直待在 Tab 順序裡、五張理念卡只有中文。每一項的共同點都是它不會報錯，所以沒有人回報過。

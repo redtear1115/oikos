@@ -6,6 +6,7 @@ import { useEffect } from 'react'
 import { detectPlatform, isNativeApp } from '@/lib/platform'
 import { flushQueue } from '@/lib/analytics/track'
 import { POSTHOG_ENABLED } from '@/lib/analytics/enabled'
+import { POSTHOG_PRIVACY_OPTIONS } from '@/lib/analytics/posthogPrivacy'
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -34,6 +35,12 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       // pageview/pageleave intact while skipping the dead-click listener work.
       // (#922)
       capture_dead_clicks: false,
+      // #1267 — autocapture stays on, but must not carry ledger content.
+      // Deliberately spread LAST so nothing above can quietly win: the
+      // guardrail test asserts this spread is present and that none of its
+      // keys is also written literally in this file. Rationale, and what it
+      // looks like when it comes off, live in the module.
+      ...POSTHOG_PRIVACY_OPTIONS,
     })
 
     // #1002 — the platform dimension, as super properties so all 18 existing

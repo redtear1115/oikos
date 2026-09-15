@@ -1,12 +1,13 @@
 ---
-last_updated: 2026-09-13
+last_updated: 2026-09-16
 status: shipped
 first_shipped_in: v1.2.0
 updates:
   - v1.5.11: 自 `CLAUDE.md` 搬入（入口檔固定 token 稅，#1086）；內容逐字保留，只改相對連結路徑
   - v1.5.13: 補「`first_record_created` 不是活化指標」這條邊界（#1127）
+  - v1.5.15: 補「autocapture 不帶文字」這條邊界（#1267）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127"]
+related_issues: ["#1018", "#1086", "#1127", "#1267"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -26,6 +27,10 @@ related_issues: ["#1018", "#1086", "#1127"]
 - **`platform` 只在 client 事件上**：`detectPlatform()`（`lib/platform.ts`）在 SSR 回 `null`（server render 沒有平台可言）。server 端的 `signed_in` / `signed_up` 要改用 `path`（`web_oauth` / `ios_native`）分辨。所以「iOS 殼使用者的登入成功率」這類跨維度問題無解。
 - **匿名訪客數是膨脹的**：cookieless 下每個 session 算新 person。已登入用戶走 identify 所以人數可靠。訪客絕對值不可用，只有同類頁面的**相對**比較有效。
 - **維度不回填**：`platform` 自 v1.5.7 部署起才有，`path` 自 v1.5.6 起。更早的事件永遠沒有，事後無法用 SQL 補。
+- **autocapture 事件不帶任何文字或屬性，`$el_text` 永遠是空的。** `mask_all_text` + `mask_all_element_attributes` 自 v1.5.15 起鎖死（#1267）：dashboard 的交易列把說明與金額渲染在可點擊元素裡，autocapture 預設會把那些字串送給 PostHog，而隱私權政策寫的是 `no third-party analytics tracking financial data`。autocapture 留下來的只有 tag、classes、`$elements_chain` 的位置、`$current_url`，以及連結的 `attr__href`。
+  - **推論：「哪顆按鈕被點了」不能用 `$el_text` 問，要用具名 `track()` 事件。** 這不是 v1.5.15 才成立的紀律——#1015 就已經把邀請漏斗從 `$el_text` 反推改成具名事件（理由是文案一改就斷、而且只涵蓋 zh-TW）。現在只是從慣例變成結構。需要一個新的互動指標時，加一個 `track()` 埋點，不要想辦法從 autocapture 還原。
+  - **失效的樣子是查詢回 0 筆，不是報錯。** 對 `$el_text` 下條件會安靜地 match 不到任何事件，看起來像「這個按鈕沒人點」而不是「這個欄位不存在」。v1.5.15 以前的事件仍然帶著文字，所以跨這個部署日的查詢會得到一條在 2026-09 突然歸零的曲線——那是遮罩上線，不是使用者行為改變。
+- **Session Replay 在前端鎖死（`disable_session_recording: true`）。** PostHog 專案後台那個開關現在是無效的；要開必須先連同 replay 自己的遮罩（`session_recording.maskAllInputs` + `maskTextSelector: '*'`）一起改 code，因為上面那兩個選項管不到 recorder。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
 - **`first_record_created` 不是活化指標，活化用 `record_created ≥ 1`。** 它的語意是「**viewer 記了自己付的那一筆**」——`isUserFirstNonDeletedRecord()`（`lib/analytics/server.ts`）數的是 `paidBy = viewer.id` 的列，所以**替伴侶記帳的人永遠不會觸發它**（#891 刻意如此）。那個語意對它原本的用途（#734 的啟用里程碑、`via` 分流）是對的，只是不等於活化。
   - 證據：90 天內 `record_created ≥ 1` 有 17 人，`first_record_created` 只有 11 人——差的 6 人確實在用產品，卻在活化口徑下被算成沒活化。
