@@ -34,7 +34,7 @@ import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { convertAmount, type CurrencyCode } from '@/lib/currency'
 import { listRatesForGroup } from '@/lib/db/queries/currencyRates'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 export interface CreateTransactionInput {
   amount: number              // integer NTD, > 0
@@ -54,9 +54,9 @@ export interface CreateTransactionInput {
   tripId?: string | null
 }
 
-export async function createTransaction(
+export const createTransaction = action(async (
   input: CreateTransactionInput,
-): Promise<{ id: string; isFirstTransaction: boolean }> {
+): Promise<{ id: string; isFirstTransaction: boolean }> => {
   const { user, group } = await getViewerWriteContext()
 
   const validated = validateTransactionInput({
@@ -161,9 +161,9 @@ export async function createTransaction(
   })
 
   return result
-}
+})
 
-export async function softDeleteTransaction(transactionId: string): Promise<void> {
+export const softDeleteTransaction = action(async (transactionId: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
   await db.transaction(async (tx) => {
@@ -181,7 +181,7 @@ export async function softDeleteTransaction(transactionId: string): Promise<void
   })
 
   revalidateAfterTransactionMutation()
-}
+})
 
 export interface EditTransactionInput {
   oldId: string
@@ -202,7 +202,7 @@ export interface EditTransactionInput {
   tripId?: string | null
 }
 
-export async function editTransaction(input: EditTransactionInput): Promise<{ id: string }> {
+export const editTransaction = action(async (input: EditTransactionInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
 
   const validated = validateTransactionInput({
@@ -313,7 +313,7 @@ export async function editTransaction(input: EditTransactionInput): Promise<{ id
   })
 
   return { id: created.id }
-}
+})
 
 export interface PagedTxnRow {
   id: string
@@ -356,14 +356,14 @@ function resolveWireFilter(
   return resolveTxnFilter(fromWire(filterWire), viewerId, group)
 }
 
-export async function loadMoreTransactions(
+export const loadMoreTransactions = action(async (
   cursor: TxnCursor | null,
-  limit = 20,
+  limit: number = 20,
   filterWire?: TxnFilterWire,
   monthKey?: string,
   drillWire?: DrillFilterWire,
   dateRange?: DateRange,
-): Promise<PagedTxnRow[]> {
+): Promise<PagedTxnRow[]> => {
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
@@ -383,20 +383,20 @@ export async function loadMoreTransactions(
     epochWindow,
   })
   return rows.map(toPagedTxnRow)
-}
+})
 
 /**
  * Records "全部" tab feed: UNION CashTransactions + Settlements + IncomeTransactions,
  * newest first.
  */
-export async function loadMoreFeedAll(
+export const loadMoreFeedAll = action(async (
   cursor: TxnCursor | null,
-  limit = 20,
+  limit: number = 20,
   monthKey?: string,
   drillWire?: DrillFilterWire,
   filterWire?: TxnFilterWire,
   dateRange?: DateRange,
-): Promise<PagedTxnRow[]> {
+): Promise<PagedTxnRow[]> => {
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
@@ -416,7 +416,7 @@ export async function loadMoreFeedAll(
     epochWindow,
   })
   return rows.map(toPagedTxnRow)
-}
+})
 
 /**
  * Per-Asia/Taipei-month aggregates (count + expense/income sums) for one
@@ -428,13 +428,13 @@ export async function loadMoreFeedAll(
  * the same `monthKey` / `drillWire` / `filterWire` / `dateRange` through
  * unchanged.
  */
-export async function loadRecordsMonthSummaries(
+export const loadRecordsMonthSummaries = action(async (
   tab: 'all' | 'expense' | 'income',
   monthKey?: string,
   drillWire?: DrillFilterWire,
   filterWire?: TxnFilterWire,
   dateRange?: DateRange,
-): Promise<FeedMonthSummary[]> {
+): Promise<FeedMonthSummary[]> => {
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
@@ -455,17 +455,17 @@ export async function loadRecordsMonthSummaries(
   return tab === 'expense'
     ? listTransactionsMonthSummaries(opts)
     : listFeedAllMonthSummaries(opts)
-}
+})
 
 /**
  * Asset-scoped page-through (newest first). Settlements never have an asset,
  * so this is transactions-only.
  */
-export async function loadMoreTransactionsForAsset(
+export const loadMoreTransactionsForAsset = action(async (
   assetId: string,
   cursor: TxnCursor | null,
-  limit = 20,
-): Promise<PagedTxnRow[]> {
+  limit: number = 20,
+): Promise<PagedTxnRow[]> => {
   const { user } = await requireViewer()
 
   const context = await resolveViewerEpochContext(user.id)
@@ -474,7 +474,7 @@ export async function loadMoreTransactionsForAsset(
 
   const rows = await listTransactionsPagedForAsset(assetId, group.id, cursor, limit, epochWindow)
   return rows.map(toPagedTxnRow)
-}
+})
 
 /**
  * Serialize a query-layer FeedRow into the wire-shape PagedTxnRow returned by
@@ -511,7 +511,7 @@ function toPagedTxnRow(r: FeedRow): PagedTxnRow {
  * AddSheet — re-fetched whenever the sheet opens so newly-added descriptions
  * surface immediately on the next entry.
  */
-export async function getDescriptionSuggestions(): Promise<string[]> {
+export const getDescriptionSuggestions = action(async (): Promise<string[]> => {
   const { user } = await requireViewer()
 
   // Empty list (not a throw) when there's no group yet — autocomplete is
@@ -520,4 +520,4 @@ export async function getDescriptionSuggestions(): Promise<string[]> {
   if (!group) return []
 
   return listDescriptionSuggestions(group.id)
-}
+})

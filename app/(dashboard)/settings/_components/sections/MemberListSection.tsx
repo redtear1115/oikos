@@ -6,6 +6,7 @@ import { createInvite } from '@/actions/invite'
 import { shareInviteLink } from '@/lib/share'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface MemberRowData {
   memberRole: 'a' | 'b'
@@ -38,7 +39,7 @@ export function MemberListSection({ viewer, partner }: Props) {
     setInviteError(null)
     startInviteTransition(async () => {
       try {
-        const url = await createInvite()
+        const url = unwrapAction(await createInvite())
         const result = await shareInviteLink(url, t.soloBanner.shareTitle, t.soloBanner.shareText)
         setInviteToast(result === 'shared' ? t.soloBanner.sharedAndCopied : t.soloBanner.copied)
         if (inviteToastTimerRef.current) clearTimeout(inviteToastTimerRef.current)

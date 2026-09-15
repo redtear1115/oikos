@@ -46,13 +46,13 @@ describe('proposeSwap', () => {
   it('rejects when a swap is already pending', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup({ pendingSwapProposedBy: 'user-b' })])
-    await expect(proposeSwap()).rejects.toThrow('swap_already_pending')
+    expect(await proposeSwap()).toEqual({ ok: false, code: 'swap_already_pending' })
   })
 
   it('rejects in a solo group (memberB null)', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup({ memberB: null })])
-    await expect(proposeSwap()).rejects.toThrow('solo_group')
+    expect(await proposeSwap()).toEqual({ ok: false, code: 'solo_group' })
   })
 
   it('throws unauthorized with no user', async () => {
@@ -96,7 +96,7 @@ describe('cancelSwap', () => {
   it('rejects when there is nothing to cancel', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])
-    await expect(cancelSwap()).rejects.toThrow('no_pending_swap')
+    expect(await cancelSwap()).toEqual({ ok: false, code: 'no_pending_swap' })
   })
 })
 
@@ -136,13 +136,13 @@ describe('confirmSwap', () => {
       pendingSwapProposedBy: 'user-a',
       pendingSwapExpiresAt: new Date('2099-01-01'),
     })])
-    await expect(confirmSwap()).rejects.toThrow('cannot_confirm_own_proposal')
+    expect(await confirmSwap()).toEqual({ ok: false, code: 'cannot_confirm_own_proposal' })
   })
 
   it('rejects when no swap is pending', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    await expect(confirmSwap()).rejects.toThrow('no_pending_swap')
+    expect(await confirmSwap()).toEqual({ ok: false, code: 'no_pending_swap' })
   })
 
   it('rejects an expired proposal', async () => {
@@ -151,7 +151,7 @@ describe('confirmSwap', () => {
       pendingSwapProposedBy: 'user-a',
       pendingSwapExpiresAt: new Date('2000-01-01'),
     })])
-    await expect(confirmSwap()).rejects.toThrow('swap_expired')
+    expect(await confirmSwap()).toEqual({ ok: false, code: 'swap_expired' })
   })
 })
 
@@ -177,7 +177,7 @@ describe('leaveGroup', () => {
     const r = await leaveGroup()
     // epochId is what LeaveGroupFlow keys `futari_just_left_` off so
     // WelcomeSoloCard reads the same key space as PartnerLeftCard (#1125).
-    expect(r).toEqual({ groupId: 'grp-new', epochId: 'epoch-new' })
+    expect(r).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
 
     // New solo group is named after the leaver's display name
@@ -191,19 +191,19 @@ describe('leaveGroup', () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
     queueDbResult([{ balance: 500 }])
-    await expect(leaveGroup()).rejects.toThrow('balance_not_zero')
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'balance_not_zero' })
   })
 
   it('rejects when caller is member_a (must swap first)', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])
-    await expect(leaveGroup()).rejects.toThrow('only_member_b_can_leave')
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'only_member_b_can_leave' })
   })
 
   it('rejects in a solo group', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup({ memberB: null })])
-    await expect(leaveGroup()).rejects.toThrow('solo_group')
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'solo_group' })
   })
 
   it('throws unauthorized with no user', async () => {
@@ -244,7 +244,7 @@ describe('removePartner', () => {
     const r = await removePartner()
     // epochId is what RemovePartnerFlow keys its "I removed them" flag off, so
     // PartnerLeftCard can pick the removal variant (#1121).
-    expect(r).toEqual({ groupId: 'grp-1', epochId: 'epoch-2' })
+    expect(r).toEqual({ ok: true, data: { groupId: 'grp-1', epochId: 'epoch-2' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
 
     // First .set() inside the tx is the invite revocation
@@ -269,13 +269,13 @@ describe('removePartner', () => {
   it('rejects when caller is member_b (only member_a can remove)', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    await expect(removePartner()).rejects.toThrow('only_member_a_can_remove')
+    expect(await removePartner()).toEqual({ ok: false, code: 'only_member_a_can_remove' })
   })
 
   it('rejects in a solo group', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup({ memberB: null })])
-    await expect(removePartner()).rejects.toThrow('solo_group')
+    expect(await removePartner()).toEqual({ ok: false, code: 'solo_group' })
   })
 
   it('rejects when there is an active trip in the current epoch', async () => {
@@ -283,7 +283,7 @@ describe('removePartner', () => {
     queueDbResult([duoGroup()])
     queueDbResult([{ id: 'epoch-1' }])
     queueDbResult([{ n: 1 }])              // hasActiveTrip → true
-    await expect(removePartner()).rejects.toThrow('active_trip')
+    expect(await removePartner()).toEqual({ ok: false, code: 'active_trip' })
   })
 
   it('throws unauthorized with no user', async () => {

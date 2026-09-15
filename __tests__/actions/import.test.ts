@@ -72,6 +72,7 @@ const {
 } = await import('@/lib/db/schema')
 const { importCsvBatch, rollbackImportBatch, getImportHistory } = await import('@/actions/import')
 const { eq } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -140,7 +141,7 @@ describe('actions/import.ts — round-trip (#607)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const result = await importCsvBatch({
+    const result = unwrapAction(await importCsvBatch({
       source: 'honeydue',
       fileName: 'test.csv',
       totalRows: 3,
@@ -181,7 +182,7 @@ describe('actions/import.ts — round-trip (#607)', () => {
           errorDetail: 'unparseable',
         },
       ],
-    })
+    }))
 
     refs.batchIds.push(result.batchId)
 
@@ -222,7 +223,7 @@ describe('actions/import.ts — round-trip (#607)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const { batchId } = await importCsvBatch({
+    const { batchId } = unwrapAction(await importCsvBatch({
       source: 'spendee',
       fileName: 'rollback.csv',
       totalRows: 2,
@@ -247,10 +248,10 @@ describe('actions/import.ts — round-trip (#607)', () => {
         },
       ],
       errors: [],
-    })
+    }))
     refs.batchIds.push(batchId)
 
-    await rollbackImportBatch(batchId)
+    unwrapAction(await rollbackImportBatch(batchId))
 
     const cashRows = await db
       .select()
@@ -273,7 +274,7 @@ describe('actions/import.ts — round-trip (#607)', () => {
     expect(batch.rolledBackAt).not.toBeNull()
 
     // Second rollback rejects (idempotent guard).
-    await expect(rollbackImportBatch(batchId)).rejects.toThrow('import_already_rolled_back')
+    expect(await rollbackImportBatch(batchId)).toEqual({ ok: false, code: 'import_already_rolled_back' })
   })
 
   it('getImportHistory returns recent batches with rollbackable flag', async () => {
@@ -281,7 +282,7 @@ describe('actions/import.ts — round-trip (#607)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const { batchId } = await importCsvBatch({
+    const { batchId } = unwrapAction(await importCsvBatch({
       source: 'cwmoney',
       fileName: 'history.csv',
       totalRows: 1,
@@ -297,10 +298,10 @@ describe('actions/import.ts — round-trip (#607)', () => {
         },
       ],
       errors: [],
-    })
+    }))
     refs.batchIds.push(batchId)
 
-    const history = await getImportHistory()
+    const history = unwrapAction(await getImportHistory())
     expect(history.length).toBeGreaterThan(0)
     const ours = history.find((b) => b.id === batchId)
     expect(ours).toBeDefined()
@@ -313,8 +314,8 @@ describe('actions/import.ts — round-trip (#607)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    await expect(
-      importCsvBatch({
+    expect(
+      await importCsvBatch({
         source: 'generic',
         fileName: 'bad.csv',
         totalRows: 1,
@@ -331,6 +332,6 @@ describe('actions/import.ts — round-trip (#607)', () => {
         ],
         errors: [],
       }),
-    ).rejects.toThrow('import_row_invalid_amount?row=1')
+    ).toEqual({ ok: false, code: 'import_row_invalid_amount', params: { row: '1' } })
   })
 })

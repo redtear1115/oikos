@@ -7,6 +7,7 @@ import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   current: SplitType
@@ -24,7 +25,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
     setError(null)
     startTransition(async () => {
       try {
-        await updateDefaultSplitType(next)
+        unwrapAction(await updateDefaultSplitType(next))
         router.refresh()
       } catch (e) {
         setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError, t.errors.actions))

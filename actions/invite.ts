@@ -12,6 +12,7 @@ import { requireViewer, requireViewerGroup } from '@/lib/auth/viewer'
 import { captureServer } from '@/lib/analytics/server'
 import { and, eq, isNull, ne } from 'drizzle-orm'
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
+import { action } from '@/lib/action-errors'
 
 export type InvitePreview =
   | { ok: true; groupName: string; inviterName: string; hasSoloLedger: boolean }
@@ -31,7 +32,7 @@ export type InvitePreview =
  * argument, is deliberate: a shared `requireGroupMember(groupId)` guard would
  * keep inviting future callers to pass an id and trust the guard.
  */
-export async function createInvite(): Promise<string> {
+export const createInvite = action(async (): Promise<string> => {
   const { user, group } = await requireViewerGroup()
 
   const token = generateToken()
@@ -49,7 +50,7 @@ export async function createInvite(): Promise<string> {
   await captureServer(user.id, 'invite_created', { group_id: group.id })
 
   return getInviteUrl(token)
-}
+})
 
 /**
  * Validate an invite token without committing membership.
@@ -57,7 +58,7 @@ export async function createInvite(): Promise<string> {
  * to surface "is this invite still good?" + the inviter's name *before* the
  * invitee clicks the confirm CTA.
  */
-export async function previewInvite(token: string): Promise<InvitePreview> {
+export const previewInvite = action(async (token: string): Promise<InvitePreview> => {
   const { user } = await requireViewer()
 
   const [invite] = await db
@@ -101,9 +102,9 @@ export async function previewInvite(token: string): Promise<InvitePreview> {
     inviterName: inviter?.displayName ?? '',
     hasSoloLedger,
   }
-}
+})
 
-export async function acceptInvite(token: string): Promise<string> {
+export const acceptInvite = action(async (token: string): Promise<string> => {
   const { user } = await requireViewer()
 
   const [invite] = await db
@@ -181,4 +182,4 @@ export async function acceptInvite(token: string): Promise<string> {
   })
 
   return invite.groupId
-}
+})

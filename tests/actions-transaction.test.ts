@@ -67,7 +67,7 @@ describe('createTransaction', () => {
       transactedAt: '2026-05-03',
     })
 
-    expect(result).toEqual({ id: 'tx-1', isFirstTransaction: true })
+    expect(result).toEqual({ ok: true, data: { id: 'tx-1', isFirstTransaction: true } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -84,7 +84,7 @@ describe('createTransaction', () => {
       transactedAt: '2026-05-03',
     })
 
-    expect(result).toEqual({ id: 'tx-2', isFirstTransaction: false })
+    expect(result).toEqual({ ok: true, data: { id: 'tx-2', isFirstTransaction: false } })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -117,10 +117,10 @@ describe('createTransaction', () => {
   it('throws when payer not in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    await expect(createTransaction({
+    expect(await createTransaction({
       amount: 100, description: 'x', category: 'dining',
       splitType: 'half', payerId: 'user-stranger', transactedAt: '2026-05-16',
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
   it('persists trimmed notes on insert', async () => {
@@ -190,19 +190,19 @@ describe('editTransaction', () => {
       transactedAt: '2026-05-03',
     })
 
-    expect(result).toEqual({ id: 'tx-new' })
+    expect(result).toEqual({ ok: true, data: { id: 'tx-new' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
-  it('throws if old row not found', async () => {
+  it('returns record_not_found if old row not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    queueDbResult([])  // oldRow lookup empty → throws '找不到該筆紀錄'
-    await expect(editTransaction({
+    queueDbResult([])  // oldRow lookup empty → returns record_not_found
+    expect(await editTransaction({
       oldId: 'tx-missing', amount: 200, description: 'x',
       category: 'dining', splitType: 'half', payerId: 'user-a',
       transactedAt: '2026-05-16',
-    })).rejects.toThrow('record_not_found')
+    })).toEqual({ ok: false, code: 'record_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -265,7 +265,7 @@ describe('createTransaction with assetId', () => {
       transactedAt: '2026-05-03',
       assetId: 'asset-1',
     })
-    expect(result).toEqual({ id: 'tx-1', isFirstTransaction: true })
+    expect(result).toEqual({ ok: true, data: { id: 'tx-1', isFirstTransaction: true } })
   })
 
   it('rejects assetId not in group', async () => {
@@ -307,7 +307,7 @@ describe('editTransaction with assetId', () => {
       transactedAt: '2026-05-16',
       assetId: 'asset-zombie',  // same as before — exempt from not-deleted check
     })
-    expect(result).toEqual({ id: 'tx-new' })
+    expect(result).toEqual({ ok: true, data: { id: 'tx-new' } })
   })
 
   it('blocks newly assigning to a deleted asset', async () => {
@@ -335,11 +335,11 @@ describe('softDeleteTransaction', () => {
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
-  it('throws if not found', async () => {
+  it('returns record_not_found if not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
-    await expect(softDeleteTransaction('tx-missing')).rejects.toThrow('record_not_found')
+    queueDbResult([])  // update returning empty → returns record_not_found
+    expect(await softDeleteTransaction('tx-missing')).toEqual({ ok: false, code: 'record_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {

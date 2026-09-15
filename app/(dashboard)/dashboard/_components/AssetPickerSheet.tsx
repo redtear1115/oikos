@@ -9,6 +9,7 @@ import { loadAssetsForPicker, type PickerAsset } from '@/actions/asset'
 import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 type PickerTab = 'aibutsu' | 'guardian'
 
@@ -34,7 +35,7 @@ export function AssetPickerSheet({ open, selectedAssetId, onClose, onSelect }: P
     setLoadError('')
     setTab('aibutsu')
     loadAssetsForPicker()
-      .then(setAssets)
+      .then((r) => setAssets(unwrapAction(r)))
       .catch((e) => setLoadError(describeError(e, t.assetPickerSheet.loadFailed, t.common.offlineError, t.errors.actions)))
   }, [open, t])
 

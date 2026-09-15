@@ -31,6 +31,7 @@ import type { PagedIncomeRow } from '@/actions/income'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import { unwrapAction } from '@/lib/action-errors'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
   if (!kind) return ''
@@ -164,7 +165,7 @@ export function SavingsView({
     const incomeCursor = cursor
       ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
       : null
-    const rows = await loadMoreInsuranceReturns(assetId, RETURN_CATEGORIES, incomeCursor, pageSize)
+    const rows = unwrapAction(await loadMoreInsuranceReturns(assetId, RETURN_CATEGORIES, incomeCursor, pageSize))
     return rows.map(incomeToFeedRow)
   }
 
@@ -263,7 +264,7 @@ export function SavingsView({
         <TransactionFeed
           initial={initialPremiumTxns}
           pageSize={pageSize}
-          loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+          loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
           acceptInsert={(row) => row.assetId === assetId}
           onItemClick={handleTxClick}
           emptyState={

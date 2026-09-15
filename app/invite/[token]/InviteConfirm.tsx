@@ -7,6 +7,7 @@ import { track } from '@/lib/analytics/track'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
 import type { InviteAcceptError } from '@/lib/invite'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { unwrapAction } from '@/lib/action-errors'
 
 type TrustStrings = Translations['trust']
 type InviteStrings = Translations['invite']
@@ -45,7 +46,7 @@ export function InviteConfirm({ token, groupName, inviterName, hasSoloLedger, tr
     setError(null)
     startTransition(async () => {
       try {
-        await acceptInvite(token)
+        unwrapAction(await acceptInvite(token))
         router.push('/dashboard')
       } catch (err) {
         const code = err instanceof Error ? err.message : ''

@@ -44,7 +44,8 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 Realtime：Client subscribes → React state mutation
 ```
 
-- Server Actions：`actions/`
+- Server Actions：`actions/`——每個 export 都包 `action()`（`lib/action-errors.ts`），**預期內錯誤是回傳值** `{ ok: false, code, params? }`，只有非預期錯誤才 throw。原因：Next.js production 把 server action 丟出的 `Error.message` 換成 digest，client 收不到內容（#1223）。呼叫端一律 `unwrapAction(await someAction(...))`；要用 code 決定流程的地方（待確認競態）直接讀回傳值。
+  - **失效的樣子**：漏掉 `unwrapAction` 的 void action，`tsc` 不會報錯——sheet 照常關閉、沒有任何錯誤訊息、但資料沒寫進去。`tests/action-result-wire.test.ts` 會 grep 出這種呼叫點，並且真的把回傳值跑過 production 的 RSC serializer。
 - DB queries：`lib/db/queries/`
 - Validators：`lib/validators.ts`
 - Realtime：`app/(dashboard)/_components/RealtimeProvider.tsx`

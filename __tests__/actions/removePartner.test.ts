@@ -61,6 +61,7 @@ const {
 } = await import('@/lib/db/schema')
 const { removePartner } = await import('@/actions/membership')
 const { eq, isNull, and, inArray } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -143,7 +144,7 @@ describe('removePartner', () => {
     activeRefs = refs
     mockUserId = refs.userAId
 
-    const result = await removePartner()
+    const result = unwrapAction(await removePartner())
     expect(result.groupId).toBe(refs.groupId)
 
     const [group] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, refs.groupId))
@@ -181,7 +182,7 @@ describe('removePartner', () => {
     }).returning({ id: groupInvites.id })
     refs.inviteIds.push(invite.id)
 
-    await removePartner()
+    unwrapAction(await removePartner())
 
     const [row] = await db.select().from(groupInvites).where(eq(groupInvites.id, invite.id))
     expect(row.revokedAt).not.toBeNull()
@@ -201,7 +202,7 @@ describe('removePartner', () => {
     }).returning({ id: groupInvites.id })
     refs.inviteIds.push(invite.id)
 
-    await removePartner()
+    unwrapAction(await removePartner())
 
     const [row] = await db.select().from(groupInvites).where(eq(groupInvites.id, invite.id))
     expect(row.revokedAt).toBeNull()
@@ -221,7 +222,7 @@ describe('removePartner', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    await expect(removePartner()).rejects.toThrow('active_trip')
+    expect(await removePartner()).toEqual({ ok: false, code: 'active_trip' })
 
     // Group must be untouched — still duo, same open epoch.
     const [group] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, refs.groupId))
@@ -244,7 +245,7 @@ describe('removePartner', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    const result = await removePartner()
+    const result = unwrapAction(await removePartner())
     expect(result.groupId).toBe(refs.groupId)
   })
 
@@ -253,7 +254,7 @@ describe('removePartner', () => {
     activeRefs = refs
     mockUserId = refs.userBId
 
-    await expect(removePartner()).rejects.toThrow('only_member_a_can_remove')
+    expect(await removePartner()).toEqual({ ok: false, code: 'only_member_a_can_remove' })
 
     // Nothing should have changed.
     const [group] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, refs.groupId))
@@ -266,8 +267,8 @@ describe('removePartner', () => {
     mockUserId = refs.userAId
 
     // First removal makes it solo.
-    await removePartner()
+    unwrapAction(await removePartner())
 
-    await expect(removePartner()).rejects.toThrow('solo_group')
+    expect(await removePartner()).toEqual({ ok: false, code: 'solo_group' })
   })
 })

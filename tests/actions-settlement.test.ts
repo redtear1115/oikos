@@ -62,7 +62,7 @@ describe('createSettlement', () => {
       payerId: 'user-a',
       settledAt: '2026-05-03',
     })
-    expect(r).toEqual({ id: 'set-1' })
+    expect(r).toEqual({ ok: true, data: { id: 'set-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -76,12 +76,12 @@ describe('createSettlement', () => {
     })).rejects.toThrow(/金額必須是正整數/)
   })
 
-  it('throws if payer not in group', async () => {
+  it('returns payer_not_in_group if payer not in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    await expect(createSettlement({
+    expect(await createSettlement({
       amount: 50, payerId: 'user-stranger', settledAt: '2026-05-16',
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
   it('throws when group not found', async () => {
@@ -122,11 +122,11 @@ describe('softDeleteSettlement', () => {
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
-  it('throws if not found', async () => {
+  it('returns record_not_found if not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
-    await expect(softDeleteSettlement('missing')).rejects.toThrow('record_not_found')
+    queueDbResult([])  // update returning empty → returns record_not_found
+    expect(await softDeleteSettlement('missing')).toEqual({ ok: false, code: 'record_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -157,25 +157,25 @@ describe('editSettlement', () => {
       payerId: 'user-a',
       settledAt: '2026-05-03',
     })
-    expect(r).toEqual({ id: 'set-new' })
+    expect(r).toEqual({ ok: true, data: { id: 'set-new' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
-  it('throws if old row not found', async () => {
+  it('returns record_not_found if old row not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    queueDbResult([])  // update returning empty → throws '找不到該筆紀錄'
-    await expect(editSettlement({
+    queueDbResult([])  // update returning empty → returns record_not_found
+    expect(await editSettlement({
       oldId: 'set-missing', amount: 75, payerId: 'user-a', settledAt: '2026-05-16',
-    })).rejects.toThrow('record_not_found')
+    })).toEqual({ ok: false, code: 'record_not_found' })
   })
 
-  it('throws if payer not in group', async () => {
+  it('returns payer_not_in_group if payer not in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    await expect(editSettlement({
+    expect(await editSettlement({
       oldId: 'set-1', amount: 75, payerId: 'user-stranger', settledAt: '2026-05-16',
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
   it('throws unauthorized when no user', async () => {

@@ -11,7 +11,7 @@ import { fetchInvoicesByCarrier } from '@/lib/invoice/api'
 import { and, eq, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateSettings } from '@/lib/revalidate'
-import { actionError, type ActionErrorCode } from '@/lib/action-errors'
+import { action, actionError, type ActionErrorCode } from '@/lib/action-errors'
 
 /**
  * v0.9.0 Phase A — credential CRUD only.
@@ -72,9 +72,9 @@ export type CreateInvoiceCredentialInput = InvoiceCarrierInput
  * runs a verification round-trip against the API (mock in Phase A), encrypts
  * the verification code, and persists the row.
  */
-export async function createInvoiceCredential(
+export const createInvoiceCredential = action(async (
   input: CreateInvoiceCredentialInput,
-): Promise<{ id: string }> {
+): Promise<{ id: string }> => {
   const validated = validateInvoiceCarrierInput(input)
   const { user, group } = await requireViewerGroup()
 
@@ -107,17 +107,17 @@ export async function createInvoiceCredential(
 
   revalidateSettings()
   return { id: created.id }
-}
+})
 
 /**
  * Rename an existing credential. Only the nickname field is mutable in place
  * — barcode is immutable (delete + recreate to swap). Throws if the row is
  * missing, soft-deleted, or owned by someone else.
  */
-export async function renameInvoiceCredential(
+export const renameInvoiceCredential = action(async (
   id: string,
   nickname: string | null,
-): Promise<void> {
+): Promise<void> => {
   const { user, group } = await requireViewerGroup()
 
   let trimmed: string | null = null
@@ -140,7 +140,7 @@ export async function renameInvoiceCredential(
   if (updated.length === 0) throw actionError('invoice_carrier_not_found')
 
   revalidateSettings()
-}
+})
 
 /**
  * Replace the verification code on a credential (e.g. user changed it inside
@@ -148,10 +148,10 @@ export async function renameInvoiceCredential(
  * new one carrying the same barcode/nickname. The new row is freshly
  * verified before persisting; failure leaves the old row untouched.
  */
-export async function refreshInvoiceCredential(
+export const refreshInvoiceCredential = action(async (
   id: string,
   newVerificationCode: string,
-): Promise<{ id: string }> {
+): Promise<{ id: string }> => {
   const { user, group } = await requireViewerGroup()
 
   // SELECT → API verify → soft-delete → insert ALL run inside the transaction
@@ -211,13 +211,13 @@ export async function refreshInvoiceCredential(
 
   revalidateSettings()
   return { id: created.id }
-}
+})
 
 /**
  * Soft-delete a credential. The verification ciphertext stays encrypted in
  * the row until the cleanup-soft-deleted cron physically purges after 1y.
  */
-export async function deleteInvoiceCredential(id: string): Promise<void> {
+export const deleteInvoiceCredential = action(async (id: string): Promise<void> => {
   const { user, group } = await requireViewerGroup()
 
   const updated = await db
@@ -233,10 +233,10 @@ export async function deleteInvoiceCredential(id: string): Promise<void> {
   if (updated.length === 0) throw actionError('invoice_carrier_not_found')
 
   revalidateSettings()
-}
+})
 
 /** Server-rendered list helper: rows the viewer (a single user) owns. */
-export async function listInvoiceCredentialsForViewer() {
+export const listInvoiceCredentialsForViewer = action(async () => {
   const { user, group } = await requireViewerGroup()
   // shape kept thin so SettingsContent can render directly
   return await db
@@ -254,5 +254,5 @@ export async function listInvoiceCredentialsForViewer() {
       eq(invoiceCredentials.userId, user.id),
       isNull(invoiceCredentials.deletedAt),
     ))
-}
+})
 

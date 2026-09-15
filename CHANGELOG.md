@@ -20,6 +20,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### 使用者可見變化
 
+- **錯誤訊息終於會說你的語言（#1223）**：v1.5.14 花一整批工把 82 句 server 錯誤翻成四語，實際上線後一句都沒送到——en / ja / zh-CN 使用者按下儲存、遇到「這個章節已經有紀錄了，不能改幣別」這類狀況時，看到的還是「發生錯誤」。現在幣別鎖定、旅行結束日早於出發日、兩台裝置同時處理同一筆待確認支出等情況，都會顯示該語言的具體說明。
+
+### 技術變更
+
+- **server action 的預期錯誤改為回傳值（#1223）**：Next.js 的 production RSC 序列化會把 server action 丟出的 `Error.message` 換成 digest，client 只收得到一句通用的 "The specific message is omitted in production builds…"。所以 #1213 的 `throw actionError('code')` 在 dev 正常、測試全綠、prod 全滅。`actions/` 的 108 個 export 現在一律包在 `action()` 裡，預期錯誤以 `{ ok: false, code, params? }` 回傳；action 內部仍然 `throw`（那是唯一能正確中止 `db.transaction` 與巢狀 helper 的方式），由 wrapper 在邊界轉成回傳值。非預期錯誤（`Unauthorized`、validator 中文句、DB driver 訊息、`redirect()` 的 `NEXT_REDIRECT`）維持 throw，仍走 error boundary 與 Sentry。
+  - client 端 `unwrapAction()` 會把回傳的 failure 再丟成 `ActionError`，所以既有的 `try` / `catch` + `describeError` 全部不動——它們本來就不能拿掉，離線與非預期錯誤仍然是 exception。需要用「哪個 code」決定流程的地方（`AddSheet` / `IncomeSheet` 的待確認競態）直接讀回傳值，不 unwrap。
+  - **失效的樣子**：漏掉 `unwrapAction` 的 `Promise<ActionResult<void>>` 呼叫點，`tsc` 看不出來——sheet 照樣關閉、沒有任何錯誤，但什麼都沒寫進去。`tests/action-result-wire.test.ts` 用 grep 補這一刀。
+- **測試實際跑 production 序列化路徑（#1223）**：`tests/action-result-wire.test.ts` 把真實 action 的回傳值送進 `react-server-dom-webpack-server.edge.production.js`（子行程，`--conditions=react-server`）、再用對應的 production client 解回來，然後才問 `describeError` 要 en / ja 句子。同一支測試也記錄了對照組：同樣的 code 用 throw 送，解回來只剩 digest。這一類 bug 之前抓不到，就是因為整個 suite 沒有任何地方碰過那支 encoder。
 - **沒網路時打開 App，會看到 Futari 的離線頁而不是空白畫面（#1225）**：原生殼只是載入線上網站的 WebView，所以沒網路冷啟動時連第一個 byte 都拿不到——使用者看到的是系統的 WebView 錯誤頁或整片空白，沒有任何提示說「需要連線」。現在殼裡打包了一份離線頁（`server.errorPath`），載入失敗時改顯示它：暖色底、一句「現在沒有網路」、一個回到 App 的按鈕，四語依裝置語系顯示。
 
 ### 技術變更

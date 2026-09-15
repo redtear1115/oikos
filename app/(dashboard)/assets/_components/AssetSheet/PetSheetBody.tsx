@@ -11,6 +11,7 @@ import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGu
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
+import { unwrapAction } from '@/lib/action-errors'
 
 export type PetInitial = Pick<
   AssetSheetInitial,
@@ -72,9 +73,9 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
     runMutation(
       async () => {
         if (isEdit) {
-          await editPet({ id: initial!.id, ...payload })
+          unwrapAction(await editPet({ id: initial!.id, ...payload }))
         } else {
-          await createPet(payload)
+          unwrapAction(await createPet(payload))
         }
       },
       () => { onMutated?.('saved'); onClose() },

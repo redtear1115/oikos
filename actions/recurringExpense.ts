@@ -37,7 +37,7 @@ import {
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 function assertPaidByInGroup(
   paidById: string,
@@ -46,7 +46,7 @@ function assertPaidByInGroup(
   assertMemberInGroup(paidById, group, 'payer_not_in_group')
 }
 
-export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id: string }> {
+export const createRule = action(async (input: RecurringExpenseRuleInput): Promise<{ id: string }> => {
   const v = validateRecurringExpenseRuleInput(input)
   const { user, group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
@@ -82,13 +82,13 @@ export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id
   })
 
   return { id: created.id }
-}
+})
 
 export interface UpdateRuleInput extends RecurringExpenseRuleInput {
   id: string
 }
 
-export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }> {
+export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string }> => {
   const v = validateRecurringExpenseRuleInput(input)
   const { group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
@@ -135,9 +135,9 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
 
   revalidateAfterRecurringExpenseRuleMutation()
   return { id: updated.id }
-}
+})
 
-export async function pauseRule(id: string): Promise<void> {
+export const pauseRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(recurringExpenseRules)
@@ -150,9 +150,9 @@ export async function pauseRule(id: string): Promise<void> {
     .returning({ id: recurringExpenseRules.id })
   if (!updated) throw actionError('recurring_rule_not_found')
   revalidateAfterRecurringExpenseRuleMutation()
-}
+})
 
-export async function resumeRule(id: string): Promise<void> {
+export const resumeRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [rule] = await db
     .select({
@@ -182,9 +182,9 @@ export async function resumeRule(id: string): Promise<void> {
     .returning({ id: recurringExpenseRules.id })
 
   revalidateAfterRecurringExpenseRuleMutation()
-}
+})
 
-export async function softDeleteRule(id: string): Promise<void> {
+export const softDeleteRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
@@ -209,9 +209,9 @@ export async function softDeleteRule(id: string): Promise<void> {
   })
 
   revalidateAfterRecurringExpenseRuleMutation()
-}
+})
 
-export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
+export const confirmPending = action(async (pendingId: string): Promise<{ txId: string }> => {
   const { user, group } = await requireViewerGroup()
 
   const [row] = await db
@@ -280,7 +280,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
     await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
   }
   return { txId: result.txId }
-}
+})
 
 export interface EditAndConfirmInput {
   pendingId: string
@@ -291,9 +291,9 @@ export interface EditAndConfirmInput {
 // 「改一下」 path (AddSheet prefilled with pending values, submit routes here) is
 // mechanical. Currently no UI caller; do not remove. Each override field is
 // independent — undefined keeps the snapshot value, defined replaces it.
-export async function editAndConfirmPending(
+export const editAndConfirmPending = action(async (
   input: EditAndConfirmInput,
-): Promise<{ txId: string }> {
+): Promise<{ txId: string }> => {
   const overrides = validateConfirmPendingExpenseInput(input.overrides)
   const { user, group } = await requireViewerGroup()
 
@@ -373,9 +373,9 @@ export async function editAndConfirmPending(
     await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
   }
   return { txId: result.txId }
-}
+})
 
-export async function skipPending(pendingId: string): Promise<void> {
+export const skipPending = action(async (pendingId: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(pendingExpenseOccurrences)
@@ -389,4 +389,4 @@ export async function skipPending(pendingId: string): Promise<void> {
     .returning({ id: pendingExpenseOccurrences.id })
   if (!updated) throw actionError('pending_expense_not_found')
   revalidatePath('/dashboard')
-}
+})

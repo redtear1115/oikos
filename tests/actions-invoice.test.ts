@@ -30,7 +30,7 @@ describe('createInvoiceCredential', () => {
       nickname: '我的',
     })
 
-    expect(out).toEqual({ id: 'cred-1' })
+    expect(out).toEqual({ ok: true, data: { id: 'cred-1' } })
     expect(mockDb.insert).toHaveBeenCalled()
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(values.groupId).toBe(GROUP.id)
@@ -87,10 +87,10 @@ describe('createInvoiceCredential', () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'existing-1' }])  // existing row found
 
-    await expect(createInvoiceCredential({
+    expect(await createInvoiceCredential({
       barcode: '/AB12CD3',
       verificationCode: 'A1B2C3D4',
-    })).rejects.toThrow('invoice_barcode_already_bound')
+    })).toEqual({ ok: false, code: 'invoice_barcode_already_bound' })
   })
 
   it('surfaces 919 from API as user-readable error', async () => {
@@ -98,20 +98,20 @@ describe('createInvoiceCredential', () => {
     queueDbResult([])
 
     // FAIL919X is the mock fixture's trigger code for HTTP 919.
-    await expect(createInvoiceCredential({
+    expect(await createInvoiceCredential({
       barcode: '/AB12CD3',
       verificationCode: 'FAIL919X',
-    })).rejects.toThrow('invoice_mof_code_invalid')
+    })).toEqual({ ok: false, code: 'invoice_mof_code_invalid' })
   })
 
   it('surfaces 998 (system busy) as a soft retry message', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
 
-    await expect(createInvoiceCredential({
+    expect(await createInvoiceCredential({
       barcode: '/AB12CD3',
       verificationCode: 'FAIL998X',
-    })).rejects.toThrow('invoice_mof_unavailable')
+    })).toEqual({ ok: false, code: 'invoice_mof_unavailable' })
   })
 
   it('rejects when viewer has no group', async () => {
@@ -151,14 +151,13 @@ describe('renameInvoiceCredential', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // no row updated
 
-    await expect(renameInvoiceCredential('cred-x', '別人的')).rejects.toThrow('invoice_carrier_not_found')
+    expect(await renameInvoiceCredential('cred-x', '別人的')).toEqual({ ok: false, code: 'invoice_carrier_not_found' })
   })
 
   it('rejects nickname over 16 chars', async () => {
     queueDbResult([GROUP])
-    await expect(
-      renameInvoiceCredential('cred-1', '這個暱稱真的有夠長到超過十六個字符限制'),
-    ).rejects.toThrow('invoice_nickname_too_long')
+    expect(await renameInvoiceCredential('cred-1', '這個暱稱真的有夠長到超過十六個字符限制'))
+      .toEqual({ ok: false, code: 'invoice_nickname_too_long' })
   })
 })
 
@@ -179,7 +178,7 @@ describe('refreshInvoiceCredential', () => {
 
     const out = await refreshInvoiceCredential('cred-1', 'NEWCODEZ')
 
-    expect(out).toEqual({ id: 'cred-2' })
+    expect(out).toEqual({ ok: true, data: { id: 'cred-2' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     expect(mockDb.update).toHaveBeenCalled()  // soft-delete
     expect(mockDb.insert).toHaveBeenCalled()  // new row
@@ -197,9 +196,8 @@ describe('refreshInvoiceCredential', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // existing row not found inside tx
 
-    await expect(
-      refreshInvoiceCredential('cred-x', 'NEWCODEZ'),
-    ).rejects.toThrow('invoice_carrier_not_found')
+    expect(await refreshInvoiceCredential('cred-x', 'NEWCODEZ'))
+      .toEqual({ ok: false, code: 'invoice_carrier_not_found' })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     // No write should have been attempted (soft-delete / insert never reached).
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -212,9 +210,8 @@ describe('refreshInvoiceCredential', () => {
       id: 'cred-1', barcode: '/AB12CD3', nickname: null, lastSyncedAt: null,
     }])  // existing row lookup (inside tx)
 
-    await expect(
-      refreshInvoiceCredential('cred-1', 'FAIL919X'),
-    ).rejects.toThrow('invoice_mof_code_invalid')
+    expect(await refreshInvoiceCredential('cred-1', 'FAIL919X'))
+      .toEqual({ ok: false, code: 'invoice_mof_code_invalid' })
     // verify ran inside tx; soft-delete/insert never reached because verify threw.
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -253,7 +250,7 @@ describe('deleteInvoiceCredential', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // no row
 
-    await expect(deleteInvoiceCredential('cred-other-group')).rejects.toThrow('invoice_carrier_not_found')
+    expect(await deleteInvoiceCredential('cred-other-group')).toEqual({ ok: false, code: 'invoice_carrier_not_found' })
   })
 })
 
@@ -266,8 +263,8 @@ describe('listInvoiceCredentialsForViewer', () => {
     ])
 
     const rows = await listInvoiceCredentialsForViewer()
-    expect(rows).toHaveLength(1)
-    expect(rows[0].barcode).toBe('/AB12CD3')
+    expect(rows).toMatchObject({ ok: true, data: [{ barcode: '/AB12CD3' }] })
+    expect((rows as { ok: true; data: unknown[] }).data).toHaveLength(1)
     expect(mockDb.select).toHaveBeenCalled()
   })
 })

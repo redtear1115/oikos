@@ -18,6 +18,7 @@ import { resolveDisplayName } from '@/lib/display-name'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { unwrapAction } from '@/lib/action-errors'
 
 // 10 mask characters — enough to read as "filled in" without leaking length.
 const PII_MASK = '●●●●●●●●●●'
@@ -58,7 +59,7 @@ function RevealableRow({
     }
     startTransition(async () => {
       try {
-        const value = await revealChildPii(assetId, field)
+        const value = unwrapAction(await revealChildPii(assetId, field))
         setRevealed(value)
         setError(null)
       } catch (e) {
@@ -183,7 +184,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         <SharedRevealableRow
           label={td.fullName}
           hasValue={assetSheetInitial.childHasFullName ?? false}
-          revealAction={() => revealChildName(assetId)}
+          revealAction={async () => unwrapAction(await revealChildName(assetId))}
         />
         <InfoRow label={td.bornDate} value={details?.birthday ?? ''} mono />
         <RevealableRow
@@ -223,7 +224,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="child" onCtaPress={() => setAddOpen(true)} />}

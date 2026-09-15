@@ -38,7 +38,7 @@ describe('createRule', () => {
       assetId: null,
     })
 
-    expect(out).toEqual({ id: 'rule-1' })
+    expect(out).toEqual({ ok: true, data: { id: 'rule-1' } })
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(values.groupId).toBe(GROUP.id)
     expect(values.amount).toBe(25000)
@@ -50,11 +50,11 @@ describe('createRule', () => {
 
   it('rejects when paidBy not in viewer group', async () => {
     queueDbResult([GROUP])
-    await expect(createRule({
+    expect(await createRule({
       amount: 1000, category: 'other', paidBy: 'stranger', splitType: 'half',
       description: 'x', intervalMonths: 1, dayOfMonth: 1,
       startsOn: '2026-05-07', endsOn: null,
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
   it('rejects when settle category provided', async () => {
@@ -84,7 +84,7 @@ describe('updateRule', () => {
     queueDbResult([{ id: 'rule-1', groupId: GROUP.id }])
     queueDbResult([{ id: 'rule-1' }])
 
-    await updateRule({
+    expect(await updateRule({
       id: 'rule-1',
       amount: 28000,
       category: 'housing',
@@ -96,7 +96,7 @@ describe('updateRule', () => {
       startsOn: '2026-05-01',
       endsOn: null,
       assetId: null,
-    })
+    })).toEqual({ ok: true, data: { id: 'rule-1' } })
 
     const setCall = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setCall.dayOfMonth).toBe(5)
@@ -105,15 +105,15 @@ describe('updateRule', () => {
     expect(setCall.nextOccurrenceAt).toBeDefined()
   })
 
-  it('throws when rule not in viewer group', async () => {
+  it('returns error code when rule not in viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(updateRule({
+    expect(await updateRule({
       id: 'rule-x', amount: 1000, category: 'housing',
       paidBy: 'user-a', splitType: 'half', description: 'x',
       intervalMonths: 1, dayOfMonth: 1,
       startsOn: '2026-05-01', endsOn: null,
-    })).rejects.toThrow('recurring_rule_not_found')
+    })).toEqual({ ok: false, code: 'recurring_rule_not_found' })
   })
 })
 
@@ -177,10 +177,10 @@ describe('softDeleteRule', () => {
     expect(mockDb.delete).toHaveBeenCalled()
   })
 
-  it('throws when rule not in viewer group', async () => {
+  it('returns error code when rule not in viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(softDeleteRule('rule-x')).rejects.toThrow('recurring_rule_not_found')
+    expect(await softDeleteRule('rule-x')).toEqual({ ok: false, code: 'recurring_rule_not_found' })
   })
 })
 
@@ -199,7 +199,7 @@ describe('confirmPending', () => {
 
     const out = await confirmPending('pend-1')
 
-    expect(out).toEqual({ txId: 'tx-1' })
+    expect(out).toEqual({ ok: true, data: { txId: 'tx-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
 
     // Insert payload mirrors snapshot
@@ -215,13 +215,13 @@ describe('confirmPending', () => {
     expect(mockDb.execute).toHaveBeenCalledTimes(1)
   })
 
-  it('throws when pending already resolved or skipped', async () => {
+  it('returns error code when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(confirmPending('pend-x')).rejects.toThrow('pending_expense_not_found')
+    expect(await confirmPending('pend-x')).toEqual({ ok: false, code: 'pending_expense_not_found' })
   })
 
-  it('throws race message when proposedPaidBy left the group', async () => {
+  it('returns race error code when proposedPaidBy left the group', async () => {
     queueDbResult([GROUP])
     queueDbResult([{
       id: 'pend-1', groupId: GROUP.id,
@@ -231,7 +231,7 @@ describe('confirmPending', () => {
       category: 'housing', assetId: null,
     }])
 
-    await expect(confirmPending('pend-1')).rejects.toThrow('pending_expense_partner_handled')
+    expect(await confirmPending('pend-1')).toEqual({ ok: false, code: 'pending_expense_partner_handled' })
     // No insert / update should have run when race-guard fired
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
@@ -258,7 +258,7 @@ describe('editAndConfirmPending', () => {
       },
     })
 
-    expect(out).toEqual({ txId: 'tx-2' })
+    expect(out).toEqual({ ok: true, data: { txId: 'tx-2' } })
     const insertVals = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(insertVals.amount).toBe(26000)
     expect(insertVals.description).toBe('5 月房租（漲了）')
@@ -280,19 +280,19 @@ describe('editAndConfirmPending', () => {
       ruleCategory: 'housing', ruleAssetId: null,
     }])
 
-    await expect(editAndConfirmPending({
+    expect(await editAndConfirmPending({
       pendingId: 'pend-1',
       overrides: { paidBy: 'stranger' },
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
-  it('throws when pending already resolved or skipped', async () => {
+  it('returns error code when pending already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(editAndConfirmPending({
+    expect(await editAndConfirmPending({
       pendingId: 'pend-x',
       overrides: { amount: 30000 },
-    })).rejects.toThrow('pending_expense_not_found')
+    })).toEqual({ ok: false, code: 'pending_expense_not_found' })
   })
 })
 
@@ -306,9 +306,9 @@ describe('skipPending', () => {
     expect(setCall.skippedAt).toBeInstanceOf(Date)
   })
 
-  it('throws when already resolved or skipped', async () => {
+  it('returns error code when already resolved or skipped', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(skipPending('pend-x')).rejects.toThrow('pending_expense_not_found')
+    expect(await skipPending('pend-x')).toEqual({ ok: false, code: 'pending_expense_not_found' })
   })
 })
