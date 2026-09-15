@@ -200,8 +200,8 @@ xcrun altool --upload-app  -f "$T/export/App.ipa" -t ios \
 # 簽章參數由 build.gradle 從環境變數讀取；值在 repo 根目錄 .env（gitignored）
 set -a; . ./.env; set +a
 
-# ⚠️ 必須 JDK 21：Capacitor 8 的 capacitor-android 以 source release 21 編譯。
-# PATH 上的 Homebrew JDK 是 18，直接跑會炸 "invalid source release: 21"。
+# ⚠️ 用 Android Studio 內附 JBR（現為 JDK 25）。Capacitor 8 要求 ≥ 21；上限由 Gradle 決定
+# （Java 25 需 Gradle 9.1+；本專案 Gradle 9.5.1 / AGP 9.2.1，#1207）。
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 cd android && ./gradlew bundleRelease
@@ -214,8 +214,9 @@ cd android && ./gradlew bundleRelease
 
 ```bash
 AAB=android/app/build/outputs/bundle/release/app-release.aab
-jarsigner -verify "$AAB"                       # 要回 "jar verified."
-unzip -p "$AAB" META-INF/FUTARI.RSA | keytool -printcert | grep SHA256
+# 用 JBR 的工具：PATH 上的 jarsigner / keytool 可能是 macOS stub（回 "Unable to locate a Java Runtime"）
+"$JAVA_HOME/bin/jarsigner" -verify "$AAB"                         # 要回 "jar verified."
+"$JAVA_HOME/bin/keytool" -printcert -jarfile "$AAB" | grep SHA256
 # 應等於 upload key 指紋：
 # 9D:4A:6F:DF:47:F7:90:8F:CA:63:61:43:0A:B7:2B:4A:19:D2:F9:F0:4B:DA:81:55:F0:90:0B:91:60:96:7F:03
 ```
@@ -265,7 +266,10 @@ unzip -p "$AAB" META-INF/FUTARI.RSA | keytool -printcert | grep SHA256
 | 真機斷網冷啟動看到空白畫面／系統錯誤頁 | 殼裡缺 `public/offline.html`（`server.errorPath` 的目標），通常是繞過 `cap copy` 手動塞檔 | 重跑 `npx cap sync`，確認 hook 有輸出 `[native-offline-page] wrote out/offline.html` |
 | `Failed to resolve dependencies ... 'apple-sign-in' depends on capacitor-swift-pm 7.0.0..<8.0.0 and 'push-notifications' depends on 8.0.0..<9.0.0` | `@capacitor-community/apple-sign-in` 停在 7.1.0，宣告 `from: "7.0.0"`；`CapApp-SPM/Package.swift` pin `exact: "8.3.4"` | `patches/@capacitor-community+apple-sign-in+7.1.0.patch` 放寬到 `<"9.0.0"`。patch 沒套上就重跑 `npm ci` 並確認輸出 |
 | `exportArchive Cloud signing permission error` / `No signing certificate "iOS Distribution" found` | 用了 App 管理角色的 key 跑 export；雲端簽章要 Admin | 換 `795L42Z42U`。ASC 的 key 建立後權限**不能改**，只能另建一把 |
-| `invalid source release: 21` | PATH 上的 JDK 是 18 | `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` |
+| `invalid source release: 21` | PATH 上的 JDK 比 21 舊 | `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` |
+| `BUG! exception in phase 'semantic analysis' ... Unsupported class file major version 69`（或 70…） | JBR 隨 Android Studio 更新漂到比 Gradle 支援的還新（69 = Java 25 需 Gradle 9.1+、70 = Java 26 需 9.4+） | 升 `android/gradle/wrapper/gradle-wrapper.properties`（連帶 AGP），見 #1207；不要另裝舊 JDK |
+| `getDefaultProguardFile('proguard-android.txt') is no longer supported`（出錯的是 `:capacitor-community-apple-sign-in`） | apple-sign-in 的 Android patch 沒套上。常見於 #1207 之前就裝好的 `node_modules`：對已套過舊 patch 的目錄套新 patch 會失敗，而 postinstall 是 `patch-package \|\| exit 0`，npm 不會報錯 | `rm -rf node_modules && npm ci`，確認輸出有 `@capacitor-community/apple-sign-in@7.1.0 ✔` |
+| patch-package 重產的 patch 多出幾百行 `android/build/**` 二進位 | Gradle 把 plugin 的 build 產物寫進 `node_modules/<plugin>/android/build/`，patch-package 會一起收 | 重產前 `rm -rf node_modules/<plugin>/android/build`，產完 `grep '^diff --git' patches/*.patch` 確認只有預期檔案 |
 | AAB 出來了但 `jarsigner -verify` 不過 | `.env` 沒 source 進來；`build.gradle` 的密碼有 `?: ""` fallback，不會讓 build 失敗 | `set -a; . ./.env; set +a` 後重跑 |
 | ASC 回「build number 已存在」 | 同一 `MARKETING_VERSION` 下 build number 必須唯一遞增，TestFlight 也吃這規則 | 計數再 +1 重傳。**不要**改 `MARKETING_VERSION` 繞過 |
 | 要送審時發現版本沒有可用的 build | TestFlight build 90 天過期（1.5.1(1) 踩過：06-11 傳、09-09 過期、09-10 要送審） | 重新 archive 上傳；之後別提早卡位 |
