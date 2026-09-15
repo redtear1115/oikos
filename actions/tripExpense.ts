@@ -8,7 +8,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidatePath } from 'next/cache'
 import { convertAmount } from '@/lib/currency'
 import { parseTripCurrencySnapshot, findRate } from '@/lib/trip-currency'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 /**
  * v0.17.2 #42 — Trip sub-ledger actions.
@@ -133,7 +133,7 @@ function validateCommon(input: CreateTripExpenseInput, group: { memberA: string;
   }
 }
 
-export async function createTripExpense(input: CreateTripExpenseInput) {
+export const createTripExpense = action(async (input: CreateTripExpenseInput) => {
   const { group } = await requireViewerGroup()
   const trip = await loadActiveTripForViewer(input.tripId, group.id)
   validateCommon(input, group)
@@ -163,9 +163,9 @@ export async function createTripExpense(input: CreateTripExpenseInput) {
 
   revalidatePath(`/trips/${trip.id}`)
   return inserted
-}
+})
 
-export async function editTripExpense(input: EditTripExpenseInput) {
+export const editTripExpense = action(async (input: EditTripExpenseInput) => {
   const { group } = await requireViewerGroup()
   const trip = await loadActiveTripForViewer(input.tripId, group.id)
   validateCommon(input, group)
@@ -211,9 +211,9 @@ export async function editTripExpense(input: EditTripExpenseInput) {
 
   revalidatePath(`/trips/${trip.id}`)
   return inserted
-}
+})
 
-export async function softDeleteTripExpense(input: { id: string; tripId: string }) {
+export const softDeleteTripExpense = action(async (input: { id: string; tripId: string }) => {
   const { group } = await requireViewerGroup()
   const trip = await loadActiveTripForViewer(input.tripId, group.id)
 
@@ -229,4 +229,4 @@ export async function softDeleteTripExpense(input: { id: string; tripId: string 
   if (deleted.length === 0) throw actionError('record_deleted_or_missing')
 
   revalidatePath(`/trips/${trip.id}`)
-}
+})

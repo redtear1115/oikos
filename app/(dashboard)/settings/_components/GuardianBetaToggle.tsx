@@ -6,6 +6,7 @@ import { Switch } from '@/components/Switch'
 import { toggleGuardianBeta } from '@/actions/group'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   /** Current persisted flag value. Component is optimistic — on failure it
@@ -26,7 +27,7 @@ export function GuardianBetaToggle({ enabled }: Props) {
     setOptimistic(next)
     startTransition(async () => {
       try {
-        await toggleGuardianBeta(next)
+        unwrapAction(await toggleGuardianBeta(next))
         router.refresh()
       } catch (e) {
         setOptimistic(enabled)

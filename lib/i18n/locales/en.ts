@@ -1792,6 +1792,13 @@ export const en: Translations = {
     metadataTitle: 'Offline · Futari',
   },
 
+  nativeOfflinePage: {
+    documentTitle: 'Offline · Futari',
+    title: 'No connection right now',
+    body: 'Once you are back online, your shared ledger will be here.',
+    retry: 'Try again',
+  },
+
   termsPage: {
     heading: 'Terms of Service',
     lastUpdated: 'Last updated: May 31, 2026',

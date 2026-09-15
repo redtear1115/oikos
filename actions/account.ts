@@ -7,6 +7,7 @@ import { requireViewer } from '@/lib/auth/viewer'
 import { signOut } from '@/actions/auth'
 import { captureServer } from '@/lib/analytics/server'
 import { revalidatePath } from 'next/cache'
+import { action } from '@/lib/action-errors'
 
 /**
  * Mark the viewer's account for deletion and sign out. No preconditions
@@ -16,7 +17,7 @@ import { revalidatePath } from 'next/cache'
  *
  * Calls signOut() last, which redirects (throws NEXT_REDIRECT) — keep it last.
  */
-export async function requestAccountDeletion(): Promise<void> {
+export const requestAccountDeletion = action(async (): Promise<void> => {
   const { user } = await requireViewer()
   await db
     .update(profiles)
@@ -24,10 +25,10 @@ export async function requestAccountDeletion(): Promise<void> {
     .where(eq(profiles.id, user.id))
   await captureServer(user.id, 'account_deletion_requested')
   await signOut()
-}
+})
 
 /** Cancel a pending deletion (grace-period undo). Idempotent. */
-export async function cancelAccountDeletion(): Promise<void> {
+export const cancelAccountDeletion = action(async (): Promise<void> => {
   const { user } = await requireViewer()
   await db
     .update(profiles)
@@ -35,4 +36,4 @@ export async function cancelAccountDeletion(): Promise<void> {
     .where(eq(profiles.id, user.id))
   await captureServer(user.id, 'account_deletion_cancelled')
   revalidatePath('/dashboard')
-}
+})

@@ -2200,6 +2200,26 @@ export type Translations = {
     metadataTitle: string
   }
 
+  /** #1225 — the offline page bundled *inside* the native shell
+   *  (`server.errorPath`). Distinct from `offlinePage` above: that one is a
+   *  React route on the deployed site and can only render after the site has
+   *  loaded at least once. This one is the cold-start case — no network, no
+   *  Next.js, no React, no i18n runtime. `scripts/build-native-offline-page.ts`
+   *  bakes all four locales into one static HTML file at `cap copy` time and an
+   *  inline script picks one from `navigator.language`.
+   *
+   *  Keep it short: every string here ships inside the app binary and can only
+   *  change by re-submitting to the stores. */
+  nativeOfflinePage: {
+    /** HTML <title>; never visible in the shell, but is what a screen reader
+     *  and the Android task switcher read. */
+    documentTitle: string
+    title: string
+    body: string
+    /** Label on the link back to the app. */
+    retry: string
+  }
+
   termsPage: {
     heading: string
     /** Localized "Last updated: <date>" line. */
@@ -4597,6 +4617,13 @@ export const zhTW: Translations = {
     linkAssets: '愛物',
     footer: '等連線回來會自動更新',
     metadataTitle: '離線中 · Futari',
+  },
+
+  nativeOfflinePage: {
+    documentTitle: '離線中 · Futari',
+    title: '現在沒有網路',
+    body: '連上網路之後，這裡就會回到你們的帳本。',
+    retry: '再試一次',
   },
 
   termsPage: {

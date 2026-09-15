@@ -10,7 +10,7 @@ import { getViewerWriteContext } from '@/lib/actionContext'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { FuelType } from '@/lib/fuel'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 /**
  * Atomic dual-write for a new fuel-up event:
@@ -20,7 +20,7 @@ import { actionError } from '@/lib/action-errors'
  * Description is auto-generated: '加油 · {station}' if station present, else '加油'.
  * paidBy / splitType are taken from form input (Q4 B1 — user picks per-fill).
  */
-export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: string }> {
+export const createFuelLog = action(async (input: FuelLogInputRaw): Promise<{ id: string }> => {
   const { user, group } = await getViewerWriteContext()
 
   const validated = validateFuelLogInput(input)
@@ -90,7 +90,7 @@ export async function createFuelLog(input: FuelLogInputRaw): Promise<{ id: strin
   }
 
   return { id: result.id }
-}
+})
 
 export interface EditFuelLogInput extends FuelLogInputRaw {
   id: string  // fuelLog id to edit
@@ -107,7 +107,7 @@ export interface EditFuelLogInput extends FuelLogInputRaw {
  * CURRENT asset is not in viewer's group, if the (possibly reassigned) target
  * asset is not in viewer's group, or if the payer is not a current group member.
  */
-export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string }> {
+export const editFuelLog = action(async (input: EditFuelLogInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
 
   const validated = validateFuelLogInput(input)
@@ -227,7 +227,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
   })
 
   return { id: result.id }
-}
+})
 
 /**
  * Atomic soft-delete of a fuel-up event:
@@ -238,7 +238,7 @@ export async function editFuelLog(input: EditFuelLogInput): Promise<{ id: string
  * Idempotent: throws if the fuel log is missing or already soft-deleted (matches
  * Phase 1 softDeleteTransaction semantics — no silent no-op on stale clicks).
  */
-export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
+export const softDeleteFuelLog = action(async (fuelLogId: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
   // Look up the fuel log; reject if missing or already soft-deleted (idempotency).
@@ -295,7 +295,7 @@ export async function softDeleteFuelLog(fuelLogId: string): Promise<void> {
   })
 
   revalidateAfterTransactionMutation({ assetId: existingLog.assetId })
-}
+})
 
 export interface FuelLogDetail {
   id: string
@@ -314,7 +314,7 @@ export interface FuelLogDetail {
  * Load a single fuel log with its car details for the edit sheet.
  * Verifies the fuel log belongs to an asset in the viewer's group.
  */
-export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> {
+export const getFuelLogById = action(async (id: string): Promise<FuelLogDetail | null> => {
   const { group } = await requireViewerGroup()
 
   const [row] = await db
@@ -354,4 +354,4 @@ export async function getFuelLogById(id: string): Promise<FuelLogDetail | null> 
     carFuelType: row.carFuelType,
     carPrimaryUserId: row.carPrimaryUserId,
   }
-}
+})

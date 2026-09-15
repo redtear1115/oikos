@@ -9,6 +9,7 @@ import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGu
 import type { TripCurrencyEntry, TripCurrencySnapshot } from '@/lib/trip-currency'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 const PRESET_CURRENCIES = CURRENCIES.map(c => c.toUpperCase())
 const MAX_ENTRIES = 5
@@ -201,20 +202,20 @@ export function TripSheet({ open, baseCurrency, onClose, initial, onSaved }: Pro
     start(async () => {
       try {
         if (editing && initial) {
-          await updateTrip({
+          unwrapAction(await updateTrip({
             tripId: initial.id,
             name: trimmedName,
             startDate,
             endDate: endDate || null,
             currencies: payload,
-          })
+          }))
         } else {
-          await createTrip({
+          unwrapAction(await createTrip({
             name: trimmedName,
             startDate,
             endDate: endDate || null,
             currencies: payload,
-          })
+          }))
         }
         onSaved?.()
         onClose()

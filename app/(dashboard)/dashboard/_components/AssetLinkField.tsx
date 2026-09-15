@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { loadAsset } from '@/actions/asset'
 import { Chevron } from '@/app/(dashboard)/_components/sheet-icons'
 import { useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
 
 // AssetPickerSheet is a nested sheet that only opens on user tap — lazy-load
 // to keep AddSheet's initial bundle lean (#670 audit 6.1).
@@ -35,8 +36,9 @@ export function AssetLinkField({ value: assetId, onChange, open }: AssetLinkFiel
     if (loadedIdRef.current === assetId) return
     setAssetInfo(null)
     let cancelled = false
-    loadAsset(assetId).then((info) => {
+    loadAsset(assetId).then((r) => {
       if (cancelled) return
+      const info = unwrapAction(r)
       if (info) {
         setAssetInfo({ name: info.name, deletedAt: info.deletedAt })
         loadedIdRef.current = assetId

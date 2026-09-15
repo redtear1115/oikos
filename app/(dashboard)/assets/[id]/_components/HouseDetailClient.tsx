@@ -17,6 +17,7 @@ import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { unwrapAction } from '@/lib/action-errors'
 
 // #826 — address subtitle is masked at the header. The actual address text
 // only becomes visible when the user taps 「顯示」 on the address row in the
@@ -123,7 +124,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         <RevealableRow
           label={td.address}
           hasValue={hasAddress}
-          revealAction={() => revealHouseAddress(assetId)}
+          revealAction={async () => unwrapAction(await revealHouseAddress(assetId))}
         />
         <InfoRow label={td.purchasedAt} value={details?.purchasedAt ?? ''} mono />
         {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
@@ -145,7 +146,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="house" onCtaPress={() => setAddOpen(true)} />}

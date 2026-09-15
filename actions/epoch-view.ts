@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers'
 import { PAST_EPOCH_COOKIE } from '@/lib/db/queries/epoch'
 import { revalidateAfterEpochViewChange } from '@/lib/revalidate'
+import { action } from '@/lib/action-errors'
 
 /**
  * Pin the viewer to a historical epoch for the rest of the browser session.
@@ -14,7 +15,7 @@ import { revalidateAfterEpochViewChange } from '@/lib/revalidate'
  * group, so a malformed or hostile value just falls back to the current
  * chapter.
  */
-export async function enterPastEpoch(epochId: string): Promise<void> {
+export const enterPastEpoch = action(async (epochId: string): Promise<void> => {
   const jar = await cookies()
   jar.set(PAST_EPOCH_COOKIE, epochId, {
     httpOnly: true,
@@ -24,19 +25,19 @@ export async function enterPastEpoch(epochId: string): Promise<void> {
   })
   // Trigger a re-render of the navigation surfaces that read the cookie.
   revalidateAfterEpochViewChange()
-}
+})
 
-export async function exitPastEpoch(): Promise<void> {
+export const exitPastEpoch = action(async (): Promise<void> => {
   const jar = await cookies()
   jar.delete(PAST_EPOCH_COOKIE)
   revalidateAfterEpochViewChange()
-}
+})
 
 /**
  * Server-side helper for layouts/pages to read the current pin without
  * pulling in `cookies()` everywhere.
  */
-export async function getPinnedEpochId(): Promise<string | null> {
+export const getPinnedEpochId = action(async (): Promise<string | null> => {
   const jar = await cookies()
   return jar.get(PAST_EPOCH_COOKIE)?.value ?? null
-}
+})

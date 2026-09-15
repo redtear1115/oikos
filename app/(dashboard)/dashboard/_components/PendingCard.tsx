@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction, type ActionResult } from '@/lib/action-errors'
 
 export interface PendingCardProps {
   /** Resolved category — supplies the icon monogram and the tint/ink colors. */
@@ -26,10 +27,16 @@ export interface PendingCardProps {
    *  parametrized because the two cards historically diverged here. */
   primaryDisabledClass: string
   secondaryDisabledClass: string
-  /** Mutating server action behind the primary (confirm) button. */
-  onConfirm: () => Promise<unknown>
-  /** Mutating server action behind skip. */
-  onSkip: () => Promise<unknown>
+  /**
+   * Mutating server action behind the primary (confirm) button. Typed as the
+   * raw `ActionResult` rather than `Promise<unknown>` so that a caller which
+   * forgets to surface an expected failure cannot type-check (#1223) — with
+   * `unknown` the failure object was simply dropped and the card faded out as
+   * if the write had succeeded.
+   */
+  onConfirm: () => Promise<ActionResult<unknown>>
+  /** Mutating server action behind skip. Same contract as `onConfirm`. */
+  onSkip: () => Promise<ActionResult<unknown>>
   confirmErrorFallback: string
   skipErrorFallback: string
   skipModalTitle: string
@@ -80,7 +87,7 @@ export function PendingCard({
 
   const handleConfirm = () => startTransition(async () => {
     try {
-      await onConfirm()
+      unwrapAction(await onConfirm())
       setFading(true)
       refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
     } catch (e) {
@@ -92,7 +99,7 @@ export function PendingCard({
     setConfirmingSkip(false)
     startTransition(async () => {
       try {
-        await onSkip()
+        unwrapAction(await onSkip())
         setFading(true)
         refreshTimerRef.current = setTimeout(() => router.refresh(), 800)
       } catch (e) {

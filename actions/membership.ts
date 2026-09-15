@@ -25,7 +25,7 @@ import {
 } from '@/lib/revalidate'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 const SWAP_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -43,7 +43,7 @@ async function getViewerAndDuoGroup() {
  * call leaveGroup. We model the swap as a two-step proposal so the partner
  * gets a chance to confirm.
  */
-export async function proposeSwap(): Promise<{ ok: true }> {
+export const proposeSwap = action(async (): Promise<{ ok: true }> => {
   const { user, group } = await getViewerAndDuoGroup()
 
   if (group.pendingSwapProposedBy !== null) {
@@ -65,14 +65,14 @@ export async function proposeSwap(): Promise<{ ok: true }> {
 
   revalidateSettings()
   return { ok: true }
-}
+})
 
 /**
  * Either member can cancel a pending swap proposal.
  * Proposer cancels = retract. Other party cancels = reject.
  * Same DB write either way; UX layer can distinguish via who's logged in.
  */
-export async function cancelSwap(): Promise<{ ok: true }> {
+export const cancelSwap = action(async (): Promise<{ ok: true }> => {
   const { group } = await getViewerAndDuoGroup()
 
   if (group.pendingSwapProposedBy === null) {
@@ -89,7 +89,7 @@ export async function cancelSwap(): Promise<{ ok: true }> {
 
   revalidateSettings()
   return { ok: true }
-}
+})
 
 /**
  * The non-proposer member confirms the swap. Atomically:
@@ -102,7 +102,7 @@ export async function cancelSwap(): Promise<{ ok: true }> {
  *
  * Epoch is NOT bumped — it's the same two-person relationship, just relabelled.
  */
-export async function confirmSwap(): Promise<{ ok: true }> {
+export const confirmSwap = action(async (): Promise<{ ok: true }> => {
   const { user, group } = await getViewerAndDuoGroup()
 
   if (group.pendingSwapProposedBy === null) {
@@ -171,7 +171,7 @@ export async function confirmSwap(): Promise<{ ok: true }> {
   await captureServer(user.id, 'swap_confirmed')
 
   return { ok: true }
-}
+})
 
 /**
  * Member B leaves the group, taking their personal data into a fresh solo
@@ -206,7 +206,7 @@ export async function confirmSwap(): Promise<{ ok: true }> {
  * (#1125) — dismissal state in this product is epoch-keyed everywhere, so the
  * flag has to be too. See the comment on that insert below.
  */
-export async function leaveGroup(): Promise<{ groupId: string; epochId: string }> {
+export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: string }> => {
   const { user, group } = await requireViewerGroup()
 
   if (group.memberB === null) throw new Error('solo_group')
@@ -472,7 +472,7 @@ export async function leaveGroup(): Promise<{ groupId: string; epochId: string }
   await captureServer(user.id, 'group_left', { had_partner: true })
 
   return { groupId: newGroupId, epochId: newEpochId }
-}
+})
 
 /**
  * Member A removes member B from the ledger — the involuntary counterpart
@@ -523,7 +523,7 @@ export async function leaveGroup(): Promise<{ groupId: string; epochId: string }
  *
  * Irreversible.
  */
-export async function removePartner(): Promise<{ groupId: string; epochId: string }> {
+export const removePartner = action(async (): Promise<{ groupId: string; epochId: string }> => {
   const { user, group } = await requireViewerGroup()
 
   if (group.memberB === null) throw new Error('solo_group')
@@ -603,4 +603,4 @@ export async function removePartner(): Promise<{ groupId: string; epochId: strin
   await captureServer(user.id, 'partner_removed', { removed_user_id: removedUserId })
 
   return { groupId, epochId: newEpochId }
-}
+})

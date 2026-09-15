@@ -1,7 +1,8 @@
 import { translateActionError, type ActionErrorMessages } from './action-errors'
 
 /**
- * Translate a caught error into a user-facing message.
+ * Translate a caught error — or a returned `ActionFailure` — into a
+ * user-facing message.
  *
  * Resolution order:
  *   1. Network failure (offline, captive portal, weak signal) → `offlineMessage`,
@@ -10,6 +11,12 @@ import { translateActionError, type ActionErrorMessages } from './action-errors'
  *   2. A server-action error code (see `lib/action-errors.ts`) → the localized
  *      sentence from `actionErrors`.
  *   3. Anything else → `fallback`.
+ *
+ * Since #1223 `e` is usually not an exception at all: expected action errors
+ * arrive as the value `{ ok: false, code, params? }`, because production strips
+ * the message off anything a server action throws. `parseActionError` accepts
+ * that shape, the `ActionError` `unwrapAction` re-throws, and the older bare
+ * code-in-message `Error` alike, so every call site below stays unchanged.
  *
  * Step 3 deliberately does NOT return `e.message` (#1156). It used to, and
  * every action that threw a zh-TW sentence rendered that sentence to en / ja /
@@ -22,7 +29,8 @@ import { translateActionError, type ActionErrorMessages } from './action-errors'
  * beats a specific one in someone else's — but it is why a validator error can
  * look "less helpful" than it used to in zh-TW.
  *
- * @param e             The caught error (any thrown value).
+ * @param e             The caught error (any thrown value) or the
+ *                      `ActionFailure` an action returned.
  * @param fallback      Localized generic message for anything unrecognised.
  * @param offlineMessage  Localized message shown when we detect a network
  *                      failure. Pass `undefined` to disable offline detection.

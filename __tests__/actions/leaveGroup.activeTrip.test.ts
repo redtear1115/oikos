@@ -52,6 +52,7 @@ const {
 } = await import('@/lib/db/schema')
 const { leaveGroup } = await import('@/actions/membership')
 const { eq, inArray } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -144,7 +145,7 @@ describe('leaveGroup — active-trip guard', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    await expect(leaveGroup()).rejects.toThrow('leave_active_trip')
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'leave_active_trip' })
   })
 
   it('succeeds when all trips are ended (no active trips)', async () => {
@@ -163,7 +164,7 @@ describe('leaveGroup — active-trip guard', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    const result = await leaveGroup()
+    const result = unwrapAction(await leaveGroup())
     refs.newGroupId = result.groupId
     expect(result.groupId).toBeTruthy()
   })
@@ -173,7 +174,7 @@ describe('leaveGroup — active-trip guard', () => {
     activeRefs = refs
     mockUserId = refs.userBId
 
-    const result = await leaveGroup()
+    const result = unwrapAction(await leaveGroup())
     refs.newGroupId = result.groupId
     expect(result.groupId).toBeTruthy()
   })
@@ -193,7 +194,7 @@ describe('leaveGroup — active-trip guard', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    const result = await leaveGroup()
+    const result = unwrapAction(await leaveGroup())
     refs.newGroupId = result.groupId
     expect(result.groupId).toBeTruthy()
   })

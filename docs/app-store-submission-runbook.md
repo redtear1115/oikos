@@ -121,8 +121,9 @@ last_updated: 2026-09-11
    # 簽章參數由 build.gradle 從環境變數讀取；值放在 repo 根目錄 .env（gitignored）
    set -a; . ./.env; set +a
 
-   # ⚠️ 必須用 JDK 21：Capacitor 8 的 capacitor-android 以 source release 21 編譯。
-   # 機器上 PATH 的 Homebrew JDK 是 18，直接跑會炸 "invalid source release: 21"。
+   # ⚠️ 用 Android Studio 內附 JBR（現為 JDK 25）。Capacitor 8 要求 ≥ 21；
+   # 上限由 Gradle 決定（Java 25 需 Gradle 9.1+，本專案 Gradle 9.5.1 / AGP 9.2.1，#1207）。
+   # JBR 比 Gradle 支援的還新時會炸 "Unsupported class file major version NN"——升 Gradle，不是裝舊 JDK。
    export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
    cd android
@@ -130,8 +131,9 @@ last_updated: 2026-09-11
    # 產物：android/app/build/outputs/bundle/release/app-release.aab
    ```
    > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`versionCode 105011` / `versionName "1.5.1"` 直接送。
-   > 驗證方式：`jarsigner -verify <aab>` 應回 `jar verified.`；
-   > `unzip -p <aab> META-INF/FUTARI.RSA | keytool -printcert` 的 SHA256 應等於下方 upload key 指紋。
+   > 驗證方式：`"$JAVA_HOME/bin/jarsigner" -verify <aab>` 應回 `jar verified.`；
+   > `"$JAVA_HOME/bin/keytool" -printcert -jarfile <aab>` 的 SHA256 應等於下方 upload key 指紋。
+   > （PATH 上的 `jarsigner` / `keytool` 可能是 macOS stub，會回 `Unable to locate a Java Runtime`。）
 
    > **Upload keystore（2026-08-06 重建）**：`~/futari-release.keystore`，alias `futari`，RSA 2048，效期至 2053-12。
    > SHA-256 `9D:4A:6F:DF:47:F7:90:8F:CA:63:61:43:0A:B7:2B:4A:19:D2:F9:F0:4B:DA:81:55:F0:90:0B:91:60:96:7F:03`。
@@ -302,7 +304,7 @@ plugin 的 `Plugin.swift` 只有一個檔案、用的都是 Capacitor 6+ 就穩�
 rm -rf node_modules && npm ci     # 輸出要有 patch-package 套用 apple-sign-in 的成功行
 
 # 1b. 乾淨 checkout 必做：cap sync 的產物沒進版控（見下方註）
-mkdir -p out && npx cap sync ios
+npx cap sync ios
 
 # 2. archive 要從全新的 SPM 解析開始，不能吃快取
 #    （Package.resolved 已 pin 8.3.4，不指定就會重用舊解析結果）
@@ -317,8 +319,11 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
 
 > ⚠️ **乾淨 checkout / 新 worktree 一定要先 `npx cap sync ios`**，否則 archive 會失敗於
 > `The file "public" / "config.xml" / "capacitor.config.json" couldn't be opened`。
-> 這三個是 `cap sync` 產物且被 gitignore，不在版控裡。`webDir` 是 `out`，而 `/out/` 也被 ignore，
-> 所以還要先 `mkdir -p out`（server.url 架構下裡面是空的沒關係，bundled 內容根本不會被用到）。
+> 這三個是 `cap sync` 產物且被 gitignore，不在版控裡。`webDir`（`out/`）也被 ignore，但
+> **不必手動 `mkdir`**：`capacitor:copy:before` hook 會建目錄並產生 `out/offline.html`
+> ——殼內離線頁，`server.errorPath` 指向它（#1225）。沒網路時 WebView 載不到 `server.url`，
+> 這是唯一會被打包進殼、而且真的會被讀到的 web 檔。缺了它使用者看到的是空白畫面，
+> 而且不會有任何錯誤回報，所以 archive 前順手 `ls -l ios/App/App/public/offline.html`。
 > 實測 `cap sync` **不會**改動已 commit 的 `CapApp-SPM/Package.swift`（內容 byte-identical），
 > 所以這步不會把 patch 需求洗掉——它依然寫 `exact: "8.3.4"`。
 

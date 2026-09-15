@@ -22,6 +22,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { revealCarPlate } from '@/actions/asset'
 import { useTranslations } from '@/lib/i18n/client'
 import type { FuelType } from '@/lib/fuel'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface SerializedFuelLog {
   id: string
@@ -196,7 +197,7 @@ export function AssetDetailClient({
         <RevealableRow
           label={t.assetDetail.car.plate}
           hasValue={hasPlate}
-          revealAction={() => revealCarPlate(assetId)}
+          revealAction={async () => unwrapAction(await revealCarPlate(assetId))}
           last
         />
       </InfoCard>
@@ -238,7 +239,7 @@ export function AssetDetailClient({
         )}
         onItemClick={handleTxItemClick}
         emptyState={<AibutsuHintCard type="car" onCtaPress={() => setAddOpen(true)} />}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         renderRow={(tx: PagedTxnRow) => {
           if (tx.fuelLogId !== null) {

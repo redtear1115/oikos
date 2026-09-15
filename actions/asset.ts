@@ -15,7 +15,7 @@ import { canAccessGuardian } from '@/lib/guardian'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
 import type { AssetType } from '@/lib/assets'
 import type { GasFuelType } from '@/lib/fuel'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 function assertPolicyHolderInGroup(
   userId: string,
@@ -65,7 +65,7 @@ export interface CreateCarInput {
  * transactedAt falls back to NOW() when purchasedAt is null (Q16 D1) — the
  * user explicitly opted to skip the date, so we anchor to creation time.
  */
-export async function createCar(input: CreateCarInput): Promise<{ id: string }> {
+export const createCar = action(async (input: CreateCarInput): Promise<{ id: string }> => {
   const validated = validateCarInput(input)
   // #837 — plate is required on create (the form enforces it too); the
   // validator's trinary only yields a string when a value was supplied.
@@ -149,7 +149,7 @@ export async function createCar(input: CreateCarInput): Promise<{ id: string }> 
   await captureServer(viewer.id, 'asset_created', { asset_type: 'car' })
 
   return { id: created.id }
-}
+})
 
 export interface EditCarInput {
   id: string
@@ -169,7 +169,7 @@ export interface EditCarInput {
   notes?: string | null
 }
 
-export async function editCar(input: EditCarInput): Promise<void> {
+export const editCar = action(async (input: EditCarInput): Promise<void> => {
   const validated = validateCarInput(input)
   const { group } = await requireViewerGroup()
 
@@ -226,9 +226,9 @@ export async function editCar(input: EditCarInput): Promise<void> {
 
   // Renamed car needs to flow to AddSheet's asset-picker label on the records page.
   revalidateAfterAssetMutation(input.id, { affectsRecords: true })
-}
+})
 
-export async function softDeleteCar(id: string): Promise<void> {
+export const softDeleteCar = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
 
   // Soft delete the Asset row only. Do NOT touch CashTransactions.asset_id —
@@ -251,7 +251,7 @@ export async function softDeleteCar(id: string): Promise<void> {
   // /assets/${id} bust ensures the next nav reads fresh state and notFound()s
   // cleanly.
   revalidateAfterAssetMutation(id, { affectsRecords: true })
-}
+})
 
 // ── Life entity (child / pet / plant) ─────────────────────────────────────
 
@@ -260,7 +260,7 @@ export interface CreateLifeEntityInput {
   name: string
 }
 
-export async function createLifeEntity(input: CreateLifeEntityInput): Promise<{ id: string }> {
+export const createLifeEntity = action(async (input: CreateLifeEntityInput): Promise<{ id: string }> => {
   const validated = validateLifeEntityInput(input)
   const { user, group } = await requireViewerGroup()
 
@@ -272,14 +272,14 @@ export async function createLifeEntity(input: CreateLifeEntityInput): Promise<{ 
   revalidateAfterAssetMutation()
   await captureServer(user.id, 'asset_created', { asset_type: validated.type })
   return { id: created.id }
-}
+})
 
 export interface EditLifeEntityInput {
   id: string
   name: string
 }
 
-export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> {
+export const editLifeEntity = action(async (input: EditLifeEntityInput): Promise<void> => {
   // Reuse validator for consistent name trimming + length check
   // type field is irrelevant for edit; 'pet' is used as a placeholder
   const { name } = validateLifeEntityInput({ type: 'pet', name: input.name })
@@ -297,9 +297,9 @@ export async function editLifeEntity(input: EditLifeEntityInput): Promise<void> 
   if (updated.length === 0) throw actionError('aibutsu_not_found')
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
-export async function softDeleteAsset(assetId: string): Promise<void> {
+export const softDeleteAsset = action(async (assetId: string): Promise<void> => {
   const { group } = await requireViewerGroup()
 
   const updated = await db
@@ -314,7 +314,7 @@ export async function softDeleteAsset(assetId: string): Promise<void> {
   if (updated.length === 0) throw actionError('aibutsu_not_found')
 
   revalidateAfterAssetMutation(assetId, { affectsRecords: true })
-}
+})
 
 export interface PickerAsset {
   id: string
@@ -331,13 +331,13 @@ export interface CarAsset {
  * Returns all non-deleted car assets for the viewer's group.
  * Used by the insurance form vehicle picker.
  */
-export async function getCarAssets(): Promise<CarAsset[]> {
+export const getCarAssets = action(async (): Promise<CarAsset[]> => {
   const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows
     .filter(r => r.type === 'car')
     .map(r => ({ id: r.id, name: r.name }))
-}
+})
 
 export interface ChildAsset {
   id: string
@@ -348,23 +348,23 @@ export interface ChildAsset {
  * #167 — Non-deleted child assets for the viewer's group, used by the
  * insurance form to bind 被保人 to a Child 愛物 (insured_child_id).
  */
-export async function getChildAssets(): Promise<ChildAsset[]> {
+export const getChildAssets = action(async (): Promise<ChildAsset[]> => {
   const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows
     .filter(r => r.type === 'child')
     .map(r => ({ id: r.id, name: r.name }))
-}
+})
 
 /**
  * Lightweight asset list for AssetPickerSheet — name + plate only, excludes
  * deleted assets (new transaction links can never point at zombies).
  */
-export async function loadAssetsForPicker(): Promise<PickerAsset[]> {
+export const loadAssetsForPicker = action(async (): Promise<PickerAsset[]> => {
   const { group } = await requireViewerGroup()
   const rows = await listAssetsForGroup(group.id)
   return rows.map(r => ({ id: r.id, type: r.type, name: r.name }))
-}
+})
 
 export interface LoadedAsset {
   id: string
@@ -376,7 +376,7 @@ export interface LoadedAsset {
  * Loads a single asset for display (e.g. AddSheet's "關聯資產" row showing
  * "我的 Tesla（已刪除）"). Returns null if not found or wrong group.
  */
-export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
+export const loadAsset = action(async (assetId: string): Promise<LoadedAsset | null> => {
   const { group } = await requireViewerGroup()
   const row = await getAssetById(assetId, group.id)
   if (!row) return null
@@ -385,7 +385,7 @@ export async function loadAsset(assetId: string): Promise<LoadedAsset | null> {
     name: row.name,
     deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
   }
-}
+})
 
 // ── Child ──────────────────────────────────────────────────────────────────
 
@@ -424,7 +424,7 @@ function encryptForInsert(value: string | null | undefined): string | null {
   return encrypt(value)
 }
 
-export async function createChild(input: CreateChildInput): Promise<{ id: string }> {
+export const createChild = action(async (input: CreateChildInput): Promise<{ id: string }> => {
   'use server'
   const validated = validateChildInput(input)
   const { user, group } = await requireViewerGroup()
@@ -461,9 +461,9 @@ export async function createChild(input: CreateChildInput): Promise<{ id: string
   revalidateAfterAssetMutation()
   await captureServer(user.id, 'asset_created', { asset_type: 'child' })
   return { id: created.id }
-}
+})
 
-export async function editChild(input: EditChildInput): Promise<void> {
+export const editChild = action(async (input: EditChildInput): Promise<void> => {
   'use server'
   const validated = validateChildInput(input)
   const { group } = await requireViewerGroup()
@@ -542,7 +542,7 @@ export async function editChild(input: EditChildInput): Promise<void> {
   })
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 /**
  * On-demand decryption for child PII fields. The detail page never receives
@@ -553,10 +553,10 @@ export async function editChild(input: EditChildInput): Promise<void> {
  * Returns the plaintext value. Throws on cross-group access, wrong asset
  * type, soft-deleted asset, or null column (nothing stored).
  */
-export async function revealChildPii(
+export const revealChildPii = action(async (
   assetId: string,
   field: 'nationalId' | 'nhiNo',
-): Promise<string> {
+): Promise<string> => {
   'use server'
   const { group } = await requireViewerGroup()
 
@@ -579,7 +579,7 @@ export async function revealChildPii(
   if (!ciphertext) throw actionError('field_not_filled')
 
   return decrypt(ciphertext)
-}
+})
 
 /**
  * #826 — on-demand decryption for the child's encrypted full name. The
@@ -589,7 +589,7 @@ export async function revealChildPii(
  * legacy plaintext `name` column populated, and the detail page hides
  * the reveal row in that case.
  */
-export async function revealChildName(assetId: string): Promise<string> {
+export const revealChildName = action(async (assetId: string): Promise<string> => {
   'use server'
   const { group } = await requireViewerGroup()
 
@@ -607,7 +607,7 @@ export async function revealChildName(assetId: string): Promise<string> {
   }
   if (!row.nameEncrypted) throw actionError('field_not_filled')
   return decrypt(row.nameEncrypted)
-}
+})
 
 /**
  * #826 — on-demand decryption for the car licence plate. Same authorisation
@@ -616,7 +616,7 @@ export async function revealChildName(assetId: string): Promise<string> {
  * has populated `plate_encrypted` on every environment, so the encrypted
  * column is the single source of truth — no legacy-plaintext fallback.
  */
-export async function revealCarPlate(assetId: string): Promise<string> {
+export const revealCarPlate = action(async (assetId: string): Promise<string> => {
   'use server'
   const { group } = await requireViewerGroup()
 
@@ -636,14 +636,14 @@ export async function revealCarPlate(assetId: string): Promise<string> {
 
   if (!row.plateEncrypted) throw actionError('field_not_filled')
   return decrypt(row.plateEncrypted)
-}
+})
 
 /**
  * #826 — on-demand decryption for the house address. Address is nullable
  * (some houses don't have one recorded), so the encrypted column may be NULL.
  * Like `revealCarPlate`, reads only the encrypted column post-backfill.
  */
-export async function revealHouseAddress(assetId: string): Promise<string> {
+export const revealHouseAddress = action(async (assetId: string): Promise<string> => {
   'use server'
   const { group } = await requireViewerGroup()
 
@@ -663,7 +663,7 @@ export async function revealHouseAddress(assetId: string): Promise<string> {
 
   if (!row.addressEncrypted) throw actionError('field_not_filled')
   return decrypt(row.addressEncrypted)
-}
+})
 
 // ── Pet ────────────────────────────────────────────────────────────────────
 
@@ -685,7 +685,7 @@ export interface EditPetInput extends CreatePetInput {
   id: string
 }
 
-export async function createPet(input: CreatePetInput): Promise<{ id: string }> {
+export const createPet = action(async (input: CreatePetInput): Promise<{ id: string }> => {
   'use server'
   const validated = validatePetInput(input)
   const { user, group } = await requireViewerGroup()
@@ -713,9 +713,9 @@ export async function createPet(input: CreatePetInput): Promise<{ id: string }> 
   revalidateAfterAssetMutation()
   await captureServer(user.id, 'asset_created', { asset_type: 'pet' })
   return { id: created.id }
-}
+})
 
-export async function editPet(input: EditPetInput): Promise<void> {
+export const editPet = action(async (input: EditPetInput): Promise<void> => {
   'use server'
   const validated = validatePetInput(input)
   const { group } = await requireViewerGroup()
@@ -764,7 +764,7 @@ export async function editPet(input: EditPetInput): Promise<void> {
   })
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 // ── Plant ──────────────────────────────────────────────────────────────────
 
@@ -782,7 +782,7 @@ export interface EditPlantInput extends CreatePlantInput {
   id: string
 }
 
-export async function createPlant(input: CreatePlantInput): Promise<{ id: string }> {
+export const createPlant = action(async (input: CreatePlantInput): Promise<{ id: string }> => {
   'use server'
   const validated = validatePlantInput(input)
   const { user, group } = await requireViewerGroup()
@@ -806,9 +806,9 @@ export async function createPlant(input: CreatePlantInput): Promise<{ id: string
   revalidateAfterAssetMutation()
   await captureServer(user.id, 'asset_created', { asset_type: 'plant' })
   return { id: created.id }
-}
+})
 
-export async function editPlant(input: EditPlantInput): Promise<void> {
+export const editPlant = action(async (input: EditPlantInput): Promise<void> => {
   'use server'
   const validated = validatePlantInput(input)
   const { group } = await requireViewerGroup()
@@ -849,7 +849,7 @@ export async function editPlant(input: EditPlantInput): Promise<void> {
   })
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 // ── Insurance ──────────────────────────────────────────────────────────────
 
@@ -919,7 +919,7 @@ function resolveInsuredFields(v: {
   return { type: 'user', childId: null, userId: null, text: v.insured }
 }
 
-export async function createInsurance(input: CreateInsuranceInput): Promise<{ id: string }> {
+export const createInsurance = action(async (input: CreateInsuranceInput): Promise<{ id: string }> => {
   'use server'
   const validated = validateInsuranceInput(input)
   const { user, group } = await requireViewerGroup()
@@ -991,9 +991,9 @@ export async function createInsurance(input: CreateInsuranceInput): Promise<{ id
   revalidateAfterAssetMutation()
   await captureServer(user.id, 'asset_created', { asset_type: 'insurance' })
   return { id: created.id }
-}
+})
 
-export async function editInsurance(input: EditInsuranceInput): Promise<void> {
+export const editInsurance = action(async (input: EditInsuranceInput): Promise<void> => {
   'use server'
   const validated = validateInsuranceInput(input)
   const { group } = await requireViewerGroup()
@@ -1084,7 +1084,7 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
   })
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 /**
  * v0.15.0 #127 — Renew a single-year insurance policy.
@@ -1096,10 +1096,10 @@ export async function editInsurance(input: EditInsuranceInput): Promise<void> {
  * Only meaningful for term_years = 1 policies but the action does not enforce
  * that — multi-year policies could also use it for an off-spec extension.
  */
-export async function renewInsurance(input: {
+export const renewInsurance = action(async (input: {
   id: string
   newPolicyNumber?: string | null
-}): Promise<void> {
+}): Promise<void> => {
   'use server'
   const { group } = await requireViewerGroup()
 
@@ -1136,7 +1136,7 @@ export async function renewInsurance(input: {
     .where(eq(insuranceDetails.assetId, input.id))
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 /**
  * v0.15.0 #127 — Mark an insurance policy as lapsed/stopped.
@@ -1146,7 +1146,7 @@ export async function renewInsurance(input: {
  * (1-year pg_cron purge), scoped through the insurance type check so callers
  * can't accidentally lapse a non-insurance asset through this action.
  */
-export async function lapseInsurance(input: { id: string }): Promise<void> {
+export const lapseInsurance = action(async (input: { id: string }): Promise<void> => {
   'use server'
   const { group } = await requireViewerGroup()
 
@@ -1163,7 +1163,7 @@ export async function lapseInsurance(input: { id: string }): Promise<void> {
   if (result.length === 0) throw actionError('policy_not_found')
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 // ── House ──────────────────────────────────────────────────────────────────
 
@@ -1175,7 +1175,7 @@ export interface CreateHouseInput {
   notes?: string | null
 }
 
-export async function createHouse(input: CreateHouseInput): Promise<{ id: string }> {
+export const createHouse = action(async (input: CreateHouseInput): Promise<{ id: string }> => {
   'use server'
   const validated = validateHouseInput(input)
   const { user: viewer, group } = await requireViewerGroup()
@@ -1237,7 +1237,7 @@ export async function createHouse(input: CreateHouseInput): Promise<{ id: string
   }
   await captureServer(viewer.id, 'asset_created', { asset_type: 'house' })
   return { id: created.id }
-}
+})
 
 export interface EditHouseInput {
   id: string
@@ -1248,7 +1248,7 @@ export interface EditHouseInput {
   notes?: string | null
 }
 
-export async function editHouse(input: EditHouseInput): Promise<void> {
+export const editHouse = action(async (input: EditHouseInput): Promise<void> => {
   'use server'
   const validated = validateHouseInput(input)
   const { group } = await requireViewerGroup()
@@ -1288,7 +1288,7 @@ export async function editHouse(input: EditHouseInput): Promise<void> {
   })
 
   revalidateAfterAssetMutation(input.id)
-}
+})
 
 // ── Template-based assets (#222) ──────────────────────────────────────────────
 
@@ -1311,7 +1311,7 @@ export interface CreateTemplateAssetInput {
  * / etc.) — those write to the matching *Details subtable and participate in
  * FuelLog / SavingsView / insurance cron. Template-based assets do not.
  */
-export async function createTemplateAsset(input: CreateTemplateAssetInput): Promise<{ id: string }> {
+export const createTemplateAsset = action(async (input: CreateTemplateAssetInput): Promise<{ id: string }> => {
   if (!isAssetTemplateKey(input.templateKey)) {
     throw actionError('template_unknown')
   }
@@ -1335,7 +1335,7 @@ export async function createTemplateAsset(input: CreateTemplateAssetInput): Prom
   revalidateAfterAssetMutation()
   await captureServer(user.id, 'asset_created', { asset_type: 'item' })
   return { id: created.id }
-}
+})
 
 export interface EditTemplateAssetInput extends CreateTemplateAssetInput {
   id: string
@@ -1350,7 +1350,7 @@ export interface EditTemplateAssetInput extends CreateTemplateAssetInput {
  * Refuses to operate on legacy assets (template_key IS NULL) — those still go
  * through the existing editCar / editChild / etc. paths.
  */
-export async function editTemplateAsset(input: EditTemplateAssetInput): Promise<void> {
+export const editTemplateAsset = action(async (input: EditTemplateAssetInput): Promise<void> => {
   if (!isAssetTemplateKey(input.templateKey)) {
     throw actionError('template_unknown')
   }
@@ -1377,4 +1377,4 @@ export async function editTemplateAsset(input: EditTemplateAssetInput): Promise<
   if (updated.length === 0) throw actionError('aibutsu_not_found')
 
   revalidateAfterAssetMutation(input.id)
-}
+})

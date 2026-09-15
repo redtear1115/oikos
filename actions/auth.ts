@@ -13,8 +13,9 @@ import {
   isFirstAuth,
   type AuthPath,
 } from '@/lib/analytics/attribution'
+import { action } from '@/lib/action-errors'
 
-export async function signOut() {
+export const signOut = action(async () => {
   const supabase = await createClient()
   await supabase.auth.signOut()
   // Land on the warm landing surface, not /sign-in. Preserve the user's
@@ -23,7 +24,7 @@ export async function signOut() {
   // because useTransition + server-action redirect previously swallowed the
   // navigation, leaving users visually stuck on /settings.
   redirect(await localizedHomePath())
-}
+})
 
 /**
  * Conversion attribution for the iOS-native Apple sign-in path, which uses
@@ -42,10 +43,10 @@ export async function signOut() {
 const NATIVE_AUTH_PATH: AuthPath = 'ios_native'
 const NATIVE_AUTH_PROVIDER = 'apple'
 
-export async function recordNativeAuthConversion(opts: {
+export const recordNativeAuthConversion = action(async (opts: {
   from?: string | null
   anonId?: string | null
-}): Promise<void> {
+}): Promise<void> => {
   try {
     const supabase = await createClient()
     const {
@@ -88,4 +89,4 @@ export async function recordNativeAuthConversion(opts: {
       // Reporting the failure must not become a new failure.
     }
   }
-}
+})

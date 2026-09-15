@@ -30,6 +30,7 @@ import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { confirmPending } from '@/actions/recurringExpense'
 import { listActivePendings } from '@/lib/db/queries/recurringExpense'
 import { transactionDelta } from '@/lib/balance'
+import { unwrapAction } from '@/lib/action-errors'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家' }
@@ -143,7 +144,7 @@ describe('confirmPending — weighted rule, end to end', () => {
     queueDbResult([{ id: 'tx-1' }])    // insert CashTx
     queueDbResult([{ id: 'pend-1' }])  // resolve pending
 
-    const out = await confirmPending('pend-1')
+    const out = unwrapAction(await confirmPending('pend-1'))
     expect(out).toEqual({ txId: 'tx-1' })
 
     const insertVals = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>

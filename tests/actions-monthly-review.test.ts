@@ -25,7 +25,7 @@ describe('upsertMonthlyReviewMessage', () => {
       year: 2026, month: 6, body: '下個月想一起去看海',
     })
 
-    expect(out).toEqual({ id: 'msg-1' })
+    expect(out).toEqual({ ok: true, data: { id: 'msg-1' } })
     const insertedValues = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(insertedValues.groupId).toBe(GROUP.id)
     expect(insertedValues.memberId).toBe(VIEWER.id)
@@ -43,7 +43,7 @@ describe('upsertMonthlyReviewMessage', () => {
       year: 2026, month: 6, body: '改一下',
     })
 
-    expect(out).toEqual({ id: 'msg-existing' })
+    expect(out).toEqual({ ok: true, data: { id: 'msg-existing' } })
     const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setPayload.body).toBe('改一下')
     expect(setPayload.updatedAt).toBeInstanceOf(Date)
@@ -53,9 +53,9 @@ describe('upsertMonthlyReviewMessage', () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: 'msg-existing', lockedAt: new Date() }])
 
-    await expect(upsertMonthlyReviewMessage({
+    expect(await upsertMonthlyReviewMessage({
       year: 2026, month: 6, body: '想改但鎖了',
-    })).rejects.toThrow('review_month_locked')
+    })).toEqual({ ok: false, code: 'review_month_locked' })
   })
 
   it('rejects empty body before touching the DB', async () => {
@@ -81,7 +81,7 @@ describe('upsertMonthlyReviewMessage', () => {
     const out = await upsertMonthlyReviewMessage({
       year: 2026, month: 6, body: '一個人也要好好過',
     })
-    expect(out).toEqual({ id: 'msg-solo' })
+    expect(out).toEqual({ ok: true, data: { id: 'msg-solo' } })
   })
 })
 

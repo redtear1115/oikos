@@ -16,6 +16,7 @@ import { formatDateAbsolute } from '@/lib/format-date'
 import { describeError } from '@/lib/errors'
 import type { SplitType } from '@/lib/balance'
 import type { FuelType, GasFuelType } from '@/lib/fuel'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface CarLite {
   id: string
@@ -142,7 +143,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     startTransition(async () => {
       try {
         if (mode === 'edit' && initial) {
-          await editFuelLog({
+          unwrapAction(await editFuelLog({
             id: initial.fuelLogId,
             assetId: car.id,
             liters: litersNum,
@@ -153,9 +154,9 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             station: initial.station,
             paidBy,
             splitType,
-          })
+          }))
         } else {
-          await createFuelLog({
+          unwrapAction(await createFuelLog({
             assetId: car.id,
             liters: litersNum,
             odometer: odometerNum,
@@ -165,7 +166,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             station: null,
             paidBy,
             splitType,
-          })
+          }))
         }
         onClose()
       } catch (err) {
@@ -179,7 +180,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
     setConfirmDelete(false)
     startTransition(async () => {
       try {
-        await softDeleteFuelLog(initial.fuelLogId)
+        unwrapAction(await softDeleteFuelLog(initial.fuelLogId))
         onClose()
       } catch (err) {
         setError(describeError(err, t.common.error, t.common.offlineError, t.errors.actions))

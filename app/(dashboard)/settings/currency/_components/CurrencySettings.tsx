@@ -13,6 +13,7 @@ import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { SubpageHeader } from '@/app/(dashboard)/_components/SubpageHeader'
 import type { RateEntry } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import type { TripOption } from '@/app/(dashboard)/dashboard/_components/TripSelector'
+import { unwrapAction } from '@/lib/action-errors'
 
 // AddSheet only mounts when the user taps to add a rate — lazy-load to keep
 // the currency settings initial bundle small (#670 audit 6.1).
@@ -43,7 +44,7 @@ export function CurrencySettings(props: {
     setBase(next)
     start(async () => {
       try {
-        await setBaseCurrency({ currency: next })
+        unwrapAction(await setBaseCurrency({ currency: next }))
       } catch (e: unknown) {
         const message = describeError(e, tc.errors.baseChangeFailed, t.common.offlineError, t.errors.actions)
         setBaseError(message)

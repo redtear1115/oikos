@@ -60,6 +60,7 @@ const {
 } = await import('@/lib/db/schema')
 const { editAndConfirmPending, confirmPending, skipPending } = await import('@/actions/recurringIncome')
 const { eq } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
 // We seed two independent groups: groupA owned by userA, groupB owned by userB.
@@ -192,7 +193,7 @@ describe('editAndConfirmPending', () => {
   it('happy path: edits + confirms pending atomically (soft-resolve pending, insert IncomeTx)', async () => {
     mockUserId = fixture.userAId
 
-    const result = await editAndConfirmPending({
+    const result = unwrapAction(await editAndConfirmPending({
       pendingId: fixture.pendingAId,
       amount: 80000,                  // user adjusts amount up
       category: 'bonus',              // and changes category
@@ -200,7 +201,7 @@ describe('editAndConfirmPending', () => {
       occurredAt: '2026-05-03',       // and shifts date
       source: 'TEST_phase2_edited',
       assetId: null,
-    })
+    }))
 
     expect(result.txId).toBeTruthy()
     cleanupTxIds.push(result.txId)
@@ -256,7 +257,7 @@ describe('editAndConfirmPending', () => {
   it('cross-group safety: userB cannot confirm groupA pending', async () => {
     mockUserId = fixture.userBId
 
-    await expect(editAndConfirmPending({
+    expect(await editAndConfirmPending({
       pendingId: fixture.pendingAId,        // belongs to groupA
       amount: 1,
       category: 'salary',
@@ -264,7 +265,7 @@ describe('editAndConfirmPending', () => {
       occurredAt: '2026-05-01',
       source: null,
       assetId: null,
-    })).rejects.toThrow('pending_income_not_found')
+    })).toEqual({ ok: false, code: 'pending_income_not_found' })
 
     // userB cannot resolve their pending against userA's group either —
     // and resolving their *own* pending here is unrelated; the assertion
@@ -291,10 +292,10 @@ describe('editAndConfirmPending', () => {
     let raceTxId: string | null = null
     try {
       mockUserId = fixture.userAId
-      const first = await confirmPending(pending.id)
+      const first = unwrapAction(await confirmPending(pending.id))
       raceTxId = first.txId
 
-      await expect(editAndConfirmPending({
+      expect(await editAndConfirmPending({
         pendingId: pending.id,
         amount: 80000,
         category: 'salary',
@@ -302,7 +303,7 @@ describe('editAndConfirmPending', () => {
         occurredAt: '2026-07-02',
         source: null,
         assetId: null,
-      })).rejects.toThrow('pending_income_not_found')
+      })).toEqual({ ok: false, code: 'pending_income_not_found' })
 
       // Resolved id stays as the first tx — race did not double-write.
       const [row] = await db.select().from(pendingIncomeOccurrences)
@@ -354,7 +355,7 @@ describe('editAndConfirmPending', () => {
 
     try {
       mockUserId = fixture.userAId
-      await expect(editAndConfirmPending({
+      expect(await editAndConfirmPending({
         pendingId: pending.id,
         amount: 75000,
         category: 'salary',
@@ -362,7 +363,7 @@ describe('editAndConfirmPending', () => {
         occurredAt: '2026-09-01',
         source: null,
         assetId: null,
-      })).rejects.toThrow('recipient_not_in_group')
+      })).toEqual({ ok: false, code: 'recipient_not_in_group' })
 
       const [row] = await db.select().from(pendingIncomeOccurrences)
         .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)
@@ -408,9 +409,9 @@ describe('editAndConfirmPending', () => {
 
     try {
       mockUserId = fixture.userAId
-      await skipPending(pending.id)
+      unwrapAction(await skipPending(pending.id))
 
-      await expect(editAndConfirmPending({
+      expect(await editAndConfirmPending({
         pendingId: pending.id,
         amount: 75000,
         category: 'salary',
@@ -418,7 +419,7 @@ describe('editAndConfirmPending', () => {
         occurredAt: '2026-11-01',
         source: null,
         assetId: null,
-      })).rejects.toThrow('pending_income_not_found')
+      })).toEqual({ ok: false, code: 'pending_income_not_found' })
 
       const [row] = await db.select().from(pendingIncomeOccurrences)
         .where(eq(pendingIncomeOccurrences.id, pending.id)).limit(1)

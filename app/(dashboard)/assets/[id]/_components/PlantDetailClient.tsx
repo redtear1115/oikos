@@ -15,6 +15,7 @@ import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface AssetSummary {
   monthAmount: number
@@ -131,7 +132,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="plant" onCtaPress={() => setAddOpen(true)} />}

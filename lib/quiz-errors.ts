@@ -1,10 +1,10 @@
 import { describeError } from './errors'
-import type { ActionErrorMessages } from './action-errors'
+import { parseActionError, type ActionErrorMessages } from './action-errors'
 import type { Translations } from './i18n/locales/zh-TW'
 
 /**
  * Map a partner-quiz server-action error to a user-facing localized string.
- * Error codes are the literal strings thrown by `actions/partnerQuiz.ts`;
+ * Error codes are the literal codes raised by `actions/partnerQuiz.ts`;
  * anything else flows through `describeError` (network detection + generic
  * fallback).
  *
@@ -21,8 +21,9 @@ export function describeQuizError(
   offlineMessage: string,
   actionErrors: ActionErrorMessages,
 ): string {
-  if (e instanceof Error) {
-    switch (e.message) {
+  const code = parseActionError(e)?.code
+  if (code) {
+    switch (code) {
       case 'solo_group':        return t.errors.solo
       case 'already_answered':  return t.errors.alreadyAnswered
       case 'already_revealed':  return t.errors.alreadyRevealed

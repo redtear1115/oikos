@@ -7,6 +7,7 @@ import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
 import { useTranslations } from '@/lib/i18n/client'
 import { leaveGroup, proposeSwap } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 type Step = 1 | 2 | 3 | 4 | 'final' | 'swap-sent'
 
@@ -112,7 +113,7 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        await proposeSwap()
+        unwrapAction(await proposeSwap())
         setStep('swap-sent')
         router.refresh()
       } catch (e) {
@@ -126,7 +127,7 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        const { epochId } = await leaveGroup()
+        const { epochId } = unwrapAction(await leaveGroup())
         // Mark the leaver's brand-new solo *epoch* so WelcomeSoloCard can
         // surface a dismissible "歡迎回到一個人" card on their first dashboard
         // render. Done client-side because the epoch only exists after the
