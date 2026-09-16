@@ -130,74 +130,89 @@ grep -n 'versionCode\|versionName' android/app/build.gradle
 
 ### 3A. iOS：archive → export → upload
 
-兩把 ASC key 分工，**不要弄混**（[§H](../../../docs/app-store-submission-runbook.md#h-app-store-connect-api-key)）：
+⚠️ **這段在 2026-09-16 整段重寫過。** 舊版寫的是「用 Admin key `795L42Z42U` 走雲端簽章」，
+那把 key **已於 2026-09-11 撤銷**（改成在本機建 distribution 憑證，見 runbook §H）。
+照舊版跑會失敗在一句與真正原因無關的錯誤上。
 
-| Key ID | 角色 | 用在哪一步 |
-|---|---|---|
-| `795L42Z42U` | **管理（Admin）** | `xcodebuild -exportArchive` 的**雲端簽章** |
-| `LRB54C7D5X` | App 管理 | `xcrun altool --validate-app` / `--upload-app` |
+現在只有一把 ASC key：`LRB54C7D5X`（App 管理），**只用於 validate / upload**，不參與簽章。
+簽章走本機憑證。
 
-本團隊的 distribution 憑證是 Apple 雲端託管型（Portal 顯示 `Distribution Managed`），
-本機 keychain 沒有私鑰，export 必須走雲端簽章，而雲端簽章要求 key 有 Admin 角色。
-用 App 管理 key 跑 export 會得到誤導性的 `No signing certificate "iOS Distribution" found`
-（底層其實是 Apple 回 403「未獲授權存取雲端託管的發佈憑證」）。
+**Issuer ID**：altool 需要，不在 dmg 也不在 repo。
+ASC → 使用者與存取權 → 整合 → App Store Connect API，頁面最上方那串 UUID。**沒有就停下來問。**
 
-`.p8` 在 `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8`；Issuer ID 在使用者的密碼管理器，
-**沒有就停下來問，不要猜**。Team ID `W64689HV8B`、Bundle ID `dev.southernlight.futari`。
+#### 0) 裝 provisioning profile（乾淨機器必做）
+
+`~/Library/MobileDevice/Provisioning Profiles/` 預設是空的，manual signing 找不到 profile 會
+失敗在看起來像憑證問題的訊息上。
+
+```bash
+P="/Volumes/Futari Secrets/apple/distribution-cert/Futari_App_Store_local_dist_cert.mobileprovision"
+UUID=$(security cms -D -i "$P" | plutil -extract UUID raw -o - -)
+for d in ~/Library/MobileDevice/Provisioning\ Profiles \
+         ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles; do
+  mkdir -p "$d" && cp "$P" "$d/$UUID.mobileprovision"
+done
+security find-identity -v -p codesigning | grep "Apple Distribution"   # 要有輸出
+```
+
+#### 1) archive（manual signing）
+
+**不要加 `-allowProvisioningUpdates`** —— 那會把 Xcode 推回雲端簽章那條已經沒有權限的路。
 
 ```bash
 T=$(mktemp -d)
-
-# 1) archive
 xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$T/App.xcarchive" archive \
-  -allowProvisioningUpdates \
-  -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_795L42Z42U.p8 \
-  -authenticationKeyID 795L42Z42U -authenticationKeyIssuerID <ISSUER>
+  CODE_SIGN_STYLE=Manual \
+  CODE_SIGN_IDENTITY="Apple Distribution: Nan-Kuang Lee (W64689HV8B)" \
+  PROVISIONING_PROFILE_SPECIFIER="Futari App Store (local dist cert)" \
+  DEVELOPMENT_TEAM=W64689HV8B
+```
 
-# 2) export（用 Admin key）
+#### 2) export
+
+```bash
 cat > "$T/ExportOptions.plist" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>method</key><string>app-store-connect</string>
   <key>teamID</key><string>W64689HV8B</string>
-  <key>signingStyle</key><string>automatic</string>
+  <key>signingStyle</key><string>manual</string>
+  <key>signingCertificate</key><string>Apple Distribution: Nan-Kuang Lee (W64689HV8B)</string>
+  <key>provisioningProfiles</key>
+  <dict><key>dev.southernlight.futari</key><string>Futari App Store (local dist cert)</string></dict>
   <key>uploadSymbols</key><true/>
 </dict></plist>
 EOF
 xcodebuild -exportArchive -archivePath "$T/App.xcarchive" -exportPath "$T/export" \
-  -exportOptionsPlist "$T/ExportOptions.plist" -allowProvisioningUpdates \
-  -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_795L42Z42U.p8 \
-  -authenticationKeyID 795L42Z42U -authenticationKeyIssuerID <ISSUER>
+  -exportOptionsPlist "$T/ExportOptions.plist"
 ```
 
-export 完先驗版本號，再**停下來給使用者確認**：
+#### 3) 從 IPA 內部驗，不要只看 build 設定
 
 ```bash
-unzip -p "$T/export/App.ipa" 'Payload/App.app/Info.plist' \
-  | plutil -extract CFBundleShortVersionString raw - ; \
-unzip -p "$T/export/App.ipa" 'Payload/App.app/Info.plist' \
-  | plutil -extract CFBundleVersion raw -
+IPA="$T/export/App.ipa"
+unzip -p "$IPA" 'Payload/App.app/Info.plist' | plutil -extract CFBundleShortVersionString raw -
+unzip -p "$IPA" 'Payload/App.app/Info.plist' | plutil -extract CFBundleVersion raw -
+TT=$(mktemp -d); unzip -q "$IPA" -d "$TT"
+codesign -d --entitlements :- "$TT/Payload/App.app" | grep applesignin  # 必須有，1.5.5(2) 就是缺這個
+test -f "$TT/Payload/App.app/public/offline.html" && echo "離線頁 OK"    # #1225，缺了不會報錯
 ```
 
-確認後才跑上傳（**這步需要使用者明講**）：
+#### 4) 上傳（**這步需要使用者明講**）
 
 ```bash
-xcrun altool --validate-app -f "$T/export/App.ipa" -t ios \
-  --apiKey LRB54C7D5X --apiIssuer <ISSUER>
-xcrun altool --upload-app  -f "$T/export/App.ipa" -t ios \
-  --apiKey LRB54C7D5X --apiIssuer <ISSUER>
+xcrun altool --validate-app -f "$IPA" -t ios --apiKey LRB54C7D5X --apiIssuer <ISSUER>
+xcrun altool --upload-app  -f "$IPA" -t ios --apiKey LRB54C7D5X --apiIssuer <ISSUER>
 ```
-
-> **不想留 Admin key 的替代路**（runbook §H）：改用 Xcode GUI 的 Distribute App（走帳戶持有人登入身分，
-> 不需 API key），或在本機建一張真正的 Apple Distribution 憑證讓 export 在本機簽。
-> `795L42Z42U` **不能上傳完就撤銷**——雲端簽章是每次 export 都要。
 
 ### 3B. Android：bundleRelease + 簽章驗證
 
 ```bash
 # 簽章參數由 build.gradle 從環境變數讀取；值在 repo 根目錄 .env（gitignored）
+# ⚠️ KEYSTORE_PATH 指向加密 dmg，**要先掛載 /Volumes/Futari Secrets**。
+#   路徑含空白，.env 裡必須加引號，否則 source 時會被分詞。
 set -a; . ./.env; set +a
 
 # ⚠️ 用 Android Studio 內附 JBR（現為 JDK 25）。Capacitor 8 要求 ≥ 21；上限由 Gradle 決定
@@ -216,18 +231,33 @@ cd android && ./gradlew bundleRelease
 AAB=android/app/build/outputs/bundle/release/app-release.aab
 # 用 JBR 的工具：PATH 上的 jarsigner / keytool 可能是 macOS stub（回 "Unable to locate a Java Runtime"）
 "$JAVA_HOME/bin/jarsigner" -verify "$AAB"                         # 要回 "jar verified."
-"$JAVA_HOME/bin/keytool" -printcert -jarfile "$AAB" | grep SHA256
-# 應等於 upload key 指紋：
-# 9D:4A:6F:DF:47:F7:90:8F:CA:63:61:43:0A:B7:2B:4A:19:D2:F9:F0:4B:DA:81:55:F0:90:0B:91:60:96:7F:03
+
+# ⚠️ keytool -printcert -jarfile 對 AAB 不管用（v2/v3 簽章不在那個位置），要自己抽簽章塊：
+TT=$(mktemp -d); unzip -o -q "$AAB" -d "$TT" 'META-INF/*'
+F=$(find "$TT/META-INF" -type f \( -name '*.RSA' -o -name '*.DSA' \) | head -1)
+LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | grep SHA1
+# 應等於 Play 綁定的 upload key 指紋（SHA-1，因為 Play 拒收時的錯誤訊息給的就是 SHA-1）：
+# 9E:89:50:87:B1:8B:88:69:D7:0A:8D:95:76:05:4A:B8:FF:83:71:88
 ```
+
+> `-J-Duser.language=en` 不是可選的：中文 locale 下 keytool 印的是「憑證指紋 (SHA-256)」，
+> `grep SHA1` 會**靜默落空**——看起來像沒簽章，實際只是 grep 沒命中。
+
+> ⚠️ **`android/obsolete/` 底下那把 2026-08-06 重建的 keystore（SHA-1 `AD:4D:E6:...`）是廢的。**
+> Play 綁定的是 2026-05-30 建的 `9E:89:50:...`，重建 keystore 不會改變綁定。用錯的那把簽，
+> build 會成功、`jarsigner -verify` 會回 `jar verified.`，一路綠燈到 Play Console 最後一步才拒收。
+> v1.5.15 送審時撞過一次。**換過簽章金鑰之後，唯一能證明它可用的方法是實際上傳一次。**
 
 指紋對上、`versionCode` 確認過之後，**把 AAB 路徑交給使用者自己上傳 Play Console**
 （或經明確同意後代傳）。
 
-> ⚠️ Upload keystore 在 `~/futari-release.keystore`（alias `futari`，效期至 2053-12）。
-> 2026-08-06 重建過一次，因為原本的密碼從未寫進任何檔案。
-> **「重建零代價」的窗口在首次送出 Production 後就關閉**——之後遺失只能走 Google 的
-> upload key reset 流程。密碼存密碼管理器，keystore 檔另外備份。
+> ⚠️ Upload keystore 在 **加密 dmg**：`/Volumes/Futari Secrets/android/futari-release.keystore`
+> （alias `futari`，2026-05-30 建，效期至 2053-10）。**要先掛載 dmg。**
+> 密碼在 repo 根目錄 `.env` 與 dmg 的 `env/.env`，兩份要一致。
+>
+> 這把已與 Play App Signing 綁定，遺失只能走 Google 的 upload key reset（1–2 個工作天，
+> 要附 `keytool -export -rfc` 匯出的 `.pem`）。**重建一把新的解決不了問題**——Play 綁的是舊那把。
+> 詳見 runbook §B 的 upload keystore 段落。
 
 ### 4. 收尾 checklist（印給使用者）
 
@@ -265,7 +295,7 @@ AAB=android/app/build/outputs/bundle/release/app-release.aab
 | `The file "public" / "config.xml" / "capacitor.config.json" couldn't be opened` | 乾淨 checkout / 新 worktree 沒跑 `cap sync`；這些是 gitignored 的產物 | `npx cap sync ios` |
 | 真機斷網冷啟動看到空白畫面／系統錯誤頁 | 殼裡缺 `public/offline.html`（`server.errorPath` 的目標），通常是繞過 `cap copy` 手動塞檔 | 重跑 `npx cap sync`，確認 hook 有輸出 `[native-offline-page] wrote out/offline.html` |
 | `Failed to resolve dependencies ... 'apple-sign-in' depends on capacitor-swift-pm 7.0.0..<8.0.0 and 'push-notifications' depends on 8.0.0..<9.0.0` | `@capacitor-community/apple-sign-in` 停在 7.1.0，宣告 `from: "7.0.0"`；`CapApp-SPM/Package.swift` pin `exact: "8.3.4"` | `patches/@capacitor-community+apple-sign-in+7.1.0.patch` 放寬到 `<"9.0.0"`。patch 沒套上就重跑 `npm ci` 並確認輸出 |
-| `exportArchive Cloud signing permission error` / `No signing certificate "iOS Distribution" found` | 用了 App 管理角色的 key 跑 export；雲端簽章要 Admin | 換 `795L42Z42U`。ASC 的 key 建立後權限**不能改**，只能另建一把 |
+| `exportArchive Cloud signing permission error` / `No signing certificate "iOS Distribution" found` | 走到雲端簽章那條路了——本團隊 2026-09-11 起改用本機 distribution 憑證，Admin key `795L42Z42U` 已撤銷 | 照 §3A 用 manual signing，並**拿掉 `-allowProvisioningUpdates`**（它會把 Xcode 推回雲端簽章）。確認 provisioning profile 已安裝 |
 | `invalid source release: 21` | PATH 上的 JDK 比 21 舊 | `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"` |
 | `BUG! exception in phase 'semantic analysis' ... Unsupported class file major version 69`（或 70…） | JBR 隨 Android Studio 更新漂到比 Gradle 支援的還新（69 = Java 25 需 Gradle 9.1+、70 = Java 26 需 9.4+） | 升 `android/gradle/wrapper/gradle-wrapper.properties`（連帶 AGP），見 #1207；不要另裝舊 JDK |
 | `getDefaultProguardFile('proguard-android.txt') is no longer supported`（出錯的是 `:capacitor-community-apple-sign-in`） | apple-sign-in 的 Android patch 沒套上。常見於 #1207 之前就裝好的 `node_modules`：對已套過舊 patch 的目錄套新 patch 會失敗，而 postinstall 是 `patch-package \|\| exit 0`，npm 不會報錯 | `rm -rf node_modules && npm ci`，確認輸出有 `@capacitor-community/apple-sign-in@7.1.0 ✔` |
