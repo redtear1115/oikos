@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server'
 import * as Sentry from '@sentry/nextjs'
 import { cookies } from 'next/headers'
 import { localizedSignInPath } from '@/lib/i18n/server-redirect'
+import { safeSameOriginUrl } from '@/lib/auth/nativeRedirect'
 import { LOCALE_COOKIE, DEFAULT_LOCALE, isLocale } from '@/lib/i18n/locales-meta'
 import { aliasServer, captureServer } from '@/lib/analytics/server'
 import {
@@ -62,8 +63,10 @@ async function recordAuthFailure(
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const rawNext = searchParams.get('next') ?? '/dashboard'
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
+  // `next` 來自 query string，不可信。safeSameOriginUrl 回傳同源的絕對 URL，
+  // 其他一律 `${origin}/dashboard`（#1275）。原本的 `startsWith('/') && !startsWith('//')`
+  // 放過 `/\evil.com` 這類瀏覽器會當成 protocol-relative 的路徑。
+  const nextUrl = safeSameOriginUrl(origin, searchParams.get('next') ?? '/dashboard')
   // Funnel attribution carried through the OAuth redirect by SignInButton.
   const from = searchParams.get('from')
   const aid = searchParams.get('aid')
@@ -146,5 +149,5 @@ export async function GET(request: Request) {
     )
   }
 
-  return NextResponse.redirect(`${origin}${next}`)
+  return NextResponse.redirect(nextUrl)
 }

@@ -9,8 +9,10 @@ import {
 import {
   parseLocaleFromPath,
   isPublicLocalizedPath,
+  isLocalePrefixedPath,
   localizedHref,
 } from './lib/i18n/path'
+import { isKnownProtectedPath } from './lib/auth/protectedPaths'
 
 const LOCALE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
 
@@ -77,7 +79,15 @@ export async function proxy(request: NextRequest) {
   //       sign-in page itself (it's public, so the proxy no longer verifies it).
   // Auth gating for protected routes is UNCHANGED — they still get a full
   // getUser() verification and redirect exactly as before.
+  //
+  // #1275: 任何 `/<locale>/...` 也略過——app/[locale] 只有 public 頁，未知的
+  // `/zh-TW/foo` 交給 [locale] 的 notFound() 回 404，而不是被 307 到 /sign-in。
+  // 這條只影響 auth-skip；上面的 cookie sync / rewrite 仍只看 isPublicLocalizedPath，
+  // 否則 `/en/junk` 會把已登入使用者的語系 cookie 切掉。
+  // 「app/[locale] 只放 public 頁」由 tests/locale-segment-public-only.test.ts 守住：
+  // 失效的樣子是那頁在 proxy 這層沒有 session refresh、也不導轉，而且不會報錯。
   const isPublic = isPublicLocalizedPath(pathname)
+    || isLocalePrefixedPath(pathname)
     || pathname.startsWith('/auth/')
     || pathname.startsWith('/invite/')
     || pathname === '/offline'
@@ -90,8 +100,16 @@ export async function proxy(request: NextRequest) {
       // 從現有 cookie 推算 locale prefix，讓使用者繼續講原語言。
       const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value
       const targetLocale: Locale = isLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE
-      const target = localizedHref('/sign-in', targetLocale)
-      return NextResponse.redirect(new URL(target, request.url))
+      const target = new URL(localizedHref('/sign-in', targetLocale), request.url)
+      // #1275: 已知 protected 頁帶 `?next=<pathname>`，登入後回原頁。
+      // - 只帶 pathname，不帶 search：/records 的金額篩選會跟著進 PostHog / Supabase log。
+      // - 用 searchParams.set 而非字串串接：sign-in 還會讀 `from`（歸因），
+      //   串接的 `&` 會讓 next 的內容偽造出別的參數。
+      // - /api/* 與未知路徑不帶（見 lib/auth/protectedPaths.ts）。
+      if (isKnownProtectedPath(pathname)) {
+        target.searchParams.set('next', pathname)
+      }
+      return NextResponse.redirect(target)
     }
   }
 
