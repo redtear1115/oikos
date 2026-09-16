@@ -1,5 +1,11 @@
 import * as Sentry from '@sentry/nextjs'
 import { DEPLOY_ENV, IS_PROD_DEPLOY } from '@/lib/deployEnv'
+import {
+  scrubSentryBreadcrumb,
+  scrubSentryEvent,
+  scrubSentryLog,
+  scrubSentrySpan,
+} from '@/lib/observability/sentryScrub'
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -13,4 +19,14 @@ Sentry.init({
   // console.error/warn so existing logging shows up without Sentry.logger calls.
   enableLogs: true,
   integrations: [Sentry.consoleLoggingIntegration({ levels: ['error', 'warn'] })],
+  // #1274 — every payload the SDK sends goes through the shared scrub:
+  // invite tokens and ledger filter values out of URLs, cookies / headers /
+  // client IPs removed. Transactions skip `beforeSend`, so each hook is
+  // needed. If one is dropped nothing errors — raw URLs just reappear in
+  // Sentry (tests/sentry-scrub-wiring.test.ts guards this).
+  beforeSend: scrubSentryEvent,
+  beforeSendTransaction: scrubSentryEvent,
+  beforeSendSpan: scrubSentrySpan,
+  beforeBreadcrumb: scrubSentryBreadcrumb,
+  beforeSendLog: scrubSentryLog,
 })

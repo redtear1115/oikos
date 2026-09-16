@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Analytics } from '@vercel/analytics/next'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { IS_PROD_DEPLOY } from '@/lib/deployEnv'
 import { InAppBrowserGuardLazy } from '@/components/InAppBrowserGuardLazy'
 import { PostHogProvider } from './providers'
 import { PostHogPageView } from './posthog-pageview'
+import { VercelInsights } from './vercel-insights'
 import './globals.css'
 // Fraunces is the landing hero typeface. Two weights (400 mobile tagline, 500
 // everything else). Self-hosted from public/fonts/ rather than next/font/google:
@@ -127,8 +126,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <PostHogPageView />
           {children}
         </PostHogProvider>
-        <Analytics />
-        <SpeedInsights />
+        <VercelInsights />
         {IS_PROD_DEPLOY && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
