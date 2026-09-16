@@ -76,6 +76,31 @@ export function titleKofiIframes(title: string): void {
   })
 }
 
+// Below `md` (#1276), the donate button is drawn icon-only — see handleLoad.
+// Match Tailwind's `md` breakpoint so it lines up with every other
+// mobile/desktop split in the app (e.g. the LandingCtaLink `md:hidden` pair).
+const KOFI_MOBILE_MEDIA_QUERY = '(max-width: 767px)'
+
+// Ko-fi's donate button (`.floatingchat-donate-button`) isn't appended to the
+// top document — it's written into a same-origin, src-less iframe via a
+// synchronous `document.write()` inside `draw()` (verified by reading
+// overlay-widget.js: `iframeContainerElement.write(buttonBody); ...close()`).
+// A src-less iframe inherits the parent's origin, so `contentDocument` is
+// reachable — this is NOT a cross-origin frame, and by the time `draw()`
+// returns the button node already exists.
+/**
+ * Label the icon-only donate button for accessibility once its text is blanked
+ * out (#1276). Ko-fi's `<img>` has no `alt`, and the `<span>` carrying the
+ * label goes empty, so without this the button has no accessible name.
+ */
+export function labelKofiDonateButtons(label: string): void {
+  if (typeof document === 'undefined') return
+  document.querySelectorAll<HTMLIFrameElement>(KOFI_IFRAME_SELECTOR).forEach((iframe) => {
+    const button = iframe.contentDocument?.querySelector('.floatingchat-donate-button')
+    if (button && !button.hasAttribute('aria-label')) button.setAttribute('aria-label', label)
+  })
+}
+
 /**
  * Bottom-right floating Ko-fi widget. Click opens a Ko-fi-hosted modal so the
  * donation completes without leaving the site.
@@ -146,14 +171,24 @@ export function KofiWidget({
     if (getCapacitorPlatform() === 'ios') return
     if (!window.kofiWidgetOverlay) return
 
+    // #1276: on narrow viewports the expanded "Support me" pill sat on top of
+    // the landing hero title. Draw icon-only below `md` instead of hiding the
+    // text at the CSS layer, because Ko-fi sizes/positions the pill from this
+    // config at draw time, not from later layout.
+    const isMobileViewport = window.matchMedia(KOFI_MOBILE_MEDIA_QUERY).matches
+
     window.kofiWidgetOverlay.draw(KOFI_USERNAME, {
       'type': 'floating-chat',
-      'floating-chat.donateButton.text': buttonText,
+      'floating-chat.donateButton.text': isMobileViewport ? '' : buttonText,
       // --color-warm-base (#FBEDE0) / --ink (#322B23) — keep the lamp warm,
       // not Ko-fi default cobalt which collides with the brand palette.
       'floating-chat.donateButton.background-color': '#FBEDE0',
       'floating-chat.donateButton.text-color': '#322B23',
     })
+
+    // Icon-only button has no accessible name from Ko-fi's own markup (empty
+    // span, alt-less <img>) — restore one from the full label we would have shown.
+    if (isMobileViewport) labelKofiDonateButtons(buttonText)
   }, [buttonText])
 
   if (isIosNative) return null
