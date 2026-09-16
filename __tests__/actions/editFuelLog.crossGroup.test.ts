@@ -172,7 +172,7 @@ describe('editFuelLog — the edited row must belong to the viewer (#1032)', () 
 
     // ── the attack: victim's fuelLogId, attacker's own (valid) assetId ──
     mockUserId = ids.attacker
-    await expect(editFuelLog({
+    expect(await editFuelLog({
       id: victimLog.id,
       assetId: attackerCar.id,
       liters: 1,
@@ -183,7 +183,7 @@ describe('editFuelLog — the edited row must belong to the viewer (#1032)', () 
       splitType: 'all_mine',
       station: 'TEST_1032_pwned',
       loggedAt: '2026-02-01',
-    })).rejects.toThrow('linked_asset_not_in_group')
+    })).toEqual({ ok: false, code: 'linked_asset_not_in_group' })
 
     // The victim's fuel log is untouched.
     const [logAfter] = await db.select().from(fuelLogs).where(eq(fuelLogs.id, victimLog.id)).limit(1)
