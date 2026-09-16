@@ -21,11 +21,17 @@ Sentry.init({
   integrations: [
     Sentry.consoleLoggingIntegration({ levels: ['error', 'warn'] }),
     // #1274 — same integration the SDK installs by default, minus cookies
-    // (this also strips the raw `cookie` header before it is read). The SDK
-    // de-duplicates integrations by name and a user instance replaces the
-    // default one, so this is not a second RequestData. The scrub hooks below
-    // still delete cookies / headers as the second line.
-    Sentry.requestDataIntegration({ include: { cookies: false } }),
+    // (this also strips the raw `cookie` header before it is read) and minus
+    // the request body. `data` defaults to true, and `httpServerIntegration`
+    // buffers textual bodies up to 10 KB: a server action POST carries its
+    // arguments, so an error during `acceptInvite(token)` would show the
+    // invite token under "Request → Body" (ledger actions: descriptions and
+    // amounts). The SDK de-duplicates integrations by name and a user
+    // instance replaces the default one, so this is not a second RequestData.
+    // The scrub hooks below still delete cookies / headers / data as the
+    // second line. If `data: false` comes off, nothing errors — bodies just
+    // reappear in Sentry.
+    Sentry.requestDataIntegration({ include: { cookies: false, data: false } }),
   ],
   // #1274 — every payload the SDK sends goes through the shared scrub:
   // invite tokens and ledger filter values out of URLs, cookies / headers /

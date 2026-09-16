@@ -256,6 +256,41 @@ export const POSTHOG_PRIVACY_OPTIONS = {
    */
   disable_session_recording: true,
   /**
+   * #1274 — `/flags` is a request, not an event, so `before_send` never sees
+   * it. posthog-js (1.374.3, `_callFlagsEndpoint` in
+   * `posthog-featureflags.js`) posts `person_properties:
+   * persistence.get_initial_props()` with it, and those `$initial_current_url`
+   * / `$initial_pathname` / `$initial_referrer` are built from the raw
+   * `location.href` / `document.referrer` (`getPersonInfo` in
+   * `utils/event-utils.js`) — invite token and filter values included. It
+   * fires once remote config loads (unless the project reports
+   * `hasFeatureFlags: false`) and again on the 5-minute refresh interval
+   * (`remote-config.js` → `refresh()`).
+   *
+   * We use no feature flags, so flags are switched off. This option makes
+   * `reloadFeatureFlags()` return before anything is scheduled, and both the
+   * first-load path (`ensureFlagsLoaded()`) and the refresh go through it; the
+   * only other caller of `_callFlagsEndpoint` is the retry inside a request
+   * that can no longer start.
+   *
+   * Not `advanced_disable_flags`: despite the name, that one also skips the
+   * remote-config load (`_shouldDisableFlags()` in `remote-config.js`), which
+   * is how the project's server-side settings reach the SDK (autocapture
+   * opt-out, heatmaps, web vitals, …). Turning those into client-only
+   * defaults is a much wider change than dropping flags we never read.
+   *
+   * The raw initial URL still sits in PostHog's persistence for the life of
+   * the page. With `persistence: 'memory'` (set in `providers.tsx`) that is
+   * JS memory only — no cookie, no storage — and nothing reads it for the
+   * network except this request.
+   *
+   * If this comes off, nothing errors: every page load (and every 5 minutes
+   * after) posts the raw landing URL and referrer to `/flags`, a request that
+   * PostHog does not show as an event anywhere. Only the `/flags` case in
+   * `tests/posthog-ledger-masking.test.tsx` notices.
+   */
+  advanced_disable_feature_flags: true,
+  /**
    * #1274 — URL scrubbing; see `scrubAnalyticsUrls` above. Lives here, not in
    * `providers.tsx`, so the guardrail test runs the exact hook production
    * ships and the "no literal re-declaration" check covers it too.

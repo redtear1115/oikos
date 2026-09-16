@@ -46,9 +46,9 @@ describe.each(CONFIGS)('%s', file => {
 })
 
 describe('sentry.server.config.ts', () => {
-  it('keeps cookies out of requestDataIntegration', () => {
+  it('keeps cookies and request bodies out of requestDataIntegration', () => {
     expect(read('sentry.server.config.ts')).toMatch(
-      /Sentry\.requestDataIntegration\(\{ include: \{ cookies: false \} \}\)/,
+      /Sentry\.requestDataIntegration\(\{ include: \{ cookies: false, data: false \} \}\)/,
     )
   })
 })

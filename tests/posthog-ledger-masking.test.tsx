@@ -366,6 +366,89 @@ describe('#1274 — PostHog events must not carry invite tokens or filter values
   })
 })
 
+/**
+ * #1274 — `/flags` is a request, not an event, so `before_send` never sees
+ * it. posthog-js sends `person_properties: persistence.get_initial_props()`
+ * with it, and those `$initial_current_url` / `$initial_pathname` /
+ * `$initial_referrer` values are the raw `location.href` / `document.referrer`.
+ *
+ * The harness above sets `advanced_disable_flags`, which would hide this leak,
+ * so these cases boot PostHog without it and intercept `_send_request`
+ * instead: the remote-config GET answers `{}` (no `hasFeatureFlags: false`,
+ * so the SDK goes on to load flags) and `/flags` answers 200, so the
+ * 5-minute refresh interval is not blocked by a request left in flight.
+ */
+describe('#1274 — feature-flag requests must not carry the raw initial URL', () => {
+  const REFRESH_INTERVAL_MS = 5 * 60 * 1000
+
+  afterEach(() => {
+    vi.useRealTimers()
+    window.history.pushState({}, '', '/')
+    if (ORIGINAL_REFERRER) Object.defineProperty(document, 'referrer', ORIGINAL_REFERRER)
+    else delete (document as unknown as Record<string, unknown>).referrer
+  })
+
+  async function bootAndWaitThroughARefresh(options: Record<string, unknown>) {
+    vi.useFakeTimers()
+    const token = `phc_flags_test_token_${++bootCount}`
+    const sent: Array<{ url: string; data?: unknown }> = []
+    type SendRequest = (o: {
+      url: string
+      data?: unknown
+      callback?: (r: { statusCode: number; json: unknown }) => void
+    }) => void
+    vi.spyOn(PostHog.prototype as unknown as { _send_request: SendRequest }, '_send_request').mockImplementation(
+      (o) => {
+        // Other instances from earlier cases may still have timers; only this
+        // boot's requests count.
+        if (!o.url.includes(token) && !JSON.stringify(o.data ?? '').includes(token)) return
+        sent.push({ url: o.url, data: o.data })
+        o.callback?.({ statusCode: 200, json: o.url.includes('/flags') ? { flags: {} } : {} })
+      },
+    )
+    arriveWithSecretsInTheUrl()
+    const instance = new PostHog()
+    const { before_send: _shipped, ...rest } = options
+    instance.init(token, {
+      api_host: 'https://posthog.invalid',
+      persistence: 'memory',
+      capture_pageview: false,
+      capture_pageleave: false,
+      disable_surveys: true,
+      disable_external_dependency_loading: true,
+      ...rest,
+      // Events are not what this case is about; drop them before any queue.
+      before_send: () => null,
+    })
+    // The first capture is what stores the initial person props.
+    instance.capture('$pageview')
+    await vi.advanceTimersByTimeAsync(10)
+    await vi.advanceTimersByTimeAsync(REFRESH_INTERVAL_MS + 10)
+    ;(instance as unknown as { _remoteConfigLoader?: { stop(): void } })._remoteConfigLoader?.stop()
+    const flags = sent.filter((r) => r.url.includes('/flags'))
+    return { sent, flags, payload: JSON.stringify(flags) }
+  }
+
+  it('sends the token and the amount to /flags without the option (control)', async () => {
+    const bare = await bootAndWaitThroughARefresh({})
+    // First load and the refresh — both paths are live in the control.
+    expect(bare.flags.length).toBe(2)
+    expect(bare.payload).toContain(SECRET_TOKEN)
+    expect(bare.payload).toContain(String(SECRET_AMOUNT))
+    expect(bare.payload).toContain('$initial_current_url')
+  })
+
+  it('never calls /flags with the shipped options, but still loads remote config', async () => {
+    const shipped = await bootAndWaitThroughARefresh({ ...POSTHOG_PRIVACY_OPTIONS })
+    expect(shipped.flags).toEqual([])
+    // Remote config (the project's server-side settings) must keep loading;
+    // this is why the option is `advanced_disable_feature_flags`, not
+    // `advanced_disable_flags`.
+    expect(shipped.sent.some((r) => r.url.includes('/config'))).toBe(true)
+    expect(JSON.stringify(shipped.sent)).not.toContain(SECRET_TOKEN)
+  })
+})
+
 describe('#1274 — scrubAnalyticsUrls, event shapes the browser test does not reach', () => {
   const base = (properties: Record<string, unknown>, extra: Partial<CaptureResult> = {}): CaptureResult => ({
     uuid: 'u1',
@@ -506,6 +589,7 @@ describe('#1267 — the masking config cannot be quietly unwired', () => {
       mask_all_text: true,
       mask_all_element_attributes: true,
       disable_session_recording: true,
+      advanced_disable_feature_flags: true,
       before_send: scrubAnalyticsUrls,
     })
   })

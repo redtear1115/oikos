@@ -71,6 +71,20 @@ describe('scrubSentryEvent — client error event', () => {
     expect(out.event_id).toBe('e1')
   })
 
+  it('drops the request body (server action arguments)', () => {
+    // A server action POST: the body is the serialized argument list, so
+    // `acceptInvite(token)` puts the token here. Object and string forms both
+    // occur (the SDK stores whatever the body parser produced).
+    for (const data of [`["${TOKEN}"]`, { 0: TOKEN, description: 'ledger', amount: AMOUNT }]) {
+      const out = scrubSentryEvent({
+        request: { method: 'POST', url: 'https://futari.example/invite/abc', data },
+      })
+      expectClean(out)
+      expect(out.request).not.toHaveProperty('data')
+      expect(out.request?.method).toBe('POST')
+    }
+  })
+
   it('does not mutate its input', () => {
     const event: Event = { request: { url: `/invite/${TOKEN}`, cookies: { a: 'b' } } }
     const snapshot = JSON.stringify(event)

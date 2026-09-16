@@ -10,7 +10,9 @@
  * - error events: `request.url`, `request.query_string` (string, pairs or
  *   object — the SDK uses all three), `request.cookies` / `request.headers`
  *   (server `requestDataIntegration`, client `httpContextIntegration` adds
- *   `Referer`), `contexts.nextjs.request_path` (`captureRequestError`),
+ *   `Referer`), `request.data` (server action bodies, e.g. the invite token
+ *   passed to `acceptInvite`), `contexts.nextjs.request_path`
+ *   (`captureRequestError`),
  *   `user.ip_address`;
  * - transactions **do not go through `beforeSend`** — only
  *   `beforeSendTransaction`. Their name, `contexts.trace.data` (`url.full`,
@@ -26,7 +28,8 @@
  * keys stay (so issues still group and read well), invite segment becomes
  * `:token`, non-allowlisted query values become `<masked>`.
  *
- * Headers and cookies are removed outright — same on client, server and edge.
+ * Headers, cookies and request bodies (`request.data`) are removed outright —
+ * same on client, server and edge.
  *
  * ## Contract
  *
@@ -268,6 +271,15 @@ function scrubRequest(request: unknown): AnyRecord | undefined {
   }
   delete out.cookies
   delete out.headers
+  // The request body. On the server, `httpServerIntegration` buffers textual
+  // bodies up to 10 KB and `requestDataIntegration` copies them here — a
+  // server action POST carries its arguments, so `acceptInvite(token)` puts
+  // the invite token in it, and ledger actions put descriptions and amounts.
+  // `sentry.server.config.ts` already turns `data` off; this is the second
+  // line, and covers client / edge events that set it some other way.
+  // Failure looks like nothing: the token just sits in the issue's
+  // "Request → Body" panel.
+  delete out.data
   // Older SDKs put `REMOTE_ADDR` here.
   delete out.env
   return out
