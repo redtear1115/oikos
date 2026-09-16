@@ -2201,6 +2201,21 @@ export type Translations = {
     metadataTitle: string
   }
 
+  /** #1275 — root `app/not-found.tsx`, the branded 404 for any unmatched
+   *  route (including inside the dashboard). A server component, so this
+   *  goes through the normal `getTranslations()` path — unlike
+   *  `globalErrorCopy`, which lives outside this file (see its own comment). */
+  notFoundPage: {
+    /** HTML <title>. */
+    metadataTitle: string
+    title: string
+    body: string
+    /** Primary link, back into the app. */
+    linkLedger: string
+    /** Secondary link, back to the marketing site. */
+    linkHome: string
+  }
+
   /** #1225 — the offline page bundled *inside* the native shell
    *  (`server.errorPath`). Distinct from `offlinePage` above: that one is a
    *  React route on the deployed site and can only render after the site has
@@ -4634,6 +4649,14 @@ export const zhTW: Translations = {
     linkAssets: '愛物',
     footer: '等連線回來會自動更新',
     metadataTitle: '離線中 · Futari',
+  },
+
+  notFoundPage: {
+    metadataTitle: '找不到這一頁',
+    title: '這一頁不在這裡',
+    body: '可能是網址打錯了，或這頁已經搬走。',
+    linkLedger: '回到帳本',
+    linkHome: '回首頁',
   },
 
   nativeOfflinePage: {

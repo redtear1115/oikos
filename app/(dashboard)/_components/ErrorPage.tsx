@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from '@/lib/i18n/client'
+import { Button } from '@/components/ui/Button'
 
 interface ErrorPageProps {
   /** i18n key from t.errorPage — e.g. 'dashboard', 'records'. */
@@ -24,14 +25,9 @@ export function ErrorPage({ page, reset, digest }: ErrorPageProps) {
       <div className="text-sm mb-6" style={{ color: 'var(--ink-3)' }}>
         {t.errorPage.subtitle}
       </div>
-      <button
-        type="button"
-        onClick={reset}
-        className="px-5 py-2 rounded-full text-sm cursor-pointer border-0"
-        style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-      >
+      <Button size="md" onClick={reset}>
         {t.errorPage.retry}
-      </button>
+      </Button>
       {digest && (
         <div className="mt-6 text-xs tracking-[0.4px] select-all" style={{ color: 'var(--ink-3)' }}>
           {t.errorPage.refLabel}: {digest}

@@ -1802,6 +1802,14 @@ export const ja: Translations = {
     metadataTitle: 'オフライン · Futari',
   },
 
+  notFoundPage: {
+    metadataTitle: 'ページが見つかりません',
+    title: 'このページは見つかりません',
+    body: 'URLが間違っているか、ページが移動した可能性があります。',
+    linkLedger: '家計簿に戻る',
+    linkHome: 'ホームに戻る',
+  },
+
   nativeOfflinePage: {
     documentTitle: 'オフライン · Futari',
     title: '今はオフラインです',
