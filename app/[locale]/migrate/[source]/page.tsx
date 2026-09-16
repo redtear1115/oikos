@@ -79,7 +79,7 @@ export default async function MigrateSourcePage({ params }: { params: Params }) 
             {page.formatHintLabel}
           </div>
           <code
-            className="block px-3 py-2 rounded-[8px] text-[11.5px] leading-[1.6] break-all"
+            className="block px-3 py-2 rounded-[8px] text-xs leading-[1.6] break-all"
             style={{
               background: 'var(--surface)',
               color: 'var(--ink-2)',

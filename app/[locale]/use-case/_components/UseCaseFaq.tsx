@@ -46,7 +46,7 @@ export function UseCaseFaq({
             }}
           >
             <dt
-              className="m-0 text-base md:text-[15.5px] font-medium"
+              className="m-0 text-base md:text-base font-medium"
               style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
             >
               {question}

@@ -40,7 +40,7 @@ export function MigrateTrustBlock({
               {title}
             </p>
             <p
-              className="m-0 mt-1.5 text-[12.5px] md:text-sm leading-[1.65]"
+              className="m-0 mt-1.5 text-xs md:text-sm leading-[1.65]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}
