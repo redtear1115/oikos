@@ -88,7 +88,7 @@ export const en: Translations = {
     taglineHtml: 'Two of you,<br />one ledger.',
     bodyHtml: 'A shared ledger for partners and couples.<br />Day by day, looking back will feel warm.',
     cta: 'Begin together',
-    ctaHint: 'Free · Try without signing up · For two',
+    ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',

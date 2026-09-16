@@ -139,7 +139,7 @@ export type Translations = {
     /** Primary CTA label — appears in top nav (desktop), hero, and
      *  must keep <= ~6 characters in CJK for the mobile pill. */
     cta: string
-    /** Caption under mobile CTA, e.g. 「免費 · 不需註冊就能體驗」 */
+    /** Caption under mobile CTA, e.g. 「免費 · 兩人一本帳 · 用 Google 或 Apple 繼續」 */
     ctaHint: string
     /** Secondary desktop CTA — sign-in link for returning users. */
     alreadyHaveAccount: string
@@ -2949,7 +2949,7 @@ export const zhTW: Translations = {
     taglineHtml: '兩個人，<br />一本帳。',
     bodyHtml: '為伴侶與夫妻設計的共同記帳。<br />日子一天天記下來，回頭看會很暖。',
     cta: '一起記錄',
-    ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
+    ctaHint: '免費 · 兩人一本帳 · 用 Google 或 Apple 繼續',
     alreadyHaveAccount: '已經有帳號 · 登入',
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
