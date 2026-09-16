@@ -21,9 +21,10 @@ const CALLBACK_PATH = '/auth/callback'
  * Absolute same-origin URL for `path`, or `${origin}/dashboard` when `path` is
  * not a plain root-relative path on `origin`. Never throws.
  *
- * Same rule as app/auth/callback/route.ts (`startsWith('/') && !startsWith('//')`),
- * plus `/\` (browsers treat `\` as `/`, making it protocol-relative) and a final
- * origin-equality check that catches anything the prefix rule misses (e.g.
+ * The single `next` rule for every redirect: app/auth/callback/route.ts and
+ * SignedInRedirect call this too (#1275). Requires `startsWith('/')`, rejects
+ * `//` and `/\` (browsers treat `\` as `/`, making it protocol-relative), then
+ * a final origin-equality check catches anything the prefix rule misses (e.g.
  * tab/newline characters the URL parser strips).
  */
 export function safeSameOriginUrl(origin: string, path: string): string {

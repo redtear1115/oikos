@@ -1802,6 +1802,14 @@ export const en: Translations = {
     metadataTitle: 'Offline · Futari',
   },
 
+  notFoundPage: {
+    metadataTitle: 'Page not found',
+    title: "This page isn't here",
+    body: 'The address might be off, or this page has moved.',
+    linkLedger: 'Back to the ledger',
+    linkHome: 'Back home',
+  },
+
   nativeOfflinePage: {
     documentTitle: 'Offline · Futari',
     title: 'No connection right now',

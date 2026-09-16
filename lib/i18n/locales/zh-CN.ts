@@ -1790,6 +1790,14 @@ export const zhCN: Translations = {
     metadataTitle: '离线中 · Futari',
   },
 
+  notFoundPage: {
+    metadataTitle: '找不到这一页',
+    title: '这一页不在这里',
+    body: '可能是网址输错了，或这页已经搬走。',
+    linkLedger: '回到账本',
+    linkHome: '回首页',
+  },
+
   nativeOfflinePage: {
     documentTitle: '离线中 · Futari',
     title: '现在没有网络',

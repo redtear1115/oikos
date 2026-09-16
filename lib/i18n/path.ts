@@ -48,5 +48,26 @@ export function isPublicLocalizedPath(pathname: string): boolean {
   )
 }
 
+/**
+ * 路徑第一段是否「嚴格地」是 supported locale（`/en`、`/en/`、`/en/...`）。
+ * 用於 proxy 判斷要不要略過 getUser()（#1275）：app/[locale] 底下只有 public
+ * 頁，未知的 `/<locale>/...` 交給 app/[locale] 的 notFound() 回 404，
+ * 不必先被 auth gate 307 到 /sign-in。
+ *
+ * 這是 auth 決策用的判斷，所以不能沿用 parseLocaleFromPath：後者會
+ * filter(Boolean) 掉空 segment，`//en/x` 也會被當成 locale-prefixed。
+ * 以 `//` 開頭或含 `\` 的一律 false（瀏覽器把 `\` 當 `/`），讓它們留在 auth gate 內。
+ *
+ * 失效的樣子：這裡放寬了不會有任何錯誤——只是某個不該略過的路徑靜默地
+ * 不再經過 proxy 的 session refresh / 未登入導轉。對應測試在
+ * tests/proxy-locale.test.ts。
+ */
+export function isLocalePrefixedPath(pathname: string): boolean {
+  if (pathname.startsWith('//') || pathname.includes('\\')) return false
+  const seg = pathname.split('/')[1]
+  if (!isLocale(seg)) return false
+  return pathname === `/${seg}` || pathname.startsWith(`/${seg}/`)
+}
+
 export { SUPPORTED_LOCALES, DEFAULT_LOCALE, isLocale }
 export type { Locale }
