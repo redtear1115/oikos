@@ -71,6 +71,7 @@ const {
 } = await import('@/lib/db/schema')
 const { createTransaction } = await import('@/actions/transaction')
 const { eq, inArray, isNull, and } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -150,14 +151,14 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const result = await createTransaction({
+    const result = unwrapAction(await createTransaction({
       amount: 200,
       description: 'TWD test',
       category: 'dining',
       splitType: 'all_mine',
       payerId: refs.userId,
       transactedAt: '2026-05-14',
-    })
+    }))
     refs.txIds.push(result.id)
 
     const [row] = await db
@@ -192,7 +193,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       rate: '32.000',
     })
 
-    const result = await createTransaction({
+    const result = unwrapAction(await createTransaction({
       amount: 1250,  // 1250 cents = $12.50 USD
       currency: 'usd',
       description: 'USD test',
@@ -200,7 +201,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       splitType: 'all_mine',
       payerId: refs.userId,
       transactedAt: '2026-05-14',
-    })
+    }))
     refs.txIds.push(result.id)
 
     const [row] = await db
@@ -232,7 +233,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       rate: '0.220',
     })
 
-    const result = await createTransaction({
+    const result = unwrapAction(await createTransaction({
       amount: 500,
       currency: 'jpy',
       description: 'JPY test',
@@ -240,7 +241,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       splitType: 'all_mine',
       payerId: refs.userId,
       transactedAt: '2026-05-14',
-    })
+    }))
     refs.txIds.push(result.id)
 
     const [row] = await db
@@ -266,7 +267,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     mockUserId = refs.userId
     // No rate seeded for JPY → TWD
 
-    await expect(createTransaction({
+    expect(await createTransaction({
       amount: 500,
       currency: 'jpy',
       description: 'missing rate test',
@@ -274,7 +275,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       splitType: 'all_mine',
       payerId: refs.userId,
       transactedAt: '2026-05-14',
-    })).rejects.toThrow()
+    })).toMatchObject({ ok: false, code: 'fx_rate_not_set' })
   })
 
   it('tripId provided + valid: insert sets tripId correctly', async () => {
@@ -291,7 +292,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     }).returning({ id: trips.id })
     refs.tripIds.push(trip.id)
 
-    const result = await createTransaction({
+    const result = unwrapAction(await createTransaction({
       amount: 300,
       description: 'trip expense',
       category: 'dining',
@@ -299,7 +300,7 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       payerId: refs.userId,
       transactedAt: '2026-05-14',
       tripId: trip.id,
-    })
+    }))
     refs.txIds.push(result.id)
 
     const [row] = await db
@@ -338,20 +339,15 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
       status: 'active',
     }).returning({ id: trips.id })
 
-    let err: Error | null = null
-    try {
-      await createTransaction({
-        amount: 100,
-        description: 'wrong group trip',
-        category: 'dining',
-        splitType: 'all_mine',
-        payerId: refs.userId,
-        transactedAt: '2026-05-14',
-        tripId: trip2.id,
-      })
-    } catch (e) {
-      err = e as Error
-    }
+    const result = await createTransaction({
+      amount: 100,
+      description: 'wrong group trip',
+      category: 'dining',
+      splitType: 'all_mine',
+      payerId: refs.userId,
+      transactedAt: '2026-05-14',
+      tripId: trip2.id,
+    })
 
     // Cleanup the second group
     await db.delete(trips).where(eq(trips.id, trip2.id))
@@ -360,7 +356,6 @@ describe('createTransaction — multi-currency + trip wiring (#68 #42)', () => {
     await db.delete(oikosGroups).where(eq(oikosGroups.id, group2.id))
     await db.delete(profiles).where(eq(profiles.id, userId2))
 
-    expect(err).not.toBeNull()
-    expect(err!.message).toMatch('trip_missing')
+    expect(result).toEqual({ ok: false, code: 'trip_missing' })
   })
 })

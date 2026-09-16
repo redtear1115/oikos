@@ -23,7 +23,7 @@ import { MAX_AMOUNT } from '@/lib/validators'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 import { localTodayISO } from '@/lib/local-date'
 import { useTranslations } from '@/lib/i18n/client'
-import { isActionError } from '@/lib/action-errors'
+import { isActionError, unwrapAction } from '@/lib/action-errors'
 
 // ─── Inline sub-components ──────────────────────────────────────────────────
 
@@ -149,7 +149,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
     if (relevant) {
       setShowPolicyPicker(true)
       // Load insurance assets lazily
-      getInsuranceAssets().then(setInsuranceAssets).catch(() => {})
+      getInsuranceAssets().then((r) => setInsuranceAssets(unwrapAction(r))).catch(() => {})
     } else {
       setShowPolicyPicker(false)
       setAssetId(null)
@@ -183,7 +183,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
       async () => {
         if (isPending) {
           if (!pendingId) throw new Error(t.incomeSheet.errors.missingPendingId)
-          await editAndConfirmPending({
+          return editAndConfirmPending({
             pendingId,
             amount: n,
             category,
@@ -193,7 +193,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             assetId,
           })
         } else if (initial && isEdit) {
-          await editIncome({
+          return editIncome({
             oldId: initial.id,
             amount: n,
             category,
@@ -202,16 +202,15 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
             source: note.trim() || null,
             assetId,
           })
-        } else {
-          await createIncome({
-            amount: n,
-            category,
-            recipientId,
-            occurredAt: date,
-            source: note.trim() || null,
-            assetId,
-          })
         }
+        return createIncome({
+          amount: n,
+          category,
+          recipientId,
+          occurredAt: date,
+          source: note.trim() || null,
+          assetId,
+        })
       },
       {
         fallbackMsg: t.incomeSheet.errors.saveFailed,
@@ -223,8 +222,10 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
         onError: (_msg, e) => {
           // Race: partner confirmed/skipped this pending in another tab/device
           // before our edit-confirm landed: `pending_income_not_found` (pre-check)
-          // or `pending_income_handled_elsewhere` (in-tx guard). Matched by code,
-          // not by the localized message, so it works in every locale (#1156).
+          // or `pending_income_handled_elsewhere` (in-tx guard). `e` is the
+          // `ActionFailure` the action returned, so the code is matched on the
+          // wire value — not on the localized message (#1156), and not on a
+          // thrown message production would have stripped to a digest (#1223).
           if (isPending && isActionError(e, 'pending_income_not_found', 'pending_income_handled_elsewhere')) {
             onMutated?.()
             onClose()
@@ -239,7 +240,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
   const performDelete = () => {
     if (!isEdit || !initial) return
     dispatchDelete(
-      async () => { await softDeleteIncome(initial.id) },
+      () => softDeleteIncome(initial.id),
       {
         fallbackMsg: t.common.error,
         offlineMsg: t.common.offlineError,
@@ -294,7 +295,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {/* Amount + recipient toggle */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div
-              className="text-xs tracking-[0.6px] mb-3"
+              className="text-xs tracking-label mb-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.amountLabel}
@@ -352,7 +353,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {/* Categories */}
           <div className="pt-5 pb-[18px]">
             <div
-              className="text-xs tracking-[0.6px] px-6 pb-3"
+              className="text-xs tracking-label px-6 pb-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.categoryLabel}
@@ -373,7 +374,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {policyRelevant && (
             <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
               <div
-                className="text-xs tracking-[0.6px] px-1 py-3"
+                className="text-xs tracking-label px-1 py-3"
                 style={{ color: 'var(--ink-3)' }}
               >
                 {t.incomeSheet.policyLink}
@@ -383,7 +384,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
                 onClick={() => {
                   setShowPolicyPicker(v => !v)
                   if (insuranceAssets.length === 0) {
-                    getInsuranceAssets().then(setInsuranceAssets).catch(() => {})
+                    getInsuranceAssets().then((r) => setInsuranceAssets(unwrapAction(r))).catch(() => {})
                   }
                 }}
                 className="w-full flex items-center gap-3 text-left cursor-pointer"
@@ -473,7 +474,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           {/* Date */}
           <div className="px-5 pt-1 pb-2">
             <div
-              className="text-xs tracking-[0.6px] px-1 py-3"
+              className="text-xs tracking-label px-1 py-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.addSheet.date}
@@ -485,7 +486,7 @@ export function IncomeSheet({ open, onClose, initial, onMutated, onRaceResolved,
           <div className="px-5 pt-3 pb-6 border-t border-hairline">
             <label
               htmlFor={noteId}
-              className="block text-xs tracking-[0.6px] px-1 py-3"
+              className="block text-xs tracking-label px-1 py-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.incomeSheet.noteLabel}

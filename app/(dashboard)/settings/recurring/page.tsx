@@ -3,6 +3,7 @@ import { listActiveRules as listExpenseRules } from '@/lib/db/queries/recurringE
 import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import { getInsuranceAssets } from '@/actions/income'
 import { RecurringSettingsContent } from './_components/RecurringSettingsContent'
+import { unwrapAction } from '@/lib/action-errors'
 
 export default async function RecurringSettingsPage() {
   const { group } = await requireViewerGroupOrRedirect()
@@ -10,7 +11,7 @@ export default async function RecurringSettingsPage() {
   const [incomeRules, expenseRules, insuranceAssets] = await Promise.all([
     listIncomeRules(group.id),
     listExpenseRules(group.id),
-    getInsuranceAssets(),
+    getInsuranceAssets().then(unwrapAction),
   ])
 
   return (

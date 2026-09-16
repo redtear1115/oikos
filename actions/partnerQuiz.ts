@@ -10,6 +10,7 @@ import {
 import { and, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
+import { action } from '@/lib/action-errors'
 
 export interface SubmitPartnerQuizAnswersInput {
   sessionId: string
@@ -27,14 +28,16 @@ export interface SubmitPartnerQuizAnswersResult {
  * this insert, stamps `revealed_at` in the same transaction so the reveal
  * surface unlocks atomically.
  */
-export async function submitPartnerQuizAnswers(
+export const submitPartnerQuizAnswers = action(async (
   input: SubmitPartnerQuizAnswersInput,
-): Promise<SubmitPartnerQuizAnswersResult> {
+): Promise<SubmitPartnerQuizAnswersResult> => {
   const { user, group } = await requireViewerGroup()
   if (!group.memberB) {
-    // Error CODE, not prose: QuestionCard renders whatever this action throws,
-    // so a literal string here ships hard-coded zh-TW to en / ja viewers and
-    // bypasses `quiz.errors.solo` entirely. Mapped by `describeQuizError`.
+    // Error CODE, not prose: QuestionCard renders whatever code this action
+    // raises, so a literal string here ships hard-coded zh-TW to en / ja
+    // viewers and bypasses `quiz.errors.solo` entirely. The `action()` wrapper
+    // turns this throw into `{ ok: false, code: 'solo_group' }` at the export
+    // boundary (#1223); `describeQuizError` maps it.
     throw new Error('solo_group')
   }
 
@@ -113,4 +116,4 @@ export async function submitPartnerQuizAnswers(
   }
 
   return { revealed }
-}
+})

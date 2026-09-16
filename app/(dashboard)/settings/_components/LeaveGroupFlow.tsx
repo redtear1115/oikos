@@ -4,9 +4,11 @@ import { createContext, useContext, useEffect, useId, useMemo, useRef, useState,
 import { useRouter } from 'next/navigation'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { leaveGroup, proposeSwap } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 type Step = 1 | 2 | 3 | 4 | 'final' | 'swap-sent'
 
@@ -112,7 +114,7 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        await proposeSwap()
+        unwrapAction(await proposeSwap())
         setStep('swap-sent')
         router.refresh()
       } catch (e) {
@@ -126,7 +128,7 @@ export function LeaveGroupFlow({
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        const { epochId } = await leaveGroup()
+        const { epochId } = unwrapAction(await leaveGroup())
         // Mark the leaver's brand-new solo *epoch* so WelcomeSoloCard can
         // surface a dismissible "歡迎回到一個人" card on their first dashboard
         // render. Done client-side because the epoch only exists after the
@@ -550,18 +552,13 @@ function FinalConfirm({
             <span className="font-medium" style={{ color: 'var(--ink)' }}>{t.confirmText}</span>
             <span>{t.typePromptSuffix}</span>
           </label>
-          <input
+          <TextInput
             id={inputId}
             type="text"
             value={confirmInput}
             onChange={(e) => onChangeInput(e.target.value)}
             placeholder={t.typePlaceholder}
-            className="w-full h-12 rounded-xl px-3 text-sm mb-4 outline-none"
-            style={{
-              background: 'var(--surface)',
-              color: 'var(--ink)',
-              border: '1px solid var(--hairline)',
-            }}
+            className="w-full mb-4"
           />
           <button
             type="button"

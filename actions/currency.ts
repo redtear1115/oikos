@@ -9,9 +9,9 @@ import { currentEpochHasRecords } from '@/lib/db/queries/epoch'
 import { upsertRate } from '@/lib/db/queries/currencyRates'
 import { revalidatePath } from 'next/cache'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
-export async function setBaseCurrency(input: { currency: CurrencyCode }) {
+export const setBaseCurrency = action(async (input: { currency: CurrencyCode }) => {
   const { user, group } = await requireViewerGroup()
   if (!CURRENCIES.includes(input.currency)) {
     throw actionError('currency_unsupported')
@@ -41,13 +41,13 @@ export async function setBaseCurrency(input: { currency: CurrencyCode }) {
     from_currency: fromCurrency,
     to_currency: input.currency,
   })
-}
+})
 
-export async function setRate(input: {
+export const setRate = action(async (input: {
   fromCurrency: CurrencyCode
   toCurrency: CurrencyCode
   rate: string
-}) {
+}) => {
   const { group } = await requireViewerGroup()
   if (input.fromCurrency === input.toCurrency) throw actionError('currency_pair_same')
   const parsed = parseFloat(input.rate)
@@ -59,4 +59,4 @@ export async function setRate(input: {
     rate: input.rate,
   })
   revalidatePath('/settings/currency')
-}
+})

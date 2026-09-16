@@ -17,6 +17,7 @@ import { localTodayISO } from '@/lib/local-date'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useLocale, useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 export interface SettlementSheetInitial {
   id: string
@@ -67,12 +68,12 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
     const payerId = payerWho === 'M' ? viewer.id : partner!.id
     startTransition(async () => {
       try {
-        await editSettlement({
+        unwrapAction(await editSettlement({
           oldId: initial.id,
           amount: n,
           payerId,
           settledAt: date,
-        })
+        }))
         onMutated?.({ savedAmount: n, edit: true })
         onClose()
       } catch (e) {
@@ -87,7 +88,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
     setConfirmingDelete(false)
     startTransition(async () => {
       try {
-        await softDeleteSettlement(initial.id)
+        unwrapAction(await softDeleteSettlement(initial.id))
         onMutated?.({ deleted: true })
         onClose()
       } catch (e) {
@@ -133,7 +134,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
         <SheetBody noPadding>
           {/* Amount + payer */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
-            <div className="text-xs tracking-[0.6px] mb-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label mb-3" style={{ color: 'var(--ink-3)' }}>
               {t.settlement.amountLabel}
             </div>
             <AmountInput
@@ -149,7 +150,7 @@ export function SettlementSheet({ open, onClose, initial, onMutated }: Props) {
 
           {/* Date */}
           <div className="px-5 pt-1 pb-6">
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.settlement.dateLabel}
             </div>
             <button onClick={() => setShowCal(v => !v)}

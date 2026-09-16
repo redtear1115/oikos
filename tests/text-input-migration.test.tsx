@@ -72,6 +72,23 @@ describe('TextInput primitive', () => {
     expect(input).not.toHaveClass('w-20')
     expect(input.parentElement).toHaveClass('w-20', 'h-[var(--control-md)]', 'rounded-bubble')
   })
+
+  // #1252: the fade used to sit on the `<input>` only, so a disabled field
+  // kept a full-strength border and addon. Nothing looked broken — it read as
+  // a live input whose text had gone faint (InsuranceListItem's renewal field
+  // while the save runs).
+  it('fades the whole field when disabled, border and addon included', () => {
+    const { rerender } = render(
+      <TextInput aria-label="保單號碼" disabled rightAddon={<span>NT$</span>} />,
+    )
+    const input = screen.getByRole('textbox', { name: '保單號碼' })
+    expect(input.parentElement).toHaveClass('opacity-50')
+    expect(input).not.toHaveClass('disabled:opacity-50')
+    expect(input).toHaveClass('disabled:cursor-default')
+
+    rerender(<TextInput aria-label="保單號碼" rightAddon={<span>NT$</span>} />)
+    expect(input.parentElement).not.toHaveClass('opacity-50')
+  })
 })
 
 describe('TextArea primitive', () => {

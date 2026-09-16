@@ -60,6 +60,7 @@ const {
 } = await import('@/actions/tripExpense')
 const { listTripExpenses, getTripExpenseById } = await import('@/lib/db/queries/tripExpense')
 const { eq, inArray } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -136,7 +137,7 @@ describe('createTrip — rate_snapshot population', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({ name: '單一幣別', startDate: '2026-05-10' })
+    const created = unwrapAction(await createTrip({ name: '單一幣別', startDate: '2026-05-10' }))
     refs.tripIds.push(created.id)
 
     const snapshot = created.rateSnapshot as { default: string; entries: Array<{ code: string; rate: number; label: string | null }> }
@@ -149,7 +150,7 @@ describe('createTrip — rate_snapshot population', () => {
     activeRefs = refs
     mockUserId = refs.userId
 
-    const created = await createTrip({
+    const created = unwrapAction(await createTrip({
       name: '越南之旅',
       startDate: '2026-05-10',
       currencies: {
@@ -159,7 +160,7 @@ describe('createTrip — rate_snapshot population', () => {
           { code: 'VND', label: '越南盾', rate: 0.0013 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(created.id)
 
     const snapshot = created.rateSnapshot as { default: string; entries: Array<{ code: string; label: string | null; rate: number }> }
@@ -181,16 +182,16 @@ describe('createTripExpense — happy paths', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    const expense = await createTripExpense({
+    const expense = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 1500,
       category: '食',
       splitType: 'half',
-    })
+    }))
 
     expect(expense.amount).toBe(1500)
     expect(expense.originalCurrency).toBeNull()
@@ -203,7 +204,7 @@ describe('createTripExpense — happy paths', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({
+    const trip = unwrapAction(await createTrip({
       name: 'JP',
       startDate: '2026-05-10',
       currencies: {
@@ -213,18 +214,18 @@ describe('createTripExpense — happy paths', () => {
           { code: 'JPY', label: null, rate: 0.2 },
         ],
       },
-    })
+    }))
     refs.tripIds.push(trip.id)
 
     // 10000 JPY → JPY rate 0.200 → 2000 TWD
-    const expense = await createTripExpense({
+    const expense = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 10000,
       currency: 'jpy',
       category: '食',
       splitType: 'half',
-    })
+    }))
 
     expect(expense.amount).toBe(2000)
     expect(expense.originalCurrency).toBe('JPY')
@@ -235,17 +236,17 @@ describe('createTripExpense — happy paths', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    const expense = await createTripExpense({
+    const expense = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 3000,
       category: '住',
       splitType: 'weighted',
       splitRatio: 70,
-    })
+    }))
 
     expect(expense.splitType).toBe('weighted')
     expect(expense.splitRatio).toBe(70)
@@ -262,7 +263,7 @@ describe('createTripExpense — rejections', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
     // Switch viewer to a fresh user not in this group
@@ -280,99 +281,99 @@ describe('createTripExpense — rejections', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
-    await endTrip({ tripId: trip.id, endDate: '2026-05-12' })
+    unwrapAction(await endTrip({ tripId: trip.id, endDate: '2026-05-12' }))
 
-    await expect(createTripExpense({
+    expect(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('trip_ended')
+    })).toEqual({ ok: false, code: 'trip_ended' })
   })
 
   it('rejects when paidBy is not a group member', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await expect(createTripExpense({
+    expect(await createTripExpense({
       tripId: trip.id,
       paidBy: randomUUID(),
       amount: 100,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('payer_not_in_trip_ledger')
+    })).toEqual({ ok: false, code: 'payer_not_in_trip_ledger' })
   })
 
   it('rejects when amount <= 0', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await expect(createTripExpense({
+    expect(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 0,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('amount_not_positive')
+    })).toEqual({ ok: false, code: 'amount_not_positive' })
   })
 
   it('rejects weighted without splitRatio', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await expect(createTripExpense({
+    expect(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
       category: '食',
       splitType: 'weighted',
-    })).rejects.toThrow('split_ratio_required')
+    })).toEqual({ ok: false, code: 'split_ratio_required' })
   })
 
   it('rejects splitRatio on non-weighted split', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await expect(createTripExpense({
+    expect(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
       category: '食',
       splitType: 'half',
       splitRatio: 60,
-    })).rejects.toThrow('split_ratio_not_applicable')
+    })).toEqual({ ok: false, code: 'split_ratio_not_applicable' })
   })
 
   it('rejects splitRatio outside [0,100]', async () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    await expect(createTripExpense({
+    expect(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 100,
       category: '食',
       splitType: 'weighted',
       splitRatio: 150,
-    })).rejects.toThrow('split_ratio_out_of_range')
+    })).toEqual({ ok: false, code: 'split_ratio_out_of_range' })
   })
 })
 
@@ -386,25 +387,25 @@ describe('editTripExpense', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    const original = await createTripExpense({
+    const original = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 500,
       category: '食',
       splitType: 'half',
-    })
+    }))
 
-    const edited = await editTripExpense({
+    const edited = unwrapAction(await editTripExpense({
       id: original.id,
       tripId: trip.id,
       paidBy: refs.partnerId,
       amount: 800,
       category: '住',
       splitType: 'half',
-    })
+    }))
 
     expect(edited.id).not.toBe(original.id)
     expect(edited.amount).toBe(800)
@@ -420,26 +421,26 @@ describe('editTripExpense', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    const original = await createTripExpense({
+    const original = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 500,
       category: '食',
       splitType: 'half',
-    })
-    await softDeleteTripExpense({ id: original.id, tripId: trip.id })
+    }))
+    unwrapAction(await softDeleteTripExpense({ id: original.id, tripId: trip.id }))
 
-    await expect(editTripExpense({
+    expect(await editTripExpense({
       id: original.id,
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 999,
       category: '食',
       splitType: 'half',
-    })).rejects.toThrow('record_deleted_or_missing')
+    })).toEqual({ ok: false, code: 'record_deleted_or_missing' })
   })
 })
 
@@ -453,18 +454,18 @@ describe('softDeleteTripExpense', () => {
     const refs = await seedDuoGroup()
     activeRefs = refs
     mockUserId = refs.userId
-    const trip = await createTrip({ name: 'JP', startDate: '2026-05-10' })
+    const trip = unwrapAction(await createTrip({ name: 'JP', startDate: '2026-05-10' }))
     refs.tripIds.push(trip.id)
 
-    const expense = await createTripExpense({
+    const expense = unwrapAction(await createTripExpense({
       tripId: trip.id,
       paidBy: refs.userId,
       amount: 200,
       category: '食',
       splitType: 'half',
-    })
+    }))
 
-    await softDeleteTripExpense({ id: expense.id, tripId: trip.id })
+    unwrapAction(await softDeleteTripExpense({ id: expense.id, tripId: trip.id }))
 
     expect(await getTripExpenseById(expense.id)).toBeNull()
     expect(await listTripExpenses(trip.id)).toHaveLength(0)

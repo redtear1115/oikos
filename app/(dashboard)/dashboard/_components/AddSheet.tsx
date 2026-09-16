@@ -42,7 +42,7 @@ import { convertViaSnapshot } from '@/lib/trip-currency'
 import { CurrencySelector } from './CurrencySelector'
 import { TripSelector, type TripOption } from './TripSelector'
 import { loadedSplitRatioToViewerShare, toMemberAShare, toViewerShare } from '@/lib/splitRatio'
-import { isActionError } from '@/lib/action-errors'
+import { isActionError, unwrapAction } from '@/lib/action-errors'
 
 export interface AddSheetInitial {
   id: string
@@ -163,7 +163,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     if (!open) return
     let cancelled = false
     getDescriptionSuggestions()
-      .then((list) => { if (!cancelled) setDescSuggestions(list) })
+      .then((r) => { if (!cancelled) setDescSuggestions(unwrapAction(r)) })
       .catch(() => { /* autocomplete is best-effort; failing it shouldn't surface an error */ })
     return () => { cancelled = true }
   }, [open])
@@ -325,7 +325,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     runMutation(
       async () => {
         if (isPending) {
-          await editAndConfirmPending({
+          return editAndConfirmPending({
             pendingId: pendingExpenseId!,
             overrides: {
               amount: n,
@@ -342,7 +342,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           // Edit stays inside TripExpenses (no migration between tables).
           // TripExpense action still accepts Date/string and does its own
           // conversion (out of scope for #453).
-          await editTripExpense({
+          return editTripExpense({
             id: initial.id,
             tripId: initial.tripId!,
             paidBy: payerId,
@@ -359,7 +359,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           // available on create (and routes to TripExpenses, not here).
           // Main ledger is single-currency by design; force baseCurrency so
           // the row never carries an originalCurrency snapshot.
-          await editTransaction({
+          return editTransaction({
             oldId: initial.id,
             amount: n,
             description: desc,
@@ -378,7 +378,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           // Trip-tagged creates go to the isolated TripExpenses table.
           // Asset link / notes / pending status are not supported on trip
           // expenses by design (see lib/db/schema.ts TripExpenses block).
-          await createTripExpense({
+          return createTripExpense({
             tripId,
             paidBy: payerId,
             amount: n,
@@ -407,7 +407,8 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             currency: baseCurrency,
             tripId: null,
           })
-          isFirstTransaction = result.isFirstTransaction
+          if (result.ok) isFirstTransaction = result.data.isFirstTransaction
+          return result
         }
       },
       {
@@ -420,8 +421,10 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
         onError: (_msg, e) => {
           // Race: partner confirmed/skipped this pending in another tab/device
           // before our edit-confirm landed: `pending_expense_not_found` (pre-check)
-          // or `pending_expense_handled_elsewhere` (in-tx guard). Matched by code,
-          // not by the localized message, so it works in every locale (#1156).
+          // or `pending_expense_handled_elsewhere` (in-tx guard). `e` is the
+          // `ActionFailure` the action returned, so the code is matched on the
+          // wire value — not on the localized message (#1156), and not on a
+          // thrown message production would have stripped to a digest (#1223).
           if (isPending && isActionError(e, 'pending_expense_not_found', 'pending_expense_handled_elsewhere')) {
             onMutated?.()
             onClose()
@@ -438,10 +441,9 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
     dispatchDelete(
       async () => {
         if (editingTripExpense) {
-          await softDeleteTripExpense({ id: initial.id, tripId: initial.tripId! })
-        } else {
-          await softDeleteTransaction(initial.id)
+          return softDeleteTripExpense({ id: initial.id, tripId: initial.tripId! })
         }
+        return softDeleteTransaction(initial.id)
       },
       {
         fallbackMsg: t.common.error,
@@ -492,7 +494,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Amount + payer toggle */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
             <div
-              className="text-xs tracking-[0.6px] mb-3"
+              className="text-xs tracking-label mb-3"
               style={{ color: 'var(--ink-3)' }}
             >
               {t.addSheet.amount}
@@ -584,7 +586,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {/* Categories */}
           <div className="pt-5 pb-[18px]">
-            <div className="text-xs tracking-[0.6px] px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-6 pb-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.category}
             </div>
             <CategoryPicker value={category} onChange={setCategory} />
@@ -592,7 +594,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {/* Asset link (visible in both solo and dual mode) */}
           <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.assetLink}
             </div>
             <AssetLinkField value={assetId} onChange={setAssetId} open={open} />
@@ -600,7 +602,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {!isSolo && (
             <div className="px-5 pt-2 pb-[18px] mt-1 border-t border-hairline">
-              <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.splitMethod}
               </div>
               <SplitTypeSelector
@@ -617,7 +619,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
 
           {/* Date */}
           <div className="px-5 pt-1 pb-2">
-            <div className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
               {t.addSheet.date}
             </div>
             <DateField value={date} onChange={setDate} open={open} />
@@ -629,7 +631,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
                 are settled by design — surfacing the toggle would lie). */}
           {!isPending && !tripId && (
             <div className="px-5 pt-1 pb-2">
-              <div id={statusLabelId} className="text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <div id={statusLabelId} className="text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.statusLabel}
               </div>
               {/* Radio semantics so the selected state isn't carried by the
@@ -678,7 +680,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
               dropped — better to omit the affordance. */}
           {!isPending && (
             <div className="px-5 pt-3 pb-6 border-t border-hairline">
-              <label htmlFor={notesId} className="block text-xs tracking-[0.6px] px-1 py-3" style={{ color: 'var(--ink-3)' }}>
+              <label htmlFor={notesId} className="block text-xs tracking-label px-1 py-3" style={{ color: 'var(--ink-3)' }}>
                 {t.addSheet.notesLabel}
               </label>
               <TextArea

@@ -65,7 +65,7 @@ describe('createIncome', () => {
       assetId: null,
     })
 
-    expect(out).toEqual({ id: 'inc-1' })
+    expect(out).toEqual({ ok: true, data: { id: 'inc-1' } })
     expect(mockDb.insert).toHaveBeenCalled()
     const values = mockBuilder.values.mock.calls[0][0] as Record<string, unknown>
     expect(values.groupId).toBe(GROUP.id)
@@ -77,10 +77,10 @@ describe('createIncome', () => {
   it('rejects when recipientId is not in the viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
-    await expect(createIncome({
+    expect(await createIncome({
       amount: 1, category: 'other', recipientId: 'stranger',
       occurredAt: '2026-05-01',
-    })).rejects.toThrow('recipient_not_in_group')
+    })).toEqual({ ok: false, code: 'recipient_not_in_group' })
   })
 
   it('rejects when assetId belongs to a different group', async () => {
@@ -128,17 +128,17 @@ describe('editIncome', () => {
     expect(mockDb.insert).toHaveBeenCalled()  // new row
   })
 
-  it('throws when oldId not found or already deleted', async () => {
+  it('returns income_not_found when oldId not found or already deleted', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // soft-delete returning is empty (row gone or wrong group)
-    await expect(editIncome({
+    expect(await editIncome({
       oldId: 'gone',
       amount: 1,
       category: 'salary',
       recipientId: 'user-a',
       occurredAt: '2026-05-01',
-    })).rejects.toThrow('income_not_found')
+    })).toEqual({ ok: false, code: 'income_not_found' })
   })
 
   it('rejects when viewer is pinned to a past epoch', async () => {

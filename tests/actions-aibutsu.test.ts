@@ -31,7 +31,7 @@ describe('createChild', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets insert
     queueDbResult([])                    // childDetails insert
 
-    await expect(createChild({ name: '小元' })).resolves.toMatchObject({ id: 'asset-1' })
+    expect(await createChild({ name: '小元' })).toMatchObject({ ok: true, data: { id: 'asset-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -128,14 +128,14 @@ describe('editChild', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets update .returning
     queueDbResult([])                    // childDetails upsert
 
-    await expect(editChild({ id: 'asset-1', name: '新名字' })).resolves.toBeUndefined()
+    expect(await editChild({ id: 'asset-1', name: '新名字' })).toEqual({ ok: true, data: undefined })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editChild({ id: 'missing', name: '小元' })).rejects.toThrow('aibutsu_not_found')
+    expect(await editChild({ id: 'missing', name: '小元' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -216,14 +216,14 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).resolves.toBe('A123456789')
+    expect(await revealChildPii('asset-1', 'nationalId')).toEqual({ ok: true, data: 'A123456789' })
   })
 
   it('throws when asset not found in viewer group (cross-group access)', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // join returns no rows — assetId is in another group
 
-    await expect(revealChildPii('asset-x', 'nationalId')).rejects.toThrow('aibutsu_not_found')
+    expect(await revealChildPii('asset-x', 'nationalId')).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws when asset is soft-deleted', async () => {
@@ -235,7 +235,7 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('aibutsu_not_found')
+    expect(await revealChildPii('asset-1', 'nationalId')).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws when asset type is not child (e.g. car)', async () => {
@@ -247,7 +247,7 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('aibutsu_not_found')
+    expect(await revealChildPii('asset-1', 'nationalId')).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws when ciphertext column is null (nothing stored)', async () => {
@@ -259,7 +259,7 @@ describe('revealChildPii', () => {
       insuranceIdEncrypted: null,
     }])
 
-    await expect(revealChildPii('asset-1', 'nationalId')).rejects.toThrow('field_not_filled')
+    expect(await revealChildPii('asset-1', 'nationalId')).toEqual({ ok: false, code: 'field_not_filled' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -276,7 +276,7 @@ describe('createPet', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets insert
     queueDbResult([])                    // petDetails insert
 
-    await expect(createPet({ name: '米嚕' })).resolves.toMatchObject({ id: 'asset-1' })
+    expect(await createPet({ name: '米嚕' })).toMatchObject({ ok: true, data: { id: 'asset-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -336,14 +336,14 @@ describe('editPet', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets update .returning
     queueDbResult([])                    // petDetails upsert
 
-    await expect(editPet({ id: 'asset-1', name: '新名字' })).resolves.toBeUndefined()
+    expect(await editPet({ id: 'asset-1', name: '新名字' })).toEqual({ ok: true, data: undefined })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editPet({ id: 'missing', name: '米嚕' })).rejects.toThrow('aibutsu_not_found')
+    expect(await editPet({ id: 'missing', name: '米嚕' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -364,7 +364,7 @@ describe('createPlant', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets insert
     queueDbResult([])                    // plantDetails insert
 
-    await expect(createPlant({ name: '阿龜' })).resolves.toMatchObject({ id: 'asset-1' })
+    expect(await createPlant({ name: '阿龜' })).toMatchObject({ ok: true, data: { id: 'asset-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -417,14 +417,14 @@ describe('editPlant', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets update .returning
     queueDbResult([])                    // plantDetails upsert
 
-    await expect(editPlant({ id: 'asset-1', name: '新名字' })).resolves.toBeUndefined()
+    expect(await editPlant({ id: 'asset-1', name: '新名字' })).toEqual({ ok: true, data: undefined })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editPlant({ id: 'missing', name: '阿龜' })).rejects.toThrow('aibutsu_not_found')
+    expect(await editPlant({ id: 'missing', name: '阿龜' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -445,7 +445,7 @@ describe('createInsurance', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets insert
     queueDbResult([])                    // insuranceDetails insert
 
-    await expect(createInsurance({ name: '壽險A' })).resolves.toMatchObject({ id: 'asset-1' })
+    expect(await createInsurance({ name: '壽險A' })).toMatchObject({ ok: true, data: { id: 'asset-1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -489,9 +489,9 @@ describe('createInsurance', () => {
     queueDbResult([GROUP])
     queueDbResult([{ id: NOT_CHILD, type: 'pet', deletedAt: null }])  // wrong type
 
-    await expect(
-      createInsurance({ name: '醫療險', insuredChildId: NOT_CHILD }),
-    ).rejects.toThrow('insured_child_invalid')
+    expect(
+      await createInsurance({ name: '醫療險', insuredChildId: NOT_CHILD }),
+    ).toEqual({ ok: false, code: 'insured_child_invalid' })
   })
 
   it('rejects insuredChildId that does not exist in the group', async () => {
@@ -499,9 +499,9 @@ describe('createInsurance', () => {
     queueDbResult([GROUP])
     queueDbResult([])  // child lookup returns nothing
 
-    await expect(
-      createInsurance({ name: '醫療險', insuredChildId: MISSING }),
-    ).rejects.toThrow('insured_child_invalid')
+    expect(
+      await createInsurance({ name: '醫療險', insuredChildId: MISSING }),
+    ).toEqual({ ok: false, code: 'insured_child_invalid' })
   })
 
   it('passes all insuranceDetails fields to insert', async () => {
@@ -553,7 +553,7 @@ describe('createInsurance', () => {
   // #221 — server-side safety net for the Guardian beta gate.
   it('throws guardian_disabled when beta flag is off on the group', async () => {
     queueDbResult([GROUP_GUARDIAN_OFF])
-    await expect(createInsurance({ name: '壽險A' })).rejects.toThrow('guardian_disabled')
+    expect(await createInsurance({ name: '壽險A' })).toEqual({ ok: false, code: 'guardian_disabled' })
   })
 
   it('throws when group not found', async () => {
@@ -570,14 +570,14 @@ describe('editInsurance', () => {
     queueDbResult([{ id: 'asset-1' }])  // assets update .returning
     queueDbResult([])                    // insuranceDetails upsert
 
-    await expect(editInsurance({ id: 'asset-1', name: '新名字' })).resolves.toBeUndefined()
+    expect(await editInsurance({ id: 'asset-1', name: '新名字' })).toEqual({ ok: true, data: undefined })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])  // assets update returning empty
-    await expect(editInsurance({ id: 'missing', name: '壽險A' })).rejects.toThrow('aibutsu_not_found')
+    expect(await editInsurance({ id: 'missing', name: '壽險A' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -598,7 +598,7 @@ describe('createHouse', () => {
     queueDbResult([{ id: 'asset-h1' }])
     queueDbResult([])
 
-    await expect(createHouse({ name: '我們家' })).resolves.toMatchObject({ id: 'asset-h1' })
+    expect(await createHouse({ name: '我們家' })).toMatchObject({ ok: true, data: { id: 'asset-h1' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -669,14 +669,14 @@ describe('editHouse', () => {
     queueDbResult([{ id: 'asset-h1' }])
     queueDbResult([])
 
-    await expect(editHouse({ id: 'asset-h1', name: '新家' })).resolves.toBeUndefined()
+    expect(await editHouse({ id: 'asset-h1', name: '新家' })).toEqual({ ok: true, data: undefined })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
   it('throws if asset not found in group', async () => {
     queueDbResult([GROUP])
     queueDbResult([])
-    await expect(editHouse({ id: 'missing', name: '我們家' })).rejects.toThrow('aibutsu_not_found')
+    expect(await editHouse({ id: 'missing', name: '我們家' })).toEqual({ ok: false, code: 'aibutsu_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {

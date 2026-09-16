@@ -11,6 +11,7 @@ import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGu
 import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
+import { unwrapAction } from '@/lib/action-errors'
 
 export type PlantInitial = Pick<
   AssetSheetInitial,
@@ -59,9 +60,9 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
     runMutation(
       async () => {
         if (isEdit) {
-          await editPlant({ id: initial!.id, ...payload })
+          unwrapAction(await editPlant({ id: initial!.id, ...payload }))
         } else {
-          await createPlant(payload)
+          unwrapAction(await createPlant(payload))
         }
       },
       () => { onMutated?.('saved'); onClose() },

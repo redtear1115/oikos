@@ -22,6 +22,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { revealCarPlate } from '@/actions/asset'
 import { useTranslations } from '@/lib/i18n/client'
 import type { FuelType } from '@/lib/fuel'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface SerializedFuelLog {
   id: string
@@ -196,7 +197,7 @@ export function AssetDetailClient({
         <RevealableRow
           label={t.assetDetail.car.plate}
           hasValue={hasPlate}
-          revealAction={() => revealCarPlate(assetId)}
+          revealAction={async () => unwrapAction(await revealCarPlate(assetId))}
           last
         />
       </InfoCard>
@@ -225,7 +226,7 @@ export function AssetDetailClient({
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium"
+                className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
                 style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
               >
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -238,7 +239,7 @@ export function AssetDetailClient({
         )}
         onItemClick={handleTxItemClick}
         emptyState={<AibutsuHintCard type="car" onCtaPress={() => setAddOpen(true)} />}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         renderRow={(tx: PagedTxnRow) => {
           if (tx.fuelLogId !== null) {
@@ -267,16 +268,15 @@ export function AssetDetailClient({
               <Link
                 key={ins.id}
                 href={`/assets/${ins.id}`}
-                className="flex items-center gap-3 text-sm font-medium"
+                className={`flex items-center gap-3 text-sm font-medium ${i > 0 ? 'pt-3' : 'pt-0'}`}
                 style={{
                   color: 'var(--ink)',
-                  paddingTop: i > 0 ? 12 : 0,
                   borderTop: i > 0 ? '1px solid var(--hairline)' : 'none',
                 }}
               >
                 <span>🛡</span>
                 <span>{ins.name}</span>
-                <span style={{ color: 'var(--ink-3)', marginLeft: 'auto' }}>›</span>
+                <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
               </Link>
             ))}
           </div>

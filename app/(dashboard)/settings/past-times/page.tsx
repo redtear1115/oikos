@@ -4,6 +4,7 @@ import { getPinnedEpochId } from '@/actions/epoch-view'
 import { getLocale, getTranslations } from '@/lib/i18n/t'
 import { BottomNavSkeleton } from '@/app/(dashboard)/_components/BottomNavSkeleton'
 import { PastTimesList } from './_components/PastTimesList'
+import { unwrapAction } from '@/lib/action-errors'
 
 /**
  * Read-only timeline of every chapter the viewer has lived through — across
@@ -19,7 +20,7 @@ export default async function PastTimesPage() {
 
   const [epochs, pinnedId, locale, t] = await Promise.all([
     listEpochsForViewer(user.id),
-    getPinnedEpochId(),
+    getPinnedEpochId().then(unwrapAction),
     getLocale(),
     getTranslations(),
   ])

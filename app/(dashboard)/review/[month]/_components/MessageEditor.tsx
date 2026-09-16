@@ -13,6 +13,7 @@ import {
   type YearMonth,
 } from '@/lib/monthlyReview'
 import { upsertMonthlyReviewMessage } from '@/actions/monthlyReview'
+import { unwrapAction } from '@/lib/action-errors'
 import type {
   ReviewEditorMessage,
   ReviewMember,
@@ -74,11 +75,11 @@ export function MessageEditor({
     if (!next.trim()) return
     setState({ kind: 'saving' })
     try {
-      await upsertMonthlyReviewMessage({
+      unwrapAction(await upsertMonthlyReviewMessage({
         year: editorMonth.year,
         month: editorMonth.month,
         body: next,
-      })
+      }))
       setSavedValue(next)
       setState({ kind: 'saved' })
     } catch (err) {
@@ -105,8 +106,8 @@ export function MessageEditor({
   return (
     <section>
       <h3
-        className="text-base font-medium px-2 mb-3"
-        style={{ color: 'var(--ink)', fontFamily: 'var(--font-fraunces)' }}
+        className="text-base font-medium px-2 mb-3 font-serif"
+        style={{ color: 'var(--ink)' }}
       >
         {isSolo ? tr.editorTitleSolo : tr.editorTitle}
       </h3>

@@ -203,7 +203,7 @@ describe('import wizard — focus and announcements', () => {
   })
 
   it('focuses the result heading, described by the imported count', async () => {
-    importCsvBatch.mockResolvedValue({ batchId: 'b1', importedCount: 3, errorCount: 0 })
+    importCsvBatch.mockResolvedValue({ ok: true, data: { batchId: 'b1', importedCount: 3, errorCount: 0 } })
     const { container } = renderWizard()
     await uploadAndReachMapping(container)
     fireEvent.click(screen.getByRole('button', { name: en.common.navigation.next }))

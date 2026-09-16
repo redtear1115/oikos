@@ -11,3 +11,20 @@ index 94246df..f900a1b 100644
      ],
      targets: [
          .target(
+diff --git a/node_modules/@capacitor-community/apple-sign-in/android/build.gradle b/node_modules/@capacitor-community/apple-sign-in/android/build.gradle
+index b045a5b..c7f021c 100644
+--- a/node_modules/@capacitor-community/apple-sign-in/android/build.gradle
++++ b/node_modules/@capacitor-community/apple-sign-in/android/build.gradle
+@@ -29,10 +29,10 @@ android {
+     buildTypes {
+         release {
+             minifyEnabled false
+-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
++            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+         }
+     }
+-    lintOptions {
++    lint {
+         abortOnError false
+     }
+ }

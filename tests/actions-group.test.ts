@@ -18,7 +18,7 @@ describe('createGroup', () => {
     // groupBalance insert (no returning) — gets [] from empty queue (default)
 
     const g = await createGroup('我們家')
-    expect(g.id).toBe('grp-new')
+    expect(g).toMatchObject({ ok: true, data: { id: 'grp-new' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
   })
 
@@ -53,7 +53,7 @@ describe('createGroup', () => {
     // no second insert, no duplicate setup_completed.
     queueDbResult([{ id: 'existing-grp' }])
     const g = await createGroup('新家')
-    expect(g.id).toBe('existing-grp')
+    expect(g).toMatchObject({ ok: true, data: { id: 'existing-grp' } })
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 
@@ -67,7 +67,7 @@ describe('updateGroupName', () => {
   it('happy path', async () => {
     queueDbResult([{ id: 'grp-1' }])  // update returning
     const r = await updateGroupName('  新名稱 ')
-    expect(r).toEqual({ ok: true })
+    expect(r).toEqual({ ok: true, data: { ok: true } })
   })
 
   it('rejects empty', async () => {
@@ -93,7 +93,7 @@ describe('updateDisplayName', () => {
   it('happy path', async () => {
     queueDbResult([{ id: 'user-a' }])
     const r = await updateDisplayName(' Coco ')
-    expect(r).toEqual({ ok: true })
+    expect(r).toEqual({ ok: true, data: { ok: true } })
   })
 
   it('rejects empty', async () => {
@@ -106,7 +106,7 @@ describe('updateDisplayName', () => {
 
   it('throws if profile not found', async () => {
     queueDbResult([])
-    await expect(updateDisplayName('Coco')).rejects.toThrow('profile_not_found')
+    expect(await updateDisplayName('Coco')).toEqual({ ok: false, code: 'profile_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -119,29 +119,29 @@ describe('updateDefaultSplitType', () => {
   it('happy path: half', async () => {
     queueDbResult([{ id: 'user-a' }])  // update returning
     const r = await updateDefaultSplitType('half')
-    expect(r).toEqual({ ok: true })
+    expect(r).toEqual({ ok: true, data: { ok: true } })
   })
 
   it('happy path: all_mine', async () => {
     queueDbResult([{ id: 'user-a' }])
     const r = await updateDefaultSplitType('all_mine')
-    expect(r).toEqual({ ok: true })
+    expect(r).toEqual({ ok: true, data: { ok: true } })
   })
 
   it('happy path: all_theirs', async () => {
     queueDbResult([{ id: 'user-a' }])
     const r = await updateDefaultSplitType('all_theirs')
-    expect(r).toEqual({ ok: true })
+    expect(r).toEqual({ ok: true, data: { ok: true } })
   })
 
   it('rejects invalid split type', async () => {
     // @ts-expect-error testing runtime validation
-    await expect(updateDefaultSplitType('invalid')).rejects.toThrow('split_type_invalid')
+    expect(await updateDefaultSplitType('invalid')).toEqual({ ok: false, code: 'split_type_invalid' })
   })
 
-  it('throws if profile not found', async () => {
+  it('returns profile_not_found when profile not found', async () => {
     queueDbResult([])  // update returning nothing
-    await expect(updateDefaultSplitType('half')).rejects.toThrow('profile_not_found')
+    expect(await updateDefaultSplitType('half')).toEqual({ ok: false, code: 'profile_not_found' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -155,7 +155,7 @@ describe('toggleGuardianBeta (#220)', () => {
     const { mockBuilder } = await import('./_mocks/db')
     queueDbResult([{ id: 'grp-1', guardianBetaEnabled: false }])
     const r = await toggleGuardianBeta(true)
-    expect(r).toEqual({ ok: true })
+    expect(r).toEqual({ ok: true, data: { ok: true } })
     const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
     expect(setPayload.guardianBetaEnabled).toBe(true)
   })

@@ -15,6 +15,7 @@ import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface AssetSummary {
   monthAmount: number
@@ -42,7 +43,7 @@ function CompanionDays({ sproutedAt, waterEvery, accent, td }: { sproutedAt: str
     <div className="text-center py-2">
       <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.companionDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
       <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
@@ -131,7 +132,7 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="plant" onCtaPress={() => setAddOpen(true)} />}

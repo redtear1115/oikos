@@ -7,6 +7,7 @@ import { recordNativeAuthConversion } from '@/actions/auth'
 import { generateNonce, sha256Hex } from '@/lib/auth/nonce'
 import { isUserCancelled } from '@/lib/auth/appleSignInError'
 import { nativeCallbackUrl, safeSameOriginUrl } from '@/lib/auth/nativeRedirect'
+import { unwrapAction } from '@/lib/action-errors'
 
 // Deep link scheme registered in AndroidManifest.xml / capacitor.config.ts
 const CAPACITOR_SCHEME = 'dev.southernlight.futari'
@@ -89,7 +90,7 @@ async function appleNativeSignIn(
   // Bypasses /auth/callback, so replay its attribution here (best-effort).
   // This is a server action — on a slow link it is seconds during which the page
   // is still the sign-in form, which is exactly why the curtain covers it.
-  await recordNativeAuthConversion({ from: ctx.from, anonId: getAnonId() })
+  unwrapAction(await recordNativeAuthConversion({ from: ctx.from, anonId: getAnonId() }))
 
   // `next` comes from the query string — safeSameOriginUrl refuses anything
   // that would leave this origin (e.g. `@evil.com`, `//evil.com`).

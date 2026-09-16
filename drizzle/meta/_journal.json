@@ -435,6 +435,20 @@
       "when": 1782000000000,
       "tag": "0062_backfill_monthly_review_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1782100000000,
+      "tag": "0063_recurring_expense_split_ratio",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1782200000000,
+      "tag": "0064_recurring_cron_taipei_date",
+      "breakpoints": true
     }
   ]
 }

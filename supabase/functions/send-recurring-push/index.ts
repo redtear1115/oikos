@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { create, getNumericDate } from 'https://deno.land/x/djwt@v3.0.2/mod.ts'
+import { taipeiDateISO } from './taipeiDate.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -70,7 +71,10 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-  const today = new Date().toISOString().slice(0, 10)
+  // Taipei wall-clock, not UTC (#1262). This runs at 00:10 Asia/Taipei; a UTC
+  // date here is the previous day and misses the pendings the generators
+  // created at 00:00, so the push would announce them a day late.
+  const today = taipeiDateISO()
 
   const { data: groups, error: groupsErr } = await supabase
     .from('PendingExpenseOccurrences')

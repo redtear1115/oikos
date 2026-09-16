@@ -36,15 +36,13 @@ function FactChip({ label, tone = 'neutral' }: { label: string; tone?: ChipTone 
   const { bg, fg } = CHIP_TONES[tone]
   return (
     <div
+      className="px-2 py-1 rounded-full text-xs"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 5,
-        padding: '4px 8px',
-        borderRadius: 999,
         background: bg,
         color: fg,
-        fontSize: 12,
         fontWeight: 500,
         letterSpacing: 0.2,
       }}
@@ -59,10 +57,10 @@ function CarListMark({ swatch, size = 40 }: { swatch: string; size?: number }) {
   const dark = isDarkColor(swatch)
   return (
     <div
+      className="rounded-chip"
       style={{
         width: size,
         height: size,
-        borderRadius: 10,
         background: swatch,
         flexShrink: 0,
         display: 'flex',
@@ -111,10 +109,9 @@ export function CarHeroCard({
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
+      className="block no-underline rounded-2xl"
       style={{
         background: 'var(--surface)',
-        borderRadius: 16,
         border: `1px solid color-mix(in srgb, ${swatch} 25%, transparent)`,
         overflow: 'hidden',
         color: 'var(--ink)',
@@ -127,8 +124,8 @@ export function CarHeroCard({
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="flex items-center gap-2">
             <div
-              className="truncate"
-              style={{ fontSize: 'var(--fs-base)', color: 'var(--ink)', fontWeight: 500 }}
+              className="truncate text-base"
+              style={{ color: 'var(--ink)', fontWeight: 500 }}
             >
               {name}
             </div>
@@ -140,17 +137,14 @@ export function CarHeroCard({
               <span
                 // #1174 — the bullets are not a name; role="img" lets the
                 // localized label replace them for screen readers.
-                className="shrink-0"
+                className="shrink-0 text-xs px-2 py-0.5 rounded-sm"
                 role="img"
                 aria-label={t.assetListItem.plateMaskedAriaLabel}
                 style={{
-                  fontSize: 'var(--fs-xs)',
                   color: 'var(--ink-3)',
                   fontFamily: '"JetBrains Mono", monospace',
                   letterSpacing: 0.8,
                   background: 'rgba(58,36,25,0.06)',
-                  padding: '2px 8px',
-                  borderRadius: 5,
                 }}
               >
                 ●●●●●●
@@ -158,8 +152,8 @@ export function CarHeroCard({
             )}
           </div>
           <div
-            className="truncate"
-            style={{ fontSize: 'var(--fs-xs)', color: 'var(--ink-3)', marginTop: 2 }}
+            className="truncate text-xs mt-0.5"
+            style={{ color: 'var(--ink-3)' }}
           >
             {subtitle}
           </div>
@@ -174,9 +168,9 @@ export function CarHeroCard({
 
       {!compact && (avgFuelEcon != null || lastFuelDate != null) && (
         <div
+          className="pt-2 pr-4 pb-2.5 pl-5.5"
           style={{
             borderTop: '1px solid var(--hairline)',
-            padding: '8px 16px 10px 22px',
             display: 'flex',
             gap: 8,
             flexWrap: 'wrap',

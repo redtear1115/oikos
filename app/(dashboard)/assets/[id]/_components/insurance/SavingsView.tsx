@@ -31,6 +31,7 @@ import type { PagedIncomeRow } from '@/actions/income'
 import type { InsuranceDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { TxnCursor } from '@/lib/db/queries/transactions'
 import type { RecurringRuleRow } from '@/lib/db/queries/recurringIncome'
+import { unwrapAction } from '@/lib/action-errors'
 
 function lookupKindLabel(kind: string | null | undefined, td: Translations['assetDetail']['insurance']): string {
   if (!kind) return ''
@@ -164,7 +165,7 @@ export function SavingsView({
     const incomeCursor = cursor
       ? { occurredAt: cursor.transactedAt.substring(0, 10), createdAt: cursor.createdAt }
       : null
-    const rows = await loadMoreInsuranceReturns(assetId, RETURN_CATEGORIES, incomeCursor, pageSize)
+    const rows = unwrapAction(await loadMoreInsuranceReturns(assetId, RETURN_CATEGORIES, incomeCursor, pageSize))
     return rows.map(incomeToFeedRow)
   }
 
@@ -263,7 +264,7 @@ export function SavingsView({
         <TransactionFeed
           initial={initialPremiumTxns}
           pageSize={pageSize}
-          loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+          loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
           acceptInsert={(row) => row.assetId === assetId}
           onItemClick={handleTxClick}
           emptyState={
@@ -284,7 +285,7 @@ export function SavingsView({
           <button
             type="button"
             onClick={() => openRecordReturn()}
-            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium"
+            className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
             style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
           >
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -396,7 +397,7 @@ export function SavingsView({
             >
               <span>🚗</span>
               <span>{linkedVehicle.name}</span>
-              <span style={{ color: 'var(--ink-3)', marginLeft: 'auto' }}>›</span>
+              <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
             </Link>
           </div>
         </div>
@@ -488,7 +489,7 @@ function RecurringRulesSection({
           <button
             type="button"
             onClick={onAdd}
-            className="h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium bg-transparent border-0 cursor-pointer"
+            className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] bg-transparent border-0 cursor-pointer"
             style={{ color: P.ink }}
           >
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">

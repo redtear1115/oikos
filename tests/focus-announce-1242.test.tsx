@@ -139,24 +139,49 @@ describe('radiogroup arrow keys + roving tabindex (#1242 §3)', () => {
     expect(partner).toHaveAttribute('aria-checked', 'true')
   })
 
+  function SplitHarness() {
+    const [value, setValue] = useState<SplitType>('weighted')
+    const [ratio, setRatio] = useState(50)
+    return (
+      <I18nWrapper>
+        <SplitTypeSelector
+          value={value}
+          onChange={setValue}
+          splitRatioA={ratio}
+          onSplitRatioAChange={setRatio}
+          amount={100}
+          payerWho="M"
+          defaultViewerShare={50}
+        />
+      </I18nWrapper>
+    )
+  }
+
+  // #1252: Home / End are optional in the WAI-ARIA pattern and #1242 left them
+  // out. Without them the keys fall through to the scroll container.
+  it('Home and End jump to the first and last radio and select it', () => {
+    render(<SplitHarness />)
+    const radios = screen.getAllByRole('radio')
+    act(() => radios[0].focus())
+
+    fireEvent.keyDown(radios[0], { key: 'End' })
+    expect(document.activeElement).toBe(radios[2])
+    expect(radios[2]).toHaveAttribute('aria-checked', 'true')
+    expect(radios[2]).toHaveAttribute('tabindex', '0')
+
+    fireEvent.keyDown(radios[2], { key: 'Home' })
+    expect(document.activeElement).toBe(radios[0])
+    expect(radios[0]).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('does not swallow Home / End pressed on the nested split slider', () => {
+    render(<SplitHarness />)
+    const slider = screen.getByRole('slider')
+    expect(fireEvent.keyDown(slider, { key: 'Home' })).toBe(true)
+    expect(fireEvent.keyDown(slider, { key: 'End' })).toBe(true)
+  })
+
   it('leaves other keys and non-radio targets alone (the nested split slider keeps its arrows)', () => {
-    function SplitHarness() {
-      const [value, setValue] = useState<SplitType>('weighted')
-      const [ratio, setRatio] = useState(50)
-      return (
-        <I18nWrapper>
-          <SplitTypeSelector
-            value={value}
-            onChange={setValue}
-            splitRatioA={ratio}
-            onSplitRatioAChange={setRatio}
-            amount={100}
-            payerWho="M"
-            defaultViewerShare={50}
-          />
-        </I18nWrapper>
-      )
-    }
     render(<SplitHarness />)
     const radios = screen.getAllByRole('radio')
     expect(radios.map((r) => r.getAttribute('tabindex'))).toEqual(['0', '-1', '-1'])
@@ -215,6 +240,36 @@ describe('radiogroup arrow keys + roving tabindex (#1242 §3)', () => {
     fireEvent.click(radios[2])
     expect(updateDefaultSplitType).toHaveBeenCalledTimes(1)
     await act(async () => resolveSave())
+  })
+
+  // #1252: #1242 kept focus put during the save but killed the arrow keys —
+  // every radio was `aria-disabled`, so the navigable list came back empty and
+  // nothing moved. Silent: no announcement, no visible change, and on a fast
+  // save it is over before the user can tell it from a dropped keypress.
+  it('keeps arrow keys moving focus while the group is aria-busy, without changing the selection', async () => {
+    let resolveSave: () => void = () => {}
+    updateDefaultSplitType.mockImplementation(() => new Promise<void>((r) => { resolveSave = r }))
+    render(
+      <I18nWrapper>
+        <SplitTypeSection current="half" isSolo={false} />
+      </I18nWrapper>,
+    )
+    const group = screen.getByRole('radiogroup')
+    const radios = screen.getAllByRole('radio')
+    act(() => radios[0].focus())
+    fireEvent.keyDown(radios[0], { key: 'ArrowDown' })
+    await waitFor(() => expect(group).toHaveAttribute('aria-busy', 'true'))
+
+    fireEvent.keyDown(radios[1], { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(radios[2])
+    fireEvent.keyDown(radios[2], { key: 'Home' })
+    expect(document.activeElement).toBe(radios[0])
+    // Focus moved; the pending save is still the only one in flight.
+    expect(updateDefaultSplitType).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('radio', { checked: true })).toBe(radios[0])
+
+    await act(async () => resolveSave())
+    expect(group).not.toHaveAttribute('aria-busy')
   })
 })
 

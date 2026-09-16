@@ -20,6 +20,7 @@ import { StepRules } from './StepRules'
 import { StepConfirm } from './StepConfirm'
 import { ImportResult } from './ImportResult'
 import { ImportHistory } from './ImportHistory'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Member {
   id: string
@@ -172,7 +173,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
 
     startSubmit(async () => {
       try {
-        const res = await importCsvBatch(input)
+        const res = unwrapAction(await importCsvBatch(input))
         setResult({
           batchId: res.batchId,
           importedCount: res.importedCount,
@@ -192,7 +193,7 @@ export function ImportContent({ viewer, partner, viewerIsMemberA, history }: Pro
     setSubmitError(null)
     startSubmit(async () => {
       try {
-        await rollbackImportBatch(batchId)
+        unwrapAction(await rollbackImportBatch(batchId))
         // Optimistically mark the local entry rolled-back so the UI updates
         // without waiting for the server refresh.
         setLocalHistory((rows) =>

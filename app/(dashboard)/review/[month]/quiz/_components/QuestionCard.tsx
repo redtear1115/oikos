@@ -11,6 +11,7 @@ import {
 } from '@/lib/partnerQuiz'
 import { submitPartnerQuizAnswers } from '@/actions/partnerQuiz'
 import { describeQuizError } from '@/lib/quiz-errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 export interface QuestionCardProps {
   sessionId: string
@@ -69,10 +70,10 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           questionKey: k,
           choiceKey: picks[k] ?? '',
         }))
-        const out = await submitPartnerQuizAnswers({
+        const out = unwrapAction(await submitPartnerQuizAnswers({
           sessionId,
           answers,
-        })
+        }))
         // Whether revealed or not, the page Server Component will re-render
         // into the right mode (waiting | reveal) on refresh.
         if (out.revealed) {
@@ -103,14 +104,14 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
     >
       {/* Header — back link */}
       <header
-        className="px-4 flex items-center justify-between"
-        style={{ paddingTop: 'max(var(--safe-top), 24px)', paddingBottom: 8 }}
+        className="px-4 pb-2 flex items-center justify-between"
+        style={{ paddingTop: 'max(var(--safe-top), 24px)' }}
       >
         <Link
           href={reviewHref}
           aria-label={tq.answerBack}
-          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2"
-          style={{ color: 'var(--ink-2)', fontSize: 'var(--fs-sm)' }}
+          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 text-sm"
+          style={{ color: 'var(--ink-2)' }}
         >
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
             <path d="M7 1L1 6.5L7 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -118,8 +119,8 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
           {tq.answerBack}
         </Link>
         <div
-          className="text-xs uppercase tracking-[0.18em]"
-          style={{ color: 'var(--ink-2)', fontFamily: 'ui-monospace, monospace' }}
+          className="text-xs uppercase tracking-[0.18em] font-mono"
+          style={{ color: 'var(--ink-2)' }}
         >
           {tq.answerEyebrow}
         </div>
@@ -183,11 +184,9 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
                 >
                   <span
                     aria-hidden="true"
-                    className="inline-block mr-3 uppercase tracking-[0.12em]"
+                    className="inline-block mr-3 uppercase tracking-[0.12em] font-mono text-xs"
                     style={{
                       color: isSelected ? 'var(--accent)' : 'var(--ink-3)',
-                      fontFamily: 'ui-monospace, monospace',
-                      fontSize: 12,
                     }}
                   >
                     {choice}

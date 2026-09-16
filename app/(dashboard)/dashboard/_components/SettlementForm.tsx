@@ -12,6 +12,7 @@ import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { formatAmount } from '@/lib/currency'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   /** Absolute outstanding debt from VIEWER's perspective (always positive). */
@@ -63,11 +64,11 @@ export function SettlementForm({ debtAmount, viewerIsDebtor, onClose, onMutated 
     const payerId = viewerIsDebtor ? viewer.id : partner!.id
     startTransition(async () => {
       try {
-        await createSettlement({
+        unwrapAction(await createSettlement({
           amount: parsed,
           payerId,
           settledAt: date,
-        })
+        }))
         onMutated({ savedAmount: parsed })
         onClose()
       } catch (e) {

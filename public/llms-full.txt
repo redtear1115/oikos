@@ -5,7 +5,7 @@
 **Product URL**: https://futari.southern-light.dev
 **Status**: Public beta, free to use
 **Languages**: Traditional Chinese (default), Simplified Chinese, English, Japanese
-**Platform**: Progressive Web App (installable on iOS / Android / desktop)
+**Platform**: Progressive Web App (installable on iOS / Android / desktop), plus native iOS and Android shells built with Capacitor
 
 ---
 
@@ -212,11 +212,13 @@ No. Futari does not have an inactivity-deletion policy. Past chapters become rea
 
 For deleted records, Futari uses soft-delete: edited or deleted entries are marked `deleted_at` and physically removed only after one year by a scheduled job. This means accidental deletions are recoverable within a year via database-level recovery.
 
+Deleting your account is different from deleting a record. A deletion request has a 14-day grace period (calendar days) and can be cancelled during it. After that, a solo ledger is cascade-deleted in full, while a ledger shared with a partner stays with that partner: the shared transactions, settlements and loved-things records remain in their ledger, the leaver’s sign-in identity is deleted, and their name shows as "a partner who left". Those records belong to both people, so a one-sided request does not remove them.
+
 ### Does Futari connect to my bank?
 
 No. Futari has no Plaid integration, no bank account linking, no automatic transaction import. Every entry is recorded manually by one of the partners. This is intentional — the friction of intentional recording is part of the product's value proposition.
 
-A CSV import feature for migrating from other apps is on the roadmap.
+Migrating from another app is supported, though: Settings → Import accepts a CSV, OFX or QIF file exported from another tracker, maps its columns to Futari’s fields, and shows a preview for review before anything is written. That is a one-off migration path, not a standing bank connection.
 
 ### Can I use Futari alone?
 
@@ -234,7 +236,7 @@ Language is selected per-user via a cookie and can be changed at any time withou
 
 ### Is Futari a native app or a web app?
 
-Futari is a Progressive Web App (PWA). It runs in any modern browser and can be installed to the home screen on iOS, Android, and desktop. There is no separate native app to download from the App Store or Play Store. Installation gives an app-like experience: full-screen, no browser chrome, offline support.
+Both, from a single codebase. Futari is a Progressive Web App that runs in any modern browser and can be installed to the home screen on iOS, Android, and desktop. There are also native iOS and Android shells built with Capacitor — thin WebView wrappers around the same deployed web app, distributed through the App Store and Play Store. Because the shell loads the live site, a web release reaches all three platforms at once; only changes to native surfaces (push notifications, native sign-in, app icon) need a new store build. Either way the experience is the same: full-screen, no browser chrome, and an offline page bundled into the shell for when the network is gone.
 
 ### Can Futari handle multiple currencies?
 
@@ -259,7 +261,7 @@ Futari is a web app, so it works on any desktop browser. It's mobile-first (desi
 
 ### Can I export my data?
 
-CSV export is on the roadmap. Direct database export via API is not currently supported.
+Yes. Settings → Your data has an "Export data (CSV)" button that downloads your transaction history as a file. There is no public API for direct database export.
 
 ---
 

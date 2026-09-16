@@ -66,6 +66,7 @@ const {
 } = await import('@/lib/db/schema')
 const { leaveGroup } = await import('@/actions/membership')
 const { eq, inArray } = await import('drizzle-orm')
+const { unwrapAction } = await import('@/lib/action-errors')
 
 beforeAll(() => {
   if (!process.env.DATABASE_URL) {
@@ -230,7 +231,7 @@ describe('leaveGroup — leaver with no owned 愛物 (#139)', () => {
 
     // ── Act ──
     mockUserId = refs.userBId
-    const result = await leaveGroup()
+    const result = unwrapAction(await leaveGroup())
     refs.newGroupId = result.groupId
 
     // ── Assert: new solo group exists and is owned by the leaver ──

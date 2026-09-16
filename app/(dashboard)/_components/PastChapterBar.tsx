@@ -6,6 +6,7 @@ import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { exitPastEpoch } from '@/actions/epoch-view'
 import { useTranslations, useLocale } from '@/lib/i18n/client'
 import { formatDateShort } from '@/lib/format-date'
+import { unwrapAction } from '@/lib/action-errors'
 
 /**
  * "You are reading a past chapter" band, with the way back out of it.
@@ -44,7 +45,7 @@ export function PastChapterBar() {
   const handleExitPastEpoch = () => {
     startTransition(async () => {
       try {
-        await exitPastEpoch()
+        unwrapAction(await exitPastEpoch())
         router.refresh()
       } catch {
         // action can throw on network failure; pending state clears automatically

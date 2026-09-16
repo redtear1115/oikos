@@ -12,6 +12,7 @@ import { InstallGuide } from '@/app/(dashboard)/_components/InstallGuide'
 import { TrustCommitments } from '@/app/(dashboard)/settings/trust/_components/TrustCommitments'
 import InviteQr from '@/app/setup/InviteQr'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
+import { unwrapAction } from '@/lib/action-errors'
 const NAME_MAX = 20
 const INSTALL_GUIDE_SEEN_KEY = 'oikos_install_guide_seen'
 
@@ -73,8 +74,8 @@ export default function SetupForm({ t }: { t: Translations }) {
     setError('')
     startTransition(async () => {
       try {
-        const g = await createGroup(trimmed)
-        const url = await createInvite()
+        const g = unwrapAction(await createGroup(trimmed))
+        const url = unwrapAction(await createInvite())
         setGroup({ id: g.id, name: g.name })
         setInviteUrl(url)
         setStep('invite')

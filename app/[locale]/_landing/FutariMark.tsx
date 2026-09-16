@@ -1,46 +1,7 @@
-// Brand mark — lifted exactly from /public/favicon.svg. Two stylised figures
-// (head + leaf body) facing each other: one ink, one accent. The "two" of
-// Futari, drawn once.
-
-type Props = {
-  size?: number
-  className?: string
-  /** Optional override; defaults to var(--ink). */
-  inkColor?: string
-  /** Optional override; defaults to var(--accent). */
-  accentColor?: string
-}
-
-export function FutariMark({
-  size = 32,
-  className,
-  inkColor = 'var(--ink)',
-  accentColor = 'var(--accent)',
-}: Props) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      shapeRendering="crispEdges"
-      className={className}
-      aria-hidden="true"
-    >
-      <g transform="translate(16 18.5) scale(0.55)">
-        <path
-          d="M 0 16 C -7 11, -15 6, -15 -2 C -15 -7, -11 -10, -7 -10 C -3 -10, -1 -8, 0 -5 Z"
-          fill={inkColor}
-        />
-        <circle cx="-9" cy="-13" r="4" fill={inkColor} />
-        <path
-          d="M 0 16 C 7 11, 15 6, 15 -2 C 15 -7, 11 -10, 7 -10 C 3 -10, 1 -8, 0 -5 Z"
-          fill={accentColor}
-        />
-        <circle cx="9" cy="-13" r="4" fill={accentColor} />
-      </g>
-    </svg>
-  )
-}
+// The brand mark itself now lives in `components/FutariMark.tsx` — one copy for
+// the whole app. This file keeps the landing's inline feature glyphs and
+// re-exports the mark so existing imports from here keep working.
+export { FutariMark } from '@/components/FutariMark'
 
 // Inline feature glyphs — intentionally simple, all stroke-based so they
 // inherit chip color. Use `currentColor`.

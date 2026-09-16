@@ -9,7 +9,7 @@ import { assertMemberInGroup } from '@/lib/auth/member'
 import { revalidateAfterTransactionMutation } from '@/lib/revalidate'
 import { validateSettlementInput } from '@/lib/validators'
 import { captureServer } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 export interface EditSettlementInput {
   oldId: string
@@ -28,7 +28,7 @@ export interface CreateSettlementInput {
   note?: string
 }
 
-export async function createSettlement(input: CreateSettlementInput): Promise<{ id: string }> {
+export const createSettlement = action(async (input: CreateSettlementInput): Promise<{ id: string }> => {
   const { user, group } = await getViewerWriteContext()
 
   const validated = validateSettlementInput({
@@ -64,9 +64,9 @@ export async function createSettlement(input: CreateSettlementInput): Promise<{ 
   await captureServer(user.id, 'settlement_created', { amount_bucket: amountBucket, direction })
 
   return { id: created.id }
-}
+})
 
-export async function softDeleteSettlement(settlementId: string): Promise<void> {
+export const softDeleteSettlement = action(async (settlementId: string): Promise<void> => {
   const { group } = await getViewerWriteContext()
 
   await db.transaction(async (tx) => {
@@ -84,9 +84,9 @@ export async function softDeleteSettlement(settlementId: string): Promise<void> 
   })
 
   revalidateAfterTransactionMutation()
-}
+})
 
-export async function editSettlement(input: EditSettlementInput): Promise<{ id: string }> {
+export const editSettlement = action(async (input: EditSettlementInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
 
   const validated = validateSettlementInput({
@@ -127,4 +127,4 @@ export async function editSettlement(input: EditSettlementInput): Promise<{ id: 
 
   revalidateAfterTransactionMutation()
   return { id: created.id }
-}
+})

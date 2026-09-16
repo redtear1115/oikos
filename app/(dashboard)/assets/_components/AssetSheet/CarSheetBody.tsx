@@ -15,6 +15,7 @@ import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 import type { GasFuelType } from '@/lib/fuel'
+import { unwrapAction } from '@/lib/action-errors'
 
 const CAR_COLORS = [
   { key: 'white',     hex: '#F0EDE8', border: '#D4CFC7' },
@@ -93,7 +94,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
     runMutation(
       async () => {
         if (isEdit) {
-          await editCar({
+          unwrapAction(await editCar({
             id: initial!.id,
             name: name.trim(),
             plate: editPlate,
@@ -107,9 +108,9 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             model: model.trim() || null,
             initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             notes: notesPayload,
-          })
+          }))
         } else {
-          await createCar({
+          unwrapAction(await createCar({
             name: name.trim(),
             plate: plate.trim(),
             purchasedAt: purchasedAt ?? undefined,
@@ -122,7 +123,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             model: model.trim() || null,
             initialOdometer: initialOdometer ? parseInt(initialOdometer.replace(/,/g, ''), 10) : null,
             notes: notesPayload,
-          })
+          }))
         }
       },
       () => { onMutated?.('saved'); onClose() },
@@ -173,7 +174,10 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
                   border: sel ? '3px solid var(--ink)' : `2px solid ${c.border}`,
                   boxShadow: sel ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none',
                 }}
-                aria-label={c.key}
+                // #1249 — the stored key (`dark_gray`) is an identifier, not a
+                // name: a screen reader announced it verbatim, in English, on
+                // every locale. `colorNames` is the localized swatch name.
+                aria-label={ts.car.colorNames[c.key]}
               />
             )
           })}
@@ -291,7 +295,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             placeholder="0"
             inputMode="numeric"
             inputClassName="tnum"
-            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>}
+            rightAddon={<span className="text-xs text-ink-3">NT$</span>}
           />
         )}
       </Field>
@@ -306,7 +310,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
             inputMode="numeric"
             placeholder={ts.car.initialOdometerPlaceholder}
             inputClassName="font-numeric"
-            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>km</span>}
+            rightAddon={<span className="text-xs text-ink-3">km</span>}
           />
         )}
       </Field>

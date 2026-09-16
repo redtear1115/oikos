@@ -7,6 +7,7 @@ import type { SplitType } from '@/lib/balance'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { onRadioGroupKeyDown, rovingTabIndex } from '@/app/(dashboard)/_components/radioGroup'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   current: SplitType
@@ -24,7 +25,7 @@ export function SplitTypeSection({ current, isSolo }: Props) {
     setError(null)
     startTransition(async () => {
       try {
-        await updateDefaultSplitType(next)
+        unwrapAction(await updateDefaultSplitType(next))
         router.refresh()
       } catch (e) {
         setError(describeError(e, t.incomeSheet.errors.saveFailed, t.common.offlineError, t.errors.actions))
@@ -79,6 +80,10 @@ export function SplitTypeSection({ current, isSolo }: Props) {
       <div
         role="radiogroup"
         aria-label={t.settings.defaultSplitLabel}
+        // Marks the whole group in-flight rather than unavailable: it is what
+        // lets the arrow keys keep moving focus while every radio is
+        // `aria-disabled` during the save (#1252, see radioGroup.ts).
+        aria-busy={saving || undefined}
         onKeyDown={onRadioGroupKeyDown}
         className="rounded-card overflow-hidden flex flex-col"
         style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}

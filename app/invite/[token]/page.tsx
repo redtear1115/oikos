@@ -8,6 +8,7 @@ import { getTranslations, getLocale } from '@/lib/i18n/t'
 import { ogLocale, alternateOgLocales, ogImage } from '@/lib/i18n/seo'
 import { localizedSignInPath } from '@/lib/i18n/server-redirect'
 import { InviteConfirm } from './InviteConfirm'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   params: Promise<{ token: string }>
@@ -56,7 +57,7 @@ export default async function InvitePage({ params }: Props) {
     redirect(await localizedSignInPath(`?next=/invite/${token}&from=invite`))
   }
 
-  const preview = await previewInvite(token)
+  const preview = unwrapAction(await previewInvite(token))
   const t = await getTranslations()
 
   if (preview.ok) {

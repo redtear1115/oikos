@@ -4,9 +4,11 @@ import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { useFocusTrap } from '@/app/(dashboard)/_components/useFocusTrap'
+import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { removePartner } from '@/actions/membership'
 import { describeMembershipError } from '@/lib/membership-errors'
+import { unwrapAction } from '@/lib/action-errors'
 
 interface Props {
   open: boolean
@@ -71,7 +73,7 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
     setErrorMsg(null)
     startTransition(async () => {
       try {
-        const { epochId } = await removePartner()
+        const { epochId } = unwrapAction(await removePartner())
         // Mark the brand-new solo epoch so `PartnerLeftCard` renders its
         // removal variant instead of "{partner} has left" (#1121). The server
         // can't tell the two apart — removal closes the duo epoch and opens a
@@ -173,18 +175,13 @@ export function RemovePartnerFlow({ open, onClose, partnerName }: Props) {
             <span className="font-medium" style={{ color: 'var(--ink)' }}>{flow.confirmText}</span>
             <span>{flow.typePromptSuffix}</span>
           </label>
-          <input
+          <TextInput
             id={inputId}
             type="text"
             value={confirmInput}
             onChange={(e) => setConfirmInput(e.target.value)}
             placeholder={flow.typePlaceholder}
-            className="w-full h-12 rounded-xl px-3 text-sm mb-4 outline-none"
-            style={{
-              background: 'var(--surface)',
-              color: 'var(--ink)',
-              border: '1px solid var(--hairline)',
-            }}
+            className="w-full mb-4"
           />
 
           {errorMsg && (

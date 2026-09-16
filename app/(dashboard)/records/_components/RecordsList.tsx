@@ -47,6 +47,7 @@ import { DrillFilterChip } from './DrillFilterChip'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { runAfterSheetCloseBack } from '@/lib/sheetNavigation'
+import { unwrapAction } from '@/lib/action-errors'
 
 // Sheets are heavy and only meaningful on user interaction. Split into
 // separate chunks and skip SSR so they don't bloat the initial Records
@@ -286,9 +287,9 @@ export function RecordsList({
     }
     let stale = false
     loadRecordsMonthSummaries(tab, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
-      .then((fresh) => {
+      .then((r) => {
         if (stale) return
-        setSummaries({ key: feedKey, data: fresh })
+        setSummaries({ key: feedKey, data: unwrapAction(r) })
       })
       .catch(() => {
         // Keep previous summaries silently — a stale header beats a broken one.
@@ -325,10 +326,10 @@ export function RecordsList({
     const scheduledDateRange = dateRangeForLoader
     summaryDebounceRef.current = setTimeout(() => {
       loadRecordsMonthSummaries(scheduledTab, scheduledMonthKey, scheduledDrillWire, scheduledFilterWire, scheduledDateRange)
-        .then((fresh) => {
+        .then((r) => {
           // Stale — the view changed since this refetch was scheduled.
           if (feedKeyRef.current !== scheduledKey) return
-          setSummaries({ key: scheduledKey, data: fresh })
+          setSummaries({ key: scheduledKey, data: unwrapAction(r) })
         })
         .catch(() => {
           // Keep previous summaries silently.
@@ -410,11 +411,11 @@ export function RecordsList({
       return makeIncomeLoader(20, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
     }
     if (tab === 'expense') {
-      return (cursor: TxnCursor | null) =>
-        loadMoreTransactions(cursor, 20, filterWire, monthKeyForLoader, effectiveDrillWire, dateRangeForLoader)
+      return async (cursor: TxnCursor | null) =>
+        unwrapAction(await loadMoreTransactions(cursor, 20, filterWire, monthKeyForLoader, effectiveDrillWire, dateRangeForLoader))
     }
-    return (cursor: TxnCursor | null) =>
-      loadMoreFeedAll(cursor, 20, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader)
+    return async (cursor: TxnCursor | null) =>
+      unwrapAction(await loadMoreFeedAll(cursor, 20, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader))
   }, [tab, monthKeyForLoader, effectiveDrillWire, filterWire, dateRangeForLoader])
 
   // Toggle one kind of the L2 dual-pill. Disallow deselecting the last
@@ -484,7 +485,7 @@ export function RecordsList({
             --safe-top already answers it. */}
         <div className="px-5 pt-[max(var(--safe-top),24px)] pb-3 flex items-center justify-between">
           <h1
-            className="text-2xl font-medium tracking-tight"
+            className="text-page font-medium tracking-tight"
             style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
           >
             {t.records.title}

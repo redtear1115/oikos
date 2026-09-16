@@ -77,7 +77,7 @@ describe('createFuelLog', () => {
       splitType: 'all_mine',
     })
 
-    expect(result).toEqual({ id: 'fuel-log-id' })
+    expect(result).toEqual({ ok: true, data: { id: 'fuel-log-id' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
     // Two inserts inside the transaction: FuelLog + CashTransaction
     expect(mockDb.insert).toHaveBeenCalledTimes(2)
@@ -128,7 +128,7 @@ describe('createFuelLog', () => {
     queueDbResult([GROUP])         // viewer's group
     queueDbResult([OPEN_EPOCH])    // current-epoch lookup
     queueDbResult([])              // asset not found in this group → empty
-    await expect(createFuelLog({
+    expect(await createFuelLog({
       assetId: 'foreign-asset',
       liters: 30,
       odometer: 1000,
@@ -138,7 +138,7 @@ describe('createFuelLog', () => {
       station: null,
       paidBy: 'user-a',
       splitType: 'all_mine',
-    })).rejects.toThrow('linked_asset_not_in_group')
+    })).toEqual({ ok: false, code: 'linked_asset_not_in_group' })
   })
 
   it('auto-generates description "加油" when station is null', async () => {
@@ -174,26 +174,26 @@ describe('createFuelLog', () => {
     })).rejects.toThrow('Unauthorized')
   })
 
-  it('throws when payer is not in the group', async () => {
+  it('returns error code when payer is not in the group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1', deletedAt: null }])
-    await expect(createFuelLog({
+    expect(await createFuelLog({
       assetId: 'asset-1', liters: 30, odometer: 1000, cost: 500,
       fuelType: '95', loggedAt: '2026-05-05', station: null,
       paidBy: 'user-stranger', splitType: 'all_mine',
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
-  it('throws when asset is soft-deleted', async () => {
+  it('returns error code when asset is soft-deleted', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'asset-1', deletedAt: new Date() }])
-    await expect(createFuelLog({
+    expect(await createFuelLog({
       assetId: 'asset-1', liters: 30, odometer: 1000, cost: 500,
       fuelType: '95', loggedAt: '2026-05-05', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow('linked_asset_deleted')
+    })).toEqual({ ok: false, code: 'linked_asset_deleted' })
   })
 
   it('rejects when viewer is pinned to a past epoch', async () => {
@@ -281,47 +281,47 @@ describe('editFuelLog', () => {
     expect(oldTxnSet.deletedAt).toBeInstanceOf(Date)
   })
 
-  it('rejects edit when fuel log is already soft-deleted', async () => {
+  it('returns error code when fuel log is already soft-deleted', async () => {
     queueDbResult([GROUP])                                                                    // group
     queueDbResult([OPEN_EPOCH])                                                               // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: new Date() }])         // fuel log soft-deleted
 
-    await expect(editFuelLog({
+    expect(await editFuelLog({
       id: 'fuel-log-id',
       assetId: 'asset-1',
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow('fuel_log_deleted_or_missing')
+    })).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
   })
 
-  it('rejects edit when fuel log is not found', async () => {
+  it('returns error code when fuel log is not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // no fuel log row
 
-    await expect(editFuelLog({
+    expect(await editFuelLog({
       id: 'missing-id',
       assetId: 'asset-1',
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow('fuel_log_deleted_or_missing')
+    })).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
   })
 
-  it('rejects edit when fuel log asset is not in viewer group', async () => {
+  it('returns error code when fuel log asset is not in viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'foreign-asset', deletedAt: null }])
     queueDbResult([])  // asset lookup empty (asset not in this group)
 
-    await expect(editFuelLog({
+    expect(await editFuelLog({
       id: 'fuel-log-id',
       assetId: 'foreign-asset',
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow('linked_asset_not_in_group')
+    })).toEqual({ ok: false, code: 'linked_asset_not_in_group' })
   })
 
   it('throws unauthorized when no user', async () => {
@@ -335,20 +335,20 @@ describe('editFuelLog', () => {
     })).rejects.toThrow('Unauthorized')
   })
 
-  it('rejects when payer is not in the group', async () => {
+  it('returns error code when payer is not in the group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: null }])
     queueDbResult([{ id: 'asset-1' }])                    // #1032 — edited row's asset
     queueDbResult([{ id: 'asset-1', deletedAt: null }])   // incoming asset
 
-    await expect(editFuelLog({
+    expect(await editFuelLog({
       id: 'fuel-log-id',
       assetId: 'asset-1',
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-stranger', splitType: 'all_mine',
-    })).rejects.toThrow('payer_not_in_group')
+    })).toEqual({ ok: false, code: 'payer_not_in_group' })
   })
 
   // ─── Regression for #1032 ───────────────────────────────────────────────
@@ -397,13 +397,13 @@ describe('editFuelLog', () => {
     // pre-fix check, so the throw must happen here, on the edited row.
     queueDbResult([])
 
-    await expect(editFuelLog({
+    expect(await editFuelLog({
       id: 'fuel-log-id',
       assetId: 'asset-1',
       liters: 40, odometer: 87000, cost: 1500,
       fuelType: '95', loggedAt: '2026-05-06', station: null,
       paidBy: 'user-a', splitType: 'all_mine',
-    })).rejects.toThrow('linked_asset_not_in_group')
+    })).toEqual({ ok: false, code: 'linked_asset_not_in_group' })
 
     // Nothing was written: no transaction, no soft-delete of the victim's txn.
     expect(mockDb.transaction).not.toHaveBeenCalled()
@@ -458,32 +458,32 @@ describe('softDeleteFuelLog', () => {
     expect(txnSet.deletedAt).toBeInstanceOf(Date)
   })
 
-  it('idempotent: soft-deleting an already-deleted fuel log throws', async () => {
+  it('idempotent: soft-deleting an already-deleted fuel log returns error code', async () => {
     queueDbResult([GROUP])                                                                    // group
     queueDbResult([OPEN_EPOCH])                                                               // current-epoch lookup
     queueDbResult([{ id: 'fuel-log-id', assetId: 'asset-1', deletedAt: new Date() }])         // fuel log soft-deleted
 
-    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('fuel_log_deleted_or_missing')
+    expect(await softDeleteFuelLog('fuel-log-id')).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
     // Should not enter the transaction at all
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 
-  it('throws when fuel log is not found', async () => {
+  it('returns error code when fuel log is not found', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([])  // no fuel log row
 
-    await expect(softDeleteFuelLog('missing-id')).rejects.toThrow('fuel_log_deleted_or_missing')
+    expect(await softDeleteFuelLog('missing-id')).toEqual({ ok: false, code: 'fuel_log_deleted_or_missing' })
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 
-  it('rejects when fuel log asset is not in viewer group', async () => {
+  it('returns error code when fuel log asset is not in viewer group', async () => {
     queueDbResult([GROUP])
     queueDbResult([OPEN_EPOCH])
     queueDbResult([{ id: 'fuel-log-id', assetId: 'foreign-asset', deletedAt: null }])
     queueDbResult([])  // asset lookup empty (asset not in this group)
 
-    await expect(softDeleteFuelLog('fuel-log-id')).rejects.toThrow('linked_asset_not_in_group')
+    expect(await softDeleteFuelLog('fuel-log-id')).toEqual({ ok: false, code: 'linked_asset_not_in_group' })
     expect(mockDb.transaction).not.toHaveBeenCalled()
   })
 

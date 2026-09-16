@@ -17,6 +17,7 @@ import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
+import { unwrapAction } from '@/lib/action-errors'
 
 // #826 — address subtitle is masked at the header. The actual address text
 // only becomes visible when the user taps 「顯示」 on the address row in the
@@ -33,7 +34,7 @@ function HomeStat({ purchasedAt, accent, td }: { purchasedAt: string; accent: st
     <div className="text-center py-2">
       <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-numeric)', fontSize: 'var(--fs-amount-lg)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
       <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
@@ -123,7 +124,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         <RevealableRow
           label={td.address}
           hasValue={hasAddress}
-          revealAction={() => revealHouseAddress(assetId)}
+          revealAction={async () => unwrapAction(await revealHouseAddress(assetId))}
         />
         <InfoRow label={td.purchasedAt} value={details?.purchasedAt ?? ''} mono />
         {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design before migrating to formatAmount. */}
@@ -145,7 +146,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
       <TransactionFeed
         initial={initialTxns}
         pageSize={pageSize}
-        loader={(cursor) => loadMoreTransactionsForAsset(assetId, cursor, pageSize)}
+        loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="house" onCtaPress={() => setAddOpen(true)} />}

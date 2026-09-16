@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-16
 status: shipped
 first_shipped_in: v0.8.0
 updates:
@@ -7,8 +7,10 @@ updates:
   - v0.8.1: polish + helpers shared
   - v0.13.0: Expense mirror — actions / queries / Settings 子頁 + Dashboard PendingExpenseStack + AddSheet 改一下 + Records 入口（PRs #76 #77 #78，closes #18）
   - v0.15.3: `source_type` / `source_ref_id` 跨 feature 來源欄位（給 [savings-view](savings-view-design.md) 自動化用，#166）
+  - v1.5.15: weighted 分攤比例納入支出 pending snapshot（#1243）；createRule 補上 `snapToFuture`，起始日在過去的規則不再顯示過去的「下次」日期（#1244）
+  - v1.5.15: cron 與推播的日期基準由 UTC 改為 Asia/Taipei（#1262）
 related_specs: [income, transactions, inbox-layer, savings-view, insurance, solo-mode]
-related_issues: ["#18", "#166"]
+related_issues: ["#18", "#166", "#1243", "#1244", "#1262"]
 ---
 
 # 自訂定期收支
@@ -43,7 +45,7 @@ related_issues: ["#18", "#166"]
 | Pending 載體 | **獨立 Pending 表**（收入 / 支出各一張） | 維持兩條 ledger invariant=「已確認」；現有 query / Realtime / RLS 全不動 |
 | 週期單位 | **`interval_months` 整數**（1=月 / 3=季 / 6=半年 / 12=年） | 一個欄位涵蓋所有實務月度週期；雙週延後處理 |
 | 日期錨 | **`day_of_month` 1–31 + clamp 到當月最後一天** | 處理 31 號規則在二月的退化；不引入「最後一天」/「第一個工作日」這種複雜錨 |
-| Cron 排程 | **每日 16:00 UTC**（= 台北 00:00） | 用戶醒來時 pending 已就位 |
+| Cron 排程 | **每日 16:00 UTC**（= 台北 00:00），日期基準讀台北日 | 用戶醒來時 pending 已就位。排程是 UTC、判斷「今天幾號」也用 UTC 的話，那一刻的 UTC 還停在前一天，卡片會整批晚一個台北日（#1262） |
 | 三動作層級 | **就這樣（primary） / 改一下（secondary） / 跳過（tertiary）** | 默認最低摩擦路徑是「就這樣」；跳過要稍微費力，避免反射性消除 |
 | Catch-up | **Pause→Resume**：0 期（snap next_occurrence 到未來）； **Cron outage**：自然每天補 1 張直到追上 | Pause 是用戶主動行為，不該有補登；Cron outage 是系統責任，那些期真的發生過該保留 |
 | 規則刪除 | **soft delete + 級聯軟刪 active pending** | 用戶刪規則 = 「我不再要這個」，留著 pending 反而困惑 |
@@ -80,14 +82,15 @@ related_issues: ["#18", "#166"]
 | 雙人模式 paid_by/recipient | recipient 預設建立者 | `paid_by` 預設建立者，picker 可選 partner |
 | Asset 關聯 | 限 `type='insurance'`（連保單用） | **選填，不限 asset type** |
 | Asset 已軟刪除的規則 | （無對應） | 規則自動 `paused_at`（cron 跑前 join 檢查） |
-| Pending snapshot 欄位 | `proposed_amount` / `proposed_date` | + `proposed_description` / `proposed_paid_by` / `proposed_split_type` |
+| Pending snapshot 欄位 | `proposed_amount` / `proposed_date` | + `proposed_description` / `proposed_paid_by` / `proposed_split_type` / `proposed_split_ratio_a` |
 | 編輯 sheet | IncomeSheet | AddSheet（含 `pendingExpenseId` 模式） |
 | Balance 影響 | 無 | 有（confirm 時 balance 重算，與 [transactions](transactions-design.md) 同 hook） |
 
 設計動機差異說明：
 
 - **`description` 為 NOT NULL on expense**：對齊 `CashTransactions.description` NOT NULL；income 的 `source` 是選填自由 metadata（不會破 ledger invariant）
-- **Snapshot 範圍**：expense 走全 snapshot（`proposed_paid_by` / `proposed_split_type` 都 freeze 在 pending），不從 rule 動態 join。理由：rule 之後若改 paid_by / split_type，已產的 pending 應反映「當時規則狀態」（與 amount snapshot 邏輯一致）
+- **Snapshot 範圍**：expense 走全 snapshot（`proposed_paid_by` / `proposed_split_type` / `proposed_split_ratio_a` 都 freeze 在 pending），不從 rule 動態 join。理由：rule 之後若改 paid_by / split_type，已產的 pending 應反映「當時規則狀態」（與 amount snapshot 邏輯一致）
+  - **漏一欄的樣子（#1243）**：`weighted` 的比例欄位是 0027 才加的，而 cron 的 INSERT 欄位清單留在 0021，於是 weighted 規則產的 pending 比例一直是 NULL。沒有任何錯誤——卡片照出、確認照成功，只是落帳的那筆變成 50/50，而且 balance 匯總會直接把它從 SUM 裡漏掉。加欄位時，cron 的欄位清單不會自己跟上。
 - **Asset 不限 type on expense**：任何愛物都可能是定期支出對象（房租→house、房貸→house、保費→insurance、車貸/月票→car、學費→child、寵物保險→pet）；過早限制 type 會不必要地排除合理 use case
 - **Asset 軟刪除 → 規則 paused on expense**：cron 跑前 join 檢查 `assets.deleted_at IS NULL`，asset 失效則 set paused_at；不強迫用戶刪規則，settings 列表頁的 paused 狀態文案明確「已暫停（關聯愛物已刪除）」
 
@@ -114,14 +117,14 @@ related_issues: ["#18", "#166"]
 
 - `interval_months` / `day_of_month` / `starts_on` / `ends_on` / `next_occurrence_at` — 排程錨點
 - `paused_at` / `deleted_at` — soft states，cron 跑前過濾
-- `next_occurrence_at` 維護：rule 建立時由 server action 計算（`startsOn` 之後第一個落在 `day_of_month` 的日期）；每次 cron 產 pending 後 += `interval_months`（並對 day_of_month 做 clamp）；`startsOn` / `interval_months` / `day_of_month` 改動時由 server action 重算
+- `next_occurrence_at` 維護：rule 建立時由 server action 計算（`startsOn` 之後第一個落在 `day_of_month` 的錨點，**再 snap 到今天（含）之後的同一系列期別**）；每次 cron 產 pending 後 += `interval_months`（並對 day_of_month 做 clamp）；`startsOn` / `interval_months` / `day_of_month` 改動時由 server action 重算（**snap 到今天之後，不含今天**——差一天，理由見下方「建立含今天、編輯不含」）
 
 ### Pending（兩張表）
 
 - `period_start`（錨日，UNIQUE 鍵之一）
 - `proposed_amount` / `proposed_date` — snapshot at generate-time（不跟著規則改動）
 - 收入: `proposed_*` 簡版
-- 支出: 多 `proposed_description` / `proposed_paid_by` / `proposed_split_type`
+- 支出: 多 `proposed_description` / `proposed_paid_by` / `proposed_split_type` / `proposed_split_ratio_a`
 - `skipped_at` / `resolved_tx_id` — 狀態旗標
 - `UNIQUE (rule_id, period_start)` 保證 idempotency
 
@@ -141,9 +144,9 @@ related_issues: ["#18", "#166"]
 
 ## Cron 邏輯
 
-每日 16:00 UTC（= 台北 00:00），對每張 rules 表跑一次 `generate-pending-{income|expense}` job：
+每日 16:00 UTC（= 台北 00:00），對每張 rules 表跑一次 `generate-pending-{income|expense}` job。job 裡的「今天」一律是台北日（`(NOW() AT TIME ZONE 'Asia/Taipei')::date`），不是 session 的 `CURRENT_DATE`——pg_cron 以 UTC 解讀排程，觸發當下的 UTC 日期是前一天（#1262）：
 
-1. 對每個 active（`deleted_at IS NULL AND paused_at IS NULL`）且 `next_occurrence_at <= CURRENT_DATE` 的規則：
+1. 對每個 active（`deleted_at IS NULL AND paused_at IS NULL`）且 `next_occurrence_at <= 台北今天` 的規則：
    - INSERT pending（ON CONFLICT DO NOTHING 保 idempotency）
    - 把 `next_occurrence_at` 推進一格（`compute_next_occurrence` SQL helper，handle clamp）
 2. **Expense 額外**：對「`asset_id` 對應 asset 已軟刪除」的規則 set `paused_at = NOW()`，避免下次跑時又進來
@@ -153,13 +156,24 @@ related_issues: ["#18", "#166"]
 **Idempotency / Dedup**：兩層保險：
 
 1. UNIQUE `(rule_id, period_start)` 是硬保證
-2. `next_occurrence_at <= CURRENT_DATE` 過濾 + `INSERT ON CONFLICT DO NOTHING`
+2. `next_occurrence_at <= 台北今天` 過濾 + `INSERT ON CONFLICT DO NOTHING`（INSERT 與推進 `next_occurrence_at` 的兩個條件必須同一個基準；不同步的話會整期消失或每晚重試同一期）
 
 **Catch-up 行為**：
 
 - **正常每日跑**：每個規則一次前進 1 期。每天最多產一張 pending
 - **規則暫停 N 個月後 resume**：`resumeRule` action 內，先把 `next_occurrence_at` snap 到「未來最近的 anchor」（即 `startsOn` 之後第一個 anchor > today），再清掉 `paused_at`。這樣 resume 後不會產任何補登
-- **規則建立後第一次**：`next_occurrence_at` 計算為「`startsOn` 之後第一個落在 `day_of_month` 的日期」。Cron 跑到那天才產 pending。**不 backfill 過去**
+- **規則建立後第一次**：`next_occurrence_at` 計算為「`startsOn` 之後第一個落在 `day_of_month` 的錨點」，再往前 snap 整數個 `interval_months` 直到 **>= today**。Cron 跑到那天才產 pending。**不 backfill 過去（今天不算過去）**
+  - **v1.5.15 之前 create 少了 snap 這一步（#1244）**：`startsOn` 在過去的規則建立後，列表上的「下次 {date}」就是一個已經過去的日期，而同一筆規則只要進編輯存檔就會被修正——同一個欄位在「新建」與「編輯」兩條路徑上結果不同。本節上方的「不 backfill 過去」與下方 acceptance 表一直是對的，**不符的是實作**。
+  - **同一輪裡有兩種不同的文件改動，不要混為一談（#1244）**：
+    - 上面那條是「spec 本來就對、實作補上」——spec 的文字沒有被改動過。
+    - acceptance 表原本寫「next_occurrence 從**未來**最近的錨日開始」，那句在當時是對的、實作也終於符合了；是**使用者 2026-09-16 決定把今天納入**，spec 才跟著改成「今天（含）之後最近」。**這是決定變了、spec 跟上，不是 spec 一直寫錯。** 分清楚這兩種，下一個人才不會把後者當成一筆長年未修的文件錯誤而回頭「訂正」。
+  - **建立含今天、編輯不含（刻意不對稱，使用者 2026-09-16 拍板）**：系列落在今天時，`createRule` 保留今天，`updateRule` / `resumeRule` 推到下一期。兩者回答的不是同一個問題——
+    - **建立**：使用者剛說「每月 N 號」，今天就是 N 號，這個月就該算進去。而且**起始日怎麼填不該改變這個答案**——`startsOn` 回答的是「這個系列從哪期開始算」，不是「第一張卡什麼時候出現」。「回填到去年 11 月的每月 7 號」與「今天開始的每月 7 號」是同一個意圖，落在今天時必須得到同一期。另外，`dayOfMonth = 今天`、`startsOn = 今天` 正是表單預設值（`lib/hooks/useRecurringRuleForm.ts` 的 `new Date().getDate()` / `localTodayISO()`），所以這是預設路徑而不是邊角案例。
+    - **編輯**：`sheet.editEffectHint` 就顯示在使用者按儲存的當下，寫著「改動從下一期開始套用。已經出現的待確認卡片，金額、日期與分攤維持原樣」。讓編輯把今天拉進來，等於違背一句正在畫面上的承諾。
+    - **機制**：`snapToFuture` 內部是 `curr <= cutoff`，`createRule` 傳入的 cutoff 是**今天的前一天**（`lib/local-date.ts › previousDay`），今天因此成為它會停下的最早一期。`snapToFuture` 本體沒有動——它與 `updateRule` / `resumeRule` 共用，那邊語義不變。`previousDay` 走 `ymdToUTCNoon` 而不是自己算月日，兩側各留 12 小時餘裕，UTC-12 ~ UTC+12 都得到同一個日期（這個 repo 為了時區踩過 #1130、#1262）。
+    - **`today` 仍由 UTC 推導**（與 `updateRule` / `resumeRule` 相同），因為它要回答的是「今晚的 cron 會不會撈到」，而 cron 比的是 Postgres `CURRENT_DATE`，同樣是 UTC。兩邊要不要一起改成 Asia/Taipei 是 #1262 的範圍。
+    - **這個不對稱如果沒被寫下來，下一個人一定會把它「修正」成一致。** 護欄是測試：expense / income 兩支測試檔各有**兩對**並排的案例（今天建立／今天編輯，回填建立／回填編輯），統一 guard 時剛好會紅。
+  - **既有資料不做 migration**：`next_occurrence_at` 落在過去的舊規則不是凍住的，cron 每晚推進一期並產一張 pending，會自己追上。那些 pending 是對真實期別的提案，批次 snap 等於替使用者把它們刪掉（`(rule_id, period_start)` 是 unique，已產生的不會重複，所以 migration 只能砍掉還沒產的）。取捨留給使用者：不想要就 skip 卡片，或編輯規則一次校正。
 - **Cron 連續多天 outage 後恢復**：每天最多補 1 期，連續 N 天才追上。實務上 pg_cron outage 罕見且短，可接受
 
 ---
@@ -239,7 +253,10 @@ related_issues: ["#18", "#166"]
 |---|---|
 | 規則 day_of_month=31，遇到 2 月 | clamp 到 2 月最後一天（28 或 29），產 pending 用 clamped date |
 | 規則 day_of_month=31，遇到 4/6/9/11 月 | clamp 到 30 |
-| 用戶建立規則時 startsOn 在過去 3 個月 | 不 backfill；next_occurrence 從**未來最近**的錨日開始 |
+| 用戶建立規則時 startsOn 在過去 3 個月 | 不 backfill；next_occurrence 從**今天（含）之後最近**的同系列錨日開始 |
+| 用戶建立規則時 day_of_month 就是今天（表單預設） | 第一期就是今天，今晚的 cron 會產這一期的待確認卡 |
+| 用戶建立規則時 startsOn 回填、而系列剛好落在今天 | 同上——第一期就是今天。起始日怎麼填不改變答案 |
+| 用戶編輯規則，系列落在今天 | 第一期是下一期——`editEffectHint` 承諾「改動從下一期開始套用」 |
 | 用戶 pause 期間錯過 2 期 | resume 不補登。`resumeRule` snap next_occurrence_at 到未來最近 anchor，pending 卡片 0 張 |
 | 用戶 pause 期間有未確認 pending | pause 不影響既有 pending；用戶仍可 confirm/skip/edit 該卡片 |
 | 用戶 delete（軟刪）規則 | 同 transaction：UPDATE rule SET deleted_at + DELETE active pendings；已 resolved 的 pending 不動（指向真實 tx，留作審計）；已 skipped 的不動（90 天後 pg_cron purge） |
@@ -247,7 +264,7 @@ related_issues: ["#18", "#166"]
 | 用戶編輯規則金額 X → Y，已有 active pending | pending.proposed_amount **不變**；下一期 cron 產的 pending 才用新金額 |
 | 用戶編輯規則 day_of_month / interval_months | 重算 next_occurrence_at；已產的 active pending 不動 |
 | 兩裝置同時點「就這樣」 | 第二個 server action 看到 pending 已有 resolved_tx_id，回「partner 剛剛已處理」，client refresh 卡片消失 |
-| Cron 失敗一天 | 隔天跑時 `next_occurrence_at <= CURRENT_DATE` 仍真，照樣產 pending |
+| Cron 失敗一天 | 隔天跑時 `next_occurrence_at <= 台北今天` 仍真，照樣產 pending |
 | 用戶 confirm 後想撤回 | 用既有 IncomeTransactions / CashTransactions soft-delete。pending.resolved_tx_id 保留（指向已軟刪除 tx），不還原 pending |
 | Solo Mode 下建立規則 | recipient / paid_by 自動填本人；split_type 鎖 all_mine；PayerToggle / SplitTypeSelector 隱藏 |
 | Solo Mode → 雙人模式 | 既有規則 recipient / paid_by / split_type 不變動；用戶可手動編輯（[solo-mode](solo-mode-design.md) acceptance） |

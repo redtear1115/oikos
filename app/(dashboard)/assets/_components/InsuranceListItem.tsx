@@ -11,6 +11,7 @@ import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
 import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
+import { unwrapAction } from '@/lib/action-errors'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
@@ -90,7 +91,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const handleRenew = () => {
     startTransition(async () => {
       try {
-        await renewInsurance({ id, newPolicyNumber: renewPolicyNo.trim() || null })
+        unwrapAction(await renewInsurance({ id, newPolicyNumber: renewPolicyNo.trim() || null }))
         setRenewOpen(false)
         setRenewPolicyNo('')
         router.refresh()
@@ -103,7 +104,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const handleLapse = () => {
     startTransition(async () => {
       try {
-        await lapseInsurance({ id })
+        unwrapAction(await lapseInsurance({ id }))
         setLapseOpen(false)
         router.refresh()
       } catch (e) {
@@ -155,8 +156,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
     const { bg, fg } = TONES[tone]
     return (
       <span
-        className="shrink-0 px-1.5 py-px rounded leading-none font-mono"
-        style={{ fontSize: 12, background: bg, color: fg }}
+        className="shrink-0 px-1.5 py-px rounded leading-none font-mono text-xs"
+        style={{ background: bg, color: fg }}
       >
         {label}
       </span>
@@ -191,9 +192,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
   return (
     <>
       <div
+        className="rounded-2xl"
         style={{
           background: 'var(--surface)',
-          borderRadius: 16,
           border: `1px solid color-mix(in srgb, ${stripeColor} 35%, transparent)`,
           overflow: 'hidden',
         }}
@@ -206,8 +207,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
         >
           {/* Header row */}
           <div
+            className="px-4 py-3"
             style={{
-              padding: '12px 16px',
               display: 'flex',
               alignItems: 'flex-start',
               gap: 12,
@@ -215,8 +216,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
           >
             {/* Policy holder icon */}
             <div
+              className="rounded-chip"
               style={{
-                width: 36, height: 36, borderRadius: 10,
+                width: 36, height: 36,
                 background: 'var(--asset-tint-insurance)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, overflow: 'hidden',
@@ -234,8 +236,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
                 />
               ) : policyHolderInitial ? (
                 <span
+                  className="text-base"
                   style={{
-                    fontSize: 16,
                     fontWeight: 500,
                     color: 'var(--ink)',
                     fontFamily: 'var(--font-serif)',
@@ -251,20 +253,20 @@ export function InsuranceListItem({ id, name, data }: Props) {
             {/* Name + insured */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
+                className="text-sm"
                 style={{
-                  fontSize: 14, fontWeight: 500, color: 'var(--ink)',
+                  fontWeight: 500, color: 'var(--ink)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}
               >
                 {name}
               </div>
               <div
+                className="text-xs mt-1"
                 style={{
-                  marginTop: 3,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  fontSize: 12,
                   color: 'var(--ink-3)',
                 }}
               >
@@ -275,8 +277,9 @@ export function InsuranceListItem({ id, name, data }: Props) {
                   <>
                     <span
                       aria-hidden="true"
+                      className="rounded-xs"
                       style={{
-                        width: 3, height: 3, borderRadius: 2,
+                        width: 3, height: 3,
                         background: 'var(--ink-3)', flexShrink: 0,
                       }}
                     />
@@ -289,16 +292,16 @@ export function InsuranceListItem({ id, name, data }: Props) {
             {/* Badge + annual premium */}
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               {renderBadge()}
-              <div style={{ marginTop: 6 }}>
+              <div className="mt-1.5">
                 <div
-                  className="font-mono"
-                  style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
+                  className="font-mono text-mini"
+                  style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
                 >
                   {i.annualLabel}
                 </div>
                 <div
-                  className="tnum"
-                  style={{ marginTop: 1, fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}
+                  className="tnum mt-px text-sm"
+                  style={{ fontWeight: 500, color: 'var(--ink)' }}
                 >
                   {annualPremium > 0 ? `NT$ ${fmtNT(annualPremium)}` : '—'}
                 </div>
@@ -307,7 +310,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
           </div>
 
           {/* Timeline visualization */}
-          <div style={{ padding: '0 16px 14px 16px' }}>
+          <div className="px-4 pb-3.5">
             {isSingleYear && (
               <TimelineBar
                 pct={singleYearPct}
@@ -343,19 +346,19 @@ export function InsuranceListItem({ id, name, data }: Props) {
 
         {/* Action row for expired single-year — outside Link so buttons don't navigate */}
         {showActionRow && (
-          <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px 16px' }}>
+          <div className="px-4 pb-3.5" style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
               onClick={() => setRenewOpen(true)}
               disabled={pending}
               style={{
-                flex: 1, height: 36, borderRadius: 10,
+                flex: 1, height: 36,
                 background: 'var(--accent-soft)', color: 'var(--ink)',
                 border: '1px solid var(--hairline)',
-                fontSize: 12, fontWeight: 500,
+                fontWeight: 500,
                 fontFamily: 'inherit', cursor: 'pointer',
               }}
-              className="disabled:opacity-50"
+              className="disabled:opacity-50 rounded-chip text-xs"
             >
               {i.renewAction}
             </button>
@@ -364,13 +367,12 @@ export function InsuranceListItem({ id, name, data }: Props) {
               onClick={() => setLapseOpen(true)}
               disabled={pending}
               style={{
-                flex: 1, height: 36, borderRadius: 10,
+                flex: 1, height: 36,
                 background: 'transparent', color: 'var(--ink-2)',
                 border: '1px solid var(--hairline)',
-                fontSize: 12,
                 fontFamily: 'inherit', cursor: 'pointer',
               }}
-              className="disabled:opacity-50"
+              className="disabled:opacity-50 rounded-chip text-xs"
             >
               {i.lapseAction}
             </button>
@@ -467,52 +469,58 @@ function TimelineBar({
 }) {
   return (
     <div>
+      {/* #1249 — `rounded-sm` is 4px on a 6px-tall bar, so CSS corner scaling
+          clamps it straight back to 3px (4+4 > 6 → all radii × 6/8). Identical
+          render, one fewer off-scale literal. */}
       <div
+        className="rounded-sm"
         style={{
-          height: 6, borderRadius: 3,
+          height: 6,
           background: 'rgba(58,36,25,0.08)',
           position: 'relative', overflow: 'hidden',
         }}
       >
         <div
+          className="rounded-sm"
           style={{
             position: 'absolute', left: 0, top: 0, bottom: 0,
             width: `${Math.max(0, Math.min(100, pct))}%`,
-            background: fillColor, borderRadius: 3,
+            background: fillColor,
           }}
         />
       </div>
       <div
+        className="mt-1.5"
         style={{
-          marginTop: 6, display: 'flex',
+          display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline', gap: 8,
         }}
       >
         <div>
           <div
-            className="font-mono"
-            style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
+            className="font-mono text-mini"
+            style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
           >
             {leftLabel}
           </div>
           <div
-            className="font-mono tnum"
-            style={{ marginTop: 1, fontSize: 12, color: 'var(--ink-2)' }}
+            className="font-mono tnum mt-px text-xs"
+            style={{ color: 'var(--ink-2)' }}
           >
             {leftValue}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div
-            className="font-mono"
-            style={{ fontSize: 10, letterSpacing: 1, color: 'var(--ink-3)' }}
+            className="font-mono text-mini"
+            style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
           >
             {rightLabel}
           </div>
           <div
-            className="font-mono tnum"
-            style={{ marginTop: 1, fontSize: 12, color: 'var(--ink-2)' }}
+            className="font-mono tnum mt-px text-xs"
+            style={{ color: 'var(--ink-2)' }}
           >
             {rightValue}
           </div>

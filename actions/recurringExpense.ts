@@ -25,6 +25,7 @@ import {
 } from '@/lib/validators'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
 import { firstAnchorFromStart, snapToFuture } from '@/lib/recurring'
+import { previousDay } from '@/lib/local-date'
 import {
   assertMemberInGroup,
   assertAssetInGroup,
@@ -37,7 +38,7 @@ import {
 import { and, eq, isNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { captureServer, isUserFirstNonDeletedRecord } from '@/lib/analytics/server'
-import { actionError } from '@/lib/action-errors'
+import { action, actionError } from '@/lib/action-errors'
 
 function assertPaidByInGroup(
   paidById: string,
@@ -46,13 +47,47 @@ function assertPaidByInGroup(
   assertMemberInGroup(paidById, group, 'payer_not_in_group')
 }
 
-export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id: string }> {
+export const createRule = action(async (input: RecurringExpenseRuleInput): Promise<{ id: string }> => {
   const v = validateRecurringExpenseRuleInput(input)
   const { user, group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
   if (v.assetId) await assertAssetInGroup(v.assetId, group.id)
 
-  const nextOccurrenceAt = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  // Snap the anchor forward so a back-dated `startsOn` cannot leave the rule
+  // showing a "next run" date that has already been and gone (#1244).
+  // `firstAnchorFromStart` only aligns the anchor to `dayOfMonth`; with a
+  // back-dated start that anchor is itself in the past.
+  //
+  // **Creating includes today; editing and resuming do not. The asymmetry is
+  // the decision, not a typo — do not "fix" it into agreement.** The two
+  // answer different questions:
+  //
+  //  - Creating, the user has just said "the Nth of every month". When today
+  //    *is* the Nth they mean this month, so today's anchor is kept and
+  //    tonight's cron materialises it. And **how they filled `startsOn` must
+  //    not change that answer**: `startsOn` says which period the series is
+  //    counted from, not when the first card shows up. Back-dating a rule to
+  //    last November and starting it today are the same intent once the
+  //    series lands on today, so they get the same first period.
+  //  - Editing, `sheet.editEffectHint` is on screen while they save, and it
+  //    promises 改動從下一期開始套用 / 已經出現的待確認卡片…維持原樣. Pulling
+  //    today in would break a promise the user is reading as they act.
+  //
+  // Mechanically: `snapToFuture` walks while `curr <= cutoff`, so passing the
+  // day *before* today makes today the earliest period it will settle on —
+  // both for the anchor-is-today case and for a back-dated series that lands
+  // on today. `snapToFuture` itself is left alone; it is shared with
+  // `updateRule` / `resumeRule`, whose semantics do not change.
+  //
+  // `today` stays UTC-derived (as in `updateRule` / `resumeRule`) because the
+  // question it answers is "will tonight's cron pick this up", and the cron
+  // compares against Postgres `CURRENT_DATE`, also UTC. Whether both should
+  // move to Asia/Taipei is #1262, not this change.
+  const today = new Date().toISOString().slice(0, 10)
+  const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
+  const nextOccurrenceAt = firstAnchor >= today
+    ? firstAnchor
+    : snapToFuture(firstAnchor, v.intervalMonths, v.dayOfMonth, previousDay(today))
 
   const [created] = await db
     .insert(recurringExpenseRules)
@@ -82,13 +117,13 @@ export async function createRule(input: RecurringExpenseRuleInput): Promise<{ id
   })
 
   return { id: created.id }
-}
+})
 
 export interface UpdateRuleInput extends RecurringExpenseRuleInput {
   id: string
 }
 
-export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }> {
+export const updateRule = action(async (input: UpdateRuleInput): Promise<{ id: string }> => {
   const v = validateRecurringExpenseRuleInput(input)
   const { group } = await requireViewerGroup()
   assertPaidByInGroup(v.paidBy, group)
@@ -108,6 +143,9 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
     .limit(1)
   if (!existing) throw actionError('recurring_rule_not_found')
 
+  // `>` and not `>=`, unlike `createRule` (#1244): `sheet.editEffectHint` is on
+  // screen while the user saves, promising the change applies from the *next*
+  // period. Today stays out. See the long comment in `createRule` above.
   const today = new Date().toISOString().slice(0, 10)
   const firstAnchor = firstAnchorFromStart(v.startsOn, v.dayOfMonth, v.intervalMonths)
   const nextOccurrenceAt = firstAnchor > today
@@ -135,9 +173,9 @@ export async function updateRule(input: UpdateRuleInput): Promise<{ id: string }
 
   revalidateAfterRecurringExpenseRuleMutation()
   return { id: updated.id }
-}
+})
 
-export async function pauseRule(id: string): Promise<void> {
+export const pauseRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(recurringExpenseRules)
@@ -150,9 +188,9 @@ export async function pauseRule(id: string): Promise<void> {
     .returning({ id: recurringExpenseRules.id })
   if (!updated) throw actionError('recurring_rule_not_found')
   revalidateAfterRecurringExpenseRuleMutation()
-}
+})
 
-export async function resumeRule(id: string): Promise<void> {
+export const resumeRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [rule] = await db
     .select({
@@ -182,9 +220,9 @@ export async function resumeRule(id: string): Promise<void> {
     .returning({ id: recurringExpenseRules.id })
 
   revalidateAfterRecurringExpenseRuleMutation()
-}
+})
 
-export async function softDeleteRule(id: string): Promise<void> {
+export const softDeleteRule = action(async (id: string): Promise<void> => {
   const { group } = await requireViewerGroup()
 
   await db.transaction(async (tx) => {
@@ -209,9 +247,9 @@ export async function softDeleteRule(id: string): Promise<void> {
   })
 
   revalidateAfterRecurringExpenseRuleMutation()
-}
+})
 
-export async function confirmPending(pendingId: string): Promise<{ txId: string }> {
+export const confirmPending = action(async (pendingId: string): Promise<{ txId: string }> => {
   const { user, group } = await requireViewerGroup()
 
   const [row] = await db
@@ -223,6 +261,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
       proposedDescription: pendingExpenseOccurrences.proposedDescription,
       proposedPaidBy: pendingExpenseOccurrences.proposedPaidBy,
       proposedSplitType: pendingExpenseOccurrences.proposedSplitType,
+      proposedSplitRatioA: pendingExpenseOccurrences.proposedSplitRatioA,
       category: recurringExpenseRules.category,
       assetId: recurringExpenseRules.assetId,
     })
@@ -252,6 +291,12 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
         paidBy: row.proposedPaidBy,
         amount: row.proposedAmount,
         splitType: row.proposedSplitType,
+        // #1243 — carry the snapshotted weighted ratio onto the record. A
+        // 'weighted' CashTransaction with split_ratio_a NULL is read three
+        // different ways and none of them errors: 50/50 by lib/balance.ts,
+        // all-payer's by CompactRow, and dropped from the SUM entirely by
+        // recalcGroupBalance.
+        splitRatioA: row.proposedSplitRatioA,
         description: row.proposedDescription,
         category: row.category,
         assetId: row.assetId,
@@ -280,7 +325,7 @@ export async function confirmPending(pendingId: string): Promise<{ txId: string 
     await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
   }
   return { txId: result.txId }
-}
+})
 
 export interface EditAndConfirmInput {
   pendingId: string
@@ -291,9 +336,9 @@ export interface EditAndConfirmInput {
 // 「改一下」 path (AddSheet prefilled with pending values, submit routes here) is
 // mechanical. Currently no UI caller; do not remove. Each override field is
 // independent — undefined keeps the snapshot value, defined replaces it.
-export async function editAndConfirmPending(
+export const editAndConfirmPending = action(async (
   input: EditAndConfirmInput,
-): Promise<{ txId: string }> {
+): Promise<{ txId: string }> => {
   const overrides = validateConfirmPendingExpenseInput(input.overrides)
   const { user, group } = await requireViewerGroup()
 
@@ -373,9 +418,9 @@ export async function editAndConfirmPending(
     await captureServer(user.id, 'first_record_created', { via: 'recurring_confirm' })
   }
   return { txId: result.txId }
-}
+})
 
-export async function skipPending(pendingId: string): Promise<void> {
+export const skipPending = action(async (pendingId: string): Promise<void> => {
   const { group } = await requireViewerGroup()
   const [updated] = await db
     .update(pendingExpenseOccurrences)
@@ -389,4 +434,4 @@ export async function skipPending(pendingId: string): Promise<void> {
     .returning({ id: pendingExpenseOccurrences.id })
   if (!updated) throw actionError('pending_expense_not_found')
   revalidatePath('/dashboard')
-}
+})
