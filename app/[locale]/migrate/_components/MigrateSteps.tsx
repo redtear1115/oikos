@@ -15,7 +15,7 @@ export function MigrateSteps({
   return (
     <section className="space-y-4">
       <h2
-        className="m-0 text-[20px] md:text-[22px] font-medium"
+        className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {heading}
@@ -31,7 +31,7 @@ export function MigrateSteps({
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >
             <span
-              className="shrink-0 inline-block text-base md:text-[18px]"
+              className="shrink-0 inline-block text-base md:text-lg"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
