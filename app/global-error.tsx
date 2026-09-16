@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react'
 import { DEFAULT_LOCALE } from '@/lib/i18n/locales-meta'
 import { globalErrorCopy, pickGlobalErrorLocale } from '@/lib/i18n/globalErrorCopy'
 import './globals.css'
+// 根 layout 被整個取代，Fraunces 的 @font-face 與 `.font-fraunces`（定義 --font-fraunces）
+// 也要自己帶；少了它 `font-serif` 會靜默退回內文字體，不會報錯。
+import './fonts/fraunces.css'
 
 export default function GlobalError({
   error,
@@ -31,7 +34,7 @@ export default function GlobalError({
   const t = globalErrorCopy[locale]
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className="font-fraunces">
       <body>
         <main className="min-h-dvh flex flex-col items-center justify-center px-6 py-16 text-center bg-bg">
           <div className="max-w-md w-full">
