@@ -310,6 +310,9 @@ describe('attachKofiClickListeners (#1304 — GA click fires from inside the ifr
     // delegated `document` listener resurrecting the old (broken) behavior.
     const gtag = vi.fn()
     ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    // Mount the real component so any document-level listener it registers
+    // is live; otherwise this passes even with the old delegated listener.
+    render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
     injectFakeKofiDom() // old-shape fake: button as a direct child of <body>
 
     const topLevelButton = document.querySelector('.floatingchat-donate-button') as HTMLElement
