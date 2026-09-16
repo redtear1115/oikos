@@ -88,7 +88,6 @@ export const en: Translations = {
     taglineHtml: 'Two of you,<br />one ledger.',
     bodyHtml: 'A shared ledger for partners and couples.<br />Day by day, looking back will feel warm.',
     cta: 'Begin together',
-    // 待確認 (#1277): native-review draft, not yet reviewed by an English speaker.
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
     trustEncrypted: 'Open only to you two',

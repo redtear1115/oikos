@@ -89,7 +89,6 @@ export const ja: Translations = {
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
     bodyHtml: '夫婦・カップルのための共有家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
     cta: 'ふたりではじめる',
-    // 待確認 (#1277): native-review draft, not yet reviewed by a Japanese speaker.
     ctaHint: '無料 · ふたりで一冊の家計簿 · Google または Apple で続ける',
     alreadyHaveAccount: 'アカウントをお持ちの方',
     trustEncrypted: 'ふたりだけに開放',
