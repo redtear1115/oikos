@@ -140,7 +140,7 @@ docs/superpowers/specs/    架構規格 + 設計決策
 | Workflow | 觸發 | 做什麼 |
 |---|---|---|
 | `.github/workflows/ci.yml` | 每個 PR to `main` | `npm ci` → `lint` → `test:ci` → `build`（不需要任何 secret） |
-| `.github/workflows/native-smoke.yml` | 動到 `ios/**`、`android/**`、`capacitor.config.ts`、`patches/**`、`package.json`、`package-lock.json` 的 PR；每月 1 號 cron；手動 | iOS 不簽章 archive（macOS runner）＋ Android `assembleDebug`（JDK 21） |
+| `.github/workflows/native-smoke.yml` | 動到 `ios/**`、`android/**`、`capacitor.config.ts`、`patches/**`、`package.json`、`package-lock.json`、`.github/workflows/native-smoke.yml` 的 PR；每月 1 號 cron；手動 | iOS 不簽章 archive（macOS runner）＋ Android `assembleDebug`（JDK 21） |
 
 原生 smoke 刻意不掛在每個 PR 上——macOS runner 是 10 倍分鐘數計費。它存在的理由見
 [app-store-submission-runbook.md §G](docs/app-store-submission-runbook.md)：Capacitor 8 的 SPM

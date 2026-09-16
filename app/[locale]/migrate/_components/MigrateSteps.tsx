@@ -80,7 +80,7 @@ export function MigrateHero({
         {kicker}
       </p>
       <h1
-        className="text-page md:text-amount-md m-0"
+        className="text-page md:text-amount-md text-balance m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--ink)',
