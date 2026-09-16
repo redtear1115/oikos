@@ -101,19 +101,58 @@ export function labelKofiDonateButtons(label: string): void {
   })
 }
 
+// #1304: a same-origin iframe's click does NOT bubble to the top document
+// (verified by reading overlay-widget.js's `write()` — it always builds BOTH
+// a desktop and a mobile donate button, each inside its own iframe; neither
+// is ever attached to the top document). A delegated `document` click
+// listener therefore can never see this click — that was the bug: GA's
+// `kofi_widget_click` sat flat at 0 with no error anywhere, because nothing
+// throws, the listener is just never invoked. Fix: attach the listener
+// directly inside each iframe, on the button node itself.
+//
+// `write()` also rebuilds the iframe wrapper's innerHTML wholesale on every
+// `draw()` call (not just the first), so a second `draw()` (e.g. Script's
+// onLoad firing twice) produces brand-new, unbound button elements — the old
+// ones are detached from the DOM and their listeners go with them. This set
+// only needs to guard against calling this function more than once for the
+// SAME still-attached button (e.g. a stray MutationObserver re-entry); it
+// can't cause a double-fire across a real re-draw because the button that
+// exists after a re-draw is never the same object this set has already seen.
+const clickBoundDonateButtons = new WeakSet<Element>()
+
+/**
+ * Wire the `kofi_widget_click` GA event onto every Ko-fi-injected donate
+ * button (desktop + mobile), reaching inside their iframes directly since a
+ * top-document listener can never see these clicks (see comment above).
+ */
+export function attachKofiClickListeners(source: string): void {
+  if (typeof document === 'undefined') return
+  document.querySelectorAll<HTMLIFrameElement>(KOFI_IFRAME_SELECTOR).forEach((iframe) => {
+    const button = iframe.contentDocument?.querySelector('.floatingchat-donate-button')
+    if (!button || clickBoundDonateButtons.has(button)) return
+    clickBoundDonateButtons.add(button)
+    button.addEventListener('click', () => {
+      window.gtag?.('event', 'kofi_widget_click', { source })
+    })
+  })
+}
+
 /**
  * Bottom-right floating Ko-fi widget. Click opens a Ko-fi-hosted modal so the
  * donation completes without leaving the site.
  *
  * Scope (#917): the widget lives only where this component is mounted — the
  * public landing and, when signed in, the Settings page. On unmount (e.g.
- * navigating away from /settings) the effect cleanup removes both the injected
- * DOM and the delegated click listener, so it doesn't bleed into the rest of
- * the app or accumulate listeners across visits.
+ * navigating away from /settings) the effect cleanup removes the injected DOM
+ * (iframes included, so any click listener bound inside them goes with it),
+ * so it doesn't bleed into the rest of the app or accumulate listeners across
+ * visits.
  *
  * On click, fires the cross-product `kofi_widget_click` GA event with
  * `source: SOURCE` so we can split traffic per site in GA reports. The event
  * call is a no-op until `window.gtag` is loaded (PR #896 + Vercel prod env).
+ * The listener is wired inside Ko-fi's iframe, not on the top document — see
+ * `attachKofiClickListeners` (#1304).
  */
 export function KofiWidget({
   buttonText,
@@ -137,17 +176,13 @@ export function KofiWidget({
       return
     }
 
-    // Ko-fi script doesn't expose an onClick hook, so attach a delegated
-    // listener on document — captures clicks regardless of when the widget
-    // injects its DOM. The button class is `.floatingchat-donate-button` per
-    // Ko-fi's overlay-widget.js. Registered on mount (not on script load) so
-    // we hold a stable reference to remove on unmount.
-    const onClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null
-      if (!target?.closest('.floatingchat-donate-button')) return
-      window.gtag?.('event', 'kofi_widget_click', { source: SOURCE })
-    }
-    document.addEventListener('click', onClick, { passive: true })
+    // #1304: no delegated listener on `document` here. Ko-fi's donate button
+    // always lives inside a same-origin, src-less iframe (verified by reading
+    // overlay-widget.js — see the comment above `attachKofiClickListeners`),
+    // and an iframe's click never bubbles to the top document, so a listener
+    // registered here could never fire. The GA click listener is instead
+    // attached directly inside the iframe, from `handleLoad` right after
+    // `draw()` (where the button node is guaranteed to already exist).
 
     // The iframe is injected asynchronously (after the script loads + draws),
     // so we can't set its `title` inline. Watch <body> for the injection and
@@ -159,7 +194,11 @@ export function KofiWidget({
 
     return () => {
       observer.disconnect()
-      document.removeEventListener('click', onClick)
+      // No iframe click listener to remove here: teardownKofiWidget() below
+      // removes the wrapper divs that contain Ko-fi's iframes (#917 scope),
+      // which detaches the iframes (and their contentDocument, and whatever
+      // listeners attachKofiClickListeners bound inside them) from the DOM
+      // entirely — nothing is left to keep firing after unmount.
       teardownKofiWidget()
     }
   }, [frameTitle])
@@ -185,6 +224,12 @@ export function KofiWidget({
       'floating-chat.donateButton.background-color': '#FBEDE0',
       'floating-chat.donateButton.text-color': '#322B23',
     })
+
+    // #1304: wire the GA click listener now — by the time draw() returns,
+    // the donate button already exists inside its iframe (both the desktop
+    // and mobile copies `draw()` builds, regardless of `isMobileViewport`;
+    // CSS is what decides which one is visible).
+    attachKofiClickListeners(SOURCE)
 
     // Icon-only button has no accessible name from Ko-fi's own markup (empty
     // span, alt-less <img>) — restore one from the full label we would have shown.

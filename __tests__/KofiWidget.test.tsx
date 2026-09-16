@@ -19,6 +19,7 @@ import {
   teardownKofiWidget,
   titleKofiIframes,
   labelKofiDonateButtons,
+  attachKofiClickListeners,
 } from '@/components/KofiWidget'
 
 /** jsdom has no real `matchMedia`; stub it to answer a fixed viewport width. */
@@ -56,6 +57,43 @@ function injectFakeKofiDom() {
   document.body.appendChild(iframe)
 }
 
+/**
+ * Mimic Ko-fi's real DOM shape (#1304): the donate button is NOT a child of
+ * the top document — it's written into a same-origin, src-less iframe's
+ * `contentDocument` (see the KofiWidget.tsx comment above
+ * `attachKofiClickListeners` for the overlay-widget.js source evidence).
+ * Wrapped in `.floatingchat-container-wrap` like the real widget, so
+ * `teardownKofiWidget()` (matched on that class) actually removes it —
+ * exercising the same DOM shape the #917 unmount contract relies on.
+ */
+function injectFakeKofiIframeWithButton(idSuffix = ''): HTMLIFrameElement {
+  const wrap = document.createElement('div')
+  wrap.className = 'floatingchat-container-wrap'
+  document.body.appendChild(wrap)
+
+  const iframe = document.createElement('iframe')
+  iframe.id = `kofi-wo-container${idSuffix}`
+  wrap.appendChild(iframe)
+  const doc = iframe.contentDocument!
+  const button = doc.createElement('div')
+  button.className = 'floatingchat-donate-button'
+  doc.body.appendChild(button)
+  return iframe
+}
+
+/**
+ * Stand-in for `window.kofiWidgetOverlay.draw()`. Ko-fi's real `write()`
+ * replaces the button wrapper's innerHTML wholesale on every call (not just
+ * the first) — so a second `draw()` tears down the previous iframe/button and
+ * builds a brand-new one. Mimic that by removing any previously-injected
+ * iframe before creating a fresh one, so tests can prove a repeated
+ * `handleLoad` doesn't leave stale, doubly-bound buttons around.
+ */
+function simulateKofiDraw(): HTMLIFrameElement {
+  document.querySelectorAll('.floatingchat-container-wrap').forEach((el) => el.remove())
+  return injectFakeKofiIframeWithButton()
+}
+
 afterEach(() => {
   cleanup()
   document.body.innerHTML = ''
@@ -90,12 +128,21 @@ describe('iOS App Store gate (#848, Apple Guideline 3.1.1)', () => {
     }
     const gtag = vi.fn()
     ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    const draw = vi.fn(() => simulateKofiDraw())
+    ;(window as unknown as { kofiWidgetOverlay: { draw: typeof draw } }).kofiWidgetOverlay = {
+      draw,
+    }
 
     render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
-    // Even if Ko-fi's DOM somehow appeared, no click listener is attached on
-    // iOS, so the donate button is inert and the widget stays hidden.
-    injectFakeKofiDom()
-    const btn = document.querySelector('.floatingchat-donate-button') as HTMLElement
+    // handleLoad bails out on iOS before calling draw() at all (belt-and-
+    // suspenders), so even if Ko-fi's DOM somehow appeared, no click listener
+    // is ever attached and the donate button stays inert.
+    capturedOnLoad?.()
+    expect(draw).not.toHaveBeenCalled()
+
+    injectFakeKofiIframeWithButton()
+    const iframe = document.querySelector('iframe[id^="kofi-wo-container"]') as HTMLIFrameElement
+    const btn = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
     btn.click()
     expect(gtag).not.toHaveBeenCalled()
   })
@@ -104,14 +151,22 @@ describe('iOS App Store gate (#848, Apple Guideline 3.1.1)', () => {
     ;(window as unknown as { Capacitor: { getPlatform: () => string } }).Capacitor = {
       getPlatform: () => 'android',
     }
+    stubMatchMedia(false)
     const gtag = vi.fn()
     ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    const draw = vi.fn(() => simulateKofiDraw())
+    ;(window as unknown as { kofiWidgetOverlay: { draw: typeof draw } }).kofiWidgetOverlay = {
+      draw,
+    }
 
     render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
-    injectFakeKofiDom()
-    const btn = document.querySelector('.floatingchat-donate-button') as HTMLElement
+    capturedOnLoad?.()
+
+    const iframe = document.querySelector('iframe[id^="kofi-wo-container"]') as HTMLIFrameElement
+    const btn = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
     btn.click()
     expect(gtag).toHaveBeenCalledTimes(1)
+    expect(gtag).toHaveBeenCalledWith('event', 'kofi_widget_click', { source: 'futari' })
   })
 })
 
@@ -129,23 +184,39 @@ describe('KofiWidget unmount (leaving /settings)', () => {
   })
 
   it('stops firing kofi_widget_click after unmount (no listener leak)', () => {
+    stubMatchMedia(false)
     const gtag = vi.fn()
     ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    const draw = vi.fn(() => simulateKofiDraw())
+    ;(window as unknown as { kofiWidgetOverlay: { draw: typeof draw } }).kofiWidgetOverlay = {
+      draw,
+    }
 
     const { unmount } = render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
-    injectFakeKofiDom()
-    const btn = document.querySelector('.floatingchat-donate-button') as HTMLElement
+    capturedOnLoad?.()
+    const iframe = document.querySelector('iframe[id^="kofi-wo-container"]') as HTMLIFrameElement
+    const btn = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
 
     btn.click()
     expect(gtag).toHaveBeenCalledTimes(1)
 
     unmount()
-    // Re-inject a button (as a fresh page would) and click — the old listener
-    // must be gone, so no further events fire from this unmounted instance.
-    injectFakeKofiDom()
-    const btn2 = document.querySelector('.floatingchat-donate-button') as HTMLElement
-    btn2.click()
-    expect(gtag).toHaveBeenCalledTimes(1)
+    // teardownKofiWidget() (run on unmount) removes the `.floatingchat-
+    // container-wrap` div — the iframe (and the button + listener inside it)
+    // goes with it, so there is nothing left in the document to click.
+    expect(document.querySelector('iframe[id^="kofi-wo-container"]')).toBeNull()
+
+    // A freshly-mounted instance's own draw+attach still works afterwards —
+    // this isn't a globally broken WeakSet or module-level lockout from the
+    // unmounted instance.
+    injectFakeKofiIframeWithButton('-fresh')
+    const freshIframe = document.getElementById('kofi-wo-container-fresh') as HTMLIFrameElement
+    const freshBtn = freshIframe.contentDocument!.querySelector(
+      '.floatingchat-donate-button',
+    ) as HTMLElement
+    attachKofiClickListeners('futari')
+    freshBtn.click()
+    expect(gtag).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -185,20 +256,6 @@ describe('KofiWidget frame-title (async iframe injection)', () => {
 })
 
 describe('labelKofiDonateButtons (icon-only a11y, #1276)', () => {
-  /** Mimic Ko-fi's same-origin, src-less iframe with the donate button written
-   *  into its contentDocument (see the KofiWidget.tsx comment for the source
-   *  evidence: overlay-widget.js writes it synchronously via document.write). */
-  function injectFakeKofiIframeWithButton(): HTMLIFrameElement {
-    const iframe = document.createElement('iframe')
-    iframe.id = 'kofi-wo-container-mobi-xyz'
-    document.body.appendChild(iframe)
-    const doc = iframe.contentDocument!
-    const button = doc.createElement('div')
-    button.className = 'floatingchat-donate-button'
-    doc.body.appendChild(button)
-    return iframe
-  }
-
   it('sets aria-label on the donate button written inside the iframe', () => {
     const iframe = injectFakeKofiIframeWithButton()
 
@@ -216,6 +273,100 @@ describe('labelKofiDonateButtons (icon-only a11y, #1276)', () => {
     labelKofiDonateButtons('請喝杯咖啡')
 
     expect(button.getAttribute('aria-label')).toBe('existing')
+  })
+})
+
+describe('attachKofiClickListeners (#1304 — GA click fires from inside the iframe)', () => {
+  it('fires kofi_widget_click exactly once when the donate button inside the iframe is clicked', () => {
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    const iframe = injectFakeKofiIframeWithButton()
+
+    attachKofiClickListeners('futari')
+
+    const button = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
+    button.click()
+
+    expect(gtag).toHaveBeenCalledTimes(1)
+    expect(gtag).toHaveBeenCalledWith('event', 'kofi_widget_click', { source: 'futari' })
+  })
+
+  it('does not double-bind when called again on the same still-attached button', () => {
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    const iframe = injectFakeKofiIframeWithButton()
+
+    attachKofiClickListeners('futari')
+    attachKofiClickListeners('futari') // e.g. a stray MutationObserver re-entry
+
+    const button = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
+    button.click()
+
+    expect(gtag).toHaveBeenCalledTimes(1)
+  })
+
+  it('a click on the top document (outside any iframe) never fires the event', () => {
+    // Regression guard for #1304 itself: proves there is no leftover
+    // delegated `document` listener resurrecting the old (broken) behavior.
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    // Mount the real component so any document-level listener it registers
+    // is live; otherwise this passes even with the old delegated listener.
+    render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
+    injectFakeKofiDom() // old-shape fake: button as a direct child of <body>
+
+    const topLevelButton = document.querySelector('.floatingchat-donate-button') as HTMLElement
+    topLevelButton.click()
+
+    expect(gtag).not.toHaveBeenCalled()
+  })
+})
+
+describe('KofiWidget GA click wiring end-to-end (#1304)', () => {
+  it('fires kofi_widget_click when the real draw()-injected button is clicked', () => {
+    stubMatchMedia(false)
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    const draw = vi.fn(() => simulateKofiDraw())
+    ;(window as unknown as { kofiWidgetOverlay: { draw: typeof draw } }).kofiWidgetOverlay = {
+      draw,
+    }
+
+    render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
+    capturedOnLoad?.()
+
+    const iframe = document.querySelector('iframe[id^="kofi-wo-container"]') as HTMLIFrameElement
+    const button = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
+    button.click()
+
+    expect(gtag).toHaveBeenCalledTimes(1)
+    expect(gtag).toHaveBeenCalledWith('event', 'kofi_widget_click', { source: 'futari' })
+  })
+
+  it('handleLoad firing twice (e.g. Script onLoad re-firing) still produces one call per click', () => {
+    stubMatchMedia(false)
+    const gtag = vi.fn()
+    ;(window as unknown as { gtag: typeof gtag }).gtag = gtag
+    // Mirrors overlay-widget.js's real write(): every draw() replaces the
+    // previous button wrapper wholesale with a brand-new iframe/button.
+    const draw = vi.fn(() => simulateKofiDraw())
+    ;(window as unknown as { kofiWidgetOverlay: { draw: typeof draw } }).kofiWidgetOverlay = {
+      draw,
+    }
+
+    render(<KofiWidget buttonText="Support" frameTitle="Ko-fi support window" />)
+    capturedOnLoad?.()
+    capturedOnLoad?.()
+
+    expect(draw).toHaveBeenCalledTimes(2)
+    // Only the latest iframe/button should exist and be wired.
+    expect(document.querySelectorAll('iframe[id^="kofi-wo-container"]').length).toBe(1)
+
+    const iframe = document.querySelector('iframe[id^="kofi-wo-container"]') as HTMLIFrameElement
+    const button = iframe.contentDocument!.querySelector('.floatingchat-donate-button') as HTMLElement
+    button.click()
+
+    expect(gtag).toHaveBeenCalledTimes(1)
   })
 })
 
