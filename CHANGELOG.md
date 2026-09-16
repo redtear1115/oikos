@@ -18,6 +18,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.5.15] - 2026-09-16
+
+主題：**上線了，不等於送到了**——這一版把一批「已經出貨、畫面正常、CI 全綠」的東西拿到 prod 上實際量一次，結果多數根本沒送達使用者：v1.5.14 翻好的 82 句錯誤訊息被 production 序列化剝成 digest、一句都沒到過 client；weighted 分攤比例每期落帳都是 null；最近 21 張待確認卡片全部晚一天出現；帳本描述與金額隨著每一次點擊送進第三方分析；隱私頁掛著一句程式碼不支持的宣稱。共同點是它們都不會報錯——要發現只能去量 prod 本身。
+完整 diff：[v1.5.14...v1.5.15](https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15)
+
 ### 使用者可見變化
 
 - **隱私權政策與服務條款的兩句更正（#1251）**：⚠️ 這是對外資料處理聲明的更正。隱私頁原本寫「資料庫中不存明文」，實際上只有孩子本名、身分證字號、健保卡號、車牌、房屋地址與發票載具驗證碼六個欄位加密，交易說明、金額、分類是明文；現在逐項寫清楚哪些加密、哪些不加密，並說明金鑰由我們保管、這是儲存時加密而非端對端加密。隱私頁與服務條款原本都寫「帳號刪除後所有相關資料將於 14 個工作天內移除」，實際上只有一個人的帳本會整本刪除，兩人共用的帳本會留給對方、共同記下的紀錄不會移除；現在分成兩種情形逐條寫明。同一批順手更正：移除無法佐證的「日本東京區」機房敘述，蒐集項目補上 Apple 登入，兩頁的最後更新日期改為 2026-09-16。
@@ -35,6 +42,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **分析工具不再收到你的交易描述與金額（#1267）**：PostHog 的 autocapture 預設是開的，而且預設會把你點到的那個元素的文字一起送出。Dashboard 的交易列整列可點，說明在一個 `<span>` 裡、金額在同一顆按鈕裡的 `<div>` 裡——所以點一筆交易，就可能把「晚餐」和「NT$450」送到第三方。畫面上不會有任何異狀，錯誤訊息、警告、載入速度全都正常，只有第三方後台的一個沒人會打開的欄位裡有東西。現在送出的事件只剩「有人點了這個位置的這種元素」，文字與屬性一律遮罩；Session Replay（會錄下整個畫面）也在前端鎖成關閉。
 
 - **定期收支的待確認卡片會在當天出現（#1262）**：設在每月 5 號的定期支出，卡片要到 6 號凌晨才冒出來，推播也跟著晚一天。產卡的排程本來就在台北 00:00 跑，但它問「今天幾號」的時候用的是 UTC，那個時刻的 UTC 還停在前一天。prod 上最近 21 張卡片全部晚一天，沒有例外。現在產卡和推播都改看台北日期，5 號的規則在 5 號 00:00 就會出現。改版當晚，當天到期的那一期會提前一天產出——那一期本來就該在那天出現，不會重複產、也不會少一期。
+
+- **瀏覽器分頁與主畫面上的圖示，終於跟 App 裡的是同一個（#1239 #1283）**：從 App Store 裝的 Futari 是一盞提燈，但從瀏覽器開、加到主畫面、或把連結分享出去時看到的卻是另一個沒有燈的圖案——同一個產品，兩個不相干的標誌。現在全部統一成提燈。分頁圖示另外畫了小尺寸的簡化版，因為母檔直接縮到 16px 會糊成一團。
 
 ### 技術變更
 
@@ -71,6 +80,9 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   - `person_profiles: 'identified_only'` + `persistence: 'memory'` 擋的是 person 層級識別，跟事件 payload 無關，所以擋不到這件事。
   - **失效的樣子**：把遮罩拿掉不會有任何徵兆——事件照送、圖表照畫，只是 `$el_text` 又開始帶帳本內容。`tests/posthog-ledger-masking.test.tsx` 是護欄：用真的 `PostHog` 實例 + 真的 `CompactRow` 跑三種點擊（整列 / 說明 / 金額），斷言 payload 裡沒有那兩個字串；同一支測試附一組**未遮罩對照組**，如果對照組也不漏，代表 harness 壞了而不是程式安全了。另一半是原始碼掃描：provider 必須展開那個常數、不得自行寫同名 key、全樹只能有一個 `posthog.init()`、不得出現 `set_config()` / `startSessionRecording()` / `capture_copied_text`。
   - ⚠️ 未處理：`$current_url` 永遠不被任何遮罩選項涵蓋，而 `/records` 的篩選器會把 `fAmtMin` / `fAmtMax` 寫進 query string。那是使用者自己設的金額門檻，不是交易紀錄，但仍是關於其花費規模的資料。修法與 gclid 歸因有取捨，另案處理。
+
+
+- **標誌收斂成單一來源（#1283，接續 #1239）**：那個扁平雙色心的 SVG path 在 repo 裡手寫重複了 5 份（`public/favicon.svg`、`app/[locale]/_landing/FutariMark.tsx`、`app/(dashboard)/_components/FutariMark.tsx`、`components/FutariMark.tsx`、`scripts/og/` 的兩份模板），改一處不會同步其餘四處——這正是它和原生殼的提燈分岔了三個月沒人發現的原因。現在收成一個來源，og 與 store 圖由 `scripts/og/` 重新生成。`illustration-hero.png` 的檯燈刻意不動：`brand-register-design.md:52` 記載那是刻意選的畫風。
 
 ## [1.5.14] - 2026-09-15
 
@@ -1006,7 +1018,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.14...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.15...HEAD
+[1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15
 [1.5.14]: https://github.com/redtear1115/oikos/compare/v1.5.13...v1.5.14
 [1.5.13]: https://github.com/redtear1115/oikos/compare/v1.5.12...v1.5.13
 [1.5.12]: https://github.com/redtear1115/oikos/compare/v1.5.11...v1.5.12
