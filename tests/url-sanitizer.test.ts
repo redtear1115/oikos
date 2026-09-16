@@ -246,3 +246,18 @@ describe('sanitizeAnalyticsUrl — never throws, never echoes', () => {
     expect(out).toBe(REDACTED_URL)
   })
 })
+
+describe('sanitizeAnalyticsUrl — parser-stripped characters', () => {
+  // The WHATWG parser drops tab / LF / CR, so a scheme split by one still
+  // parses as that scheme. The redaction must see the same scheme.
+  it.each(['java\tscript:alert(1)', 'java\nscript:alert(1)', ' JavaScript\r:alert(1)', 'da\tta:text/plain,x'])(
+    'redacts %j',
+    (input) => {
+      expect(sanitizeAnalyticsUrl(input)).toMatch(/^(javascript|data):redacted$/)
+    },
+  )
+
+  it('masks a token split by a tab inside the path', () => {
+    expect(sanitizeAnalyticsUrl(`/inv\tite/${TOKEN}`)).not.toContain(TOKEN)
+  })
+})

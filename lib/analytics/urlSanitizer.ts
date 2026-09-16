@@ -106,7 +106,10 @@ export function sanitizeAnalyticsUrl(
 }
 
 function sanitize(raw: string, dropUnknown: boolean): string {
-  const input = raw.trim()
+  // The WHATWG parser silently drops tab / LF / CR anywhere in the input, so
+  // strip them first — otherwise `java\tscript:x` misses SCHEME_RE here but
+  // still parses as `javascript:` below and slips past the redaction.
+  const input = raw.replace(/[\t\n\r]/g, '').trim()
   if (input === '') return ''
 
   // Protocol-relative: `//host/path`. Backslashes count as slashes in the
