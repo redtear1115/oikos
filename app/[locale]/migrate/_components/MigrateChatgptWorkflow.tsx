@@ -79,7 +79,7 @@ export function MigrateChatgptWorkflow({
             >
               <span
                 aria-hidden
-                className="shrink-0 inline-flex items-center justify-center"
+                className="shrink-0 inline-flex items-center justify-center text-xs"
                 style={{
                   width: 24,
                   height: 24,
@@ -88,7 +88,6 @@ export function MigrateChatgptWorkflow({
                   border: '1px solid var(--hairline)',
                   fontFamily: 'var(--font-fraunces)',
                   fontStyle: 'italic',
-                  fontSize: 13,
                   color: 'var(--ink-3)',
                 }}
               >

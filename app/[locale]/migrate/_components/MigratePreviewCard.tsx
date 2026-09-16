@@ -50,7 +50,7 @@ export function MigratePreviewCard({ t, source, encoding, stats }: Props) {
       style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
     >
       <header className="flex items-baseline justify-between gap-4 flex-wrap">
-        <h2 className="text-[17px] font-medium" style={{ color: 'var(--ink)' }}>
+        <h2 className="text-base font-medium" style={{ color: 'var(--ink)' }}>
           {t.preview.title}
         </h2>
         <div

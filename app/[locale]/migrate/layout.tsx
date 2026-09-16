@@ -56,7 +56,7 @@ export default async function MigrateLayout({
         >
           <FutariMark size={22} />
           <span
-            className="text-[17px] md:text-title font-medium"
+            className="text-base md:text-title font-medium"
             style={{ fontFamily: 'var(--font-fraunces)', letterSpacing: '-0.2px' }}
           >
             Futari

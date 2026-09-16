@@ -10,11 +10,10 @@ export function UseCaseHero({
   return (
     <header className="space-y-4 text-center md:text-left">
       <p
-        className="m-0"
+        className="m-0 text-xs"
         style={{
           fontFamily: 'var(--font-fraunces)',
           fontStyle: 'italic',
-          fontSize: 13,
           color: 'var(--ink-2)',
           letterSpacing: '3.5px',
         }}
@@ -22,7 +21,7 @@ export function UseCaseHero({
         {kicker}
       </p>
       <h1
-        className="text-[32px] md:text-[44px] m-0"
+        className="text-page md:text-amount-md m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--ink)',
@@ -34,7 +33,7 @@ export function UseCaseHero({
         {title}
       </h1>
       <p
-        className="text-base md:text-[17px] leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
+        className="text-base leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
         style={{ color: 'var(--ink-2)', maxWidth: 520 }}
       >
         {subtitle}
