@@ -344,6 +344,7 @@ The vocabulary is deliberately tiny. `components/ui/` holds five primitives: `Bu
 
 ### Buttons
 - **Shape:** Friendly rounded (`--radius-bubble`, 14px). Heights via control tokens: sm 36px, md 44px, lg 52px. Font weight 500, label truncates rather than wraps.
+- **Height by role (#1250):** the full-width commit button that closes a sheet or ends a standalone flow (sheet footer 記下, setup / invite / sign-in, leave-ledger, remove-partner, log out, delete account, public-page CTAs) is **48px, Tailwind-native `h-12`**. That is the primary-button default in shipped code, about 30 sites. `--control-md` (44px) is the `Button` primitive's `md`, used for inline and secondary buttons and for every text input. `--control-lg` (52px) is reserved for the hero CTA. An earlier token comment called 44px the "primary button default". Shipped code never matched it, and the failure looks like this: a reviewer "corrects" a 48px commit button down to `h-11`, and that one screen's anchor comes out 4px shorter than every other flow's. Don't shrink the `h-12` sites to match the token.
 - **Primary:** Cocoa Ink fill (#3A2419) with `--on-fill` text. The firm commit anchor (記下 / 儲存 / 繼續 / 確認).
 - **Accent:** Ember fill with `--on-fill` text. The rare ember commit (empty-state "add first record", invite, monthly-review entry). Subject to the One Ember Rule. Flat: no drop shadow; the fill carries it.
 - **Secondary:** Surface White with Cocoa Ink text and a Cocoa Ink 3 (#82654F) hairline border. The calm alternative (取消 / 輔助).
