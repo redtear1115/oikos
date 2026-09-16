@@ -6,13 +6,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 每版分兩小節：
-- **使用者可見變化** — 使用者實際感知到的功能 / 修正，一句話、不寫技術細節
-- **技術變更** — 技術決定、重構、schema migration、breaking change（沒有的話省略）
+- **使用者可見變化** — 使用者實際感知到的功能 / 修正
+- **技術變更** — 技術決定、重構、schema migration、breaking change（沒有的話省略整節）
+- 有隱私 / 安全性質的條目（文案更正、資料遮罩、權限修補……）另外獨立成 `### Security` 小節，不要混進上面兩節
 
 > **本檔從 1.0.0 起算。** v0.1.0 – v0.17.6（37 個版本）只保留在 git tag，沒有
 > changelog 條目。`docs/superpowers/specs/` 有 21 份 spec 的 `first_shipped_in`
 > 指向這段區間——查不到條目是正常的，不代表 spec 過期，用
 > `git show <tag>` 或 `git log v0.17.6` 追。
+
+### 條目格式：三行短條目（`[Unreleased]` 起適用）
+
+**這條規則只管 `[Unreleased]` 之後新寫的條目，不回頭重寫舊版**——1.0.0–1.5.15
+的條目是舊格式（常常一段就是一整個技術論證），保留原樣，不要為了統一格式去改它們。
+
+每條固定三行：
+
+```markdown
+- **定期支出按比例分會帶規則比例（#1243）**
+  使用者：確認後不再變回平分；未確認卡會補比例。
+  技術：`0063` cron INSERT 補 `proposed_split_ratio_a`；已落帳不回填。
+```
+
+- 標題一句話＋issue 號，不寫「主題句」——主題句可以留作該版開頭第一行（像現有版本那樣），
+  但它是版本敘事、不是條目標題，兩者不能互相取代。
+- 「使用者」「技術」各一行、各一句話。技術行只需要「動了什麼、為什麼」，不需要完整論證。
+- **「失效的樣子」、確切行號、時區這類論證留在對應 issue 或 CLAUDE.md，CHANGELOG 只連號碼。**
+  CHANGELOG 是給人「掃過知道這版動了什麼」的索引，不是把 issue 結案文搬進來的地方——
+  細節要查的人會點 `#issue` 進去看。
+- 沒有技術變更（純文案 / 純 UI 微調）的條目可以只留「使用者」那一行。
 
 ---
 

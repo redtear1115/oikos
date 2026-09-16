@@ -21,7 +21,7 @@ export function MigrateTrustBlock({
       style={{ background: 'var(--surface-alt)' }}
     >
       <h2
-        className="m-0 text-[20px] md:text-[22px] font-medium text-center md:text-left"
+        className="m-0 text-xl md:text-title font-medium text-center md:text-left"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {heading}
@@ -40,7 +40,7 @@ export function MigrateTrustBlock({
               {title}
             </p>
             <p
-              className="m-0 mt-1.5 text-[12.5px] md:text-sm leading-[1.65]"
+              className="m-0 mt-1.5 text-xs md:text-sm leading-[1.65]"
               style={{ color: 'var(--ink-2)' }}
             >
               {body}
@@ -87,7 +87,7 @@ export function MigrateFooter({
       </div>
       <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
         <div
-          className="flex items-center gap-3 text-[12px]"
+          className="flex items-center gap-3 text-xs"
           style={{ color: 'var(--ink-2)', letterSpacing: '0.3px' }}
         >
           <Link href={legalLinks.termsHref} className="underline">{legalLinks.termsLabel}</Link>

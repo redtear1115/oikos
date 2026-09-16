@@ -24,7 +24,7 @@ export function UseCaseFeatures({
   return (
     <section className="space-y-4">
       <h2
-        className="m-0 text-[20px] md:text-[22px] font-medium"
+        className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {heading}
@@ -43,7 +43,7 @@ export function UseCaseFeatures({
             >
               <div className="flex items-start gap-3">
                 <span
-                  className="shrink-0 text-[18px] mt-0.5"
+                  className="shrink-0 text-lg mt-0.5"
                   aria-hidden
                   style={{ color: 'var(--accent)', fontFamily: 'var(--font-fraunces)' }}
                 >

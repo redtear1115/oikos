@@ -15,7 +15,7 @@ export function MigrateSteps({
   return (
     <section className="space-y-4">
       <h2
-        className="m-0 text-[20px] md:text-[22px] font-medium"
+        className="m-0 text-xl md:text-title font-medium"
         style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
       >
         {heading}
@@ -31,7 +31,7 @@ export function MigrateSteps({
             style={{ color: 'var(--ink-2)', borderColor: 'var(--hairline)' }}
           >
             <span
-              className="shrink-0 inline-block text-base md:text-[18px]"
+              className="shrink-0 inline-block text-base md:text-lg"
               style={{
                 fontFamily: 'var(--font-fraunces)',
                 fontStyle: 'italic',
@@ -69,11 +69,10 @@ export function MigrateHero({
   return (
     <header className="space-y-4 text-center md:text-left">
       <p
-        className="m-0"
+        className="m-0 text-xs"
         style={{
           fontFamily: 'var(--font-fraunces)',
           fontStyle: 'italic',
-          fontSize: 13,
           color: 'var(--ink-2)',
           letterSpacing: '3.5px',
         }}
@@ -81,7 +80,7 @@ export function MigrateHero({
         {kicker}
       </p>
       <h1
-        className="text-[32px] md:text-[44px] m-0"
+        className="text-page md:text-amount-md text-balance m-0"
         style={{
           fontFamily: 'var(--font-fraunces)',
           color: 'var(--ink)',
@@ -93,7 +92,7 @@ export function MigrateHero({
         {title}
       </h1>
       <p
-        className="text-base md:text-[17px] leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
+        className="text-base leading-[1.7] m-0 md:max-w-[520px] mx-auto md:mx-0"
         style={{ color: 'var(--ink-2)', maxWidth: 520 }}
       >
         {subtitle}
