@@ -42,6 +42,48 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.16] - 2026-09-17
+
+主題：**網址裡的東西不再外流，走錯路也還在 Futari 裡**——分析工具的網址清洗、自家的 404 與錯誤頁、landing 手機版收尾。
+完整 diff：[v1.5.15...v1.5.16](https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16)
+
+### 使用者可見變化
+
+- **打錯網址會看到 Futari 的 404，不再被帶去登入（#1275）**
+  使用者：不存在的頁面顯示「這一頁不在這裡」，可以回帳本或回首頁；全站錯誤頁也換成同一套燈，重試按鈕變大。
+  技術：proxy 對語系前綴路徑略過登入檢查；新增 `app/not-found.tsx`，`global-error.tsx` 改用四語小模組。
+- **登入後回到原本要去的那一頁（#1275）**
+  使用者：沒登入時打開帳本裡的頁面，登入完會回到那一頁，不再一律落在首頁帳本。
+  技術：proxy 對已知受保護頁帶 `?next=<路徑>`（不帶 query）；callback 與已登入轉址統一用 `safeSameOriginUrl`。
+- **手機 landing 的 Ko-fi 按鈕只剩圖示（#1276）**
+  使用者：往下捲時不再整塊蓋住「一本帳，承接生活的四種光」。
+  技術：寬度小於 768px 時按鈕文字留空，並替 iframe 裡的按鈕補上 `aria-label`。
+- **Landing 不再寫「不需註冊就能體驗」，手機多了登入入口（#1277）**
+  使用者：說明改成「免費 · 兩人一本帳 · 用 Google 或 Apple 繼續」；手機版按鈕下方有「已經有帳號 · 登入」。
+- **使用情境與搬家頁的字級對齊全站（#1278）**
+  使用者：標題與內文大小和 landing 一致，手機上的長標題斷行比較平均。
+  技術：已廢除的 13／17px 與 arbitrary 字級改用既有 class，`text-white` 改 `--on-fill`；新增字級守護測試。
+
+### 技術變更
+
+- **Ko-fi 點擊的 GA 事件改掛在 iframe 裡（#1304）**
+  技術：按鈕在同源 iframe 內，點擊不會冒泡到上層，`kofi_widget_click` 過去從未送出；現在每次點擊送出一次。
+- **主要按鈕高度以 48px（`h-12`）為準（#1250）**
+  技術：DESIGN.md 與 `--control-md` 註解對齊現況，畫面不變。
+- **本機 DB 整合測試改驗回傳的錯誤碼（#1305）**
+  技術：8 個測試在 #1223 改成回傳錯誤碼後一直是紅的；CI 排除這組測試，所以沒被發現。
+- **README 改成維護者入口，CHANGELOG 改用三行短條目（#1292 #1293 #1294）**
+  技術：README 版本表只留最近三版；release skill 同步新格式。
+- **原生簽章文件更正，版本計數對齊已送出的版號（#1296 #1297）**
+  技術：main 寫回 iOS 1.5.15 (4)／Android 1.5.15 (105012)，下一顆 binary 才不會撞號。
+- **忽略 Supabase CLI 的本機狀態目錄（#1302）**
+
+### Security
+
+- **分析與錯誤回報工具不再收到邀請 token 與帳務篩選金額（#1274）**
+  使用者：PostHog、Sentry、Vercel Analytics 看到的網址裡，邀請連結與記帳篩選值都已遮蔽。
+  技術：共用網址清洗模組；PostHog `before_send`、Sentry 五個 hook（client／server／edge）、Vercel `beforeSend`；Sentry 另刪除 cookie、header、IP 與 request body，PostHog 關掉 feature flags 請求。GA 仍待 #1300。
+
 ## [1.5.15] - 2026-09-16
 
 主題：**上線了，不等於送到了**——這一版把一批「已經出貨、畫面正常、CI 全綠」的東西拿到 prod 上實際量一次，結果多數根本沒送達使用者：v1.5.14 翻好的 82 句錯誤訊息被 production 序列化剝成 digest、一句都沒到過 client；weighted 分攤比例每期落帳都是 null；最近 21 張待確認卡片全部晚一天出現；帳本描述與金額隨著每一次點擊送進第三方分析；隱私頁掛著一句程式碼不支持的宣稱。共同點是它們都不會報錯——要發現只能去量 prod 本身。
@@ -1040,7 +1082,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.15...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.16...HEAD
+[1.5.16]: https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16
 [1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15
 [1.5.14]: https://github.com/redtear1115/oikos/compare/v1.5.13...v1.5.14
 [1.5.13]: https://github.com/redtear1115/oikos/compare/v1.5.12...v1.5.13
