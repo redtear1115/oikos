@@ -167,7 +167,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(tx.id)
 
-    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('base_currency_locked')
+    expect(await setBaseCurrency({ currency: 'usd' })).toEqual({ ok: false, code: 'base_currency_locked' })
   })
 
   it('rejects when current epoch has at least one income transaction', async () => {
@@ -184,7 +184,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
     }).returning({ id: incomeTransactions.id })
     refs.incomeTxIds.push(tx.id)
 
-    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('base_currency_locked')
+    expect(await setBaseCurrency({ currency: 'usd' })).toEqual({ ok: false, code: 'base_currency_locked' })
   })
 
   it('rejects when current epoch has at least one settlement', async () => {
@@ -200,7 +200,7 @@ describe('setBaseCurrency — lock rule (#68)', () => {
     }).returning({ id: settlements.id })
     refs.settlementIds.push(s.id)
 
-    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('base_currency_locked')
+    expect(await setBaseCurrency({ currency: 'usd' })).toEqual({ ok: false, code: 'base_currency_locked' })
   })
 
   it('records OUTSIDE current epoch do not block change', async () => {
@@ -297,7 +297,7 @@ describe('setBaseCurrency — backdated records still lock (#1106)', () => {
     }).returning({ id: cashTransactions.id })
     refs.cashTxIds.push(tx.id)
 
-    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('base_currency_locked')
+    expect(await setBaseCurrency({ currency: 'usd' })).toEqual({ ok: false, code: 'base_currency_locked' })
 
     const [after] = await db.select().from(oikosGroups)
       .where(eq(oikosGroups.id, refs.groupId)).limit(1)
@@ -318,7 +318,7 @@ describe('setBaseCurrency — backdated records still lock (#1106)', () => {
     }).returning({ id: incomeTransactions.id })
     refs.incomeTxIds.push(tx.id)
 
-    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('base_currency_locked')
+    expect(await setBaseCurrency({ currency: 'usd' })).toEqual({ ok: false, code: 'base_currency_locked' })
 
     const [after] = await db.select().from(oikosGroups)
       .where(eq(oikosGroups.id, refs.groupId)).limit(1)
@@ -338,7 +338,7 @@ describe('setBaseCurrency — backdated records still lock (#1106)', () => {
     }).returning({ id: settlements.id })
     refs.settlementIds.push(s.id)
 
-    await expect(setBaseCurrency({ currency: 'usd' })).rejects.toThrow('base_currency_locked')
+    expect(await setBaseCurrency({ currency: 'usd' })).toEqual({ ok: false, code: 'base_currency_locked' })
 
     const [after] = await db.select().from(oikosGroups)
       .where(eq(oikosGroups.id, refs.groupId)).limit(1)

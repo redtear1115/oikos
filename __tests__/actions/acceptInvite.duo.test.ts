@@ -93,7 +93,7 @@ describe('acceptInvite — accepter already in a duo (#912)', () => {
     })
 
     mockUserId = ids.accepter
-    await expect(acceptInvite(ids.token)).rejects.toThrow('already_in_duo')
+    expect(await acceptInvite(ids.token)).toEqual({ ok: false, code: 'already_in_duo' })
 
     const [after] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, target.id)).limit(1)
     expect(after.memberB).toBeNull()
