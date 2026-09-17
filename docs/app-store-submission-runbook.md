@@ -49,102 +49,52 @@ last_updated: 2026-09-11
    2. Product → Archive。
    3. Organizer → Distribute App → App Store Connect → Upload。
    4. 等 build 在 App Store Connect 處理完。
-   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。目前：`MARKETING_VERSION=1.5.5` / `CURRENT_PROJECT_VERSION=3`。
-   > 不需要 `out/` 或 `cap sync`（server.url 架構），除非改了原生 plugin / config。
+   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`versionCode 105011` / `versionName "1.5.1"`。
+
+   > **Upload keystore**：`/Volumes/Futari Secrets/android/futari-release.keystore`
+   > （加密 dmg，**要先掛載**），alias `futari`，RSA 2048，建立於 2026-05-30，效期至 2053-10。
+   > 密碼在 repo 根目錄 `.env` 與 dmg 的 `env/.env`（`KEYSTORE_PATH` / `KEYSTORE_PASSWORD` /
+   > `KEY_ALIAS` / `KEY_PASSWORD`，store 與 key 同值）。路徑含空白，`.env` 裡**必須加引號**，
+   > 否則 `. ./.env` 會把它分詞掉。
    >
-   > **也可以完全不開 Xcode**，用 ASC API key 從 CLI 走完（key 見 [§H](#h-app-store-connect-api-key)）：
+   > **Play 綁定的指紋（SHA-1）**：
+   > `9E:89:50:87:B1:8B:88:69:D7:0A:8D:95:76:05:4A:B8:FF:83:71:88`
+   >
+   > 記 SHA-1 是刻意的——**Play Console 拒收時的錯誤訊息給的是 SHA-1**，記 SHA-256 對不上，
+   > 出事的當下沒得比。（這把的 SHA-256 是
+   > `35:38:F7:A6:DA:CE:40:84:6B:D3:1A:32:40:EB:95:EF:CE:A2:B8:62:6D:6F:32:FD:D7:23:F7:E6:01:34:C9:E8`。）
+   >
+   > 驗證 AAB 簽對了沒（`keytool -printcert -jarfile` 對 AAB **不管用**，v2/v3 簽章不在 META-INF 的
+   > 那個位置；要自己抽簽章塊）：
    > ```bash
-   > xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
-   >   -destination 'generic/platform=iOS' -archivePath <out>.xcarchive archive \
-   >   -allowProvisioningUpdates \
-   >   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 \
-   >   -authenticationKeyID <KEYID> -authenticationKeyIssuerID <ISSUER>
-   > cat > /tmp/ExportOptions.plist <<'EOF'
-   > <?xml version="1.0" encoding="UTF-8"?>
-   > <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-   > <plist version="1.0"><dict>
-   >   <key>method</key><string>app-store-connect</string>
-   >   <key>teamID</key><string>W64689HV8B</string>
-   >   <key>signingStyle</key><string>automatic</string>
-   >   <key>uploadSymbols</key><true/>
-   > </dict></plist>
-   > EOF
-   > xcodebuild -exportArchive -archivePath <out>.xcarchive -exportPath <dir> \
-   >   -exportOptionsPlist /tmp/ExportOptions.plist -allowProvisioningUpdates \
-   >   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 \
-   >   -authenticationKeyID <KEYID> -authenticationKeyIssuerID <ISSUER>
-   > xcrun altool --upload-app -f <dir>/App.ipa -t ios --apiKey <KEYID> --apiIssuer <ISSUER>
+   > "$JAVA_HOME/bin/jarsigner" -verify "$AAB"          # 要回 jar verified.
+   > TT=$(mktemp -d); unzip -o -q "$AAB" -d "$TT" 'META-INF/*'
+   > F=$(find "$TT/META-INF" -type f \( -name '*.RSA' -o -name '*.DSA' \) | head -1)
+   > LC_ALL=C "$JAVA_HOME/bin/keytool" -J-Duser.language=en -printcert -file "$F" | grep SHA1
    > ```
-
-5. ⬜ **實機 / TestFlight 驗證**
-   Apple 登入 + push 收送 + 主流程。Apple 登入已接 `@capacitor-community/apple-sign-in`（見 [native-auth spec](superpowers/specs/native-auth-design.md)）。
-
-6. ⬜ **App Store Connect 上架資料**
-   - 截圖：✅ 6.7" iPhone 4 張（1290×2796）+ 13" iPad 4 張（2064×2752），見 [store-assets/](store-assets/README.md)。
-     iPad 那格是必填 —— `project.pbxproj` 的 `TARGETED_DEVICE_FAMILY = "1,2"` 宣告了支援 iPad。
-   - 描述、關鍵字、support URL、行銷 URL、隱私政策 URL（文案見 [app-store-listing.md](app-store-listing.md)）。
-   - **App Privacy**（Nutrition label）：申報 Supabase / Sentry / PostHog / GA，須與 `/privacy` 一致。
-   - **App Review Information**：註記「solo 模式可直接進入、無 onboarding block」+ Review Notes（模板見 §D）。
-     本 app 只有 Google / Apple OAuth，**沒有 demo 帳號可提供**，審核員用自己的 Apple ID 登入。
-
-7. ⬜ **送審**
-   TestFlight 驗證 OK → App Store Connect → 該版本 → Add for Review → Submit。
-
----
-
-## B. Android 送審（可與 iOS 並行）— Google Play Console
-
-1. ✅ **B3：`android/app/google-services.json` — 首版不需要**
-
-   > **2026-08-07 查證：Android 推播從未實作，補這個檔也不會讓它通。**
-   > - `lib/pushNotifications.ts:7` — `if (Capacitor.getPlatform() !== 'ios') return`，
-   >   Android 根本不註冊 push token。
-   > - `supabase/functions/send-recurring-push/index.ts:113` — `.eq('platform', 'apns')`，
-   >   發送端只撈 APNs token，沒有 FCM 分支。
-   > - `PushTokens.platform` 的註解雖寫 `'apns' or 'fcm'`，但 `'fcm'` 從未被寫入或讀取。
-   >
-   > 因此首版 Android **決定不含推播**（[#968](https://github.com/redtear1115/oikos/issues/968) 追蹤後續實作）。
-   > 這不構成退件或虛假宣稱風險：推播註冊是靜默的（`PushTokenRegistrar.tsx`），
-   > **沒有任何使用者可見的通知開關**；四語商店文案也都沒有承諾推播
-   > （只有 iOS Review Notes 提到 APNs，那是 iOS 專屬且屬實）。
-   >
-   > 沒有程式碼引用 Firebase，build 也不需要此檔（`build.gradle:61-66` 會條件式跳過
-   > google-services plugin）。等 #968 真的要做 FCM 時再從 Firebase Console 下載。
-
-2. ✅ **Play Console app 已建立**，且**已在跑封閉測試**（2026-06-08 起）。
-   商店資訊（名稱／簡短說明／完整說明／圖示／主題圖片／手機截圖）早已填妥。
-   > ⚠️ 2026-08-07 教訓：這份 runbook 當時仍標「⬜ 未建立」，導致重複產製已存在的素材。
-   > **動手前先開 Console 看實況**，不要以文件的勾選狀態為準。
-
-3. ✅ **Build 簽章 AAB** — 2026-08-06 實跑成功
-   ```bash
-   # 簽章參數由 build.gradle 從環境變數讀取；值放在 repo 根目錄 .env（gitignored）
-   set -a; . ./.env; set +a
-
-   # ⚠️ 用 Android Studio 內附 JBR（現為 JDK 25）。Capacitor 8 要求 ≥ 21；
-   # 上限由 Gradle 決定（Java 25 需 Gradle 9.1+，本專案 Gradle 9.5.1 / AGP 9.2.1，#1207）。
-   # JBR 比 Gradle 支援的還新時會炸 "Unsupported class file major version NN"——升 Gradle，不是裝舊 JDK。
-   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-
-   cd android
-   ./gradlew bundleRelease
-   # 產物：android/app/build/outputs/bundle/release/app-release.aab
-   ```
-   > 版本號規則見 [§E](#e-版本號規則策略-a純單調計數器)。首送：`versionCode 105011` / `versionName "1.5.1"` 直接送。
-   > 驗證方式：`"$JAVA_HOME/bin/jarsigner" -verify <aab>` 應回 `jar verified.`；
-   > `"$JAVA_HOME/bin/keytool" -printcert -jarfile <aab>` 的 SHA256 應等於下方 upload key 指紋。
+   > `-J-Duser.language=en` 是必要的：中文 locale 下輸出是「憑證指紋 (SHA-256)」，grep `SHA1` 會靜默落空。
    > （PATH 上的 `jarsigner` / `keytool` 可能是 macOS stub，會回 `Unable to locate a Java Runtime`。）
 
-   > **Upload keystore（2026-08-06 重建）**：`~/futari-release.keystore`，alias `futari`，RSA 2048，效期至 2053-12。
-   > SHA-256 `9D:4A:6F:DF:47:F7:90:8F:CA:63:61:43:0A:B7:2B:4A:19:D2:F9:F0:4B:DA:81:55:F0:90:0B:91:60:96:7F:03`。
-   > 密碼在 repo 根目錄 `.env`（`KEYSTORE_PATH` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`，store 與 key 同值）。
+   > ### ⚠️ 2026-08-06 那把重建的 keystore 是廢的，不要用
    >
-   > 重建原因：原 keystore（2026-05-30 建）密碼遺失——`keytool -genkey` 當時沒帶 `-storepass`，
-   > 密碼是互動輸入且從未寫入任何檔案（`.env` 內留的那組事後查證是錯的）。因為當時尚未送 Play、
-   > upload key 未與 Play App Signing 綁定，重建零代價。舊檔留在 `~/futari-release.keystore.bak`。
+   > `android/obsolete/futari-release-AD4DE6-2026-08-06-DEAD.keystore`，SHA-1
+   > `AD:4D:E6:B7:A5:01:0D:76:4A:73:87:4F:F5:ED:33:BE:5D:D0:47:C2`。
    >
-   > ⚠️ **這個「重建零代價」的窗口在首次送出 Production 後就關閉**。之後遺失只能走 Google 的
-   > upload key reset 流程。密碼務必存進密碼管理器，keystore 檔案務必另外備份。
+   > 當初重建是因為以為 5/30 那把的密碼遺失。本檔曾記著「因為當時尚未送 Play、upload key 未與
+   > Play App Signing 綁定，**重建零代價**」——**那句話是錯的**，而且與本節上方「首送
+   > `versionCode 105011`」自相矛盾：105011 在 2026-06 就送出去了，8/6 重建時 Play 早已綁定 5/30 那把。
+   >
+   > 後續（2026-09-16）也證實 5/30 那把**一直都在**（連同密碼），所以整次重建從頭到尾沒有必要。
+   >
+   > **失效的樣子**：build 成功、`jarsigner -verify` 回 `jar verified.`、指紋還跟當時 README/runbook
+   > 記的那一行對得上——一路綠燈，直到 Play Console 在上傳的最後一步才拒收。v1.5.15 送審時就是這樣撞上的。
+   > **指紋記錯比沒記更危險**：沒記的話人會去查，記錯的話人會停止懷疑。
+   >
+   > **鐵則：換過簽章金鑰之後，唯一能證明它可用的方法是實際上傳一次。** 8/6 重建到 9/16 之間沒有任何
+   > 一次上傳，所以問題潛伏了 41 天，直到第一次重送才現形。
+   >
+   > ⚠️ 這把 key 已與 Play App Signing 綁定，遺失只能走 Google 的 upload key reset 流程（1–2 個工作天）。
+   > 申請時要附 `keytool -export -rfc` 匯出的 `.pem`。
 
 4. ⬜ **Play Console 上架資料**
    - 商店資訊：標題、簡短/完整說明（中英對照，套品牌文案準則）。
@@ -361,19 +311,71 @@ Xcode 的 provisioning 日誌裡是 Apple 回的 403：
 **管理（Admin）** 角色。App 管理不夠，且 **ASC 的 key 建立後權限不能修改**
 （介面明寫「你無法透過修改金鑰存取更多服務」），只能另外建一把。
 
-因此目前有兩把：
+**2026-09-11 已改走替代路 2，`795L42Z42U` 已撤銷。** 下面保留原委，因為
+「為什麼不能用 App 管理 key export」這個結論仍然成立，只是解法換了。
 
-| Key ID | 角色 | 用途 |
-|---|---|---|
-| `LRB54C7D5X` | App 管理 | `xcrun altool --validate-app` / `--upload-app` |
-| `795L42Z42U` | 管理 | `xcodebuild -exportArchive` 的雲端簽章 |
+### 現況：本機 distribution 憑證 + manual signing
 
-> **`795L42Z42U` 不能上傳完就撤銷** —— 雲端簽章權限是**每次 export 都要**，不是只有第一次。
-> 若不想長期保留 Admin 級 key，有兩條替代路：
-> 1. **改用 Xcode GUI 的 Distribute App**：走的是帳戶持有人的登入身分，不需要任何 API key。
-> 2. **在本機建一張真正的 Apple Distribution 憑證**（CSR → Portal → `.cer` → 匯入 keychain）：
->    有本機憑證後 export 就在本機簽，不碰雲端簽章，Admin key 即可撤銷，`LRB54C7D5X` 留著上傳就夠。
->    代價是佔一個 distribution 憑證名額，私鑰務必另外備份。
+| Key ID | 角色 | 用途 | 狀態 |
+|---|---|---|---|
+| `LRB54C7D5X` | App 管理 | `xcrun altool --validate-app` / `--upload-app` | 使用中 |
+| ~~`795L42Z42U`~~ | 管理 | 雲端簽章 | **2026-09-11 撤銷** |
+
+簽章材料在加密 dmg 的 `apple/distribution-cert/`：
+
+```
+futari-dist.key                                  RSA 2048 私鑰
+futari-dist.cer                                  Apple 簽發的憑證
+Futari_App_Store_local_dist_cert.mobileprovision Provisioning profile
+```
+
+⚠️ **provisioning profile 不會自動安裝。** 乾淨的機器上 `~/Library/MobileDevice/Provisioning Profiles/`
+是空的，而 manual signing 找不到 profile 會失敗在一句與真正原因無關的錯誤上。先裝：
+
+```bash
+P="/Volumes/Futari Secrets/apple/distribution-cert/Futari_App_Store_local_dist_cert.mobileprovision"
+UUID=$(security cms -D -i "$P" | plutil -extract UUID raw -o - -)
+for d in ~/Library/MobileDevice/Provisioning\ Profiles \
+         ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles; do
+  mkdir -p "$d" && cp "$P" "$d/$UUID.mobileprovision"
+done
+security find-identity -v -p codesigning | grep "Apple Distribution"   # 要看到憑證
+```
+
+archive 與 export 都要明寫 manual signing，**不要用 `-allowProvisioningUpdates`**
+（那會把 Xcode 推回雲端簽章那條已經沒有權限的路）：
+
+```bash
+T=$(mktemp -d)
+xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath "$T/App.xcarchive" archive \
+  CODE_SIGN_STYLE=Manual \
+  CODE_SIGN_IDENTITY="Apple Distribution: Nan-Kuang Lee (W64689HV8B)" \
+  PROVISIONING_PROFILE_SPECIFIER="Futari App Store (local dist cert)" \
+  DEVELOPMENT_TEAM=W64689HV8B
+```
+
+ExportOptions 對應要 `signingStyle: manual` 並逐 bundle id 指定 profile 名稱：
+
+```xml
+<key>signingStyle</key><string>manual</string>
+<key>signingCertificate</key><string>Apple Distribution: Nan-Kuang Lee (W64689HV8B)</string>
+<key>provisioningProfiles</key>
+<dict><key>dev.southernlight.futari</key><string>Futari App Store (local dist cert)</string></dict>
+```
+
+export 完直接從 IPA 內部驗版號與 entitlement，不要只看 build 設定：
+
+```bash
+unzip -p "$T/export/App.ipa" 'Payload/App.app/Info.plist' | plutil -extract CFBundleShortVersionString raw -
+unzip -p "$T/export/App.ipa" 'Payload/App.app/Info.plist' | plutil -extract CFBundleVersion raw -
+TT=$(mktemp -d); unzip -q "$T/export/App.ipa" -d "$TT"
+codesign -d --entitlements :- "$TT/Payload/App.app" | grep applesignin   # 必須有
+test -f "$TT/Payload/App.app/public/offline.html"                        # #1225 的離線頁
+```
+
+**Issuer ID**：altool 需要它，而它不在 dmg 也不在 repo。
+ASC → 使用者與存取權 → 整合 → App Store Connect API，頁面最上方那串 UUID。
 
 ## I. 用 ASC API 填上架資料（比點表單快，且可逐項回查）
 

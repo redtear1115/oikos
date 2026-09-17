@@ -36,7 +36,7 @@ export function MigratePrimaryCta({
         fromParam={source}
         ctaLocation="migrate_primary"
         target="sign_in"
-        className="shrink-0 self-start md:self-auto inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-base font-medium"
+        className="shrink-0 self-start md:self-auto inline-flex items-center justify-center h-12 px-6 rounded-xl text-[var(--on-fill)] text-base font-medium"
         style={{ background: 'var(--btn-primary-bg)', letterSpacing: '1.2px', textDecoration: 'none' }}
       >
         {button}

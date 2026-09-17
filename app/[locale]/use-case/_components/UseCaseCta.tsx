@@ -28,7 +28,7 @@ export function UseCaseCta({
         fromParam={fromParamForUseCase(slug)}
         ctaLocation="use_case_primary"
         target="sign_in"
-        className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-white text-base font-medium"
+        className="inline-flex items-center justify-center h-12 px-6 rounded-xl text-[var(--on-fill)] text-base font-medium"
         style={{ background: 'var(--ink)', textDecoration: 'none' }}
       >
         {label}

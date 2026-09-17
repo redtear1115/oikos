@@ -88,7 +88,7 @@ export const en: Translations = {
     taglineHtml: 'Two of you,<br />one ledger.',
     bodyHtml: 'A shared ledger for partners and couples.<br />Day by day, looking back will feel warm.',
     cta: 'Begin together',
-    ctaHint: 'Free · Try without signing up · For two',
+    ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
@@ -1800,6 +1800,14 @@ export const en: Translations = {
     linkAssets: 'Aibutsu',
     footer: "We'll catch up when you're back online",
     metadataTitle: 'Offline · Futari',
+  },
+
+  notFoundPage: {
+    metadataTitle: 'Page not found',
+    title: "This page isn't here",
+    body: 'The address might be off, or this page has moved.',
+    linkLedger: 'Back to the ledger',
+    linkHome: 'Back home',
   },
 
   nativeOfflinePage: {

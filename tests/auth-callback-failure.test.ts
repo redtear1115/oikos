@@ -166,6 +166,46 @@ describe('/auth/callback — success path is untouched', () => {
     expect(res.headers.get('location')).toBe(`${ORIGIN}/dashboard`)
   })
 
+  // #1275: next 改走 safeSameOriginUrl。舊的 `startsWith('/') && !startsWith('//')`
+  // 放過 `/\evil.com`（瀏覽器把 `\` 當 `/`）。每一項的 Location 必須「完全等於」
+  // 同源 /dashboard——只檢查 contains 會漏掉 userinfo 形式的 `origin@evil.com`。
+  it.each([
+    ['/\\evil.com', '/\\evil.com'],
+    ['/%5Cevil.com', '/%5Cevil.com'],
+    ['%2F%2Fevil.com', '%2F%2Fevil.com'],
+    ['/%09/evil.com', '/%09/evil.com'],
+    ['/%0A/evil.com', '/%0A/evil.com'],
+    ['@evil.com', '%40evil.com'],
+    ['https://evil.com', 'https%3A%2F%2Fevil.com'],
+    ['javascript:alert(1)', 'javascript%3Aalert(1)'],
+  ])('refuses next=%s → same-origin /dashboard', async (_label, encoded) => {
+    const res = await call(`?code=abc123&next=${encoded}`)
+
+    expect(res.headers.get('location')).toBe(`${ORIGIN}/dashboard`)
+  })
+
+  it.each([
+    ['%2Frecords%3Fmonth%3D2026-09', `${ORIGIN}/records?month=2026-09`],
+    ['/invite/abc', `${ORIGIN}/invite/abc`],
+  ])('passes a same-origin next through: %s', async (encoded, expected) => {
+    const res = await call(`?code=abc123&next=${encoded}`)
+
+    expect(res.headers.get('location')).toBe(expected)
+  })
+
+  it('falls back to /dashboard when next is absent', async () => {
+    const res = await call('?code=abc123')
+
+    expect(res.headers.get('location')).toBe(`${ORIGIN}/dashboard`)
+  })
+
+  it('failure branches ignore next entirely', async () => {
+    const res = await call('?next=/records')
+
+    expect(res.headers.get('location')).toContain('/sign-in?error=auth_failed')
+    expect(res.headers.get('location')).not.toContain('records')
+  })
+
   // #998: every signed_in used to look alike, so the iOS-native path (which
   // bypasses this route entirely) was indistinguishable from web in the funnel.
   it('tags the conversion with the web OAuth path', async () => {

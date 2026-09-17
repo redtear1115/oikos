@@ -92,7 +92,7 @@
 
   /* Control height tokens — Button + TextInput sizing (issue #629) */
   --control-sm:   36px;
-  --control-md:   44px;  /* = h-11, primary button + input default */
+  --control-md:   44px;  /* = h-11, <Button> md + input default. Full-width commit buttons use h-12 (48px) — see DESIGN.md §5 Buttons (#1250) */
   --control-lg:   52px;  /* hero CTA */
 
   /* Sheet inner spacing tokens — eliminates px-4/px-5/px-6 mix (issue #629) */

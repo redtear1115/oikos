@@ -1,0 +1,3 @@
+# Supabase CLI 的本機狀態（supabase link 寫入的 project ref、CLI 版本快取），每台機器不同
+.branches
+.temp

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   parseLocaleFromPath,
   isPublicLocalizedPath,
+  isLocalePrefixedPath,
   stripLocaleFromPath,
   localizedHref,
 } from '@/lib/i18n/path'
@@ -57,5 +58,33 @@ describe('proxy locale routing — input cases', () => {
   })
   it('stripLocaleFromPath strips /en/sign-in correctly', () => {
     expect(stripLocaleFromPath('/en/sign-in')).toBe('/sign-in')
+  })
+
+  // #1275: proxy 對任何 `/<locale>/...` 略過 getUser()，讓未知路徑落到
+  // app/[locale] 的 404。這是 auth 決策，所以判斷必須嚴格：
+  // parseLocaleFromPath 會吞掉空 segment（`//en/x` → 'en'），不能拿來用。
+  describe('#1275 isLocalePrefixedPath (strict, for the auth-skip)', () => {
+    it.each(['/en', '/en/', '/en/foo', '/zh-TW/api/export/transactions'])(
+      'locale-prefixed: %s',
+      (p) => {
+        expect(isLocalePrefixedPath(p)).toBe(true)
+      },
+    )
+
+    it.each(['//en/foo', '/en\\foo', '/enx/foo', '/zh%2DTW/dashboard', '/dashboard', '/'])(
+      'NOT locale-prefixed (stays behind the auth gate): %s',
+      (p) => {
+        expect(isLocalePrefixedPath(p)).toBe(false)
+      },
+    )
+
+    it('parseLocaleFromPath is looser — the reason it is not used for the skip', () => {
+      expect(parseLocaleFromPath('//en/foo')).toBe('en')
+      expect(isLocalePrefixedPath('//en/foo')).toBe(false)
+    })
+
+    it('unknown locale-prefixed path is still NOT public-localized (no cookie sync)', () => {
+      expect(isPublicLocalizedPath('/en/foo')).toBe(false)
+    })
   })
 })

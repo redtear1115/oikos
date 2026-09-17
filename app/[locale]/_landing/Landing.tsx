@@ -238,6 +238,21 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
               {t.ctaHint}
             </p>
 
+            {/* Mobile-only secondary entry (#1277): desktop already has the
+                sign-in link inline in the CTA row above; on mobile there was
+                no way for a returning user to reach it without retracing the
+                Google/Apple OAuth flow behind the primary CTA. */}
+            <div className="md:hidden mt-1 flex justify-center">
+              <LandingCtaLink
+                href={signInHref}
+                ctaLocation="secondary"
+                target="sign_in"
+                className="min-h-11 inline-flex items-center justify-center px-3 text-sm text-ink-2 cursor-pointer transition-opacity duration-150 ease-out hover:opacity-70 active:opacity-60 motion-reduce:transition-none"
+              >
+                {t.alreadyHaveAccount}
+              </LandingCtaLink>
+            </div>
+
             {/* Trust row — desktop only; full version lives below the
                 Features section (see <TrustSection variant="full" /> below). */}
             <div className="hidden md:block mt-7">

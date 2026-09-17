@@ -139,7 +139,7 @@ export type Translations = {
     /** Primary CTA label — appears in top nav (desktop), hero, and
      *  must keep <= ~6 characters in CJK for the mobile pill. */
     cta: string
-    /** Caption under mobile CTA, e.g. 「免費 · 不需註冊就能體驗」 */
+    /** Caption under mobile CTA, e.g. 「免費 · 兩人一本帳 · 用 Google 或 Apple 繼續」 */
     ctaHint: string
     /** Secondary desktop CTA — sign-in link for returning users. */
     alreadyHaveAccount: string
@@ -2201,6 +2201,21 @@ export type Translations = {
     metadataTitle: string
   }
 
+  /** #1275 — root `app/not-found.tsx`, the branded 404 for any unmatched
+   *  route (including inside the dashboard). A server component, so this
+   *  goes through the normal `getTranslations()` path — unlike
+   *  `globalErrorCopy`, which lives outside this file (see its own comment). */
+  notFoundPage: {
+    /** HTML <title>. */
+    metadataTitle: string
+    title: string
+    body: string
+    /** Primary link, back into the app. */
+    linkLedger: string
+    /** Secondary link, back to the marketing site. */
+    linkHome: string
+  }
+
   /** #1225 — the offline page bundled *inside* the native shell
    *  (`server.errorPath`). Distinct from `offlinePage` above: that one is a
    *  React route on the deployed site and can only render after the site has
@@ -2934,7 +2949,7 @@ export const zhTW: Translations = {
     taglineHtml: '兩個人，<br />一本帳。',
     bodyHtml: '為伴侶與夫妻設計的共同記帳。<br />日子一天天記下來，回頭看會很暖。',
     cta: '一起記錄',
-    ctaHint: '免費 · 不需註冊就能體驗 · 兩人共同使用',
+    ctaHint: '免費 · 兩人一本帳 · 用 Google 或 Apple 繼續',
     alreadyHaveAccount: '已經有帳號 · 登入',
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
@@ -4634,6 +4649,14 @@ export const zhTW: Translations = {
     linkAssets: '愛物',
     footer: '等連線回來會自動更新',
     metadataTitle: '離線中 · Futari',
+  },
+
+  notFoundPage: {
+    metadataTitle: '找不到這一頁',
+    title: '這一頁不在這裡',
+    body: '可能是網址打錯了，或這頁已經搬走。',
+    linkLedger: '回到帳本',
+    linkHome: '回首頁',
   },
 
   nativeOfflinePage: {

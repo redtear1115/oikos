@@ -6,19 +6,83 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 每版分兩小節：
-- **使用者可見變化** — 使用者實際感知到的功能 / 修正，一句話、不寫技術細節
-- **技術變更** — 技術決定、重構、schema migration、breaking change（沒有的話省略）
+- **使用者可見變化** — 使用者實際感知到的功能 / 修正
+- **技術變更** — 技術決定、重構、schema migration、breaking change（沒有的話省略整節）
+- 有隱私 / 安全性質的條目（文案更正、資料遮罩、權限修補……）另外獨立成 `### Security` 小節，不要混進上面兩節
 
 > **本檔從 1.0.0 起算。** v0.1.0 – v0.17.6（37 個版本）只保留在 git tag，沒有
 > changelog 條目。`docs/superpowers/specs/` 有 21 份 spec 的 `first_shipped_in`
 > 指向這段區間——查不到條目是正常的，不代表 spec 過期，用
 > `git show <tag>` 或 `git log v0.17.6` 追。
 
+### 條目格式：三行短條目（`[Unreleased]` 起適用）
+
+**這條規則只管 `[Unreleased]` 之後新寫的條目，不回頭重寫舊版**——1.0.0–1.5.15
+的條目是舊格式（常常一段就是一整個技術論證），保留原樣，不要為了統一格式去改它們。
+
+每條固定三行：
+
+```markdown
+- **定期支出按比例分會帶規則比例（#1243）**
+  使用者：確認後不再變回平分；未確認卡會補比例。
+  技術：`0063` cron INSERT 補 `proposed_split_ratio_a`；已落帳不回填。
+```
+
+- 標題一句話＋issue 號，不寫「主題句」——主題句可以留作該版開頭第一行（像現有版本那樣），
+  但它是版本敘事、不是條目標題，兩者不能互相取代。
+- 「使用者」「技術」各一行、各一句話。技術行只需要「動了什麼、為什麼」，不需要完整論證。
+- **「失效的樣子」、確切行號、時區這類論證留在對應 issue 或 CLAUDE.md，CHANGELOG 只連號碼。**
+  CHANGELOG 是給人「掃過知道這版動了什麼」的索引，不是把 issue 結案文搬進來的地方——
+  細節要查的人會點 `#issue` 進去看。
+- 沒有技術變更（純文案 / 純 UI 微調）的條目可以只留「使用者」那一行。
+
 ---
 
 ## [Unreleased]
 
 _Nothing unreleased yet._
+
+## [1.5.16] - 2026-09-17
+
+主題：**網址裡的東西不再外流，走錯路也還在 Futari 裡**——分析工具的網址清洗、自家的 404 與錯誤頁、landing 手機版收尾。
+完整 diff：[v1.5.15...v1.5.16](https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16)
+
+### 使用者可見變化
+
+- **打錯網址會看到 Futari 的 404，不再被帶去登入（#1275）**
+  使用者：不存在的頁面顯示「這一頁不在這裡」，可以回帳本或回首頁；全站錯誤頁也換成同一套燈，重試按鈕變大。
+  技術：proxy 對語系前綴路徑略過登入檢查；新增 `app/not-found.tsx`，`global-error.tsx` 改用四語小模組。
+- **登入後回到原本要去的那一頁（#1275）**
+  使用者：沒登入時打開帳本裡的頁面，登入完會回到那一頁，不再一律落在首頁帳本。
+  技術：proxy 對已知受保護頁帶 `?next=<路徑>`（不帶 query）；callback 與已登入轉址統一用 `safeSameOriginUrl`。
+- **手機 landing 的 Ko-fi 按鈕只剩圖示（#1276）**
+  使用者：往下捲時不再整塊蓋住「一本帳，承接生活的四種光」。
+  技術：寬度小於 768px 時按鈕文字留空，並替 iframe 裡的按鈕補上 `aria-label`。
+- **Landing 不再寫「不需註冊就能體驗」，手機多了登入入口（#1277）**
+  使用者：說明改成「免費 · 兩人一本帳 · 用 Google 或 Apple 繼續」；手機版按鈕下方有「已經有帳號 · 登入」。
+- **使用情境與搬家頁的字級對齊全站（#1278）**
+  使用者：標題與內文大小和 landing 一致，手機上的長標題斷行比較平均。
+  技術：已廢除的 13／17px 與 arbitrary 字級改用既有 class，`text-white` 改 `--on-fill`；新增字級守護測試。
+
+### 技術變更
+
+- **Ko-fi 點擊的 GA 事件改掛在 iframe 裡（#1304）**
+  技術：按鈕在同源 iframe 內，點擊不會冒泡到上層，`kofi_widget_click` 過去從未送出；現在每次點擊送出一次。
+- **主要按鈕高度以 48px（`h-12`）為準（#1250）**
+  技術：DESIGN.md 與 `--control-md` 註解對齊現況，畫面不變。
+- **本機 DB 整合測試改驗回傳的錯誤碼（#1305）**
+  技術：8 個測試在 #1223 改成回傳錯誤碼後一直是紅的；CI 排除這組測試，所以沒被發現。
+- **README 改成維護者入口，CHANGELOG 改用三行短條目（#1292 #1293 #1294）**
+  技術：README 版本表只留最近三版；release skill 同步新格式。
+- **原生簽章文件更正，版本計數對齊已送出的版號（#1296 #1297）**
+  技術：main 寫回 iOS 1.5.15 (4)／Android 1.5.15 (105012)，下一顆 binary 才不會撞號。
+- **忽略 Supabase CLI 的本機狀態目錄（#1302）**
+
+### Security
+
+- **分析與錯誤回報工具不再收到邀請 token 與帳務篩選金額（#1274）**
+  使用者：PostHog、Sentry、Vercel Analytics 看到的網址裡，邀請連結與記帳篩選值都已遮蔽。
+  技術：共用網址清洗模組；PostHog `before_send`、Sentry 五個 hook（client／server／edge）、Vercel `beforeSend`；Sentry 另刪除 cookie、header、IP 與 request body，PostHog 關掉 feature flags 請求。GA 仍待 #1300。
 
 ## [1.5.15] - 2026-09-16
 
@@ -1018,7 +1082,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.15...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.16...HEAD
+[1.5.16]: https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16
 [1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15
 [1.5.14]: https://github.com/redtear1115/oikos/compare/v1.5.13...v1.5.14
 [1.5.13]: https://github.com/redtear1115/oikos/compare/v1.5.12...v1.5.13

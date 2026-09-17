@@ -90,7 +90,7 @@ export default async function UseCaseHubPage({ params }: { params: Params }) {
 
       <section className="space-y-5">
         <h2
-          className="m-0 text-[20px] md:text-[22px] font-medium"
+          className="m-0 text-xl md:text-title font-medium"
           style={{ color: 'var(--ink)', letterSpacing: '-0.2px' }}
         >
           {hub.heading}

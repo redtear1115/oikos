@@ -88,7 +88,7 @@ export const zhCN: Translations = {
     taglineHtml: '两个人，<br />一本账。',
     bodyHtml: '为伴侣与夫妻设计的共同记账。<br />日子一天天记下来，回头看会很暖。',
     cta: '一起记录',
-    ctaHint: '免费 · 无需注册即可体验 · 两人共同使用',
+    ctaHint: '免费 · 两人一本账 · 用 Google 或 Apple 继续',
     alreadyHaveAccount: '已有账号 · 登录',
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
@@ -1788,6 +1788,14 @@ export const zhCN: Translations = {
     linkAssets: '爱物',
     footer: '联网后会自动更新',
     metadataTitle: '离线中 · Futari',
+  },
+
+  notFoundPage: {
+    metadataTitle: '找不到这一页',
+    title: '这一页不在这里',
+    body: '可能是网址输错了，或这页已经搬走。',
+    linkLedger: '回到账本',
+    linkHome: '回首页',
   },
 
   nativeOfflinePage: {

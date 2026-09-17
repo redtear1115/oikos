@@ -22,7 +22,7 @@ export function UseCaseOtherCases({
   return (
     <section className="space-y-4">
       <h2
-        className="m-0 text-[18px] font-medium"
+        className="m-0 text-lg font-medium"
         style={{ color: 'var(--ink-2)', letterSpacing: '-0.1px' }}
       >
         {copy.heading}
