@@ -1,13 +1,13 @@
-# docgrad scorecard — oikos @ 6f9a092 · 2026-09-19
+# docgrad scorecard — oikos @ b41540c · 2026-09-19
 
-> Round 15 (loop, no `--judge`). Picked: `date_drift`.
+> Round 16 (loop, no `--judge`). Picked: `entry_cost`.
 
 ## Measure
 measure_hash dd15ca3f · corpus_hash cf8df136
 
-- `entry_cost`: 6578 — **WATCH** (line: "WATCH (not ≤ 5,000 tok (entry_cost_tiers[2]), not > 10,000 tok (entry_cost_tiers[1]))") · accept OK · meets_target false
+- `entry_cost`: 5863 — **WATCH** (line: "WATCH (not ≤ 5,000 tok (entry_cost_tiers[2]), not > 10,000 tok (entry_cost_tiers[1]))") · accept WATCH · meets_target true
 - `pollution`: 0.0483 — **OK** (line: "OK < 10% (pollution_max)") · accept OK · meets_target true
-- `dead_link_ratio`: 0 (0/232) — **OK** (line: "OK = 0%") · accept OK · meets_target true
+- `dead_link_ratio`: 0 (0/234) — **OK** (line: "OK = 0%") · accept OK · meets_target true
 - `orphan_ratio`: 0 (0/50) — **OK** (line: "OK ≤ 5%") · accept OK · meets_target true
 - `reachable_ratio`: 1 — **OK** (line: "OK ≥ 95%") · accept OK · meets_target true
 - `index_present`: 1 — **OK** (line: "OK = 1") · accept OK · meets_target true
@@ -18,10 +18,10 @@ measure_hash dd15ca3f · corpus_hash cf8df136
 - `drifted_dirs`: 0 — **OK** (line: "OK = 0") · accept OK · meets_target true
 
 - Freshness date_concentration: 16 files (35.6%) share 2026-07-13 — backfill trace; limits how well coverage distinguishes unmaintained docs.
-- Economy: fixed cost ~6578 tokens (CLAUDE.md); pollution 0.0483 (exclude charged: docs/superpowers/plans/2026-05-30-migrate-cms-architecture.md); out_of_scope 0 files / 0 tokens; untracked 0 — corpus matches the commit.
+- Economy: fixed cost ~5863 tokens (CLAUDE.md); pollution 0.0483 (exclude charged: docs/superpowers/plans/2026-05-30-migrate-cms-architecture.md); out_of_scope 0 files / 0 tokens; untracked 0 — corpus matches the commit.
 - Thresholds: shipped defaults (customised: false).
-- Config note: targets: ignored legacy star targets completeness, correctness, freshness, linkage, consistency, economy — v2 targets name measure signals (see measure.md §Targets)
-- Graduation gate `.docgrad/graduation/docs-gate.mjs` (run: `DOCGRAD_DIR=<docgrad install> node .docgrad/graduation/docs-gate.mjs --root .`): produced but not installed — no workflow references it. **The committed gate is red: entry cost 6578 > its declared 5500.** This gate predates the pollution threshold. Its judging logic differs from the template docgrad ships (expected for an older gate; regenerate at next graduation).
+- Config note: —
+- Graduation gate `.docgrad/graduation/docs-gate.mjs` (run: `DOCGRAD_DIR=<docgrad install> node .docgrad/graduation/docs-gate.mjs --root .`): produced but not installed — no workflow references it. **The committed gate is red: entry cost 5863 > its declared 5500.** This gate predates the pollution threshold. Its judging logic differs from the template docgrad ships (expected for an older gate; regenerate at next graduation).
 
 ## Judge — not comparable across rounds
 judge_hash 41cb532f
@@ -29,12 +29,12 @@ judge_hash 41cb532f
 judge not run this round — no judged-dimension table
 
 ## Token economy (report-only)
-- Fixed cost: ~6578 tokens (entry_files: CLAUDE.md)
+- Fixed cost: ~5863 tokens (entry_files: CLAUDE.md)
 - Marginal cost:
-  - "actions/transaction.ts": ~17775 tokens, max_depth 1, fan_in 3, code_pointer yes, churn_commits 6
-  - "lib/balance.ts": ~28682 tokens, max_depth 1, fan_in 5, code_pointer no, churn_commits 0
-  - "app/(dashboard)/trips": ~6578 tokens, max_depth null, fan_in 0, code_pointer no, churn_commits 13
-  - "lib/i18n": ~32257 tokens, max_depth 3, fan_in 8, code_pointer yes, churn_commits 70
+  - "actions/transaction.ts": ~17060 tokens, max_depth 1, fan_in 3, code_pointer yes, churn_commits 6
+  - "lib/balance.ts": ~27967 tokens, max_depth 1, fan_in 5, code_pointer no, churn_commits 0
+  - "app/(dashboard)/trips": ~5863 tokens, max_depth null, fan_in 0, code_pointer no, churn_commits 13
+  - "lib/i18n": ~43226 tokens, max_depth 3, fan_in 9, code_pointer yes, churn_commits 70
   - Most taxed: `lib/i18n` (churn 70, ~32k tokens, depth 3).
 - Pollution surface: 4.83% (exclude: docs/superpowers/plans/, docs/superpowers/perf-baselines/)
 - Thresholds in force: shipped defaults
@@ -54,6 +54,6 @@ judge not run this round — no judged-dimension table
 
 ## Suggested next steps
 **Measure rows not meeting target:**
-1. `entry_cost` 6578 tokens — WATCH (OK ≤ 5000); the committed graduation gate declares 5500 and is red
+(none — all rows meet target)
 
 (to also rate judged dimensions, run /docgrad judge or add --judge)

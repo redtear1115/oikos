@@ -75,8 +75,7 @@ Entity 目錄、Entity 關係、Balance 計算規則、分類色 token 見 [doma
 - 工作模式不變：在本 session 依序做（一次一個任務）；平行背景 agent 只在明確要求時用，且各自有自己的 worktree。委派與否依全域 Orchestration 政策。
 - **兩套 worktree 各管各的情境**：主 session 的任務 worktree 用上述 `.claude/worktrees/{issue_no}-{slug}/` 手動慣例；平行 subagent 的隔離交給 harness 的 `isolation: "worktree"`（自動建立與回收，不落在此路徑）。
 - Worktree 缺 `.env.local` 時從 main checkout `ln -s`，不要 copy（copy 會在 key 輪替後 silently drift）。
-- 做 iOS 原生工作的 worktree，開完先 `npx cap sync ios`（`cap sync` 產物沒進版控，乾淨 checkout 缺這步 Xcode 會開不起來）。`out/` 不必手動建——`capacitor:copy:before` hook 會建目錄並產生殼內離線頁（見下方「原生 build 雷點」）。
-  - **在 worktree 裡跑 `cap sync` 會弄髒兩個有進版控的檔**：`android/capacitor.settings.gradle` 與 `ios/App/CapApp-SPM/Package.swift` 會被改寫成 worktree 深度的相對路徑（`../../../` → `../../../../../../`），因為 `node_modules` 是 symlink、Capacitor 解到 main checkout 的實體路徑。**commit 前一定要 `git checkout --` 這兩個檔**。失效的樣子不是哪裡報錯，是這兩行被 merge 進 main 之後，別人的 Xcode / Gradle 解不到 plugin 專案，而錯誤訊息只會說某個 package 找不到。
+- 做原生工作的 worktree：開完先 `npx cap sync ios`；**commit 前 `git checkout -- android/capacitor.settings.gradle ios/App/CapApp-SPM/Package.swift`**（worktree 裡的 `cap sync` 會把這兩個進版控的檔改寫成 worktree 深度的路徑）。原因與失效的樣子見 [runbook §K](docs/app-store-submission-runbook.md#k-原生-build-雷點)。
 - Worktree 與 main repo 共用 git history；PR merge 後 worktree 連同 branch 一起清掉。
 
 ---
@@ -116,14 +115,7 @@ Next.js 16 web app + Capacitor 8 **薄殼**：`capacitor.config.ts` 的 `server.
 
 ### 原生 build 雷點
 
-- Android 用 Android Studio 內附 JBR 建置：`export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`（現為 JDK 25；工具鏈 Gradle 9.5.1 + AGP 9.2.1，#1207）
-  - **Gradle 版本決定 JBR 能不能用，不是 Capacitor。** Capacitor 8 的 `sourceCompatibility` 21 只是下限；真正的上限是「Gradle 能在哪個 Java 上執行」——Java 25 要 Gradle 9.1.0+、Java 26 要 9.4.0+（[相容表](https://docs.gradle.org/current/userguide/compatibility.html)）。JBR 隨 Studio 更新往上漂，漂過 Gradle 支援的版本就會壞。
-  - **失效的樣子**：`cap sync` 正常、web 全綠，只有打原生包那一刻炸 `BUG! exception in phase 'semantic analysis' ... Unsupported class file major version 69`（69 = Java 25、70 = Java 26），錯誤訊息完全不提 JDK。修法是升 Gradle wrapper（連帶 AGP），不是另裝舊 JDK。
-  - **撤回**：本段原本寫「2026-09-13 實測 JDK 25 + Gradle 8.14.3 + AGP 8.13 下 `assembleDebug` 245 個 task 全過，不要為了湊 21 另外裝 JDK」。那是錯的——當天 daemon log 只跑了無 task 的 `gradlew`，沒有編譯任何 build script；2026-09-14 實跑 `bundleRelease` 即炸上述錯誤。推論路徑的錯在於把「daemon 起得來」當成「能建置」。
-  - PATH 上的 `jarsigner` / `keytool` 可能是 macOS 的 stub（回 `Unable to locate a Java Runtime`），簽章驗證用 `"$JAVA_HOME/bin/jarsigner"` / `"$JAVA_HOME/bin/keytool"`。
-- 乾淨 checkout / worktree 做 iOS 工作前先 `npx cap sync ios`
-- **`webDir`（`out/`）現在有一個檔案：殼內離線頁 `offline.html`（#1225）。** `server.url` 架構下沒網路就載不到網站，所以 `server.errorPath` 指向這份打包進殼的靜態頁。它由 `scripts/build-native-offline-page.ts` 在 `capacitor:copy:before` hook 產生（文案來源 `lib/i18n/locales/*.ts › nativeOfflinePage`，四語烤在同一個檔、靠 `navigator.language` 選）。
-  - **失效的樣子**：什麼紅燈都沒有。`cap sync` 成功、archive 成功、web 部署全綠——只有真機斷網冷啟動時是一片空白，而且 Sentry 收不到（那個情境沒有任何 JS 在跑）。護欄在 `__tests__/nativeOfflinePage.test.ts` 與 native-smoke 的檔案存在檢查，不在 build log。
+Android 的 JDK／Gradle 相容（JBR 漂過 Gradle 支援的版本會炸 `Unsupported class file major version`）、`jarsigner` stub、殼內離線頁 `offline.html` 的產生與護欄，見 [runbook §K](docs/app-store-submission-runbook.md#k-原生-build-雷點)。
 
 ---
 
