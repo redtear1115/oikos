@@ -405,6 +405,44 @@ describe('AddSheet error banner is described onto its field (#1242 §4)', () => 
     expect(amount).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-describedby')
   })
+
+  // #1312 — the banner used to be `absolute top-4` against the panel, i.e. on
+  // top of cancel / save, and never cleared until the next save: forgetting
+  // the description left the sheet stuck. jsdom has no layout, so pin the two
+  // things that caused it: the banner is in flow after the header row, and
+  // editing the offending field clears it.
+  it('renders the banner in flow after the cancel / save row, not overlaid on it (#1312)', async () => {
+    renderSheet()
+    fireEvent.change(screen.getByLabelText(zhTW.addSheet.amount), { target: { value: '120' } })
+    const save = screen.getByRole('button', { name: zhTW.common.save })
+    fireEvent.click(save)
+
+    const banner = await screen.findByRole('alert')
+    expect(banner.className).not.toMatch(/\b(absolute|fixed)\b/)
+    expect(save.compareDocumentPosition(banner) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('combobox').compareDocumentPosition(banner) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+  })
+
+  it('clears the description error once the description is typed (#1312)', async () => {
+    renderSheet()
+    fireEvent.change(screen.getByLabelText(zhTW.addSheet.amount), { target: { value: '120' } })
+    fireEvent.click(screen.getByRole('button', { name: zhTW.common.save }))
+    await screen.findByRole('alert')
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '午餐' } })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-invalid')
+  })
+
+  it('keeps the error while an unrelated field changes (#1312)', async () => {
+    renderSheet()
+    fireEvent.change(screen.getByLabelText(zhTW.addSheet.amount), { target: { value: '120' } })
+    fireEvent.click(screen.getByRole('button', { name: zhTW.common.save }))
+    await screen.findByRole('alert')
+
+    fireEvent.change(screen.getByLabelText(zhTW.addSheet.amount), { target: { value: '150' } })
+    expect(screen.getByRole('alert')).toHaveTextContent(zhTW.addSheet.errors.descriptionRequired)
+  })
 })
 
 // ── 1. LeaveGroupFlow step change ──────────────────────────────────────────
