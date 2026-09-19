@@ -158,6 +158,14 @@ async function appleNativeSignIn(
   return 'navigating'
 }
 
+/**
+ * How long `browserFinished` waits for the OAuth deep link before the attempt
+ * counts as cancelled (#1315). The gap measured on the Android emulator was
+ * ~10 ms; this is generous because a real cancel only costs the user this long
+ * behind the curtain, while a too-short one silently loses the sign-in.
+ */
+const CALLBACK_GRACE_MS = 1500
+
 /** Android-native: in-app browser OAuth + custom-scheme deep link back. */
 async function browserOAuthSignIn(
   supabase: ReturnType<typeof createClient>,
@@ -221,9 +229,20 @@ async function browserOAuthSignIn(
   // so this is the ONLY signal that the attempt is over; without it the curtain
   // would hang forever. Our own Browser.close() above fires this too, which the
   // `done` guard in finish() absorbs.
+  //
+  // #1315 — but it is NOT proof the user cancelled. On Android the deep link
+  // itself brings MainActivity back to the front, which finishes the Custom Tab,
+  // and `browserFinished` lands ~10 ms *before* `appUrlOpen`. Aborting on the
+  // spot removed the appUrlOpen listener just in time to miss the real callback:
+  // Google sign-in in the Android shell never completed. Worse, Capacitor keeps
+  // an unheard `appUrlOpen` and replays it to the next listener, so the next tap
+  // navigated with the previous attempt's code and landed on
+  // `?error=auth_failed`. So wait briefly for a callback before calling it
+  // cancelled. iOS never hit this — SFSafariViewController stays open until we
+  // close it, so the deep link always comes first there.
   listeners.push(
-    await Browser.addListener('browserFinished', async () => {
-      await finish('aborted')
+    await Browser.addListener('browserFinished', () => {
+      setTimeout(() => void finish('aborted'), CALLBACK_GRACE_MS)
     }),
   )
 
