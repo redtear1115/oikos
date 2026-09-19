@@ -508,6 +508,7 @@ export const en: Translations = {
   assetListItem: {
     savingsBadge: 'Savings',
     thisMonth: 'This month',
+    thisChapter: 'This chapter',
     plateMaskedAriaLabel: 'Plate hidden',
     lastRefuel: 'Last refuel {date}',
     childAge: '{years} yr {months} mo',
@@ -1031,8 +1032,8 @@ export const en: Translations = {
       body: 'Add a car, pet, child, or policy to start recording the time and care you give them.',
     },
     section: {
-      property: 'Property',
-      living: 'Living',
+      property: 'At home',
+      living: 'In our care',
       coverage: 'Coverage',
       items: 'Items',
     },

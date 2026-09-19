@@ -697,6 +697,9 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** #1323 — label for the same money line when viewing a past (closed) chapter;
+     *  swaps in for `thisMonth` and shows the chapter total instead. */
+    thisChapter: string
     /** #1174 — accessible name for the masked plate chip (the ●●● glyphs are not a name). */
     plateMaskedAriaLabel: string
     /** #1173 — Template with `{date}`. */
@@ -3370,6 +3373,7 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    thisChapter: '這個章節',
     plateMaskedAriaLabel: '車牌已隱藏',
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 歲 {months} 個月',
@@ -3890,8 +3894,8 @@ export const zhTW: Translations = {
       body: '新增一台車、寵物、孩子或保單，開始記錄花在他們身上的時間與心意。',
     },
     section: {
-      property: '財產',
-      living: '生命體',
+      property: '家裡的',
+      living: '一起照顧的',
       coverage: '保障',
       items: '物品',
     },

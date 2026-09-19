@@ -18,6 +18,8 @@ interface Props {
   model: string | null
   latestOdometer: number | null
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   compact?: boolean
   avgFuelEcon?: number | null
   lastFuelDate?: string | null
@@ -92,6 +94,8 @@ export function CarHeroCard({
   model,
   latestOdometer,
   monthAmount,
+  totalAmount,
+  isPast,
   compact = false,
   avgFuelEcon,
   lastFuelDate,
@@ -105,6 +109,12 @@ export function CarHeroCard({
   if (brandModel) subtitleParts.push(brandModel)
   subtitleParts.push(`${latestOdometer != null ? fmtInt(latestOdometer) : '—'} km`)
   const subtitle = subtitleParts.join(' · ')
+
+  // #1323 — same quiet money line as the other 愛物 cards: a relational
+  // anchor (odometer / age / companionship) stays primary, money folds into
+  // one line underneath and disappears entirely at 0.
+  const displayAmount = isPast ? totalAmount : monthAmount
+  const moneyLabel = isPast ? t.assetListItem.thisChapter : t.assetListItem.thisMonth
 
   return (
     <Link
@@ -157,12 +167,11 @@ export function CarHeroCard({
           >
             {subtitle}
           </div>
-        </div>
-        <div className="text-right shrink-0 ml-2">
-          <div className="text-xs tracking-[0.4px]" style={{ color: 'var(--ink-3)' }}>{t.assetListItem.thisMonth}</div>
-          <div className="tnum text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            {formatAmount(monthAmount, 'twd')}
-          </div>
+          {displayAmount !== 0 && (
+            <div className="tnum text-xs mt-1" style={{ color: 'var(--ink-3)' }}>
+              {moneyLabel} {formatAmount(displayAmount, 'twd')}
+            </div>
+          )}
         </div>
       </div>
 
