@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-08-06
+last_updated: 2026-08-27
 ---
 
 # Store assets — Futari
