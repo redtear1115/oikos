@@ -558,7 +558,6 @@ export function AssetsListClient({ items }: Props) {
                 id={item.id}
                 name={item.name}
                 monthAmount={item.monthAmount}
-                templateKey={item.type === 'item' ? 'item' : null}
                 notes={undefined}
               />
             ))}

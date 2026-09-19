@@ -512,6 +512,7 @@ export const en: Translations = {
     lastRefuel: 'Last refuel {date}',
     childAge: '{years} yr {months} mo',
     petAge: '{years} yr',
+    petAgeMonths: '{months} mo',
     birthdayThisMonth: '🎂 Birthday this month',
     plantCompanionDays: '{days} days together',
     insuranceGroups: {
@@ -1333,6 +1334,7 @@ export const en: Translations = {
         champagne: 'Champagne',
       },
       plate: 'Plate',
+      plateRequired: 'Plate (required)',
       platePlaceholder: 'e.g., ABC-1234',
       year: 'Year',
       yearPlaceholder: 'e.g., 2019',

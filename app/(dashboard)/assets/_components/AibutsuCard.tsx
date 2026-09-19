@@ -293,7 +293,13 @@ export function PetCard({
                 <span style={{ color: 'var(--ink-2)' }}>{speciesBreed}</span>
               )}
               {(age || weightKg) && speciesBreed && <Dot />}
-              {age && <span>{t.assetListItem.petAge.replace('{years}', String(age.years))}</span>}
+              {age && (
+                <span>
+                  {age.years > 0
+                    ? t.assetListItem.petAge.replace('{years}', String(age.years))
+                    : t.assetListItem.petAgeMonths.replace('{months}', String(age.months))}
+                </span>
+              )}
               {age && weightKg && <span>{weightKg}</span>}
               {!age && weightKg && <span>{weightKg}</span>}
             </div>
@@ -394,11 +400,10 @@ interface ItemCardProps {
   id: string
   name: string
   monthAmount: number
-  templateKey?: string | null
   notes?: string | null
 }
 
-export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCardProps) {
+export function ItemCard({ id, name, monthAmount, notes }: ItemCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -439,17 +444,6 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
               >
                 {name}
               </div>
-              {templateKey && (
-                <span
-                  className="font-mono shrink-0 text-mini px-1.5 py-0.5 rounded-sm"
-                  style={{
-                    color: 'var(--ink-2)',
-                    background: 'rgba(58,36,25,0.06)',
-                  }}
-                >
-                  {templateKey}
-                </span>
-              )}
             </div>
             {notes && (
               <div

@@ -507,6 +507,7 @@ export const zhCN: Translations = {
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 岁 {months} 个月',
     petAge: '{years} 岁',
+    petAgeMonths: '{months} 个月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
@@ -1323,6 +1324,7 @@ export const zhCN: Translations = {
         champagne: '香槟金',
       },
       plate: '车牌',
+      plateRequired: '车牌（必填）',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
       yearPlaceholder: '例：2019',

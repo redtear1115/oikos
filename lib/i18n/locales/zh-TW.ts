@@ -705,6 +705,8 @@ export type Translations = {
     childAge: string
     /** #1173 — Template with `{years}`. */
     petAge: string
+    /** #1326 — Template with `{months}`, for pets under 1 year (petAge would show `0 歲`). */
+    petAgeMonths: string
     birthdayThisMonth: string
     /** #1173 — Template with `{days}` (rendered emphasised, so keep it a standalone token). */
     plantCompanionDays: string
@@ -1671,6 +1673,8 @@ export type Translations = {
       colorNoneAriaLabel: string
       colorNames: Record<'white' | 'black' | 'silver' | 'dark_gray' | 'dark_red' | 'dark_blue' | 'brown' | 'champagne', string>
       plate: string
+      /** #1326 — create-only label; edit mode keeps `plate` (blank = keep existing encrypted value, see #837). */
+      plateRequired: string
       platePlaceholder: string
       year: string
       yearPlaceholder: string
@@ -3368,6 +3372,7 @@ export const zhTW: Translations = {
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 歲 {months} 個月',
     petAge: '{years} 歲',
+    petAgeMonths: '{months} 個月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
@@ -4184,6 +4189,7 @@ export const zhTW: Translations = {
         champagne: '香檳金',
       },
       plate: '車牌',
+      plateRequired: '車牌（必填）',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
       yearPlaceholder: '例：2019',
