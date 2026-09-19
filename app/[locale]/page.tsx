@@ -110,6 +110,7 @@ export default async function RootPage({ params }: { params: Params }) {
         t={t.landing}
         signInHref={signInHref}
         dashboardHref="/dashboard"
+        checkingLabel={t.signIn.signingIn}
         useCaseHrefs={{
           cohabitation: localizedHref('/use-case/cohabitation', locale),
           newlyweds: localizedHref('/use-case/newlyweds', locale),

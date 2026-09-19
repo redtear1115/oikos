@@ -25,6 +25,8 @@ type Props = {
   signInHref: string
   /** 主 CTA 已登入時的目的地（/dashboard）— client-side 才會切過去。 */
   dashboardHref: string
+  /** 殼／PWA 冷啟動確認既有 session 時，等待遮罩上的文字（沿用 signIn.signingIn，#1318）。 */
+  checkingLabel: string
   /** Locale-aware /use-case/* hrefs (#851). Three internal links to
    *  situational SEO landing pages for long-tail keyword traffic. */
   useCaseHrefs: {
@@ -59,7 +61,7 @@ type Props = {
 // promoted to a two-column hero + 4-column feature row at md+ (>=768px).
 // All copy is i18n-driven via t.landing — see Translations type.
 
-export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
+export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHrefs, migrateHrefs, legalLinks, languageSwitcher }: Props) {
   return (
     <main
       className="relative min-h-dvh overflow-hidden"
@@ -71,7 +73,7 @@ export function Landing({ t, signInHref, dashboardHref, useCaseHrefs, migrateHre
     >
       {/* #949 — installed-app (PWA / Capacitor) signed-in users skip the public
           landing and go straight to the dashboard. No-op in a browser tab. */}
-      <LandingStandaloneRedirect dashboardHref={dashboardHref} />
+      <LandingStandaloneRedirect dashboardHref={dashboardHref} checkingLabel={checkingLabel} />
 
       {/* Decorative faint mark — desktop only, hidden on mobile */}
       <div

@@ -34,7 +34,7 @@ describe('SignedInRedirect (#920 Phase 1 sign-in client redirect)', () => {
 
   it('redirects to /dashboard when a session exists', async () => {
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
-    render(<SignedInRedirect />)
+    render(<SignedInRedirect checkingLabel="正在帶你進去" />)
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith(`${ORIGIN}/dashboard`)
     })
@@ -44,7 +44,7 @@ describe('SignedInRedirect (#920 Phase 1 sign-in client redirect)', () => {
   it('honours a same-origin ?next=', async () => {
     setSearch('?next=%2Frecords')
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
-    render(<SignedInRedirect />)
+    render(<SignedInRedirect checkingLabel="正在帶你進去" />)
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith(`${ORIGIN}/records`)
     })
@@ -55,7 +55,7 @@ describe('SignedInRedirect (#920 Phase 1 sign-in client redirect)', () => {
     async (raw) => {
       setSearch(`?next=${encodeURIComponent(decodeURIComponent(raw))}`)
       getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
-      render(<SignedInRedirect />)
+      render(<SignedInRedirect checkingLabel="正在帶你進去" />)
       await waitFor(() => {
         expect(replace).toHaveBeenCalledWith(`${ORIGIN}/dashboard`)
       })
@@ -64,7 +64,7 @@ describe('SignedInRedirect (#920 Phase 1 sign-in client redirect)', () => {
 
   it('does NOT redirect when there is no session', async () => {
     getSession.mockResolvedValue({ data: { session: null } })
-    render(<SignedInRedirect />)
+    render(<SignedInRedirect checkingLabel="正在帶你進去" />)
     await Promise.resolve()
     await Promise.resolve()
     expect(replace).not.toHaveBeenCalled()

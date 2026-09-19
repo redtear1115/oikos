@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
 import { isStandalone } from '@/lib/install-guide'
+import { useSignedInRedirect } from '../sign-in/useSignedInRedirect'
+import { WaitingCurtain } from '../sign-in/WaitingCurtain'
 
 /** True when running inside a Capacitor native shell (iOS / Android) — the
  *  native WebView does not report `display-mode: standalone`, so this is a
@@ -28,18 +27,21 @@ function isCapacitor(): boolean {
  * cross cleanly into the authed dashboard route group and drop the landing from
  * the back-stack.
  */
-export function LandingStandaloneRedirect({ dashboardHref }: { dashboardHref: string }) {
-  useEffect(() => {
-    if (!isStandalone() && !isCapacitor()) return
-    let active = true
-    const supabase = createClient()
-    void supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
-      if (active && data.session) window.location.replace(dashboardHref)
-    })
-    return () => {
-      active = false
-    }
-  }, [dashboardHref])
+/** Only an installed context (PWA or native shell) skips the public landing. */
+function isInstalledApp(): boolean {
+  return isStandalone() || isCapacitor()
+}
 
-  return null
+export function LandingStandaloneRedirect({
+  dashboardHref,
+  checkingLabel,
+}: {
+  dashboardHref: string
+  checkingLabel: string
+}) {
+  // #1318 — cover the landing while a stored session is being confirmed, so
+  // a signed-in user reopening the app doesn't tap into the sign-in flow in
+  // the seconds a token refresh takes. See useSignedInRedirect.
+  const checking = useSignedInRedirect(dashboardHref, isInstalledApp)
+  return checking ? <WaitingCurtain label={checkingLabel} /> : null
 }
