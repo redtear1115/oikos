@@ -22,11 +22,11 @@ script looks in the usual install locations and exits 2 if it cannot find one.
 Put `docs-gate.mjs` in `.github/scripts/` and `docs-gate.yml` in `.github/workflows/`. docgrad
 deliberately does not do this for you — it does not modify anyone's CI.
 
-## This repo's graduation (2026-09-19, round 16)
+## 本 repo 的畢業紀錄（2026-09-19，round 16）
 
-Regenerated from the docgrad 2.0.1 template, replacing the round-13 gate. That gate had never been installed. By 2026-09-19 it was red: CLAUDE.md's entry cost was 6,578 tokens against its declared 5,500.
+這份 gate 由 docgrad 2.0.1 模板重產，取代 round 13 那份。舊的那份從沒被安裝過；到 2026-09-19 已經是紅燈：CLAUDE.md 的入口成本 6,578 tokens，超過它宣告的 5,500。
 
-`max_entry_cost_tokens` went from 5,500 to 5,863, and that is a deliberate loosening, not a pin. The user decided to accept `entry_cost: WATCH` (OK is ≤ 5,000) so the brand-copy guidelines stay in the entry file. Round 16 moved the native-build pitfalls out to the runbook, which dropped the cost from 6,578 to 5,863. Before raising this threshold again, look at what was added to CLAUDE.md. Between 2026-09-13 and 2026-09-19 it grew by about 1,200 tokens without anyone noticing, because nothing runs this gate.
+`max_entry_cost_tokens` 從 5,500 調到 5,863，這是刻意放寬。使用者決定接受 `entry_cost: WATCH`（OK 線是 ≤ 5,000），讓品牌文案準則留在入口檔。Round 16 把原生 build 雷點搬進 runbook，成本降到 5,863。下次想再調高這個門檻之前，先看 CLAUDE.md 多了什麼：2026-09-13 到 09-19 之間它長了約 1,200 tokens，沒有人發現。
 
 ## The thresholds expire. Plan for it.
 

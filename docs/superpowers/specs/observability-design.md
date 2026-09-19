@@ -37,7 +37,7 @@ related_issues: ["#1018", "#1086", "#1127", "#1267", "#1274", "#1314"]
   - 所以：追查 client 端的失敗時，Issues 和 Logs 都要查（`search_events` 用 `dataset: logs`）。要讓某條 catch 路徑被看見，就明確呼叫 `Sentry.captureException`，並先處理訊息裡的 URL query（client scrub 不會處理 exception 的訊息內容）。
 - **Session Replay 在前端鎖死（`disable_session_recording: true`）。** PostHog 專案後台那個開關現在是無效的；要開必須先連同 replay 自己的遮罩（`session_recording.maskAllInputs` + `maskTextSelector: '*'`）一起改 code，因為上面那兩個選項管不到 recorder。
 - **Sentry 裡看不到原始網址、cookie、header、請求 body 與 client IP。** 自 v1.5.16 起（#1274），client / server / edge 三份 Sentry config 的 `beforeSend` / `beforeSendTransaction` / `beforeSendSpan` / `beforeBreadcrumb` / `beforeSendLog` 全部走 `lib/observability/sentryScrub.ts`：網址套用與 PostHog 共用的 `lib/analytics/urlSanitizer.ts` 規則（路徑與 query key 保留，邀請 token 變 `:token`，非白名單 query 值變 `<masked>`），header / cookie / `request.data` 整段拿掉。所以「重現某個錯誤時的完整網址或 server action 參數」在 Sentry 上查不到，要從 issue 的路徑形狀與 stack 回推。
-  - **失效的樣子是沒有任何錯誤。** 某份 config 漏接一個 hook，原始網址與 cookie 會安靜地重新出現在 Sentry，而沒人會去那裡看；hook 自己 throw 則是 SDK 把事件吞掉，錯誤面板看起來像「沒有錯誤」。唯一會變紅的是 `tests/sentry-scrub-wiring.test.ts`。
+  - **失效的樣子是沒有任何錯誤。** 某份 config 漏接一個 hook，原始網址與 cookie 會安靜地重新出現在 Sentry，而沒人會去那裡看；hook 自己 throw 時，`beforeSend*` 那幾個會讓 SDK 丟掉整筆事件，breadcrumb／log 的則漏給呼叫端。唯一會變紅的是 `tests/sentry-scrub-wiring.test.ts`。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
 - **`first_record_created` 不是活化指標，活化用 `record_created ≥ 1`。** 它的語意是「**viewer 記了自己付的那一筆**」——`isUserFirstNonDeletedRecord()`（`lib/analytics/server.ts`）數的是 `paidBy = viewer.id` 的列，所以**替伴侶記帳的人永遠不會觸發它**（#891 刻意如此）。那個語意對它原本的用途（#734 的啟用里程碑、`via` 分流）是對的，只是不等於活化。
   - 證據：90 天內 `record_created ≥ 1` 有 17 人，`first_record_created` 只有 11 人——差的 6 人確實在用產品，卻在活化口徑下被算成沒活化。
