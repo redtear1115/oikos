@@ -66,13 +66,13 @@ function Dot() {
 
 /**
  * Compute age in years + remaining months from a 'YYYY-MM-DD' string to today.
- * Returns null if birthday is null/invalid.
+ * Returns null if birthday is null, invalid, or after today.
  */
 function computeAge(birthday: string | null | undefined): { years: number; months: number } | null {
   if (!birthday) return null
   const today = todayLocalDate()
   const [y, m, d] = birthday.split('-').map(Number)
-  if (!y || !m || !d) return null
+  if (!y || !m || !d || m > 12 || d > 31) return null
   let years = today.getFullYear() - y
   let months = today.getMonth() + 1 - m
   if (months < 0) {
@@ -85,7 +85,10 @@ function computeAge(birthday: string | null | undefined): { years: number; month
     years -= 1
     months = 11
   }
-  return { years: Math.max(0, years), months: Math.max(0, months) }
+  // A birthday after today (typo, or a due date) has no age yet. Clamping it
+  // to 0 used to keep the leftover month count, so 2027-01-01 read as 8 個月.
+  if (years < 0) return null
+  return { years, months }
 }
 
 function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
