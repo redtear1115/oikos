@@ -1,6 +1,6 @@
-# docgrad scorecard — oikos @ b41540c · 2026-09-19
+# docgrad scorecard — oikos @ 88c4eff · 2026-09-19
 
-> Round 16 (loop, no `--judge`). Picked: `entry_cost`.
+> **Graduation stop** after round 16 — targets met (entry_cost at its accepted WATCH). No round ran; no history row.
 
 ## Measure
 measure_hash dd15ca3f · corpus_hash cf8df136
@@ -21,7 +21,7 @@ measure_hash dd15ca3f · corpus_hash cf8df136
 - Economy: fixed cost ~5863 tokens (CLAUDE.md); pollution 0.0483 (exclude charged: docs/superpowers/plans/2026-05-30-migrate-cms-architecture.md); out_of_scope 0 files / 0 tokens; untracked 0 — corpus matches the commit.
 - Thresholds: shipped defaults (customised: false).
 - Config note: —
-- Graduation gate `.docgrad/graduation/docs-gate.mjs` (run: `DOCGRAD_DIR=<docgrad install> node .docgrad/graduation/docs-gate.mjs --root .`): produced but not installed — no workflow references it. **The committed gate is red: entry cost 5863 > its declared 5500.** This gate predates the pollution threshold. Its judging logic differs from the template docgrad ships (expected for an older gate; regenerate at next graduation).
+- Graduation gate `.docgrad/graduation/docs-gate.mjs` (run: `DOCGRAD_DIR=<docgrad install> node .docgrad/graduation/docs-gate.mjs --root .`): produced but not installed — no workflow references it. Regenerated this stop from the docgrad 2.0.1 template (judging logic matches the template); all six declared thresholds hold, pinned to today's values (dead 0, anchors 0, orphans 0, freshness 0.90, entry cost 5,863, pollution 0.0483). `max_entry_cost_tokens` was loosened 5,500 → 5,863 by user decision — see `.docgrad/graduation/README.md`.
 
 ## Judge — not comparable across rounds
 judge_hash 41cb532f
@@ -44,7 +44,7 @@ judge not run this round — no judged-dimension table
 
 ### Traceability (report-only)
 - code_pointer_ratio: 0.9167
-- index_hotness: ratio 3.33 (top5: CLAUDE.md 53, docs/app-store-submission-runbook.md 23, docs/superpowers/specs/INDEX.md 10, DESIGN.md 9, docs/superpowers/specs/csv-import-design.md 9) — CLAUDE.md absorbs edits that child docs should carry.
+- index_hotness: ratio 3.33 (top5: CLAUDE.md 54, docs/app-store-submission-runbook.md 24, docs/superpowers/specs/INDEX.md 10, DESIGN.md 9, docs/superpowers/specs/csv-import-design.md 9) — CLAUDE.md absorbs edits that child docs should carry.
 
 ## Outside docgrad's remit
 3 open item(s):
