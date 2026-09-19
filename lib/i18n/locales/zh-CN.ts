@@ -503,6 +503,7 @@ export const zhCN: Translations = {
   assetListItem: {
     savingsBadge: '储蓄',
     thisMonth: '本月',
+    thisChapter: '这个章节',
     plateMaskedAriaLabel: '车牌已隐藏',
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 岁 {months} 个月',
@@ -1023,8 +1024,8 @@ export const zhCN: Translations = {
       body: '新增一台车、宠物、孩子或保单，开始记录花在他们身上的时间与心意。',
     },
     section: {
-      property: '财产',
-      living: '生命体',
+      property: '家里的',
+      living: '一起照顾的',
       coverage: '保障',
       items: '物品',
     },

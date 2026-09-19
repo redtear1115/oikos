@@ -508,6 +508,7 @@ export const ja: Translations = {
   assetListItem: {
     savingsBadge: '貯蓄',
     thisMonth: '今月',
+    thisChapter: 'この章',
     plateMaskedAriaLabel: 'ナンバーは非表示',
     lastRefuel: '前回の給油 {date}',
     childAge: '{years}歳{months}ヶ月',
@@ -1031,8 +1032,8 @@ export const ja: Translations = {
       body: '車、ペット、子ども、保険を追加して、彼らに費やした時間と心を記録しはじめましょう。',
     },
     section: {
-      property: '財産',
-      living: '生命体',
+      property: 'うちのもの',
+      living: '一緒にお世話している',
       coverage: '保障',
       items: '物品',
     },

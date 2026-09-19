@@ -31,6 +31,9 @@ export interface AssetsListItem {
    *  mask when true). Plaintext plate never reaches the client. */
   hasPlate: boolean
   monthAmount: number
+  /** #1323 — epoch-filtered total, used for the money line's past-chapter mode
+   *  (shows the chapter total instead of the always-zero month amount). */
+  totalAmount: number
   /** Insurance-only: true when InsuranceDetails.insurance_type === 'savings'.
    *  Drives the 「儲蓄」badge in AssetListItem. */
   isSavings?: boolean
@@ -81,6 +84,10 @@ export interface AssetsListItem {
 
 interface Props {
   items: AssetsListItem[]
+  /** #1323 — true when viewing a closed (past) chapter. Cards swap their
+   *  quiet money line from 本月 (always 0 in a past chapter) to 這個章節
+   *  showing the chapter total instead. */
+  isPast: boolean
 }
 
 // #160 — section headers were too quiet to anchor the eye. Stronger weight,
@@ -195,7 +202,7 @@ function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
   )
 }
 
-export function AssetsListClient({ items }: Props) {
+export function AssetsListClient({ items, isPast }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -489,6 +496,8 @@ export function AssetsListClient({ items }: Props) {
               model={c.model ?? null}
               latestOdometer={c.latestOdometer ?? null}
               monthAmount={c.monthAmount}
+              totalAmount={c.totalAmount}
+              isPast={isPast}
               compact={multiCar}
               avgFuelEcon={c.avgFuelEcon ?? null}
               lastFuelDate={c.lastFuelDate ?? null}
@@ -500,6 +509,8 @@ export function AssetsListClient({ items }: Props) {
               id={h.id}
               name={h.name}
               monthAmount={h.monthAmount}
+              totalAmount={h.totalAmount}
+              isPast={isPast}
             />
           ))}
         </div>
@@ -516,6 +527,8 @@ export function AssetsListClient({ items }: Props) {
                 name={c.name}
                 nickname={c.nickname}
                 monthAmount={c.monthAmount}
+                totalAmount={c.totalAmount}
+                isPast={isPast}
                 childBirthday={c.childBirthday}
                 childHeightCm={c.childHeightCm}
                 childWeightG={c.childWeightG}
@@ -527,6 +540,8 @@ export function AssetsListClient({ items }: Props) {
                 id={p.id}
                 name={p.name}
                 monthAmount={p.monthAmount}
+                totalAmount={p.totalAmount}
+                isPast={isPast}
                 petSpecies={p.petSpecies}
                 petBreed={p.petBreed}
                 petBirthDate={p.petBirthDate}
@@ -539,6 +554,8 @@ export function AssetsListClient({ items }: Props) {
                 id={pl.id}
                 name={pl.name}
                 monthAmount={pl.monthAmount}
+                totalAmount={pl.totalAmount}
+                isPast={isPast}
                 plantLocation={pl.plantLocation}
                 plantSproutedAt={pl.plantSproutedAt}
                 plantWaterEvery={pl.plantWaterEvery}
@@ -558,6 +575,8 @@ export function AssetsListClient({ items }: Props) {
                 id={item.id}
                 name={item.name}
                 monthAmount={item.monthAmount}
+                totalAmount={item.totalAmount}
+                isPast={isPast}
                 notes={undefined}
               />
             ))}

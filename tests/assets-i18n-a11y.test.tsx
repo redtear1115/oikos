@@ -94,7 +94,7 @@ describe('/assets a11y (#1174)', () => {
   })
 
   it('renders the /assets title as the page h1', () => {
-    render(<AssetsListClient items={[]} />, { wrapper: wrap(en, 'en') })
+    render(<AssetsListClient items={[]} isPast={false} />, { wrapper: wrap(en, 'en') })
     expect(screen.getByRole('heading', { level: 1, name: en.assets.title })).toBeTruthy()
   })
 
@@ -107,7 +107,8 @@ describe('/assets a11y (#1174)', () => {
     render(
       <CarHeroCard
         id="c1" name="Car" hasPlate color={null} year={null} brand={null} model={null}
-        latestOdometer={null} monthAmount={0} avgFuelEcon={12.3} lastFuelDate="2026-09-01"
+        latestOdometer={null} monthAmount={0} totalAmount={0} isPast={false}
+        avgFuelEcon={12.3} lastFuelDate="2026-09-01"
       />,
       { wrapper: wrap(en, 'en') },
     )
@@ -136,9 +137,9 @@ describe('/assets i18n (#1173) — no zh-TW leaks under en / ja', () => {
   it('child / pet / plant cards format age and companion days per locale', () => {
     const { container } = render(
       <>
-        <ChildCard id="k1" name="Kid" monthAmount={0} childBirthday="2023-01-15" />
-        <PetCard id="p1" name="Cat" monthAmount={0} petBirthDate="2020-01-15" />
-        <PlantCard id="pl1" name="Fern" monthAmount={0} plantSproutedAt="2026-01-01" />
+        <ChildCard id="k1" name="Kid" monthAmount={0} totalAmount={0} isPast={false} childBirthday="2023-01-15" />
+        <PetCard id="p1" name="Cat" monthAmount={0} totalAmount={0} isPast={false} petBirthDate="2020-01-15" />
+        <PlantCard id="pl1" name="Fern" monthAmount={0} totalAmount={0} isPast={false} plantSproutedAt="2026-01-01" />
       </>,
       { wrapper: wrap(en, 'en') },
     )
