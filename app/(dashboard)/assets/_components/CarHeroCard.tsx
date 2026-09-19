@@ -168,7 +168,7 @@ export function CarHeroCard({
             {subtitle}
           </div>
           {displayAmount !== 0 && (
-            <div className="tnum text-xs mt-1" style={{ color: 'var(--ink-3)' }}>
+            <div className="tnum text-xs mt-1 text-ink-3">
               {moneyLabel} {formatAmount(displayAmount, 'twd')}
             </div>
           )}

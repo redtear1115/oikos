@@ -47,7 +47,7 @@ function MoneyLine({
   if (amount === 0) return null
   const label = isPast ? t.assetListItem.thisChapter : t.assetListItem.thisMonth
   return (
-    <div className="tnum text-xs mt-1" style={{ color: 'var(--ink-3)' }}>
+    <div className="tnum text-xs mt-1 text-ink-3">
       {label} {formatAmount(amount, 'twd')}
     </div>
   )
