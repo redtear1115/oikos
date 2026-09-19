@@ -41,7 +41,7 @@ describe('LandingStandaloneRedirect (#949)', () => {
   it('redirects to the dashboard when installed (standalone) AND a session exists', async () => {
     isStandalone.mockReturnValue(true)
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
-    render(<LandingStandaloneRedirect dashboardHref="/dashboard" />)
+    render(<LandingStandaloneRedirect dashboardHref="/dashboard" checkingLabel="正在帶你進去" />)
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith('/dashboard')
     })
@@ -50,7 +50,7 @@ describe('LandingStandaloneRedirect (#949)', () => {
   it('redirects when running inside the Capacitor native shell (Android / iOS app)', async () => {
     ;(window as unknown as Record<string, unknown>).Capacitor = {}
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
-    render(<LandingStandaloneRedirect dashboardHref="/dashboard" />)
+    render(<LandingStandaloneRedirect dashboardHref="/dashboard" checkingLabel="正在帶你進去" />)
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith('/dashboard')
     })
@@ -59,7 +59,7 @@ describe('LandingStandaloneRedirect (#949)', () => {
   it('does NOT redirect in a plain browser tab even when signed in (keeps public landing)', async () => {
     isStandalone.mockReturnValue(false)
     getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
-    render(<LandingStandaloneRedirect dashboardHref="/dashboard" />)
+    render(<LandingStandaloneRedirect dashboardHref="/dashboard" checkingLabel="正在帶你進去" />)
     await Promise.resolve()
     await Promise.resolve()
     expect(getSession).not.toHaveBeenCalled()
@@ -69,7 +69,7 @@ describe('LandingStandaloneRedirect (#949)', () => {
   it('does NOT redirect when installed but there is no session', async () => {
     isStandalone.mockReturnValue(true)
     getSession.mockResolvedValue({ data: { session: null } })
-    render(<LandingStandaloneRedirect dashboardHref="/dashboard" />)
+    render(<LandingStandaloneRedirect dashboardHref="/dashboard" checkingLabel="正在帶你進去" />)
     await Promise.resolve()
     await Promise.resolve()
     expect(replace).not.toHaveBeenCalled()
