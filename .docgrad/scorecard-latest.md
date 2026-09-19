@@ -1,6 +1,6 @@
-# docgrad scorecard — oikos @ 505d101 · 2026-09-19
+# docgrad scorecard — oikos @ 6f9a092 · 2026-09-19
 
-> Round 14 (loop, no `--judge`). Picked: `undocumented_dirs`.
+> Round 15 (loop, no `--judge`). Picked: `date_drift`.
 
 ## Measure
 measure_hash dd15ca3f · corpus_hash cf8df136
@@ -13,11 +13,11 @@ measure_hash dd15ca3f · corpus_hash cf8df136
 - `index_present`: 1 — **OK** (line: "OK = 1") · accept OK · meets_target true
 - `date_coverage`: 0.9 (45/50) — **OK** (line: "OK ≥ 90%") · accept OK · meets_target true
 - `key_doc_age`: 6 — **OK** (line: "OK ≤ 60 days (stale_after_days)") · accept OK · meets_target true
-- `date_drift`: 63 — **WATCH** (line: "WATCH (not < 30 days)") · accept OK · meets_target false
+- `date_drift`: 0 — **OK** (line: "OK < 30 days") · accept OK · meets_target true
 - `undocumented_dirs`: 0 — **OK** (line: "OK = 0") · accept OK · meets_target true
 - `drifted_dirs`: 0 — **OK** (line: "OK = 0") · accept OK · meets_target true
 
-- Freshness date_concentration: 17 files (37.8%) share 2026-07-13 — backfill trace; limits how well coverage distinguishes unmaintained docs.
+- Freshness date_concentration: 16 files (35.6%) share 2026-07-13 — backfill trace; limits how well coverage distinguishes unmaintained docs.
 - Economy: fixed cost ~6578 tokens (CLAUDE.md); pollution 0.0483 (exclude charged: docs/superpowers/plans/2026-05-30-migrate-cms-architecture.md); out_of_scope 0 files / 0 tokens; untracked 0 — corpus matches the commit.
 - Thresholds: shipped defaults (customised: false).
 - Config note: targets: ignored legacy star targets completeness, correctness, freshness, linkage, consistency, economy — v2 targets name measure signals (see measure.md §Targets)
@@ -31,7 +31,7 @@ judge not run this round — no judged-dimension table
 ## Token economy (report-only)
 - Fixed cost: ~6578 tokens (entry_files: CLAUDE.md)
 - Marginal cost:
-  - "actions/transaction.ts": ~17772 tokens, max_depth 1, fan_in 3, code_pointer yes, churn_commits 6
+  - "actions/transaction.ts": ~17775 tokens, max_depth 1, fan_in 3, code_pointer yes, churn_commits 6
   - "lib/balance.ts": ~28682 tokens, max_depth 1, fan_in 5, code_pointer no, churn_commits 0
   - "app/(dashboard)/trips": ~6578 tokens, max_depth null, fan_in 0, code_pointer no, churn_commits 13
   - "lib/i18n": ~32257 tokens, max_depth 3, fan_in 8, code_pointer yes, churn_commits 70
@@ -54,7 +54,6 @@ judge not run this round — no judged-dimension table
 
 ## Suggested next steps
 **Measure rows not meeting target:**
-1. `date_drift` 63 days — WATCH (OK < 30): epoch-readonly-design.md claims 2026-07-13, git 2026-09-14
-2. `entry_cost` 6578 tokens — WATCH (OK ≤ 5000); the committed graduation gate declares 5500 and is red
+1. `entry_cost` 6578 tokens — WATCH (OK ≤ 5000); the committed graduation gate declares 5500 and is red
 
 (to also rate judged dimensions, run /docgrad judge or add --judge)
