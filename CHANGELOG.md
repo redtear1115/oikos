@@ -42,6 +42,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.17] - 2026-09-19
+
+主題：**按下去就會有回應**——記帳錯誤提示不再擋住按鈕，App 冷啟動不再被登入畫面打斷，iOS 與 Android 殼的 Google 登入走得完。
+完整 diff：[v1.5.16...v1.5.17](https://github.com/redtear1115/oikos/compare/v1.5.16...v1.5.17)
+
+### 使用者可見變化
+
+- **沒填描述按儲存，錯誤提示不再擋住儲存與取消（#1312）**
+  使用者：提示出現在標題列下方，補上描述後自動消失，可以直接按儲存。
+  技術：banner 從 panel 內的 `absolute top-4` 改回一般排版流；改動錯誤所指的欄位時清除錯誤。
+- **已登入的人打開 App，不會再先看到可以按的登入畫面（#1318）**
+  使用者：App 關掉一陣子再開，會先看到「正在帶你進去」，接著直接進帳本；確認期間按不到登入按鈕，不會打斷自動登入。
+  技術：裝置上有 session cookie 時，登入頁與殼／PWA landing 先蓋等待遮罩，等 `getSession()` 的 token refresh 完成；10 秒逾時會收起。
+- **Android App 用 Google 登入不再停在登入頁（#1315）**
+  使用者：授權完成後會回到帳本，不會再跳回登入頁或顯示登入失敗。
+  技術：`browserFinished` 比 `appUrlOpen` 早到時，先等 1.5 秒再判定取消，不再丟掉登入回跳。
+- **iOS App 按 Google 登入不再偶爾沒反應（#1314）**
+  使用者：第一次點擊就會打開 Google 授權頁。
+  技術：登入頁掛上時預先載入原生 plugin 的 chunk，點擊時遇到 `ChunkLoadError` 重試一次；根本原因是 #1318 的冷啟動轉址。
+
+### 技術變更
+
+- **登入流程的非預期錯誤送 Sentry Issue（#1314）**
+  技術：過去只有 `console.error`，所以只進了 Sentry Logs；現在改用 `captureException`（先去掉 query string），PostHog 事件加上 `error_name`。
+- **觀測文件補上「catch 住的錯誤只進 Logs」這條邊界（#1314）**
+  技術：見 `docs/superpowers/specs/observability-design.md`。
+
 ## [1.5.16] - 2026-09-17
 
 主題：**網址裡的東西不再外流，走錯路也還在 Futari 裡**——分析工具的網址清洗、自家的 404 與錯誤頁、landing 手機版收尾。
@@ -1082,7 +1109,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.16...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.17...HEAD
+[1.5.17]: https://github.com/redtear1115/oikos/compare/v1.5.16...v1.5.17
 [1.5.16]: https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16
 [1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15
 [1.5.14]: https://github.com/redtear1115/oikos/compare/v1.5.13...v1.5.14

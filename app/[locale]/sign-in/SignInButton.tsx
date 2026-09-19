@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { createClient } from '@/lib/supabase/client'
 import { track, getAnonId } from '@/lib/analytics/track'
 import { buildAuthCallbackUrl, entrySourceFromParam } from '@/lib/analytics/attribution'
@@ -54,12 +55,71 @@ function getPlatform(): string {
   return cap?.getPlatform?.() ?? 'web'
 }
 
+/**
+ * #1314 — the native plugins are code-split, so the first tap used to be the
+ * moment their chunk was fetched. On the iOS shell that fetch sometimes failed
+ * on the spot (`ChunkLoadError`, script `error` 5 ms after the tap — the file
+ * itself was fine), and the tap simply did nothing: the curtain flashed and
+ * came down. 4 Google attempts in 3 days, 2026-09-15 → 17.
+ *
+ * Two layers, so neither has to be perfect:
+ * - {@link preloadNativeAuthModules} fetches them when the sign-in page mounts,
+ *   long before the tap. A failure there is swallowed — the tap retries.
+ * - {@link importWithRetry} retries a `ChunkLoadError` once at tap time.
+ *   webpack clears a failed chunk's slot (`installedChunks[id] = undefined`),
+ *   so the second `import()` really goes back to the network.
+ */
+export async function importWithRetry<T>(load: () => Promise<T>): Promise<T> {
+  try {
+    return await load()
+  } catch (err) {
+    if ((err as { name?: unknown } | null)?.name !== 'ChunkLoadError') throw err
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    return load()
+  }
+}
+
+const loadBrowser = () => importWithRetry(() => import('@capacitor/browser'))
+const loadApp = () => importWithRetry(() => import('@capacitor/app'))
+const loadAppleSignIn = () => importWithRetry(() => import('@capacitor-community/apple-sign-in'))
+
+/** Warm the native sign-in chunks on mount. No-op outside the native shells. */
+export function preloadNativeAuthModules(): void {
+  if (!isCapacitor()) return
+  const ignore = () => {}
+  import('@capacitor/browser').catch(ignore)
+  import('@capacitor/app').catch(ignore)
+  if (getPlatform() === 'ios') import('@capacitor-community/apple-sign-in').catch(ignore)
+}
+
+/** Query strings can carry OAuth state; drop them before an error leaves the device. */
+function stripQueries(text: string): string {
+  return text.replace(/\?[^\s)'"]*/g, '')
+}
+
+/**
+ * The catch-all used to end in `console.error` only. That does reach Sentry —
+ * as a *log*, which nobody reads — so #1314 sat in Logs for days while Issues
+ * showed nothing. Send an issue, with the query strings stripped: this path's
+ * errors can quote the provider URL, and the client scrub (`sentryScrub.ts`)
+ * does not touch exception messages.
+ */
+function reportUnexpected(err: unknown, provider: Provider): void {
+  const name = err instanceof Error ? err.name : typeof err
+  track('sign_in_failed', { reason: 'unexpected', provider, path: getPlatform(), error_name: name })
+  const safe = new Error(stripQueries(err instanceof Error ? err.message : String(err)))
+  safe.name = name
+  if (err instanceof Error && err.stack) safe.stack = stripQueries(err.stack)
+  Sentry.captureException(safe, { tags: { area: 'auth', op: 'sign_in_unexpected', provider } })
+  console.error('[sign-in] unexpected failure', err)
+}
+
 /** iOS-native Apple: native sheet → identity token → client-side session. */
 async function appleNativeSignIn(
   supabase: ReturnType<typeof createClient>,
   ctx: { next: string; from: string | null },
 ): Promise<SignInOutcome> {
-  const { SignInWithApple } = await import('@capacitor-community/apple-sign-in')
+  const { SignInWithApple } = await loadAppleSignIn()
 
   const rawNonce = generateNonce()
   const hashedNonce = await sha256Hex(rawNonce)
@@ -98,14 +158,22 @@ async function appleNativeSignIn(
   return 'navigating'
 }
 
+/**
+ * How long `browserFinished` waits for the OAuth deep link before the attempt
+ * counts as cancelled (#1315). The gap measured on the Android emulator was
+ * ~10 ms; this is generous because a real cancel only costs the user this long
+ * behind the curtain, while a too-short one silently loses the sign-in.
+ */
+const CALLBACK_GRACE_MS = 1500
+
 /** Android-native: in-app browser OAuth + custom-scheme deep link back. */
 async function browserOAuthSignIn(
   supabase: ReturnType<typeof createClient>,
   provider: Provider,
   ctx: { next: string; from: string | null },
 ): Promise<SignInOutcome> {
-  const { Browser } = await import('@capacitor/browser')
-  const { App } = await import('@capacitor/app')
+  const { Browser } = await loadBrowser()
+  const { App } = await loadApp()
 
   const redirectTo = buildAuthCallbackUrl(`${CAPACITOR_SCHEME}://login-callback`, {
     next: ctx.next,
@@ -161,9 +229,20 @@ async function browserOAuthSignIn(
   // so this is the ONLY signal that the attempt is over; without it the curtain
   // would hang forever. Our own Browser.close() above fires this too, which the
   // `done` guard in finish() absorbs.
+  //
+  // #1315 — but it is NOT proof the user cancelled. On Android the deep link
+  // itself brings MainActivity back to the front, which finishes the Custom Tab,
+  // and `browserFinished` lands ~10 ms *before* `appUrlOpen`. Aborting on the
+  // spot removed the appUrlOpen listener just in time to miss the real callback:
+  // Google sign-in in the Android shell never completed. Worse, Capacitor keeps
+  // an unheard `appUrlOpen` and replays it to the next listener, so the next tap
+  // navigated with the previous attempt's code and landed on
+  // `?error=auth_failed`. So wait briefly for a callback before calling it
+  // cancelled. iOS never hit this — SFSafariViewController stays open until we
+  // close it, so the deep link always comes first there.
   listeners.push(
-    await Browser.addListener('browserFinished', async () => {
-      await finish('aborted')
+    await Browser.addListener('browserFinished', () => {
+      setTimeout(() => void finish('aborted'), CALLBACK_GRACE_MS)
     }),
   )
 
@@ -249,8 +328,7 @@ export function SignInButton({
       }
     } catch (err) {
       // A throw here reaches nothing the user can see, so at minimum record it.
-      track('sign_in_failed', { reason: 'unexpected', provider, path: getPlatform() })
-      console.error('[sign-in] unexpected failure', err)
+      reportUnexpected(err, provider)
       outcome = 'aborted'
     } finally {
       // Only 'navigating' keeps the curtain — see SignInOutcome.

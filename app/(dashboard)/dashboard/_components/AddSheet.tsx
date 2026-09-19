@@ -490,6 +490,25 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           </Button>
         </div>
 
+        {/* Error banner lives inside the panel so it is part of the dialog's
+            subtree (a modal dialog hides everything outside it from assistive
+            tech), and `role="alert"` announces it (#1186).
+            It sits in normal flow *below* the header, never over it (#1312).
+            #1186 first pinned it `absolute top-4` against the panel — which is
+            exactly where cancel / save live, and the error only cleared on the
+            next save. Failure looked like: forget the description, press save,
+            and the sheet is stuck — both buttons covered, no way out. */}
+        {error && open && (
+          <div
+            id={errorBannerId}
+            role="alert"
+            className="mx-4 mb-2 shrink-0 px-4 py-3 rounded-xl text-sm text-white"
+            style={{ background: 'var(--debit)' }}
+          >
+            {error}
+          </div>
+        )}
+
         <SheetBody noPadding ref={scrollableRef}>
           {/* Amount + payer toggle */}
           <div className="px-6 pt-6 pb-7 text-center border-b border-hairline">
@@ -501,7 +520,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
             </div>
             <AmountInput
               value={amount}
-              onChange={setAmount}
+              onChange={(v) => { setAmount(v); if (errorField === 'amount') setError('') }}
               symbol={currencySymbol(currency)}
               ariaLabel={t.addSheet.amount}
               inputRef={amountInputRef}
@@ -577,7 +596,7 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           {/* Description (with autocomplete from household history) */}
           <DescriptionAutocomplete
             value={desc}
-            onChange={setDesc}
+            onChange={(v) => { setDesc(v); if (errorField === 'description') setError('') }}
             suggestions={descSuggestions}
             placeholder={t.addSheet.descPlaceholder}
             listboxLabel={t.addSheet.descSuggestions}
@@ -717,23 +736,6 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
           <div style={{ height: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </SheetBody>
 
-        {/* Error banner lives inside the panel so it is part of the dialog's
-            subtree (a modal dialog hides everything outside it from assistive
-            tech), and `role="alert"` announces it. It used to render after
-            the SheetFrame: pressing save with a validation error announced
-            nothing, the sheet just seemed not to respond (#1186).
-            Positioned against the panel (the panel is `fixed`), so it sits at
-            the top of the sheet rather than the top of the viewport. */}
-        {error && open && (
-          <div
-            id={errorBannerId}
-            role="alert"
-            className="absolute left-4 right-4 top-4 z-modal px-4 py-3 rounded-xl text-sm text-white"
-            style={{ background: 'var(--debit)' }}
-          >
-            {error}
-          </div>
-        )}
       </SheetFrame>
 
       <ConfirmModal

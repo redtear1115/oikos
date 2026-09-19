@@ -29,6 +29,7 @@ const renderLanding = () =>
       t={zhTW.landing}
       signInHref="/zh-TW/sign-in"
       dashboardHref="/dashboard"
+      checkingLabel={zhTW.signIn.signingIn}
       useCaseHrefs={{
         cohabitation: '/zh-TW/use-case/cohabitation',
         newlyweds: '/zh-TW/use-case/newlyweds',

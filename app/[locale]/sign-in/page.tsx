@@ -125,7 +125,7 @@ export default async function SignInPage({
     >
       {/* Already-signed-in viewers get bounced to /dashboard client-side (#920
           Phase 1) — the proxy no longer verifies auth on this public path. */}
-      <SignedInRedirect />
+      <SignedInRedirect checkingLabel={t.signIn.signingIn} />
 
       {/* Warm TLS to the OAuth hosts so the post-click redirect costs less.
           Supabase (the auth backend the OAuth handshake routes through) is
