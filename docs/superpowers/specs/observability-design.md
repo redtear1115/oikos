@@ -6,8 +6,9 @@ updates:
   - v1.5.11: 自 `CLAUDE.md` 搬入（入口檔固定 token 稅，#1086）；內容逐字保留，只改相對連結路徑
   - v1.5.13: 補「`first_record_created` 不是活化指標」這條邊界（#1127）
   - v1.5.15: 補「autocapture 不帶文字」這條邊界（#1267）
+  - v1.5.17: 補「catch 住的錯誤只進 Sentry Logs」這條邊界（#1314）
 related_specs: [conversion-analytics, product]
-related_issues: ["#1018", "#1086", "#1127", "#1267"]
+related_issues: ["#1018", "#1086", "#1127", "#1267", "#1314"]
 ---
 
 # 觀測的邊界與讀數據的紀律
@@ -30,6 +31,9 @@ related_issues: ["#1018", "#1086", "#1127", "#1267"]
 - **autocapture 事件不帶任何文字或屬性，`$el_text` 永遠是空的。** `mask_all_text` + `mask_all_element_attributes` 自 v1.5.15 起鎖死（#1267）：dashboard 的交易列把說明與金額渲染在可點擊元素裡，autocapture 預設會把那些字串送給 PostHog，而隱私權政策寫的是 `no third-party analytics tracking financial data`。autocapture 留下來的只有 tag、classes、`$elements_chain` 的位置、`$current_url`，以及連結的 `attr__href`。
   - **推論：「哪顆按鈕被點了」不能用 `$el_text` 問，要用具名 `track()` 事件。** 這不是 v1.5.15 才成立的紀律——#1015 就已經把邀請漏斗從 `$el_text` 反推改成具名事件（理由是文案一改就斷、而且只涵蓋 zh-TW）。現在只是從慣例變成結構。需要一個新的互動指標時，加一個 `track()` 埋點，不要想辦法從 autocapture 還原。
   - **失效的樣子是查詢回 0 筆，不是報錯。** 對 `$el_text` 下條件會安靜地 match 不到任何事件，看起來像「這個按鈕沒人點」而不是「這個欄位不存在」。v1.5.15 以前的事件仍然帶著文字，所以跨這個部署日的查詢會得到一條在 2026-09 突然歸零的曲線——那是遮罩上線，不是使用者行為改變。
+- **Sentry 的 Issues 空白，不代表沒有錯誤：被 `catch` 住的錯誤只會出現在 Logs。** client 的 `consoleLoggingIntegration`（`instrumentation-client.ts`）把 `console.error` / `console.warn` 轉成 Sentry **Logs**，不會建 Issue。被 `try/catch` 接住、只 `console.error` 的錯誤，就只存在 Logs 資料集裡。
+  - **失效的樣子**：Issues 頁面乾乾淨淨，PostHog 卻有失敗事件，看起來像「有東西壞了但沒留下任何錯誤」。#1314 就這樣被誤判成「錯誤內容沒被記錄」：iOS 殼 Google 登入的 `ChunkLoadError` 其實在 Logs 裡躺了四天。
+  - 所以：追查 client 端的失敗時，Issues 和 Logs 都要查（`search_events` 用 `dataset: logs`）。要讓某條 catch 路徑被看見，就明確呼叫 `Sentry.captureException`，並先處理訊息裡的 URL query（client scrub 不會處理 exception 的訊息內容）。
 - **Session Replay 在前端鎖死（`disable_session_recording: true`）。** PostHog 專案後台那個開關現在是無效的；要開必須先連同 replay 自己的遮罩（`session_recording.maskAllInputs` + `maskTextSelector: '*'`）一起改 code，因為上面那兩個選項管不到 recorder。
 - **UA 分不出平台**：iOS WKWebView 被 PostHog 歸類為 Mobile Safari（實測佔 iOS 流量 43%），原生殼／PWA／其他 App 內嵌瀏覽器三者在 UA 上同形。一律改看 `platform`。
 - **`first_record_created` 不是活化指標，活化用 `record_created ≥ 1`。** 它的語意是「**viewer 記了自己付的那一筆**」——`isUserFirstNonDeletedRecord()`（`lib/analytics/server.ts`）數的是 `paidBy = viewer.id` 的列，所以**替伴侶記帳的人永遠不會觸發它**（#891 刻意如此）。那個語意對它原本的用途（#734 的啟用里程碑、`via` 分流）是對的，只是不等於活化。
