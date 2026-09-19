@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { FuelTypeButtonGroup } from '@/app/(dashboard)/_components/FuelTypeButtonGroup'
 import { PrimaryUserToggle } from '@/app/(dashboard)/_components/PrimaryUserToggle'
+import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createCar, editCar } from '@/actions/asset'
 import { TextInput } from '@/components/ui/TextInput'
 import { Field } from './shared/Field'
@@ -40,6 +41,8 @@ interface Props extends BodySharedProps {
 }
 
 export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial }: Props) {
+  const { isSolo } = useMember()
+
   // #837 — plate is encrypted PII; the form always starts blank (we never
   // receive plaintext). `hasPlate` tells us an encrypted value exists so we can
   // show 「先前已加密」 + 「清除」; `wantClearPlate` is the cleared sentinel.
@@ -202,7 +205,7 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       {/* #837 — plate is encrypted PII. Same trinary UX as child nationalId:
           blank + 「清除」 clears, blank alone on edit keeps, a typed value sets.
           The generic encryptedHint / clear strings are reused from `child`. */}
-      <Field label={ts.car.plate}>
+      <Field label={isEdit ? ts.car.plate : ts.car.plateRequired}>
         {id => (
           <div className="flex items-center gap-2">
             <TextInput
@@ -319,10 +322,14 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         <FuelTypeButtonGroup value={fuelType} onChange={setFuelType} />
       </Field>
 
-      {/* Primary User (hidden in solo mode — PrimaryUserToggle returns null) */}
-      <Field label={ts.car.primaryUser}>
-        <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
-      </Field>
+      {/* Primary User — hidden entirely in solo mode (#1326: the Field
+          wrapper used to render regardless, leaving a label + hairline row
+          with nothing under it since PrimaryUserToggle returns null). */}
+      {!isSolo && (
+        <Field label={ts.car.primaryUser}>
+          <PrimaryUserToggle value={primaryUserId} onChange={setPrimaryUserId} />
+        </Field>
+      )}
 
       <NotesField
         label={ts.notes.label}
