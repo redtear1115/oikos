@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { SignInButton } from './SignInButton'
+import { useEffect, useState } from 'react'
+import { SignInButton, preloadNativeAuthModules } from './SignInButton'
 
 /**
  * Owns the shared "an attempt is in flight" state for both provider buttons and
@@ -28,6 +28,11 @@ export function SignInActions({
   pendingLabel: string
 }) {
   const [pending, setPending] = useState(false)
+
+  // #1314 — fetch the native plugin chunks now, not on the tap.
+  useEffect(() => {
+    preloadNativeAuthModules()
+  }, [])
 
   const start = () => setPending(true)
   const abort = () => setPending(false)
