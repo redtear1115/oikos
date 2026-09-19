@@ -707,6 +707,8 @@ export type Translations = {
     petAge: string
     /** #1326 — Template with `{months}`, for pets under 1 year (petAge would show `0 歲`). */
     petAgeMonths: string
+    /** Pet born within the last month (#1326). */
+    petAgeUnderOneMonth: string
     birthdayThisMonth: string
     /** #1173 — Template with `{days}` (rendered emphasised, so keep it a standalone token). */
     plantCompanionDays: string
@@ -3373,6 +3375,7 @@ export const zhTW: Translations = {
     childAge: '{years} 歲 {months} 個月',
     petAge: '{years} 歲',
     petAgeMonths: '{months} 個月',
+    petAgeUnderOneMonth: '未滿 1 個月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {

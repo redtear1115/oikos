@@ -513,6 +513,7 @@ export const en: Translations = {
     childAge: '{years} yr {months} mo',
     petAge: '{years} yr',
     petAgeMonths: '{months} mo',
+    petAgeUnderOneMonth: 'Under 1 mo',
     birthdayThisMonth: '🎂 Birthday this month',
     plantCompanionDays: '{days} days together',
     insuranceGroups: {

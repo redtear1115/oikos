@@ -513,6 +513,7 @@ export const ja: Translations = {
     childAge: '{years}歳{months}ヶ月',
     petAge: '{years}歳',
     petAgeMonths: '{months}ヶ月',
+    petAgeUnderOneMonth: '1ヶ月未満',
     birthdayThisMonth: '🎂 今月が誕生日',
     plantCompanionDays: '一緒に {days} 日',
     insuranceGroups: {

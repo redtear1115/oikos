@@ -94,6 +94,8 @@ function computeAge(birthday: string | null | undefined): { years: number; month
 function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
   if (!birthday) return false
   const today = todayLocalDate()
+  // Not born yet (a due date) has no birthday to mark, even in its own month.
+  if (computeAge(birthday) === null) return false
   const [, m] = birthday.split('-').map(Number)
   return m === today.getMonth() + 1
 }
@@ -300,7 +302,9 @@ export function PetCard({
                 <span>
                   {age.years > 0
                     ? t.assetListItem.petAge.replace('{years}', String(age.years))
-                    : t.assetListItem.petAgeMonths.replace('{months}', String(age.months))}
+                    : (age.months === 0
+                      ? t.assetListItem.petAgeUnderOneMonth
+                      : t.assetListItem.petAgeMonths.replace('{months}', String(age.months)))}
                 </span>
               )}
               {age && weightKg && <span>{weightKg}</span>}

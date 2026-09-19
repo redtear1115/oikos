@@ -508,6 +508,7 @@ export const zhCN: Translations = {
     childAge: '{years} 岁 {months} 个月',
     petAge: '{years} 岁',
     petAgeMonths: '{months} 个月',
+    petAgeUnderOneMonth: '未满 1 个月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
