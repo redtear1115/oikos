@@ -37,9 +37,17 @@ interface Props {
   /**
    * Which delete copy to use: a plain-named prompt for things (car / house /
    * insurance / generic item) vs a softer one for child / pet / plant.
-   * Both state the same truth — past expenses stay in the ledger, they just
-   * stop being attributed to this aibutsu — softDeleteAsset only ever sets
-   * `deletedAt` (#1325).
+   * Both state the same truth: past expenses stay in the ledger and are not
+   * deleted with the asset — `softDeleteAsset` only ever sets `deletedAt`.
+   *
+   * **Retracted (#1325):** this comment used to add "they just stop being
+   * attributed to this aibutsu", and the shipped copy said so too. It is not
+   * true. `monthlyStatsByAsset` (`lib/db/queries/transactions.ts`) LEFT JOINs
+   * Assets without filtering `deleted_at` — deliberately, so a deleted
+   * aibutsu keeps its own name in the records breakdown instead of collapsing
+   * into 未命名. So its past expenses stay grouped, summed and drillable under
+   * that name, one tap from the records page. Don't reintroduce the claim in
+   * copy or here without changing that query first.
    */
   deleteVariant?: 'item' | 'lifeEntity'
 }
