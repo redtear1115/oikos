@@ -15,7 +15,6 @@ import { NameField } from './shared/NameField'
 import { NotesField } from './shared/NotesField'
 import { SheetShell } from './shared/SheetShell'
 import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
-import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 import { unwrapAction } from '@/lib/action-errors'
@@ -166,6 +165,10 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
       onClose={onClose}
       onSave={handleSave}
       isDirty={isDirty}
+      onDelete={isEdit ? performDelete : undefined}
+      deletePending={pending}
+      assetName={name}
+      deleteVariant="item"
     >
       {typePickerSlot}
 
@@ -474,7 +477,6 @@ export function InsuranceSheetBody({ open, onClose, onMutated, typePickerSlot, i
         onChange={setNotes}
       />
 
-      {isEdit && <DeleteConfirmFlow pending={pending} onDelete={performDelete} />}
     </SheetShell>
   )
 }

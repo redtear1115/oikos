@@ -1294,9 +1294,14 @@ export const zhCN: Translations = {
     typeFallback: '爱物',
     saveChanges: '保存更改',
     deleteConfirm: {
-      title: '确认删除？',
-      description: '这个爱物与所有关联支出将从列表中移除。',
       confirmLabel: '删除',
+      description: '之前记下的支出会留在账本里，不会跟着一起删掉。',
+      unnamed: '这个爱物',
+      item: { title: '「{name}」要从爱物移除吗？' },
+      lifeEntity: { title: '要把「{name}」从爱物收起来吗？' },
+    },
+    menu: {
+      ariaLabel: '更多操作',
     },
     type: {
       label: '类型',

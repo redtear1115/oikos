@@ -12,7 +12,6 @@ import { NotesField } from './shared/NotesField'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { SheetShell } from './shared/SheetShell'
 import { useDirtyCheck } from '@/app/(dashboard)/_components/useUnsavedChangesGuard'
-import { DeleteConfirmFlow } from './shared/DeleteConfirmFlow'
 import { useAssetSheetCommon } from './shared/useAssetSheetCommon'
 import type { AssetSheetInitial, BodySharedProps } from './types'
 import type { GasFuelType } from '@/lib/fuel'
@@ -151,6 +150,10 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       onClose={onClose}
       onSave={handleSave}
       isDirty={isDirty}
+      onDelete={isEdit ? performDelete : undefined}
+      deletePending={pending}
+      assetName={name}
+      deleteVariant="item"
     >
       {typePickerSlot}
 
@@ -338,7 +341,6 @@ export function CarSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         onChange={setNotes}
       />
 
-      {isEdit && <DeleteConfirmFlow pending={pending} onDelete={performDelete} />}
     </SheetShell>
   )
 }
