@@ -134,7 +134,7 @@ export const MIGRATE_SOURCES = {
   cwmoney: {
     slug: 'cwmoney',
     name: 'CWMoney',
-    contentUpdatedAt: '2026-09-15',
+    contentUpdatedAt: '2026-09-20',
     templateDownload: { href: '/cwmoney-template.xlsx' },
     comparison: {
       rows: [

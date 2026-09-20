@@ -2865,9 +2865,9 @@ export const zhCN: Translations = {
         ogDescription: 'Spendee 用户的双人记账新选择：上传 CSV，3 分钟搬完。',
       },
       cwmoney: {
-        title: '从 CWMoney 搬家到 Futari｜Excel 导入',
-        description: 'CWMoney 数据导出后怎么导入新工具？用我们提供的 Excel 转换模板整理成 CSV，再上传到 Futari 这个专为夫妻、情侣设计的共同账本，完成搬家。',
-        ogDescription: 'CWMoney 用户搬家指南：Excel 转 CSV，搬进 Futari 双人记账。',
+        title: '从 CWMoney 搬家到 Futari｜免费双人分账',
+        description: 'CWMoney 用户的双人记账新选择。分账结算不必解 VIP——Futari 免费内置费用分摊，用 Excel 转换模板把 CWMoney 数据整理成 CSV 就能搬家，和对方一起接着记。',
+        ogDescription: 'CWMoney 用户的下一站：免费分账，Excel 转 CSV 搬进 Futari。',
       },
       moneybook: {
         title: '从麻布记账搬家到 Futari｜CSV 导入',

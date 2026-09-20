@@ -5733,9 +5733,9 @@ export const zhTW: Translations = {
         ogDescription: 'Spendee 用戶的雙人記帳新選擇：上傳 CSV，3 分鐘搬完。',
       },
       cwmoney: {
-        title: '從 CWMoney 搬家到 Futari｜Excel 匯入',
-        description: 'CWMoney 資料匯出後怎麼匯入新工具？用我們提供的 Excel 轉換模板整理成 CSV，再上傳到 Futari 這個專為夫妻、伴侶設計的共同帳本，完成搬家。',
-        ogDescription: 'CWMoney 用戶搬家指南：Excel 轉 CSV，搬進 Futari 雙人記帳。',
+        title: '從 CWMoney 搬家到 Futari｜免費雙人分帳',
+        description: 'CWMoney 用戶的雙人記帳新選擇。分帳結算不必解 VIP——Futari 免費內建費用分攤，用 Excel 轉換模板把 CWMoney 資料整理成 CSV 就能搬家，和對方一起接著記。',
+        ogDescription: 'CWMoney 用戶的下一站：免費分帳，Excel 轉 CSV 搬進 Futari。',
       },
       moneybook: {
         title: '從麻布記帳搬家到 Futari｜CSV 匯入',
