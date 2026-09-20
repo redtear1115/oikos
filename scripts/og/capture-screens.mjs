@@ -26,6 +26,28 @@ const OUT_DIR = resolve(__dirname, '..', '..', 'docs', 'store-assets', 'screensh
 const PROFILE = join(homedir(), '.futari-shots-profile')
 const BASE = process.env.BASE_URL || 'http://localhost:3000'
 const LOGIN_MODE = process.argv.includes('--login')
+// 連上一個已經在跑、而且已經登入的 Chrome（例：superpowers-chrome 的 CDP endpoint），
+// 取代 --login 那套專用 profile。deviceScaleFactor 走 CDP 的 Emulation 覆寫，
+// 所以輸出像素仍然精確，不受實體螢幕 DPI 影響。
+//   node capture-screens.mjs --connect=http://127.0.0.1:9222
+const CONNECT = (process.argv.find((a) => a.startsWith('--connect=')) || '').replace('--connect=', '')
+
+// --connect 拿掉了「這一定是專用 profile」這個保證：連到哪個瀏覽器，就截到那個
+// 瀏覽器當下登入的帳本。指到日常 Chrome 就會把真實帳本渲染進公開 repo 與商店頁。
+// 失效的樣子不是報錯，是截圖看起來完全正常、只是內容是別人的生活。
+// 這個檢查要的是「示範帳本的樣子」：頭像是首字圓圈（沒有 <img>），不是真人照片。
+async function assertDemoLedger(page) {
+  const real = await page.evaluate(() => {
+    const imgs = Array.from(document.querySelectorAll('img[src]'))
+    return imgs.filter((i) => /googleusercontent|gravatar|\/avatars?\//.test(i.src)).length
+  })
+  if (real > 0) {
+    throw new Error(
+      `畫面上有 ${real} 張真人頭像 —— 這個瀏覽器登入的不是示範帳本。\n` +
+      '把示範帳號的 profile 設成 avatar_hidden（#1328），或改用 --login 的專用 profile。',
+    )
+  }
+}
 // 只截某幾組尺寸，例：--only=ipad-13。不給就全部重截。
 // 存在的理由：已上架那幾組是用整理過的 dev 帳本截的，重跑會整批覆寫；
 // 補一個新尺寸時沒有理由連帶重截已驗過的圖。
@@ -101,11 +123,13 @@ async function capture() {
   await mkdir(OUT_DIR, { recursive: true })
   // 與 login() 用同一個 channel —— profile 由 Chrome stable 建立，
   // 換成 puppeteer 自帶的 Chromium 可能因版本不符而讀不到。
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    channel: 'chrome',
-    userDataDir: PROFILE,
-  })
+  const browser = CONNECT
+    ? await puppeteer.connect({ browserURL: CONNECT, defaultViewport: null })
+    : await puppeteer.launch({
+        headless: 'new',
+        channel: 'chrome',
+        userDataDir: PROFILE,
+      })
   const results = []
 
   const formats = ONLY.length ? FORMATS.filter((f) => ONLY.includes(f.key)) : FORMATS
@@ -145,6 +169,9 @@ async function capture() {
           )
         }
 
+        // 登入了不等於登入的是示範帳本（--connect 尤其如此，見檔頭）。
+        await assertDemoLedger(page)
+
         // 隱藏捲軸 + Next.js dev overlay 的浮標 + 等動畫與字體收斂。
         // dev indicator 那顆黑色「N」是 dev server 才有的東西，2026-08 那批截圖
         // 沒擋掉，在 *-play.png 裡直接壓住「首頁」tab 圖示。
@@ -166,7 +193,9 @@ async function capture() {
       }
     }
   } finally {
-    await browser.close()
+    // 連上別人的 Chrome 時只中斷連線，不要把使用者的視窗關掉。
+    if (CONNECT) await browser.disconnect()
+    else await browser.close()
   }
 
   console.log(`\n共 ${results.length} 張 → ${OUT_DIR}`)
