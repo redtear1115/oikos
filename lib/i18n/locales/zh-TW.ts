@@ -2979,7 +2979,7 @@ export const zhTW: Translations = {
     },
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
-    trustPwa: 'iPhone App · 網頁版 · Android 即將',
+    trustPwa: 'iPhone App · 網頁版',
     trust: {
       narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
       encryption: {

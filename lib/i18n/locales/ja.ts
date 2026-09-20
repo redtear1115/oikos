@@ -99,7 +99,7 @@ export const ja: Translations = {
     trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
-    trustPwa: 'iPhone App · Web PWA · Android は近日',
+    trustPwa: 'iPhone App · Web PWA',
     trust: {
       narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
       encryption: {

@@ -96,7 +96,7 @@ export const zhCN: Translations = {
     },
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
-    trustPwa: 'iPhone App · 网页版 · Android 即将',
+    trustPwa: 'iPhone App · 网页版',
     trust: {
       narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
       encryption: {

@@ -98,7 +98,7 @@ export const en: Translations = {
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
-    trustPwa: 'iPhone app · Web PWA · Android coming soon',
+    trustPwa: 'iPhone app · Web PWA',
     trust: {
       narrative: 'Your records belong only to the two of you. No ads, no data selling.',
       encryption: {
