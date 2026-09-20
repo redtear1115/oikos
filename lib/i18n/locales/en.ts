@@ -761,6 +761,11 @@ export const en: Translations = {
     sectionPersonal: 'Personal',
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
+    // TODO(i18n): native review pending (#1328) — MT-quality draft.
+    avatarVisibility: {
+      title: 'Show my avatar',
+      description: 'Off shows the first letter of your name instead',
+    },
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloLockHint: 'While solo, every record is yours.',
     defaultSplitLabel: 'Default split',

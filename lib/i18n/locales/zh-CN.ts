@@ -756,6 +756,10 @@ export const zhCN: Translations = {
     sectionPersonal: '个人',
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
+    avatarVisibility: {
+      title: '显示我的头像',
+      description: '关闭后改用名字的第一个字',
+    },
     soloLockHint: '单人状态下，每笔记录都算你的。',
     defaultSplitLabel: '默认分摊方式',
     inviteCta: '邀请对方加入',

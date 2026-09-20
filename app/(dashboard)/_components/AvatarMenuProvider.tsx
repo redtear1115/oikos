@@ -15,6 +15,8 @@ export interface AvatarMenuData {
   groupDefaultRatioA: number | null
   guardianBetaEnabled: boolean
   currentLocale: string
+  /** #1328 — viewer's own avatar-visibility preference. */
+  avatarHidden: boolean
 }
 
 interface AvatarMenuApi {

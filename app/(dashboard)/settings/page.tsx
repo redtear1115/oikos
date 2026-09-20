@@ -14,6 +14,7 @@ import {
   type ViewerInfo,
 } from './_components/SettingsContent'
 import type { PendingSwap } from './_components/DangerZone'
+import { maskAvatarUrl } from '@/lib/avatar'
 
 export default async function SettingsPage() {
   const [{ user, group }, currentLocale, t] = await Promise.all([
@@ -43,14 +44,14 @@ export default async function SettingsPage() {
     id: user.id,
     displayName: viewerProfile?.displayName ?? '?',
     email: user.email ?? '',
-    avatarUrl: viewerProfile?.avatarUrl ?? null,
+    avatarUrl: viewerProfile ? maskAvatarUrl(viewerProfile) : null,
   }
   const partner: PartnerInfo | null = partnerProfile
     ? {
         id: partnerProfile.id,
         displayName: partnerProfile.displayName,
         email: null,
-        avatarUrl: partnerProfile.avatarUrl ?? null,
+        avatarUrl: maskAvatarUrl(partnerProfile),
       }
     : null
 

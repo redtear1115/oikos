@@ -1069,6 +1069,11 @@ export type Translations = {
     sectionPersonal: string
     addToHomeScreen: string
     displayName: string
+    /** #1328 — avatar-visibility toggle row, 個人 section. */
+    avatarVisibility: {
+      title: string
+      description: string
+    }
     soloLockHint: string
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
@@ -3626,6 +3631,10 @@ export const zhTW: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
+    avatarVisibility: {
+      title: '顯示我的頭貼',
+      description: '關閉後改用名字的第一個字',
+    },
     soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',

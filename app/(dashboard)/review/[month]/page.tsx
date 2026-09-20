@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { db } from '@/lib/db/client'
 import { profiles } from '@/lib/db/schema'
-import { inArray } from 'drizzle-orm'
+import { inArray, sql } from 'drizzle-orm'
 import {
   loadMonthlyReviewSnapshot,
   loadMonthlyReviewMessages,
@@ -53,7 +53,9 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
     .select({
       id: profiles.id,
       displayName: profiles.displayName,
-      avatarUrl: profiles.avatarUrl,
+      // #1328 — mask at the query so a hidden avatar can never leak into the
+      // returned row, for either member.
+      avatarUrl: sql<string | null>`CASE WHEN ${profiles.avatarHidden} THEN NULL ELSE ${profiles.avatarUrl} END`,
     })
     .from(profiles)
     .where(inArray(profiles.id, memberIds))
