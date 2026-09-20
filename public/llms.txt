@@ -29,11 +29,11 @@ Futari belongs to the "Freedom Project" family — a brand built on the metaphor
 
 ## Links
 
-- [Futari — Home](https://futari.southern-light.dev/)
-- [Sign in](https://futari.southern-light.dev/zh-TW/sign-in)
-- [Use case: Cohabitation](https://futari.southern-light.dev/zh-TW/use-case/cohabitation)
-- [Use case: Newlyweds](https://futari.southern-light.dev/zh-TW/use-case/newlyweds)
-- [Use case: Pet owners](https://futari.southern-light.dev/zh-TW/use-case/pet-owners)
-- [Privacy policy](https://futari.southern-light.dev/zh-TW/privacy)
-- [Terms of service](https://futari.southern-light.dev/zh-TW/terms)
+- [Futari — Home](https://futari.southern-light.dev/?utm_source=llms_txt&utm_medium=ai_agent)
+- [Sign in](https://futari.southern-light.dev/zh-TW/sign-in?utm_source=llms_txt&utm_medium=ai_agent)
+- [Use case: Cohabitation](https://futari.southern-light.dev/zh-TW/use-case/cohabitation?utm_source=llms_txt&utm_medium=ai_agent)
+- [Use case: Newlyweds](https://futari.southern-light.dev/zh-TW/use-case/newlyweds?utm_source=llms_txt&utm_medium=ai_agent)
+- [Use case: Pet owners](https://futari.southern-light.dev/zh-TW/use-case/pet-owners?utm_source=llms_txt&utm_medium=ai_agent)
+- [Privacy policy](https://futari.southern-light.dev/zh-TW/privacy?utm_source=llms_txt&utm_medium=ai_agent)
+- [Terms of service](https://futari.southern-light.dev/zh-TW/terms?utm_source=llms_txt&utm_medium=ai_agent)
 - [Full LLM context](https://futari.southern-light.dev/llms-full.txt)

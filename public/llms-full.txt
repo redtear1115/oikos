@@ -2,7 +2,7 @@
 
 > Two-person companion expense tracker for couples and partners. Mobile-first PWA built around the shared chapters of a relationship rather than balance sheets. Codebase name: Oikos.
 
-**Product URL**: https://futari.southern-light.dev
+**Product URL**: https://futari.southern-light.dev/?utm_source=llms_txt&utm_medium=ai_agent
 **Status**: Public beta, free to use
 **Languages**: Traditional Chinese (default), Simplified Chinese, English, Japanese
 **Platform**: Progressive Web App (installable on iOS / Android / desktop), plus native iOS and Android shells built with Capacitor
@@ -315,7 +315,7 @@ This is reflected in the UI:
 
 ## Links
 
-- **Product**: https://futari.southern-light.dev
+- **Product**: https://futari.southern-light.dev/?utm_source=llms_txt&utm_medium=ai_agent
 - **Index (short version)**: https://futari.southern-light.dev/llms.txt
 - **Full description (this file)**: https://futari.southern-light.dev/llms-full.txt
 - **Sitemap**: https://futari.southern-light.dev/sitemap.xml
