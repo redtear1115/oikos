@@ -41,26 +41,45 @@ export function AppStoreNote({
   linkText: string
   androidNote: string
 }) {
-  const [isIosNative, setIsIosNative] = useState(false)
+  // 'pending' until the effect has read the platform. The markup is rendered
+  // during SSR either way — crawlers and no-JS readers still get the App Store
+  // link — but it is inert until we know this is not the iOS shell.
+  //
+  // Why not just `return null` while pending: the gate can only run after
+  // mount, so between paint and hydration the shell would show a tappable
+  // 「下載 iPhone 版」 to someone already inside the app (a plain <a> needs no
+  // JS to work). Inside the shell that window is the whole remote page load.
+  // Hiding first and revealing second moves the flash to the harmless side:
+  // web visitors briefly miss a footnote instead of shell users being told to
+  // install what they are already using.
+  const [gate, setGate] = useState<'pending' | 'show' | 'hide'>('pending')
 
   useEffect(() => {
-    if (getCapacitorPlatform() === 'ios') setIsIosNative(true)
+    setGate(getCapacitorPlatform() === 'ios' ? 'hide' : 'show')
   }, [])
 
-  if (isIosNative) return null
+  if (gate === 'hide') return null
+
+  const pending = gate === 'pending'
 
   return (
     <p
-      className="m-0 mt-3 text-center md:text-left text-xs"
-      style={{ color: 'var(--ink-3)', letterSpacing: '0.3px' }}
+      className={`m-0 mt-3 text-center md:text-left text-xs text-ink-3${pending ? ' opacity-0' : ''}`}
+      style={{ letterSpacing: '0.3px' }}
+      aria-hidden={pending || undefined}
     >
       <a
         href={APP_STORE_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline outline-none focus-visible:oik-focus-ring"
-        style={{ color: 'var(--ink-2)' }}
-        onClick={() => track('landing_app_store_link_clicked', { cta_location: 'hero' })}
+        className="underline outline-none focus-visible:oik-focus-ring text-ink-2 inline-flex min-h-11 items-center"
+        tabIndex={pending ? -1 : undefined}
+        onClick={(e) => {
+          // Inert while pending: the platform is still unknown, so a tap here
+          // could be the iOS shell's.
+          if (pending) { e.preventDefault(); return }
+          track('landing_app_store_link_clicked', { cta_location: 'hero' })
+        }}
       >
         {linkText}
       </a>

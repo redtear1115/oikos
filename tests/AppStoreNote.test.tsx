@@ -50,3 +50,25 @@ describe('AppStoreNote iOS shell gate (#1333)', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 })
+
+describe('AppStoreNote pre-hydration state (#1333)', () => {
+  // The gate can only run after mount, so between paint and hydration the
+  // server markup is all an iOS-shell user has. If that markup were a live
+  // link, the shell would briefly show — and accept a tap on — 「下載 iPhone
+  // 版」 to someone already inside the app; a plain <a> needs no JS to work.
+  // Inside the shell that window is the whole remote page load, so this is
+  // the state that actually matters, not the post-mount one.
+  it('renders the link inert and invisible on the server', async () => {
+    const { renderToString } = await import('react-dom/server')
+    const html = renderToString(
+      <AppStoreNote linkText="iPhone 版已在 App Store" androidNote="Android 版正在路上" />,
+    )
+
+    // Present for crawlers and no-JS readers…
+    expect(html).toContain('apps.apple.com/app/id6779264784')
+    // …but not visible, not focusable, not announced.
+    expect(html).toContain('opacity-0')
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain('tabindex="-1"')
+  })
+})
