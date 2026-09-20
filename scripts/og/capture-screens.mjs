@@ -26,6 +26,11 @@ const OUT_DIR = resolve(__dirname, '..', '..', 'docs', 'store-assets', 'screensh
 const PROFILE = join(homedir(), '.futari-shots-profile')
 const BASE = process.env.BASE_URL || 'http://localhost:3000'
 const LOGIN_MODE = process.argv.includes('--login')
+// 連上一個已經在跑、而且已經登入的 Chrome（例：superpowers-chrome 的 CDP endpoint），
+// 取代 --login 那套專用 profile。deviceScaleFactor 走 CDP 的 Emulation 覆寫，
+// 所以輸出像素仍然精確，不受實體螢幕 DPI 影響。
+//   node capture-screens.mjs --connect=http://127.0.0.1:9222
+const CONNECT = (process.argv.find((a) => a.startsWith('--connect=')) || '').replace('--connect=', '')
 // 只截某幾組尺寸，例：--only=ipad-13。不給就全部重截。
 // 存在的理由：已上架那幾組是用整理過的 dev 帳本截的，重跑會整批覆寫；
 // 補一個新尺寸時沒有理由連帶重截已驗過的圖。
@@ -101,11 +106,13 @@ async function capture() {
   await mkdir(OUT_DIR, { recursive: true })
   // 與 login() 用同一個 channel —— profile 由 Chrome stable 建立，
   // 換成 puppeteer 自帶的 Chromium 可能因版本不符而讀不到。
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    channel: 'chrome',
-    userDataDir: PROFILE,
-  })
+  const browser = CONNECT
+    ? await puppeteer.connect({ browserURL: CONNECT, defaultViewport: null })
+    : await puppeteer.launch({
+        headless: 'new',
+        channel: 'chrome',
+        userDataDir: PROFILE,
+      })
   const results = []
 
   const formats = ONLY.length ? FORMATS.filter((f) => ONLY.includes(f.key)) : FORMATS
@@ -166,7 +173,9 @@ async function capture() {
       }
     }
   } finally {
-    await browser.close()
+    // 連上別人的 Chrome 時只中斷連線，不要把使用者的視窗關掉。
+    if (CONNECT) await browser.disconnect()
+    else await browser.close()
   }
 
   console.log(`\n共 ${results.length} 張 → ${OUT_DIR}`)
