@@ -35,4 +35,11 @@ describe('AibutsuHintCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /記第一筆/ }))
     expect(onCtaPress).toHaveBeenCalledTimes(1)
   })
+
+  // #1326 — a past (read-only) chapter has no entry point that can open
+  // AddSheet, so the empty-timeline hint must not offer the CTA button.
+  it('renders no CTA button when onCtaPress is omitted', () => {
+    render(<AibutsuHintCard type="pet" />, { wrapper: I18nWrapper })
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
 })

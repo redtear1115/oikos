@@ -512,6 +512,8 @@ export const ja: Translations = {
     lastRefuel: '前回の給油 {date}',
     childAge: '{years}歳{months}ヶ月',
     petAge: '{years}歳',
+    petAgeMonths: '{months}ヶ月',
+    petAgeUnderOneMonth: '1ヶ月未満',
     birthdayThisMonth: '🎂 今月が誕生日',
     plantCompanionDays: '一緒に {days} 日',
     insuranceGroups: {
@@ -1333,6 +1335,7 @@ export const ja: Translations = {
         champagne: 'シャンパンゴールド',
       },
       plate: 'ナンバー',
+      plateRequired: 'ナンバー（必須）',
       platePlaceholder: '例: ABC-1234',
       year: '年式',
       yearPlaceholder: '例: 2019',

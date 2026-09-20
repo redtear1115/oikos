@@ -149,7 +149,7 @@ export function TemplateAssetDetailClient({
         loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
-        emptyState={<AibutsuHintCard type="item" onCtaPress={() => setAddOpen(true)} />}
+        emptyState={<AibutsuHintCard type="item" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}

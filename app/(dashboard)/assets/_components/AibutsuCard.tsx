@@ -66,13 +66,13 @@ function Dot() {
 
 /**
  * Compute age in years + remaining months from a 'YYYY-MM-DD' string to today.
- * Returns null if birthday is null/invalid.
+ * Returns null if birthday is null, invalid, or after today.
  */
 function computeAge(birthday: string | null | undefined): { years: number; months: number } | null {
   if (!birthday) return null
   const today = todayLocalDate()
   const [y, m, d] = birthday.split('-').map(Number)
-  if (!y || !m || !d) return null
+  if (!y || !m || !d || m > 12 || d > 31) return null
   let years = today.getFullYear() - y
   let months = today.getMonth() + 1 - m
   if (months < 0) {
@@ -85,12 +85,17 @@ function computeAge(birthday: string | null | undefined): { years: number; month
     years -= 1
     months = 11
   }
-  return { years: Math.max(0, years), months: Math.max(0, months) }
+  // A birthday after today (typo, or a due date) has no age yet. Clamping it
+  // to 0 used to keep the leftover month count, so 2027-01-01 read as 8 個月.
+  if (years < 0) return null
+  return { years, months }
 }
 
 function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
   if (!birthday) return false
   const today = todayLocalDate()
+  // Not born yet (a due date) has no birthday to mark, even in its own month.
+  if (computeAge(birthday) === null) return false
   const [, m] = birthday.split('-').map(Number)
   return m === today.getMonth() + 1
 }
@@ -293,7 +298,15 @@ export function PetCard({
                 <span style={{ color: 'var(--ink-2)' }}>{speciesBreed}</span>
               )}
               {(age || weightKg) && speciesBreed && <Dot />}
-              {age && <span>{t.assetListItem.petAge.replace('{years}', String(age.years))}</span>}
+              {age && (
+                <span>
+                  {age.years > 0
+                    ? t.assetListItem.petAge.replace('{years}', String(age.years))
+                    : (age.months === 0
+                      ? t.assetListItem.petAgeUnderOneMonth
+                      : t.assetListItem.petAgeMonths.replace('{months}', String(age.months)))}
+                </span>
+              )}
               {age && weightKg && <span>{weightKg}</span>}
               {!age && weightKg && <span>{weightKg}</span>}
             </div>
@@ -394,11 +407,10 @@ interface ItemCardProps {
   id: string
   name: string
   monthAmount: number
-  templateKey?: string | null
   notes?: string | null
 }
 
-export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCardProps) {
+export function ItemCard({ id, name, monthAmount, notes }: ItemCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -439,17 +451,6 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
               >
                 {name}
               </div>
-              {templateKey && (
-                <span
-                  className="font-mono shrink-0 text-mini px-1.5 py-0.5 rounded-sm"
-                  style={{
-                    color: 'var(--ink-2)',
-                    background: 'rgba(58,36,25,0.06)',
-                  }}
-                >
-                  {templateKey}
-                </span>
-              )}
             </div>
             {notes && (
               <div
