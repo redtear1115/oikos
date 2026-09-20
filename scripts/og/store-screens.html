@@ -21,12 +21,24 @@
     }
     html, body { margin: 0; padding: 0; }
     body {
-      width: 430px;
-      height: 932px;
+      /* --w/--h are set from the query string: 430×932 for iPhone 6.7",
+       * 1032×1376 for the 13" iPad. Everything else scales via --k. */
+      width: var(--w, 430px);
+      height: var(--h, 932px);
       background: var(--bg-committed);
       color: var(--ink);
       font-family: 'Noto Sans TC', -apple-system, system-ui, sans-serif;
       position: relative;
+      overflow: hidden;
+    }
+    /* The composition is authored once at 430×932 and scaled to fit the target
+     * store size, centred on the cream ground. The iPad is a different aspect
+     * ratio, so it gets side margins of ground rather than a stretched layout. */
+    #root {
+      position: absolute;
+      width: 430px;
+      height: 932px;
+      transform-origin: top left;
       overflow: hidden;
     }
     body[data-lang="ja"] { font-family: 'Noto Sans JP', 'Noto Sans TC', sans-serif; }
@@ -131,6 +143,15 @@
   <script>
     const params = new URLSearchParams(location.search)
     const lang = params.get('lang') || 'zh'
+    const W = Number(params.get('w') || 430)
+    const H = Number(params.get('h') || 932)
+    document.documentElement.style.setProperty('--w', W + 'px')
+    document.documentElement.style.setProperty('--h', H + 'px')
+    const S = Math.min(W / 430, H / 932)
+    const rootEl = document.getElementById('root')
+    rootEl.style.transform = `scale(${S})`
+    rootEl.style.left = `${(W - 430 * S) / 2}px`
+    rootEl.style.top = `${(H - 932 * S) / 2}px`
     const frameId = params.get('frame') || '1'
     document.body.dataset.lang = lang
 

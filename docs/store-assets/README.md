@@ -21,6 +21,8 @@ last_updated: 2026-08-06
 | `screenshots/*-play.png` | 1080×1920、無 alpha | Play 手機截圖（必填 ≥2），4 張 | ✅ |
 | `screenshots/*-tablet.png` | 1080×1920、無 alpha | Play 平板截圖（7 吋 / 10 吋），4 張 | ✅ |
 | `screenshots/*-ipad-13.png` | 2064×2752、無 alpha | App Store 13" iPad（必填），4 張 | ✅ |
+| `story/0N-zh-ios-6.7.png` | 1290×2796、無 alpha | **插畫故事圖**（zh-TW），5 張 | ✅ 待上傳 |
+| `story/0N-zh-ipad-13.png` | 2064×2752、無 alpha | 同上，13" iPad | ✅ 待上傳 |
 
 ## 怎麼重新產生
 
@@ -120,3 +122,38 @@ Google 會擋「宣告自己被自動化控制」的瀏覽器，故 script 用�
 > ⚠️ 順帶發現：`GroupBalance` 的 cache 原本是 **0**，但照 `lib/db/queries/balance.ts`
 > 的公式重算是 **36,116,560** —— cache 長期未同步。那兩筆三千六百萬的測試 settlement
 > 是主因。dev 專屬問題，但值得確認 prod 沒有同樣的 cache 漂移。
+
+## 插畫故事圖（story/）
+
+2026-09-20 起的主打素材：不只是實機畫面，每張上方是一個兩人生活的場景插畫，下方接一段見證式文案與一塊裁過的實機畫面。
+
+```bash
+cd scripts/og
+node render-store-screens.mjs                      # zh-TW、iPhone 6.7"
+node render-store-screens.mjs --format=ipad-13     # 13" iPad
+node render-store-screens.mjs --frames=2,4         # 只補某幾張
+```
+
+版型在 `scripts/og/store-screens.html`：構圖固定在 430×932，再等比縮放置中到目標尺寸，所以 iPad 是兩側留奶油底，不是把手機版拉寬。插畫在 `docs/store-assets/illustrations/`。
+
+**文案與畫面裡的數字要對齊。** 第 4 張標題寫「陪伴 285 天」，那是截圖當下的實際值；示範帳本的天數每天都在長，重截時要一起更新標題，否則圖上兩個數字會打架。
+
+### 實機畫面怎麼截
+
+```bash
+cd scripts/og
+node capture-screens.mjs --connect=http://127.0.0.1:9222   # 連上已登入的 Chrome
+node capture-screens.mjs --login                            # 或用自己的專用 profile 登入一次
+```
+
+`--connect` 接受任何 CDP endpoint（例如 superpowers-chrome 起的那個）。`deviceScaleFactor` 由 CDP 覆寫，所以輸出像素不受實體螢幕 DPI 影響。
+
+**截圖前的帳本準備**（2026-09-20 實作）：
+- dev 兩位 profile 設 `avatar_hidden = true`（#1328 的欄位），頭像變成首字圓圈，不會出現真人照片
+- 顯示名稱改成 Futa／Tari——首字 F／T 有差別，圓圈才分得出兩個人
+- 把示範紀錄的日期挪到近一週，feed 才會顯示「今天／昨天」而不是「14 天前」
+- 定期提案先跳過，否則首頁上半部會被提案卡佔滿
+
+### 語系
+
+目前只有 zh-TW。**其他三個語系還是舊的純實機截圖**：故事圖的文案是中文，而 dev 帳本的紀錄名稱（貓砂和飼料、巷口那家晚餐）也是中文，直接配英文／日文標題會變成混語畫面。要做 en／ja 的故事圖，得先有一份對應語言的示範帳本。

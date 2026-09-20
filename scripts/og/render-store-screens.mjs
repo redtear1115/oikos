@@ -25,6 +25,16 @@ const arg = (name, fallback) => {
   return hit ? hit.slice(name.length + 3) : fallback
 }
 const lang = arg('lang', 'zh')
+// Store sizes. iPhone 6.7" is 430×932 @3x; the 13" iPad is 1032×1376 @2x —
+// the only sizes App Store Connect accepts for APP_IPHONE_67 /
+// APP_IPAD_PRO_3GEN_129 (see docs/app-store-submission-runbook.md §I).
+const FORMATS = {
+  'ios-6.7': { w: 430, h: 932, dsr: 3 },
+  'ipad-13': { w: 1032, h: 1376, dsr: 2 },
+}
+const formatKey = arg('format', 'ios-6.7')
+const fmt = FORMATS[formatKey]
+if (!fmt) { console.error(`unknown --format=${formatKey}; use ${Object.keys(FORMATS).join(' | ')}`); process.exit(1) }
 const frames = arg('frames', '1,2,3,4,5').split(',')
 const outDir = resolve(arg('out', resolve(__dirname, '..', '..', 'docs', 'store-assets', 'story')))
 
@@ -34,15 +44,15 @@ const browser = await puppeteer.launch({ headless: 'new', args: ['--allow-file-a
 try {
   for (const frame of frames) {
     const page = await browser.newPage()
-    await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3 })
-    await page.goto(`${TEMPLATE}?frame=${frame}&lang=${encodeURIComponent(lang)}`, {
+    await page.setViewport({ width: fmt.w, height: fmt.h, deviceScaleFactor: fmt.dsr })
+    await page.goto(`${TEMPLATE}?frame=${frame}&lang=${encodeURIComponent(lang)}&w=${fmt.w}&h=${fmt.h}`, {
       waitUntil: 'networkidle0',
       timeout: 30000,
     })
     // Without this wait the headline silently falls back to a system font.
     await page.waitForFunction(() => window.__OG_READY__ === true, { timeout: 15000 })
     const buf = await page.screenshot({ type: 'png', omitBackground: false })
-    const name = `${frame.padStart(2, '0')}-${lang}-ios-6.7.png`
+    const name = `${frame.padStart(2, '0')}-${lang}-${formatKey}.png`
     await writeFile(resolve(outDir, name), buf)
     console.log(`✓ ${name}`)
     await page.close()
