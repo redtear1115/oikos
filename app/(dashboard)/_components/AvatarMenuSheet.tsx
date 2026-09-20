@@ -12,6 +12,7 @@ import { SplitTypeSection } from '@/app/(dashboard)/settings/_components/section
 import { SplitRatioSection } from '@/app/(dashboard)/settings/_components/sections/SplitRatioSection'
 import { LanguageSwitcher } from '@/lib/i18n/LanguageSwitcher'
 import { GuardianBetaToggle } from '@/app/(dashboard)/settings/_components/GuardianBetaToggle'
+import { AvatarVisibilityToggle } from '@/app/(dashboard)/settings/_components/AvatarVisibilityToggle'
 import { LogoutButton } from '@/app/(dashboard)/settings/_components/LogoutButton'
 import { updateGroupName } from '@/actions/group'
 import { updateDisplayName } from '@/actions/profile'
@@ -76,6 +77,9 @@ export function AvatarMenuSheet({ open, onClose, data }: Props) {
               value={viewer.displayName}
               onSave={updateDisplayName}
             />
+            <div className="mt-3">
+              <AvatarVisibilityToggle avatarHidden={data.avatarHidden} />
+            </div>
             <div className="mt-3">
               <SplitTypeSection current={viewer.defaultSplitType} isSolo={isSolo} />
             </div>
