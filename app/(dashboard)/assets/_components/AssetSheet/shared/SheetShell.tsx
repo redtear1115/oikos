@@ -43,10 +43,11 @@ export function SheetShell({
 }: Props) {
   const t = useTranslations()
   const accentColor = destructive ? 'var(--destructive)' : 'var(--accent)'
-  const bottomBg = destructive ? 'var(--btn-destructive-bg)' : 'var(--accent)'
-  const bottomShadow = destructive
-    ? '0 2px 6px rgba(184, 90, 72, 0.3)'
-    : '0 2px 6px rgba(224,136,86,0.3)'
+  // Bottom commit follows the system's primary/danger vocabulary (ink fill,
+  // or destructive fill for irreversible confirms) — never the ember accent,
+  // and flat (no shadow): DESIGN.md's Flat-By-Default Rule, an in-flow button
+  // gets no drop shadow (#1322).
+  const bottomBg = destructive ? 'var(--btn-destructive-bg)' : 'var(--btn-primary-bg)'
   return (
     <SheetFrame
       open={open}
@@ -98,11 +99,11 @@ export function SheetShell({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className="mt-6 w-full h-[46px] rounded-xl border-0 text-white font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
+          className="mt-6 w-full h-12 rounded-bubble border-0 font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
           style={{
             background: canSave ? bottomBg : 'var(--ink-3)',
+            color: 'var(--btn-primary-text)',
             opacity: canSave ? 1 : 0.55,
-            boxShadow: canSave ? bottomShadow : 'none',
           }}
         >
           {pending ? t.common.saving : bottomSaveLabel}
