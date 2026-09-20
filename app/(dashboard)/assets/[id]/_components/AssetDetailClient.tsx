@@ -186,6 +186,7 @@ export function AssetDetailClient({
         color={assetSheetInitial.color ?? null}
         monthAmount={monthAmount}
         totalAmount={totalAmount}
+        isPast={isPast}
         avgEcon={avgEcon}
         lastFuelAt={lastFuelAt}
       />

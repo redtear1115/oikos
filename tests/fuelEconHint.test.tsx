@@ -85,6 +85,7 @@ describe('AssetHero renders a distinct subtitle per situation', () => {
     color: null,
     monthAmount: 0,
     totalAmount: 0,
+    isPast: false,
   }
 
   const subtitleFor = (avgEcon: number | null, lastFuelAt: string | null) => {
