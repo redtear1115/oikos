@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-09-19
+last_updated: 2026-09-21
 ---
 
 # App Store / Play Store 上架 Runbook — Futari（首次送審）
@@ -396,8 +396,32 @@ DER 的 `SEQUENCE{r,s}` 轉成 raw 64 bytes，再組 `header.payload.signature`�
 | 新增語系會自動長出版本 localization | `POST appInfoLocalizations` 之後，該語系的 `appStoreVersionLocalizations` 會自動被建好（空的），所以後續要用 `PATCH` 而不是 `POST`。 |
 | App 隱私權**不在**公開 API | `appDataUsages` 那組公開端點全部 404。要用網頁的私有 iris API：`POST /iris/v1/appDataUsages`，一列 = `(app, category, dataProtection, purpose)`；詞彙表在 `/iris/v1/appDataUsageCategories`、`appDataUsagePurposes`、`appDataUsageDataProtections`。最後的「發佈」是**法律聲明**（同意內容正確且合法），要本人按。 |
 | 出口合規可以事後補在 build 上 | binary 若沒有 `ITSAppUsesNonExemptEncryption`，build 的 `usesNonExemptEncryption` 會是 `null`（送審 blocker）。**不需要重新 build**：`PATCH /v1/builds/{id}` 設 `usesNonExemptEncryption: false` 即可。 |
-| 截圖上傳是三步 | `POST /v1/appScreenshots`（給 `fileSize` / `fileName`）拿到 `uploadOperations` → 依每個 operation 的 `method` / `url` / `requestHeaders` PUT 對應 byte range → `PATCH` 設 `uploaded: true` + `sourceFileChecksum`（檔案的 MD5 hex）。 |
+| 截圖上傳是三步（已寫成腳本） | `POST /v1/appScreenshots`（給 `fileSize` / `fileName`）拿到 `uploadOperations` → 依每個 operation 的 `method` / `url` / `requestHeaders` PUT 對應 byte range → `PATCH` 設 `uploaded: true` + `sourceFileChecksum`（檔案的 MD5 hex）。**不必手刻**：`scripts/og/asc-screenshots.mjs` 已封裝，預設 dry-run，`--apply` 才寫入；它會擋下「沒有可編輯版本」「story/ 沒有對應檔案」「PNG 尺寸不符」三種情況，其中第二種若不擋就會刪光線上截圖而且回報成功。 |
 | iPad 截圖用 `APP_IPAD_PRO_3GEN_129` | 13" 的 2064×2752 就放這個 display type，會被接受。iPhone 1290×2796 放 `APP_IPHONE_67`。 |
+| **送審不是 `appStoreVersionSubmissions`** | 那個端點現在回 `403 FORBIDDEN_ERROR: The resource 'appStoreVersionSubmissions' does not allow 'CREATE'. Allowed operation is: DELETE`。改用三步：`POST /v1/reviewSubmissions`（帶 `platform: IOS` 與 app 關聯）→ `POST /v1/reviewSubmissionItems`（把 `appStoreVersion` 放進該 submission）→ `PATCH /v1/reviewSubmissions/{id}` 設 `submitted: true`。成功後版本轉 `WAITING_FOR_REVIEW`。2026-09-20 實作於 v1.5.18。 |
+| 已經有開著的 submission 就沿用 | 重跑時先查 `GET /v1/apps/{id}/reviewSubmissions?filter[state]=READY_FOR_REVIEW,WAITING_FOR_REVIEW,IN_REVIEW`；`READY_FOR_REVIEW` 的那個可以直接加 item，不必新建。 |
+| 非首次送審**可以**寫 `whatsNew` | 首次送審連 `null` 都會被 409 擋（上面那條）；有前一版之後 `PATCH appStoreVersionLocalizations` 帶 `whatsNew` 正常。每個語系各自一份。 |
+
+### 送審那一步（2026-09-20 實跑）
+
+```
+POST  /v1/reviewSubmissions        { platform: IOS, relationships.app }
+POST  /v1/reviewSubmissionItems    { relationships.reviewSubmission, relationships.appStoreVersion }
+PATCH /v1/reviewSubmissions/{id}   { submitted: true }
+```
+
+送出後 `reviewSubmissions.state` 與版本的 `appStoreState` 都會變成 `WAITING_FOR_REVIEW`。
+
+**送審前自己回查一次，不要信「腳本跑完了」**——這份文件已經因為同一個理由錯過兩次（見下方 2026-09-11 那條）。至少查這四項：
+
+```
+GET /v1/appStoreVersions/{id}?fields[appStoreVersions]=versionString,appStoreState
+GET /v1/appStoreVersions/{id}/build?fields[builds]=version,processingState,usesNonExemptEncryption
+GET /v1/appStoreVersions/{id}/appStoreVersionLocalizations?fields[appStoreVersionLocalizations]=locale,whatsNew
+GET /v1/appScreenshotSets/{id}/appScreenshots?fields[appScreenshots]=fileName,assetDeliveryState
+```
+
+`assetDeliveryState.state` 要是 `COMPLETE`；`usesNonExemptEncryption` 是 `null` 就照上表補 `false`。
 
 > ⚠️ **2026-09-11 教訓（又一次）**：runbook 寫「截圖 ✅ 已產出」，但 ASC 上實際掛的是
 > 2026-06 用手機拍的 `IMG_88xx.PNG`（1242×2688，6.5" 格），**不是** `docs/store-assets/`
