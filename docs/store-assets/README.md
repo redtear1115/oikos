@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-08-06
+last_updated: 2026-09-20
 ---
 
 # Store assets — Futari
@@ -66,11 +66,13 @@ node capture-screens.mjs --only=ipad-13   # 只補某一組
 dev 帳本截的，且 `SCREENS` 裡的 trip UUID 是寫死的 —— 資料漂移後重跑不保證截得一樣。
 補新尺寸時請用 `--only`。
 
-> **已知瑕疵（2026-08-27 發現）**：2026-08 那批 12 張左下角有 Next.js dev overlay 的
-> 黑色「N」浮標，`*-play.png` 裡它直接壓住「首頁」tab 圖示。截圖腳本現在會用 CSS
-> 蓋掉 `nextjs-portal`（iPad 這組已乾淨），但**已上傳到 Play 的那批沒有重截**。
-> 追蹤：重截 play / tablet / ios-6.7 需要先把 dev 帳本的日期往前推，否則畫面會顯示
-> 「20 天前」而不是「今天」。
+> **repo 與商店是兩個狀態，別把前者當後者。**
+> repo 裡的 16 張已於 2026-09-20 全部重截：沒有 dev overlay 的「N」浮標、頭像是首字圓圈、
+> 名稱是示範名（見下方「截圖前的帳本準備」）。
+>
+> **但已上傳到 Play 的那批還是 2026-08 的舊圖**——左下角有「N」浮標，而且帶著真人頭像與真實姓名。
+> 換掉它需要到 Play Console 重新上傳，這件事還沒做。App Store 那批同樣是舊圖，換圖要先有一個
+> 可編輯的版本（見下方「上傳到 App Store Connect」）。
 
 四個畫面照敘事順序：餘額一覽 → 紀錄與分攤 → 旅行帳本（內頁）→ 愛物。
 
@@ -147,6 +149,18 @@ node capture-screens.mjs --login                            # 或用自己的專
 ```
 
 `--connect` 接受任何 CDP endpoint（例如 superpowers-chrome 起的那個）。`deviceScaleFactor` 由 CDP 覆寫，所以輸出像素不受實體螢幕 DPI 影響。
+
+**上傳到 App Store Connect**
+
+```bash
+cd scripts/og
+node asc-screenshots.mjs            # dry-run：印出會刪什麼、傳什麼，不動 ASC
+node asc-screenshots.mjs --apply    # 真的換圖
+```
+
+`--apply` 會**先刪掉該 display type 的既有截圖再上傳**，所以它同時檢查三件事才動手：ASC 上必須有
+唯一一個 `PREPARE_FOR_SUBMISSION` 版本（`READY_FOR_SALE` 改不動截圖）、`story/` 裡要有對應檔案
+（空清單時跳過而不是把線上截圖清光）、每張 PNG 的實際尺寸要符合該 display type。
 
 **截圖前的帳本準備**（2026-09-20 實作）：
 - dev 兩位 profile 設 `avatar_hidden = true`（#1328 的欄位），頭像變成首字圓圈，不會出現真人照片

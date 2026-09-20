@@ -158,13 +158,15 @@
     const SHOTS = '../../docs/store-assets/screenshots/'
     const SHOT_W = 1290 // source screenshots are iPhone 6.7" 1290×2796
 
-    /* crop: [x0, y0, x1, y1] in source pixels. Crops avoid the bottom nav,
-     * which still carries the dev-overlay "N" badge in the 2026-08 batch. */
+    /* crop: [x0, y0, x1, y1] in source pixels. Crops stay clear of the bottom
+     * nav — originally because the 2026-08 sources carried a dev-overlay "N"
+     * badge there (the 2026-09-20 re-capture no longer does), and still
+     * because a cropped nav bar reads as a broken screenshot. */
     const frames = {
       1: { scene: '../../public/illustration-hero.png', hero: true },
       2: { shot: '01-dashboard-ios-6.7.png', crop: [0, 500, 1290, 1010],
            scene: '../../docs/store-assets/illustrations/story-2.png', pos: '50% 60%', brief: '巷口那家晚餐。兩人並肩坐在麵店吧台，一人拿手機結帳，另一人看著笑。頭頂一顆燈泡的暖光，窗外是雨後的巷子。' },
-      3: { shot: '01-dashboard-ios-6.7.png', crop: [50, 1180, 1240, 2030],
+      3: { shot: '01-dashboard-ios-6.7.png', crop: [50, 1290, 1240, 2030],
            scene: '../../docs/store-assets/illustrations/story-3.png', pos: '50% 55%', brief: '晚上的廚房。一人把超市袋子的東西收進冰箱，另一人靠在流理台邊用手機記一筆。桌上放著收據和一杯熱茶。' },
       4: { shot: '04-assets-ios-6.7.png', crop: [50, 1440, 1240, 2230],
            scene: '../../docs/store-assets/illustrations/story-4.png', pos: '40% 18%', brief: '傍晚的客廳。窗台上一盆小仙子（多肉），柴犬麻糬趴在沙發腳邊，兩人的腳擱在同一張小凳上。斜斜的夕陽光。' },

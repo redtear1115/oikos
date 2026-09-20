@@ -32,7 +32,11 @@ const SETS = {
   APP_IPHONE_67: { suffix: 'ios-6.7', expect: [1290, 2796] },
   APP_IPAD_PRO_3GEN_129: { suffix: 'ipad-13', expect: [2064, 2752] },
 }
-const LOCALES = ['zh-Hant']
+// ASC locale → the language token used in story/ filenames. Adding a locale
+// here without adding its rendered files is caught by the empty-list guard
+// below, not by silently uploading another language's images.
+const LOCALE_FILE_LANG = { 'zh-Hant': 'zh' }
+const LOCALES = Object.keys(LOCALE_FILE_LANG)
 
 function env() {
   const raw = fs.readFileSync('/Volumes/Futari Secrets/env/.env', 'utf8')
@@ -66,11 +70,23 @@ function token() {
   return `${input}.${Buffer.concat([readInt(), readInt()]).toString('base64url')}`
 }
 
-const JWT = token()
+/** PNG 尺寸讀自 IHDR（bytes 16-24）。宣告了就要真的驗，否則那兩個數字只是註解。 */
+function pngSize(file) {
+  const fd = fs.openSync(file, 'r')
+  const head = Buffer.alloc(24)
+  fs.readSync(fd, head, 0, 24, 0)
+  fs.closeSync(fd)
+  if (head.toString('ascii', 1, 4) !== 'PNG') throw new Error(`${path.basename(file)} 不是 PNG`)
+  return [head.readUInt32BE(16), head.readUInt32BE(20)]
+}
+
+// 一次上傳好幾 MB 的 PNG，單一 15 分鐘 token 有機會在中途過期；過期點若落在
+// 「刪掉舊圖之後、傳完新圖之前」，商店會停在少圖甚至無圖的狀態。所以每次請求
+// 現簽，簽章成本遠低於那個風險。
 async function api(pathname, init = {}) {
   const res = await fetch(`https://api.appstoreconnect.apple.com${pathname}`, {
     ...init,
-    headers: { Authorization: `Bearer ${JWT}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
+    headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
   })
   if (res.status === 204) return null
   const body = await res.text()
@@ -78,8 +94,13 @@ async function api(pathname, init = {}) {
   return body ? JSON.parse(body) : null
 }
 
-const versions = await api(`/v1/apps/${APP_ID}/appStoreVersions?limit=5&fields[appStoreVersions]=versionString,appStoreState`)
-const editable = versions.data.find((v) => v.attributes.appStoreState === 'PREPARE_FOR_SUBMISSION')
+const versions = await api(`/v1/apps/${APP_ID}/appStoreVersions?limit=5&filter[platform]=IOS&fields[appStoreVersions]=versionString,appStoreState`)
+const editables = versions.data.filter((v) => v.attributes.appStoreState === 'PREPARE_FOR_SUBMISSION')
+if (editables.length > 1) {
+  console.error(`有 ${editables.length} 個 PREPARE_FOR_SUBMISSION 版本，不確定該動哪一個。手動處理。`)
+  process.exit(1)
+}
+const editable = editables[0]
 console.log('版本：', versions.data.map((v) => `${v.attributes.versionString} (${v.attributes.appStoreState})`).join(', '))
 if (!editable) {
   console.error('\n沒有 PREPARE_FOR_SUBMISSION 的版本 —— 截圖改不動。')
@@ -96,16 +117,40 @@ for (const loc of locs.data) {
     continue
   }
   for (const [displayType, spec] of Object.entries(SETS)) {
+    const fileLang = LOCALE_FILE_LANG[locale]
     const files = fs.readdirSync(STORY_DIR)
-      .filter((f) => f.endsWith(`-zh-${spec.suffix}.png`))
+      .filter((f) => f.endsWith(`-${fileLang}-${spec.suffix}.png`))
       .sort()
       .map((f) => path.join(STORY_DIR, f))
     console.log(`\n${locale} / ${displayType}: ${files.length} 張`)
-    files.forEach((f) => console.log('   ', path.basename(f)))
-    if (!APPLY) continue
+    files.forEach((f) => console.log('   ', path.basename(f), pngSize(f).join('×')))
+
+    // 尺寸不對的檔案 Apple 會在非同步驗證時才退，而那時舊圖已經刪掉了。先擋。
+    for (const f of files) {
+      const [w, h] = pngSize(f)
+      if (w !== spec.expect[0] || h !== spec.expect[1]) {
+        console.error(`${path.basename(f)} 是 ${w}×${h}，${displayType} 只收 ${spec.expect.join('×')}`)
+        process.exit(1)
+      }
+    }
 
     const sets = await api(`/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets?limit=20&fields[appScreenshotSets]=screenshotDisplayType`)
     let set = sets.data.find((s) => s.attributes.screenshotDisplayType === displayType)
+    // 先把「要刪什麼」讀出來，dry-run 也印——這支存在的理由就是「商店上掛的跟你以為的不一樣」，
+    // 預覽卻不顯示破壞性的那一半就沒意義了。
+    const existingNow = set
+      ? (await api(`/v1/appScreenshotSets/${set.id}/appScreenshots?limit=20&fields[appScreenshots]=fileName`)).data
+      : []
+    existingNow.forEach((s) => console.log('    將刪除：', s.attributes.fileName))
+
+    // 空清單仍然執行刪除，會把該尺寸的截圖清光而且回報成功——store/ 還沒 render、
+    // 檔名慣例改了、或在別的 worktree 跑，都會踩到。
+    if (!files.length) {
+      console.error(`${locale} / ${displayType}: story/ 裡沒有對應檔案，跳過（不刪除既有截圖）`)
+      continue
+    }
+    if (!APPLY) continue
+
     if (!set) {
       set = (await api('/v1/appScreenshotSets', {
         method: 'POST',
@@ -113,7 +158,9 @@ for (const loc of locs.data) {
       })).data
     }
     // 舊圖先刪，否則新圖只是追加在後面，商店會顯示兩套混在一起。
-    const existing = await api(`/v1/appScreenshotSets/${set.id}/appScreenshots?limit=20&fields[appScreenshots]=fileName`)
+    const existing = set.id === (sets.data.find((s) => s.attributes.screenshotDisplayType === displayType)?.id)
+      ? { data: existingNow }
+      : await api(`/v1/appScreenshotSets/${set.id}/appScreenshots?limit=20&fields[appScreenshots]=fileName`)
     for (const shot of existing.data) {
       await api(`/v1/appScreenshots/${shot.id}`, { method: 'DELETE' })
       console.log('    刪除舊圖', shot.attributes.fileName)
