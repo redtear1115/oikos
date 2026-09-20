@@ -1308,7 +1308,8 @@ export const en: Translations = {
     saveChanges: 'Save changes',
     deleteConfirm: {
       confirmLabel: 'Delete',
-      description: 'Past expenses stay in the ledger — they just won’t be counted under “{name}” anymore.',
+      description: 'Past expenses stay in the ledger; they are not deleted with it.',
+      unnamed: 'this aibutsu',
       item: { title: 'Remove “{name}” from aibutsu?' },
       lifeEntity: { title: 'Put “{name}” away from aibutsu?' },
     },

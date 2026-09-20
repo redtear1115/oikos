@@ -1295,7 +1295,8 @@ export const zhCN: Translations = {
     saveChanges: '保存更改',
     deleteConfirm: {
       confirmLabel: '删除',
-      description: '之前记下的支出会留在账本里，只是不再算在「{name}」名下。',
+      description: '之前记下的支出会留在账本里，不会跟着一起删掉。',
+      unnamed: '这个爱物',
       item: { title: '「{name}」要从爱物移除吗？' },
       lifeEntity: { title: '要把「{name}」从爱物收起来吗？' },
     },

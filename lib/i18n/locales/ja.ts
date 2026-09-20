@@ -1308,7 +1308,8 @@ export const ja: Translations = {
     saveChanges: '変更を保存',
     deleteConfirm: {
       confirmLabel: '削除',
-      description: 'これまでの支出は家計簿に残ります。「{name}」に紐づかなくなるだけです。',
+      description: 'これまでの支出は家計簿に残ります。一緒に削除されることはありません。',
+      unnamed: 'この愛物',
       item: { title: '「{name}」を愛物から削除しますか？' },
       lifeEntity: { title: '「{name}」を愛物からしまいますか？' },
     },

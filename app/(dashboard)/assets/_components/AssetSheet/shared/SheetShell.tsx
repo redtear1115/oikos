@@ -146,8 +146,14 @@ export function SheetShell({
       {onDelete && (
         <ConfirmModal
           open={confirmingDelete}
-          title={ts.deleteConfirm[deleteVariant].title.replace('{name}', assetName)}
-          description={ts.deleteConfirm.description.replace('{name}', assetName)}
+          // The sheet's live name field, so the dialog matches what is on
+          // screen — but it can be empty (saving is gated on a name, deleting
+          // is not), and 「」要從愛物移除嗎？ reads like a bug. Fall back then.
+          title={ts.deleteConfirm[deleteVariant].title.replace(
+            '{name}',
+            assetName.trim() || ts.deleteConfirm.unnamed,
+          )}
+          description={ts.deleteConfirm.description}
           confirmLabel={ts.deleteConfirm.confirmLabel}
           pending={deletePending}
           onConfirm={() => { setConfirmingDelete(false); onDelete() }}

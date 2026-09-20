@@ -85,7 +85,7 @@ describe('asset delete confirm (#1325)', () => {
     openMenuAndClickDelete()
 
     const expectedTitle = zhTW.assetSheet.deleteConfirm.item.title.replace('{name}', '小白')
-    const expectedDescription = zhTW.assetSheet.deleteConfirm.description.replace('{name}', '小白')
+    const expectedDescription = zhTW.assetSheet.deleteConfirm.description
     expect(screen.getByText(expectedTitle)).toBeTruthy()
     expect(screen.getByText(expectedDescription)).toBeTruthy()
 
@@ -110,5 +110,46 @@ describe('asset delete confirm (#1325)', () => {
     expect(screen.getByText(expectedTitle)).toBeTruthy()
     // And not the plain item copy a car would get.
     expect(screen.queryByText(itemTitle)).toBeNull()
+  })
+
+  // The description is a factual claim about what softDeleteAsset does, and the
+  // first version of it was wrong twice over. It only sets Assets.deleted_at —
+  // so past expenses survive (true, and what the old copy denied), but they also
+  // keep their attribution: monthlyStatsByAsset (lib/db/queries/transactions.ts)
+  // joins Assets without filtering deleted_at, on purpose, so a deleted aibutsu
+  // still groups and sums its old expenses under its own name in the records
+  // breakdown. Anything here that promises the attribution disappears is a lie
+  // the UI tells about its own behaviour.
+  it('claims only what softDeleteAsset actually does', () => {
+    render(
+      <PetSheetBody open onClose={() => {}} initial={{ id: 'a3', name: '米嚕' }} />,
+      { wrapper: wrap },
+    )
+    openMenuAndClickDelete()
+
+    const description = zhTW.assetSheet.deleteConfirm.description
+    expect(screen.getByText(description)).toBeTruthy()
+    // Says the records survive…
+    expect(description).toMatch(/留在帳本裡/)
+    // …and does not promise they stop being attributed to this aibutsu.
+    expect(description).not.toMatch(/名下|不再算在/)
+    // …nor repeats the original error that they get removed.
+    expect(description).not.toMatch(/移除|刪除支出/)
+  })
+
+  it('falls back to a generic noun when the name field is empty', () => {
+    // Saving is gated on a name; deleting is not, so this is reachable —
+    // without the fallback the title renders as 「」要從愛物移除嗎？.
+    render(
+      <PetSheetBody open onClose={() => {}} initial={{ id: 'a4', name: '' }} />,
+      { wrapper: wrap },
+    )
+    openMenuAndClickDelete()
+
+    const expected = zhTW.assetSheet.deleteConfirm.lifeEntity.title.replace(
+      '{name}',
+      zhTW.assetSheet.deleteConfirm.unnamed,
+    )
+    expect(screen.getByText(expected)).toBeTruthy()
   })
 })

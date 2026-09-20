@@ -1678,6 +1678,7 @@ export type Translations = {
       /** Shared truth line — the ledger keeps past expenses either way (#1325). */
       description: string
       /** For car / house / insurance / generic item. `{name}` interpolated. */
+      unnamed: string
       item: { title: string }
       /** For child / pet / plant. `{name}` interpolated. */
       lifeEntity: { title: string }
@@ -4206,7 +4207,8 @@ export const zhTW: Translations = {
     saveChanges: '儲存變更',
     deleteConfirm: {
       confirmLabel: '刪除',
-      description: '之前記下的支出會留在帳本裡，只是不再算在「{name}」名下。',
+      description: '之前記下的支出會留在帳本裡，不會跟著一起刪掉。',
+      unnamed: '這個愛物',
       item: { title: '「{name}」要從愛物移除嗎？' },
       lifeEntity: { title: '要把「{name}」從愛物收起來嗎？' },
     },
