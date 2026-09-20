@@ -1429,7 +1429,9 @@ export type Translations = {
       singleYearLabel: string
       /** Template with `{n}` — amber/warning badge (≤60d, >reminderDaysBefore). */
       daysLeftWarning: string
-      /** Template with `{n}` — red/urgent badge (≤reminderDaysBefore). */
+      /** Template with `{n}` and `{date}` (ISO, e.g. `2026-11-02`) — red/urgent
+       *  badge (≤reminderDaysBefore). #1324 — carries the date so it isn't
+       *  colour-only against `daysLeftWarning`. */
       daysLeftUrgent: string
       /** Red badge shown when single-year policy is expired. */
       expiredBadge: string
@@ -1446,10 +1448,16 @@ export type Translations = {
       renewPolicyNoLabel: string
       renewPolicyNoPlaceholder: string
       renewConfirm: string
+      /** #1324 — generic fallback shown when renewInsurance fails without a
+       *  recognised action code (network / unexpected). */
+      renewError: string
       // ── lapse confirm ───────────────────────────────────────────────────
       lapseTitle: string
       lapseDescription: string
       lapseConfirm: string
+      /** #1324 — generic fallback shown when lapseInsurance fails without a
+       *  recognised action code (network / unexpected). */
+      lapseError: string
       insuredShort: string
       annualLabel: string
       timelineStarts: string
@@ -3961,7 +3969,7 @@ export const zhTW: Translations = {
       expired: '已到期',
       singleYearLabel: '單年期',
       daysLeftWarning: '剩 {n} 天',
-      daysLeftUrgent: '剩 {n} 天',
+      daysLeftUrgent: '{date} 到期 · 剩 {n} 天',
       expiredBadge: '已到期',
       nextPaymentBadge: '繳費剩 {n} 天',
       renewAction: '已續保',
@@ -3971,9 +3979,11 @@ export const zhTW: Translations = {
       renewPolicyNoLabel: '新保單號（選填）',
       renewPolicyNoPlaceholder: '沿用原號可留空',
       renewConfirm: '已續保',
+      renewError: '續保失敗，請再試一次',
       lapseTitle: '已停止這份保單？',
       lapseDescription: '保單將從列表中移除，仍可從詳細頁找回。',
       lapseConfirm: '已停止',
+      lapseError: '停止失敗，請再試一次',
       insuredShort: '保 {name}',
       annualLabel: '年繳',
       timelineStarts: '生效',

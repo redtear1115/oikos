@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
-import { SheetBackdrop } from '@/app/(dashboard)/dashboard/_components/SheetBackdrop'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
 import { computeNextPaymentDate, getFramingGroup, payCycleMonths } from '@/lib/insurance'
 import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
 import { renewInsurance, lapseInsurance } from '@/actions/asset'
 import { unwrapAction } from '@/lib/action-errors'
+import { describeError } from '@/lib/errors'
 
 /**
  * v0.15.0 #127 — Insurance list card with type-specific behaviour.
@@ -59,6 +59,8 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const [renewOpen, setRenewOpen] = useState(false)
   const [lapseOpen, setLapseOpen] = useState(false)
   const [renewPolicyNo, setRenewPolicyNo] = useState('')
+  const [renewError, setRenewError] = useState('')
+  const [lapseError, setLapseError] = useState('')
 
   const framing = getFramingGroup(data.insuranceType)
   const today = todayLocalDate()
@@ -88,15 +90,18 @@ export function InsuranceListItem({ id, name, data }: Props) {
   const showNextPaymentBadge =
     daysToNextPayment !== null && daysToNextPayment >= 0 && daysToNextPayment <= paymentThreshold
 
+  const i = t.assets.insuranceList
+
   const handleRenew = () => {
     startTransition(async () => {
       try {
         unwrapAction(await renewInsurance({ id, newPolicyNumber: renewPolicyNo.trim() || null }))
         setRenewOpen(false)
         setRenewPolicyNo('')
+        setRenewError('')
         router.refresh()
       } catch (e) {
-        console.error('renewInsurance failed', e)
+        setRenewError(describeError(e, i.renewError, t.common.offlineError, t.errors.actions))
       }
     })
   }
@@ -106,14 +111,13 @@ export function InsuranceListItem({ id, name, data }: Props) {
       try {
         unwrapAction(await lapseInsurance({ id }))
         setLapseOpen(false)
+        setLapseError('')
         router.refresh()
       } catch (e) {
-        console.error('lapseInsurance failed', e)
+        setLapseError(describeError(e, i.lapseError, t.common.offlineError, t.errors.actions))
       }
     })
   }
-
-  const i = t.assets.insuranceList
 
   const policyHolderInitial = data.policyHolderDisplayName?.trim().charAt(0).toUpperCase() ?? null
 
@@ -146,7 +150,12 @@ export function InsuranceListItem({ id, name, data }: Props) {
         label = i.expiredBadge
       } else if (daysToExpiry <= data.reminderDaysBefore) {
         tone = 'destructive'
-        label = i.daysLeftUrgent.replace('{n}', String(daysToExpiry))
+        // #1324 — urgent and warning badges used to differ by colour alone
+        // ("剩 {n} 天" either way). Urgent adds the expiry date itself as a
+        // non-colour cue.
+        label = i.daysLeftUrgent
+          .replace('{n}', String(daysToExpiry))
+          .replace('{date}', data.expiryDate ?? '')
       } else if (daysToExpiry <= 60) {
         tone = 'warning'
         label = i.daysLeftWarning.replace('{n}', String(daysToExpiry))
@@ -349,7 +358,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
           <div className="px-4 pb-3.5" style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
-              onClick={() => setRenewOpen(true)}
+              onClick={() => { setRenewError(''); setRenewOpen(true) }}
               disabled={pending}
               style={{
                 flex: 1, height: 36,
@@ -364,7 +373,7 @@ export function InsuranceListItem({ id, name, data }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => setLapseOpen(true)}
+              onClick={() => { setLapseError(''); setLapseOpen(true) }}
               disabled={pending}
               style={{
                 flex: 1, height: 36,
@@ -380,28 +389,22 @@ export function InsuranceListItem({ id, name, data }: Props) {
         )}
       </div>
 
-      {/* Renew sheet */}
-      <SheetBackdrop open={renewOpen} onClick={() => !pending && setRenewOpen(false)} />
-      <div
-        className="fixed left-1/2 top-1/2 z-modal w-[calc(100%-48px)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6"
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--hairline)',
-          boxShadow: '0 20px 60px rgba(31,27,22,0.18)',
-          opacity: renewOpen ? 1 : 0,
-          pointerEvents: renewOpen ? 'auto' : 'none',
-          transition: 'opacity 200ms',
-        }}
+      {/* Renew confirm — #1324 was a hand-rolled always-mounted dialog (hidden
+          via opacity/pointerEvents only), so its input + two buttons stayed
+          in Tab/VoiceOver order on every row. Rebuilt on the shared
+          ConfirmModal (portal + focus trap + Escape + restore focus), which
+          only mounts its panel while `open`. */}
+      <ConfirmModal
+        open={renewOpen}
+        title={i.renewTitle}
+        description={i.renewDescription}
+        confirmLabel={i.renewConfirm}
+        cancelLabel={t.common.cancel}
+        destructive={false}
+        pending={pending}
+        onCancel={() => { setRenewOpen(false); setRenewError('') }}
+        onConfirm={handleRenew}
       >
-        <h2
-          className="text-base mb-2 leading-tight"
-          style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--ink)', fontWeight: 500 }}
-        >
-          {i.renewTitle}
-        </h2>
-        <p className="text-sm mb-4" style={{ color: 'var(--ink-2)' }}>
-          {i.renewDescription}
-        </p>
         <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-3)' }}>
           {i.renewPolicyNoLabel}
         </label>
@@ -411,29 +414,13 @@ export function InsuranceListItem({ id, name, data }: Props) {
           onChange={(e) => setRenewPolicyNo(e.target.value)}
           placeholder={i.renewPolicyNoPlaceholder}
           disabled={pending}
-          className="mb-5"
         />
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setRenewOpen(false)}
-            disabled={pending}
-            className="flex-1 h-11 rounded-xl cursor-pointer text-sm font-medium disabled:opacity-50"
-            style={{ background: 'transparent', color: 'var(--ink-2)', border: '1px solid var(--hairline)' }}
-          >
-            {t.common.cancel}
-          </button>
-          <button
-            type="button"
-            onClick={handleRenew}
-            disabled={pending}
-            className="flex-1 h-11 rounded-xl cursor-pointer text-sm font-medium disabled:opacity-50"
-            style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-          >
-            {i.renewConfirm}
-          </button>
-        </div>
-      </div>
+        {renewError && (
+          <div className="mt-3 text-sm" style={{ color: 'var(--destructive)' }} role="alert">
+            {renewError}
+          </div>
+        )}
+      </ConfirmModal>
 
       <ConfirmModal
         open={lapseOpen}
@@ -443,9 +430,15 @@ export function InsuranceListItem({ id, name, data }: Props) {
         cancelLabel={t.common.cancel}
         destructive
         pending={pending}
-        onCancel={() => setLapseOpen(false)}
+        onCancel={() => { setLapseOpen(false); setLapseError('') }}
         onConfirm={handleLapse}
-      />
+      >
+        {lapseError && (
+          <div className="text-sm" style={{ color: 'var(--destructive)' }} role="alert">
+            {lapseError}
+          </div>
+        )}
+      </ConfirmModal>
     </>
   )
 }
