@@ -1307,9 +1307,13 @@ export const en: Translations = {
     typeFallback: 'aibutsu',
     saveChanges: 'Save changes',
     deleteConfirm: {
-      title: 'Delete?',
-      description: 'This aibutsu and all linked expenses will be removed from the list.',
       confirmLabel: 'Delete',
+      description: 'Past expenses stay in the ledger — they just won’t be counted under “{name}” anymore.',
+      item: { title: 'Remove “{name}” from aibutsu?' },
+      lifeEntity: { title: 'Put “{name}” away from aibutsu?' },
+    },
+    menu: {
+      ariaLabel: 'More actions',
     },
     type: {
       label: 'Type',

@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
+import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
+import { HeaderOverflowMenu } from './HeaderOverflowMenu'
 
 interface Props {
   open: boolean
@@ -22,12 +25,28 @@ interface Props {
   destructive?: boolean
   /** Unsaved-input check (see SheetFrame `isDirty`, #1183). */
   isDirty?: () => boolean
+  /**
+   * Soft-deletes the asset (edit mode only). When present, a "⋯" menu
+   * appears in the header; the entry point stays plain — the destructive
+   * moment is the confirm dialog it opens, not the menu row (#1325).
+   */
+  onDelete?: () => void
+  deletePending?: boolean
+  /** Current name, interpolated into the delete confirm's copy. */
+  assetName?: string
+  /**
+   * Which delete copy to use: a plain-named prompt for things (car / house /
+   * insurance / generic item) vs a softer one for child / pet / plant.
+   * Both state the same truth — past expenses stay in the ledger, they just
+   * stop being attributed to this aibutsu — softDeleteAsset only ever sets
+   * `deletedAt` (#1325).
+   */
+  deleteVariant?: 'item' | 'lifeEntity'
 }
 
 // Shared sheet chrome: backdrop, slide-up container with fixed height,
-// grabber, header (cancel / title / save), scrolling content area with the
-// caller-provided body, error display, and bottom save. Delete affordance is
-// rendered by each body via DeleteConfirmFlow (only in edit mode).
+// grabber, header (cancel / title / ⋯ menu / save), scrolling content area
+// with the caller-provided body, error display, and bottom save.
 export function SheetShell({
   open,
   title,
@@ -40,8 +59,14 @@ export function SheetShell({
   children,
   destructive = false,
   isDirty,
+  onDelete,
+  deletePending = false,
+  assetName = '',
+  deleteVariant = 'item',
 }: Props) {
   const t = useTranslations()
+  const ts = t.assetSheet
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const accentColor = destructive ? 'var(--destructive)' : 'var(--accent)'
   // Bottom commit follows the system's primary/danger vocabulary (ink fill,
   // or destructive fill for irreversible confirms) — never the ember accent,
@@ -67,16 +92,24 @@ export function SheetShell({
         <div className="text-base font-medium tracking-wide" style={{ color: 'var(--ink)' }}>
           {title}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onSave}
-          disabled={!canSave}
-          className="px-2 font-medium"
-          style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
-        >
-          {pending ? t.common.saving : t.common.save}
-        </Button>
+        <div className="flex items-center gap-1">
+          {onDelete && (
+            <HeaderOverflowMenu
+              ariaLabel={ts.menu.ariaLabel}
+              items={[{ label: t.common.delete, onSelect: () => setConfirmingDelete(true) }]}
+            />
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSave}
+            disabled={!canSave}
+            className="px-2 font-medium"
+            style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
+          >
+            {pending ? t.common.saving : t.common.save}
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-auto flex-1 px-5 pt-2 pb-6">
@@ -109,6 +142,18 @@ export function SheetShell({
           {pending ? t.common.saving : bottomSaveLabel}
         </button>
       </div>
+
+      {onDelete && (
+        <ConfirmModal
+          open={confirmingDelete}
+          title={ts.deleteConfirm[deleteVariant].title.replace('{name}', assetName)}
+          description={ts.deleteConfirm.description.replace('{name}', assetName)}
+          confirmLabel={ts.deleteConfirm.confirmLabel}
+          pending={deletePending}
+          onConfirm={() => { setConfirmingDelete(false); onDelete() }}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
     </SheetFrame>
   )
 }

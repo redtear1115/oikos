@@ -1307,9 +1307,13 @@ export const ja: Translations = {
     typeFallback: '愛物',
     saveChanges: '変更を保存',
     deleteConfirm: {
-      title: '削除しますか？',
-      description: 'この愛物と関連するすべての支出が一覧から削除されます。',
       confirmLabel: '削除',
+      description: 'これまでの支出は家計簿に残ります。「{name}」に紐づかなくなるだけです。',
+      item: { title: '「{name}」を愛物から削除しますか？' },
+      lifeEntity: { title: '「{name}」を愛物からしまいますか？' },
+    },
+    menu: {
+      ariaLabel: 'その他の操作',
     },
     type: {
       label: '種類',

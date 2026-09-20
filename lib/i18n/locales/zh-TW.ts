@@ -1674,9 +1674,17 @@ export type Translations = {
     typeFallback: string
     saveChanges: string
     deleteConfirm: {
-      title: string
-      description: string
       confirmLabel: string
+      /** Shared truth line — the ledger keeps past expenses either way (#1325). */
+      description: string
+      /** For car / house / insurance / generic item. `{name}` interpolated. */
+      item: { title: string }
+      /** For child / pet / plant. `{name}` interpolated. */
+      lifeEntity: { title: string }
+    }
+    menu: {
+      /** aria-label for the header "⋯" trigger that reveals delete (#1325). */
+      ariaLabel: string
     }
     type: {
       label: string
@@ -4197,9 +4205,13 @@ export const zhTW: Translations = {
     typeFallback: '愛物',
     saveChanges: '儲存變更',
     deleteConfirm: {
-      title: '確認刪除？',
-      description: '這個愛物與所有關聯支出將從列表中移除。',
       confirmLabel: '刪除',
+      description: '之前記下的支出會留在帳本裡，只是不再算在「{name}」名下。',
+      item: { title: '「{name}」要從愛物移除嗎？' },
+      lifeEntity: { title: '要把「{name}」從愛物收起來嗎？' },
+    },
+    menu: {
+      ariaLabel: '更多操作',
     },
     type: {
       label: '類型',
