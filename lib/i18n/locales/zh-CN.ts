@@ -1509,7 +1509,7 @@ export const zhCN: Translations = {
     },
     money: {
       thisMonth: '本月',
-      cumulative: '累计',
+      thisChapter: '这个章节',
     },
     hint: {
       title: '✦ 可以记什么？',

@@ -1,5 +1,7 @@
 'use client'
 
+import type { Age } from '@/lib/age'
+import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
 
 export function SectionHeader({ children }: { children: React.ReactNode }) {
@@ -45,37 +47,38 @@ export function InfoRow({ label, value, mono = false, last = false }: {
   )
 }
 
-export function MoneyTwoCol({ month, total, accent }: { month: number; total: number; accent: string }) {
+// #1338 — this used to be `MoneyTwoCol`: a framed two-column block (本月 /
+// 累計) sitting directly under the age hero, its labels in the 愛物's accent
+// colour, louder than the numbers themselves. The list card above it already
+// folded money into one quiet line (#1323); the detail page now carries the
+// same shape down, so the first thing the page says stays 「這是我們照顧的一個
+// 對象」 rather than 「這是一個成本中心」.
+//
+// Hidden entirely at 0 — a quiet 0 still asks the reader to notice its absence.
+// In a past chapter 「本月」 is 0 by construction (the query scopes both
+// aggregates to the chapter), so the label swaps to 「這個章節」 and shows the
+// chapter total instead.
+export function MoneyLine({ month, total, isPast }: { month: number; total: number; isPast: boolean }) {
   const t = useTranslations()
+  const amount = isPast ? total : month
+  if (amount === 0) return null
+  const label = isPast ? t.assetDetail.money.thisChapter : t.assetDetail.money.thisMonth
   return (
-    <div
-      className="mx-4 mt-3 flex rounded-2xl px-3.5 py-3 gap-2"
-      style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
-    >
-      {[{ label: t.assetDetail.money.thisMonth, value: month }, { label: t.assetDetail.money.cumulative, value: total }].map((s, i) => (
-        <div key={s.label} className="flex-1 flex items-stretch gap-2">
-          {i > 0 && <div className="w-px" style={{ background: 'var(--hairline)' }} />}
-          <div className="flex-1">
-            <div className="text-xs tracking-[1px]" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{s.label}</div>
-            {/* TODO(v0.17 currency): "NT$ {amount}" with space — defer to design
-                 before migrating to formatAmount. */}
-            <div className="text-base font-medium mt-0.5 tabular-nums" style={{ color: 'var(--ink)' }}>
-              NT$ {s.value.toLocaleString()}
-            </div>
-          </div>
-        </div>
-      ))}
+    <div className="tnum text-xs px-5 pt-3 text-ink-3">
+      {label} {formatAmount(amount, 'twd')}
     </div>
   )
 }
 
-export function AgeDisplay({ birth, accent }: { birth: string; accent: string }) {
+// #1339 — takes an already-computed `Age` rather than the raw 'YYYY-MM-DD'
+// string. It used to parse `new Date(birth)` (UTC) against a local `new Date()`
+// and had no future-date guard, so a due date typed in ahead of the birth read
+// as 「-1 歲」 here while the list card correctly showed no age. The single
+// source of truth is now `computeAge()` in `lib/age.ts`; callers that get null
+// back render no age block at all.
+export function AgeDisplay({ age, accent }: { age: Age; accent: string }) {
   const t = useTranslations()
-  const now = new Date()
-  const b = new Date(birth)
-  const months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth())
-  const yrs = Math.floor(months / 12)
-  const mos = months % 12
+  const { years: yrs, months: mos } = age
   return (
     <div className="text-center">
       <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{t.assetDetail.age.label}</div>

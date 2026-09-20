@@ -1880,7 +1880,11 @@ export type Translations = {
     }
     money: {
       thisMonth: string
-      cumulative: string
+      /** #1338 — was `cumulative` (「累計」). `getAssetSummary` scopes BOTH
+       *  aggregates to the current chapter, so this was never an all-time
+       *  figure; it is the chapter total, and now says so. Matches
+       *  `assetListItem.thisChapter` on the list card. */
+      thisChapter: string
     }
     hint: {
       title: string
@@ -4400,7 +4404,7 @@ export const zhTW: Translations = {
     },
     money: {
       thisMonth: '本月',
-      cumulative: '累計',
+      thisChapter: '這個章節',
     },
     hint: {
       title: '✦ 可以記什麼？',

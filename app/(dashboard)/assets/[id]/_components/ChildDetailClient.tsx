@@ -7,7 +7,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint, type SiblingChip } from './AibutsuHeader'
-import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aibutsu-ui'
+import { SectionHeader, InfoCard, InfoRow, MoneyLine, AgeDisplay } from './aibutsu-ui'
 import type { ChildDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
@@ -15,6 +15,7 @@ import { revealChildPii, revealChildName } from '@/actions/asset'
 import { RevealableRow as SharedRevealableRow } from '@/app/(dashboard)/_components/RevealableRow'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { resolveDisplayName } from '@/lib/display-name'
+import { computeAge } from '@/lib/age'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
@@ -120,6 +121,10 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
   const t = useTranslations()
   const td = t.assetDetail.child
   const { isPast } = useMember()
+  // #1339 — null for a missing, malformed, or future birthday (a due date
+  // typed in early); the age block is then skipped entirely rather than
+  // rendering 「-1 歲」.
+  const age = computeAge(details?.birthday)
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -166,13 +171,13 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         currentAssetId={assetId}
       />
 
-      {details?.birthday && (
+      {age && (
         <div className="px-5 pb-6" style={{ background: tint.bg }}>
-          <AgeDisplay birth={details.birthday} accent={tint.accent} />
+          <AgeDisplay age={age} accent={tint.accent} />
         </div>
       )}
 
-      <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
+      <MoneyLine month={summary.monthAmount} total={summary.totalAmount} isPast={isPast} />
 
       <SectionHeader>{td.sectionId}</SectionHeader>
       <InfoCard>

@@ -1522,7 +1522,7 @@ export const ja: Translations = {
     },
     money: {
       thisMonth: '今月',
-      cumulative: '累計',
+      thisChapter: 'この章',
     },
     hint: {
       title: '✦ 何を記録できる？',

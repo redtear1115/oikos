@@ -7,7 +7,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, type SiblingChip } from './AibutsuHeader'
-import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
+import { SectionHeader, InfoCard, InfoRow, MoneyLine } from './aibutsu-ui'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
@@ -62,7 +62,6 @@ export function TemplateAssetDetailClient({
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
 
-  const accent = '#6E5F52'
   const template = getTemplate(templateKey)
 
   const handleAssetMutated = (kind: 'saved' | 'deleted') => {
@@ -103,7 +102,7 @@ export function TemplateAssetDetailClient({
         currentAssetId={assetId}
       />
 
-      <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={accent} />
+      <MoneyLine month={summary.monthAmount} total={summary.totalAmount} isPast={isPast} />
 
       {template.fields.length > 0 && (
         <>

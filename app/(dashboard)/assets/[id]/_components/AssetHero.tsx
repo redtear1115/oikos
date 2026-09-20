@@ -23,6 +23,14 @@ interface AssetHeroProps {
    * parked for half a year was told it needed at least 2 logs.
    */
   lastFuelAt: string | null
+  /**
+   * Past chapter view. #1338 — both aggregates are already scoped to the
+   * chapter by `getAssetSummary`, so in a past chapter 「本月」 is 0 by
+   * construction. Showing it there put 「本月 NT$0」 on the page, which is the
+   * same quiet-zero the list stopped showing in #1323; the chapter total is
+   * the only number that means anything once the chapter has closed.
+   */
+  isPast: boolean
   onEdit?: () => void
 }
 
@@ -46,7 +54,7 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
 
 export function AssetHero({
   name, brand, model, year, fuelType, color,
-  monthAmount, totalAmount, avgEcon, lastFuelAt, onEdit,
+  monthAmount, totalAmount, avgEcon, lastFuelAt, isPast, onEdit,
 }: AssetHeroProps) {
   const t = useTranslations()
   const isElectric = fuelType === 'electric'
@@ -94,9 +102,13 @@ export function AssetHero({
           {name && header}
           {name && subtitle}
           <div className={`flex items-baseline gap-7 ${name ? 'mt-6' : ''}`}>
-            <Stat label={t.assetDetail.money.thisMonth} amount={monthAmount} accent={false} />
-            <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
-            <Stat label={t.assetDetail.money.cumulative} amount={totalAmount} accent />
+            {!isPast && (
+              <>
+                <Stat label={t.assetDetail.money.thisMonth} amount={monthAmount} accent={false} />
+                <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
+              </>
+            )}
+            <Stat label={t.assetDetail.money.thisChapter} amount={totalAmount} accent />
           </div>
         </div>
       </div>
@@ -137,9 +149,13 @@ export function AssetHero({
           className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
           style={{ background: 'rgba(58,36,25,0.04)', border: '1px solid var(--hairline)' }}
         >
-          <MiniStat label={t.assetDetail.money.thisMonth} value={`NT$ ${monthAmount.toLocaleString()}`} />
-          <div style={{ width: 1, background: 'var(--hairline)' }} />
-          <MiniStat label={t.assetDetail.money.cumulative} value={`NT$ ${totalAmount.toLocaleString()}`} />
+          {!isPast && (
+            <>
+              <MiniStat label={t.assetDetail.money.thisMonth} value={`NT$ ${monthAmount.toLocaleString()}`} />
+              <div style={{ width: 1, background: 'var(--hairline)' }} />
+            </>
+          )}
+          <MiniStat label={t.assetDetail.money.thisChapter} value={`NT$ ${totalAmount.toLocaleString()}`} />
         </div>
       </div>
     </div>

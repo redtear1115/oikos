@@ -1522,7 +1522,7 @@ export const en: Translations = {
     },
     money: {
       thisMonth: 'This month',
-      cumulative: 'Total',
+      thisChapter: 'This chapter',
     },
     hint: {
       title: '✦ What can you record?',

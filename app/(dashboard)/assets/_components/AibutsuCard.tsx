@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
+import { computeAge } from '@/lib/age'
 import { todayLocalDate } from '@/lib/local-date'
 
 // ─── Shared chassis helpers ───────────────────────────────────────────────────
@@ -69,33 +70,6 @@ function Dot() {
 }
 
 // ─── Age computation helpers ──────────────────────────────────────────────────
-
-/**
- * Compute age in years + remaining months from a 'YYYY-MM-DD' string to today.
- * Returns null if birthday is null, invalid, or after today.
- */
-function computeAge(birthday: string | null | undefined): { years: number; months: number } | null {
-  if (!birthday) return null
-  const today = todayLocalDate()
-  const [y, m, d] = birthday.split('-').map(Number)
-  if (!y || !m || !d || m > 12 || d > 31) return null
-  let years = today.getFullYear() - y
-  let months = today.getMonth() + 1 - m
-  if (months < 0) {
-    years -= 1
-    months += 12
-  }
-  if (today.getDate() < d && months > 0) {
-    months -= 1
-  } else if (today.getDate() < d && months === 0) {
-    years -= 1
-    months = 11
-  }
-  // A birthday after today (typo, or a due date) has no age yet. Clamping it
-  // to 0 used to keep the leftover month count, so 2027-01-01 read as 8 個月.
-  if (years < 0) return null
-  return { years, months }
-}
 
 function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
   if (!birthday) return false
