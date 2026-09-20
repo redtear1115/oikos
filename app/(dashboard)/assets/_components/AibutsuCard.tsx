@@ -27,22 +27,28 @@ function TintIconBox({ type, tintVar }: { type: string; tintVar: string }) {
   )
 }
 
-function MonthAmount({ amount }: { amount: number }) {
+// #1323 — the money column used to sit right-aligned as its own visual
+// block (see git history for the old `MonthAmount`). It now folds into a
+// single quiet line under the relational meta line, so the card's anchor
+// stays age / companionship / species — not the amount spent on them.
+// Hidden entirely at 0 (no line, no placeholder): a quiet 0 still asks the
+// reader to notice its absence, which isn't the point here.
+function MoneyLine({
+  monthAmount,
+  totalAmount,
+  isPast,
+}: {
+  monthAmount: number
+  totalAmount: number
+  isPast: boolean
+}) {
   const t = useTranslations()
+  const amount = isPast ? totalAmount : monthAmount
+  if (amount === 0) return null
+  const label = isPast ? t.assetListItem.thisChapter : t.assetListItem.thisMonth
   return (
-    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-      <div
-        className="font-mono text-mini"
-        style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
-      >
-        {t.assetListItem.thisMonth}
-      </div>
-      <div
-        className="tnum mt-0.5 text-sm"
-        style={{ fontWeight: 500, color: 'var(--ink)' }}
-      >
-        {formatAmount(amount, 'twd')}
-      </div>
+    <div className="tnum text-xs mt-1 text-ink-3">
+      {label} {formatAmount(amount, 'twd')}
     </div>
   )
 }
@@ -117,6 +123,8 @@ interface ChildCardProps {
   name: string
   nickname?: string | null
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   childBirthday?: string | null
   childHeightCm?: number | null
   childWeightG?: number | null
@@ -127,6 +135,8 @@ export function ChildCard({
   name,
   nickname,
   monthAmount,
+  totalAmount,
+  isPast,
   childBirthday,
   childHeightCm,
   childWeightG,
@@ -217,8 +227,8 @@ export function ChildCard({
                 </span>
               )}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -231,6 +241,8 @@ interface PetCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   petSpecies?: string | null
   petBreed?: string | null
   petBirthDate?: string | null
@@ -241,6 +253,8 @@ export function PetCard({
   id,
   name,
   monthAmount,
+  totalAmount,
+  isPast,
   petSpecies,
   petBreed,
   petBirthDate,
@@ -310,8 +324,8 @@ export function PetCard({
               {age && weightKg && <span>{weightKg}</span>}
               {!age && weightKg && <span>{weightKg}</span>}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -324,6 +338,8 @@ interface PlantCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   plantLocation?: string | null
   plantSproutedAt?: string | null
   plantWaterEvery?: number | null
@@ -333,6 +349,8 @@ export function PlantCard({
   id,
   name,
   monthAmount,
+  totalAmount,
+  isPast,
   plantLocation,
   plantSproutedAt,
 }: PlantCardProps) {
@@ -393,8 +411,8 @@ export function PlantCard({
               {days != null && plantLocation && <Dot />}
               {plantLocation && <span>{plantLocation}</span>}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -407,10 +425,12 @@ interface ItemCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   notes?: string | null
 }
 
-export function ItemCard({ id, name, monthAmount, notes }: ItemCardProps) {
+export function ItemCard({ id, name, monthAmount, totalAmount, isPast, notes }: ItemCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -465,8 +485,8 @@ export function ItemCard({ id, name, monthAmount, notes }: ItemCardProps) {
                 {notes}
               </div>
             )}
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -479,9 +499,11 @@ interface HouseCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
 }
 
-export function HouseCard({ id, name, monthAmount }: HouseCardProps) {
+export function HouseCard({ id, name, monthAmount, totalAmount, isPast }: HouseCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -515,8 +537,8 @@ export function HouseCard({ id, name, monthAmount }: HouseCardProps) {
             >
               {name}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
