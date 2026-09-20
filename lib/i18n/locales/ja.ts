@@ -508,10 +508,13 @@ export const ja: Translations = {
   assetListItem: {
     savingsBadge: '貯蓄',
     thisMonth: '今月',
+    thisChapter: 'この章',
     plateMaskedAriaLabel: 'ナンバーは非表示',
     lastRefuel: '前回の給油 {date}',
     childAge: '{years}歳{months}ヶ月',
     petAge: '{years}歳',
+    petAgeMonths: '{months}ヶ月',
+    petAgeUnderOneMonth: '1ヶ月未満',
     birthdayThisMonth: '🎂 今月が誕生日',
     plantCompanionDays: '一緒に {days} 日',
     insuranceGroups: {
@@ -758,6 +761,11 @@ export const ja: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
+    // TODO(i18n): native review pending (#1328) — MT-quality draft.
+    avatarVisibility: {
+      title: 'アバターを表示する',
+      description: 'オフにすると名前の頭文字が表示されます',
+    },
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloLockHint: 'ひとりのあいだは、記録はすべて自分の分になります。',
     defaultSplitLabel: 'デフォルトの分担方法',
@@ -1029,8 +1037,8 @@ export const ja: Translations = {
       body: '車、ペット、子ども、保険を追加して、彼らに費やした時間と心を記録しはじめましょう。',
     },
     section: {
-      property: '財産',
-      living: '生命体',
+      property: 'うちのもの',
+      living: '一緒にお世話している',
       coverage: '保障',
       items: '物品',
     },
@@ -1333,6 +1341,7 @@ export const ja: Translations = {
         champagne: 'シャンパンゴールド',
       },
       plate: 'ナンバー',
+      plateRequired: 'ナンバー（必須）',
       platePlaceholder: '例: ABC-1234',
       year: '年式',
       yearPlaceholder: '例: 2019',

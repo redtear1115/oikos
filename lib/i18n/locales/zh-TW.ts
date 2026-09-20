@@ -697,6 +697,9 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** #1323 — label for the same money line when viewing a past (closed) chapter;
+     *  swaps in for `thisMonth` and shows the chapter total instead. */
+    thisChapter: string
     /** #1174 — accessible name for the masked plate chip (the ●●● glyphs are not a name). */
     plateMaskedAriaLabel: string
     /** #1173 — Template with `{date}`. */
@@ -705,6 +708,10 @@ export type Translations = {
     childAge: string
     /** #1173 — Template with `{years}`. */
     petAge: string
+    /** #1326 — Template with `{months}`, for pets under 1 year (petAge would show `0 歲`). */
+    petAgeMonths: string
+    /** Pet born within the last month (#1326). */
+    petAgeUnderOneMonth: string
     birthdayThisMonth: string
     /** #1173 — Template with `{days}` (rendered emphasised, so keep it a standalone token). */
     plantCompanionDays: string
@@ -1062,6 +1069,11 @@ export type Translations = {
     sectionPersonal: string
     addToHomeScreen: string
     displayName: string
+    /** #1328 — avatar-visibility toggle row, 個人 section. */
+    avatarVisibility: {
+      title: string
+      description: string
+    }
     soloLockHint: string
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
@@ -1671,6 +1683,8 @@ export type Translations = {
       colorNoneAriaLabel: string
       colorNames: Record<'white' | 'black' | 'silver' | 'dark_gray' | 'dark_red' | 'dark_blue' | 'brown' | 'champagne', string>
       plate: string
+      /** #1326 — create-only label; edit mode keeps `plate` (blank = keep existing encrypted value, see #837). */
+      plateRequired: string
       platePlaceholder: string
       year: string
       yearPlaceholder: string
@@ -3364,10 +3378,13 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    thisChapter: '這個章節',
     plateMaskedAriaLabel: '車牌已隱藏',
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 歲 {months} 個月',
     petAge: '{years} 歲',
+    petAgeMonths: '{months} 個月',
+    petAgeUnderOneMonth: '未滿 1 個月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
@@ -3614,6 +3631,10 @@ export const zhTW: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
+    avatarVisibility: {
+      title: '顯示我的頭貼',
+      description: '關閉後改用名字的第一個字',
+    },
     soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
@@ -3882,8 +3903,8 @@ export const zhTW: Translations = {
       body: '新增一台車、寵物、孩子或保單，開始記錄花在他們身上的時間與心意。',
     },
     section: {
-      property: '財產',
-      living: '生命體',
+      property: '家裡的',
+      living: '一起照顧的',
       coverage: '保障',
       items: '物品',
     },
@@ -4184,6 +4205,7 @@ export const zhTW: Translations = {
         champagne: '香檳金',
       },
       plate: '車牌',
+      plateRequired: '車牌（必填）',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
       yearPlaceholder: '例：2019',

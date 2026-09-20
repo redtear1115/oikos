@@ -19,6 +19,7 @@ import { AccountDeletionBanner } from './_components/AccountDeletionBanner'
 import { ShellUpdateNotice } from './_components/ShellUpdateNotice'
 import { ShellTopStack } from './_components/ShellTopStack'
 import { PastChapterBar } from './_components/PastChapterBar'
+import { maskAvatarUrl } from '@/lib/avatar'
 
 // CJK font note: Google serves Noto Sans TC as 105 unicode-range split files,
 // which is why this import is worth being careful with.
@@ -90,7 +91,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       id: viewerProfile.id,
       displayName: viewerProfile.displayName,
       initial: (viewerProfile.displayName[0] ?? '?').toUpperCase(),
-      avatarUrl: viewerProfile.avatarUrl ?? null,
+      avatarUrl: maskAvatarUrl(viewerProfile),
       defaultSplitType: viewerProfile.defaultSplitType,
       who: 'M',
     },
@@ -98,7 +99,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       id: partnerProfile.id,
       displayName: partnerProfile.displayName,
       initial: (partnerProfile.displayName[0] ?? '?').toUpperCase(),
-      avatarUrl: partnerProfile.avatarUrl ?? null,
+      avatarUrl: maskAvatarUrl(partnerProfile),
       defaultSplitType: partnerProfile.defaultSplitType,
       who: 'T',
     } : null,
@@ -115,6 +116,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     groupDefaultRatioA: group.defaultSplitRatioA ?? null,
     guardianBetaEnabled: group.guardianBetaEnabled,
     currentLocale: locale,
+    avatarHidden: viewerProfile.avatarHidden,
   }
 
   return (

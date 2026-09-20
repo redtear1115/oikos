@@ -40,6 +40,11 @@ export const profiles = pgTable('Profiles', {
   id: uuid('id').primaryKey(), // mirrors auth.users.id
   displayName: text('display_name').notNull(),
   avatarUrl: text('avatar_url'),
+  // #1328 — per-profile preference: when true, this member's photo is hidden
+  // everywhere it would render (own screen AND partner's screen), falling
+  // back to the letter avatar (Avatar.tsx). Owner-only write; every read
+  // path that surfaces avatarUrl must check this flag before returning it.
+  avatarHidden: boolean('avatar_hidden').notNull().default(false),
   defaultSplitType: splitTypeEnum('default_split_type').notNull().default('half'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   deletionRequestedAt: timestamp('deletion_requested_at', { withTimezone: true }),

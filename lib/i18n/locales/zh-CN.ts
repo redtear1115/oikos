@@ -503,10 +503,13 @@ export const zhCN: Translations = {
   assetListItem: {
     savingsBadge: '储蓄',
     thisMonth: '本月',
+    thisChapter: '这个章节',
     plateMaskedAriaLabel: '车牌已隐藏',
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 岁 {months} 个月',
     petAge: '{years} 岁',
+    petAgeMonths: '{months} 个月',
+    petAgeUnderOneMonth: '未满 1 个月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
@@ -753,6 +756,10 @@ export const zhCN: Translations = {
     sectionPersonal: '个人',
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
+    avatarVisibility: {
+      title: '显示我的头像',
+      description: '关闭后改用名字的第一个字',
+    },
     soloLockHint: '单人状态下，每笔记录都算你的。',
     defaultSplitLabel: '默认分摊方式',
     inviteCta: '邀请对方加入',
@@ -1021,8 +1028,8 @@ export const zhCN: Translations = {
       body: '新增一台车、宠物、孩子或保单，开始记录花在他们身上的时间与心意。',
     },
     section: {
-      property: '财产',
-      living: '生命体',
+      property: '家里的',
+      living: '一起照顾的',
       coverage: '保障',
       items: '物品',
     },
@@ -1323,6 +1330,7 @@ export const zhCN: Translations = {
         champagne: '香槟金',
       },
       plate: '车牌',
+      plateRequired: '车牌（必填）',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
       yearPlaceholder: '例：2019',

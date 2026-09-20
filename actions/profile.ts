@@ -47,3 +47,25 @@ export const updateDefaultSplitType = action(async (splitType: SplitType): Promi
   revalidateAfterProfileMutation()
   return { ok: true }
 })
+
+/**
+ * #1328 — owner-only: hides/shows the viewer's own avatar. `requireViewer()`
+ * scopes the write to `user.id`, so there's no way to toggle a partner's
+ * flag from here. The read side (dashboard layout, settings, review pages,
+ * asset queries) checks this flag before ever returning avatarUrl, for BOTH
+ * members — this action only flips the bit.
+ */
+export const updateAvatarHidden = action(async (hidden: boolean): Promise<{ ok: true }> => {
+  const { user } = await requireViewer()
+
+  const result = await db
+    .update(profiles)
+    .set({ avatarHidden: hidden })
+    .where(eq(profiles.id, user.id))
+    .returning({ id: profiles.id })
+
+  if (result.length === 0) throw actionError('profile_not_found')
+
+  revalidateAfterProfileMutation()
+  return { ok: true }
+})

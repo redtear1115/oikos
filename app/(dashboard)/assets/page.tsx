@@ -43,6 +43,7 @@ export default async function AssetsPage() {
       nickname: a.type === 'child' ? (childNicknames.get(a.id) ?? null) : null,
       hasPlate: Boolean(a.plateEncrypted),
       monthAmount: summary.monthAmount,
+      totalAmount: summary.totalAmount,
       isSavings: a.type === 'insurance' && a.insuranceType === 'savings',
     }
     if (a.type === 'insurance') {
@@ -115,5 +116,5 @@ export default async function AssetsPage() {
     }
   })
 
-  return <AssetsListClient items={items} />
+  return <AssetsListClient items={items} isPast={epochWindow.isPast} />
 }

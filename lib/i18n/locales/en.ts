@@ -508,10 +508,13 @@ export const en: Translations = {
   assetListItem: {
     savingsBadge: 'Savings',
     thisMonth: 'This month',
+    thisChapter: 'This chapter',
     plateMaskedAriaLabel: 'Plate hidden',
     lastRefuel: 'Last refuel {date}',
     childAge: '{years} yr {months} mo',
     petAge: '{years} yr',
+    petAgeMonths: '{months} mo',
+    petAgeUnderOneMonth: 'Under 1 mo',
     birthdayThisMonth: '🎂 Birthday this month',
     plantCompanionDays: '{days} days together',
     insuranceGroups: {
@@ -758,6 +761,11 @@ export const en: Translations = {
     sectionPersonal: 'Personal',
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
+    // TODO(i18n): native review pending (#1328) — MT-quality draft.
+    avatarVisibility: {
+      title: 'Show my avatar',
+      description: 'Off shows the first letter of your name instead',
+    },
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloLockHint: 'While solo, every record is yours.',
     defaultSplitLabel: 'Default split',
@@ -1029,8 +1037,8 @@ export const en: Translations = {
       body: 'Add a car, pet, child, or policy to start recording the time and care you give them.',
     },
     section: {
-      property: 'Property',
-      living: 'Living',
+      property: 'At home',
+      living: 'In our care',
       coverage: 'Coverage',
       items: 'Items',
     },
@@ -1333,6 +1341,7 @@ export const en: Translations = {
         champagne: 'Champagne',
       },
       plate: 'Plate',
+      plateRequired: 'Plate (required)',
       platePlaceholder: 'e.g., ABC-1234',
       year: 'Year',
       yearPlaceholder: 'e.g., 2019',

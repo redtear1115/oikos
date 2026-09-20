@@ -449,6 +449,13 @@
       "when": 1782200000000,
       "tag": "0064_recurring_cron_taipei_date",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1782300000000,
+      "tag": "0065_profile_avatar_hidden",
+      "breakpoints": true
     }
   ]
 }
