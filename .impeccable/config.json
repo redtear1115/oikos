@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "noto sans jp",
+        "createdAt": "2026-09-19T17:01:42.597Z",
+        "reason": "existing precedent: scripts/og/store-graphic.html already loads Noto Sans JP for the ja store locale; store assets need a JP glyph font"
+      }
+    ]
+  }
+}

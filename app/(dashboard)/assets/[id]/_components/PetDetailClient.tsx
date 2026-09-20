@@ -7,11 +7,12 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint, type SiblingChip } from './AibutsuHeader'
-import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol, AgeDisplay } from './aibutsu-ui'
+import { SectionHeader, InfoCard, InfoRow, MoneyLine, AgeDisplay } from './aibutsu-ui'
 import type { PetDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
+import { computeAge } from '@/lib/age'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -38,6 +39,10 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
   const t = useTranslations()
   const td = t.assetDetail.pet
   const { isPast } = useMember()
+  // #1339 — null for a missing, malformed, or future birthday (a due date
+  // typed in early); the age block is then skipped entirely rather than
+  // rendering 「-1 歲」.
+  const age = computeAge(details?.birthDate)
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
@@ -95,13 +100,13 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         currentAssetId={assetId}
       />
 
-      {details?.birthDate && (
+      {age && (
         <div className="px-5 pb-6" style={{ background: tint.bg }}>
-          <AgeDisplay birth={details.birthDate} accent={tint.accent} />
+          <AgeDisplay age={age} accent={tint.accent} />
         </div>
       )}
 
-      <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
+      <MoneyLine month={summary.monthAmount} total={summary.totalAmount} isPast={isPast} />
 
       <SectionHeader>{td.sectionAtHome}</SectionHeader>
       <InfoCard>
@@ -136,7 +141,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
-        emptyState={<AibutsuHintCard type="pet" onCtaPress={() => setAddOpen(true)} />}
+        emptyState={<AibutsuHintCard type="pet" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}

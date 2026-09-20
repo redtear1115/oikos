@@ -63,7 +63,7 @@ export function TypePicker({ value, onChange }: Props) {
               aria-pressed={sel}
               className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
               style={{
-                background: sel ? 'var(--accent)' : 'var(--surface)',
+                background: sel ? 'var(--ink)' : 'var(--surface)',
                 color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
               }}
             >
@@ -106,7 +106,7 @@ export function TypePicker({ value, onChange }: Props) {
                 aria-pressed={sel}
                 className="flex flex-col items-center gap-1 py-3 rounded-bubble border-0 cursor-pointer"
                 style={{
-                  background: sel ? 'var(--accent)' : 'var(--surface)',
+                  background: sel ? 'var(--ink)' : 'var(--surface)',
                   color: sel ? 'var(--on-fill)' : 'var(--ink-2)',
                 }}
               >

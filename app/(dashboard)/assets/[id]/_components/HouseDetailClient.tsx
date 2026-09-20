@@ -7,7 +7,7 @@ import { TransactionFeed } from '@/app/(dashboard)/_components/TransactionFeed'
 import { AddSheet, type AddSheetInitial } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { AssetSheet, type AssetSheetInitial } from '@/app/(dashboard)/assets/_components/AssetSheet'
 import { AibutsuHeader, useTint, type SiblingChip } from './AibutsuHeader'
-import { SectionHeader, InfoCard, InfoRow, MoneyTwoCol } from './aibutsu-ui'
+import { SectionHeader, InfoCard, InfoRow, MoneyLine } from './aibutsu-ui'
 import { RevealableRow } from '@/app/(dashboard)/_components/RevealableRow'
 import type { HouseDetailsRow } from '@/lib/db/queries/aibutsu'
 import type { PagedTxnRow } from '@/actions/transaction'
@@ -116,7 +116,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         </div>
       )}
 
-      <MoneyTwoCol month={summary.monthAmount} total={summary.totalAmount} accent={tint.accent} />
+      <MoneyLine month={summary.monthAmount} total={summary.totalAmount} isPast={isPast} />
 
       <SectionHeader>{td.sectionInfo}</SectionHeader>
       <InfoCard>
@@ -149,7 +149,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         onItemClick={handleTxClick}
-        emptyState={<AibutsuHintCard type="house" onCtaPress={() => setAddOpen(true)} />}
+        emptyState={<AibutsuHintCard type="house" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
           <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}

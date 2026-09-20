@@ -30,6 +30,7 @@ vi.mock('@/actions/group', () => ({
 vi.mock('@/actions/profile', () => ({
   updateDisplayName: vi.fn(),
   updateDefaultSplitType: vi.fn(),
+  updateAvatarHidden: vi.fn(),
 }))
 vi.mock('@/actions/invite', () => ({
   createInvite: vi.fn(),
@@ -46,6 +47,7 @@ const data: AvatarMenuData = {
   groupDefaultRatioA: 60,
   guardianBetaEnabled: false,
   currentLocale: 'zh-TW',
+  avatarHidden: false,
 }
 
 function makeCtx(opts: { solo: boolean }): MemberContextValue {

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
 import { createGroup, updateGroupName, toggleGuardianBeta } from '@/actions/group'
-import { updateDisplayName, updateDefaultSplitType } from '@/actions/profile'
+import { updateDisplayName, updateDefaultSplitType, updateAvatarHidden } from '@/actions/profile'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 
@@ -176,5 +176,32 @@ describe('toggleGuardianBeta (#220)', () => {
   it('throws when group not found', async () => {
     queueDbResult([])
     await expect(toggleGuardianBeta(true)).rejects.toThrow('找不到家計簿')
+  })
+})
+
+describe('updateAvatarHidden (#1328)', () => {
+  it('writes the requested boolean to Profiles.avatarHidden, scoped to the viewer', async () => {
+    queueDbResult([{ id: 'user-a' }])  // update returning
+    const r = await updateAvatarHidden(true)
+    expect(r).toEqual({ ok: true, data: { ok: true } })
+    const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setPayload.avatarHidden).toBe(true)
+  })
+
+  it('also accepts a false value (turning the flag off)', async () => {
+    queueDbResult([{ id: 'user-a' }])
+    await updateAvatarHidden(false)
+    const setPayload = mockBuilder.set.mock.calls[0][0] as Record<string, unknown>
+    expect(setPayload.avatarHidden).toBe(false)
+  })
+
+  it('returns profile_not_found when profile not found', async () => {
+    queueDbResult([])
+    expect(await updateAvatarHidden(true)).toEqual({ ok: false, code: 'profile_not_found' })
+  })
+
+  it('throws unauthorized when no user', async () => {
+    setMockUser(null)
+    await expect(updateAvatarHidden(true)).rejects.toThrow('Unauthorized')
   })
 })

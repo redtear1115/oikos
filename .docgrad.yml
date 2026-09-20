@@ -11,13 +11,11 @@ freshness:
 coverage:
   drift_after_days: 30
   min_commits: 3
+# targets：docgrad 2.x 只收 measure 訊號 id（OK / WATCH），1.x 的星級 key 會被忽略。
+# entry_cost 接受 WATCH（使用者 2026-09-19 決定）：延續 1.x 的 economy: 3。CLAUDE.md 的品牌文案準則
+# 刻意留在入口檔（每個動 copy 的 PR 都要看到），不為了壓到 ≤5,000 tokens 搬走。
 targets:
-  completeness: 4
-  correctness: 4
-  freshness: 4
-  linkage: 4
-  consistency: 4
-  economy: 3
+  entry_cost: WATCH
 economy:
   entry_cost_tiers: [20000, 10000, 5000, 3000]
   pollution_max: 0.1

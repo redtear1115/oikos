@@ -143,9 +143,25 @@ export type Translations = {
     ctaHint: string
     /** Secondary desktop CTA — sign-in link for returning users. */
     alreadyHaveAccount: string
+    /** Quiet note under the hero CTA area (#1333): the iPhone app is live on
+     *  the App Store; Android isn't yet, so this only ever claims "on the
+     *  way" — never a download link or a waitlist. Rendered by `AppStoreNote`,
+     *  which hides it inside the iOS native shell (same runtime gate as
+     *  `components/KofiWidget.tsx` — "download the app" from inside the app
+     *  itself is nonsensical and an App Store review risk); web, PWA and
+     *  Android all see it. */
+    appStoreNote: {
+      /** The anchor's visible label, linking out to the App Store listing. */
+      linkText: string
+      /** Trailing plain-text note after the link. */
+      androidNote: string
+    }
     /** Trust pills next to the desktop CTA (compact variant of `<TrustSection>`). */
     trustEncrypted: string
     trustFree: string
+    /** Device-availability trust pill. Kept in sync with reality (#1333):
+     *  iPhone app is live, Android is not on Play Store yet — don't promise a
+     *  listing that doesn't exist. */
     trustPwa: string
     /** Full trust section (#538) — shown between Features and footer. The
      *  compact variant above stays available via `<TrustSection variant="compact">`
@@ -697,6 +713,9 @@ export type Translations = {
     savingsBadge: string
     /** Small label above the monthly amount column. */
     thisMonth: string
+    /** #1323 — label for the same money line when viewing a past (closed) chapter;
+     *  swaps in for `thisMonth` and shows the chapter total instead. */
+    thisChapter: string
     /** #1174 — accessible name for the masked plate chip (the ●●● glyphs are not a name). */
     plateMaskedAriaLabel: string
     /** #1173 — Template with `{date}`. */
@@ -705,6 +724,10 @@ export type Translations = {
     childAge: string
     /** #1173 — Template with `{years}`. */
     petAge: string
+    /** #1326 — Template with `{months}`, for pets under 1 year (petAge would show `0 歲`). */
+    petAgeMonths: string
+    /** Pet born within the last month (#1326). */
+    petAgeUnderOneMonth: string
     birthdayThisMonth: string
     /** #1173 — Template with `{days}` (rendered emphasised, so keep it a standalone token). */
     plantCompanionDays: string
@@ -1062,6 +1085,11 @@ export type Translations = {
     sectionPersonal: string
     addToHomeScreen: string
     displayName: string
+    /** #1328 — avatar-visibility toggle row, 個人 section. */
+    avatarVisibility: {
+      title: string
+      description: string
+    }
     soloLockHint: string
     /** Accessible label for the default split-type radiogroup (assistive only). */
     defaultSplitLabel: string
@@ -1401,7 +1429,9 @@ export type Translations = {
       singleYearLabel: string
       /** Template with `{n}` — amber/warning badge (≤60d, >reminderDaysBefore). */
       daysLeftWarning: string
-      /** Template with `{n}` — red/urgent badge (≤reminderDaysBefore). */
+      /** Template with `{n}` and `{date}` (ISO, e.g. `2026-11-02`) — red/urgent
+       *  badge (≤reminderDaysBefore). #1324 — carries the date so it isn't
+       *  colour-only against `daysLeftWarning`. */
       daysLeftUrgent: string
       /** Red badge shown when single-year policy is expired. */
       expiredBadge: string
@@ -1418,10 +1448,16 @@ export type Translations = {
       renewPolicyNoLabel: string
       renewPolicyNoPlaceholder: string
       renewConfirm: string
+      /** #1324 — generic fallback shown when renewInsurance fails without a
+       *  recognised action code (network / unexpected). */
+      renewError: string
       // ── lapse confirm ───────────────────────────────────────────────────
       lapseTitle: string
       lapseDescription: string
       lapseConfirm: string
+      /** #1324 — generic fallback shown when lapseInsurance fails without a
+       *  recognised action code (network / unexpected). */
+      lapseError: string
       insuredShort: string
       annualLabel: string
       timelineStarts: string
@@ -1638,9 +1674,18 @@ export type Translations = {
     typeFallback: string
     saveChanges: string
     deleteConfirm: {
-      title: string
-      description: string
       confirmLabel: string
+      /** Shared truth line — the ledger keeps past expenses either way (#1325). */
+      description: string
+      /** For car / house / insurance / generic item. `{name}` interpolated. */
+      unnamed: string
+      item: { title: string }
+      /** For child / pet / plant. `{name}` interpolated. */
+      lifeEntity: { title: string }
+    }
+    menu: {
+      /** aria-label for the header "⋯" trigger that reveals delete (#1325). */
+      ariaLabel: string
     }
     type: {
       label: string
@@ -1671,6 +1716,8 @@ export type Translations = {
       colorNoneAriaLabel: string
       colorNames: Record<'white' | 'black' | 'silver' | 'dark_gray' | 'dark_red' | 'dark_blue' | 'brown' | 'champagne', string>
       plate: string
+      /** #1326 — create-only label; edit mode keeps `plate` (blank = keep existing encrypted value, see #837). */
+      plateRequired: string
       platePlaceholder: string
       year: string
       yearPlaceholder: string
@@ -1850,7 +1897,11 @@ export type Translations = {
     }
     money: {
       thisMonth: string
-      cumulative: string
+      /** #1338 — was `cumulative` (「累計」). `getAssetSummary` scopes BOTH
+       *  aggregates to the current chapter, so this was never an all-time
+       *  figure; it is the chapter total, and now says so. Matches
+       *  `assetListItem.thisChapter` on the list card. */
+      thisChapter: string
     }
     hint: {
       title: string
@@ -2951,9 +3002,13 @@ export const zhTW: Translations = {
     cta: '一起記錄',
     ctaHint: '免費 · 兩人一本帳 · 用 Google 或 Apple 繼續',
     alreadyHaveAccount: '已經有帳號 · 登入',
+    appStoreNote: {
+      linkText: 'iPhone 版已在 App Store',
+      androidNote: 'Android 版正在路上',
+    },
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
-    trustPwa: 'iOS / Android / Web PWA',
+    trustPwa: 'iPhone App · 網頁版',
     trust: {
       narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
       encryption: {
@@ -3364,10 +3419,13 @@ export const zhTW: Translations = {
   assetListItem: {
     savingsBadge: '儲蓄',
     thisMonth: '本月',
+    thisChapter: '這個章節',
     plateMaskedAriaLabel: '車牌已隱藏',
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 歲 {months} 個月',
     petAge: '{years} 歲',
+    petAgeMonths: '{months} 個月',
+    petAgeUnderOneMonth: '未滿 1 個月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
@@ -3614,6 +3672,10 @@ export const zhTW: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: '加到主畫面',
     displayName: '顯示名稱',
+    avatarVisibility: {
+      title: '顯示我的頭貼',
+      description: '關閉後改用名字的第一個字',
+    },
     soloLockHint: '單人狀態下，每筆記錄都算你的。',
     defaultSplitLabel: '預設分攤方式',
     inviteCta: '邀請對方加入',
@@ -3882,8 +3944,8 @@ export const zhTW: Translations = {
       body: '新增一台車、寵物、孩子或保單，開始記錄花在他們身上的時間與心意。',
     },
     section: {
-      property: '財產',
-      living: '生命體',
+      property: '家裡的',
+      living: '一起照顧的',
       coverage: '保障',
       items: '物品',
     },
@@ -3920,7 +3982,7 @@ export const zhTW: Translations = {
       expired: '已到期',
       singleYearLabel: '單年期',
       daysLeftWarning: '剩 {n} 天',
-      daysLeftUrgent: '剩 {n} 天',
+      daysLeftUrgent: '{date} 到期 · 剩 {n} 天',
       expiredBadge: '已到期',
       nextPaymentBadge: '繳費剩 {n} 天',
       renewAction: '已續保',
@@ -3930,9 +3992,11 @@ export const zhTW: Translations = {
       renewPolicyNoLabel: '新保單號（選填）',
       renewPolicyNoPlaceholder: '沿用原號可留空',
       renewConfirm: '已續保',
+      renewError: '續保失敗，請再試一次',
       lapseTitle: '已停止這份保單？',
       lapseDescription: '保單將從列表中移除，仍可從詳細頁找回。',
       lapseConfirm: '已停止',
+      lapseError: '停止失敗，請再試一次',
       insuredShort: '保 {name}',
       annualLabel: '年繳',
       timelineStarts: '生效',
@@ -4142,9 +4206,14 @@ export const zhTW: Translations = {
     typeFallback: '愛物',
     saveChanges: '儲存變更',
     deleteConfirm: {
-      title: '確認刪除？',
-      description: '這個愛物與所有關聯支出將從列表中移除。',
       confirmLabel: '刪除',
+      description: '之前記下的支出會留在帳本裡，不會跟著一起刪掉。',
+      unnamed: '這個愛物',
+      item: { title: '「{name}」要從愛物移除嗎？' },
+      lifeEntity: { title: '要把「{name}」從愛物收起來嗎？' },
+    },
+    menu: {
+      ariaLabel: '更多操作',
     },
     type: {
       label: '類型',
@@ -4184,6 +4253,7 @@ export const zhTW: Translations = {
         champagne: '香檳金',
       },
       plate: '車牌',
+      plateRequired: '車牌（必填）',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
       yearPlaceholder: '例：2019',
@@ -4358,7 +4428,7 @@ export const zhTW: Translations = {
     },
     money: {
       thisMonth: '本月',
-      cumulative: '累計',
+      thisChapter: '這個章節',
     },
     hint: {
       title: '✦ 可以記什麼？',

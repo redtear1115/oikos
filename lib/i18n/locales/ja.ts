@@ -91,9 +91,15 @@ export const ja: Translations = {
     cta: 'ふたりではじめる',
     ctaHint: '無料 · ふたりで一冊の家計簿 · Google または Apple で続ける',
     alreadyHaveAccount: 'アカウントをお持ちの方',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    appStoreNote: {
+      linkText: 'iPhone 版は App Store で公開中',
+      androidNote: 'Android 版は近日公開',
+    },
     trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
-    trustPwa: 'iOS / Android / Web PWA',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    trustPwa: 'iPhone App · Web PWA',
     trust: {
       narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
       encryption: {
@@ -508,10 +514,13 @@ export const ja: Translations = {
   assetListItem: {
     savingsBadge: '貯蓄',
     thisMonth: '今月',
+    thisChapter: 'この章',
     plateMaskedAriaLabel: 'ナンバーは非表示',
     lastRefuel: '前回の給油 {date}',
     childAge: '{years}歳{months}ヶ月',
     petAge: '{years}歳',
+    petAgeMonths: '{months}ヶ月',
+    petAgeUnderOneMonth: '1ヶ月未満',
     birthdayThisMonth: '🎂 今月が誕生日',
     plantCompanionDays: '一緒に {days} 日',
     insuranceGroups: {
@@ -758,6 +767,11 @@ export const ja: Translations = {
     sectionPersonal: '個人',
     addToHomeScreen: 'ホーム画面に追加',
     displayName: '表示名',
+    // TODO(i18n): native review pending (#1328) — MT-quality draft.
+    avatarVisibility: {
+      title: 'アバターを表示する',
+      description: 'オフにすると名前の頭文字が表示されます',
+    },
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloLockHint: 'ひとりのあいだは、記録はすべて自分の分になります。',
     defaultSplitLabel: 'デフォルトの分担方法',
@@ -1029,8 +1043,8 @@ export const ja: Translations = {
       body: '車、ペット、子ども、保険を追加して、彼らに費やした時間と心を記録しはじめましょう。',
     },
     section: {
-      property: '財産',
-      living: '生命体',
+      property: 'うちのもの',
+      living: '一緒にお世話している',
       coverage: '保障',
       items: '物品',
     },
@@ -1067,7 +1081,7 @@ export const ja: Translations = {
       expired: '満期',
       singleYearLabel: '1 年契約',
       daysLeftWarning: '残り {n} 日',
-      daysLeftUrgent: '残り {n} 日',
+      daysLeftUrgent: '{date} 満期 · 残り {n} 日',
       expiredBadge: '満期',
       nextPaymentBadge: '次回払込まで {n} 日',
       renewAction: '更新済み',
@@ -1077,9 +1091,11 @@ export const ja: Translations = {
       renewPolicyNoLabel: '新しい証券番号（任意）',
       renewPolicyNoPlaceholder: '同じ番号なら空欄で OK',
       renewConfirm: '更新済み',
+      renewError: '更新に失敗しました。もう一度お試しください',
       lapseTitle: 'この保険を停止しますか？',
       lapseDescription: 'リストから外れますが、詳細ページから復帰できます。',
       lapseConfirm: '停止',
+      lapseError: '停止に失敗しました。もう一度お試しください',
       insuredShort: '被保険者 {name}',
       annualLabel: '年払い',
       timelineStarts: '始期',
@@ -1291,9 +1307,14 @@ export const ja: Translations = {
     typeFallback: '愛物',
     saveChanges: '変更を保存',
     deleteConfirm: {
-      title: '削除しますか？',
-      description: 'この愛物と関連するすべての支出が一覧から削除されます。',
       confirmLabel: '削除',
+      description: 'これまでの支出は家計簿に残ります。一緒に削除されることはありません。',
+      unnamed: 'この愛物',
+      item: { title: '「{name}」を愛物から削除しますか？' },
+      lifeEntity: { title: '「{name}」を愛物からしまいますか？' },
+    },
+    menu: {
+      ariaLabel: 'その他の操作',
     },
     type: {
       label: '種類',
@@ -1333,6 +1354,7 @@ export const ja: Translations = {
         champagne: 'シャンパンゴールド',
       },
       plate: 'ナンバー',
+      plateRequired: 'ナンバー（必須）',
       platePlaceholder: '例: ABC-1234',
       year: '年式',
       yearPlaceholder: '例: 2019',
@@ -1507,7 +1529,7 @@ export const ja: Translations = {
     },
     money: {
       thisMonth: '今月',
-      cumulative: '累計',
+      thisChapter: 'この章',
     },
     hint: {
       title: '✦ 何を記録できる？',

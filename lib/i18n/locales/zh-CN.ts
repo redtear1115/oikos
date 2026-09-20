@@ -90,9 +90,13 @@ export const zhCN: Translations = {
     cta: '一起记录',
     ctaHint: '免费 · 两人一本账 · 用 Google 或 Apple 继续',
     alreadyHaveAccount: '已有账号 · 登录',
+    appStoreNote: {
+      linkText: 'iPhone 版已在 App Store',
+      androidNote: 'Android 版即将上线',
+    },
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
-    trustPwa: 'iOS / Android / Web PWA',
+    trustPwa: 'iPhone App · 网页版',
     trust: {
       narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
       encryption: {
@@ -503,10 +507,13 @@ export const zhCN: Translations = {
   assetListItem: {
     savingsBadge: '储蓄',
     thisMonth: '本月',
+    thisChapter: '这个章节',
     plateMaskedAriaLabel: '车牌已隐藏',
     lastRefuel: '上次加油 {date}',
     childAge: '{years} 岁 {months} 个月',
     petAge: '{years} 岁',
+    petAgeMonths: '{months} 个月',
+    petAgeUnderOneMonth: '未满 1 个月',
     birthdayThisMonth: '🎂 本月生日',
     plantCompanionDays: '陪伴 {days} 天',
     insuranceGroups: {
@@ -753,6 +760,10 @@ export const zhCN: Translations = {
     sectionPersonal: '个人',
     addToHomeScreen: '添加到主屏幕',
     displayName: '显示名称',
+    avatarVisibility: {
+      title: '显示我的头像',
+      description: '关闭后改用名字的第一个字',
+    },
     soloLockHint: '单人状态下，每笔记录都算你的。',
     defaultSplitLabel: '默认分摊方式',
     inviteCta: '邀请对方加入',
@@ -1021,8 +1032,8 @@ export const zhCN: Translations = {
       body: '新增一台车、宠物、孩子或保单，开始记录花在他们身上的时间与心意。',
     },
     section: {
-      property: '财产',
-      living: '生命体',
+      property: '家里的',
+      living: '一起照顾的',
       coverage: '保障',
       items: '物品',
     },
@@ -1059,7 +1070,7 @@ export const zhCN: Translations = {
       expired: '已到期',
       singleYearLabel: '单年期',
       daysLeftWarning: '剩 {n} 天',
-      daysLeftUrgent: '剩 {n} 天',
+      daysLeftUrgent: '{date} 到期 · 剩 {n} 天',
       expiredBadge: '已到期',
       nextPaymentBadge: '缴费剩 {n} 天',
       renewAction: '已续保',
@@ -1069,9 +1080,11 @@ export const zhCN: Translations = {
       renewPolicyNoLabel: '新保单号（选填）',
       renewPolicyNoPlaceholder: '沿用原号可留空',
       renewConfirm: '已续保',
+      renewError: '续保失败，请再试一次',
       lapseTitle: '已停止这份保单？',
       lapseDescription: '保单将从列表中移除，仍可从详细页找回。',
       lapseConfirm: '已停止',
+      lapseError: '停止失败，请再试一次',
       insuredShort: '保 {name}',
       annualLabel: '年缴',
       timelineStarts: '生效',
@@ -1281,9 +1294,14 @@ export const zhCN: Translations = {
     typeFallback: '爱物',
     saveChanges: '保存更改',
     deleteConfirm: {
-      title: '确认删除？',
-      description: '这个爱物与所有关联支出将从列表中移除。',
       confirmLabel: '删除',
+      description: '之前记下的支出会留在账本里，不会跟着一起删掉。',
+      unnamed: '这个爱物',
+      item: { title: '「{name}」要从爱物移除吗？' },
+      lifeEntity: { title: '要把「{name}」从爱物收起来吗？' },
+    },
+    menu: {
+      ariaLabel: '更多操作',
     },
     type: {
       label: '类型',
@@ -1323,6 +1341,7 @@ export const zhCN: Translations = {
         champagne: '香槟金',
       },
       plate: '车牌',
+      plateRequired: '车牌（必填）',
       platePlaceholder: '例：ABC-1234',
       year: '年份',
       yearPlaceholder: '例：2019',
@@ -1497,7 +1516,7 @@ export const zhCN: Translations = {
     },
     money: {
       thisMonth: '本月',
-      cumulative: '累计',
+      thisChapter: '这个章节',
     },
     hint: {
       title: '✦ 可以记什么？',

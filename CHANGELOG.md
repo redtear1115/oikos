@@ -42,6 +42,83 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.18] - 2026-09-21
+
+主題：**先看見關係，再看見金額**——愛物列表把年齡與陪伴天數放到前面、金額退成安靜的一行，過去章節不再排出一整排 NT$0；邊界狀態留下的空洞補起來，頭貼也可以選擇不顯示。
+完整 diff：[v1.5.17...v1.5.18](https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18)
+
+### 使用者可見變化
+
+- **愛物列表改以關係為主，金額退成安靜的一行（#1323）**
+  使用者：卡片第一眼是年齡、陪伴天數、里程這些關係資訊，金額縮成下面一行的淡字，是 0 就整行不顯示。
+  技術：`MonthAmount` 右欄換成 `MoneyLine`（CarHeroCard 同形內嵌）；金額行改用 `text-ink-3` class。
+- **過去章節顯示「這個章節」的合計，不再整排 NT$0（#1323）**
+  使用者：翻到已經結束的章節時，金額那行標的是該章節的合計，而不是在過去章節幾乎總是 0 的「本月」。
+  技術：列表多傳一個依 epoch 過濾的 `totalAmount`，`isPast` 時取代 `monthAmount`。
+- **愛物分區改名「家裡的」「一起照顧的」（#1323）**
+  使用者：原本的「財產」「生命體」換成貼近關係的說法，四語同步（en／ja 待確認）。
+- **過去章節的愛物詳細頁不再有新增入口（#1326）**
+  使用者：翻到已經結束的章節、時間軸還空著時，只會看到說明，不會再出現可以按的「記第一筆」。
+  技術：`AibutsuHintCard` 的 `onCtaPress` 改成選填，六個詳細頁在 `isPast` 時不傳。
+- **單人狀態下新增車子，不再留下空的「主要使用人」（#1326）**
+  使用者：沒有伴侶時整列不顯示，不會只剩一個標籤和一條分隔線。
+  技術：`CarSheetBody` 讀 `useMember()` 的 `isSolo`，整個 `Field` 一起不 render。
+- **一般物品的卡片不再顯示英文 `item` 標籤（#1326）**
+  使用者：那個四語都一樣、就掛在「物品」分區底下的英文小標拿掉了。
+- **未滿 1 歲的寵物顯示月齡，日期還沒到的不顯示年齡（#1326）**
+  使用者：剛出生的寵物顯示「未滿 1 個月」或「N 個月」，不再是「0 歲」；生日填在未來的孩子或寵物不顯示年齡，孩子也不會被標成本月生日。
+  技術：`computeAge` 對未來日期與不合法的月／日回 null，`isBirthdayThisMonth` 跟著判斷。
+- **新增車子時「車牌」標示為必填（#1326）**
+  使用者：標籤直接寫「車牌（必填）」，不會再只看到儲存鈕變灰卻沒有任何說明。
+  技術：只有新增模式換標籤；編輯模式維持留白代表保留原本的加密值（#837）。
+- **愛物詳細頁的金額退成一行，過去章節不再顯示「本月 NT$0」（#1338）**
+  使用者：愛物詳細頁的兩欄金額方塊換成一行淡字、是 0 就整行不顯示；只有車子詳細頁維持方塊，且過去章節只留章節合計那一格。
+  技術：`MoneyTwoCol` 換成 `MoneyLine`，`AssetHero` 在 `isPast` 時不渲染「本月」那半邊。
+- **詳細頁的「累計」正名為「這個章節」（#1338）**
+  使用者：那個數字一直都只算目前章節，標籤現在說的是實情。
+  技術：`assetDetail.money.cumulative` 改名 `thisChapter`；`getAssetSummary` 的統計範圍沒有變，是原本的標籤寫錯。
+- **詳細頁的年齡與列表共用同一份計算，未來的生日不再顯示「-1 歲」（#1339）**
+  使用者：預產期還沒到的孩子或寵物，詳細頁不再出現負數年齡；生日那天之前的日子，詳細頁也不會再比列表多算一個月。
+  技術：抽出 `lib/age.ts#computeAge` 當唯一來源；詳細頁原本用 UTC 的 `new Date(birth)` 比對本地時間，也沒有未來日期的防護。
+- **愛物 sheet 的儲存鈕與類型選擇改用系統主要色（#1322）**
+  使用者：sheet 底部的儲存鈕改成深色實心並拿掉陰影，類型選擇器選中的格子跟著改，畫面上不再有兩處橘色互相搶。
+  技術：`SheetShell` 的 `bottomBg` 改用 `--btn-primary-bg`、移除 `boxShadow`（DESIGN.md Flat-By-Default）、高度改 `h-12`；`TypePicker` 選中態改 `--ink`。
+- **愛物詳細頁提示卡的按鈕改成次要樣式（#1322）**
+  使用者：原本橘色實心的「記第一筆」按鈕改成淡底加細框，不再跟畫面上的重點搶視線。
+- **續保與停止保單失敗時會顯示錯誤，不再靜靜地沒反應（#1324）**
+  使用者：動作失敗時對話框裡出現訊息，不會像成功一樣把對話框關掉。
+  技術：兩個 handler 從 `console.error` 改成 `describeError()` 寫進 state；`ConfirmModal` 開放 `children`，讓錯誤訊息與表單欄位共用同一個 panel。
+- **隱藏的續保對話框不再留在 Tab 與螢幕閱讀器的順序裡（#1324）**
+  使用者：每張保單卡片底下原本都藏著一組看不見卻按得到的欄位與按鈕，現在只有打開時才存在。
+  技術：手寫的 always-mounted dialog（只靠 opacity／pointerEvents 隱藏）改用共用 `ConfirmModal`（portal＋focus trap＋Escape＋還原焦點）。
+- **快到期的保單徽章帶上到期日，不再只靠顏色區分（#1324）**
+  使用者：緊急與提醒兩種狀態原本都只寫「剩 N 天」，現在緊急那種會一併寫出到期日。
+  技術：`daysLeftUrgent` 加上 `{date}` 佔位符。
+- **刪除愛物的入口收進標題列的 ⋯ 選單，確認視窗會帶上名字（#1325）**
+  使用者：刪除不再是 sheet 底部儲存鈕下方那顆按鈕，改從標題列的「⋯」進入；確認視窗的標題寫出這個愛物的名字，還沒填名字時顯示「這個愛物」。
+  技術：`DeleteConfirmFlow` 移除，改由 `SheetShell` 統一渲染 `HeaderOverflowMenu` 與確認視窗；孩子／寵物／植物用較柔和的一句，車／房／保單／物品用另一句。
+- **刪除確認不再說支出會跟著一起刪掉（#1325）**
+  使用者：說明改成「之前記下的支出會留在帳本裡，不會跟著一起刪掉」。
+  技術：舊文案寫「這個愛物與所有關聯支出將從列表中移除」，但 `softDeleteAsset` 只在資產列寫上 `deletedAt`，支出完全不動——是文案更正，不是行為變更。
+- **Landing 說得出 iPhone 版已在 App Store（#1333）**
+  使用者：主行動下方多一行連到 App Store 的說明，Android 標為正在路上；裝置那格改成「iPhone App · 網頁版」。
+  技術：新增 `AppStoreNote`，用 `Capacitor.getPlatform()` 在 iOS 殼內隱藏；確認平台之前那行不可見也不可點。
+
+### 技術變更
+
+- **觀測文件補上「Sentry 看不到原始網址、cookie 與請求 body」這條邊界（#1274）**
+  技術：v1.5.16 起生效的清洗範圍寫進 `observability-design.md`，並標明 exception 訊息不在清洗範圍內。
+- **文件系統收斂到 docgrad 的畢業門檻（#1321）**
+  技術：11 項 measure 訊號全數達標（`entry_cost` 為接受的 WATCH）；CLAUDE.md 的原生 build 雷點改成連到 runbook §K。
+- **商店圖改成插畫故事版型，並用乾淨帳本重截 16 張截圖（#1334）**
+  技術：新增故事圖產線與預設 dry-run 的 ASC 上傳腳本（`scripts/og/`）。
+
+### Security
+
+- **可以隱藏自己的頭貼，改用名字的第一個字（#1328）**
+  使用者：在設定裡關掉「顯示我的頭貼」之後，自己和伴侶的畫面上都改顯示首字，重新登入也不會跑回來。
+  技術：`0065` 替 `Profiles` 加 `avatar_hidden`；寫入只限本人，所有讀 `avatarUrl` 的路徑（dashboard layout、設定、月結、愛物查詢）在回傳前就遮蔽兩人的值。
+
 ## [1.5.17] - 2026-09-19
 
 主題：**按下去就會有回應**——記帳錯誤提示不再擋住按鈕，App 冷啟動不再被登入畫面打斷，iOS 與 Android 殼的 Google 登入走得完。
@@ -1109,7 +1186,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.17...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.18...HEAD
+[1.5.18]: https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18
 [1.5.17]: https://github.com/redtear1115/oikos/compare/v1.5.16...v1.5.17
 [1.5.16]: https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16
 [1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15

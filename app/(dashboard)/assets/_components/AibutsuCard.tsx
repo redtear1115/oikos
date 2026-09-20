@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
+import { computeAge } from '@/lib/age'
 import { todayLocalDate } from '@/lib/local-date'
 
 // ─── Shared chassis helpers ───────────────────────────────────────────────────
@@ -27,22 +28,28 @@ function TintIconBox({ type, tintVar }: { type: string; tintVar: string }) {
   )
 }
 
-function MonthAmount({ amount }: { amount: number }) {
+// #1323 — the money column used to sit right-aligned as its own visual
+// block (see git history for the old `MonthAmount`). It now folds into a
+// single quiet line under the relational meta line, so the card's anchor
+// stays age / companionship / species — not the amount spent on them.
+// Hidden entirely at 0 (no line, no placeholder): a quiet 0 still asks the
+// reader to notice its absence, which isn't the point here.
+function MoneyLine({
+  monthAmount,
+  totalAmount,
+  isPast,
+}: {
+  monthAmount: number
+  totalAmount: number
+  isPast: boolean
+}) {
   const t = useTranslations()
+  const amount = isPast ? totalAmount : monthAmount
+  if (amount === 0) return null
+  const label = isPast ? t.assetListItem.thisChapter : t.assetListItem.thisMonth
   return (
-    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-      <div
-        className="font-mono text-mini"
-        style={{ letterSpacing: 1, color: 'var(--ink-3)' }}
-      >
-        {t.assetListItem.thisMonth}
-      </div>
-      <div
-        className="tnum mt-0.5 text-sm"
-        style={{ fontWeight: 500, color: 'var(--ink)' }}
-      >
-        {formatAmount(amount, 'twd')}
-      </div>
+    <div className="tnum text-xs mt-1 text-ink-3">
+      {label} {formatAmount(amount, 'twd')}
     </div>
   )
 }
@@ -64,33 +71,11 @@ function Dot() {
 
 // ─── Age computation helpers ──────────────────────────────────────────────────
 
-/**
- * Compute age in years + remaining months from a 'YYYY-MM-DD' string to today.
- * Returns null if birthday is null/invalid.
- */
-function computeAge(birthday: string | null | undefined): { years: number; months: number } | null {
-  if (!birthday) return null
-  const today = todayLocalDate()
-  const [y, m, d] = birthday.split('-').map(Number)
-  if (!y || !m || !d) return null
-  let years = today.getFullYear() - y
-  let months = today.getMonth() + 1 - m
-  if (months < 0) {
-    years -= 1
-    months += 12
-  }
-  if (today.getDate() < d && months > 0) {
-    months -= 1
-  } else if (today.getDate() < d && months === 0) {
-    years -= 1
-    months = 11
-  }
-  return { years: Math.max(0, years), months: Math.max(0, months) }
-}
-
 function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
   if (!birthday) return false
   const today = todayLocalDate()
+  // Not born yet (a due date) has no birthday to mark, even in its own month.
+  if (computeAge(birthday) === null) return false
   const [, m] = birthday.split('-').map(Number)
   return m === today.getMonth() + 1
 }
@@ -112,6 +97,8 @@ interface ChildCardProps {
   name: string
   nickname?: string | null
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   childBirthday?: string | null
   childHeightCm?: number | null
   childWeightG?: number | null
@@ -122,6 +109,8 @@ export function ChildCard({
   name,
   nickname,
   monthAmount,
+  totalAmount,
+  isPast,
   childBirthday,
   childHeightCm,
   childWeightG,
@@ -212,8 +201,8 @@ export function ChildCard({
                 </span>
               )}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -226,6 +215,8 @@ interface PetCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   petSpecies?: string | null
   petBreed?: string | null
   petBirthDate?: string | null
@@ -236,6 +227,8 @@ export function PetCard({
   id,
   name,
   monthAmount,
+  totalAmount,
+  isPast,
   petSpecies,
   petBreed,
   petBirthDate,
@@ -293,12 +286,20 @@ export function PetCard({
                 <span style={{ color: 'var(--ink-2)' }}>{speciesBreed}</span>
               )}
               {(age || weightKg) && speciesBreed && <Dot />}
-              {age && <span>{t.assetListItem.petAge.replace('{years}', String(age.years))}</span>}
+              {age && (
+                <span>
+                  {age.years > 0
+                    ? t.assetListItem.petAge.replace('{years}', String(age.years))
+                    : (age.months === 0
+                      ? t.assetListItem.petAgeUnderOneMonth
+                      : t.assetListItem.petAgeMonths.replace('{months}', String(age.months)))}
+                </span>
+              )}
               {age && weightKg && <span>{weightKg}</span>}
               {!age && weightKg && <span>{weightKg}</span>}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -311,6 +312,8 @@ interface PlantCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
   plantLocation?: string | null
   plantSproutedAt?: string | null
   plantWaterEvery?: number | null
@@ -320,6 +323,8 @@ export function PlantCard({
   id,
   name,
   monthAmount,
+  totalAmount,
+  isPast,
   plantLocation,
   plantSproutedAt,
 }: PlantCardProps) {
@@ -380,8 +385,8 @@ export function PlantCard({
               {days != null && plantLocation && <Dot />}
               {plantLocation && <span>{plantLocation}</span>}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -394,11 +399,12 @@ interface ItemCardProps {
   id: string
   name: string
   monthAmount: number
-  templateKey?: string | null
+  totalAmount: number
+  isPast: boolean
   notes?: string | null
 }
 
-export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCardProps) {
+export function ItemCard({ id, name, monthAmount, totalAmount, isPast, notes }: ItemCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -439,17 +445,6 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
               >
                 {name}
               </div>
-              {templateKey && (
-                <span
-                  className="font-mono shrink-0 text-mini px-1.5 py-0.5 rounded-sm"
-                  style={{
-                    color: 'var(--ink-2)',
-                    background: 'rgba(58,36,25,0.06)',
-                  }}
-                >
-                  {templateKey}
-                </span>
-              )}
             </div>
             {notes && (
               <div
@@ -464,8 +459,8 @@ export function ItemCard({ id, name, monthAmount, templateKey, notes }: ItemCard
                 {notes}
               </div>
             )}
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>
@@ -478,9 +473,11 @@ interface HouseCardProps {
   id: string
   name: string
   monthAmount: number
+  totalAmount: number
+  isPast: boolean
 }
 
-export function HouseCard({ id, name, monthAmount }: HouseCardProps) {
+export function HouseCard({ id, name, monthAmount, totalAmount, isPast }: HouseCardProps) {
   return (
     <Link
       href={`/assets/${id}`}
@@ -514,8 +511,8 @@ export function HouseCard({ id, name, monthAmount }: HouseCardProps) {
             >
               {name}
             </div>
+            <MoneyLine monthAmount={monthAmount} totalAmount={totalAmount} isPast={isPast} />
           </div>
-          <MonthAmount amount={monthAmount} />
         </div>
       </div>
     </Link>

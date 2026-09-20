@@ -22,6 +22,13 @@ interface Props {
   pending?: boolean
   onCancel: () => void
   onConfirm: () => void
+  /**
+   * Optional extra content between the description and the button row (e.g.
+   * a single form field for a confirm-with-input flow). Rendered inside the
+   * same panel, so it shares the portal + focus trap without a second
+   * hand-rolled dialog (#1324).
+   */
+  children?: React.ReactNode
 }
 
 const noopSubscribe = () => () => {}
@@ -50,6 +57,7 @@ export function ConfirmModal({
   pending = false,
   onCancel,
   onConfirm,
+  children,
 }: Props) {
   const t = useTranslations()
   const finalConfirmLabel = confirmLabel ?? t.common.confirm
@@ -129,6 +137,7 @@ export function ConfirmModal({
               {description}
             </p>
           )}
+          {children && <div className="mb-5">{children}</div>}
           {/* `oik-btn` is the design system's keyboard focus ring (2px
               --focus-ring-color, globals.css). Without it these two fall back
               to the engine default — a 1px blue outline that belongs to no

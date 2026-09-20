@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <title>Futari · store screenshot render</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" />
+  <style>
+    /* App Store / Play story screenshots — illustration first, UI second.
+     * Laid out at 430×932 CSS px (iPhone 6.7" in points) and rendered at
+     * deviceScaleFactor 3 → 1290×2796. Brand register (PRODUCT.md Surface
+     * Tiers): committed cream ground, cocoa ink, one ember per frame.
+     * No exclamation marks, no 管理／追蹤／監控 (CLAUDE.md copy rules). */
+    :root {
+      --bg-committed: #EFDDC4;
+      --ink: #3A2419;
+      --ink-2: #6B4C3B;
+      --ember: #E08856;
+      --surface: #FFFFFF;
+    }
+    html, body { margin: 0; padding: 0; }
+    body {
+      /* --w/--h are set from the query string: 430×932 for iPhone 6.7",
+       * 1032×1376 for the 13" iPad. Everything else scales via --k. */
+      width: var(--w, 430px);
+      height: var(--h, 932px);
+      background: var(--bg-committed);
+      color: var(--ink);
+      font-family: 'Noto Sans TC', -apple-system, system-ui, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+    /* The composition is authored once at 430×932 and scaled to fit the target
+     * store size, centred on the cream ground. The iPad is a different aspect
+     * ratio, so it gets side margins of ground rather than a stretched layout. */
+    #root {
+      position: absolute;
+      width: 430px;
+      height: 932px;
+      transform-origin: top left;
+      overflow: hidden;
+    }
+    body[data-lang="ja"] { font-family: 'Noto Sans JP', 'Noto Sans TC', sans-serif; }
+
+    /* The scene. Full-bleed, fading into the ground so the copy reads as
+     * part of the same room rather than a caption under a photo. */
+    .scene {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 520px;
+      background-size: cover;
+      background-position: center;
+      -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+              mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+    }
+    .scene.hero {
+      /* illustration-hero.png carries its own white rounded frame; scale past
+       * it so no white edge shows at the top of the store frame. */
+      height: 700px;
+      background-size: auto 112%;
+      background-position: 46% 50%;
+    }
+
+    /* Placeholder until the illustration exists — deliberately not a
+     * drawing, so nobody mistakes the draft for the final art. */
+    .scene.todo {
+      background:
+        radial-gradient(circle at 50% 38%, rgba(224,136,86,0.38) 0%, rgba(224,136,86,0.10) 34%, rgba(224,136,86,0) 62%),
+        linear-gradient(180deg, #5B4636 0%, #8A6B52 55%, var(--bg-committed) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .todo-card {
+      margin: 0 36px 60px;
+      padding: 16px 18px;
+      border: 1.5px dashed rgba(251,237,224,0.7);
+      border-radius: 16px;
+      color: #FBEDE0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .todo-card b { display: block; font-size: 12px; letter-spacing: 2px; opacity: 0.8; margin-bottom: 4px; }
+
+    .copy {
+      position: absolute;
+      left: 32px;
+      right: 32px;
+      top: 500px;
+    }
+    .hero-copy { top: 680px; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
+    }
+    .brand svg { width: 22px; height: 22px; }
+    .headline {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.22;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .headline .lit { color: var(--ember); }
+    .sub {
+      margin: 14px 0 0;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--ink-2);
+    }
+
+    /* The UI, cropped to the one moment the frame is about. A warm lamp
+     * bloom sits behind it instead of a drop shadow on the card itself. */
+    .shot-wrap {
+      position: absolute;
+      left: 32px;
+      right: 32px;
+      bottom: 40px;
+    }
+    .shot-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -40px -20px;
+      background: radial-gradient(ellipse at 50% 50%, rgba(255,248,238,0.9) 0%, rgba(255,248,238,0) 70%);
+    }
+    .shot {
+      position: relative;
+      border-radius: 24px;
+      background-repeat: no-repeat;
+      background-color: #FBEDE0;
+      outline: 1px solid rgba(58,36,25,0.08);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const params = new URLSearchParams(location.search)
+    const lang = params.get('lang') || 'zh'
+    const W = Number(params.get('w') || 430)
+    const H = Number(params.get('h') || 932)
+    document.documentElement.style.setProperty('--w', W + 'px')
+    document.documentElement.style.setProperty('--h', H + 'px')
+    const S = Math.min(W / 430, H / 932)
+    const rootEl = document.getElementById('root')
+    rootEl.style.transform = `scale(${S})`
+    rootEl.style.left = `${(W - 430 * S) / 2}px`
+    rootEl.style.top = `${(H - 932 * S) / 2}px`
+    const frameId = params.get('frame') || '1'
+    document.body.dataset.lang = lang
+
+    const SHOTS = '../../docs/store-assets/screenshots/'
+    const SHOT_W = 1290 // source screenshots are iPhone 6.7" 1290×2796
+
+    /* crop: [x0, y0, x1, y1] in source pixels. Crops stay clear of the bottom
+     * nav — originally because the 2026-08 sources carried a dev-overlay "N"
+     * badge there (the 2026-09-20 re-capture no longer does), and still
+     * because a cropped nav bar reads as a broken screenshot. */
+    const frames = {
+      1: { scene: '../../public/illustration-hero.png', hero: true },
+      2: { shot: '01-dashboard-ios-6.7.png', crop: [0, 500, 1290, 1010],
+           scene: '../../docs/store-assets/illustrations/story-2.png', pos: '50% 60%', brief: '巷口那家晚餐。兩人並肩坐在麵店吧台，一人拿手機結帳，另一人看著笑。頭頂一顆燈泡的暖光，窗外是雨後的巷子。' },
+      3: { shot: '01-dashboard-ios-6.7.png', crop: [50, 1290, 1240, 2030],
+           scene: '../../docs/store-assets/illustrations/story-3.png', pos: '50% 55%', brief: '晚上的廚房。一人把超市袋子的東西收進冰箱，另一人靠在流理台邊用手機記一筆。桌上放著收據和一杯熱茶。' },
+      4: { shot: '04-assets-ios-6.7.png', crop: [50, 1440, 1240, 2230],
+           scene: '../../docs/store-assets/illustrations/story-4.png', pos: '40% 18%', brief: '傍晚的客廳。窗台上一盆小仙子（多肉），柴犬麻糬趴在沙發腳邊，兩人的腳擱在同一張小凳上。斜斜的夕陽光。' },
+      5: { shot: '03-trip-ios-6.7.png', crop: [50, 520, 1240, 1130],
+           scene: '../../docs/store-assets/illustrations/story-5.png', pos: '50% 60%', brief: '旅行的回程。兩人拖著行李走出車站，行李箱上掛著御守，一人手上提著伴手禮。黃昏，路燈剛亮。' },
+    }
+
+    // zh-TW is the master (CLAUDE.md i18n rule). Other locales follow once
+    // the zh-TW draft is approved by the designer.
+    const copy = {
+      zh: {
+        1: { head: ['兩個人，', '<span class="lit">一本帳。</span>'], sub: '一起記，回頭看會很暖。' },
+        2: { head: ['誰先付的，', '<span class="lit">不用再算。</span>'], sub: '每一筆都分好了。想結清的時候，點一下就好。' },
+        3: { head: ['一起記下的，', '<span class="lit">都是日子。</span>'], sub: '晚餐、看牙、營養液，兩個人的日常都在這裡。' },
+        4: { head: ['小仙子陪了我們', '<span class="lit">285 天。</span>'], sub: '孩子、毛孩、植物，家裡的每一個都記得。' },
+        5: { head: ['大阪七天，', '<span class="lit">回家就結清。</span>'], sub: '日圓、台幣照常記，旅行的帳自己分開算。' },
+      },
+    }
+
+    const f = frames[frameId]
+    const t = (copy[lang] || copy.zh)[frameId]
+    const root = document.getElementById('root')
+
+    const scene = document.createElement('div')
+    if (f.todo) {
+      scene.className = 'scene todo'
+      scene.innerHTML = `<div class="todo-card"><b>插畫 ${frameId}（待繪）</b>${f.todo}</div>`
+    } else {
+      scene.className = 'scene' + (f.hero ? ' hero' : '')
+      scene.style.backgroundImage = `url(${f.scene})`
+      if (f.pos) scene.style.backgroundPosition = f.pos
+    }
+    root.appendChild(scene)
+
+    const c = document.createElement('div')
+    c.className = 'copy' + (f.hero ? ' hero-copy' : '')
+    c.innerHTML =
+      (f.hero ? `<div class="brand"><svg viewBox="0 0 24 24" fill="none"><path d="M8 6a4 4 0 0 1 8 0" stroke="#3A2419" stroke-width="2.2" stroke-linecap="round"/><rect x="5" y="6" width="14" height="15" rx="2" stroke="#3A2419" stroke-width="2.2"/><path d="M12 10c1.6 2 2.4 3.4 2.4 4.6a2.4 2.4 0 0 1-4.8 0c0-1.2.8-2.6 2.4-4.6z" fill="#E08856"/></svg>Futari</div>` : '') +
+      `<h1 class="headline">${t.head.join('<br>')}</h1><p class="sub">${t.sub}</p>`
+    root.appendChild(c)
+
+    if (f.shot) {
+      const [x0, y0, x1, y1] = f.crop
+      const w = 430 - 64
+      const k = w / (x1 - x0)
+      const wrap = document.createElement('div')
+      wrap.className = 'shot-wrap'
+      const shot = document.createElement('div')
+      shot.className = 'shot'
+      shot.style.width = w + 'px'
+      shot.style.height = Math.round((y1 - y0) * k) + 'px'
+      shot.style.backgroundImage = `url(${SHOTS}${f.shot})`
+      shot.style.backgroundSize = `${SHOT_W * k}px auto`
+      shot.style.backgroundPosition = `${-x0 * k}px ${-y0 * k}px`
+      wrap.appendChild(shot)
+      root.appendChild(wrap)
+    }
+
+    document.fonts.ready.then(() => { window.__OG_READY__ = true })
+  </script>
+</body>
+</html>

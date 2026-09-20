@@ -90,9 +90,15 @@ export const en: Translations = {
     cta: 'Begin together',
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    appStoreNote: {
+      linkText: 'The iPhone app is on the App Store',
+      androidNote: 'Android is on the way',
+    },
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
-    trustPwa: 'iOS / Android / Web PWA',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    trustPwa: 'iPhone app · Web PWA',
     trust: {
       narrative: 'Your records belong only to the two of you. No ads, no data selling.',
       encryption: {
@@ -508,10 +514,13 @@ export const en: Translations = {
   assetListItem: {
     savingsBadge: 'Savings',
     thisMonth: 'This month',
+    thisChapter: 'This chapter',
     plateMaskedAriaLabel: 'Plate hidden',
     lastRefuel: 'Last refuel {date}',
     childAge: '{years} yr {months} mo',
     petAge: '{years} yr',
+    petAgeMonths: '{months} mo',
+    petAgeUnderOneMonth: 'Under 1 mo',
     birthdayThisMonth: '🎂 Birthday this month',
     plantCompanionDays: '{days} days together',
     insuranceGroups: {
@@ -758,6 +767,11 @@ export const en: Translations = {
     sectionPersonal: 'Personal',
     addToHomeScreen: 'Add to Home Screen',
     displayName: 'Display name',
+    // TODO(i18n): native review pending (#1328) — MT-quality draft.
+    avatarVisibility: {
+      title: 'Show my avatar',
+      description: 'Off shows the first letter of your name instead',
+    },
     // TODO(i18n): native review pending (#1016) — MT-quality draft.
     soloLockHint: 'While solo, every record is yours.',
     defaultSplitLabel: 'Default split',
@@ -1029,8 +1043,8 @@ export const en: Translations = {
       body: 'Add a car, pet, child, or policy to start recording the time and care you give them.',
     },
     section: {
-      property: 'Property',
-      living: 'Living',
+      property: 'At home',
+      living: 'In our care',
       coverage: 'Coverage',
       items: 'Items',
     },
@@ -1067,7 +1081,7 @@ export const en: Translations = {
       expired: 'Expired',
       singleYearLabel: '1-year term',
       daysLeftWarning: '{n} d left',
-      daysLeftUrgent: '{n} d left',
+      daysLeftUrgent: 'Expires {date} · {n} d left',
       expiredBadge: 'Expired',
       nextPaymentBadge: 'Premium in {n}d',
       renewAction: 'Renewed',
@@ -1077,9 +1091,11 @@ export const en: Translations = {
       renewPolicyNoLabel: 'New policy no. (optional)',
       renewPolicyNoPlaceholder: 'Leave empty to keep current',
       renewConfirm: 'Renewed',
+      renewError: 'Renewal failed, please try again',
       lapseTitle: 'Stop this policy?',
       lapseDescription: 'It will be removed from the list. Still recoverable from the detail page.',
       lapseConfirm: 'Stop',
+      lapseError: 'Couldn’t stop the policy, please try again',
       insuredShort: 'Insured: {name}',
       annualLabel: 'Annual',
       timelineStarts: 'Effective',
@@ -1291,9 +1307,14 @@ export const en: Translations = {
     typeFallback: 'aibutsu',
     saveChanges: 'Save changes',
     deleteConfirm: {
-      title: 'Delete?',
-      description: 'This aibutsu and all linked expenses will be removed from the list.',
       confirmLabel: 'Delete',
+      description: 'Past expenses stay in the ledger; they are not deleted with it.',
+      unnamed: 'this aibutsu',
+      item: { title: 'Remove “{name}” from aibutsu?' },
+      lifeEntity: { title: 'Put “{name}” away from aibutsu?' },
+    },
+    menu: {
+      ariaLabel: 'More actions',
     },
     type: {
       label: 'Type',
@@ -1333,6 +1354,7 @@ export const en: Translations = {
         champagne: 'Champagne',
       },
       plate: 'Plate',
+      plateRequired: 'Plate (required)',
       platePlaceholder: 'e.g., ABC-1234',
       year: 'Year',
       yearPlaceholder: 'e.g., 2019',
@@ -1507,7 +1529,7 @@ export const en: Translations = {
     },
     money: {
       thisMonth: 'This month',
-      cumulative: 'Total',
+      thisChapter: 'This chapter',
     },
     hint: {
       title: '✦ What can you record?',

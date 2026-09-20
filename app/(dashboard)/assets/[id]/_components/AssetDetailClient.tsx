@@ -186,6 +186,7 @@ export function AssetDetailClient({
         color={assetSheetInitial.color ?? null}
         monthAmount={monthAmount}
         totalAmount={totalAmount}
+        isPast={isPast}
         avgEcon={avgEcon}
         lastFuelAt={lastFuelAt}
       />
@@ -238,7 +239,7 @@ export function AssetDetailClient({
           </div>
         )}
         onItemClick={handleTxItemClick}
-        emptyState={<AibutsuHintCard type="car" onCtaPress={() => setAddOpen(true)} />}
+        emptyState={<AibutsuHintCard type="car" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         loader={async (cursor) => unwrapAction(await loadMoreTransactionsForAsset(assetId, cursor, pageSize))}
         acceptInsert={(row) => row.assetId === assetId}
         renderRow={(tx: PagedTxnRow) => {
