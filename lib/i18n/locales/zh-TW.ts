@@ -143,9 +143,25 @@ export type Translations = {
     ctaHint: string
     /** Secondary desktop CTA — sign-in link for returning users. */
     alreadyHaveAccount: string
+    /** Quiet note under the hero CTA area (#1333): the iPhone app is live on
+     *  the App Store; Android isn't yet, so this only ever claims "on the
+     *  way" — never a download link or a waitlist. Rendered by `AppStoreNote`,
+     *  which hides it inside the iOS native shell (same runtime gate as
+     *  `components/KofiWidget.tsx` — "download the app" from inside the app
+     *  itself is nonsensical and an App Store review risk); web, PWA and
+     *  Android all see it. */
+    appStoreNote: {
+      /** The anchor's visible label, linking out to the App Store listing. */
+      linkText: string
+      /** Trailing plain-text note after the link. */
+      androidNote: string
+    }
     /** Trust pills next to the desktop CTA (compact variant of `<TrustSection>`). */
     trustEncrypted: string
     trustFree: string
+    /** Device-availability trust pill. Kept in sync with reality (#1333):
+     *  iPhone app is live, Android is not on Play Store yet — don't promise a
+     *  listing that doesn't exist. */
     trustPwa: string
     /** Full trust section (#538) — shown between Features and footer. The
      *  compact variant above stays available via `<TrustSection variant="compact">`
@@ -2957,9 +2973,13 @@ export const zhTW: Translations = {
     cta: '一起記錄',
     ctaHint: '免費 · 兩人一本帳 · 用 Google 或 Apple 繼續',
     alreadyHaveAccount: '已經有帳號 · 登入',
+    appStoreNote: {
+      linkText: 'iPhone 版已在 App Store',
+      androidNote: 'Android 版正在路上',
+    },
     trustEncrypted: '只開放給你們倆',
     trustFree: '免費使用',
-    trustPwa: 'iOS / Android / Web PWA',
+    trustPwa: 'iPhone App · 網頁版 · Android 即將',
     trust: {
       narrative: '你的記錄只屬於你們兩個人。我們不靠廣告，不賣資料。',
       encryption: {
