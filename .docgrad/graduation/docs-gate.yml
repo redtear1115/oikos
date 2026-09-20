@@ -1,18 +1,20 @@
-# docs-gate.yml — GitHub Actions workflow 範本（docgrad 產出，**不由 docgrad 安裝**）
+# docs-gate.yml — GitHub Actions workflow template (produced by docgrad, **not installed by docgrad**)
 #
-# 要啟用：自行複製到 .github/workflows/docs-gate.yml 並調整。docgrad 絕不寫入 .github/。
+# To enable: copy it yourself to .github/workflows/docs-gate.yml and adjust. docgrad never writes to .github/.
 #
-# 這道 gate 就是「畢業」的內容：docgrad 是一次性的收斂工具，離開後由 CI 守住成果。
-# 沒有它，收斂會自然衰減——oikos 收官當天就冒出新孤兒與缺日期的檔案，兩個月後仍在原地。
+# This gate is what "graduation" means in practice: docgrad is a one-time convergence tool;
+# once it's gone, CI is what holds the result. Without it, convergence naturally decays —
+# oikos had new orphans and dateless files pop up the day it graduated, and they were still there two months later.
 
 name: docs-gate
 
 on:
   pull_request:
     paths:
-      # 依你的 .docgrad.yml 的 docs_dirs / entry_files 調整
+      # Adjust to match your .docgrad.yml's docs_dirs / entry_files
       - 'docs/**'
       - 'CLAUDE.md'
+      - 'README.md'
       - '.docgrad.yml'
 
 jobs:
@@ -21,27 +23,28 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # freshness 要讀 git log 的真實日期，淺 clone 會失準
+          fetch-depth: 0 # freshness reads real dates from git log; a shallow clone would give wrong results
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20' # docgrad 腳本零依賴，Node ≥18 即可
+          node-version: '20' # docgrad's scripts have zero dependencies; Node >=18 is enough
 
-      - name: 取得 docgrad
+      - name: Get docgrad
         run: git clone --depth 1 https://github.com/redtear1115/docgrad.git /tmp/docgrad
 
-      - name: 跑 docs-gate
+      - name: Run docs-gate
         env:
           DOCGRAD_DIR: /tmp/docgrad
         run: node .github/scripts/docs-gate.mjs --root .
-        # exit 1 = 文件不合格；exit 2 = 環境問題（找不到 docgrad、腳本炸了）
+        # exit 1 = docs failed the gate; exit 2 = environment problem (docgrad not found, script crashed)
 
-# ── 也可以改用現成工具（docgrad 的腳本不是唯一解）──────────────────────────────
+# ── You can also use off-the-shelf tools instead (docgrad's scripts are not the only option) ──────
 #
-#   死鏈      lychee 或 markdown-link-check
-#   格式      markdownlint
-#   術語風格  Vale
+#   dead links      lychee or markdown-link-check
+#   formatting      markdownlint
+#   terminology     Vale
 #
-# 這些工具在死鏈與格式上比 docgrad 成熟得多。docgrad 的腳本在兩件事上仍有差異化價值：
-# 孤兒／可達性（從單一索引 transitive 走得到嗎）與入口檔 token 預算——這兩個是
-# 「文件作為 agent context」特有的量測，一般 docs linter 不做。
+# These tools are far more mature for dead links and formatting. docgrad's scripts still add
+# distinct value on two fronts: orphans/reachability (can you transitively reach it from a
+# single index?) and entry-file token budget — measurements specific to "documentation as
+# agent context" that a general docs linter doesn't do.

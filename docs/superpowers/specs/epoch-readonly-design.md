@@ -1,9 +1,9 @@
 ---
-last_updated: 2026-07-13
+last_updated: 2026-09-14
 status: shipped
 first_shipped_in: v0.15.3
 related_specs: [transactions, income, monthly-review, realtime]
-related_issues: ["#207"]
+related_issues: ["#207", "#1190"]
 ---
 
 # Epoch Read-Only 與 Read-Path 型別防呆
