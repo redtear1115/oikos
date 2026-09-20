@@ -2930,7 +2930,7 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'Spendee ユーザーへのふたり家計簿。CSV をアップして 3 分で引っ越し。',
       },
       cwmoney: {
-        title: 'CWMoney から Futari へ｜無料のふたり分の割り勘',
+        title: 'CWMoney から Futari へ｜無料の割り勘機能',
         description: 'CWMoney ユーザーの新しい選択肢。割り勘に VIP は不要——Futari は無料で割り勘機能を搭載。変換テンプレートで CSV に整えてアップロードするだけ。',
         ogDescription: 'CWMoney ユーザーの次の住みか。無料の割り勘機能、Excel を CSV に変換して Futari へ。',
       },

@@ -2932,9 +2932,9 @@ I will upload the screenshots once you confirm.`,
         ogDescription: 'A couple-first alternative to Spendee. Upload your CSV in three minutes.',
       },
       cwmoney: {
-        title: 'Import from CWMoney to Futari · Free couple expense-splitting',
-        description: 'Moving from CWMoney? Skip the VIP paywall — Futari includes free expense-splitting for couples. Use our Excel template to bring your data over.',
-        ogDescription: 'Where CWMoney users go next: free splitting, Excel-to-CSV import into Futari.',
+        title: 'Import from CWMoney to Futari · Free expense splitting',
+        description: 'Moving from CWMoney? Skip the VIP paywall — Futari includes free expense splitting for couples. Use our Excel template to bring your data over.',
+        ogDescription: 'Where CWMoney users go next: free expense splitting, Excel-to-CSV import into Futari.',
       },
       // TODO(#839): en copy below pending native review
       moneybook: {
