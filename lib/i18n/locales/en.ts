@@ -90,9 +90,15 @@ export const en: Translations = {
     cta: 'Begin together',
     ctaHint: 'Free · One ledger for two · Continue with Google or Apple',
     alreadyHaveAccount: 'I already have an account',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    appStoreNote: {
+      linkText: 'The iPhone app is on the App Store',
+      androidNote: 'Android is on the way',
+    },
     trustEncrypted: 'Open only to you two',
     trustFree: 'Free to use',
-    trustPwa: 'iOS / Android / Web PWA',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    trustPwa: 'iPhone app · Web PWA',
     trust: {
       narrative: 'Your records belong only to the two of you. No ads, no data selling.',
       encryption: {

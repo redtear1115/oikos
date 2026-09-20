@@ -9,6 +9,7 @@ import {
   StatsGlyph,
   ShieldOutlineGlyph,
 } from './FutariMark'
+import { AppStoreNote } from './AppStoreNote'
 import { IllustrationSlot } from './IllustrationSlot'
 import { LandingCtaLink } from './LandingCtaLink'
 import { LandingPrimaryCta } from './LandingPrimaryCta'
@@ -260,6 +261,15 @@ export function Landing({ t, signInHref, dashboardHref, checkingLabel, useCaseHr
             <div className="hidden md:block mt-7">
               <TrustSection t={t} variant="compact" />
             </div>
+
+            {/* App Store note (#1333) — quiet, secondary; hidden inside the
+                iOS shell itself (see AppStoreNote). Sits last in the copy
+                column so it reads as a footnote, not competing with the
+                primary web CTA above. */}
+            <AppStoreNote
+              linkText={t.appStoreNote.linkText}
+              androidNote={t.appStoreNote.androidNote}
+            />
           </div>
 
           {/* Illustration + demoted phone — desktop only */}

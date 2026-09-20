@@ -91,9 +91,15 @@ export const ja: Translations = {
     cta: 'ふたりではじめる',
     ctaHint: '無料 · ふたりで一冊の家計簿 · Google または Apple で続ける',
     alreadyHaveAccount: 'アカウントをお持ちの方',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    appStoreNote: {
+      linkText: 'iPhone 版は App Store で公開中',
+      androidNote: 'Android 版は近日公開',
+    },
     trustEncrypted: 'ふたりだけに開放',
     trustFree: '無料で使える',
-    trustPwa: 'iOS / Android / Web PWA',
+    // TODO(i18n): native review pending (#1333) — MT-quality draft.
+    trustPwa: 'iPhone App · Web PWA',
     trust: {
       narrative: 'あなたたちの記録は、二人だけのもの。広告もデータ販売もありません。',
       encryption: {

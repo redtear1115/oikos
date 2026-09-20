@@ -90,9 +90,13 @@ export const zhCN: Translations = {
     cta: '一起记录',
     ctaHint: '免费 · 两人一本账 · 用 Google 或 Apple 继续',
     alreadyHaveAccount: '已有账号 · 登录',
+    appStoreNote: {
+      linkText: 'iPhone 版已在 App Store',
+      androidNote: 'Android 版即将上线',
+    },
     trustEncrypted: '只开放给你们俩',
     trustFree: '免费使用',
-    trustPwa: 'iOS / Android / Web PWA',
+    trustPwa: 'iPhone App · 网页版',
     trust: {
       narrative: '你们的记录只属于你们两个人。我们不靠广告，不卖数据。',
       encryption: {
