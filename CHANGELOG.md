@@ -40,7 +40,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+_Nothing unreleased yet._
+
+## [1.5.18] - 2026-09-21
+
 主題：**先看見關係，再看見金額**——愛物列表把年齡與陪伴天數放到前面、金額退成安靜的一行，過去章節不再排出一整排 NT$0；邊界狀態留下的空洞補起來，頭貼也可以選擇不顯示。
+完整 diff：[v1.5.17...v1.5.18](https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18)
 
 ### 使用者可見變化
 
@@ -1181,7 +1186,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.17...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.18...HEAD
+[1.5.18]: https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18
 [1.5.17]: https://github.com/redtear1115/oikos/compare/v1.5.16...v1.5.17
 [1.5.16]: https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16
 [1.5.15]: https://github.com/redtear1115/oikos/compare/v1.5.14...v1.5.15
