@@ -43,6 +43,45 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.19] - 2026-09-21
+
+主題：**凌晨的「今天」對得上了**——伺服器和手機用同一個今天，確認框不再被誤關，四語文案與 token 紀律收尾。
+完整 diff：[v1.5.18...v1.5.19](https://github.com/redtear1115/oikos/compare/v1.5.18...v1.5.19)
+
+### 使用者可見變化
+
+- **台北凌晨 0–8 點，天數、年齡與「今天／昨天」不再閃動（#1360）**
+  使用者：愛物的陪伴天數、年齡、首頁紀錄列表的「今天／昨天」、記帳 sheet 的日期，凌晨打開時和白天一樣穩定（首頁收入摘要的日期另見 #1362）。
+  技術：伺服器依 `futari_tz` cookie（裝置時區，預設 Asia/Taipei）算出今天，經 `TodayProvider` 交給 client；`computeAge`／`formatDateRelative`／`formatPickerSubtitle` 與新的 `daysSince` 都必須傳入 `today`（#1363、#1371）。
+- **確認框在送出中不會被關掉（#1347）**
+  使用者：送出中點背景、按 Escape 或返回都不會關掉確認框，失敗時看得到錯誤訊息。
+  技術：`ConfirmModal` 在 pending 時拒絕關閉，所有呼叫點共用，不做特例。
+- **植物、房子的天數不再把未來日期顯示成「0 天」（#1347）**
+  使用者：萌芽日或房子的購買日期填在未來時不顯示天數；台北早上 8 點前也不再少算一天。
+  技術：新增 `lib/age.ts#daysSince`，以當地日曆日計算。
+- **四語文案對齊主稿（#1280）**
+  使用者：en／ja 的 landing 按鈕回到「一起記錄」；en 的功能卡標題、分享標題與邀請說明不再用 Track；ja 在對方還沒加入時的錯誤訊息和登出說明改用「相手」；zh-TW 房子與車子的欄位改成「購買日期」「買入金額／價格」，zh-CN 房子詳細頁改成「购入日期」。
+- **油耗說明文字回到設計字級（#1327）**
+  使用者：油耗的單位與說明文字變回較小的設計尺寸，不再沿用父層字級。
+  技術：assets 目錄的靜態 inline style 改用既有 class／token，經瀏覽器量測，除這 4 處外畫面不變。
+- **定期收入的收款人列間距對齊付款人切換（#1268）**
+  使用者：收款人列和付款人切換的上方間距一致。
+  技術：兩份 `RuleListItem` 合併成 `settings/recurring/_components/RuleListItem.tsx`，輸出與合併前相同。
+- **CWMoney 搬家頁的搜尋文案改成先講好處（#1337）**
+  使用者：搜尋結果的標題與描述先說 Futari 的好處；關於 CWMoney 的說法只保留比較表撐得住的事實。
+  技術：`contentUpdatedAt` 更新到 2026-09-20；`llms.txt` 的連結加上 `utm_source=llms_txt&utm_medium=ai_agent`。
+
+### 技術變更
+
+- **送審 runbook 補上 `reviewSubmissions` 三步流程與送審前的回查清單（#1352）**
+  技術：ASC 的 `appStoreVersionSubmissions` 已不能 CREATE，改記 `reviewSubmissions` → `reviewSubmissionItems` → PATCH `submitted` 三步，並列出送審前要回查的四個 GET。
+- **`docs/utm-convention.md` 新增 inbound 標記一節（#1337）**
+  技術：新增 inbound 表（`llms_txt`／`ai_agent`），並寫明這些值不進 `lib/utm.ts` 的 `UTM_SOURCES`／`UTM_MEDIUMS`。
+- **CHANGELOG 的 Security 門檻寫明是「有沒有改變暴露面」（#1347）**
+  技術：以 #1191 為反例，寫明門檻是資料的暴露面，不是形式。
+- **`lib/db/queries/asset.ts` 註解更正：`totalAmount` 是章節範圍，不是全部時間（#1347）**
+  技術：只改 docstring，查詢本來就帶 `epochClause`。
+
 ## [1.5.18] - 2026-09-21
 
 主題：**先看見關係，再看見金額**——愛物列表把年齡與陪伴天數放到前面、金額退成安靜的一行，過去章節不再排出一整排 NT$0；邊界狀態留下的空洞補起來，頭貼也可以選擇不顯示。
@@ -1187,7 +1226,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.18...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.19...HEAD
+[1.5.19]: https://github.com/redtear1115/oikos/compare/v1.5.18...v1.5.19
 [1.5.18]: https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18
 [1.5.17]: https://github.com/redtear1115/oikos/compare/v1.5.16...v1.5.17
 [1.5.16]: https://github.com/redtear1115/oikos/compare/v1.5.15...v1.5.16
