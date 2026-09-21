@@ -43,6 +43,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.6.0] - 2026-09-22
+
+主題：**出遊**——和朋友出去玩時，由你們兩人代記一本多人分帳；結束時只把你們倆之間的帳折回主帳本。
+完整 diff：[v1.5.21...v1.6.0](https://github.com/redtear1115/oikos/compare/v1.5.21...v1.6.0)
+
+### 使用者可見變化
+
+- **新功能：出遊（#943）**
+  使用者：從旅行頁進入「出遊」，開一本和朋友的分帳，加入朋友的名字、記下誰付了什麼、平分給誰，系統會算出誰該給誰多少、建議最少的轉帳筆數；出遊結束時，你們兩人之間的欠款會以一筆「出遊『名稱』結算」寫回主帳本，朋友的部分只在出遊裡結清。
+  技術：新增 5 張 outing 表（`0066`，RLS 開啟且對 client 一律拒絕）；寫回在單一 transaction 內完成（鎖定出遊與帳本、依章節判斷、`recalcGroupBalance`），重複結束不會記兩次；有進行中的出遊時不能離開帳本或移除對方；基準幣別在有進行中的出遊時鎖定（#1378、#1402）。
+- **刪除確認的文案改成與實際行為一致（#1379）**
+  使用者：刪除記帳、收入、結算時，確認視窗改說明「紀錄會立即從帳本移除，並於約 1 年後由系統永久清除」，不再承諾 30 天內可還原。
+
+### 技術變更
+
+- **帳號刪除與軟刪除清理涵蓋出遊資料（#943）**
+  技術：`_delete_group_cascade` 與 `process_account_deletions` 加入 outing 表，離開者的出遊名字會被匿名化；`cleanup-soft-deleted` cron 加入 outing 表（`0066`）。
+
 ## [1.5.21] - 2026-09-21
 
 主題：**章節的邊界更可靠**——旅行、匯入回滾、過去章節的愛物都只作用在該作用的章節；首頁多了常駐的月回顧與旅行入口。
@@ -1279,7 +1297,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.21...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/redtear1115/oikos/compare/v1.5.21...v1.6.0
 [1.5.21]: https://github.com/redtear1115/oikos/compare/v1.5.20...v1.5.21
 [1.5.20]: https://github.com/redtear1115/oikos/compare/v1.5.19...v1.5.20
 [1.5.19]: https://github.com/redtear1115/oikos/compare/v1.5.18...v1.5.19

@@ -775,6 +775,67 @@ export type Translations = {
     }
   }
 
+  /** 出遊 (Group Outing) list page. */
+  outingList: {
+    title: string
+    subtitle: string
+    sectionActive: string
+    sectionPast: string
+    endedTag: string
+    /** Participant count tag on a list row. `{count}` = number of participants. */
+    countTag: string
+    addCta: string
+    empty: { heading: string; body: string }
+  }
+
+  /** 出遊 detail + sheets. */
+  outing: {
+    participantsLabel: string
+    transfersLabel: string
+    /** "{from} → {to}" transfer row. */
+    transferRow: string
+    allSettled: string
+    expensesLabel: string
+    /** "{name} 付" payer tag. */
+    paidByTag: string
+    /** "{count} 人" split-count tag. */
+    splitCountTag: string
+    untitledExpense: string
+    emptyExpenses: string
+    addExpense: string
+    addParticipant: string
+    settle: string
+    endOuting: string
+    endedNote: string
+    /** "結束後你們倆的 {amount} 會折回主帳本。" */
+    coupleFoldNote: string
+    endConfirmTitle: string
+    /** Note on the Settlement written when an ended outing folds the couple's
+     *  mutual debt into the main ledger. `{name}` = outing name (bounded). */
+    foldSettlementNote: string
+    /** Participant name for a group member whose profile name is blank. */
+    memberFallbackName: string
+    endConfirmBody: string
+    form: {
+      nameLabel: string
+      namePlaceholder: string
+      saveCreate: string
+      payerLabel: string
+      amountLabel: string
+      splitLabel: string
+      descriptionLabel: string
+      participantNameLabel: string
+      participantNamePlaceholder: string
+      saveParticipant: string
+      saveExpense: string
+      settleFromLabel: string
+      settleToLabel: string
+      settleAmountLabel: string
+      saveSettle: string
+      confirmEnd: string
+    }
+  }
+
   /** Trip create/edit sheet (#42, #410). */
   tripSheet: {
     /** Sheet title for creating a new trip. */
@@ -1220,6 +1281,7 @@ export type Translations = {
         balanceNotZero: string
         soloGroup: string
         activeTrip: string
+        activeOuting: string
         fallback: string
       }
     }
@@ -2852,6 +2914,22 @@ export type Translations = {
       record_not_found: string
       record_deleted_or_missing: string
       amount_not_positive: string
+      amount_invalid: string
+      amount_too_large: string
+      outing_not_found: string
+      outing_not_active: string
+      outing_epoch_closed: string
+      outing_participant_not_found: string
+      outing_participant_limit: string
+      outing_name_empty: string
+      outing_name_too_long: string
+      outing_participant_name_empty: string
+      outing_participant_name_too_long: string
+      outing_share_empty: string
+      outing_settlement_same_party: string
+      outing_description_too_long: string
+      outing_currency_changed: string
+      leave_active_outing: string
       category_empty: string
       split_ratio_required: string
       split_ratio_out_of_range: string
@@ -3138,7 +3216,7 @@ export const zhTW: Translations = {
     edit: '編輯',
     shared: '共用',
     none: '無',
-    deleteSoftDescription: '這個動作無法復原，但帳本歷史會保留 30 天可由開發者還原。',
+    deleteSoftDescription: '這個動作無法復原，紀錄會立即從帳本移除，並於約 1 年後由系統永久清除。',
     toast: {
       recorded: '已記錄 NT${amount}',
       updated: '已更新 NT${amount}',
@@ -3476,6 +3554,60 @@ export const zhTW: Translations = {
     empty: {
       heading: '還沒有旅行紀錄',
       body: '建一趟旅行，這段日子裡的每筆支出，就會自動收進來，回來再一起翻。',
+    },
+  },
+
+  outingList: {
+    title: '出遊',
+    subtitle: '揪一團，一起把帳記乾淨。',
+    sectionActive: '進行中',
+    sectionPast: '過去的出遊',
+    endedTag: '已結束',
+    countTag: '{count} 人',
+    addCta: '開一個出遊',
+    empty: {
+      heading: '還沒有出遊',
+      body: '揪朋友出門時，開一個出遊，誰付了什麼、誰該還誰，一起看得清楚。',
+    },
+  },
+
+  outing: {
+    participantsLabel: '參與者',
+    transfersLabel: '誰付給誰',
+    transferRow: '{from} → {to}',
+    allSettled: '都結清了。',
+    expensesLabel: '支出',
+    paidByTag: '{name} 付',
+    splitCountTag: '{count} 人',
+    untitledExpense: '一筆支出',
+    emptyExpenses: '還沒有支出。記下第一筆吧。',
+    addExpense: '記一筆',
+    addParticipant: '加一個人',
+    settle: '標記還款',
+    endOuting: '結束出遊',
+    endedNote: '這次出遊已經結束。',
+    coupleFoldNote: '結束後，你們倆的 {amount} 會折回主帳本。',
+    endConfirmTitle: '結束這次出遊',
+    foldSettlementNote: '出遊『{name}』結算',
+    memberFallbackName: '成員',
+    endConfirmBody: '結束後就不能再記帳了。你們倆之間的部分會折回主帳本，朋友的部分留在這裡結算。',
+    form: {
+      nameLabel: '出遊名稱',
+      namePlaceholder: '例如：九份兩日',
+      saveCreate: '開始',
+      payerLabel: '誰付的',
+      amountLabel: '金額',
+      splitLabel: '分給誰',
+      descriptionLabel: '備註（選填）',
+      participantNameLabel: '名字',
+      participantNamePlaceholder: '朋友的名字',
+      saveParticipant: '加入',
+      saveExpense: '記下',
+      settleFromLabel: '誰還',
+      settleToLabel: '還給誰',
+      settleAmountLabel: '金額',
+      saveSettle: '記下還款',
+      confirmEnd: '結束出遊',
     },
   },
 
@@ -3831,6 +3963,7 @@ export const zhTW: Translations = {
         balanceNotZero: '還有差額沒結清，無法離開',
         soloGroup: '已經是單人帳本',
         activeTrip: '這本帳本目前有進行中的旅行，請先到「旅行」把它標記為結束，才能移除對方',
+        activeOuting: '這本帳本目前有進行中的出遊，請先到「出遊」把它標記為結束，才能移除對方',
         fallback: '操作失敗，請稍後再試',
       },
     },
@@ -6379,6 +6512,22 @@ export const zhTW: Translations = {
       record_not_found: '找不到該筆紀錄',
       record_deleted_or_missing: '紀錄已被刪除或不存在',
       amount_not_positive: '金額需大於 0',
+      amount_invalid: '金額需為整數',
+      amount_too_large: '金額過大',
+      outing_not_found: '找不到這次出遊',
+      outing_not_active: '這次出遊已經結束',
+      outing_epoch_closed: '這次出遊在過去的章節裡，只能結束',
+      outing_participant_not_found: '找不到這位參與者',
+      outing_participant_limit: '一次出遊最多 20 人',
+      outing_name_empty: '出遊名稱為空',
+      outing_name_too_long: '出遊名稱最長 100 字',
+      outing_participant_name_empty: '名字為空',
+      outing_participant_name_too_long: '名字最長 40 字',
+      outing_share_empty: '至少選一位分攤的人',
+      outing_settlement_same_party: '付款人與收款人不可相同',
+      outing_description_too_long: '說明最長 100 字',
+      outing_currency_changed: '這次出遊的幣別和帳本目前的基準幣別不一致，所以不能折回主帳本。',
+      leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
       split_ratio_required: '依比例分需要指定比例',
       split_ratio_out_of_range: '比例需在 0–100 之間',

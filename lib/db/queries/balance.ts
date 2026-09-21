@@ -110,8 +110,16 @@ export async function recalcGroupBalance(
   `)
 }
 
-export async function getGroupBalance(groupId: string): Promise<number> {
-  const rows = await db.execute<{ balance: number }>(sql`
+/**
+ * Pass `tx` to read inside a transaction — leaveGroup does, after locking the
+ * group row, so a Settlement committed by a concurrent endOuting (#943) is
+ * seen before the balance-zero check rather than after it.
+ */
+export async function getGroupBalance(
+  groupId: string,
+  tx: typeof db | DbTransaction = db,
+): Promise<number> {
+  const rows = await tx.execute<{ balance: number }>(sql`
     SELECT balance FROM "GroupBalance" WHERE group_id = ${groupId} LIMIT 1
   `)
   return Number(rows[0]?.balance ?? 0)
