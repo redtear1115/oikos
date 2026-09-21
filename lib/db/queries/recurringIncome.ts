@@ -3,7 +3,7 @@ import {
   recurringIncomeRules,
   pendingIncomeOccurrences,
 } from '@/lib/db/schema'
-import { and, asc, eq, isNull } from 'drizzle-orm'
+import { and, asc, eq, isNull, lt } from 'drizzle-orm'
 
 export interface RecurringRuleRow {
   id: string
@@ -49,8 +49,15 @@ export async function listActiveRules(groupId: string): Promise<RecurringRuleRow
  * Used by SavingsView to surface "income arrives every cycle" rules on the
  * insurance detail page itself, so the user doesn't have to bounce to
  * /settings/recurring?tab=income to see them.
+ *
+ * `createdBefore` (optional) keeps only rules created strictly before that
+ * instant — same cut-off as the /assets read paths (lib/pinnedChapterScope.ts).
  */
-export async function listRulesForAsset(groupId: string, assetId: string): Promise<RecurringRuleRow[]> {
+export async function listRulesForAsset(
+  groupId: string,
+  assetId: string,
+  createdBefore: Date | null = null,
+): Promise<RecurringRuleRow[]> {
   return db
     .select({
       id: recurringIncomeRules.id,
@@ -71,6 +78,7 @@ export async function listRulesForAsset(groupId: string, assetId: string): Promi
       eq(recurringIncomeRules.groupId, groupId),
       eq(recurringIncomeRules.assetId, assetId),
       isNull(recurringIncomeRules.deletedAt),
+      createdBefore ? lt(recurringIncomeRules.createdAt, createdBefore) : undefined,
     ))
     .orderBy(asc(recurringIncomeRules.nextOccurrenceAt))
 }
