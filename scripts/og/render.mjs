@@ -1,11 +1,12 @@
 // Render the Futari OG images from template.html via Puppeteer.
 //
 // Outputs go to ../../public/ (i.e. oikos/public/):
-//   - og-image.png      1200 × 630   · default OG (zh-TW / zh-CN)
-//   - og-image-en.png   1200 × 630   · English OG
-//   - og-image-ja.png   1200 × 630   · Japanese OG
-//   - og-line.png       1200 × 600   · LINE share image
-//   - og-square.png     1200 × 1200  · IG / Threads square
+//   - og-image.png         1200 × 630   · default OG (zh-TW)
+//   - og-image-en.png      1200 × 630   · English OG
+//   - og-image-ja.png      1200 × 630   · Japanese OG
+//   - og-image-zh-CN.png   1200 × 630   · Simplified Chinese OG
+//   - og-line.png          1200 × 600   · LINE share image
+//   - og-square.png        1200 × 1200  · IG / Threads square
 //
 // Usage:
 //   cd scripts/og
@@ -26,9 +27,10 @@ const OUT_DIR = resolve(__dirname, '..', '..', 'public')
 
 /** @type {Array<{name: string, w: number, h: number, layout: 'wide'|'square', lang: string, dsr: number}>} */
 const targets = [
-  { name: 'og-image.png',    w: 1200, h: 630,  layout: 'wide',   lang: 'zh', dsr: 1 },
-  { name: 'og-image-en.png', w: 1200, h: 630,  layout: 'wide',   lang: 'en', dsr: 1 },
-  { name: 'og-image-ja.png', w: 1200, h: 630,  layout: 'wide',   lang: 'ja', dsr: 1 },
+  { name: 'og-image.png',       w: 1200, h: 630,  layout: 'wide',   lang: 'zh',    dsr: 1 },
+  { name: 'og-image-en.png',    w: 1200, h: 630,  layout: 'wide',   lang: 'en',    dsr: 1 },
+  { name: 'og-image-ja.png',    w: 1200, h: 630,  layout: 'wide',   lang: 'ja',    dsr: 1 },
+  { name: 'og-image-zh-CN.png', w: 1200, h: 630,  layout: 'wide',   lang: 'zh-CN', dsr: 1 },
   { name: 'og-line.png',     w: 1200, h: 600,  layout: 'wide',   lang: 'zh', dsr: 1 },
   { name: 'og-square.png',   w: 1200, h: 1200, layout: 'square', lang: 'zh', dsr: 1 },
 ]

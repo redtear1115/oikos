@@ -46,6 +46,7 @@ export function alternateOgLocales(currentLocale: Locale): string[] {
 const LOCALE_OG_IMAGES: Partial<Record<Locale, string>> = {
   en: '/og-image-en.png',
   ja: '/og-image-ja.png',
+  'zh-CN': '/og-image-zh-CN.png',
 }
 
 export function ogImage(locale: Locale): string {
