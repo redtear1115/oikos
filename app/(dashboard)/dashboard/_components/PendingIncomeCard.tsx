@@ -27,7 +27,7 @@ export function PendingIncomeCard({ pending, onEdit }: PendingIncomeCardProps) {
       editLabel={t.pendingIncomeCard.edit}
       skipLabel={t.pendingIncomeCard.skip}
       primaryDisabledClass="disabled:opacity-50"
-      secondaryDisabledClass="disabled:opacity-30"
+      secondaryDisabledClass="disabled:opacity-50"
       onConfirm={() => confirmPending(pending.id)}
       onSkip={() => skipPending(pending.id)}
       confirmErrorFallback={t.pendingIncomeCard.confirmError}

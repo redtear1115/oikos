@@ -225,11 +225,10 @@ export function QuestionCard({ sessionId, questionKeys, reviewHref }: QuestionCa
             type="button"
             onClick={advance}
             disabled={pending}
-            className="inline-flex items-center gap-2 h-12 px-7 rounded-full text-sm font-medium"
+            className="inline-flex items-center gap-2 h-12 px-7 rounded-full text-sm font-medium disabled:opacity-50"
             style={{
               background: 'var(--ink)',
               color: 'var(--on-fill)',
-              opacity: pending ? 0.6 : 1,
             }}
           >
             {pending

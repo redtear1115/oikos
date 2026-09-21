@@ -356,7 +356,7 @@ The vocabulary is deliberately tiny. `components/ui/` holds five primitives: `Bu
 - **Secondary:** Surface White with Cocoa Ink text and a Cocoa Ink 3 (#82654F) hairline border. The calm alternative (取消 / 輔助).
 - **Ghost:** Transparent with Cocoa Ink 2 (#7A5848) text, no border.
 - **Danger:** Destructive fill (#B85A48) with white text (離開帳本 / 刪除). Distinct from Clay debit so "leaving" never reads as "an expense."
-- **Disabled:** Cocoa Ink 3 fill at opacity 0.40. Never a grey from outside the palette.
+- **Disabled:** Cocoa Ink 3 fill at opacity 0.50. Never a grey from outside the palette.
 - **States:** `transition-opacity 150ms`. Focus shows the 2px ember ring via `.oik-btn:focus-visible`.
 
 ### Chips / Toggles

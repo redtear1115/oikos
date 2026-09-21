@@ -3,6 +3,7 @@
 import { resolveCarColor } from '../../_components/carColor'
 import { useTranslations } from '@/lib/i18n/client'
 import { avgEconHint } from '@/lib/fuelEconHint'
+import { formatAmount, formatAmountParts } from '@/lib/currency'
 import type { FuelType } from '@/lib/fuel'
 
 interface AssetHeroProps {
@@ -143,19 +144,23 @@ export function AssetHero({
           </div>
         </div>
 
-        {/* TODO(v0.17 currency): MiniStat values use "NT$ {amount}" with space —
-             defer to design before migrating to formatAmount. */}
+        {/* TODO(v0.17 currency): 'twd' hard-coded. #1399 blocks wiring a real
+             baseCurrency: the main ledger stores whole units as typed, but
+             formatAmountParts divides USD by 100 (cents semantics), so a
+             USD-base group would render this at 1/100th its actual size
+             until that's fixed — on top of AssetHero having no
+             base-currency prop path today either. */}
         <div
           className="mt-5 flex rounded-2xl px-4 py-3 gap-2 border border-hairline"
           style={{ background: 'rgba(58,36,25,0.04)' }}
         >
           {!isPast && (
             <>
-              <MiniStat label={t.assetDetail.money.thisMonth} value={`NT$ ${monthAmount.toLocaleString()}`} />
+              <MiniStat label={t.assetDetail.money.thisMonth} value={formatAmount(monthAmount, 'twd')} />
               <div className="w-px bg-hairline" />
             </>
           )}
-          <MiniStat label={t.assetDetail.money.thisChapter} value={`NT$ ${totalAmount.toLocaleString()}`} />
+          <MiniStat label={t.assetDetail.money.thisChapter} value={formatAmount(totalAmount, 'twd')} />
         </div>
       </div>
     </div>
@@ -164,6 +169,8 @@ export function AssetHero({
 
 function Stat({ label, amount, accent }: { label: string; amount: number; accent: boolean }) {
   const dim = amount === 0
+  // TODO(v0.17 currency): 'twd' hard-coded — #1399, see the MiniStat block above for why.
+  const { symbol, digits } = formatAmountParts(amount, 'twd')
   return (
     <div>
       <div className="text-xs tracking-label mb-1 text-ink-3">{label}</div>
@@ -175,10 +182,8 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
           color: dim ? 'var(--ink-3)' : 'var(--ink)',
         }}
       >
-        {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
-             needs formatAmount digits-only mode (or symbol/digits split). */}
-        <span className="text-base mr-0.5 text-ink-2 font-medium">NT$</span>
-        {amount.toLocaleString('en-US')}
+        <span className="text-base mr-0.5 text-ink-2 font-medium">{symbol}</span>
+        {digits}
       </div>
     </div>
   )

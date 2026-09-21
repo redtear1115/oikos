@@ -564,7 +564,7 @@ function FinalConfirm({
             type="button"
             onClick={onLeave}
             disabled={!matched || pending}
-            className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-40"
+            className="w-full h-12 rounded-bubble text-sm font-medium cursor-pointer disabled:opacity-50"
             style={{ background: 'var(--btn-destructive-bg)', color: 'var(--btn-destructive-text)' }}
           >
             {pending ? t.leaving : t.leaveButton}

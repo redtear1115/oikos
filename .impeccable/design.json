@@ -303,7 +303,7 @@
       "refersTo": "button-primary",
       "description": "The firm commit anchor (記下 / 儲存 / 確認). Dark cocoa-ink fill in a soft, cream-lit room.",
       "html": "<button class=\"ds-btn-primary\">記下</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: var(--control-md, 44px); padding: 0 20px; background: var(--btn-primary-bg, #3A2419); color: var(--btn-primary-text, #fff); border: none; border-radius: var(--radius-bubble, 14px); font-weight: 500; font-size: 16px; cursor: pointer; transition: opacity 150ms ease; } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); } .ds-btn-primary:disabled { opacity: 0.4; cursor: default; }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: var(--control-md, 44px); padding: 0 20px; background: var(--btn-primary-bg, #3A2419); color: var(--btn-primary-text, #fff); border: none; border-radius: var(--radius-bubble, 14px); font-weight: 500; font-size: 16px; cursor: pointer; transition: opacity 150ms ease; } .ds-btn-primary:hover { opacity: 0.9; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(224,136,86,0.55)); } .ds-btn-primary:disabled { opacity: 0.5; cursor: default; }"
     },
     {
       "name": "Secondary Button",
