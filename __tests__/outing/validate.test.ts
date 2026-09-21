@@ -9,6 +9,7 @@ import {
   OUTING_PARTICIPANT_CAP,
   foldNoteName,
   foldSettlementFor,
+  isUuid,
   memberParticipantName,
   normalizeCategory,
   normalizeDescription,
@@ -187,5 +188,20 @@ describe('telemetry carries no names (#943 S-C, F13)', () => {
     // actionError params are sent to the client and may reach logs: none carry text.
     const params = src.match(/actionError\([^)]*,[^)]*\)/g) ?? []
     expect(params).toEqual([])
+  })
+})
+
+describe('isUuid (#943 P3) — malformed ids never reach a uuid cast', () => {
+  it.each([
+    ['00000000-0000-0000-0000-000000000000', true],
+    ['3F2504E0-4F89-11D3-9A0C-0305E82C3301', true],
+    ['not-a-uuid', false],
+    ['', false],
+    ["'; drop table x; --", false],
+    ['3f2504e0-4f89-11d3-9a0c-0305e82c330', false],
+    [42, false],
+    [null, false],
+  ])('%p → %p', (value, expected) => {
+    expect(isUuid(value)).toBe(expected)
   })
 })

@@ -46,6 +46,7 @@ const {
   endOuting, softDeleteOuting,
 } = await import('@/actions/outing')
 const { leaveGroup, removePartner } = await import('@/actions/membership')
+const { setBaseCurrency } = await import('@/actions/currency')
 const { recalcGroupBalance } = await import('@/lib/db/queries/balance')
 const { PAST_EPOCH_COOKIE } = await import('@/lib/db/queries/epoch')
 
@@ -447,5 +448,93 @@ describe('membership fences (S-E)', () => {
     expect(await db.select().from(groupEpochs).where(eq(groupEpochs.groupId, o.groupId))).toEqual(epochsBefore)
     const [g] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, o.groupId))
     expect(g.memberB).toBe(o.partnerId)
+  })
+})
+
+// ─── #1378 review fixes ───
+
+describe('base currency vs an outing (P2)', () => {
+  it('the base currency is locked while an outing is active, and free again once it ends with nothing to fold', async () => {
+    const seed = await seedGroup()
+    mockUserId = seed.userId
+    const { id } = ok(await createOuting({ name: 'x' }))
+    expect(await setBaseCurrency({ currency: 'jpy' })).toEqual({ ok: false, code: 'base_currency_locked' })
+    expect(ok(await endOuting({ outingId: id }))).toEqual({ folded: false })
+    ok(await setBaseCurrency({ currency: 'jpy' }))
+  })
+
+  it('if the base changes anyway (a race past the lock), end refuses and writes nothing; switching back lets it fold', async () => {
+    const o = await seedOuting()
+    ok(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 3000, participantIds: [o.pA, o.pB] }))
+    // Stand-in for a setBaseCurrency that passed its guard before the outing existed.
+    await db.update(oikosGroups).set({ baseCurrency: 'jpy' }).where(eq(oikosGroups.id, o.groupId))
+
+    expect(await endOuting({ outingId: o.outingId })).toEqual({ ok: false, code: 'outing_currency_changed' })
+    expect(await db.select().from(settlements).where(eq(settlements.groupId, o.groupId))).toHaveLength(0)
+    expect(await balanceOf(o.groupId)).toBe(0)
+    const [still] = await db.select().from(outings).where(eq(outings.id, o.outingId))
+    expect(still.status).toBe('active')
+    expect(still.foldedAt).toBeNull()
+
+    await db.update(oikosGroups).set({ baseCurrency: 'twd' }).where(eq(oikosGroups.id, o.groupId))
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: true })
+    expect(await balanceOf(o.groupId)).toBe(1500)
+  })
+
+  it('a mismatch with nothing to fold still ends (no debt is dropped)', async () => {
+    const o = await seedOuting()
+    await db.update(oikosGroups).set({ baseCurrency: 'jpy' }).where(eq(oikosGroups.id, o.groupId))
+    expect(ok(await endOuting({ outingId: o.outingId }))).toEqual({ folded: false })
+  })
+})
+
+describe('malformed ids (P3) — "not found", never an unexpected 22P02', () => {
+  it('a non-UUID outing id on every action', async () => {
+    const o = await seedOuting()
+    const bad = 'not-a-uuid'
+    const notFound = { ok: false, code: 'outing_not_found' }
+    expect(await addOutingParticipant({ outingId: bad, displayName: 'x' })).toEqual(notFound)
+    expect(await addOutingExpense({ outingId: bad, paidByParticipantId: o.pA, amount: 1, participantIds: [o.pA] })).toEqual(notFound)
+    expect(await recordOutingSettlement({ outingId: bad, fromParticipantId: o.pA, toParticipantId: o.pB, amount: 1 })).toEqual(notFound)
+    expect(await endOuting({ outingId: bad })).toEqual(notFound)
+    expect(await softDeleteOuting({ outingId: bad })).toEqual(notFound)
+  })
+
+  it('non-UUID participant ids', async () => {
+    const o = await seedOuting()
+    const reject = { ok: false, code: 'outing_participant_not_found' }
+    expect(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: 'x', amount: 1, participantIds: [o.pA] })).toEqual(reject)
+    expect(await addOutingExpense({ outingId: o.outingId, paidByParticipantId: o.pA, amount: 1, participantIds: ['x'] })).toEqual(reject)
+    expect(await recordOutingSettlement({ outingId: o.outingId, fromParticipantId: 'x', toParticipantId: o.pA, amount: 1 })).toEqual(reject)
+  })
+})
+
+describe('createOuting vs a concurrent partner removal (P3)', () => {
+  it('waits for the group lock and then builds the outing from the group as it is after the removal', async () => {
+    const seed = await seedGroup()
+    mockUserId = seed.userId
+    let release!: () => void
+    const held = new Promise<void>((r) => { release = r })
+    // Stand-in for removePartner mid-transaction: group row locked, member_b
+    // cleared, the duo epoch closed and a solo one opened; not committed.
+    let newEpochId = ''
+    const removing = db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM "OikosGroups" WHERE id = ${seed.groupId} FOR UPDATE`)
+      const now = new Date()
+      await tx.update(groupEpochs).set({ endedAt: now }).where(and(eq(groupEpochs.groupId, seed.groupId), isNull(groupEpochs.endedAt)))
+      const [e] = await tx.insert(groupEpochs).values({ groupId: seed.groupId, startedAt: now, memberAId: seed.userId, memberBId: null }).returning()
+      newEpochId = e.id
+      await tx.update(oikosGroups).set({ memberB: null, currentEpochStartedAt: now }).where(eq(oikosGroups.id, seed.groupId))
+      await held
+    })
+    const creating = createOuting({ name: 'race' })
+    await waitForLockWaiter()
+    release()
+    await removing
+    const { id } = ok(await creating)
+    const [o] = await db.select().from(outings).where(eq(outings.id, id))
+    expect(o.epochId).toBe(newEpochId)
+    const ps = await members(id)
+    expect(ps.map((p) => p.profileId)).toEqual([seed.userId]) // the removed partner is not a participant
   })
 })

@@ -20,6 +20,7 @@ import {
   OUTING_PARTICIPANT_CAP,
   foldNoteName,
   foldSettlementFor,
+  isUuid,
   memberParticipantName,
   normalizeCategory,
   normalizeDescription,
@@ -96,8 +97,34 @@ async function lockOutingForWrite(
   return outing
 }
 
+/**
+ * Lock the group row FOR SHARE (after any outing lock: the order is always
+ * Outings → OikosGroups). Shared, so outing writes don't serialize against
+ * each other — only against leaveGroup / removePartner / endOuting, which take
+ * it FOR UPDATE.
+ */
+async function lockGroupShared(tx: Tx, groupId: string) {
+  const [row] = await tx
+    .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB, baseCurrency: oikosGroups.baseCurrency })
+    .from(oikosGroups)
+    .where(eq(oikosGroups.id, groupId))
+    .for('share')
+  if (!row) throw actionError('group_not_found')
+  return row
+}
+
+/**
+ * Reject ids that are not UUIDs before they reach Postgres: a malformed id
+ * would fail the uuid cast (22P02) and surface as an unexpected error instead
+ * of the "not found" it is.
+ */
+function assertOutingId(outingId: unknown): asserts outingId is string {
+  if (!isUuid(outingId)) throw actionError('outing_not_found')
+}
+
 /** Throws unless every id is an active participant of `outingId`. */
 async function assertActiveParticipants(tx: Tx, outingId: string, ids: string[]) {
+  if (!ids.every(isUuid)) throw actionError('outing_participant_not_found')
   const found = await tx
     .select({ id: outingParticipants.id })
     .from(outingParticipants)
@@ -128,14 +155,19 @@ export const createOuting = action(async (input: CreateOutingInput): Promise<{ i
   const name = normalizeOutingName(input?.name)
   const t = await getTranslations()
 
-  const memberIds = [group.memberA, group.memberB].filter((id): id is string => !!id)
-  const memberProfiles = await db
-    .select({ id: profiles.id, displayName: profiles.displayName })
-    .from(profiles)
-    .where(inArray(profiles.id, memberIds))
-  const nameOf = new Map(memberProfiles.map((p) => [p.id, p.displayName]))
-
   const created = await db.transaction(async (tx) => {
+    // Group row FOR SHARE: a concurrent leaveGroup / removePartner (FOR UPDATE)
+    // either commits first — and we read the solo group it left — or waits for
+    // this outing and then sees it through its active-outing fence. Members and
+    // base currency come from the locked row, not the pre-transaction context.
+    const locked = await lockGroupShared(tx, group.id)
+    const memberIds = [locked.memberA, locked.memberB].filter((id): id is string => !!id)
+    const memberProfiles = await tx
+      .select({ id: profiles.id, displayName: profiles.displayName })
+      .from(profiles)
+      .where(inArray(profiles.id, memberIds))
+    const nameOf = new Map(memberProfiles.map((p) => [p.id, p.displayName]))
+
     const epochId = await currentEpochId(tx, group.id)
     if (!epochId) throw actionError('current_epoch_not_found')
 
@@ -146,7 +178,7 @@ export const createOuting = action(async (input: CreateOutingInput): Promise<{ i
         epochId,
         createdBy: user.id,
         name,
-        currency: group.baseCurrency as CurrencyCode,
+        currency: locked.baseCurrency as CurrencyCode,
         status: 'active',
       })
       .returning({ id: outings.id })
@@ -173,6 +205,7 @@ export interface AddParticipantInput {
 /** Add a friend (a name, never linked to a profile in v1.6.0). At most 20 people per outing. */
 export const addOutingParticipant = action(async (input: AddParticipantInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
+  assertOutingId(input?.outingId)
   const displayName = normalizeParticipantName(input?.displayName)
 
   const participant = await db.transaction(async (tx) => {
@@ -208,6 +241,7 @@ export interface AddExpenseInput {
 
 export const addOutingExpense = action(async (input: AddExpenseInput): Promise<{ id: string }> => {
   const { user, group } = await getViewerWriteContext()
+  assertOutingId(input?.outingId)
   const amount = validateOutingAmount(input?.amount)
   const shareIds = normalizeShareIds(input?.participantIds)
   const description = normalizeDescription(input?.description)
@@ -218,6 +252,7 @@ export const addOutingExpense = action(async (input: AddExpenseInput): Promise<{
 
   const expense = await db.transaction(async (tx) => {
     await lockOutingForWrite(tx, input.outingId, group.id, 'share')
+    await lockGroupShared(tx, group.id)
     await assertActiveParticipants(tx, input.outingId, [input.paidByParticipantId, ...shareIds])
 
     // Audit: which member entered it. Null only if the viewer somehow has no
@@ -264,6 +299,7 @@ export interface RecordSettlementInput {
 /** A repayment between two people inside the outing. Never touches the main ledger. */
 export const recordOutingSettlement = action(async (input: RecordSettlementInput): Promise<{ id: string }> => {
   const { group } = await getViewerWriteContext()
+  assertOutingId(input?.outingId)
   const amount = validateOutingAmount(input?.amount)
   const { fromParticipantId: from, toParticipantId: to } = input
   if (typeof from !== 'string' || typeof to !== 'string' || !from || !to) {
@@ -302,6 +338,7 @@ export const recordOutingSettlement = action(async (input: RecordSettlementInput
  */
 export const endOuting = action(async (input: { outingId: string }): Promise<{ folded: boolean }> => {
   const { group } = await getViewerWriteContext()
+  assertOutingId(input?.outingId)
   const t = await getTranslations()
   const todayYMD = await getTodayYMD()
   const now = new Date()
@@ -319,7 +356,7 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
         isNull(outings.foldedAt),
         isNull(outings.deletedAt),
       ))
-      .returning({ id: outings.id, name: outings.name, epochId: outings.epochId })
+      .returning({ id: outings.id, name: outings.name, epochId: outings.epochId, currency: outings.currency })
     if (!ended) {
       const [exists] = await tx
         .select({ id: outings.id })
@@ -332,7 +369,7 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
     // 2. Group row lock, then read the members fresh — not from the viewer
     //    context resolved before the transaction.
     const [locked] = await tx
-      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB, baseCurrency: oikosGroups.baseCurrency })
       .from(oikosGroups)
       .where(eq(oikosGroups.id, group.id))
       .for('update')
@@ -385,6 +422,15 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
     const fold = foldSettlementFor(net, locked.memberA, locked.memberB)
     if (!fold) return { folded: false }
 
+    // The outing's integers are in the currency it was opened with; the
+    // Settlement is read in today's base currency. setBaseCurrency refuses while
+    // an outing is active (currentEpochHasRecords), but a base change racing
+    // createOuting can still slip through. Refuse rather than fold NT$1500 as
+    // ¥1500 — and rather than end without folding, which would silently drop a
+    // real debt. Throwing rolls back the status flip: the outing stays active,
+    // and the couple can switch the currency back or delete the outing.
+    if (ended.currency !== locked.baseCurrency) throw actionError('outing_currency_changed')
+
     await tx.insert(settlements).values({
       groupId: group.id,
       paidBy: fold.paidBy,
@@ -408,6 +454,7 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
  */
 export const softDeleteOuting = action(async (input: { outingId: string }): Promise<void> => {
   const { group } = await getViewerWriteContext()
+  assertOutingId(input?.outingId)
   const [row] = await db
     .update(outings)
     .set({ deletedAt: new Date() })

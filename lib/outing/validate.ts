@@ -20,6 +20,13 @@ export const OUTING_CATEGORY_MAX = 32
 /** How much of the outing name goes into the folded Settlement's note. */
 export const OUTING_FOLD_NOTE_NAME_MAX = 40
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Postgres uuid shape. Anything else would fail the uuid cast (22P02) in a query. */
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_RE.test(value)
+}
+
 const codePointLength = (s: string) => Array.from(s).length
 const truncateCodePoints = (s: string, max: number) => Array.from(s).slice(0, max).join('')
 

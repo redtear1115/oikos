@@ -2,10 +2,13 @@ import { notFound } from 'next/navigation'
 import { requireViewerGroupOrRedirect } from '@/lib/auth/viewer'
 import { getOutingDetail } from '@/lib/db/queries/outing'
 import { buildOutingView } from '@/lib/outing/view'
+import { isUuid } from '@/lib/outing/validate'
 import { OutingDetailClient } from './_components/OutingDetailClient'
 
 export default async function OutingDetailPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
+  // A malformed id would fail the uuid cast in Postgres and 500; it is simply not an outing.
+  if (!isUuid(id)) notFound()
   const { group } = await requireViewerGroupOrRedirect()
   const detail = await getOutingDetail(id)
   if (!detail || detail.outing.groupId !== group.id) notFound()

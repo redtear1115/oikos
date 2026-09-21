@@ -171,6 +171,7 @@ describe('real actions, round-tripped through the production wire', () => {
     queueDbResult([{ n: 1 }])       // currentEpochHasRecords → cash count
     queueDbResult([{ n: 0 }])       // → income count
     queueDbResult([{ n: 0 }])       // → settlement count
+    queueDbResult([{ n: 0 }])       // → active outing count (#943)
 
     const wire = await roundTrip(setBaseCurrency({ currency: 'jpy' }))
 

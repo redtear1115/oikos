@@ -2909,6 +2909,7 @@ export type Translations = {
       outing_share_empty: string
       outing_settlement_same_party: string
       outing_description_too_long: string
+      outing_currency_changed: string
       leave_active_outing: string
       category_empty: string
       split_ratio_required: string
@@ -6490,6 +6491,7 @@ export const zhTW: Translations = {
       outing_share_empty: '至少選一位分攤的人',
       outing_settlement_same_party: '付款人與收款人不可相同',
       outing_description_too_long: '說明最長 100 字',
+      outing_currency_changed: '帳本的基準幣別在這次出遊開始後改過了，所以不能折回主帳本。可以把幣別改回來，或刪除這次出遊',
       leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
       split_ratio_required: '依比例分需要指定比例',
