@@ -43,6 +43,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.20] - 2026-09-21
+
+主題：**修補旅行編輯的欄位寫入**——hotfix 版，另外帶上出遊的 spec 與版本主題更新。
+完整 diff：[v1.5.19...v1.5.20](https://github.com/redtear1115/oikos/compare/v1.5.19...v1.5.20)
+
+### 技術變更
+
+- **出遊 spec 進 main，solo-trip 撤回「共旅者在 Trips」（#943、#870）**
+  技術：新增 `group-outing-design.md`（分階段、與旅行的界線、不採用表）；`solo-trip-design.md` 的 LD1 加上更正紀錄，並掃過所有引用處；CLAUDE.md 版本主題與 PRODUCT.md 一句對齊決定。
+
+- **GA 的已知風險寫進文件，新增 SECURITY.md（#1300、#1291）**
+  技術：`observability-design.md` 記下 GA 會收到邀請 token 與篩選值、為什麼接受這個風險、什麼情況要重新決定；新增 SECURITY.md，說明漏洞的私密回報管道，也寫清楚加密的範圍：伺服器持有金鑰、只加密指定欄位，不是端對端（#1381）。
+
+### Security
+
+- **編輯旅行時，伺服器只寫入允許的欄位（#1290）**
+  使用者：旅行的編輯流程不變。
+  技術：`updateTrip` 改用白名單逐欄寫入（名稱、日期、幣別、預算），其他欄位一律忽略；名稱與日期的檢查比照 `createTrip`（#1382）。
+
 ## [1.5.19] - 2026-09-21
 
 主題：**凌晨的「今天」對得上了**——伺服器和手機用同一個今天，確認框不再被誤關，四語文案與 token 紀律收尾。
@@ -1226,7 +1245,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.19...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.20...HEAD
+[1.5.20]: https://github.com/redtear1115/oikos/compare/v1.5.19...v1.5.20
 [1.5.19]: https://github.com/redtear1115/oikos/compare/v1.5.18...v1.5.19
 [1.5.18]: https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18
 [1.5.17]: https://github.com/redtear1115/oikos/compare/v1.5.16...v1.5.17
