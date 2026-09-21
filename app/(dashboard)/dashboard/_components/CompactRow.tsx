@@ -9,6 +9,7 @@ import { formatDateRelative } from '@/lib/format-date'
 import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatAmount, type CurrencyCode } from '@/lib/currency'
 import { toViewerShare } from '@/lib/splitRatio'
+import { isOutingFoldNote } from '@/lib/outing/foldNote'
 
 // Beyond 1億 the full number overflows the row on mobile widths.
 // Abbreviate to TW-familiar units (億 / 兆) so the row stays scannable;
@@ -59,7 +60,11 @@ export function CompactRow({ tx, isLast, onClick, baseCurrency = 'twd' }: Compac
   const payerInitial = payerIsViewer ? viewer.initial : (partner?.initial ?? '?')
   const payerAvatar = payerIsViewer ? viewer.avatarUrl : (partner?.avatarUrl ?? null)
   const partnerName = partner?.displayName ?? t.common.partner
-  const payerLabel = tx.kind === 'settlement'
+  // An ended outing's fold-back reads as a repayment under the generic label,
+  // but it's really "I covered your share on the trip" — say where it came from.
+  const payerLabel = tx.kind === 'settlement' && isOutingFoldNote(tx.description)
+    ? t.compactRow.outingSettled
+    : tx.kind === 'settlement'
     ? (payerIsViewer ? t.compactRow.iSettled : t.compactRow.partnerSettled.replace('{name}', partnerName))
     : tx.kind === 'income'
     ? (payerIsViewer ? t.compactRow.youIncome : t.compactRow.partnerIncome.replace('{name}', partnerName))

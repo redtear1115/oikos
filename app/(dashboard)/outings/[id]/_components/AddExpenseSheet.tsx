@@ -31,6 +31,16 @@ export function AddExpenseSheet({ open, outingId, currency, participants, onClos
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
 
+  // Preselect everyone each time the sheet opens, not once at mount: someone
+  // added after the page loaded would otherwise start unticked (#1396).
+  // Adjusted during render on the closed→open edge, so the first open frame
+  // already shows the fresh selection.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setSelected(participants.map((p) => p.id))
+  }
+
   const parsedAmount = Number(amountRaw)
   const amountValid = amountRaw.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount > 0
   const canSave = !!payer && amountValid && selected.length > 0
@@ -53,7 +63,6 @@ export function AddExpenseSheet({ open, outingId, currency, participants, onClos
         }))
         onSaved?.()
         setAmountRaw(''); setDescription(''); setPayer('')
-        setSelected(participants.map((p) => p.id))
         onClose()
         router.refresh()
       } catch (e) {
