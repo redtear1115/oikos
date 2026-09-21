@@ -15,7 +15,7 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 ## 目前狀態
 
-**Latest released: v1.5.21** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
+**Latest released: v1.6.0** — 版本歷史見 [CHANGELOG.md](CHANGELOG.md)（1.0.0 起算；v0.x 只在 git tag）
 
 ## Backlog / 未釋出版本
 
@@ -23,8 +23,8 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
-| [v1.6.0](https://github.com/redtear1115/oikos/milestone/55) | 出遊．和朋友分帳，先由兩人代記 |
 | [v1.6.1](https://github.com/redtear1115/oikos/milestone/59) | 設計審查的統一優化 |
+| [v1.6.2](https://github.com/redtear1115/oikos/milestone/80) | 安全性補強（章節邊界、發票載具、金鑰輪替）與其餘 v1.6.0 延續項 |
 | [v1.7.0](https://github.com/redtear1115/oikos/milestone/60) | 出遊．朋友從連結加入——揪團擴散獲客 |
 | [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
 | [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 |
