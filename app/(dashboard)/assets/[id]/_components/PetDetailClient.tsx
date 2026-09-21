@@ -13,6 +13,7 @@ import type { PagedTxnRow } from '@/actions/transaction'
 import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { computeAge } from '@/lib/age'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -42,7 +43,8 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
   // #1339 — null for a missing, malformed, or future birthday (a due date
   // typed in early); the age block is then skipped entirely rather than
   // rendering 「-1 歲」.
-  const age = computeAge(details?.birthDate)
+  const today = useToday()
+  const age = computeAge(details?.birthDate, today)
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)

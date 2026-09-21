@@ -28,17 +28,17 @@ describe('formatDateRelative — records list', () => {
     ['ja',    '2026-05-14', '今日'],
     ['ja',    '2026-05-13', '昨日'],
   ])('%s diff 0 / -1 → %s', (loc, iso, expected) => {
-    expect(formatDateRelative(iso, loc)).toBe(expected)
+    expect(formatDateRelative(iso, loc, '2026-05-14')).toBe(expected)
   })
 
   it('>30 days (same year) → short date without year', () => {
-    expect(formatDateRelative('2026-01-01', 'en')).toBe('Jan 1')
-    expect(formatDateRelative('2026-01-01', 'zh-TW')).toBe('1月1日')
+    expect(formatDateRelative('2026-01-01', 'en', '2026-05-14')).toBe('Jan 1')
+    expect(formatDateRelative('2026-01-01', 'zh-TW', '2026-05-14')).toBe('1月1日')
   })
 
   it('different year → short date with year', () => {
-    expect(formatDateRelative('2025-12-25', 'en')).toBe('Dec 25, 2025')
-    expect(formatDateRelative('2025-12-25', 'zh-TW')).toBe('2025年12月25日')
+    expect(formatDateRelative('2025-12-25', 'en', '2026-05-14')).toBe('Dec 25, 2025')
+    expect(formatDateRelative('2025-12-25', 'zh-TW', '2026-05-14')).toBe('2025年12月25日')
   })
 })
 

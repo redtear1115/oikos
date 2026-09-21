@@ -101,23 +101,23 @@ describe('daysSince (#1347)', () => {
   })
 
   it('returns null for a date after today — the hero is skipped, not 「0 天」', () => {
-    expect(daysSince('2026-09-21')).toBeNull()
-    expect(daysSince('2027-01-01')).toBeNull()
+    expect(daysSince('2026-09-21', '2026-09-20')).toBeNull()
+    expect(daysSince('2027-01-01', '2026-09-20')).toBeNull()
   })
 
   it('returns 0 on the day itself, in local calendar days', () => {
-    expect(daysSince('2026-09-20')).toBe(0)
+    expect(daysSince('2026-09-20', '2026-09-20')).toBe(0)
   })
 
   it('counts whole local days for past dates', () => {
-    expect(daysSince('2026-09-19')).toBe(1)
-    expect(daysSince('2025-09-20')).toBe(365)
+    expect(daysSince('2026-09-19', '2026-09-20')).toBe(1)
+    expect(daysSince('2025-09-20', '2026-09-20')).toBe(365)
   })
 
   it('returns null for a missing or malformed date', () => {
-    expect(daysSince(null)).toBeNull()
-    expect(daysSince(undefined)).toBeNull()
-    expect(daysSince('')).toBeNull()
-    expect(daysSince('not-a-date')).toBeNull()
+    expect(daysSince(null, '2026-09-20')).toBeNull()
+    expect(daysSince(undefined, '2026-09-20')).toBeNull()
+    expect(daysSince('', '2026-09-20')).toBeNull()
+    expect(daysSince('not-a-date', '2026-09-20')).toBeNull()
   })
 })

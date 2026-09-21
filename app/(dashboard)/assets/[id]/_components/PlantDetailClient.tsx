@@ -14,6 +14,7 @@ import { loadMoreTransactionsForAsset } from '@/actions/transaction'
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { useTranslations } from '@/lib/i18n/client'
 import { daysSince } from '@/lib/age'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { Translations } from '@/lib/i18n/locales/zh-TW'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { unwrapAction } from '@/lib/action-errors'
@@ -59,7 +60,8 @@ export function PlantDetailClient({ assetId, name, notes, details, summary, asse
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)
   const tint = useTint('plant')
-  const companionDays = daysSince(details?.sproutedAt)
+  const today = useToday()
+  const companionDays = daysSince(details?.sproutedAt, today)
   const subtitle = details
     ? [details.species, details.location].filter(Boolean).join(' · ')
     : null

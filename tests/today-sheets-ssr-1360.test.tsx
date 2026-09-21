@@ -17,6 +17,11 @@
 //     an error. Left as is; kept here as a guard.
 //   SettlementForm — not tested: BalanceHero mounts it only after a click
 //     (`settleOpen && canSettle`, initial false), so it is never in SSR HTML.
+//   NewFuelLog — returns null while closed (NewFuelLog.tsx `if (!open)
+//     return null`), so its seeded date never reaches the HTML: 0 errors.
+//     Left as is; kept here as a guard.
+//   HouseSheetBody — reads the clock only inside `showCal && …` (initial
+//     false), i.e. after a tap. Never in SSR HTML; not tested.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { act, type ReactNode } from 'react'
@@ -73,6 +78,7 @@ vi.mock('@/actions/asset', () => ({
   getChildAssets: vi.fn(() => new Promise(() => {})),
 }))
 vi.mock('@/actions/trip', () => ({ endTrip: vi.fn() }))
+vi.mock('@/actions/fuelLog', () => ({ createFuelLog: vi.fn(), editFuelLog: vi.fn(), softDeleteFuelLog: vi.fn() }))
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
   usePathname: () => '/dashboard',
@@ -83,6 +89,7 @@ import { AddSheet } from '@/app/(dashboard)/dashboard/_components/AddSheet'
 import { IncomeSheet } from '@/app/(dashboard)/dashboard/_components/IncomeSheet'
 import { SettlementSheet } from '@/app/(dashboard)/dashboard/_components/SettlementSheet'
 import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
+import { NewFuelLog } from '@/app/(dashboard)/assets/[id]/_components/NewFuelLog'
 
 const INSTANT = new Date('2026-09-20T23:30:00Z')
 const originalTZ = process.env.TZ
@@ -134,6 +141,7 @@ describe('closed sheets across the UTC → Taipei boundary (#1360)', () => {
     ['SettlementSheet', <SettlementSheet key="s" open={false} onClose={noop} initial={null} />],
     ['RecurringRuleSheet (expense)', <RecurringRuleSheet key="re" type="expense" open={false} onClose={noop} onMutated={noop} />],
     ['RecurringRuleSheet (income)', <RecurringRuleSheet key="ri" type="income" open={false} onClose={noop} onMutated={noop} insuranceAssets={[]} />],
+    ['NewFuelLog', <NewFuelLog key="f" open={false} onClose={noop} car={{ id: 'c1', name: '小白', fuelType: '95', primaryUserId: 'u-1' }} lastOdometer={null} mode="create" />],
   ])('%s', async (_name, node) => {
     // Control: same zone on both sides must hydrate cleanly, so any error
     // below is the zone boundary and not some other nondeterminism.

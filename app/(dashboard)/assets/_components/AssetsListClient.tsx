@@ -15,7 +15,8 @@ import { GatedView } from '@/app/(dashboard)/_components/GatedView'
 import { useTranslations } from '@/lib/i18n/client'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { getFramingGroup } from '@/lib/insurance'
-import { parseLocalDate, todayLocalDate, daysBetween } from '@/lib/local-date'
+import { parseLocalDate, daysBetween } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import type { AssetType } from '@/lib/assets'
 
 type AssetsTab = 'aibutsu' | 'guardian'
@@ -117,7 +118,8 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
 function GuardianSummary({ insurances }: { insurances: AssetsListItem[] }) {
   const t = useTranslations()
   const i = t.assets.insuranceList
-  const today = todayLocalDate()
+  // #1360 — from useToday(), not the clock, so SSR and hydration agree.
+  const today = parseLocalDate(useToday())!
   const totalAnnual = insurances.reduce((sum, a) => sum + (a.insurance?.annualPremium ?? 0), 0)
   const count = insurances.length
   // `{count}` is rendered emphasised, so split the template around it rather

@@ -16,6 +16,7 @@ import { RevealableRow as SharedRevealableRow } from '@/app/(dashboard)/_compone
 import { AibutsuHintCard } from './AibutsuHintCard'
 import { resolveDisplayName } from '@/lib/display-name'
 import { computeAge } from '@/lib/age'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { useTranslations } from '@/lib/i18n/client'
 import { describeError } from '@/lib/errors'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
@@ -121,7 +122,8 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
   // #1339 — null for a missing, malformed, or future birthday (a due date
   // typed in early); the age block is then skipped entirely rather than
   // rendering 「-1 歲」.
-  const age = computeAge(details?.birthday)
+  const today = useToday()
+  const age = computeAge(details?.birthday, today)
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<AddSheetInitial | null>(null)

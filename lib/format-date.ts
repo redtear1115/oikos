@@ -22,10 +22,13 @@ function calendarDayDiff(target: Date, ref: Date): number {
  * Diff 0/-1/…/-30 → relative ("today" / "yesterday" / "N days ago"); locale-aware
  * via Intl.RelativeTimeFormat. Older / future → short absolute date (with year
  * only when it differs from today's).
+ *
+ * `today` ('YYYY-MM-DD') comes from `useToday()` in a component rather than
+ * the runtime clock, for the same reason as formatPickerSubtitle (#1360).
  */
-export function formatDateRelative(iso: string, locale: string): string {
+export function formatDateRelative(iso: string, locale: string, today: string): string {
   const d = parseLocal(iso)
-  const now = new Date()
+  const now = parseLocal(today)
   const diff = calendarDayDiff(d, now)
   if (diff <= 0 && diff >= -30) {
     return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(diff, 'day')
