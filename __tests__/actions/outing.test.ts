@@ -55,6 +55,7 @@ const { leaveGroup, removePartner } = await import('@/actions/membership')
 const { setBaseCurrency } = await import('@/actions/currency')
 const { recalcGroupBalance } = await import('@/lib/db/queries/balance')
 const { PAST_EPOCH_COOKIE } = await import('@/lib/db/queries/epoch')
+const { listOutings } = await import('@/lib/db/queries/outing')
 
 beforeEach(() => cookieJar.clear())
 
@@ -124,6 +125,21 @@ async function waitForLockWaiter() {
   }
   throw new Error('no backend ever waited on a lock — the interleaving under test did not happen')
 }
+
+// ─── listOutings ───
+
+describe('listOutings', () => {
+  it('counts each outing\'s own participants: 3 on one, 2 on the other', async () => {
+    const seed = await seedOuting()
+    const { id: second } = ok(await createOuting({ name: '花蓮' }))
+    const [{ epochId }] = await db.select({ epochId: outings.epochId }).from(outings).where(eq(outings.id, seed.outingId))
+
+    const rows = await listOutings(seed.groupId, epochId)
+    const byId = new Map(rows.map((r) => [r.id, r.participantCount]))
+    expect(byId.get(seed.outingId)).toBe(3)
+    expect(byId.get(second)).toBe(2)
+  })
+})
 
 // ─── S-C: authorization + scoping + validation ───
 
