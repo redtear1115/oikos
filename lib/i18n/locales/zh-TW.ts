@@ -372,6 +372,19 @@ export type Translations = {
   }
 
   dashboard: {
+    /** ContinuityRow under the hero (#1364): the always-there ways into
+     *  月回顧 and 旅行. `{month}` is an Intl month name ('8月' / 'August'). */
+    continuity: {
+      reviewTitle: string
+      reviewLatest: string
+      reviewReturn: string
+      reviewEmpty: string
+      reviewAriaLatest: string
+      reviewAriaIndex: string
+      tripTitle: string
+      tripEmpty: string
+      tripAria: string
+    }
     /** Solo expense hero. `{month}` is the locale's own month name, resolved
      *  at render with Intl (「9月」/ "September"), never string-concatenated. */
     soloHero: {
@@ -2338,6 +2351,12 @@ export type Translations = {
   }
 
   monthlyReview: {
+    /** /review index (#1364): every month that has a review, newest first. */
+    index: {
+      title: string
+      emptyHeading: string
+      emptyBody: string
+    }
     /** Template with `{year}` `{month}`. */
     pageTitle: string
     backAriaLabel: string
@@ -3201,6 +3220,17 @@ export const zhTW: Translations = {
   },
 
   dashboard: {
+    continuity: {
+      reviewTitle: '月回顧',
+      reviewLatest: '{month}的回顧 · 看一看',
+      reviewReturn: '回到回顧',
+      reviewEmpty: '記滿一個月後會在這裡',
+      reviewAriaLatest: '月回顧：打開{month}的回顧',
+      reviewAriaIndex: '月回顧：打開回顧列表',
+      tripTitle: '旅行',
+      tripEmpty: '開始一趟旅行帳',
+      tripAria: '旅行：前往旅行列表',
+    },
     soloHero: {
       monthLabel: '{month}記下',
       countLabel: '{count} 筆',
@@ -4805,6 +4835,11 @@ export const zhTW: Translations = {
   },
 
   monthlyReview: {
+    index: {
+      title: '月回顧',
+      emptyHeading: '還沒有月回顧',
+      emptyBody: '記滿一個月後，那個月的回顧會出現在這裡。',
+    },
     pageTitle: '{year} 年 {month} 月．我們的記帳回顧',
     backAriaLabel: '返回',
     closeAriaLabel: '關閉',

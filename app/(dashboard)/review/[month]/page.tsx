@@ -20,6 +20,7 @@ import {
   parseYearMonth,
   currentYearMonthInTaipei,
   isAfter,
+  isMonthInChapter,
   nextMonth,
 } from '@/lib/monthlyReview'
 import { ReviewClient } from './_components/ReviewClient'
@@ -47,6 +48,12 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   const context = await resolveViewerEpochContext(user.id)
   if (!context) redirect('/onboarding')
   const { group } = context
+
+  // Reviews follow the chapter (#1380): a month outside the viewed chapter's
+  // window is not this chapter's to show — including its messages, which are
+  // group-scoped too. A month straddling a chapter boundary belongs to neither
+  // side (lib/monthlyReview.ts › isMonthInChapter).
+  if (!isMonthInChapter(reviewedMonth, context.window)) notFound()
 
   const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
   const profileRows = await db

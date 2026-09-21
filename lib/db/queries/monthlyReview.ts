@@ -1,6 +1,7 @@
 import { db } from '@/lib/db/client'
 import { monthlyReviewMessages, monthlyReviewSnapshots } from '@/lib/db/schema'
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq } from 'drizzle-orm'
+import { isMonthInChapter } from '@/lib/monthlyReview'
 
 export interface RecurringEvent {
   name: string
@@ -111,4 +112,22 @@ export async function loadMonthlyReviewMessages(
       eq(monthlyReviewMessages.month, month),
     ))
     .orderBy(asc(monthlyReviewMessages.createdAt))
+}
+
+/**
+ * Months with a review that belong to `chapter`, newest first (#1364, #1380).
+ * Feeds the /review index and the dashboard 月回顧 cell. Reviews follow the
+ * chapter, not the group — see isMonthInChapter for the rule, including why a
+ * month straddling a chapter boundary belongs to neither side.
+ */
+export async function listMonthlyReviewMonths(
+  groupId: string,
+  chapter: { startedAt: Date; endedAt: Date | null },
+): Promise<{ year: number; month: number }[]> {
+  const rows = await db
+    .select({ year: monthlyReviewSnapshots.year, month: monthlyReviewSnapshots.month })
+    .from(monthlyReviewSnapshots)
+    .where(eq(monthlyReviewSnapshots.groupId, groupId))
+    .orderBy(desc(monthlyReviewSnapshots.year), desc(monthlyReviewSnapshots.month))
+  return rows.filter((ym) => isMonthInChapter(ym, chapter))
 }

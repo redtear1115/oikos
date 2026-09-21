@@ -74,6 +74,36 @@ export function currentYearMonthInTaipei(now: Date = new Date()): YearMonth {
   return { year: y, month: m }
 }
 
+/** First instant of a calendar month in Asia/Taipei (UTC+8, no DST). */
+export function taipeiMonthStart({ year, month }: YearMonth): Date {
+  return new Date(Date.UTC(year, month - 1, 1) - 8 * 60 * 60 * 1000)
+}
+
+/**
+ * Does month `ym` belong to a chapter (#1380)? Reviews follow the chapter, not
+ * the group (user decision 2026-09-21): a new partner must not see the months
+ * a previous partner shared.
+ *
+ * A month belongs only if it lies ENTIRELY inside the chapter window —
+ * `[startedAt, endedAt)`, endedAt null for the open chapter. A month that
+ * straddles a chapter boundary belongs to no chapter, because its snapshot is
+ * not chapter-scoped: compute_monthly_review_snapshot (drizzle/0061) sums every
+ * group row whose transacted_at falls in the calendar month and stores the
+ * largest expense's payer name, so a straddling month mixes both chapters.
+ * Hiding it everywhere is the only rule that never shows one partner's month to
+ * the next. What it costs: the partial month in which a chapter starts (or
+ * ends) has no review page in either chapter.
+ *
+ * Failure looks like: no error anywhere — just a month from the previous
+ * partner appearing in the new partner's list, banner or 月回顧 cell.
+ */
+export function isMonthInChapter(ym: YearMonth, chapter: { startedAt: Date; endedAt: Date | null }): boolean {
+  const start = taipeiMonthStart(ym).getTime()
+  const end = taipeiMonthStart(nextMonth(ym)).getTime()
+  return start >= chapter.startedAt.getTime()
+    && (chapter.endedAt === null || end <= chapter.endedAt.getTime())
+}
+
 /** True if `a` is strictly after `b` (later year, or same year & later month). */
 export function isAfter(a: YearMonth, b: YearMonth): boolean {
   if (a.year !== b.year) return a.year > b.year
