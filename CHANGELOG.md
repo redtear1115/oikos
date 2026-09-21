@@ -43,6 +43,40 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 _Nothing unreleased yet._
 
+## [1.5.21] - 2026-09-21
+
+主題：**章節的邊界更可靠**——旅行、匯入回滾、過去章節的愛物都只作用在該作用的章節；首頁多了常駐的月回顧與旅行入口。
+完整 diff：[v1.5.20...v1.5.21](https://github.com/redtear1115/oikos/compare/v1.5.20...v1.5.21)
+
+### 使用者可見變化
+
+- **首頁結餘下方多了常駐的月回顧與旅行入口，新增 /review 列表頁（#1364）**
+  使用者：關掉月回顧 banner 後，一樣點一下就能進回顧；沒有旅行時也看得到旅行入口。月回顧只顯示目前章節的月份。
+  技術：`ContinuityRow` 與 `/review` 列表；月回顧的範圍改成跟著章節走，跨章節的那個月不顯示（#1380）。
+- **離開的一方能打開自己舊章節的月回顧（#1384）**
+  使用者：從過去的章節進月回顧，不再被導回登入頁；過去的章節是唯讀的。
+  技術：成員改成依照正在查看的章節判斷，留言只顯示該章節兩位成員寫的（#1388）。
+
+### 技術變更
+
+- **加密改用金鑰環，並支援綁定欄位的新密文格式（#1287）**
+  技術：新增 `v1:<kid>:…` 格式與 AAD；寫入仍然是舊格式，所以上線後行為不變（#1387）。
+
+### Security
+
+- **接受邀請改成在 transaction 內原子地認領；建立新邀請時，舊的邀請會失效（#1288）**
+  使用者：邀請流程不變。
+  技術：在接受當下用 DB 時鐘確認邀請還有效，舊邀請標記為 superseded（#1385）。
+- **旅行的結束、編輯、刪除與標記，只作用在目前章節的旅行（#1290）**
+  使用者：旅行的操作流程不變。
+  技術：寫入閘門加上進行中章節的條件（#1392）。
+- **回滾匯入只作用在本帳本、目前章節、24 小時內的批次（#1290）**
+  使用者：回滾流程不變。
+  技術：伺服器端檢查期限與章節，並加上 group 過濾（#1390）。
+- **查看過去章節時，只讀取該章節結束前就存在的愛物（#1290）**
+  使用者：目前成員看到的內容不變。
+  技術：非成員釘選過去章節時，愛物、規則、連結的保險都依章節結束時間過濾（#1391）。
+
 ## [1.5.20] - 2026-09-21
 
 主題：**修補旅行編輯的欄位寫入**——hotfix 版，另外帶上出遊的 spec 與版本主題更新。
@@ -1245,7 +1279,8 @@ _本版無使用者可見變化（純後端分析事件接入）。_
 - **每頁 `generateMetadata` 接 OG image（#487）**：`public/og-image.png` 從 #282 ship 但未 wire 進 metadata，造成 prod HTML 缺 `og:image` / `twitter:image`；本版 4 個 public page 各加 `openGraph.images` + `twitter.images`，`alt` 用 `t.title` locale-aware，無需新增 i18n key。
 - **`settings.local.json` 列入 gitignore（#478）**：避免本地 hook / 權限設定外洩。
 
-[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.20...HEAD
+[Unreleased]: https://github.com/redtear1115/oikos/compare/v1.5.21...HEAD
+[1.5.21]: https://github.com/redtear1115/oikos/compare/v1.5.20...v1.5.21
 [1.5.20]: https://github.com/redtear1115/oikos/compare/v1.5.19...v1.5.20
 [1.5.19]: https://github.com/redtear1115/oikos/compare/v1.5.18...v1.5.19
 [1.5.18]: https://github.com/redtear1115/oikos/compare/v1.5.17...v1.5.18
