@@ -161,15 +161,16 @@ describe('leaveGroup', () => {
   it('happy path: member_b leaves with balance = 0', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])                          // group lookup
-    // getGroupBalance — first execute() call: returns [{ balance: 0 }]
-    queueDbResult([{ balance: 0 }])
-    queueDbResult([{ id: 'epoch-1' }])                   // active-trip guard: currentEpoch (.limit)
-    queueDbResult([{ n: 0 }])                            // active-trip guard: hasActiveTrip count (.then)
     queueDbResult([{ displayName: 'Mei' }])              // leaver profile
     queueDbResult([])                                    // movingHouse rows
     queueDbResult([])                                    // movingCar rows
     queueDbResult([])                                    // movingInsurance rows
-    // Inside the transaction:
+    // Inside the transaction — guards first, after the group-row lock (#943 S-E):
+    queueDbResult([{ memberB: 'user-b' }])               // OikosGroups … FOR UPDATE
+    queueDbResult([{ balance: 0 }])                      // getGroupBalance(groupId, tx) → execute()
+    queueDbResult([{ id: 'epoch-1' }])                   // currentEpoch (.limit)
+    queueDbResult([{ n: 0 }])                            // hasActiveTrip (.then)
+    queueDbResult([{ n: 0 }])                            // hasActiveOuting (.then)
     queueDbResult([{ id: 'grp-new' }])                   // insert new group .returning
     queueDbResult([])                                    // groupBalance insert (await → .then)
     queueDbResult([{ id: 'epoch-new' }])                 // insert leaver's solo epoch .returning
@@ -179,6 +180,7 @@ describe('leaveGroup', () => {
     // WelcomeSoloCard reads the same key space as PartnerLeftCard (#1125).
     expect(r).toEqual({ ok: true, data: { groupId: 'grp-new', epochId: 'epoch-new' } })
     expect(mockDb.transaction).toHaveBeenCalledOnce()
+    expect(mockBuilder.for).toHaveBeenCalledWith('update')
 
     // New solo group is named after the leaver's display name
     const insertedGroup = (mockBuilder.values.mock.calls[0][0]) as Record<string, unknown>
@@ -187,11 +189,64 @@ describe('leaveGroup', () => {
     expect(insertedGroup.memberB).toBeNull()
   })
 
-  it('rejects when balance is not 0', async () => {
+  it('rejects when balance is not 0 — read inside the transaction, after the group-row lock', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
+    queueDbResult([{ displayName: 'Mei' }])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
     queueDbResult([{ balance: 500 }])
     expect(await leaveGroup()).toEqual({ ok: false, code: 'balance_not_zero' })
+    // The check ran inside the tx (so an endOuting Settlement committed before
+    // the lock is seen) and nothing was written.
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    expect(mockBuilder.for).toHaveBeenCalledWith('update')
+    expect(mockDb.execute).toHaveBeenCalledOnce()
+    expect(mockBuilder.values).not.toHaveBeenCalled()
+  })
+
+  it('rejects when an outing is active in the current epoch (#943)', async () => {
+    setMockUser(VIEWER_B)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ displayName: 'Mei' }])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ balance: 0 }])
+    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ n: 0 }])                            // no active trip
+    queueDbResult([{ n: 1 }])                            // active outing
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'leave_active_outing' })
+    expect(mockBuilder.values).not.toHaveBeenCalled()
+  })
+
+  it('rejects when an active trip exists (checked before the outing fence)', async () => {
+    setMockUser(VIEWER_B)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ displayName: 'Mei' }])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ balance: 0 }])
+    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ n: 1 }])                            // active trip
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'leave_active_trip' })
+  })
+
+  it('re-checks membership under the lock: a concurrent change makes the leave stale', async () => {
+    setMockUser(VIEWER_B)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ displayName: 'Mei' }])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([])
+    queueDbResult([{ memberB: null }])                   // partner row changed before we got the lock
+    expect(await leaveGroup()).toEqual({ ok: false, code: 'only_member_b_can_leave' })
+    expect(mockBuilder.values).not.toHaveBeenCalled()
   })
 
   it('rejects when caller is member_a (must swap first)', async () => {
@@ -214,13 +269,15 @@ describe('leaveGroup', () => {
   it('falls back to a generic group name when profile is missing', async () => {
     setMockUser(VIEWER_B)
     queueDbResult([duoGroup()])
-    queueDbResult([{ balance: 0 }])
-    queueDbResult([{ id: 'epoch-1' }])                   // active-trip guard: currentEpoch (.limit)
-    queueDbResult([{ n: 0 }])                            // active-trip guard: hasActiveTrip count (.then)
     queueDbResult([])                                    // no profile row
     queueDbResult([])                                    // no house
     queueDbResult([])                                    // no car
     queueDbResult([])                                    // no insurance
+    queueDbResult([{ memberB: 'user-b' }])               // group-row lock
+    queueDbResult([{ balance: 0 }])
+    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ n: 0 }])                            // no active trip
+    queueDbResult([{ n: 0 }])                            // no active outing
     queueDbResult([{ id: 'grp-new' }])
 
     await leaveGroup()
@@ -235,8 +292,11 @@ describe('removePartner', () => {
   it('happy path: member_a removes member_b — closes epoch, opens solo epoch, clears member_b', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])            // group lookup
-    queueDbResult([{ id: 'epoch-1' }])     // active-trip guard: currentEpoch (.limit)
-    queueDbResult([{ n: 0 }])              // active-trip guard: hasActiveTrip count (.then)
+    // Inside the transaction — fences after the group-row lock (#943 S-E):
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])  // OikosGroups … FOR UPDATE
+    queueDbResult([{ id: 'epoch-1' }])     // currentEpoch (.limit)
+    queueDbResult([{ n: 0 }])              // hasActiveTrip (.then)
+    queueDbResult([{ n: 0 }])              // hasActiveOuting (.then)
     queueDbResult([])                      // tx: invite revocation (.then)
     queueDbResult([])                      // tx: close old epoch (.then)
     queueDbResult([{ id: 'epoch-2' }])     // tx: insert new solo epoch (.returning)
@@ -281,9 +341,23 @@ describe('removePartner', () => {
   it('rejects when there is an active trip in the current epoch', async () => {
     setMockUser(VIEWER_A)
     queueDbResult([duoGroup()])
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
     queueDbResult([{ id: 'epoch-1' }])
     queueDbResult([{ n: 1 }])              // hasActiveTrip → true
     expect(await removePartner()).toEqual({ ok: false, code: 'active_trip' })
+    expect(mockDb.transaction).toHaveBeenCalledOnce()
+    expect(mockBuilder.set).not.toHaveBeenCalled()
+  })
+
+  it('rejects when an outing is active in the current epoch (#943)', async () => {
+    setMockUser(VIEWER_A)
+    queueDbResult([duoGroup()])
+    queueDbResult([{ memberA: 'user-a', memberB: 'user-b' }])
+    queueDbResult([{ id: 'epoch-1' }])
+    queueDbResult([{ n: 0 }])              // no active trip
+    queueDbResult([{ n: 1 }])              // hasActiveOuting → true
+    expect(await removePartner()).toEqual({ ok: false, code: 'active_outing' })
+    expect(mockBuilder.set).not.toHaveBeenCalled()
   })
 
   it('throws unauthorized with no user', async () => {

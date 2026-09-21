@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
+import { describeError } from '@/lib/errors'
 import { createOuting } from '@/actions/outing'
 
 interface Props {
@@ -27,13 +29,13 @@ export function OutingSheet({ open, onClose, onSaved }: Props) {
     setError('')
     startTransition(async () => {
       try {
-        const outing = await createOuting({ name: name.trim() })
+        const outing = unwrapAction(await createOuting({ name: name.trim() }))
         onSaved?.()
         setName('')
         onClose()
         router.push(`/outings/${outing.id}`)
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

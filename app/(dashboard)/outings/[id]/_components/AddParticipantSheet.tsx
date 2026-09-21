@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
+import { describeError } from '@/lib/errors'
 import { addOutingParticipant } from '@/actions/outing'
 import { Field } from './sheetBits'
 
@@ -29,13 +31,13 @@ export function AddParticipantSheet({ open, outingId, onClose, onSaved }: Props)
     setError('')
     startTransition(async () => {
       try {
-        await addOutingParticipant({ outingId, displayName: name.trim() })
+        unwrapAction(await addOutingParticipant({ outingId, displayName: name.trim() }))
         onSaved?.()
         setName('')
         onClose()
         router.refresh()
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

@@ -4,6 +4,32 @@ import {
 } from '@/lib/db/schema'
 import { and, eq, isNull, inArray, sql } from 'drizzle-orm'
 
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
+/**
+ * Whether the group has an active, non-deleted outing in `epochId` — the
+ * membership fence (#943 S-E). leaveGroup / removePartner call it inside their
+ * transaction after locking the group row: an outing is tied to its epoch, and
+ * closing the epoch under an active outing would leave one that can never fold
+ * its couple debt back (mirrors hasActiveTrip, lib/db/queries/trips.ts).
+ */
+export async function hasActiveOuting(
+  groupId: string,
+  epochId: string,
+  tx: typeof db | DbTransaction = db,
+): Promise<boolean> {
+  const [row] = await tx
+    .select({ n: sql<number>`count(*)::int` })
+    .from(outings)
+    .where(and(
+      eq(outings.groupId, groupId),
+      eq(outings.epochId, epochId),
+      eq(outings.status, 'active'),
+      isNull(outings.deletedAt),
+    ))
+  return Number(row.n) > 0
+}
+
 export interface OutingListRow {
   id: string
   name: string

@@ -32,6 +32,7 @@ export function describeMembershipError(
       case 'balance_not_zero':      return t.balanceNotZero
       case 'solo_group':            return t.soloGroup
       case 'active_trip':           return t.activeTrip
+      case 'active_outing':         return t.activeOuting
     }
   }
   return describeError(e, t.fallback, offlineMessage, actionErrors)

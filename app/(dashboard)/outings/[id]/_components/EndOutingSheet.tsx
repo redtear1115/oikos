@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
+import { describeError } from '@/lib/errors'
 import { endOuting } from '@/actions/outing'
 
 interface Props {
@@ -24,12 +26,12 @@ export function EndOutingSheet({ open, outingId, onClose, onSaved }: Props) {
     setError('')
     startTransition(async () => {
       try {
-        await endOuting({ outingId })
+        unwrapAction(await endOuting({ outingId }))
         onSaved?.()
         onClose()
         router.refresh()
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

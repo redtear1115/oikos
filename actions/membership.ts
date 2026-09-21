@@ -17,6 +17,7 @@ import {
 } from '@/lib/db/schema'
 import { recalcGroupBalance, getGroupBalance } from '@/lib/db/queries/balance'
 import { hasActiveTrip } from '@/lib/db/queries/trips'
+import { hasActiveOuting } from '@/lib/db/queries/outing'
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import {
@@ -212,18 +213,11 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
   if (group.memberB === null) throw new Error('solo_group')
   if (user.id !== group.memberB) throw new Error('only_member_b_can_leave')
 
-  const balance = await getGroupBalance(group.id)
-  if (balance !== 0) throw new Error('balance_not_zero')
-
-  // Guard: reject if any active trip exists in the current epoch (#42)
-  const [currentEpochRow] = await db
-    .select()
-    .from(groupEpochs)
-    .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
-    .limit(1)
-  if (currentEpochRow && await hasActiveTrip(group.id, currentEpochRow.id)) {
-    throw actionError('leave_active_trip')
-  }
+  // The balance / active-trip / active-outing guards run INSIDE the
+  // transaction below, after the group row is locked (#943 S-E). Checked here,
+  // before the lock, they could pass and then go stale: an endOuting committing
+  // in between writes a Settlement that makes the balance non-zero, and the
+  // leave would close the epoch on top of it.
 
   const leaver = user.id
   const oldGroupId = group.id
@@ -281,6 +275,32 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
 
   const now = new Date()
   const { newGroupId, newEpochId } = await db.transaction(async (tx) => {
+    // 0. Lock the group row, then run every guard against what is committed
+    //    now. endOuting takes this same lock before it writes its Settlement,
+    //    so the two serialize: whichever commits second sees the first.
+    const [lockedGroup] = await tx
+      .select({ memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, oldGroupId))
+      .for('update')
+    if (lockedGroup?.memberB !== leaver) throw new Error('only_member_b_can_leave')
+
+    if (await getGroupBalance(oldGroupId, tx) !== 0) throw new Error('balance_not_zero')
+
+    const [currentEpochRow] = await tx
+      .select({ id: groupEpochs.id })
+      .from(groupEpochs)
+      .where(and(eq(groupEpochs.groupId, oldGroupId), isNull(groupEpochs.endedAt)))
+      .limit(1)
+    // Active trip in the current epoch (#42) / active outing (#943): closing
+    // the epoch under either would orphan it.
+    if (currentEpochRow && await hasActiveTrip(oldGroupId, currentEpochRow.id, tx)) {
+      throw actionError('leave_active_trip')
+    }
+    if (currentEpochRow && await hasActiveOuting(oldGroupId, currentEpochRow.id, tx)) {
+      throw actionError('leave_active_outing')
+    }
+
     // 1. Create the leaver's new solo group + balance row
     const [newGroup] = await tx
       .insert(oikosGroups)
@@ -509,8 +529,9 @@ export const leaveGroup = action(async (): Promise<{ groupId: string; epochId: s
  *
  * Pre-conditions:
  *   - Caller must be member_a of a duo group
- *   - No active trip in the current epoch (mirrors leaveGroup's guard —
- *     otherwise the trip would orphan when the epoch closes)
+ *   - No active trip or outing in the current epoch (mirrors leaveGroup's
+ *     guard — otherwise it would orphan when the epoch closes). Checked
+ *     inside the transaction after the group row is locked.
  *
  * Steps (symmetric to leaveGroup's stayer-side handling):
  *   - Revoke any unaccepted GroupInvites on the group (closes the "the
@@ -531,17 +552,6 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
 
   const removedUserId = group.memberB
 
-  // Guard: reject if any active trip exists in the current epoch — same
-  // fence as leaveGroup, for the same reason (no orphaned trips).
-  const [currentEpochRow] = await db
-    .select()
-    .from(groupEpochs)
-    .where(and(eq(groupEpochs.groupId, group.id), isNull(groupEpochs.endedAt)))
-    .limit(1)
-  if (currentEpochRow && await hasActiveTrip(group.id, currentEpochRow.id)) {
-    throw new Error('active_trip')
-  }
-
   const now = new Date()
   const groupId = group.id
   // Returned to the caller so `RemovePartnerFlow` can key its client flag off
@@ -550,6 +560,29 @@ export const removePartner = action(async (): Promise<{ groupId: string; epochId
   let newEpochId = ''
 
   await db.transaction(async (tx) => {
+    // Lock the group row, then the fences — same shape as leaveGroup (#943
+    // S-E). No active trip / outing in the current epoch: closing the epoch
+    // would orphan it. No balance check here by design (see above).
+    const [lockedGroup] = await tx
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, groupId))
+      .for('update')
+    if (lockedGroup?.memberA !== user.id) throw new Error('only_member_a_can_remove')
+    if (lockedGroup.memberB !== removedUserId) throw new Error('solo_group')
+
+    const [currentEpochRow] = await tx
+      .select({ id: groupEpochs.id })
+      .from(groupEpochs)
+      .where(and(eq(groupEpochs.groupId, groupId), isNull(groupEpochs.endedAt)))
+      .limit(1)
+    if (currentEpochRow && await hasActiveTrip(groupId, currentEpochRow.id, tx)) {
+      throw new Error('active_trip')
+    }
+    if (currentEpochRow && await hasActiveOuting(groupId, currentEpochRow.id, tx)) {
+      throw new Error('active_outing')
+    }
+
     // Revoke any unaccepted invites on this group. Without this, an invite
     // minted by member_a before the removal still passes #1031's "issuer is
     // still a member" check after the removal (member_a stays a member) —

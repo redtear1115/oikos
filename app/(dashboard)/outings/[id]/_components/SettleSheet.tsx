@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { SheetShell } from '@/app/(dashboard)/assets/_components/AssetSheet/shared/SheetShell'
 import { TextInput } from '@/components/ui/TextInput'
 import { useTranslations } from '@/lib/i18n/client'
+import { unwrapAction } from '@/lib/action-errors'
+import { describeError } from '@/lib/errors'
 import { currencyPrecision } from '@/lib/currency'
 import { recordOutingSettlement } from '@/actions/outing'
 import { Field, ChipRow, Chip } from './sheetBits'
@@ -38,13 +40,13 @@ export function SettleSheet({ open, outingId, currency, participants, onClose, o
     const amount = precision === 2 ? Math.round(parsedAmount * 100) : Math.round(parsedAmount)
     startTransition(async () => {
       try {
-        await recordOutingSettlement({ outingId, fromParticipantId: from, toParticipantId: to, amount })
+        unwrapAction(await recordOutingSettlement({ outingId, fromParticipantId: from, toParticipantId: to, amount }))
         onSaved?.()
         setFrom(''); setTo(''); setAmountRaw('')
         onClose()
         router.refresh()
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e))
+        setError(describeError(e, t.common.error, t.common.offlineError, t.errors.actions))
       }
     })
   }

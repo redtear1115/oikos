@@ -797,6 +797,11 @@ export type Translations = {
     /** "結束後你們倆的 {amount} 會折回主帳本。" */
     coupleFoldNote: string
     endConfirmTitle: string
+    /** Note on the Settlement written when an ended outing folds the couple's
+     *  mutual debt into the main ledger. `{name}` = outing name (bounded). */
+    foldSettlementNote: string
+    /** Participant name for a group member whose profile name is blank. */
+    memberFallbackName: string
     endConfirmBody: string
     form: {
       nameLabel: string
@@ -1263,6 +1268,7 @@ export type Translations = {
         balanceNotZero: string
         soloGroup: string
         activeTrip: string
+        activeOuting: string
         fallback: string
       }
     }
@@ -2889,6 +2895,21 @@ export type Translations = {
       record_not_found: string
       record_deleted_or_missing: string
       amount_not_positive: string
+      amount_invalid: string
+      amount_too_large: string
+      outing_not_found: string
+      outing_not_active: string
+      outing_epoch_closed: string
+      outing_participant_not_found: string
+      outing_participant_limit: string
+      outing_name_empty: string
+      outing_name_too_long: string
+      outing_participant_name_empty: string
+      outing_participant_name_too_long: string
+      outing_share_empty: string
+      outing_settlement_same_party: string
+      outing_description_too_long: string
+      leave_active_outing: string
       category_empty: string
       split_ratio_required: string
       split_ratio_out_of_range: string
@@ -3536,6 +3557,8 @@ export const zhTW: Translations = {
     endedNote: '這次出遊已經結束。',
     coupleFoldNote: '結束後，你們倆的 {amount} 會折回主帳本。',
     endConfirmTitle: '結束這次出遊',
+    foldSettlementNote: '出遊『{name}』結算',
+    memberFallbackName: '成員',
     endConfirmBody: '結束後就不能再記帳了。你們倆之間的部分會折回主帳本，朋友的部分留在這裡結算。',
     form: {
       nameLabel: '出遊名稱',
@@ -3909,6 +3932,7 @@ export const zhTW: Translations = {
         balanceNotZero: '還有差額沒結清，無法離開',
         soloGroup: '已經是單人帳本',
         activeTrip: '這本帳本目前有進行中的旅行，請先到「旅行」把它標記為結束，才能移除對方',
+        activeOuting: '這本帳本目前有進行中的出遊，請先到「出遊」把它標記為結束，才能移除對方',
         fallback: '操作失敗，請稍後再試',
       },
     },
@@ -6452,6 +6476,21 @@ export const zhTW: Translations = {
       record_not_found: '找不到該筆紀錄',
       record_deleted_or_missing: '紀錄已被刪除或不存在',
       amount_not_positive: '金額需大於 0',
+      amount_invalid: '金額需為整數',
+      amount_too_large: '金額過大',
+      outing_not_found: '找不到這次出遊',
+      outing_not_active: '這次出遊已經結束',
+      outing_epoch_closed: '這次出遊在過去的章節裡，只能結束',
+      outing_participant_not_found: '找不到這位參與者',
+      outing_participant_limit: '一次出遊最多 20 人',
+      outing_name_empty: '出遊名稱為空',
+      outing_name_too_long: '出遊名稱最長 100 字',
+      outing_participant_name_empty: '名字為空',
+      outing_participant_name_too_long: '名字最長 40 字',
+      outing_share_empty: '至少選一位分攤的人',
+      outing_settlement_same_party: '付款人與收款人不可相同',
+      outing_description_too_long: '說明最長 100 字',
+      leave_active_outing: '請先結束出遊再離開章節',
       category_empty: '分類為空',
       split_ratio_required: '依比例分需要指定比例',
       split_ratio_out_of_range: '比例需在 0–100 之間',
