@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client'
 import { monthlyReviewMessages, monthlyReviewSnapshots } from '@/lib/db/schema'
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq } from 'drizzle-orm'
 
 export interface RecurringEvent {
   name: string
@@ -111,4 +111,30 @@ export async function loadMonthlyReviewMessages(
       eq(monthlyReviewMessages.month, month),
     ))
     .orderBy(asc(monthlyReviewMessages.createdAt))
+}
+
+/**
+ * Months that have a review, newest first (#1364). Feeds the /review index —
+ * the destination that makes the dashboard's 月回顧 cell always go somewhere.
+ * Only (year, month): the index lists months; each month's page loads its own
+ * snapshot.
+ */
+export async function listMonthlyReviewMonths(
+  groupId: string,
+): Promise<{ year: number; month: number }[]> {
+  return db
+    .select({ year: monthlyReviewSnapshots.year, month: monthlyReviewSnapshots.month })
+    .from(monthlyReviewSnapshots)
+    .where(eq(monthlyReviewSnapshots.groupId, groupId))
+    .orderBy(desc(monthlyReviewSnapshots.year), desc(monthlyReviewSnapshots.month))
+}
+
+/** Whether the group has any monthly review yet (#1364, dashboard 月回顧 cell). */
+export async function hasAnyMonthlyReview(groupId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: monthlyReviewSnapshots.id })
+    .from(monthlyReviewSnapshots)
+    .where(eq(monthlyReviewSnapshots.groupId, groupId))
+    .limit(1)
+  return !!row
 }

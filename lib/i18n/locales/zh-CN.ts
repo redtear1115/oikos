@@ -289,6 +289,17 @@ export const zhCN: Translations = {
   },
 
   dashboard: {
+    continuity: {
+      reviewTitle: '月回顾',
+      reviewLatest: '{month}的回顾 · 看一看',
+      reviewReturn: '回到回顾',
+      reviewEmpty: '记满一个月后会在这里',
+      reviewAriaLatest: '月回顾：打开{month}的回顾',
+      reviewAriaIndex: '月回顾：打开回顾列表',
+      tripTitle: '旅行',
+      tripEmpty: '开始一趟旅行账',
+      tripAria: '旅行：前往旅行列表',
+    },
     soloHero: {
       monthLabel: '{month}记下',
       countLabel: '{count} 笔',
@@ -1893,6 +1904,11 @@ export const zhCN: Translations = {
   },
 
   monthlyReview: {
+    index: {
+      title: '月回顾',
+      emptyHeading: '还没有月回顾',
+      emptyBody: '记满一个月后，那个月的回顾会出现在这里。',
+    },
     pageTitle: '{year} 年 {month} 月．我们的记账回顾',
     backAriaLabel: '返回',
     closeAriaLabel: '关闭',

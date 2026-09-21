@@ -291,6 +291,17 @@ export const en: Translations = {
   },
 
   dashboard: {
+    continuity: {
+      reviewTitle: 'Monthly review',
+      reviewLatest: '{month} review · take a look',
+      reviewReturn: 'Back to your reviews',
+      reviewEmpty: 'Shows up after a full month',
+      reviewAriaLatest: 'Monthly review: open the {month} review',
+      reviewAriaIndex: 'Monthly review: open all reviews',
+      tripTitle: 'Trips',
+      tripEmpty: 'Start a trip ledger',
+      tripAria: 'Trips: go to your trips',
+    },
     soloHero: {
       // TODO(i18n): native review pending (#1016) — MT-quality draft.
       monthLabel: '{month}',
@@ -1907,6 +1918,11 @@ export const en: Translations = {
   },
 
   monthlyReview: {
+    index: {
+      title: 'Monthly reviews',
+      emptyHeading: 'No monthly reviews yet',
+      emptyBody: 'After a full month of records, that month\'s review appears here.',
+    },
     // {monthName}, not {month}: CJK templates read `{month} 月`, en needs a name (#1178).
     pageTitle: '{monthName} {year} · Our monthly review',
     backAriaLabel: 'Back',

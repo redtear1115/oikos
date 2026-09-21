@@ -292,6 +292,17 @@ export const ja: Translations = {
   },
 
   dashboard: {
+    continuity: {
+      reviewTitle: '月の振り返り',
+      reviewLatest: '{month}の振り返り · 見てみる',
+      reviewReturn: '振り返りに戻る',
+      reviewEmpty: 'ひと月分たまるとここに届きます',
+      reviewAriaLatest: '月の振り返り：{month}の振り返りを開く',
+      reviewAriaIndex: '月の振り返り：一覧を開く',
+      tripTitle: '旅',
+      tripEmpty: '旅の記録をはじめる',
+      tripAria: '旅：旅の一覧へ',
+    },
     soloHero: {
       // TODO(i18n): native review pending (#1016) — MT-quality draft.
       monthLabel: '{month}の記録',
@@ -1908,6 +1919,11 @@ export const ja: Translations = {
   },
 
   monthlyReview: {
+    index: {
+      title: '月の振り返り',
+      emptyHeading: 'まだ振り返りはありません',
+      emptyBody: 'ひと月分の記録がたまると、その月の振り返りがここに表示されます。',
+    },
     pageTitle: '{year} 年 {month} 月・家計の振り返り',
     backAriaLabel: '戻る',
     closeAriaLabel: '閉じる',
