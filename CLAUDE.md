@@ -23,8 +23,9 @@ This is **Next.js 16** with breaking changes. APIs, conventions, and file struct
 
 | 版本 | 主題 |
 |---|---|
-| [v1.6.0](https://github.com/redtear1115/oikos/milestone/55) | 出團多人旅行（付費功能） |
-| [v1.7.0](https://github.com/redtear1115/oikos/milestone/60) | 出遊．揪團一起記——多方分帳的擴散獲客 |
+| [v1.6.0](https://github.com/redtear1115/oikos/milestone/55) | 出遊．和朋友分帳，先由兩人代記 |
+| [v1.6.1](https://github.com/redtear1115/oikos/milestone/59) | 設計審查的統一優化 |
+| [v1.7.0](https://github.com/redtear1115/oikos/milestone/60) | 出遊．朋友從連結加入——揪團擴散獲客 |
 | [v2.0.0](https://github.com/redtear1115/oikos/milestone/2) | 買斷層．長線一起守 |
 | [v3.0.0](https://github.com/redtear1115/oikos/milestone/3) | 訂閱層．AI 與資產管家 |
 
