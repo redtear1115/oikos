@@ -20,19 +20,42 @@ export const setBaseCurrency = action(async (input: { currency: CurrencyCode }) 
     return  // no-op
   }
 
+  // Check and update in ONE transaction, after locking the group row (#943).
+  // createOuting takes this row FOR SHARE and copies base_currency into the
+  // outing, so the two now serialize: either the outing commits first and the
+  // check below counts it (locked), or this update commits first and the
+  // outing is opened in the new currency. Checked outside a transaction, an
+  // outing could commit between the check and the update and keep the old
+  // currency — endOuting would then refuse to fold it, and the base could not
+  // be switched back because the outing itself holds the lock.
+  //
   // `created_at`, not the event dates — a backdated / imported row still
   // belongs to the chapter it was recorded in. Shared with the settings page so
   // the disabled selector and this guard can't drift apart again (#1106).
-  if (await currentEpochHasRecords(group)) {
-    throw actionError('base_currency_locked')
-  }
+  const fromCurrency = await db.transaction(async (tx) => {
+    const [locked] = await tx
+      .select({
+        id: oikosGroups.id,
+        baseCurrency: oikosGroups.baseCurrency,
+        currentEpochStartedAt: oikosGroups.currentEpochStartedAt,
+      })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, group.id))
+      .for('update')
+    if (!locked) throw actionError('group_not_found')
+    if (input.currency === locked.baseCurrency) return null  // no-op, re-checked under the lock
 
-  const fromCurrency = group.baseCurrency
+    if (await currentEpochHasRecords(locked, tx)) {
+      throw actionError('base_currency_locked')
+    }
 
-  await db
-    .update(oikosGroups)
-    .set({ baseCurrency: input.currency })
-    .where(eq(oikosGroups.id, group.id))
+    await tx
+      .update(oikosGroups)
+      .set({ baseCurrency: input.currency })
+      .where(eq(oikosGroups.id, group.id))
+    return locked.baseCurrency
+  })
+  if (fromCurrency === null) return
 
   revalidatePath('/settings/currency')
 

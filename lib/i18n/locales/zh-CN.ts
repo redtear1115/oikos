@@ -3500,7 +3500,7 @@ export const zhCN: Translations = {
       outing_share_empty: '至少选一位分摊的人',
       outing_settlement_same_party: '付款人与收款人不可相同',
       outing_description_too_long: '说明最长 100 字',
-      outing_currency_changed: '账本的基准币别在这次出游开始后改过了，所以不能折回主账本。可以把币别改回来，或删除这次出游',
+      outing_currency_changed: '这次出游的币别和账本目前的基准币别不一致，所以不能折回主账本。',
       leave_active_outing: '请先结束出游再离开章节',
       category_empty: '分类为空',
       split_ratio_required: '按比例分需要指定比例',

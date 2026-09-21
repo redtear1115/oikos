@@ -538,3 +538,46 @@ describe('createOuting vs a concurrent partner removal (P3)', () => {
     expect(ps.map((p) => p.profileId)).toEqual([seed.userId]) // the removed partner is not a participant
   })
 })
+
+describe('setBaseCurrency and createOuting serialize on the group row (#1378 re-verify)', () => {
+  it('an outing committing while the currency change waits → the change is refused', async () => {
+    const seed = await seedGroup()
+    mockUserId = seed.userId
+    const [epoch] = await db.select().from(groupEpochs).where(and(eq(groupEpochs.groupId, seed.groupId), isNull(groupEpochs.endedAt)))
+    let release!: () => void
+    const held = new Promise<void>((r) => { release = r })
+    // Stand-in for createOuting mid-transaction: group row FOR SHARE, outing inserted, not committed.
+    const creating = db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM "OikosGroups" WHERE id = ${seed.groupId} FOR SHARE`)
+      await tx.insert(outings).values({ groupId: seed.groupId, epochId: epoch.id, createdBy: seed.userId, name: 'race', currency: 'twd' })
+      await held
+    })
+    const changing = setBaseCurrency({ currency: 'jpy' })
+    await waitForLockWaiter()
+    release()
+    await creating
+    expect(await changing).toEqual({ ok: false, code: 'base_currency_locked' })
+    const [g] = await db.select().from(oikosGroups).where(eq(oikosGroups.id, seed.groupId))
+    expect(g.baseCurrency).toBe('twd')
+  })
+
+  it('a currency change committing while createOuting waits → the outing opens in the new base', async () => {
+    const seed = await seedGroup()
+    mockUserId = seed.userId
+    let release!: () => void
+    const held = new Promise<void>((r) => { release = r })
+    // Stand-in for setBaseCurrency mid-transaction: group row FOR UPDATE, base switched, not committed.
+    const changing = db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM "OikosGroups" WHERE id = ${seed.groupId} FOR UPDATE`)
+      await tx.update(oikosGroups).set({ baseCurrency: 'jpy' }).where(eq(oikosGroups.id, seed.groupId))
+      await held
+    })
+    const creating = createOuting({ name: 'after' })
+    await waitForLockWaiter()
+    release()
+    await changing
+    const { id } = ok(await creating)
+    const [o] = await db.select().from(outings).where(eq(outings.id, id))
+    expect(o.currency).toBe('jpy')
+  })
+})

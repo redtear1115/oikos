@@ -11,6 +11,8 @@ import {
 } from '@/lib/db/schema'
 import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { epochClause } from '@/lib/db/queries/_predicates'
 
@@ -134,6 +136,9 @@ export async function getActiveEpochWindow(
  */
 export async function currentEpochHasRecords(
   group: Pick<typeof oikosGroups.$inferSelect, 'id' | 'currentEpochStartedAt'>,
+  /** setBaseCurrency passes its transaction so the check reads what is
+   *  committed after it has locked the group row (#943). */
+  tx: typeof db | DbTransaction = db,
 ): Promise<boolean> {
   const window: EpochWindow = {
     startedAt: group.currentEpochStartedAt,
@@ -144,22 +149,22 @@ export async function currentEpochHasRecords(
   }
 
   const [cashRow, incomeRow, settlementRow, outingRow] = await Promise.all([
-    db.select({ n: count() }).from(cashTransactions).where(and(
+    tx.select({ n: count() }).from(cashTransactions).where(and(
       eq(cashTransactions.groupId, group.id),
       epochClause(cashTransactions.createdAt, window),
       isNull(cashTransactions.deletedAt),
     )),
-    db.select({ n: count() }).from(incomeTransactions).where(and(
+    tx.select({ n: count() }).from(incomeTransactions).where(and(
       eq(incomeTransactions.groupId, group.id),
       epochClause(incomeTransactions.createdAt, window),
       isNull(incomeTransactions.deletedAt),
     )),
-    db.select({ n: count() }).from(settlements).where(and(
+    tx.select({ n: count() }).from(settlements).where(and(
       eq(settlements.groupId, group.id),
       epochClause(settlements.createdAt, window),
       isNull(settlements.deletedAt),
     )),
-    db.select({ n: count() }).from(outings).where(and(
+    tx.select({ n: count() }).from(outings).where(and(
       eq(outings.groupId, group.id),
       epochClause(outings.createdAt, window),
       eq(outings.status, 'active'),

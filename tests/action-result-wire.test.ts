@@ -168,6 +168,7 @@ describe('real actions, round-tripped through the production wire', () => {
 
   it('setBaseCurrency › base_currency_locked reaches en / ja as a sentence', async () => {
     queueDbResult([GROUP])          // requireViewerGroup → getActiveGroupForUser
+    queueDbResult([{ id: GROUP.id, baseCurrency: 'twd', currentEpochStartedAt: GROUP.currentEpochStartedAt }]) // tx: OikosGroups FOR UPDATE
     queueDbResult([{ n: 1 }])       // currentEpochHasRecords → cash count
     queueDbResult([{ n: 0 }])       // → income count
     queueDbResult([{ n: 0 }])       // → settlement count

@@ -423,12 +423,12 @@ export const endOuting = action(async (input: { outingId: string }): Promise<{ f
     if (!fold) return { folded: false }
 
     // The outing's integers are in the currency it was opened with; the
-    // Settlement is read in today's base currency. setBaseCurrency refuses while
-    // an outing is active (currentEpochHasRecords), but a base change racing
-    // createOuting can still slip through. Refuse rather than fold NT$1500 as
-    // ¥1500 — and rather than end without folding, which would silently drop a
-    // real debt. Throwing rolls back the status flip: the outing stays active,
-    // and the couple can switch the currency back or delete the outing.
+    // Settlement is read in today's base currency. This should be unreachable:
+    // setBaseCurrency refuses while an outing is active, and it checks under
+    // the same group-row lock createOuting takes, so neither can slip past the
+    // other. Kept as a defensive guard — refusing beats folding NT$1500 as
+    // ¥1500, and beats ending without the fold, which would silently drop a
+    // real debt. Throwing rolls back the status flip; nothing is written.
     if (ended.currency !== locked.baseCurrency) throw actionError('outing_currency_changed')
 
     await tx.insert(settlements).values({
