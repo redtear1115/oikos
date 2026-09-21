@@ -45,7 +45,7 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
     >
       <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
         <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
-          stroke="#3A2419" strokeWidth="1.2"
+          stroke="var(--ink)" strokeWidth="1.2"
           strokeLinecap="round" strokeLinejoin="round" fill="none"/>
       </svg>
     </button>

@@ -88,7 +88,7 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
               <AssetIcon
                 type={s.type}
                 size={14}
-                color={isCurrent ? '#FBEDE0' : 'var(--ink-2)'}
+                color={isCurrent ? 'var(--bg)' : 'var(--ink-2)'}
               />
             </div>
 
@@ -97,7 +97,7 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
               className="text-xs max-w-30 overflow-hidden text-ellipsis whitespace-nowrap"
               style={{
                 fontWeight: isCurrent ? 500 : 400,
-                color: isCurrent ? '#FBEDE0' : 'var(--ink)',
+                color: isCurrent ? 'var(--bg)' : 'var(--ink)',
               }}
             >
               {s.name}
@@ -189,7 +189,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
           >
             <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
-                stroke="#3A2419" strokeWidth="1.2"
+                stroke="var(--ink)" strokeWidth="1.2"
                 strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             </svg>
           </button>

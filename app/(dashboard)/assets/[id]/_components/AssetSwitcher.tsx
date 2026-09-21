@@ -51,7 +51,7 @@ export function AssetSwitcher({
   currentAssetId,
   allAssets,
   groups,
-  chevronInk = '#3A2419',
+  chevronInk = 'var(--ink)',
   triggerBg = 'rgba(58,36,25,0.06)',
   children,
 }: AssetSwitcherProps) {
