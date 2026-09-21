@@ -24,7 +24,7 @@ export function OutingList({ outings }: { outings: OutingListRow[] }) {
       <SubpageHeader title={tl.title} backLabel={t.common.back} />
 
       <div className="px-5 pt-6 pb-4">
-        <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{tl.subtitle}</p>
+        <p className="text-sm text-ink-3">{tl.subtitle}</p>
       </div>
 
       {outings.length === 0 ? (
@@ -62,12 +62,12 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
     <div className="flex items-center gap-2 px-1">
       <span
         aria-hidden="true"
-        className="inline-block rounded-full shrink-0"
-        style={{ width: 8, height: 8, background: dotColor }}
+        className="inline-block rounded-full shrink-0 w-2 h-2"
+        style={{ background: dotColor }}
       />
       <div
-        className="text-base font-medium"
-        style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)', letterSpacing: '-0.2px' }}
+        className="text-base font-medium font-serif text-ink"
+        style={{ letterSpacing: '-0.2px' }}
       >
         {label}
       </div>
@@ -78,10 +78,9 @@ function SectionLabel({ label, dotColor }: { label: string; dotColor: string }) 
 function OutingGroup({ outings, variant }: { outings: OutingListRow[]; variant: 'active' | 'past' }) {
   return (
     <div
-      className="rounded-card overflow-hidden"
+      className="rounded-card overflow-hidden border border-hairline"
       style={{
         background: variant === 'past' ? 'transparent' : 'var(--surface)',
-        border: '1px solid var(--hairline)',
       }}
     >
       {outings.map((o, i) => (
@@ -100,14 +99,14 @@ function OutingRow({ outing, variant, isLast }: { outing: OutingListRow; variant
   return (
     <Link
       href={`/outings/${outing.id}`}
-      className="flex items-center justify-between gap-3 px-3.5 py-3.5 no-underline"
-      style={{ borderBottom: isLast ? 'none' : '1px solid var(--hairline)', color: 'var(--ink)' }}
+      className="flex items-center justify-between gap-3 px-3.5 py-3.5 no-underline text-ink"
+      style={{ borderBottom: isLast ? 'none' : '1px solid var(--hairline)' }}
     >
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate" style={{ color: isPast ? 'var(--ink-2)' : 'var(--ink)' }}>
           {outing.name}
         </div>
-        <div className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--ink-3)' }}>
+        <div className="text-xs mt-0.5 flex items-center gap-1.5 text-ink-3">
           <span>{countLabel}</span>
           {isPast && (
             <>
@@ -117,7 +116,7 @@ function OutingRow({ outing, variant, isLast }: { outing: OutingListRow; variant
           )}
         </div>
       </div>
-      <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true" style={{ color: 'var(--ink-3)' }}>
+      <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true" className="text-ink-3">
         <path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </Link>
@@ -130,8 +129,7 @@ function OutingsEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center pt-16 pb-12 px-6 text-center">
       <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-        style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 bg-surface border border-hairline"
         aria-hidden="true"
       >
         {/* Three small points of light gathered — "a group". */}
@@ -142,8 +140,8 @@ function OutingsEmptyState() {
           <circle cx="12" cy="13" r="1.3" fill="var(--accent)" />
         </svg>
       </div>
-      <div className="text-base font-medium mb-2" style={{ color: 'var(--ink)' }}>{tl.empty.heading}</div>
-      <div className="text-sm leading-relaxed" style={{ color: 'var(--ink-3)', maxWidth: 260 }}>{tl.empty.body}</div>
+      <div className="text-base font-medium mb-2 text-ink">{tl.empty.heading}</div>
+      <div className="text-sm leading-relaxed text-ink-3 max-w-65">{tl.empty.body}</div>
     </div>
   )
 }

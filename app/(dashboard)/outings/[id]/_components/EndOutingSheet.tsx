@@ -49,7 +49,7 @@ export function EndOutingSheet({ open, outingId, onClose, onSaved }: Props) {
       destructive
     >
       <div className="px-5 pt-2 pb-4">
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-2)' }}>{to.endConfirmBody}</p>
+        <p className="text-sm leading-relaxed text-ink-2">{to.endConfirmBody}</p>
       </div>
     </SheetShell>
   )

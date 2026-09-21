@@ -71,7 +71,7 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span aria-hidden="true" className="inline-block rounded-full shrink-0" style={{ width: 9, height: 9, background: dotOf(p.id) }} />
-                  <span className="text-sm truncate" style={{ color: 'var(--ink)' }}>{p.displayName}</span>
+                  <span className="text-sm truncate text-ink">{p.displayName}</span>
                 </div>
                 <NetAmount net={p.net} currency={outing.currency} />
               </div>
@@ -83,7 +83,7 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
         <Card>
           <SectionTitle>{to.transfersLabel}</SectionTitle>
           {view.transfers.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{to.allSettled}</p>
+            <p className="text-sm text-ink-3">{to.allSettled}</p>
           ) : (
             <div className="flex flex-col">
               {view.transfers.map((tr, i) => (
@@ -92,10 +92,10 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
                   className="flex items-center justify-between gap-3 py-2.5"
                   style={{ borderBottom: i === view.transfers.length - 1 ? 'none' : '1px solid var(--hairline)' }}
                 >
-                  <span className="text-sm truncate" style={{ color: 'var(--ink)' }}>
+                  <span className="text-sm truncate text-ink">
                     {to.transferRow.replace('{from}', nameOf(tr.from)).replace('{to}', nameOf(tr.to))}
                   </span>
-                  <span className="text-sm tabular-nums shrink-0" style={{ color: 'var(--ink-2)' }}>
+                  <span className="text-sm tabular-nums shrink-0 text-ink-2">
                     {formatAmount(tr.amount, outing.currency)}
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
         <Card>
           <SectionTitle>{to.expensesLabel}</SectionTitle>
           {expenses.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--ink-3)' }}>{to.emptyExpenses}</p>
+            <p className="text-sm text-ink-3">{to.emptyExpenses}</p>
           ) : (
             <div className="flex flex-col">
               {expenses.map((e, i) => (
@@ -118,14 +118,14 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
                   style={{ borderBottom: i === expenses.length - 1 ? 'none' : '1px solid var(--hairline)' }}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate" style={{ color: 'var(--ink)' }}>{e.description || to.untitledExpense}</div>
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+                    <div className="text-sm truncate text-ink">{e.description || to.untitledExpense}</div>
+                    <div className="text-xs mt-0.5 text-ink-3">
                       {to.paidByTag.replace('{name}', nameOf(e.paidByParticipantId))}
                       {' · '}
                       {to.splitCountTag.replace('{count}', String(e.shares.length))}
                     </div>
                   </div>
-                  <span className="text-sm tabular-nums shrink-0" style={{ color: 'var(--ink)' }}>
+                  <span className="text-sm tabular-nums shrink-0 text-ink">
                     {formatAmount(e.amount, outing.currency)}
                   </span>
                 </div>
@@ -135,13 +135,13 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
         </Card>
 
         {coupleNet !== 0 && (
-          <p className="text-xs px-1" style={{ color: 'var(--ink-3)' }}>
+          <p className="text-xs px-1 text-ink-3">
             {to.coupleFoldNote.replace('{amount}', formatAmount(Math.abs(coupleNet), outing.currency))}
           </p>
         )}
 
         {!active && (
-          <p className="text-sm px-1" style={{ color: 'var(--ink-3)' }}>{to.endedNote}</p>
+          <p className="text-sm px-1 text-ink-3">{to.endedNote}</p>
         )}
 
         {active && (
@@ -180,19 +180,19 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <section className="rounded-card p-4" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+    <section className="rounded-card p-4 bg-surface border border-hairline">
       {children}
     </section>
   )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <div className="text-sm font-medium mb-2" style={{ color: 'var(--ink-2)' }}>{children}</div>
+  return <div className="text-sm font-medium mb-2 text-ink-2">{children}</div>
 }
 
 function NetAmount({ net, currency }: { net: number; currency: string }) {
   if (net === 0) {
-    return <span className="text-sm tabular-nums shrink-0" style={{ color: 'var(--ink-3)' }}>{formatAmount(0, currency)}</span>
+    return <span className="text-sm tabular-nums shrink-0 text-ink-3">{formatAmount(0, currency)}</span>
   }
   const positive = net > 0
   return (
