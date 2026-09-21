@@ -189,7 +189,7 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
   return updated
 })
 
-export const updateTrip = action(async (input: {
+export interface UpdateTripInput {
   tripId: string
   name?: string
   startDate?: string
@@ -204,32 +204,104 @@ export const updateTrip = action(async (input: {
    * rates only affects future records.
    */
   currencies?: TripCurrencySnapshot
-}) => {
+}
+
+const TRIP_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * The only Trip columns `updateTrip` may write. Server-action arguments are
+ * not type-checked at runtime and Drizzle's `.set()` writes every key that
+ * matches a column, so the patch is built field by field from `input` —
+ * never by spreading it. Ownership and lifecycle columns (group, epoch,
+ * status, ended/deleted timestamps, cover photo) belong to their dedicated
+ * actions, not to the edit sheet.
+ *
+ * Failure mode if this regresses: nothing errors and the sheet still works —
+ * an extra key in the payload silently rewrites a column the sheet never
+ * shows. `tests/actions-trip.test.ts` pins the exact key set of `.set()`.
+ */
+type TripEditPatch = Partial<Pick<typeof trips.$inferInsert,
+  | 'name'
+  | 'startDate'
+  | 'endDate'
+  | 'budgetAmount'
+  | 'budgetCurrency'
+  | 'rateSnapshot'
+  | 'defaultCurrency'
+>>
+
+export const updateTrip = action(async (input: UpdateTripInput) => {
   const { group } = await requireViewerGroup()
+  if (!input || typeof input !== 'object' || typeof input.tripId !== 'string' || !input.tripId) {
+    throw new Error('Invalid trip update input')
+  }
+  const tripId = input.tripId
+  const patch: TripEditPatch = {}
+
+  if (input.name !== undefined) {
+    if (typeof input.name !== 'string') throw new Error('Invalid trip name')
+    const name = input.name.trim()
+    if (!name) throw actionError('trip_name_empty')
+    if (name.length > 100) throw actionError('trip_name_too_long')
+    patch.name = name
+  }
+
+  if (input.startDate !== undefined) {
+    if (typeof input.startDate !== 'string' || !TRIP_DATE_RE.test(input.startDate)) {
+      throw new Error('Invalid trip start date')
+    }
+    patch.startDate = input.startDate
+  }
+
+  if (input.endDate !== undefined) {
+    if (input.endDate !== null
+      && (typeof input.endDate !== 'string' || !TRIP_DATE_RE.test(input.endDate))) {
+      throw new Error('Invalid trip end date')
+    }
+    patch.endDate = input.endDate
+  }
+
+  if (input.budgetAmount !== undefined) {
+    if (input.budgetAmount !== null
+      && (!Number.isInteger(input.budgetAmount) || input.budgetAmount < 0)) {
+      throw new Error('Invalid trip budget amount')
+    }
+    patch.budgetAmount = input.budgetAmount
+  }
+
+  if (input.budgetCurrency !== undefined) {
+    if (input.budgetCurrency !== null && typeof input.budgetCurrency !== 'string') {
+      throw new Error('Invalid trip budget currency')
+    }
+    patch.budgetCurrency = input.budgetCurrency ? input.budgetCurrency.toUpperCase() : null
+  }
+
   const epochStartDate = group.currentEpochStartedAt.toISOString().slice(0, 10)
-  if (input.startDate && input.startDate < epochStartDate) {
+  if (patch.startDate && patch.startDate < epochStartDate) {
     throw actionError('trip_move_to_past_epoch')
   }
 
   const [existing] = await db
     .select()
     .from(trips)
-    .where(and(eq(trips.id, input.tripId), eq(trips.groupId, group.id)))
+    .where(and(eq(trips.id, tripId), eq(trips.groupId, group.id)))
     .limit(1)
   if (!existing) throw actionError('trip_not_found')
 
-  const { tripId, budgetCurrency, currencies, ...rest } = input
-  const patch: Record<string, unknown> = { ...rest }
-  if (budgetCurrency !== undefined) {
-    patch.budgetCurrency = budgetCurrency ? budgetCurrency.toUpperCase() : null
+  // Same rule as createTrip, checked against the merged result so a partial
+  // update (only one of the two dates) can't leave end < start either.
+  const nextStart = patch.startDate ?? existing.startDate
+  const nextEnd = patch.endDate !== undefined ? patch.endDate : existing.endDate
+  if (nextEnd && nextStart && nextEnd < nextStart) {
+    throw actionError('trip_end_before_start')
   }
 
-  if (currencies !== undefined) {
+  if (input.currencies !== undefined) {
     // validateTripCurrencySnapshot ensures default = base, base entry exists,
     // and rates are positive. We don't enforce a used-currency rate lock any
     // more — rate edits only affect future writes; historical TripExpenses.amount
     // (base integer) stays as-is.
-    const validated = validateTripCurrencySnapshot(currencies, group.baseCurrency)
+    const validated = validateTripCurrencySnapshot(input.currencies, group.baseCurrency)
     patch.rateSnapshot = validated
     patch.defaultCurrency = validated.default
   }
