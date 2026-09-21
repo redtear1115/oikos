@@ -96,7 +96,7 @@ related_issues: ["#943", "#870"]
 所有寫入走 Server Action(主 app 既有 `Client → Server Action → Drizzle` 路徑),不開放 client 直連 DB。
 
 - **加入**:點 `share_token` 連結 → join 落地 → 認領空 slot 或新增自己 → 拿 `claim_token` 存 cookie,回訪即「我就是這個人」。登入的 Futari 用戶用登入身分認領(填 `profile_id`)。
-- **授權**:寫入允許「持有該出遊某 participant 有效 `claim_token`」**或**「已登入且為該出遊 participant」。出遊層級操作(改名、結束、刪 participant)只限 `created_by` owner。`share_token` 只能加入,要先認領出身分才有寫權限。
+- **授權**:寫入允許「持有該出遊某 participant 有效 `claim_token`」**或**「已登入且為該出遊 participant」。出遊層級操作(改名、結束、刪 participant)只限 `created_by` owner——這是 v1.7.0 匿名世界的規則。**v1.6.0 沒有匿名參與者,結束與刪除出遊由帳本兩位成員都能做**(2026-09-21 使用者決定,#943 Q4):折回的那筆 Settlement 同時影響兩個人,與旅行、結算的權限一致。`share_token` 只能加入,要先認領出身分才有寫權限。
 - **RLS**:outing 五表對 client 直連一律 deny;Server Action server 端驗 token。不為匿名用戶開 `auth.uid()` RLS。
 - **Locked decision**:任何拿到連結者都能認領身分並寫入(摩擦最低,符合「快速開始」);**不**要 owner approve 新參與者。
 - **防濫用(v1 輕量)**:`share_token` 不可猜;participant 新增 rate limit;出遊人數上限(≤ 20);非 owner 不能刪別人已認領的 slot。
@@ -140,6 +140,7 @@ related_issues: ["#943", "#870"]
 - Futari 用戶能開局、以名字加入朋友；帳本成員能代任一參與者加支出（選付款人＋挑分攤者，系統平分）、看每人淨額、看最少筆數轉帳建議、標記還款、結束出遊。
 - 帳目不變量成立：每筆 `Σ share === amount`；全體 `Σ net === 0`。
 - 出遊結束時，兩位成員相互欠額正確折回主帳本 `Settlement`（只折 balance）；朋友份額不進主帳本；折回 idempotent；solo／單一成員參與時不折。
+- 帳本兩位成員都能結束或刪除出遊。
 - 當前章節有進行中的出遊時，離開帳本與移除伴侶都被擋下，訊息說明下一步。
 - outing 表 client 直連被 RLS deny；所有寫入只經 Server Action。
 - 全部使用者可見字串 4 語齊全。
