@@ -13,6 +13,7 @@ import {
   categoryInClause,
   cursorClause,
   andClause,
+  openEpochClause,
 } from '@/lib/db/queries/_predicates'
 import { ASSET_FILTER_NONE, type DateRange } from '@/lib/filter'
 import type { EpochWindow } from '@/lib/db/queries/epoch'
@@ -305,5 +306,17 @@ describe('andClause helper', () => {
     const { sql: s, params } = ser(expr)
     expect(s).toMatch(/WHERE deleted_at IS NULL AND created_at\s*>=/)
     expect(params).toEqual(['2026-05-01T00:00:00.000Z'])
+  })
+})
+
+describe('openEpochClause', () => {
+  it('compares the column to the group\'s open GroupEpochs id, with the group id bound as a parameter', () => {
+    const { sql: text, params } = ser(openEpochClause('t.epoch_id', 'grp-1'))
+    expect(text.replace(/\s+/g, ' ').trim()).toBe(
+      't.epoch_id = ( SELECT "id" FROM "GroupEpochs" WHERE "group_id" = $1::uuid AND "ended_at" IS NULL )',
+    )
+    // A column reference here would bind to GroupEpochs.group_id inside the
+    // subquery and match every group; the group id must be a parameter.
+    expect(params).toEqual(['grp-1'])
   })
 })

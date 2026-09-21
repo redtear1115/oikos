@@ -66,6 +66,35 @@ export function epochClause(
 }
 
 /**
+ * `epochIdCol = (the group's open GroupEpochs id)` — the row belongs to the
+ * chapter that is open *right now*, read by the statement itself rather than
+ * from a value the caller resolved earlier.
+ *
+ * Fails closed: a group with no open chapter makes the subquery NULL, and
+ * `x = NULL` matches no row. There is deliberately no fallback (compare
+ * `resolveViewerEpochContext`'s `new Date(0)` window, which is a read-path
+ * convenience and must not be copied into a write guard). At most one open
+ * row per group is guaranteed by the `group_epochs_one_open_per_group` unique
+ * index (drizzle/0030), so the scalar subquery cannot return two rows.
+ *
+ * `groupId` is a bound parameter, not a column reference: inside the
+ * subquery an unqualified `group_id` would bind to GroupEpochs' own column
+ * and silently match every group. Callers pair this with their own
+ * `eq(table.groupId, groupId)`, so anchoring on the parameter is equivalent
+ * to anchoring on the row's group.
+ *
+ * Used by the trip write paths (actions/trip.ts, actions/tripExpense.ts, the
+ * trip tag check in actions/transaction.ts): a trip whose chapter has closed
+ * is part of the read-only past.
+ */
+export function openEpochClause(epochIdColumn: ColRef, groupId: string): SQL {
+  return sql`${col(epochIdColumn)} = (
+    SELECT "id" FROM "GroupEpochs"
+    WHERE "group_id" = ${groupId}::uuid AND "ended_at" IS NULL
+  )`
+}
+
+/**
  * Build the SQL bounds for a timestamptz column scoped to a calendar window in
  * Asia/Taipei local time. Used by CashTransactions (`transacted_at`) and
  * Settlements (`settled_at`).

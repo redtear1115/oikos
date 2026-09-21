@@ -1,11 +1,13 @@
 'use server'
 
 import { db } from '@/lib/db/client'
-import { trips, groupEpochs, tripExpenses, cashTransactions } from '@/lib/db/schema'
+import { trips, groupEpochs, tripExpenses, cashTransactions, oikosGroups } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
+import { openEpochClause } from '@/lib/db/queries/_predicates'
 import { buildTripSummaries } from '@/lib/tripSummary'
 import { requireViewerGroup } from '@/lib/auth/viewer'
+import { getViewerWriteContext } from '@/lib/actionContext'
 import {
   validateTripCurrencySnapshot,
   type TripCurrencySnapshot,
@@ -95,12 +97,22 @@ export const createTrip = action(async (input: CreateTripInput) => {
 })
 
 export const endTrip = action(async (input: { tripId: string; endDate: string }) => {
-  const { user, group } = await requireViewerGroup()
+  const { user, group } = await getViewerWriteContext()
 
   const txResult = await db.transaction(async (tx) => {
     // Conditional update on status='active' makes this idempotent: a second
     // endTrip on an already-ended trip yields no rows and no summary writes,
     // even if the caller races with itself.
+    //
+    // `openEpochClause`: only a trip of the chapter that is open now can be
+    // ended; a trip whose chapter has closed is part of the read-only past.
+    // Fails as `active_trip_not_found`, same as a missing trip.
+    //
+    // Residual (known, not handled here): this takes no lock on the chapter
+    // row. If a chapter close commits *after* this UPDATE has matched, the
+    // summary rows below still commit, with a created_at later than that
+    // close's boundary. Closing it needs the epoch-row lock ordering between
+    // trip writers and chapter closers, which is a separate change.
     const [row] = await tx
       .update(trips)
       .set({
@@ -112,6 +124,7 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
         eq(trips.id, input.tripId),
         eq(trips.groupId, group.id),
         eq(trips.status, 'active'),
+        openEpochClause(trips.epochId, group.id),
       ))
       .returning()
     if (!row) {
@@ -137,10 +150,19 @@ export const endTrip = action(async (input: { tripId: string; endDate: string })
         isNull(tripExpenses.deletedAt),
       ))
 
+    // Split with the members as they are inside this transaction, not as
+    // they were when the viewer's context was resolved before it.
+    const [members] = await tx
+      .select({ memberA: oikosGroups.memberA, memberB: oikosGroups.memberB })
+      .from(oikosGroups)
+      .where(eq(oikosGroups.id, group.id))
+      .limit(1)
+    if (!members) throw actionError('active_trip_not_found')
+
     const summaries = buildTripSummaries({
       expenses,
-      memberA: group.memberA,
-      memberB: group.memberB,
+      memberA: members.memberA,
+      memberB: members.memberB,
     })
 
     let firstRecord = false
@@ -231,7 +253,7 @@ type TripEditPatch = Partial<Pick<typeof trips.$inferInsert,
 >>
 
 export const updateTrip = action(async (input: UpdateTripInput) => {
-  const { group } = await requireViewerGroup()
+  const { group } = await getViewerWriteContext()
   if (!input || typeof input !== 'object' || typeof input.tripId !== 'string' || !input.tripId) {
     throw new Error('Invalid trip update input')
   }
@@ -281,10 +303,16 @@ export const updateTrip = action(async (input: UpdateTripInput) => {
     throw actionError('trip_move_to_past_epoch')
   }
 
+  // A trip of a closed chapter is read-only: `openEpochClause` makes it
+  // `trip_not_found` here and again on the UPDATE below.
   const [existing] = await db
     .select()
     .from(trips)
-    .where(and(eq(trips.id, tripId), eq(trips.groupId, group.id)))
+    .where(and(
+      eq(trips.id, tripId),
+      eq(trips.groupId, group.id),
+      openEpochClause(trips.epochId, group.id),
+    ))
     .limit(1)
   if (!existing) throw actionError('trip_not_found')
 
@@ -309,7 +337,11 @@ export const updateTrip = action(async (input: UpdateTripInput) => {
   const [updated] = await db
     .update(trips)
     .set(patch)
-    .where(and(eq(trips.id, tripId), eq(trips.groupId, group.id)))
+    .where(and(
+      eq(trips.id, tripId),
+      eq(trips.groupId, group.id),
+      openEpochClause(trips.epochId, group.id),
+    ))
     .returning()
   if (!updated) throw actionError('trip_not_found')
   revalidatePath('/trips')
@@ -318,10 +350,18 @@ export const updateTrip = action(async (input: UpdateTripInput) => {
 })
 
 export const softDeleteTrip = action(async (input: { tripId: string }) => {
-  const { group } = await requireViewerGroup()
-  await db
+  const { group } = await getViewerWriteContext()
+  // Same chapter rule as updateTrip. `.returning()` so a refused delete is
+  // reported instead of silently matching nothing.
+  const deleted = await db
     .update(trips)
     .set({ deletedAt: new Date() })
-    .where(and(eq(trips.id, input.tripId), eq(trips.groupId, group.id)))
+    .where(and(
+      eq(trips.id, input.tripId),
+      eq(trips.groupId, group.id),
+      openEpochClause(trips.epochId, group.id),
+    ))
+    .returning({ id: trips.id })
+  if (deleted.length === 0) throw actionError('trip_not_found')
   revalidatePath('/trips')
 })

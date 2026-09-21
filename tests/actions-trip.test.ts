@@ -1,6 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setMockUser } from './_mocks/supabase'
 import { mockDb, mockBuilder, queueDbResult, resetDbMocks } from './_mocks/db'
+
+// updateTrip resolves the viewer through getViewerWriteContext, which reads
+// the past-chapter pin cookie. No pin here: the viewer is in the open chapter.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: () => undefined, set: vi.fn(), delete: vi.fn() })),
+}))
 
 import { updateTrip, type UpdateTripInput } from '@/actions/trip'
 
@@ -12,6 +18,14 @@ const GROUP = {
   name: '我們家',
   baseCurrency: 'TWD',
   currentEpochStartedAt: new Date('2026-01-01T00:00:00Z'),
+}
+const OPEN_EPOCH = {
+  id: 'epoch-current',
+  groupId: 'grp-1',
+  startedAt: new Date('2026-01-01T00:00:00Z'),
+  endedAt: null,
+  memberAId: 'user-a',
+  memberBId: 'user-b',
 }
 const EXISTING_TRIP = {
   id: 'trip-1',
@@ -42,7 +56,8 @@ const ALLOWED_COLUMNS = new Set([
 ])
 
 function queueHappyPath() {
-  queueDbResult([GROUP])          // requireViewerGroup → group lookup (.limit)
+  queueDbResult([GROUP])          // getViewerWriteContext → group lookup (.limit)
+  queueDbResult([OPEN_EPOCH])     // getViewerWriteContext → open epoch lookup (.limit)
   queueDbResult([EXISTING_TRIP])  // existing trip lookup (.limit)
   queueDbResult([{ ...EXISTING_TRIP }]) // update .returning
 }
@@ -179,6 +194,7 @@ describe('updateTrip — legitimate edits still apply', () => {
 describe('updateTrip — field validation', () => {
   it('rejects an empty name with trip_name_empty', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     expect(await updateTrip({ tripId: 'trip-1', name: '   ' }))
       .toEqual({ ok: false, code: 'trip_name_empty' })
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -186,6 +202,7 @@ describe('updateTrip — field validation', () => {
 
   it('rejects a name over 100 chars with trip_name_too_long', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     expect(await updateTrip({ tripId: 'trip-1', name: 'x'.repeat(101) }))
       .toEqual({ ok: false, code: 'trip_name_too_long' })
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -193,6 +210,7 @@ describe('updateTrip — field validation', () => {
 
   it('rejects an endDate before the existing startDate', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([EXISTING_TRIP])
     expect(await updateTrip({ tripId: 'trip-1', endDate: '2026-02-01' }))
       .toEqual({ ok: false, code: 'trip_end_before_start' })
@@ -201,6 +219,7 @@ describe('updateTrip — field validation', () => {
 
   it('still rejects moving the start into a past epoch', async () => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     expect(await updateTrip({ tripId: 'trip-1', startDate: '2025-12-31' }))
       .toEqual({ ok: false, code: 'trip_move_to_past_epoch' })
     expect(mockDb.update).not.toHaveBeenCalled()
@@ -215,6 +234,7 @@ describe('updateTrip — field validation', () => {
     ['budgetCurrency', { budgetCurrency: { toUpperCase: 1 } }],
   ])('rejects a malformed %s without writing', async (_label, extra) => {
     queueDbResult([GROUP])
+    queueDbResult([OPEN_EPOCH])
     queueDbResult([EXISTING_TRIP])
     await expect(updateTrip({ tripId: 'trip-1', ...extra } as unknown as UpdateTripInput))
       .rejects.toThrow()
