@@ -1,4 +1,4 @@
-// #1360 — the `tz` cookie and "today in a zone". See lib/today.ts.
+// #1360 — the `futari_tz` cookie and "today in a zone". See lib/today.ts.
 
 import { describe, it, expect, afterEach } from 'vitest'
 import {
@@ -12,7 +12,7 @@ import {
 const originalTZ = process.env.TZ
 afterEach(() => {
   process.env.TZ = originalTZ
-  document.cookie = 'tz=; path=/; max-age=0'
+  document.cookie = 'futari_tz=; path=/; max-age=0'
 })
 
 describe('todayYMDIn', () => {
@@ -42,26 +42,26 @@ describe('isValidTimeZone', () => {
   })
 })
 
-describe('tz cookie', () => {
+describe('futari_tz cookie', () => {
   it('reads the value out of a cookie string', () => {
-    expect(readTimeZoneCookie('lang=en; tz=Asia%2FTokyo; x=1')).toBe('Asia/Tokyo')
+    expect(readTimeZoneCookie('lang=en; futari_tz=Asia%2FTokyo; x=1')).toBe('Asia/Tokyo')
     expect(readTimeZoneCookie('lang=en')).toBeNull()
   })
 
   it('treats an undecodable or invalid value as missing instead of throwing', () => {
-    expect(() => readTimeZoneCookie('tz=%E0%A4%A')).not.toThrow()
-    expect(readTimeZoneCookie('tz=%E0%A4%A')).toBeNull()
-    expect(readTimeZoneCookie('tz=Mars%2FOlympus')).toBeNull()
+    expect(() => readTimeZoneCookie('futari_tz=%E0%A4%A')).not.toThrow()
+    expect(readTimeZoneCookie('futari_tz=%E0%A4%A')).toBeNull()
+    expect(readTimeZoneCookie('futari_tz=Mars%2FOlympus')).toBeNull()
   })
 
   it('with duplicate names (a sibling subdomain\'s cookie), the first valid one wins', () => {
-    expect(readTimeZoneCookie('tz=%E0%A4%A; tz=Asia%2FTokyo')).toBe('Asia/Tokyo')
-    expect(readTimeZoneCookie('tz=Nope; tz=Europe%2FParis; tz=Asia%2FTokyo')).toBe('Europe/Paris')
+    expect(readTimeZoneCookie('futari_tz=%E0%A4%A; futari_tz=Asia%2FTokyo')).toBe('Asia/Tokyo')
+    expect(readTimeZoneCookie('futari_tz=Nope; futari_tz=Europe%2FParis; futari_tz=Asia%2FTokyo')).toBe('Europe/Paris')
   })
 
   it('overwrites a malformed cookie with the device zone instead of throwing', () => {
     process.env.TZ = 'Asia/Tokyo'
-    document.cookie = 'tz=%E0%A4%A; path=/'
+    document.cookie = 'futari_tz=%E0%A4%A; path=/'
     expect(() => syncTimeZoneCookie()).not.toThrow()
     expect(readTimeZoneCookie(document.cookie)).toBe('Asia/Tokyo')
     expect(document.cookie).not.toContain('%E0%A4%A')

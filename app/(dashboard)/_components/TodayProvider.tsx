@@ -11,7 +11,7 @@ const TodayContext = createContext<string | null>(null)
 const noopSubscribe = () => () => {}
 
 /**
- * Hands the server's "today" (computed in the device's zone from the `tz`
+ * Hands the server's "today" (computed in the device's zone from the `futari_tz`
  * cookie) to client components, and keeps that cookie current.
  */
 export function TodayProvider({ todayYMD, children }: { todayYMD: string; children: ReactNode }) {
