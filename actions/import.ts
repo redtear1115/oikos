@@ -292,6 +292,11 @@ export const importCsvBatch = action(async (
   }
 })
 
+/** Rollback is offered for 24h after an import. The history list uses it to
+ *  show / hide the button; `rollbackImportBatch` enforces it against the DB
+ *  clock so a hidden button is not the only guard. */
+const ROLLBACK_WINDOW_MS = 24 * 60 * 60 * 1000
+
 export const rollbackImportBatch = action(async (batchId: string): Promise<void> => {
   if (!batchId || typeof batchId !== 'string') {
     throw actionError('import_batch_id_invalid')
@@ -300,21 +305,46 @@ export const rollbackImportBatch = action(async (batchId: string): Promise<void>
   const { group } = await getViewerWriteContext()
 
   await db.transaction(async (tx) => {
+    // FOR UPDATE: a second rollback of the same batch waits here and then
+    // sees the first one's `rolled_back`, instead of both passing the status
+    // check and both reporting success.
+    //
+    // Known residual: lock order here is batch -> tagged rows. A membership
+    // change that moves rows locks those rows without taking the batch first,
+    // so the two can still deadlock; Postgres aborts one transaction (a
+    // retryable error, nothing half-written). Goes away once membership
+    // changes take their locks up front.
     const [batch] = await tx
       .select({
         id: importBatches.id,
         groupId: importBatches.groupId,
         status: importBatches.status,
         rolledBackAt: importBatches.rolledBackAt,
+        // Both judged on the DB clock, inside this transaction. Column names
+        // are written out qualified: drizzle renders a single-table select's
+        // columns unqualified, which inside the subquery would bind to
+        // "GroupEpochs" instead of the batch.
+        withinWindow: sql<boolean>`"ImportBatches"."created_at" > now() - make_interval(secs => ${ROLLBACK_WINDOW_MS / 1000})`,
+        // The batch must belong to the group's open chapter. Anchored on the
+        // open GroupEpochs row: no open epoch => NULL => false => refused.
+        inOpenChapter: sql<boolean>`coalesce("ImportBatches"."created_at" >= (
+          SELECT ge.started_at FROM "GroupEpochs" ge
+          WHERE ge.group_id = "ImportBatches"."group_id"
+            AND ge.ended_at IS NULL
+        ), false)`,
       })
       .from(importBatches)
       .where(eq(importBatches.id, batchId))
       .limit(1)
+      .for('update')
 
     if (!batch) throw actionError('import_batch_not_found')
     if (batch.groupId !== group.id) throw actionError('import_rollback_forbidden')
     if (batch.status === 'rolled_back' || batch.rolledBackAt !== null) {
       throw actionError('import_already_rolled_back')
+    }
+    if (!batch.withinWindow || !batch.inOpenChapter) {
+      throw actionError('import_rollback_forbidden')
     }
 
     const now = new Date()
@@ -322,12 +352,17 @@ export const rollbackImportBatch = action(async (batchId: string): Promise<void>
     // Soft delete to keep the audit trail consistent with editing semantics.
     // Rows are still queryable for the import batch detail view; balance
     // filters on deletedAt IS NULL so the cache rebuilds correctly.
+    //
+    // Scoped to the viewer's group: a row tagged with this batch is not
+    // guaranteed to still be in the batch's group, and a rollback only ever
+    // touches rows in the viewer's own group.
     await tx
       .update(cashTransactions)
       .set({ deletedAt: now })
       .where(
         and(
           eq(cashTransactions.importBatchId, batchId),
+          eq(cashTransactions.groupId, group.id),
           isNull(cashTransactions.deletedAt),
         ),
       )
@@ -338,6 +373,7 @@ export const rollbackImportBatch = action(async (batchId: string): Promise<void>
       .where(
         and(
           eq(incomeTransactions.importBatchId, batchId),
+          eq(incomeTransactions.groupId, group.id),
           isNull(incomeTransactions.deletedAt),
         ),
       )
@@ -367,8 +403,6 @@ export interface ImportBatchSummary {
    *  back. The UI uses this to enable / hide the rollback button. */
   rollbackable: boolean
 }
-
-const ROLLBACK_WINDOW_MS = 24 * 60 * 60 * 1000
 
 export const getImportHistory = action(async (): Promise<ImportBatchSummary[]> => {
   const { group } = await getViewerWriteContext()
