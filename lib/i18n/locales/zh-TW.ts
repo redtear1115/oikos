@@ -777,9 +777,6 @@ export type Translations = {
 
   /** 出遊 detail + sheets. */
   outing: {
-    shareLabel: string
-    copyLink: string
-    copied: string
     participantsLabel: string
     transfersLabel: string
     /** "{from} → {to}" transfer row. */
@@ -3523,9 +3520,6 @@ export const zhTW: Translations = {
   },
 
   outing: {
-    shareLabel: '分享連結',
-    copyLink: '複製',
-    copied: '已複製',
     participantsLabel: '參與者',
     transfersLabel: '誰付給誰',
     transferRow: '{from} → {to}',

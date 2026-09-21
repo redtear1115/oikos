@@ -28,7 +28,6 @@ export default async function OutingDetailPage(props: { params: Promise<{ id: st
         name: detail.outing.name,
         currency: detail.outing.currency,
         status: detail.outing.status,
-        shareToken: detail.outing.shareToken,
       }}
       view={view}
       coupleNet={view.coupleNet}

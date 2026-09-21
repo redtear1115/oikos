@@ -40,7 +40,7 @@ describe('OutingDetailClient', () => {
   it('renders share link, participant nets, transfers and the expense feed', () => {
     wrap(
       <OutingDetailClient
-        outing={{ id: 'o1', name: '九份兩日', currency: 'twd', status: 'active', shareToken: 'tok123' }}
+        outing={{ id: 'o1', name: '九份兩日', currency: 'twd', status: 'active' }}
         view={view}
         coupleNet={300}
         expenses={[{ id: 'e1', paidByParticipantId: 'A', amount: 900, description: '午餐', category: null, shares: [{ participantId: 'A', shareAmount: 300 }, { participantId: 'B', shareAmount: 300 }, { participantId: 'F', shareAmount: 300 }] }]}
@@ -48,7 +48,6 @@ describe('OutingDetailClient', () => {
       />,
     )
     expect(screen.getByText('九份兩日')).toBeTruthy()
-    expect(screen.getByText('/outing/tok123')).toBeTruthy()
     expect(screen.getByText('午餐')).toBeTruthy()
     // a transfer row "阿傑 → 我"
     expect(screen.getByText('阿傑 → 我')).toBeTruthy()
@@ -59,7 +58,7 @@ describe('OutingDetailClient', () => {
   it('shows the ended note and hides actions when not active', () => {
     wrap(
       <OutingDetailClient
-        outing={{ id: 'o1', name: '宜蘭', currency: 'twd', status: 'ended', shareToken: 'tok' }}
+        outing={{ id: 'o1', name: '宜蘭', currency: 'twd', status: 'ended' }}
         view={{ participants: [], transfers: [], coupleNet: 0 }}
         coupleNet={0}
         expenses={[]}

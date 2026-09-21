@@ -545,9 +545,11 @@ export const tripExpenses = pgTable('TripExpenses', {
 })
 
 // 出遊（Group Outing）— 多方分帳子帳本。獨立於兩人核心；participant 與
-// Profile 解耦（profile_id nullable，認領後才填）。所有寫入走 Server Action，
-// 5 表 RLS enable 但無 policy = client 直連 deny。spec:
-// docs/superpowers/specs/2026-06-23-group-outing-design.md
+// Profile 解耦（profile_id nullable：v1.6.0 的朋友只有名字，成員由 server
+// 依 group.member_a/b 連結）。所有存取走 Server Action；5 表 RLS enable 且無
+// policy，並 REVOKE anon/authenticated = client 直連 deny。CHECK 與索引只寫在
+// drizzle/0066_outing_tables.sql。沒有 share_token／claim_token：匿名加入是
+// v1.7.0，到時再加。spec: docs/superpowers/specs/group-outing-design.md
 export const outings = pgTable('Outings', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   groupId: uuid('group_id').notNull().references(() => oikosGroups.id),
@@ -555,7 +557,6 @@ export const outings = pgTable('Outings', {
   createdBy: uuid('created_by').notNull().references(() => profiles.id),
   name: text('name').notNull(),
   currency: currencyEnum('currency').notNull(),
-  shareToken: text('share_token').notNull().unique(),
   status: outingStatusEnum('status').notNull().default('active'),
   startDate: date('start_date'),
   foldedAt: timestamp('folded_at', { withTimezone: true }),
@@ -564,16 +565,14 @@ export const outings = pgTable('Outings', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-// 出遊裡的「一個人」。臨時朋友只有 display_name；Futari 用戶 / 認領後填 profile_id。
-// claim_token 為此 slot 的操作 + 認領密鑰（存 cookie）。deactivated_at 標記中途退出
-// （不刪歷史 share）。
+// 出遊裡的「一個人」。朋友只有 display_name（profile_id 為 NULL）；帳本成員由
+// server 填 profile_id，同一出遊同一 profile 只能一列（partial unique index）。
+// deactivated_at 標記中途退出（不刪歷史 share）。
 export const outingParticipants = pgTable('OutingParticipants', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   outingId: uuid('outing_id').notNull().references(() => outings.id),
   displayName: text('display_name').notNull(),
   profileId: uuid('profile_id').references(() => profiles.id),
-  claimToken: text('claim_token').notNull().unique(),
-  claimedAt: timestamp('claimed_at', { withTimezone: true }),
   deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })

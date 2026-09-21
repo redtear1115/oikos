@@ -559,9 +559,6 @@ export const en: Translations = {
   },
 
   outing: {
-    shareLabel: 'Share link',
-    copyLink: 'Copy',
-    copied: 'Copied',
     participantsLabel: 'Participants',
     transfersLabel: 'Who pays whom',
     transferRow: '{from} → {to}',

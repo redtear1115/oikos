@@ -560,9 +560,6 @@ export const ja: Translations = {
   },
 
   outing: {
-    shareLabel: '共有リンク',
-    copyLink: 'コピー',
-    copied: 'コピーしました',
     participantsLabel: '参加者',
     transfersLabel: '誰が誰に払うか',
     transferRow: '{from} → {to}',

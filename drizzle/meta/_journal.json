@@ -456,6 +456,13 @@
       "when": 1782300000000,
       "tag": "0065_profile_avatar_hidden",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1782400000000,
+      "tag": "0066_outing_tables",
+      "breakpoints": true
     }
   ]
 }

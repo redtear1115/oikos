@@ -30,10 +30,10 @@ describe('outing queries', () => {
 
     const [o] = await db.insert(outings).values({
       groupId, epochId, createdBy: userId, name: '宜蘭', currency: 'twd',
-      shareToken: randomUUID(), status: 'active',
+      status: 'active',
     }).returning()
     await db.insert(outingParticipants).values({
-      outingId: o.id, displayName: '我', profileId: userId, claimToken: randomUUID(),
+      outingId: o.id, displayName: '我', profileId: userId,
     })
 
     const list = await listOutings(groupId, epochId)
@@ -56,12 +56,10 @@ describe('createOuting', () => {
     const outing = await createOuting({ name: '九份' })
     expect(outing.groupId).toBe(groupId)
     expect(outing.currency).toBe('twd')
-    expect(outing.shareToken).toMatch(/^[A-Za-z0-9_-]{16,}$/)
 
     const detail = await getOutingDetail(outing.id)
     const profileIds = detail!.participants.map((p) => p.profileId).sort()
     expect(profileIds).toEqual([userId, partnerId].sort())
-    expect(detail!.participants.every((p) => p.claimedAt !== null)).toBe(true)
   })
 
   it('rejects an empty name', async () => {
@@ -80,7 +78,6 @@ describe('addOutingParticipant', () => {
     const p = await addOutingParticipant({ outingId: outing.id, displayName: '阿傑' })
     expect(p.profileId).toBeNull()
     expect(p.displayName).toBe('阿傑')
-    expect(p.claimToken).toMatch(/^[A-Za-z0-9_-]{16,}$/)
   })
 
   it('rejects adding to an outing of another group', async () => {

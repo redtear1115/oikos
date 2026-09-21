@@ -7,7 +7,6 @@ import {
 import { splitEqual } from '@/lib/outing/split'
 import { and, eq, isNull, inArray } from 'drizzle-orm'
 import { requireViewerGroup, type ViewerGroup } from '@/lib/auth/viewer'
-import { generateShareToken, generateClaimToken } from '@/lib/outing/token'
 import { revalidatePath } from 'next/cache'
 
 type CurrencyCode = 'twd' | 'cny' | 'usd' | 'jpy'
@@ -47,7 +46,6 @@ export async function createOuting(input: CreateOutingInput) {
         createdBy: user.id,
         name,
         currency,
-        shareToken: generateShareToken(),
         status: 'active',
       })
       .returning()
@@ -58,8 +56,6 @@ export async function createOuting(input: CreateOutingInput) {
           outingId: outing.id,
           displayName: m.displayName,
           profileId: m.id,
-          claimToken: generateClaimToken(),
-          claimedAt: new Date(),
         })),
       )
     }
@@ -101,7 +97,6 @@ export async function addOutingParticipant(input: AddParticipantInput) {
       outingId: input.outingId,
       displayName,
       profileId: null,
-      claimToken: generateClaimToken(),
     })
     .returning()
 

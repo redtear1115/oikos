@@ -552,9 +552,6 @@ export const zhCN: Translations = {
   },
 
   outing: {
-    shareLabel: '分享链接',
-    copyLink: '复制',
-    copied: '已复制',
     participantsLabel: '参与者',
     transfersLabel: '谁付给谁',
     transferRow: '{from} → {to}',

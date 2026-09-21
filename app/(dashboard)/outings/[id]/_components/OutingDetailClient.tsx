@@ -20,7 +20,6 @@ export interface OutingDetailOuting {
   name: string
   currency: string
   status: 'active' | 'settling' | 'ended' | 'archived'
-  shareToken: string
 }
 
 interface Props {
@@ -60,8 +59,6 @@ export function OutingDetailClient({ outing, view, coupleNet, expenses, particip
       <SubpageHeader title={outing.name} backLabel={t.common.back} />
 
       <div className="px-4 pt-5 flex flex-col gap-5">
-        <ShareCard shareToken={outing.shareToken} label={to.shareLabel} copyLabel={to.copyLink} copiedLabel={to.copied} />
-
         {/* Participants + nets */}
         <Card>
           <SectionTitle>{to.participantsLabel}</SectionTitle>
@@ -205,36 +202,5 @@ function NetAmount({ net, currency }: { net: number; currency: string }) {
     >
       {positive ? '+' : '−'}{formatAmount(Math.abs(net), currency)}
     </span>
-  )
-}
-
-function ShareCard({ shareToken, label, copyLabel, copiedLabel }: { shareToken: string; label: string; copyLabel: string; copiedLabel: string }) {
-  const [copied, setCopied] = useState(false)
-  const path = `/outing/${shareToken}`
-  const handleCopy = async () => {
-    const url = typeof window !== 'undefined' ? window.location.origin + path : path
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* clipboard unavailable — no-op */
-    }
-  }
-  return (
-    <section className="rounded-card p-4 flex items-center justify-between gap-3" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
-      <div className="min-w-0">
-        <div className="text-sm font-medium mb-1" style={{ color: 'var(--ink-2)' }}>{label}</div>
-        <div className="text-xs truncate" style={{ color: 'var(--ink-3)' }}>{path}</div>
-      </div>
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="shrink-0 rounded-bubble px-4 text-sm font-medium"
-        style={{ height: 'var(--control-sm)', background: 'var(--surface)', border: '1px solid var(--ink-3)', color: 'var(--ink)' }}
-      >
-        {copied ? copiedLabel : copyLabel}
-      </button>
-    </section>
   )
 }
