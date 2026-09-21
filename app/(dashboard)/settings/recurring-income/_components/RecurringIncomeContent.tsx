@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { RuleListItem } from './RuleListItem'
+import { RuleListItem } from '@/app/(dashboard)/settings/recurring/_components/RuleListItem'
 import { DEFAULT_INCOME_PALETTE } from '@/lib/incomePalettes'
 
 // Sheet only mounts when the user taps to add / edit a rule — lazy-load to
@@ -52,6 +52,7 @@ export function RecurringIncomeContent({ rules, insuranceAssets }: Props) {
             {rules.map((r) => (
               <RuleListItem
                 key={r.id}
+                type="income"
                 rule={r}
                 onEdit={(rule) => setSheetState(rule)}
               />

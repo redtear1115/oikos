@@ -330,8 +330,8 @@ export function RecurringRuleSheet(props: Props) {
             {!isSolo && (
               isIncome ? (
                 <div
-                  className="flex items-center justify-center gap-2.5 text-sm"
-                  style={{ marginTop: 18, color: 'var(--ink-2)' }}
+                  className="mt-[22px] flex items-center justify-center gap-2.5 text-sm"
+                  style={{ color: 'var(--ink-2)' }}
                 >
                   <span id={recipientLabelId}>{t.recurringIncome.sheet.recipientPrompt}</span>
                   {/* Radio semantics + 44px ::before tap area mirror PayerToggle

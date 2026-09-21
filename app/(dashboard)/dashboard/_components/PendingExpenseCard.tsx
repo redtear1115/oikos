@@ -19,7 +19,7 @@ function splitLabel(split: SplitType, t: ReturnType<typeof useTranslations>): st
   if (split === 'all_theirs') return t.splitType.allPartners
   // #1243 — a weighted card used to fall through to 「平分」, so the one card
   // whose split is not even was the one labelled even. Mirrors the rule list
-  // (settings/recurring-expense/_components/RuleListItem.tsx).
+  // (settings/recurring/_components/RuleListItem.tsx).
   if (split === 'weighted') return t.splitType.weighted
   return t.splitType.even
 }

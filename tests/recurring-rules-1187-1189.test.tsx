@@ -38,8 +38,7 @@ vi.mock('@/app/(dashboard)/dashboard/_components/AssetLinkField', () => ({
 }))
 
 import { ruleNextDateText } from '@/lib/recurringNextDate'
-import { RuleListItem as IncomeRuleListItem } from '@/app/(dashboard)/settings/recurring-income/_components/RuleListItem'
-import { RuleListItem as ExpenseRuleListItem } from '@/app/(dashboard)/settings/recurring-expense/_components/RuleListItem'
+import { RuleListItem } from '@/app/(dashboard)/settings/recurring/_components/RuleListItem'
 import { IncomeChip } from '@/app/(dashboard)/dashboard/_components/IncomeChip'
 import { RecurringRuleSheet } from '@/app/(dashboard)/_components/RecurringRuleSheet'
 import { getIncomeCategory } from '@/lib/incomeCategories'
@@ -98,15 +97,36 @@ describe('ruleNextDateText', () => {
 
 describe('recurring rule list rows', () => {
   it('income row: English category name and next run date', () => {
-    render(<En><ul><IncomeRuleListItem rule={incomeRule} onEdit={() => {}} /></ul></En>)
+    render(<En><ul><RuleListItem type="income" rule={incomeRule} onEdit={() => {}} /></ul></En>)
     expect(screen.getByText('Salary')).toBeInTheDocument()
     expect(screen.queryByText('薪水')).toBeNull()
     expect(screen.getByText('Next October 5, 2026')).toBeInTheDocument()
   })
 
   it('expense row: next run date', () => {
-    render(<En><ul><ExpenseRuleListItem rule={expenseRule} onEdit={() => {}} /></ul></En>)
+    render(<En><ul><RuleListItem type="expense" rule={expenseRule} onEdit={() => {}} /></ul></En>)
     expect(screen.getByText('Next October 1, 2026')).toBeInTheDocument()
+  })
+
+  // #1268 — one shared row: expense keeps its split pill, income has none
+  // (a recipient is a single choice, not a split, #1187).
+  it('expense row shows payer and split pill', () => {
+    render(<En><ul><RuleListItem type="expense" rule={expenseRule} onEdit={() => {}} /></ul></En>)
+    expect(screen.getByText(en.common.you)).toBeInTheDocument()
+    expect(screen.getByText(en.splitType.even)).toBeInTheDocument()
+  })
+
+  it('income row shows recipient without a split pill', () => {
+    render(<En><ul><RuleListItem type="income" rule={{ ...incomeRule, recipientId: 'u-2' }} onEdit={() => {}} /></ul></En>)
+    expect(screen.getByText('Sam')).toBeInTheDocument()
+    expect(screen.queryByText(en.splitType.even)).toBeNull()
+  })
+
+  it('passes the row to onEdit', () => {
+    const onEdit = vi.fn()
+    render(<En><ul><RuleListItem type="income" rule={incomeRule} onEdit={onEdit} /></ul></En>)
+    act(() => screen.getByRole('button').click())
+    expect(onEdit).toHaveBeenCalledWith(incomeRule)
   })
 })
 
@@ -150,6 +170,14 @@ describe('RecurringRuleSheet (income)', () => {
     act(() => radios[1].click())
     expect(radios[0]).toHaveAttribute('aria-checked', 'false')
     expect(radios[1]).toHaveAttribute('aria-checked', 'true')
+  })
+
+  // #1268 — same top spacing as PayerToggle (mt-[22px]); was marginTop: 18.
+  it('recipient segment row uses PayerToggle spacing', () => {
+    renderSheet()
+    const row = screen.getByRole('radiogroup', { name: en.recurringIncome.sheet.recipientPrompt }).parentElement!
+    expect(row).toHaveClass('mt-[22px]')
+    expect(row.style.marginTop).toBe('')
   })
 
   it('interval and category buttons expose aria-pressed; chips are English', () => {
