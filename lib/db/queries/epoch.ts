@@ -131,8 +131,9 @@ export async function getActiveEpochWindow(
  * ending it folds the couple's share into GroupBalance as those integers.
  * Change the base currency underneath it and the fold writes NT$1500 as ¥1500,
  * with nothing on screen to say so. Ended outings have already folded and no
- * longer care; endOuting also refuses on a mismatch, for the race this check
- * cannot close.
+ * longer care. setBaseCurrency runs this check under the group-row lock that
+ * createOuting also takes, so an outing cannot be opened in a base that is
+ * about to change; endOuting's refusal on a mismatch is only a defensive guard.
  */
 export async function currentEpochHasRecords(
   group: Pick<typeof oikosGroups.$inferSelect, 'id' | 'currentEpochStartedAt'>,
