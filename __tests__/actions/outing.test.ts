@@ -15,6 +15,12 @@ import { loadEnvLocal, seedGroup } from '../outing/_setup'
 
 loadEnvLocal()
 
+// Real round trips to the remote dev database: a single test here makes dozens
+// of sequential queries (seed, several actions, read-backs), and the lock tests
+// poll pg_stat_activity. Vitest's 5s default times them out on network latency
+// alone — the failure looks like "Test timed out", never an assertion.
+vi.setConfig({ testTimeout: 60_000 })
+
 let mockUserId = ''
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
