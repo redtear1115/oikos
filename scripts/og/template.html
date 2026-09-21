@@ -182,11 +182,15 @@
     const layout = params.get('layout') || 'wide';
     const lang = params.get('lang') || 'zh';
 
-    // BCP-47 tag for <html lang>, so Simplified text gets SC glyph shapes
-    // via :lang()-aware font matching instead of inheriting the file's
-    // hard-coded zh-TW default.
-    const HTML_LANG = { zh: 'zh-TW', 'zh-CN': 'zh-CN', en: 'en', ja: 'ja' };
-    document.documentElement.lang = HTML_LANG[lang] || 'zh-TW';
+    // Only the zh-CN target gets its own <html lang>, so Simplified text
+    // picks SC glyph shapes via :lang()-aware font matching. zh / en / ja
+    // keep the file's baked-in lang="zh-TW" exactly as at 62ff11c — setting
+    // lang="ja" for the ja target changed which system font its .sub-text
+    // fallback resolved to (Songti TC → Hiragino Mincho ProN), a real
+    // regression caught by @1400's verifier, not just render noise.
+    if (lang === 'zh-CN') {
+      document.documentElement.lang = 'zh-CN';
+    }
 
     document.body.style.setProperty('--w', w + 'px');
     document.body.style.setProperty('--h', h + 'px');
