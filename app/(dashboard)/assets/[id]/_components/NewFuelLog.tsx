@@ -241,15 +241,15 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           className="mx-4 mt-1 p-5 rounded-tile text-center shrink-0"
           style={{ background: 'linear-gradient(180deg, var(--bg) 0%, var(--bg-page) 100%)' }}
         >
-          <div className="text-micro text-[var(--ink-3)] tracking-[1.4px] font-mono uppercase">{tf.econLabel}</div>
+          <div className="text-xs text-[var(--ink-3)] tracking-[1.4px] font-mono uppercase">{tf.econLabel}</div>
           <div className="mt-1.5 inline-flex items-baseline gap-1.5">
             <span
               className="text-amount-lg font-medium text-[var(--ink)] leading-none tabular-nums"
               style={{ letterSpacing: '-1.5px' }}
             >{econ}</span>
-            <span className="text-label text-[var(--ink-3)] font-medium">km/L</span>
+            <span className="text-sm text-[var(--ink-3)] font-medium">km/L</span>
           </div>
-          <div className="mt-1.5 text-micro text-[var(--ink-3)] font-mono">
+          <div className="mt-1.5 text-xs text-[var(--ink-3)] font-mono">
             {lastOdometer === null
               ? tf.firstRefuelHint
               : dist !== null && dist > 0
