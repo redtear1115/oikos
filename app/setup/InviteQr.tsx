@@ -8,7 +8,8 @@ import { track } from '@/lib/analytics/track'
  * How long the QR stays visible after the user taps "reveal", in ms.
  *
  * Security rationale (issue #1017): the invite token embedded in the QR URL
- * is a 7-day single-use entry ticket, and there is currently no way for the
+ * is a single-use entry ticket (valid for 24 h, `INVITE_TTL_MS`
+ * in `lib/invite.ts`), and there is currently no way for the
  * group owner to remove a member who claims the slot (`leaveGroup` is
  * `only_member_b_can_leave` — see `actions/membership.ts`). Leaving the QR
  * on screen indefinitely would turn it into a standing public display of
