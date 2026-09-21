@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/supabase/server'
 import { getAssetById, getAssetSummary, listAssetsForGroup, listTransactionsPagedForAsset } from '@/lib/db/queries/asset'
 import type { AssetWithCar } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { nonMemberPinCutoff } from '@/lib/pinnedChapterScope'
 import { canAccessGuardian } from '@/lib/guardian'
 import { listFuelLogsWithPrev, fuelStatsForAsset } from '@/lib/db/queries/fuelLog'
 import { computeAvgEcon } from '@/lib/fuelEcon'
@@ -126,7 +127,14 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
 
-  const asset = await getAssetById(id, group.id)
+  // A viewer on a closed chapter of a group they are no longer in only reaches
+  // assets (and rules) created before that chapter closed; anything newer is
+  // not found, by URL too. null → no cut-off (current members, open chapter).
+  // Known limit: an older asset still shows its current field values — see
+  // lib/pinnedChapterScope.ts.
+  const createdBefore = nonMemberPinCutoff(context, user.id)
+
+  const asset = await getAssetById(id, group.id, createdBefore)
   if (!asset || asset.deletedAt) notFound()
 
   // #221/#227 — Guardian beta gate. Insurance asset detail pages live behind
@@ -138,7 +146,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     return <InsuranceGatedClient />
   }
 
-  const allAssetsData = await listAssetsForGroup(group.id)
+  const allAssetsData = await listAssetsForGroup(group.id, createdBefore)
   const today = new Date()
   const t = await getTranslations()
 
@@ -366,7 +374,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         getInsuranceReturnTotalsByCategory(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, epochWindow),
         listInsurancePaymentsPaged(asset.id, group.id, null, PAGE_SIZE, epochWindow),
         listInsuranceReturnsPaged(asset.id, group.id, SAVINGS_RETURN_CATEGORIES, null, PAGE_SIZE, epochWindow),
-        listRulesForAsset(group.id, asset.id),
+        listRulesForAsset(group.id, asset.id, createdBefore),
       ])
 
       // Plain-object shape for the client component (Map isn't serialisable
@@ -449,6 +457,11 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     fuelStatsForAsset(id, epochWindow),
     getLinkedInsurancesForVehicle(id),
   ])
+  // Same cut-off for the car's linked-insurance chips: keep only insurances
+  // that are in the (already cut-off) asset list.
+  const visibleLinkedInsurances = createdBefore
+    ? linkedInsurances.filter((ins) => allAssetsData.some((a) => a.id === ins.id))
+    : linkedInsurances
 
   const initialTxns = serializeTxns(txnRows)
 
@@ -493,7 +506,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     <AssetDetailClient
       assetId={asset.id}
       notes={asset.notes ?? null}
-      linkedInsurances={linkedInsurances}
+      linkedInsurances={visibleLinkedInsurances}
       siblings={buildSiblings(allAssetsData, asset.id, today)}
       assetSheetInitial={{
         id: asset.id,

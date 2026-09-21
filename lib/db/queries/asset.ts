@@ -1,7 +1,7 @@
 import { db } from '@/lib/db/client'
 import { alias } from 'drizzle-orm/pg-core'
 import { assets, carDetails, childDetails, insuranceDetails, profiles } from '@/lib/db/schema'
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNull, lt, sql } from 'drizzle-orm'
 import { type FeedRow, type FeedKind, type TxnCursor, rowToFeedRow } from './transactions'
 import type { EpochWindow } from './epoch'
 import { andClause, cursorClause, epochClause } from './_predicates'
@@ -75,8 +75,16 @@ export interface AssetWithCar {
 /**
  * List all non-deleted assets for a group with their car details joined.
  * Non-car assets have null car detail fields.
+ *
+ * `createdBefore` (optional) keeps only assets created strictly before that
+ * instant — set by the /assets read paths when the viewer is on a closed
+ * chapter of a group they are no longer in (see lib/pinnedChapterScope.ts).
+ * Omitted / null → no cut-off.
  */
-export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[]> {
+export async function listAssetsForGroup(
+  groupId: string,
+  createdBefore: Date | null = null,
+): Promise<AssetWithCar[]> {
   const rows = await db
     .select({
       id: assets.id,
@@ -132,6 +140,7 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
     .where(and(
       eq(assets.groupId, groupId),
       isNull(assets.deletedAt),
+      createdBefore ? lt(assets.createdAt, createdBefore) : undefined,
     ))
     .orderBy(sql`${assets.createdAt} DESC`)
   return rows as AssetWithCar[]
@@ -141,8 +150,15 @@ export async function listAssetsForGroup(groupId: string): Promise<AssetWithCar[
  * Get a single asset by id, **including soft-deleted** ones (so the AddSheet
  * can show "(已刪除)" labels on zombie asset references). Returns null if not
  * found or wrong group.
+ *
+ * `createdBefore` (optional): same cut-off as `listAssetsForGroup` — an asset
+ * created at or after it resolves to null.
  */
-export async function getAssetById(id: string, groupId: string): Promise<AssetWithCar | null> {
+export async function getAssetById(
+  id: string,
+  groupId: string,
+  createdBefore: Date | null = null,
+): Promise<AssetWithCar | null> {
   const rows = await db
     .select({
       id: assets.id,
@@ -200,7 +216,11 @@ export async function getAssetById(id: string, groupId: string): Promise<AssetWi
     .leftJoin(policyHolderProfile, eq(policyHolderProfile.id, insuranceDetails.policyHolderUserId))
     .leftJoin(insuredUserProfile, eq(insuredUserProfile.id, insuranceDetails.insuredUserId))
     .leftJoin(insuredChildAsset, eq(insuredChildAsset.id, insuranceDetails.insuredChildId))
-    .where(and(eq(assets.id, id), eq(assets.groupId, groupId)))
+    .where(and(
+      eq(assets.id, id),
+      eq(assets.groupId, groupId),
+      createdBefore ? lt(assets.createdAt, createdBefore) : undefined,
+    ))
     .limit(1)
   return (rows[0] as AssetWithCar) ?? null
 }
