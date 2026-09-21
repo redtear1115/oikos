@@ -139,11 +139,10 @@ export function SheetShell({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className="mt-6 w-full h-12 rounded-bubble border-0 font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default"
+          className="mt-6 w-full h-12 rounded-bubble border-0 font-medium text-sm tracking-[0.3px] cursor-pointer disabled:cursor-default disabled:opacity-50"
           style={{
             background: canSave ? bottomBg : 'var(--ink-3)',
             color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
-            opacity: canSave ? 1 : 0.5,
           }}
         >
           {pending ? t.common.saving : bottomSaveLabel}

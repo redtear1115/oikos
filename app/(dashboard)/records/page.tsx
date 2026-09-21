@@ -174,6 +174,7 @@ export default async function RecordsPage({
         <MonthlyStatsSection
           userId={user.id}
           groupId={group.id}
+          baseCurrency={group.baseCurrency}
           epochWindow={epochWindow}
           monthKey={monthKey}
           view={view}

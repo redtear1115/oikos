@@ -93,7 +93,7 @@ describe('AssetHero amount split (#1358)', () => {
 })
 
 describe('BalanceHero amount split (#1358)', () => {
-  it('renders NT$ + digits for the expanded balance amount', () => {
+  it('renders NT$ + digits for the expanded balance amount (default twd)', () => {
     render(
       withProviders(
         <BalanceHero
@@ -111,15 +111,48 @@ describe('BalanceHero amount split (#1358)', () => {
     expect(screen.getByText('NT$')).toBeInTheDocument()
     expect(screen.getByText('98,765')).toBeInTheDocument()
   })
+
+  it('honours a non-TWD baseCurrency prop (#1358 A2 — jpy)', () => {
+    render(
+      withProviders(
+        <BalanceHero
+          rawBalance={98765}
+          initialHeroCollapsed={false}
+          initialIncludePending={false}
+          mode="expense"
+          incomeMonthTotal={0}
+          incomeMonthCount={0}
+          recentIncomeLabel={null}
+          baseCurrency="jpy"
+        />,
+      ),
+    )
+
+    expect(screen.queryByText('NT$')).toBeNull()
+    expect(screen.getByText('¥')).toBeInTheDocument()
+    expect(screen.getByText('98,765')).toBeInTheDocument()
+  })
 })
 
 describe('SoloMonthHero amount split (#1358)', () => {
-  it('renders NT$ + digits for the month total', () => {
+  it('renders NT$ + digits for the month total (default twd)', () => {
     render(
       withProviders(<SoloMonthHero monthKey="2026-03" total={45000} count={12} />),
     )
 
     expect(screen.getByText('NT$')).toBeInTheDocument()
     expect(screen.getByText('45,000')).toBeInTheDocument()
+  })
+
+  it('honours a non-TWD baseCurrency prop (#1358 A2 — usd cents)', () => {
+    render(
+      withProviders(
+        <SoloMonthHero monthKey="2026-03" total={4500} count={12} baseCurrency="usd" />,
+      ),
+    )
+
+    expect(screen.queryByText('NT$')).toBeNull()
+    expect(screen.getByText('$')).toBeInTheDocument()
+    expect(screen.getByText('45.00')).toBeInTheDocument()
   })
 })

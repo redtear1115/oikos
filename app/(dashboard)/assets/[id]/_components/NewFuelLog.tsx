@@ -349,11 +349,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="w-full h-12 rounded-2xl font-medium text-base tracking-wide transition-opacity bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
-              style={{
-                opacity: canSubmit ? 1 : 0.45,
-                cursor: canSubmit ? 'pointer' : 'default',
-              }}
+              className="w-full h-12 rounded-2xl font-medium text-base tracking-wide transition-opacity cursor-pointer disabled:cursor-default disabled:opacity-50 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
             >
               {pending ? t.common.saving : mode === 'edit' ? t.common.update : tf.submit}
             </button>

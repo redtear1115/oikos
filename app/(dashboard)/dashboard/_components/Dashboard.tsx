@@ -341,6 +341,7 @@ export function Dashboard({
             monthKey={expenseMonthKey}
             total={expenseMonthTotal}
             count={expenseMonthCount}
+            baseCurrency={baseCurrency}
           />
         )
       ) : (
@@ -354,6 +355,7 @@ export function Dashboard({
           incomeMonthTotal={incomeMonthTotal}
           incomeMonthCount={incomeMonthCount}
           recentIncomeLabel={recentIncomeLabel}
+          baseCurrency={baseCurrency}
         />
       )}
       {/* Always-there entries to 月回顧 / 旅行 (#1364). Not on a pinned past

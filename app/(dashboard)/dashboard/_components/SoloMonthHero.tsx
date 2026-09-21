@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations, useLocale } from '@/lib/i18n/client'
-import { formatAmountParts } from '@/lib/currency'
+import { formatAmountParts, type CurrencyCode } from '@/lib/currency'
 
 interface Props {
   /** 'YYYY-MM' — the same month key the total and count were summed over, so
@@ -11,6 +11,8 @@ interface Props {
   total: number
   /** How many rows that sum came from. */
   count: number
+  /** Group's base currency (default 'twd'). */
+  baseCurrency?: CurrencyCode
 }
 
 /**
@@ -27,7 +29,7 @@ interface Props {
  * Duo mode keeps `BalanceHero`; income mode uses `BalanceHero`'s income branch
  * in both, since that branch never depended on there being a partner.
  */
-export function SoloMonthHero({ monthKey, total, count }: Props) {
+export function SoloMonthHero({ monthKey, total, count, baseCurrency = 'twd' }: Props) {
   const t = useTranslations()
   const locale = useLocale()
 
@@ -36,7 +38,7 @@ export function SoloMonthHero({ monthKey, total, count }: Props) {
   const [year, month] = monthKey.split('-').map(Number)
   const monthName = new Intl.DateTimeFormat(locale, { month: 'long' })
     .format(new Date(year, month - 1, 1))
-  const totalParts = formatAmountParts(total, 'twd')
+  const totalParts = formatAmountParts(total, baseCurrency)
 
   return (
     <div className="px-5 pt-6 pb-5">

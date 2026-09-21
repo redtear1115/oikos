@@ -63,7 +63,9 @@ export function HeaderOverflowMenu({ ariaLabel, items }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
-        className="oik-btn h-8 w-8 flex items-center justify-center rounded-full border-0 cursor-pointer bg-transparent text-ink-2"
+        // #1174 — 32px visual, 44px hit area via a transparent ::before
+        // (same pattern as NewFuelLog's old header buttons this replaces).
+        className="oik-btn relative h-8 w-8 flex items-center justify-center rounded-full border-0 cursor-pointer bg-transparent text-ink-2 before:absolute before:-inset-1.5 before:content-['']"
       >
         <span aria-hidden="true" className="text-base leading-none tracking-[1px]">···</span>
       </button>
