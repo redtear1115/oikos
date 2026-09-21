@@ -15,15 +15,23 @@
  * bug.
  *
  * The fix: the server computes today in the *device's* zone (reported by the
- * client in the `tz` cookie, see `syncTimeZoneCookie`) and hands it down via
+ * client in the `futari_tz` cookie, see `syncTimeZoneCookie`) and hands it down via
  * `TodayProvider`; `useToday()` uses that value while hydrating and the
  * client's own clock afterwards.
  *
  * Safe to import from both server and client modules.
  */
 
-/** Device IANA zone, written by the client, read by the server. */
-export const TZ_COOKIE = 'tz'
+/**
+ * Device IANA zone, written by the client, read by the server.
+ *
+ * Prefixed on purpose: southern-light.dev hosts sibling sites, and a bare
+ * `tz` set by one of them with `Domain=.southern-light.dev` would arrive
+ * under our name — and a *valid* foreign zone sorted ahead of ours would win
+ * the first-valid rule on both sides. Renamed from `tz` before it ever
+ * reached prod (#1360).
+ */
+export const TZ_COOKIE = 'futari_tz'
 
 /**
  * Used when there's no (valid) cookie yet: the first request from a device.
@@ -68,7 +76,7 @@ export function deviceTimeZone(): string | null {
 }
 
 /**
- * The first *valid* `tz` value in a `document.cookie` string, or null.
+ * The first *valid* `futari_tz` value in a `document.cookie` string, or null.
  *
  * Invalid entries — undecodable (`%E0%A4%A`), or not a zone Intl knows —
  * are skipped as if absent. There can be more than one: southern-light.dev
@@ -95,7 +103,7 @@ export function readTimeZoneCookie(cookieHeader: string): string | null {
 }
 
 /**
- * The zone a raw Cookie header resolves to: the first valid `tz` value, else
+ * The zone a raw Cookie header resolves to: the first valid `futari_tz` value, else
  * Asia/Taipei. The server calls this on the request's `Cookie` header, and it
  * is the same `readTimeZoneCookie` the client runs on `document.cookie` — one
  * rule on both sides by construction. Browsers list cookies in the same order
@@ -106,7 +114,7 @@ export function timeZoneFromCookieHeader(cookieHeader: string | null | undefined
 }
 
 /**
- * Write the device zone into the `tz` cookie when it differs from what's
+ * Write the device zone into the `futari_tz` cookie when it differs from what's
  * stored. Client-only; no-op on the server. Returns whether it wrote.
  *
  * `max-age` matters: without it this is a session cookie, and a native

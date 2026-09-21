@@ -1,9 +1,9 @@
-// #1360 follow-up — duplicate `tz` cookies. southern-light.dev hosts sibling
+// #1360 follow-up — duplicate `futari_tz` cookies. southern-light.dev hosts sibling
 // sites, so a `Domain=.southern-light.dev` cookie can arrive next to ours
 // under the same name.
 //
-// The client takes the first *valid* `tz` in document.cookie. #1363's server
-// used `cookies().getAll('tz')`, assuming it would see every entry — but
+// The client takes the first *valid* `futari_tz` in document.cookie. #1363's server
+// used `cookies().getAll('futari_tz')`, assuming it would see every entry — but
 // Next's RequestCookies keys by name, a later duplicate overwrites an earlier
 // one, and the server's real rule was "the last decodable value". Now the
 // server parses the raw Cookie header with the client's own function.
@@ -36,14 +36,17 @@ async function serverRule(header: string | null): Promise<string> {
   return getTimeZone()
 }
 
-describe('duplicate tz cookies: server and client agree (#1360)', () => {
+describe('duplicate futari_tz cookies: server and client agree (#1360)', () => {
   it.each([
-    ['two valid zones → the first', 'tz=Europe%2FParis; tz=Asia%2FTokyo', 'Europe/Paris'],
-    ['valid then junk → the valid one', 'tz=Asia%2FTokyo; tz=junk', 'Asia/Tokyo'],
-    ['undecodable then valid → the valid one', 'tz=%E0%A4%A; tz=Asia%2FTokyo', 'Asia/Tokyo'],
-    ['junk only → Asia/Taipei', 'tz=junk', 'Asia/Taipei'],
-    ['among other cookies', 'lang=en; tz=America%2FNew_York; sb=x', 'America/New_York'],
+    ['two valid zones → the first', 'futari_tz=Europe%2FParis; futari_tz=Asia%2FTokyo', 'Europe/Paris'],
+    ['valid then junk → the valid one', 'futari_tz=Asia%2FTokyo; futari_tz=junk', 'Asia/Tokyo'],
+    ['undecodable then valid → the valid one', 'futari_tz=%E0%A4%A; futari_tz=Asia%2FTokyo', 'Asia/Tokyo'],
+    ['junk only → Asia/Taipei', 'futari_tz=junk', 'Asia/Taipei'],
+    ['among other cookies', 'lang=en; futari_tz=America%2FNew_York; sb=x', 'America/New_York'],
     ['no tz → Asia/Taipei', 'lang=en', 'Asia/Taipei'],
+    // A sibling site's bare `tz` (Domain=.southern-light.dev) is not ours — the
+    // reason for the futari_ prefix — even when it is a valid zone sorted first.
+    ['a sibling site\'s bare tz is ignored', 'tz=Europe%2FParis; futari_tz=Asia%2FTokyo', 'Asia/Tokyo'],
   ])('%s', async (_name, header, expected) => {
     expect(clientRule(header)).toBe(expected)
     expect(await serverRule(header)).toBe(expected)
@@ -58,12 +61,12 @@ describe('duplicate tz cookies: server and client agree (#1360)', () => {
   // record of the real RequestCookies behaviour, so the next person doesn't
   // "simplify" back to cookies().getAll().
   it('the real RequestCookies collapses duplicates to the last value', () => {
-    const jar = new RequestCookies(new Headers({ cookie: 'tz=Europe%2FParis; tz=Asia%2FTokyo' }))
-    expect(jar.getAll('tz').map(c => c.value)).toEqual(['Asia/Tokyo'])
+    const jar = new RequestCookies(new Headers({ cookie: 'futari_tz=Europe%2FParis; futari_tz=Asia%2FTokyo' }))
+    expect(jar.getAll('futari_tz').map(c => c.value)).toEqual(['Asia/Tokyo'])
     // …which disagrees with the client's first-valid rule:
-    expect(clientRule('tz=Europe%2FParis; tz=Asia%2FTokyo')).toBe('Europe/Paris')
+    expect(clientRule('futari_tz=Europe%2FParis; futari_tz=Asia%2FTokyo')).toBe('Europe/Paris')
 
-    const junkLast = new RequestCookies(new Headers({ cookie: 'tz=Asia%2FTokyo; tz=junk' }))
-    expect(junkLast.getAll('tz').map(c => c.value)).toEqual(['junk'])
+    const junkLast = new RequestCookies(new Headers({ cookie: 'futari_tz=Asia%2FTokyo; futari_tz=junk' }))
+    expect(junkLast.getAll('futari_tz').map(c => c.value)).toEqual(['junk'])
   })
 })

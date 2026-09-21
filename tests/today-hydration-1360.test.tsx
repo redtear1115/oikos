@@ -30,7 +30,7 @@ const originalTZ = process.env.TZ
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(INSTANT)
-  document.cookie = 'tz=; path=/; max-age=0'
+  document.cookie = 'futari_tz=; path=/; max-age=0'
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -103,12 +103,12 @@ describe('hydrating "today" across zones (#1360)', () => {
     expect(r.finalText).toBe('19')
   })
 
-  it('mounts with a malformed tz cookie: no uncaught error, cookie rewritten to the device zone', async () => {
+  it('mounts with a malformed futari_tz cookie: no uncaught error, cookie rewritten to the device zone', async () => {
     // A sibling site on .southern-light.dev could plausibly leave this. Before
     // the fix, decodeURIComponent threw URIError in TodayProvider's effect and
     // the dashboard fell to the global error page on every load.
     process.env.TZ = 'Asia/Taipei'
-    document.cookie = 'tz=%E0%A4%A; path=/'
+    document.cookie = 'futari_tz=%E0%A4%A; path=/'
     const container = document.createElement('div')
     document.body.appendChild(container)
     await expect(
@@ -117,12 +117,12 @@ describe('hydrating "today" across zones (#1360)', () => {
       }),
     ).resolves.not.toThrow()
     expect(container.querySelector('[data-testid="days"]')?.textContent).toBe('20')
-    expect(document.cookie).toContain('tz=Asia%2FTaipei')
+    expect(document.cookie).toContain('futari_tz=Asia%2FTaipei')
     expect(document.cookie).not.toContain('%E0%A4%A')
   })
 
-  it('writes the device zone into the tz cookie after hydration', async () => {
+  it('writes the device zone into the futari_tz cookie after hydration', async () => {
     await ssrThenHydrate(<Fixed />, { serverTZ: 'UTC', deviceTZ: 'Asia/Taipei', cookieTZ: 'Asia/Taipei' })
-    expect(document.cookie).toContain('tz=Asia%2FTaipei')
+    expect(document.cookie).toContain('futari_tz=Asia%2FTaipei')
   })
 })

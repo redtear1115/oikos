@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import { timeZoneFromCookieHeader, todayYMDIn } from './today'
 
 /**
- * The device's IANA zone from the `tz` cookie (#1360), or Asia/Taipei when
+ * The device's IANA zone from the `futari_tz` cookie (#1360), or Asia/Taipei when
  * the cookie is missing or not a zone Intl accepts.
  *
  * The cookie is client-controlled. Its value is only ever passed to the
@@ -17,7 +17,7 @@ export const getTimeZone = cache(async (): Promise<string> => {
   // The raw header, not `cookies()`: a sibling site's
   // `Domain=.southern-light.dev` cookie can share the name, and Next's
   // RequestCookies keys by name — a later duplicate overwrites an earlier
-  // one, so `getAll('tz')` returns at most one entry, the *last* one. The
+  // one, so `getAll('futari_tz')` returns at most one entry, the *last* one. The
   // client takes the *first valid* one; parsing the header with the client's
   // own function is what makes the two agree.
   //
