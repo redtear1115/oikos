@@ -10,12 +10,6 @@ Futari (codebase: Oikos) is a shared ledger for two people. If you find a securi
 
 Use GitHub private vulnerability reporting: open this repository's **Security** tab and choose **Report a vulnerability**. Only the maintainers can see the report.
 
-<!-- TODO(user): GitHub private vulnerability reporting is currently DISABLED on this repo
-     (`gh api repos/redtear1115/oikos/private-vulnerability-reporting` → {"enabled":false}).
-     Enable it under Settings → Code security → Private vulnerability reporting before merging,
-     or the button above will not exist. Also decide whether to list a security contact email
-     here; none has been added on purpose. -->
-
 請不要：
 
 - 開公開 issue、PR 或討論串描述漏洞；
