@@ -53,7 +53,7 @@ export function FuelRow({ fuelLog, amount, onClick }: FuelRowProps) {
         <div className="flex items-baseline gap-1.5">
           <span className="text-sm text-[var(--ink)] font-medium">{t.assetDetail.refuel}</span>
           {econ !== null ? (
-            <span className="text-micro text-[var(--ink-3)] font-mono bg-[var(--bg-page)] px-1.5 py-px rounded">
+            <span className="text-xs text-[var(--ink-3)] font-mono bg-[var(--bg-page)] px-1.5 py-px rounded">
               {econ.toFixed(1)} km/L
             </span>
           ) : (

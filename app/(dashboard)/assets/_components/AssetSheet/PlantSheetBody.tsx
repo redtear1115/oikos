@@ -130,30 +130,29 @@ export function PlantSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             {id => (
               <TextInput id={id} value={cost} onChange={e => setCost(e.target.value)}
                 type="number" inputMode="numeric" placeholder={ts.plant.costPlaceholder}
-                rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>} />
+                rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
             )}
           </Field>
         </div>
       </div>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.plant.sectionCare}</div>
-        <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+        <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">{ts.plant.sectionCare}</div>
+        <div className="flex-1 h-px bg-hairline" />
       </div>
 
       <Field label={ts.plant.waterEvery}>
         <div className="flex gap-1.5">
           {[2, 3, 7, 14, 30].map(d => (
             <button key={d} type="button" onClick={() => setWaterEvery(d)}
-              className="relative flex-1 h-10 rounded-chip text-sm font-medium before:absolute before:-inset-y-0.5 before:inset-x-0 before:content-['']"
+              className="relative flex-1 h-10 rounded-chip text-sm font-medium before:absolute before:-inset-y-0.5 before:inset-x-0 before:content-[''] font-numeric"
               style={{
                 border: waterEvery === d ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: waterEvery === d ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: waterEvery === d ? 'var(--ink)' : 'var(--ink-2)',
-                fontFamily: 'var(--font-numeric)',
               }}>{d}</button>
           ))}
-          <span className="self-center text-xs ml-1" style={{ color: 'var(--ink-3)' }}>{ts.plant.waterEverySuffix}</span>
+          <span className="self-center text-xs ml-1 text-ink-3">{ts.plant.waterEverySuffix}</span>
         </div>
       </Field>
 

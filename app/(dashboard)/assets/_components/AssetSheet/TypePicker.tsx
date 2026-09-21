@@ -51,7 +51,7 @@ export function TypePicker({ value, onChange }: Props) {
 
   return (
     <div className="mb-4">
-      <div className="text-xs mb-2 tracking-wide" style={{ color: 'var(--ink-3)' }}>{ts.type.label}</div>
+      <div className="text-xs mb-2 tracking-wide text-ink-3">{ts.type.label}</div>
       <div className="grid grid-cols-5 gap-2">
         {primaryOptions.map(opt => {
           const sel = value === opt.value
@@ -77,10 +77,8 @@ export function TypePicker({ value, onChange }: Props) {
           type="button"
           onClick={() => setMoreOpen(v => !v)}
           aria-expanded={showSecondaryRow}
-          className="flex flex-col items-center gap-1 py-3 rounded-bubble cursor-pointer"
+          className="flex flex-col items-center gap-1 py-3 rounded-bubble cursor-pointer bg-surface text-ink-2"
           style={{
-            background: 'var(--surface)',
-            color: 'var(--ink-2)',
             border: showSecondaryRow ? '1px solid var(--ink)' : '1px solid transparent',
           }}
         >

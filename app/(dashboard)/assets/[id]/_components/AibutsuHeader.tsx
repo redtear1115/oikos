@@ -45,9 +45,8 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
     <div
       role="tablist"
       aria-label={t.assetDetail.siblingRailAriaLabel}
-      className="flex gap-2 pb-0.5 mt-3.5 -mx-4 px-4"
+      className="flex gap-2 pb-0.5 mt-3.5 -mx-4 px-4 overflow-x-auto"
       style={{
-        overflowX: 'auto',
         scrollSnapType: 'x proximity',
         msOverflowStyle: 'none',
         scrollbarWidth: 'none',
@@ -63,9 +62,8 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             role="tab"
             aria-selected={isCurrent}
             onClick={() => router.push(`/assets/${s.id}`)}
-            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pl-2 pr-3 py-1.5 rounded-full"
+            className="flex items-center gap-1.5 shrink-0 border-0 cursor-pointer transition-opacity pl-2 pr-3 py-1.5 rounded-full h-9"
             style={{
-              height: 36,
               background: isCurrent ? 'var(--ink)' : 'rgba(255,255,255,0.55)',
               border: isCurrent ? 'none' : '1px solid rgba(58,36,25,0.08)',
               scrollSnapAlign: 'start',
@@ -82,34 +80,24 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
           >
             {/* Type icon square */}
             <div
-              className="rounded-md"
+              className="rounded-md w-6 h-6 flex items-center justify-center shrink-0"
               style={{
-                width: 24,
-                height: 24,
                 background: isCurrent ? 'rgba(255,255,255,0.18)' : `var(--asset-tint-${s.type})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
               }}
             >
               <AssetIcon
                 type={s.type}
                 size={14}
-                color={isCurrent ? '#FBEDE0' : 'var(--ink-2)'}
+                color={isCurrent ? 'var(--bg)' : 'var(--ink-2)'}
               />
             </div>
 
             {/* Name */}
             <span
-              className="text-xs"
+              className="text-xs max-w-30 overflow-hidden text-ellipsis whitespace-nowrap"
               style={{
                 fontWeight: isCurrent ? 500 : 400,
-                color: isCurrent ? '#FBEDE0' : 'var(--ink)',
-                maxWidth: 120,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                color: isCurrent ? 'var(--bg)' : 'var(--ink)',
               }}
             >
               {s.name}
@@ -118,12 +106,10 @@ function SiblingRail({ siblings, currentId }: { siblings: SiblingChip[]; current
             {/* Status badge — only on non-current chips */}
             {!isCurrent && s.badge && badgeStyle && (
               <span
-                className="text-mini px-1.5 py-px rounded-sm"
+                className="text-mini px-1.5 py-px rounded-sm font-numeric shrink-0"
                 style={{
-                  fontFamily: 'var(--font-numeric)',
                   background: badgeStyle.bg,
                   color: badgeStyle.fg,
-                  flexShrink: 0,
                 }}
               >
                 {s.badge.label}
@@ -173,8 +159,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
       <div className="flex items-center justify-between gap-2">
         <Link
           href="/assets"
-          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent shrink-0 text-sm"
-          style={{ color: 'var(--ink-2)' }}
+          className="flex items-center gap-1.5 min-h-11 px-2 -ml-2 bg-transparent shrink-0 text-sm text-ink-2"
         >
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
             <path d="M6.5 1.5L1.5 6.5L6.5 11.5" stroke="currentColor" strokeWidth="1.6"
@@ -191,21 +176,20 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
             identical, it just stops responding 7px outside itself. Truncation
             now lives on an inner span for the string case only. */}
         <h1
-          className="flex-1 text-lg font-medium tracking-tight min-w-0 text-center"
-          style={{ fontFamily: 'var(--font-serif)', color: '#3A2419' }}
+          className="flex-1 text-lg font-medium tracking-tight min-w-0 text-center font-serif text-ink"
         >
           {typeof name === 'string' ? <span className="block truncate">{name}</span> : name}
         </h1>
         {onEditClick ? (
           <button
             onClick={onEditClick}
-            className="relative w-[30px] h-[30px] rounded-chip shrink-0 flex items-center justify-center before:absolute before:-inset-[7px] before:content-['']"
-            style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
+            className="relative w-[30px] h-[30px] rounded-chip shrink-0 flex items-center justify-center before:absolute before:-inset-[7px] before:content-[''] border-none"
+            style={{ background: 'rgba(58,36,25,0.08)' }}
             aria-label={t.assetDetail.editAriaLabel}
           >
             <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M8.2 1.8l2 2-6.4 6.4-2.4.4.4-2.4 6.4-6.4z"
-                stroke="#3A2419" strokeWidth="1.2"
+                stroke="var(--ink)" strokeWidth="1.2"
                 strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             </svg>
           </button>
@@ -215,8 +199,7 @@ export function AibutsuHeader({ kind, name, subtitle, onEditClick, siblings, cur
       </div>
       {subtitle && (
         <div
-          className="text-xs mt-1.5 tracking-[1px] text-center"
-          style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+          className="text-xs mt-1.5 tracking-[1px] text-center text-ink-3 font-numeric"
         >{subtitle}</div>
       )}
       {siblings && siblings.length > 0 && (

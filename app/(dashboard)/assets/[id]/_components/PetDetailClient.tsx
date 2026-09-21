@@ -90,7 +90,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="pet"
         name={name}
@@ -127,7 +127,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -143,7 +143,7 @@ export function PetDetailClient({ assetId, name, notes, details, summary, assetS
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="pet" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

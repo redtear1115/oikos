@@ -29,12 +29,12 @@ const ADDRESS_SUBTITLE_MASK = '●●●●●●●●'
 function HomeStat({ days, purchasedAt, accent, td }: { days: number; purchasedAt: string; accent: string; td: Translations['assetDetail']['house'] }) {
   return (
     <div className="text-center py-2">
-      <div className="text-xs tracking-[1.5px] uppercase" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>{td.livingDays}</div>
+      <div className="text-xs tracking-[1.5px] uppercase font-numeric" style={{ color: accent }}>{td.livingDays}</div>
       <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-        <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -2 }}>{days}</span>
+        <span className="tabular-nums leading-none text-amount-lg font-numeric font-medium text-ink" style={{ letterSpacing: -2 }}>{days}</span>
         <span className="text-sm font-medium" style={{ color: accent }}>{td.daysSuffix}</span>
       </div>
-      <div className="text-xs mt-1.5 opacity-75" style={{ color: accent, fontFamily: 'var(--font-numeric)' }}>
+      <div className="text-xs mt-1.5 opacity-75 font-numeric" style={{ color: accent }}>
         {purchasedAt}{td.livingSuffix}
       </div>
     </div>
@@ -98,7 +98,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="house"
         name={name}
@@ -134,7 +134,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -150,7 +150,7 @@ export function HouseDetailClient({ assetId, name, notes, details, summary, asse
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="house" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

@@ -117,12 +117,11 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         <div className="flex flex-wrap gap-1.5">
           {[{v: 'cat', label: ts.pet.speciesCat},{v: 'dog', label: ts.pet.speciesDog},{v: 'rabbit', label: ts.pet.speciesRabbit},{v: 'bird', label: ts.pet.speciesBird},{v: 'fish', label: ts.pet.speciesFish},{v: 'other', label: ts.pet.speciesOther}].map(o => (
             <button key={o.v} type="button" onClick={() => setSpecies(o.v)}
-              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-['']"
+              className="relative h-chip px-3.5 rounded-chip text-sm before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] font-medium"
               style={{
                 border: species === o.v ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: species === o.v ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: species === o.v ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: 500,
               }}>{o.label}</button>
           ))}
         </div>
@@ -136,14 +135,13 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
       </Field>
 
       <Field label={ts.pet.sex}>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--toggle-segment-track)' }}>
+        <div className="flex gap-1 p-1 rounded-xl bg-[var(--toggle-segment-track)]">
           {([{v: 'male' as const, label: ts.pet.sexMale}, {v: 'female' as const, label: ts.pet.sexFemale}, {v: 'unknown' as const, label: ts.pet.sexUnknown}]).map(o => {
             const sel = sex === o.v
             return (
               <button key={o.v} type="button" onClick={() => setSex(o.v)}
-                className="oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
+                className="oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] border-none"
                 style={{
-                  border: 'none',
                   background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
                   color: sel ? 'var(--ink)' : 'var(--ink-2)',
                   boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
@@ -170,7 +168,7 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         {id => (
           <TextInput id={id} value={cost} onChange={e => setCost(e.target.value)}
             type="number" inputMode="numeric" placeholder={ts.pet.purchaseCostPlaceholder}
-            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>NT$</span>} />
+            rightAddon={<span className="text-xs text-ink-3">NT$</span>} />
         )}
       </Field>
 
@@ -178,19 +176,19 @@ export function PetSheetBody({ open, onClose, onMutated, typePickerSlot, initial
         {id => (
           <TextInput id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
             type="number" inputMode="decimal" placeholder={ts.pet.weightPlaceholder}
-            rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>} />
+            rightAddon={<span className="text-xs text-ink-3">kg</span>} />
         )}
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.pet.sectionHealth}</div>
-        <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+        <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">{ts.pet.sectionHealth}</div>
+        <div className="flex-1 h-px bg-hairline" />
       </div>
 
       <Field label={ts.pet.chipNo}>
         {id => (
           <TextInput id={id} value={chipNo} onChange={e => setChipNo(e.target.value.slice(0, 20))}
-            placeholder={ts.pet.chipNoPlaceholder} style={{ fontFamily: 'var(--font-numeric)' }} />
+            placeholder={ts.pet.chipNoPlaceholder} inputClassName="font-numeric" />
         )}
       </Field>
 

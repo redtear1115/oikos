@@ -63,8 +63,7 @@ export function HeaderOverflowMenu({ ariaLabel, items }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
-        className="oik-btn h-8 w-8 flex items-center justify-center rounded-full border-0 cursor-pointer"
-        style={{ background: 'transparent', color: 'var(--ink-2)' }}
+        className="oik-btn h-8 w-8 flex items-center justify-center rounded-full border-0 cursor-pointer bg-transparent text-ink-2"
       >
         <span aria-hidden="true" className="text-base leading-none tracking-[1px]">···</span>
       </button>
@@ -82,10 +81,8 @@ export function HeaderOverflowMenu({ ariaLabel, items }: Props) {
             e.preventDefault()
             setOpen(false)
           }}
-          className="absolute right-0 top-full mt-1 min-w-[8rem] rounded-xl py-1 z-modal"
+          className="absolute right-0 top-full mt-1 min-w-[8rem] rounded-xl py-1 z-modal bg-surface border border-hairline"
           style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--hairline)',
             boxShadow: '0 12px 32px rgba(31,27,22,0.16)',
           }}
         >
@@ -95,8 +92,7 @@ export function HeaderOverflowMenu({ ariaLabel, items }: Props) {
               type="button"
               role="menuitem"
               onClick={() => { setOpen(false); item.onSelect() }}
-              className="oik-btn w-full text-left px-4 h-9 text-sm font-medium cursor-pointer border-0"
-              style={{ background: 'transparent', color: 'var(--ink)' }}
+              className="oik-btn w-full text-left px-4 h-9 text-sm font-medium cursor-pointer border-0 bg-transparent text-ink"
             >
               {item.label}
             </button>

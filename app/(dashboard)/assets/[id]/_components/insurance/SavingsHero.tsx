@@ -68,8 +68,7 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
 
       {showBreakdown && (
         <div
-          className="mt-1.5 ml-[26px] text-xs tabular-nums"
-          style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}
+          className="mt-1.5 ml-[26px] text-xs tabular-nums text-ink-3 font-numeric"
         >
           {ts.heroBreakdownPrefix}{' '}
           {/* TODO(v0.17 currency): "NT$ {amount}" with space + i18n templates have
@@ -87,7 +86,7 @@ export function SavingsHero({ progress, endsAt, startsAt, returnBreakdown, onSet
         </div>
       )}
 
-      <div className="mt-4 text-sm" style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>
+      <div className="mt-4 text-sm text-ink-3 italic">
         {subCopy}
       </div>
     </div>
@@ -116,8 +115,7 @@ function ProgressBar({
     <div>
       <div className="flex items-center gap-3">
         <span
-          className="text-base font-medium shrink-0"
-          style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)', width: 18 }}
+          className="text-base font-medium shrink-0 text-ink-2 font-numeric w-4.5"
         >
           {label}
         </span>
@@ -133,14 +131,13 @@ function ProgressBar({
           )}
         </div>
         <span
-          className="shrink-0 text-xs tabular-nums"
-          style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)', minWidth: 40, textAlign: 'right' }}
+          className="shrink-0 text-xs tabular-nums text-ink-2 font-numeric min-w-10 text-right"
         >
           {pct !== null ? `${pct}%` : '—'}
         </span>
       </div>
-      <div className="mt-1.5 ml-[26px] text-xs tabular-nums" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
-        <span style={{ color: 'var(--ink) ' }}>NT$ {actual.toLocaleString()}</span>
+      <div className="mt-1.5 ml-[26px] text-xs tabular-nums text-ink-3 font-numeric">
+        <span className="text-ink">NT$ {actual.toLocaleString()}</span>
         <span> {actualLabel}</span>
         {expected !== null && (
           <span> / {expectedTag} NT$ {expected.toLocaleString()}</span>
@@ -167,12 +164,11 @@ function NoExpectedMaturityRow({
     <div>
       <div className="flex items-center gap-3">
         <span
-          className="text-base font-medium shrink-0"
-          style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)', width: 18 }}
+          className="text-base font-medium shrink-0 text-ink-2 font-numeric w-4.5"
         >
           {labelOut}
         </span>
-        <div className="flex-1 text-xs" style={{ color: 'var(--ink-2)', fontFamily: 'var(--font-numeric)' }}>
+        <div className="flex-1 text-xs text-ink-2 font-numeric">
           {barTemplate.replace('{received}', received.toLocaleString())}
         </div>
       </div>
@@ -180,8 +176,7 @@ function NoExpectedMaturityRow({
         <button
           type="button"
           onClick={onSetExpected}
-          className="mt-1.5 ml-[26px] text-xs underline-offset-2 underline"
-          style={{ color: 'var(--ink-2)' }}
+          className="mt-1.5 ml-[26px] text-xs underline-offset-2 underline text-ink-2"
         >
           {ctaLabel}
         </button>
