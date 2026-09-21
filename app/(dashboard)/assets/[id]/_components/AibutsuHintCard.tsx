@@ -37,7 +37,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
     : t.assetDetail.hint.itemsHouse
   return (
     <div
-      className="mx-4 rounded-bubble p-[14px] bg-surface"
+      className="mx-4 rounded-bubble p-3.5 bg-surface"
       style={{
         border: `1.5px dashed ${style.borderColor}`,
       }}
@@ -49,7 +49,7 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
         {t.assetDetail.hint.title}
       </p>
       <p
-        className="text-xs mb-[10px] text-ink-2"
+        className="text-xs mb-2.5 text-ink-2"
         style={{ lineHeight: 1.9 }}
       >
         {items}

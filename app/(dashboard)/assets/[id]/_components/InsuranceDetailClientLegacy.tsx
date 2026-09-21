@@ -129,7 +129,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       </div>
 
       {details?.startsAt && details?.endsAt && (
-        <div className="mx-4 mt-[14px] p-4 rounded-2xl bg-surface border border-hairline">
+        <div className="mx-4 mt-3.5 p-4 rounded-2xl bg-surface border border-hairline">
           <div className="flex justify-between items-baseline">
             <span className="text-xs text-ink-2">{td.contractProgress}</span>
             <span className="text-xs text-ink-3 font-numeric">
