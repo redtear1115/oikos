@@ -5,7 +5,7 @@ import { SheetFrame } from '@/app/(dashboard)/_components/SheetFrame'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
 import { Button } from '@/components/ui/Button'
 import { useTranslations } from '@/lib/i18n/client'
-import { HeaderOverflowMenu } from './HeaderOverflowMenu'
+import { HeaderOverflowMenu } from '@/app/(dashboard)/assets/_components/shared/HeaderOverflowMenu'
 
 interface Props {
   open: boolean
@@ -143,7 +143,7 @@ export function SheetShell({
           style={{
             background: canSave ? bottomBg : 'var(--ink-3)',
             color: destructive ? 'var(--btn-destructive-text)' : 'var(--btn-primary-text)',
-            opacity: canSave ? 1 : 0.55,
+            opacity: canSave ? 1 : 0.5,
           }}
         >
           {pending ? t.common.saving : bottomSaveLabel}

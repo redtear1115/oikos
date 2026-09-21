@@ -8,6 +8,7 @@ import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalend
 import { PayerToggle } from '@/app/(dashboard)/dashboard/_components/PayerToggle'
 import { SplitTypeSelector } from '@/app/(dashboard)/dashboard/_components/SplitTypeSelector'
 import { ConfirmModal } from '@/app/(dashboard)/_components/ConfirmModal'
+import { HeaderOverflowMenu } from '@/app/(dashboard)/assets/_components/shared/HeaderOverflowMenu'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { createFuelLog, editFuelLog, softDeleteFuelLog } from '@/actions/fuelLog'
 import { localTodayISO } from '@/lib/local-date'
@@ -224,15 +225,10 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
           </div>
           {/* Past-epoch view is read-only — hide delete affordance. */}
           {mode === 'edit' && !isPast && (
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(true)}
-              className="relative w-8 h-8 rounded-chip flex items-center justify-center before:absolute before:-inset-1.5 before:content-['']"
-              style={{ background: 'rgba(58,36,25,0.06)' }}
-              aria-label={t.common.delete}
-            >
-              <span className="text-base leading-none text-[var(--ink)]">⋯</span>
-            </button>
+            <HeaderOverflowMenu
+              ariaLabel={t.assetSheet.menu.ariaLabel}
+              items={[{ label: t.common.delete, onSelect: () => setConfirmDelete(true) }]}
+            />
           )}
         </div>
 

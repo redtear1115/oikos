@@ -7,6 +7,7 @@ import { getCategory, type CategoryId } from '@/lib/categories'
 import { getIncomeCategory, type IncomeCategoryId } from '@/lib/incomeCategories'
 import type { CategoryStatRow, AssetStatRow, DailyTrendRow } from '@/lib/db/queries/transactions'
 import type { IncomeCategoryStatRow } from '@/lib/db/queries/incomes'
+import { formatAmountParts, currencySymbol } from '@/lib/currency'
 import { StatsBreakdownToggle, type BreakdownView } from './StatsBreakdownToggle'
 import { MonthlyStatsPieChart } from './MonthlyStatsPieChart'
 import { DailyTrendChart } from './DailyTrendChart'
@@ -360,23 +361,22 @@ function SummaryText({
   t: StatsT
 }) {
   const net = incomeTotal - expenseTotal
-  // TODO(v0.17 currency): three bare digits + one trailing NT$ anchor (per
-  // spec). formatAmount returns a fully-symbolized string, so we keep
-  // toLocaleString here until formatAmount gains a digits-only mode.
+  // Three bare digits + one trailing currency anchor (per spec): the amounts
+  // below pull `digits` only from formatAmountParts, never the symbol.
   const expenseStr = t.records.stats.summaryExpense.replace(
     '{amount}',
-    expenseTotal.toLocaleString('en-US'),
+    formatAmountParts(expenseTotal, 'twd').digits,
   )
   const incomeStr = t.records.stats.summaryIncome.replace(
     '{amount}',
-    incomeTotal.toLocaleString('en-US'),
+    formatAmountParts(incomeTotal, 'twd').digits,
   )
   const netStr =
     net === 0
       ? t.records.stats.summaryNetEven
       : net > 0
-        ? t.records.stats.summaryNetIncome.replace('{amount}', net.toLocaleString('en-US'))
-        : t.records.stats.summaryNetExpense.replace('{amount}', Math.abs(net).toLocaleString('en-US'))
+        ? t.records.stats.summaryNetIncome.replace('{amount}', formatAmountParts(net, 'twd').digits)
+        : t.records.stats.summaryNetExpense.replace('{amount}', formatAmountParts(Math.abs(net), 'twd').digits)
 
   return (
     <div className="text-xs tnum" style={{ color: 'var(--ink-2)' }}>
@@ -386,8 +386,8 @@ function SummaryText({
       <span className="mx-1.5" style={{ color: 'var(--ink-3)' }}>·</span>
       <span className="font-medium">{netStr}</span>
       {/* One currency mark per line, at the end (per spec). The three numbers
-          above are bare; this NT$ anchors them all. */}
-      <span className="ml-1.5" style={{ color: 'var(--ink-3)' }}>NT$</span>
+          above are bare; this symbol anchors them all. */}
+      <span className="ml-1.5" style={{ color: 'var(--ink-3)' }}>{currencySymbol('twd')}</span>
     </div>
   )
 }

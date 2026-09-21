@@ -52,7 +52,7 @@ export function Button({
         'rounded-bubble font-medium cursor-pointer',
         'transition-opacity duration-150',
         'oik-btn',
-        'disabled:opacity-40 disabled:cursor-default',
+        'disabled:opacity-50 disabled:cursor-default',
         'min-w-0 truncate',
         variantBase[variant],
         sizeBase[size],
