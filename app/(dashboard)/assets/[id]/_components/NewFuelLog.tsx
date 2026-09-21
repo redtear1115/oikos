@@ -217,7 +217,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             </svg>
           </button>
           <div className="flex-1">
-            <div className="text-title font-medium text-[var(--ink)]" style={{ fontFamily: 'var(--font-serif)' }}>
+            <div className="text-title font-medium text-[var(--ink)] font-serif">
               {mode === 'edit' ? tf.titleEdit : tf.titleNew}
             </div>
             <div className="text-xs text-[var(--ink-3)]">{car.name}</div>
@@ -304,8 +304,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             <button
               type="button"
               onClick={() => setShowCal(v => !v)}
-              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-base text-left flex items-center"
-              style={{ color: 'var(--ink)' }}
+              className="w-full h-11 px-3.5 rounded-xl border border-[var(--hairline)] bg-surface text-base text-left flex items-center text-ink"
             >
               {date ? formatDateAbsolute(date, locale) : tf.pickDate}
             </button>
@@ -337,7 +336,7 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
         </div>
 
         {error && (
-          <div className="mx-4 mb-2 text-sm shrink-0" style={{ color: 'var(--destructive)' }}>
+          <div className="mx-4 mb-2 text-sm shrink-0 text-destructive">
             {error}
           </div>
         )}
@@ -348,17 +347,14 @@ export function NewFuelLog({ open, onClose, car, lastOdometer, mode, initial }: 
             for defence in depth. */}
         {!isPast && (
           <div
-            className="shrink-0 px-4 pt-3 pb-7 border-t"
-            style={{ borderColor: 'var(--hairline)', background: 'var(--bg)' }}
+            className="shrink-0 px-4 pt-3 pb-7 border-t border-hairline bg-bg"
           >
             <button
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="w-full h-12 rounded-2xl font-medium text-base tracking-wide transition-opacity"
+              className="w-full h-12 rounded-2xl font-medium text-base tracking-wide transition-opacity bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
               style={{
-                background: 'var(--btn-primary-bg)',
-                color: 'var(--btn-primary-text)',
                 opacity: canSubmit ? 1 : 0.45,
                 cursor: canSubmit ? 'pointer' : 'default',
               }}

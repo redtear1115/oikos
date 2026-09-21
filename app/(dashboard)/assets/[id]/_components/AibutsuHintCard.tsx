@@ -37,9 +37,8 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
     : t.assetDetail.hint.itemsHouse
   return (
     <div
-      className="mx-4 rounded-bubble p-[14px]"
+      className="mx-4 rounded-bubble p-[14px] bg-surface"
       style={{
-        background: 'var(--surface)',
         border: `1.5px dashed ${style.borderColor}`,
       }}
     >
@@ -50,8 +49,8 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
         {t.assetDetail.hint.title}
       </p>
       <p
-        className="text-xs mb-[10px]"
-        style={{ color: 'var(--ink-2)', lineHeight: 1.9 }}
+        className="text-xs mb-[10px] text-ink-2"
+        style={{ lineHeight: 1.9 }}
       >
         {items}
       </p>
@@ -59,11 +58,8 @@ export function AibutsuHintCard({ type, onCtaPress }: AibutsuHintCardProps) {
         <button
           type="button"
           onClick={onCtaPress}
-          className="relative w-full h-9 rounded-chip border text-sm font-medium cursor-pointer before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
+          className="relative w-full h-9 rounded-chip border text-sm font-medium cursor-pointer before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] bg-[var(--btn-secondary-bg)] border-[color:var(--btn-secondary-border)] text-[var(--btn-secondary-text)]"
           style={{
-            background: 'var(--btn-secondary-bg)',
-            borderColor: 'var(--btn-secondary-border)',
-            color: 'var(--btn-secondary-text)',
             letterSpacing: '0.2px',
           }}
         >

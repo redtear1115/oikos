@@ -98,17 +98,13 @@ export function AssetSwitcher({
   const popover = open ? (
     <div
       ref={popoverRef}
-      className="overflow-auto rounded-xl py-2"
+      className="overflow-auto rounded-xl py-2 fixed w-80 bg-surface border border-hairline"
       role="listbox"
       style={{
-        position: 'fixed',
         top: popoverPos.top,
         left: popoverPos.left,
         zIndex: 9999,
-        width: 320,
         maxHeight: 'min(60vh, 400px)',
-        background: 'var(--surface)',
-        border: '1px solid var(--hairline)',
         boxShadow: '0 16px 40px rgba(58,36,25,0.18)',
       }}
     >
@@ -116,12 +112,9 @@ export function AssetSwitcher({
         ? groups.map((group) => (
             <div key={group.label}>
               <div
-                className="pt-2 px-3.5 pb-1 text-mini"
+                className="pt-2 px-3.5 pb-1 text-mini font-numeric text-ink-3 uppercase"
                 style={{
-                  fontFamily: 'var(--font-numeric)',
                   letterSpacing: '1.2px',
-                  color: 'var(--ink-3)',
-                  textTransform: 'uppercase',
                 }}
               >
                 {group.label}
@@ -207,15 +200,9 @@ function SwitcherRow({
     >
       {/* Type icon square */}
       <div
-        className="rounded-md"
+        className="rounded-md w-6 h-6 flex items-center justify-center shrink-0"
         style={{
-          width: 24,
-          height: 24,
           background: `var(--asset-tint-${item.type})`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
         }}
       >
         <AssetIcon type={item.type} size={14} color="var(--ink-2)" />
@@ -224,10 +211,9 @@ function SwitcherRow({
       {/* Name + subtitle */}
       <div className="flex-1 flex flex-col min-w-0">
         <span
-          className="truncate text-sm"
+          className="truncate text-sm text-ink"
           style={{
             fontWeight: isCurrent ? 500 : 400,
-            color: 'var(--ink)',
             lineHeight: 1.3,
           }}
         >
@@ -235,10 +221,8 @@ function SwitcherRow({
         </span>
         {item.subtitle && (
           <span
-            className="truncate text-mini"
+            className="truncate text-mini font-numeric text-ink-3"
             style={{
-              fontFamily: 'var(--font-numeric)',
-              color: 'var(--ink-3)',
               lineHeight: 1.4,
             }}
           >
@@ -250,12 +234,10 @@ function SwitcherRow({
       {/* Status badge */}
       {item.badge && badgeStyle && (
         <span
-          className="text-mini px-1.5 py-px rounded-sm"
+          className="text-mini px-1.5 py-px rounded-sm font-numeric shrink-0"
           style={{
-            fontFamily: 'var(--font-numeric)',
             background: badgeStyle.bg,
             color: badgeStyle.fg,
-            flexShrink: 0,
           }}
         >
           {item.badge.label}
@@ -267,7 +249,7 @@ function SwitcherRow({
         <span className="sr-only">{t.assetDetail.switcher.currentLabel}</span>
       )}
       {isCurrent && (
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ flexShrink: 0, color: 'var(--ink)' }}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="shrink-0 text-ink">
           <path d="M2.5 6.5l3 3 4.5-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       )}

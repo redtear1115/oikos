@@ -119,7 +119,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             blank + 「清除」 clears, blank alone on edit keeps, typed value sets.
             Generic encryptedHint / clear strings reused from `child`. */}
         <div className="flex flex-col gap-1">
-          <label htmlFor={addressId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.address}</label>
+          <label htmlFor={addressId} className="text-xs tracking-[1px] uppercase text-ink-3">{ts.house.address}</label>
           <div className="flex items-center gap-2">
             <TextInput
               id={addressId}
@@ -141,8 +141,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearAddress(true)}
-                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-                style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-destructive"
               >
                 {ts.child.clear}
               </button>
@@ -151,8 +150,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearAddress(false)}
-                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-                style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 shrink-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
               >
                 {ts.child.cancelClear}
               </button>
@@ -162,13 +160,13 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
         {/* Purchase date */}
         <div className="flex flex-col gap-1">
-          <label htmlFor={purchaseDateId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasedAt}</label>
+          <label htmlFor={purchaseDateId} className="text-xs tracking-[1px] uppercase text-ink-3">{ts.house.purchasedAt}</label>
           <button
             id={purchaseDateId}
             type="button"
             onClick={() => setShowCal(c => !c)}
-            className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between"
-            style={{ background: 'var(--surface)', color: purchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--hairline)' }}
+            className="w-full rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between bg-surface"
+            style={{ color: purchasedAt ? 'var(--ink)' : 'var(--ink-3)', border: '1.5px solid var(--hairline)' }}
           >
             <span>{purchasedAt ? formatDateAbsolute(purchasedAt, locale) : ts.house.pickDate}</span>
             <CalIcon size={16} />
@@ -183,7 +181,7 @@ export function HouseSheetBody({ open, onClose, onMutated, typePickerSlot, initi
 
         {/* Purchase price */}
         <div className="flex flex-col gap-1">
-          <label htmlFor={purchasePriceId} className="text-xs tracking-[1px] uppercase" style={{ color: 'var(--ink-3)' }}>{ts.house.purchasePrice}</label>
+          <label htmlFor={purchasePriceId} className="text-xs tracking-[1px] uppercase text-ink-3">{ts.house.purchasePrice}</label>
           <TextInput
             id={purchasePriceId}
             type="number"

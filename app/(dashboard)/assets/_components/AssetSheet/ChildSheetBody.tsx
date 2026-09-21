@@ -199,8 +199,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearFullName(true)}
-                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-                style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
               >
                 {ts.child.clear}
               </button>
@@ -209,8 +208,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
               <button
                 type="button"
                 onClick={() => setWantClearFullName(false)}
-                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-                style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+                className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
               >
                 {ts.child.cancelClear}
               </button>
@@ -220,14 +218,13 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <Field label={ts.child.gender}>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--toggle-segment-track)' }}>
+        <div className="flex gap-1 p-1 rounded-xl bg-[var(--toggle-segment-track)]">
           {([{v: 'male' as const, label: ts.child.genderMale}, {v: 'female' as const, label: ts.child.genderFemale}]).map(o => {
             const sel = gender === o.v
             return (
               <button key={o.v} type="button" onClick={() => setGender(o.v)}
-                className="oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
+                className="oik-segment relative flex-1 h-9 rounded-lg text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] border-none"
                 style={{
-                  border: 'none',
                   background: sel ? 'var(--toggle-segment-thumb)' : 'transparent',
                   color: sel ? 'var(--ink)' : 'var(--ink-2)',
                   boxShadow: sel ? 'var(--toggle-segment-thumb-shadow)' : 'none',
@@ -245,8 +242,8 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionId}</div>
-        <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+        <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">{ts.child.sectionId}</div>
+        <div className="flex-1 h-px bg-hairline" />
       </div>
 
       <Field label={ts.child.nationalId}>
@@ -269,14 +266,13 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
                     : ts.child.nationalIdPlaceholder)
             }
             className="flex-1"
-            style={{ fontFamily: 'var(--font-numeric)' }}
+            inputClassName="font-numeric"
           />
           {isEdit && hasNationalId && !wantClearNationalId && nationalId.trim() === '' && (
             <button
               type="button"
               onClick={() => setWantClearNationalId(true)}
-              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-              style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-destructive"
             >
               {ts.child.clear}
             </button>
@@ -285,8 +281,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             <button
               type="button"
               onClick={() => setWantClearNationalId(false)}
-              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-              style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
             >
               {ts.child.cancelClear}
             </button>
@@ -315,14 +310,13 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
                     : ts.child.nhiNoPlaceholder)
             }
             className="flex-1"
-            style={{ fontFamily: 'var(--font-numeric)' }}
+            inputClassName="font-numeric"
           />
           {isEdit && hasNhiNo && !wantClearNhiNo && nhiNo.trim() === '' && (
             <button
               type="button"
               onClick={() => setWantClearNhiNo(true)}
-              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-              style={{ background: 'var(--surface)', color: 'var(--destructive)' }}
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-destructive"
             >
               {ts.child.clear}
             </button>
@@ -331,8 +325,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             <button
               type="button"
               onClick={() => setWantClearNhiNo(false)}
-              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-              style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+              className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
             >
               {ts.child.cancelClear}
             </button>
@@ -345,12 +338,11 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
         <div className="flex gap-1.5">
           {(['A', 'B', 'O', 'AB'] as const).map(b => (
             <button key={b} type="button" onClick={() => setBloodType(b)}
-              className="relative flex-1 h-9 rounded-chip text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
+              className="relative flex-1 h-9 rounded-chip text-sm font-medium before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] font-numeric"
               style={{
                 border: bloodType === b ? `1.5px solid var(--ink)` : `1px solid var(--hairline)`,
                 background: bloodType === b ? 'rgba(58,36,25,0.04)' : 'var(--surface)',
                 color: bloodType === b ? 'var(--ink)' : 'var(--ink-2)',
-                fontFamily: 'var(--font-numeric)',
               }}>{b}</button>
           ))}
         </div>
@@ -364,8 +356,8 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
       </Field>
 
       <div className="flex items-center gap-2 mt-2 px-1">
-        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>{ts.child.sectionBody}</div>
-        <div className="flex-1 h-px" style={{ background: 'var(--hairline)' }} />
+        <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">{ts.child.sectionBody}</div>
+        <div className="flex-1 h-px bg-hairline" />
       </div>
 
       <div className="flex gap-2">
@@ -374,7 +366,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             {id => (
               <TextInput id={id} value={heightCm} onChange={e => setHeightCm(e.target.value)}
                 type="number" inputMode="numeric" placeholder={ts.child.heightPlaceholder}
-                rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>cm</span>} />
+                rightAddon={<span className="text-xs text-ink-3">cm</span>} />
             )}
           </Field>
         </div>
@@ -383,7 +375,7 @@ export function ChildSheetBody({ open, onClose, onMutated, typePickerSlot, initi
             {id => (
               <TextInput id={id} value={weightKg} onChange={e => setWeightKg(e.target.value)}
                 type="number" inputMode="decimal" placeholder={ts.child.weightPlaceholder}
-                rightAddon={<span className="text-xs" style={{ color: 'var(--ink-3)' }}>kg</span>} />
+                rightAddon={<span className="text-xs text-ink-3">kg</span>} />
             )}
           </Field>
         </div>

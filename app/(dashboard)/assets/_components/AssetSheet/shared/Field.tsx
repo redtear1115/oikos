@@ -12,15 +12,14 @@ export function Field({ label, htmlFor, children }: FieldProps) {
   const effectiveId = htmlFor ?? (isRenderProp ? generatedId : undefined)
   return (
     <div
-      className="py-3"
-      style={{ borderBottom: '1px solid var(--hairline)' }}
+      className="py-3 border-b border-b-hairline"
     >
       {effectiveId ? (
-        <label htmlFor={effectiveId} className="block text-xs mb-1 tracking-wide" style={{ color: 'var(--ink-3)' }}>
+        <label htmlFor={effectiveId} className="block text-xs mb-1 tracking-wide text-ink-3">
           {label}
         </label>
       ) : (
-        <div className="text-xs mb-1 tracking-wide" style={{ color: 'var(--ink-3)' }}>{label}</div>
+        <div className="text-xs mb-1 tracking-wide text-ink-3">{label}</div>
       )}
       {isRenderProp ? (children as (id: string) => React.ReactNode)(effectiveId!) : children}
     </div>

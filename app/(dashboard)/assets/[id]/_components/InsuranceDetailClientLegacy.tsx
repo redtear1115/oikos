@@ -67,7 +67,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
   const hasDates = !!(details?.startsAt && details?.endsAt)
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="insurance"
         name={
@@ -88,11 +88,11 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       <div className="px-5 pb-6 text-center" style={{ background: tint.bg }}>
         {hasDates ? (
           <>
-            <div className="text-xs tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+            <div className="text-xs tracking-[1.5px] uppercase mt-1 font-numeric" style={{ color: tint.accent }}>
               {pct >= 1 ? td.expired : td.coverageRemaining}
             </div>
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-              <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: pct >= 1 ? 'var(--ink-3)' : 'var(--ink)', letterSpacing: -1.5 }}>
+              <span className="tabular-nums leading-none text-amount-lg font-numeric font-medium" style={{ color: pct >= 1 ? 'var(--ink-3)' : 'var(--ink)', letterSpacing: -1.5 }}>
                 {pct >= 1 ? '0' : daysLeft !== null ? daysLeft.toString() : yearsLeft.toFixed(1)}
               </span>
               {pct < 1 && (
@@ -101,7 +101,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
                 </span>
               )}
             </div>
-            <div className="text-xs mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+            <div className="text-xs mt-1.5 opacity-75 font-numeric" style={{ color: tint.accent }}>
               {details?.annualPremium ? td.annualPremiumPrefix.replace('{amount}', details.annualPremium.toLocaleString()) : ''}
               {details?.annualPremium && details?.termYears ? ` · ` : ''}
               {details?.termYears ? td.termYearsLine.replace('{n}', String(details.termYears)) : ''}
@@ -109,18 +109,18 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
           </>
         ) : (
           <>
-            <div className="text-xs tracking-[1.5px] uppercase mt-1" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>{td.annualPremiumLabel}</div>
+            <div className="text-xs tracking-[1.5px] uppercase mt-1 font-numeric" style={{ color: tint.accent }}>{td.annualPremiumLabel}</div>
             {/* TODO(v0.17 currency): typographic split (small NT$ + large digits)
                  + termAndSumLine i18n template has "NT$" baked in — defer
                  migration until formatAmount supports digits-only mode. */}
             <div className="inline-flex items-baseline gap-1.5 mt-1.5">
-              <span className="text-lg font-medium" style={{ color: 'var(--ink-2)' }}>NT$</span>
-              <span className="tabular-nums leading-none text-amount-lg" style={{ fontFamily: 'var(--font-numeric)', fontWeight: 500, color: 'var(--ink)', letterSpacing: -1.5 }}>
+              <span className="text-lg font-medium text-ink-2">NT$</span>
+              <span className="tabular-nums leading-none text-amount-lg font-numeric font-medium text-ink" style={{ letterSpacing: -1.5 }}>
                 {details?.annualPremium?.toLocaleString() ?? '—'}
               </span>
             </div>
             {details?.termYears && details?.sumInsured && (
-              <div className="text-xs mt-1.5 opacity-75" style={{ color: tint.accent, fontFamily: 'var(--font-numeric)' }}>
+              <div className="text-xs mt-1.5 opacity-75 font-numeric" style={{ color: tint.accent }}>
                 {td.termAndSumLine.replace('{n}', String(details.termYears)).replace('{sum}', details.sumInsured.toLocaleString())}
               </div>
             )}
@@ -129,10 +129,10 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       </div>
 
       {details?.startsAt && details?.endsAt && (
-        <div className="mx-4 mt-[14px] p-4 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-[14px] p-4 rounded-2xl bg-surface border border-hairline">
           <div className="flex justify-between items-baseline">
-            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
-            <span className="text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <span className="text-xs text-ink-2">{td.contractProgress}</span>
+            <span className="text-xs text-ink-3 font-numeric">
               {td.yearsLeft.replace('{years}', yearsLeft.toFixed(1))}
             </span>
           </div>
@@ -143,7 +143,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
             {/* than enough for a 1.5px-tall progress bar. */}
             <div className="h-full rounded-full" style={{ width: `${(pct * 100).toFixed(2)}%`, background: tint.accent }} />
           </div>
-          <div className="mt-1.5 flex justify-between text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="mt-1.5 flex justify-between text-xs text-ink-3 font-numeric">
             <span>{details.startsAt}</span>
             <span>{details.endsAt}</span>
           </div>
@@ -167,19 +167,18 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
       </InfoCard>
 
       {linkedVehicle && (
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden bg-surface border border-hairline">
           <div className="px-5 py-4">
-            <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs font-medium tracking-[0.5px] mb-2 text-ink-3">
               {t.assetDetail.linkedVehicleSection}
             </div>
             <Link
               href={`/assets/${linkedVehicle.id}`}
-              className="flex items-center gap-3 text-sm font-medium"
-              style={{ color: 'var(--ink)' }}
+              className="flex items-center gap-3 text-sm font-medium text-ink"
             >
               <span>🚗</span>
               <span>{linkedVehicle.name}</span>
-              <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
+              <span className="ml-auto text-ink-3">›</span>
             </Link>
           </div>
         </div>
@@ -189,7 +188,7 @@ export function InsuranceDetailClientLegacy({ assetId, name, notes, details, lin
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>

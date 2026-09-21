@@ -176,7 +176,7 @@ export function SavingsView({
     progress.returnRatio < 1.05
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="insurance"
         name={
@@ -229,10 +229,10 @@ export function SavingsView({
       )}
 
       {details.startsAt && details.endsAt && !progress.awaitingMaturity && (
-        <div className="mx-4 mt-3 p-4 rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 p-4 rounded-2xl bg-surface border border-hairline">
           <div className="flex justify-between items-baseline">
-            <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{td.contractProgress}</span>
-            <span className="text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <span className="text-xs text-ink-2">{td.contractProgress}</span>
+            <span className="text-xs text-ink-3 font-numeric">
               {progress.yearsLeft !== null && progress.yearsLeft > 0
                 ? td.yearsLeft.replace('{years}', progress.yearsLeft.toFixed(1))
                 : progress.isMatured
@@ -252,7 +252,7 @@ export function SavingsView({
               }}
             />
           </div>
-          <div className="mt-1.5 flex justify-between text-xs" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="mt-1.5 flex justify-between text-xs text-ink-3 font-numeric">
             <span>{details.startsAt}</span>
             <span>{details.endsAt}</span>
           </div>
@@ -268,7 +268,7 @@ export function SavingsView({
           acceptInsert={(row) => row.assetId === assetId}
           onItemClick={handleTxClick}
           emptyState={
-            <div className="text-center py-8 text-sm" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-center py-8 text-sm text-ink-3">
               {ts.paymentEmpty}
             </div>
           }
@@ -276,7 +276,7 @@ export function SavingsView({
       </div>
 
       <div className="px-5 pt-[18px] pb-2 flex items-center justify-between">
-        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+        <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
           {ts.sectionReturn}
         </div>
         {/* Inline addReturn (記滿期金) opens IncomeSheet — write surface,
@@ -285,8 +285,7 @@ export function SavingsView({
           <button
             type="button"
             onClick={() => openRecordReturn()}
-            className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+            className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] bg-surface border border-hairline text-ink-2"
           >
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -303,7 +302,7 @@ export function SavingsView({
           acceptInsert={(row) => row.assetId === assetId}
           onItemClick={() => { /* edit-from-detail flow not implemented for income; user edits via Records page */ }}
           emptyState={
-            <div className="text-center py-8 text-sm" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-center py-8 text-sm text-ink-3">
               {progress.isMatured
                 ? ts.returnEmptyAwaiting
                 : ts.returnEmptyBefore}
@@ -319,21 +318,18 @@ export function SavingsView({
         <>
           <SectionHeader>{ts.accountValueLabel}</SectionHeader>
           <div
-            className="mx-4 rounded-2xl"
-            style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}
+            className="mx-4 rounded-2xl bg-surface border border-hairline"
           >
             <div className="px-4 py-3 flex items-baseline justify-between">
               <span
-                className="text-xl font-medium tabular-nums"
-                style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+                className="text-xl font-medium tabular-nums text-ink font-numeric"
               >
                 {/* TODO(v0.17 currency): "NT$ {amount}" with space */}NT$ {details.accountValue.toLocaleString()}
               </span>
               <button
                 type="button"
                 onClick={() => setEditAssetOpen(true)}
-                className="text-xs font-medium underline-offset-2 underline bg-transparent border-0 cursor-pointer"
-                style={{ color: 'var(--ink-2)' }}
+                className="text-xs font-medium underline-offset-2 underline bg-transparent border-0 cursor-pointer text-ink-2"
               >
                 {ts.accountValueEditCta}
               </button>
@@ -385,19 +381,18 @@ export function SavingsView({
       </InfoCard>
 
       {linkedVehicle && (
-        <div className="mx-4 mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden bg-surface border border-hairline">
           <div className="px-5 py-4">
-            <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs font-medium tracking-[0.5px] mb-2 text-ink-3">
               {t.assetDetail.linkedVehicleSection}
             </div>
             <Link
               href={`/assets/${linkedVehicle.id}`}
-              className="flex items-center gap-3 text-sm font-medium"
-              style={{ color: 'var(--ink)' }}
+              className="flex items-center gap-3 text-sm font-medium text-ink"
             >
               <span>🚗</span>
               <span>{linkedVehicle.name}</span>
-              <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
+              <span className="ml-auto text-ink-3">›</span>
             </Link>
           </div>
         </div>
@@ -407,7 +402,7 @@ export function SavingsView({
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -482,7 +477,7 @@ function RecurringRulesSection({
   return (
     <>
       <div className="px-5 pt-[18px] pb-2 flex items-center justify-between">
-        <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+        <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
           {translations.recurringSectionTitle}
         </div>
         {rules.length > 0 && (
@@ -511,8 +506,8 @@ function RecurringRulesSection({
             <button
               type="button"
               onClick={onAdd}
-              className="relative h-9 px-4 rounded-full text-sm font-medium border-0 cursor-pointer before:absolute before:-inset-y-1 before:inset-x-0 before:content-['']"
-              style={{ background: P.ink, color: 'var(--on-fill)' }}
+              className="relative h-9 px-4 rounded-full text-sm font-medium border-0 cursor-pointer before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] text-[var(--on-fill)]"
+              style={{ background: P.ink }}
             >
               {translations.recurringAddCta}
             </button>
@@ -524,23 +519,22 @@ function RecurringRulesSection({
                 <button
                   type="button"
                   onClick={() => onEdit(rule)}
-                  className="w-full text-left rounded-2xl px-4 py-3 bg-surface cursor-pointer"
-                  style={{ border: '1px solid var(--hairline)' }}
+                  className="w-full text-left rounded-2xl px-4 py-3 bg-surface cursor-pointer border border-hairline"
                 >
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-base font-medium tabular-nums" style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}>
+                    <span className="text-base font-medium tabular-nums text-ink font-numeric">
                       {/* TODO(v0.17 currency): "NT$ {amount}" with space */}
                       NT$ {rule.amount.toLocaleString()}
                     </span>
                     {rule.pausedAt ? (
-                      <span className="text-xs" style={{ color: 'var(--ink-3)' }}>{translations.recurringRulePaused}</span>
+                      <span className="text-xs text-ink-3">{translations.recurringRulePaused}</span>
                     ) : (
-                      <span className="text-xs tabular-nums" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+                      <span className="text-xs tabular-nums text-ink-3 font-numeric">
                         {translations.recurringRuleNextDate.replace('{date}', formatDateAbsolute(rule.nextOccurrenceAt, locale))}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 text-xs" style={{ color: 'var(--ink-3)' }}>
+                  <div className="mt-1 text-xs text-ink-3">
                     {translations.recurringRuleSummary
                       .replace('{day}', String(rule.dayOfMonth))
                       .replace('{interval}', formatInterval(rule.intervalMonths, intervalLabels))}

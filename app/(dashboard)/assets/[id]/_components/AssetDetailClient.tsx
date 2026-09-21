@@ -207,7 +207,7 @@ export function AssetDetailClient({
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -219,7 +219,7 @@ export function AssetDetailClient({
         pageSize={pageSize}
         header={(count) => (
           <div className="flex items-center justify-between">
-            <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+            <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
               {t.assetDetail.timelineEntries.replace('{count}', String(count))}
             </div>
             {/* "+ 其他支出" is a write entry — hide on past-epoch view. */}
@@ -227,8 +227,7 @@ export function AssetDetailClient({
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
-                style={{ background: 'var(--surface)', border: '1px solid var(--hairline)', color: 'var(--ink-2)' }}
+                className="relative h-7 px-2.5 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] bg-surface border border-hairline text-ink-2"
               >
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                   <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -260,24 +259,23 @@ export function AssetDetailClient({
       />
 
       {linkedInsurances && linkedInsurances.length > 0 && (
-        <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--hairline)' }}>
+        <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden bg-surface border border-hairline">
           <div className="px-5 py-4">
-            <div className="text-xs font-medium tracking-[0.5px] mb-2" style={{ color: 'var(--ink-3)' }}>
+            <div className="text-xs font-medium tracking-[0.5px] mb-2 text-ink-3">
               {t.assetDetail.relatedInsurance}
             </div>
             {linkedInsurances.map((ins, i) => (
               <Link
                 key={ins.id}
                 href={`/assets/${ins.id}`}
-                className={`flex items-center gap-3 text-sm font-medium ${i > 0 ? 'pt-3' : 'pt-0'}`}
+                className={`text-ink flex items-center gap-3 text-sm font-medium ${i > 0 ? 'pt-3' : 'pt-0'}`}
                 style={{
-                  color: 'var(--ink)',
                   borderTop: i > 0 ? '1px solid var(--hairline)' : 'none',
                 }}
               >
                 <span>🛡</span>
                 <span>{ins.name}</span>
-                <span className="ml-auto" style={{ color: 'var(--ink-3)' }}>›</span>
+                <span className="ml-auto text-ink-3">›</span>
               </Link>
             ))}
           </div>

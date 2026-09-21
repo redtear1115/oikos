@@ -76,12 +76,10 @@ function RevealableRow({
       style={{ borderBottom: last ? 'none' : '1px solid var(--hairline)' }}
     >
       <div
-        className="text-xs shrink-0 tracking-[0.4px]"
-        style={{ color: 'var(--ink-3)', width: 76 }}
+        className="text-xs shrink-0 tracking-[0.4px] text-ink-3 w-19"
       >{label}</div>
       <div
-        className="flex-1 text-sm font-medium truncate"
-        style={{ color: 'var(--ink)', fontFamily: 'var(--font-numeric)' }}
+        className="flex-1 text-sm font-medium truncate text-ink font-numeric"
       >
         {error ?? displayValue}
       </div>
@@ -89,8 +87,7 @@ function RevealableRow({
         type="button"
         onClick={onToggle}
         disabled={pending}
-        className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 disabled:cursor-default before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-['']"
-        style={{ background: 'var(--surface)', color: 'var(--ink-2)' }}
+        className="relative text-xs px-2 py-1 rounded-md cursor-pointer border-0 disabled:cursor-default before:absolute before:-inset-y-2.5 before:-inset-x-1 before:content-[''] bg-surface text-ink-2"
       >
         {pending ? t.assetDetail.child.revealLoading : (revealed !== null ? t.assetDetail.child.revealHide : t.assetDetail.child.revealShow)}
       </button>
@@ -161,7 +158,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
   }
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen pb-28 bg-bg">
       <AibutsuHeader
         kind="child"
         name={display.primary}
@@ -218,7 +215,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         <>
           <SectionHeader>{t.assetDetail.notesSection}</SectionHeader>
           <InfoCard>
-            <div className="px-4 py-3 whitespace-pre-wrap text-sm" style={{ color: 'var(--ink)' }}>
+            <div className="px-4 py-3 whitespace-pre-wrap text-sm text-ink">
               {notes}
             </div>
           </InfoCard>
@@ -234,7 +231,7 @@ export function ChildDetailClient({ assetId, name, nickname, notes, details, sum
         onItemClick={handleTxClick}
         emptyState={<AibutsuHintCard type="child" onCtaPress={isPast ? undefined : () => setAddOpen(true)} />}
         header={(count) => (
-          <div className="text-xs tracking-[1.5px] uppercase" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+          <div className="text-xs tracking-[1.5px] uppercase text-ink-3 font-numeric">
             {t.assetDetail.timelineEntries.replace('{count}', String(count))}
           </div>
         )}

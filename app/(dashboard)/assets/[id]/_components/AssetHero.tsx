@@ -39,8 +39,8 @@ function EditPencilButton({ onClick, ariaLabel }: { onClick: () => void; ariaLab
     <button
       type="button"
       onClick={onClick}
-      className="relative w-[30px] h-[30px] rounded-chip shrink-0 inline-flex items-center justify-center align-middle ml-1.5 before:absolute before:-inset-[7px] before:content-['']"
-      style={{ background: 'rgba(58,36,25,0.08)', border: 'none' }}
+      className="relative w-[30px] h-[30px] rounded-chip shrink-0 inline-flex items-center justify-center align-middle ml-1.5 before:absolute before:-inset-[7px] before:content-[''] border-none"
+      style={{ background: 'rgba(58,36,25,0.08)' }}
       aria-label={ariaLabel}
     >
       <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -65,7 +65,7 @@ export function AssetHero({
   // here (#826): it's PII, masked + revealed in the dedicated 車牌 row below,
   // never rendered inline in the hero.
   const subtitle = (
-    <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5" style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-numeric)' }}>
+    <div className="text-xs mt-1 tracking-[1px] flex items-center gap-1.5 text-ink-3 font-numeric">
       {(brand || model) && (
         <span>{[brand, model].filter(Boolean).join(' ')}</span>
       )}
@@ -79,7 +79,7 @@ export function AssetHero({
   // visible while the page scrolls (#250).
   const header = (
     <div className="flex items-center">
-      <div className="text-2xl font-medium tracking-tight min-w-0" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+      <div className="text-2xl font-medium tracking-tight min-w-0 font-serif text-ink">
         {name}
       </div>
       {onEdit && <EditPencilButton onClick={onEdit} ariaLabel={t.assetDetail.editAriaLabel} />}
@@ -105,7 +105,7 @@ export function AssetHero({
             {!isPast && (
               <>
                 <Stat label={t.assetDetail.money.thisMonth} amount={monthAmount} accent={false} />
-                <div style={{ width: 1, height: 36, background: 'var(--hairline)' }} />
+                <div className="w-px h-9 bg-hairline" />
               </>
             )}
             <Stat label={t.assetDetail.money.thisChapter} amount={totalAmount} accent />
@@ -122,17 +122,17 @@ export function AssetHero({
         {name && subtitle}
 
         <div className="text-center mt-5 pb-1">
-          <div className="text-xs font-mono uppercase tracking-[1.5px]" style={{ color: 'var(--ink-3)' }}>{t.assetDetail.car.avgEcon}</div>
+          <div className="text-xs font-mono uppercase tracking-[1.5px] text-ink-3">{t.assetDetail.car.avgEcon}</div>
           <div className="inline-flex items-baseline gap-1.5 mt-1.5">
             <span
-              className="text-amount-lg font-medium tabular-nums leading-none"
-              style={{ letterSpacing: '-2px', color: 'var(--ink)' }}
+              className="text-amount-lg font-medium tabular-nums leading-none text-ink"
+              style={{ letterSpacing: '-2px' }}
             >
               {avgEcon !== null ? avgEcon.toFixed(1) : '—'}
             </span>
-            <span className="text-sm font-medium" style={{ color: 'var(--ink-3)' }}>km/L</span>
+            <span className="text-sm font-medium text-ink-3">km/L</span>
           </div>
-          <div className="text-xs font-mono mt-1" style={{ color: 'var(--ink-3)' }}>
+          <div className="text-xs font-mono mt-1 text-ink-3">
             {econHint === 'noLog'
               ? t.assetDetail.car.avgEconNoLog
               : econHint === 'stale'
@@ -146,13 +146,13 @@ export function AssetHero({
         {/* TODO(v0.17 currency): MiniStat values use "NT$ {amount}" with space —
              defer to design before migrating to formatAmount. */}
         <div
-          className="mt-5 flex rounded-2xl px-4 py-3 gap-2"
-          style={{ background: 'rgba(58,36,25,0.04)', border: '1px solid var(--hairline)' }}
+          className="mt-5 flex rounded-2xl px-4 py-3 gap-2 border border-hairline"
+          style={{ background: 'rgba(58,36,25,0.04)' }}
         >
           {!isPast && (
             <>
               <MiniStat label={t.assetDetail.money.thisMonth} value={`NT$ ${monthAmount.toLocaleString()}`} />
-              <div style={{ width: 1, background: 'var(--hairline)' }} />
+              <div className="w-px bg-hairline" />
             </>
           )}
           <MiniStat label={t.assetDetail.money.thisChapter} value={`NT$ ${totalAmount.toLocaleString()}`} />
@@ -166,20 +166,18 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
   const dim = amount === 0
   return (
     <div>
-      <div className="text-xs tracking-label mb-1" style={{ color: 'var(--ink-3)' }}>{label}</div>
+      <div className="text-xs tracking-label mb-1 text-ink-3">{label}</div>
       <div
         // #1174 — 32 was off the type scale; the secondary stat drops to the
         // nearest static tier below (text-page, 26). 40 is only a clamp() floor.
-        className={`tnum tracking-[-1px] leading-none ${accent ? 'text-amount-md' : 'text-page'}`}
+        className={`font-numeric font-medium tnum tracking-[-1px] leading-none ${accent ? 'text-amount-md' : 'text-page'}`}
         style={{
-          fontFamily: 'var(--font-numeric)',
-          fontWeight: 500,
           color: dim ? 'var(--ink-3)' : 'var(--ink)',
         }}
       >
         {/* TODO(v0.17 currency): typographic split — small NT$ + large digits;
              needs formatAmount digits-only mode (or symbol/digits split). */}
-        <span className="text-base mr-0.5" style={{ color: 'var(--ink-2)', fontWeight: 500 }}>NT$</span>
+        <span className="text-base mr-0.5 text-ink-2 font-medium">NT$</span>
         {amount.toLocaleString('en-US')}
       </div>
     </div>
@@ -189,8 +187,8 @@ function Stat({ label, amount, accent }: { label: string; amount: number; accent
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1">
-      <div className="text-xs font-mono tracking-wider" style={{ color: 'var(--ink-3)' }}>{label}</div>
-      <div className="text-base font-medium tabular-nums mt-0.5" style={{ color: 'var(--ink)' }}>{value}</div>
+      <div className="text-xs font-mono tracking-wider text-ink-3">{label}</div>
+      <div className="text-base font-medium tabular-nums mt-0.5 text-ink">{value}</div>
     </div>
   )
 }
