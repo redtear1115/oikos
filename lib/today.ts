@@ -95,6 +95,17 @@ export function readTimeZoneCookie(cookieHeader: string): string | null {
 }
 
 /**
+ * The zone a raw Cookie header resolves to: the first valid `tz` value, else
+ * Asia/Taipei. The server calls this on the request's `Cookie` header, and it
+ * is the same `readTimeZoneCookie` the client runs on `document.cookie` — one
+ * rule on both sides by construction. Browsers list cookies in the same order
+ * in both places (RFC 6265 §5.4: longer path first, then oldest first).
+ */
+export function timeZoneFromCookieHeader(cookieHeader: string | null | undefined): string {
+  return readTimeZoneCookie(cookieHeader ?? '') ?? DEFAULT_TIME_ZONE
+}
+
+/**
  * Write the device zone into the `tz` cookie when it differs from what's
  * stored. Client-only; no-op on the server. Returns whether it wrote.
  *
