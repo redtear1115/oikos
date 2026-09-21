@@ -54,7 +54,7 @@ export function MonthSection({ monthKey, count, totalAmount, summary }: Props) {
     <div className="px-6 pt-4 pb-2 flex items-baseline justify-between gap-2">
       <span
         className="text-base font-medium tracking-tight shrink-0"
-        style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
+        style={{ color: 'var(--ink)' }}
       >
         {monthLabel(monthKey, locale)}
       </span>

@@ -44,9 +44,12 @@ export function BrandHeader({ showTripButton, onTripClick }: BrandHeaderProps = 
         {/* The ledger name is the dashboard's visible title, so it carries the
             page's only <h1> (#1197). BrandHeader renders on /dashboard alone;
             other routes own their own h1. Preflight zeroes h1's default size,
-            weight and margin, so the classes below still decide the look. */}
+            weight and margin, so the classes below still decide the look.
+            Sans, not serif (#1269): this slot is the Dashboard L1, and the
+            L1 tier is sans even where its content happens to be a name the
+            couple gave the ledger. */}
         <h1 className="text-title font-medium tracking-tight truncate"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+          style={{ color: 'var(--ink)' }}>
           {group.name}
         </h1>
       </div>
