@@ -23,6 +23,13 @@ interface Props {
    * or deleting an asset.
    */
   destructive?: boolean
+  /**
+   * False drops the top-right save, leaving the bottom button as the only
+   * commit — for one-action confirms where two buttons read as two steps
+   * (end outing, #1396). The slot stays as an invisible placeholder so the
+   * title keeps its centre.
+   */
+  headerSave?: boolean
   /** Unsaved-input check (see SheetFrame `isDirty`, #1183). */
   isDirty?: () => boolean
   /**
@@ -66,6 +73,7 @@ export function SheetShell({
   onSave,
   children,
   destructive = false,
+  headerSave = true,
   isDirty,
   onDelete,
   deletePending = false,
@@ -107,16 +115,24 @@ export function SheetShell({
               items={[{ label: t.common.delete, onSelect: () => setConfirmingDelete(true) }]}
             />
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSave}
-            disabled={!canSave}
-            className="px-2 font-medium"
-            style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
-          >
-            {pending ? t.common.saving : t.common.save}
-          </Button>
+          {headerSave ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSave}
+              disabled={!canSave}
+              className="px-2 font-medium"
+              style={{ color: canSave ? accentColor : 'var(--ink-3)' }}
+            >
+              {pending ? t.common.saving : t.common.save}
+            </Button>
+          ) : (
+            <span aria-hidden className="invisible">
+              <Button variant="ghost" size="sm" tabIndex={-1} className="px-2 font-medium">
+                {t.common.save}
+              </Button>
+            </span>
+          )}
         </div>
       </div>
 

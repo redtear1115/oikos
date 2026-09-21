@@ -17,6 +17,7 @@ export function Chip({ selected, onClick, children }: { selected: boolean; onCli
   return (
     <button
       type="button"
+      aria-pressed={selected}
       onClick={onClick}
       className="h-chip rounded-chip px-3.5 text-sm"
       style={{

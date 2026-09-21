@@ -521,6 +521,8 @@ export type Translations = {
     iSettled: string
     /** Transaction row payer label — partner paid (settlement). `{name}` = partner displayName. */
     partnerSettled: string
+    /** Settlement row label when it's an ended outing's fold-back (no direction). */
+    outingSettled: string
     /** Transaction row payer label — viewer paid (income). */
     youIncome: string
     /** Transaction row payer label — partner paid (income). `{name}` = partner displayName. */
@@ -3401,6 +3403,7 @@ export const zhTW: Translations = {
     pendingBadge: '待結算',
     iSettled: '我還款',
     partnerSettled: '{name} 還款',
+    outingSettled: '出遊結算',
     youIncome: '你收入',
     partnerIncome: '{name} 收入',
     youPaid: '你付',
@@ -3580,7 +3583,7 @@ export const zhTW: Translations = {
     paidByTag: '{name} 付',
     splitCountTag: '{count} 人',
     untitledExpense: '一筆支出',
-    emptyExpenses: '還沒有支出。記下第一筆吧。',
+    emptyExpenses: '還沒有支出。',
     addExpense: '記一筆',
     addParticipant: '加一個人',
     settle: '標記還款',
