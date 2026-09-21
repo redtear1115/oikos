@@ -15,11 +15,12 @@ import {
   derivePartnerQuizStatus,
   isPartnerQuizQuestionKey,
 } from '@/lib/partnerQuiz'
-import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { getEpochMembers, resolveViewerEpochContext } from '@/lib/db/queries/epoch'
 import {
   parseYearMonth,
   currentYearMonthInTaipei,
   isAfter,
+  isMonthInChapter,
   nextMonth,
 } from '@/lib/monthlyReview'
 import { ReviewClient } from './_components/ReviewClient'
@@ -48,7 +49,27 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   if (!context) redirect('/onboarding')
   const { group } = context
 
-  const memberIds = [group.memberA, group.memberB].filter((x): x is string => !!x)
+  // Reviews follow the chapter (#1380): a month outside the viewed chapter's
+  // window is not this chapter's to show — including its messages, which are
+  // group-scoped too. A month straddling a chapter boundary belongs to neither
+  // side (lib/monthlyReview.ts › isMonthInChapter).
+  if (!isMonthInChapter(reviewedMonth, context.window)) notFound()
+
+  // Members of the chapter being viewed, not of the group today (#1384). A
+  // partner who left views their old chapter through the past-times pin
+  // (resolveViewerEpochContext accepts it only for that chapter's members);
+  // the group row no longer names them, the epoch row does. Reading the group
+  // row sent them to /sign-in, and showed the stayer the NEXT partner as the
+  // other half of an old chapter.
+  const chapter = context.window.epochId ? await getEpochMembers(context.window.epochId) : null
+  const memberA = chapter ? chapter.memberAId : group.memberA
+  const memberB = chapter ? chapter.memberBId : group.memberB
+  const memberIds = [memberA, memberB].filter((x): x is string => !!x)
+  // Not one of this chapter's two people → not theirs to see. Unreachable
+  // through resolveViewerEpochContext today; kept so the page never relies on
+  // a caller for its own access rule.
+  if (!memberIds.includes(user.id)) notFound()
+
   const profileRows = await db
     .select({
       id: profiles.id,
@@ -62,19 +83,26 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
 
   const viewerProfile = profileRows.find((p) => p.id === user.id)
   if (!viewerProfile) redirect('/sign-in')
-  const partnerProfile = group.memberB
+  const partnerProfile = memberB
     ? profileRows.find((p) => p.id !== user.id)
     : null
-  const isSolo = !group.memberB
+  const isSolo = !memberB
+  // A closed chapter is read-only (epoch-readonly): no next-month editor, and
+  // no partner quiz — the quiz session is the group's live one, which after a
+  // leave belongs to a different pair.
+  const readOnly = context.window.isPast
 
   const editorMonth = nextMonth(reviewedMonth)
 
-  const [snapshot, pastMessages, editorMessages, quizSession] = await Promise.all([
+  const [snapshot, allPastMessages, allEditorMessages, quizSession] = await Promise.all([
     loadMonthlyReviewSnapshot(group.id, reviewedMonth.year, reviewedMonth.month),
     loadMonthlyReviewMessages(group.id, reviewedMonth.year, reviewedMonth.month),
     loadMonthlyReviewMessages(group.id, editorMonth.year, editorMonth.month),
-    isSolo ? Promise.resolve(null) : loadPartnerQuizSessionByGroup(group.id),
+    isSolo || readOnly ? Promise.resolve(null) : loadPartnerQuizSessionByGroup(group.id),
   ])
+  // Messages are group-scoped rows; only the chapter's two people's belong here.
+  const pastMessages = allPastMessages.filter((m) => memberIds.includes(m.memberId))
+  const editorMessages = allEditorMessages.filter((m) => memberIds.includes(m.memberId))
 
   // Quiz state — only resolved for dyad groups. Spec: solo mode 不渲染整段
   // quiz；surface 條件「第一次有 MonthlyReviewSnapshot row 後」由 snapshot 存在判定。
@@ -85,7 +113,7 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
   const partnerAnswered = quizSession && partnerProfile
     ? quizAnswers.some((a) => a.memberId === partnerProfile.id)
     : false
-  const quizStatus = !isSolo && snapshot
+  const quizStatus = !isSolo && !readOnly && snapshot
     ? derivePartnerQuizStatus({
         hasSession: !!quizSession,
         selfAnswered,
@@ -135,6 +163,7 @@ export default async function MonthlyReviewPage({ params }: PageProps) {
         avatarUrl: partnerProfile.avatarUrl,
       } : null}
       isSolo={isSolo}
+      readOnly={readOnly}
       quiz={quizStatus ? {
         status: quizStatus,
         partnerName: partnerProfile?.displayName ?? '',

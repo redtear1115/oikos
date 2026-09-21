@@ -10,6 +10,7 @@ import { SoloMonthHero } from './SoloMonthHero'
 import { useMember } from '@/app/(dashboard)/_components/MemberContext'
 import { useRealtimeEvents } from '@/app/(dashboard)/_components/RealtimeProvider'
 import { BalanceHero } from './BalanceHero'
+import { ContinuityRow, type ReviewCellState } from './ContinuityRow'
 import type { RateEntry } from './AddSheet'
 import { BottomNav } from '@/app/(dashboard)/_components/BottomNav'
 import { defaultFilter, type TxnFilter, type PayerFilter, type BurdenFilter } from '@/lib/filter'
@@ -84,6 +85,8 @@ export interface DashboardProps {
   initialHeroCollapsed: boolean
   initialIncludePending: boolean
   initialTripCollapsed: boolean
+  /** 月回顧 cell of the ContinuityRow (#1364), decided on the server. */
+  reviewCell: ReviewCellState
 }
 
 export function Dashboard({
@@ -106,6 +109,7 @@ export function Dashboard({
   initialHeroCollapsed,
   initialIncludePending,
   initialTripCollapsed,
+  reviewCell,
 }: DashboardProps) {
   const router = useRouter()
   const { isSolo, isPast, viewerIsA, partner } = useMember()
@@ -352,6 +356,10 @@ export function Dashboard({
           recentIncomeLabel={recentIncomeLabel}
         />
       )}
+      {/* Always-there entries to 月回顧 / 旅行 (#1364). Not on a pinned past
+          chapter: that view is a read-only snapshot, and ContextStrip already
+          steps aside there for the same reason. */}
+      {!isPast && <ContinuityRow review={reviewCell} hasActiveTrip={activeTrips.length > 0} />}
       {mode === 'expense' && expensePendings.length > 0 && (
         <div className="px-5">
           <PendingExpenseStack

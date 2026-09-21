@@ -349,3 +349,21 @@ export const resolveViewerEpochContext = cache(async (
       : { startedAt: new Date(0), endedAt: null, epochId: null, isPast: false },
   }
 })
+
+/**
+ * The two people of a chapter, as recorded on its GroupEpochs row (#1384).
+ * A closed chapter's members are not the group's current members: after a
+ * leave, the group row names the stayer and whoever joined next, while the
+ * epoch row still names the pair who lived that chapter. Anything rendering a
+ * chapter — names, avatars, "whose message" — must read these.
+ */
+export async function getEpochMembers(
+  epochId: string,
+): Promise<{ memberAId: string; memberBId: string | null } | null> {
+  const [row] = await db
+    .select({ memberAId: groupEpochs.memberAId, memberBId: groupEpochs.memberBId })
+    .from(groupEpochs)
+    .where(eq(groupEpochs.id, epochId))
+    .limit(1)
+  return row ?? null
+}

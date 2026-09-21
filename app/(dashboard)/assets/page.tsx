@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/supabase/server'
 import { listAssetsForGroup, getAssetSummariesBatch } from '@/lib/db/queries/asset'
 import { resolveViewerEpochContext } from '@/lib/db/queries/epoch'
+import { nonMemberPinCutoff } from '@/lib/pinnedChapterScope'
 import { getCarHeroStats } from '@/lib/db/queries/fuelLog'
 import { getChildNicknames, getPetListDetailsBatch, getPlantListDetailsBatch } from '@/lib/db/queries/aibutsu'
 import { AssetsListClient, type AssetsListItem } from './_components/AssetsListClient'
@@ -14,7 +15,12 @@ export default async function AssetsPage() {
   if (!context) redirect('/onboarding')
   const { group, window: epochWindow } = context
 
-  const assetRows = await listAssetsForGroup(group.id)
+  // A viewer on a closed chapter of a group they are no longer in only sees
+  // assets that existed before that chapter closed (null for everyone else).
+  // Known limit: those assets still show their current field values — see
+  // lib/pinnedChapterScope.ts.
+  const createdBefore = nonMemberPinCutoff(context, user.id)
+  const assetRows = await listAssetsForGroup(group.id, createdBefore)
 
   const childIds = assetRows.filter((a) => a.type === 'child').map((a) => a.id)
   const petIds = assetRows.filter((a) => a.type === 'pet').map((a) => a.id)
