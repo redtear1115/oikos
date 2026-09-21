@@ -43,7 +43,7 @@ export async function SettingsContent({
           * already have one; this was a styled div (#1172). */}
         <h1
           className="text-page font-medium tracking-tight"
-          style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}
+          style={{ color: 'var(--ink)' }}
         >
           {t.settings.title}
         </h1>

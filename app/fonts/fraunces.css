@@ -71,8 +71,13 @@
   size-adjust: 115.45%;
 }
 
-/* Scoped, not on :root — the layouts opt subtrees in by class, which is how
- * Fraunces stays off the routes that don't need it. (#572) */
+/* Root-level, not route-scoped: app/layout.tsx puts .font-fraunces on
+ * <html>, so this loads on every route including the dashboard. The
+ * dashboard layout only swaps the *default* family to Noto Sans TC
+ * (font-noto-tc on its wrapper) — it does not unload Fraunces. An earlier
+ * version of this comment said the opposite ("layouts opt subtrees in by
+ * class"); that was false and fed a P1 that stripped serif from intentional
+ * emotional moments (#1162). See DESIGN.md §3, The Serif-Speaks Rule. */
 .font-fraunces {
   --font-fraunces: 'Fraunces', 'Fraunces Fallback';
 }
