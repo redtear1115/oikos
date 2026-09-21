@@ -19,8 +19,9 @@ interface Props {
  * /trips). Back chevron + centred small title + 64px spacer so the title sits
  * visually centred against the back button.
  *
- * Per-page big serif `pageHeading` (Fraunces) sits in its own section below
- * this strip — it's not part of the header to keep both visual roles distinct.
+ * Per-page big `pageHeading` sits in its own section below this strip — it's
+ * not part of the header to keep both visual roles distinct. That heading is
+ * sans (Noto Sans TC, Page tier), not serif — #1269 moved it off Fraunces.
  */
 export function SubpageHeader({ title, backLabel, onBack, titleAs: Title = 'div' }: Props) {
   const router = useRouter()
