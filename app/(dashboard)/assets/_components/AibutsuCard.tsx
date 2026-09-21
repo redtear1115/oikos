@@ -12,15 +12,9 @@ import { todayLocalDate } from '@/lib/local-date'
 function TintIconBox({ type, tintVar }: { type: string; tintVar: string }) {
   return (
     <div
-      className="rounded-chip"
+      className="rounded-chip w-9 h-9 flex items-center justify-center shrink-0"
       style={{
-        width: 36,
-        height: 36,
         background: tintVar,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
       }}
     >
       <AssetIcon type={type as import('@/lib/assets').AssetType} size={18} />
@@ -58,12 +52,10 @@ function Dot() {
   return (
     <span
       aria-hidden="true"
-      className="rounded-xs"
+      className="rounded-xs inline-block bg-ink-3 shrink-0"
       style={{
-        display: 'inline-block',
-        width: 3, height: 3,
-        background: 'var(--ink-3)',
-        flexShrink: 0,
+        width: 3,
+        height: 3,
       }}
     />
   )
@@ -117,42 +109,29 @@ export function ChildCard({
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
-      style={{ color: 'var(--ink)' }}
+      className="block no-underline text-ink"
     >
       <div
-        className="rounded-2xl"
+        className="rounded-2xl bg-surface overflow-hidden"
         style={{
-          background: 'var(--surface)',
           border: '1px solid color-mix(in srgb, var(--asset-color-child) 25%, transparent)',
-          overflow: 'hidden',
         }}
       >
         <div
-          className="px-4 py-3"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
+          className="px-4 py-3 flex items-center gap-3"
         >
           <TintIconBox type="child" tintVar="var(--asset-tint-child)" />
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
             {/* Name line */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+            <div className="flex items-baseline gap-1.5 min-w-0">
               <div
-                className="text-sm"
-                style={{
-                  fontWeight: 500, color: 'var(--ink)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}
+                className="text-sm font-medium text-ink overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {displayName}
               </div>
               {secondaryName && (
                 <span
-                  className="font-mono shrink-0 text-mini"
-                  style={{ color: 'var(--ink-3)' }}
+                  className="font-mono shrink-0 text-mini text-ink-3"
                 >
                   {secondaryName}
                 </span>
@@ -160,17 +139,10 @@ export function ChildCard({
             </div>
             {/* Info line */}
             <div
-              className="text-xs mt-1"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                color: 'var(--ink-3)',
-                flexWrap: 'wrap',
-              }}
+              className="text-xs mt-1 flex items-center gap-1.5 text-ink-3 flex-wrap"
             >
               {age && (
-                <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>
+                <span className="text-ink-2 font-medium">
                   {t.assetListItem.childAge
                     .replace('{years}', String(age.years))
                     .replace('{months}', String(age.months))}
@@ -180,12 +152,7 @@ export function ChildCard({
               {bodyStr && <span>{bodyStr}</span>}
               {birthdayThisMonth && (
                 <span
-                  className="text-mini px-1.5 py-px rounded-sm"
-                  style={{
-                    background: 'var(--accent-soft)',
-                    color: 'var(--ink-2)',
-                    fontWeight: 500,
-                  }}
+                  className="text-mini px-1.5 py-px rounded-sm bg-accent-soft text-ink-2 font-medium"
                 >
                   {t.assetListItem.birthdayThisMonth}
                 </span>
@@ -232,48 +199,29 @@ export function PetCard({
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
-      style={{ color: 'var(--ink)' }}
+      className="block no-underline text-ink"
     >
       <div
-        className="rounded-2xl"
+        className="rounded-2xl bg-surface overflow-hidden"
         style={{
-          background: 'var(--surface)',
           border: '1px solid color-mix(in srgb, var(--asset-color-pet) 25%, transparent)',
-          overflow: 'hidden',
         }}
       >
         <div
-          className="px-4 py-3"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
+          className="px-4 py-3 flex items-center gap-3"
         >
           <TintIconBox type="pet" tintVar="var(--asset-tint-pet)" />
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
             <div
-              className="text-sm"
-              style={{
-                fontWeight: 500, color: 'var(--ink)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
+              className="text-sm font-medium text-ink overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {name}
             </div>
             <div
-              className="text-xs mt-1"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                color: 'var(--ink-3)',
-                flexWrap: 'wrap',
-              }}
+              className="text-xs mt-1 flex items-center gap-1.5 text-ink-3 flex-wrap"
             >
               {speciesBreed && (
-                <span style={{ color: 'var(--ink-2)' }}>{speciesBreed}</span>
+                <span className="text-ink-2">{speciesBreed}</span>
               )}
               {(age || weightKg) && speciesBreed && <Dot />}
               {age && (
@@ -326,49 +274,31 @@ export function PlantCard({
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
-      style={{ color: 'var(--ink)' }}
+      className="block no-underline text-ink"
     >
       <div
-        className="rounded-2xl"
+        className="rounded-2xl bg-surface overflow-hidden"
         style={{
-          background: 'var(--surface)',
           border: '1px solid color-mix(in srgb, var(--asset-color-plant) 25%, transparent)',
-          overflow: 'hidden',
         }}
       >
         <div
-          className="px-4 py-3"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
+          className="px-4 py-3 flex items-center gap-3"
         >
           <TintIconBox type="plant" tintVar="var(--asset-tint-plant)" />
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
             <div
-              className="text-sm"
-              style={{
-                fontWeight: 500, color: 'var(--ink)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
+              className="text-sm font-medium text-ink overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {name}
             </div>
             <div
-              className="text-xs mt-1"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                color: 'var(--ink-3)',
-              }}
+              className="text-xs mt-1 flex items-center gap-1.5 text-ink-3"
             >
               {days != null && (
                 <span>
                   {daysBefore}
-                  <span style={{ color: 'var(--ink-2)', fontWeight: 500 }}>{days}</span>
+                  <span className="text-ink-2 font-medium">{days}</span>
                   {daysAfter}
                 </span>
               )}
@@ -398,53 +328,31 @@ export function ItemCard({ id, name, monthAmount, totalAmount, isPast, notes }: 
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
-      style={{ color: 'var(--ink)' }}
+      className="block no-underline text-ink"
     >
       <div
-        className="rounded-2xl"
+        className="rounded-2xl bg-surface overflow-hidden"
         style={{
-          background: 'var(--surface)',
           border: '1px solid color-mix(in srgb, var(--asset-color-item) 25%, transparent)',
-          overflow: 'hidden',
         }}
       >
         <div
-          className="px-4 py-3"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
+          className="px-4 py-3 flex items-center gap-3"
         >
           <TintIconBox type="item" tintVar="var(--asset-tint-item)" />
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
+              className="flex items-center gap-1.5"
             >
               <div
-                className="text-sm"
-                style={{
-                  fontWeight: 500, color: 'var(--ink)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}
+                className="text-sm font-medium text-ink overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {name}
               </div>
             </div>
             {notes && (
               <div
-                className="text-xs mt-1"
-                style={{
-                  color: 'var(--ink-3)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
+                className="text-xs mt-1 text-ink-3 overflow-hidden text-ellipsis whitespace-nowrap"
               >
                 {notes}
               </div>
@@ -471,33 +379,21 @@ export function HouseCard({ id, name, monthAmount, totalAmount, isPast }: HouseC
   return (
     <Link
       href={`/assets/${id}`}
-      className="block no-underline"
-      style={{ color: 'var(--ink)' }}
+      className="block no-underline text-ink"
     >
       <div
-        className="rounded-2xl"
+        className="rounded-2xl bg-surface overflow-hidden"
         style={{
-          background: 'var(--surface)',
           border: '1px solid color-mix(in srgb, var(--asset-color-house) 25%, transparent)',
-          overflow: 'hidden',
         }}
       >
         <div
-          className="px-4 py-3"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
+          className="px-4 py-3 flex items-center gap-3"
         >
           <TintIconBox type="house" tintVar="var(--asset-tint-house)" />
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0">
             <div
-              className="text-sm"
-              style={{
-                fontWeight: 500, color: 'var(--ink)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
+              className="text-sm font-medium text-ink overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {name}
             </div>
