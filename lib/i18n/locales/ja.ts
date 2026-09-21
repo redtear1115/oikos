@@ -472,7 +472,7 @@ export const ja: Translations = {
     label: 'ログアウト',
     pending: 'ログアウト中…',
     title: 'Futari からログアウト？',
-    description: '次回は Google でサインインする必要があります。パートナーを招待していない記録は失われません。',
+    description: '次回は Google でサインインする必要があります。相手を招待していなくても、記録は失われません。',
   },
 
   deleteAccountButton: {
