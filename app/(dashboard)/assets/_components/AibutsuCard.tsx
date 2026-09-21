@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { AssetIcon } from '@/app/(dashboard)/_components/AssetIcon'
 import { formatAmount } from '@/lib/currency'
 import { useTranslations } from '@/lib/i18n/client'
-import { computeAge } from '@/lib/age'
+import { computeAge, daysSince } from '@/lib/age'
 import { todayLocalDate } from '@/lib/local-date'
 
 // ─── Shared chassis helpers ───────────────────────────────────────────────────
@@ -78,16 +78,6 @@ function isBirthdayThisMonth(birthday: string | null | undefined): boolean {
   if (computeAge(birthday) === null) return false
   const [, m] = birthday.split('-').map(Number)
   return m === today.getMonth() + 1
-}
-
-function companionDays(sproutedAt: string | null | undefined): number | null {
-  if (!sproutedAt) return null
-  const today = todayLocalDate()
-  const [y, m, d] = sproutedAt.split('-').map(Number)
-  if (!y || !m || !d) return null
-  const start = new Date(y, m - 1, d)
-  const diff = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-  return Math.max(0, diff)
 }
 
 // ─── ChildCard ────────────────────────────────────────────────────────────────
@@ -329,7 +319,7 @@ export function PlantCard({
   plantSproutedAt,
 }: PlantCardProps) {
   const t = useTranslations()
-  const days = companionDays(plantSproutedAt)
+  const days = daysSince(plantSproutedAt)
   // `{days}` is rendered emphasised — split the template around it.
   const [daysBefore, daysAfter = ''] = t.assetListItem.plantCompanionDays.split('{days}')
 

@@ -1,4 +1,4 @@
-import { todayLocalDate } from './local-date'
+import { daysBetween, parseLocalDate, todayLocalDate } from './local-date'
 
 export interface Age {
   years: number
@@ -40,4 +40,25 @@ export function computeAge(birthday: string | null | undefined): Age | null {
   // to 0 used to keep the leftover month count, so 2027-01-01 read as 8 個月.
   if (years < 0) return null
   return { years, months }
+}
+
+/**
+ * Whole days from a 'YYYY-MM-DD' start date to today, in local calendar days.
+ * Returns null if the date is null, invalid, or after today — the day-count
+ * counterpart of `computeAge`, with the same future-date guard (#1347).
+ *
+ * Serves the plant 陪伴天數 and the house 住了幾天 heroes, and the plant list
+ * card. The detail heroes used to parse `new Date(ymd)` (UTC) against
+ * `Date.now()` and clamp with `Math.max(0, …)`.
+ *
+ * **失效的樣子**: nothing throws and nothing goes negative. A sprout date or
+ * move-in date typed in ahead of time reads as 「0 天」 on the first screen —
+ * a plausible-looking number for something that hasn't started yet — and in
+ * UTC+8 a date entered as today counts from 08:00, not midnight.
+ */
+export function daysSince(ymd: string | null | undefined): number | null {
+  const start = parseLocalDate(ymd)
+  if (!start) return null
+  const days = daysBetween(start, todayLocalDate())
+  return days < 0 ? null : days
 }
