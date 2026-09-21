@@ -8,7 +8,7 @@ import {
   createInsurance, editInsurance,
   createHouse, editHouse,
 } from '@/actions/asset'
-import { decrypt } from '@/lib/crypto'
+import { decrypt, aadFor } from '@/lib/crypto'
 
 const VIEWER = { id: 'user-a', email: 'a@example.com' }
 const GROUP = { id: 'grp-1', memberA: 'user-a', memberB: 'user-b', name: '我們家', guardianBetaEnabled: true }
@@ -69,10 +69,10 @@ describe('createChild', () => {
     // Round-trip via decrypt() to prove correctness.
     expect(childPayload.idNumberEncrypted).not.toBe('A123456789')
     expect(childPayload.idNumberEncrypted).toMatch(CIPHERTEXT_RE)
-    expect(decrypt(childPayload.idNumberEncrypted as string)).toBe('A123456789')
+    expect(decrypt(childPayload.idNumberEncrypted as string, aadFor('ChildDetails', 'id_number_encrypted', 'asset-2'))).toBe('A123456789')
     expect(childPayload.insuranceIdEncrypted).not.toBe('NHI-001')
     expect(childPayload.insuranceIdEncrypted).toMatch(CIPHERTEXT_RE)
-    expect(decrypt(childPayload.insuranceIdEncrypted as string)).toBe('NHI-001')
+    expect(decrypt(childPayload.insuranceIdEncrypted as string, aadFor('ChildDetails', 'insurance_id_encrypted', 'asset-2'))).toBe('NHI-001')
   })
 
   it('null PII fields stay null (no encryption of null)', async () => {
@@ -194,10 +194,10 @@ describe('editChild', () => {
     const setObj = (conflictCall[0] as { set: Record<string, unknown> }).set
     expect(setObj.idNumberEncrypted).not.toBe('A123456789')
     expect(setObj.idNumberEncrypted).toMatch(CIPHERTEXT_RE)
-    expect(decrypt(setObj.idNumberEncrypted as string)).toBe('A123456789')
+    expect(decrypt(setObj.idNumberEncrypted as string, aadFor('ChildDetails', 'id_number_encrypted', 'asset-1'))).toBe('A123456789')
     expect(setObj.insuranceIdEncrypted).not.toBe('NHI-002')
     expect(setObj.insuranceIdEncrypted).toMatch(CIPHERTEXT_RE)
-    expect(decrypt(setObj.insuranceIdEncrypted as string)).toBe('NHI-002')
+    expect(decrypt(setObj.insuranceIdEncrypted as string, aadFor('ChildDetails', 'insurance_id_encrypted', 'asset-1'))).toBe('NHI-002')
   })
 })
 
@@ -206,7 +206,7 @@ describe('editChild', () => {
 describe('revealChildPii', () => {
   it('returns plaintext when ciphertext present and asset belongs to group', async () => {
     const { encrypt } = await import('@/lib/crypto')
-    const ct = encrypt('A123456789')
+    const ct = encrypt('A123456789', aadFor('ChildDetails', 'id_number_encrypted', 'asset-1'))
 
     queueDbResult([GROUP])
     queueDbResult([{

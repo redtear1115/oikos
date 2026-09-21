@@ -5,7 +5,8 @@ import { assets, carDetails, cashTransactions, childDetails, petDetails, plantDe
 import { validateCarInput, validateLifeEntityInput, validateChildInput, validatePetInput, validatePlantInput, validateInsuranceInput, validateHouseInput, validateName, validateNotes } from '@/lib/validators'
 import { deriveTxnFromPrimaryUser } from '@/lib/primaryUser'
 import { recalcGroupBalance } from '@/lib/db/queries/balance'
-import { encrypt, decrypt } from '@/lib/crypto'
+import { randomUUID } from 'crypto'
+import { encrypt, decrypt, aadFor, type AadContext } from '@/lib/crypto'
 import { eq, and, isNull } from 'drizzle-orm'
 import { requireViewerGroup } from '@/lib/auth/viewer'
 import { revalidateAfterAssetMutation } from '@/lib/revalidate'
@@ -85,7 +86,7 @@ export const createCar = action(async (input: CreateCarInput): Promise<{ id: str
     await tx.insert(carDetails).values({
       assetId: asset.id,
       // #837 — encrypted column is the only store; legacy `plate` was dropped.
-      plateEncrypted: encrypt(plate),
+      plateEncrypted: encrypt(plate, aadFor('CarDetails', 'plate_encrypted', asset.id)),
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
       primaryUserId: validated.primaryUserId,
@@ -214,7 +215,7 @@ export const editCar = action(async (input: EditCarInput): Promise<void> => {
       initialOdometer: validated.initialOdometer,
     }
     if (validated.plate !== undefined) {
-      carUpdates.plateEncrypted = validated.plate === null ? null : encrypt(validated.plate)
+      carUpdates.plateEncrypted = validated.plate === null ? null : encrypt(validated.plate, aadFor('CarDetails', 'plate_encrypted', updated[0].id))
     }
 
     await tx
@@ -419,9 +420,9 @@ export interface EditChildInput extends CreateChildInput {
  * `string` (set). On INSERT there is no existing row to keep — both `undefined`
  * and `null` map to NULL in the column; only a non-empty string is encrypted.
  */
-function encryptForInsert(value: string | null | undefined): string | null {
+function encryptForInsert(value: string | null | undefined, ctx: AadContext): string | null {
   if (value === undefined || value === null) return null
-  return encrypt(value)
+  return encrypt(value, ctx)
 }
 
 export const createChild = action(async (input: CreateChildInput): Promise<{ id: string }> => {
@@ -429,17 +430,23 @@ export const createChild = action(async (input: CreateChildInput): Promise<{ id:
   const validated = validateChildInput(input)
   const { user, group } = await requireViewerGroup()
 
+  // #1287 — Assets.id is generated here (not by the DB default) so the
+  // name_encrypted AAD can bind to the row's primary key before the INSERT.
+  // The same value goes to `.values({ id })` and to aadFor.
+  const assetId = randomUUID()
+
   const [created] = await db.transaction(async (tx) => {
     const [asset] = await tx
       .insert(assets)
       .values({
+        id: assetId,
         groupId: group.id,
         type: 'child',
         name: validated.name,
         // #826 — encrypted full name on the Asset row. Display name stays on
         // `name` (plaintext) so list / header / sibling-rail queries don't
         // need to decrypt for casual reads.
-        nameEncrypted: encryptForInsert(validated.fullName),
+        nameEncrypted: encryptForInsert(validated.fullName, aadFor('Assets', 'name_encrypted', assetId)),
         notes: validated.notes,
       })
       .returning({ id: assets.id })
@@ -447,8 +454,8 @@ export const createChild = action(async (input: CreateChildInput): Promise<{ id:
       assetId: asset.id,
       birthday: validated.birthday,
       gender: validated.gender,
-      idNumberEncrypted: encryptForInsert(validated.nationalId),
-      insuranceIdEncrypted: encryptForInsert(validated.nhiNo),
+      idNumberEncrypted: encryptForInsert(validated.nationalId, aadFor('ChildDetails', 'id_number_encrypted', asset.id)),
+      insuranceIdEncrypted: encryptForInsert(validated.nhiNo, aadFor('ChildDetails', 'insurance_id_encrypted', asset.id)),
       nickname: validated.nickname,
       hospital: validated.hospital,
       bloodType: validated.bloodType,
@@ -481,10 +488,10 @@ export const editChild = action(async (input: EditChildInput): Promise<void> => 
     insuranceIdEncrypted?: string | null
   } = {}
   if (validated.nationalId !== undefined) {
-    piiUpdates.idNumberEncrypted = validated.nationalId === null ? null : encrypt(validated.nationalId)
+    piiUpdates.idNumberEncrypted = validated.nationalId === null ? null : encrypt(validated.nationalId, aadFor('ChildDetails', 'id_number_encrypted', input.id))
   }
   if (validated.nhiNo !== undefined) {
-    piiUpdates.insuranceIdEncrypted = validated.nhiNo === null ? null : encrypt(validated.nhiNo)
+    piiUpdates.insuranceIdEncrypted = validated.nhiNo === null ? null : encrypt(validated.nhiNo, aadFor('ChildDetails', 'insurance_id_encrypted', input.id))
   }
   // #826 — full name lives on the Assets row (not childDetails). Same trinary
   // semantics: undefined leaves the column untouched, null clears it, string
@@ -494,7 +501,7 @@ export const editChild = action(async (input: EditChildInput): Promise<void> => 
     notes: validated.notes,
   }
   if (validated.fullName !== undefined) {
-    assetUpdates.nameEncrypted = validated.fullName === null ? null : encrypt(validated.fullName)
+    assetUpdates.nameEncrypted = validated.fullName === null ? null : encrypt(validated.fullName, aadFor('Assets', 'name_encrypted', input.id))
   }
 
   await db.transaction(async (tx) => {
@@ -509,6 +516,11 @@ export const editChild = action(async (input: EditChildInput): Promise<void> => 
       ))
       .returning({ id: assets.id })
     if (updated.length === 0) throw actionError('aibutsu_not_found')
+    // #1287 — the ciphertexts above were bound to `input.id`. Postgres matches
+    // uuid literals case-insensitively (and accepts brace / no-hyphen forms),
+    // so a non-canonical id would find the row yet bind an AAD the reveal
+    // (canonical id) can never reproduce. Refuse it; throwing rolls back.
+    if (updated[0].id !== input.id) throw actionError('aibutsu_not_found')
 
     // INSERT path runs only when no row exists yet — same encryption rules as
     // createChild (undefined / null → NULL column; string → encrypted).
@@ -518,8 +530,8 @@ export const editChild = action(async (input: EditChildInput): Promise<void> => 
         assetId: input.id,
         birthday: validated.birthday,
         gender: validated.gender,
-        idNumberEncrypted: encryptForInsert(validated.nationalId),
-        insuranceIdEncrypted: encryptForInsert(validated.nhiNo),
+        idNumberEncrypted: encryptForInsert(validated.nationalId, aadFor('ChildDetails', 'id_number_encrypted', input.id)),
+        insuranceIdEncrypted: encryptForInsert(validated.nhiNo, aadFor('ChildDetails', 'insurance_id_encrypted', input.id)),
         nickname: validated.nickname,
         hospital: validated.hospital,
         bloodType: validated.bloodType,
@@ -578,7 +590,12 @@ export const revealChildPii = action(async (
   const ciphertext = field === 'nationalId' ? row.idNumberEncrypted : row.insuranceIdEncrypted
   if (!ciphertext) throw actionError('field_not_filled')
 
-  return decrypt(ciphertext)
+  return decrypt(
+    ciphertext,
+    field === 'nationalId'
+      ? aadFor('ChildDetails', 'id_number_encrypted', assetId)
+      : aadFor('ChildDetails', 'insurance_id_encrypted', assetId),
+  )
 })
 
 /**
@@ -606,7 +623,7 @@ export const revealChildName = action(async (assetId: string): Promise<string> =
     throw actionError('aibutsu_not_found')
   }
   if (!row.nameEncrypted) throw actionError('field_not_filled')
-  return decrypt(row.nameEncrypted)
+  return decrypt(row.nameEncrypted, aadFor('Assets', 'name_encrypted', assetId))
 })
 
 /**
@@ -635,7 +652,7 @@ export const revealCarPlate = action(async (assetId: string): Promise<string> =>
   }
 
   if (!row.plateEncrypted) throw actionError('field_not_filled')
-  return decrypt(row.plateEncrypted)
+  return decrypt(row.plateEncrypted, aadFor('CarDetails', 'plate_encrypted', assetId))
 })
 
 /**
@@ -662,7 +679,7 @@ export const revealHouseAddress = action(async (assetId: string): Promise<string
   }
 
   if (!row.addressEncrypted) throw actionError('field_not_filled')
-  return decrypt(row.addressEncrypted)
+  return decrypt(row.addressEncrypted, aadFor('HouseDetails', 'address_encrypted', assetId))
 })
 
 // ── Pet ────────────────────────────────────────────────────────────────────
@@ -1190,7 +1207,7 @@ export const createHouse = action(async (input: CreateHouseInput): Promise<{ id:
       owner: viewer.id,
       // #837 — address stored encrypted only (legacy `address` dropped).
       // Nullable: undefined/null/blank → NULL, a value → encrypted.
-      addressEncrypted: encryptForInsert(validated.address),
+      addressEncrypted: encryptForInsert(validated.address, aadFor('HouseDetails', 'address_encrypted', asset.id)),
       purchasedAt: validated.purchasedAt,
       purchasePrice: validated.purchasePrice,
     })
@@ -1278,7 +1295,7 @@ export const editHouse = action(async (input: EditHouseInput): Promise<void> => 
       purchasePrice: validated.purchasePrice,
     }
     if (validated.address !== undefined) {
-      houseUpdates.addressEncrypted = validated.address === null ? null : encrypt(validated.address)
+      houseUpdates.addressEncrypted = validated.address === null ? null : encrypt(validated.address, aadFor('HouseDetails', 'address_encrypted', updated[0].id))
     }
 
     await tx
