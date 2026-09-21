@@ -5,11 +5,14 @@ import {
   groupEpochs,
   incomeTransactions,
   oikosGroups,
+  outings,
   profiles,
   settlements,
 } from '@/lib/db/schema'
 import { and, count, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 import { getActiveGroupForUser } from '@/lib/db/queries/group'
 import { epochClause } from '@/lib/db/queries/_predicates'
 
@@ -122,9 +125,21 @@ export async function getActiveEpochWindow(
  * Always the current chapter, never the pinned one: a viewer time-travelling
  * through 過去的時光 still can't edit history, and the lock is about what the
  * live chapter already holds.
+ *
+ * An ACTIVE 出遊 counts too (#943), even one with no expenses yet. An outing
+ * stores its amounts as integers in the base currency it was opened with, and
+ * ending it folds the couple's share into GroupBalance as those integers.
+ * Change the base currency underneath it and the fold writes NT$1500 as ¥1500,
+ * with nothing on screen to say so. Ended outings have already folded and no
+ * longer care. setBaseCurrency runs this check under the group-row lock that
+ * createOuting also takes, so an outing cannot be opened in a base that is
+ * about to change; endOuting's refusal on a mismatch is only a defensive guard.
  */
 export async function currentEpochHasRecords(
   group: Pick<typeof oikosGroups.$inferSelect, 'id' | 'currentEpochStartedAt'>,
+  /** setBaseCurrency passes its transaction so the check reads what is
+   *  committed after it has locked the group row (#943). */
+  tx: typeof db | DbTransaction = db,
 ): Promise<boolean> {
   const window: EpochWindow = {
     startedAt: group.currentEpochStartedAt,
@@ -134,25 +149,32 @@ export async function currentEpochHasRecords(
     isPast: false,
   }
 
-  const [cashRow, incomeRow, settlementRow] = await Promise.all([
-    db.select({ n: count() }).from(cashTransactions).where(and(
+  const [cashRow, incomeRow, settlementRow, outingRow] = await Promise.all([
+    tx.select({ n: count() }).from(cashTransactions).where(and(
       eq(cashTransactions.groupId, group.id),
       epochClause(cashTransactions.createdAt, window),
       isNull(cashTransactions.deletedAt),
     )),
-    db.select({ n: count() }).from(incomeTransactions).where(and(
+    tx.select({ n: count() }).from(incomeTransactions).where(and(
       eq(incomeTransactions.groupId, group.id),
       epochClause(incomeTransactions.createdAt, window),
       isNull(incomeTransactions.deletedAt),
     )),
-    db.select({ n: count() }).from(settlements).where(and(
+    tx.select({ n: count() }).from(settlements).where(and(
       eq(settlements.groupId, group.id),
       epochClause(settlements.createdAt, window),
       isNull(settlements.deletedAt),
     )),
+    tx.select({ n: count() }).from(outings).where(and(
+      eq(outings.groupId, group.id),
+      epochClause(outings.createdAt, window),
+      eq(outings.status, 'active'),
+      isNull(outings.deletedAt),
+    )),
   ])
 
-  return Number(cashRow[0].n) + Number(incomeRow[0].n) + Number(settlementRow[0].n) > 0
+  return Number(cashRow[0].n) + Number(incomeRow[0].n) + Number(settlementRow[0].n)
+    + Number(outingRow[0].n) > 0
 }
 
 /**

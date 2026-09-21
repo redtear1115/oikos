@@ -44,6 +44,8 @@ export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
         </p>
       </div>
 
+      <OutingEntryRow />
+
       {props.trips.length === 0 ? (
         <TripsEmptyState />
       ) : (
@@ -76,6 +78,32 @@ export function TripList(props: { trips: Trip[]; baseCurrency: CurrencyCode }) {
         onClose={() => setOpen(false)}
         onSaved={handleSaved}
       />
+    </div>
+  )
+}
+
+/**
+ * The v1.6.0 way into 出遊 (#943, Q3): one row on /trips. 旅行 and 出遊 are
+ * meant to share a single entry, and how that entry routes between the two is
+ * still undecided (group-outing-design.md「與旅行的界線」) — so this is the
+ * smallest entry that works, and the easiest one to replace.
+ */
+function OutingEntryRow() {
+  const t = useTranslations()
+  return (
+    <div className="px-4 pb-6">
+      <Link
+        href="/outings"
+        className="flex items-center justify-between gap-3 px-3.5 py-3.5 no-underline rounded-card bg-surface border border-hairline text-ink"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium truncate">{t.outingList.title}</div>
+          <div className="text-xs mt-0.5 text-ink-3">{t.outingList.subtitle}</div>
+        </div>
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true" className="text-ink-3">
+          <path d="M1.5 1.5L6.5 6.5L1.5 11.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </Link>
     </div>
   )
 }

@@ -2,6 +2,8 @@ import { db } from '@/lib/db/client'
 import { trips, cashTransactions, groupEpochs } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
 export async function listActiveTrips(groupId: string, epochId: string) {
   return await db
     .select()
@@ -36,8 +38,12 @@ export async function getTripById(id: string) {
   return t ?? null
 }
 
-export async function hasActiveTrip(groupId: string, epochId: string): Promise<boolean> {
-  const [row] = await db
+export async function hasActiveTrip(
+  groupId: string,
+  epochId: string,
+  tx: typeof db | DbTransaction = db,
+): Promise<boolean> {
+  const [row] = await tx
     .select({ n: sql<number>`count(*)::int` })
     .from(trips)
     .where(and(
