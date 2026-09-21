@@ -17,7 +17,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { act, type ReactNode } from 'react'
 import { renderToString } from 'react-dom/server'
-import { hydrateRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import { TodayProvider, useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { daysBetween, parseLocalDate, todayLocalDate } from '@/lib/local-date'
 import { todayYMDIn } from '@/lib/today'
@@ -101,6 +101,24 @@ describe('hydrating "today" across zones (#1360)', () => {
     expect(r.errors).toEqual([])
     expect(r.serverText).toBe('20')
     expect(r.finalText).toBe('19')
+  })
+
+  it('mounts with a malformed tz cookie: no uncaught error, cookie rewritten to the device zone', async () => {
+    // A sibling site on .southern-light.dev could plausibly leave this. Before
+    // the fix, decodeURIComponent threw URIError in TodayProvider's effect and
+    // the dashboard fell to the global error page on every load.
+    process.env.TZ = 'Asia/Taipei'
+    document.cookie = 'tz=%E0%A4%A; path=/'
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    await expect(
+      act(async () => {
+        createRoot(container).render(<TodayProvider todayYMD="2026-09-21"><Fixed /></TodayProvider>)
+      }),
+    ).resolves.not.toThrow()
+    expect(container.querySelector('[data-testid="days"]')?.textContent).toBe('20')
+    expect(document.cookie).toContain('tz=Asia%2FTaipei')
+    expect(document.cookie).not.toContain('%E0%A4%A')
   })
 
   it('writes the device zone into the tz cookie after hydration', async () => {

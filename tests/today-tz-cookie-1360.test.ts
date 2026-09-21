@@ -48,6 +48,25 @@ describe('tz cookie', () => {
     expect(readTimeZoneCookie('lang=en')).toBeNull()
   })
 
+  it('treats an undecodable or invalid value as missing instead of throwing', () => {
+    expect(() => readTimeZoneCookie('tz=%E0%A4%A')).not.toThrow()
+    expect(readTimeZoneCookie('tz=%E0%A4%A')).toBeNull()
+    expect(readTimeZoneCookie('tz=Mars%2FOlympus')).toBeNull()
+  })
+
+  it('with duplicate names (a sibling subdomain\'s cookie), the first valid one wins', () => {
+    expect(readTimeZoneCookie('tz=%E0%A4%A; tz=Asia%2FTokyo')).toBe('Asia/Tokyo')
+    expect(readTimeZoneCookie('tz=Nope; tz=Europe%2FParis; tz=Asia%2FTokyo')).toBe('Europe/Paris')
+  })
+
+  it('overwrites a malformed cookie with the device zone instead of throwing', () => {
+    process.env.TZ = 'Asia/Tokyo'
+    document.cookie = 'tz=%E0%A4%A; path=/'
+    expect(() => syncTimeZoneCookie()).not.toThrow()
+    expect(readTimeZoneCookie(document.cookie)).toBe('Asia/Tokyo')
+    expect(document.cookie).not.toContain('%E0%A4%A')
+  })
+
   it('writes the device zone when the cookie is missing, and not again when it matches', () => {
     process.env.TZ = 'Asia/Tokyo'
     expect(syncTimeZoneCookie()).toBe(true)

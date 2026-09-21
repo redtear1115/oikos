@@ -15,8 +15,11 @@ import { DEFAULT_TIME_ZONE, TZ_COOKIE, isValidTimeZone, todayYMDIn } from './tod
  */
 export const getTimeZone = cache(async (): Promise<string> => {
   const cookieStore = await cookies()
-  const value = cookieStore.get(TZ_COOKIE)?.value
-  return isValidTimeZone(value) ? value : DEFAULT_TIME_ZONE
+  // getAll, not get: a sibling site's `Domain=.southern-light.dev` cookie can
+  // share the name (see readTimeZoneCookie). First valid one wins, matching
+  // the client.
+  const valid = cookieStore.getAll(TZ_COOKIE).map(c => c.value).find(isValidTimeZone)
+  return valid ?? DEFAULT_TIME_ZONE
 })
 
 /** Today as 'YYYY-MM-DD' in the device's zone (see getTimeZone). */

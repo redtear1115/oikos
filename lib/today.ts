@@ -15,7 +15,7 @@
  * bug.
  *
  * The fix: the server computes today in the *device's* zone (reported by the
- * client in the `tz` cookie, see `TimeZoneCookieSync`) and hands it down via
+ * client in the `tz` cookie, see `syncTimeZoneCookie`) and hands it down via
  * `TodayProvider`; `useToday()` uses that value while hydrating and the
  * client's own clock afterwards.
  *
@@ -67,11 +67,29 @@ export function deviceTimeZone(): string | null {
   }
 }
 
-/** Read the `tz` cookie out of a `document.cookie` string. */
+/**
+ * The first *valid* `tz` value in a `document.cookie` string, or null.
+ *
+ * Invalid entries — undecodable (`%E0%A4%A`), or not a zone Intl knows —
+ * are skipped as if absent. There can be more than one: southern-light.dev
+ * hosts sibling sites, and a cookie set with `Domain=.southern-light.dev`
+ * shows up here next to ours under the same name.
+ *
+ * **失效的樣子** if this ever throws: it runs in TodayProvider's effect, so
+ * the whole dashboard unmounts to the global error page — on every load,
+ * because the throw comes before the cookie could be rewritten (#1360).
+ */
 export function readTimeZoneCookie(cookieHeader: string): string | null {
   for (const part of cookieHeader.split(';')) {
     const [k, ...v] = part.trim().split('=')
-    if (k === TZ_COOKIE) return decodeURIComponent(v.join('='))
+    if (k !== TZ_COOKIE) continue
+    let value: string
+    try {
+      value = decodeURIComponent(v.join('='))
+    } catch {
+      continue // URIError: malformed percent-encoding
+    }
+    if (isValidTimeZone(value)) return value
   }
   return null
 }
@@ -86,10 +104,17 @@ export function readTimeZoneCookie(cookieHeader: string): string | null {
  */
 export function syncTimeZoneCookie(): boolean {
   if (typeof document === 'undefined') return false
-  const tz = deviceTimeZone()
-  if (!tz) return false
-  if (readTimeZoneCookie(document.cookie) === tz) return false
-  // Site-wide, 1-year, Lax — a per-device display preference, not sensitive.
-  document.cookie = `${TZ_COOKIE}=${encodeURIComponent(tz)}; path=/; max-age=31536000; SameSite=Lax`
-  return true
+  // Never throws: a display preference must not be able to take the
+  // dashboard down (see readTimeZoneCookie). Reading or writing
+  // document.cookie can itself throw (SecurityError in sandboxed frames).
+  try {
+    const tz = deviceTimeZone()
+    if (!tz) return false
+    if (readTimeZoneCookie(document.cookie) === tz) return false
+    // Site-wide, 1-year, Lax — a per-device display preference, not sensitive.
+    document.cookie = `${TZ_COOKIE}=${encodeURIComponent(tz)}; path=/; max-age=31536000; SameSite=Lax`
+    return true
+  } catch {
+    return false
+  }
 }
