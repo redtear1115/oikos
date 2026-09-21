@@ -500,7 +500,7 @@ function RecurringRulesSection({
             className="rounded-2xl px-4 py-5 flex flex-col items-center text-center"
             style={{ background: P.tint, border: `1px solid ${P.ink}20` }}
           >
-            <p className="text-sm mb-3" style={{ color: P.ink, lineHeight: 1.5 }}>
+            <p className="text-sm leading-normal mb-3" style={{ color: P.ink }}>
               {translations.recurringEmptyHint}
             </p>
             <button

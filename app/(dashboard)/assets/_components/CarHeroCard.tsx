@@ -38,9 +38,8 @@ function FactChip({ label, tone = 'neutral' }: { label: string; tone?: ChipTone 
   const { bg, fg } = CHIP_TONES[tone]
   return (
     <div
-      className="px-2 py-1 rounded-full text-xs inline-flex items-center font-medium"
+      className="px-2 py-1 rounded-full text-xs inline-flex items-center font-medium gap-1.25"
       style={{
-        gap: 5,
         background: bg,
         color: fg,
         letterSpacing: 0.2,
