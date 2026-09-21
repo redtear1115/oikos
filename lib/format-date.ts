@@ -1,5 +1,3 @@
-import { localTodayISO } from './local-date'
-
 /**
  * Parse "YYYY-MM-DD" or a full ISO timestamp into a local-time Date.
  * Date-only strings anchor at local noon so getDate()/getFullYear() are stable
@@ -75,9 +73,14 @@ export function formatMonthShort(iso: string, locale: string): string {
 /**
  * Subtitle under a picked date in form fields — "today" when iso is today,
  * else the short weekday. Locale-aware via Intl.RelativeTimeFormat.
+ *
+ * `today` ('YYYY-MM-DD') comes from `useToday()` in a component, not from
+ * the runtime clock: the server renders in UTC, so reading the clock here
+ * made the server say 「週一」 and the client say 「今天」 between 00:00 and
+ * 08:00 Taipei — a hydration mismatch even in a closed sheet (#1360).
  */
-export function formatPickerSubtitle(iso: string, locale: string): string {
-  if (iso === localTodayISO()) {
+export function formatPickerSubtitle(iso: string, locale: string, today: string): string {
+  if (iso === today) {
     return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'day')
   }
   return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(parseLocal(iso))

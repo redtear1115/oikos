@@ -18,7 +18,7 @@
 import { useState, useEffect } from 'react'
 import { CalIcon, Chevron } from './sheet-icons'
 import { MiniCalendar } from '@/app/(dashboard)/dashboard/_components/MiniCalendar'
-import { localTodayISO } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { formatDateAbsolute, formatPickerSubtitle } from '@/lib/format-date'
 import { useLocale } from '@/lib/i18n/client'
 
@@ -35,13 +35,14 @@ interface DateFieldProps {
 
 export function DateField({ value, onChange, open, label, placeholder }: DateFieldProps) {
   const locale = useLocale()
+  const today = useToday()
   const [showCal, setShowCal] = useState(false)
   useEffect(() => { if (open) setShowCal(false) }, [open])
 
   const toggle = () => setShowCal(v => !v)
   const select = (d: string) => { onChange(d); setShowCal(false) }
   // MiniCalendar requires a non-null seed; inline variant may not have one yet.
-  const calendarSeed = value ?? localTodayISO()
+  const calendarSeed = value ?? today
 
   if (label !== undefined) {
     // Inline variant — matches Field shell so it sits alongside other sheet rows.
@@ -75,7 +76,7 @@ export function DateField({ value, onChange, open, label, placeholder }: DateFie
         <CalIcon />
         <div className="flex-1 text-left">
           <div className="text-base font-medium" style={{ color: 'var(--ink)' }}>{formatDateAbsolute(calendarSeed, locale)}</div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{formatPickerSubtitle(calendarSeed, locale)}</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{formatPickerSubtitle(calendarSeed, locale, today)}</div>
         </div>
         <Chevron />
       </button>

@@ -30,6 +30,7 @@ import type { CategoryId } from '@/lib/categories'
 import type { SplitType } from '@/lib/balance'
 import { MAX_AMOUNT, type RecordStatus } from '@/lib/validators'
 import { localTodayISO, ymdToUTCNoon } from '@/lib/local-date'
+import { useToday } from '@/app/(dashboard)/_components/TodayProvider'
 import { CategoryPicker } from './CategoryPicker'
 import { DateField } from '@/app/(dashboard)/_components/DateField'
 import { AssetLinkField } from './AssetLinkField'
@@ -132,7 +133,11 @@ export function AddSheet({ open, onClose, initial, onMutated, prefilledAssetId, 
   const [split, setSplit] = useState<SplitType>('half')
   const [splitRatioA, setSplitRatioA] = useState<number>(50)
   const [payerWho, setPayerWho] = useState<'M' | 'T'>('M')
-  const [date, setDate] = useState(localTodayISO())
+  // Seeded from useToday(), not the clock: this closed sheet is in the
+  // server HTML, and the clock disagrees with it after Taipei midnight
+  // (#1360). Opening for a new record still resets to the device's today.
+  const today = useToday()
+  const [date, setDate] = useState(today)
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState<RecordStatus>('settled')
   const {

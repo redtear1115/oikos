@@ -86,13 +86,13 @@ describe('formatMonthShort — month-only axis', () => {
 
 describe('formatPickerSubtitle — date picker subtitle', () => {
   it('today returns relative "today" label per locale', () => {
-    expect(formatPickerSubtitle('2026-05-14', 'zh-TW')).toBe('今天')
-    expect(formatPickerSubtitle('2026-05-14', 'en')).toBe('today')
-    expect(formatPickerSubtitle('2026-05-14', 'ja')).toBe('今日')
+    expect(formatPickerSubtitle('2026-05-14', 'zh-TW', '2026-05-14')).toBe('今天')
+    expect(formatPickerSubtitle('2026-05-14', 'en', '2026-05-14')).toBe('today')
+    expect(formatPickerSubtitle('2026-05-14', 'ja', '2026-05-14')).toBe('今日')
   })
 
   it('non-today returns short weekday', () => {
-    expect(formatPickerSubtitle('2026-05-13', 'zh-TW')).toBe('週三')
-    expect(formatPickerSubtitle('2026-05-13', 'en')).toBe('Wed')
+    expect(formatPickerSubtitle('2026-05-13', 'zh-TW', '2026-05-14')).toBe('週三')
+    expect(formatPickerSubtitle('2026-05-13', 'en', '2026-05-14')).toBe('Wed')
   })
 })
