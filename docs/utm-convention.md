@@ -37,6 +37,21 @@ Southern Light 旗下產品（Futari / Wildcard / blog）共用 GA（`G-YHXFBMRQ
 新增 outbound 面（footer、設定頁「支持我們」等）時：從 `lib/utm.ts` 的
 `UTM_MEDIUMS` 挑或新增 medium，並回填上表。
 
+## Inbound 標記（連回 Futari 的入口）
+
+上面的參數表與 `withUtm()` 只管 outbound（離開本站、連到自家其他 GA 屬性）。
+以下是另一類：寫死在靜態檔裡、**連回 Futari 本站**的連結，用 UTM 標出流量是從哪個入口進來的。
+這些值不經 `withUtm()`，也不列在 `lib/utm.ts` 的 `UTM_SOURCES` / `UTM_MEDIUMS`
+（那兩個 list 是 `withUtm()` 的輸入型別，列進去等於允許 outbound 連結蓋成 inbound 的章）。
+
+| Surface | source / medium | 檔案 |
+|---|---|---|
+| AI 答案引擎／agent 讀的 llms.txt 連回本站 | `llms_txt` / `ai_agent` | `public/llms.txt`、`public/llms-full.txt` |
+
+原因：多數聊天介面點出去不帶 referrer，流量會落進 `$direct`；UTM 寫在網址文字裡，
+被原樣引用就會跟著走。失效的樣子：有人從 AI 答案點進來，PostHog / GA 看到的卻是
+direct，而且沒有任何錯誤——所以改 llms*.txt 的連結時，UTM 要一起保留。
+
 ## 不掛 UTM 的外連
 
 - GitHub issue 連結（terms / privacy 頁）：GitHub 不是自家 GA 屬性，掛了也看不到。

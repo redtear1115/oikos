@@ -2933,7 +2933,7 @@ I will upload the screenshots once you confirm.`,
       },
       cwmoney: {
         title: 'Import from CWMoney to Futari · Free expense splitting',
-        description: 'Moving from CWMoney? Skip the VIP paywall — Futari includes free expense splitting for couples. Use our Excel template to bring your data over.',
+        description: 'Moving from CWMoney? Its shared ledger needs VIP and it has no expense splitting. Futari gives couples both, free. Import with our Excel template.',
         ogDescription: 'Where CWMoney users go next: free expense splitting, Excel-to-CSV import into Futari.',
       },
       // TODO(#839): en copy below pending native review

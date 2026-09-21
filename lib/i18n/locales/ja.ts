@@ -2931,8 +2931,8 @@ I will upload the screenshots once you confirm.`,
       },
       cwmoney: {
         title: 'CWMoney から Futari へ｜無料の割り勘機能',
-        description: 'CWMoney ユーザーの新しい選択肢。割り勘に VIP は不要——Futari は無料で割り勘機能を搭載。変換テンプレートで CSV に整えてアップロードするだけ。',
-        ogDescription: 'CWMoney ユーザーの次の住みか。無料の割り勘機能、Excel を CSV に変換して Futari へ。',
+        description: 'CWMoney ユーザーの新しい選択肢。CWMoney では共有家計簿に VIP が必要で、割り勘機能もありません。Futari はどちらも無料。変換テンプレートで CSV に整えてアップロードするだけ。',
+        ogDescription: 'CWMoney ユーザーの乗り換え先。無料の割り勘機能、Excel を CSV に変換して Futari へ。',
       },
       // TODO(#839): ja copy below pending native review
       moneybook: {

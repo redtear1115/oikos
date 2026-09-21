@@ -5734,7 +5734,7 @@ export const zhTW: Translations = {
       },
       cwmoney: {
         title: '從 CWMoney 搬家到 Futari｜免費雙人分帳',
-        description: 'CWMoney 用戶的雙人記帳新選擇。分帳結算不必解 VIP——Futari 免費內建費用分攤，用 Excel 轉換模板把 CWMoney 資料整理成 CSV 就能搬家，和對方一起接著記。',
+        description: 'CWMoney 用戶的雙人記帳新選擇。CWMoney 的共同帳本要解 VIP，也沒有費用分攤；Futari 兩樣都免費內建。用 Excel 轉換模板把 CWMoney 資料整理成 CSV 就能搬家，和對方一起接著記。',
         ogDescription: 'CWMoney 用戶的下一站：免費分帳，Excel 轉 CSV 搬進 Futari。',
       },
       moneybook: {
