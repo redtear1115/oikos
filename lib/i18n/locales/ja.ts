@@ -88,7 +88,7 @@ export const ja: Translations = {
     heroKicker: 'A COUPLE\'S LEDGER',
     taglineHtml: 'ふたりで、<br />ひとつの家計簿。',
     bodyHtml: '夫婦・カップルのための共有家計簿。<br />一日ずつ記していけば、振り返ったとき心が温かくなります。',
-    cta: 'ふたりではじめる',
+    cta: 'ふたりで記録する',
     ctaHint: '無料 · ふたりで一冊の家計簿 · Google または Apple で続ける',
     alreadyHaveAccount: 'アカウントをお持ちの方',
     // TODO(i18n): native review pending (#1333) — MT-quality draft.
@@ -380,7 +380,7 @@ export const ja: Translations = {
       amountRequired: '金額を入力してください',
       amountTooLarge: '金額は {max} 以下にしてください',
       descriptionRequired: '内容を入力してください',
-      noPartner: 'パートナーがまだ参加していません',
+      noPartner: '相手がまだ参加していません',
     },
   },
 
@@ -649,7 +649,7 @@ export const ja: Translations = {
     errors: {
       exceedsDebt: '金額が借入額を超えています',
       amountRequired: '金額を入力してください',
-      noPartner: 'パートナーがまだ参加していません',
+      noPartner: '相手がまだ参加していません',
     },
   },
 

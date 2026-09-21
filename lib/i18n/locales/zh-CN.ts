@@ -1609,7 +1609,7 @@ export const zhCN: Translations = {
     house: {
       sectionInfo: '房子信息',
       address: '地址',
-      purchasedAt: '购入日',
+      purchasedAt: '购入日期',
       purchasePrice: '购入金额',
       livingDays: '入住天数',
       daysSuffix: '天',

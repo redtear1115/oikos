@@ -4338,9 +4338,9 @@ export const zhTW: Translations = {
     house: {
       address: '地址',
       addressPlaceholder: '例：台北市大安區某路1號',
-      purchasedAt: '購入日期',
+      purchasedAt: '購買日期',
       pickDate: '選擇日期',
-      purchasePrice: '購入金額',
+      purchasePrice: '買入金額',
       purchasePricePlaceholder: '例：15000000',
     },
     insurance: {
@@ -4521,8 +4521,8 @@ export const zhTW: Translations = {
     house: {
       sectionInfo: '房子資訊',
       address: '地址',
-      purchasedAt: '購入日',
-      purchasePrice: '購入金額',
+      purchasedAt: '購買日期',
+      purchasePrice: '買入金額',
       livingDays: '入住天數',
       daysSuffix: '天',
       livingSuffix: ' 入住',
