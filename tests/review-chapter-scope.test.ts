@@ -69,6 +69,7 @@ const loadSnapshot = vi.fn(async () => null)
 vi.mock('next/navigation', () => ({ notFound, redirect: vi.fn(() => { throw new Error('NEXT_REDIRECT') }) }))
 vi.mock('@/lib/supabase/server', () => ({ getCurrentUser: async () => ({ id: 'user-c' }) }))
 vi.mock('@/lib/db/queries/epoch', () => ({
+  getEpochMembers: async () => ({ memberAId: 'user-a', memberBId: 'user-c' }),
   resolveViewerEpochContext: async () => ({
     group: { id: 'g1', memberA: 'user-a', memberB: 'user-c' },
     window: { ...CH2, epochId: 'e2', isPast: false },

@@ -53,7 +53,9 @@ export interface ReviewClientProps {
   viewer: ReviewMember
   partner: ReviewMember | null
   isSolo: boolean
-  /** Null when solo or before the first monthly snapshot exists. */
+  /** Viewing a closed chapter (#1384): the next-month editor is not rendered. */
+  readOnly: boolean
+  /** Null when solo, in a closed chapter, or before the first monthly snapshot exists. */
   quiz: ReviewQuizState | null
 }
 
@@ -67,6 +69,7 @@ export function ReviewClient({
   viewer,
   partner,
   isSolo,
+  readOnly,
   quiz,
 }: ReviewClientProps) {
   const router = useRouter()
@@ -158,16 +161,18 @@ export function ReviewClient({
         />
       )}
 
-      <div className="px-4 pt-6">
-        <MessageEditor
-          editorMonth={editorMonth}
-          ownMessage={ownEditorMessage}
-          partnerMessage={partnerEditorMessage}
-          viewer={viewer}
-          partner={partner}
-          isSolo={isSolo}
-        />
-      </div>
+      {!readOnly && (
+        <div className="px-4 pt-6">
+          <MessageEditor
+            editorMonth={editorMonth}
+            ownMessage={ownEditorMessage}
+            partnerMessage={partnerEditorMessage}
+            viewer={viewer}
+            partner={partner}
+            isSolo={isSolo}
+          />
+        </div>
+      )}
     </div>
   )
 }
